@@ -32,7 +32,8 @@ struct SparseArrayIt {
     SKR_INLINE ValueType* operator->() const { return &_array[index()]._sparse_array_data; }
 
     // other data
-    SKR_INLINE TS index() const { return _bit_it.index(); }
+    SKR_INLINE ValueType* data() const { return &_array[index()]._sparse_array_data; }
+    SKR_INLINE TS         index() const { return _bit_it.index(); }
 
 private:
     DataType* _array;

@@ -124,7 +124,7 @@ SKR_INLINE void BitArray<TBlock, Alloc>::_realloc(SizeType new_capacity)
 {
     SKR_ASSERT(new_capacity != _capacity);
     SKR_ASSERT(new_capacity > 0);
-    SKR_ASSERT(_size < new_capacity);
+    SKR_ASSERT(_size <= new_capacity);
     SKR_ASSERT((_capacity > 0 && _data != nullptr) || (_capacity == 0 && _data == nullptr));
 
     SizeType old_block_capacity = Algo::num_blocks(_capacity);
@@ -153,8 +153,8 @@ SKR_INLINE void BitArray<TBlock, Alloc>::_realloc(SizeType new_capacity)
 
             // release old memory
             _alloc.template free<TBlock>(_data);
-            _data = new_memory;
 
+            _data     = new_memory;
             _capacity = new_capacity;
         }
     }

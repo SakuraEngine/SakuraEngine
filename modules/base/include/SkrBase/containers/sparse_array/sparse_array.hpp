@@ -8,7 +8,6 @@
 
 // SparseArray def
 // TODO. auto compact_top when remove items
-// TODO. better remove all
 namespace skr
 {
 template <typename T, typename TBitBlock, typename Alloc>
@@ -19,7 +18,7 @@ struct SparseArray {
     using CDataRef                        = SparseArrayDataRef<const T, SizeType>;
     using It                              = SparseArrayIt<T, TBitBlock, SizeType, false>;
     using CIt                             = SparseArrayIt<T, TBitBlock, SizeType, true>;
-    using Algo                            = algo::BitAlgo<TBitBlock>;
+    using BitAlgo                         = algo::BitAlgo<TBitBlock>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // ctor & dtor
@@ -165,11 +164,8 @@ struct SparseArray {
 
 private:
     // helper
-    void _set_bit(SizeType index, bool v);
-    bool _get_bit(SizeType index) const;
-    void _set_bit_range(SizeType start, SizeType n, bool v);
-    void _resize_memory(SizeType new_capacity);
-    void _grow(SizeType n);
+    void _realloc(SizeType new_capacity);
+    void _free();
 
 private:
     TBitBlock* _bit_array      = nullptr;
@@ -188,46 +184,34 @@ namespace skr
 {
 // helper
 template <typename T, typename TBitBlock, typename Alloc>
-SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_set_bit(SizeType index, bool v)
+SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_realloc(SizeType new_capacity)
 {
-    Algo::set(_bit_array, index, v);
-}
-template <typename T, typename TBitBlock, typename Alloc>
-SKR_INLINE bool SparseArray<T, TBitBlock, Alloc>::_get_bit(SizeType index) const
-{
-    return Algo::get(_bit_array, index);
-}
-template <typename T, typename TBitBlock, typename Alloc>
-SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_set_bit_range(SizeType start, SizeType n, bool v)
-{
-    Algo::set_range(_bit_array, start, n, v);
-}
-template <typename T, typename TBitBlock, typename Alloc>
-SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_resize_memory(SizeType new_capacity)
-{
-    if (new_capacity)
+    SKR_ASSERT(new_capacity != _capacity);
+    SKR_ASSERT(new_capacity > 0);
+    SKR_ASSERT(_sparse_size <= new_capacity);
+    SKR_ASSERT((_capacity > 0 && _data != nullptr) || (_capacity == 0 && _data == nullptr));
+
+    // realloc data array
+    if constexpr (memory::memory_traits<T>::use_realloc)
     {
-        // calc new size
-        auto new_sparse_size = std::min(_sparse_size, _capacity);
+        _data     = _alloc.template realloc<DataType>(_data, new_capacity);
+        _capacity = new_capacity;
+    }
+    else
+    {
+        // alloc new memory
+        DataType* new_memory = _alloc.template alloc<DataType>(new_capacity);
 
-        // realloc
-        if constexpr (memory::memory_traits<T>::use_realloc)
+        // move items
+        if (_sparse_size)
         {
-            _data = _alloc.resize_container(_data, _sparse_size, _capacity, new_capacity);
-        }
-        else
-        {
-            // alloc new memory
-            DataType* new_memory = _alloc.template alloc<DataType>(new_capacity);
-
-            // move items
-            for (SizeType i = 0; i < new_sparse_size; ++i)
+            for (SizeType i = 0; i < _sparse_size; ++i)
             {
                 DataType& new_data = *(new_memory + i);
                 DataType& old_data = *(_data + i);
                 if (has_data(i))
                 {
-                    new_data._sparse_array_data = std::move(old_data._sparse_array_data);
+                    memory::move(&new_data._sparse_array_data, &old_data._sparse_array_data);
                 }
                 else
                 {
@@ -235,59 +219,63 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_resize_memory(SizeType new_ca
                     new_data._sparse_array_freelist_next = old_data._sparse_array_freelist_next;
                 }
             }
+        }
 
-            // destruct items
-            if constexpr (memory::memory_traits<T>::use_dtor)
+        // release old memory
+        _alloc.template free<DataType>(_data);
+
+        _data     = new_memory;
+        _capacity = new_capacity;
+    }
+
+    // realloc bit array
+    SizeType new_block_size = BitAlgo::num_blocks(_capacity);
+    SizeType old_block_size = BitAlgo::num_blocks(_bit_array_size);
+
+    if (new_block_size != old_block_size)
+    {
+        // realloc bit array
+        if constexpr (memory::memory_traits<TBitBlock>::use_realloc)
+        {
+            _bit_array      = _alloc.template realloc<TBitBlock>(_bit_array, new_block_size);
+            _bit_array_size = new_block_size * BitAlgo::PerBlockSize;
+        }
+        else
+        {
+            // alloc new memory
+            TBitBlock* new_memory = _alloc.template alloc<TBitBlock>(new_block_size);
+
+            // move items
+            if (_bit_array_size)
             {
-                for (SizeType i = 0; i < _sparse_size; ++i)
-                {
-                    if (has_data(i))
-                    {
-                        memory::destruct(&_data[i]._sparse_array_data);
-                    }
-                }
+                memory::move(new_memory, _bit_array, old_block_size);
             }
 
             // release old memory
-            _alloc.free(_data);
-            _data = new_memory;
+            _alloc.template free<TBitBlock>(_bit_array);
+
+            _bit_array      = new_memory;
+            _bit_array_size = new_block_size * BitAlgo::PerBlockSize;
         }
 
-        // update size
-        _sparse_size = new_sparse_size;
-        _capacity    = new_capacity;
-
-        // resize bit array
-        SizeType data_block_size = Algo::num_blocks(_capacity);
-        SizeType old_block_size  = Algo::num_blocks(_bit_array_size);
-        if (data_block_size != old_block_size)
+        // cleanup new bit array memory
+        if (new_block_size > old_block_size)
         {
-            SizeType new_block_size = data_block_size;
-
-            // resize
-            _bit_array = _alloc.resize_container(_bit_array, old_block_size, old_block_size, new_block_size);
-
-            // clean memory
-            if (data_block_size > old_block_size)
-            {
-                Algo::set_blocks(_bit_array + old_block_size, SizeType(0), new_block_size - old_block_size, false);
-            }
-
-            // update size
-            _bit_array_size = new_block_size * Algo::PerBlockSize;
+            memset(_bit_array + old_block_size, 0, (new_block_size - old_block_size) * sizeof(TBitBlock));
         }
     }
-    else if (_data)
+}
+template <typename T, typename TBitBlock, typename Alloc>
+SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_free()
+{
+    if (_data)
     {
         // destruct items
         if constexpr (memory::memory_traits<T>::use_dtor)
         {
-            for (SizeType i = 0; i < _sparse_size; ++i)
+            for (auto it = begin(); it != end(); ++it)
             {
-                if (has_data(i))
-                {
-                    memory::destruct<T>(&_data[i]._sparse_array_data);
-                }
+                memory::destruct<T>(it.data());
             }
         }
 
@@ -305,77 +293,6 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_resize_memory(SizeType new_ca
         _data           = nullptr;
     }
 }
-template <typename T, typename TBitBlock, typename Alloc>
-SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_grow(SizeType n)
-{
-    auto new_sparse_size = _sparse_size + n;
-
-    // grow memory
-    if (new_sparse_size > _capacity)
-    {
-        auto new_capacity = _alloc.get_grow(new_sparse_size, _capacity);
-
-        // grow memory
-        if constexpr (memory::memory_traits<T>::use_realloc)
-        {
-            _data = _alloc.resize_container(_data, _sparse_size, _capacity, new_capacity);
-        }
-        else
-        {
-            // alloc new memory
-            DataType* new_memory = _alloc.template alloc<DataType>(new_capacity);
-
-            // move items
-            for (SizeType i = 0; i < _sparse_size; ++i)
-            {
-                DataType& new_data = *(new_memory + i);
-                DataType& old_data = *(_data + i);
-                if (has_data(i))
-                {
-                    new_data._sparse_array_data = std::move(old_data._sparse_array_data);
-                    memory::destruct<T>(&old_data._sparse_array_data);
-                }
-                else
-                {
-                    new_data._sparse_array_freelist_prev = old_data._sparse_array_freelist_prev;
-                    new_data._sparse_array_freelist_next = old_data._sparse_array_freelist_next;
-                }
-            }
-
-            // release old memory
-            _alloc.free(_data);
-            _data = new_memory;
-        }
-
-        // update capacity
-        _capacity = new_capacity;
-
-        // grow bit array
-        if (_bit_array_size < _capacity)
-        {
-            // calc grow size
-            SizeType data_block_size = Algo::num_blocks(_capacity);
-            SizeType old_block_size  = Algo::num_blocks(_bit_array_size);
-            SizeType new_block_size  = _alloc.get_grow(data_block_size, old_block_size);
-
-            // alloc memory and clean
-            if (new_block_size > old_block_size)
-            {
-                // alloc
-                _bit_array = _alloc.resize_container(_bit_array, old_block_size, old_block_size, new_block_size);
-
-                // clean
-                Algo::set_blocks(_bit_array + old_block_size, SizeType(0), new_block_size - old_block_size, false);
-
-                // update size
-                _bit_array_size = new_block_size * Algo::PerBlockSize;
-            }
-        }
-    }
-
-    // update size
-    _sparse_size = new_sparse_size;
-}
 
 // ctor & dtor
 template <typename T, typename TBitBlock, typename Alloc>
@@ -390,9 +307,9 @@ SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(SizeType size, Alloc al
     if (size)
     {
         // resize
-        _resize_memory(size);
+        _realloc(size);
         _sparse_size = size;
-        _set_bit_range(0, size, true);
+        BitAlgo::set_range(_bit_array, SizeType(0), size, true);
 
         // call ctor
         for (SizeType i = 0; i < size; ++i)
@@ -408,9 +325,9 @@ SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(SizeType size, const T&
     if (size)
     {
         // resize
-        _resize_memory(size);
+        _realloc(size);
         _sparse_size = size;
-        _set_bit_range(0, size, true);
+        BitAlgo::set_range(_bit_array, SizeType(0), size, true);
 
         // call ctor
         for (SizeType i = 0; i < size; ++i)
@@ -426,9 +343,9 @@ SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(const T* p, SizeType n,
     if (n)
     {
         // resize
-        _resize_memory(n);
+        _realloc(n);
         _sparse_size = n;
-        _set_bit_range(0, n, true);
+        BitAlgo::set_range(_bit_array, SizeType(0), n, true);
 
         // call ctor
         for (SizeType i = 0; i < n; ++i)
@@ -445,9 +362,9 @@ SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(std::initializer_list<T
     if (size)
     {
         // resize
-        _resize_memory(size);
+        _realloc(size);
         _sparse_size = size;
-        _set_bit_range(0, size, true);
+        BitAlgo::set_range(_bit_array, SizeType(0), size, true);
 
         // call ctor
         for (SizeType i = 0; i < size; ++i)
@@ -522,7 +439,7 @@ SKR_INLINE SparseArray<T, TBitBlock, Alloc>& SparseArray<T, TBitBlock, Alloc>::o
         }
 
         // copy bit array
-        std::memcpy(_bit_array, rhs._bit_array, sizeof(TBitBlock) * Algo::num_blocks(rhs._sparse_size));
+        std::memcpy(_bit_array, rhs._bit_array, sizeof(TBitBlock) * BitAlgo::num_blocks(rhs._sparse_size));
 
         // copy other data
         _num_hole      = rhs._num_hole;
@@ -570,7 +487,7 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::assign(const T* p, SizeType n)
         // resize
         reserve(n);
         _sparse_size = n;
-        _set_bit_range(0, n, true);
+        BitAlgo::set_range(_bit_array, SizeType(0), n, true);
 
         // call ctor
         for (SizeType i = 0; i < n; ++i)
@@ -590,7 +507,7 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::assign(std::initializer_list<T
         // resize
         reserve(size);
         _sparse_size = size;
-        _set_bit_range(0, size, true);
+        BitAlgo::set_range(_bit_array, SizeType(0), size, true);
 
         // call ctor
         for (SizeType i = 0; i < size; ++i)
@@ -708,12 +625,12 @@ SKR_INLINE const Alloc& SparseArray<T, TBitBlock, Alloc>::allocator() const
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE bool SparseArray<T, TBitBlock, Alloc>::has_data(SizeType idx) const
 {
-    return _get_bit(idx);
+    return BitAlgo::get(_bit_array, idx);
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE bool SparseArray<T, TBitBlock, Alloc>::is_hole(SizeType idx) const
 {
-    return !_get_bit(idx);
+    return !BitAlgo::get(_bit_array, idx);
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE bool SparseArray<T, TBitBlock, Alloc>::is_valid_index(SizeType idx) const
@@ -733,19 +650,16 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::clear()
     // destruct items
     if constexpr (memory::memory_traits<T>::use_dtor)
     {
-        for (SizeType i = 0; i < _sparse_size; ++i)
+        for (auto it = begin(); it != end(); ++it)
         {
-            if (has_data(i))
-            {
-                memory::destruct<T>(&_data[i]._sparse_array_data);
-            }
+            memory::destruct<T>(it.data());
         }
     }
 
     // clean up bit array
     if (_bit_array)
     {
-        Algo::set_blocks(_bit_array, SizeType(0), Algo::num_blocks(_bit_array_size), false);
+        BitAlgo::set_blocks(_bit_array, SizeType(0), BitAlgo::num_blocks(_bit_array_size), false);
     }
 
     // clean up data
@@ -757,23 +671,31 @@ template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::release(SizeType capacity)
 {
     clear();
-    _resize_memory(capacity);
+    if (capacity)
+    {
+        _realloc(capacity);
+    }
+    else
+    {
+        _free();
+    }
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::reserve(SizeType capacity)
 {
     if (capacity > _capacity)
     {
-        _resize_memory(capacity);
+        _realloc(capacity);
     }
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::shrink()
 {
     auto new_capacity = _alloc.get_shrink(_sparse_size, _capacity);
+    SKR_ASSERT(new_capacity >= _sparse_size);
     if (new_capacity < _capacity)
     {
-        _resize_memory(new_capacity);
+        _realloc(new_capacity);
     }
 }
 template <typename T, typename TBitBlock, typename Alloc>
@@ -802,12 +724,13 @@ SKR_INLINE bool SparseArray<T, TBitBlock, Alloc>::compact()
         }
 
         // setup bit array
-        _set_bit_range(compacted_index, _num_hole, false);
-        _set_bit_range(0, compacted_index, true);
+        BitAlgo::set_range(_bit_array, compacted_index, _num_hole, false);
+        BitAlgo::set_range(_bit_array, SizeType(0), compacted_index, true);
 
         // setup data
-        _num_hole    = 0;
-        _sparse_size = compacted_index;
+        _num_hole      = 0;
+        _freelist_head = npos;
+        _sparse_size   = compacted_index;
 
         return true;
     }
@@ -841,14 +764,16 @@ SKR_INLINE bool SparseArray<T, TBitBlock, Alloc>::compact_stable()
             while (read_index < _sparse_size && has_data(read_index))
             {
                 memory::move(&_data[write_index]._sparse_array_data, &_data[read_index]._sparse_array_data);
-                _set_bit(write_index, true);
                 ++write_index;
                 ++read_index;
             }
         }
 
+        // setup bit array
+        BitAlgo::set_range(_bit_array, compacted_index, _num_hole, false);
+        BitAlgo::set_range(_bit_array, SizeType(0), compacted_index, true);
+
         // reset data
-        _set_bit_range(compacted_index, _num_hole, false);
         _num_hole      = 0;
         _freelist_head = npos;
         _sparse_size   = compacted_index;
@@ -925,7 +850,7 @@ SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::DataRef SparseArray<T, TBi
 {
     SizeType index;
 
-    if (_num_hole)
+    if (_num_hole) // has hole case
     {
         // remove and use first index from freelist
         index          = _freelist_head;
@@ -938,17 +863,30 @@ SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::DataRef SparseArray<T, TBi
             _data[_freelist_head]._sparse_array_freelist_prev = npos;
         }
     }
-    else
+    else // no hole case
     {
         // add new element
         index = _sparse_size;
-        _grow(1);
+
+        // try grow memory
+        auto new_sparse_size = _sparse_size + 1;
+        if (new_sparse_size > _capacity)
+        {
+            auto new_capacity = _alloc.get_grow(new_sparse_size, _capacity);
+            SKR_ASSERT(new_capacity >= _capacity);
+            if (new_capacity > _capacity)
+            {
+                _realloc(new_capacity);
+            }
+        }
+
+        _sparse_size = new_sparse_size;
     }
 
     // setup bit
-    _set_bit(index, true);
+    BitAlgo::set(_bit_array, index, true);
 
-    return DataRef(&_data[index]._sparse_array_data, index);
+    return { &_data[index]._sparse_array_data, index };
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::DataRef SparseArray<T, TBitBlock, Alloc>::add_default()
@@ -1002,7 +940,7 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::add_at_unsafe(SizeType idx)
     }
 
     // setup bit
-    _set_bit(idx, true);
+    BitAlgo::set(_bit_array, idx, true);
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::add_at_default(SizeType idx)
@@ -1072,6 +1010,7 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::remove_at(SizeType index, Size
     {
         for (SizeType i = 0; i < n; ++i)
         {
+            SKR_ASSERT(has_data(index + i));
             memory::destruct(&_data[index + i]._sparse_array_data);
         }
     }
@@ -1087,6 +1026,8 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::remove_at_unsafe(SizeType inde
 
     for (; n; --n)
     {
+        SKR_ASSERT(has_data(index));
+
         DataType& data = _data[index];
 
         // link to freelist
@@ -1100,7 +1041,7 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::remove_at_unsafe(SizeType inde
         ++_num_hole;
 
         // set flag
-        _set_bit(index, false);
+        BitAlgo::set(_bit_array, index, false);
 
         // update index
         ++index;
@@ -1153,11 +1094,11 @@ template <typename TP>
 SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::SizeType SparseArray<T, TBitBlock, Alloc>::remove_all_if(TP&& p)
 {
     SizeType count = 0;
-    for (SizeType i = 0; i < _sparse_size; ++i)
+    for (auto it = begin(); it != end(); ++it)
     {
-        if (has_data(i) && p(_data[i]._sparse_array_data))
+        if (p(*it))
         {
-            remove_at(i);
+            remove_at(it.index());
             ++count;
         }
     }
@@ -1209,69 +1150,52 @@ template <typename T, typename TBitBlock, typename Alloc>
 template <typename TP>
 SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::DataRef SparseArray<T, TBitBlock, Alloc>::find_if(TP&& p)
 {
-    for (SizeType i = 0; i < _sparse_size; ++i)
+    for (auto it = begin(); it != end(); ++it)
     {
-        if (has_data(i))
+        if (p(*it))
         {
-            auto& data = _data[i]._sparse_array_data;
-            if (p(data))
-            {
-                return DataRef(&data, i);
-            }
+            return { it.data(), it.index() };
         }
     }
-    return DataRef();
+    return {};
 }
 template <typename T, typename TBitBlock, typename Alloc>
 template <typename TP>
 SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::DataRef SparseArray<T, TBitBlock, Alloc>::find_last_if(TP&& p)
 {
-    for (SizeType i(_sparse_size - 1), n(_sparse_size); n; --i, --n)
+    // TODO. reserve it
+    // for (auto it = begin(); it != end(); ++it)
+    // {
+    //     if (p(*it))
+    //     {
+    //         return { it.data(), it.index() };
+    //     }
+    // }
+    for (SizeType i = _sparse_size - 1; i >= 0; --i)
     {
         if (has_data(i))
         {
-            auto& data = _data[i]._sparse_array_data;
-            if (p(data))
+            if (p(_data[i]._sparse_array_data))
             {
-                return DataRef(&data, i);
+                return { &_data[i]._sparse_array_data, i };
             }
         }
     }
-    return DataRef();
+    return {};
 }
 template <typename T, typename TBitBlock, typename Alloc>
 template <typename TP>
 SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::CDataRef SparseArray<T, TBitBlock, Alloc>::find_if(TP&& p) const
 {
-    for (SizeType i = 0; i < _sparse_size; ++i)
-    {
-        if (has_data(i))
-        {
-            auto& data = _data[i]._sparse_array_data;
-            if (p(data))
-            {
-                return CDataRef(&data, i);
-            }
-        }
-    }
-    return CDataRef();
+    auto ref = const_cast<SparseArray*>(this)->find_if(std::forward<TP>(p));
+    return { ref.data, ref.index };
 }
 template <typename T, typename TBitBlock, typename Alloc>
 template <typename TP>
 SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::CDataRef SparseArray<T, TBitBlock, Alloc>::find_last_if(TP&& p) const
 {
-    for (SizeType i(_sparse_size - 1), n(_sparse_size); n; --i, --n)
-    {
-        if (has_data(i))
-        {
-            auto& data = _data[i]._sparse_array_data;
-            if (p(data))
-            {
-                return CDataRef(&data, i);
-            }
-        }
-    }
-    return CDataRef();
+    auto ref = const_cast<SparseArray*>(this)->find_last_if(std::forward<TP>(p));
+    return { ref.data, ref.index };
 }
 
 // contain

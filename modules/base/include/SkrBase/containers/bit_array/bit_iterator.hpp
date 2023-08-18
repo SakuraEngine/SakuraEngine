@@ -83,7 +83,7 @@ struct TrueBitIt {
         , _step_mask(Algo::FullMask << (start & Algo::PerBlockSizeMask))
     {
         SKR_ASSERT(start >= 0 && start <= size);
-        _findFirstSetBit();
+        _find_first_set_bit();
     }
 
     SKR_INLINE TrueBitIt& operator++()
@@ -92,7 +92,7 @@ struct TrueBitIt {
         _step_mask &= ~_block_mask;
 
         // find next mask
-        _findFirstSetBit();
+        _find_first_set_bit();
         return *this;
     }
 
@@ -114,7 +114,7 @@ struct TrueBitIt {
     SKR_INLINE TS index() const { return _bit_index; }
 
 private:
-    SKR_INLINE void _findFirstSetBit()
+    SKR_INLINE void _find_first_set_bit()
     {
         const TS block_last = (_bit_size - 1) >> Algo::PerBlockSizeLog2;
 
