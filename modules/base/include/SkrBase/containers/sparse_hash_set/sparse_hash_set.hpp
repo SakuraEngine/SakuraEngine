@@ -245,7 +245,27 @@ SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::_resize_bucket() con
     {
         if (new_bucket_size) // has new size
         {
-            _bucket      = _data.allocator().resize_container(_bucket, _bucket_size, _bucket_size, new_bucket_size);
+            if constexpr (memory::memory_traits<SizeType>::use_realloc)
+            {
+                _bucket = _data.allocator().template realloc<SizeType>(_bucket, new_bucket_size);
+            }
+            else
+            {
+                // alloc new memory
+                SizeType* new_memory = _data.allocator().template alloc<SizeType>(new_bucket_size);
+
+                // move items
+                if (_bucket_size)
+                {
+                    memory::move(new_memory, _bucket, _bucket_size);
+                }
+
+                // release old memory
+                _data.allocator().free(_bucket);
+
+                _bucket = new_memory;
+            }
+
             _bucket_size = new_bucket_size;
             _bucket_mask = new_bucket_size - 1;
         }
