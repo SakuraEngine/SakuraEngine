@@ -9,9 +9,6 @@
 // Array def
 namespace skr
 {
-// TODO. move item，swap item
-// TODO. binary add & remove & find
-// TODO. [所有容器] append 优化
 template <typename T, typename Alloc>
 struct Array {
     using SizeType = typename Alloc::SizeType;

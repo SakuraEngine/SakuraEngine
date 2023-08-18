@@ -166,6 +166,7 @@ private:
     // helper
     void _realloc(SizeType new_capacity);
     void _free();
+    void _grow(SizeType new_capacity);
 
 private:
     TBitBlock* _bit_array      = nullptr;
@@ -292,6 +293,22 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_free()
         _capacity       = 0;
         _data           = nullptr;
     }
+}
+template <typename T, typename TBitBlock, typename Alloc>
+SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_grow(SizeType new_capacity)
+{
+    auto new_sparse_size = _sparse_size + new_capacity;
+    if (new_sparse_size > _capacity)
+    {
+        auto new_capacity = _alloc.get_grow(new_sparse_size, _capacity);
+        SKR_ASSERT(new_capacity >= _capacity);
+        if (new_capacity > _capacity)
+        {
+            _realloc(new_capacity);
+        }
+    }
+
+    _sparse_size = new_sparse_size;
 }
 
 // ctor & dtor
@@ -865,22 +882,8 @@ SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::DataRef SparseArray<T, TBi
     }
     else // no hole case
     {
-        // add new element
         index = _sparse_size;
-
-        // try grow memory
-        auto new_sparse_size = _sparse_size + 1;
-        if (new_sparse_size > _capacity)
-        {
-            auto new_capacity = _alloc.get_grow(new_sparse_size, _capacity);
-            SKR_ASSERT(new_capacity >= _capacity);
-            if (new_capacity > _capacity)
-            {
-                _realloc(new_capacity);
-            }
-        }
-
-        _sparse_size = new_sparse_size;
+        _grow(1);
     }
 
     // setup bit
@@ -976,25 +979,84 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::emplace_at(SizeType index, Arg
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::append(const SparseArray& arr)
 {
-    for (const T& data : arr)
+    // fill hole
+    SizeType count = 0;
+    auto     it    = arr.begin();
+    while (_num_hole > 0 && it != arr.end())
     {
-        add(data);
+        add(*it);
+        ++it;
+        ++count;
+    }
+
+    // grow and copy
+    if (it != arr.end())
+    {
+        auto write_idx  = _sparse_size;
+        auto grow_count = arr.size() - count;
+        _grow(grow_count);
+        BitAlgo::set_range(_bit_array, write_idx, grow_count, true);
+        while (it != arr.end())
+        {
+            new (&(_data[write_idx]._sparse_array_data)) T(*it);
+            ++write_idx;
+            ++it;
+        }
+        SKR_ASSERT(write_idx == _sparse_size);
     }
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::append(std::initializer_list<T> init_list)
 {
-    for (const T& data : init_list)
+    // fill hole
+    SizeType read_idx = 0;
+    while (_num_hole > 0 && read_idx < init_list.size())
     {
-        add(data);
+        add(init_list.begin()[read_idx]);
+        ++read_idx;
+    }
+
+    // grow and copy
+    if (read_idx < init_list.size())
+    {
+        auto write_idx  = _sparse_size;
+        auto grow_count = init_list.size() - read_idx;
+        _grow(grow_count);
+        BitAlgo::set_range(_bit_array, write_idx, grow_count, true);
+        while (read_idx < init_list.size())
+        {
+            new (&(_data[write_idx]._sparse_array_data)) T(init_list.begin()[read_idx]);
+            ++write_idx;
+            ++read_idx;
+        }
+        SKR_ASSERT(write_idx == _sparse_size);
     }
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::append(T* p, SizeType n)
 {
-    for (SizeType i = 0; i < n; ++i)
+    // fill hole
+    SizeType read_idx = 0;
+    while (_num_hole > 0 && read_idx < n)
     {
-        add(p[i]);
+        add(p[read_idx]);
+        ++read_idx;
+    }
+
+    // grow
+    if (read_idx < n)
+    {
+        auto write_idx  = _sparse_size;
+        auto grow_count = n - read_idx;
+        _grow(grow_count);
+        BitAlgo::set_range(_bit_array, write_idx, grow_count, true);
+        while (read_idx < n)
+        {
+            new (&(_data[write_idx]._sparse_array_data)) T(p[read_idx]);
+            ++write_idx;
+            ++read_idx;
+        }
+        SKR_ASSERT(write_idx == _sparse_size);
     }
 }
 
