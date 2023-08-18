@@ -105,17 +105,17 @@ SKR_INLINE void BitArray<TBlock, Alloc>::_grow(SizeType size)
     if (_size + size > _capacity)
     {
         // calc new capacity
-        SizeType old_block_size     = Algo::num_blocks(_size);
         SizeType old_block_capacity = Algo::num_blocks(_capacity);
         SizeType new_block_size     = Algo::num_blocks(_size + size);
         SizeType new_block_capacity = _alloc.get_grow(new_block_size, old_block_capacity);
 
         // realloc
-        _data = _alloc.resize_container(_data, old_block_size, old_block_capacity, new_block_capacity);
+        _realloc(new_block_capacity);
 
         // update capacity
         _capacity = new_block_capacity << Algo::PerBlockSizeLog2;
     }
+
     // update size
     _size += size;
 }
@@ -147,7 +147,6 @@ SKR_INLINE void BitArray<TBlock, Alloc>::_realloc(SizeType new_capacity)
             // move items
             if (_size)
             {
-                // move items
                 memory::move(new_memory, _data, Algo::num_blocks(_size));
             }
 

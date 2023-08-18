@@ -90,42 +90,6 @@ struct AllocTemplate {
 
         return result;
     }
-
-    // resize helper
-    // TODO. move to container
-    template <typename T>
-    SKR_INLINE T* resize_container(T* p, SizeType size, SizeType capacity, SizeType new_capacity) const
-    {
-        SKR_ASSERT(new_capacity > 0);
-        SKR_ASSERT(size <= capacity);
-        SKR_ASSERT((capacity > 0 && p != nullptr) || (capacity == 0 && p == nullptr));
-
-        if constexpr (memory::memory_traits<T>::use_realloc)
-        {
-            return realloc(p, new_capacity);
-        }
-
-        // alloc new memory
-        T* new_memory = alloc<T>(new_capacity);
-
-        // move memory
-        if (size)
-        {
-            // move items
-            memory::move(new_memory, p, std::min(size, new_capacity));
-
-            // destruct old items
-            if (size > new_capacity)
-            {
-                memory::destruct(p + new_capacity, size - new_capacity);
-            }
-
-            // release old memory
-            free(p);
-        }
-
-        return new_memory;
-    }
 };
 } // namespace skr
 
