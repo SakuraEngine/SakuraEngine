@@ -783,29 +783,88 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
 }
 
 // append
+// TODO. optimize for multimap
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::append(const SparseHashSet& set)
 {
-    for (const auto& v : set)
+    // fill slack
+    SizeType count = 0;
+    auto     it    = set.begin();
+    while (slack() > 0 && it != set.end())
     {
-        add(v);
+        add(*it);
+        ++it;
+        ++count;
+    }
+
+    // reserve and add
+    if (it != set.end())
+    {
+        auto new_capacity = _data.capacity() + (set.size() - count);
+        _data.reserve(new_capacity);
+
+        while (it != set.end())
+        {
+            add(*it);
+            ++it;
+        }
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::append(std::initializer_list<T> init_list)
 {
-    for (const auto& v : init_list)
+    // fill slack
+    SizeType read_idx = 0;
+    while (slack() > 0 && read_idx < init_list.size())
     {
+        const auto& v = init_list.begin()[read_idx];
         add(v);
+        ++read_idx;
     }
+
+    // reserve and add
+    if (read_idx < init_list.size())
+    {
+        auto new_capacity = _data.capacity() + (init_list.size() - read_idx);
+        _data.reserve(new_capacity);
+
+        while (read_idx < init_list.size())
+        {
+            const auto& v = init_list.begin()[read_idx];
+            add(v);
+            ++read_idx;
+        }
+    }
+
+    rehash();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::append(const T* p, SizeType n)
 {
-    for (SizeType i = 0; i < n; ++i)
+    // fill slack
+    SizeType read_idx = 0;
+    while (slack() > 0 && read_idx < n)
     {
-        add(p[n]);
+        const auto& v = p[read_idx];
+        add(v);
+        ++read_idx;
     }
+
+    // reserve and add
+    if (read_idx < n)
+    {
+        auto new_capacity = _data.capacity() + (n - read_idx);
+        _data.reserve(new_capacity);
+
+        while (read_idx < n)
+        {
+            const auto& v = p[read_idx];
+            add(v);
+            ++read_idx;
+        }
+    }
+
+    rehash();
 }
 
 // remove
