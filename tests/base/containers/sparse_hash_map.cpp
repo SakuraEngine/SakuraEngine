@@ -1,6 +1,7 @@
 #include "SkrTestFramework/framework.hpp"
 #include "skr_test_allocator.hpp"
 
+#include "SkrBase/tools/hash.hpp"
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map.hpp"
 #include <chrono>
 
@@ -11,7 +12,7 @@ TEST_CASE("test sparse hash map")
     using ValueType = int32_t;
     using PairType  = KVPair<KeyType, ValueType>;
 
-    using TestHashMap = SparseHashMap<KeyType, ValueType, uint64_t, SparseHashMapConfigDefault<KeyType, ValueType>, SkrTestAllocator>;
+    using TestHashMap = SparseHashMap<KeyType, ValueType, uint64_t, size_t, Hash<KeyType>, Equal<KeyType>, false, SkrTestAllocator>;
 
     SUBCASE("ctor & dtor")
     {

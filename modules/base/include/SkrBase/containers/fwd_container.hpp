@@ -16,9 +16,9 @@ struct BitArray;
 template <typename T, typename TBitBlock, typename Alloc>
 struct SparseArray;
 
-// unordered set
-template <typename T, bool MultiKey = false>
-struct SparseHashSetConfigDefault;
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
+// hash set & hash map
+template <typename T, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
 struct SparseHashSet;
+template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+struct SparseHashMap;
 } // namespace skr
