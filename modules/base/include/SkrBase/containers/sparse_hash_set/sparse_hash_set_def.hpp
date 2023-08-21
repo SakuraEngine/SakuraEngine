@@ -48,3 +48,15 @@ struct SparseHashSetDataRef {
     SKR_INLINE T* operator->() const { return data; }
 };
 } // namespace skr
+
+// TODO. skr swap
+namespace std
+{
+template <typename T, typename TS, typename HashType>
+void swap(::skr::SparseHashSetData<T, TS, HashType>& a, ::skr::SparseHashSetData<T, TS, HashType>& b)
+{
+    ::std::swap(a._sparse_hash_set_data, b._sparse_hash_set_data);
+    ::std::swap(a._sparse_hash_set_hash, b._sparse_hash_set_hash);
+    ::std::swap(a._sparse_hash_set_next, b._sparse_hash_set_next);
+}
+} // namespace std

@@ -57,6 +57,17 @@ struct KeyTraits<KVPair<K, V>> {
 };
 } // namespace skr
 
+// TODO. skr swap
+namespace std
+{
+template <typename K, typename V>
+void swap(::skr::KVPair<K, V>& a, ::skr::KVPair<K, V>& b)
+{
+    ::std::swap(a.key, b.key);
+    ::std::swap(a.value, b.value);
+}
+} // namespace std
+
 namespace skr
 {
 // constructor
