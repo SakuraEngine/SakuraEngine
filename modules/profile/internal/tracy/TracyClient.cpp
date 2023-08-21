@@ -19,9 +19,9 @@
 
 #include "common/TracySystem.cpp"
 #ifdef TRACY_ENABLE
-#ifdef _MSC_VER
-#  pragma warning(push, 0)
-#endif
+    #ifdef _MSC_VER
+    #  pragma warning(push, 0)
+    #endif
 
 #include "common/tracy_lz4.cpp"
 #include "client/TracyProfiler.cpp"
