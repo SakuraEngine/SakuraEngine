@@ -1,5 +1,14 @@
 #pragma once
 
+ #ifdef __OPTIMIZE__
+    // Some platforms define NDEBUG for Release builds
+    #ifndef NDEBUG
+        #define NDEBUG
+    #endif
+#elif !defined(_MSC_VER)
+    #define _DEBUG 1
+#endif
+
 #pragma region tracy
 
 #if !defined(SKR_PROFILE_ENABLE) && !defined(SKR_PROFILE_OVERRIDE_DISABLE) && !defined(SKR_PROFILE_OVERRIDE_ENABLE)

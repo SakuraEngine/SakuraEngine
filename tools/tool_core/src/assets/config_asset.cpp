@@ -70,7 +70,7 @@ bool SConfigCooker::Cook(SCookContext* ctx)
     // no cook needed for config, just binarize it
     //-----fetch runtime dependencies
     auto type = (skr::type::RecordType*)skr_get_type(&resource->configType);
-    for (auto& field : type->fields)
+    for (auto& field : type->GetFields())
     {
         if (field.type->Same(skr::type::type_of<skr_resource_handle_t>::get()))
         {

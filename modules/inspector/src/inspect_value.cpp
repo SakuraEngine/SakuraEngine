@@ -178,7 +178,7 @@ void inspect_system::DrawObject(const skr_value_ref_t &object, const skr::string
     if(nodeOpen)
     {
         auto& rtype = *(skr::type::RecordType*)object.type;
-        for(auto& field : rtype.fields)
+        for(auto& field : rtype.GetFields())
         {
             skr_value_ref_t child = {(char*)object.ptr + field.offset, field.type};
             if(field.type->type == SKR_TYPE_CATEGORY_OBJ)
