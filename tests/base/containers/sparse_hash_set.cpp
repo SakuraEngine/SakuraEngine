@@ -1,13 +1,14 @@
 #include "SkrTestFramework/framework.hpp"
 #include "skr_test_allocator.hpp"
 
+#include "SkrBase/tools/hash.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
 
 TEST_CASE("test sparse hash set (Single)")
 {
     using namespace skr;
     using ValueType   = int32_t;
-    using TestHashSet = SparseHashSet<ValueType, uint64_t, SparseHashSetConfigDefault<ValueType>, SkrTestAllocator>;
+    using TestHashSet = SparseHashSet<ValueType, uint64_t, size_t, Hash<ValueType>, Equal<ValueType>, false, SkrTestAllocator>;
 
     SUBCASE("ctor & dtor")
     {

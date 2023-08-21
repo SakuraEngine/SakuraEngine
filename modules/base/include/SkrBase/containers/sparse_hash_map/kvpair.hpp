@@ -1,6 +1,7 @@
 #pragma once
-#include "SkrBase/config.h"
 #include <type_traits>
+#include "SkrBase/config.h"
+#include "SkrBase/containers/key_traits.hpp"
 
 namespace skr
 {
@@ -41,6 +42,18 @@ struct KVPair {
     bool operator>(const KVPair& other) const;
     bool operator<=(const KVPair& other) const;
     bool operator>=(const KVPair& other) const;
+};
+
+template <typename K, typename V>
+struct MapKey {
+    SKR_INLINE constexpr K&       operator()(KVPair<K, V>& pair) const { return pair.key; }
+    SKR_INLINE constexpr const K& operator()(const KVPair<K, V>& pair) const { return pair.key; }
+};
+
+template <typename K, typename V>
+struct KeyTraits<KVPair<K, V>> {
+    using KeyType       = K;
+    using KeyMapperType = MapKey<K, V>;
 };
 } // namespace skr
 
