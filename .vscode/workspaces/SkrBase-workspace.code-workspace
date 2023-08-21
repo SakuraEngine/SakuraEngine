@@ -11,6 +11,10 @@
 		{
 			"path": "../../tests/base/",
 			"name": "base-tests"
+		},
+		{
+			"path": "../../build/.gens/",
+			"name": "code-gen"
 		}
 	],
 	"settings": {

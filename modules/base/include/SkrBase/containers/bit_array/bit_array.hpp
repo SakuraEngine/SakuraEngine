@@ -144,7 +144,7 @@ SKR_INLINE void BitArray<TBlock, Alloc>::_free()
 {
     if (_data)
     {
-        _alloc.template free(_data);
+        _alloc.template free<TBlock>(_data);
         _data     = nullptr;
         _capacity = 0;
     }
