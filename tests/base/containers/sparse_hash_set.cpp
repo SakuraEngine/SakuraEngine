@@ -3,6 +3,7 @@
 
 #include "SkrBase/tools/hash.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
+#include <chrono>
 
 TEST_CASE("test sparse hash set (Single)")
 {

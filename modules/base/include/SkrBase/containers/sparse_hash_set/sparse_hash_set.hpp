@@ -980,14 +980,14 @@ template <typename T, typename TBitBlock, typename THash, typename THasher, type
 template <typename TP>
 SKR_INLINE void SparseHashSet<T, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::sort(TP&& p)
 {
-    _data.template sort([&](const DataType& a, const DataType& b) { return p(key_of(a._sparse_hash_set_data), key_of(b._sparse_hash_set_data)); });
+    _data.sort([&](const DataType& a, const DataType& b) { return p(key_of(a._sparse_hash_set_data), key_of(b._sparse_hash_set_data)); });
     rehash();
 }
 template <typename T, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
 template <typename TP>
 SKR_INLINE void SparseHashSet<T, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::sort_stable(TP&& p)
 {
-    _data.template sort_stable([&](const DataType& a, const DataType& b) { return p(key_of(a._sparse_hash_set_data), key_of(b._sparse_hash_set_data)); });
+    _data.sort_stable([&](const DataType& a, const DataType& b) { return p(key_of(a._sparse_hash_set_data), key_of(b._sparse_hash_set_data)); });
     rehash();
 }
 
