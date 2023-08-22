@@ -7,7 +7,7 @@
 #include "scheduler.hpp"
 #include <EASTL/bitset.h>
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 dual::scheduler_t::scheduler_t()
 {
@@ -128,7 +128,7 @@ bool dual::scheduler_t::sync_query(dual_query_t* query)
 {
     SKR_ASSERT(is_main_thread(query->storage));
     
-    ZoneScopedN("SyncQuery");
+    SkrZoneScopedN("SyncQuery");
     
     llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
     auto add_group = [&](dual_group_t* group) {
@@ -291,7 +291,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
 {
     query->storage->build_queries();
     skr::task::event_t result;
-    ZoneScopedN("SchedualECSJob");
+    SkrZoneScopedN("SchedualECSJob");
 
     SKR_ASSERT(is_main_thread(query->storage));
     SKR_ASSERT(query->parameters.length < 32);
@@ -327,7 +327,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
 
     auto groupCount = (uint32_t)groups.size();
     {
-        ZoneScopedN("AllocateSharedData");
+        SkrZoneScopedN("AllocateSharedData");
         struct_arena_t<SharedData> arena;
         arena.record(&SharedData::groups, groupCount);
         arena.record(&SharedData::localTypes, groupCount * params.length);
@@ -380,20 +380,20 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     auto dependencies = update_dependencies(query, result, resources);
     
     {
-        ZoneScopedN("AllocateCounter");
+        SkrZoneScopedN("AllocateCounter");
         allCounter.add(1);
         query->storage->counter.add(1);
     }
     skr::task::schedule([dependencies = std::move(dependencies), sharedData, init, teardown, this, query, batchSize]()mutable
     {
         {
-            ZoneScopedN("JobWaitDependencies");
+            SkrZoneScopedN("JobWaitDependencies");
             for(auto& dependency : dependencies)
                 if(auto ptr = dependency.lock())
                     ptr.wait(false);
         }
         {
-            ZoneScopedN("JobInitialize");
+            SkrZoneScopedN("JobInitialize");
             if (init)
                 init(sharedData->userdata, sharedData->entityCount);
         }
@@ -404,7 +404,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         fixed_stack_scope_t _(localStack);
         dual_meta_filter_t validatedMeta;
         {
-            ZoneScopedN("JobValidateMeta");
+            SkrZoneScopedN("JobValidateMeta");
 
             auto& meta = query->meta;
             auto data = (char*)localStack.allocate(data_size(meta));
@@ -438,7 +438,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             eastl::vector<batch_t> batches;
             eastl::vector<task_t>& tasks = sharedData->tasks;
             {
-                ZoneScopedN("JobBatching");
+                SkrZoneScopedN("JobBatching");
                 batches.reserve(sharedData->entityCount / batchSize);
                 tasks.reserve(batches.capacity());
                 uint32_t batchRemain = batchSize;
@@ -522,7 +522,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         }
 
         {
-            ZoneScopedN("JobTearDown0");
+            SkrZoneScopedN("JobTearDown0");
             if(teardown)
                 teardown(sharedData->userdata, sharedData->entityCount);
         }
@@ -535,7 +535,7 @@ skr::task::event_t dual::scheduler_t::schedule_job(dual_query_t* query, dual_sch
     skr::task::event_t result;
     auto deps = update_dependencies(query, result, resources);
     {
-        ZoneScopedN("AllocateCounter");
+        SkrZoneScopedN("AllocateCounter");
         allCounter.add(1);
         query->storage->counter.add(1);
     }
@@ -559,7 +559,7 @@ skr::task::event_t dual::scheduler_t::schedule_job(dual_query_t* query, dual_sch
 
 eastl::vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources)
 {
-    ZoneScopedN("SchedualCustomJob");
+    SkrZoneScopedN("SchedualCustomJob");
 
     llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
     auto add_group = [&](dual_group_t* group) {
@@ -571,7 +571,7 @@ eastl::vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(du
 
     if (resources)
     {
-        ZoneScopedN("UpdateResourcesEntries");
+        SkrZoneScopedN("UpdateResourcesEntries");
         SMutexLock resourceLock(resourceMutex.mMutex);
         forloop (i, 0, resources->count)
         {
@@ -616,7 +616,7 @@ eastl::vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(du
     };
 
     {
-        ZoneScopedN("UpdateArchetypeEntries");
+        SkrZoneScopedN("UpdateArchetypeEntries");
         forloop (i, 0, params.length)
         {
             if (type_index_t(params.types[i]).is_tag())
@@ -730,7 +730,7 @@ void dualJ_remove_resource(dual_entity_t id)
 bool dualJ_schedule_ecs(dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
 dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, skr::task::event_t* counter)
 {
-    ZoneScopedN("dualJ::schedule_ecs");
+    SkrZoneScopedN("dualJ::schedule_ecs");
     
     auto c = dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources);
     if (counter)
@@ -743,7 +743,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
 void dualJ_schedule_custom(dual_query_t* query, dual_schedule_callback_t callback, void* u,
 dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, skr::task::event_t* counter)
 {
-    ZoneScopedN("dualJ::schedule_custom");
+    SkrZoneScopedN("dualJ::schedule_custom");
     auto c = dual::scheduler_t::get().schedule_job(query, callback, u, init, teardown, resources);
     if (counter)
     {

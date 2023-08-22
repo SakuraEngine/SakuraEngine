@@ -2,7 +2,7 @@
 #include "pool.hpp"
 #include <EASTL/vector.h>
 #include <EASTL/numeric.h>
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 const char* kDualMemoryName = "dual";
 namespace dual
@@ -26,7 +26,7 @@ void* pool_t::allocate()
     if (blocks.try_dequeue(block))
         return block;
     {
-        ZoneScopedN("DualPoolAllocation");
+        SkrZoneScopedN("DualPoolAllocation");
         return dual_calloc(1, blockSize);
     }
 }

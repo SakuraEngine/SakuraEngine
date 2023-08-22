@@ -177,7 +177,7 @@ const CGPUProcTable tbl_vk = {
 const CGPUProcTable* CGPU_VulkanProcTable() { return &tbl_vk; }
 
 // GCGPUVkAllocationCallbacks
-#include "tracy/TracyC.h"
+#include "SkrProfile/profile.h"
 
 static const char* kVulkanMemoryPoolNameUnknown = "vk::unknown";
 static const char* kVulkanInternalMemoryPoolNames[5] = {
@@ -231,9 +231,9 @@ static void* VKAPI_PTR cgpu_vulkan_alloc(
     if (size == 0) return CGPU_NULLPTR;
 
     SKR_UNUSED const char* CZoneN = "vulkan::alloc";
-    TracyCZoneCS(z, SKR_ALLOC_TRACY_MARKER_COLOR, 16, 1);
-    TracyCZoneText(z, CZoneN, strlen(CZoneN));
-    TracyCZoneName(z, CZoneN, strlen(CZoneN));
+    SkrCZoneCS(z, SKR_ALLOC_TRACY_MARKER_COLOR, 16, 1);
+    SkrCZoneText(z, CZoneN, strlen(CZoneN));
+    SkrCZoneName(z, CZoneN, strlen(CZoneN));
 
     uint8_t* ptr = CGPU_NULLPTR;
     alignment = alignment ? alignment : _Alignof(AllocHeader);
@@ -253,7 +253,7 @@ static void* VKAPI_PTR cgpu_vulkan_alloc(
     pHeader->alignment = (uint32_t)alignment;
     pHeader->scope = allocationScope;
 
-    TracyCZoneEnd(z);
+    SkrCZoneEnd(z);
 
     return result;
 }
@@ -265,9 +265,9 @@ static void VKAPI_PTR cgpu_vulkan_free(
     if (CGPU_NULLPTR == pMemory) return;
 
     SKR_UNUSED const char* CZoneN = "vulkan::free";
-    TracyCZoneCS(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 16, 1);
-    TracyCZoneText(z, CZoneN, strlen(CZoneN));
-    TracyCZoneName(z, CZoneN, strlen(CZoneN));
+    SkrCZoneCS(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 16, 1);
+    SkrCZoneText(z, CZoneN, strlen(CZoneN));
+    SkrCZoneName(z, CZoneN, strlen(CZoneN));
     
     AllocHeader* pHeader = (AllocHeader*)((uint8_t*)pMemory - sizeof(AllocHeader));
     if (pHeader->scope <= 4)
@@ -279,7 +279,7 @@ static void VKAPI_PTR cgpu_vulkan_free(
         traced_os_free_aligned((uint8_t*)pMemory - pHeader->padding, pHeader->alignment, kVulkanMemoryPoolNameUnknown);
     }
 
-    TracyCZoneEnd(z);
+    SkrCZoneEnd(z);
 }
 
 static void* VKAPI_PTR cgpu_vulkan_realloc(
@@ -290,9 +290,9 @@ static void* VKAPI_PTR cgpu_vulkan_realloc(
     VkSystemAllocationScope                     allocationScope)
 {
     SKR_UNUSED const char* CZoneN = "vulkan::realloc";
-    TracyCZoneCS(z, SKR_ALLOC_TRACY_MARKER_COLOR, 16, 1);
-    TracyCZoneText(z, CZoneN, strlen(CZoneN));
-    TracyCZoneName(z, CZoneN, strlen(CZoneN));
+    SkrCZoneCS(z, SKR_ALLOC_TRACY_MARKER_COLOR, 16, 1);
+    SkrCZoneText(z, CZoneN, strlen(CZoneN));
+    SkrCZoneName(z, CZoneN, strlen(CZoneN));
 
     AllocHeader* pHeader = (AllocHeader*)((uint8_t*)pOriginal - sizeof(AllocHeader));
     alignment = alignment ? alignment : _Alignof(AllocHeader);
@@ -309,7 +309,7 @@ static void* VKAPI_PTR cgpu_vulkan_realloc(
     pHeader->alignment = (uint32_t)alignment;
     pHeader->scope = allocationScope;
 
-    TracyCZoneEnd(z);
+    SkrCZoneEnd(z);
 
     return result;
 }

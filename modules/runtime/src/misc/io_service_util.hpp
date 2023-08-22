@@ -11,8 +11,8 @@
 #include <EASTL/sort.h>
 #include "SkrRT/containers/concurrent_queue.h"
 
-#include "tracy/Tracy.hpp"
-#include "tracy/TracyC.h"
+#include "SkrProfile/profile.h"
+#include "SkrProfile/profile.h"
 
 namespace skr
 {
@@ -193,7 +193,7 @@ struct TaskContainer
         SKR_DEFER({ optionalUnlockTasks(); });
         if (isLockless)
         {
-            ZoneScopedN("ioServiceDequeueRequests");
+            SkrZoneScopedN("ioServiceDequeueRequests");
             Task tsk;
             while (task_requests.try_dequeue(tsk))
             {
@@ -203,7 +203,7 @@ struct TaskContainer
         // 1.defer cancel tasks
         if (tasks.size())
         {
-            ZoneScopedN("ioServiceCancels");
+            SkrZoneScopedN("ioServiceCancels");
             tasks.erase(
                 eastl::remove_if(tasks.begin(), tasks.end(),
                     [](Task& t) {
@@ -223,7 +223,7 @@ struct TaskContainer
             }
             else // do sort
             {
-                ZoneScopedN("ioServiceSort");
+                SkrZoneScopedN("ioServiceSort");
                 service->setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
                 switch (service->sortMethod)
                 {
@@ -277,8 +277,8 @@ struct TaskContainer
         {
             optionalLockTasks();
             SKR_DEFER({ optionalUnlockTasks(); });
-            TracyCZone(requestZone, 1);
-            TracyCZoneName(requestZone, "ioRequest(Locked)", strlen("ioRequest(Locked)"));
+            SkrCZone(requestZone, 1);
+            SkrCZoneName(requestZone, "ioRequest(Locked)", strlen("ioRequest(Locked)"));
             if (tasks.size() >= SKR_IO_SERVICE_MAX_TASK_COUNT)
             {
                 if (criticalTaskCount)
@@ -292,19 +292,19 @@ struct TaskContainer
             back.setTaskStatus(SKR_IO_STAGE_ENQUEUED);
             tasks.emplace_back(back);
             skr_atomicu32_store_release(&back.request->request_cancel, 0);
-            TracyCZoneEnd(requestZone);
+            SkrCZoneEnd(requestZone);
         }
         else
         {
-            TracyCZone(requestZone, 1);
-            TracyCZoneName(requestZone, "ioRequest(Lockless)", strlen("ioRequest(Lockless)"));
+            SkrCZone(requestZone, 1);
+            SkrCZoneName(requestZone, "ioRequest(Lockless)", strlen("ioRequest(Lockless)"));
             back.setTaskStatus(SKR_IO_STAGE_ENQUEUED);
             {
-                ZoneScopedN("EnqueueLockless");
+                SkrZoneScopedN("EnqueueLockless");
                 task_requests.enqueue(back);
             }
             skr_atomicu32_store_release(&back.request->request_cancel, 0);
-            TracyCZoneEnd(requestZone);
+            SkrCZoneEnd(requestZone);
         }
     }
 
@@ -373,14 +373,14 @@ public:
             service->setServiceStatus(SKR_ASYNC_SERVICE_STATUS_SLEEPING);
 
             // use condition variable to sleep
-            TracyCZoneC(sleepZone, tracy::Color::Gray43, 1);
-            TracyCZoneName(sleepZone, "ioServiceSleep(Cond)", strlen("ioServiceSleep(Cond)"));
+            SkrCZoneC(sleepZone, tracy::Color::Gray43, 1);
+            SkrCZoneName(sleepZone, "ioServiceSleep(Cond)", strlen("ioServiceSleep(Cond)"));
             {
                 SMutexLock sleepLock(service->sleepMutex);
                 skr_wait_condition_vars(&service->sleepCv, &service->sleepMutex, sleepTimeVal);
                 skr_init_condition_var(&service->sleepCv);
             }
-            TracyCZoneEnd(sleepZone);
+            SkrCZoneEnd(sleepZone);
 
             auto serviceQuiting = getServiceStatus();
             if (serviceQuiting == SKR_ASYNC_SERVICE_STATUS_QUITING)

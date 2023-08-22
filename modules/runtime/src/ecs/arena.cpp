@@ -2,7 +2,7 @@
 #include "pool.hpp"
 #include "SkrRT/ecs/dual_config.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace dual
 {
@@ -10,7 +10,7 @@ fixed_arena_t::fixed_arena_t(size_t capacity)
     : size()
     , capacity(capacity)
 {
-    ZoneScopedN("DualFixedArenaAllocation");
+    SkrZoneScopedN("DualFixedArenaAllocation");
     
     buffer = dual_calloc(1, capacity);
 }
@@ -44,7 +44,7 @@ void* struct_arena_base_t::allocate(size_t s, size_t a)
 }
 void struct_arena_base_t::initialize(size_t a)
 {
-    ZoneScopedN("DualArenaAllocation");
+    SkrZoneScopedN("DualArenaAllocation");
 
     buffer = dual_calloc_aligned(1, capacity, a);
 }

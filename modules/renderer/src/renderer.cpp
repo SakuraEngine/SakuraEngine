@@ -11,7 +11,7 @@
 #include <EASTL/vector.h>
 #include <EASTL/fixed_vector.h>
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectProcessor {
     RenderEffectProcessorVtblProxy(VtblRenderEffectProcessor vtbl)
@@ -94,7 +94,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
     {
         // produce draw calls
         {
-            ZoneScopedN("ForeachProcessors(Sync)");
+            SkrZoneScopedN("ForeachProcessors(Sync)");
             for (auto& processor : processors)
             {
                 skr_primitive_update_context_t update_context = {};
@@ -113,7 +113,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
                 {
                     if (pass && processor)
                     {
-                        ZoneScopedN("ProduceDrawPacket");
+                        SkrZoneScopedN("ProduceDrawPacket");
 
                         skr_primitive_draw_context_t draw_context = {};
                         draw_context.renderer = this;
@@ -140,7 +140,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
 
         // execute draw calls
         {
-            ZoneScopedN("ForeachPasses(Sync)");
+            SkrZoneScopedN("ForeachPasses(Sync)");
             for (auto& pass : passes)
             {
                 if (pass)
@@ -154,7 +154,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
 
                     auto& pass_draw_packets = draw_packets[pass->identity()];
                     {
-                        ZoneScopedN("PassExecute");
+                        SkrZoneScopedN("PassExecute");
 
                         pass->execute(&pass_context, pass_draw_packets);
                     }

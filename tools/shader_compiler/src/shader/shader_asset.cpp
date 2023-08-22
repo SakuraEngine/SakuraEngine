@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skd
 {
@@ -101,7 +101,7 @@ option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
 //    same as "switch": ["on", "off"]
 bool SShaderCooker::Cook(SCookContext* ctx)
 {
-    ZoneScopedN("SShaderCooker::Cook");
+    SkrZoneScopedN("SShaderCooker::Cook");
 
     const auto outputPath = ctx->GetOutputPath();
     const auto assetRecord = ctx->GetAssetRecord();
@@ -147,7 +147,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
     eastl::vector<skr_multi_shader_resource_t> allOutResources(static_variants.size());
     // foreach variants
     {
-    ZoneScopedN("Permutations::Compile");
+    SkrZoneScopedN("Permutations::Compile");
     skr::parallel_for(static_variants.begin(), static_variants.end(), 1,
     [&](const auto* pVariant, const auto* _) -> void {
         const auto* shaderImporter = static_cast<SShaderImporter*>(ctx->GetImporter());
@@ -160,19 +160,19 @@ bool SShaderCooker::Cook(SCookContext* ctx)
             outResource.option_variants[dyn_hash] = {};
             outResource.option_variants[dyn_hash].resize(byteCodeFormats.size());
         }
-        ZoneScopedN("StaticPermutations::Compile");
+        SkrZoneScopedN("StaticPermutations::Compile");
 
         // foreach dynamic variants
         skr::parallel_for(dynamic_variants.begin(), dynamic_variants.end(), 1,
         [&](const auto* pDynamicVariant, const auto* __) -> void {
             const uint64_t dynamic_varidx = pDynamicVariant - dynamic_variants.begin();
             const auto dyn_hash = dynamic_stable_hashes[dynamic_varidx];
-            ZoneScopedN("DynamicPermutations::Compile");
+            SkrZoneScopedN("DynamicPermutations::Compile");
 
             // foreach target profiles
             skr::parallel_for(byteCodeFormats.begin(), byteCodeFormats.end(), 1,
             [&](const ECGPUShaderBytecodeType* pFormat, const ECGPUShaderBytecodeType* ___) -> void {
-                ZoneScopedN("ShaderCompileTask");
+                SkrZoneScopedN("ShaderCompileTask");
 
                 const ECGPUShaderBytecodeType format = *pFormat;
                 const uint64_t fmtIndex = pFormat - byteCodeFormats.begin();

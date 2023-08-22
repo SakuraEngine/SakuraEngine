@@ -5,7 +5,7 @@
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/serde/binary/blob.h"
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 [[maybe_unused]] static const char8_t* BinaryArrayBinaryFieldArchiveFailedFormat = u8"[SERDE/BIN] Failed to %s %s.%s[%d]: %d";
 [[maybe_unused]] static const char8_t* BinaryFieldArchiveFailedFormat = u8"[SERDE/BIN] Failed to %s %s.%s: %d";
@@ -97,7 +97,7 @@ int __Archive(S* archive, ${record.name}& record${configParam})
 %if generator.filter_blob_type(record):
 void BlobTrait<${record.name}>::BuildArena(skr_blob_arena_builder_t& arena, ${record.name}& dst, const ${record.name}Builder& src)
 {
-    ZoneScopedN("binary::BlobTrait<${record.name}>::BuildArena");
+    SkrZoneScopedN("binary::BlobTrait<${record.name}>::BuildArena");
 %for base in record.bases:
     BlobTrait<${base}>::BuildArena(arena, (${base}&)dst, (${base}Builder&) src);
 %endfor
@@ -114,7 +114,7 @@ void BlobTrait<${record.name}>::BuildArena(skr_blob_arena_builder_t& arena, ${re
 }
 void BlobTrait<${record.name}>::Remap(skr_blob_arena_t& arena, ${record.name}& dst)
 {
-    ZoneScopedN("binary::BlobTrait<${record.name}>::Remap");
+    SkrZoneScopedN("binary::BlobTrait<${record.name}>::Remap");
 %for base in record.bases:
     BlobTrait<${base}>::Remap(arena, (${base}&)dst);
 %endfor
@@ -131,7 +131,7 @@ void BlobTrait<${record.name}>::Remap(skr_blob_arena_t& arena, ${record.name}& d
 }
 int ReadTrait<${record.name}>::Read(skr_binary_reader_t* archive, skr_blob_arena_t& arena, ${record.name}& record${configParam})
 {
-    ZoneScopedN("binary::ReadTrait<${record.name}>::Read");
+    SkrZoneScopedN("binary::ReadTrait<${record.name}>::Read");
 %for base in record.bases:
     int ret = ReadTrait<const ${base}&>::Read(archive, arena, (${base}&)record);
     if(ret != 0)
@@ -144,7 +144,7 @@ int ReadTrait<${record.name}>::Read(skr_binary_reader_t* archive, skr_blob_arena
 }
 int WriteTrait<const ${record.name}&>::Write(skr_binary_writer_t* archive, skr_blob_arena_t& arena, const ${record.name}& record${configParam})
 {
-    ZoneScopedN("binary::WriteTrait<${record.name}>::Write");
+    SkrZoneScopedN("binary::WriteTrait<${record.name}>::Write");
 %for base in record.bases:
     int ret = WriteTrait<const ${base}&>::Write(archive, arena, (${base}&)record);
     if(ret != 0)
@@ -158,7 +158,7 @@ int WriteTrait<const ${record.name}&>::Write(skr_binary_writer_t* archive, skr_b
 %else:
 int ReadTrait<${record.name}>::Read(skr_binary_reader_t* archive, ${record.name}& record${configParam})
 {
-    ZoneScopedN("binary::ReadTrait<${record.name}>::Read");
+    SkrZoneScopedN("binary::ReadTrait<${record.name}>::Read");
 %for base in record.bases:
     int ret = skr::binary::Read(archive, (${base}&)record);
     if(ret != 0)
@@ -171,7 +171,7 @@ int ReadTrait<${record.name}>::Read(skr_binary_reader_t* archive, ${record.name}
 }
 int WriteTrait<const ${record.name}&>::Write(skr_binary_writer_t* archive, const ${record.name}& record${configParam})
 {
-    ZoneScopedN("binary::WriteTrait<${record.name}>::Write");
+    SkrZoneScopedN("binary::WriteTrait<${record.name}>::Write");
 %for base in record.bases:
     int ret = skr::binary::Write<const ${base}&>(archive, record);
     if(ret != 0)

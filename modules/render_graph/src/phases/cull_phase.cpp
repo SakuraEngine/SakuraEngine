@@ -3,14 +3,14 @@
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr {
 namespace render_graph {
 
 void CullPhase::on_compile(RenderGraph* graph) SKR_NOEXCEPT
 {
-    ZoneScopedN("RenderGraphCull");
+    SkrZoneScopedN("RenderGraphCull");
     auto& resources = get_resources(graph);
     auto& passes = get_passes(graph);
 
@@ -18,12 +18,12 @@ void CullPhase::on_compile(RenderGraph* graph) SKR_NOEXCEPT
     eastl::remove_if(resources.begin(), resources.end(),
     [this](ResourceNode* resource) {
         SKR_UNUSED const auto name = resource->get_name_view();
-        ZoneScopedC(tracy::Color::SteelBlue);
+        SkrZoneScopedC(tracy::Color::SteelBlue);
         ZoneName((const char*)name.raw().data(), name.size());
 
         const bool lone = !(resource->incoming_edges() + resource->outgoing_edges());
         {
-            ZoneScopedN("RecordDealloc");
+            SkrZoneScopedN("RecordDealloc");
             if (lone) culled_resources.emplace_back(resource);
         }
         return lone;
@@ -34,14 +34,14 @@ void CullPhase::on_compile(RenderGraph* graph) SKR_NOEXCEPT
     eastl::remove_if(passes.begin(), passes.end(),
     [this](PassNode* pass) {
         SKR_UNUSED const auto name = pass->get_name_view();
-        ZoneScopedC(tracy::Color::SteelBlue);
+        SkrZoneScopedC(tracy::Color::SteelBlue);
         ZoneName((const char*)name.raw().data(), name.size());
 
         const bool lone = !(pass->incoming_edges() + pass->outgoing_edges());
         const bool can_be_lone = pass->get_can_be_lone();
         const bool culled = lone && !can_be_lone;
         {
-            ZoneScopedN("RecordDealloc");
+            SkrZoneScopedN("RecordDealloc");
             if (culled) culled_passes.emplace_back(pass);
         }
         return culled;

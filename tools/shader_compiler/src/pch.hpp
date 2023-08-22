@@ -34,4 +34,4 @@
 #include "dxc/dxcapi.h" // IWYU pragma: export
 
 
-#include "tracy/Tracy.hpp" // IWYU pragma: export
+#include "SkrProfile/profile.h" // IWYU pragma: export

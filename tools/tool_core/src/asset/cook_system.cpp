@@ -17,7 +17,7 @@
 
 #include <atomic>
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skd::asset
 {
@@ -200,7 +200,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
         auto cooker = system->GetCooker(metaAsset);
         SKR_ASSERT(cooker);
         // Trace
-        ZoneScopedN("CookingTask");
+        SkrZoneScopedN("CookingTask");
         const auto rtti_type = type::GetTypeRegistry()->get_type(metaAsset->type);
         const auto type_name = skr_get_type_name(&metaAsset->type);
         const auto cookerTypeName = rtti_type ? rtti_type->Name() : type_name ? type_name : u8"UnknownResource";
@@ -209,9 +209,9 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
         const auto scopeName = skr::format(u8"Cook.[{}]", (const ochar8_t*)cookerTypeName);
         const auto assetString = skr::format(u8"Asset: {}", metaAsset->path.u8string().c_str());
         ZoneName(scopeName.c_str(), scopeName.size());
-        TracyMessage(guidString.c_str(), guidString.size());
-        TracyMessage(assetTypeGuidString.c_str(), assetTypeGuidString.size());
-        TracyMessage(assetString.c_str(), assetString.size());
+        SkrMessage(guidString.c_str(), guidString.size());
+        SkrMessage(assetTypeGuidString.c_str(), assetTypeGuidString.size());
+        SkrMessage(assetString.c_str(), assetString.size());
 
         SKR_DEFER({
             auto system = static_cast<SCookSystemImpl*>(GetCookSystem());
@@ -323,7 +323,7 @@ void SCookSystemImpl::UnregisterCooker(skr_guid_t guid)
 
 skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
 {
-    ZoneScoped;
+    SkrZoneScoped;
     {
         skr::task::event_t result{nullptr};
         cooking.if_contains(guid, [&](const auto& ctx_kv) {
@@ -487,7 +487,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
 
 SAssetRecord* SCookSystemImpl::ImportAsset(SProject* project, skr::filesystem::path path)
 {
-    ZoneScoped;
+    SkrZoneScoped;
     std::error_code ec = {};
     auto record = SkrNew<SAssetRecord>();
     // TODO: replace file load with skr api

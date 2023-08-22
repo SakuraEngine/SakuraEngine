@@ -11,7 +11,7 @@
 
 #include "SkrRenderGraph/phases/cull_phase.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr
 {
@@ -48,7 +48,7 @@ void RenderGraphFrameExecutor::commit(CGPUQueueId gfx_queue, uint64_t frame_inde
 void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
 {
     {
-        ZoneScopedN("ResetBindTables");
+        SkrZoneScopedN("ResetBindTables");
         for (auto bind_table_pool : bind_table_pools)
         {
             bind_table_pool.second->reset();
@@ -56,7 +56,7 @@ void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
     }
 
     {
-        ZoneScopedN("ResetMergedTables");
+        SkrZoneScopedN("ResetMergedTables");
         for (auto merged_table_pool : merged_table_pools)
         {
             merged_table_pool.second->reset();
@@ -64,7 +64,7 @@ void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
     }
 
     {
-        ZoneScopedN("ResetAliasingBinds");
+        SkrZoneScopedN("ResetAliasingBinds");
         for (auto aliasing_texture : aliasing_textures)
         {
             texture_view_pool.erase(aliasing_texture);
@@ -74,14 +74,14 @@ void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
     }
 
     {
-        ZoneScopedN("ResetMarkerBuffer");
+        SkrZoneScopedN("ResetMarkerBuffer");
         marker_idx = 0;
         marker_messages.clear();
         valid_marker_val++;
     }
 
     {
-        ZoneScopedN("ResetCommandPool");
+        SkrZoneScopedN("ResetCommandPool");
         cgpu_reset_command_pool(gfx_cmd_pool);
     }
 
@@ -224,7 +224,7 @@ CGPUTextureId RenderGraphBackend::try_aliasing_allocate(RenderGraphFrameExecutor
 {
     if (node.frame_aliasing_source)
     {
-        ZoneScopedN("AllocateAliasingResource");
+        SkrZoneScopedN("AllocateAliasingResource");
         // allocate & try bind
         auto aliasing_texture = cgpu_create_texture(device, &node.descriptor);
         CGPUTextureAliasingBindDescriptor aliasing_desc = {};
@@ -261,7 +261,7 @@ uint64_t RenderGraphBackend::get_latest_finished_frame() SKR_NOEXCEPT
 
 CGPUTextureId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, const TextureNode& node) SKR_NOEXCEPT
 {
-    ZoneScopedN("ResolveTexture");
+    SkrZoneScopedN("ResolveTexture");
     if (!node.frame_texture)
     {
         if (auto aliased = try_aliasing_allocate(executor, node); aliased)
@@ -281,7 +281,7 @@ CGPUTextureId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, co
 
 CGPUBufferId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, const BufferNode& node) SKR_NOEXCEPT
 {
-    ZoneScopedN("ResolveBuffer");
+    SkrZoneScopedN("ResolveBuffer");
     if (!node.frame_buffer)
     {
         uint64_t latest_frame = (node.tags & kRenderGraphDynamicResourceTag) ? get_latest_finished_frame() : UINT64_MAX;
@@ -299,7 +299,7 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
     stack_set<TextureHandle> tex_resolve_set;
     stack_set<BufferHandle> buf_resolve_set;
 
-    ZoneScopedN("CalculateBarriers");
+    SkrZoneScopedN("CalculateBarriers");
     pass->foreach_textures(
         [&](TextureNode* texture, TextureEdge* edge) {
             auto tex_resolved = resolve(executor, *texture);
@@ -362,7 +362,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
 {
     if (!root_sig) return nullptr;
 
-    ZoneScopedN("UpdateBindings");
+    SkrZoneScopedN("UpdateBindings");
     auto tex_read_edges = pass->tex_read_edges();
     auto tex_rw_edges = pass->tex_readwrite_edges();
     auto buf_read_edges = pass->buf_read_edges();
@@ -486,7 +486,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
 
 void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
 {
-    ZoneScopedN("VirtualDeallocate");
+    SkrZoneScopedN("VirtualDeallocate");
     pass->foreach_textures([this, pass](TextureNode* texture, TextureEdge* edge) {
         if (texture->imported) return;
         bool is_last_user = true;
@@ -502,7 +502,7 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
         {
             if (!texture->frame_aliasing)
             {
-                ZoneScopedN("VirtualDeallocate::TextureFromPool");
+                SkrZoneScopedN("VirtualDeallocate::TextureFromPool");
 
                 texture_pool.deallocate(texture->descriptor, texture->frame_texture,
                     edge->requested_state, { frame_index, texture->tags });
@@ -522,7 +522,7 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
         });
         if (is_last_user)
         {
-            ZoneScopedN("VirtualDeallocate::BufferFromPool");
+            SkrZoneScopedN("VirtualDeallocate::BufferFromPool");
 
             buffer_pool.deallocate(buffer->descriptor, buffer->frame_buffer,
                 edge->requested_state, { frame_index, buffer->tags });
@@ -532,7 +532,7 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
 
 void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass) SKR_NOEXCEPT
 {
-    ZoneScopedC(tracy::Color::LightBlue);
+    SkrZoneScopedC(tracy::Color::LightBlue);
     ZoneName(pass->name.c_str(), pass->name.size());
 
     ComputePassContext pass_context = {};
@@ -577,7 +577,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     }
     cgpux_compute_encoder_bind_bind_table(pass_context.encoder, pass_context.bind_table);
     {
-        ZoneScopedN("PassExecutor");
+        SkrZoneScopedN("PassExecutor");
         pass->executor(*this, pass_context);
     }
     cgpu_cmd_end_compute_pass(executor.gfx_cmd_buf, pass_context.encoder);
@@ -588,7 +588,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
 
 void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor, RenderPassNode* pass) SKR_NOEXCEPT
 {
-    ZoneScopedC(tracy::Color::LightPink);
+    SkrZoneScopedC(tracy::Color::LightPink);
     ZoneName(pass->name.c_str(), pass->name.size());
 
     RenderPassContext pass_context = {};
@@ -623,7 +623,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     {
-        ZoneScopedN("WriteBarrierMarker");
+        SkrZoneScopedN("WriteBarrierMarker");
         graph_big_object_string message = u8"Pass-";
         message += pass->get_name();
         message += u8"-BeginBarrier";
@@ -742,14 +742,14 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_desc.depth_stencil = &ds_attachment;
     pass_context.cmd = executor.gfx_cmd_buf;
     {
-        ZoneScopedN("WriteBeginPassMarker");
+        SkrZoneScopedN("WriteBeginPassMarker");
         graph_big_object_string message = u8"Pass-";
         message += pass->get_name();
         message += u8"-BeginPass";
         executor.write_marker(message.u8_str());
     }
     {
-        ZoneScopedN("BeginRenderPass");
+        SkrZoneScopedN("BeginRenderPass");
         pass_context.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
     }
     if (pass->pipeline) 
@@ -761,12 +761,12 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         cgpux_render_encoder_bind_bind_table(pass_context.encoder, pass_context.bind_table);
     }
     {
-        ZoneScopedN("PassExecutor");
+        SkrZoneScopedN("PassExecutor");
         pass->executor(*this, pass_context);
     }
     cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, pass_context.encoder);
     {
-        ZoneScopedN("WriteEndPassMarker");
+        SkrZoneScopedN("WriteEndPassMarker");
         graph_big_object_string message = u8"Pass-";
         message += pass->get_name();
         message += u8"-EndRenderPass";
@@ -779,7 +779,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
 
 void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, CopyPassNode* pass) SKR_NOEXCEPT
 {
-    ZoneScopedC(tracy::Color::LightYellow);
+    SkrZoneScopedC(tracy::Color::LightYellow);
     ZoneName(pass->name.c_str(), pass->name.size());
     // resource de-virtualize
     stack_vector<CGPUTextureBarrier> tex_barriers = {};
@@ -920,16 +920,16 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
         SKR_BREAK();
     }
     {
-        ZoneScopedN("AcquireExecutor");
+        SkrZoneScopedN("AcquireExecutor");
         cgpu_wait_fences(&executor.exec_fence, 1);
         if (profiler) profiler->on_acquire_executor(*this, executor);
     }
     {
-        ZoneScopedN("GraphExecutePasses");
+        SkrZoneScopedN("GraphExecutePasses");
         executor.reset_begin(texture_view_pool);
         if (profiler) profiler->on_cmd_begin(*this, executor);
         {
-            ZoneScopedN("GraphExecutorBeginEvent");
+            SkrZoneScopedN("GraphExecutorBeginEvent");
 
             skr::string frameLabel = skr::format(u8"Frame-{}", frame_index);
             CGPUEventInfo event = { (const char8_t*)frameLabel.c_str(), { 0.8f, 0.8f, 0.8f, 1.f } };
@@ -970,16 +970,16 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
     }
     {
         // submit
-        ZoneScopedN("GraphQueueSubmit");
+        SkrZoneScopedN("GraphQueueSubmit");
         if (profiler) profiler->before_commit(*this, executor);
         {
-            ZoneScopedN("CGPUGfxQueueSubmit");
+            SkrZoneScopedN("CGPUGfxQueueSubmit");
             executor.commit(gfx_queue, frame_index);
         }
         if (profiler) profiler->after_commit(*this, executor);
     }
     {
-        ZoneScopedN("GraphCleanup");
+        SkrZoneScopedN("GraphCleanup");
 
         // 3.dealloc passes & connected edges 
         for (auto pass : passes)
@@ -1023,10 +1023,10 @@ bool RenderGraphBackend::compile() SKR_NOEXCEPT
     for (auto& phase : phases)
         phase->on_compile(this);
 
-    ZoneScopedN("RenderGraphCompile");
+    SkrZoneScopedN("RenderGraphCompile");
     if (aliasing_enabled)
     {
-        ZoneScopedN("CalculateAliasing");
+        SkrZoneScopedN("CalculateAliasing");
         // 2.calc aliasing
         // - 先在aliasing chain里找一圈，如果有不重合的，直接把它加入到aliasing chain里
         // - 如果没找到，在所有resource中找一个合适的加入到aliasing chain

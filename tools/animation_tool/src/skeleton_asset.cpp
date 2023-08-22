@@ -15,7 +15,7 @@ namespace skd::asset
 {
 bool SSkelCooker::Cook(SCookContext *ctx)
 {
-    ZoneScopedNS("SSkelCooker::Cook", 4);
+    SkrZoneScopedNS("SSkelCooker::Cook", 4);
 
     using namespace ozz::animation::offline;
     //-----load config

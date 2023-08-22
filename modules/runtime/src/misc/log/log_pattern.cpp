@@ -4,7 +4,7 @@
 #include "SkrRT/misc/log/log_pattern.hpp"
 #include "SkrRT/containers/hashmap.hpp"
 #include <EASTL/string.h>
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr::log
 {
@@ -257,7 +257,7 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
 
     if (is_set_in_pattern_[(size_t)Attribute::timestamp])
     {
-        ZoneScopedN("LogPattern::Time");
+        SkrZoneScopedN("LogPattern::Time");
 
         const auto& dt = LogManager::Get()->datetime_;
         const auto midnightNs = dt.midnightNs;
@@ -351,7 +351,7 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
     }
 
     {
-        ZoneScopedN("LogPattern::FormatNArgs");
+        SkrZoneScopedN("LogPattern::FormatNArgs");
         auto sequence = eastl::make_index_sequence<kAttributeCount>();
         formatted_string_ = format_NArgs(sequence, calculated_format_.view(), _args);
     }

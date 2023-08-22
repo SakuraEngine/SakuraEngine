@@ -3,11 +3,11 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/async/fib_task.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 int main(int argc, char** argv)
 {
-    ZoneScopedN("Main");
+    SkrZoneScopedN("Main");
 
     auto moduleManager = skr_get_module_manager();
     std::error_code ec = {};

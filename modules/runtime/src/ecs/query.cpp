@@ -22,7 +22,7 @@
     #include <emmintrin.h>
 #endif
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr
 {
@@ -470,7 +470,7 @@ void dual_storage_t::build_queries()
     if (queriesBuilt)
         return;
     
-    ZoneScopedN("dual_storage_t::build_queries");
+    SkrZoneScopedN("dual_storage_t::build_queries");
     struct phase_entry_builder {
         dual_type_index_t type;
         uint32_t phase;

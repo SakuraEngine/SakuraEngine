@@ -57,41 +57,6 @@
 
 #pragma endregion
 
-
-#pragma region tracy
-
-#if !defined(TRACY_ENABLE) && !defined(TRACY_OVERRIDE_DISABLE) && !defined(TRACY_OVERRIDE_ENABLE)
-    #ifdef _DEBUG
-        #define TRACY_ENABLE
-    #else
-    #endif
-#endif
-
-#ifdef TRACY_OVERRIDE_ENABLE
-    #define TRACY_ENABLE
-#endif
-
-#if defined(TRACY_ENABLE)
-    #ifndef TRACY_IMPORTS
-    #define TRACY_IMPORTS
-    #endif
-    
-    #ifndef TRACY_ON_DEMAND
-    #define TRACY_ON_DEMAND
-    #endif
-
-    #ifndef TRACY_FIBERS
-    #define TRACY_FIBERS
-    #endif
-#endif
-
-#ifdef TRACY_ENABLE
-#define TRACY_TRACE_ALLOCATION
-#endif
-
-#pragma endregion
-
-
 #define SKR_IS_BIG_ENDIAN 0
 #define SKR_IS_LITTLE_ENDIAN 1
 

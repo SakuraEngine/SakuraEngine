@@ -17,7 +17,7 @@ void DStorageFileResolver::resolve(SkrAsyncServicePriority priority, IOBatchId b
 
     if (pPath && !pFile->dfile)
     {
-        ZoneScopedN("DStorage::OpenFile");
+        SkrZoneScopedN("DStorage::OpenFile");
 
         SKR_ASSERT(pPath->get_vfs());
         skr::filesystem::path p = pPath->get_vfs()->mount_dir;

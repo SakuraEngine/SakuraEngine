@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrBase/base/config.h"
+#include "SkrBase/config.h"
 #include "SkrBase/memory/memory_traits.hpp"
 #include <memory>
 

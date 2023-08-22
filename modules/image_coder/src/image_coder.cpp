@@ -117,18 +117,18 @@ EImageCoderFormat skr_image_coder_detect_format(const uint8_t* encoded_data, uin
 
 #ifdef _WIN32
 #include "SkrImageCoder/extensions/win_dstorage_decompressor.h"
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 HRESULT skr_image_coder_win_dstorage_decompressor(skr_win_dstorage_decompress_request_t* request, void* user_data)
 {
-    ZoneScopedN("DirectStoragePNGDecompressor");
+    SkrZoneScopedN("DirectStoragePNGDecompressor");
     EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)request->src_buffer, request->src_size);
     SKR_LOG_TRACE(u8"skr_image_coder_win_dstorage_decompressor: format=%d", format);
     auto decoder = skr::IImageDecoder::Create(format);
     const auto encoded_size = request->src_size;
     if (decoder->initialize((const uint8_t*)request->src_buffer, request->src_size))
     {
-        SKR_DEFER({ ZoneScopedN("DirectStoragePNGDecompressorFree"); decoder.reset(); });
+        SKR_DEFER({ SkrZoneScopedN("DirectStoragePNGDecompressorFree"); decoder.reset(); });
 
         const auto encoded_format = decoder->get_color_format();
         const auto color_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;

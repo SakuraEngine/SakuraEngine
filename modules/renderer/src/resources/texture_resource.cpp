@@ -20,7 +20,7 @@
 //#include "SkrRT/platform/win/dstorage_windows.h"
 #endif
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr
 {

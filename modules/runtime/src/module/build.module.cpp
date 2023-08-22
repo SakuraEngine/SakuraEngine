@@ -4,7 +4,7 @@
 #include "SkrRT/runtime_module.h"
 #include "SkrRT/ecs/dual.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRuntimeModule, SkrRT);
 
@@ -54,7 +54,7 @@ void SkrRuntimeModule::on_unload()
     skr_log_finalize_async_worker();
     skr_finalize_crash_handler();
 
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     if (tracy::GetProfiler().IsConnected())
     {
         std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );

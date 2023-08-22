@@ -27,7 +27,7 @@
 #include "SkrRT/runtime_module.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "imgui/skr_imgui_rg.h"
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #ifdef SKR_OS_WINDOWS
     #include <shellscalingapi.h>

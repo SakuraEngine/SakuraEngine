@@ -99,21 +99,21 @@ struct TValueSerializePolicy : ValueSerializePolicy {
                 break;
             case SKR_TYPE_CATEGORY_ARR: {
                 ctx.BeginArray();
-                auto& arr = (const ArrayType&)(*type);
-                auto element = arr.elementType;
-                auto d = (char*)data;
-                auto size = element->Size();
+                auto& arr     = (const ArrayType&)(*type);
+                auto  element = arr.elementType;
+                auto  d       = (char*)data;
+                auto  size    = element->Size();
                 for (int i = 0; i < arr.num; ++i)
                     serializeImpl(&ctx, d + i * size, element);
                 ctx.EndArray();
                 break;
             }
             case SKR_TYPE_CATEGORY_DYNARR: {
-                auto& arr = (const DynArrayType&)(*type);
-                auto element = arr.elementType;
-                auto d = (char*)arr.Get(data, 0);
-                auto n = arr.Num(data);
-                auto size = element->Size();
+                auto& arr     = (const DynArrayType&)(*type);
+                auto  element = arr.elementType;
+                auto  d       = (char*)arr.Get(data, 0);
+                auto  n       = arr.Num(data);
+                auto  size    = element->Size();
                 ctx.BeginArray(n);
                 for (int i = 0; i < n; ++i)
                     serializeImpl(&ctx, d + i * size, element);
@@ -121,12 +121,12 @@ struct TValueSerializePolicy : ValueSerializePolicy {
                 break;
             }
             case SKR_TYPE_CATEGORY_ARRV: {
-                auto& arr = (const ArrayViewType&)(*type);
+                auto& arr     = (const ArrayViewType&)(*type);
                 auto& element = arr.elementType;
-                auto size = element->Size();
-                auto v = *(skr::span<char>*)data;
-                auto n = v.size();
-                auto d = v.data();
+                auto  size    = element->Size();
+                auto  v       = *(skr::span<char>*)data;
+                auto  n       = v.size();
+                auto  d       = v.data();
                 ctx.BeginArray(n);
                 for (int i = 0; i < n; ++i)
                     serializeImpl(&ctx, d + i * size, element);
@@ -143,7 +143,7 @@ struct TValueSerializePolicy : ValueSerializePolicy {
                 {
                     ctx.BeginObject(obj);
                     auto d = (char*)data;
-                    for (const auto& field : obj->fields)
+                    for (const auto& field : obj->GetFields())
                     {
                         if (ctx.BeginField(field))
                         {
@@ -160,7 +160,7 @@ struct TValueSerializePolicy : ValueSerializePolicy {
             }
             case SKR_TYPE_CATEGORY_REF: {
                 void* address;
-                auto ref = ((const ReferenceType*)type);
+                auto  ref = ((const ReferenceType*)type);
                 switch (ref->ownership)
                 {
                     case ReferenceType::Observed:

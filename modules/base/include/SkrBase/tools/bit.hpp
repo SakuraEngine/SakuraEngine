@@ -1,11 +1,10 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
+#include "SkrBase/config.h"
 #include <cstdint>
 #include <limits>
 #include <type_traits>
 
-// TODO. 使用 built-in 指令优化，Fuck CPP
-// TODO. 抄 EASTL 的 Fallback，更快一点
+// TODO. 使用 EASTL 的实现
 namespace skr
 {
 // countLZero & countRZero
@@ -72,7 +71,7 @@ template <typename T>
 SKR_INLINE T countr_zero_fallback(T v)
 {
     auto digits = std::numeric_limits<T>::digits;
-    return digits - countLZero(static_cast<T>(static_cast<T>(~v) & static_cast<T>(v - 1)));
+    return digits - countl_zero(static_cast<T>(static_cast<T>(~v) & static_cast<T>(v - 1)));
 }
 
 template <typename T>

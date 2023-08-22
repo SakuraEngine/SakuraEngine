@@ -17,7 +17,7 @@
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/hashmap.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 static struct SkrMeshResourceUtil
 {

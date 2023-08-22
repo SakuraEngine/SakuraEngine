@@ -90,7 +90,7 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
             break;
 
         {
-            ZoneScopedN("DirectStorageDecompress");
+            SkrZoneScopedN("DirectStorageDecompress");
             for (uint32_t i = 0; i < numRequests; ++i)
             {
                 auto& future = service->decompress_futures.emplace_back();
@@ -126,7 +126,7 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
             }
         }
         {
-            ZoneScopedN("CleanupFutures");
+            SkrZoneScopedN("CleanupFutures");
             auto& arr = service->decompress_futures;
             for (auto& future : arr)
             {
@@ -152,7 +152,7 @@ static void CALLBACK __decompressThreadPoolTask_DirectStorage(
     TP_WAIT* wait,
     TP_WAIT_RESULT)
 {
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     auto thread_id = skr_current_thread_id();
     const auto indexed_name = skr::format(u8"DirectStorageDecompressThread(Pooled)-{}", thread_id);
     tracy::SetThreadName(indexed_name.c_str());
@@ -161,7 +161,7 @@ static void CALLBACK __decompressThreadPoolTask_DirectStorage(
     auto service = (skr_win_dstorage_decompress_service_id)data;
     auto oldPriority = GetThreadPriority(GetCurrentThread());
     {
-        ZoneScopedN("DirectStorageDecompress");
+        SkrZoneScopedN("DirectStorageDecompress");
         SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
         __decompressTask_DirectStorage(service);
@@ -177,14 +177,14 @@ static void CALLBACK __decompressThreadPoolTask_DirectStorage(
 
 static void CALLBACK __decompressThreadTask_DirectStorage(void* data)
 {
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     tracy::SetThreadName("DirectStorageDecompressThread");
 #endif
     auto service = (skr_win_dstorage_decompress_service_id)data;
     while (skr_atomicu32_load_acquire(&service->thread_running))
     {
         {
-            ZoneScopedNC("DirectStorageDecompressWait", tracy::Color::Gray43);
+            SkrZoneScopedNC("DirectStorageDecompressWait", tracy::Color::Gray43);
             WaitForSingleObject(service->event_handle, INFINITE);
         }
         __decompressTask_DirectStorage(service);

@@ -8,7 +8,7 @@
 #include "SkrRT/math/vector.h"
 #include "SkrRT/math/quat.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 void MPRenderWorld::Initialize(MPClientWorld* gameWorld)
 {
@@ -73,7 +73,7 @@ dual::type_builder_t MPRenderWorld::GetRenderEntityType(skr_resource_handle_t pr
 
 void MPRenderWorld::UpdateStructuralChanges()
 {
-    ZoneScopedN("MPRenderWorld::UpdateStructuralChanges");
+    SkrZoneScopedN("MPRenderWorld::UpdateStructuralChanges");
     gameToRenderEntityMap.clear();
     toDeleteRenderEntities.clear();
     newGameEntities.clear();
@@ -182,7 +182,7 @@ void MPRenderWorld::UpdateStructuralChanges()
 
 void MPRenderWorld::Update()
 {
-    ZoneScopedN("RenderWorld::Update");
+    SkrZoneScopedN("RenderWorld::Update");
     deltaTime = skr_hires_timer_get_seconds(&renderTimer, true);
     //camera follow entity with CController
     {

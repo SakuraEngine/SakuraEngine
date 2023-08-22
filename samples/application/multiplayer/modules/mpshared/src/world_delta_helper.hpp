@@ -4,7 +4,7 @@
 #include "MPShared/world_delta.h"
 #include "MPShared/components.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 template<class T, auto F, class H = void, bool bitpacking = false>
 skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWorldDeltaBuildContext ctx, MPWorldDeltaViewBuilder& builder)
@@ -21,7 +21,7 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
     static uint32_t historyComponentSize = withHistory ? dualT_get_desc(historyComponent)->size : 0;skr::task::event_t result{nullptr};
     dual::schedual_custom(query, [=, &comps, &builder](dual::task_context_t tctx)
     {
-        ZoneScopedN("BuildDelta");
+        SkrZoneScopedN("BuildDelta");
         if(comps.entities.empty())
             return;
         
