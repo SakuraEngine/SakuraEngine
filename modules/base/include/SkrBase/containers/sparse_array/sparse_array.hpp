@@ -2,9 +2,10 @@
 #include "SkrBase/config.h"
 #include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/memory/memory_ops.hpp"
+#include "sparse_array_def.hpp"
+#include "sparse_array_iterator.hpp"
 #include "SkrBase/algo/intro_sort.hpp"
 #include "SkrBase/algo/merge_sort.hpp"
-#include "sparse_array_iterator.hpp"
 
 // SparseArray def
 // TODO. auto compact_top when remove items
