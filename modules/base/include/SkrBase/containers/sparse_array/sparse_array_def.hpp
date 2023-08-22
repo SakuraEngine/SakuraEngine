@@ -33,7 +33,7 @@ using SparseArrayDataRef = ArrayDataRef<T, TS>;
 namespace std
 {
 template <typename T, typename TS>
-void swap(skr::SparseArrayData<T, TS>& a, skr::SparseArrayData<T, TS>& b)
+SKR_INLINE void swap(::skr::SparseArrayData<T, TS>& a, ::skr::SparseArrayData<T, TS>& b)
 {
     ::std::swap(a._sparse_array_data, b._sparse_array_data);
 }

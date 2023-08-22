@@ -61,7 +61,7 @@ struct KeyTraits<KVPair<K, V>> {
 namespace std
 {
 template <typename K, typename V>
-void swap(::skr::KVPair<K, V>& a, ::skr::KVPair<K, V>& b)
+SKR_INLINE void swap(::skr::KVPair<K, V>& a, ::skr::KVPair<K, V>& b)
 {
     ::std::swap(a.key, b.key);
     ::std::swap(a.value, b.value);

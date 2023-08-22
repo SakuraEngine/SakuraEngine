@@ -1,9 +1,10 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/containers/fwd_container.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array.hpp"
+#include "SkrBase/containers/sparse_hash_set/sparse_hash_set_def.hpp"
 #include "sparse_hash_set_iterator.hpp"
 #include "SkrBase/containers/key_traits.hpp"
+#include "SkrBase/containers/sparse_array/sparse_array.hpp"
 
 // SparseHashSet def
 // set 在 add/emplace 时候从不覆盖既存元素，主要是 key 是元素的某个 Field 的情况比较少见，出现这种情况时，覆盖行为也需要用户自己关注，不应该 by default
