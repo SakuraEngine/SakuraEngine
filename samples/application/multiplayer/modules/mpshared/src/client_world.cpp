@@ -8,7 +8,7 @@
 #include "steam/isteamnetworkingsockets.h"
 #include "lz4.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 MPClientWorld::MPClientWorld()
 {
@@ -56,11 +56,11 @@ void MPClientWorld::Shutdown()
 
 void MPClientWorld::ReceiveWorldDelta(const void* data, size_t dataLength)
 {
-    ZoneScopedN("MPClientWorld::ReceiveWorldDelta");
+    SkrZoneScopedN("MPClientWorld::ReceiveWorldDelta");
     skr::span<uint8_t> span;
     skr::vector<uint8_t> decompressedData;
     {
-        ZoneScopedN("Decompress");
+        SkrZoneScopedN("Decompress");
         bandwidthCounter.AddRecord(dataLength);
         uint64_t size = *(uint64_t*)data;
         bandwidthBeforeCompressCounter.AddRecord(size);
@@ -130,7 +130,7 @@ void MPClientWorld::DestroyEntity(dual_entity_t entity)
 
 void MPClientWorld::ApplyWorldDelta()
 {
-    ZoneScopedN("MPClientWorld::ApplyWorldDelta");
+    SkrZoneScopedN("MPClientWorld::ApplyWorldDelta");
     entity_map_t map;
     if(predictionEnabled)
     {
@@ -208,7 +208,7 @@ void ApplyComponent(void* dst, const void* src, dual_type_index_t type, uint32_t
 
 void MPClientWorld::Snapshot()
 {
-    ZoneScopedN("MPClientWorld::Snapshot");
+    SkrZoneScopedN("MPClientWorld::Snapshot");
     if(snapshotStorage)
         dualS_reset(snapshotStorage);
     else
@@ -285,7 +285,7 @@ void MPClientWorld::Snapshot()
 
 void MPClientWorld::RollBack()
 {
-    ZoneScopedN("MPClientWorld::RollBack");
+    SkrZoneScopedN("MPClientWorld::RollBack");
     if(snapshotStorage)
     {
         dual_type_index_t snapshotT = dual_id_of<CSnapshot>::get();
@@ -378,7 +378,7 @@ double MPClientWorld::GetCompressRatio()
 
 void MPClientWorld::RollForward()
 {
-    ZoneScopedN("MPClientWorld::RollForward");
+    SkrZoneScopedN("MPClientWorld::RollForward");
     if(predictionEnabled)
     {
         while (currentFrame < predictedFrame)
@@ -413,7 +413,7 @@ void MPClientWorld::SetPredictionEnabled(bool enabled)
 
 bool MPClientWorld::Update()
 {
-    ZoneScopedN("MPClientWorld::Update");
+    SkrZoneScopedN("MPClientWorld::Update");
     bool updated = false;
     auto currentTime = skr_hires_timer_get_seconds(&timer, false);
     double deltaTime = currentTime - lastTime;

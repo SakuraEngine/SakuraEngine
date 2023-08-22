@@ -29,14 +29,13 @@ namespace skr::type
     }
 %endif
     static skr_type_t* type_of_${record.id};
-    const skr_type_t* type_of<${record.name}>::get()
+    void type_register<${record.name}>::instantiate_type(RecordType* type)
     {
         constexpr skr_guid_t guid = {${db.guid_constant(record)}};
         if(type_of_${record.id} == nullptr)
         {
             using namespace skr::type;
-            auto registry = GetTypeRegistry();
-            type_of_${record.id} = registry->register_record(guid);
+            type_of_${record.id} = type;
             size_t size = sizeof(${record.name});
             size_t align = alignof(${record.name});
             skr::string_view name = u8"${record.name}";
@@ -57,8 +56,8 @@ namespace skr::type
         %endif
                 GetSerialize<${record.name}>(),
                 GetDeserialize<${record.name}>(),
-                GetTextSerialize<${record.name}>(),
-                GetTextDeserialize<${record.name}>(),
+                GetJsonSerialize<${record.name}>(),
+                GetJsonDeserialize<${record.name}>(),
             };
         <%
             fields = [(name, field) for name, field in vars(record.fields).items() if not hasattr(field.attrs, "no-rtti")]
@@ -125,9 +124,8 @@ namespace skr::type
         %else:
             static skr::span<skr_method_t> methods;
         %endif
-            new (type_of_${record.id}) RecordType(size, align, name, guid, skr::is_object_v<${record.name}>, base, nativeMethods, fields, methods);
+            type->initialize(size, align, name, skr::is_object_v<${record.name}>, base, nativeMethods, fields, methods);
         }
-        return type_of_${record.id};
     }
 }
 static struct RegisterRTTI${record.id}Helper
@@ -145,23 +143,22 @@ static struct RegisterRTTI${record.id}Helper
 namespace skr::type
 {
     static skr_type_t* type_of_${enum.id};
-    const skr_type_t* type_of<${enum.name}>::get()
+    void type_register<${enum.name}>::instantiate_type(EnumType* type)
     {
         constexpr skr_guid_t guid = {${db.guid_constant(enum)}};
         if(type_of_${enum.id} == nullptr)
         {
             using namespace skr::type;
-            auto registry = GetTypeRegistry();
-            type_of_${enum.id} = registry->register_enum(guid);
+            type_of_${enum.id} = type;
             static EnumType::Enumerator enumerators[] = 
             {
             %for name, enumerator in vars(enum.values).items():
                 {u8"${db.short_name(name)}", ${enumerator.value}},
             %endfor
             };
-            new (type_of_${enum.id}) EnumType{
+            type->initialize(
                 type_of<std::underlying_type_t<${enum.name}>>::get(),
-                u8"${enum.name}", guid,
+                u8"${enum.name}",
                 +[](void* self, skr::string_view enumStr)
                 {
                     auto& This = *((${enum.name}*)self);
@@ -187,9 +184,8 @@ namespace skr::type
                     return skr::string(u8"${enum.name}::INVALID_ENUMERATOR");
                 },
                 enumerators
-            };
+            );
         }
-        return type_of_${enum.id};
     }
 }
 static struct RegisterRTTI${enum.id}Helper

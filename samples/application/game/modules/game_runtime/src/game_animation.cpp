@@ -5,7 +5,7 @@
 #include "SkrTweak/module.h"
 #include "SkrInspector/inspect_value.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace game
 {
@@ -29,7 +29,7 @@ namespace game
         sampling_job.ratio = newTime / anim->animation.duration();
         sampling_job.output = ozz::span{state->local_transforms.data(), state->local_transforms.size()};
         {
-            ZoneScopedN("RunSamplingJob");
+            SkrZoneScopedN("RunSamplingJob");
             if (!sampling_job.Run()) {
                 SKR_LOG_ERROR(u8"Failed to sample animation %s.", anim->animation.name());
                 return;
@@ -43,7 +43,7 @@ namespace game
         output->joint_matrices.resize(skeleton->skeleton.num_joints());
         ltm_job.output = ozz::span{output->joint_matrices.data(), output->joint_matrices.size()};
         {
-            ZoneScopedN("RunLocalToModelJob");
+            SkrZoneScopedN("RunLocalToModelJob");
             if (!ltm_job.Run()) {
                 SKR_LOG_ERROR(u8"Failed to convert local space to model space %s.", anim->animation.name());
                 return;

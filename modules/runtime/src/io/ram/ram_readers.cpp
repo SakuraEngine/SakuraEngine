@@ -41,7 +41,7 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
     if (auto pFile = io_component<FileComponent>(request.get()))
     {
         {
-            ZoneScopedN("dispatch_read");
+            SkrZoneScopedN("dispatch_read");
             if (service->runner.try_cancel(priority, rq))
             {
                 // cancel...
@@ -59,7 +59,7 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
             {
                 if (pStatus->getStatus() == SKR_IO_STAGE_RESOLVING)
                 {
-                    ZoneScopedN("read_request");
+                    SkrZoneScopedN("read_request");
 
                     pStatus->setStatus(SKR_IO_STAGE_LOADING);
                     // SKR_LOG_DEBUG(u8"dispatch read request: %s", rq->path.c_str());
@@ -79,7 +79,7 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
             }
         }
         {
-            ZoneScopedN("dispatch_close");
+            SkrZoneScopedN("dispatch_close");
             if (pFile->file)
             {
                 // SKR_LOG_DEBUG(u8"dispatch close request: %s", rq->path.c_str());
@@ -103,7 +103,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
         auto launcher = VFSReaderFutureLauncher(job_queue);
         loaded_futures[priority].emplace_back(
             launcher.async([this, rq, priority](){
-                ZoneScopedN("VFSReadTask");
+                SkrZoneScopedN("VFSReadTask");
                 dispatchFunction(priority, rq);
                 return true;
             })
@@ -123,7 +123,7 @@ bool VFSRAMReader::poll_processed_request(SkrAsyncServicePriority priority, IORe
 
 void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    ZoneScopedN("VFSRAMReader::recycle");
+    SkrZoneScopedN("VFSRAMReader::recycle");
 
     auto& arr = loaded_futures[priority];
     for (auto& future : arr)
@@ -219,8 +219,8 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
     auto instance = skr_get_dstorage_instnace();
     IOBatchId batch;
     skr::SObjectPtr<DStorageEvent> event;
-#ifdef TRACY_ENABLE
-    TracyCZoneCtx Zone;
+#ifdef SKR_PROFILE_ENABLE
+    SkrCZoneCtx Zone;
     bool bZoneSet = false;
 #endif
     while (fetched_batches[priority].try_dequeue(batch))
@@ -228,8 +228,8 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
         auto& eref = event;
         if (!eref)
         {
-#ifdef TRACY_ENABLE
-            TracyCZoneN(z, "DStorage::EnqueueAndSubmit", 1);
+#ifdef SKR_PROFILE_ENABLE
+            SkrCZoneN(z, "DStorage::EnqueueAndSubmit", 1);
             Zone = z;
             bZoneSet = true;
 #endif
@@ -251,7 +251,7 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
                 {
                     if (pStatus->getStatus() == SKR_IO_STAGE_RESOLVING)
                     {
-                        ZoneScopedN("DStorage::ReadRequest");
+                        SkrZoneScopedN("DStorage::ReadRequest");
                         SKR_ASSERT(pFile->dfile);
                         pStatus->setStatus(SKR_IO_STAGE_LOADING);
                         uint64_t dst_offset = 0u;
@@ -291,15 +291,15 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
             submitted[priority].emplace_back(event);
         }
     }
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     if (bZoneSet)
-        TracyCZoneEnd(Zone);
+        SkrCZoneEnd(Zone);
 #endif
 }
 
 void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    ZoneScopedN("DStorage::PollSubmitted");
+    SkrZoneScopedN("DStorage::PollSubmitted");
 
     auto instance = skr_get_dstorage_instnace();
     for (auto& e : submitted[priority])

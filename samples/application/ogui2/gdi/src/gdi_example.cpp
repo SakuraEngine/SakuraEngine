@@ -204,7 +204,7 @@ struct gdi_example_application : public gdi_application_t {
     skr::gui::IGDIElement* debug_element = nullptr;
 };
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 int main(int argc, char* argv[])
 {
@@ -234,12 +234,12 @@ int main(int argc, char* argv[])
         FrameMark;
         float delta = 1.f / 60.f;
         {
-            ZoneScopedN("SystemEvents");
+            SkrZoneScopedN("SystemEvents");
             handler->pump_messages(delta);
             handler->process_messages(delta);
         }
         {
-            ZoneScopedN("GDI Draw & Render");
+            SkrZoneScopedN("GDI Draw & Render");
             App.render();
         }
     }

@@ -68,7 +68,7 @@ IVRAMService* IVRAMService::create(const VRAMServiceDescriptor* desc) SKR_NOEXCE
 
 void IVRAMService::destroy(IVRAMService* service) SKR_NOEXCEPT
 {
-    ZoneScopedN("VRAMService::destroy");
+    SkrZoneScopedN("VRAMService::destroy");
 
     auto S = static_cast<VRAMService*>(service);
     S->runner.destroy();
@@ -140,7 +140,7 @@ void VRAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     runner.drain(priority);    
     {
-        ZoneScopedN("VRAMService::server_drain");
+        SkrZoneScopedN("VRAMService::server_drain");
         auto predicate = [this, priority] {
             return !runner.processing_count(priority);
         };

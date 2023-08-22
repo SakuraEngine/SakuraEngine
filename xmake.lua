@@ -40,8 +40,7 @@ end
 target("SkrRoot")
     set_kind("headeronly")
     -- core deps
-    add_deps("SkrCompileFlags", {public = true})
-    add_deps("tracyclient", {public = true})
+    add_deps("SkrProfile", {public = true})
     -- add OpenString defines
     add_defines("OPEN_STRING_API=SKR_RUNTIME_API", {public = true})
     -- generate codegen fences

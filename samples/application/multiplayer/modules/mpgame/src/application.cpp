@@ -31,7 +31,7 @@
 #include <SDL2/SDL_syswm.h>
 #include "cgpu/api.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 #ifdef SKR_OS_WINDOWS
     #include <shellscalingapi.h>
@@ -120,7 +120,7 @@ static void read_bytes(skr_vfs_t* vfs, const char8_t* file_name, uint8_t** bytes
 
 int MPApplication::InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
 {
-    ZoneScopedN("InitializeImgui");
+    SkrZoneScopedN("InitializeImgui");
     auto render_device = skr_get_default_render_device();
     const auto device = renderer.renderGraph->get_backend_device();
     const auto backend = device->adapter->instance->backend;
@@ -268,7 +268,7 @@ int InitializeSockets()
 
 int MPApplication::Initialize()
 {
-    ZoneScopedN("MPApplication::Initialize");
+    SkrZoneScopedN("MPApplication::Initialize");
     skr::input::Input::Initialize();
 
     if (auto result = CreateVFS(); result != 0)
@@ -328,7 +328,7 @@ void MPApplication::Shutdown()
 
 void MPApplication::Render()
 {
-    ZoneScopedN("MPApplication::Render");
+    SkrZoneScopedN("MPApplication::Render");
     uint32_t backbuffer_index;
     {
         // acquire frame
@@ -373,7 +373,7 @@ void MPApplication::Render()
         auto viewport_manager = renderer.renderer->get_viewport_manager();
         skr_resolve_cameras_to_viewport(viewport_manager, world.storage);
         {
-            ZoneScopedN("RegisterPasses");
+            SkrZoneScopedN("RegisterPasses");
             register_render_effects(renderer.renderer, renderer.renderGraph);
         }
         skr_renderer_render_frame(renderer.renderer, renderer.renderGraph);
@@ -430,7 +430,7 @@ bool MPApplication::ProcessEvent()
 
 void MPApplication::Update()
 {
-    ZoneScopedN("MPApplication::Update");
+    SkrZoneScopedN("MPApplication::Update");
     skr::input::Input::GetInstance()->Tick();
     auto currentTime = skr_hires_timer_get_seconds(&timer, false);
     deltaTime = currentTime - lastUpdateTime;
@@ -662,7 +662,7 @@ void MPApplication::EnterGameState()
 
 void MPApplication::UpdateEnteringGame()
 {
-    ZoneScopedN("UpdateEnteringGame");
+    SkrZoneScopedN("UpdateEnteringGame");
     if(signaling)
         signaling->Poll();
     SteamNetworkingSockets()->RunCallbacks();
@@ -767,7 +767,7 @@ void MPApplication::SetupInput(skr::input::InputSystem &inputSystem)
 
 void MPApplication::UpdateGame()
 {
-    ZoneScopedN("UpdateGame");
+    SkrZoneScopedN("UpdateGame");
     inputSystem->update(deltaTime);
     
     if(signaling)
@@ -812,7 +812,7 @@ void MPApplication::UpdateGame()
     renderWorld.Update();
 
     {
-        ZoneScopedN("ImGui");
+        SkrZoneScopedN("ImGui");
         ImGui::Begin("Networking Statics");
         SteamNetConnectionRealTimeStatus_t status;
         SteamNetworkingSockets()->GetConnectionRealTimeStatus(world.serverConnection, &status, 0, nullptr);

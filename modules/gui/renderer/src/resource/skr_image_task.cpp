@@ -1,7 +1,7 @@
 #include "SkrGuiRenderer/resource/skr_image_task.hpp"
 #include "SkrGuiRenderer/resource/skr_resource_device.hpp"
 #include "SkrImageCoder/skr_image_coder.h"
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 
@@ -35,7 +35,7 @@ ECGPUFormat _cgpu_format_from_image_coder_format(EImageCoderFormat format, EImag
 
 skr::BlobId _image_coder_decode_image(const uint8_t* bytes, uint64_t size, uint32_t& out_height, uint32_t& out_width, uint32_t& out_depth, ECGPUFormat& out_format)
 {
-    ZoneScopedN("DirectStoragePNGDecompressor");
+    SkrZoneScopedN("DirectStoragePNGDecompressor");
     EImageCoderFormat format  = skr_image_coder_detect_format((const uint8_t*)bytes, size);
     auto              decoder = skr::IImageDecoder::Create(format);
     if (decoder->initialize((const uint8_t*)bytes, size))
@@ -173,7 +173,7 @@ void SkrImageUploadTask::from_image(const SkrImageData& image)
 {
     _image_data = image;
 
-    ZoneScopedN("CreateGUITexture(VRAMService)");
+    SkrZoneScopedN("CreateGUITexture(VRAMService)");
 
     auto vram_service = _render_device->vram_service();
     auto request = vram_service->open_texture_request();

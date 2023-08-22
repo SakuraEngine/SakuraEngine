@@ -56,7 +56,7 @@ struct STypeRegistryImpl final : public STypeRegistry {
         return nullptr;
     }
     
-    RecordType* register_record(skr_guid_t tid) final
+    RecordType* register_record(skr_guid_t tid, void(*initializer)(RecordType*)) final
     {
         auto iter = types.find(tid);
         auto iter2 = outdatedTypesMap.find(tid);
@@ -72,15 +72,14 @@ struct STypeRegistryImpl final : public STypeRegistry {
         }
         else 
         {
-            auto record = SkrNew<RecordType>();
-            record->guid = tid;
-            record->type = SKR_TYPE_CATEGORY_OBJ;
-            types.insert({ tid, record });
-            return record;
+            auto recordType = SkrNew<RecordType>(tid);
+            types.insert({ tid, recordType });
+            initializer(recordType);
+            return recordType;
         }
     }
 
-    EnumType* register_enum(skr_guid_t tid) final
+    EnumType* register_enum(skr_guid_t tid, void(*initializer)(EnumType*)) final
     {
         auto iter = types.find(tid);
         auto iter2 = outdatedTypesMap.find(tid);
@@ -96,10 +95,9 @@ struct STypeRegistryImpl final : public STypeRegistry {
         }
         else 
         {
-            auto enumType = SkrNew<EnumType>();
-            enumType->guid = tid;
-            enumType->type = SKR_TYPE_CATEGORY_ENUM;
+            auto enumType = SkrNew<EnumType>(tid);
             types.insert({ tid, enumType });
+            initializer(enumType);
             return enumType;
         }
     }
@@ -127,6 +125,21 @@ SKR_RUNTIME_API STypeRegistry* GetTypeRegistry()
     static STypeRegistryImpl registry = {};
     return &registry;
 }
+
+SKR_RUNTIME_API skr_type_t* InitializeAndAddToRegistry(skr_guid_t tid, void(*initializer)(RecordType*))
+{
+    auto registry = GetTypeRegistry();
+    auto type = registry->register_record(tid, initializer);
+    return type;
+}
+
+SKR_RUNTIME_API skr_type_t* InitializeAndAddToRegistry(skr_guid_t tid, void(*initializer)(EnumType*))
+{
+    auto registry = GetTypeRegistry();
+    auto type = registry->register_enum(tid, initializer);
+    return type;
+}
+
 } // namespace skr::type
 
 skr_type_t::skr_type_t(skr_type_category_t type)
@@ -178,9 +191,9 @@ uint64_t skr_type_t::Size() const
         case SKR_TYPE_CATEGORY_ARRV:
             return sizeof(skr::span<char8_t>);
         case SKR_TYPE_CATEGORY_OBJ:
-            return ((RecordType*)this)->size;
+            return ((RecordType*)this)->GetSize();
         case SKR_TYPE_CATEGORY_ENUM:
-            return ((EnumType*)this)->underlyingType->Size();
+            return ((EnumType*)this)->GetUnderlyingType()->Size();
         case SKR_TYPE_CATEGORY_REF: {
             switch (((ReferenceType*)this)->ownership)
             {
@@ -219,9 +232,9 @@ uint64_t skr_type_t::Align() const
         case SKR_TYPE_CATEGORY_ARRV:
             return alignof(skr::span<char8_t>);
         case SKR_TYPE_CATEGORY_OBJ:
-            return ((RecordType*)this)->align;
+            return ((RecordType*)this)->GetAlign();
         case SKR_TYPE_CATEGORY_ENUM:
-            return ((EnumType*)this)->underlyingType->Align();
+            return ((EnumType*)this)->GetUnderlyingType()->Align();
         case SKR_TYPE_CATEGORY_REF: {
             switch (((ReferenceType*)this)->ownership)
             {
@@ -253,7 +266,7 @@ skr_guid_t skr_type_t::Id() const
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
         case SKR_TYPE_CATEGORY_OBJ:
-            return ((RecordType*)this)->guid;
+            return ((RecordType*)this)->GetGuid();
         default:
             SKR_UNREACHABLE_CODE();
             break;
@@ -293,9 +306,9 @@ const char8_t* skr_type_t::Name() const
             return arr.name.u8_str();
         }
         case SKR_TYPE_CATEGORY_OBJ:
-            return ((RecordType*)this)->name.raw().data();
+            return ((RecordType*)this)->GetName().raw().data();
         case SKR_TYPE_CATEGORY_ENUM:
-            return ((EnumType*)this)->name.raw().data();
+            return ((EnumType*)this)->GetName().raw().data();
         case SKR_TYPE_CATEGORY_REF: {
             auto& ref = (ReferenceType&)(*this);
             if (!ref.name.is_empty())
@@ -559,8 +572,8 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                     return true;
                 else if (ptr.pointee->type == SKR_TYPE_CATEGORY_ENUM || sptr.pointee->type == SKR_TYPE_CATEGORY_ENUM)
                 {
-                    auto type1 = ptr.pointee->type == SKR_TYPE_CATEGORY_ENUM ? ((EnumType*)ptr.pointee)->underlyingType : ptr.pointee;
-                    auto type2 = sptr.pointee->type == SKR_TYPE_CATEGORY_ENUM ? ((EnumType*)sptr.pointee)->underlyingType : sptr.pointee;
+                    auto type1 = ptr.pointee->type == SKR_TYPE_CATEGORY_ENUM ? ((EnumType*)ptr.pointee)->GetUnderlyingType() : ptr.pointee;
+                    auto type2 = sptr.pointee->type == SKR_TYPE_CATEGORY_ENUM ? ((EnumType*)sptr.pointee)->GetUnderlyingType() : sptr.pointee;
                     return type1->type == type2->type;
                 }
                 else if (ptr.pointee->type == SKR_TYPE_CATEGORY_OBJ && sptr.pointee->type == SKR_TYPE_CATEGORY_OBJ)
@@ -586,7 +599,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                     if (ptr.pointee->Same(sptr.pointee))
                         return true;
                     auto& sobj = (const RecordType&)(*sptr.pointee);
-                    if (!(!obs && ptr.object && sobj.object))
+                    if (!(!obs && ptr.object && sobj.IsObject()))
                         return false;
                     auto& obj = (const RecordType&)(*ptr.pointee);
                     if (obj.IsBaseOf(sobj))
@@ -671,7 +684,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
 #define ENUM_CONVERT                                   \
     case SKR_TYPE_CATEGORY_ENUM: {                     \
         auto& enm = (const EnumType&)(*srcType);       \
-        Convert(dst, src, enm.underlyingType, policy); \
+        Convert(dst, src, enm.GetUnderlyingType(), policy); \
     }
 
     switch (type)
@@ -950,7 +963,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             else if (srcType->type == SKR_TYPE_CATEGORY_STRV)
                 enm.FromString(dst, *(skr::string_view*)src);
             else
-                enm.underlyingType->Convert(dst, src, srcType);
+                enm.GetUnderlyingType()->Convert(dst, src, srcType);
             break;
         }
         case SKR_TYPE_CATEGORY_REF: {
@@ -1112,7 +1125,7 @@ void skr_type_t::Construct(void* dst, skr::type::Value* args, uint64_t nargs) co
         break;
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            obj.nativeMethods.ctor(dst, args, nargs);
+            obj.GetObjectMethods().ctor(dst, args, nargs);
         }
         break;
         case SKR_TYPE_CATEGORY_VARIANT: {
@@ -1144,7 +1157,7 @@ uint64_t skr_type_t::Hash(const void* dst, uint64_t base) const
 #undef TRIVAL_TYPE_IMPL
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
-            enm.underlyingType->Hash(dst, base);
+            enm.GetUnderlyingType()->Hash(dst, base);
             return 0;
         }
         case SKR_TYPE_CATEGORY_ARR: {
@@ -1179,8 +1192,8 @@ uint64_t skr_type_t::Hash(const void* dst, uint64_t base) const
         }
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            if (obj.nativeMethods.Hash)
-                return obj.nativeMethods.Hash(dst, base);
+            if (auto hash = obj.GetObjectMethods().Hash)
+                return hash(dst, base);
             else
                 return 0;
         }
@@ -1223,8 +1236,8 @@ void skr_type_t::Destruct(void* address) const
 #undef TRIVAL_TYPE_IMPL
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = ((const RecordType&)(*this));
-            if (obj.nativeMethods.dtor)
-                obj.nativeMethods.dtor(address);
+            if (auto dtor = obj.GetObjectMethods().dtor)
+                dtor(address);
             break;
         }
         case SKR_TYPE_CATEGORY_HANDLE: {
@@ -1334,12 +1347,12 @@ void skr_type_t::Copy(void* dst, const void* src) const
             break;
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            obj.nativeMethods.copy(dst, src);
+            obj.GetObjectMethods().copy(dst, src);
             break;
         }
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
-            enm.underlyingType->Copy(dst, src);
+            enm.GetUnderlyingType()->Copy(dst, src);
             break;
         }
         case SKR_TYPE_CATEGORY_REF: {
@@ -1412,12 +1425,12 @@ void skr_type_t::Move(void* dst, void* src) const
             break;
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            obj.nativeMethods.move(dst, src);
+            obj.GetObjectMethods().move(dst, src);
             break;
         }
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
-            switch (enm.underlyingType->type)
+            switch (enm.GetUnderlyingType()->type)
             {
                 case SKR_TYPE_CATEGORY_I32:
                     MoveImpl<int32_t>(dst, src);
@@ -1558,12 +1571,12 @@ int skr_type_t::Serialize(const void* dst, skr_binary_writer_t* writer) const
         }
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            return obj.nativeMethods.Serialize(dst, writer);
+            return obj.GetObjectMethods().Serialize(dst, writer);
             break;
         }
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
-            return enm.underlyingType->Serialize(dst, writer);
+            return enm.GetUnderlyingType()->Serialize(dst, writer);
             break;
         }
         case SKR_TYPE_CATEGORY_REF: {
@@ -1643,12 +1656,12 @@ void skr_type_t::SerializeText(const void* dst, skr_json_writer_t* writer) const
         }
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            obj.nativeMethods.SerializeText(dst, writer);
+            obj.GetObjectMethods().SerializeText(dst, writer);
             break;
         }
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
-            enm.underlyingType->SerializeText(dst, writer);
+            enm.GetUnderlyingType()->SerializeText(dst, writer);
             break;
         }
         case SKR_TYPE_CATEGORY_REF: {
@@ -1732,12 +1745,12 @@ int skr_type_t::Deserialize(void* dst, skr_binary_reader_t* reader) const
         }
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            return obj.nativeMethods.Deserialize(dst, reader);
+            return obj.GetObjectMethods().Deserialize(dst, reader);
             break;
         }
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
-            return enm.underlyingType->Deserialize(dst, reader);
+            return enm.GetUnderlyingType()->Deserialize(dst, reader);
             break;
         }
         case SKR_TYPE_CATEGORY_REF: {
@@ -1853,11 +1866,11 @@ skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&
             break;
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            return obj.nativeMethods.DeserializeText(dst, std::move(reader));
+            return obj.GetObjectMethods().DeserializeText(dst, std::move(reader));
         }
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
-            return enm.underlyingType->DeserializeText(dst, std::move(reader));
+            return enm.GetUnderlyingType()->DeserializeText(dst, std::move(reader));
         }
         case SKR_TYPE_CATEGORY_REF: {
             auto& ref = (*(ReferenceType*)this);

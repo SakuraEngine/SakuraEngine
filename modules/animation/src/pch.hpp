@@ -14,4 +14,4 @@
 #include "SkrAnim/ozz/base/maths/simd_math.h" // IWYU pragma: export
 */
 
-#include "tracy/Tracy.hpp" // IWYU pragma: export
+#include "SkrProfile/profile.h" // IWYU pragma: export

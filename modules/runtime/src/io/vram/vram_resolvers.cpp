@@ -10,7 +10,7 @@ namespace io {
 
 void AllocateVRAMResourceResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
-    ZoneScopedNC("VRAMResource::Allocate", tracy::Color::BlueViolet);
+    SkrZoneScopedNC("VRAMResource::Allocate", tracy::Color::BlueViolet);
     // try open dstorage files first
     if (auto pMem = io_component<MemorySrcComponent>(request.get()); !pMem->data)
     {

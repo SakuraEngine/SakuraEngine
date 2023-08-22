@@ -270,7 +270,7 @@ class Scheduler {
     // Used for debugging.
     static const char* toString(State state);
 
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     skr::string name;
 #endif
     Allocator::unique_ptr<OSFiber> const impl;

@@ -7,7 +7,7 @@ namespace skd::asset
 {
 bool SSkinCooker::Cook(SCookContext* ctx)
 {
-    ZoneScopedNS("SSkinCooker::Cook", 4);
+    SkrZoneScopedNS("SSkinCooker::Cook", 4);
 
     cgltf_data* rawMesh = ctx->Import<cgltf_data>();
     if (!rawMesh)

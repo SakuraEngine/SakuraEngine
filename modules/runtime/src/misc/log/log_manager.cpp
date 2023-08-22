@@ -2,7 +2,7 @@
 
 #include <EASTL/fixed_hash_set.h>
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr {
 namespace log {
@@ -149,7 +149,7 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatte
 {
     eastl::fixed_hash_set<skr_guid_t, 4, 5, true, skr::guid::hash> patterns_;
     {
-        ZoneScopedN("PatternAll");
+        SkrZoneScopedN("PatternAll");
         for (auto&& [id, sink] : sinks_)
         {
             auto pattern_id = sink->get_pattern();
@@ -159,7 +159,7 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatte
             
             if (auto p = LogManager::QueryPattern(pattern_id))
             {
-                ZoneScopedN("LogPattern::Pattern");
+                SkrZoneScopedN("LogPattern::Pattern");
 
                 [[maybe_unused]] 
                 auto& _ = p->pattern(event, formatted_message);
@@ -173,14 +173,14 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatte
     }
 
     {
-        ZoneScopedN("SinkAll");
+        SkrZoneScopedN("SinkAll");
         for (auto&& [id, sink] : sinks_)
         {
             auto pattern_id = sink->get_pattern();
 
             if (auto p = LogManager::QueryPattern(pattern_id))
             {
-                ZoneScopedN("LogSink::Sink");
+                SkrZoneScopedN("LogSink::Sink");
 
                 sink->sink(event, p->last_result().view());
             }
@@ -198,7 +198,7 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatte
 
 void LogManager::FlushAllSinks() SKR_NOEXCEPT
 {
-    ZoneScopedN("LogManager::FlushSinks");
+    SkrZoneScopedN("LogManager::FlushSinks");
 
     for (auto&& [id, sink] : sinks_)
     {

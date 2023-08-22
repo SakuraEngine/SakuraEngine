@@ -1,0 +1,30 @@
+{
+	"folders": [
+		{
+			"path": "../../",
+			"name": "root",
+		},
+		{
+			"path": "../../modules/base",
+			"name": "base"
+		},
+		{
+			"path": "../../tests/base/",
+			"name": "base-tests"
+		},
+		{
+			"path": "../../build/.gens/",
+			"name": "code-gen"
+		}
+	],
+	"settings": {
+		"dascript.server.connectTimeout": 10,
+		"xmake.additionalConfigArguments": [
+			"--build_tests=y",
+			"--cxx_version=cxx17"
+		],
+		"xmake.customDebugConfig": {
+			"stopAtEntry": false,
+		}
+	}
+}
