@@ -223,7 +223,7 @@ SKR_INLINE void Array<T, Alloc>::_realloc(SizeType new_capacity)
     SKR_ASSERT(_size <= new_capacity);
     SKR_ASSERT((_capacity > 0 && _data != nullptr) || (_capacity == 0 && _data == nullptr));
 
-    if constexpr (memory::memory_traits<T>::use_realloc)
+    if constexpr (memory::MemoryTraits<T>::use_realloc)
     {
         _data     = _alloc.template realloc<T>(_data, new_capacity);
         _capacity = new_capacity;

@@ -232,7 +232,7 @@ SKR_INLINE bool SparseHashSet<T, TBitBlock, THash, THasher, TComparer, AllowMult
     {
         if (new_bucket_size) // has new size
         {
-            if constexpr (memory::memory_traits<SizeType>::use_realloc)
+            if constexpr (memory::MemoryTraits<SizeType>::use_realloc)
             {
                 _bucket = _data.allocator().template realloc<SizeType>(_bucket, new_bucket_size);
             }
