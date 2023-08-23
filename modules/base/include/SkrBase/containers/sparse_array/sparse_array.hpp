@@ -194,7 +194,7 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_realloc(SizeType new_capacity
     SKR_ASSERT((_capacity > 0 && _data != nullptr) || (_capacity == 0 && _data == nullptr));
 
     // realloc data array
-    if constexpr (memory::memory_traits<T>::use_realloc)
+    if constexpr (memory::MemoryTraits<T>::use_realloc)
     {
         _data     = _alloc.template realloc<DataType>(_data, new_capacity);
         _capacity = new_capacity;
@@ -237,7 +237,7 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_realloc(SizeType new_capacity
     if (new_block_size != old_block_size)
     {
         // realloc bit array
-        if constexpr (memory::memory_traits<TBitBlock>::use_realloc)
+        if constexpr (memory::MemoryTraits<TBitBlock>::use_realloc)
         {
             _bit_array      = _alloc.template realloc<TBitBlock>(_bit_array, new_block_size);
             _bit_array_size = new_block_size * BitAlgo::PerBlockSize;
@@ -273,7 +273,7 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_free()
     if (_data)
     {
         // destruct items
-        if constexpr (memory::memory_traits<T>::use_dtor)
+        if constexpr (memory::MemoryTraits<T>::use_dtor)
         {
             for (auto it = begin(); it != end(); ++it)
             {
@@ -432,7 +432,7 @@ SKR_INLINE SparseArray<T, TBitBlock, Alloc>& SparseArray<T, TBitBlock, Alloc>::o
         _sparse_size = rhs._sparse_size;
 
         // copy data
-        if constexpr (memory::memory_traits<T>::use_ctor)
+        if constexpr (memory::MemoryTraits<T>::use_ctor)
         {
             for (SizeType i = 0; i < rhs._sparse_size; ++i)
             {
@@ -666,7 +666,7 @@ template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::clear()
 {
     // destruct items
-    if constexpr (memory::memory_traits<T>::use_dtor)
+    if constexpr (memory::MemoryTraits<T>::use_dtor)
     {
         for (auto it = begin(); it != end(); ++it)
         {
@@ -1069,7 +1069,7 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::remove_at(SizeType index, Size
     SKR_ASSERT(is_valid_index(index + n - 1));
     SKR_ASSERT(n > 0);
 
-    if constexpr (memory::memory_traits<T>::use_dtor)
+    if constexpr (memory::MemoryTraits<T>::use_dtor)
     {
         for (SizeType i = 0; i < n; ++i)
         {

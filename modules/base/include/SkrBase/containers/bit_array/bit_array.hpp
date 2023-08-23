@@ -115,7 +115,7 @@ SKR_INLINE void BitArray<TBlock, Alloc>::_realloc(SizeType new_capacity)
 
     if (new_block_capacity > old_block_capacity)
     {
-        if constexpr (memory::memory_traits<TBlock>::use_realloc)
+        if constexpr (memory::MemoryTraits<TBlock>::use_realloc)
         {
             _data     = _alloc.template realloc<TBlock>(_data, new_capacity);
             _capacity = new_capacity;
