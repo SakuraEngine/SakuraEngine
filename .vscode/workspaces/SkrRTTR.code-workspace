@@ -1,0 +1,34 @@
+{
+    "folders": [
+        {
+            "path": "../../",
+            "name": "root",
+        },
+        {
+            "path": "../../modules/base/",
+            "name": "base"
+        },
+        {
+            "path": "../../modules/runtime/",
+            "name": "runtime"
+        },
+        {
+            "path": "../../build/.gens/",
+            "name": "code-gen"
+        },
+        {
+            "path": "../../modules/rttr/",
+            "name": "rttr"
+        },
+    ],
+    "settings": {
+        "dascript.server.connectTimeout": 10,
+        "xmake.additionalConfigArguments": [
+            "--build_tests=y",
+            "--cxx_version=cxx17"
+        ],
+        "xmake.customDebugConfig": {
+            "stopAtEntry": false,
+        }
+    }
+}
