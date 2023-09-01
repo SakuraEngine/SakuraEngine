@@ -14,7 +14,7 @@ template <size_t Extent, size_t Offset, size_t Count>
 inline static constexpr size_t subspan_extent = (Count != kDynamicExtent ? Count : (Extent != kDynamicExtent ? (Extent - Offset) : kDynamicExtent));
 } // namespace __helper
 
-template <typename T, typename TSize, size_t Extent = kDynamicExtent>
+template <typename T, typename TSize = size_t, size_t Extent = kDynamicExtent>
 struct Span {
     // ctor & dtor
     constexpr Span();
