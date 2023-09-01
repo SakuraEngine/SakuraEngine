@@ -16,10 +16,6 @@
             "path": "../../build/.gens/",
             "name": "code-gen"
         },
-        {
-            "path": "../../modules/rttr/",
-            "name": "rttr"
-        },
     ],
     "settings": {
         "dascript.server.connectTimeout": 10,
