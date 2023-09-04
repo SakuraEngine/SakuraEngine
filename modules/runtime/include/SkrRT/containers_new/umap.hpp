@@ -13,7 +13,7 @@ V,             /*Value Type*/
 size_t,        /*BitBlock Type*/
 size_t,        /*Hash Type*/
 Hash<K>,       /*Hasher Type*/
-Equal<V>,      /*Comparer Type*/
+Equal<K>,      /*Comparer Type*/
 false,         /*Allow MultiKey*/
 SkrAllocator>; /*Allocator Type*/
 }

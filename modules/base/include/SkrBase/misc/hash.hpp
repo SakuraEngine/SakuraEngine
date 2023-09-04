@@ -10,7 +10,7 @@ struct Hash;
 namespace detail
 {
 template <typename T>
-using has_skr_hash = decltype(T::_skr_hash(std::declval<const T&>()));
+using has_skr_hash = decltype(std::declval<const T&>()._skr_hash());
 }
 template <typename T>
 inline constexpr bool has_skr_hash_v = is_detected_v<detail::has_skr_hash, T>;
@@ -27,7 +27,7 @@ struct Hash {
         else // struct case
         {
             static_assert(has_skr_hash_v<T>, "T::_skr_hash(const T&) is not defined");
-            return T::_skr_hash(v);
+            return v._skr_hash();
         }
     }
 };
