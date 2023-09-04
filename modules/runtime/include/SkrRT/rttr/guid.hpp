@@ -2,7 +2,9 @@
 #pragma once
 #include <cstdint>
 #include <type_traits>
+#include "SkrBase/misc/hash.hpp"
 #include "SkrRT/misc/macros.h"
+#include "SkrRT/platform/configure.h"
 
 // FIXME. temporal solution
 #define SKR_IS_BIG_ENDIAN 0
@@ -11,8 +13,8 @@
 namespace skr
 {
 struct GUID {
-    inline constexpr GUID() = default;
-    inline constexpr GUID(uint32_t b0, uint16_t b1, uint16_t b2, const uint8_t b3s[8])
+    SKR_INLINE constexpr GUID() = default;
+    SKR_INLINE constexpr GUID(uint32_t b0, uint16_t b1, uint16_t b2, const uint8_t b3s[8])
         : _storage0(b0)
         , _storage1((uint32_t)b1 << 16 | (uint32_t)b2)
         ,
@@ -47,20 +49,31 @@ struct GUID {
     constexpr uint16_t data3() const { return (uint16_t)(_storage1 & UINT16_MAX); }
     constexpr uint16_t data4(uint8_t idx0_7) const { return ((uint8_t*)&_storage2)[idx0_7]; }
 
-    inline constexpr bool operator==(const GUID& rhs) const
+    SKR_INLINE constexpr bool operator==(const GUID& rhs) const
     {
         return _storage0 == rhs._storage0 && _storage1 == rhs._storage1 && _storage2 == rhs._storage2 && _storage3 == rhs._storage3;
     }
-    inline constexpr bool operator!=(const GUID& rhs) const { return !(*this == rhs); }
-    inline constexpr bool operator<(const GUID& rhs) const
+    SKR_INLINE constexpr bool operator!=(const GUID& rhs) const { return !(*this == rhs); }
+    SKR_INLINE constexpr bool operator<(const GUID& rhs) const
     {
         return _storage0 < rhs._storage0 || (!(_storage0 < rhs._storage0) && _storage1 < rhs._storage1) ||
                (!(_storage0 < rhs._storage0) && !(_storage1 < rhs._storage1) && _storage2 < rhs._storage2) ||
                (!(_storage0 < rhs._storage0) && !(_storage1 < rhs._storage1) && !(_storage2 < rhs._storage2) && _storage3 < rhs._storage3);
     }
-    inline constexpr bool operator>(const GUID& rhs) const { return rhs < *this; }
-    inline constexpr bool operator<=(const GUID& rhs) const { return !(*this > rhs); }
-    inline constexpr bool operator>=(const GUID& rhs) const { return !(*this < rhs); }
+    SKR_INLINE constexpr bool operator>(const GUID& rhs) const { return rhs < *this; }
+    SKR_INLINE constexpr bool operator<=(const GUID& rhs) const { return !(*this > rhs); }
+    SKR_INLINE constexpr bool operator>=(const GUID& rhs) const { return !(*this < rhs); }
+
+    SKR_INLINE size_t _skr_hash() const
+    {
+        Hash<uint32_t> hasher;
+
+        size_t result = hasher(_storage0);
+        result        = hash_combine(result, hasher(_storage1));
+        result        = hash_combine(result, hasher(_storage2));
+        result        = hash_combine(result, hasher(_storage3));
+        return result;
+    }
 
 private:
     uint32_t _storage0 = 0;
