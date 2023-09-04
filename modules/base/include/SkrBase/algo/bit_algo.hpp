@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/tools/integer_tools.hpp"
-#include "SkrBase/tools/bit.hpp"
+#include "SkrBase/misc/integer_tools.hpp"
+#include "SkrBase/misc/bit.hpp"
 #include <limits>
 #include <type_traits>
 #include <memory>

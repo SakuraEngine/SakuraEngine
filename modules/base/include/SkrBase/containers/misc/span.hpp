@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/tools/assert.h"
+#include "SkrBase/misc/assert.h"
 #include "SkrBase/containers/fwd_container.hpp"
-#include "SkrBase/tools/integer_tools.hpp"
+#include "SkrBase/misc/integer_tools.hpp"
 
 namespace skr::container
 {

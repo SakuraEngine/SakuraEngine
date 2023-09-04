@@ -1,7 +1,7 @@
 #include "SkrTestFramework/framework.hpp"
 #include "skr_test_allocator.hpp"
 
-#include "SkrBase/tools/hash.hpp"
+#include "SkrBase/misc/hash.hpp"
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map.hpp"
 #include <chrono>
 

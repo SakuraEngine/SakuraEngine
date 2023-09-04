@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/tools/integer_tools.hpp"
+#include "SkrBase/misc/integer_tools.hpp"
 #include "sparse_hash_set_def.hpp"
 #include "SkrBase/containers/sparse_array/sparse_array_iterator.hpp"
 
