@@ -10,12 +10,13 @@ struct Type;
 struct TypeLoader;
 
 // type register (loader)
+RUNTIME_API void register_type_loader(const GUID& guid, TypeLoader* loader);
+RUNTIME_API void unregister_type_loader(const GUID& guid);
+
 // TODO. generic type loader
-void register_type_loader(const GUID& guid, TypeLoader* loader);
-void unregister_type_loader(const GUID& guid);
 
 // get type (after register)
-Type* get_type_from_guid(const GUID& guid);
-Type* get_type_from_type_desc(Span<TypeDesc> type_desc);
+RUNTIME_API Type* get_type_from_guid(const GUID& guid);
+RUNTIME_API Type* get_type_from_type_desc(Span<TypeDesc> type_desc);
 
 } // namespace skr::rttr

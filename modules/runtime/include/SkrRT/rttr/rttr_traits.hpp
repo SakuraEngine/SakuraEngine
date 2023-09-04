@@ -1,23 +1,31 @@
 #pragma once
 #include "SkrRT/platform/configure.h"
 #include "SkrRT/rttr/guid.hpp"
-#include "SkrRT/rttr/type.hpp"
+#include "SkrRT/rttr/type_desc.hpp"
 #include "SkrRT/rttr/type_registry.hpp"
 
 // RTTR traits
 // 提供部分静态类型功能，从动态角度来说，实际上只是一层皮
 namespace skr::rttr
 {
+struct Type;
+
 template <typename T>
 struct RTTRTraits {
-    static GUID  get_guid();
-    static Type* get_type();
+    static GUID           get_guid();
+    static Span<TypeDesc> get_type_desc();
+    static Type*          get_type();
 };
 
 template <typename T>
 SKR_INLINE GUID type_id() SKR_NOEXCEPT
 {
     return RTTRTraits<T>::get_guid();
+}
+template <typename T>
+SKR_INLINE Span<TypeDesc> type_desc() SKR_NOEXCEPT
+{
+    return RTTRTraits<T>::get_type_desc();
 }
 template <typename T>
 SKR_INLINE Type* type_of() SKR_NOEXCEPT
@@ -29,11 +37,24 @@ SKR_INLINE Type* type_of() SKR_NOEXCEPT
 // primitive types
 namespace skr::rttr
 {
-#define SKR_RTTR_PRIMITIVE_TYPE_TRAITS(__TYPE, __GUID)                     \
-    template <>                                                            \
-    struct RTTRTraits<__TYPE> {                                            \
-        static GUID  get_guid() { return __GUID##_guid; }                  \
-        static Type* get_type() { return get_type_from_guid(get_guid()); } \
+#define SKR_RTTR_PRIMITIVE_TYPE_TRAITS(__TYPE, __GUID)             \
+    template <>                                                    \
+    struct RTTRTraits<__TYPE> {                                    \
+        static GUID           get_guid() { return __GUID##_guid; } \
+        static Span<TypeDesc> get_type_desc()                      \
+        {                                                          \
+            static TypeDesc desc = { get_guid() };                 \
+            return { &desc, 1 };                                   \
+        }                                                          \
+        static Type* get_type()                                    \
+        {                                                          \
+            static Type* type = nullptr;                           \
+            if (!type)                                             \
+            {                                                      \
+                type = get_type_from_guid(get_guid());             \
+            }                                                      \
+            return type;                                           \
+        }                                                          \
     };
 
 SKR_RTTR_PRIMITIVE_TYPE_TRAITS(void, "ca27c68d-b987-482c-a031-59112a81eba8")
