@@ -15,6 +15,7 @@
 // TODO. bucket 与碰撞统计，以及更好的 bucket 分配策略
 // TODO. xxxx_as 依旧需要，除了异构查询之外，还有使用某个特定成员作为 key 的情况，这时候，我们会需要使用便利的异构查找
 // TODO. compare 成本较小的情况下可以省去 hash 先行比较，可以通过 traits 实现
+// TODO. Hasher 与 Comparer 应当配合 KeyTraits
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
