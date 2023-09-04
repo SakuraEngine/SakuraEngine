@@ -4,15 +4,9 @@
 #include "SkrBase/containers/sparse_hash_map/kvpair.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
 
-// SparseHashSet config
-namespace skr
-{
-
-} // namespace skr
-
 // SparseHashMap def
 // TODO. remove/find/contain/count value
-namespace skr
+namespace skr::container
 {
 template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
 struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc> {
@@ -160,10 +154,10 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, THash, THa
     CIt begin() const;
     CIt end() const;
 };
-} // namespace skr
+} // namespace skr::container
 
 // SparseHashMap impl
-namespace skr
+namespace skr::container
 {
 // ctor & dtor
 template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
@@ -742,4 +736,4 @@ SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, Al
 {
     return Base::end();
 }
-} // namespace skr
+} // namespace skr::container

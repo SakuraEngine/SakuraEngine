@@ -6,6 +6,7 @@
 TEST_CASE("test array")
 {
     using namespace skr;
+    using namespace skr::container;
     using TestArray = Array<uint32_t, SkrTestAllocator>;
 
     SUBCASE("ctor")

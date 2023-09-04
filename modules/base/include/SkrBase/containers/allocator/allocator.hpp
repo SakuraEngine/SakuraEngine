@@ -4,9 +4,8 @@
 #include "SkrBase/tools/assert.h"
 #include "SkrBase/memory.hpp"
 #include "SkrBase/tools/assert.h"
-#include "arena.hpp"
 
-namespace skr
+namespace skr::container
 {
 // TODO. container specific allocator
 // [Array]
@@ -91,37 +90,4 @@ struct AllocTemplate {
         return result;
     }
 };
-} // namespace skr
-
-namespace skr
-{
-struct PmrAllocator : AllocTemplate<PmrAllocator, size_t> {
-    // ctor...
-    SKR_INLINE PmrAllocator(IArena* res = default_arena())
-        : _arena(res)
-    {
-        SKR_ASSERT(_arena != nullptr);
-    }
-    SKR_INLINE               PmrAllocator(const PmrAllocator&) = default;
-    SKR_INLINE               PmrAllocator(PmrAllocator&&)      = default;
-    SKR_INLINE PmrAllocator& operator=(const PmrAllocator&)    = default;
-    SKR_INLINE PmrAllocator& operator=(PmrAllocator&&)         = default;
-
-    // impl
-    SKR_INLINE void free_raw(void* p, SizeType align) const
-    {
-        _arena->free(p);
-    }
-    SKR_INLINE void* alloc_raw(SizeType size, SizeType align) const
-    {
-        return _arena->alloc(size, align);
-    }
-    SKR_INLINE void* realloc_raw(void* p, SizeType size, SizeType align) const
-    {
-        return _arena->realloc(p, size, align);
-    }
-
-private:
-    IArena* _arena;
-};
-} // namespace skr
+} // namespace skr::container

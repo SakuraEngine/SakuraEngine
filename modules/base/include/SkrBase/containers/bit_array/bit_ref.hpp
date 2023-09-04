@@ -2,7 +2,7 @@
 #include "SkrBase/config.h"
 #include <type_traits>
 
-namespace skr
+namespace skr::container
 {
 template <typename TBlock>
 struct BitRef {
@@ -29,4 +29,4 @@ private:
     TBlock& _data;
     TBlock  _mask;
 };
-} // namespace skr
+} // namespace skr::container

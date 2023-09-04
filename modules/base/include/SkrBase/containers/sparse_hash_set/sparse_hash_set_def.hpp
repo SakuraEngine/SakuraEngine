@@ -3,7 +3,7 @@
 #include "SkrBase/tools/integer_tools.hpp"
 
 // SparseHashSet structs
-namespace skr
+namespace skr::container
 {
 // SparseHashSet 的数据定义，存储于 SparseArray 中
 // 存储的 hash 用于快速比较，next 用于查找 hash 链表
@@ -47,13 +47,13 @@ struct SparseHashSetDataRef {
     SKR_INLINE T& operator*() const { return *data; }
     SKR_INLINE T* operator->() const { return data; }
 };
-} // namespace skr
+} // namespace skr::container
 
 // TODO. skr swap
 namespace std
 {
 template <typename T, typename TS, typename HashType>
-SKR_INLINE void swap(::skr::SparseHashSetData<T, TS, HashType>& a, ::skr::SparseHashSetData<T, TS, HashType>& b)
+SKR_INLINE void swap(::skr::container::SparseHashSetData<T, TS, HashType>& a, ::skr::container::SparseHashSetData<T, TS, HashType>& b)
 {
     ::std::swap(a._sparse_hash_set_data, b._sparse_hash_set_data);
     ::std::swap(a._sparse_hash_set_hash, b._sparse_hash_set_hash);

@@ -2,7 +2,7 @@
 #include "SkrBase/config.h"
 #include "SkrBase/tools/integer_tools.hpp"
 
-namespace skr
+namespace skr::container
 {
 // Array 的数据引用，代替单纯的指针/Index返回
 // 提供足够的信息，并将 npos 封装起来简化调用防止出错
@@ -30,4 +30,4 @@ struct ArrayDataRef {
     SKR_INLINE T& operator*() const { return *data; }
     SKR_INLINE T* operator->() const { return data; }
 };
-} // namespace skr
+} // namespace skr::container

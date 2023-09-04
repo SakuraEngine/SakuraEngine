@@ -2,7 +2,7 @@
 #include "SkrBase/containers/allocator/allocator.hpp"
 #include <new>
 
-namespace skr
+namespace skr::container
 {
 struct SkrTestAllocator : AllocTemplate<SkrTestAllocator, size_t> {
     static void* alloc_raw(size_t size, size_t align)
@@ -24,4 +24,4 @@ struct SkrTestAllocator : AllocTemplate<SkrTestAllocator, size_t> {
         return new_mem;
     }
 };
-} // namespace skr
+} // namespace skr::container

@@ -3,7 +3,7 @@
 #include "SkrBase/config.h"
 #include "SkrBase/containers/key_traits.hpp"
 
-namespace skr
+namespace skr::container
 {
 template <typename K, typename V>
 struct KVPair {
@@ -55,20 +55,20 @@ struct KeyTraits<KVPair<K, V>> {
     using KeyType       = K;
     using KeyMapperType = MapKey<K, V>;
 };
-} // namespace skr
+} // namespace skr::container
 
 // TODO. skr swap
 namespace std
 {
 template <typename K, typename V>
-SKR_INLINE void swap(::skr::KVPair<K, V>& a, ::skr::KVPair<K, V>& b)
+SKR_INLINE void swap(::skr::container::KVPair<K, V>& a, ::skr::container::KVPair<K, V>& b)
 {
     ::std::swap(a.key, b.key);
     ::std::swap(a.value, b.value);
 }
 } // namespace std
 
-namespace skr
+namespace skr::container
 {
 // constructor
 template <typename K, typename V>
@@ -199,7 +199,7 @@ SKR_INLINE bool KVPair<K, V>::operator>=(const KVPair& rhs) const
 {
     return !((*this) < rhs);
 }
-} // namespace skr
+} // namespace skr::container
 
 // TODO. integrate std
 // std::swap

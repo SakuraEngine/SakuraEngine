@@ -5,7 +5,7 @@
 #include "SkrBase/containers/sparse_array/sparse_array_iterator.hpp"
 
 // SparseHashSet iterator
-namespace skr
+namespace skr::container
 {
 template <typename T, typename TBitBlock, typename TS, typename TH, bool Const>
 struct SparseHashSetIt {
@@ -41,4 +41,4 @@ private:
     SparseDataType* _array;
     BitItType       _bit_it;
 };
-} // namespace skr
+} // namespace skr::container

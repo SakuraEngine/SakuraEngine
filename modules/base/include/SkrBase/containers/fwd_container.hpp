@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace skr
+namespace skr::container
 {
 using DefaultBitBlock = uint64_t;
 
@@ -21,4 +21,4 @@ template <typename T, typename TBitBlock, typename THash, typename THasher, type
 struct SparseHashSet;
 template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
 struct SparseHashMap;
-} // namespace skr
+} // namespace skr::container

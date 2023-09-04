@@ -8,6 +8,7 @@
 TEST_CASE("test sparse hash set (Single)")
 {
     using namespace skr;
+    using namespace skr::container;
     using ValueType   = int32_t;
     using TestHashSet = SparseHashSet<ValueType, uint64_t, size_t, Hash<ValueType>, Equal<ValueType>, false, SkrTestAllocator>;
 
