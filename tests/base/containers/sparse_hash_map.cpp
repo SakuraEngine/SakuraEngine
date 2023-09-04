@@ -8,6 +8,7 @@
 TEST_CASE("test sparse hash map")
 {
     using namespace skr;
+    using namespace skr::container;
     using KeyType   = int32_t;
     using ValueType = int32_t;
     using PairType  = KVPair<KeyType, ValueType>;

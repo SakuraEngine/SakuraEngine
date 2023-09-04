@@ -4,7 +4,7 @@
 #include "SkrBase/containers/bit_array/bit_iterator.hpp"
 
 // SparseArray iterator
-namespace skr
+namespace skr::container
 {
 template <typename T, typename TBitBlock, typename TS, bool Const>
 struct SparseArrayIt {
@@ -39,4 +39,4 @@ private:
     DataType* _array;
     BitItType _bit_it;
 };
-} // namespace skr
+} // namespace skr::container

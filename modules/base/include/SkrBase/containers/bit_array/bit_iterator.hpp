@@ -4,7 +4,7 @@
 #include "bit_ref.hpp"
 
 // bit iterator
-namespace skr
+namespace skr::container
 {
 template <typename TBlock, typename TS, bool Const>
 struct BitIt {
@@ -63,10 +63,10 @@ private:
     TS      _block_index;
     TBlock  _block_mask;
 };
-} // namespace skr
+} // namespace skr::container
 
 // true bit iterator
-namespace skr
+namespace skr::container
 {
 template <typename TBlock, typename TS, bool Const>
 struct TrueBitIt {
@@ -155,4 +155,4 @@ private:
     TBlock  _block_mask;
     TBlock  _step_mask; // 用于快速的起步搜索
 };
-} // namespace skr
+} // namespace skr::container

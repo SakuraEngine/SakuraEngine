@@ -2,7 +2,7 @@
 #include "SkrBase/config.h"
 #include "SkrBase/tools/integer_tools.hpp"
 
-namespace skr
+namespace skr::container
 {
 template <typename K, typename V, typename TS>
 struct SparseHashMapDataRef {
@@ -39,4 +39,4 @@ struct SparseHashMapDataRef {
     SKR_INLINE operator bool() { return key != nullptr || index != npos_of<TS>; }
 };
 
-} // namespace skr
+} // namespace skr::container

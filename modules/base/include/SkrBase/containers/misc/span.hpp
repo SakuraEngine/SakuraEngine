@@ -4,7 +4,7 @@
 #include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/tools/integer_tools.hpp"
 
-namespace skr
+namespace skr::container
 {
 inline static constexpr size_t kDynamicExtent = npos_of<size_t>;
 
@@ -64,7 +64,7 @@ private:
     T*     _data;
     size_t _size;
 };
-} // namespace skr
+} // namespace skr::container
 
 namespace skr
 {

@@ -6,7 +6,8 @@
 TEST_CASE("test bit array")
 {
     using namespace skr;
-    using BitArray = skr::BitArray<uint64_t, skr::SkrTestAllocator>;
+    using namespace skr::container;
+    using BitArray = BitArray<uint64_t, SkrTestAllocator>;
 
     SUBCASE("test ctor")
     {

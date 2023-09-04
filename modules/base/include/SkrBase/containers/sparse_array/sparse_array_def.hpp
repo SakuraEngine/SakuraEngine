@@ -3,7 +3,7 @@
 #include "SkrBase/containers/array/array_def.hpp"
 
 // SparseArray structs
-namespace skr
+namespace skr::container
 {
 // SparseArray 的 Element 定义
 // 空穴状态会变为链表的节点，带来的问题是当 sizeof(T) < sizeof(TS) * 2 时，会产生不必要的浪费的浪费
@@ -27,13 +27,13 @@ union SparseArrayData
 // 规则见 ArrayDataRef
 template <typename T, typename TS>
 using SparseArrayDataRef = ArrayDataRef<T, TS>;
-} // namespace skr
+} // namespace skr::container
 
 // TODO. skr swap
 namespace std
 {
 template <typename T, typename TS>
-SKR_INLINE void swap(::skr::SparseArrayData<T, TS>& a, ::skr::SparseArrayData<T, TS>& b)
+SKR_INLINE void swap(::skr::container::SparseArrayData<T, TS>& a, ::skr::container::SparseArrayData<T, TS>& b)
 {
     ::std::swap(a._sparse_array_data, b._sparse_array_data);
 }

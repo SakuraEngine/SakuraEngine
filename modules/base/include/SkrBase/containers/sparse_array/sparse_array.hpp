@@ -9,7 +9,7 @@
 
 // SparseArray def
 // TODO. auto compact_top when remove items
-namespace skr
+namespace skr::container
 {
 template <typename T, typename TBitBlock, typename Alloc>
 struct SparseArray {
@@ -179,10 +179,10 @@ private:
     DataType*  _data           = nullptr;
     Alloc      _alloc;
 };
-} // namespace skr
+} // namespace skr::container
 
 // SparseArray impl
-namespace skr
+namespace skr::container
 {
 // helper
 template <typename T, typename TBitBlock, typename Alloc>
@@ -1318,4 +1318,4 @@ SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::CIt SparseArray<T, TBitBlo
 {
     return CIt(data(), sparse_size(), bit_array(), sparse_size());
 }
-} // namespace skr
+} // namespace skr::container

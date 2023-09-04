@@ -7,7 +7,7 @@
 #include "SkrBase/containers/array/array_def.hpp"
 
 // Array def
-namespace skr
+namespace skr::container
 {
 template <typename T, typename Alloc>
 struct Array {
@@ -209,10 +209,10 @@ private:
     SizeType _capacity = 0;
     Alloc    _alloc    = {};
 };
-} // namespace skr
+} // namespace skr::container
 
 // Array impl
-namespace skr
+namespace skr::container
 {
 // helper
 template <typename T, typename Alloc>
@@ -1135,4 +1135,4 @@ template <typename T, typename Alloc>
 SKR_INLINE const T* Array<T, Alloc>::begin() const { return _data; }
 template <typename T, typename Alloc>
 SKR_INLINE const T* Array<T, Alloc>::end() const { return _data + _size; }
-} // namespace skr
+} // namespace skr::container

@@ -3,11 +3,11 @@
 #include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/algo/utils.hpp"
 
-namespace skr
+namespace skr::container
 {
 template <typename T>
 struct KeyTraits {
     using KeyType       = T;
     using KeyMapperType = MapFwd<T>;
 };
-} // namespace skr
+} // namespace skr::container

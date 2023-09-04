@@ -8,7 +8,7 @@
 
 // BitArray def
 // TODO. 包装一个更安全的 SizeType 作为查找返回
-namespace skr
+namespace skr::container
 {
 template <typename TBlock, typename Alloc>
 struct BitArray final {
@@ -94,10 +94,10 @@ private:
     SizeType _capacity = 0;
     Alloc    _alloc    = {};
 };
-} // namespace skr
+} // namespace skr::container
 
 // BitArray impl
-namespace skr
+namespace skr::container
 {
 // helper
 template <typename TBlock, typename Alloc>
@@ -469,4 +469,4 @@ SKR_INLINE typename BitArray<TBlock, Alloc>::CIt BitArray<TBlock, Alloc>::end() 
     return CIt(data(), size(), _size);
 }
 
-} // namespace skr
+} // namespace skr::container
