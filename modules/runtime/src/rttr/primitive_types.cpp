@@ -1,6 +1,6 @@
 #include "SkrRT/rttr/type_loader.hpp"
 #include "SkrRT/rttr/type/type.hpp"
-#include "SkrBase/tools/hash.hpp"
+#include "SkrBase/misc/hash.hpp"
 #include "SkrRT/rttr/rttr_traits.hpp"
 
 namespace skr::rttr

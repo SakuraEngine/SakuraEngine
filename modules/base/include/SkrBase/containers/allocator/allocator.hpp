@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/config.h"
-#include "SkrBase/tools/assert.h"
+#include "SkrBase/misc/assert.h"
 #include "SkrBase/memory.hpp"
-#include "SkrBase/tools/assert.h"
+#include "SkrBase/misc/assert.h"
 
 namespace skr::container
 {

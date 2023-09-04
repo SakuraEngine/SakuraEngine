@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/tools/integer_tools.hpp"
+#include "SkrBase/misc/integer_tools.hpp"
 
 namespace skr::container
 {
