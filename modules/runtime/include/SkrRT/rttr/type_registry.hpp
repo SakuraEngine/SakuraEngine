@@ -8,12 +8,15 @@ namespace skr::rttr
 {
 struct Type;
 struct TypeLoader;
+struct GenericTypeLoader;
 
 // type register (loader)
 RUNTIME_API void register_type_loader(const GUID& guid, TypeLoader* loader);
 RUNTIME_API void unregister_type_loader(const GUID& guid);
 
-// TODO. generic type loader
+// generic type loader
+RUNTIME_API void register_generic_type_loader(const GUID& generic_guid, GenericTypeLoader* loader);
+RUNTIME_API void unregister_generic_type_loader(const GUID& generic_guid);
 
 // get type (after register)
 RUNTIME_API Type* get_type_from_guid(const GUID& guid);
