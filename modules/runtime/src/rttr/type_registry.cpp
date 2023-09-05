@@ -1,7 +1,8 @@
 #include "SkrRT/rttr/type_registry.hpp"
 #include "SkrRT/containers_new/umap.hpp"
 #include "SkrRT/misc/log.h"
-#include "SkrRT/rttr/type_loader.hpp"
+#include "SkrRT/rttr/type_loader/type_loader.hpp"
+#include "SkrRT/rttr/type_loader/generic_type_loader.hpp"
 #include "SkrRT/rttr/type/type.hpp"
 
 namespace skr::rttr
@@ -37,7 +38,13 @@ void unregister_type_loader(const GUID& guid)
     }
 }
 
-// TODO. generic type loader
+// generic type loader
+void register_generic_type_loader(const GUID& generic_guid, GenericTypeLoader* loader)
+{
+}
+void unregister_generic_type_loader(const GUID& generic_guid)
+{
+}
 
 // get type (after register)
 Type* get_type_from_guid(const GUID& guid)

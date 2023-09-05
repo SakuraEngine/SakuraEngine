@@ -3,6 +3,7 @@
 #include "SkrRT/rttr/guid.hpp"
 #include "SkrRT/rttr/type_desc.hpp"
 #include "SkrRT/rttr/type_registry.hpp"
+#include "SkrRT/containers/string.hpp"
 
 // RTTR traits
 // 提供部分静态类型功能，从动态角度来说，实际上只是一层皮
@@ -12,6 +13,7 @@ struct Type;
 
 template <typename T>
 struct RTTRTraits {
+    static string_view    get_name();
     static GUID           get_guid();
     static Span<TypeDesc> get_type_desc();
     static Type*          get_type();
@@ -37,24 +39,26 @@ SKR_INLINE Type* type_of() SKR_NOEXCEPT
 // primitive types
 namespace skr::rttr
 {
-#define SKR_RTTR_PRIMITIVE_TYPE_TRAITS(__TYPE, __GUID)             \
-    template <>                                                    \
-    struct RTTRTraits<__TYPE> {                                    \
-        static GUID           get_guid() { return __GUID##_guid; } \
-        static Span<TypeDesc> get_type_desc()                      \
-        {                                                          \
-            static TypeDesc desc = { get_guid() };                 \
-            return { &desc, 1 };                                   \
-        }                                                          \
-        static Type* get_type()                                    \
-        {                                                          \
-            static Type* type = nullptr;                           \
-            if (!type)                                             \
-            {                                                      \
-                type = get_type_from_guid(get_guid());             \
-            }                                                      \
-            return type;                                           \
-        }                                                          \
+#define SKR_RTTR_PRIMITIVE_MAKE_U8(__VALUE) u8##__VALUE
+#define SKR_RTTR_PRIMITIVE_TYPE_TRAITS(__TYPE, __GUID)                                   \
+    template <>                                                                          \
+    struct RTTRTraits<__TYPE> {                                                          \
+        static string_view    get_name() { return SKR_RTTR_PRIMITIVE_MAKE_U8(#__TYPE); } \
+        static GUID           get_guid() { return __GUID##_guid; }                       \
+        static Span<TypeDesc> get_type_desc()                                            \
+        {                                                                                \
+            static TypeDesc desc = { get_guid() };                                       \
+            return { &desc, 1 };                                                         \
+        }                                                                                \
+        static Type* get_type()                                                          \
+        {                                                                                \
+            static Type* type = nullptr;                                                 \
+            if (!type)                                                                   \
+            {                                                                            \
+                type = get_type_from_guid(get_guid());                                   \
+            }                                                                            \
+            return type;                                                                 \
+        }                                                                                \
     };
 
 SKR_RTTR_PRIMITIVE_TYPE_TRAITS(void, "ca27c68d-b987-482c-a031-59112a81eba8")
@@ -71,4 +75,5 @@ SKR_RTTR_PRIMITIVE_TYPE_TRAITS(float, "42f9cf37-9995-40a7-9776-1cdb67b98fcf")
 SKR_RTTR_PRIMITIVE_TYPE_TRAITS(double, "9454d5cd-68dd-4039-8e67-07732de87e5c")
 
 #undef SKR_RTTR_PRIMITIVE_TYPE_TRAITS
+#undef SKR_RTTR_PRIMITIVE_MAKE_U8
 } // namespace skr::rttr
