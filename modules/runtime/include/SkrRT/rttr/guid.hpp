@@ -75,6 +75,8 @@ struct GUID {
         return result;
     }
 
+    SKR_RUNTIME_API static GUID Create();
+
 private:
     uint32_t _storage0 = 0;
     uint32_t _storage1 = 0;
