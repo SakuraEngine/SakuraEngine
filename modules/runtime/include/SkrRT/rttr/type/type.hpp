@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrRT/module.configure.h"
 #include <cstdint>
-#include "SkrBase/config.h"
 #include "SkrRT/rttr/guid.hpp"
 
 namespace skr::rttr
@@ -17,6 +16,7 @@ enum ETypeCategory
 };
 
 struct RUNTIME_API Type {
+    Type(ETypeCategory type_category, GUID type_id, size_t size, size_t alignment);
     virtual ~Type() = default;
 
     // getter
@@ -37,7 +37,7 @@ struct RUNTIME_API Type {
     // TODO. convert
     // TODO. serialize
 
-protected:
+private:
     // basic data
     ETypeCategory _type_category = ETypeCategory::SKR_TYPE_CATEGORY_INVALID;
     GUID          _type_id       = {};

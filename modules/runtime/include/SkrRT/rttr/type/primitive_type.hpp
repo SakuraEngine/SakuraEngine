@@ -7,11 +7,8 @@ namespace skr::rttr
 template <typename T>
 struct PrimitiveType final : public Type {
     PrimitiveType()
+        : Type(ETypeCategory::SKR_TYPE_CATEGORY_PRIMITIVE, RTTRTraits<T>::get_guid(), sizeof(T), alignof(T))
     {
-        _type_category = ETypeCategory::SKR_TYPE_CATEGORY_PRIMITIVE;
-        _alignment     = alignof(T);
-        _size          = sizeof(T);
-        _type_id       = RTTRTraits<T>::get_guid();
     }
 
     bool call_ctor(void* ptr) const override { return true; }
@@ -46,11 +43,8 @@ struct PrimitiveType final : public Type {
 template <>
 struct PrimitiveType<void> final : public Type {
     PrimitiveType()
+        : Type(ETypeCategory::SKR_TYPE_CATEGORY_PRIMITIVE, RTTRTraits<void>::get_guid(), 1, 1)
     {
-        _type_category = ETypeCategory::SKR_TYPE_CATEGORY_PRIMITIVE;
-        _alignment     = 0;
-        _size          = 0;
-        _type_id       = RTTRTraits<void>::get_guid();
     }
 
     bool call_ctor(void* ptr) const override { return true; }
