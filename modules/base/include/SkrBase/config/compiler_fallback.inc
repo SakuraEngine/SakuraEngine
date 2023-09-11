@@ -43,8 +43,5 @@
 #ifndef SKR_CXX_20
     #define SKR_CXX_20 0
 #endif
-#ifndef SKR_CXX_VER
-    #define SKR_CXX_VER 0
-#endif
 
 #define __SKR_COMPILER_FALLBACK_INC__
