@@ -249,7 +249,7 @@ private:
     };
 };
 
-struct RUNTIME_API EnumType : public Type {
+struct SKR_RUNTIME_API EnumType : public Type {
     EnumType(Type* underlying_type, GUID type_id);
 
     SKR_INLINE Type* underlying_type() const { return _underlying_type; }

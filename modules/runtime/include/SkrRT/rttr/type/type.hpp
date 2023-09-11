@@ -15,7 +15,7 @@ enum ETypeCategory
     SKR_TYPE_CATEGORY_GENERIC,
 };
 
-struct RUNTIME_API Type {
+struct SKR_RUNTIME_API Type {
     Type(ETypeCategory type_category, GUID type_id, size_t size, size_t alignment);
     virtual ~Type() = default;
 
