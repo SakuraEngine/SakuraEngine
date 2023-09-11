@@ -84,10 +84,11 @@
 // fall back
 #include "compiler_fallback.inc"
 
-#if SKR_COMPILER_MSVC
-    #define SKR_COMPILER_VERSION _MSC_VER
-#elif SKR_COMPILER_CLANG || SKR_COMPILER_CLANG_CL
-    #define SKR_COMPILER_VERSION (__clang_major__ * 100 + __clang_minor__)
-#elif SKR_COMPILER_GCC
-    #define SKR_COMPILER_VERSION (__GNUC__ * 1000 + __GNUC_MINOR__)
-#endif
+// TODO. use this impl
+// #if SKR_COMPILER_MSVC
+//     #define SKR_COMPILER_VERSION _MSC_VER
+// #elif SKR_COMPILER_CLANG || SKR_COMPILER_CLANG_CL
+//     #define SKR_COMPILER_VERSION (__clang_major__ * 100 + __clang_minor__)
+// #elif SKR_COMPILER_GCC
+//     #define SKR_COMPILER_VERSION (__GNUC__ * 1000 + __GNUC_MINOR__)
+// #endif

@@ -35,16 +35,52 @@ struct Method {
     Array<Type*>   parameters_type = {};
     ExecutableType executable      = {};
 };
+struct RecordBasicMethodTable {
+    void (*ctor)(void* self)                      = nullptr;
+    void (*dtor)(void* self)                      = nullptr;
+    void (*copy)(void* dst, const void* src)      = nullptr;
+    void (*move)(void* dst, void* src)            = nullptr;
+    void (*assign)(void* dst, const void* src)    = nullptr;
+    void (*move_assign)(void* dst, void* src)     = nullptr;
+    void (*hash)(const void* ptr, size_t& result) = nullptr;
+};
+template <typename T>
+SKR_INLINE RecordBasicMethodTable make_record_basic_method_table()
+{
+    return {
+        std::is_default_constructible_v<T> ? +[](void* self) { new (self) T(); } : nullptr,
+        std::is_destructible_v<T> ? +[](void* self) { ((T*)self)->~T(); } : nullptr,
+        std::is_copy_constructible_v<T> ? +[](void* dst, const void* src) { new (dst) T(*(T*)src); } : nullptr,
+        std::is_move_constructible_v<T> ? +[](void* dst, void* src) { new (dst) T(std::move(*(T*)src)); } : nullptr,
+        std::is_copy_assignable_v<T> ? +[](void* dst, const void* src) { *(T*)dst = *(T*)src; } : nullptr,
+        std::is_move_assignable_v<T> ? +[](void* dst, void* src) { *(T*)dst = std::move(*(T*)src); } : nullptr,
+        skr_hashable_v<T> ? +[](const void* ptr, size_t& result) { result = Hash<T>()(*(const T*)ptr); } : nullptr,
+    };
+}
 
 struct SKR_RUNTIME_API RecordType : public Type {
-    RecordType(GUID type_id, size_t size, size_t alignment, Span<Type*> base_types, Span<FieldInfo> fields, Span<MethodInfo> methods);
+    RecordType(GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods, Span<Type*> base_types, Span<FieldInfo> fields, Span<MethodInfo> methods);
+
+    bool call_ctor(void* ptr) const override;
+    bool call_dtor(void* ptr) const override;
+    bool call_copy(void* dst, const void* src) const override;
+    bool call_move(void* dst, void* src) const override;
+    bool call_assign(void* dst, const void* src) const override;
+    bool call_move_assign(void* dst, void* src) const override;
+    bool call_hash(const void* ptr, size_t& result) const override;
+
+    // getter
+    const UMap<GUID, Type*>&         base_types() const { return _base_types_map; }
+    const MultiUMap<string, Field>&  fields() const { return _fields_map; }
+    const MultiUMap<string, Method>& methods() const { return _methods_map; }
 
     // find methods
     // find fields
 
 private:
     UMap<GUID, Type*>         _base_types_map = {};
-    MultiUMap<string, Field>  _fields         = {};
-    MultiUMap<string, Method> _methods        = {};
+    MultiUMap<string, Field>  _fields_map     = {};
+    MultiUMap<string, Method> _methods_map    = {};
+    RecordBasicMethodTable    _basic_methods  = {};
 };
 } // namespace skr::rttr
