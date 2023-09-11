@@ -5,12 +5,16 @@
             "name": "root",
         },
         {
-            "path": "../../modules/base/",
-            "name": "base"
+            "path": "../../modules/runtime/include/SkrRT/rttr/",
+            "name": "include"
         },
         {
-            "path": "../../modules/runtime/",
-            "name": "runtime"
+            "path": "../../modules/runtime/src/rttr/",
+            "name": "src"
+        },
+        {
+            "path": "../../modules/base/",
+            "name": "base"
         },
         {
             "path": "../../build/.gens/",

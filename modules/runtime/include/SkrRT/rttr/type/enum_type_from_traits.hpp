@@ -6,8 +6,8 @@
 namespace skr::rttr
 {
 template <typename T>
-struct TraitsEnumType : public EnumType {
-    TraitsEnumType()
+struct EnumTypeFromTraits : public EnumType {
+    EnumTypeFromTraits()
         : EnumType(get_underlying_type<T>(), RTTRTraits<T>::get_guid())
     {
     }

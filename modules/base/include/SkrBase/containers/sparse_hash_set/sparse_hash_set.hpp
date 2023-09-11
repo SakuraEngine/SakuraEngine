@@ -719,10 +719,10 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, THash, THasher, TComparer, Allow
     }
     else
     {
-        auto data_arr_ref  = _data.add_ex_unsafe();
-        data_arr_ref->hash = hash;
+        auto data_arr_ref                   = _data.add_unsafe();
+        data_arr_ref->_sparse_hash_set_hash = hash;
         _add_to_bucket(*data_arr_ref, data_arr_ref.index);
-        return { &data_arr_ref->data, data_arr_ref.index, false };
+        return { &data_arr_ref->_sparse_hash_set_data, data_arr_ref.index, false };
     }
 }
 
