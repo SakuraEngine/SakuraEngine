@@ -11,25 +11,37 @@ namespace detail
 {
 template <typename T>
 using has_skr_hash = decltype(std::declval<const T&>()._skr_hash());
-}
+template <typename T>
+using skr_hashable = decltype(std::declval<Hash<T>>()(std::declval<const T&>()));
+} // namespace detail
 template <typename T>
 inline constexpr bool has_skr_hash_v = is_detected_v<detail::has_skr_hash, T>;
+template <typename T>
+inline constexpr bool skr_hashable_v = is_detected_v<detail::skr_hashable, T>;
+
+namespace detail
+{
+template <typename T, typename = void>
+struct HashSelector {
+};
+template <typename T>
+struct HashSelector<T, std::enable_if_t<std::is_enum_v<T>>> {
+    size_t operator()(const T& p) const
+    {
+        return static_cast<size_t>(p);
+    }
+};
+template <typename T>
+struct HashSelector<T, std::enable_if_t<has_skr_hash_v<T>>> {
+    size_t operator()(const T& p) const
+    {
+        return p._skr_hash();
+    }
+};
+} // namespace detail
 
 template <typename T>
-struct Hash {
-    SKR_INLINE size_t operator()(const T& v) const
-    {
-        if constexpr (std::is_enum_v<T>) // enum case
-        {
-            using UnderlyingType = std::underlying_type_t<T>;
-            return Hash<UnderlyingType>()(static_cast<UnderlyingType>(v));
-        }
-        else // struct case
-        {
-            static_assert(has_skr_hash_v<T>, "T::_skr_hash(const T&) is not defined");
-            return v._skr_hash();
-        }
-    }
+struct Hash : detail::HashSelector<T> {
 };
 
 // hash combine
