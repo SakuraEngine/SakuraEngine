@@ -4,6 +4,7 @@
 #include "rttr/type/pointer_type.cpp"
 #include "rttr/type/reference_type.cpp"
 #include "rttr/type/type.cpp"
+#include "rttr/type/record_type.cpp"
 
 // rttr/
 #include "rttr/guid.cpp"
