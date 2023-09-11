@@ -5,16 +5,8 @@
 
 namespace skr::rttr
 {
-struct PointerTypeLoader final : public GenericTypeLoader {
-    Type* load(Span<TypeDesc> desc) override
-    {
-        SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_GUID);
-        SKR_ASSERT(desc[0].value_guid() == kPointerGenericGUID);
-        return SkrNew<PointerType>(get_type_from_type_desc(desc.subspan(1)));
-    }
-    void destroy(Type* type) override
-    {
-        SkrDelete(type);
-    }
+struct RUNTIME_API PointerTypeLoader final : public GenericTypeLoader {
+    Type* load(Span<TypeDesc> desc) override;
+    void  destroy(Type* type) override;
 };
 } // namespace skr::rttr

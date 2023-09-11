@@ -5,6 +5,12 @@
 #include "rttr/type/reference_type.cpp"
 #include "rttr/type/type.cpp"
 #include "rttr/type/record_type.cpp"
+#include "rttr/type/enum_type.cpp"
+
+// rttr/type_loader
+#include "rttr/type_loader/array_type_loader.cpp"
+#include "rttr/type_loader/pointer_type_loader.cpp"
+#include "rttr/type_loader/reference_type_loader.cpp"
 
 // rttr/
 #include "rttr/guid.cpp"
