@@ -4,7 +4,7 @@
 
 namespace skr::rttr
 {
-struct RUNTIME_API ArrayTypeLoader final : public GenericTypeLoader {
+struct SKR_RUNTIME_API ArrayTypeLoader final : public GenericTypeLoader {
     Type* load(Span<TypeDesc> desc) override;
     void  destroy(Type* type) override;
 };

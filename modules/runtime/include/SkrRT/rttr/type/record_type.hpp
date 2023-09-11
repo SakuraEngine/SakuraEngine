@@ -36,7 +36,7 @@ struct Method {
     ExecutableType executable      = {};
 };
 
-struct RUNTIME_API RecordType : public Type {
+struct SKR_RUNTIME_API RecordType : public Type {
     RecordType(GUID type_id, size_t size, size_t alignment, Span<Type*> base_types, Span<FieldInfo> fields, Span<MethodInfo> methods);
 
     // find methods

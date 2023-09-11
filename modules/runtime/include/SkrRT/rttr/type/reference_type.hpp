@@ -3,7 +3,7 @@
 
 namespace skr::rttr
 {
-struct RUNTIME_API ReferenceType : public GenericType {
+struct SKR_RUNTIME_API ReferenceType : public GenericType {
     ReferenceType(Type* target_type);
 
     bool call_ctor(void* ptr) const override;
