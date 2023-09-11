@@ -45,6 +45,17 @@ SKR_INLINE Type* type_of() SKR_NOEXCEPT
 }
 } // namespace skr::rttr
 
+// remove cv
+namespace skr::rttr
+{
+template <typename T>
+struct RTTRTraits<const T> : RTTRTraits<T> {
+};
+template <typename T>
+struct RTTRTraits<volatile T> : RTTRTraits<T> {
+};
+} // namespace skr::rttr
+
 // primitive types
 namespace skr::rttr
 {
