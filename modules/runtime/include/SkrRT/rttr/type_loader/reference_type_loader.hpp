@@ -4,16 +4,8 @@
 
 namespace skr::rttr
 {
-struct ReferenceTypeLoader final : public GenericTypeLoader {
-    Type* load(Span<TypeDesc> desc) override
-    {
-        SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_GUID);
-        SKR_ASSERT(desc[0].value_guid() == kReferenceGenericGUID);
-        return SkrNew<ReferenceType>(get_type_from_type_desc(desc.subspan(1)));
-    }
-    void destroy(Type* type) override
-    {
-        SkrDelete(type);
-    }
+struct RUNTIME_API ReferenceTypeLoader final : public GenericTypeLoader {
+    Type* load(Span<TypeDesc> desc) override;
+    void  destroy(Type* type) override;
 };
 } // namespace skr::rttr
