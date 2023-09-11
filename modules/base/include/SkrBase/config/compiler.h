@@ -11,7 +11,10 @@
 //      SKR_CXX_14
 //      SKR_CXX_17
 //      SKR_CXX_20
-//      SKR_CXX_VER
+//      SKR_CXX_VERSION
+//
+// -> other
+//      SKR_COMPILER_VERSION
 //-------------------------------------------------------------------------------
 
 #include "platform.h"
@@ -69,14 +72,22 @@
 
 // cxx version
 #if defined(SKR_CXX_20)
-    #define SKR_CXX_VER 20
+    #define SKR_CXX_VERSION 20
 #elif defined(SKR_CXX_17)
-    #define SKR_CXX_VER 17
+    #define SKR_CXX_VERSION 17
 #elif defined(SKR_CXX_14)
-    #define SKR_CXX_VER 14
+    #define SKR_CXX_VERSION 14
 #elif defined(SKR_CXX_11)
-    #define SKR_CXX_VER 11
+    #define SKR_CXX_VERSION 11
 #endif
 
 // fall back
 #include "compiler_fallback.inc"
+
+#if SKR_COMPILER_MSVC
+    #define SKR_COMPILER_VERSION _MSC_VER
+#elif SKR_COMPILER_CLANG || SKR_COMPILER_CLANG_CL
+    #define SKR_COMPILER_VERSION (__clang_major__ * 100 + __clang_minor__)
+#elif SKR_COMPILER_GCC
+    #define SKR_COMPILER_VERSION (__GNUC__ * 1000 + __GNUC_MINOR__)
+#endif
