@@ -70,7 +70,7 @@ namespace skr::rttr
         }                                                                                    \
                                                                                              \
         inline static string_view get_name() { return SKR_RTTR_PRIMITIVE_MAKE_U8(#__TYPE); } \
-        inline static GUID        get_guid() { return __GUID##_guid; }                       \
+        inline static GUID        get_guid() { return u8##__GUID##_guid; }                   \
         inline static Type*       get_type()                                                 \
         {                                                                                    \
             static Type* type = nullptr;                                                     \
