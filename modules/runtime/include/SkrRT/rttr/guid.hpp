@@ -128,7 +128,7 @@ constexpr GUID make_guid_helper(const char8_t* begin)
 }
 } // namespace __help
 
-constexpr GUID operator""_guid(const char* str, size_t N)
+constexpr GUID operator""_guid(const char8_t* str, size_t N)
 {
     auto Data1 = __help::parse_hex<uint32_t>(str);
     str += 8 + 1;
