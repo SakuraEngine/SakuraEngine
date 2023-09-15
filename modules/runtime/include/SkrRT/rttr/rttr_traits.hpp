@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
 #include "SkrRT/rttr/guid.hpp"
+#include "SkrRT/platform/configure.h"
 #include "SkrRT/rttr/type_desc.hpp"
 #include "SkrRT/rttr/type_registry.hpp"
 #include "SkrRT/rttr/type/type.hpp"
@@ -102,7 +102,7 @@ SKR_RTTR_PRIMITIVE_TYPE_TRAITS(double, "9454d5cd-68dd-4039-8e67-07732de87e5c")
 // pointer type
 namespace skr::rttr
 {
-static constexpr inline GUID kPointerGenericGUID = "d2b6757d-3e32-4073-b483-62f41bc4bd8a"_guid;
+static constexpr inline GUID kPointerGenericGUID = u8"d2b6757d-3e32-4073-b483-62f41bc4bd8a"_guid;
 template <typename T>
 struct RTTRTraits<T*> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 1;
@@ -138,7 +138,7 @@ struct RTTRTraits<T*> {
 // reference type
 namespace skr::rttr
 {
-static constexpr inline GUID kReferenceGenericGUID = "277d6af2-91e9-4ee3-a56f-b6e3becf88df"_guid;
+static constexpr inline GUID kReferenceGenericGUID = u8"277d6af2-91e9-4ee3-a56f-b6e3becf88df"_guid;
 template <typename T>
 struct RTTRTraits<T&> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 1;
@@ -174,7 +174,7 @@ struct RTTRTraits<T&> {
 // array type
 namespace skr::rttr
 {
-static constexpr inline GUID kArrayGenericGUID = "b382ee62-3a82-4cf0-9b29-263f2cc848d9"_guid;
+static constexpr inline GUID kArrayGenericGUID = u8"b382ee62-3a82-4cf0-9b29-263f2cc848d9"_guid;
 template <typename T, size_t N>
 struct RTTRTraits<T[N]> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 3;
