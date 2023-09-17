@@ -2,7 +2,7 @@ local lmdb_include_dir = "lmdb/include"
 local lmdb_include_dir_private = "lmdb/include/lmdb"
 local lmdb_source_dir = "lmdb"
 
-set_languages("c99")
+set_languages("c89")
 add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
 
 target("lmdb")
