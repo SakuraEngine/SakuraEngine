@@ -7,7 +7,8 @@
 //      SKR_PLAT_WIN32
 //      SKR_PLAT_WIN64
 //      SKR_PLAT_WINDOWS
-//      SKR_PLAT_MAC_OSX
+//      SKR_PLAT_MACOSX
+//      SKR_PLAT_UNIX
 //      SKR_PLAT_IPHONE
 //      SKR_PLAT_IPHONE_SIMULATOR
 //
@@ -39,8 +40,11 @@
 #ifndef SKR_PLAT_WIN64
     #define SKR_PLAT_WIN64 0
 #endif
-#ifndef SKR_PLAT_MAC_OSX
-    #define SKR_PLAT_MAC_OSX 0
+#ifndef SKR_PLAT_MACOSX
+    #define SKR_PLAT_MACOSX 0
+#endif
+#ifndef SKR_PLAT_UNIX
+    #define SKR_PLAT_UNIX 0
 #endif
 #ifndef SKR_PLAT_IPHONE
     #define SKR_PLAT_IPHONE 0

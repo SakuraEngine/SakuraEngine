@@ -1,4 +1,18 @@
 #pragma once
+//-------------------------------------------------------------------------------
+// unused
+// alignas
+// assume
+// enable/disable optimization
+// inline
+// forceinline
+// extern c
+// export/import/static API
+// ptr size
+// no vtable
+// noexcept
+//-------------------------------------------------------------------------------
+
 #if __has_include("stdint.h")
     #include <stdint.h>
 #endif

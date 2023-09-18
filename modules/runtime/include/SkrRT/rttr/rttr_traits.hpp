@@ -56,48 +56,46 @@ struct RTTRTraits<volatile T> : RTTRTraits<T> {
 };
 } // namespace skr::rttr
 
+// help marcos
+#define SKR_RTTR_MAKE_U8(__VALUE) u8##__VALUE
+#define SKR_RTTR_TYPE(__TYPE, __GUID)                                              \
+    namespace skr::rttr                                                            \
+    {                                                                              \
+    template <>                                                                    \
+    struct RTTRTraits<__TYPE> {                                                    \
+        inline static constexpr size_t type_desc_type = 1;                         \
+        inline static void             write_type_desc(TypeDesc* desc)             \
+        {                                                                          \
+            new (desc) TypeDesc{ get_guid() };                                     \
+        }                                                                          \
+                                                                                   \
+        inline static string_view get_name() { return SKR_RTTR_MAKE_U8(#__TYPE); } \
+        inline static GUID        get_guid() { return u8##__GUID##_guid; }         \
+        inline static Type*       get_type()                                       \
+        {                                                                          \
+            static Type* type = nullptr;                                           \
+            if (!type)                                                             \
+            {                                                                      \
+                type = get_type_from_guid(get_guid());                             \
+            }                                                                      \
+            return type;                                                           \
+        }                                                                          \
+    };                                                                             \
+    }
+
 // primitive types
-namespace skr::rttr
-{
-#define SKR_RTTR_PRIMITIVE_MAKE_U8(__VALUE) u8##__VALUE
-#define SKR_RTTR_PRIMITIVE_TYPE_TRAITS(__TYPE, __GUID)                                       \
-    template <>                                                                              \
-    struct RTTRTraits<__TYPE> {                                                              \
-        inline static constexpr size_t type_desc_type = 1;                                   \
-        inline static void             write_type_desc(TypeDesc* desc)                       \
-        {                                                                                    \
-            new (desc) TypeDesc{ get_guid() };                                               \
-        }                                                                                    \
-                                                                                             \
-        inline static string_view get_name() { return SKR_RTTR_PRIMITIVE_MAKE_U8(#__TYPE); } \
-        inline static GUID        get_guid() { return u8##__GUID##_guid; }                   \
-        inline static Type*       get_type()                                                 \
-        {                                                                                    \
-            static Type* type = nullptr;                                                     \
-            if (!type)                                                                       \
-            {                                                                                \
-                type = get_type_from_guid(get_guid());                                       \
-            }                                                                                \
-            return type;                                                                     \
-        }                                                                                    \
-    };
-
-SKR_RTTR_PRIMITIVE_TYPE_TRAITS(void, "ca27c68d-b987-482c-a031-59112a81eba8")
-SKR_RTTR_PRIMITIVE_TYPE_TRAITS(bool, "12721970-aa6f-4114-a1d4-e4542dc42956")
-SKR_RTTR_PRIMITIVE_TYPE_TRAITS(int8_t, "28a92ad9-f90d-443e-b3d2-6cbe7fcb0e3f")
-SKR_RTTR_PRIMITIVE_TYPE_TRAITS(int16_t, "604d2131-e4e9-4ffc-8fc0-e9aaf5c4012c")
-SKR_RTTR_PRIMITIVE_TYPE_TRAITS(int32_t, "ed57842f-4aba-44ff-b581-d00a88e031b1")
-SKR_RTTR_PRIMITIVE_TYPE_TRAITS(int64_t, "6c5df40d-2109-4b2c-b7cc-1e5a37bbf9ed")
-SKR_RTTR_PRIMITIVE_TYPE_TRAITS(uint8_t, "0d38d18f-7faa-4794-a261-67eadb4e4c13")
-SKR_RTTR_PRIMITIVE_TYPE_TRAITS(uint16_t, "da5f823f-89d5-4d3a-9ec5-1eeab6a9da0b")
-SKR_RTTR_PRIMITIVE_TYPE_TRAITS(uint32_t, "582975db-c2a3-4646-bcea-8cc3c1a0f7e5")
-SKR_RTTR_PRIMITIVE_TYPE_TRAITS(uint64_t, "52b49582-f1f3-4b34-94f2-f89cc40499ca")
-SKR_RTTR_PRIMITIVE_TYPE_TRAITS(float, "42f9cf37-9995-40a7-9776-1cdb67b98fcf")
-SKR_RTTR_PRIMITIVE_TYPE_TRAITS(double, "9454d5cd-68dd-4039-8e67-07732de87e5c")
-
-#undef SKR_RTTR_PRIMITIVE_TYPE_TRAITS
-#undef SKR_RTTR_PRIMITIVE_MAKE_U8
-} // namespace skr::rttr
+SKR_RTTR_TYPE(void, "ca27c68d-b987-482c-a031-59112a81eba8")
+SKR_RTTR_TYPE(bool, "12721970-aa6f-4114-a1d4-e4542dc42956")
+SKR_RTTR_TYPE(int8_t, "28a92ad9-f90d-443e-b3d2-6cbe7fcb0e3f")
+SKR_RTTR_TYPE(int16_t, "604d2131-e4e9-4ffc-8fc0-e9aaf5c4012c")
+SKR_RTTR_TYPE(int32_t, "ed57842f-4aba-44ff-b581-d00a88e031b1")
+SKR_RTTR_TYPE(int64_t, "6c5df40d-2109-4b2c-b7cc-1e5a37bbf9ed")
+SKR_RTTR_TYPE(uint8_t, "0d38d18f-7faa-4794-a261-67eadb4e4c13")
+SKR_RTTR_TYPE(uint16_t, "da5f823f-89d5-4d3a-9ec5-1eeab6a9da0b")
+SKR_RTTR_TYPE(uint32_t, "582975db-c2a3-4646-bcea-8cc3c1a0f7e5")
+SKR_RTTR_TYPE(uint64_t, "52b49582-f1f3-4b34-94f2-f89cc40499ca")
+SKR_RTTR_TYPE(float, "42f9cf37-9995-40a7-9776-1cdb67b98fcf")
+SKR_RTTR_TYPE(double, "9454d5cd-68dd-4039-8e67-07732de87e5c")
 
 // pointer type
 namespace skr::rttr

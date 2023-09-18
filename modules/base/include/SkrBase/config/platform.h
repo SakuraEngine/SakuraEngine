@@ -4,7 +4,8 @@
 //      SKR_PLAT_WIN32
 //      SKR_PLAT_WIN64
 //      SKR_PLAT_WINDOWS
-//      SKR_PLAT_MAC_OSX
+//      SKR_PLAT_MACOSX
+//      SKR_PLAT_UNIX
 //      SKR_PLAT_IPHONE
 //      SKR_PLAT_IPHONE_SIMULATOR
 //
@@ -50,8 +51,12 @@
         #define SKR_PLAT_IPHONE 1
     #elif TARGET_OS_MAC == 1
         /* macOS */
-        #define SKR_PLAT_MAC_OSX 1
+        #define SKR_PLAT_MACOSX 1
     #endif
+#endif
+
+#if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
+    #define SKR_PLAT_UNIX 1
 #endif
 
 // architecture
@@ -110,19 +115,6 @@
 // fallback
 #include "platform_fallback.inc"
 
-// big platform def
+// other platform def
 #define SKR_PLAT_WINDOWS SKR_PLAT_WIN32 || SKR_PLAT_WIN64
 #define SKR_ARCH_WA SKR_ARCH_WA32 || SKR_ARCH_WA64
-
-// Platform Specific Configure
-#define SKR_HEADER_SCOPE_DEFINING_PLATFORM_CONFIGURE
-#ifdef __APPLE__
-    #include "platform/apple.h"
-#endif
-#ifdef _WIN32
-    #include "platform/windows.h"
-#endif
-#ifndef SKR_OS_DPI
-    #define SKR_OS_DPI 72
-#endif
-#undef SKR_HEADER_SCOPE_DEFINING_PLATFORM_CONFIGURE
