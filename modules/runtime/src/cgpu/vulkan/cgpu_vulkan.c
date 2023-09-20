@@ -768,6 +768,7 @@ static const char* kVkPSOMemoryPoolName = "cgpu::vk_pso";
 CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc)
 {
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
+    CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)device->adapter;
     CGPURootSignature_Vulkan* RS = (CGPURootSignature_Vulkan*)desc->root_signature;
     
     uint32_t input_binding_count = 0;
@@ -907,22 +908,15 @@ CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, con
             .scissorCount = 1,
             .pScissors = NULL
     };
-	VkDynamicState dyn_states[] =
-    {
-        VK_DYNAMIC_STATE_VIEWPORT,
-        VK_DYNAMIC_STATE_SCISSOR,
-        VK_DYNAMIC_STATE_BLEND_CONSTANTS,
-        VK_DYNAMIC_STATE_DEPTH_BOUNDS,
-        VK_DYNAMIC_STATE_STENCIL_REFERENCE,
-#if VK_KHR_fragment_shading_rate
-        VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR 
-#endif
-    };
+    uint32_t dyn_state_count = 0;
+    VkUitl_QueryDynamicPipelineStates(A, &dyn_state_count, CGPU_NULLPTR);
+    VkDynamicState* dyn_states = cgpu_callocN(dyn_state_count, sizeof(VkDynamicState), kVkPSOMemoryPoolName);
+    VkUitl_QueryDynamicPipelineStates(A, &dyn_state_count, dyn_states);
     VkPipelineDynamicStateCreateInfo dys = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.dynamicStateCount = sizeof(dyn_states) / sizeof(dyn_states[0]),
+		.dynamicStateCount = dyn_state_count,
 		.pDynamicStates = dyn_states
     };
     // Multi-sampling
@@ -1078,6 +1072,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, con
     };
     VkResult createResult = D->mVkDeviceTable.vkCreateGraphicsPipelines(D->pVkDevice,
         D->pPipelineCache, 1, &pipelineInfo, GLOBAL_VkAllocationCallbacks, &RP->pVkPipeline);
+    cgpu_freeN(dyn_states, kVkPSOMemoryPoolName);
     if (createResult != VK_SUCCESS)
     {
         cgpu_fatal("CGPU VULKAN: Failed to create Graphics Pipeline! Error Code: %d", createResult);
