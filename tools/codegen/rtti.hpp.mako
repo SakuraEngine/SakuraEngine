@@ -1,5 +1,7 @@
 // BEGIN RTTI GENERATED
 #include "SkrRT/type/type.hpp"
+#include "SkrRT/rttr/enum_traits.hpp"
+#include "SkrRT/rttr/rttr_traits.hpp"
 
 namespace skr::type
 {
@@ -25,3 +27,18 @@ namespace skr::type
 //${api} skr::span<const skr_type_t*> skr_get_all_records_${module}();
 //${api} skr::span<const skr_type_t*> skr_get_all_enums_${module}();
 // END RTTI GENERATED
+
+// BEGIN RTTR GENERATED
+namespace skr::rttr
+{
+%for enum in generator.filter_rtti(db.enums):
+template <>
+struct ${api} EnumTraits<${enum.name}>
+{
+    static Span<EnumItem<${enum.name}>> items();
+    static string_view                  to_string(const ${enum.name}& value);
+    static bool                         from_string(string_view str, ${enum.name}& value);
+};
+%endfor
+}
+// END RTTR GENERATED

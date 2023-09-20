@@ -8,7 +8,7 @@ namespace skr::rttr
 template <typename T>
 struct EnumTypeFromTraits : public EnumType {
     EnumTypeFromTraits()
-        : EnumType(get_underlying_type<T>(), RTTRTraits<T>::get_guid())
+        : EnumType(RTTRTraits<std::underlying_type_t<T>>::get_type(), RTTRTraits<T>::get_guid())
     {
     }
 
@@ -33,7 +33,7 @@ struct EnumTypeFromTraits : public EnumType {
         }
         else
         {
-            return "";
+            return u8"";
         }
     }
 };

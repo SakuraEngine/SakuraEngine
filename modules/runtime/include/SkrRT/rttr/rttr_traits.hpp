@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/rttr/guid.hpp"
 #include "SkrRT/platform/configure.h"
 #include "SkrRT/rttr/type_desc.hpp"
@@ -14,12 +15,12 @@ struct Type;
 
 template <typename T>
 struct RTTRTraits {
-    inline static constexpr size_t type_desc_size = 1;
-    static void                    write_type_desc(TypeDesc* desc);
+    // inline static constexpr size_t type_desc_size = 1;
+    // static void                    write_type_desc(TypeDesc* desc);
 
-    static string_view get_name();
-    static GUID        get_guid();
-    static Type*       get_type();
+    // static string_view get_name();
+    // static GUID        get_guid();
+    // static Type*       get_type();
 };
 
 template <typename T>
@@ -63,7 +64,7 @@ struct RTTRTraits<volatile T> : RTTRTraits<T> {
     {                                                                              \
     template <>                                                                    \
     struct RTTRTraits<__TYPE> {                                                    \
-        inline static constexpr size_t type_desc_type = 1;                         \
+        inline static constexpr size_t type_desc_size = 1;                         \
         inline static void             write_type_desc(TypeDesc* desc)             \
         {                                                                          \
             new (desc) TypeDesc{ get_guid() };                                     \
@@ -278,3 +279,148 @@ struct RTTRTraits<T[N1][N2][N3]>
 };
 
 } // namespace skr::rttr
+
+// skr types
+// TODO. remove it
+SKR_RTTR_TYPE(skr_guid_t, "80EE37B7-E9C0-40E6-BF2F-51E12053A7A9");
+SKR_RTTR_TYPE(skr_md5_t, "F8ABEC14-9436-43B5-A93A-460E7D3CBEC2");
+SKR_RTTR_TYPE(skr_resource_handle_t, "A9E0CE3D-5E9B-45F1-AC28-B882885C63AB");
+SKR_RTTR_TYPE(skr_rotator_t, "236DFBE6-1554-4BCF-A021-1DAD18BF19B8");
+SKR_RTTR_TYPE(skr_float2_t, "CD0FEAC8-C536-4DE7-854A-EC711E59F17D");
+SKR_RTTR_TYPE(skr_float3_t, "9E6AB3E9-325F-4224-935C-233CC8DE47B6");
+SKR_RTTR_TYPE(skr_float4_t, "38BFB8AD-2287-40FC-8AFE-185CABF84C4A");
+SKR_RTTR_TYPE(skr_float4x4_t, "E49D2F13-9DFF-4A7B-8D43-27F68BA932E0");
+SKR_RTTR_TYPE(skr_quaternion_t, "51977A88-7095-4FA7-8467-541698803936");
+SKR_RTTR_TYPE(::skr::string, "214ED643-54BD-4213-BE37-E336A77FDE84");
+SKR_RTTR_TYPE(::skr::string_view, "B799BA81-6009-405D-9131-E4B6101660DC");
+SKR_RTTR_TYPE(::skr::SInterface, "244617fe-5274-47bc-aa3d-acd76dbbeddd");
+
+// template types
+// TODO. 仅仅为了过编译
+#include "SkrRT/containers/sptr.hpp"
+#include "EASTL/variant.h"
+#include "EASTL/span.h"
+#include "EASTL/vector.h"
+namespace skr::rttr
+{
+template <typename T>
+struct RTTRTraits<eastl::vector<T>> {
+    inline static constexpr size_t type_desc_size = 1;
+    inline static void             write_type_desc(TypeDesc* desc)
+    {
+    }
+
+    inline static string_view get_name()
+    {
+        return u8"Vector";
+    }
+    inline static GUID get_guid()
+    {
+        return {};
+    }
+    inline static Type* get_type()
+    {
+        return nullptr;
+    }
+};
+template <typename T>
+struct RTTRTraits<eastl::span<T>> {
+    inline static constexpr size_t type_desc_size = 1;
+    inline static void             write_type_desc(TypeDesc* desc)
+    {
+    }
+
+    inline static string_view get_name()
+    {
+        return u8"Vector";
+    }
+    inline static GUID get_guid()
+    {
+        return {};
+    }
+    inline static Type* get_type()
+    {
+        return nullptr;
+    }
+};
+template <typename T>
+struct RTTRTraits<skr::resource::TResourceHandle<T>> {
+    inline static constexpr size_t type_desc_size = 1;
+    inline static void             write_type_desc(TypeDesc* desc)
+    {
+    }
+
+    inline static string_view get_name()
+    {
+        return u8"Vector";
+    }
+    inline static GUID get_guid()
+    {
+        return {};
+    }
+    inline static Type* get_type()
+    {
+        return nullptr;
+    }
+};
+template <typename T>
+struct RTTRTraits<skr::SPtrHelper<T>> {
+    inline static constexpr size_t type_desc_size = 1;
+    inline static void             write_type_desc(TypeDesc* desc)
+    {
+    }
+
+    inline static string_view get_name()
+    {
+        return u8"Vector";
+    }
+    inline static GUID get_guid()
+    {
+        return {};
+    }
+    inline static Type* get_type()
+    {
+        return nullptr;
+    }
+};
+template <typename T>
+struct RTTRTraits<skr::TEnumAsByte<T>> {
+    inline static constexpr size_t type_desc_size = 1;
+    inline static void             write_type_desc(TypeDesc* desc)
+    {
+    }
+
+    inline static string_view get_name()
+    {
+        return u8"Vector";
+    }
+    inline static GUID get_guid()
+    {
+        return {};
+    }
+    inline static Type* get_type()
+    {
+        return nullptr;
+    }
+};
+template <typename... TS>
+struct RTTRTraits<eastl::variant<TS...>> {
+    inline static constexpr size_t type_desc_size = 1;
+    inline static void             write_type_desc(TypeDesc* desc)
+    {
+    }
+
+    inline static string_view get_name()
+    {
+        return u8"Vector";
+    }
+    inline static GUID get_guid()
+    {
+        return {};
+    }
+    inline static Type* get_type()
+    {
+        return nullptr;
+    }
+};
+}; // namespace skr::rttr

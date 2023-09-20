@@ -9,6 +9,10 @@ enums = generator.filter_rtti(db.enums)
 #include "SkrRT/misc/hash.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/type/type_helper.hpp"
+#include "SkrRT/rttr/type_loader/type_loader.hpp"
+#include "SkrRT/rttr/type/record_type.hpp"
+#include "SkrRT/rttr/exec_static.hpp"
+#include "SkrRT/rttr/type_loader/enum_type_from_traits_loader.hpp"
 
 [[maybe_unused]] static const char8_t* ArgumentNumMisMatchFormat = u8"Argument number mismatch while calling %s, expected %d, got %d.";
 [[maybe_unused]] static const char8_t* ArgumentIncompatibleFormat = u8"Argument %s is incompatible while calling %s. %s can not be converted to %s.";
@@ -226,3 +230,113 @@ skr::span<const skr_type_t*> skr_get_all_enums_${module}()
 }
 
 //END RTTI GENERATED
+
+
+// BEGIN RTTR GENERATED
+namespace skr::rttr 
+{
+%for record in records:
+struct InternalTypeLoader_${record.id} : public TypeLoader
+{
+    Type* load() override 
+    {
+    <%
+        bases = record.bases
+        fields = [(name, field) for name, field in vars(record.fields).items() if not hasattr(field.attrs, "no-rtti")]
+        methods = [method for method in record.methods if hasattr(method.attrs, "rtti")]
+    %>
+        constexpr GUID guid = {${db.guid_constant(record)}};
+    
+    %if bases:
+        Type* base_types[] = {
+        %for base in bases:
+            RTTRTraits<${base}>::get_type(),
+        %endfor
+        };
+    %else:
+        Span<Type*> base_types = {};
+    %endif
+
+    %if fields:
+        FieldInfo fields[] = {
+        %for name, field in fields:
+            {u8"${name}", RTTRTraits<${field.type}>::get_type(), ${field.offset}},
+        %endfor
+        };
+    %else:
+        Span<FieldInfo> fields = {};
+    %endif
+
+    %if methods:
+        Span<MethodInfo> methods = {};
+    %else:
+        Span<MethodInfo> methods = {};
+    %endif
+
+        return SkrNew<RecordType>(
+            guid,
+            sizeof(${record.name}),
+            alignof(${record.name}),
+            make_record_basic_method_table<${record.name}>(),
+            Span<Type*>(base_types),
+            Span<FieldInfo>(fields),
+            Span<MethodInfo>(methods)
+        );
+    }
+    void destroy(Type* type) override
+    {
+        SkrDelete(type);
+    }
+};
+%endfor
+%for enum in generator.filter_rtti(db.enums):
+Span<EnumItem<${enum.name}>> EnumTraits<${enum.name}>::items()
+{
+    static EnumItem<${enum.name}> items[] = {
+    %for name, value in vars(enum.values).items():
+        {u8"${db.short_name(name)}", ${name}},
+    %endfor
+    };
+    return items;
+}
+skr::string_view EnumTraits<${enum.name}>::to_string(const ${enum.name}& value)
+{
+    switch (value)
+    {
+    %for name, value in vars(enum.values).items():
+    case ${enum.name}::${db.short_name(name)}: return u8"${db.short_name(name)}";
+    %endfor
+    default: SKR_UNREACHABLE_CODE(); return u8"${enum.name}::INVALID_ENUMERATOR";
+    }
+}
+bool EnumTraits<${enum.name}>::from_string(string_view str, ${enum.name}& value)
+{
+    const std::string_view enumStrV = {(const char*)str.raw().data(), (size_t)str.size()};
+    const auto hash = hash_crc32(enumStrV);
+    switch(hash)
+    {
+    %for name, value in vars(enum.values).items():
+        case hash_crc32<char>("${db.short_name(name)}"): if(str == u8"${db.short_name(name)}") value = ${name}; return true;
+    %endfor
+        default:
+            return false;
+    }
+}
+%endfor
+}
+
+SKR_RTTR_EXEC_STATIC
+{
+    using namespace ::skr::rttr;
+
+%for record in records:
+    static InternalTypeLoader_${record.id} LOADER__${record.id};
+    register_type_loader(RTTRTraits<${record.name}>::get_guid(), &LOADER__${record.id});
+
+%endfor
+%for enum in generator.filter_rtti(db.enums):
+    static EnumTypeFromTraitsLoader<${enum.name}> LOADER__${enum.id};
+    register_type_loader(RTTRTraits<${enum.name}>::get_guid(), &LOADER__${enum.id});
+%endfor
+};
+// END RTTR GENERATED
