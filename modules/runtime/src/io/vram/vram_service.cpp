@@ -20,6 +20,8 @@ inline static IOReaderId<IIOBatchProcessor> CreateCommonReader(VRAMService* serv
 inline static IOReaderId<IIOBatchProcessor> CreateDSReader(VRAMService* service, const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
 {
 #ifdef _WIN32
+    if (desc->gpu_device->adapter->instance->backend != CGPU_BACKEND_D3D12)
+        return nullptr;
     if (skr_query_dstorage_availability() == SKR_DSTORAGE_AVAILABILITY_HARDWARE)
     {
         auto reader = skr::SObjectPtr<DStorageVRAMReader>::Create(service, desc->gpu_device);
