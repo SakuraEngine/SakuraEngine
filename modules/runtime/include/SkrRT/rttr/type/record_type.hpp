@@ -47,15 +47,37 @@ struct RecordBasicMethodTable {
 template <typename T>
 SKR_INLINE RecordBasicMethodTable make_record_basic_method_table()
 {
-    return {
-        std::is_default_constructible_v<T> ? +[](void* self) { new (self) T(); } : nullptr,
-        std::is_destructible_v<T> ? +[](void* self) { ((T*)self)->~T(); } : nullptr,
-        std::is_copy_constructible_v<T> ? +[](void* dst, const void* src) { new (dst) T(*(T*)src); } : nullptr,
-        std::is_move_constructible_v<T> ? +[](void* dst, void* src) { new (dst) T(std::move(*(T*)src)); } : nullptr,
-        std::is_copy_assignable_v<T> ? +[](void* dst, const void* src) { *(T*)dst = *(T*)src; } : nullptr,
-        std::is_move_assignable_v<T> ? +[](void* dst, void* src) { *(T*)dst = std::move(*(T*)src); } : nullptr,
-        skr_hashable_v<T> ? +[](const void* ptr, size_t& result) { result = Hash<T>()(*(const T*)ptr); } : nullptr,
-    };
+    RecordBasicMethodTable table = {};
+    if constexpr (std::is_default_constructible_v<T>)
+    {
+        table.ctor = +[](void* self) { new (self) T(); };
+    }
+    if constexpr (std::is_destructible_v<T>)
+    {
+        table.dtor = +[](void* self) { ((T*)self)->~T(); };
+    }
+    if constexpr (std::is_copy_constructible_v<T>)
+    {
+        table.copy = +[](void* dst, const void* src) { new (dst) T(*(T*)src); };
+    }
+    if constexpr (std::is_move_constructible_v<T>)
+    {
+        table.move = +[](void* dst, void* src) { new (dst) T(std::move(*(T*)src)); };
+    }
+    if constexpr (std::is_copy_assignable_v<T>)
+    {
+        table.assign = +[](void* dst, const void* src) { *(T*)dst = *(T*)src; };
+    }
+    if constexpr (std::is_move_assignable_v<T>)
+    {
+        table.move_assign = +[](void* dst, void* src) { *(T*)dst = std::move(*(T*)src); };
+    }
+    if constexpr (skr_hashable_v<T>)
+    {
+        table.hash = +[](const void* ptr, size_t& result) { result = Hash<T>()(*(const T*)ptr); };
+    }
+
+    return table;
 }
 
 struct SKR_RUNTIME_API RecordType : public Type {

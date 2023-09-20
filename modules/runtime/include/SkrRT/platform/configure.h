@@ -12,7 +12,7 @@
 #elif defined(__GNUC__) || defined(__clang__)
     #define SKR_UNUSED __attribute__((unused))
 #elif defined(_MSC_VER)
-    #define SKR_UNUSED 
+    #define SKR_UNUSED
 #endif
 
 #ifdef __cplusplus
@@ -28,16 +28,16 @@
 #endif
 
 #ifndef SKR_ASSUME
-	#if defined(__clang__)
-		#define SKR_ASSUME(x) __builtin_assume(x)
-	#elif defined(_MSC_VER)
-		#define SKR_ASSUME(x) __assume(x)
-	#else
-		#define SKR_ASSUME(x)
-	#endif
+    #if defined(__clang__)
+        #define SKR_ASSUME(x) __builtin_assume(x)
+    #elif defined(_MSC_VER)
+        #define SKR_ASSUME(x) __assume(x)
+    #else
+        #define SKR_ASSUME(x)
+    #endif
 #endif
 
-#define sstatic_ctor_name_impl(index, expr) "\"StaticCtor" # index "\" : " #expr
+#define sstatic_ctor_name_impl(index, expr) "\"StaticCtor" #index "\" : " #expr
 #define sstatic_ctor_name(index, expr) sstatic_ctor_name_impl(index, #expr)
 #ifdef __meta__
     #define sreflect __attribute__((annotate("__reflect__")))
@@ -56,7 +56,7 @@
     #define spush_attr(...)
     #define spop_attr()
 
-	#if __skr_clangd__
+    #if __skr_clangd__
         #define sstatic_ctor(expr) //__attribute__((assume(((void)expr, true))))
     #else
         #define sstatic_ctor(expr)
@@ -65,14 +65,25 @@
 #define sreflect_struct(...) struct sreflect sattr(__VA_ARGS__)
 #define sreflect_enum(...) enum sreflect sattr(__VA_ARGS__)
 #define sreflect_enum_class(...) enum class sreflect sattr(__VA_ARGS__)
-#define simport_struct_impl_impl(idx, name) struct sreflect import_##idx { using type = ::name; } sattr("inject" : #name)
+#define simport_struct_impl_impl(idx, name) \
+    struct sreflect import_##idx {          \
+        using type = ::name;                \
+    } sattr("inject" : #name)
 #define simport_struct_impl(idx, name) simport_struct_impl_impl(idx, name)
 #define simport_struct(name) simport_struct_impl(__COUNTER__, name)
 
-typedef struct $T { uint32_t _; } $T;
-typedef struct $Super { uint32_t _; } $Super;
-typedef struct $Owner { uint32_t _; } $Owner;
-typedef struct $Module { uint32_t _; } $Module;
+typedef struct $T {
+    uint32_t _;
+} $T;
+typedef struct $Super {
+    uint32_t _;
+} $Super;
+typedef struct $Owner {
+    uint32_t _;
+} $Owner;
+typedef struct $Module {
+    uint32_t _;
+} $Module;
 extern const char* $name;
 
 #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
@@ -105,14 +116,14 @@ extern const char* $name;
 #endif
 
 #if defined(_MSC_VER) && !defined(__clang__)
-#ifndef FORCEINLINE
-    #define FORCEINLINE __forceinline
-#endif
+    #ifndef FORCEINLINE
+        #define FORCEINLINE __forceinline
+    #endif
     #define DEFINE_ALIGNED(def, a) __declspec(align(a)) def
 #else
-#ifndef FORCEINLINE
-    #define FORCEINLINE inline __attribute__((always_inline))
-#endif
+    #ifndef FORCEINLINE
+        #define FORCEINLINE inline __attribute__((always_inline))
+    #endif
     #define DEFINE_ALIGNED(def, a) __attribute__((aligned(a))) def
 #endif
 
@@ -207,7 +218,9 @@ extern const char* $name;
 #endif
 
 #if defined(__cplusplus)
-    #define DECLARE_ZERO(type, var) static_assert(std::is_trivially_constructible<type>::value, "not trival, 0 init is invalid!"); type var = {};
+    #define DECLARE_ZERO(type, var)                                                                    \
+        static_assert(std::is_trivially_constructible<type>::value, "not trival, 0 init is invalid!"); \
+        type var = {};
 #else
     #define DECLARE_ZERO(type, var) type var = { 0 };
 #endif
@@ -240,11 +253,11 @@ extern const char* $name;
 
     #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
-#if defined(__clang__)
-    #define SKR_UNREF_PARAM(x) (void)x
-#else
-    #define SKR_UNREF_PARAM(x) (x)
-#endif
+    #if defined(__clang__)
+        #define SKR_UNREF_PARAM(x) (void)x
+    #else
+        #define SKR_UNREF_PARAM(x) (x)
+    #endif
     #define SKR_ALIGNAS(x) __declspec(align(x))
     #define SKR_DEFINE_ALIGNED(def, a) __declspec(align(a)) def
     #define SKR_CALLCONV __cdecl
@@ -381,9 +394,9 @@ typedef int64_t host_ptr_t;
 #endif
 
 #if defined(SKR_COMPILER_MSVC) && !defined(SKR_COMPILER_CLANG)
-#define SKR_TEMPLATE
+    #define SKR_TEMPLATE
 #else
-#define SKR_TEMPLATE template
+    #define SKR_TEMPLATE template
 #endif
 
 #ifndef SKR_MANUAL_CONFIG_COMPILER_TRAITS
@@ -424,13 +437,6 @@ typedef int64_t host_ptr_t;
 #endif
 
 // inline defs
-#ifndef SKR_FORCEINLINE
-    #ifdef SKR_COMPILER_MSVC
-        #define SKR_FORCEINLINE __forceinline
-    #else
-        #define SKR_FORCEINLINE inline
-    #endif
-#endif
 #define SKR_INLINE inline
 #ifdef __cplusplus
     // By Default we use cpp-standard above 2011XXL
@@ -465,5 +471,5 @@ typedef int64_t host_ptr_t;
     #define THRESH_VECTOR_NORMALIZED 0.01
 #endif
 
-// TODO: 
+// TODO:
 #define SKR_RESOURCE_DEV_MODE

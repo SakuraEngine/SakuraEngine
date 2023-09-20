@@ -117,7 +117,7 @@ struct EnumValue {
 
     // caster
     template <typename T>
-    SKR_INLINE bool cast_to(T& result)
+    SKR_INLINE bool cast_to(T& result) const
     {
         if (!is_valid())
         {
@@ -227,6 +227,10 @@ struct EnumValue {
             {
                 return false;
             }
+        }
+        else {
+            SKR_UNREACHABLE_CODE()
+            return false;
         }
     }
 

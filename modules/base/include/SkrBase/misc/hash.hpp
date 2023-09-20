@@ -12,7 +12,7 @@ namespace detail
 template <typename T>
 using has_skr_hash = decltype(std::declval<const T&>()._skr_hash());
 template <typename T>
-using skr_hashable = decltype(std::declval<Hash<T>>()(std::declval<const T&>()));
+using skr_hashable = decltype(std::declval<Hash<T>>().operator()(std::declval<const T&>()));
 } // namespace detail
 template <typename T>
 inline constexpr bool has_skr_hash_v = is_detected_v<detail::has_skr_hash, T>;
