@@ -61,6 +61,7 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
 void VkUtil_FreeShaderReflection(CGPUShaderLibrary_Vulkan* library);
 
 // Feature Select Helpers
+void VkUitl_QueryDynamicPipelineStates(CGPUAdapter_Vulkan* VkAdapter, uint32_t* pCount, VkDynamicState* pStates);
 void VkUtil_SelectQueueIndices(CGPUAdapter_Vulkan* VkAdapter);
 void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter);
 void VkUtil_EnumFormatSupports(CGPUAdapter_Vulkan* VkAdapter);
