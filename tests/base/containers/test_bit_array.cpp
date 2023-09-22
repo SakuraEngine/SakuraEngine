@@ -292,4 +292,14 @@ TEST_CASE("test bit array")
             REQUIRE(it.index() % 5 == 0);
         }
     }
+
+    // test iterator
+    SUBCASE("iterator")
+    {
+        BitArray a;
+        for (auto b : a)
+        {
+            printf("%s\n", (b ? "true" : "false"));
+        }
+    }
 }

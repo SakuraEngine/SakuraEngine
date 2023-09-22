@@ -845,4 +845,14 @@ TEST_CASE("test sparse array")
         }
         REQUIRE_EQ(count, 1000);
     }
+
+    // test iterator
+    SUBCASE("iterator")
+    {
+        TestSparseArray a;
+        for (auto n : a)
+        {
+            printf("%d\n", n);
+        }
+    }
 }

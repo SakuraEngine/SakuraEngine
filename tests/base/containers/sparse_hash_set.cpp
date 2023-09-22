@@ -462,4 +462,14 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(sub_a_c.size(), 2);
         REQUIRE(sub_a_c == TestHashSet({ 4, 5 }));
     }
+
+    // test iterator
+    SUBCASE("iterator")
+    {
+        TestHashSet a;
+        for (auto n : a)
+        {
+            printf("%d\n", n);
+        }
+    }
 }

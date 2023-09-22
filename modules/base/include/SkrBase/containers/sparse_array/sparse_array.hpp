@@ -259,12 +259,12 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_realloc(SizeType new_capacity
             _bit_array      = new_memory;
             _bit_array_size = new_block_size * BitAlgo::PerBlockSize;
         }
+    }
 
-        // cleanup new bit array memory
-        if (new_block_size > old_block_size)
-        {
-            memset(_bit_array + old_block_size, 0, (new_block_size - old_block_size) * sizeof(TBitBlock));
-        }
+    // cleanup new bit array memory
+    if (new_block_size > old_block_size)
+    {
+        memset(_bit_array + old_block_size, 0, (new_block_size - old_block_size) * sizeof(TBitBlock));
     }
 }
 template <typename T, typename TBitBlock, typename Alloc>

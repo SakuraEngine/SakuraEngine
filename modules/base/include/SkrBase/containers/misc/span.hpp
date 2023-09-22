@@ -60,9 +60,8 @@ struct Span {
     constexpr bool is_valid_ptr(T* ptr) const;
 
 private:
-private:
-    T*     _data;
-    size_t _size;
+    T*     _data = nullptr;
+    size_t _size = 0;
 };
 } // namespace skr::container
 
