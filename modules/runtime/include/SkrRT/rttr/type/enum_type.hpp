@@ -228,7 +228,8 @@ struct EnumValue {
                 return false;
             }
         }
-        else {
+        else
+        {
             SKR_UNREACHABLE_CODE()
             return false;
         }
@@ -254,7 +255,7 @@ private:
 };
 
 struct SKR_RUNTIME_API EnumType : public Type {
-    EnumType(Type* underlying_type, GUID type_id);
+    EnumType(Type* underlying_type, GUID type_id, string name);
 
     SKR_INLINE Type* underlying_type() const { return _underlying_type; }
 

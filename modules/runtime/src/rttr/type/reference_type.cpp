@@ -3,8 +3,8 @@
 
 namespace skr::rttr
 {
-ReferenceType::ReferenceType(Type* target_type)
-    : GenericType(kReferenceGenericGUID, GUID::Create(), sizeof(size_t&), alignof(size_t&))
+ReferenceType::ReferenceType(Type* target_type, string name)
+    : GenericType(kReferenceGenericGUID, std::move(name), GUID::Create(), sizeof(size_t&), alignof(size_t&))
 {
 }
 

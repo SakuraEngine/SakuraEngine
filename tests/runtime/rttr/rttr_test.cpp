@@ -16,14 +16,15 @@ TEST_CASE("test rttr")
     auto maxwell_type = static_cast<RecordType*>(type_of<Maxwell>());
     for (auto [guid, type] : maxwell_type->base_types())
     {
+        printf("%s [", type->name().c_str());
         print_guid(guid);
-        printf("\n");
+        printf("]\n");
     }
 
     for (const auto& [name, field] : maxwell_type->fields())
     {
-        printf("%s : ", name.c_str());
+        printf("%s : %s [", name.c_str(), field.type->name().c_str());
         print_guid(field.type->type_id());
-        printf("[%d]\n", field.offset);
+        printf("](%d)\n", field.offset);
     }
 }

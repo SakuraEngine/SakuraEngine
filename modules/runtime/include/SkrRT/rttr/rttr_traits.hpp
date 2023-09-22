@@ -15,12 +15,24 @@ struct Type;
 
 template <typename T>
 struct RTTRTraits {
-    // inline static constexpr size_t type_desc_size = 1;
-    // static void                    write_type_desc(TypeDesc* desc);
+    inline static constexpr size_t type_desc_size = 1;
+    static void                    write_type_desc(TypeDesc* desc)
+    {
+        static_assert(std::is_same_v<T, T*>, "RTTRTraits<T>::write_type_desc() is not implemented");
+    }
 
-    // static string_view get_name();
-    // static GUID        get_guid();
-    // static Type*       get_type();
+    static string_view get_name()
+    {
+        static_assert(std::is_same_v<T, T*>, "RTTRTraits<T>::write_type_desc() is not implemented");
+    }
+    static GUID get_guid()
+    {
+        static_assert(std::is_same_v<T, T*>, "RTTRTraits<T>::write_type_desc() is not implemented");
+    }
+    static Type* get_type()
+    {
+        static_assert(std::is_same_v<T, T*>, "RTTRTraits<T>::write_type_desc() is not implemented");
+    }
 };
 
 template <typename T>

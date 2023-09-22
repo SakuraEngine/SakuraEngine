@@ -81,7 +81,7 @@ SKR_INLINE RecordBasicMethodTable make_record_basic_method_table()
 }
 
 struct SKR_RUNTIME_API RecordType : public Type {
-    RecordType(GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods, Span<Type*> base_types, Span<FieldInfo> fields, Span<MethodInfo> methods);
+    RecordType(string name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods, Span<Type*> base_types, Span<FieldInfo> fields, Span<MethodInfo> methods);
 
     bool call_ctor(void* ptr) const override;
     bool call_dtor(void* ptr) const override;

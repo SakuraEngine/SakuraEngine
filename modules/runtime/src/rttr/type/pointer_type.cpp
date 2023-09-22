@@ -3,8 +3,8 @@
 
 namespace skr::rttr
 {
-PointerType::PointerType(Type* target_type)
-    : GenericType(kPointerGenericGUID, GUID::Create(), sizeof(void*), alignof(void*))
+PointerType::PointerType(Type* target_type, string name)
+    : GenericType(kPointerGenericGUID, std::move(name), GUID::Create(), sizeof(void*), alignof(void*))
 {
 }
 

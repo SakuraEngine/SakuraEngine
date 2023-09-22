@@ -2,8 +2,8 @@
 
 namespace skr::rttr
 {
-EnumType::EnumType(Type* underlying_type, GUID type_id)
-    : Type(ETypeCategory::SKR_TYPE_CATEGORY_ENUM, type_id, underlying_type->size(), underlying_type->alignment())
+EnumType::EnumType(Type* underlying_type, GUID type_id, string name)
+    : Type(ETypeCategory::SKR_TYPE_CATEGORY_ENUM, std::move(name), type_id, underlying_type->size(), underlying_type->alignment())
     , _underlying_type(underlying_type)
 {
 }

@@ -4,7 +4,7 @@
 namespace skr::rttr
 {
 struct SKR_RUNTIME_API PointerType : public GenericType {
-    PointerType(Type* target_type);
+    PointerType(Type* target_type, string name);
 
     bool call_ctor(void* ptr) const override;
     bool call_dtor(void* ptr) const override;

@@ -8,7 +8,9 @@ Type* PointerTypeLoader::load(Span<TypeDesc> desc)
 {
     SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_GUID);
     SKR_ASSERT(desc[0].value_guid() == kPointerGenericGUID);
-    return SkrNew<PointerType>(get_type_from_type_desc(desc.subspan(1)));
+
+    Type* target_type = get_type_from_type_desc(desc.subspan(1));
+    return SkrNew<PointerType>(target_type, format(u8"{}*", target_type->name()));
 }
 void PointerTypeLoader::destroy(Type* type)
 {
