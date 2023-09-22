@@ -683,4 +683,14 @@ TEST_CASE("test array")
     // [test in above code] stack
 
     // [needn't test] support foreach
+
+    // test iterator
+    SUBCASE("iterator")
+    {
+        TestArray a;
+        for (auto n : a)
+        {
+            printf("%d\n", n);
+        }
+    }
 }

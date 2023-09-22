@@ -402,4 +402,14 @@ TEST_CASE("test sparse hash map")
     }
 
     // [needn't test] set ops
+
+    // test iterator
+    SUBCASE("iterator")
+    {
+        TestHashMap a;
+        for (auto [k, v] : a)
+        {
+            printf("%d: T%d\n", k, v);
+        }
+    }
 }

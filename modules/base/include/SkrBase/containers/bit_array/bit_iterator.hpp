@@ -83,7 +83,10 @@ struct TrueBitIt {
         , _step_mask(Algo::FullMask << (start & Algo::PerBlockSizeMask))
     {
         SKR_ASSERT(start >= 0 && start <= size);
-        _find_first_set_bit();
+        if (data)
+        {
+            _find_first_set_bit();
+        }
     }
 
     SKR_INLINE TrueBitIt& operator++()
