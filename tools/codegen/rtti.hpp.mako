@@ -1,7 +1,5 @@
 // BEGIN RTTI GENERATED
 #include "SkrRT/type/type.hpp"
-#include "SkrRT/rttr/enum_traits.hpp"
-#include "SkrRT/rttr/rttr_traits.hpp"
 
 namespace skr::type
 {
@@ -29,8 +27,11 @@ namespace skr::type
 // END RTTI GENERATED
 
 // BEGIN RTTR GENERATED
+#include "SkrRT/rttr/enum_traits.hpp"
+#include "SkrRT/rttr/rttr_traits.hpp"
 namespace skr::rttr
 {
+// enum traits
 %for enum in generator.filter_rtti(db.enums):
 template <>
 struct ${api} EnumTraits<${enum.name}>
@@ -41,4 +42,12 @@ struct ${api} EnumTraits<${enum.name}>
 };
 %endfor
 }
+
+// rttr traits
+%for record in generator.filter_rtti(db.records):
+SKR_RTTR_TYPE(::${record.name}, "${record.attrs.guid}")
+%endfor
+%for enum in generator.filter_rtti(db.enums):
+SKR_RTTR_TYPE(::${enum.name}, "${enum.attrs.guid}")
+%endfor
 // END RTTR GENERATED

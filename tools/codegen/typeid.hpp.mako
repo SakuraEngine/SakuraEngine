@@ -1,6 +1,5 @@
 //BEGIN TYPEID GENERATED
 #include "SkrRT/type/type_id.hpp"
-#include "SkrRT/rttr/rttr_traits.hpp"
 
 namespace skr::type
 {
@@ -34,12 +33,3 @@ namespace skr::type
 %endfor
 }
 //END TYPEID GENERATED
-
-// BEGIN RTTR TRAITS GENERATED
-%for record in generator.filter_types(db.records):
-SKR_RTTR_TYPE(::${record.name}, "${record.attrs.guid}")
-%endfor
-%for enum in generator.filter_types(db.enums):
-SKR_RTTR_TYPE(::${enum.name}, "${enum.attrs.guid}")
-%endfor
-// END RTTR TRAITS GENERATED

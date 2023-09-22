@@ -35,5 +35,4 @@ sattr("rtti": true)
 Maxwell : public Dog{
 
 };
-
 } // namespace skr_rttr_test sreflect
