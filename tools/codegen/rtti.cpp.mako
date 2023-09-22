@@ -9,10 +9,6 @@ enums = generator.filter_rtti(db.enums)
 #include "SkrRT/misc/hash.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/type/type_helper.hpp"
-#include "SkrRT/rttr/type_loader/type_loader.hpp"
-#include "SkrRT/rttr/type/record_type.hpp"
-#include "SkrRT/rttr/exec_static.hpp"
-#include "SkrRT/rttr/type_loader/enum_type_from_traits_loader.hpp"
 
 [[maybe_unused]] static const char8_t* ArgumentNumMisMatchFormat = u8"Argument number mismatch while calling %s, expected %d, got %d.";
 [[maybe_unused]] static const char8_t* ArgumentIncompatibleFormat = u8"Argument %s is incompatible while calling %s. %s can not be converted to %s.";
@@ -233,6 +229,10 @@ skr::span<const skr_type_t*> skr_get_all_enums_${module}()
 
 
 // BEGIN RTTR GENERATED
+#include "SkrRT/rttr/type_loader/type_loader.hpp"
+#include "SkrRT/rttr/type/record_type.hpp"
+#include "SkrRT/rttr/exec_static.hpp"
+#include "SkrRT/rttr/type_loader/enum_type_from_traits_loader.hpp"
 namespace skr::rttr 
 {
 %for record in records:
