@@ -60,6 +60,18 @@ target("RTTITest")
     })
     add_files("rtti/rtti.cpp")
 
+executable_module("RTTRTest", "RTTR_TEST", engine_version)
+    set_group("05.tests/base")
+    set_kind("binary")
+    public_dependency("SkrRT", engine_version)
+    add_deps("SkrTestFramework", {public = false})
+    add_rules("c++.codegen", {
+        files = {"rttr/**.h", "rttr/**.hpp"},
+        rootdir = "rttr/",
+        api = "RTTR_TEST"
+    })
+    add_files("rttr/rttr_test.cpp")
+
 target("SPtrTest")
     set_group("05.tests/base")
     set_kind("binary")
