@@ -7,7 +7,7 @@ namespace skr::rttr
 template <typename T>
 struct PrimitiveType final : public Type {
     PrimitiveType()
-        : Type(ETypeCategory::SKR_TYPE_CATEGORY_PRIMITIVE, RTTRTraits<T>::get_guid(), sizeof(T), alignof(T))
+        : Type(ETypeCategory::SKR_TYPE_CATEGORY_PRIMITIVE, RTTRTraits<T>::get_name(), RTTRTraits<T>::get_guid(), sizeof(T), alignof(T))
     {
     }
 
@@ -43,7 +43,7 @@ struct PrimitiveType final : public Type {
 template <>
 struct PrimitiveType<void> final : public Type {
     PrimitiveType()
-        : Type(ETypeCategory::SKR_TYPE_CATEGORY_PRIMITIVE, RTTRTraits<void>::get_guid(), 1, 1)
+        : Type(ETypeCategory::SKR_TYPE_CATEGORY_PRIMITIVE, RTTRTraits<void>::get_name(), RTTRTraits<void>::get_guid(), 1, 1)
     {
     }
 

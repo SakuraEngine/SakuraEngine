@@ -2,8 +2,8 @@
 
 namespace skr::rttr
 {
-RecordType::RecordType(GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods, Span<Type*> base_types, Span<FieldInfo> fields, Span<MethodInfo> methods)
-    : Type(ETypeCategory::SKR_TYPE_CATEGORY_RECORD, type_id, size, alignment)
+RecordType::RecordType(string name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods, Span<Type*> base_types, Span<FieldInfo> fields, Span<MethodInfo> methods)
+    : Type(ETypeCategory::SKR_TYPE_CATEGORY_RECORD, std::move(name), type_id, size, alignment)
     , _basic_methods(basic_methods)
 {
     _base_types_map.reserve(base_types.size());

@@ -13,8 +13,8 @@ inline static size_t _element_count_of(Span<size_t> dimensions)
     return size;
 }
 
-ArrayType::ArrayType(Type* target_type, Span<size_t> dimensions)
-    : GenericType(kArrayGenericGUID, GUID::Create(), target_type->size() * _element_count_of(dimensions), target_type->alignment())
+ArrayType::ArrayType(Type* target_type, Span<size_t> dimensions, string name)
+    : GenericType(kArrayGenericGUID, std::move(name), GUID::Create(), target_type->size() * _element_count_of(dimensions), target_type->alignment())
     , _size(_element_count_of(dimensions))
     , _dimensions(dimensions.data(), dimensions.size())
 {

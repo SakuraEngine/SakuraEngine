@@ -17,7 +17,14 @@ Type* ArrayTypeLoader::load(Span<TypeDesc> desc)
         dimensions_buffer[dim_idx] = desc[dim_idx + 2].value_uint64();
     }
 
-    return SkrNew<ArrayType>(get_type_from_type_desc(desc.subspan(2 + dim)), Span<size_t>{ dimensions_buffer, dim });
+    Type*  target_type = get_type_from_type_desc(desc.subspan(2 + dim));
+    string type_name   = target_type->name();
+    for (int dim_idx = 0; dim_idx < dim; ++dim_idx)
+    {
+        type_name.append(format(u8"[{}]", dimensions_buffer[dim_idx]));
+    }
+
+    return SkrNew<ArrayType>(target_type, Span<size_t>{ dimensions_buffer, dim }, std::move(type_name));
 }
 void ArrayTypeLoader::destroy(Type* type)
 {

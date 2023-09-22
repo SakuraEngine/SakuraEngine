@@ -6,7 +6,7 @@
 namespace skr::rttr
 {
 struct SKR_RUNTIME_API ArrayType : public GenericType {
-    ArrayType(Type* target_type, Span<size_t> dimensions);
+    ArrayType(Type* target_type, Span<size_t> dimensions, string name);
 
     bool call_ctor(void* ptr) const override;
     bool call_dtor(void* ptr) const override;

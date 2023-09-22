@@ -245,8 +245,7 @@ struct InternalTypeLoader_${record.id} : public TypeLoader
         fields = [(name, field) for name, field in vars(record.fields).items() if not hasattr(field.attrs, "no-rtti")]
         methods = [method for method in record.methods if hasattr(method.attrs, "rtti")]
     %>
-        constexpr GUID guid = {${db.guid_constant(record)}};
-    
+
     %if bases:
         Type* base_types[] = {
         %for base in bases:
@@ -274,7 +273,8 @@ struct InternalTypeLoader_${record.id} : public TypeLoader
     %endif
 
         return SkrNew<RecordType>(
-            guid,
+            RTTRTraits<::${record.name}>::get_name(),
+            RTTRTraits<::${record.name}>::get_guid(),
             sizeof(${record.name}),
             alignof(${record.name}),
             make_record_basic_method_table<${record.name}>(),
