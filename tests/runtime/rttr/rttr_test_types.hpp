@@ -32,7 +32,12 @@ Duck : public Animal{
 
 sreflect_struct("guid": "88e524ad-4229-4e3d-9fb8-3bff9220868b")
 sattr("rtti": true)
-Maxwell : public Dog{
+Maxwell : public Dog
+{
 
+private:
+    float  animal_party;
+    int    luisa_compute;
+    double lian_quan_da_jiang_hu;
 };
 } // namespace skr_rttr_test sreflect
