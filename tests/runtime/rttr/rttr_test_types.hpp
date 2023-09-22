@@ -36,7 +36,7 @@ Maxwell : public Dog
 {
 
 private:
-    float  animal_party;
+    float  party_animals;
     int    luisa_compute;
     double lian_quan_da_jiang_hu;
 };

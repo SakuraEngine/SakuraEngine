@@ -27,4 +27,13 @@ TEST_CASE("test rttr")
         print_guid(field.type->type_id());
         printf("](%d)\n", field.offset);
     }
+
+    auto arr_type = type_of<int[10][100][114514]>();
+    printf("%s\n", arr_type->name().c_str());
+
+    auto pointer_type = type_of<const volatile Maxwell**>();
+    printf("%s\n", pointer_type->name().c_str());
+
+    auto reference_type = type_of<int&>();
+    printf("%s\n", reference_type->name().c_str());
 }
