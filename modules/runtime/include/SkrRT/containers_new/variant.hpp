@@ -3,6 +3,8 @@
 
 namespace skr
 {
-template <typename... TS>
-using Variant = eastl::variant<TS...>;
-}
+using eastl::variant;
+using eastl::visit;
+using eastl::variant_size_v;
+using eastl::variant_npos;
+} // namespace skr
