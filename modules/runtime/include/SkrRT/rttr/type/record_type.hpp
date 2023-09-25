@@ -8,6 +8,17 @@
 
 namespace skr::rttr
 {
+struct BaseInfo {
+    Type*  _type   = nullptr;
+    size_t _offset = 0;
+};
+template <typename FROM, typename TO>
+constexpr inline size_t get_cast_offset()
+{
+    return reinterpret_cast<size_t>(static_cast<TO*>(reinterpret_cast<FROM*>(0)));
+}
+
+// TODO. 直接使用 Field，并传递 Array<Field> 作为参数，使用 move 语义
 struct FieldInfo {
     string_view name   = {};
     Type*       type   = nullptr;
@@ -19,6 +30,7 @@ struct Field {
     size_t offset = 0;
 };
 
+// TODO. 直接使用 Method，并传递 Array<Method> 作为参数，使用 move 语义
 struct MethodInfo {
     using ExecutableType = void (*)(void* self, void* parameters, void* return_value);
 
@@ -35,6 +47,7 @@ struct Method {
     Array<Type*>   parameters_type = {};
     ExecutableType executable      = {};
 };
+
 struct RecordBasicMethodTable {
     void (*ctor)(void* self)                      = nullptr;
     void (*dtor)(void* self)                      = nullptr;
@@ -81,7 +94,7 @@ SKR_INLINE RecordBasicMethodTable make_record_basic_method_table()
 }
 
 struct SKR_RUNTIME_API RecordType : public Type {
-    RecordType(string name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods, Span<Type*> base_types, Span<FieldInfo> fields, Span<MethodInfo> methods);
+    RecordType(string name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods, Span<BaseInfo> base_types, Span<FieldInfo> fields, Span<MethodInfo> methods);
 
     bool call_ctor(void* ptr) const override;
     bool call_dtor(void* ptr) const override;
@@ -92,7 +105,7 @@ struct SKR_RUNTIME_API RecordType : public Type {
     bool call_hash(const void* ptr, size_t& result) const override;
 
     // getter
-    const UMap<GUID, Type*>&         base_types() const { return _base_types_map; }
+    const UMap<GUID, BaseInfo>&      base_types() const { return _base_types_map; }
     const MultiUMap<string, Field>&  fields() const { return _fields_map; }
     const MultiUMap<string, Method>& methods() const { return _methods_map; }
 
@@ -100,7 +113,7 @@ struct SKR_RUNTIME_API RecordType : public Type {
     // find fields
 
 private:
-    UMap<GUID, Type*>         _base_types_map = {};
+    UMap<GUID, BaseInfo>      _base_types_map = {};
     MultiUMap<string, Field>  _fields_map     = {};
     MultiUMap<string, Method> _methods_map    = {};
     RecordBasicMethodTable    _basic_methods  = {};

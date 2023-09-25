@@ -14,9 +14,9 @@ TEST_CASE("test rttr")
     using namespace skr::rttr;
     using namespace skr_rttr_test;
     auto maxwell_type = static_cast<RecordType*>(type_of<Maxwell>());
-    for (auto [guid, type] : maxwell_type->base_types())
+    for (const auto& [guid, base] : maxwell_type->base_types())
     {
-        printf("%s [", type->name().c_str());
+        printf("%s [", base._type->name().c_str());
         print_guid(guid);
         printf("]\n");
     }
