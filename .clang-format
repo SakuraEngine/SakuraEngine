@@ -22,6 +22,7 @@ SpaceAfterCStyleCast: false
 SpaceBeforeParens: ControlStatements
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceInEmptyParentheses: false
+SortUsingDeclarations: false
 
 ColumnLimit: 0
 PointerAlignment: Left
