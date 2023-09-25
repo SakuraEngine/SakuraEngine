@@ -2,37 +2,10 @@
 
 namespace skr::rttr
 {
-RecordType::RecordType(string name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods, Span<BaseInfo> base_types, Span<FieldInfo> fields, Span<MethodInfo> methods)
+RecordType::RecordType(string name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods)
     : Type(ETypeCategory::SKR_TYPE_CATEGORY_RECORD, std::move(name), type_id, size, alignment)
     , _basic_methods(basic_methods)
 {
-    _base_types_map.reserve(base_types.size());
-    _fields_map.reserve(fields.size());
-    _methods_map.reserve(methods.size());
-
-    for (const BaseInfo& base : base_types)
-    {
-        _base_types_map.add(base._type->type_id(), base);
-    }
-
-    for (const FieldInfo& field : fields)
-    {
-        _fields_map.add(field.name, { field.name, field.type, field.offset });
-    }
-
-    for (const MethodInfo& method : methods)
-    {
-        auto ref = _methods_map.add_default(method.name);
-
-        ref->value.name        = method.name;
-        ref->value.return_type = method.return_type;
-        ref->value.executable  = method.executable;
-        ref->value.parameters_type.reserve(method.parameters_type.size());
-        for (Type* parameter_type : method.parameters_type)
-        {
-            ref->value.parameters_type.add(parameter_type);
-        }
-    }
 }
 
 bool RecordType::call_ctor(void* ptr) const

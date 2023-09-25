@@ -72,7 +72,7 @@ namespace skr::type
         %else:
             static skr::span<skr_field_t> fields;
         %endif
-        %for i, method in methods:
+        %for i, method in enumerate(methods):
             %if vars(method.parameters):
                 static skr_field_t _params${i}[] = {
                 %for name, field in vars(method.parameters).items():
@@ -87,7 +87,7 @@ namespace skr::type
         
         %if methods:
         static skr_method_t methods[] = {
-        %for i, method in methods:
+        %for i, method in enumerate(methods):
             {
                 "${db.short_name(method.name)}", 
             %if method.retType == "void":
@@ -233,6 +233,8 @@ skr::span<const skr_type_t*> skr_get_all_enums_${module}()
 #include "SkrRT/rttr/type/record_type.hpp"
 #include "SkrRT/rttr/exec_static.hpp"
 #include "SkrRT/rttr/type_loader/enum_type_from_traits_loader.hpp"
+#include "SkrRT/containers_new/tuple.hpp"
+
 namespace skr::rttr 
 {
 %for enum in generator.filter_rtti(db.enums):
@@ -288,42 +290,81 @@ SKR_RTTR_EXEC_STATIC
             using namespace skr;
             using namespace skr::rttr;
 
-        %if bases:
-            BaseInfo base_types[] = {
-            %for base in bases:
-                {RTTRTraits<${base}>::get_type(), get_cast_offset<${record.name}, ${base}>()}
-            %endfor
-            };
-        %else:
-            Span<BaseInfo> base_types = {};
-        %endif
-
-        %if fields:
-            FieldInfo fields[] = {
-            %for name, field in fields:
-                {u8"${name}", RTTRTraits<${field.type}>::get_type(), ${field.offset}},
-            %endfor
-            };
-        %else:
-            Span<FieldInfo> fields = {};
-        %endif
-
-        %if methods:
-            Span<MethodInfo> methods = {};
-        %else:
-            Span<MethodInfo> methods = {};
-        %endif
-
-            return SkrNew<RecordType>(
+            RecordType* result = SkrNew<RecordType>(
                 RTTRTraits<::${record.name}>::get_name(),
                 RTTRTraits<::${record.name}>::get_guid(),
                 sizeof(${record.name}),
                 alignof(${record.name}),
-                make_record_basic_method_table<${record.name}>(),
-                Span<BaseInfo>(base_types),
-                Span<FieldInfo>(fields),
-                Span<MethodInfo>(methods)
+                make_record_basic_method_table<${record.name}>()
             );
+
+        %if bases:
+            UMap<GUID, BaseInfo> base_types = {
+            %for base in bases:
+                {RTTRTraits<${base}>::get_guid(), {RTTRTraits<${base}>::get_type(), get_cast_offset<${record.name}, ${base}>()}},
+            %endfor
+            };
+            result->set_base_types(base_types);
+        %endif
+
+        %if fields:
+            MultiUMap<string, Field> fields = {
+            %for name, field in fields:
+                {u8"${name}", {u8"${name}", RTTRTraits<${field.type}>::get_type(), ${field.offset}}},
+            %endfor
+            };
+            result->set_fields(fields);
+        %endif
+
+        %if methods:
+            MultiUMap<string, Method> methods = {
+            %for method in methods:
+                {
+                    u8"${db.short_name(method.name)}",
+                    {
+                        u8"${db.short_name(method.name)}",
+                        RTTRTraits<${method.retType}>::get_type(),
+                        {
+                        %for name, parameter in vars(method.parameters).items():
+                            {u8"${name}", RTTRTraits<${parameter.type}>::get_type()},
+                        %endfor
+                        },
+                        +[](void* self, void* parameters, void* return_value)
+                        {
+                            <%  
+                                parameters_tuple = ""
+                                if len(vars(method.parameters)) == 1:
+                                    parameters_tuple = "tuple<%s>" % vars(method.parameters).items()[0].type
+                                elif len(vars(method.parameters)) > 1:
+                                    parameters_tuple = "tuple<%s>" % ", ".join([parameter.type for name, parameter in vars(method.parameters).items()]) 
+                                invoke_expr = "{obj}->{method}({args});".format(
+                                    obj = "reinterpret_cast<%s*>(self)" % record.name,
+                                    method = db.short_name(method.name),
+                                    args = ", ".join(["get<%d>(params)" % i for i in range(len(vars(method.parameters)))])
+                                )
+                            %>
+                            ${parameters_tuple}& params = *reinterpret_cast<${parameters_tuple}*>(parameters);
+                        %if method.retType == "void":
+                            ${invoke_expr}
+                        %else:
+                            if (return_value)
+                            {
+                                *((${method.retType}*)return_value) = ${invoke_expr}
+                            }
+                            else
+                            {
+                                ${invoke_expr}
+                            }
+                        %endif
+                        }
+                    }
+                },
+            %endfor
+            };
+            result->set_methods(methods);
+        %endif
+
+            return result;
         }
         void destroy(Type* type) override
         {

@@ -17,35 +17,22 @@ constexpr inline size_t get_cast_offset()
 {
     return reinterpret_cast<size_t>(static_cast<TO*>(reinterpret_cast<FROM*>(0)));
 }
-
-// TODO. 直接使用 Field，并传递 Array<Field> 作为参数，使用 move 语义
-struct FieldInfo {
-    string_view name   = {};
-    Type*       type   = nullptr;
-    size_t      offset = 0;
-};
 struct Field {
     string name   = {};
     Type*  type   = nullptr;
     size_t offset = 0;
 };
-
-// TODO. 直接使用 Method，并传递 Array<Method> 作为参数，使用 move 语义
-struct MethodInfo {
-    using ExecutableType = void (*)(void* self, void* parameters, void* return_value);
-
-    string_view    name            = {};
-    Type*          return_type     = nullptr;
-    Span<Type*>    parameters_type = {};
-    ExecutableType executable      = {};
+struct ParameterInfo {
+    string name = {};
+    Type*  type = nullptr;
 };
 struct Method {
     using ExecutableType = void (*)(void* self, void* parameters, void* return_value);
 
-    string         name            = {};
-    Type*          return_type     = nullptr;
-    Array<Type*>   parameters_type = {};
-    ExecutableType executable      = {};
+    string               name            = {};
+    Type*                return_type     = nullptr;
+    Array<ParameterInfo> parameters_type = {};
+    ExecutableType       executable      = {};
 };
 
 struct RecordBasicMethodTable {
@@ -94,7 +81,7 @@ SKR_INLINE RecordBasicMethodTable make_record_basic_method_table()
 }
 
 struct SKR_RUNTIME_API RecordType : public Type {
-    RecordType(string name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods, Span<BaseInfo> base_types, Span<FieldInfo> fields, Span<MethodInfo> methods);
+    RecordType(string name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods);
 
     bool call_ctor(void* ptr) const override;
     bool call_dtor(void* ptr) const override;
@@ -104,10 +91,15 @@ struct SKR_RUNTIME_API RecordType : public Type {
     bool call_move_assign(void* dst, void* src) const override;
     bool call_hash(const void* ptr, size_t& result) const override;
 
+    // setup
+    SKR_INLINE void set_base_types(UMap<GUID, BaseInfo> base_types) { _base_types_map = std::move(base_types); }
+    SKR_INLINE void set_fields(MultiUMap<string, Field> fields) { _fields_map = std::move(fields); }
+    SKR_INLINE void set_methods(MultiUMap<string, Method> methods) { _methods_map = std::move(methods); }
+
     // getter
-    const UMap<GUID, BaseInfo>&      base_types() const { return _base_types_map; }
-    const MultiUMap<string, Field>&  fields() const { return _fields_map; }
-    const MultiUMap<string, Method>& methods() const { return _methods_map; }
+    SKR_INLINE const UMap<GUID, BaseInfo>& base_types() const { return _base_types_map; }
+    SKR_INLINE const MultiUMap<string, Field>& fields() const { return _fields_map; }
+    SKR_INLINE const MultiUMap<string, Method>& methods() const { return _methods_map; }
 
     // find methods
     // find fields
