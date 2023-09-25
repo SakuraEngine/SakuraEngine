@@ -299,25 +299,23 @@ SKR_RTTR_EXEC_STATIC
             );
 
         %if bases:
-            UMap<GUID, BaseInfo> base_types = {
+            result->set_base_types({
             %for base in bases:
                 {RTTRTraits<${base}>::get_guid(), {RTTRTraits<${base}>::get_type(), get_cast_offset<${record.name}, ${base}>()}},
             %endfor
-            };
-            result->set_base_types(base_types);
+            });
         %endif
 
         %if fields:
-            MultiUMap<string, Field> fields = {
+            result->set_fields({
             %for name, field in fields:
                 {u8"${name}", {u8"${name}", RTTRTraits<${field.type}>::get_type(), ${field.offset}}},
             %endfor
-            };
-            result->set_fields(fields);
+            });
         %endif
 
         %if methods:
-            MultiUMap<string, Method> methods = {
+            result->set_methods({
             %for method in methods:
                 {
                     u8"${db.short_name(method.name)}",
@@ -360,8 +358,7 @@ SKR_RTTR_EXEC_STATIC
                     }
                 },
             %endfor
-            };
-            result->set_methods(methods);
+            });
         %endif
 
             return result;
