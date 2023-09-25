@@ -289,13 +289,13 @@ SKR_RTTR_EXEC_STATIC
             using namespace skr::rttr;
 
         %if bases:
-            Type* base_types[] = {
+            BaseInfo base_types[] = {
             %for base in bases:
-                RTTRTraits<${base}>::get_type(),
+                {RTTRTraits<${base}>::get_type(), get_cast_offset<${record.name}, ${base}>()}
             %endfor
             };
         %else:
-            Span<Type*> base_types = {};
+            Span<BaseInfo> base_types = {};
         %endif
 
         %if fields:
@@ -320,7 +320,7 @@ SKR_RTTR_EXEC_STATIC
                 sizeof(${record.name}),
                 alignof(${record.name}),
                 make_record_basic_method_table<${record.name}>(),
-                Span<Type*>(base_types),
+                Span<BaseInfo>(base_types),
                 Span<FieldInfo>(fields),
                 Span<MethodInfo>(methods)
             );
