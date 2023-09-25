@@ -30,8 +30,8 @@ struct Method {
     using ExecutableType = void (*)(void* self, void* parameters, void* return_value);
 
     string               name            = {};
-    Type*                return_type     = nullptr;
-    Array<ParameterInfo> parameters_type = {};
+    Type*                return_info     = nullptr;
+    Array<ParameterInfo> parameters_info = {};
     ExecutableType       executable      = {};
 };
 

@@ -34,7 +34,8 @@ sreflect_struct("guid": "88e524ad-4229-4e3d-9fb8-3bff9220868b")
 sattr("rtti": true)
 Maxwell : public Dog
 {
-    sattr("rtti": true);
+    sattr("rtti": true)
+    sattr("fuck": 100) 
     void no_good(int a, bool b, Dog* c) {}
 
 private:
