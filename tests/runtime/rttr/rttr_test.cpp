@@ -9,6 +9,19 @@ static void print_guid(const ::skr::GUID& g)
            g.data1(), g.data2(), g.data3(), g.data4(0), g.data4(1), g.data4(2), g.data4(3), g.data4(4), g.data4(5), g.data4(6), g.data4(7));
 }
 
+// TODO. impl list
+//  1. optr/SkrNewObj/SkrDeleteObj
+//  2. record type test
+//  3. enum type test
+//  4. Vector, UMap, MultiUMap, USet, MultiUSet impl & test
+//  5. TResourceHandle, SPtrHelper, TEnumAsByte, variant impl & test
+
+// TODO. test list
+// 1. record type test(cast, field, method)
+// 2. pointer, array, reference type
+// 3. enum type
+// 4. Vector, UMap, UMultiMap, USet, UMultiSet
+
 TEST_CASE("test rttr")
 {
     using namespace skr::rttr;
