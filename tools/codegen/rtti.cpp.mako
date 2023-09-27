@@ -341,7 +341,9 @@ SKR_RTTR_EXEC_STATIC
                                     args = ", ".join(["get<%d>(params)" % i for i in range(len(vars(method.parameters)))])
                                 )
                             %>
+                        %if len(vars(method.parameters)) >= 1:
                             ${parameters_tuple}& params = *reinterpret_cast<${parameters_tuple}*>(parameters);
+                        %endif
                         %if method.retType == "void":
                             ${invoke_expr}
                         %else:
