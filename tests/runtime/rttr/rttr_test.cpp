@@ -2,6 +2,7 @@
 #include "SkrRT/rttr/type_registry.hpp"
 #include "rttr_test_types.hpp"
 #include "SkrRT/rttr/type/record_type.hpp"
+#include "SkrRT/rttr/optr.hpp"
 
 static void print_guid(const ::skr::GUID& g)
 {
@@ -10,8 +11,8 @@ static void print_guid(const ::skr::GUID& g)
 }
 
 // TODO. impl list
-//  1. optr/SkrNewObj/SkrDeleteObj
-//  2. record type test
+////  1. optr/SkrNewObj/SkrDeleteObj
+////  2. record type test
 //  3. enum type test
 //  4. Vector, UMap, MultiUMap, USet, MultiUSet impl & test
 //  5. TResourceHandle, SPtrHelper, TEnumAsByte, variant impl & test
@@ -22,31 +23,36 @@ static void print_guid(const ::skr::GUID& g)
 // 3. enum type
 // 4. Vector, UMap, UMultiMap, USet, UMultiSet
 
-TEST_CASE("test rttr")
+TEST_CASE("test record type")
 {
     using namespace skr::rttr;
     using namespace skr_rttr_test;
-    auto maxwell_type = static_cast<RecordType*>(type_of<Maxwell>());
-    for (const auto& [guid, base] : maxwell_type->base_types())
+
+    SUBCASE("cast")
     {
-        printf("%s [", base._type->name().c_str());
-        print_guid(guid);
-        printf("]\n");
+        OPtr<Maxwell> p_maxwell = SkrNewObj<Maxwell>();
+        OPtr<Dog>     p_dog     = p_maxwell;
+        OPtr<Animal>  p_animal  = p_maxwell;
+        OPtr<IWolf>   p_wolf    = p_maxwell;
+
+        REQUIRE_EQ(p_dog.type_cast<Maxwell>(), p_maxwell);
+        REQUIRE_EQ(p_animal.type_cast<Maxwell>(), p_maxwell);
+        REQUIRE_EQ(p_wolf.type_cast<Maxwell>(), p_maxwell);
+
+        SkrDeleteObj(p_maxwell);
     }
 
-    for (const auto& [name, field] : maxwell_type->fields())
+    SUBCASE("field")
     {
-        printf("%s : %s [", name.c_str(), field.type->name().c_str());
-        print_guid(field.type->type_id());
-        printf("](%d)\n", field.offset);
+        OPtr<Maxwell> p_maxwell = SkrNewObj<Maxwell>();
+        RecordType*   type      = (RecordType*)p_maxwell.get_type();
+        for (const auto& field_pair : type->fields())
+        {
+            printf("field name: %s\n", field_pair.key.c_str());
+        }
     }
 
-    auto arr_type = type_of<int[10][100][114514]>();
-    printf("%s\n", arr_type->name().c_str());
-
-    auto pointer_type = type_of<const volatile Maxwell**>();
-    printf("%s\n", pointer_type->name().c_str());
-
-    auto reference_type = type_of<int&>();
-    printf("%s\n", reference_type->name().c_str());
+    SUBCASE("method")
+    {
+    }
 }

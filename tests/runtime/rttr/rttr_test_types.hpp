@@ -30,12 +30,23 @@ Duck : public Animal{
 
 };
 
+sreflect_struct("guid": "5189a020-c3e6-449f-970d-4a7411c8fde3")
+sattr("rtti": true)
+IWolf
+{
+    virtual ~IWolf() = default;
+    spush_attr("rtti": true)
+    void test_a() {}
+    spush_attr("rtti": true)
+    void test_b() {}
+};
+
 sreflect_struct("guid": "88e524ad-4229-4e3d-9fb8-3bff9220868b")
 sattr("rtti": true)
-Maxwell : public Dog
+      Maxwell : public Dog,
+                public IWolf
 {
-    sattr("rtti": true)
-    sattr("fuck": 100) 
+    sattr("rtti": true) 
     void no_good(int a, bool b, Dog* c) {}
 
 private:

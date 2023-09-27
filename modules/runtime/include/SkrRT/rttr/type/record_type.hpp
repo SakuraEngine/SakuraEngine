@@ -9,8 +9,8 @@
 namespace skr::rttr
 {
 struct BaseInfo {
-    Type*  _type   = nullptr;
-    size_t _offset = 0;
+    Type*  type   = nullptr;
+    size_t offset = 0;
 };
 template <typename FROM, typename TO>
 constexpr inline size_t get_cast_offset()
@@ -100,6 +100,9 @@ struct SKR_RUNTIME_API RecordType : public Type {
     SKR_INLINE const UMap<GUID, BaseInfo>& base_types() const { return _base_types_map; }
     SKR_INLINE const MultiUMap<string, Field>& fields() const { return _fields_map; }
     SKR_INLINE const MultiUMap<string, Method>& methods() const { return _methods_map; }
+
+    // find base
+    bool find_base(const Type* type, BaseInfo& result) const;
 
     // find methods
     // find fields
