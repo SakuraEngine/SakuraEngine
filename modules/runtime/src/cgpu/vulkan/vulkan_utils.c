@@ -701,9 +701,12 @@ void VkUitl_QueryDynamicPipelineStates(CGPUAdapter_Vulkan* VkAdapter, uint32_t* 
         VK_DYNAMIC_STATE_SCISSOR,
         VK_DYNAMIC_STATE_BLEND_CONSTANTS,
         VK_DYNAMIC_STATE_DEPTH_BOUNDS,
-        VK_DYNAMIC_STATE_STENCIL_REFERENCE,
-        VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR 
+        VK_DYNAMIC_STATE_STENCIL_REFERENCE
+
+        // extension:
+        // VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR 
     };
+
     uint32_t base_states_count = sizeof(base_states) / sizeof(VkDynamicState);
     uint32_t total_states_count = base_states_count;
     if (pStates)
