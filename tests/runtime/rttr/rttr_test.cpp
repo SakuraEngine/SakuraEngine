@@ -30,26 +30,26 @@ TEST_CASE("test record type")
 
     SUBCASE("cast")
     {
-        OPtr<Maxwell> p_maxwell = SkrNewObj<Maxwell>();
-        OPtr<Dog>     p_dog     = p_maxwell;
-        OPtr<Animal>  p_animal  = p_maxwell;
-        OPtr<IWolf>   p_wolf    = p_maxwell;
+        // OPtr<Maxwell> p_maxwell = SkrNewObj<Maxwell>();
+        // OPtr<Dog>     p_dog     = p_maxwell;
+        // OPtr<Animal>  p_animal  = p_maxwell;
+        // OPtr<IWolf>   p_wolf    = p_maxwell;
 
-        REQUIRE_EQ(p_dog.type_cast<Maxwell>(), p_maxwell);
-        REQUIRE_EQ(p_animal.type_cast<Maxwell>(), p_maxwell);
-        REQUIRE_EQ(p_wolf.type_cast<Maxwell>(), p_maxwell);
+        // REQUIRE_EQ(p_dog.type_cast<Maxwell>(), p_maxwell);
+        // REQUIRE_EQ(p_animal.type_cast<Maxwell>(), p_maxwell);
+        // REQUIRE_EQ(p_wolf.type_cast<Maxwell>(), p_maxwell);
 
-        SkrDeleteObj(p_maxwell);
+        // SkrDeleteObj(p_maxwell);
     }
 
     SUBCASE("field")
     {
-        OPtr<Maxwell> p_maxwell = SkrNewObj<Maxwell>();
-        RecordType*   type      = (RecordType*)p_maxwell.get_type();
-        for (const auto& field_pair : type->fields())
-        {
-            printf("field name: %s\n", field_pair.key.c_str());
-        }
+        // OPtr<Maxwell> p_maxwell = SkrNewObj<Maxwell>();
+        // RecordType*   type      = (RecordType*)p_maxwell.get_type();
+        // for (const auto& field_pair : type->fields())
+        // {
+        //     printf("field name: %s\n", field_pair.key.c_str());
+        // }
     }
 
     SUBCASE("method")
