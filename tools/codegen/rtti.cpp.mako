@@ -96,7 +96,7 @@ namespace skr::type
                 type_of<${method.retType}>::get(), 
             %endif
                 params${i}.data(),
-                +[](void* self, struct skr_value_ref_t* args, size_t nargs)
+                +[](void* self, struct skr_value_ref_t* args, uint64_t nargs)
                 {   
                     skr_value_t result = {};
                     if(nargs < ${len(vars(method.parameters))})
@@ -124,7 +124,7 @@ namespace skr::type
         %else:
             static skr::span<skr_method_t> methods;
         %endif
-            type->initialize(size, align, name, skr::is_object_v<${record.name}>, base, nativeMethods, fields, skr::span<skr_method_t>{methods});
+            type->initialize(size, align, name, skr::is_object_v<${record.name}>, base, nativeMethods, fields, methods);
         }
     }
 }
