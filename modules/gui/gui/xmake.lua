@@ -11,11 +11,11 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     public_dependency("SkrRT", engine_version)
 
     -- reflection
-    add_rules("c++.codegen", {
-        files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/SkrGui/",
-        api = "SKR_GUI"
-    })
+    -- add_rules("c++.codegen", {
+    --     files = {"include/**.h", "include/**.hpp"},
+    --     rootdir = "include/SkrGui/",
+    --     api = "SKR_GUI"
+    -- })
 
     -- unity build & pch
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
