@@ -10,6 +10,14 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     add_packages("nanovg")
     public_dependency("SkrRT", engine_version)
 
+    -- reflection
+    add_rules("c++.codegen", {
+        files = {"include/**.h", "include/**.hpp"},
+        rootdir = "include/SkrGui/",
+        api = "SKR_GUI"
+    })
+
+    -- unity build & pch
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     set_pcxxheader("src/pch.hpp")
     add_includedirs("include", {public = true})
@@ -25,7 +33,7 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     add_files("src/backend/paragraph/*.cpp", {unity_group  = "text"})
     add_files("src/backend/text_server/*.cpp", {unity_group  = "text"})
     add_files("src/backend/text_server_adv/*.cpp", {unity_group  = "text_adv"})
-
+    
     remove_files("src/dev/deprecated/**.cpp")
     if (is_plat("windows")) then
         add_cxflags("/wd4267", "/wd4244", "/wd4018","/source-charset:utf-8", {public=false})
