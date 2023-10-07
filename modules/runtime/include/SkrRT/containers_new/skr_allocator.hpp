@@ -11,25 +11,21 @@ struct SkrAllocator : container::AllocTemplate<SkrAllocator, size_t> {
     {
 #if defined(TRACY_TRACE_ALLOCATION)
         SkrCZoneNCS(z, "containers::allocate", SKR_ALLOC_TRACY_MARKER_COLOR, 16, 1);
-        // void* p = _sakura_malloc_aligned(size, alignment, kContainersDefaultPoolName);
-        // FIXME. 本处是为了防止静态容器析构后于 mimalloc 导致的问题
-        void* p = traced_os_malloc_aligned(size, alignment, kContainersDefaultPoolName);
+        void* p = _sakura_malloc_aligned(size, alignment, kContainersDefaultPoolName);
         SkrCZoneEnd(z);
         return p;
 #else
-        return traced_os_malloc_aligned(size, alignment, kContainersDefaultPoolName);
+        return sakura_malloc_aligned(size, alignment);
 #endif
     }
     static void free_raw(void* p, size_t alignment)
     {
 #if defined(TRACY_TRACE_ALLOCATION)
         SkrCZoneNCS(z, "containers::free", SKR_DEALLOC_TRACY_MARKER_COLOR, 16, 1);
-        // _sakura_free_aligned(p, alignment, kContainersDefaultPoolName);
-        // FIXME. 本处是为了防止静态容器析构后于 mimalloc 导致的问题
-        traced_os_free_aligned(p, alignment, kContainersDefaultPoolName);
+        _sakura_free_aligned(p, alignment, kContainersDefaultPoolName);
         SkrCZoneEnd(z);
 #else
-        traced_os_free_aligned(p, alignment, kContainersDefaultPoolName);
+        sakura_free_aligned(p, alignment);
 #endif
     }
     static void* realloc_raw(void* p, size_t size, size_t alignment)
