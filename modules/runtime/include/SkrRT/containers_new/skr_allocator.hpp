@@ -17,7 +17,7 @@ struct SkrAllocator : container::AllocTemplate<SkrAllocator, size_t> {
         SkrCZoneEnd(z);
         return p;
 #else
-        return sakura_malloc_aligned(size, alignment);
+        return traced_os_malloc_aligned(size, alignment, kContainersDefaultPoolName);
 #endif
     }
     static void free_raw(void* p, size_t alignment)
@@ -29,7 +29,7 @@ struct SkrAllocator : container::AllocTemplate<SkrAllocator, size_t> {
         traced_os_free_aligned(p, alignment, kContainersDefaultPoolName);
         SkrCZoneEnd(z);
 #else
-        sakura_free_aligned(p, alignment);
+        traced_os_free_aligned(p, alignment, kContainersDefaultPoolName);
 #endif
     }
     static void* realloc_raw(void* p, size_t size, size_t alignment)
