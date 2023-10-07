@@ -188,5 +188,9 @@ struct SkrTracedNewObj {
 
 } // namespace skr::rttr
 
-#define SkrNewObj ::skr::rttr::SkrTracedNewObj{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__), SKR_ALLOC_STRINGFY(__LINE__)) }.create
-#define SkrDeleteObj ::skr::rttr::SkrTracedNewObj{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__), SKR_ALLOC_STRINGFY(__LINE__)) }.destroy
+#define SKR_ALLOC_OBJ_STRINGFY_IMPL(X) #X
+#define SKR_ALLOC_OBJ_STRINGFY(X) SKR_ALLOC_STRINGFY_IMPL(X)
+#define SKR_ALLOC_OBJ_CAT_IMPL(X,Y) X  Y
+#define SKR_ALLOC_OBJ_CAT(X,Y) SKR_ALLOC_CAT_IMPL(X,Y)
+#define SkrNewObj ::skr::rttr::SkrTracedNewObj{ SKR_ALLOC_OBJ_CAT(SKR_ALLOC_OBJ_STRINGFY(__FILE__), SKR_ALLOC_OBJ_STRINGFY(__LINE__)) }.create
+#define SkrDeleteObj ::skr::rttr::SkrTracedNewObj{ SKR_ALLOC_OBJ_CAT(SKR_ALLOC_OBJ_STRINGFY(__FILE__), SKR_ALLOC_OBJ_STRINGFY(__LINE__)) }.destroy
