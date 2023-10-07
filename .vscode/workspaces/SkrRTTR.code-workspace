@@ -4,22 +4,30 @@
             "path": "../../",
             "name": "root",
         },
+        // {
+        //     "path": "../../modules/runtime/include/SkrRT/rttr/",
+        //     "name": "include"
+        // },
+        // {
+        //     "path": "../../modules/runtime/src/rttr/",
+        //     "name": "src"
+        // },
+        // {
+        //     "path": "../../modules/base/",
+        //     "name": "base"
+        // },
+        // {
+        //     "path": "../../build/.gens/",
+        //     "name": "code-gen"
+        // },
         {
-            "path": "../../modules/runtime/include/SkrRT/rttr/",
-            "name": "include"
+            "path": "../../modules/gui/gui/",
+            "name": "gui"
         },
         {
-            "path": "../../modules/runtime/src/rttr/",
-            "name": "src"
-        },
-        {
-            "path": "../../modules/base/",
-            "name": "base"
-        },
-        {
-            "path": "../../build/.gens/",
-            "name": "code-gen"
-        },
+            "path": "../../build/.gens/SkrGui/",
+            "name": "gui-gen"
+        }
     ],
     "settings": {
         "dascript.server.connectTimeout": 10,

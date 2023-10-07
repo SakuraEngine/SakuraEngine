@@ -9,6 +9,9 @@
 #include <cstddef>
 #include <limits>
 
+// reflection macro
+#include "SkrRT/platform/configure.h"
+
 // export macro
 #include "SkrGui/module.configure.h"
 
