@@ -33,7 +33,7 @@
         "dascript.server.connectTimeout": 10,
         "xmake.additionalConfigArguments": [
             "--build_tests=y",
-            "--cxx_version=cxx20"
+            "--cxx_version=cxx17"
         ],
         "xmake.customDebugConfig": {
             "stopAtEntry": false,

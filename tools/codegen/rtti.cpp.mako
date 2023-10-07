@@ -124,7 +124,7 @@ namespace skr::type
         %else:
             static skr::span<skr_method_t> methods;
         %endif
-            type->initialize(size, align, name, skr::is_object_v<${record.name}>, base, nativeMethods, fields, methods);
+            type->initialize(size, align, name, skr::is_object_v<${record.name}>, base, nativeMethods, fields, skr::span<skr_method_t>{methods});
         }
     }
 }
