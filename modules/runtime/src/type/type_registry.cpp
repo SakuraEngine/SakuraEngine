@@ -115,6 +115,7 @@ struct STypeRegistryImpl final : public STypeRegistry {
     {
         return outdatedTypes.contains(type);
     }
+    
     skr::flat_hash_map<skr_guid_t, const skr_type_t*, skr::guid::hash> outdatedTypesMap;
     skr::flat_hash_set<const skr_type_t*> outdatedTypes;
     skr::flat_hash_map<skr_guid_t, const skr_type_t*, skr::guid::hash> types;
