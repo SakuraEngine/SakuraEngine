@@ -46,7 +46,6 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     end
 
     -- add deps & links
-    add_deps("mimalloc", {public = false})
     add_deps("vulkan", {public = true})
 
     -- runtime compile definitions
