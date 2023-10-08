@@ -685,12 +685,46 @@ void VkUtil_QueryHostVisbleVramInfo(CGPUAdapter_Vulkan* VkAdapter)
     }
 }
 
-static inline uint32_t VkUtil_CombineVersion(uint32_t a, uint32_t b) {
+static inline uint32_t VkUtil_CombineVersion(uint32_t a, uint32_t b) 
+{
    uint32_t times = 1;
    while (times <= b)
       times *= 10;
    return a*times + b;
 } 
+
+void VkUitl_QueryDynamicPipelineStates(CGPUAdapter_Vulkan* VkAdapter, uint32_t* pCount, VkDynamicState* pStates)
+{
+    VkDynamicState base_states[] =
+    {
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR,
+        VK_DYNAMIC_STATE_BLEND_CONSTANTS,
+        VK_DYNAMIC_STATE_DEPTH_BOUNDS,
+        VK_DYNAMIC_STATE_STENCIL_REFERENCE
+
+        // extension:
+        // VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR 
+    };
+
+    uint32_t base_states_count = sizeof(base_states) / sizeof(VkDynamicState);
+    uint32_t total_states_count = base_states_count;
+    if (pStates)
+    {
+        memcpy(pStates, base_states, sizeof(base_states));
+    }
+    if (VkAdapter->adapter_detail.support_shading_rate)
+    {
+        if (pStates)
+            pStates[total_states_count] = VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR;
+        total_states_count += 1;
+    }
+    if (pCount)
+    {
+        *pCount = total_states_count;
+    }
+
+}
 
 void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter)
 {
