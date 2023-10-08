@@ -16,3 +16,6 @@
 #include "rttr/guid.cpp"
 #include "rttr/register_basic_types.cpp"
 #include "rttr/type_registry.cpp"
+
+// header
+#include "SkrRT/rttr/iobject.hpp"
