@@ -1,10 +1,18 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_shifted_box.hpp"
+#ifndef __meta__
+    #include "SkrGui/render_objects/render_positioned.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct RenderPositioned : public RenderShiftedBox {
-    SKR_GUI_OBJECT(RenderPositioned, "17953364-abcc-4430-ac0c-7242c11dce92", RenderShiftedBox)
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "50971da8-2439-46c1-adcb-579f270e354d"
+)
+RenderPositioned : public RenderShiftedBox {
+    SKR_RTTR_GENERATE_BODY()
     using Super = RenderShiftedBox;
 
     // getter & setter
@@ -57,4 +65,5 @@ private:
     Optional<float> _height_factor = {}; // used in anchor mode
     Positional      _positional    = {};
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

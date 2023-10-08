@@ -3,9 +3,15 @@
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/math/matrix.hpp"
 #include "SkrGui/framework/slot.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/render_object/render_object.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
+namespace gui sreflect
+{
+
 enum class ERenderObjectLifecycle : uint8_t
 {
     Initial,
@@ -14,9 +20,8 @@ enum class ERenderObjectLifecycle : uint8_t
     Destroyed,
 };
 
-struct SKR_GUI_API RenderObject SKR_GUI_OBJECT_BASE {
-    SKR_GUI_OBJECT_ROOT(RenderObject, "74844fa6-8994-4915-8f8e-ec944a1cbea4");
-    SKR_GUI_RAII_MIX_IN()
+struct SKR_GUI_API RenderObject : virtual public skr::rttr::IObject {
+    SKR_RTTR_GENERATE_BODY()
     friend struct PipelineOwner;
     using VisitFuncRef = FunctionRef<void(NotNull<RenderObject*>)>;
 
@@ -135,4 +140,5 @@ private:
     Slot _slot = {};
 };
 
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

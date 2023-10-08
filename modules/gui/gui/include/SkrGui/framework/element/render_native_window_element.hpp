@@ -1,10 +1,18 @@
 #pragma once
 #include "SkrGui/framework/element/render_window_element.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/element/render_native_window_element.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct SKR_GUI_API RenderNativeWindowElement : public RenderWindowElement {
-    SKR_GUI_OBJECT(RenderNativeWindowElement, "e1cfa7d1-15fd-41b3-b72b-87b97ec24035", RenderWindowElement)
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "cddf8085-4ab4-46be-8de7-34bd1a2c290e"
+)
+SKR_GUI_API RenderNativeWindowElement : public RenderWindowElement {
+    SKR_RTTR_GENERATE_BODY()
     using Super = RenderWindowElement;
     using Super::Super;
 
@@ -29,4 +37,5 @@ private:
     Widget*  _new_child_widget = nullptr;
     Element* _child            = nullptr;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

@@ -15,7 +15,7 @@ struct SKR_RUNTIME_API IObject {
 
     //=> Helper API
     template <typename TO>
-    TO* type_cast() const
+    TO* type_cast()
     {
         BaseInfo result;
         if (get_record_type()->find_base(RTTRTraits<TO>::get_type(), result))

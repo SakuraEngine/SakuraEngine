@@ -3,8 +3,13 @@
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/framework/build_context.hpp"
 #include "SkrGui/framework/slot.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/element/element.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 enum class EElementLifecycle : uint8_t
 {
@@ -14,9 +19,12 @@ enum class EElementLifecycle : uint8_t
     Destroyed, // 完全被销毁
 };
 
-struct SKR_GUI_API Element SKR_GUI_OBJECT_BASE_WITH(public IBuildContext) {
-    SKR_GUI_OBJECT(Element, "123127c7-4eed-4007-87ff-6843bd56771a", IBuildContext)
-    SKR_GUI_RAII_MIX_IN()
+sreflect_struct(
+    "guid": "ec3aff75-d8d1-4e0f-aff3-5c8df4995a78"
+)
+SKR_GUI_API Element : virtual public skr::rttr::IObject,
+                      public IBuildContext {
+    SKR_RTTR_GENERATE_BODY()
     using VisitFuncRef = FunctionRef<void(NotNull<Element*>)>;
 
     Element(Widget* widget) SKR_NOEXCEPT;
@@ -52,12 +60,12 @@ struct SKR_GUI_API Element SKR_GUI_OBJECT_BASE_WITH(public IBuildContext) {
     RenderObject*     find_ancestor_render_object() const SKR_NOEXCEPT override;
     Optional<Sizef>   render_box_size() const SKR_NOEXCEPT override;
     InheritedWidget*  depend_on_inherited_element(NotNull<InheritedElement*> ancestor) SKR_NOEXCEPT override;
-    InheritedWidget*  depend_on_inherited_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT override;
-    InheritedElement* get_element_for_inherited_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT override;
-    Widget*           find_ancestor_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT override;
-    State*            find_ancestor_state_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT override;
-    State*            find_root_ancestor_state_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT override;
-    RenderObject*     find_ancestor_render_object_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT override;
+    InheritedWidget*  depend_on_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
+    InheritedElement* get_element_for_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
+    Widget*           find_ancestor_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
+    State*            find_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
+    State*            find_root_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
+    RenderObject*     find_ancestor_render_object_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
     void              visit_ancestor_elements(FunctionRef<bool(NotNull<Element*>)> visitor) SKR_NOEXCEPT override;
     void              visit_child_elements(FunctionRef<void(NotNull<Element*>)> visitor) SKR_NOEXCEPT override;
     void              dispatch_notification(NotNull<Notification*> notification) SKR_NOEXCEPT override;
@@ -102,4 +110,5 @@ private:
     Slot    _slot;
     Widget* _widget = nullptr;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

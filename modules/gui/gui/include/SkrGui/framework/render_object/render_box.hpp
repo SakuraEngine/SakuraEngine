@@ -2,14 +2,22 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
 #include "SkrGui/math/layout.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/render_object/render_box.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 struct HitTestRecord {
 };
 
-struct SKR_GUI_API RenderBox : public RenderObject {
-    SKR_GUI_OBJECT(RenderBox, "01a2eb19-1299-4069-962f-88db0c719134", RenderObject);
+sreflect_struct(
+    "guid": "d4c45487-d696-42fb-bff1-f0a3f6adcea3"
+)
+SKR_GUI_API RenderBox : public RenderObject {
+    SKR_RTTR_GENERATE_BODY()
 
 public:
     RenderBox();
@@ -64,5 +72,5 @@ private:
 
     // TODO. cached data
 };
-
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

@@ -9,8 +9,9 @@
 #include <cstddef>
 #include <limits>
 
-// reflection macro
+// reflection
 #include "SkrRT/platform/configure.h"
+#include "SkrRT/rttr/iobject.hpp"
 
 // export macro
 #include "SkrGui/module.configure.h"
@@ -26,49 +27,11 @@
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/sptr.hpp"
 
-// type system
-#include "SkrGui/dev/type_system.hpp"
-
 // function ref
 #include "SkrRT/containers/function_ref.hpp"
 
 // not_null
 #include "SkrRT/containers/not_null.hpp"
-
-#define SKR_GUI_RAII_MIX_IN()                                       \
-    template <typename To>                                          \
-    auto type_cast() const SKR_NOEXCEPT                             \
-    {                                                               \
-        return SKR_GUI_CAST<const std::remove_cv_t<To>>(this);      \
-    }                                                               \
-    template <typename To>                                          \
-    auto type_cast() SKR_NOEXCEPT                                   \
-    {                                                               \
-        return SKR_GUI_CAST<To>(this);                              \
-    }                                                               \
-    template <typename To>                                          \
-    auto type_cast_fast() SKR_NOEXCEPT                              \
-    {                                                               \
-        return SKR_GUI_CAST_FAST<To>(this);                         \
-    }                                                               \
-    template <typename To>                                          \
-    auto type_cast_fast() const SKR_NOEXCEPT                        \
-    {                                                               \
-        return SKR_GUI_CAST_FAST<const std::remove_cv_t<To>>(this); \
-    }                                                               \
-    template <typename To>                                          \
-    bool type_is() const SKR_NOEXCEPT                               \
-    {                                                               \
-        return SKR_GUI_CAST<To>(this) != nullptr;                   \
-    }                                                               \
-    bool type_based_on(SKR_GUI_TYPE_ID id) const SKR_NOEXCEPT       \
-    {                                                               \
-        return SKR_GUI_BASED_ON(this, id);                          \
-    }                                                               \
-    SKR_GUI_TYPE_ID type_id() const SKR_NOEXCEPT                    \
-    {                                                               \
-        return SKR_GUI_TYPE_ID_OF(this);                            \
-    }
 
 // assert
 #define SKR_GUI_ASSERT(__EXPR) SKR_ASSERT(__EXPR)

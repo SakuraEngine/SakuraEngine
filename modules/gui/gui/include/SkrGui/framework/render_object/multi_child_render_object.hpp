@@ -3,18 +3,26 @@
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/framework/slot.hpp"
 #include "SkrGui/framework/render_object/render_object.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/render_object/multi_child_render_object.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct SKR_GUI_API IMultiChildRenderObject SKR_GUI_INTERFACE_BASE {
-    SKR_GUI_INTERFACE_ROOT(IMultiChildRenderObject, "e244fce1-ff1c-4fb7-b51e-bd4cc81a659f")
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "409eaa24-5549-46e3-87c1-81649576d2cd"
+)
+SKR_GUI_API IMultiChildRenderObject : virtual public skr::rttr::IObject {
+    SKR_RTTR_GENERATE_BODY()
     virtual ~IMultiChildRenderObject() = default;
 
-    virtual SKR_GUI_TYPE_ID accept_child_type() const SKR_NOEXCEPT                                    = 0;
-    virtual void            add_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT           = 0;
-    virtual void            remove_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT        = 0;
-    virtual void            move_child(NotNull<RenderObject*> child, Slot from, Slot to) SKR_NOEXCEPT = 0;
-    virtual void            flush_updates() SKR_NOEXCEPT                                              = 0;
+    virtual GUID accept_child_type() const SKR_NOEXCEPT                                    = 0;
+    virtual void add_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT           = 0;
+    virtual void remove_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT        = 0;
+    virtual void move_child(NotNull<RenderObject*> child, Slot from, Slot to) SKR_NOEXCEPT = 0;
+    virtual void flush_updates() SKR_NOEXCEPT                                              = 0;
 };
 
 template <typename TChild, typename TSlotData>
@@ -44,9 +52,9 @@ struct MultiChildRenderObjectMixin {
     Array<SlotStorage<TChild, TSlotData>> _children;
     bool                                  _need_flush_updates = false;
 
-    inline SKR_GUI_TYPE_ID accept_child_type(const TSelf& self) const SKR_NOEXCEPT
+    inline GUID accept_child_type(const TSelf& self) const SKR_NOEXCEPT
     {
-        return SKR_GUI_TYPE_ID_OF_STATIC(TChild);
+        return ::skr::rttr::type_id<TChild>();
     }
     inline void add_child(TSelf& self, NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
     {
@@ -121,7 +129,8 @@ struct MultiChildRenderObjectMixin {
         }
     }
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect
 
 #define MULTI_CHILD_RENDER_OBJECT_MIX_IN(__SELF, __CHILD, __SLOT_DATA)                                \
     /*===============> Begin Multi Child Render Object Mixin <===============*/                       \
@@ -129,7 +138,7 @@ private:                                                                        
     MultiChildRenderObjectMixin<__SELF, __CHILD, __SLOT_DATA> _multi_child_render_object_mix_in = {}; \
                                                                                                       \
 public:                                                                                               \
-    SKR_GUI_TYPE_ID accept_child_type() const SKR_NOEXCEPT override                                   \
+    GUID accept_child_type() const SKR_NOEXCEPT override                                              \
     {                                                                                                 \
         return _multi_child_render_object_mix_in.accept_child_type(*this);                            \
     }                                                                                                 \

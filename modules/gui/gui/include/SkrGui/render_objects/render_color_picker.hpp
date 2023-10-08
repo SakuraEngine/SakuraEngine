@@ -1,10 +1,18 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
+#ifndef __meta__
+    #include "SkrGui/render_objects/render_color_picker.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct SKR_GUI_API RenderColorPicker : public RenderBox {
-    SKR_GUI_OBJECT(RenderColorPicker, "25a95354-b3fa-4729-b06f-1a85d0f227c4", RenderBox);
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "f9de7eb7-9431-4dde-a06d-2fb9bc211bb9"
+)
+SKR_GUI_API RenderColorPicker : public RenderBox {
+    SKR_RTTR_GENERATE_BODY()
     using Super = RenderBox;
 
     void perform_layout() SKR_NOEXCEPT override;
@@ -13,4 +21,5 @@ struct SKR_GUI_API RenderColorPicker : public RenderBox {
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override {}
 };
 
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

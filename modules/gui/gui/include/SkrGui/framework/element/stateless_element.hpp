@@ -1,10 +1,19 @@
 #pragma once
 #include "SkrGui/framework/element/component_element.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/element/stateless_element.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct SKR_GUI_API StatelessElement : public ComponentElement {
-    SKR_GUI_OBJECT(StatelessElement, "efeba07d-131b-4a15-b263-889182119f45", ComponentElement)
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "05699161-383d-481e-abfa-ce0a7110dc2c"
+)
+SKR_GUI_API StatelessElement : public ComponentElement {
+    SKR_RTTR_GENERATE_BODY()
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect
