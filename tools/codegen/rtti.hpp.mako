@@ -1,3 +1,4 @@
+<%doc>
 // BEGIN RTTI GENERATED
 #include "SkrRT/type/type.hpp"
 
@@ -25,6 +26,7 @@ namespace skr::type
 //${api} skr::span<const skr_type_t*> skr_get_all_records_${module}();
 //${api} skr::span<const skr_type_t*> skr_get_all_enums_${module}();
 // END RTTI GENERATED
+</%doc>
 
 // BEGIN RTTR GENERATED
 #include "SkrRT/rttr/enum_traits.hpp"
