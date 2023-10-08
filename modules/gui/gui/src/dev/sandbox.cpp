@@ -33,7 +33,7 @@ void Sandbox::set_content(NotNull<Widget*> content)
 void Sandbox::show(const WindowDesc& desc)
 {
     // create native window
-    auto native_window = SKR_GUI_CAST_FAST<INativeWindow>(_device->create_window().get());
+    auto native_window = _device->create_window()->type_cast_fast<INativeWindow>();
     native_window->init_normal(desc);
 
     // init root render native window

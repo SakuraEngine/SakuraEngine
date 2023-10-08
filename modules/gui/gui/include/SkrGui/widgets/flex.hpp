@@ -1,11 +1,19 @@
 #pragma once
 #include "SkrGui/framework/widget/multi_child_render_object_widget.hpp"
 #include "SkrGui/math/layout.hpp"
+#ifndef __meta__
+    #include "SkrGui/widgets/flex.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct SKR_GUI_API Flex : public MultiChildRenderObjectWidget {
-    SKR_GUI_OBJECT(Flex, "03fbfa97-39bb-4233-afdb-1f53648e5152", MultiChildRenderObjectWidget)
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "4a3df0ec-b346-4f5b-a1bd-a46763a7818d"
+)
+SKR_GUI_API Flex : public MultiChildRenderObjectWidget {
+    SKR_RTTR_GENERATE_BODY()
 
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
     void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
@@ -15,5 +23,5 @@ struct SKR_GUI_API Flex : public MultiChildRenderObjectWidget {
     ECrossAxisAlignment cross_axis_alignment = ECrossAxisAlignment::Start;
     EMainAxisSize       main_axis_size       = EMainAxisSize::Max;
 };
-
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

@@ -218,32 +218,32 @@ InheritedWidget* Element::depend_on_inherited_element(NotNull<InheritedElement*>
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-InheritedWidget* Element::depend_on_inherited_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT
+InheritedWidget* Element::depend_on_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-InheritedElement* Element::get_element_for_inherited_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT
+InheritedElement* Element::get_element_for_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-Widget* Element::find_ancestor_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT
+Widget* Element::find_ancestor_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-State* Element::find_ancestor_state_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT
+State* Element::find_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-State* Element::find_root_ancestor_state_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT
+State* Element::find_root_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-RenderObject* Element::find_ancestor_render_object_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT
+RenderObject* Element::find_ancestor_render_object_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;

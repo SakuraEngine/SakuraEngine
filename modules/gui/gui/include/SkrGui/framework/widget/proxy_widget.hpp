@@ -1,12 +1,21 @@
 #pragma once
 #include "SkrGui/framework/widget/widget.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/widget/proxy_widget.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct SKR_GUI_API ProxyWidget : public Widget {
-    SKR_GUI_OBJECT(ProxyWidget, "698b53db-2fd1-4747-99e7-27503a6bcc8a", Widget);
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "3b3208fe-f5df-419d-840c-6621dc1661d2"
+)
+SKR_GUI_API ProxyWidget : public Widget {
+    SKR_RTTR_GENERATE_BODY()
 
     Widget* child = nullptr;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

@@ -1,10 +1,18 @@
 #pragma once
 #include "SkrGui/framework/layer/layer.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/layer/container_layer.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct SKR_GUI_API ContainerLayer : public Layer {
-    SKR_GUI_OBJECT(ContainerLayer, "bb5a6b46-30b2-49f3-b445-260f9372bbb5", Layer)
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "ea23bfe8-33db-4277-a415-bf059bf76f46"
+)
+SKR_GUI_API ContainerLayer : public Layer {
+    SKR_RTTR_GENERATE_BODY()
 
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override;
 
@@ -17,4 +25,5 @@ struct SKR_GUI_API ContainerLayer : public Layer {
 private:
     Array<Layer*> _children;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

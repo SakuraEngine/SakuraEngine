@@ -2,25 +2,33 @@
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/framework/render_object/render_object.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/render_object/single_child_render_object.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct SKR_GUI_API ISingleChildRenderObject SKR_GUI_INTERFACE_BASE {
-    SKR_GUI_INTERFACE_ROOT(ISingleChildRenderObject, "5349672b-bfc5-46a9-9a02-40ef563c196d")
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "5349672b-bfc5-46a9-9a02-40ef563c196d"
+)
+SKR_GUI_API ISingleChildRenderObject : virtual public skr::rttr::IObject {
+    SKR_RTTR_GENERATE_BODY()
     virtual ~ISingleChildRenderObject() = default;
 
-    virtual SKR_GUI_TYPE_ID accept_child_type() const SKR_NOEXCEPT               = 0;
-    virtual void            set_child(NotNull<RenderObject*> child) SKR_NOEXCEPT = 0;
-    virtual void            remove_child() SKR_NOEXCEPT                          = 0;
+    virtual GUID accept_child_type() const SKR_NOEXCEPT               = 0;
+    virtual void set_child(NotNull<RenderObject*> child) SKR_NOEXCEPT = 0;
+    virtual void remove_child() SKR_NOEXCEPT                          = 0;
 };
 
 template <typename TSelf, typename TChild>
 struct SingleChildRenderObjectMixin {
     TChild* _child;
 
-    inline SKR_GUI_TYPE_ID accept_child_type(const TSelf& self) const SKR_NOEXCEPT
+    inline GUID accept_child_type(const TSelf& self) const SKR_NOEXCEPT
     {
-        return SKR_GUI_TYPE_ID_OF_STATIC(TChild);
+        return ::skr::rttr::type_id<TChild>();
     }
     inline void set_child(TSelf& self, NotNull<RenderObject*> child) SKR_NOEXCEPT
     {
@@ -38,7 +46,8 @@ struct SingleChildRenderObjectMixin {
         if (_child) visitor(make_not_null(_child));
     }
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect
 
 #define SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(__SELF, __CHILD)                         \
     /*===============> Begin Single Child Render Object Mixin <===============*/          \
@@ -46,7 +55,7 @@ private:                                                                        
     SingleChildRenderObjectMixin<__SELF, __CHILD> _single_child_render_object_mixin = {}; \
                                                                                           \
 public:                                                                                   \
-    SKR_GUI_TYPE_ID accept_child_type() const SKR_NOEXCEPT override                       \
+    GUID accept_child_type() const SKR_NOEXCEPT override                                  \
     {                                                                                     \
         return _single_child_render_object_mixin.accept_child_type(*this);                \
     }                                                                                     \

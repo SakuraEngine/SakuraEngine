@@ -2,6 +2,9 @@
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
+#ifndef __meta__
+    #include "SkrGui/backend/device/window.generated.h"
+#endif
 
 namespace skr::gui
 {
@@ -10,7 +13,9 @@ struct IDevice;
 struct Layer;
 } // namespace skr::gui
 
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 enum class EWindowFlag : uint32_t
 {
@@ -42,8 +47,11 @@ struct WindowDesc {
 //
 // ! 考虑下 HitTest 怎么做
 // ! 考虑下 Focus 怎么管理
-struct SKR_GUI_API IWindow SKR_GUI_INTERFACE_BASE {
-    SKR_GUI_INTERFACE_ROOT(IWindow, "ac74082f-42c1-4d39-930e-ee1f022bbda7")
+sreflect_struct(
+    "guid": "e1cb928d-482e-4795-8f49-d89f20fe171a"
+)
+SKR_GUI_API IWindow : virtual public skr::rttr::IObject {
+    SKR_RTTR_GENERATE_BODY()
     virtual ~IWindow() = default;
 
     // init view
@@ -84,8 +92,11 @@ struct SKR_GUI_API IWindow SKR_GUI_INTERFACE_BASE {
     // TODO. window call back
 };
 
-struct SKR_GUI_API INativeWindow : public IWindow {
-    SKR_GUI_INTERFACE(INativeWindow, "47b82f64-2f95-4276-9ffa-0f3d0288894a", IWindow)
+sreflect_struct(
+    "guid": "e46f6067-1fbe-41bf-8361-14399bc7054b"
+)
+SKR_GUI_API INativeWindow : public IWindow {
+    SKR_RTTR_GENERATE_BODY()
 
     // getter
     virtual bool   minimized() SKR_NOEXCEPT        = 0;
@@ -100,4 +111,5 @@ struct SKR_GUI_API INativeWindow : public IWindow {
     virtual void set_title(const String& title) SKR_NOEXCEPT              = 0;
 };
 
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

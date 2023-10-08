@@ -1,13 +1,22 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/framework/render_object/single_child_render_object.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/render_object/render_window.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 // 概念性的 Window，并不一定是 Root，Root 通常是 RenderNativeWindow
 struct IWindow;
-struct SKR_GUI_API RenderWindow : public RenderObject, public ISingleChildRenderObject {
-    SKR_GUI_OBJECT(RenderWindow, "564ff723-9f85-4c93-8efd-841700dfe104", RenderObject, ISingleChildRenderObject)
+sreflect_struct(
+    "guid": "358b1333-d5b8-4529-b4ad-9c800d5c9caf"
+)
+SKR_GUI_API RenderWindow : public RenderObject,
+                           public ISingleChildRenderObject {
+    SKR_RTTR_GENERATE_BODY()
 
     RenderWindow(IWindow* window);
 
@@ -24,4 +33,5 @@ private:
 
     SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(RenderWindow, RenderBox)
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

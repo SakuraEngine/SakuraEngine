@@ -1,11 +1,20 @@
 #pragma once
 #include "SkrGui/framework/element/component_element.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/element/proxy_element.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct SKR_GUI_API ProxyElement : public ComponentElement {
-    SKR_GUI_OBJECT(ProxyElement, "752d1492-e111-4f86-b50e-954ee871e53c", ComponentElement)
+namespace gui sreflect
+{
+
+sreflect_struct(
+    "guid": "5b6fca8a-7558-4301-a00a-749b63be5aab"
+)
+SKR_GUI_API ProxyElement : public ComponentElement {
+    SKR_RTTR_GENERATE_BODY()
     using Super = ComponentElement;
     using Super::Super;
 
@@ -16,4 +25,5 @@ struct SKR_GUI_API ProxyElement : public ComponentElement {
 
     virtual void updated(NotNull<ProxyWidget*> old_widget) = 0;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

@@ -18,20 +18,34 @@ struct RTTRTraits {
     inline static constexpr size_t type_desc_size = 1;
     static void                    write_type_desc(TypeDesc* desc)
     {
+#ifndef __meta__
         static_assert(std::is_same_v<T, T*>, "RTTRTraits<T>::write_type_desc() is not implemented");
+#endif
     }
 
     static string_view get_name()
     {
+#ifndef __meta__
         static_assert(std::is_same_v<T, T*>, "RTTRTraits<T>::write_type_desc() is not implemented");
+#else
+        return {};
+#endif
     }
     static GUID get_guid()
     {
+#ifndef __meta__
         static_assert(std::is_same_v<T, T*>, "RTTRTraits<T>::write_type_desc() is not implemented");
+#else
+        return {};
+#endif
     }
     static Type* get_type()
     {
+#ifndef __meta__
         static_assert(std::is_same_v<T, T*>, "RTTRTraits<T>::write_type_desc() is not implemented");
+#else
+        return nullptr;
+#endif
     }
 };
 
@@ -220,10 +234,9 @@ struct RTTRTraits<T[N]> {
 };
 
 template <typename T, size_t N1, size_t N2>
-struct RTTRTraits<T[N1][N2]>
-{
+struct RTTRTraits<T[N1][N2]> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 4;
-    inline static void             write_type_desc(TypeDesc * desc)
+    inline static void             write_type_desc(TypeDesc* desc)
     {
         new (desc + 0) TypeDesc{ kArrayGenericGUID };
         new (desc + 1) TypeDesc{ uint64_t(2) };
@@ -255,10 +268,9 @@ struct RTTRTraits<T[N1][N2]>
 };
 
 template <typename T, size_t N1, size_t N2, size_t N3>
-struct RTTRTraits<T[N1][N2][N3]>
-{
+struct RTTRTraits<T[N1][N2][N3]> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 5;
-    inline static void             write_type_desc(TypeDesc * desc)
+    inline static void             write_type_desc(TypeDesc* desc)
     {
         new (desc + 0) TypeDesc{ kArrayGenericGUID };
         new (desc + 1) TypeDesc{ uint64_t(3) };

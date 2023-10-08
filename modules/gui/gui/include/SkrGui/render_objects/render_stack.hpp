@@ -2,13 +2,22 @@
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/math/layout.hpp"
 #include "SkrGui/framework/render_object/multi_child_render_object.hpp"
+#ifndef __meta__
+    #include "SkrGui/render_objects/render_stack.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 
-struct SKR_GUI_API RenderStack : public RenderBox, public IMultiChildRenderObject {
+sreflect_struct(
+    "guid": "977b69fd-b3c7-4030-8c9d-076bc94fdfbf"
+)
+SKR_GUI_API RenderStack : public RenderBox,
+                          public IMultiChildRenderObject {
 public:
-    SKR_GUI_OBJECT(RenderStack, "b3c8ede6-d878-472c-a1c1-6b3acdc9f1f0", RenderBox, IMultiChildRenderObject);
+    SKR_RTTR_GENERATE_BODY()
     using Super = RenderBox;
 
     // intrinsic size
@@ -44,5 +53,5 @@ private:
     // MIXIN
     MULTI_CHILD_RENDER_OBJECT_MIX_IN(RenderStack, RenderBox, SlotData)
 };
-
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

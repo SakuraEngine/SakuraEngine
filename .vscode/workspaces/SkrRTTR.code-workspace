@@ -39,6 +39,6 @@
         "xmake.customDebugConfig": {
             "stopAtEntry": false,
         },
-        "editor.formatOnSave": false,
+        "editor.formatOnSave": true,
     }
 }

@@ -1,13 +1,22 @@
 #pragma once
 #include "SkrGui/framework/element/proxy_element.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/element/slot_element.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct SlotElement : public ProxyElement {
-    SKR_GUI_OBJECT(SlotElement, "70e475e0-193e-4945-a17b-0c358621a1b3", ProxyElement)
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "cddf8085-4ab4-46be-8de7-34bd1a2c290e"
+)
+SlotElement : public ProxyElement {
+    SKR_RTTR_GENERATE_BODY()
     using Super = ProxyElement;
     using Super::Super;
 
     void updated(NotNull<ProxyWidget*> old_widget) override;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

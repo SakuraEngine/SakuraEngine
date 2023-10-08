@@ -1,11 +1,19 @@
 #pragma once
 #include "SkrGui/framework/element/element.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/element/component_element.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct SKR_GUI_API ComponentElement : public Element {
-    SKR_GUI_OBJECT(ComponentElement, "46b19d80-a5bb-4bce-9f98-5f218cc75229", Element)
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "8344aca9-b204-4b4a-8e16-18e4219039be"
+)
+SKR_GUI_API ComponentElement : public Element {
+    SKR_RTTR_GENERATE_BODY()
     using Super = Element;
     using Super::Super;
 
@@ -21,4 +29,5 @@ struct SKR_GUI_API ComponentElement : public Element {
 private:
     Element* _child;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect
