@@ -3,6 +3,7 @@ records = generator.filter_rtti(db.records)
 enums = generator.filter_rtti(db.enums)
 %>
 
+<%doc>
 // BEGIN RTTI GENERATED
 #include "SkrRT/type/type.hpp"
 #include "SkrRT/platform/debug.h"
@@ -226,6 +227,7 @@ skr::span<const skr_type_t*> skr_get_all_enums_${module}()
 }
 
 //END RTTI GENERATED
+</%doc>
 
 
 // BEGIN RTTR GENERATED
