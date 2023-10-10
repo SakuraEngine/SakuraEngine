@@ -15,7 +15,7 @@ struct SKR_RUNTIME_API IObject {
 
     //=> Helper API
     template <typename TO>
-    TO* type_cast()
+    inline TO* type_cast()
     {
         BaseInfo result;
         if (get_record_type()->find_base(RTTRTraits<TO>::get_type(), result))
@@ -29,18 +29,27 @@ struct SKR_RUNTIME_API IObject {
         }
     }
     template <typename TO>
-    const TO* type_cast() const
+    inline const TO* type_cast() const
     {
         return const_cast<IObject*>(this)->type_cast<TO>();
     }
     template <typename TO>
-    TO* type_cast_fast() const { return type_cast<TO>(); }
+    inline TO* type_cast_fast() const { return type_cast<TO>(); }
     template <typename TO>
-    TO* type_cast_fast() { return type_cast<TO>(); }
+    inline TO* type_cast_fast() { return type_cast<TO>(); }
     template <typename TO>
-    bool type_is() const noexcept
+    inline bool type_is() const noexcept
     {
         return type_cast<TO>() != nullptr;
+    }
+    inline bool type_is(const GUID& guid) const
+    {
+        BaseInfo result;
+        return get_record_type()->find_base(skr::rttr::get_type_from_guid(guid), result);
+    }
+    inline GUID type_id() const
+    {
+        return get_record_type()->type_id();
     }
     //=> Helper API
 };

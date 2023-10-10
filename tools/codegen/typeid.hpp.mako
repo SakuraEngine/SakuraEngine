@@ -1,3 +1,4 @@
+<%doc>
 //BEGIN TYPEID GENERATED
 #include "SkrRT/type/type_id.hpp"
 
@@ -33,3 +34,4 @@ namespace skr::type
 %endfor
 }
 //END TYPEID GENERATED
+</%doc>

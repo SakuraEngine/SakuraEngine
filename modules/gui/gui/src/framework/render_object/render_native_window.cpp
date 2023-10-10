@@ -12,7 +12,7 @@ RenderNativeWindow::RenderNativeWindow(INativeWindow* native_window)
 
 NotNull<OffsetLayer*> RenderNativeWindow::update_layer(OffsetLayer* old_layer)
 {
-    return old_layer ? make_not_null(old_layer) : make_not_null(SkrNew<NativeWindowLayer>(SKR_GUI_CAST_FAST<INativeWindow>(window())));
+    return old_layer ? make_not_null(old_layer) : make_not_null(SkrNew<NativeWindowLayer>(window()->type_cast<INativeWindow>()));
 }
 
 void RenderNativeWindow::prepare_initial_frame() SKR_NOEXCEPT

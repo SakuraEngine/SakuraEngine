@@ -7,7 +7,7 @@
 #include <variant> // TODO. use skr::variant, here for shit msvc
 
 #ifndef __meta__
-    #include "SkrGui/render_objects/render_text.hpp"
+    #include "SkrGui/render_objects/render_text.generated.h"
 #endif
 
 namespace skr sreflect

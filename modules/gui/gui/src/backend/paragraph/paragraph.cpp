@@ -1,6 +1,6 @@
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include "SkrGui/framework/painting_context.hpp"
-#include "backend/paragraph/paragraph.hpp"
+#include "SkrGui/_private/paragraph.hpp"
 #include "backend/text_server/text_paragraph.h"
 #include "backend/text_server/font.h"
 

@@ -1,6 +1,6 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
 #include "SkrGui/framework/pipeline_owner.hpp"
-#include "SkrGui/framework/layer/offet_layer.hpp"
+#include "SkrGui/framework/layer/offset_layer.hpp"
 
 namespace skr::gui
 {

@@ -20,7 +20,10 @@ enum class ERenderObjectLifecycle : uint8_t
     Destroyed,
 };
 
-struct SKR_GUI_API RenderObject : virtual public skr::rttr::IObject {
+sreflect_struct(
+    "guid" : "2f1b78a5-1be9-4799-a3ca-2f2d3b153f29"
+)
+SKR_GUI_API RenderObject : virtual public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
     friend struct PipelineOwner;
     using VisitFuncRef = FunctionRef<void(NotNull<RenderObject*>)>;

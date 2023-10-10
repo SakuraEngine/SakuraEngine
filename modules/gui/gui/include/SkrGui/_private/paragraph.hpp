@@ -1,16 +1,25 @@
 #pragma once
 #include "SkrGui/backend/text/paragraph.hpp"
 #include "backend/text_server/text_paragraph.h"
+#ifndef __meta__
+    #include "SkrGui/_private/paragraph.generated.h"
+#endif
 
 namespace godot
 {
 class TextParagraph;
 }
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct _EmbeddedParagraph : public godot::TextParagraph, public IParagraph {
-    SKR_GUI_OBJECT(_EmbeddedParagraph, "1d611491-1e27-42cf-9604-4135b6617e21", IParagraph)
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "4863f5b6-c952-468d-9460-1a5841f2d8f5"
+)
+_EmbeddedParagraph : public godot::TextParagraph,
+                     public IParagraph {
+    SKR_RTTR_GENERATE_BODY()
 
     _EmbeddedParagraph();
 
@@ -27,4 +36,5 @@ private:
     Array<String> _texts = {}; // TODO. inline
     bool          _dirty = false;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

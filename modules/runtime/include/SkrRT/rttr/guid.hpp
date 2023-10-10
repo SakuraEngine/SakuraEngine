@@ -1,6 +1,7 @@
 // TODO. move this file to SkrBase
 #pragma once
 #include <cstdint>
+#include <initializer_list>
 #include <type_traits>
 #include "SkrBase/misc/hash.hpp"
 #include "SkrRT/misc/macros.h"
