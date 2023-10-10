@@ -6,8 +6,7 @@ namespace renderer
 {
 using namespace skr::resource;
 
-struct SMaterialTypeFactoryImpl : public SMaterialTypeFactory
-{
+struct SMaterialTypeFactoryImpl : public SMaterialTypeFactory {
     SMaterialTypeFactoryImpl(const SMaterialTypeFactory::Root& root)
         : root(root)
     {
@@ -15,7 +14,7 @@ struct SMaterialTypeFactoryImpl : public SMaterialTypeFactory
 
     skr_type_id_t GetResourceType() override
     {
-        return skr::type::type_id<skr_material_type_resource_t>::get();
+        return ::skr::rttr::type_id<skr_material_type_resource_t>();
     }
     bool AsyncIO() override { return true; }
     bool Unload(skr_resource_record_t* record) override
@@ -42,15 +41,15 @@ struct SMaterialTypeFactoryImpl : public SMaterialTypeFactory
     Root root;
 };
 
-SMaterialTypeFactory* SMaterialTypeFactory::Create(const Root &root)
+SMaterialTypeFactory* SMaterialTypeFactory::Create(const Root& root)
 {
     return SkrNew<SMaterialTypeFactoryImpl>(root);
 }
 
-void SMaterialTypeFactory::Destroy(SMaterialTypeFactory *factory)
+void SMaterialTypeFactory::Destroy(SMaterialTypeFactory* factory)
 {
     SkrDelete(factory);
 }
 
-}
-}
+} // namespace renderer
+} // namespace skr

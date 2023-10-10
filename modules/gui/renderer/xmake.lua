@@ -9,7 +9,13 @@ shared_module("SkrGuiRenderer", "SKR_GUI_RENDERER", engine_version)
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/GUI", 
-        dxil_outdir = "/../resources/shaders/GUI"})
+        dxil_outdir = "/../resources/shaders/GUI"}
+    )
+    add_rules("c++.codegen", {
+        files = {"include/**.h", "include/**.hpp"},
+        rootdir = "include/SkrGuiRenderer/",
+        api = "SKR_GUI_RENDERER"
+    })
     add_files("shaders/*.hlsl")
     if (is_os("windows") or is_os("macosx")) then 
         public_dependency("SkrImageCoder", engine_version)

@@ -31,7 +31,7 @@ struct hash {
 namespace details
 {
 constexpr const size_t short_guid_form_length = 36; // XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-constexpr const size_t long_guid_form_length = 38;  // {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}
+constexpr const size_t long_guid_form_length  = 38; // {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}
 
 //
 constexpr int parse_hex_digit(const char8_t c)
@@ -52,7 +52,7 @@ template <class T>
 constexpr T parse_hex(const char8_t* ptr)
 {
     constexpr size_t digits = sizeof(T) * 2;
-    T result{};
+    T                result{};
     for (size_t i = 0; i < digits; ++i)
         result |= parse_hex_digit(ptr[i]) << (4 * (digits - i - 1));
     return result;
@@ -67,7 +67,7 @@ constexpr skr_guid_t make_guid_helper(const char8_t* begin)
     auto Data3 = parse_hex<uint16_t>(begin);
     begin += 4 + 1;
     uint8_t Data4[8] = {};
-    Data4[0] = parse_hex<uint8_t>(begin);
+    Data4[0]         = parse_hex<uint8_t>(begin);
     begin += 2;
     Data4[1] = parse_hex<uint8_t>(begin);
     begin += 2 + 1;
@@ -125,3 +125,9 @@ constexpr skr_guid_t operator""_guid(const char8_t* str, size_t N)
 } // namespace literals
 SKR_RUNTIME_API bool make_guid(const skr::string_view& str, skr_guid_t& value);
 } // namespace skr::guid
+
+#define SKR_CONSTEXPR_GUID(__GUID) []() constexpr {  \
+    using namespace skr::guid::literals;             \
+    constexpr skr_guid_t result = u8##__GUID##_guid; \
+    return result;                                   \
+}()

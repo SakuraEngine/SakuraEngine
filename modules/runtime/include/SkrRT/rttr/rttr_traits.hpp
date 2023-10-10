@@ -66,6 +66,11 @@ SKR_INLINE Span<TypeDesc> type_desc() SKR_NOEXCEPT
     return { desc, RTTRTraits<T>::type_desc_size };
 }
 template <typename T>
+SKR_INLINE string_view type_name() SKR_NOEXCEPT
+{
+    return RTTRTraits<T>::get_name();
+}
+template <typename T>
 SKR_INLINE Type* type_of() SKR_NOEXCEPT
 {
     return RTTRTraits<T>::get_type();
@@ -97,8 +102,12 @@ struct RTTRTraits<volatile T> : RTTRTraits<T> {
         }                                                                          \
                                                                                    \
         inline static string_view get_name() { return SKR_RTTR_MAKE_U8(#__TYPE); } \
-        inline static GUID        get_guid() { return u8##__GUID##_skr_guid; }     \
-        inline static Type*       get_type()                                       \
+        inline static GUID        get_guid()                                       \
+        {                                                                          \
+            using namespace skr::guid::literals;                                   \
+            return u8##__GUID##_guid;                                              \
+        }                                                                          \
+        inline static Type* get_type()                                             \
         {                                                                          \
             static Type* type = nullptr;                                           \
             if (!type)                                                             \
@@ -127,7 +136,7 @@ SKR_RTTR_TYPE(double, "9454d5cd-68dd-4039-8e67-07732de87e5c")
 // pointer type
 namespace skr::rttr
 {
-static constexpr inline GUID kPointerGenericGUID = u8"d2b6757d-3e32-4073-b483-62f41bc4bd8a"_skr_guid;
+static constexpr inline GUID kPointerGenericGUID = SKR_CONSTEXPR_GUID("d2b6757d-3e32-4073-b483-62f41bc4bd8a");
 template <typename T>
 struct RTTRTraits<T*> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 1;
@@ -163,7 +172,7 @@ struct RTTRTraits<T*> {
 // reference type
 namespace skr::rttr
 {
-static constexpr inline GUID kReferenceGenericGUID = u8"277d6af2-91e9-4ee3-a56f-b6e3becf88df"_skr_guid;
+static constexpr inline GUID kReferenceGenericGUID = SKR_CONSTEXPR_GUID("277d6af2-91e9-4ee3-a56f-b6e3becf88df");
 template <typename T>
 struct RTTRTraits<T&> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 1;
@@ -199,7 +208,7 @@ struct RTTRTraits<T&> {
 // array type
 namespace skr::rttr
 {
-static constexpr inline GUID kArrayGenericGUID = u8"b382ee62-3a82-4cf0-9b29-263f2cc848d9"_skr_guid;
+static constexpr inline GUID kArrayGenericGUID = SKR_CONSTEXPR_GUID("b382ee62-3a82-4cf0-9b29-263f2cc848d9");
 template <typename T, size_t N>
 struct RTTRTraits<T[N]> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 3;
