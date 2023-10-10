@@ -268,32 +268,6 @@ struct SKR_RUNTIME_API SObjectHeader : public SInterface {
     virtual skr_guid_t        get_type() override { return type; }
     virtual SInterfaceDeleter custom_deleter() const override { return deleter; }
 };
-namespace type
-{
-template <class T>
-struct type_id;
-}
-template <class T>
-struct SBoxed : public SObjectHeader {
-    T        value;
-    T*       get() { return &value; }
-    const T* get() const { return &value; }
-    SBoxed(T&& value, SInterfaceDeleter deleter = nullptr)
-        : value(std::move(value))
-    {
-        type          = ::skr::rttr::type_id<T>();
-        this->deleter = deleter;
-    }
-    static SBoxed<T>* from(T* ptr)
-    {
-        return (SBoxed<T>*)((uint8_t*)(ptr)-offsetof(SBoxed<T>, value));
-    }
-};
-template <class T>
-SBoxed<T>* box(T* ptr)
-{
-    return SBoxed<T>::from(ptr);
-}
 
 struct SKR_RUNTIME_API IBlob : public SInterface {
     static SObjectPtr<IBlob> Create(const uint8_t* data, uint64_t size, bool move, const char* name = nullptr) SKR_NOEXCEPT;

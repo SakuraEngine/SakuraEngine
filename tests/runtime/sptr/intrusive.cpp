@@ -174,18 +174,3 @@ TEST_CASE_METHOD(SPTRIntrusiveTests, "VoidPtrCastIntrusive")
     }
     EXPECT_EQ(status, TestObject::Status::Destroyed);
 }
-
-TEST_CASE_METHOD(SPTRIntrusiveTests, "BoxedValue")
-{
-    skr::SBoxedPtr<uint32_t> upValue;
-    {
-        auto object = skr::SBoxedPtr<uint32_t>(SkrNew<skr::SBoxed<uint32_t>>((uint32_t)1u));
-        auto value  = object.get()->get();
-        EXPECT_EQ(object->get_type(), ::skr::rttr::type_id<uint32_t>());
-        EXPECT_EQ(*value, 1);
-        *value = 2;
-        EXPECT_EQ(object->value, 2);
-        upValue.reset(skr::box(value));
-    }
-    EXPECT_EQ(upValue->value, 2);
-}
