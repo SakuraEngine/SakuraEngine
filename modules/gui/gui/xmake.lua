@@ -13,7 +13,7 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     -- reflection
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/SkrGui/",
+        rootdir = "include/SkrGui",
         api = "SKR_GUI"
     })
 

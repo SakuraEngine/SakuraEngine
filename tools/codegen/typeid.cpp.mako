@@ -1,3 +1,4 @@
+<%doc>
 //BEGIN TYPEID GENERATED
 #include "SkrRT/type/type.hpp"
 
@@ -16,3 +17,4 @@ static struct RegisterName${type.id}Helper
 %endfor
 
 //END TYPEID GENERATED
+</%doc>
