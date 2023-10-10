@@ -25,9 +25,8 @@ template <class T>
 struct TResourceHandle;
 }
 // end forward declaration for resources
-struct skr_json_format_t
-{
-    bool enable = true;
+struct skr_json_format_t {
+    bool     enable     = true;
     uint32_t indentSize = 4;
 };
 
@@ -39,31 +38,31 @@ public:
     skr_json_writer_t(size_t levelDepth, skr_json_format_t format = skr_json_format_t());
     inline bool IsComplete() { return _hasRoot && _levelStack.empty(); }
     skr::string Str() const;
-    bool Bool(bool b);
-    bool Int(int32_t i);
-    bool UInt(uint32_t i);
-    bool Int64(int64_t i);
-    bool UInt64(uint64_t i);
-    bool Float(float f);
-    bool Double(double d);
-    bool RawNumber(const TChar* str, TSize length);
-    bool RawNumber(skr::string_view view);
-    bool String(const TChar* str, TSize length);
-    bool String(skr::string_view view);
-    bool StartObject();
-    bool Key(const TChar* str, TSize length);
-    bool Key(skr::string_view view);
-    bool EndObject();
-    bool StartArray();
-    bool EndArray();
-    bool RawValue(const TChar* str, TSize length, ESkrJsonType type);
-    bool RawValue(skr::string_view view, ESkrJsonType type);
+    bool        Bool(bool b);
+    bool        Int(int32_t i);
+    bool        UInt(uint32_t i);
+    bool        Int64(int64_t i);
+    bool        UInt64(uint64_t i);
+    bool        Float(float f);
+    bool        Double(double d);
+    bool        RawNumber(const TChar* str, TSize length);
+    bool        RawNumber(skr::string_view view);
+    bool        String(const TChar* str, TSize length);
+    bool        String(skr::string_view view);
+    bool        StartObject();
+    bool        Key(const TChar* str, TSize length);
+    bool        Key(skr::string_view view);
+    bool        EndObject();
+    bool        StartArray();
+    bool        EndArray();
+    bool        RawValue(const TChar* str, TSize length, ESkrJsonType type);
+    bool        RawValue(skr::string_view view, ESkrJsonType type);
 
     skr::string buffer;
 
 protected:
     struct Level {
-        bool isArray = false;
+        bool     isArray    = false;
         uint32_t valueCount = 0;
     };
     bool _WriteBool(bool b);
@@ -82,9 +81,9 @@ protected:
     bool _Prefix(ESkrJsonType type);
     bool _NewLine();
 
-    bool _hasRoot = false;
+    bool                 _hasRoot = false;
     eastl::vector<Level> _levelStack;
-    skr_json_format_t _format;
+    skr_json_format_t    _format;
 };
 #else
 typedef struct skr_json_writer_t skr_json_writer_t;
@@ -305,12 +304,12 @@ struct WriteTrait<const skr::variant<Ts...>&> {
             using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
             json->StartObject();
             json->Key(u8"type");
-            skr::json::Write<const skr_guid_t&>(json, skr::type::type_id<raw>::get());
+            skr::json::Write<const skr_guid_t&>(json, ::skr::rttr::type_id<raw>());
             json->Key(u8"value");
             skr::json::Write<decltype(value)>(json, value);
             json->EndObject();
         },
-        v);
+                     v);
     }
 };
 

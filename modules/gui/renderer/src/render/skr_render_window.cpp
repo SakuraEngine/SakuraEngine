@@ -1,6 +1,6 @@
 #include "SkrGuiRenderer/render/skr_render_window.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
-#include "SkrGui/framework/layer/offet_layer.hpp"
+#include "SkrGui/framework/layer/offset_layer.hpp"
 #include "SkrGui/framework/layer/geometry_layer.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include "SkrRT/math/rtm/qvvf.h"
@@ -407,7 +407,7 @@ void SkrRenderWindow::_render()
                                          0.f, 1.f);
         cgpu_render_encoder_set_scissor(ctx.encoder,
                                         0, 0,
-                                        (uint32_t)target_desc->width, 
+                                        (uint32_t)target_desc->width,
                                         (uint32_t)target_desc->height);
 
         SkrPipelineKey pipeline_key_cache = { ESkrPipelineFlag::__Count, CGPU_SAMPLE_COUNT_1 };
@@ -425,7 +425,7 @@ void SkrRenderWindow::_render()
 
             if (use_texture)
             {
-                const auto gui_texture = SKR_GUI_CAST<SkrUpdatableImage>(cmd.texture);
+                const auto gui_texture = cmd.texture->type_cast<SkrUpdatableImage>();
                 cgpux_render_encoder_bind_bind_table(ctx.encoder, gui_texture->bind_table());
             }
 

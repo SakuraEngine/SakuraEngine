@@ -1,12 +1,9 @@
 #include "test.hpp"
 
-struct SPTRIntrusiveTests
-{
-
+struct SPTRIntrusiveTests {
 };
 
-struct TestObject : public skr::SInterface
-{
+struct TestObject : public skr::SInterface {
     enum Status
     {
         Uninitialized,
@@ -38,13 +35,15 @@ struct TestObject : public skr::SInterface
     {
         return rc;
     }
-    Status& code;
+    Status&              code;
     std::atomic_uint32_t rc = 0;
 };
 
-struct TestSon : public TestObject
-{
-    TestSon(Status& code) : TestObject(code) { }
+struct TestSon : public TestObject {
+    TestSon(Status& code)
+        : TestObject(code)
+    {
+    }
 };
 
 TEST_CASE_METHOD(SPTRIntrusiveTests, "CopyIntrusive")
@@ -77,12 +76,12 @@ TEST_CASE_METHOD(SPTRIntrusiveTests, "CopyIntrusive2")
 
 TEST_CASE_METHOD(SPTRIntrusiveTests, "SwapIntrusive")
 {
-    auto one_status = TestObject::Status::Uninitialized;
+    auto one_status     = TestObject::Status::Uninitialized;
     auto another_status = TestObject::Status::Uninitialized;
-    auto mOneObject = skr::SObjectPtr<TestObject>::Create(one_status);
+    auto mOneObject     = skr::SObjectPtr<TestObject>::Create(one_status);
     {
         auto mAnotherObject = skr::SObjectPtr<TestObject>::Create(another_status);
-        mOneObject = mAnotherObject;     
+        mOneObject          = mAnotherObject;
         EXPECT_EQ(one_status, TestObject::Status::Destroyed);
     }
     EXPECT_EQ(another_status, TestObject::Status::Hosted);
@@ -90,12 +89,12 @@ TEST_CASE_METHOD(SPTRIntrusiveTests, "SwapIntrusive")
 
 TEST_CASE_METHOD(SPTRIntrusiveTests, "SwapIntrusive2")
 {
-    auto one_status = TestObject::Status::Uninitialized;
+    auto one_status     = TestObject::Status::Uninitialized;
     auto another_status = TestObject::Status::Uninitialized;
-    auto mOneObject = skr::SObjectPtr<TestObject>::Create(one_status);
+    auto mOneObject     = skr::SObjectPtr<TestObject>::Create(one_status);
     {
         auto mAnotherObject = skr::SObjectPtr<TestObject>::Create(another_status);
-        mOneObject = mAnotherObject;     
+        mOneObject          = mAnotherObject;
         EXPECT_EQ(one_status, TestObject::Status::Destroyed);
     }
     EXPECT_EQ(another_status, TestObject::Status::Hosted);
@@ -103,10 +102,10 @@ TEST_CASE_METHOD(SPTRIntrusiveTests, "SwapIntrusive2")
 
 TEST_CASE_METHOD(SPTRIntrusiveTests, "MoveIntrusive")
 {
-    auto one_status = TestObject::Status::Uninitialized;
-    auto another_status = TestObject::Status::Uninitialized;
+    auto                        one_status     = TestObject::Status::Uninitialized;
+    auto                        another_status = TestObject::Status::Uninitialized;
     skr::SObjectPtr<TestObject> rT1(SkrNew<TestObject>(one_status));
-    skr::SObjectPtr<TestSon> rT2(SkrNew<TestSon>(another_status)); // default ctor uses 0
+    skr::SObjectPtr<TestSon>    rT2(SkrNew<TestSon>(another_status)); // default ctor uses 0
 
     EXPECT_EQ(one_status, TestObject::Status::Hosted);
     EXPECT_EQ(another_status, TestObject::Status::Hosted);
@@ -118,10 +117,10 @@ TEST_CASE_METHOD(SPTRIntrusiveTests, "MoveIntrusive")
 
 TEST_CASE_METHOD(SPTRIntrusiveTests, "MoveIntrusive2")
 {
-    auto one_status = TestObject::Status::Uninitialized;
-    auto another_status = TestObject::Status::Uninitialized;
+    auto                        one_status     = TestObject::Status::Uninitialized;
+    auto                        another_status = TestObject::Status::Uninitialized;
     skr::SObjectPtr<TestObject> rT1(SkrNew<TestObject>(one_status));
-    skr::SObjectPtr<TestSon> rT2(SkrNew<TestSon>(another_status)); // default ctor uses 0
+    skr::SObjectPtr<TestSon>    rT2(SkrNew<TestSon>(another_status)); // default ctor uses 0
 
     EXPECT_EQ(one_status, TestObject::Status::Hosted);
     EXPECT_EQ(another_status, TestObject::Status::Hosted);
@@ -133,31 +132,31 @@ TEST_CASE_METHOD(SPTRIntrusiveTests, "MoveIntrusive2")
 
 TEST_CASE_METHOD(SPTRIntrusiveTests, "CastIntrusive")
 {
-    TestObject::Status status = TestObject::Status::Uninitialized;
-    skr::SObjectPtr<TestSon> pC(SkrNew<TestSon>(status));
+    TestObject::Status          status = TestObject::Status::Uninitialized;
+    skr::SObjectPtr<TestSon>    pC(SkrNew<TestSon>(status));
     skr::SObjectPtr<TestObject> pP(pC);
-    skr::SObjectPtr<TestSon> pCC(skr::static_pointer_cast<TestSon>(pP));
+    skr::SObjectPtr<TestSon>    pCC(skr::static_pointer_cast<TestSon>(pP));
     EXPECT_EQ(pCC->use_count(), 3);
 
-    skr::SObjectPtr<TestObject> pCC2 = (skr::SObjectPtr<TestSon>)pCC; 
+    skr::SObjectPtr<TestObject> pCC2 = (skr::SObjectPtr<TestSon>)pCC;
     EXPECT_EQ(pCC->use_count(), 4);
-    
-    skr::SObjectPtr<TestObject> pCC3 = std::move(pCC); 
+
+    skr::SObjectPtr<TestObject> pCC3 = std::move(pCC);
     EXPECT_EQ(pCC3->use_count(), 4);
 }
 
 TEST_CASE_METHOD(SPTRIntrusiveTests, "CastIntrusive2")
 {
-    TestObject::Status status = TestObject::Status::Uninitialized;
-    skr::SObjectPtr<TestSon> pC(SkrNew<TestSon>(status));
+    TestObject::Status          status = TestObject::Status::Uninitialized;
+    skr::SObjectPtr<TestSon>    pC(SkrNew<TestSon>(status));
     skr::SObjectPtr<TestObject> pP(pC);
-    skr::SObjectPtr<TestSon> pCC(skr::static_pointer_cast<TestSon>(pP));
+    skr::SObjectPtr<TestSon>    pCC(skr::static_pointer_cast<TestSon>(pP));
     EXPECT_EQ(pCC->use_count(), 3);
 
-    skr::SObjectPtr<TestObject> pCC2 = (skr::SObjectPtr<TestSon>)pCC; 
+    skr::SObjectPtr<TestObject> pCC2 = (skr::SObjectPtr<TestSon>)pCC;
     EXPECT_EQ(pCC->use_count(), 4);
-    
-    skr::SObjectPtr<TestObject> pCC3 = std::move(pCC); 
+
+    skr::SObjectPtr<TestObject> pCC3 = std::move(pCC);
     EXPECT_EQ(pCC3->use_count(), 4);
 }
 
@@ -181,8 +180,8 @@ TEST_CASE_METHOD(SPTRIntrusiveTests, "BoxedValue")
     skr::SBoxedPtr<uint32_t> upValue;
     {
         auto object = skr::SBoxedPtr<uint32_t>(SkrNew<skr::SBoxed<uint32_t>>((uint32_t)1u));
-        auto value = object.get()->get();
-        EXPECT_EQ(object->get_type(), skr::type::type_id<uint32_t>::get());
+        auto value  = object.get()->get();
+        EXPECT_EQ(object->get_type(), ::skr::rttr::type_id<uint32_t>());
         EXPECT_EQ(*value, 1);
         *value = 2;
         EXPECT_EQ(object->value, 2);

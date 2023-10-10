@@ -3,14 +3,22 @@
 #include "SkrGui/backend/device/window.hpp"
 #include "SkrRT/platform/window.h"
 #include "SkrGui/backend/device/device.hpp"
+#ifndef __meta__
+    #include "SkrGuiRenderer/device/skr_native_window.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 struct SkrRenderWindow;
 struct SkrNativeDevice;
 
-struct SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
-    SKR_GUI_OBJECT(SkrNativeWindow, "093aa38f-f5f8-4aa9-92ed-5eafa6b797d5", INativeWindow)
+sreflect_struct(
+    "guid": "53ce54d5-329c-4455-91bc-fcc80444f19f"
+)
+SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
+    SKR_RTTR_GENERATE_BODY()
 
     SkrNativeWindow(SkrNativeDevice* device);
     ~SkrNativeWindow();
@@ -73,4 +81,5 @@ private:
     SkrRenderWindow*   _render_window = nullptr;
     NativeWindowLayer* _native_layer  = nullptr;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

@@ -26,11 +26,11 @@ namespace skr
 namespace json
 {
 struct error_code_info {
-    error_code code;
+    error_code  code;
     const char* message; // do not use a fancy std::string where a simple C string will do (no alloc, no destructor)
 };
 SKR_STATIC_API const char* error_message(error_code err) noexcept;
-SKR_STATIC_API void set_error_message(error_code err) noexcept;
+SKR_STATIC_API void        set_error_message(error_code err) noexcept;
 template <class T>
 error_code Read(simdjson::ondemand::value&& json, T& value);
 
@@ -134,7 +134,7 @@ struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
             auto value = pair.value();
             if (value.error() != simdjson::SUCCESS)
                 return (error_code)value.error();
-            V v;
+            V          v;
             error_code error = skr::json::Read<V>(std::move(value).value_unsafe(), v);
             if (error != SUCCESS)
                 return error;
@@ -142,7 +142,7 @@ struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
             const char* key_str = key.value_unsafe().raw();
             if constexpr (std::is_same_v<std::decay_t<K>, skr::string>)
             {
-                map.insert(std::make_pair(K{key_str}, std::move(v)));
+                map.insert(std::make_pair(K{ key_str }, std::move(v)));
             }
             else
             {
@@ -165,7 +165,7 @@ struct ReadTrait<skr::vector<V, Allocator>> {
         {
             if (value.error() != simdjson::SUCCESS)
                 return (error_code)value.error();
-            V v;
+            V          v;
             error_code error = skr::json::Read<V>(std::move(value).value_unsafe(), v);
             if (error != SUCCESS)
                 return error;
@@ -180,9 +180,9 @@ struct ReadTrait<skr::variant<Ts...>> {
     template <class T>
     static error_code ReadByIndex(simdjson::ondemand::value&& json, skr::variant<Ts...>& value, skr_guid_t index)
     {
-        if (index == skr::type::type_id<T>::get())
+        if (index == ::skr::rttr::type_id<T>())
         {
-            T t;
+            T          t;
             error_code ret = skr::json::Read(std::move(json), t);
             if (ret != error_code::SUCCESS)
                 return ret;
@@ -213,8 +213,7 @@ struct ReadTrait<skr::variant<Ts...>> {
 };
 
 template <class T>
-struct ReadTrait<TEnumAsByte<T>>
-{
+struct ReadTrait<TEnumAsByte<T>> {
     static error_code Read(simdjson::ondemand::value&& json, TEnumAsByte<T>& value)
     {
         return skr::json::Read<typename TEnumAsByte<T>::UT>(std::move(json), value.as_byte());
@@ -237,16 +236,19 @@ error_code Read(simdjson::ondemand::value&& json, T& value)
 } // namespace json
 
 template <class K, class V, class Hash, class Eq>
-struct SerdeCompleteChecker<json::ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>>> 
-: std::bool_constant<is_complete_serde_v<json::ReadTrait<K>> && is_complete_serde_v<json::ReadTrait<V>>> {};
+struct SerdeCompleteChecker<json::ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>>>
+    : std::bool_constant<is_complete_serde_v<json::ReadTrait<K>> && is_complete_serde_v<json::ReadTrait<V>>> {
+};
 
 template <class V, class Allocator>
 struct SerdeCompleteChecker<json::ReadTrait<eastl::vector<V, Allocator>>>
-: std::bool_constant<is_complete_serde_v<json::ReadTrait<V>>> {};
+    : std::bool_constant<is_complete_serde_v<json::ReadTrait<V>>> {
+};
 
 template <class... Ts>
 struct SerdeCompleteChecker<json::ReadTrait<skr::variant<Ts...>>>
-: std::bool_constant<(is_complete_serde_v<json::ReadTrait<Ts>> && ...)> {};
+    : std::bool_constant<(is_complete_serde_v<json::ReadTrait<Ts>> && ...)> {
+};
 
 } // namespace skr
 #else
