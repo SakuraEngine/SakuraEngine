@@ -1,5 +1,6 @@
 includes("application/xmake.lua")
 includes("hotfix/xmake.lua")
+includes("gameai/xmake.lua")
 
 if has_config("build_cgpu_samples") then 
     includes("cgpu/xmake.lua")
