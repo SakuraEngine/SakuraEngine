@@ -57,10 +57,9 @@ private:
 };
 } // namespace skr
 
-// binary reader & writer
+// binary serde
 #include "SkrRT/serde/binary/reader_fwd.h"
 #include "SkrRT/serde/binary/writer_fwd.h"
-
 namespace skr::binary
 {
 template <class T>
@@ -79,3 +78,24 @@ struct WriteTrait<const StronglyEnum<T>&> {
     }
 };
 } // namespace skr::binary
+
+// json serde
+#include "SkrRT/serde/json/writer.h"
+#include "SkrRT/serde/json/reader.h"
+namespace skr::json
+{
+template <class T>
+struct WriteTrait<const StronglyEnum<T>&> {
+    static void Write(skr_json_writer_t* writer, const StronglyEnum<T>& value)
+    {
+        skr::json::Write(writer, value.underlying_value());
+    }
+};
+template <class T>
+struct ReadTrait<StronglyEnum<T>> {
+    static error_code Read(simdjson::ondemand::value&& json, StronglyEnum<T>& value)
+    {
+        return skr::json::Read<typename TEnumAsByte<T>::UT>(std::move(json), value.underlying_value());
+    }
+};
+} // namespace skr::json
