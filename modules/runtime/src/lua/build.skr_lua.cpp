@@ -413,9 +413,9 @@ void bind_skr_resource_handle(lua_State* L)
                             return 0;
                         }
                         auto tid = resource->get_type();
-                        auto type = skr_get_type(&tid);
+                        auto type = skr::rttr::get_type_from_guid(tid);
                         lua_pushlightuserdata(L, ptr);
-                        luaL_getmetatable(L, (const char*)type->Name());
+                        luaL_getmetatable(L, (const char*)type->name().c_str());
                         lua_setmetatable(L, -2);
                         return 1;
                     }, "get_resolved");

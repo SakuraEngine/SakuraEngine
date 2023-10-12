@@ -15,54 +15,6 @@ namespace skr
     using eastl::visit;
 }
 
-#include "SkrRT/type/type.hpp"
-
-namespace skr
-{
-namespace type
-{
-struct VariantStorage
-{
-    size_t index;
-    uint8_t data[1];
-};
-// skr::variant<Ts...>
-struct VariantType : skr_type_t {
-    const skr::span<const skr_type_t*> types;
-    size_t size;
-    size_t align;
-    size_t padding;
-    skr::string name;
-    SKR_RUNTIME_API void Set(void* dst, size_t index, const void* src) const;
-    SKR_RUNTIME_API void* Get(void* data, size_t index) const;
-    SKR_RUNTIME_API size_t Index(void* data) const;
-    VariantType(const skr::span<const skr_type_t*> types, size_t size, size_t align, size_t padding)
-        : skr_type_t{ SKR_TYPE_CATEGORY_VARIANT }
-        , types(types)
-        , size(size)
-        , align(align)
-        , padding(padding)
-    {
-    }
-};
-SKR_RUNTIME_API const skr_type_t* make_variant_type(const skr::span<const skr_type_t*> types);
-template <class... Ts>
-struct type_of<skr::variant<Ts...>> 
-{
-    static const skr::span<const skr_type_t*> variants()
-    {
-        static const skr_type_t* datas[] = { type_of<Ts>::get()... };
-        return skr::span<const skr_type_t*>(datas);
-    }
-    static const skr_type_t* get()
-    {
-        static auto type = make_variant_type(variants());
-        return type;
-    }
-};
-} // namespace type
-} // namespace skr
-
 // binary reader
 #include "SkrRT/serde/binary/reader_fwd.h"
 
@@ -135,6 +87,6 @@ struct WriteTrait<const skr::variant<Ts...>&> {
 } // namespace binary
 template <class... Ts>
 struct SerdeCompleteChecker<binary::WriteTrait<const skr::variant<Ts...>&>>
-    : std::bool_constant<(is_complete_serde_v<json::WriteTrait<Ts>> && ...)> {
+    : std::bool_constant<(is_complete_serde_v<binary::WriteTrait<Ts>> && ...)> {
 };
 } // namespace skr

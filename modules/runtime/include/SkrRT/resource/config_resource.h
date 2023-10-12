@@ -3,6 +3,7 @@
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/serde/binary/reader_fwd.h"
 #include "SkrRT/serde/binary/writer_fwd.h"
+#include "SkrRT/rttr/rttr_traits.hpp"
 
 typedef struct skr_config_resource_t skr_config_resource_t;
 
@@ -12,12 +13,14 @@ sattr("rtti" : true)
 SKR_RUNTIME_API skr_config_resource_t 
 {
     sattr("no-rtti" : true)
-    skr_type_id_t configType;
+    skr_guid_t configType;
     sattr("no-rtti" : true)
     void* configData = nullptr;
-    void SetType(skr_type_id_t type);
+    void SetType(skr_guid_t type);
     ~skr_config_resource_t();
 };
+
+SKR_RTTR_TYPE(skr_config_resource_t, "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74")
 
 namespace skr::binary
 {
@@ -36,22 +39,11 @@ namespace skr::binary
     };
 }
 
-inline static constexpr skr_guid_t get_type_id_skr_config_resource_t()
-{ 
-    return {0x8F2DE9A2, 0xFE05, 0x4EB7, {0xA0, 0x7F, 0xA9, 0x73, 0xE3, 0xE9, 0x2B, 0x74}}; 
-}
-
 namespace skr
 {
-namespace type
-{
-template <> struct type_id<skr_config_resource_t> {
-    static const skr_guid_t get() { return get_type_id_skr_config_resource_t(); }
-};
-}
 namespace resource
 {struct SKR_RUNTIME_API SConfigFactory : public SResourceFactory {
-    skr_type_id_t GetResourceType() override;
+    skr_guid_t GetResourceType() override;
 
     bool AsyncIO() override { return false; }
 };

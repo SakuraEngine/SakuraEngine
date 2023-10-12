@@ -8,9 +8,7 @@
     #include "SkrRT/containers/variant.hpp"
     #include "SkrRT/containers/string.hpp"
     #include "SkrRT/containers/vector.hpp"
-    #include "SkrRT/type/type_id.hpp"
     #include "SkrRT/platform/guid.hpp"
-    #include "SkrRT/type/type_helper.hpp"
 
 // forward declaration for resources
 struct skr_resource_handle_t;
