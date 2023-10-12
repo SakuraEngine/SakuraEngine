@@ -34,7 +34,7 @@ namespace skr::type
 namespace skr::rttr
 {
 // enum traits
-%for enum in generator.filter_rtti(db.enums):
+%for enum in generator.filter_guid(db.enums):
 template <>
 struct ${api} EnumTraits<${enum.name}>
 {

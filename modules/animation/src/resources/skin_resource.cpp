@@ -2,7 +2,7 @@
 
 namespace skr::resource
 {
-skr_type_id_t SSkinFactory::GetResourceType()
+skr_guid_t SSkinFactory::GetResourceType()
 {
     return skr::rttr::type_id<skr_skin_resource_t>();
 }

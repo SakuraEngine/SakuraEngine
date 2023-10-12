@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrAnim/resources/skeleton_resource.h"
+#include "SkrRT/containers/span.hpp"
 #ifndef __meta__
     #include "SkrAnim/resources/skin_resource.generated.h" // IWYU pragma: export
 #endif
@@ -32,7 +33,7 @@ namespace skr::resource
 struct SKR_ANIM_API SSkinFactory : public SResourceFactory 
 {
     virtual ~SSkinFactory() = default;
-    skr_type_id_t GetResourceType() override;
+    skr_guid_t GetResourceType() override;
     bool AsyncIO() override { return true; }
     float AsyncSerdeLoadFactor() override { return 1.0f; }
 };

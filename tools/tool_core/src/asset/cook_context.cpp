@@ -117,7 +117,7 @@ void* SCookContextImpl::_Import()
         importerType = importerTypeGuid;
         //-----import raw data
         SkrZoneScopedN("Importer.Import");
-        const auto type_name = skr_get_type_name(&importerType);
+        const auto type_name = skr::rttr::get_type_from_guid(importerType)->name().c_str();
         ZoneName((const char*)type_name, strlen((const char*)type_name));
         auto rawData = importer->Import(ioService, this);
         SKR_LOG_INFO(u8"[SCookContext::Cook] asset imported for asset: %s", record->path.u8string().c_str());

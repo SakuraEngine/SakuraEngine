@@ -21,7 +21,7 @@ int WriteTrait<const skr_skeleton_resource_t&>::Write(skr_binary_writer_t* write
 
 namespace skr::resource
 {
-skr_type_id_t SSkelFactory::GetResourceType()
+skr_guid_t SSkelFactory::GetResourceType()
 {
     return ::skr::rttr::type_id<skr_skeleton_resource_t>();
 }

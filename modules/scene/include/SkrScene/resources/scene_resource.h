@@ -25,7 +25,7 @@ namespace skr::resource
     {
     public:
         virtual ~SSceneFactory() noexcept = default;
-        skr_type_id_t GetResourceType() override;
+        skr_guid_t GetResourceType() override;
         bool AsyncIO() override { return true; }
         float AsyncSerdeLoadFactor() override { return 0.5f; }
     };

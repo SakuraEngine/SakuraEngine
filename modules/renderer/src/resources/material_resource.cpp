@@ -49,7 +49,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
         if (rs_pool) cgpu_free_root_signature_pool(rs_pool);
     }
 
-    skr_type_id_t GetResourceType() override
+    skr_guid_t GetResourceType() override
     {
         return ::skr::rttr::type_id<skr_material_resource_t>();
     }

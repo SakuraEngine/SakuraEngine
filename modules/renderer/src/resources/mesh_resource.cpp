@@ -178,7 +178,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
     }
 
     ~SMeshFactoryImpl() noexcept = default;
-    skr_type_id_t     GetResourceType() override;
+    skr_guid_t     GetResourceType() override;
     bool              AsyncIO() override { return true; }
     bool              Unload(skr_resource_record_t* record) override;
     ESkrInstallStatus Install(skr_resource_record_t* record) override;
@@ -241,7 +241,7 @@ void SMeshFactory::Destroy(SMeshFactory* factory)
     SkrDelete(factory);
 }
 
-skr_type_id_t SMeshFactoryImpl::GetResourceType()
+skr_guid_t SMeshFactoryImpl::GetResourceType()
 {
     const auto resource_type = ::skr::rttr::type_id<skr_mesh_resource_t>();
     return resource_type;

@@ -2,7 +2,6 @@
 #include "SkrRT/io/ram_io.hpp"
 #include <SkrRT/platform/filesystem.hpp>
 #include "SkrRT/platform/debug.h"
-#include "SkrRT/type/type_id.hpp"
 #include "SkrRT/io/vram_io.hpp"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_system.h"
@@ -40,7 +39,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory {
         this->root.dstorage_root = dstorage_root.u8_str();
     }
     ~STextureFactoryImpl() noexcept = default;
-    skr_type_id_t     GetResourceType() override;
+    skr_guid_t     GetResourceType() override;
     bool              AsyncIO() override { return true; }
     bool              Unload(skr_resource_record_t* record) override;
     ESkrInstallStatus Install(skr_resource_record_t* record) override;
@@ -121,7 +120,7 @@ void STextureFactory::Destroy(STextureFactory* factory)
     SkrDelete(factory);
 }
 
-skr_type_id_t STextureFactoryImpl::GetResourceType()
+skr_guid_t STextureFactoryImpl::GetResourceType()
 {
     const auto resource_type = ::skr::rttr::type_id<skr_texture_resource_t>();
     return resource_type;
