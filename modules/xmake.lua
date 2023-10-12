@@ -12,9 +12,9 @@ includes("input/xmake.lua")
 includes("input_system/xmake.lua")
 includes("live2d/xmake.lua")
 includes("animation/xmake.lua")
-includes("inspector/xmake.lua")
+-- includes("inspector/xmake.lua") -- TODO. resume
 includes("devtime/xmake.lua")
-includes("tweak/xmake.lua")
+-- includes("tweak/xmake.lua") -- TODO. resume
 includes("physics/xmake.lua")
 includes("gui/xmake.lua") 
 includes("netcode/xmake.lua")
