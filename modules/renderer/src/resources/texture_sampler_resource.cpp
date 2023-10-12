@@ -12,7 +12,7 @@ struct SKR_RENDERER_API STextureSamplerFactoryImpl : public STextureSamplerFacto
     ~STextureSamplerFactoryImpl() noexcept = default;
     bool AsyncIO() override { return true; }
 
-    skr_type_id_t     GetResourceType() override;
+    skr_guid_t     GetResourceType() override;
     bool              Unload(skr_resource_record_t* record) override;
     ESkrInstallStatus Install(skr_resource_record_t* record) override;
     bool              Uninstall(skr_resource_record_t* record) override;
@@ -100,7 +100,7 @@ void STextureSamplerFactory::Destroy(STextureSamplerFactory* factory)
     SkrDelete(factory);
 }
 
-skr_type_id_t STextureSamplerFactoryImpl::GetResourceType()
+skr_guid_t STextureSamplerFactoryImpl::GetResourceType()
 {
     const auto resource_type = ::skr::rttr::type_id<skr_texture_sampler_resource_t>();
     return resource_type;

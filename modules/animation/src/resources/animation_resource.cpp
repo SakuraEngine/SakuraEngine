@@ -21,7 +21,7 @@ int WriteTrait<const skr_anim_resource_t&>::Write(skr_binary_writer_t* writer, c
 
 namespace skr::resource
 {
-skr_type_id_t SAnimFactory::GetResourceType()
+skr_guid_t SAnimFactory::GetResourceType()
 {
     return skr::rttr::type_id<skr_anim_resource_t>();
 }
