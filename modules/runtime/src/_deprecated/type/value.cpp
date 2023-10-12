@@ -1,4 +1,4 @@
-#include "SkrRT/type/type.hpp"
+#include "SkrRT/_deprecated/type/type.hpp"
 
 #define CHECK_OUTDATED() SKR_ASSERT(!type || !skr::type::GetTypeRegistry()->is_outdated(type))
 
