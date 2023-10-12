@@ -5,11 +5,11 @@ enums = generator.filter_rtti(db.enums)
 
 <%doc>
 // BEGIN RTTI GENERATED
-#include "SkrRT/type/type.hpp"
+#include "SkrRT/_deprecated/type/type.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/misc/hash.h"
 #include "SkrRT/misc/log.h"
-#include "SkrRT/type/type_helper.hpp"
+#include "SkrRT/_deprecated/type/type_helper.hpp"
 
 [[maybe_unused]] static const char8_t* ArgumentNumMisMatchFormat = u8"Argument number mismatch while calling %s, expected %d, got %d.";
 [[maybe_unused]] static const char8_t* ArgumentIncompatibleFormat = u8"Argument %s is incompatible while calling %s. %s can not be converted to %s.";

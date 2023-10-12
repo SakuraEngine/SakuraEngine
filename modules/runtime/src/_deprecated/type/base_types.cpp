@@ -1,7 +1,7 @@
 #include "SkrRT/misc/hash.h"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"
-#include "SkrRT/type/type.hpp"
+#include "SkrRT/_deprecated/type/type.hpp"
 
 namespace skr {
 namespace type {

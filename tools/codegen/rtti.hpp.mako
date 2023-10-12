@@ -1,6 +1,6 @@
 <%doc>
 // BEGIN RTTI GENERATED
-#include "SkrRT/type/type.hpp"
+#include "SkrRT/_deprecated/type/type.hpp"
 
 namespace skr::type
 {

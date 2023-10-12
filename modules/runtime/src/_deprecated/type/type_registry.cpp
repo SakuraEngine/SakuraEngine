@@ -5,8 +5,8 @@
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/serde/json/reader.h"
 #include "SkrRT/serde/json/writer.h"
-#include "SkrRT/type/type.hpp"
-#include "SkrRT/type/type_serde.h"
+#include "SkrRT/_deprecated/type/type.hpp"
+#include "SkrRT/_deprecated/type/type_serde.h"
 
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/containers/vector.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrInspector/module.configure.h"
-#include "SkrRT/type/type.hpp"
+#include "SkrRT/_deprecated/type/type.hpp"
 
 namespace skr::inspect
 {

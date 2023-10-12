@@ -1,6 +1,6 @@
 <%doc>
 //BEGIN TYPEID GENERATED
-#include "SkrRT/type/type_id.hpp"
+#include "SkrRT/_deprecated/type/type_id.hpp"
 
 namespace skr::type
 {
