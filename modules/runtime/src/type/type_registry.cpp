@@ -1936,7 +1936,7 @@ bool skr::type::RecordType::IsBaseOf(const RecordType& other) const
     return false;
 }
 
-const skr_type_t* skr_get_type(const skr_type_id_t* id)
+const skr_type_t* skr_get_type(const skr_guid_t* id)
 {
     auto registry = skr::type::GetTypeRegistry();
     return registry->get_type(*id);
@@ -1947,7 +1947,7 @@ void skr_get_derived_types(const struct skr_type_t* type, void (*callback)(void*
     SKR_UNIMPLEMENTED_FUNCTION();
 }
 
-void skr_get_type_id(const struct skr_type_t* type, skr_type_id_t* id)
+void skr_get_type_id(const struct skr_type_t* type, skr_guid_t* id)
 {
     *id = type->Id();
 }

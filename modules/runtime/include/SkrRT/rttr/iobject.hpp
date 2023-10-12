@@ -71,32 +71,3 @@ SKR_RTTR_TYPE(IObject, "19246699-65f8-4c0b-a82e-7886a0cb315d")
         ::skr::rttr::RecordType* get_record_type() const override { return nullptr; } \
         void*                    get_head_ptr() const override { return nullptr; }
 #endif
-
-// TODO. remove it
-#include "SkrRT/type/type_id.hpp"
-namespace skr::type
-{
-template <>
-struct type_id<::skr::rttr::IObject> {
-    inline static SKR_CONSTEXPR skr_guid_t get()
-    {
-        using namespace skr::guid::literals;
-        return u8"19246699-65f8-4c0b-a82e-7886a0cb315d"_guid;
-    }
-    inline static SKR_CONSTEXPR std::string_view str()
-    {
-        return "19246699-65f8-4c0b-a82e-7886a0cb315d";
-    }
-};
-template <>
-struct SKR_RUNTIME_API type_register<::skr::rttr::IObject> {
-    static void instantiate_type(RecordType* type)
-    {
-    }
-    inline static constexpr skr_guid_t get_id()
-    {
-        using namespace skr::guid::literals;
-        return u8"19246699-65f8-4c0b-a82e-7886a0cb315d"_guid;
-    }
-};
-} // namespace skr::type

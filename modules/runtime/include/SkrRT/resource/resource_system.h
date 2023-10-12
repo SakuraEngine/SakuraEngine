@@ -100,9 +100,9 @@ public:
     virtual void FlushResource(skr_resource_handle_t& handle) = 0;
     virtual ESkrLoadingStatus GetResourceStatus(const skr_guid_t& handle) = 0;
 
-    virtual SResourceFactory* FindFactory(skr_type_id_t type) const = 0;
+    virtual SResourceFactory* FindFactory(skr_guid_t type) const = 0;
     virtual void RegisterFactory(SResourceFactory* factory) = 0;
-    virtual void UnregisterFactory(skr_type_id_t type) = 0;
+    virtual void UnregisterFactory(skr_guid_t type) = 0;
 
     virtual SResourceRegistry* GetRegistry() const = 0;
     virtual skr_io_ram_service_t* GetRAMService() const = 0;

@@ -48,23 +48,23 @@ template <class T, class = void>
 struct DefaultBindTrait;
 
 template <class T>
-struct DefaultBindTrait<T*, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>> {
+struct DefaultBindTrait<T*, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::rttr::RTTRTraits<T>>>> {
     static int push(lua_State* L, T* value)
     {
-        return push_unknown(L, value, skr::type::type_id<T>::str());
+        return push_unknown(L, value, skr::rttr::type_name<T>());
     }
     static T* check(lua_State* L, int index)
     {
-        return (T*)check_unknown(L, index, skr::type::type_id<T>::str());
+        return (T*)check_unknown(L, index, skr::rttr::type_name<T>());
     }
 };
 
 template <class T>
-struct DefaultBindTrait<T, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>> {
+struct DefaultBindTrait<T, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::rttr::RTTRTraits<T>>>> {
     static int push(lua_State* L, const T& value)
     {
         static constexpr std::string_view prefix = "[unique]";
-        static constexpr std::string_view tid    = skr::type::type_id<T>::str();
+        static constexpr std::string_view tid    = skr::rttr::type_name<T>();
         return push_unknown_value(
         L, value, join_v<prefix, tid>, sizeof(T), +[](void* dst, const void* src) { new (dst) T(*(const T*)src); }, +[](void* dst) { ((T*)dst)->~T(); });
     }
@@ -76,11 +76,11 @@ struct DefaultBindTrait<T, std::enable_if_t<!std::is_enum_v<T> && skr::is_comple
 };
 
 template <class T>
-struct DefaultBindTrait<skr::SPtr<T>, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>> {
+struct DefaultBindTrait<skr::SPtr<T>, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::rttr::RTTRTraits<T>>>> {
     static int push(lua_State* L, const skr::SPtr<T>& value)
     {
         static constexpr std::string_view prefix = "[shared]";
-        static constexpr std::string_view tid    = skr::type::type_id<T>::str();
+        static constexpr std::string_view tid    = skr::rttr::type_name<T>();
         return push_sptr(L, value, join_v<prefix, tid>);
     }
     static skr::SPtr<T> check(lua_State* L, int index)
@@ -90,11 +90,11 @@ struct DefaultBindTrait<skr::SPtr<T>, std::enable_if_t<!std::is_enum_v<T> && skr
 };
 
 template <class T>
-struct DefaultBindTrait<skr::SObjectPtr<T>, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>> {
+struct DefaultBindTrait<skr::SObjectPtr<T>, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::rttr::RTTRTraits<T>>>> {
     static int push(lua_State* L, const skr::SObjectPtr<T>& value)
     {
         static constexpr std::string_view prefix = "[shared]";
-        static constexpr std::string_view tid    = skr::type::type_id<T>::str();
+        static constexpr std::string_view tid    = skr::rttr::type_name<T>();
         return push_sobjectptr(L, value, join_v<prefix, tid>);
     }
     static skr::SObjectPtr<T> check(lua_State* L, int index)
@@ -122,7 +122,7 @@ struct DefaultBindTrait<T, std::enable_if_t<std::is_enum_v<T>>> {
 };
 
 template <class T>
-struct DefaultBindTrait<const T&, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>> {
+struct DefaultBindTrait<const T&, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::rttr::RTTRTraits<T>>>> {
     static int push(lua_State* L, const T& value)
     {
         return DefaultBindTrait<T>::push(L, value);
