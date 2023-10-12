@@ -95,7 +95,7 @@ template <class T>
 struct ReadTrait<StronglyEnum<T>> {
     static error_code Read(simdjson::ondemand::value&& json, StronglyEnum<T>& value)
     {
-        return skr::json::Read<typename TEnumAsByte<T>::UT>(std::move(json), value.underlying_value());
+        return skr::json::Read<typename StronglyEnum<T>::UnderlyingType>(std::move(json), value.underlying_value());
     }
 };
 } // namespace skr::json

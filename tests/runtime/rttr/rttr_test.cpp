@@ -15,7 +15,7 @@ static void print_guid(const ::skr::GUID& g)
 ////  2. record type test
 //  3. enum type test
 //  4. Vector, UMap, MultiUMap, USet, MultiUSet impl & test
-//  5. TResourceHandle, SPtrHelper, TEnumAsByte, variant impl & test
+//  5. TResourceHandle, SPtrHelper, StronglyEnum, variant impl & test
 //
 
 TEST_CASE("test record type")

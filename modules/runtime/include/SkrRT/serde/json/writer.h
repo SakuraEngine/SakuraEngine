@@ -255,14 +255,6 @@ struct WriteTrait<const skr::flat_hash_map<K, V, Hash, Eq>&> {
 };
 
 template <class T>
-struct WriteTrait<const TEnumAsByte<T>&> {
-    static void Write(skr_json_writer_t* writer, const TEnumAsByte<T>& value)
-    {
-        skr::json::Write(writer, value.as_byte());
-    }
-};
-
-template <class T>
 struct WriteTrait<const skr::resource::TResourceHandle<T>&> {
     static void Write(skr_json_writer_t* json, const skr::resource::TResourceHandle<T>& handle)
     {

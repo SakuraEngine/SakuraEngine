@@ -213,14 +213,6 @@ struct ReadTrait<skr::variant<Ts...>> {
 };
 
 template <class T>
-struct ReadTrait<TEnumAsByte<T>> {
-    static error_code Read(simdjson::ondemand::value&& json, TEnumAsByte<T>& value)
-    {
-        return skr::json::Read<typename TEnumAsByte<T>::UT>(std::move(json), value.as_byte());
-    }
-};
-
-template <class T>
 struct ReadTrait<skr::resource::TResourceHandle<T>> {
     static error_code Read(simdjson::ondemand::value&& json, skr::resource::TResourceHandle<T>& handle)
     {
