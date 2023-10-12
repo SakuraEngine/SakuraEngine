@@ -6,6 +6,7 @@
 #include "SkrRT/rttr/type_registry.hpp"
 #include "SkrRT/rttr/type/type.hpp"
 #include "SkrRT/containers/string.hpp"
+#include "SkrRT/rttr/strongly_enum.hpp"
 
 // RTTR traits
 // 提供部分静态类型功能，从动态角度来说，实际上只是一层皮
@@ -417,7 +418,7 @@ struct RTTRTraits<skr::SPtrHelper<T>> {
     }
 };
 template <typename T>
-struct RTTRTraits<skr::TEnumAsByte<T>> {
+struct RTTRTraits<skr::StronglyEnum<T>> {
     inline static constexpr size_t type_desc_size = 1;
     inline static void             write_type_desc(TypeDesc* desc)
     {

@@ -23,7 +23,7 @@ MultiShaderResource
     using stable_hasher_t = skr_stable_shader_hash_t::hasher;
 
     stable_hash_t stable_hash;
-    skr::TEnumAsByte<ECGPUShaderStage> shader_stage;
+    skr::StronglyEnum<ECGPUShaderStage> shader_stage;
     skr::string entry;
 
     sattr("no-rtti" : true)

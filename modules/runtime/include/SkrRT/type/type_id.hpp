@@ -2,7 +2,6 @@
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/type/type.h"
-#include "SkrRT/type/enum_as_byte.hpp"
 #include <string_view> // TODO: replace with skr::string_view
 
 // fwd declares
@@ -109,14 +108,6 @@ SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr_quaternion_t, "51977A88-7095-4FA7-8467-54
 SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr::string, "214ED643-54BD-4213-BE37-E336A77FDE84");
 // {b799ba81-6009-405d-9131-e4b6101660dc}
 SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr::string_view, "B799BA81-6009-405D-9131-E4B6101660DC");
-
-template <class T>
-struct type_of<TEnumAsByte<T>> {
-    static const skr_type_t* get()
-    {
-        return type_of<std::underlying_type_t<T>>::get();
-    }
-};
 
 } // namespace type
 } // namespace skr

@@ -3,6 +3,7 @@
 #include "cgpu/flags.h"
 #ifdef __cplusplus
 #include "SkrRT/containers/string.hpp"
+#include "SkrRT/rttr/strongly_enum.hpp"
 #endif
 
 #ifndef __meta__
@@ -73,8 +74,8 @@ sattr("serialize" : ["json", "bin"], "rtti" : true)
 skr_platform_shader_identifier_t 
 {
 #ifdef __cplusplus
-    skr::TEnumAsByte<ECGPUShaderBytecodeType> bytecode_type;
-    skr::TEnumAsByte<ECGPUShaderStage> shader_stage;
+    skr::StronglyEnum<ECGPUShaderBytecodeType> bytecode_type;
+    skr::StronglyEnum<ECGPUShaderStage> shader_stage;
 #else
     ECGPUShaderBytecodeType bytecode_type;
     ECGPUShaderStage shader_stage;
