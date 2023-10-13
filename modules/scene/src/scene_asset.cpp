@@ -51,7 +51,7 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
     sortedEntities.resize(guids.size());
     skr::parallel_for(indices.begin(), indices.end(), 2048, [&](iter begin, iter end)
     {
-        for(auto it = begin; it != end; ++it)
+        for (auto it = begin; it != end; ++it)
         {
             sortedEntities[*it] = entities[it - indices.begin()];
         }
@@ -63,12 +63,12 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
         auto group = dualC_get_group(view->chunk);
         dual_entity_type_t type;
         dualG_get_type(group, &type);
-        for(EIndex i = 0; i < view->count; ++i)
+        for (EIndex i = 0; i < view->count; ++i)
         {
             auto guidStr = skr::format(u8"{}", cguids[i]);
             writer->Key(guidStr.u8_str(), guidStr.size());
             writer->StartObject();
-            for(EIndex j = 0; j < type.type.length; ++j)
+            for (EIndex j = 0; j < type.type.length; ++j)
             {
                 auto index = dualG_get_stable_order(group, j);
                 auto component = type.type.data[index];
@@ -92,9 +92,9 @@ void skr_load_scene(dual_storage_t* world, skr_json_reader_t* reader)
     skr::json::value_t value = std::move(*(skr::json::value_t*)reader);
     auto root = value.get_object();
     #define ERR(var) var.error() != simdjson::error_code::SUCCESS
-    if(ERR(root))
+    if (ERR(root))
         return;
-    for(auto field : root.value_unsafe())
+    for (auto field : root.value_unsafe())
     {
         auto key = field.unescaped_key();
         if(ERR(key))
@@ -108,7 +108,7 @@ void skr_load_scene(dual_storage_t* world, skr_json_reader_t* reader)
             continue;
         dual::type_builder_t entityType;
         entityType.with(DUAL_COMPONENT_GUID);
-        for(auto component : entity.value_unsafe())
+        for (auto component : entity.value_unsafe())
         {
             auto key = component.unescaped_key();
             if(ERR(key))

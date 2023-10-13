@@ -98,7 +98,6 @@ rule("skr.module")
                 end
             end
         end
-        -- need build this target?
         module_codegen.skr_module_gen_json(target, target:data("module.meta.json"), dep_modules)
         module_codegen.skr_module_gen_cpp(target, target:data("module.meta.cpp"), dep_modules)
         module_codegen.skr_module_gen_header(target, target:data("module.meta.header"), api)

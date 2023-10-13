@@ -138,6 +138,8 @@ function skr_module_gen_header(target, filename, api)
     local cpp_content = "//DO NOT MODIFY THIS FILE\n"
     cpp_content = cpp_content..[[
 #pragma once
+#include "SkrRT/platform/configure.h"
+
 #ifdef __cplusplus
     #define ]]..api..[[_EXTERN_C extern "C"
 #else
