@@ -10,13 +10,15 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "66b7a12f-520d-4591-a31d-100f12211b17"
+    "guid": "66b7a12f-520d-4591-a31d-100f12211b17",
+    "rtti": true
 )
-SKR_GUI_API ColoredBox : public SingleChildRenderObjectWidget {
+SKR_GUI_API ColoredBox : public SingleChildRenderObjectWidget
+{
     SKR_RTTR_GENERATE_BODY()
 
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
-    void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
+    void update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
 
     Color color = {};
 };

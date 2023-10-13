@@ -9,9 +9,11 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "1d1fbcab-eb50-4a22-99f6-59c5f4aca3e9"
+    "guid": "1d1fbcab-eb50-4a22-99f6-59c5f4aca3e9",
+    "rtti": true
 )
-GeometryLayer : public Layer {
+GeometryLayer : public Layer
+{
     SKR_RTTR_GENERATE_BODY()
     using Super = Layer;
 

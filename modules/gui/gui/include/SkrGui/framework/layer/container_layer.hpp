@@ -9,9 +9,11 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "ea23bfe8-33db-4277-a415-bf059bf76f46"
+    "guid": "ea23bfe8-33db-4277-a415-bf059bf76f46",
+    "rtti": true
 )
-SKR_GUI_API ContainerLayer : public Layer {
+SKR_GUI_API ContainerLayer : public Layer
+{
     SKR_RTTR_GENERATE_BODY()
 
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override;

@@ -10,13 +10,15 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "4a3df0ec-b346-4f5b-a1bd-a46763a7818d"
+    "guid": "4a3df0ec-b346-4f5b-a1bd-a46763a7818d",
+    "rtti": true
 )
-SKR_GUI_API Flex : public MultiChildRenderObjectWidget {
+SKR_GUI_API Flex : public MultiChildRenderObjectWidget
+{
     SKR_RTTR_GENERATE_BODY()
 
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
-    void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
+    void update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
 
     EFlexDirection      flex_direction       = EFlexDirection::Row;
     EMainAxisAlignment  main_axis_alignment  = EMainAxisAlignment::Start;

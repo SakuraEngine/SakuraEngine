@@ -14,9 +14,11 @@ struct HitTestRecord {
 };
 
 sreflect_struct(
-    "guid": "d4c45487-d696-42fb-bff1-f0a3f6adcea3"
+    "guid": "d4c45487-d696-42fb-bff1-f0a3f6adcea3",
+    "rtti": true
 )
-SKR_GUI_API RenderBox : public RenderObject {
+SKR_GUI_API RenderBox : public RenderObject
+{
     SKR_RTTR_GENERATE_BODY()
 
 public:

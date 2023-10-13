@@ -13,9 +13,11 @@ namespace gui sreflect
 struct TextStyle;
 struct PaintingContext;
 sreflect_struct(
-    "guid": "fe659fa3-d171-4d41-a95a-849618c3765b"
+    "guid": "fe659fa3-d171-4d41-a95a-849618c3765b",
+    "rtti": true
 )
-SKR_GUI_API IParagraph : virtual public skr::rttr::IObject {
+SKR_GUI_API IParagraph : virtual public skr::rttr::IObject
+{
     SKR_RTTR_GENERATE_BODY()
     virtual ~IParagraph() = default;
 

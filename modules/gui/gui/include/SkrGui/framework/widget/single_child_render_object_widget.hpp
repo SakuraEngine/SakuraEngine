@@ -11,9 +11,11 @@ namespace gui sreflect
 {
 
 sreflect_struct(
-    "guid": "57df4e45-aefa-49e8-9d5b-0f03b468d0b1"
+    "guid": "57df4e45-aefa-49e8-9d5b-0f03b468d0b1",
+    "rtti": true
 )
-SKR_GUI_API SingleChildRenderObjectWidget : public RenderObjectWidget {
+SKR_GUI_API SingleChildRenderObjectWidget : public RenderObjectWidget
+{
     SKR_RTTR_GENERATE_BODY()
 
     NotNull<Element*> create_element() SKR_NOEXCEPT override;

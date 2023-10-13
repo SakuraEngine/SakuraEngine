@@ -9,9 +9,11 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "794d783e-9772-4abd-a2bb-06528963e72b"
+    "guid": "794d783e-9772-4abd-a2bb-06528963e72b",
+    "rtti": true
 )
-SKR_GUI_API MultiChildRenderObjectElement : public RenderObjectElement {
+SKR_GUI_API MultiChildRenderObjectElement : public RenderObjectElement
+{
     SKR_RTTR_GENERATE_BODY()
     using Super = RenderObjectElement;
     using Super::Super;

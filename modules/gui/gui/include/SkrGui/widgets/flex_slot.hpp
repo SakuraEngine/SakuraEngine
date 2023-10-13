@@ -10,9 +10,11 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "32dc9243-8d16-4854-9ce8-3039a47991bf"
+    "guid": "32dc9243-8d16-4854-9ce8-3039a47991bf",
+    "rtti": true
 )
-SKR_GUI_API FlexSlot : public SlotWidget {
+SKR_GUI_API FlexSlot : public SlotWidget
+{
     SKR_RTTR_GENERATE_BODY()
 
     float    flex     = 1;               // determines how much the child should grow or shrink relative to other flex items
