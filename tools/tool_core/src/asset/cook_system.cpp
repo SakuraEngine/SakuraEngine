@@ -201,7 +201,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
         // Trace
         SkrZoneScopedN("CookingTask");
         const auto rtti_type           = skr::rttr::get_type_from_guid(metaAsset->type);
-        const auto cookerTypeName      = rtti_type ? rtti_type->name().c_str() : u8"UnknownResource";
+        const auto cookerTypeName      = rtti_type ? rtti_type->name().raw().c_str() : (const ochar_t*)u8"UnknownResource";
         const auto guidString          = skr::format(u8"Guid: {}", metaAsset->guid);
         const auto assetTypeGuidString = skr::format(u8"TypeGuid: {}", metaAsset->type);
         const auto scopeName           = skr::format(u8"Cook.[{}]", (const ochar8_t*)cookerTypeName);

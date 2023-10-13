@@ -57,12 +57,14 @@ WhitespaceSensitiveMacros:
   - "spush_attr"
   - "sreflect_enum"
   - "sreflect_struct"
+  - "sreflect_enum_class"
 
 Macros:
   - sattr(x)=/* x */
   - spush_attr(x)=/* x */
   - sreflect_enum(x)=enum class
   - sreflect_struct(x)=struct
+  - sreflect_enum_class(x)=enum class
 
 ForEachMacros: ["forloop"]
 

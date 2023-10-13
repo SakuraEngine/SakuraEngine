@@ -69,6 +69,8 @@ private:
     void perform_resize() SKR_NOEXCEPT override; // override compute_dry_layout instead
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     Sizef          _size        = {};
     BoxConstraints _constraints = {};
 

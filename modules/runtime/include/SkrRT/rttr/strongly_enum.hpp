@@ -80,22 +80,22 @@ struct WriteTrait<StronglyEnum<T>> {
 } // namespace skr::binary
 
 // json serde
-#include "SkrRT/serde/json/writer.h"
-#include "SkrRT/serde/json/reader.h"
+#include "SkrRT/serde/json/writer_fwd.h"
+#include "SkrRT/serde/json/reader_fwd.h"
 namespace skr::json
 {
 template <class T>
 struct WriteTrait<StronglyEnum<T>> {
     static void Write(skr_json_writer_t* writer, const StronglyEnum<T>& value)
     {
-        skr::json::Write(writer, value.underlying_value());
+        skr::json::WriteTrait<typename StronglyEnum<T>::UnderlyingType>::Write(writer, value.underlying_value());
     }
 };
 template <class T>
 struct ReadTrait<StronglyEnum<T>> {
-    static error_code Read(simdjson::ondemand::value&& json, StronglyEnum<T>& value)
+    static error_code Read(skr::json::value_t&& json, StronglyEnum<T>& value)
     {
-        return skr::json::Read<typename StronglyEnum<T>::UnderlyingType>(std::move(json), value.underlying_value());
+        return skr::json::ReadTrait<typename StronglyEnum<T>::UnderlyingType>::Read(std::move(json), value.underlying_value());
     }
 };
 } // namespace skr::json

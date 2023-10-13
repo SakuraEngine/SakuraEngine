@@ -25,6 +25,8 @@ GeometryLayer : public Layer
     inline ICanvas* canvas() const SKR_NOEXCEPT { return _canvas; }
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     ICanvas* _canvas = nullptr;
 };
 } // namespace gui sreflect

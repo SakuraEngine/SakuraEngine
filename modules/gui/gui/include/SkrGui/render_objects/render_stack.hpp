@@ -48,6 +48,8 @@ public:
 
 private:
     friend struct _StackHelper;
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     Alignment      _stack_alignment = Alignment::TopLeft();
     EPositionalFit _child_fit       = EPositionalFit::PassThrough;
     EStackSize     _stack_size      = EStackSize::Shrink;

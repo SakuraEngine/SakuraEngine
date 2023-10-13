@@ -41,6 +41,8 @@ RenderConstrainedBox : public RenderProxyBox
     void perform_layout() SKR_NOEXCEPT override;
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     BoxConstraints _additional_constraint = {};
 };
 } // namespace gui sreflect

@@ -20,6 +20,8 @@ SKR_GUI_API Stack : public MultiChildRenderObjectWidget
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
     void update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
 
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     Alignment      stack_alignment = Alignment::TopLeft();
     EPositionalFit child_fit       = EPositionalFit::PassThrough;
     EStackSize     stack_size      = EStackSize::Shrink;

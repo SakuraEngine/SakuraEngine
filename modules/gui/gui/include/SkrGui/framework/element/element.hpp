@@ -96,6 +96,8 @@ protected:
 
 private:
     friend struct BuildOwner;
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     // element tree
     Element*    _parent = nullptr;
     BuildOwner* _owner  = nullptr;

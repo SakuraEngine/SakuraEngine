@@ -63,6 +63,8 @@ private:
     inline bool shrink_wrap_height() const SKR_NOEXCEPT { return _height_factor || !constraints().has_bounded_height(); }
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     Optional<float> _width_factor  = {}; // used in anchor mode
     Optional<float> _height_factor = {}; // used in anchor mode
     Positional      _positional    = {};

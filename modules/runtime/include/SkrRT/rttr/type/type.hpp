@@ -1,10 +1,9 @@
 #pragma once
-#include "SkrRT/module.configure.h"
 #include <cstdint>
 #include "SkrRT/rttr/guid.hpp"
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/serde/json/writer_fwd.h"
-#include "SkrRT/serde/json/reader.h"
+#include "SkrRT/serde/json/reader_fwd.h"
 
 namespace skr::rttr
 {
@@ -42,7 +41,7 @@ struct SKR_RUNTIME_API Type {
     inline int                   write_binary(const void* dst, skr_binary_writer_t* writer) const { return 0; }
     inline int                   read_binary(void* dst, skr_binary_reader_t* reader) const { return 0; }
     inline void                  write_json(const void* dst, skr_json_writer_t* writer) const {}
-    inline skr::json::error_code read_json(void* dst, simdjson::ondemand::value&& reader) const { return skr::json::error_code::SUCCESS; }
+    inline skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const { return skr::json::error_code::SUCCESS; }
 
     // TODO. convert
 

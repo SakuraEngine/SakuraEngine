@@ -134,46 +134,48 @@ struct MultiChildRenderObjectMixin {
 } // namespace gui sreflect
 } // namespace skr sreflect
 
-#define MULTI_CHILD_RENDER_OBJECT_MIX_IN(__SELF, __CHILD, __SLOT_DATA)                                \
-    /*===============> Begin Multi Child Render Object Mixin <===============*/                       \
-private:                                                                                              \
-    MultiChildRenderObjectMixin<__SELF, __CHILD, __SLOT_DATA> _multi_child_render_object_mix_in = {}; \
-                                                                                                      \
-public:                                                                                               \
-    GUID accept_child_type() const SKR_NOEXCEPT override                                              \
-    {                                                                                                 \
-        return _multi_child_render_object_mix_in.accept_child_type(*this);                            \
-    }                                                                                                 \
-    void add_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT override                     \
-    {                                                                                                 \
-        _multi_child_render_object_mix_in.add_child(*this, child, slot);                              \
-    }                                                                                                 \
-    void remove_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT override                  \
-    {                                                                                                 \
-        _multi_child_render_object_mix_in.remove_child(*this, child, slot);                           \
-    }                                                                                                 \
-    void move_child(NotNull<RenderObject*> child, Slot from, Slot to) SKR_NOEXCEPT override           \
-    {                                                                                                 \
-        _multi_child_render_object_mix_in.move_child(*this, child, from, to);                         \
-    }                                                                                                 \
-    void flush_updates() SKR_NOEXCEPT override                                                        \
-    {                                                                                                 \
-        _multi_child_render_object_mix_in.flush_updates(*this);                                       \
-    }                                                                                                 \
-    void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override                             \
-    {                                                                                                 \
-        _multi_child_render_object_mix_in.visit_children(*this, visitor);                             \
-    }                                                                                                 \
-    inline const Array<SlotStorage<__CHILD, __SLOT_DATA>>& children() const SKR_NOEXCEPT              \
-    {                                                                                                 \
-        return _multi_child_render_object_mix_in._children;                                           \
-    }                                                                                                 \
-    inline Array<SlotStorage<__CHILD, __SLOT_DATA>>& children() SKR_NOEXCEPT                          \
-    {                                                                                                 \
-        return _multi_child_render_object_mix_in._children;                                           \
-    }                                                                                                 \
-    inline bool need_flush_updates() const SKR_NOEXCEPT                                               \
-    {                                                                                                 \
-        return _multi_child_render_object_mix_in._need_flush_updates;                                 \
-    }                                                                                                 \
+#define MULTI_CHILD_RENDER_OBJECT_MIX_IN(__SELF, __CHILD, __SLOT_DATA)                      \
+    /*===============> Begin Multi Child Render Object Mixin <===============*/             \
+private:                                                                                    \
+    sattr("no-rtti": true)                                                                  \
+          MultiChildRenderObjectMixin<__SELF, __CHILD, __SLOT_DATA>                         \
+          _multi_child_render_object_mix_in = {};                                           \
+                                                                                            \
+public:                                                                                     \
+    GUID accept_child_type() const SKR_NOEXCEPT override                                    \
+    {                                                                                       \
+        return _multi_child_render_object_mix_in.accept_child_type(*this);                  \
+    }                                                                                       \
+    void add_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT override           \
+    {                                                                                       \
+        _multi_child_render_object_mix_in.add_child(*this, child, slot);                    \
+    }                                                                                       \
+    void remove_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT override        \
+    {                                                                                       \
+        _multi_child_render_object_mix_in.remove_child(*this, child, slot);                 \
+    }                                                                                       \
+    void move_child(NotNull<RenderObject*> child, Slot from, Slot to) SKR_NOEXCEPT override \
+    {                                                                                       \
+        _multi_child_render_object_mix_in.move_child(*this, child, from, to);               \
+    }                                                                                       \
+    void flush_updates() SKR_NOEXCEPT override                                              \
+    {                                                                                       \
+        _multi_child_render_object_mix_in.flush_updates(*this);                             \
+    }                                                                                       \
+    void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override                   \
+    {                                                                                       \
+        _multi_child_render_object_mix_in.visit_children(*this, visitor);                   \
+    }                                                                                       \
+    inline const Array<SlotStorage<__CHILD, __SLOT_DATA>>& children() const SKR_NOEXCEPT    \
+    {                                                                                       \
+        return _multi_child_render_object_mix_in._children;                                 \
+    }                                                                                       \
+    inline Array<SlotStorage<__CHILD, __SLOT_DATA>>& children() SKR_NOEXCEPT                \
+    {                                                                                       \
+        return _multi_child_render_object_mix_in._children;                                 \
+    }                                                                                       \
+    inline bool need_flush_updates() const SKR_NOEXCEPT                                     \
+    {                                                                                       \
+        return _multi_child_render_object_mix_in._need_flush_updates;                       \
+    }                                                                                       \
     /*===============> End Multi Child Render Object Mixin <===============*/

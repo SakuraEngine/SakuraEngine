@@ -9,6 +9,7 @@
     #include "SkrRT/containers/string.hpp"
     #include "SkrRT/containers/vector.hpp"
     #include "SkrRT/platform/guid.hpp"
+    #include "SkrRT/rttr/rttr_traits.hpp"
 
 // forward declaration for resources
 struct skr_resource_handle_t;

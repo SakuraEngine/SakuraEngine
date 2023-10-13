@@ -30,7 +30,7 @@
         "xmake.additionalConfigArguments": [
             "--use_profile=disable",
             "--build_tests=y",
-            "--cxx_version=cxx17"
+            "--cxx_version=cxx20"
         ],
         "xmake.customDebugConfig": {
             "stopAtEntry": false,

@@ -33,6 +33,8 @@ protected:
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     Offsetf _offset = {};
 
     SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(RenderShiftedBox, RenderBox)
