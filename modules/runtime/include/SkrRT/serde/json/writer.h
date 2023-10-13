@@ -290,7 +290,7 @@ void Write(skr_json_writer_t* writer, const T& value)
 }
 } // namespace skr::json
 
-// serde traits
+// serde complete check
 namespace skr
 {
 template <class K, class V, class Hash, class Eq>
