@@ -62,7 +62,7 @@ struct ReadTrait<Array<V>> {
     }
 };
 template <class V>
-struct WriteTrait<const Array<V>&> {
+struct WriteTrait<Array<V>> {
     template <class... Args>
     static int Write(skr_binary_writer_t* archive, const Array<V>& vec, Args&&... args)
     {
@@ -102,8 +102,8 @@ struct ArrayWriter {
 
 struct ArrayWriterBitpacked {
     Array<uint8_t>* buffer;
-    uint8_t                 bitOffset = 0;
-    int                     write(const void* data, size_t size)
+    uint8_t         bitOffset = 0;
+    int             write(const void* data, size_t size)
     {
         return write_bits(data, size * 8);
     }

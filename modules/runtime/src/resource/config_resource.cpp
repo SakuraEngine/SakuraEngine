@@ -41,7 +41,7 @@ void skr_config_resource_t::SetType(skr_guid_t type)
 
 namespace skr::binary
 {
-int WriteTrait<const skr_config_resource_t&>::Write(skr_binary_writer_t* archive, const skr_config_resource_t& value)
+int WriteTrait<skr_config_resource_t>::Write(skr_binary_writer_t* archive, const skr_config_resource_t& value)
 {
     if (auto result = skr::binary::Write(archive, value.configType); result != 0)
         return result;

@@ -25,11 +25,12 @@ template <class T>
 struct TResourceHandle;
 }
 // end forward declaration for resources
+
+// json writer
 struct skr_json_format_t {
     bool     enable     = true;
     uint32_t indentSize = 4;
 };
-
 struct SKR_STATIC_API skr_json_writer_t {
 public:
     using TChar = skr_json_writer_char_t;
@@ -91,149 +92,127 @@ typedef struct skr_json_writer_t skr_json_writer_t;
 
 #if defined(__cplusplus)
     #include "SkrRT/platform/guid.hpp"
-// utils for codegen
-namespace skr
-{
-namespace json
+
+// helper functions
+namespace skr::json
 {
 template <class T>
 void Write(skr_json_writer_t* writer, const T& value);
+}
 
+// primitive types
+// bool
+// int/uint 8/16/32/64
+// float/double
+namespace skr::json
+{
 template <>
-struct WriteTrait<const bool&> {
-    static void Write(skr_json_writer_t* writer, bool b)
-    {
-        writer->Bool(b);
-    }
+struct SKR_STATIC_API WriteTrait<bool> {
+    static void Write(skr_json_writer_t* writer, bool b);
 };
 
+// int
 template <>
-struct WriteTrait<const int32_t&> {
-    static void Write(skr_json_writer_t* writer, int32_t i)
-    {
-        writer->Int(i);
-    }
+struct SKR_STATIC_API WriteTrait<int8_t> {
+    static void Write(skr_json_writer_t* writer, int8_t i);
+};
+template <>
+struct SKR_STATIC_API WriteTrait<int16_t> {
+    static void Write(skr_json_writer_t* writer, int16_t i);
+};
+template <>
+struct SKR_STATIC_API WriteTrait<int32_t> {
+    static void Write(skr_json_writer_t* writer, int32_t i);
+};
+template <>
+struct SKR_STATIC_API WriteTrait<int64_t> {
+    static void Write(skr_json_writer_t* writer, int64_t i);
 };
 
+// uint
 template <>
-struct WriteTrait<const int64_t&> {
-    static void Write(skr_json_writer_t* writer, int64_t i)
-    {
-        writer->Int64(i);
-    }
+struct SKR_STATIC_API WriteTrait<uint8_t> {
+    static void Write(skr_json_writer_t* writer, uint8_t i);
+};
+template <>
+struct SKR_STATIC_API WriteTrait<uint16_t> {
+    static void Write(skr_json_writer_t* writer, uint16_t i);
+};
+template <>
+struct SKR_STATIC_API WriteTrait<uint32_t> {
+    static void Write(skr_json_writer_t* writer, uint32_t i);
+};
+template <>
+struct SKR_STATIC_API WriteTrait<uint64_t> {
+    static void Write(skr_json_writer_t* writer, uint64_t i);
 };
 
+// float
 template <>
-struct WriteTrait<const uint8_t&> {
-    static void Write(skr_json_writer_t* writer, uint8_t i)
-    {
-        writer->UInt(i);
-    }
+struct SKR_STATIC_API WriteTrait<float> {
+    static void Write(skr_json_writer_t* writer, float f);
+};
+template <>
+struct SKR_STATIC_API WriteTrait<double> {
+    static void Write(skr_json_writer_t* writer, double d);
 };
 
-template <>
-struct WriteTrait<const uint16_t&> {
-    static void Write(skr_json_writer_t* writer, uint16_t i)
-    {
-        writer->UInt(i);
-    }
-};
+} // namespace skr::json
 
+// skr types
+namespace skr::json
+{
 template <>
-struct WriteTrait<const uint32_t&> {
-    static void Write(skr_json_writer_t* writer, uint32_t i)
-    {
-        writer->UInt(i);
-    }
-};
-
-template <>
-struct WriteTrait<const uint64_t&> {
-    static void Write(skr_json_writer_t* writer, uint64_t i)
-    {
-        writer->UInt64(i);
-    }
-};
-
-template <>
-struct WriteTrait<const float&> {
-    static void Write(skr_json_writer_t* writer, float f)
-    {
-        writer->Float(f);
-    }
-};
-
-template <>
-struct WriteTrait<const double&> {
-    static void Write(skr_json_writer_t* writer, double d)
-    {
-        writer->Double(d);
-    }
-};
-
-template <>
-struct WriteTrait<const skr::string_view&> {
-    static void Write(skr_json_writer_t* writer, const skr::string_view& str)
-    {
-        writer->String(str.raw().begin().data(), str.size());
-    }
-};
-
-template <>
-struct WriteTrait<const skr::string&> {
-    static void Write(skr_json_writer_t* writer, const skr::string& str)
-    {
-        writer->String(str.u8_str(), str.size());
-    }
-};
-
-template <>
-struct SKR_STATIC_API WriteTrait<const skr_guid_t&> {
-    static void Write(skr_json_writer_t* writer, const skr_guid_t& guid);
-};
-
-template <>
-struct SKR_STATIC_API WriteTrait<const skr_md5_t&> {
-    static void Write(skr_json_writer_t* writer, const skr_md5_t& md5);
-};
-
-template <>
-struct SKR_STATIC_API WriteTrait<const skr_float2_t&> {
+struct SKR_STATIC_API WriteTrait<skr_float2_t> {
     static void Write(skr_json_writer_t* writer, const skr_float2_t& v);
 };
-
 template <>
-struct SKR_STATIC_API WriteTrait<const skr_float3_t&> {
+struct SKR_STATIC_API WriteTrait<skr_float3_t> {
     static void Write(skr_json_writer_t* writer, const skr_float3_t& v);
 };
-
 template <>
-struct SKR_STATIC_API WriteTrait<const skr_float4_t&> {
+struct SKR_STATIC_API WriteTrait<skr_float4_t> {
     static void Write(skr_json_writer_t* writer, const skr_float4_t& v);
 };
-
 template <>
-struct SKR_STATIC_API WriteTrait<const skr_rotator_t&> {
-    static void Write(skr_json_writer_t* writer, const skr_rotator_t& v);
-};
-
-template <>
-struct SKR_STATIC_API WriteTrait<const skr_float4x4_t&> {
+struct SKR_STATIC_API WriteTrait<skr_float4x4_t> {
     static void Write(skr_json_writer_t* writer, const skr_float4x4_t& v);
 };
-
 template <>
-struct SKR_STATIC_API WriteTrait<const skr_quaternion_t&> {
+struct SKR_STATIC_API WriteTrait<skr_rotator_t> {
+    static void Write(skr_json_writer_t* writer, const skr_rotator_t& v);
+};
+template <>
+struct SKR_STATIC_API WriteTrait<skr_quaternion_t> {
     static void Write(skr_json_writer_t* writer, const skr_quaternion_t& v);
 };
-
 template <>
-struct SKR_STATIC_API WriteTrait<const skr_resource_handle_t&> {
+struct SKR_STATIC_API WriteTrait<skr_guid_t> {
+    static void Write(skr_json_writer_t* writer, const skr_guid_t& guid);
+};
+template <>
+struct SKR_STATIC_API WriteTrait<skr_md5_t> {
+    static void Write(skr_json_writer_t* writer, const skr_md5_t& md5);
+};
+template <>
+struct SKR_STATIC_API WriteTrait<skr_resource_handle_t> {
     static void Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle);
 };
+template <>
+struct SKR_STATIC_API WriteTrait<skr::string_view> {
+    static void Write(skr_json_writer_t* writer, const skr::string_view& str);
+};
+template <>
+struct SKR_STATIC_API WriteTrait<skr::string> {
+    static void Write(skr_json_writer_t* writer, const skr::string& str);
+};
+} // namespace skr::json
 
+// container & template
+namespace skr::json
+{
 template <class K, class V, class Hash, class Eq>
-struct WriteTrait<const skr::flat_hash_map<K, V, Hash, Eq>&> {
+struct WriteTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
     static void Write(skr_json_writer_t* json, const skr::flat_hash_map<K, V, Hash, Eq>& map)
     {
         json->StartObject();
@@ -241,61 +220,57 @@ struct WriteTrait<const skr::flat_hash_map<K, V, Hash, Eq>&> {
         {
             if constexpr (std::is_same_v<std::decay_t<decltype(pair.first)>, skr::string>)
             {
-                skr::json::Write<const skr::string&>(json, pair.first);
+                skr::json::Write<skr::string>(json, pair.first);
             }
             else
             {
-                skr::json::Write<const skr::string&>(json, skr::string(pair.first));
+                skr::json::Write<skr::string>(json, skr::string(pair.first));
             }
-            skr::json::Write<const V&>(json, pair.second);
+            skr::json::Write<V>(json, pair.second);
         }
         json->EndObject();
     }
 };
-
 template <class T>
-struct WriteTrait<const skr::resource::TResourceHandle<T>&> {
+struct WriteTrait<skr::resource::TResourceHandle<T>> {
     static void Write(skr_json_writer_t* json, const skr::resource::TResourceHandle<T>& handle)
     {
-        skr::json::Write<const skr_resource_handle_t&>(json, (const skr_resource_handle_t&)handle);
+        skr::json::Write<skr_resource_handle_t>(json, (const skr_resource_handle_t&)handle);
     }
 };
-
 template <class V, class Allocator>
-struct WriteTrait<const eastl::vector<V, Allocator>&> {
+struct WriteTrait<eastl::vector<V, Allocator>> {
     static void Write(skr_json_writer_t* json, const eastl::vector<V, Allocator>& vec)
     {
         json->StartArray();
         for (auto& v : vec)
         {
-            skr::json::Write<const V&>(json, v);
+            skr::json::Write<V>(json, v);
         }
         json->EndArray();
     }
 };
-
 template <class V>
-struct WriteTrait<const eastl::span<V>&> {
+struct WriteTrait<eastl::span<V>> {
     static void Write(skr_json_writer_t* json, const eastl::span<V>& vec)
     {
         json->StartArray();
         for (auto& v : vec)
         {
-            skr::json::Write<const V&>(json, v);
+            skr::json::Write<V>(json, v);
         }
         json->EndArray();
     }
 };
-
 template <class... Ts>
-struct WriteTrait<const skr::variant<Ts...>&> {
+struct WriteTrait<skr::variant<Ts...>> {
     static void Write(skr_json_writer_t* json, const skr::variant<Ts...>& v)
     {
         eastl::visit([&](auto&& value) {
             using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
             json->StartObject();
             json->Key(u8"type");
-            skr::json::Write<const skr_guid_t&>(json, ::skr::rttr::type_id<raw>());
+            skr::json::Write<skr_guid_t>(json, ::skr::rttr::type_id<raw>());
             json->Key(u8"value");
             skr::json::Write<decltype(value)>(json, value);
             json->EndObject();
@@ -303,26 +278,33 @@ struct WriteTrait<const skr::variant<Ts...>&> {
                      v);
     }
 };
+} // namespace skr::json
 
+// help function impl
+namespace skr::json
+{
 template <class T>
 void Write(skr_json_writer_t* writer, const T& value)
 {
-    WriteTrait<const T&>::Write(writer, value);
+    WriteTrait<T>::Write(writer, value);
 }
-} // namespace json
+} // namespace skr::json
 
+// serde traits
+namespace skr
+{
 template <class K, class V, class Hash, class Eq>
-struct SerdeCompleteChecker<json::WriteTrait<const skr::flat_hash_map<K, V, Hash, Eq>&>>
+struct SerdeCompleteChecker<json::WriteTrait<skr::flat_hash_map<K, V, Hash, Eq>>>
     : std::bool_constant<is_complete_serde_v<json::WriteTrait<K>> && is_complete_serde_v<json::WriteTrait<V>>> {
 };
 
 template <class V, class Allocator>
-struct SerdeCompleteChecker<json::WriteTrait<const eastl::vector<V, Allocator>&>>
+struct SerdeCompleteChecker<json::WriteTrait<eastl::vector<V, Allocator>>>
     : std::bool_constant<is_complete_serde_v<json::WriteTrait<V>>> {
 };
 
 template <class... Ts>
-struct SerdeCompleteChecker<json::WriteTrait<const skr::variant<Ts...>&>>
+struct SerdeCompleteChecker<json::WriteTrait<skr::variant<Ts...>>>
     : std::bool_constant<(is_complete_serde_v<json::WriteTrait<Ts>> && ...)> {
 };
 

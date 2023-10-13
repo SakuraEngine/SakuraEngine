@@ -141,7 +141,7 @@ namespace skr
 namespace binary
 {
 template <class T>
-struct WriteTrait<const skr::resource::TResourceHandle<T>&> {
+struct WriteTrait<skr::resource::TResourceHandle<T>> {
     static int Write(skr_binary_writer_t* binary, const skr::resource::TResourceHandle<T>& handle)
     {
         const auto& hdl = static_cast<const skr_resource_handle_t&>(handle);
@@ -150,7 +150,7 @@ struct WriteTrait<const skr::resource::TResourceHandle<T>&> {
 };
 
 template <>
-struct SKR_STATIC_API WriteTrait<const skr_resource_handle_t&> {
+struct SKR_STATIC_API WriteTrait<skr_resource_handle_t> {
     static int Write(skr_binary_writer_t* writer, const skr_resource_handle_t& handle);
 };
 

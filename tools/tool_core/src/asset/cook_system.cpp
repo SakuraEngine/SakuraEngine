@@ -21,22 +21,21 @@
 
 namespace skd::asset
 {
-struct SCookSystemImpl : public skd::asset::SCookSystem
-{
+struct SCookSystemImpl : public skd::asset::SCookSystem {
     friend struct ::SkrToolCoreModule;
-    using AssetMap = skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash>;
+    using AssetMap   = skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash>;
     using CookingMap = skr::parallel_flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash>;
 
     skr::task::event_t AddCookTask(skr_guid_t resource) override;
     skr::task::event_t EnsureCooked(skr_guid_t resource) override;
-    void WaitForAll() override;
-    bool AllCompleted() const override;
+    void               WaitForAll() override;
+    bool               AllCompleted() const override;
 
-    void RegisterCooker(bool isDefault, skr_guid_t cooker, skr_guid_t type, SCooker* instance) override;
-    void UnregisterCooker(skr_guid_t type) override;
+    void     RegisterCooker(bool isDefault, skr_guid_t cooker, skr_guid_t type, SCooker* instance) override;
+    void     UnregisterCooker(skr_guid_t type) override;
     SCooker* GetCooker(SAssetRecord* record) const
     {
-        if(record->cooker == skr_guid_t{})
+        if (record->cooker == skr_guid_t{})
         {
             auto it = defaultCookers.find(record->type);
             if (it != defaultCookers.end()) return it->second;
@@ -53,8 +52,8 @@ struct SCookSystemImpl : public skd::asset::SCookSystem
         return nullptr;
     }
 
-    SAssetRecord* GetAssetRecord(const skr_guid_t& guid) override;
-    SAssetRecord* ImportAsset(SProject* project, skr::filesystem::path path) override;
+    SAssetRecord*         GetAssetRecord(const skr_guid_t& guid) override;
+    SAssetRecord*         ImportAsset(SProject* project, skr::filesystem::path path) override;
     skr_io_ram_service_t* getIOService() override;
 
     template <class F, class Iter>
@@ -64,47 +63,47 @@ struct SCookSystemImpl : public skd::asset::SCookSystem
     }
     void ParallelForEachAsset(uint32_t batch, skr::function_ref<void(skr::span<SAssetRecord*>)> f) override
     {
-        ParallelFor(assets.begin(), assets.end(), batch, 
-        [f, batch](auto begin, auto end){
-            skr::vector<SAssetRecord*> records;
-            records.reserve(batch);
-            for (auto it = begin; it != end; ++it)
-            {
-                records.emplace_back(it->second);
-            }
-            f(records);
-        });
+        ParallelFor(assets.begin(), assets.end(), batch,
+                    [f, batch](auto begin, auto end) {
+                        skr::vector<SAssetRecord*> records;
+                        records.reserve(batch);
+                        for (auto it = begin; it != end; ++it)
+                        {
+                            records.emplace_back(it->second);
+                        }
+                        f(records);
+                    });
     }
+
 protected:
-    AssetMap assets;
+    AssetMap   assets;
     CookingMap cooking;
-    SMutex ioMutex;
+    SMutex     ioMutex;
 
     skr::task::counter_t mainCounter;
 
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> defaultCookers;
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
-    SMutex assetMutex;
-    skr_io_ram_service_t* ioServices[ioServicesMaxCount];
+    SMutex                                                    assetMutex;
+    skr_io_ram_service_t*                                     ioServices[ioServicesMaxCount];
 };
-}
+} // namespace skd::asset
 
-struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
-{
-    skr::JobQueue* io_job_queue = nullptr;
+struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule {
+    skr::JobQueue* io_job_queue          = nullptr;
     skr::JobQueue* io_callback_job_queue = nullptr;
-    virtual void on_load(int argc, char8_t** argv) override
+    virtual void   on_load(int argc, char8_t** argv) override
     {
         skr_init_mutex(&cook_system.ioMutex);
         skr_init_mutex(&cook_system.assetMutex);
 
-        auto jqDesc = make_zeroed<skr::JobQueueDesc>();
+        auto jqDesc         = make_zeroed<skr::JobQueueDesc>();
         jqDesc.thread_count = 1;
-        jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
-        jqDesc.name = u8"Tool-IOJobQueue";
-        io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
+        jqDesc.priority     = SKR_THREAD_ABOVE_NORMAL;
+        jqDesc.name         = u8"Tool-IOJobQueue";
+        io_job_queue        = SkrNew<skr::JobQueue>(jqDesc);
 
-        jqDesc.name = u8"Tool-IOCallbackJobQueue";
+        jqDesc.name           = u8"Tool-IOCallbackJobQueue";
         io_callback_job_queue = SkrNew<skr::JobQueue>(jqDesc);
 
         for (auto& ioService : cook_system.ioServices)
@@ -113,12 +112,12 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
             if (ioService == nullptr)
             {
                 skr_ram_io_service_desc_t desc = {};
-                desc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
-                desc.awake_at_request = true;
-                desc.name = u8"Tool-IOService";
-                desc.io_job_queue = io_job_queue;
-                desc.callback_job_queue = io_callback_job_queue;
-                ioService = skr_io_ram_service_t::create(&desc);        
+                desc.sleep_time                = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
+                desc.awake_at_request          = true;
+                desc.name                      = u8"Tool-IOService";
+                desc.io_job_queue              = io_job_queue;
+                desc.callback_job_queue        = io_callback_job_queue;
+                ioService                      = skr_io_ram_service_t::create(&desc);
                 ioService->run();
             }
         }
@@ -167,11 +166,11 @@ bool SCookSystemImpl::AllCompleted() const
     return mainCounter.test();
 }
 
-skr_io_ram_service_t* SCookSystemImpl::getIOService() 
+skr_io_ram_service_t* SCookSystemImpl::getIOService()
 {
-    SMutexLock lock(ioMutex);
+    SMutexLock                  lock(ioMutex);
     static std::atomic_uint32_t cursor = 0;
-    cursor = (cursor % ioServicesMaxCount);
+    cursor                             = (cursor % ioServicesMaxCount);
     return ioServices[cursor++];
 }
 
@@ -179,34 +178,34 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
 {
     SCookContext* jobContext;
     {
-        skr::task::event_t result{nullptr};
-        cooking.lazy_emplace_l(guid,
+        skr::task::event_t result{ nullptr };
+        cooking.lazy_emplace_l(
+        guid,
         [&](const auto& ctx_kv) { result = ctx_kv.second->GetCounter(); },
         [&](const CookingMap::constructor& ctor) {
             jobContext = SCookContext::Create(getIOService());
             ctor(guid, jobContext);
         });
-        if(result) return result;
+        if (result) return result;
     }
     jobContext->record = GetAssetRecord(guid);
     skr::task::event_t counter;
     jobContext->SetCounter(counter);
     auto guidName = skr::format(u8"Fiber{}", jobContext->record->guid);
     mainCounter.add(1);
-    skr::task::schedule([jobContext]()
-    {
-        auto system = static_cast<SCookSystemImpl*>(GetCookSystem());
+    skr::task::schedule([jobContext]() {
+        auto       system    = static_cast<SCookSystemImpl*>(GetCookSystem());
         const auto metaAsset = jobContext->record;
-        auto cooker = system->GetCooker(metaAsset);
+        auto       cooker    = system->GetCooker(metaAsset);
         SKR_ASSERT(cooker);
         // Trace
         SkrZoneScopedN("CookingTask");
-        const auto rtti_type = skr::rttr::get_type_from_guid(metaAsset->type);
-        const auto cookerTypeName = rtti_type ? rtti_type->name().c_str() : u8"UnknownResource";
-        const auto guidString = skr::format(u8"Guid: {}", metaAsset->guid);
+        const auto rtti_type           = skr::rttr::get_type_from_guid(metaAsset->type);
+        const auto cookerTypeName      = rtti_type ? rtti_type->name().c_str() : u8"UnknownResource";
+        const auto guidString          = skr::format(u8"Guid: {}", metaAsset->guid);
         const auto assetTypeGuidString = skr::format(u8"TypeGuid: {}", metaAsset->type);
-        const auto scopeName = skr::format(u8"Cook.[{}]", (const ochar8_t*)cookerTypeName);
-        const auto assetString = skr::format(u8"Asset: {}", metaAsset->path.u8string().c_str());
+        const auto scopeName           = skr::format(u8"Cook.[{}]", (const ochar8_t*)cookerTypeName);
+        const auto assetString         = skr::format(u8"Asset: {}", metaAsset->path.u8string().c_str());
         ZoneName(scopeName.c_str(), scopeName.size());
         SkrMessage(guidString.c_str(), guidString.size());
         SkrMessage(assetTypeGuidString.c_str(), assetTypeGuidString.size());
@@ -214,14 +213,14 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
 
         SKR_DEFER({
             auto system = static_cast<SCookSystemImpl*>(GetCookSystem());
-            auto guid = jobContext->record->guid;
+            auto guid   = jobContext->record->guid;
             system->cooking.erase_if(guid, [](const auto& ctx_kv) { SCookContext::Destroy(ctx_kv.second); return true; });
             system->mainCounter.decrement();
         });
 
         // Create output dir
-        auto outputPath = metaAsset->project->GetOutputPath();
-        std::error_code ec = {};
+        auto            outputPath = metaAsset->project->GetOutputPath();
+        std::error_code ec         = {};
         skr::filesystem::create_directories(outputPath, ec);
 
         // TODO: platform dependent directory
@@ -242,9 +241,9 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 SKR_LOG_INFO(u8"[CookTask] resource %s cook finished! updating resource metas.", metaAsset->path.u8string().c_str());
                 auto headerPath = jobContext->GetOutputPath();
                 headerPath.replace_extension("rh");
-                eastl::vector<uint8_t> buffer;
-                skr::binary::VectorWriter writer{&buffer};
-                skr_binary_writer_t archive(writer);
+                eastl::vector<uint8_t>    buffer;
+                skr::binary::VectorWriter writer{ &buffer };
+                skr_binary_writer_t       archive(writer);
                 jobContext->WriteHeader(archive, cooker);
                 auto file = fopen(headerPath.string().c_str(), "wb");
                 if (!file)
@@ -260,7 +259,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
             {
                 SKR_LOG_INFO(u8"[CookTask] resource %s cook finished! updating dependencies.", metaAsset->path.u8string().c_str());
                 // write dependencies
-                auto dependencyPath = metaAsset->project->GetDependencyPath() / skr::format(u8"{}.d", metaAsset->guid).c_str();
+                auto              dependencyPath = metaAsset->project->GetDependencyPath() / skr::format(u8"{}.d", metaAsset->guid).c_str();
                 skr_json_writer_t writer(2);
                 writer.StartObject();
                 writer.Key(u8"importerVersion");
@@ -272,13 +271,13 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 for (auto& dep : jobContext->GetFileDependencies())
                 {
                     auto str = dep.string();
-                    skr::json::Write<const skr::string_view&>(&writer, {(const char8_t*)str.data(), str.size() });
+                    skr::json::Write<skr::string_view>(&writer, { (const char8_t*)str.data(), str.size() });
                 }
                 writer.EndArray();
                 writer.Key(u8"dependencies");
                 writer.StartArray();
                 for (auto& dep : jobContext->GetStaticDependencies())
-                    skr::json::Write<const skr_resource_handle_t&>(&writer, dep);
+                    skr::json::Write<skr_resource_handle_t>(&writer, dep);
                 writer.EndArray();
                 writer.EndObject();
                 auto file = fopen(dependencyPath.string().c_str(), "w");
@@ -291,7 +290,8 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 fwrite(writer.buffer.c_str(), 1, writer.buffer.size(), file);
             }
         }
-    }, &counter, guidName.c_str());
+    },
+                        &counter, guidName.c_str());
     return counter;
 }
 
@@ -313,18 +313,18 @@ void SCookSystemImpl::UnregisterCooker(skr_guid_t guid)
     cookers.erase(guid);
 }
 
-#define SKR_CHECK_RESULT(result, name) \
-    if (result.error() != simdjson::SUCCESS) \
-    { \
+#define SKR_CHECK_RESULT(result, name)                                                                                                       \
+    if (result.error() != simdjson::SUCCESS)                                                                                                 \
+    {                                                                                                                                        \
         SKR_LOG_INFO(u8"[SCookSystemImpl::EnsureCooked] " name " file parse failed! resource guid: %s", metaAsset->path.u8string().c_str()); \
-        return false; \
+        return false;                                                                                                                        \
     }
 
 skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
 {
     SkrZoneScoped;
     {
-        skr::task::event_t result{nullptr};
+        skr::task::event_t result{ nullptr };
         cooking.if_contains(guid, [&](const auto& ctx_kv) {
             result = ctx_kv.second->GetCounter();
         });
@@ -337,11 +337,11 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
         SKR_LOG_ERROR(u8"[SCookSystemImpl::EnsureCooked] resource not exist! asset path: %s", metaAsset->path.u8string().c_str());
         return nullptr;
     }
-    auto resourcePath = metaAsset->project->GetOutputPath() / skr::format(u8"{}.bin", metaAsset->guid).u8_str();
+    auto resourcePath   = metaAsset->project->GetOutputPath() / skr::format(u8"{}.bin", metaAsset->guid).u8_str();
     auto dependencyPath = metaAsset->project->GetDependencyPath() / skr::format(u8"{}.d", metaAsset->guid).u8_str();
-    auto checkUpToDate = [&]() -> bool {
+    auto checkUpToDate  = [&]() -> bool {
         auto cooker = GetCooker(metaAsset);
-        if(!cooker)
+        if (!cooker)
         {
             SKR_LOG_INFO(u8"[SCookSystemImpl::EnsureCooked] cooker not found! asset path: %s", metaAsset->path.u8string().c_str());
             return true;
@@ -349,7 +349,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
         std::error_code ec = {};
         if (!skr::filesystem::is_regular_file(resourcePath, ec))
         {
-            SKR_LOG_INFO(u8"[SCookSystemImpl::EnsureCooked] resource not exist! asset path: %s" , metaAsset->path.u8string().c_str());
+            SKR_LOG_INFO(u8"[SCookSystemImpl::EnsureCooked] resource not exist! asset path: %s", metaAsset->path.u8string().c_str());
             return false;
         }
         if (!skr::filesystem::is_regular_file(dependencyPath, ec))
@@ -364,22 +364,22 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
             return false;
         }
         simdjson::ondemand::parser parser;
-        auto json = simdjson::padded_string::load(dependencyPath.string());
-        auto doc = parser.iterate(json);
+        auto                       json = simdjson::padded_string::load(dependencyPath.string());
+        auto                       doc  = parser.iterate(json);
         if (doc.error() != simdjson::SUCCESS)
         {
             SKR_LOG_INFO(u8"[SCookSystemImpl::EnsureCooked] dependency file parse failed! asset path: %s", metaAsset->path.u8string().c_str());
             return false;
         }
         simdjson::ondemand::parser metaParser;
-        auto metaDoc = metaParser.iterate(metaAsset->meta);
+        auto                       metaDoc = metaParser.iterate(metaAsset->meta);
         SKR_CHECK_RESULT(metaDoc, "meta")
         auto importer = metaDoc["importer"];
         SKR_CHECK_RESULT(importer, "meta")
         auto importerType = importer["importerType"];
         SKR_CHECK_RESULT(importerType, "meta")
         skr_guid_t importerTypeGuid;
-        if(skr::json::Read(std::move(importerType).value_unsafe(), importerTypeGuid) != skr::json::SUCCESS)
+        if (skr::json::Read(std::move(importerType).value_unsafe(), importerTypeGuid) != skr::json::SUCCESS)
         {
             SKR_LOG_INFO(u8"[SCookSystemImpl::EnsureCooked] meta file parse failed! asset path: %s", metaAsset->path.u8string().c_str());
             return false;
@@ -387,18 +387,18 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
         auto importerVersion = doc["importerVersion"].get_uint64();
         SKR_CHECK_RESULT(importerVersion, "dependency")
         auto currentImporterVersion = GetImporterRegistry()->GetImporterVersion(importerTypeGuid);
-        if(importerVersion.value_unsafe() != currentImporterVersion)
+        if (importerVersion.value_unsafe() != currentImporterVersion)
         {
             SKR_LOG_INFO(u8"[SCookSystemImpl::EnsureCooked] importer version changed! asset path: %s", metaAsset->path.u8string().c_str());
             return false;
         }
-        if(currentImporterVersion == UINT32_MAX)
+        if (currentImporterVersion == UINT32_MAX)
         {
             SKR_LOG_INFO(u8"[SCookSystemImpl::EnsureCooked] dev importer version (UINT32_MAX)! asset path: %s", metaAsset->path.u8string().c_str());
             return false;
         }
         {
-            
+
             if (cooker->Version() == UINT32_MAX)
             {
                 SKR_LOG_INFO(u8"[SCookSystemImpl::EnsureCooked] dev cooker version (UINT32_MAX)! asset path: %s", metaAsset->path.u8string().c_str());
@@ -409,10 +409,10 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
             uint8_t buffer[sizeof(skr_resource_header_t)];
             fread(buffer, 0, sizeof(skr_resource_header_t), resourceFile);
             SKR_DEFER({ fclose(resourceFile); });
-            skr::binary::SpanReader reader = {buffer};
-            skr_binary_reader_t archive{reader};
-            skr_resource_header_t header;
-            if(header.ReadWithoutDeps(&archive) != 0)
+            skr::binary::SpanReader reader = { buffer };
+            skr_binary_reader_t     archive{ reader };
+            skr_resource_header_t   header;
+            if (header.ReadWithoutDeps(&archive) != 0)
             {
                 SKR_LOG_INFO(u8"[SCookSystemImpl::EnsureCooked] resource header read failed! asset path: %s", metaAsset->path.u8string().c_str());
                 return false;
@@ -434,9 +434,9 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
             skr::string pathStr;
             skr::json::Read(std::move(file).value_unsafe(), pathStr);
             skr::filesystem::path path(pathStr.c_str());
-            path = metaAsset->path.parent_path() / (path);
+            path               = metaAsset->path.parent_path() / (path);
             std::error_code ec = {};
-            if(!skr::filesystem::exists(path, ec))
+            if (!skr::filesystem::exists(path, ec))
             {
                 SKR_LOG_INFO(u8"[SCookSystemImpl::EnsureCooked] file not exist! asset path: %s", metaAsset->path.u8string().c_str());
                 return false;
@@ -487,12 +487,12 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
 SAssetRecord* SCookSystemImpl::ImportAsset(SProject* project, skr::filesystem::path path)
 {
     SkrZoneScoped;
-    std::error_code ec = {};
-    auto record = SkrNew<SAssetRecord>();
+    std::error_code ec     = {};
+    auto            record = SkrNew<SAssetRecord>();
     // TODO: replace file load with skr api
     record->meta = simdjson::padded_string::load(path.string()).value_unsafe();
     simdjson::ondemand::parser parser;
-    auto doc = parser.iterate(record->meta);
+    auto                       doc = parser.iterate(record->meta);
     skr::json::Read(doc["guid"].value_unsafe(), record->guid);
     auto otype = doc["type"];
     if (otype.error() == simdjson::SUCCESS)
@@ -504,7 +504,7 @@ SAssetRecord* SCookSystemImpl::ImportAsset(SProject* project, skr::filesystem::p
         skr::json::Read(std::move(ctype).value_unsafe(), record->cooker);
     else
         std::memset(&record->cooker, 0, sizeof(skr_guid_t));
-    record->path = skr::filesystem::relative(path, project->GetAssetPath());
+    record->path    = skr::filesystem::relative(path, project->GetAssetPath());
     record->project = project;
     SMutexLock lock(assetMutex);
     assets.insert(std::make_pair(record->guid, record));
