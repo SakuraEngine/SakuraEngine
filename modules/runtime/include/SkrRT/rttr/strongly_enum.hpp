@@ -71,7 +71,7 @@ struct ReadTrait<StronglyEnum<T>> {
 };
 
 template <class T>
-struct WriteTrait<const StronglyEnum<T>&> {
+struct WriteTrait<StronglyEnum<T>> {
     static int Write(skr_binary_writer_t* writer, const StronglyEnum<T>& value)
     {
         return skr::binary::Archive(writer, value.underlying_value());
@@ -85,7 +85,7 @@ struct WriteTrait<const StronglyEnum<T>&> {
 namespace skr::json
 {
 template <class T>
-struct WriteTrait<const StronglyEnum<T>&> {
+struct WriteTrait<StronglyEnum<T>> {
     static void Write(skr_json_writer_t* writer, const StronglyEnum<T>& value)
     {
         skr::json::Write(writer, value.underlying_value());

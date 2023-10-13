@@ -16,7 +16,7 @@ struct ${api} ReadTrait<${record.name}>
 %endif
 };
 template<>
-struct ${api} WriteTrait<const ${record.name}&>
+struct ${api} WriteTrait<${record.name}>
 {<% configParam = ", " + record.attrs.serialize_config if hasattr(record.attrs, "serialize_config") else ""%>
 %if generator.filter_blob_type(record):
     static int Write(skr_binary_writer_t* archive, skr_blob_arena_t& arena, const ${record.name}& value${configParam});

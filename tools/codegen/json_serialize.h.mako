@@ -14,7 +14,7 @@ namespace skr::json
     };
 %endif
     template <>
-    struct ${api} WriteTrait<const ${record.name}&>
+    struct ${api} WriteTrait<${record.name}>
     {
         static void Write(skr_json_writer_t* writer, const ${record.name}& v);
         static void WriteFields(skr_json_writer_t* writer, const ${record.name}& v);
@@ -28,7 +28,7 @@ namespace skr::json
     };
 
     template <>
-    struct ${api} WriteTrait<const ${enum.name}&>
+    struct ${api} WriteTrait<${enum.name}>
     {
         static void Write(skr_json_writer_t* writer, ${enum.name} v);
     };

@@ -19,17 +19,17 @@ skr_scene_resource_t
 
 namespace skr::resource
 {
-    // scene resource factory, base class
-    // derive from this class to implement your own game specific install logic
-    class SKR_SCENE_API SSceneFactory : public SResourceFactory
-    {
-    public:
-        virtual ~SSceneFactory() noexcept = default;
-        skr_guid_t GetResourceType() override;
-        bool AsyncIO() override { return true; }
-        float AsyncSerdeLoadFactor() override { return 0.5f; }
-    };
-}
+// scene resource factory, base class
+// derive from this class to implement your own game specific install logic
+class SKR_SCENE_API SSceneFactory : public SResourceFactory
+{
+public:
+    virtual ~SSceneFactory() noexcept = default;
+    skr_guid_t GetResourceType() override;
+    bool       AsyncIO() override { return true; }
+    float      AsyncSerdeLoadFactor() override { return 0.5f; }
+};
+} // namespace skr::resource
 
 namespace skr::binary
 {
@@ -38,7 +38,7 @@ struct SKR_SCENE_API ReadTrait<skr_scene_resource_t> {
     static int Read(skr_binary_reader_t* reader, skr_scene_resource_t& value);
 };
 template <>
-struct SKR_SCENE_API WriteTrait<const skr_scene_resource_t&> {
+struct SKR_SCENE_API WriteTrait<skr_scene_resource_t> {
     static int Write(skr_binary_writer_t* writer, const skr_scene_resource_t& value);
 };
 } // namespace skr::binary
