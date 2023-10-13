@@ -21,6 +21,8 @@ SKR_GUI_API OffsetLayer : public ContainerLayer
     inline Offsetf offset() const noexcept { return _offset; }
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     Offsetf _offset = {};
 };
 } // namespace gui sreflect

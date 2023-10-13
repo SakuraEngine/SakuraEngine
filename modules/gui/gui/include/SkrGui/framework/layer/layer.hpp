@@ -38,6 +38,8 @@ SKR_GUI_API Layer : virtual public skr::rttr::IObject
     inline int32_t        depth() const SKR_NOEXCEPT { return _depth; }
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     // layer tree
     Layer*         _parent = nullptr;
     PipelineOwner* _owner  = nullptr;

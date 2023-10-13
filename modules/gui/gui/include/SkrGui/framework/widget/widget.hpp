@@ -28,6 +28,8 @@ SKR_GUI_API Widget : virtual public skr::rttr::IObject
     // help function
     static bool can_update(NotNull<Widget*> old_widget, NotNull<Widget*> new_widget) SKR_NOEXCEPT;
 
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     Key key = {};
 };
 } // namespace gui sreflect

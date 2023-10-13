@@ -30,6 +30,8 @@ RenderColoredBox : public RenderProxyBox
     }
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     Color _color = {};
 };
 } // namespace gui sreflect

@@ -1,7 +1,7 @@
 #pragma once
+#include "SkrRT/platform/configure.h"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/rttr/guid.hpp"
-#include "SkrRT/platform/configure.h"
 #include "SkrRT/rttr/type_desc.hpp"
 #include "SkrRT/rttr/type_registry.hpp"
 #include "SkrRT/rttr/type/type.hpp"

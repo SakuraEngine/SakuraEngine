@@ -113,6 +113,8 @@ private:
     void _flush_relayout_boundary() SKR_NOEXCEPT;
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     // render object tree
     RenderObject*  _parent = nullptr;
     PipelineOwner* _owner  = nullptr;

@@ -20,6 +20,8 @@ SKR_GUI_API ColoredBox : public SingleChildRenderObjectWidget
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
     void update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
 
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     Color color = {};
 };
 } // namespace gui sreflect

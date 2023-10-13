@@ -51,30 +51,32 @@ struct SingleChildRenderObjectMixin {
 } // namespace gui sreflect
 } // namespace skr sreflect
 
-#define SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(__SELF, __CHILD)                         \
-    /*===============> Begin Single Child Render Object Mixin <===============*/          \
-private:                                                                                  \
-    SingleChildRenderObjectMixin<__SELF, __CHILD> _single_child_render_object_mixin = {}; \
-                                                                                          \
-public:                                                                                   \
-    GUID accept_child_type() const SKR_NOEXCEPT override                                  \
-    {                                                                                     \
-        return _single_child_render_object_mixin.accept_child_type(*this);                \
-    }                                                                                     \
-    void set_child(NotNull<RenderObject*> child) SKR_NOEXCEPT override                    \
-    {                                                                                     \
-        _single_child_render_object_mixin.set_child(*this, child);                        \
-    }                                                                                     \
-    void remove_child() SKR_NOEXCEPT override                                             \
-    {                                                                                     \
-        _single_child_render_object_mixin.remove_child(*this);                            \
-    }                                                                                     \
-    void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override                 \
-    {                                                                                     \
-        _single_child_render_object_mixin.visit_children(*this, visitor);                 \
-    }                                                                                     \
-    inline __CHILD* child() const SKR_NOEXCEPT                                            \
-    {                                                                                     \
-        return _single_child_render_object_mixin._child;                                  \
-    }                                                                                     \
+#define SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(__SELF, __CHILD)                \
+    /*===============> Begin Single Child Render Object Mixin <===============*/ \
+private:                                                                         \
+    sattr("no-rtti": true)                                                       \
+          SingleChildRenderObjectMixin<__SELF, __CHILD>                          \
+          _single_child_render_object_mixin = {};                                \
+                                                                                 \
+public:                                                                          \
+    GUID accept_child_type() const SKR_NOEXCEPT override                         \
+    {                                                                            \
+        return _single_child_render_object_mixin.accept_child_type(*this);       \
+    }                                                                            \
+    void set_child(NotNull<RenderObject*> child) SKR_NOEXCEPT override           \
+    {                                                                            \
+        _single_child_render_object_mixin.set_child(*this, child);               \
+    }                                                                            \
+    void remove_child() SKR_NOEXCEPT override                                    \
+    {                                                                            \
+        _single_child_render_object_mixin.remove_child(*this);                   \
+    }                                                                            \
+    void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override        \
+    {                                                                            \
+        _single_child_render_object_mixin.visit_children(*this, visitor);        \
+    }                                                                            \
+    inline __CHILD* child() const SKR_NOEXCEPT                                   \
+    {                                                                            \
+        return _single_child_render_object_mixin._child;                         \
+    }                                                                            \
     /*===============> End Single Child Render Object Mixin <===============*/

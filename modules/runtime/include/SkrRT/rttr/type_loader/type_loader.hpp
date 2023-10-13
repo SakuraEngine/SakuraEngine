@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrRT/module.configure.h"
 
 namespace skr::rttr
 {
