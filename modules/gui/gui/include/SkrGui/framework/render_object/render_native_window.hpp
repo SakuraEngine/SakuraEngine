@@ -10,16 +10,18 @@ namespace gui sreflect
 {
 struct INativeWindow;
 sreflect_struct(
-    "guid": "1681d4be-cb32-4b65-9f07-9f143ebe1c6e"
+    "guid": "1681d4be-cb32-4b65-9f07-9f143ebe1c6e",
+    "rtti": true
 )
-SKR_GUI_API RenderNativeWindow : public RenderWindow {
+SKR_GUI_API RenderNativeWindow : public RenderWindow
+{
     SKR_RTTR_GENERATE_BODY()
-    RenderNativeWindow(INativeWindow* native_window);
+    RenderNativeWindow(INativeWindow * native_window);
 
-    NotNull<OffsetLayer*> update_layer(OffsetLayer* old_layer) override;
+    NotNull<OffsetLayer*> update_layer(OffsetLayer * old_layer) override;
 
     void        prepare_initial_frame() SKR_NOEXCEPT;
-    inline void setup_owner(PipelineOwner* owner) SKR_NOEXCEPT { _owner = owner; }
+    inline void setup_owner(PipelineOwner * owner) SKR_NOEXCEPT { _owner = owner; }
 };
 } // namespace gui sreflect
 } // namespace skr sreflect

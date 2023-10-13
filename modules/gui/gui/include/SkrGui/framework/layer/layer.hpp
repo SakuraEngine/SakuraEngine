@@ -10,9 +10,11 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "a40f7782-8b8f-4059-ab2a-3d8e4ac2fdd5"
+    "guid": "a40f7782-8b8f-4059-ab2a-3d8e4ac2fdd5",
+    "rtti": true
 )
-SKR_GUI_API Layer : virtual public skr::rttr::IObject {
+SKR_GUI_API Layer : virtual public skr::rttr::IObject
+{
     SKR_RTTR_GENERATE_BODY()
     using VisitFuncRef = FunctionRef<void(NotNull<Layer*>)>;
 

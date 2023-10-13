@@ -20,14 +20,16 @@ enum class EElementLifecycle : uint8_t
 };
 
 sreflect_struct(
-    "guid": "ec3aff75-d8d1-4e0f-aff3-5c8df4995a78"
+    "guid": "ec3aff75-d8d1-4e0f-aff3-5c8df4995a78",
+    "rtti": true
 )
 SKR_GUI_API Element : virtual public skr::rttr::IObject,
-                      public IBuildContext {
+                      public IBuildContext
+{
     SKR_RTTR_GENERATE_BODY()
     using VisitFuncRef = FunctionRef<void(NotNull<Element*>)>;
 
-    Element(Widget* widget) SKR_NOEXCEPT;
+    Element(Widget * widget) SKR_NOEXCEPT;
 
     // lifecycle & tree
     // ctor -> mount <-> unmount -> destroy
@@ -53,22 +55,22 @@ SKR_GUI_API Element : virtual public skr::rttr::IObject,
     // TODO. IBuildContext API
 
     //==> Begin IBuildContext API
-    Widget*           bound_widget() const SKR_NOEXCEPT override;
-    BuildOwner*       build_owner() const SKR_NOEXCEPT override;
-    bool              is_destroyed() const SKR_NOEXCEPT override;
-    RenderObject*     find_render_object() const SKR_NOEXCEPT override;
-    RenderObject*     find_ancestor_render_object() const SKR_NOEXCEPT override;
-    Optional<Sizef>   render_box_size() const SKR_NOEXCEPT override;
-    InheritedWidget*  depend_on_inherited_element(NotNull<InheritedElement*> ancestor) SKR_NOEXCEPT override;
-    InheritedWidget*  depend_on_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
+    Widget* bound_widget() const SKR_NOEXCEPT override;
+    BuildOwner* build_owner() const SKR_NOEXCEPT override;
+    bool is_destroyed() const SKR_NOEXCEPT override;
+    RenderObject* find_render_object() const SKR_NOEXCEPT override;
+    RenderObject* find_ancestor_render_object() const SKR_NOEXCEPT override;
+    Optional<Sizef> render_box_size() const SKR_NOEXCEPT override;
+    InheritedWidget* depend_on_inherited_element(NotNull<InheritedElement*> ancestor) SKR_NOEXCEPT override;
+    InheritedWidget* depend_on_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
     InheritedElement* get_element_for_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
-    Widget*           find_ancestor_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
-    State*            find_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
-    State*            find_root_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
-    RenderObject*     find_ancestor_render_object_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
-    void              visit_ancestor_elements(FunctionRef<bool(NotNull<Element*>)> visitor) SKR_NOEXCEPT override;
-    void              visit_child_elements(FunctionRef<void(NotNull<Element*>)> visitor) SKR_NOEXCEPT override;
-    void              dispatch_notification(NotNull<Notification*> notification) SKR_NOEXCEPT override;
+    Widget* find_ancestor_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
+    State* find_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
+    State* find_root_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
+    RenderObject* find_ancestor_render_object_of_exact_type(const GUID& type_id) SKR_NOEXCEPT override;
+    void visit_ancestor_elements(FunctionRef<bool(NotNull<Element*>)> visitor) SKR_NOEXCEPT override;
+    void visit_child_elements(FunctionRef<void(NotNull<Element*>)> visitor) SKR_NOEXCEPT override;
+    void dispatch_notification(NotNull<Notification*> notification) SKR_NOEXCEPT override;
     //==> End IBuildContext API
 
     // getter & setter
@@ -80,8 +82,8 @@ SKR_GUI_API Element : virtual public skr::rttr::IObject,
 
 protected:
     // help functions
-    Element*          _update_child(Element* child, Widget* new_widget, Slot new_slot) SKR_NOEXCEPT;
-    void              _update_children(Array<Element*>& children, const Array<Widget*>& new_widgets);
+    Element*          _update_child(Element * child, Widget * new_widget, Slot new_slot) SKR_NOEXCEPT;
+    void              _update_children(Array<Element*> & children, const Array<Widget*>& new_widgets);
     NotNull<Element*> _inflate_widget(NotNull<Widget*> widget, Slot slot) SKR_NOEXCEPT;
     void              _update_slot_for_child(NotNull<Element*> child, Slot new_slot) SKR_NOEXCEPT;
     void              _attach_render_object_children(Slot new_slot) SKR_NOEXCEPT;

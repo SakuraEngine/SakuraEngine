@@ -12,18 +12,20 @@ namespace gui sreflect
 // 概念性的 Window，并不一定是 Root，Root 通常是 RenderNativeWindow
 struct IWindow;
 sreflect_struct(
-    "guid": "358b1333-d5b8-4529-b4ad-9c800d5c9caf"
+    "guid": "358b1333-d5b8-4529-b4ad-9c800d5c9caf",
+    "rtti": true
 )
 SKR_GUI_API RenderWindow : public RenderObject,
-                           public ISingleChildRenderObject {
+                           public ISingleChildRenderObject
+{
     SKR_RTTR_GENERATE_BODY()
 
-    RenderWindow(IWindow* window);
+    RenderWindow(IWindow * window);
 
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
     void perform_layout() SKR_NOEXCEPT override;
 
-    NotNull<OffsetLayer*> update_layer(OffsetLayer* old_layer) override;
+    NotNull<OffsetLayer*> update_layer(OffsetLayer * old_layer) override;
 
     // getter
     inline IWindow* window() const SKR_NOEXCEPT { return _window; }

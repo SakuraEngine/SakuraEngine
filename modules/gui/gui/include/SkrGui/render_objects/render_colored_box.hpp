@@ -10,9 +10,11 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "02cc61fb-9ca4-464b-95a5-2a5ad277abf8"
+    "guid": "02cc61fb-9ca4-464b-95a5-2a5ad277abf8",
+    "rtti": true
 )
-RenderColoredBox : public RenderProxyBox {
+RenderColoredBox : public RenderProxyBox
+{
     SKR_RTTR_GENERATE_BODY()
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 

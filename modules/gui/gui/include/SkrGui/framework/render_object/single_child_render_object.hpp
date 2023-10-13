@@ -11,9 +11,11 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "5349672b-bfc5-46a9-9a02-40ef563c196d"
+    "guid": "5349672b-bfc5-46a9-9a02-40ef563c196d",
+    "rtti": true
 )
-SKR_GUI_API ISingleChildRenderObject : virtual public skr::rttr::IObject {
+SKR_GUI_API ISingleChildRenderObject : virtual public skr::rttr::IObject
+{
     SKR_RTTR_GENERATE_BODY()
     virtual ~ISingleChildRenderObject() = default;
 

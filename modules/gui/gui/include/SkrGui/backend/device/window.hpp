@@ -48,9 +48,11 @@ struct WindowDesc {
 // ! 考虑下 HitTest 怎么做
 // ! 考虑下 Focus 怎么管理
 sreflect_struct(
-    "guid": "e1cb928d-482e-4795-8f49-d89f20fe171a"
+    "guid": "e1cb928d-482e-4795-8f49-d89f20fe171a",
+    "rtti": true
 )
-SKR_GUI_API IWindow : virtual public skr::rttr::IObject {
+SKR_GUI_API IWindow : virtual public skr::rttr::IObject
+{
     SKR_RTTR_GENERATE_BODY()
     virtual ~IWindow() = default;
 
@@ -87,15 +89,17 @@ SKR_GUI_API IWindow : virtual public skr::rttr::IObject {
     virtual void hide() SKR_NOEXCEPT                             = 0;
 
     // rendering
-    virtual void update_content(WindowLayer* root_layer) SKR_NOEXCEPT = 0;
+    virtual void update_content(WindowLayer * root_layer) SKR_NOEXCEPT = 0;
 
     // TODO. window call back
 };
 
 sreflect_struct(
-    "guid": "e46f6067-1fbe-41bf-8361-14399bc7054b"
+    "guid": "e46f6067-1fbe-41bf-8361-14399bc7054b",
+    "rtti": true
 )
-SKR_GUI_API INativeWindow : public IWindow {
+SKR_GUI_API INativeWindow : public IWindow
+{
     SKR_RTTR_GENERATE_BODY()
 
     // getter

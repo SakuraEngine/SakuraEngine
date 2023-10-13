@@ -11,9 +11,11 @@ namespace gui sreflect
 {
 
 sreflect_struct(
-    "guid": "5b6fca8a-7558-4301-a00a-749b63be5aab"
+    "guid": "5b6fca8a-7558-4301-a00a-749b63be5aab",
+    "rtti": true
 )
-SKR_GUI_API ProxyElement : public ComponentElement {
+SKR_GUI_API ProxyElement : public ComponentElement
+{
     SKR_RTTR_GENERATE_BODY()
     using Super = ComponentElement;
     using Super::Super;

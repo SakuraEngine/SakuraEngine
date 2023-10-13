@@ -11,10 +11,12 @@ namespace gui sreflect
 {
 // 会对 child 施加布局偏移的 RenderBox
 sreflect_struct(
-    "guid": "357e11e8-dbcd-4830-9256-869198ca7bed"
+    "guid": "357e11e8-dbcd-4830-9256-869198ca7bed",
+    "rtti": true
 )
 RenderShiftedBox : public RenderBox,
-                   public ISingleChildRenderObject {
+                   public ISingleChildRenderObject
+{
     SKR_RTTR_GENERATE_BODY()
 
     inline Offsetf offset() const SKR_NOEXCEPT { return _offset; }

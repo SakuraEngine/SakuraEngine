@@ -45,9 +45,11 @@ enum class EResourceState : uint32_t
 };
 
 sreflect_struct(
-    "guid": "1d4ba81f-09b7-4186-b35a-f380c49302e4"
+    "guid": "1d4ba81f-09b7-4186-b35a-f380c49302e4",
+    "rtti": true
 )
-SKR_GUI_API IResource : virtual skr::rttr::IObject {
+SKR_GUI_API IResource : virtual skr::rttr::IObject
+{
     SKR_RTTR_GENERATE_BODY()
     virtual ~IResource() = default;
 
@@ -59,23 +61,27 @@ SKR_GUI_API IResource : virtual skr::rttr::IObject {
 };
 
 sreflect_struct(
-    "guid": "f0a63d5a-62ae-44fa-8f8f-6847af623cea"
+    "guid": "f0a63d5a-62ae-44fa-8f8f-6847af623cea",
+    "rtti": true
 )
-SKR_GUI_API ISurface : virtual public IResource {
+SKR_GUI_API ISurface : virtual public IResource{
     SKR_RTTR_GENERATE_BODY()
 };
 
 sreflect_struct(
-    "guid": "41d08a49-c9fe-4ccb-a91d-fd16f946aca1"
+    "guid": "41d08a49-c9fe-4ccb-a91d-fd16f946aca1",
+    "rtti": true
 )
-SKR_GUI_API IMaterial : virtual public ISurface {
+SKR_GUI_API IMaterial : virtual public ISurface{
     SKR_RTTR_GENERATE_BODY()
 };
 
 sreflect_struct(
-    "guid": "6cc1395f-9660-4431-b998-df32d1d363eb"
+    "guid": "6cc1395f-9660-4431-b998-df32d1d363eb",
+    "rtti": true
 )
-SKR_GUI_API IImage : virtual public ISurface {
+SKR_GUI_API IImage : virtual public ISurface
+{
     SKR_RTTR_GENERATE_BODY()
     virtual Sizei       size() const SKR_NOEXCEPT       = 0; // in image pixel
     virtual Rectf       uv_rect() const SKR_NOEXCEPT    = 0; // [0, 1]
@@ -83,9 +89,11 @@ SKR_GUI_API IImage : virtual public ISurface {
 };
 
 sreflect_struct(
-    "guid": "7ae28a98-10f2-44c4-b7aa-b50780435d03"
+    "guid": "7ae28a98-10f2-44c4-b7aa-b50780435d03",
+    "rtti": true
 )
-SKR_GUI_API IUpdatableImage : virtual public IImage {
+SKR_GUI_API IUpdatableImage : virtual public IImage
+{
     SKR_RTTR_GENERATE_BODY()
     virtual void                      update(const UpdatableImageDesc& desc) = 0;
     virtual const UpdatableImageDesc& desc() const SKR_NOEXCEPT              = 0;

@@ -37,9 +37,11 @@ struct InlineType : public std::variant<skr::string, RenderObject*, RenderText*,
 };
 
 sreflect_struct(
-    "guid": "5179c185-bc7f-4f12-9c11-d979fc14e515"
+    "guid": "5179c185-bc7f-4f12-9c11-d979fc14e515",
+    "rtti": true
 )
-SKR_GUI_API RenderText : public RenderBox {
+SKR_GUI_API RenderText : public RenderBox
+{
 public:
     SKR_RTTR_GENERATE_BODY()
     using Super = RenderBox;

@@ -38,9 +38,11 @@ struct IParagraph;
 // Resource/ResourceEntry/ResourceProvider：资源管理服务
 
 sreflect_struct(
-    "guid": "a3c50232-9ff3-4671-a6bd-0af032240a98"
+    "guid": "a3c50232-9ff3-4671-a6bd-0af032240a98",
+    "rtti": true
 )
-SKR_GUI_API IDevice : virtual public skr::rttr::IObject {
+SKR_GUI_API IDevice : virtual public skr::rttr::IObject
+{
     SKR_RTTR_GENERATE_BODY()
     virtual ~IDevice() = default;
 
@@ -58,9 +60,11 @@ SKR_GUI_API IDevice : virtual public skr::rttr::IObject {
 // 对使用方来说，无论如何，都有唯一且确定的 NativeDevice 贯穿整个 APP 的生命周期
 // 使用方需要思考这些问题，并将某些 API 转发到这个全局唯一的 NativeDevice 上，而不是另外处理
 sreflect_struct(
-    "guid": "8ba2ea3e-8a8e-4d88-a7d6-c98552219fc8"
+    "guid": "8ba2ea3e-8a8e-4d88-a7d6-c98552219fc8",
+    "rtti": true
 )
-SKR_GUI_API INativeDevice : public IDevice {
+SKR_GUI_API INativeDevice : public IDevice
+{
     SKR_RTTR_GENERATE_BODY()
 
     // display info

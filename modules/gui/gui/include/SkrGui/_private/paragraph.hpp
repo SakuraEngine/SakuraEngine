@@ -10,15 +10,20 @@ namespace godot
 class TextParagraph;
 }
 
+// 为了过编
+SKR_RTTR_TYPE(godot::TextParagraph, "c15eb17d-0444-42c3-a753-240de4a1443c")
+
 namespace skr sreflect
 {
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "4863f5b6-c952-468d-9460-1a5841f2d8f5"
+    "guid": "4863f5b6-c952-468d-9460-1a5841f2d8f5",
+    "rtti": true
 )
 _EmbeddedParagraph : public godot::TextParagraph,
-                     public IParagraph {
+                     public IParagraph
+{
     SKR_RTTR_GENERATE_BODY()
 
     _EmbeddedParagraph();
@@ -30,7 +35,7 @@ _EmbeddedParagraph : public godot::TextParagraph,
     void  paint(NotNull<PaintingContext*> context, Offsetf offset) override;
 
 private:
-    void _draw(godot::TextServer::TextDrawProxy* proxy, const skr_float2_t& p_pos, const godot::Color& p_color, const godot::Color& p_dc_color);
+    void _draw(godot::TextServer::TextDrawProxy * proxy, const skr_float2_t& p_pos, const godot::Color& p_color, const godot::Color& p_dc_color);
 
 private:
     Array<String> _texts = {}; // TODO. inline

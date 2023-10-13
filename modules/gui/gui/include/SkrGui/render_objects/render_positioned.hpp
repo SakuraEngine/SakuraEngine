@@ -9,9 +9,11 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "50971da8-2439-46c1-adcb-579f270e354d"
+    "guid": "50971da8-2439-46c1-adcb-579f270e354d",
+    "rtti": true
 )
-RenderPositioned : public RenderShiftedBox {
+RenderPositioned : public RenderShiftedBox
+{
     SKR_RTTR_GENERATE_BODY()
     using Super = RenderShiftedBox;
 

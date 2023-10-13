@@ -9,9 +9,11 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid" : "4207334c-617c-4f7c-bf3c-fd2f9e018a9c"
+    "guid" : "4207334c-617c-4f7c-bf3c-fd2f9e018a9c",
+    "rtti": true
 )
-SKR_GUI_API RenderGridPaper : public RenderBox {
+SKR_GUI_API RenderGridPaper : public RenderBox
+{
 public:
     SKR_RTTR_GENERATE_BODY()
     using Super = RenderBox;
