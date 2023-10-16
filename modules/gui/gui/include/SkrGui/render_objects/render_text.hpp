@@ -15,7 +15,7 @@ namespace skr sreflect
 namespace gui sreflect
 {
 struct RenderText;
-struct Paragraph;
+struct IParagraph;
 struct FontFile;
 
 enum class EInlineAlignment : uint32_t
@@ -46,12 +46,21 @@ public:
     SKR_RTTR_GENERATE_BODY()
     using Super = RenderBox;
 
-    RenderText() {}
-    ~RenderText() {}
+    RenderText();
+    ~RenderText();
 
-    void perform_layout() SKR_NOEXCEPT override {}
-    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override {}
+    void perform_layout() SKR_NOEXCEPT override;
+    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override {}
+
+    void          set_text(const string& text);
+    const string& text() const { return _text; }
+
+private:
+    //
+    spush_attr("no-rtti": true)
+    IParagraph* _paragraph = nullptr;
+    String      _text      = {};
 };
 } // namespace gui sreflect
 } // namespace skr sreflect
