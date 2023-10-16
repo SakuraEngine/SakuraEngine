@@ -21,9 +21,11 @@ enum class ERenderObjectLifecycle : uint8_t
 };
 
 sreflect_struct(
-    "guid" : "2f1b78a5-1be9-4799-a3ca-2f2d3b153f29"
+    "guid" : "2f1b78a5-1be9-4799-a3ca-2f2d3b153f29",
+    "rtti" : true
 )
-SKR_GUI_API RenderObject : virtual public skr::rttr::IObject {
+SKR_GUI_API RenderObject : virtual public skr::rttr::IObject
+{
     SKR_RTTR_GENERATE_BODY()
     friend struct PipelineOwner;
     using VisitFuncRef = FunctionRef<void(NotNull<RenderObject*>)>;
@@ -75,14 +77,14 @@ SKR_GUI_API RenderObject : virtual public skr::rttr::IObject {
     // layer composite
     // repaint boundary render object 会持有 layer 来实现局部重绘
     // 部分 repaint boundary render object 会通过 layer 来实现特效，比如毛玻璃，局部透明，复杂蒙版等等
-    virtual NotNull<OffsetLayer*> update_layer(OffsetLayer* old_layer);
+    virtual NotNull<OffsetLayer*> update_layer(OffsetLayer * old_layer);
     inline ContainerLayer*        layer() const SKR_NOEXCEPT { return _layer; }
 
     // transform
     // 用于做坐标点转换，通常用于 hit-test
     virtual bool    paints_child(NotNull<RenderObject*> child) const SKR_NOEXCEPT;
-    virtual void    apply_paint_transform(NotNull<RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT;
-    virtual Matrix4 get_transform_to(RenderObject* ancestor) const SKR_NOEXCEPT;
+    virtual void    apply_paint_transform(NotNull<RenderObject*> child, Matrix4 & transform) const SKR_NOEXCEPT;
+    virtual Matrix4 get_transform_to(RenderObject * ancestor) const SKR_NOEXCEPT;
 
     // TODO
     // invoke_layout_callback：用于在 layout 过程中创建 child，通常用于 Sliver
@@ -98,7 +100,7 @@ SKR_GUI_API RenderObject : virtual public skr::rttr::IObject {
 
     // setter
     inline void set_slot(Slot slot) SKR_NOEXCEPT { _slot = slot; }
-    inline void set_layer(ContainerLayer* layer) SKR_NOEXCEPT { _layer = layer; }
+    inline void set_layer(ContainerLayer * layer) SKR_NOEXCEPT { _layer = layer; }
 
 protected:
     void        _mark_parent_needs_layout() SKR_NOEXCEPT;
