@@ -55,7 +55,7 @@ void _EmbeddedParagraph::build()
 {
     if (_dirty)
     {
-        this->clear();
+        godot::TextParagraph::clear();
 
         for (const auto& text : _texts)
         {
