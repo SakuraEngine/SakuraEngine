@@ -16,6 +16,7 @@ typedef enum ESkrJsonType
     #include "SkrRT/containers/string.hpp"
     #include "SkrRT/containers/hashmap.hpp"
     #include "SkrRT/containers/span.hpp"
+    #include "SkrRT/rttr/rttr_traits.hpp"
 
 // forward declaration for resources
 struct skr_resource_handle_t;
