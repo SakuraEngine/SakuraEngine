@@ -73,20 +73,15 @@ bool RecordType::call_hash(const void* ptr, size_t& result) const
 }
 
 // find base
-bool RecordType::find_base(const Type* type, BaseInfo& result) const
+void* RecordType::cast_to(const Type* target_type, void* p_self) const
 {
-    // TODO. 构建一张展平表来优化查找
-    if (type == this)
+    if (target_type == this)
     {
-        result.type = const_cast<RecordType*>(this);
-        result.offset += 0;
-        return true;
+        return p_self;
     }
-    else if (auto find_result = _base_types_map.find(type->type_id()))
+    else if (auto find_result = _base_types_map.find(target_type->type_id()))
     {
-        result.type = find_result->value.type;
-        result.offset += find_result->value.offset;
-        return true;
+        return find_result->value.cast_func(p_self);
     }
     else
     {
@@ -95,13 +90,10 @@ bool RecordType::find_base(const Type* type, BaseInfo& result) const
             const Type* type = pair.value.type;
             if (type->type_category() == ETypeCategory::SKR_TYPE_CATEGORY_RECORD)
             {
-                auto old_offset = result.offset;
-                result.offset += pair.value.offset;
-                if (static_cast<const RecordType*>(type)->find_base(type, result))
+                if (auto cast_p = static_cast<const RecordType*>(type)->cast_to(target_type, pair.value.cast_func(p_self)))
                 {
-                    return true;
+                    return cast_p;
                 }
-                result.offset = old_offset;
             }
             else
             {
@@ -109,7 +101,7 @@ bool RecordType::find_base(const Type* type, BaseInfo& result) const
             }
         }
     }
-    return false;
+    return nullptr;
 }
 
 } // namespace skr::rttr

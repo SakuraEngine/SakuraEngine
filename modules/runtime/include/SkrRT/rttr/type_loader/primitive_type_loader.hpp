@@ -6,11 +6,12 @@ namespace skr::rttr
 {
 template <typename T>
 struct PrimitiveTypeLoader final : public TypeLoader {
-    Type* load() override
+    Type* create() override
     {
         Type* type = SkrNew<PrimitiveType<T>>();
         return type;
     }
+    void load(Type* type) override {}
     void destroy(Type* type) override
     {
         SkrDelete(type);

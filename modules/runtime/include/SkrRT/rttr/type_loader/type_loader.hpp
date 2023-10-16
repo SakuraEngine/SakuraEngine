@@ -8,7 +8,9 @@ struct Type;
 struct TypeLoader {
     virtual ~TypeLoader() = default;
 
-    virtual Type* load()              = 0;
+    // 这里的二段式加载是为了解决 RecordType 对自身循环依赖的问题
+    virtual Type* create()            = 0;
+    virtual void  load(Type* type)    = 0;
     virtual void  destroy(Type* type) = 0;
 };
 } // namespace skr::rttr

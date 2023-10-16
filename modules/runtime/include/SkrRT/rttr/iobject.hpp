@@ -17,16 +17,8 @@ struct SKR_RUNTIME_API IObject {
     template <typename TO>
     inline TO* type_cast()
     {
-        BaseInfo result;
-        if (get_record_type()->find_base(RTTRTraits<TO>::get_type(), result))
-        {
-            uint8_t* p_head = reinterpret_cast<uint8_t*>(get_head_ptr());
-            return reinterpret_cast<TO*>(p_head + result.offset);
-        }
-        else
-        {
-            return nullptr;
-        }
+        void* cast_p = get_record_type()->cast_to(RTTRTraits<TO>::get_type(), get_head_ptr());
+        return reinterpret_cast<TO*>(cast_p);
     }
     template <typename TO>
     inline const TO* type_cast() const
@@ -44,8 +36,7 @@ struct SKR_RUNTIME_API IObject {
     }
     inline bool type_is(const GUID& guid) const
     {
-        BaseInfo result;
-        return get_record_type()->find_base(skr::rttr::get_type_from_guid(guid), result);
+        return get_record_type()->cast_to(skr::rttr::get_type_from_guid(guid), get_head_ptr()) != nullptr;
     }
     inline GUID type_id() const
     {

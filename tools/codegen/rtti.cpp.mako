@@ -287,23 +287,27 @@ SKR_RTTR_EXEC_STATIC
         %>
     static struct InternalTypeLoader_${record.id} : public TypeLoader
     {
-        Type* load() override 
-        {
-            using namespace skr;
-            using namespace skr::rttr;
-
-            RecordType* result = SkrNew<RecordType>(
+        Type* create() override {
+            return SkrNew<RecordType>(
                 RTTRTraits<::${record.name}>::get_name(),
                 RTTRTraits<::${record.name}>::get_guid(),
                 sizeof(${record.name}),
                 alignof(${record.name}),
                 make_record_basic_method_table<${record.name}>()
             );
+        }
+
+        void load(Type* type) override 
+        {
+            using namespace skr;
+            using namespace skr::rttr;
+
+            RecordType* result = static_cast<RecordType*>(type);
 
         %if bases:
             result->set_base_types({
             %for base in bases:
-                {RTTRTraits<${base}>::get_guid(), {RTTRTraits<${base}>::get_type(), get_cast_offset<${record.name}, ${base}>()}},
+                {RTTRTraits<${base}>::get_guid(), {RTTRTraits<${base}>::get_type(), +[](void* p) -> void* { return static_cast<${base}*>(reinterpret_cast<${record.name}*>(p)); }}},
             %endfor
             });
         %endif
@@ -364,8 +368,6 @@ SKR_RTTR_EXEC_STATIC
             %endfor
             });
         %endif
-
-            return result;
         }
         void destroy(Type* type) override
         {
