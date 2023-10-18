@@ -17,6 +17,21 @@ enum ETypeCategory
     SKR_TYPE_CATEGORY_GENERIC,
 };
 
+enum class ETypeFeature : uint32_t
+{
+    Constructor,
+    Destructor,
+    Copy,
+    Move,
+    Assign,
+    MoveAssign,
+    Hash,
+    WriteBinary,
+    ReadBinary,
+    WriteJson,
+    ReadJson
+};
+
 struct SKR_RUNTIME_API Type {
     Type(ETypeCategory type_category, string name, GUID type_id, size_t size, size_t alignment);
     virtual ~Type() = default;
@@ -27,6 +42,9 @@ struct SKR_RUNTIME_API Type {
     SKR_INLINE GUID          type_id() const { return _type_id; }
     SKR_INLINE size_t        size() const { return _size; }
     SKR_INLINE size_t        alignment() const { return _alignment; }
+
+    // feature query
+    virtual bool query_feature(ETypeFeature feature) const = 0;
 
     // call functions
     virtual bool call_ctor(void* ptr) const                       = 0;

@@ -9,6 +9,36 @@ RecordType::RecordType(string name, GUID type_id, size_t size, size_t alignment,
 {
 }
 
+bool RecordType::query_feature(ETypeFeature feature) const
+{
+    switch (feature)
+    {
+        case ETypeFeature::Constructor:
+            return _basic_methods.ctor != nullptr;
+        case ETypeFeature::Destructor:
+            return _basic_methods.dtor != nullptr;
+        case ETypeFeature::Copy:
+            return _basic_methods.copy != nullptr;
+        case ETypeFeature::Move:
+            return _basic_methods.move != nullptr;
+        case ETypeFeature::Assign:
+            return _basic_methods.assign != nullptr;
+        case ETypeFeature::MoveAssign:
+            return _basic_methods.move_assign != nullptr;
+        case ETypeFeature::Hash:
+            return _basic_methods.hash != nullptr;
+        case ETypeFeature::WriteBinary:
+            return _basic_methods.write_binary != nullptr;
+        case ETypeFeature::ReadBinary:
+            return _basic_methods.read_binary != nullptr;
+        case ETypeFeature::WriteJson:
+            return _basic_methods.write_json != nullptr;
+        case ETypeFeature::ReadJson:
+            return _basic_methods.read_json != nullptr;
+    }
+    return false;
+}
+
 bool RecordType::call_ctor(void* ptr) const
 {
     if (_basic_methods.ctor)

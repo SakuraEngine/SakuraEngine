@@ -6,6 +6,8 @@ namespace skr::rttr
 struct SKR_RUNTIME_API ReferenceType : public GenericType {
     ReferenceType(Type* target_type, string name);
 
+    bool query_feature(ETypeFeature feature) const override;
+
     bool call_ctor(void* ptr) const override;
     bool call_dtor(void* ptr) const override;
     bool call_copy(void* dst, const void* src) const override;
