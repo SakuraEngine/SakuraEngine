@@ -31,13 +31,13 @@ struct Method {
 };
 
 struct RecordBasicMethodTable {
-    void (*ctor)(void* self)                      = nullptr;
-    void (*dtor)(void* self)                      = nullptr;
-    void (*copy)(void* dst, const void* src)      = nullptr;
-    void (*move)(void* dst, void* src)            = nullptr;
-    void (*assign)(void* dst, const void* src)    = nullptr;
-    void (*move_assign)(void* dst, void* src)     = nullptr;
-    void (*hash)(const void* ptr, size_t& result) = nullptr;
+    void   (*ctor)(void* self)                   = nullptr;
+    void   (*dtor)(void* self)                   = nullptr;
+    void   (*copy)(void* dst, const void* src)   = nullptr;
+    void   (*move)(void* dst, void* src)         = nullptr;
+    void   (*assign)(void* dst, const void* src) = nullptr;
+    void   (*move_assign)(void* dst, void* src)  = nullptr;
+    size_t (*hash)(const void* ptr)              = nullptr;
 
     int                   (*write_binary)(const void* dst, skr_binary_writer_t* writer) = nullptr;
     int                   (*read_binary)(void* dst, skr_binary_reader_t* reader)        = nullptr;
@@ -50,31 +50,45 @@ SKR_INLINE RecordBasicMethodTable make_record_basic_method_table()
     RecordBasicMethodTable table = {};
     if constexpr (std::is_default_constructible_v<T>)
     {
-        table.ctor = +[](void* self) { new (self) T(); };
+        table.ctor = +[](void* self) {
+            new (self) T();
+        };
     }
     if constexpr (std::is_destructible_v<T>)
     {
-        table.dtor = +[](void* self) { ((T*)self)->~T(); };
+        table.dtor = +[](void* self) {
+            ((T*)self)->~T();
+        };
     }
     if constexpr (std::is_copy_constructible_v<T>)
     {
-        table.copy = +[](void* dst, const void* src) { new (dst) T(*(T*)src); };
+        table.copy = +[](void* dst, const void* src) {
+            new (dst) T(*(T*)src);
+        };
     }
     if constexpr (std::is_move_constructible_v<T>)
     {
-        table.move = +[](void* dst, void* src) { new (dst) T(std::move(*(T*)src)); };
+        table.move = +[](void* dst, void* src) {
+            new (dst) T(std::move(*(T*)src));
+        };
     }
     if constexpr (std::is_copy_assignable_v<T>)
     {
-        table.assign = +[](void* dst, const void* src) { *(T*)dst = *(T*)src; };
+        table.assign = +[](void* dst, const void* src) {
+            *(T*)dst = *(T*)src;
+        };
     }
     if constexpr (std::is_move_assignable_v<T>)
     {
-        table.move_assign = +[](void* dst, void* src) { *(T*)dst = std::move(*(T*)src); };
+        table.move_assign = +[](void* dst, void* src) {
+            *(T*)dst = std::move(*(T*)src);
+        };
     }
     if constexpr (skr_hashable_v<T>)
     {
-        table.hash = +[](const void* ptr, size_t& result) { result = Hash<T>()(*(const T*)ptr); };
+        table.hash = +[](const void* ptr) {
+            return Hash<T>()(*(const T*)ptr);
+        };
     }
 
     if constexpr (skr::is_complete_serde<skr::binary::WriteTrait<T>>())
@@ -110,13 +124,13 @@ struct SKR_RUNTIME_API RecordType : public Type {
 
     bool query_feature(ETypeFeature feature) const override;
 
-    bool call_ctor(void* ptr) const override;
-    bool call_dtor(void* ptr) const override;
-    bool call_copy(void* dst, const void* src) const override;
-    bool call_move(void* dst, void* src) const override;
-    bool call_assign(void* dst, const void* src) const override;
-    bool call_move_assign(void* dst, void* src) const override;
-    bool call_hash(const void* ptr, size_t& result) const override;
+    void   call_ctor(void* ptr) const override;
+    void   call_dtor(void* ptr) const override;
+    void   call_copy(void* dst, const void* src) const override;
+    void   call_move(void* dst, void* src) const override;
+    void   call_assign(void* dst, const void* src) const override;
+    void   call_move_assign(void* dst, void* src) const override;
+    size_t call_hash(const void* ptr) const override;
 
     int                   write_binary(const void* dst, skr_binary_writer_t* writer) const override;
     int                   read_binary(void* dst, skr_binary_reader_t* reader) const override;

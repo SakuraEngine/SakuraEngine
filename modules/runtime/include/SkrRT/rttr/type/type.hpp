@@ -47,21 +47,19 @@ struct SKR_RUNTIME_API Type {
     virtual bool query_feature(ETypeFeature feature) const = 0;
 
     // call functions
-    virtual bool call_ctor(void* ptr) const                       = 0;
-    virtual bool call_dtor(void* ptr) const                       = 0;
-    virtual bool call_copy(void* dst, const void* src) const      = 0;
-    virtual bool call_move(void* dst, void* src) const            = 0;
-    virtual bool call_assign(void* dst, const void* src) const    = 0;
-    virtual bool call_move_assign(void* dst, void* src) const     = 0;
-    virtual bool call_hash(const void* ptr, size_t& result) const = 0;
+    virtual void   call_ctor(void* ptr) const                    = 0;
+    virtual void   call_dtor(void* ptr) const                    = 0;
+    virtual void   call_copy(void* dst, const void* src) const   = 0;
+    virtual void   call_move(void* dst, void* src) const         = 0;
+    virtual void   call_assign(void* dst, const void* src) const = 0;
+    virtual void   call_move_assign(void* dst, void* src) const  = 0;
+    virtual size_t call_hash(const void* ptr) const              = 0;
 
     // serialize
     virtual int                   write_binary(const void* dst, skr_binary_writer_t* writer) const = 0;
     virtual int                   read_binary(void* dst, skr_binary_reader_t* reader) const        = 0;
     virtual void                  write_json(const void* dst, skr_json_writer_t* writer) const     = 0;
     virtual skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const          = 0;
-
-    // TODO. convert
 
 private:
     // basic data

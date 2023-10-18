@@ -8,13 +8,13 @@ struct SKR_RUNTIME_API ReferenceType : public GenericType {
 
     bool query_feature(ETypeFeature feature) const override;
 
-    bool call_ctor(void* ptr) const override;
-    bool call_dtor(void* ptr) const override;
-    bool call_copy(void* dst, const void* src) const override;
-    bool call_move(void* dst, void* src) const override;
-    bool call_assign(void* dst, const void* src) const override;
-    bool call_move_assign(void* dst, void* src) const override;
-    bool call_hash(const void* ptr, size_t& result) const override;
+    void   call_ctor(void* ptr) const override;
+    void   call_dtor(void* ptr) const override;
+    void   call_copy(void* dst, const void* src) const override;
+    void   call_move(void* dst, void* src) const override;
+    void   call_assign(void* dst, const void* src) const override;
+    void   call_move_assign(void* dst, void* src) const override;
+    size_t call_hash(const void* ptr) const override;
 
     inline Type* target_type() const { return _target_type; }
 

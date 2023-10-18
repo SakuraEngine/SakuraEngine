@@ -237,7 +237,7 @@ struct EnumValue {
 
     // validate
     SKR_INLINE bool is_valid() const { return _underlying_type != EEnumUnderlyingType::INVALID; }
-    SKR_INLINE operator bool() const { return is_valid(); }
+    SKR_INLINE      operator bool() const { return is_valid(); }
 
 private:
     EEnumUnderlyingType _underlying_type;
@@ -259,13 +259,13 @@ struct SKR_RUNTIME_API EnumType : public Type {
 
     SKR_INLINE Type* underlying_type() const { return _underlying_type; }
 
-    bool call_ctor(void* ptr) const override;
-    bool call_dtor(void* ptr) const override;
-    bool call_copy(void* dst, const void* src) const override;
-    bool call_move(void* dst, void* src) const override;
-    bool call_assign(void* dst, const void* src) const override;
-    bool call_move_assign(void* dst, void* src) const override;
-    bool call_hash(const void* ptr, size_t& result) const override;
+    void   call_ctor(void* ptr) const override;
+    void   call_dtor(void* ptr) const override;
+    void   call_copy(void* dst, const void* src) const override;
+    void   call_move(void* dst, void* src) const override;
+    void   call_assign(void* dst, const void* src) const override;
+    void   call_move_assign(void* dst, void* src) const override;
+    size_t call_hash(const void* ptr) const override;
 
     virtual EnumValue value_from_string(string_view str) const      = 0;
     virtual string    value_to_string(const EnumValue& value) const = 0;

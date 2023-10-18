@@ -28,34 +28,34 @@ bool PointerType::query_feature(ETypeFeature feature) const
     }
 }
 
-bool PointerType::call_ctor(void* ptr) const { return true; }
-bool PointerType::call_dtor(void* ptr) const { return true; }
-bool PointerType::call_copy(void* dst, const void* src) const
+void PointerType::call_ctor(void* ptr) const
+{
+}
+void PointerType::call_dtor(void* ptr) const
+{
+}
+void PointerType::call_copy(void* dst, const void* src) const
 {
     *reinterpret_cast<void**>(dst) = *reinterpret_cast<void* const*>(src);
-    return true;
 }
-bool PointerType::call_move(void* dst, void* src) const
+void PointerType::call_move(void* dst, void* src) const
 {
     *reinterpret_cast<void**>(dst) = *reinterpret_cast<void**>(src);
-    return true;
 }
-bool PointerType::call_assign(void* dst, const void* src) const
+void PointerType::call_assign(void* dst, const void* src) const
 {
     *reinterpret_cast<void**>(dst) = *reinterpret_cast<void* const*>(src);
-    return true;
 }
-bool PointerType::call_move_assign(void* dst, void* src) const
+void PointerType::call_move_assign(void* dst, void* src) const
 {
     *reinterpret_cast<void**>(dst) = *reinterpret_cast<void**>(src);
-    return true;
 }
-bool PointerType::call_hash(const void* ptr, size_t& result) const
+size_t PointerType::call_hash(const void* ptr) const
 {
-    result = reinterpret_cast<size_t>(*reinterpret_cast<void* const*>(ptr));
-    return true;
+    return reinterpret_cast<size_t>(*reinterpret_cast<void* const*>(ptr));
 }
 
+// TODO. 考虑多态序列化，等多态序列化的方式敲定之后再实现
 int PointerType::write_binary(const void* dst, skr_binary_writer_t* writer) const
 {
     SKR_UNIMPLEMENTED_FUNCTION();
