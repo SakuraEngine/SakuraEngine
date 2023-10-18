@@ -38,6 +38,11 @@ struct RecordBasicMethodTable {
     void (*assign)(void* dst, const void* src)    = nullptr;
     void (*move_assign)(void* dst, void* src)     = nullptr;
     void (*hash)(const void* ptr, size_t& result) = nullptr;
+
+    int                   (*write_binary)(const void* dst, skr_binary_writer_t* writer) = nullptr;
+    int                   (*read_binary)(void* dst, skr_binary_reader_t* reader)        = nullptr;
+    void                  (*write_json)(const void* dst, skr_json_writer_t* writer)     = nullptr;
+    skr::json::error_code (*read_json)(void* dst, skr::json::value_t&& reader)          = nullptr;
 };
 template <typename T>
 SKR_INLINE RecordBasicMethodTable make_record_basic_method_table()
@@ -72,6 +77,31 @@ SKR_INLINE RecordBasicMethodTable make_record_basic_method_table()
         table.hash = +[](const void* ptr, size_t& result) { result = Hash<T>()(*(const T*)ptr); };
     }
 
+    if constexpr (skr::is_complete_serde<skr::binary::WriteTrait<T>>())
+    {
+        table.write_binary = +[](const void* dst, skr_binary_writer_t* writer) {
+            return skr::binary::WriteTrait<T>::Write(writer, *(const T*)dst);
+        };
+    }
+    if constexpr (skr::is_complete_serde<skr::binary::ReadTrait<T>>())
+    {
+        table.read_binary = +[](void* dst, skr_binary_reader_t* reader) {
+            return skr::binary::ReadTrait<T>::Read(reader, *(T*)dst);
+        };
+    }
+    if constexpr (skr::is_complete_serde<skr::json::WriteTrait<T>>())
+    {
+        table.write_json = +[](const void* dst, skr_json_writer_t* writer) {
+            skr::json::WriteTrait<T>::Write(writer, *(const T*)dst);
+        };
+    }
+    if constexpr (skr::is_complete_serde<skr::json::ReadTrait<T>>())
+    {
+        table.read_json = +[](void* dst, skr::json::value_t&& reader) {
+            return skr::json::ReadTrait<T>::Read(std::forward<skr::json::value_t>(reader), *(T*)dst);
+        };
+    }
+
     return table;
 }
 
@@ -85,6 +115,11 @@ struct SKR_RUNTIME_API RecordType : public Type {
     bool call_assign(void* dst, const void* src) const override;
     bool call_move_assign(void* dst, void* src) const override;
     bool call_hash(const void* ptr, size_t& result) const override;
+
+    int                   write_binary(const void* dst, skr_binary_writer_t* writer) const override;
+    int                   read_binary(void* dst, skr_binary_reader_t* reader) const override;
+    void                  write_json(const void* dst, skr_json_writer_t* writer) const override;
+    skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const override;
 
     // setup
     SKR_INLINE void set_base_types(UMap<GUID, BaseInfo> base_types) { _base_types_map = std::move(base_types); }

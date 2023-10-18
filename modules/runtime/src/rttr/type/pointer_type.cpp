@@ -35,4 +35,24 @@ bool PointerType::call_hash(const void* ptr, size_t& result) const
     result = reinterpret_cast<size_t>(*reinterpret_cast<void* const*>(ptr));
     return true;
 }
+
+int PointerType::write_binary(const void* dst, skr_binary_writer_t* writer) const
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return 0;
+}
+int PointerType::read_binary(void* dst, skr_binary_reader_t* reader) const
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return 0;
+}
+void PointerType::write_json(const void* dst, skr_json_writer_t* writer) const
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+skr::json::error_code PointerType::read_json(void* dst, skr::json::value_t&& reader) const
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return skr::json::error_code::SUCCESS;
+}
 } // namespace skr::rttr
