@@ -1,4 +1,3 @@
-// TODO. move this file to SkrBase
 #pragma once
 #include "SkrRT/platform/guid.hpp"
 

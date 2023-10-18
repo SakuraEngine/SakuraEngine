@@ -39,68 +39,90 @@ bool RecordType::query_feature(ETypeFeature feature) const
     return false;
 }
 
-bool RecordType::call_ctor(void* ptr) const
+void RecordType::call_ctor(void* ptr) const
 {
     if (_basic_methods.ctor)
     {
         _basic_methods.ctor(ptr);
-        return true;
     }
-    return false;
+    else
+    {
+        SKR_LOG_ERROR(u8"[RTTR] type %s has no ctor method, before call this function, please check the type feature by query_feature().", name().c_str());
+        SKR_UNREACHABLE_CODE();
+    }
 }
-bool RecordType::call_dtor(void* ptr) const
+void RecordType::call_dtor(void* ptr) const
 {
     if (_basic_methods.dtor)
     {
         _basic_methods.dtor(ptr);
-        return true;
     }
-    return false;
+    else
+    {
+        SKR_LOG_ERROR(u8"[RTTR] type %s has no dtor method, before call this function, please check the type feature by query_feature().", name().c_str());
+        SKR_UNREACHABLE_CODE();
+    }
 }
-bool RecordType::call_copy(void* dst, const void* src) const
+void RecordType::call_copy(void* dst, const void* src) const
 {
     if (_basic_methods.copy)
     {
         _basic_methods.copy(dst, src);
-        return true;
     }
-    return false;
+    else
+    {
+        SKR_LOG_ERROR(u8"[RTTR] type %s has no copy method, before call this function, please check the type feature by query_feature().", name().c_str());
+        SKR_UNREACHABLE_CODE();
+    }
 }
-bool RecordType::call_move(void* dst, void* src) const
+void RecordType::call_move(void* dst, void* src) const
 {
     if (_basic_methods.move)
     {
         _basic_methods.move(dst, src);
-        return true;
     }
-    return false;
+    else
+    {
+        SKR_LOG_ERROR(u8"[RTTR] type %s has no move method, before call this function, please check the type feature by query_feature().", name().c_str());
+        SKR_UNREACHABLE_CODE();
+    }
 }
-bool RecordType::call_assign(void* dst, const void* src) const
+void RecordType::call_assign(void* dst, const void* src) const
 {
     if (_basic_methods.assign)
     {
         _basic_methods.assign(dst, src);
-        return true;
     }
-    return false;
+    else
+    {
+        SKR_LOG_ERROR(u8"[RTTR] type %s has no assign method, before call this function, please check the type feature by query_feature().", name().c_str());
+        SKR_UNREACHABLE_CODE();
+    }
 }
-bool RecordType::call_move_assign(void* dst, void* src) const
+void RecordType::call_move_assign(void* dst, void* src) const
 {
     if (_basic_methods.move_assign)
     {
         _basic_methods.move_assign(dst, src);
-        return true;
     }
-    return false;
+    else
+    {
+        SKR_LOG_ERROR(u8"[RTTR] type %s has no move_assign method, before call this function, please check the type feature by query_feature().", name().c_str());
+        SKR_UNREACHABLE_CODE();
+    }
 }
-bool RecordType::call_hash(const void* ptr, size_t& result) const
+size_t RecordType::call_hash(const void* ptr) const
 {
     if (_basic_methods.hash)
     {
-        _basic_methods.hash(ptr, result);
-        return true;
+        return _basic_methods.hash(ptr);
     }
-    return false;
+    else
+    {
+        SKR_LOG_ERROR(u8"[RTTR] type %s has no hash method, before call this function, please check the type feature by query_feature().", name().c_str());
+        SKR_UNREACHABLE_CODE();
+        return 0;
+    }
 }
 
 // find base
@@ -143,7 +165,8 @@ int RecordType::write_binary(const void* dst, skr_binary_writer_t* writer) const
     }
     else
     {
-        SKR_LOG_ERROR(u8"RecordType::write_binary: type {} has no write_binary method", name().c_str());
+        SKR_LOG_ERROR(u8"[RTTR] type %s has no write_binary method, before call this function, please check the type feature by query_feature().", name().c_str());
+        SKR_UNREACHABLE_CODE();
     }
     return 0;
 }
@@ -155,7 +178,8 @@ int RecordType::read_binary(void* dst, skr_binary_reader_t* reader) const
     }
     else
     {
-        SKR_LOG_ERROR(u8"RecordType::read_binary: type {} has no read_binary method", name().c_str());
+        SKR_LOG_ERROR(u8"[RTTR] type %s has no read_binary method, before call this function, please check the type feature by query_feature().", name().c_str());
+        SKR_UNREACHABLE_CODE();
     }
     return 0;
 }
@@ -167,7 +191,8 @@ void RecordType::write_json(const void* dst, skr_json_writer_t* writer) const
     }
     else
     {
-        SKR_LOG_ERROR(u8"RecordType::write_json: type {} has no write_json method", name().c_str());
+        SKR_LOG_ERROR(u8"[RTTR] type %s has no write_json method, before call this function, please check the type feature by query_feature().", name().c_str());
+        SKR_UNREACHABLE_CODE();
     }
 }
 skr::json::error_code RecordType::read_json(void* dst, skr::json::value_t&& reader) const
@@ -178,7 +203,8 @@ skr::json::error_code RecordType::read_json(void* dst, skr::json::value_t&& read
     }
     else
     {
-        SKR_LOG_ERROR(u8"RecordType::read_json: type {} has no read_json method", name().c_str());
+        SKR_LOG_ERROR(u8"[RTTR] type %s has no read_json method, before call this function, please check the type feature by query_feature().", name().c_str());
+        SKR_UNREACHABLE_CODE();
     }
     return skr::json::error_code::SUCCESS;
 }
