@@ -70,7 +70,7 @@ void _EmbeddedParagraph::build()
 }
 void _EmbeddedParagraph::add_text(const String& text, const TextStyle& style)
 {
-    _texts.push_back(text);
+    _texts.add(text);
     _dirty = true;
 }
 Sizef _EmbeddedParagraph::layout(BoxConstraints constraints)

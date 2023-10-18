@@ -39,7 +39,7 @@ struct ChildBuilder {
         f(*widget);
         widget->post_construct();
 
-        child_list.emplace_back(widget);
+        child_list.add(widget);
     }
 };
 

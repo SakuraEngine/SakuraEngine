@@ -29,7 +29,7 @@ void SkrNativeDevice::init()
         skr_monitor_get_extent(monitor, &width, &height);
         skr_monitor_get_position(monitor, &x, &y);
 
-        auto out = _display_metrics.monitors.emplace_back();
+        auto out = *_display_metrics.monitors.add_default();
 
         // name
         // device_id
@@ -65,17 +65,13 @@ void SkrNativeDevice::shutdown()
 NotNull<IWindow*> SkrNativeDevice::create_window()
 {
     auto view = SkrNew<SkrNativeWindow>(this);
-    _all_windows.push_back(view);
+    _all_windows.add(view);
     return make_not_null(view);
 }
 void SkrNativeDevice::destroy_window(NotNull<IWindow*> view)
 {
     // erase it
-    auto it = std::find(_all_windows.begin(), _all_windows.end(), view);
-    if (it != _all_windows.end())
-    {
-        _all_windows.erase(it);
-    }
+    _all_windows.remove(view);
 
     // delete
     SkrDelete(view.get());
@@ -94,11 +90,11 @@ void SkrNativeDevice::render_all_windows() SKR_NOEXCEPT
     // commit render graph
     render_graph->compile();
     auto frame_index = render_device()->render_graph()->execute();
-    
+
     // TODO: 更优雅地回收垃圾
     if (frame_index >= RG_MAX_FRAME_IN_FLIGHT * 10)
         render_graph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT * 10);
-            
+
     // present
     for (auto window : _all_windows)
     {

@@ -314,6 +314,31 @@ struct RTTRTraits<T[N1][N2][N3]> {
 
 } // namespace skr::rttr
 
+// TODO. skr container
+namespace skr::rttr
+{
+template <typename T>
+struct RTTRTraits<skr::Array<T>> {
+    inline static constexpr size_t type_desc_size = 1;
+    inline static void             write_type_desc(TypeDesc* desc)
+    {
+    }
+
+    inline static string_view get_name()
+    {
+        return u8"Vector";
+    }
+    inline static GUID get_guid()
+    {
+        return {};
+    }
+    inline static Type* get_type()
+    {
+        return nullptr;
+    }
+};
+} // namespace skr::rttr
+
 // skr types
 // TODO. remove it
 SKR_RTTR_TYPE(skr_guid_t, "80EE37B7-E9C0-40E6-BF2F-51E12053A7A9");
