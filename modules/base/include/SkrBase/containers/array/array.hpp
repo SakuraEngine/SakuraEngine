@@ -43,7 +43,7 @@ struct Array {
     SizeType     size() const;
     SizeType     capacity() const;
     SizeType     slack() const;
-    bool         empty();
+    bool         empty() const;
     T*           data();
     const T*     data() const;
     Alloc&       allocator();
@@ -390,7 +390,7 @@ SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::capacity() const 
 template <typename T, typename Alloc>
 SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::slack() const { return _capacity - _size; }
 template <typename T, typename Alloc>
-SKR_INLINE bool Array<T, Alloc>::empty() { return _size == 0; }
+SKR_INLINE bool Array<T, Alloc>::empty() const { return _size == 0; }
 template <typename T, typename Alloc>
 SKR_INLINE T* Array<T, Alloc>::data() { return _data; }
 template <typename T, typename Alloc>

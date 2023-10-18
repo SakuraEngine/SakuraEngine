@@ -20,11 +20,13 @@
 #include "SkrRT/misc/types.h"
 
 // skr containers
+#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/umap.hpp"
+#include "SkrRT/containers_new/uset.hpp"
+
 #include "SkrRT/containers/lite.hpp"
 #include "SkrRT/containers/span.hpp"
-#include "SkrRT/containers/vector.hpp"
 #include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/sptr.hpp"
 
 // function ref
@@ -76,10 +78,10 @@ using Span = skr::lite::LiteSpan<T>;
 using String     = skr::string;
 using StringView = skr::string_view;
 template <typename T>
-using Array = skr::vector<T>;
+using Array = skr::Array<T>;
 template <typename K, typename V>
-using Map = skr::flat_hash_map<K, V>;
+using Map = skr::UMap<K, V>;
 template <typename T>
-using Set = skr::flat_hash_set<T>;
+using Set = skr::USet<T>;
 
 } // namespace skr::gui

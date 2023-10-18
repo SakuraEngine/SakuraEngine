@@ -60,7 +60,7 @@ struct MultiChildRenderObjectMixin {
     }
     inline void add_child(TSelf& self, NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
     {
-        _children.emplace_back(slot, child->type_cast_fast<TChild>());
+        _children.emplace(slot, child->type_cast_fast<TChild>());
         _need_flush_updates = true;
     }
     inline void remove_child(TSelf& self, NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
@@ -86,7 +86,7 @@ struct MultiChildRenderObjectMixin {
             {
                 if (!_children[i].child)
                 {
-                    _remove_at_swap(i);
+                    _children.remove_at_swap(i);
                 }
                 else
                 {
@@ -109,11 +109,6 @@ struct MultiChildRenderObjectMixin {
         _need_flush_updates = false;
     }
 
-    inline void _remove_at_swap(size_t pos)
-    {
-        _children[pos] = _children.back();
-        _children.pop_back();
-    }
     inline void _sort_slots()
     {
         std::sort(_children.begin(), _children.end(), [](const auto& lhs, const auto& rhs) {

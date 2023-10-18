@@ -12,11 +12,11 @@ PipelineOwner::PipelineOwner(INativeDevice* native_device) SKR_NOEXCEPT
 // schedule
 void PipelineOwner::schedule_layout_for(NotNull<RenderObject*> node) SKR_NOEXCEPT
 {
-    _nodes_needing_layout.emplace_back(node);
+    _nodes_needing_layout.add(node);
 }
 void PipelineOwner::schedule_paint_for(NotNull<RenderObject*> node) SKR_NOEXCEPT
 {
-    _nodes_needing_paint.emplace_back(node);
+    _nodes_needing_paint.add(node);
 }
 
 // flush
