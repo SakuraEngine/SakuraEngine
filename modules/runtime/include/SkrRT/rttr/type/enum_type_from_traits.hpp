@@ -12,6 +12,11 @@ struct EnumTypeFromTraits : public EnumType {
     {
     }
 
+    bool query_feature(ETypeFeature feature) const override
+    {
+        return true;
+    }
+
     EnumValue value_from_string(string_view str) const override
     {
         T result;
@@ -45,8 +50,7 @@ struct EnumTypeFromTraits : public EnumType {
         }
         else
         {
-            SKR_LOG_ERROR(u8"Type {} is not binary writable", name().c_str());
-            return 0;
+            return underlying_type()->write_binary(dst, writer);
         }
     }
     int read_binary(void* dst, skr_binary_reader_t* reader) const override
@@ -57,8 +61,7 @@ struct EnumTypeFromTraits : public EnumType {
         }
         else
         {
-            SKR_LOG_ERROR(u8"Type {} is not binary readable", name().c_str());
-            return 0;
+            return underlying_type()->read_binary(dst, reader);
         }
     }
     void write_json(const void* dst, skr_json_writer_t* writer) const override
@@ -69,7 +72,7 @@ struct EnumTypeFromTraits : public EnumType {
         }
         else
         {
-            SKR_LOG_ERROR(u8"Type {} is not json writable", name().c_str());
+            underlying_type()->write_json(dst, writer);
         }
     }
     skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const override
@@ -80,8 +83,7 @@ struct EnumTypeFromTraits : public EnumType {
         }
         else
         {
-            SKR_LOG_ERROR(u8"Type {} is not json readable", name().c_str());
-            return skr::json::error_code::SUCCESS;
+            return underlying_type()->read_json(dst, std::move(reader));
         }
     }
 };

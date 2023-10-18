@@ -20,6 +20,11 @@ ArrayType::ArrayType(Type* target_type, Span<size_t> dimensions, string name)
 {
 }
 
+bool ArrayType::query_feature(ETypeFeature feature) const
+{
+    return _target_type->query_feature(feature);
+}
+
 bool ArrayType::call_ctor(void* ptr) const
 {
     SKR_UNIMPLEMENTED_FUNCTION();

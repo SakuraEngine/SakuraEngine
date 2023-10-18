@@ -8,6 +8,8 @@ namespace skr::rttr
 struct SKR_RUNTIME_API ArrayType : public GenericType {
     ArrayType(Type* target_type, Span<size_t> dimensions, string name);
 
+    bool query_feature(ETypeFeature feature) const override;
+
     bool call_ctor(void* ptr) const override;
     bool call_dtor(void* ptr) const override;
     bool call_copy(void* dst, const void* src) const override;

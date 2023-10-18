@@ -15,6 +15,11 @@ struct PrimitiveType final : public Type {
     {
     }
 
+    bool query_feature(ETypeFeature feature) const override
+    {
+        return true;
+    }
+
     bool call_ctor(void* ptr) const override { return true; }
     bool call_dtor(void* ptr) const override { return true; }
     bool call_copy(void* dst, const void* src) const override
@@ -66,6 +71,11 @@ struct PrimitiveType<void> final : public Type {
     PrimitiveType()
         : Type(ETypeCategory::SKR_TYPE_CATEGORY_PRIMITIVE, RTTRTraits<void>::get_name(), RTTRTraits<void>::get_guid(), 1, 1)
     {
+    }
+
+    bool query_feature(ETypeFeature feature) const override
+    {
+        return false;
     }
 
     bool call_ctor(void* ptr) const override { return true; }

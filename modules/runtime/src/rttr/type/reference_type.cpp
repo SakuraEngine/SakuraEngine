@@ -8,6 +8,27 @@ ReferenceType::ReferenceType(Type* target_type, string name)
 {
 }
 
+bool ReferenceType::query_feature(ETypeFeature feature) const
+{
+    switch (feature)
+    {
+        case ETypeFeature::Constructor:
+        case ETypeFeature::Destructor:
+        case ETypeFeature::Copy:
+        case ETypeFeature::Move:
+        case ETypeFeature::Assign:
+        case ETypeFeature::MoveAssign:
+        case ETypeFeature::Hash:
+            return true;
+        case ETypeFeature::WriteBinary:
+        case ETypeFeature::ReadBinary:
+        case ETypeFeature::WriteJson:
+        case ETypeFeature::ReadJson:
+            return false;
+    }
+    return false;
+}
+
 bool ReferenceType::call_ctor(void* ptr) const { return true; }
 bool ReferenceType::call_dtor(void* ptr) const { return true; }
 bool ReferenceType::call_copy(void* dst, const void* src) const
