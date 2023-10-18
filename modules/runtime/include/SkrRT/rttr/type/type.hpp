@@ -37,11 +37,11 @@ struct SKR_RUNTIME_API Type {
     virtual bool call_move_assign(void* dst, void* src) const     = 0;
     virtual bool call_hash(const void* ptr, size_t& result) const = 0;
 
-    // TODO. serialize
-    inline int                   write_binary(const void* dst, skr_binary_writer_t* writer) const { return 0; }
-    inline int                   read_binary(void* dst, skr_binary_reader_t* reader) const { return 0; }
-    inline void                  write_json(const void* dst, skr_json_writer_t* writer) const {}
-    inline skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const { return skr::json::error_code::SUCCESS; }
+    // serialize
+    virtual int                   write_binary(const void* dst, skr_binary_writer_t* writer) const = 0;
+    virtual int                   read_binary(void* dst, skr_binary_reader_t* reader) const        = 0;
+    virtual void                  write_json(const void* dst, skr_json_writer_t* writer) const     = 0;
+    virtual skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const          = 0;
 
     // TODO. convert
 

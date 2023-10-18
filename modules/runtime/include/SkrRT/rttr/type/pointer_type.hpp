@@ -16,6 +16,11 @@ struct SKR_RUNTIME_API PointerType : public GenericType {
 
     inline Type* target_type() const { return _target_type; }
 
+    int                   write_binary(const void* dst, skr_binary_writer_t* writer) const override;
+    int                   read_binary(void* dst, skr_binary_reader_t* reader) const override;
+    void                  write_json(const void* dst, skr_json_writer_t* writer) const override;
+    skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const override;
+
 private:
     Type* _target_type;
 };

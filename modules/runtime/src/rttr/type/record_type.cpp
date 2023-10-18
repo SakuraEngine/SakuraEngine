@@ -1,4 +1,5 @@
 #include "SkrRT/rttr/type/record_type.hpp"
+#include "SkrRT/misc/log.hpp"
 
 namespace skr::rttr
 {
@@ -102,6 +103,54 @@ void* RecordType::cast_to(const Type* target_type, void* p_self) const
         }
     }
     return nullptr;
+}
+
+int RecordType::write_binary(const void* dst, skr_binary_writer_t* writer) const
+{
+    if (_basic_methods.write_binary)
+    {
+        return _basic_methods.write_binary(dst, writer);
+    }
+    else
+    {
+        SKR_LOG_ERROR(u8"RecordType::write_binary: type {} has no write_binary method", name().c_str());
+    }
+    return 0;
+}
+int RecordType::read_binary(void* dst, skr_binary_reader_t* reader) const
+{
+    if (_basic_methods.read_binary)
+    {
+        return _basic_methods.read_binary(dst, reader);
+    }
+    else
+    {
+        SKR_LOG_ERROR(u8"RecordType::read_binary: type {} has no read_binary method", name().c_str());
+    }
+    return 0;
+}
+void RecordType::write_json(const void* dst, skr_json_writer_t* writer) const
+{
+    if (_basic_methods.write_json)
+    {
+        _basic_methods.write_json(dst, writer);
+    }
+    else
+    {
+        SKR_LOG_ERROR(u8"RecordType::write_json: type {} has no write_json method", name().c_str());
+    }
+}
+skr::json::error_code RecordType::read_json(void* dst, skr::json::value_t&& reader) const
+{
+    if (_basic_methods.read_json)
+    {
+        return _basic_methods.read_json(dst, std::move(reader));
+    }
+    else
+    {
+        SKR_LOG_ERROR(u8"RecordType::read_json: type {} has no read_json method", name().c_str());
+    }
+    return skr::json::error_code::SUCCESS;
 }
 
 } // namespace skr::rttr
