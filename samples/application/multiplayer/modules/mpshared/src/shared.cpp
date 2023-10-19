@@ -13,12 +13,13 @@
 void MPGameWorld::Initialize()
 {
     storage = dualS_create();
+    dualQ_make_alias(storage, "skr_translation_comp_t", "skr_translation_comp_t:move");
     controlQuery.Initialize(storage);
     healthCheckQuery.Initialize(storage);
     fireQuery.Initialize(storage);
     movementQuery.Initialize(storage);
     ballQuery.Initialize(storage);
-    ballChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t', [inout]CHealth, [in]CSphereCollider2D");
+    ballChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t:move, [inout]CHealth, [in]CSphereCollider2D");
     dualQ_add_child(ballQuery.query, ballChildQuery);
     killBallQuery.Initialize(storage);
     killZombieQuery.Initialize(storage);

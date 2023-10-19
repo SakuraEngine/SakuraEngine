@@ -539,6 +539,14 @@ SKR_RUNTIME_API void dualS_pack_entities(dual_storage_t* storage);
  */
 SKR_RUNTIME_API dual_query_t* dualQ_create(dual_storage_t* storage, const dual_filter_t* filter, const dual_parameters_t* params);
 /**
+ * @brief create an alias for a component with unique phase to work with overloded query
+ * 
+ * @param query 
+ * @param component 
+ * @param alias  
+ */
+SKR_RUNTIME_API void dualQ_make_alias(dual_storage_t* storage, const char* component, const char* alias);
+/**
  * @brief release a query
  * 
  * @param query 
