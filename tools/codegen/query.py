@@ -4,11 +4,10 @@ import re
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
 class Access(object):
-    def __init__(self, readonly, atomic, order, phase):
+    def __init__(self, readonly, atomic, order):
         self.readonly = readonly
         self.atomic = atomic
         self.order = order
-        self.phase = phase
 
 # literal grammar:
 #   [access]<order>?type'
@@ -47,23 +46,17 @@ class Query(object):
             else:
                 cat = self.all
             #type
-            endpos = part.find("'")
+            endpos = part.find("@")
             if(endpos == -1):
                 type = part
-                count = -1
             else:
                 type = part[:endpos]
-                part = part[endpos+1:]
-                #count tailing "'"
-                count = 1
-                while len(part) > count and part[count] == "'":
-                    count += 1
             #add to list
             if access == "out":
                 count = 0
             if access != "has" and cat is not self.none:
                 self.components.append(type)
-                acc = Access(access == "in", access == "atomic", order, count)
+                acc = Access(access == "in", access == "atomic", order)
                 self.accesses.append(acc)
             if cat is not None:
                 cat.append(type)

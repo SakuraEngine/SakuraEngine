@@ -44,7 +44,7 @@ MPInputFrame
 
 sreflect_struct(
     "guid" : "407B6F08-E76C-40E5-8EDC-A5AA808A0D0F",
-    "query" : "[in]CMovement, [inout]skr_translation_comp_t:move, [inout]skr_rotation_comp_t, [atomic]?dual::dirty_comp_t"
+    "query" : "[in]CMovement, [inout]skr_translation_comp_t@move, [inout]skr_rotation_comp_t, [atomic]?dual::dirty_comp_t"
 )
 QMovement
 {
@@ -80,7 +80,7 @@ QFireBullet
 
 sreflect_struct(
     "guid" : "CB8DA6C6-4D7E-4066-A867-A37418EAEC1E",
-    "query" : "[inout]skr_translation_comp_t:move, [in]CSphereCollider2D, [inout]CMovement, [atomic]?dual::dirty_comp_t, [inout]CBall, [has]skr_rotation_comp_t"
+    "query" : "[inout]skr_translation_comp_t@move, [in]CSphereCollider2D, [inout]CMovement, [atomic]?dual::dirty_comp_t, [inout]CBall, [has]skr_rotation_comp_t"
 )
 QBallMovement
 {

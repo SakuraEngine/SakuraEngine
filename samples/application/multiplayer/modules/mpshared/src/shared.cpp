@@ -19,7 +19,7 @@ void MPGameWorld::Initialize()
     fireQuery.Initialize(storage);
     movementQuery.Initialize(storage);
     ballQuery.Initialize(storage);
-    ballChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t:move, [inout]CHealth, [in]CSphereCollider2D");
+    ballChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t@move, [inout]CHealth, [in]CSphereCollider2D");
     dualQ_add_child(ballQuery.query, ballChildQuery);
     killBallQuery.Initialize(storage);
     killZombieQuery.Initialize(storage);
