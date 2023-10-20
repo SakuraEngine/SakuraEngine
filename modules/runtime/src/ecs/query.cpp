@@ -187,12 +187,8 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
     using namespace dual;
     skr::string desc = skr::string::from_utf8((ochar8_t*)inDesc);
     using namespace skr;
-#ifdef _WIN32
     desc.replace(u8""_txtv, u8" "_txtv);
     desc.replace(u8""_txtv, u8"\r"_txtv);
-#else
-    desc.erase(eastl::remove_if(desc.begin(), desc.end(), isspace), desc.end());
-#endif
     ostr::sequence<skr::string_view> parts;
     auto spliter = u8","_txtv;
     desc.split(spliter, parts, true);
