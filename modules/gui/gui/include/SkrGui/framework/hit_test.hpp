@@ -3,10 +3,19 @@
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/math/matrix.hpp"
 
-namespace skr
+namespace skr sreflect
 {
-namespace gui
+namespace gui sreflect
 {
+struct PointerEvent;
+struct HitTestEntry;
+
+// TODO. rttr
+struct IHitTestTarget {
+    void handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry);
+};
+
+// TODO. keyboard & gamepad Input 怎么支持
 
 struct HitTestEntry {
     RenderObject*     target    = nullptr;
@@ -21,5 +30,5 @@ private:
     Array<Matrix4>      _local_transforms;
 };
 
-} // namespace gui
-} // namespace skr
+} // namespace gui sreflect
+} // namespace skr sreflect

@@ -38,6 +38,8 @@ void PipelineOwner::flush_layout()
             node->mark_needs_paint();
         }
     }
+
+    _nodes_needing_layout.clear();
 }
 void PipelineOwner::flush_paint()
 {
@@ -59,5 +61,7 @@ void PipelineOwner::flush_paint()
             PaintingContext::update_layer_properties(make_not_null(node));
         }
     }
+
+    _nodes_needing_paint.clear();
 }
 } // namespace skr::gui

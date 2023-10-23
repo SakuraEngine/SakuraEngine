@@ -36,7 +36,7 @@
     "settings": {
         "dascript.server.connectTimeout": 10,
         "xmake.additionalConfigArguments": [
-            "--use_profile=disable",
+            "--use_profile=enable",
             "--build_tests=y",
             "--cxx_version=cxx20"
         ],
