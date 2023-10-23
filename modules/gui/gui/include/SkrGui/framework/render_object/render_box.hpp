@@ -10,9 +10,6 @@ namespace skr sreflect
 {
 namespace gui sreflect
 {
-struct HitTestRecord {
-};
-
 sreflect_struct(
     "guid": "d4c45487-d696-42fb-bff1-f0a3f6adcea3",
     "rtti": true
