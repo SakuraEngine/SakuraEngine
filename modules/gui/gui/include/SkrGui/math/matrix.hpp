@@ -1,50 +1,45 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
-
+#include "SkrRT/math/rtm/matrix4x4f.h"
+#include "SkrGui/math/geometry.hpp"
 namespace skr::gui
 {
-// row major matrix
+// column major matrix
 struct SKR_ALIGNAS(16) Matrix4 {
     // factory
-
-    // info
-
-    // compare
-
-    // arithmetic ops
-
-    // transform
-
-    // calculations
-
-    // visitor
-    template <bool bConst>
-    struct _RowVisitor {
-        using Pointer   = ::std::conditional_t<bConst, const float*, float*>;
-        using Reference = ::std::conditional_t<bConst, float, float&>;
-
-        Pointer _row;
-        inline constexpr _RowVisitor(Pointer row) SKR_NOEXCEPT
-            : _row(row)
-        {
-        }
-        inline constexpr Reference operator[](size_t n) SKR_NOEXCEPT
-        {
-            SKR_ASSERT(n > 0 && n < 4 && "Matrix4 row index out of range");
-            return _row[n];
-        }
-    };
-    inline constexpr _RowVisitor<false> operator[](size_t n) SKR_NOEXCEPT
+    static Matrix4 Identity() SKR_NOEXCEPT
     {
-        SKR_ASSERT(n > 0 && n < 4 && "Matrix4 row index out of range");
-        return _RowVisitor<false>(_m + n * 4);
+        return Matrix4(rtm::matrix_identity());
     }
-    inline constexpr const _RowVisitor<true> operator[](size_t n) const SKR_NOEXCEPT
+    static Matrix4 Translate(float x, float y, float z) SKR_NOEXCEPT
     {
-        SKR_ASSERT(n > 0 && n < 4 && "Matrix4 row index out of range");
-        return _RowVisitor<true>(_m + n * 4);
+        return {
+            {
+            rtm::vector_set(1.f, 0.f, 0.f, 0.f),
+            rtm::vector_set(0.f, 1.f, 0.f, 0.f),
+            rtm::vector_set(0.f, 0.f, 1.f, 0.f),
+            rtm::vector_set(x, y, z, 1.f),
+            }
+        };
     }
 
-    float _m[16];
+    // operators
+    inline Matrix4 operator*(const Matrix4& rhs) const SKR_NOEXCEPT
+    {
+        return Matrix4(rtm::matrix_mul(_m, rhs._m));
+    }
+    inline Matrix4& operator*=(const Matrix4& rhs) SKR_NOEXCEPT
+    {
+        _m = rtm::matrix_mul(_m, rhs._m);
+        return *this;
+    }
+    inline friend Sizef operator*(const Sizef& lhs, const Matrix4& rhs) SKR_NOEXCEPT
+    {
+        auto vec    = rtm::vector_set(lhs.width, lhs.height, 0.f, 0.f);
+        auto result = rtm::matrix_mul_vector(vec, rhs._m);
+        return { rtm::vector_get_x(result), rtm::vector_get_y(result) };
+    }
+
+    rtm::matrix4x4f _m;
 };
 } // namespace skr::gui
