@@ -14,8 +14,7 @@ sreflect_struct(
     "guid": "d4c45487-d696-42fb-bff1-f0a3f6adcea3",
     "rtti": true
 )
-SKR_GUI_API RenderBox : public RenderObject
-{
+SKR_GUI_API RenderBox : public RenderObject {
     SKR_RTTR_GENERATE_BODY()
 
 public:
@@ -44,6 +43,11 @@ public:
 
     // dry layout
     Sizef get_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT;
+
+    // hit test
+    bool         hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT;
+    virtual bool hit_test_self(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT;
+    virtual bool hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT;
 
     // TODO.
     // global_to_local

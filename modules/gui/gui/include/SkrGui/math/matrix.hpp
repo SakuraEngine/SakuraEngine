@@ -9,7 +9,7 @@ struct SKR_ALIGNAS(16) Matrix4 {
     // factory
     static Matrix4 Identity() SKR_NOEXCEPT
     {
-        return Matrix4(rtm::matrix_identity());
+        return { rtm::matrix_identity() };
     }
     static Matrix4 Translate(float x, float y, float z) SKR_NOEXCEPT
     {

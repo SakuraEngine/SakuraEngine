@@ -218,12 +218,17 @@ Matrix4 RenderObject::get_transform_to(RenderObject* ancestor) const SKR_NOEXCEP
     return {};
 }
 
+// event
+void RenderObject::handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry)
+{
+}
+
 // layout & paint marks
 void RenderObject::_mark_parent_needs_layout() SKR_NOEXCEPT
 {
     _needs_layout = true;
     _parent->mark_needs_layout();
-    // TODO. layout call from paint
+    // TODO. 针对 sliver 在 layout 中 create widget 的行为，需要在这里阻断向 parent 的传递
 }
 void RenderObject::_flush_relayout_boundary() SKR_NOEXCEPT
 {
