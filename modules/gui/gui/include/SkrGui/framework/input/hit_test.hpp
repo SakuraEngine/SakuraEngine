@@ -17,12 +17,23 @@ struct HitTestEntry;
 sreflect_struct(
     "guid": "72127868-ac63-46e0-a8e1-cb5c7c2c4382"
 )
-IHitTestTarget : virtual public ::skr::rttr::IObject {
+SKR_GUI_API IHitTestTarget : virtual public ::skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
-    void handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry);
+    virtual void handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) = 0;
 };
 
 struct HitTestEntry {
+    // 通常我们会让 hit_test 为 const，但是 event dispatch 为非 const，这里是为了方便代码书写
+    inline HitTestEntry(const IHitTestTarget* target)
+        : target(const_cast<IHitTestTarget*>(target))
+    {
+    }
+    inline HitTestEntry(const IHitTestTarget* target, Matrix4 transform)
+        : target(const_cast<IHitTestTarget*>(target))
+        , transform(transform)
+    {
+    }
+
     IHitTestTarget*   target    = nullptr;
     Optional<Matrix4> transform = {};
 };

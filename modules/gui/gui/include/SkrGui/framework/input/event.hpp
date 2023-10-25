@@ -18,10 +18,10 @@ sreflect_enum_class(
 EEventRoutePhase : int32_t
 {
     None        = 0,
-    TrickleDown = 1 >> 0,
-    Reach       = 1 >> 1,
-    Broadcast   = 1 >> 2,
-    BubbleUp    = 1 >> 3,
+    TrickleDown = 1 << 0,
+    Reach       = 1 << 1,
+    Broadcast   = 1 << 2,
+    BubbleUp    = 1 << 3,
     All         = TrickleDown | Reach | Broadcast | BubbleUp,
     NoBroadcast = TrickleDown | Reach | BubbleUp,
 };

@@ -65,5 +65,7 @@ struct INativeDevice;
 struct State;
 struct Notification;
 struct Slot;
+struct HitTestResult;
+struct HitTestEntry;
 
 } // namespace skr::gui

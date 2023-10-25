@@ -1,5 +1,5 @@
 #include "SkrGui/framework/render_object/render_box.hpp"
-#include <algorithm>
+#include "SkrGui/framework/input/hit_test.hpp"
 
 namespace skr::gui
 {
@@ -51,6 +51,28 @@ float RenderBox::compute_min_intrinsic_height(float width) const SKR_NOEXCEPT
 float RenderBox::compute_max_intrinsic_height(float width) const SKR_NOEXCEPT
 {
     return 0.0f;
+}
+
+// hit test
+bool RenderBox::hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
+{
+    if (_size.contains(local_position))
+    {
+        if (hit_test_children(result, local_position) || hit_test_self(result, local_position))
+        {
+            result->add({ this });
+            return true;
+        }
+    }
+    return false;
+}
+bool RenderBox::hit_test_self(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
+{
+    return false;
+}
+bool RenderBox::hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
+{
+    return false;
 }
 
 // dry layout
