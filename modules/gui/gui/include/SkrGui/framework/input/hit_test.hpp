@@ -28,7 +28,70 @@ struct HitTestEntry {
 };
 
 struct HitTestResult {
-    // add ops
+    // add
+    inline void add(HitTestEntry entry)
+    {
+        entry.transform = _get_last_transform();
+        _path.add(entry);
+    }
+
+    // add helpers
+    // bool HitTestFunc(HitTestResult* result, Offsetf local_position)
+    template <typename HitTestFunc>
+    inline bool add_with_raw_transform(Optional<Matrix4> matrix, Offsetf position, HitTestFunc&& hit_test)
+    {
+        bool is_hit;
+        if (matrix)
+        {
+            push_transform(matrix.get());
+            is_hit = hit_test(this, matrix.get().transform(position));
+            pop_transform();
+        }
+        else
+        {
+            is_hit = hit_test(this, position);
+        }
+        return is_hit;
+    }
+    // bool HitTestFunc(HitTestResult* result, Offsetf local_position)
+    template <typename HitTestFunc>
+    inline bool add_with_paint_transform(Optional<Matrix4> matrix, Offsetf position, HitTestFunc&& hit_test)
+    {
+        if (matrix)
+        {
+            Matrix4 inv_matrix;
+            if (matrix.get().try_inverse(inv_matrix))
+            {
+                return add_with_raw_transform(inv_matrix, position, hit_test);
+            }
+            else
+            {
+                SKR_LOG_ERROR(u8"Objects are not visible on screen and cannot be hit-tested");
+            }
+        }
+        else
+        {
+            return add_with_raw_transform({}, position, hit_test);
+        }
+        return false;
+    }
+    // bool HitTestFunc(HitTestResult* result, Offsetf local_position)
+    template <typename HitTestFunc>
+    inline bool add_with_paint_offset(Optional<Offsetf> paint_offset, Offsetf position, HitTestFunc&& hit_test)
+    {
+        bool is_hit;
+        if (paint_offset)
+        {
+            push_offset(-paint_offset.get());
+            is_hit = hit_test(this, position - paint_offset);
+            pop_transform();
+        }
+        else
+        {
+            is_hit = hit_test(this, position);
+        }
+        return is_hit;
+    }
 
     // transform stack
     inline void push_transform(const Matrix4& matrix)
@@ -53,8 +116,9 @@ struct HitTestResult {
 
 private:
     // tools
-    inline void _globalize_transforms()
+    inline Matrix4 _get_last_transform()
     {
+        // globalize transforms
         if (!_local_transforms.empty())
         {
             Matrix4 last = _transforms.last();
@@ -65,6 +129,8 @@ private:
             }
             _local_transforms.clear();
         }
+
+        return _transforms.empty() ? Matrix4::Identity() : _transforms.last();
     }
 
 private:
