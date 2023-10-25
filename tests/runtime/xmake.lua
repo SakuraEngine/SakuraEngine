@@ -35,6 +35,14 @@ target("ECSTest")
     add_deps("SkrTestFramework", {public = false})
     add_files("ecs/main.cpp")
 
+target("MDBTest")
+    set_group("05.tests/base")
+    set_kind("binary")
+    public_dependency("SkrRT", engine_version)
+    public_dependency("SkrLightningStorage", engine_version)
+    add_deps("SkrTestFramework", {public = false})
+    add_files("mdb/main.cpp")
+
 -- TODO. remove rtti test module when finish RTTR system 
 -- shared_module("RTTITestTypes", "RTTI_TEST_TYPES", engine_version)
 --     set_group("05.tests/framework")
