@@ -26,6 +26,7 @@ SortUsingDeclarations: false
 
 ColumnLimit: 0
 PointerAlignment: Left
+ReferenceAlignment: Left
 AllowAllParametersOfDeclarationOnNextLine: true
 AlignEscapedNewlinesLeft: true
 
@@ -60,11 +61,61 @@ WhitespaceSensitiveMacros:
   - "sreflect_enum_class"
 
 Macros:
+  # attr
   - sattr(x)=/* x */
+  - sattr(x,y)=/* x */
+  - sattr(x,y,z)=/* x */
+  - sattr(x,y,z)=/* x */
+  - sattr(x,y,z,w)=/* x */
+  - sattr(x,y,z,w,a)=/* x */
+  - sattr(x,y,z,w,a,b)=/* x */
+  - sattr(x,y,z,w,a,b,c)=/* x */
+  - sattr(x,y,z,w,a,b,c,d)=/* x */
+  - sattr(x,y,z,w,a,b,c,d,e)=/* x */
+  # push attr
   - spush_attr(x)=/* x */
+  - spush_attr(x,y)=/* x */
+  - spush_attr(x,y,z)=/* x */
+  - spush_attr(x,y,z)=/* x */
+  - spush_attr(x,y,z,w)=/* x */
+  - spush_attr(x,y,z,w,a)=/* x */
+  - spush_attr(x,y,z,w,a,b)=/* x */
+  - spush_attr(x,y,z,w,a,b,c)=/* x */
+  - spush_attr(x,y,z,w,a,b,c,d)=/* x */
+  - spush_attr(x,y,z,w,a,b,c,d,e)=/* x */
+  # enum
   - sreflect_enum(x)=enum class
-  - sreflect_struct(x)=struct
+  - sreflect_enum(x,y)=enum class
+  - sreflect_enum(x,y,z)=enum class
+  - sreflect_enum(x,y,z)=enum class
+  - sreflect_enum(x,y,z,w)=enum class
+  - sreflect_enum(x,y,z,w,a)=enum class
+  - sreflect_enum(x,y,z,w,a,b)=enum class
+  - sreflect_enum(x,y,z,w,a,b,c)=enum class
+  - sreflect_enum(x,y,z,w,a,b,c,d)=enum class
+  - sreflect_enum(x,y,z,w,a,b,c,d,e)=enum class
+  # enum class
   - sreflect_enum_class(x)=enum class
+  - sreflect_enum_class(x,y)=enum class
+  - sreflect_enum_class(x,y,z)=enum class
+  - sreflect_enum_class(x,y,z)=enum class
+  - sreflect_enum_class(x,y,z,w)=enum class
+  - sreflect_enum_class(x,y,z,w,a)=enum class
+  - sreflect_enum_class(x,y,z,w,a,b)=enum class
+  - sreflect_enum_class(x,y,z,w,a,b,c)=enum class
+  - sreflect_enum_class(x,y,z,w,a,b,c,d)=enum class
+  - sreflect_enum_class(x,y,z,w,a,b,c,d,e)=enum class
+  # struct
+  - sreflect_struct(x)=struct
+  - sreflect_struct(x,y)=struct
+  - sreflect_struct(x,y,z)=struct
+  - sreflect_struct(x,y,z)=struct
+  - sreflect_struct(x,y,z,w)=struct
+  - sreflect_struct(x,y,z,w,a)=struct
+  - sreflect_struct(x,y,z,w,a,b)=struct
+  - sreflect_struct(x,y,z,w,a,b,c)=struct
+  - sreflect_struct(x,y,z,w,a,b,c,d)=struct
+  - sreflect_struct(x,y,z,w,a,b,c,d,e)=struct
 
 ForEachMacros: ["forloop"]
 
