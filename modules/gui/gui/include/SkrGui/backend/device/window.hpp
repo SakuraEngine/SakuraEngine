@@ -39,6 +39,10 @@ struct WindowDesc {
 };
 
 // 设备视口，某颗 UI 树（或子树）的渲染目标，可能是物理上的窗口、RenderTarget、物理窗口的某一部分、Overlay 等等
+// IWindow 可以视为一颗树，它从 Layer Tree 层接受事件，被 RenderObject Tree 层持有
+// 所以 IWindow 是 UI 与窗口系统（这一系统可以是系统级别的，也可以是控件模拟的）层面交互的边界
+//  - 作为边界出口，Window 起到 UI 控制操作系统窗口相关 API，以及递交给操作系统渲染数据的作用
+//  - 作为边界入口，window 提供系统相关的参数，以及窗口状态
 // ! 考虑一下事件路由怎么做
 // FDirectPolicy: 只找根
 // FToLeafmostPolicy: 只找最后的叶子
@@ -51,8 +55,7 @@ sreflect_struct(
     "guid": "e1cb928d-482e-4795-8f49-d89f20fe171a",
     "rtti": true
 )
-SKR_GUI_API IWindow : virtual public skr::rttr::IObject
-{
+SKR_GUI_API IWindow : virtual public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
     virtual ~IWindow() = default;
 
@@ -89,7 +92,7 @@ SKR_GUI_API IWindow : virtual public skr::rttr::IObject
     virtual void hide() SKR_NOEXCEPT                             = 0;
 
     // rendering
-    virtual void update_content(WindowLayer * root_layer) SKR_NOEXCEPT = 0;
+    virtual void update_content(WindowLayer* root_layer) SKR_NOEXCEPT = 0;
 
     // TODO. window call back
 };
@@ -98,8 +101,7 @@ sreflect_struct(
     "guid": "e46f6067-1fbe-41bf-8361-14399bc7054b",
     "rtti": true
 )
-SKR_GUI_API INativeWindow : public IWindow
-{
+SKR_GUI_API INativeWindow : public IWindow {
     SKR_RTTR_GENERATE_BODY()
 
     // getter

@@ -61,11 +61,15 @@ struct INativeWindow;
 struct IDevice;
 struct INativeDevice;
 
+// input
+struct Event;
+struct PointerEvent;
+struct HitTestResult;
+struct HitTestEntry;
+
 // misc
 struct State;
 struct Notification;
 struct Slot;
-struct HitTestResult;
-struct HitTestEntry;
 
 } // namespace skr::gui
