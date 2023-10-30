@@ -10,38 +10,38 @@ struct MDBTests
 
 TEST_CASE_METHOD(MDBTests, "Environment")
 {
-    auto env = skr_lightning_storage_create_environment(u8"./test_mdb");
+    auto env = skr_lightning_environment_create(u8"./test_mdb");
     EXPECT_NE(env, nullptr);
-    skr_lightning_storage_free_environment(env);
+    skr_lightning_environment_free(env);
 }
 
 TEST_CASE_METHOD(MDBTests, "Storage")
 {
-    auto env = skr_lightning_storage_create_environment(u8"./test_mdb");
+    auto env = skr_lightning_environment_create(u8"./test_mdb");
     EXPECT_NE(env, nullptr);
 
     SLightningStorageOpenDescriptor desc = {};
     desc.flags = LIGHTNING_STORAGE_OPEN_CREATE;
     desc.name = u8"test_storage";
-    auto storage = skr_open_lightning_storage(env, &desc);
+    auto storage = skr_lightning_storage_open(env, &desc);
     EXPECT_NE(storage, nullptr);
     
-    skr_close_lightning_storage(storage);
-    skr_lightning_storage_free_environment(env);
+    skr_lightning_storage_close(storage);
+    skr_lightning_environment_free(env);
 }
 
 TEST_CASE_METHOD(MDBTests, "TXN")
 {
-    auto env = skr_lightning_storage_create_environment(u8"./test_mdb");
+    auto env = skr_lightning_environment_create(u8"./test_mdb");
     EXPECT_NE(env, nullptr);
 
     SLightningStorageOpenDescriptor desc = {};
     desc.flags = LIGHTNING_STORAGE_OPEN_CREATE;
     desc.name = u8"test_storage";
-    auto storage = skr_open_lightning_storage(env, &desc);
+    auto storage = skr_lightning_storage_open(env, &desc);
     EXPECT_NE(storage, nullptr);
     
-    if (auto txn = skr_open_lightning_transaction(env, nullptr, 0))
+    if (auto txn = skr_lightning_transaction_open(env, nullptr, 0))
     {
         skr::string key_string = u8"hello";
         skr::string value_string = u8"world";
@@ -60,11 +60,11 @@ TEST_CASE_METHOD(MDBTests, "TXN")
         EXPECT_TRUE(skr_lightning_storage_del(txn, storage, &key));
         EXPECT_FALSE(skr_lightning_storage_read(txn, storage, &key, &readed_value));
 
-        EXPECT_TRUE(skr_commit_lightning_transaction(txn));
+        EXPECT_TRUE(skr_lightning_transaction_commit(txn));
     }
 
-    skr_close_lightning_storage(storage);
-    skr_lightning_storage_free_environment(env);
+    skr_lightning_storage_close(storage);
+    skr_lightning_environment_free(env);
 }
 
 TEST_CASE_METHOD(MDBTests, "TXN2")

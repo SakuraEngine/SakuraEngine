@@ -33,19 +33,19 @@ typedef enum ELightningTransactionOpenFlag
 typedef uint32_t ELightningTransactionOpenFlags;
 
 SKR_LIGHTNING_STORAGE_EXTERN_C SKR_LIGHTNING_STORAGE_API
-SLightningEnvironmentId skr_lightning_storage_create_environment(const char8_t* name);
+SLightningEnvironmentId skr_lightning_environment_create(const char8_t* name);
 
 SKR_LIGHTNING_STORAGE_EXTERN_C SKR_LIGHTNING_STORAGE_API
-void skr_lightning_storage_free_environment(SLightningEnvironmentId environment);
+void skr_lightning_environment_free(SLightningEnvironmentId environment);
 
 SKR_LIGHTNING_STORAGE_EXTERN_C SKR_LIGHTNING_STORAGE_API
-SLightningStorageId skr_open_lightning_storage(SLightningEnvironmentId environment, const struct SLightningStorageOpenDescriptor* desc);
+SLightningStorageId skr_lightning_storage_open(SLightningEnvironmentId environment, const struct SLightningStorageOpenDescriptor* desc);
 
 SKR_LIGHTNING_STORAGE_EXTERN_C SKR_LIGHTNING_STORAGE_API
-void skr_close_lightning_storage(SLightningStorageId storage);
+void skr_lightning_storage_close(SLightningStorageId storage);
 
 SKR_LIGHTNING_STORAGE_EXTERN_C SKR_LIGHTNING_STORAGE_API
-SLightningTXNId skr_open_lightning_transaction(SLightningEnvironmentId env, SLightningTXNId parent, ELightningTransactionOpenFlags flags);
+SLightningTXNId skr_lightning_transaction_open(SLightningEnvironmentId env, SLightningTXNId parent, ELightningTransactionOpenFlags flags);
 
 SKR_LIGHTNING_STORAGE_EXTERN_C SKR_LIGHTNING_STORAGE_API
 bool skr_lightning_storage_read(SLightningTXNId txn, SLightningStorageId storage, const struct SLightningStorageValue* key, struct SLightningStorageValue* value);
@@ -57,7 +57,7 @@ SKR_LIGHTNING_STORAGE_EXTERN_C SKR_LIGHTNING_STORAGE_API
 bool skr_lightning_storage_del(SLightningTXNId txn, SLightningStorageId storage, const struct SLightningStorageValue* key);
 
 SKR_LIGHTNING_STORAGE_EXTERN_C SKR_LIGHTNING_STORAGE_API
-bool skr_commit_lightning_transaction(SLightningTXNId txn);
+bool skr_lightning_transaction_commit(SLightningTXNId txn);
 
 // lightning storage objects
 typedef struct SLightningStorageValue
@@ -70,14 +70,14 @@ typedef struct SLightningEnvironment
 {
     struct MDB_env* env;
 
-    inline static SLightningEnvironment* Open(const char8_t* name) SKR_NOEXCEPT { return skr_lightning_storage_create_environment(name); } 
-    inline static void Free(SLightningEnvironment* env) SKR_NOEXCEPT { return skr_lightning_storage_free_environment(env); } 
+    inline static SLightningEnvironment* Open(const char8_t* name) SKR_NOEXCEPT { return skr_lightning_environment_create(name); } 
+    inline static void Free(SLightningEnvironment* env) SKR_NOEXCEPT { return skr_lightning_environment_free(env); } 
     
-    inline SLightningStorageId open_storage(const SLightningStorageOpenDescriptor* desc) SKR_NOEXCEPT { return skr_open_lightning_storage(this, desc); }
-    inline void close_storage(SLightningStorageId storage) SKR_NOEXCEPT { skr_close_lightning_storage(storage); }
+    inline SLightningStorageId open_storage(const SLightningStorageOpenDescriptor* desc) SKR_NOEXCEPT { return skr_lightning_storage_open(this, desc); }
+    inline void close_storage(SLightningStorageId storage) SKR_NOEXCEPT { skr_lightning_storage_close(storage); }
    
-    inline SLightningTXNId open_transaction(SLightningTXNId parent, ELightningTransactionOpenFlags flags) SKR_NOEXCEPT { return skr_open_lightning_transaction(this, parent, flags); }
-    inline bool commit_transaction(SLightningTXNId txn) SKR_NOEXCEPT { return skr_commit_lightning_transaction(txn); } 
+    inline SLightningTXNId open_transaction(SLightningTXNId parent, ELightningTransactionOpenFlags flags) SKR_NOEXCEPT { return skr_lightning_transaction_open(this, parent, flags); }
+    inline bool commit_transaction(SLightningTXNId txn) SKR_NOEXCEPT { return skr_lightning_transaction_commit(txn); } 
 } SLightningEnvironment;
 
 typedef struct SLightningStorage

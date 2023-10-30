@@ -5,7 +5,7 @@
 #include "SkrLightningStorage/mdb.h"
 #include "lmdb/lmdb.h"
 
-SLightningEnvironmentId skr_lightning_storage_create_environment(const char8_t* name)
+SLightningEnvironmentId skr_lightning_environment_create(const char8_t* name)
 {
     std::error_code ec = {};
     if (!skr::filesystem::exists((const char*)name, ec))
@@ -26,13 +26,13 @@ SLightningEnvironmentId skr_lightning_storage_create_environment(const char8_t* 
     return env;
 }
 
-void skr_lightning_storage_free_environment(SLightningEnvironmentId environment)
+void skr_lightning_environment_free(SLightningEnvironmentId environment)
 {
     mdb_env_close(environment->env);
     sakura_free(environment);
 }
 
-SLightningStorageId skr_open_lightning_storage(SLightningEnvironmentId environment, const struct SLightningStorageOpenDescriptor* desc)
+SLightningStorageId skr_lightning_storage_open(SLightningEnvironmentId environment, const struct SLightningStorageOpenDescriptor* desc)
 {
     const bool readonly = desc->flags & LIGHTNING_STORAGE_OPEN_READ_ONLY;
     auto env = environment->env;
@@ -68,14 +68,14 @@ SLightningStorageId skr_open_lightning_storage(SLightningEnvironmentId environme
     return storage;
 }
 
-void skr_close_lightning_storage(SLightningStorageId storage)
+void skr_lightning_storage_close(SLightningStorageId storage)
 {
     MDB_dbi dbi = static_cast<MDB_dbi>(storage->mdbi);
     mdb_dbi_close(storage->env->env, dbi);
     sakura_free(storage);
 }
 
-SLightningTXNId skr_open_lightning_transaction(SLightningEnvironmentId env, SLightningTXNId parent, ELightningTransactionOpenFlags flags)
+SLightningTXNId skr_lightning_transaction_open(SLightningEnvironmentId env, SLightningTXNId parent, ELightningTransactionOpenFlags flags)
 {
     MDB_txn* _txn = nullptr;
     MDB_txn* _parent = (MDB_txn*)parent;
@@ -133,7 +133,7 @@ bool skr_lightning_storage_del(SLightningTXNId txn, SLightningStorageId storage,
     return true;
 }
 
-bool skr_commit_lightning_transaction(SLightningTXNId txn)
+bool skr_lightning_transaction_commit(SLightningTXNId txn)
 {
     if (auto rc = mdb_txn_commit((MDB_txn*)txn))
     {
