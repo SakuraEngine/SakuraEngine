@@ -5,7 +5,7 @@
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/math/matrix.hpp"
 #ifndef __meta__
-    #include "SkrGui/framework/input/event.generated.h"
+    #include "SkrGui/system/input/event.generated.h"
 #endif
 
 namespace skr sreflect
@@ -26,6 +26,17 @@ EEventRoutePhase : int32_t
     NoBroadcast = TrickleDown | Reach | BubbleUp,
 };
 
+sreflect_enum_class(
+    "guid" : "03ff08f9-ba01-465a-991c-a6cfa294ddc4"
+)
+EEventSource : int32_t
+{
+    None = 0,
+    System,
+    Gesture,
+    Framework,
+};
+
 sreflect_struct(
     "guid": "06ecf250-43e8-44a3-b1e9-b52b1ab53e05"
 )
@@ -33,7 +44,8 @@ Event {
     GUID tid      = {}; // 框架识别类型
     GUID user_tid = {}; // 用户自定义类型
 
-    EEventRoutePhase phase = EEventRoutePhase::None;
+    EEventRoutePhase phase  = EEventRoutePhase::None;
+    EEventSource     source = EEventSource::None;
 };
 
 sreflect_enum(

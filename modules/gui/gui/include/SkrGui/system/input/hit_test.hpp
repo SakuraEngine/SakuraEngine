@@ -4,7 +4,7 @@
 #include "SkrGui/math/matrix.hpp"
 #include "SkrGui/math/geometry.hpp"
 #ifndef __meta__
-    #include "SkrGui/framework/input/hit_test.generated.h"
+    #include "SkrGui/system/input/hit_test.generated.h"
 #endif
 
 namespace skr sreflect
