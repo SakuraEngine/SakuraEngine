@@ -62,13 +62,13 @@ void SkrNativeDevice::shutdown()
 }
 
 // view
-NotNull<IWindow*> SkrNativeDevice::create_window()
+NotNull<INativeWindow*> SkrNativeDevice::create_window()
 {
     auto view = SkrNew<SkrNativeWindow>(this);
     _all_windows.add(view);
     return make_not_null(view);
 }
-void SkrNativeDevice::destroy_window(NotNull<IWindow*> view)
+void SkrNativeDevice::destroy_window(NotNull<INativeWindow*> view)
 {
     // erase it
     _all_windows.remove(view);

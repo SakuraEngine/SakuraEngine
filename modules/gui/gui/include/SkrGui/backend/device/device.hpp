@@ -9,7 +9,7 @@ namespace skr sreflect
 {
 namespace gui sreflect
 {
-struct IWindow;
+struct INativeWindow;
 struct ICanvas;
 struct DisplayMetrics;
 struct IUpdatableImage;
@@ -37,22 +37,6 @@ struct IParagraph;
 // TextService：文本绘制服务
 // Resource/ResourceEntry/ResourceProvider：资源管理服务
 
-sreflect_struct(
-    "guid": "a3c50232-9ff3-4671-a6bd-0af032240a98",
-    "rtti": true
-)
-SKR_GUI_API IDevice : virtual public skr::rttr::IObject
-{
-    SKR_RTTR_GENERATE_BODY()
-    virtual ~IDevice() = default;
-
-    // window
-    virtual NotNull<IWindow*> create_window()                        = 0;
-    virtual void              destroy_window(NotNull<IWindow*> view) = 0;
-
-    // TODO. input
-};
-
 // 对于一般 APP 来说 native device 是全局唯一的， 但是对于游戏来说，3D UI、离屏的 RT UI 都可以持有一个模拟的 NativeDevice
 // 所以框架并不对此做出任何限制，框架通过 Owner 追溯到顶层 NativeWindow 并通过 NativeWindow 追溯到 NativeDevice
 // 以这样的路径来获取各种资源，这样的设计可以让框架更加灵活，但是也会带来一些问题，即生命周期的管理被转移到了使用方
@@ -63,9 +47,12 @@ sreflect_struct(
     "guid": "8ba2ea3e-8a8e-4d88-a7d6-c98552219fc8",
     "rtti": true
 )
-SKR_GUI_API INativeDevice : public IDevice
-{
+SKR_GUI_API INativeDevice : virtual public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
+
+    // window
+    virtual NotNull<INativeWindow*> create_window()                              = 0;
+    virtual void                    destroy_window(NotNull<INativeWindow*> view) = 0;
 
     // display info
     virtual const DisplayMetrics& display_metrics() const = 0;
