@@ -77,7 +77,7 @@ Sizef SkrNativeWindow::to_relative(const Sizef& absolute) SKR_NOEXCEPT
 }
 
 // info
-IDevice* SkrNativeWindow::device() SKR_NOEXCEPT
+INativeDevice* SkrNativeWindow::device() SKR_NOEXCEPT
 {
     return _device;
 }

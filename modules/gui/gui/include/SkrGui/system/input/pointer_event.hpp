@@ -28,7 +28,7 @@ sreflect_struct(
 )
 PointerEvent : public Event {
     spush_attr("no-rtti": true)
-    IWindow*           window       = nullptr;                     // 来源 window
+    INativeWindow*     window       = nullptr;                     // 来源 window
     uint64_t           time_stamp   = 0;                           // 时间戳 // TODO. 使用更文明的时间戳
     int64_t            pointer_id   = 0;                           // 指针 id
     EPointerDeviceType device_type  = EPointerDeviceType::Unknown; // 来源设备

@@ -24,8 +24,8 @@ SKR_GUI_RENDERER_API SkrNativeDevice final : public INativeDevice {
     void shutdown();
 
     // view
-    NotNull<IWindow*> create_window() override;
-    void              destroy_window(NotNull<IWindow*> view) override;
+    NotNull<INativeWindow*> create_window() override;
+    void                    destroy_window(NotNull<INativeWindow*> view) override;
 
     // sub device
     inline NotNull<SkrRenderDevice*>   render_device() const SKR_NOEXCEPT { return make_not_null(_render_device); }
