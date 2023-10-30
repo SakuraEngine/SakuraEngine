@@ -219,8 +219,9 @@ Matrix4 RenderObject::get_transform_to(RenderObject* ancestor) const SKR_NOEXCEP
 }
 
 // event
-void RenderObject::handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry)
+bool RenderObject::handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry)
 {
+    return false;
 }
 
 // layout & paint marks

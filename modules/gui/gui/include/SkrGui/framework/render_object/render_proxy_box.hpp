@@ -16,8 +16,7 @@ sreflect_struct(
     "rtti": true
 )
 RenderProxyBox : public RenderBox,
-                 public ISingleChildRenderObject
-{
+                 public ISingleChildRenderObject {
     SKR_RTTR_GENERATE_BODY()
 
 protected:

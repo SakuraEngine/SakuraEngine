@@ -19,7 +19,7 @@ sreflect_struct(
 )
 SKR_GUI_API IHitTestTarget : virtual public ::skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
-    virtual void handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) = 0;
+    virtual bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) = 0;
 };
 
 struct HitTestEntry {
