@@ -88,7 +88,7 @@ SKR_GUI_API RenderObject : virtual public skr::rttr::IObject,
     virtual Matrix4 get_transform_to(RenderObject* ancestor) const SKR_NOEXCEPT;
 
     // event
-    void handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) override;
+    bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) override;
 
     // TODO
     // invoke_layout_callback：用于在 layout 过程中创建 child，通常用于 Sliver

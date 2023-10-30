@@ -15,8 +15,7 @@ sreflect_struct(
     "rtti": true
 )
 RenderShiftedBox : public RenderBox,
-                   public ISingleChildRenderObject
-{
+                   public ISingleChildRenderObject {
     SKR_RTTR_GENERATE_BODY()
 
     inline Offsetf offset() const SKR_NOEXCEPT { return _offset; }
@@ -31,6 +30,9 @@ protected:
 
     // paint
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
+
+    // hit test
+    bool hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 
 private:
     // TODO. enable field reflection
