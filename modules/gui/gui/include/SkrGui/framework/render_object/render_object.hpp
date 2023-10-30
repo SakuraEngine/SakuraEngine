@@ -3,7 +3,7 @@
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/math/matrix.hpp"
 #include "SkrGui/framework/slot.hpp"
-#include "SkrGui/framework/input/hit_test.hpp"
+#include "SkrGui/system/input/hit_test.hpp"
 #ifndef __meta__
     #include "SkrGui/framework/render_object/render_object.generated.h"
 #endif
