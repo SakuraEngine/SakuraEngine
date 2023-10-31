@@ -151,4 +151,26 @@ void RenderStack::set_stack_size(EStackSize size) SKR_NOEXCEPT
         mark_needs_layout();
     }
 }
+
+// hit test
+bool RenderStack::hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
+{
+    for (auto i = children().size(); i > 0; --i)
+    {
+        const auto& child_data = children()[i - 1];
+
+        bool is_hit = result->add_with_paint_offset(
+        child_data.data.offset,
+        local_position,
+        [&child_data](HitTestResult* result, Offsetf transformed_position) {
+            return child_data.child->hit_test(result, transformed_position);
+        });
+
+        if (is_hit)
+        {
+            return true;
+        }
+    }
+    return false;
+}
 } // namespace skr::gui

@@ -38,8 +38,8 @@ bool RenderShiftedBox::hit_test_children(HitTestResult* result, Offsetf local_po
         return result->add_with_paint_offset(
         _offset,
         local_position,
-        [&](HitTestResult* result, Offsetf local_position) {
-            return child()->hit_test(result, local_position);
+        [this](HitTestResult* result, Offsetf transformed_position) {
+            return child()->hit_test(result, transformed_position);
         });
     }
     return false;

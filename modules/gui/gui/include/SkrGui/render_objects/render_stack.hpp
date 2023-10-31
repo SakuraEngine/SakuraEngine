@@ -16,8 +16,7 @@ sreflect_struct(
     "rtti": true
 )
 SKR_GUI_API RenderStack : public RenderBox,
-                          public IMultiChildRenderObject
-{
+                          public IMultiChildRenderObject {
 public:
     SKR_RTTR_GENERATE_BODY()
     using Super = RenderBox;
@@ -41,6 +40,9 @@ public:
     void set_stack_alignment(Alignment alignment) SKR_NOEXCEPT;
     void set_child_fit(EPositionalFit fit) SKR_NOEXCEPT;
     void set_stack_size(EStackSize size) SKR_NOEXCEPT;
+
+    // hit test
+    bool hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 
     struct SlotData {
         Offsetf offset = Offsetf::Zero();

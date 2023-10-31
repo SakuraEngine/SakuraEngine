@@ -19,4 +19,10 @@ void RenderColoredBox::paint(NotNull<PaintingContext*> context, Offsetf offset) 
         context->paint_child(make_not_null(child()), offset);
     }
 }
+
+// hit test
+bool RenderColoredBox::hit_test_self(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
+{
+    return true;
+}
 } // namespace skr::gui

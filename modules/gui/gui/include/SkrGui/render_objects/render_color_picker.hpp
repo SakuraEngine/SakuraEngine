@@ -12,8 +12,7 @@ sreflect_struct(
     "guid": "f9de7eb7-9431-4dde-a06d-2fb9bc211bb9",
     "rtti": true
 )
-SKR_GUI_API RenderColorPicker : public RenderBox
-{
+SKR_GUI_API RenderColorPicker : public RenderBox {
     SKR_RTTR_GENERATE_BODY()
     using Super = RenderBox;
 
@@ -21,6 +20,9 @@ SKR_GUI_API RenderColorPicker : public RenderBox
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override {}
+
+    // hit test
+    bool hit_test_self(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 };
 
 } // namespace gui sreflect

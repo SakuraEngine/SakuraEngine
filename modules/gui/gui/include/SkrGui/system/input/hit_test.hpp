@@ -94,7 +94,7 @@ struct HitTestResult {
         if (paint_offset)
         {
             push_offset(-paint_offset.get());
-            is_hit = hit_test(this, position - paint_offset);
+            is_hit = hit_test(this, position - (paint_offset.get()));
             pop_transform();
         }
         else
@@ -125,6 +125,8 @@ struct HitTestResult {
         }
     }
 
+    inline const Array<HitTestEntry>& path() const SKR_NOEXCEPT { return _path; }
+
 private:
     // tools
     inline Matrix4 _get_last_transform()
@@ -132,7 +134,7 @@ private:
         // globalize transforms
         if (!_local_transforms.empty())
         {
-            Matrix4 last = _transforms.last();
+            Matrix4 last = _transforms.empty() ? Matrix4::Identity() : _transforms.last();
             for (const auto matrix : _local_transforms)
             {
                 last = matrix * last;

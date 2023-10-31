@@ -50,4 +50,14 @@ void RenderProxyBox::paint(NotNull<PaintingContext*> context, Offsetf offset) SK
         context->paint_child(make_not_null(child()), offset);
     }
 }
+
+// hit test
+bool RenderProxyBox::hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
+{
+    if (child())
+    {
+        return child()->hit_test(result, local_position);
+    }
+    return false;
+}
 } // namespace skr::gui

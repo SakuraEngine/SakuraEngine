@@ -12,19 +12,19 @@ void RenderColorPicker::perform_layout() SKR_NOEXCEPT
 
 void RenderColorPicker::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
 {
-    Rectf       paint_rect = Rectf::OffsetSize(offset, size());
+    Rectf       paint_rect     = Rectf::OffsetSize(offset, size());
     float       current_degree = 0;
-    const float kPi = 3.1415926535897932384626433832795f;
+    const float kPi            = 3.1415926535897932384626433832795f;
 
     // draw
     auto canvas = context->canvas();
     {
         auto _ = canvas->paint_scope();
 
-        Offsetf center = paint_rect.center();
+        Offsetf center       = paint_rect.center();
         float   outer_radius = paint_rect.size().shortest_side() / 2.f - 5.f;
         float   inner_radius = outer_radius - 20.f;
-        float   radius = (outer_radius + inner_radius) / 2.f;
+        float   radius       = (outer_radius + inner_radius) / 2.f;
 
         // draw hue ring
         {
@@ -65,8 +65,8 @@ void RenderColorPicker::paint(NotNull<PaintingContext*> context, Offsetf offset)
             canvas->path_end(FillPen(), ColorBrush().custom(
                                         [current_degree](PaintVertex& v) {
                                             const auto   index = static_cast<uint32_t>(v.texcoord.x / 0.3333f);
-                                            const double S[] = { 0.0, 0.0, 1.0 };
-                                            const double V[] = { 0.0, 1.0, 1.0 };
+                                            const double S[]   = { 0.0, 0.0, 1.0 };
+                                            const double V[]   = { 0.0, 1.0, 1.0 };
                                             if (0 <= index && index < 3)
                                             {
                                                 v.color = hsv_to_abgr(current_degree, S[index], V[index]);
@@ -79,6 +79,12 @@ void RenderColorPicker::paint(NotNull<PaintingContext*> context, Offsetf offset)
     }
 
     Super::paint(context, offset);
+}
+
+// hit test
+bool RenderColorPicker::hit_test_self(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
+{
+    return true;
 }
 
 } // namespace skr::gui

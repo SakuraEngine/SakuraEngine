@@ -26,4 +26,15 @@ void RenderNativeWindow::prepare_initial_frame() SKR_NOEXCEPT
     _layer->attach(make_not_null(_owner));
     _owner->schedule_paint_for(make_not_null(this));
 }
+
+bool RenderNativeWindow::hit_test(HitTestResult* result, Offsetf local_position)
+{
+    if (child()->hit_test(result, local_position))
+    {
+        result->add(this);
+        return true;
+    }
+    return false;
+}
+
 } // namespace skr::gui
