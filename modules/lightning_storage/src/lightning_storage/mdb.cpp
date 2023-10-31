@@ -143,3 +143,8 @@ bool skr_lightning_transaction_commit(SLightningTXNId txn)
     }
     return true;
 }
+
+void skr_lightning_transaction_abort(SLightningTXNId txn)
+{
+    mdb_txn_abort((MDB_txn*)txn);
+}

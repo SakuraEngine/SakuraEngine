@@ -57,6 +57,9 @@ SKR_LIGHTNING_STORAGE_EXTERN_C SKR_LIGHTNING_STORAGE_API
 bool skr_lightning_storage_del(SLightningTXNId txn, SLightningStorageId storage, const struct SLightningStorageValue* key);
 
 SKR_LIGHTNING_STORAGE_EXTERN_C SKR_LIGHTNING_STORAGE_API
+void skr_lightning_transaction_abort(SLightningTXNId txn);
+
+SKR_LIGHTNING_STORAGE_EXTERN_C SKR_LIGHTNING_STORAGE_API
 bool skr_lightning_transaction_commit(SLightningTXNId txn);
 
 // lightning storage objects
@@ -69,7 +72,7 @@ typedef struct SLightningStorageValue
 typedef struct SLightningEnvironment
 {
     struct MDB_env* env;
-
+#ifdef __cplusplus
     inline static SLightningEnvironment* Open(const char8_t* name) SKR_NOEXCEPT { return skr_lightning_environment_create(name); } 
     inline static void Free(SLightningEnvironment* env) SKR_NOEXCEPT { return skr_lightning_environment_free(env); } 
     
@@ -78,16 +81,18 @@ typedef struct SLightningEnvironment
    
     inline SLightningTXNId open_transaction(SLightningTXNId parent, ELightningTransactionOpenFlags flags) SKR_NOEXCEPT { return skr_lightning_transaction_open(this, parent, flags); }
     inline bool commit_transaction(SLightningTXNId txn) SKR_NOEXCEPT { return skr_lightning_transaction_commit(txn); } 
+#endif
 } SLightningEnvironment;
 
 typedef struct SLightningStorage
 {
     SLightningEnvironment* env;
     uint64_t mdbi;
-
+#ifdef __cplusplus
     inline SLightningStorageValue read(SLightningTXNId txn, SLightningStorageValue key) SKR_NOEXCEPT { SLightningStorageValue value; skr_lightning_storage_read(txn, this, &key, &value); return value; }
     inline bool write(SLightningTXNId txn, SLightningStorageValue key, SLightningStorageValue value) SKR_NOEXCEPT { return skr_lightning_storage_write(txn, this, &key, &value); }
     inline bool del(SLightningTXNId txn, SLightningStorageValue key) SKR_NOEXCEPT { return skr_lightning_storage_del(txn, this, &key); }
+#endif
 } SLightningStorage;
 
 // lightning storage descriptors
@@ -97,3 +102,17 @@ typedef struct SLightningStorageOpenDescriptor
     const char8_t* name;
     LightningStorageOpenFlags flags;
 } SLightningStorageOpenDescriptor;
+
+#ifdef __cplusplus
+namespace skr::mdb
+{
+    using StorageValue = SLightningStorageValue;
+    using Environment = SLightningEnvironment;
+    using EnvironmentId = SLightningEnvironment*;
+    using Storage = SLightningStorage;
+    using StorageId = SLightningStorage*;
+    using Transaction = SLightningTXN;
+    using TransactionId = SLightningTXN*;
+    using StorageOpenDescriptor = SLightningStorageOpenDescriptor;
+}
+#endif
