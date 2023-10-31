@@ -15,8 +15,7 @@ sreflect_struct(
     "rtti": true
 )
 SKR_GUI_API RenderFlex : public RenderBox,
-                         public IMultiChildRenderObject
-{
+                         public IMultiChildRenderObject {
 public:
     SKR_RTTR_GENERATE_BODY()
     using Super = RenderBox;
@@ -41,6 +40,9 @@ public:
     void set_main_axis_alignment(EMainAxisAlignment value) SKR_NOEXCEPT;
     void set_cross_axis_alignment(ECrossAxisAlignment value) SKR_NOEXCEPT;
     void set_main_axis_size(EMainAxisSize value) SKR_NOEXCEPT;
+
+    // hit test
+    bool hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 
     struct SlotData {
         // slot data

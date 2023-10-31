@@ -15,8 +15,7 @@ sreflect_struct(
     "guid": "409eaa24-5549-46e3-87c1-81649576d2cd",
     "rtti": true
 )
-SKR_GUI_API IMultiChildRenderObject : virtual public skr::rttr::IObject
-{
+SKR_GUI_API IMultiChildRenderObject : virtual public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
     virtual ~IMultiChildRenderObject() = default;
 

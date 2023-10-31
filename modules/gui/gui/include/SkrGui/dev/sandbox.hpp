@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
+#include "SkrGui/math/geometry.hpp"
 
 namespace skr::gui
 {
@@ -22,6 +23,10 @@ struct SKR_GUI_API Sandbox {
     void layout();
     void paint();
     void compose();
+
+    bool hit_test(HitTestResult* result, Offsetf global_position);
+
+    void resize_window(int32_t width, int32_t height);
 
 private:
     // backend

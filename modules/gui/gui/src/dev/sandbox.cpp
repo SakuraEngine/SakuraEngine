@@ -78,4 +78,13 @@ void Sandbox::compose()
     _root_layer->update_window();
 }
 
+bool Sandbox::hit_test(HitTestResult* result, Offsetf global_position)
+{
+    return _root_render_object->hit_test(result, _root_render_object->window()->to_relative(global_position));
+}
+
+void Sandbox::resize_window(int32_t width, int32_t height)
+{
+}
+
 } // namespace skr::gui

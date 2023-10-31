@@ -919,14 +919,14 @@ SKR_INLINE const T& Array<T, Alloc>::operator[](SizeType index) const
 template <typename T, typename Alloc>
 SKR_INLINE T& Array<T, Alloc>::last(SizeType index)
 {
-    index = _size - index;
+    index = _size - index - 1;
     SKR_ASSERT(is_valid_index(index));
     return *(_data + index);
 }
 template <typename T, typename Alloc>
 SKR_INLINE const T& Array<T, Alloc>::last(SizeType index) const
 {
-    index = _size - index;
+    index = _size - index - 1;
     SKR_ASSERT(is_valid_index(index));
     return *(_data + index);
 }

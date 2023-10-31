@@ -55,4 +55,11 @@ void RenderGridPaper::paint(NotNull<PaintingContext*> context, Offsetf offset) S
 
     Super::paint(context, offset);
 }
+
+// hit test
+bool RenderGridPaper::hit_test_self(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
+{
+    return true;
+}
+
 } // namespace skr::gui

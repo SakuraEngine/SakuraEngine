@@ -35,6 +35,9 @@ protected:
     // paint
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 
+    // hit test
+    bool hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
+
     // MIXIN
     SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(RenderProxyBox, RenderBox);
 };
