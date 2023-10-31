@@ -6,12 +6,15 @@ namespace skr::gui
 {
 // column major matrix
 struct SKR_ALIGNAS(16) Matrix4 {
+    inline Matrix4() SKR_NOEXCEPT = default;
+    inline Matrix4(const rtm::matrix4x4f& m) SKR_NOEXCEPT : _m(m) {}
+
     // factory
-    static Matrix4 Identity() SKR_NOEXCEPT
+    inline static Matrix4 Identity() SKR_NOEXCEPT
     {
         return { rtm::matrix_identity() };
     }
-    static Matrix4 Translate(float x, float y, float z) SKR_NOEXCEPT
+    inline static Matrix4 Translate(float x, float y, float z) SKR_NOEXCEPT
     {
         return {
             {
