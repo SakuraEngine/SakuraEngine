@@ -130,6 +130,7 @@ void SkrRenderDevice::init()
         ioServiceDesc.sleep_time = 1000 / 60;
         ioServiceDesc.gpu_device = _cgpu_device;
         _vram_service            = skr_io_vram_service_t::create(&ioServiceDesc);
+        _vram_service->run();
     }
 }
 void SkrRenderDevice::shutdown()
