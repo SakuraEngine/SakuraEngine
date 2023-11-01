@@ -52,12 +52,14 @@ void RenderProxyBox::paint(NotNull<PaintingContext*> context, Offsetf offset) SK
 }
 
 // hit test
-bool RenderProxyBox::hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
+bool RenderProxyBox::hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
 {
-    if (child())
-    {
-        return child()->hit_test(result, local_position);
-    }
-    return false;
+    return _default_hit_test(
+    result,
+    local_position,
+    nullptr, // proxy widget 通常不会自主响应 hit test
+    [this](HitTestResult* result, Offsetf local_position) {
+        return child() && child()->hit_test(result, local_position);
+    });
 }
 } // namespace skr::gui

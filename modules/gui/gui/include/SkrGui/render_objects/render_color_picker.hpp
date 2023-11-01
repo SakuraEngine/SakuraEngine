@@ -22,7 +22,7 @@ SKR_GUI_API RenderColorPicker : public RenderBox {
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override {}
 
     // hit test
-    bool hit_test_self(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
+    bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 };
 
 } // namespace gui sreflect

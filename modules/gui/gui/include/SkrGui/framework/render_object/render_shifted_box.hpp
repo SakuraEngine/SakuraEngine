@@ -32,7 +32,7 @@ protected:
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 
     // hit test
-    bool hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
+    bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 
 private:
     // TODO. enable field reflection

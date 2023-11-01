@@ -30,7 +30,7 @@ RenderColoredBox : public RenderProxyBox {
 
     // hit test
     // TODO. 补足半透明的 HitTestBehavior 实现 Overlay 事件穿过的功能
-    bool hit_test_self(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
+    bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 
 private:
     // TODO. enable field reflection

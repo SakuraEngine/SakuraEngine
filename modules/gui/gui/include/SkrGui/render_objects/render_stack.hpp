@@ -42,7 +42,7 @@ public:
     void set_stack_size(EStackSize size) SKR_NOEXCEPT;
 
     // hit test
-    bool hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
+    bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 
     struct SlotData {
         Offsetf offset = Offsetf::Zero();

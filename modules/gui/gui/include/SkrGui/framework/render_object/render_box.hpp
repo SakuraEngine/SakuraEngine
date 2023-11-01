@@ -45,10 +45,7 @@ public:
     Sizef get_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT;
 
     // hit test
-    // TODO. 通过模板函数，来实现逻辑组合，而不是预先实现一个死板的逻辑，然后通过虚函数补足实现
-    bool         hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT;
-    virtual bool hit_test_self(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT;
-    virtual bool hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT;
+    virtual bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT;
 
     // TODO.
     // global_to_local
@@ -66,6 +63,10 @@ protected:
 
     // dry layout
     virtual Sizef compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT;
+
+    // helper function
+    using HitTestFuncRef = FunctionRef<bool(HitTestResult* result, Offsetf local_position)>;
+    bool _default_hit_test(HitTestResult* result, Offsetf local_position, HitTestFuncRef hit_test_self, HitTestFuncRef hit_test_children) const;
 
 private:
     void perform_resize() SKR_NOEXCEPT override; // override compute_dry_layout instead
