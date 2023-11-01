@@ -82,9 +82,15 @@ void RenderColorPicker::paint(NotNull<PaintingContext*> context, Offsetf offset)
 }
 
 // hit test
-bool RenderColorPicker::hit_test_self(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
+bool RenderColorPicker::hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
 {
-    return true;
+    return _default_hit_test(
+    result,
+    local_position,
+    [](HitTestResult* result, Offsetf local_position) {
+        return true; // always accept self
+    },
+    nullptr);
 }
 
 } // namespace skr::gui

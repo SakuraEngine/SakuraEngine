@@ -42,7 +42,7 @@ public:
     void set_main_axis_size(EMainAxisSize value) SKR_NOEXCEPT;
 
     // hit test
-    bool hit_test_children(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
+    bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 
     struct SlotData {
         // slot data
