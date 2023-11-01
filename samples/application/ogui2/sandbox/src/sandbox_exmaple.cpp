@@ -25,6 +25,9 @@ int main(void)
 {
     using namespace skr::gui;
 
+    // log system
+    skr::log::LogConstants::gFlushBehavior = skr::log::LogFlushBehavior::kFlushImmediate;
+
     // create backends
     SkrNativeDevice* device = SkrNew<SkrNativeDevice>();
     device->init();
