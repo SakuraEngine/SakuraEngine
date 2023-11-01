@@ -1,5 +1,6 @@
 #include "SkrRT/platform/process.h"
 #include "SkrRT/misc/log/log_sink.hpp"
+#include "log_manager.hpp"
 
 #include <stdio.h> // FILE
 #include "SkrProfile/profile.h"
@@ -294,6 +295,11 @@ void LogConsoleWindowSink::sink(const LogEvent& event, skr::string_view content)
     // reset origin
     if (csbiInfo.wAttributes != attrs)
         ::SetConsoleTextAttribute(StdHandle, csbiInfo.wAttributes);
+
+    if (!LogManager::Get() || !LogManager::Get()->TryGetWorker())
+    {
+        ::FlushFileBuffers(StdHandle);
+    }
 #else
     LogConsoleSink::sink(event, content);
 #endif
