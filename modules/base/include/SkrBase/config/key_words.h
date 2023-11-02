@@ -13,16 +13,6 @@
 // noexcept
 //-------------------------------------------------------------------------------
 
-#ifndef __cplusplus
-    #include <stdbool.h>
-#endif
-
-#ifdef __cplusplus
-    #include <cstdint>
-#else
-    #include <stdint.h>
-#endif
-
 // UNUSED
 #if defined(__cplusplus)
     #define SKR_UNUSED [[maybe_unused]]

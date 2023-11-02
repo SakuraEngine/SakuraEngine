@@ -1,12 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrRT/misc/macros.h"
-#ifndef __cplusplus
-    #include <stdbool.h>
-#endif
-#if __has_include("stdint.h")
-    #include <stdint.h>
-#endif
 
 #define sstatic_ctor_name_impl(index, expr) "\"StaticCtor" #index "\" : " #expr
 #define sstatic_ctor_name(index, expr) sstatic_ctor_name_impl(index, #expr)
