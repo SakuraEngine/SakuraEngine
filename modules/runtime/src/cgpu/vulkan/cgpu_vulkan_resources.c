@@ -12,7 +12,7 @@
 #endif
 #include <string.h>
 
-FORCEINLINE static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGPUAdapter_Vulkan* A, const struct CGPUBufferDescriptor* desc)
+SKR_FORCEINLINE static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGPUAdapter_Vulkan* A, const struct CGPUBufferDescriptor* desc)
 {
     uint64_t allocationSize = desc->size;
     // Align the buffer size to multiples of the dynamic uniform buffer minimum size
@@ -38,7 +38,7 @@ FORCEINLINE static VkBufferCreateInfo VkUtil_CreateBufferCreateInfo(CGPUAdapter_
     return add_info;
 }
 
-FORCEINLINE static VkFormatFeatureFlags VkUtil_ImageUsageToFormatFeatures(VkImageUsageFlags usage)
+SKR_FORCEINLINE static VkFormatFeatureFlags VkUtil_ImageUsageToFormatFeatures(VkImageUsageFlags usage)
 {
     VkFormatFeatureFlags result = (VkFormatFeatureFlags)0;
     if (VK_IMAGE_USAGE_SAMPLED_BIT == (usage & VK_IMAGE_USAGE_SAMPLED_BIT))

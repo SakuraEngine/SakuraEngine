@@ -12,10 +12,10 @@ typedef struct SCallOnceFnWrapper {
     SCallOnceFn fn;
 } SCallOnceFnWrapper;
 
-FORCEINLINE static BOOL callOnceImpl(
-PINIT_ONCE initOnce,
-PVOID pWrapper,
-PVOID* ppContext)
+SKR_FORCEINLINE static BOOL callOnceImpl(
+    PINIT_ONCE initOnce,
+    PVOID pWrapper,
+    PVOID* ppContext)
 {
     SCallOnceFn fn = ((SCallOnceFnWrapper*)pWrapper)->fn;
     if (fn) fn();

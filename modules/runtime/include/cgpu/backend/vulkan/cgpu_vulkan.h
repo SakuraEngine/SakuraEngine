@@ -493,7 +493,7 @@ static const VkStencilOp gVkStencilOpTranslator[CGPU_STENCIL_OP_COUNT] = {
 extern "C" {
 #endif
 
-FORCEINLINE static VkFormat VkUtil_FormatTranslateToVk(const ECGPUFormat format);
+SKR_FORCEINLINE static VkFormat VkUtil_FormatTranslateToVk(const ECGPUFormat format);
 
 #include "cgpu_vulkan.inl"
 #ifdef __cplusplus

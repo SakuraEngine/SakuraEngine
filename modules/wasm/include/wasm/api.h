@@ -55,12 +55,12 @@ typedef struct SWAValue {
     ESWAValueType type;
 #ifdef __cplusplus
     /* clang-format off */
-    FORCEINLINE operator swa_f32() const { return f; }
-    FORCEINLINE operator swa_f64() const { return F; }
-    FORCEINLINE operator swa_i32() const { return i; }
-    FORCEINLINE operator swa_i64() const { return I; }
-    FORCEINLINE operator swa_ptr() const { return ptr; }
-    FORCEINLINE operator swa_cptr() const { return cptr; }
+    SKR_FORCEINLINE operator swa_f32() const { return f; }
+    SKR_FORCEINLINE operator swa_f64() const { return F; }
+    SKR_FORCEINLINE operator swa_i32() const { return i; }
+    SKR_FORCEINLINE operator swa_i64() const { return I; }
+    SKR_FORCEINLINE operator swa_ptr() const { return ptr; }
+    SKR_FORCEINLINE operator swa_cptr() const { return cptr; }
     SWAValue() : I(0) {}
     SWAValue(swa_f32 f) : f(f), type(SWA_VAL_F32) {}
     SWAValue(swa_f64 F) : F(F), type(SWA_VAL_F64) {}
@@ -211,7 +211,7 @@ class utilx
 public:
     // linkage
     template <typename Func>
-    FORCEINLINE static SWAHostFunctionDescriptor linkage(const char* module_name,
+    SKR_FORCEINLINE static SWAHostFunctionDescriptor linkage(const char* module_name,
         const char* function_name, Func* function)
     {
         SWAHostFunctionDescriptor out = {};
@@ -224,7 +224,7 @@ public:
         return out;
     }
     template <typename Func>
-    FORCEINLINE static void link(SWAModuleId module, const char* module_name,
+    SKR_FORCEINLINE static void link(SWAModuleId module, const char* module_name,
         const char* function_name, Func* function)
     {
         SWAHostFunctionDescriptor host_func = linkage(module_name, function_name, function);
@@ -234,7 +234,7 @@ public:
     // execution
     struct executor {
         template <typename RetT, typename... Args>
-        FORCEINLINE RetT exec(Args&&... args)
+        SKR_FORCEINLINE RetT exec(Args&&... args)
         {
             SWAValue ret;
             const SWAValue iargs[] = { std::forward<Args>(args)... };
@@ -247,7 +247,7 @@ public:
             return RetT(ret);
         }
         template <typename RetT>
-        FORCEINLINE RetT exec()
+        SKR_FORCEINLINE RetT exec()
         {
             SWAValue ret;
             SWAExecDescriptor exec_desc = {

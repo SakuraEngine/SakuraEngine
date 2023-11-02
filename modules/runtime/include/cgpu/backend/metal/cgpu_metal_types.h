@@ -77,7 +77,7 @@ typedef struct CGPUCommandBuffer_Metal {
 #endif
 
 /* clang-format off */
-FORCEINLINE static MTLPixelFormat MetalUtil_TranslatePixelFormat(const ECGPUFormat fmt)
+SKR_FORCEINLINE static MTLPixelFormat MetalUtil_TranslatePixelFormat(const ECGPUFormat fmt)
 {
     switch (fmt) {
 	case CGPU_FORMAT_A8_UNORM: 		return MTLPixelFormatA8Unorm;
@@ -202,7 +202,7 @@ FORCEINLINE static MTLPixelFormat MetalUtil_TranslatePixelFormat(const ECGPUForm
 	return MTLPixelFormatInvalid;
 }
 
-FORCEINLINE static bool MetalFormatOkayOnMac(MTLPixelFormat fmt)
+SKR_FORCEINLINE static bool MetalFormatOkayOnMac(MTLPixelFormat fmt)
 {
     switch (fmt)
     {
@@ -339,7 +339,7 @@ FORCEINLINE static bool MetalFormatOkayOnMac(MTLPixelFormat fmt)
     return false;
 }
 
-FORCEINLINE static bool MetalFormatOkayOnIOS(MTLPixelFormat fmt) {
+SKR_FORCEINLINE static bool MetalFormatOkayOnIOS(MTLPixelFormat fmt) {
 	switch(fmt) 
     {
 	    case MTLPixelFormatA8Unorm:

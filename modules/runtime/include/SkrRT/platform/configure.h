@@ -137,10 +137,6 @@ extern const char* $name;
     #endif
 #endif
 
-#ifndef FORCEINLINE
-#define FORCEINLINE SKR_FORCEINLINE
-#endif
-
 #if defined(_MSC_VER)
     #include <crtdbg.h>
     #define COMPILE_ASSERT(exp) _STATIC_ASSERT(exp)
@@ -270,73 +266,6 @@ typedef int64_t host_ptr_t;
         #define SKR_PLATFORM_64BIT
         #define SKR_PLATFORM_BIG_ENDIAN
     #endif
-#endif
-
-#ifndef SKR_MANUAL_CONFIG_COMPILER
-    #if defined(_MSC_VER)
-        #define SKR_COMPILER_MSVC
-    #endif
-
-    #if defined(__clang__)
-        #define SKR_COMPILER_CLANG
-    #elif defined(__GNUC__)
-        #define SKR_COMPILER_GCC
-    #elif defined(_MSC_VER)
-    #else
-        #error Unrecognized compiler was used.
-    #endif
-#endif
-
-#if defined(SKR_COMPILER_MSVC) && !defined(SKR_COMPILER_CLANG)
-    #define SKR_TEMPLATE
-#else
-    #define SKR_TEMPLATE template
-#endif
-
-#ifndef SKR_MANUAL_CONFIG_COMPILER_TRAITS
-    #if defined(SKR_COMPILER_MSVC)
-        #define SKR_COMPILER_VERSION _MSC_VER
-    #elif defined(SKR_COMPILER_CLANG)
-        #define SKR_COMPILER_VERSION (__clang_major__ * 100 + __clang_minor__)
-    #elif defined(SKR_COMPILER_GCC)
-        #define SKR_COMPILER_VERSION (__GNUC__ * 1000 + __GNUC_MINOR__)
-    #endif
-#endif
-
-#ifndef SKR_MANUAL_CONFIG_CPP_STANDARD
-    #if (defined(SKR_COMPILER_CLANG) || defined(SKR_COMPILER_GCC))
-        #if __cplusplus >= 201703L
-            #define SKR_COMPILER_CPP17
-        #endif
-        #if __cplusplus >= 201402L
-            #define SKR_COMPILER_CPP14
-        #endif
-    #elif defined(SKR_COMPILER_MSVC)
-        #if (SKR_COMPILER_VERSION >= 1920) // VS 2019
-            #define SKR_COMPILER_CPP17
-        #endif
-        #if (SKR_COMPILER_VERSION >= 1910) // VS 2017
-            #define SKR_COMPILER_CPP14
-        #endif
-    #else
-        #error "Failed to delect C++ standard version."
-    #endif
-#endif // SKR_MANUAL_CONFIG_CPP_STANDARD_VERSION
-
-// no vtable
-#ifdef _MSC_VER
-    #define SKR_NOVTABLE __declspec(novtable)
-#else
-    #define SKR_NOVTABLE
-#endif
-
-// inline defs
-#define SKR_INLINE inline
-#ifdef __cplusplus
-    // By Default we use cpp-standard above 2011XXL
-    #define SKR_NOEXCEPT noexcept
-#else
-    #define SKR_NOEXCEPT
 #endif
 
 // Platform Specific Configure

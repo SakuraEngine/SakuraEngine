@@ -40,8 +40,8 @@ struct SKR_RUNTIME_API LogEvent
 {
     LogEvent(struct Logger* logger, LogLevel level, const LogSourceData& src_data) SKR_NOEXCEPT;
     
-    FORCEINLINE LogLevel get_level() const SKR_NOEXCEPT { return level; }
-    FORCEINLINE uint64_t get_thread_id() const SKR_NOEXCEPT { return thread_id; }
+    SKR_FORCEINLINE LogLevel get_level() const SKR_NOEXCEPT { return level; }
+    SKR_FORCEINLINE uint64_t get_thread_id() const SKR_NOEXCEPT { return thread_id; }
 
 protected:
     friend struct LogPattern;

@@ -135,7 +135,7 @@ SKR_RUNTIME_API bool skr_vfs_fclose(skr_vfile_t* file) SKR_NOEXCEPT;
 
 SKR_RUNTIME_API void skr_vfs_get_native_procs(struct skr_vfs_proctable_t* procs) SKR_NOEXCEPT;
 
-static FORCEINLINE const char8_t* skr_vfs_filemode_to_string(ESkrFileMode mode)
+static SKR_FORCEINLINE const char8_t* skr_vfs_filemode_to_string(ESkrFileMode mode)
 {
     mode = (ESkrFileMode)(mode & ~SKR_FM_ALLOW_READ);
     switch (mode)
@@ -153,7 +153,7 @@ static FORCEINLINE const char8_t* skr_vfs_filemode_to_string(ESkrFileMode mode)
         default: return u8"r";
     }
 }
-static FORCEINLINE const char8_t* skr_vfs_overwirte_filemode_to_string(ESkrFileMode mode)
+static SKR_FORCEINLINE const char8_t* skr_vfs_overwirte_filemode_to_string(ESkrFileMode mode)
 {
     switch (mode)
     {

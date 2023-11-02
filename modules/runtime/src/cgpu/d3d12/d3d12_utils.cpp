@@ -447,7 +447,7 @@ void reflectionRecordShaderResources(ID3D12ReflectionT* d3d12reflection, ECGPUSh
     }
 }
 
-FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d3d12reflection, ECGPUShaderStage stage, CGPUShaderLibrary_D3D12* S)
+SKR_FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d3d12reflection, ECGPUShaderStage stage, CGPUShaderLibrary_D3D12* S)
 {
     // Get a description of this shader
     D3D12_SHADER_DESC shaderDesc;

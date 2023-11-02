@@ -41,7 +41,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-FORCEINLINE static void* calloc_aligned(size_t count, size_t size, size_t alignment)
+SKR_FORCEINLINE static void* calloc_aligned(size_t count, size_t size, size_t alignment)
 {
 #if !defined(_WIN32)
     void* ptr = (alignment == 1) ? malloc(size * count) : NULL;

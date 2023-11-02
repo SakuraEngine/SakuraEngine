@@ -18,92 +18,92 @@ typedef volatile SKR_ALIGNAS(SKR_PTR_SIZE) intptr_t SAtomicPtr;
 
 #include <intrin0.h>
 
-FORCEINLINE static void skr_memorybarrier_acquire() { _ReadWriteBarrier(); }
-FORCEINLINE static void skr_memorybarrier_release() { _ReadWriteBarrier(); }
+SKR_FORCEINLINE static void skr_memorybarrier_acquire() { _ReadWriteBarrier(); }
+SKR_FORCEINLINE static void skr_memorybarrier_release() { _ReadWriteBarrier(); }
 
-FORCEINLINE static uint32_t skr_atomicu32_load_relaxed(const SAtomicU32* pVar) { return *(pVar); }
-FORCEINLINE static uint32_t skr_atomicu32_store_relaxed(SAtomicU32* dst, uint32_t val) { return _InterlockedExchange( (volatile long*)(dst), val ); }
-FORCEINLINE static uint32_t skr_atomicu32_add_relaxed(SAtomicU32* dst, uint32_t val) { return _InterlockedExchangeAdd( (volatile long*)(dst), val ); }
-FORCEINLINE static uint32_t skr_atomicu32_cas_relaxed(SAtomicU32* dst, uint32_t cmp_val, uint32_t new_val) { return _InterlockedCompareExchange( (volatile long*)(dst), (new_val), (cmp_val) ); }
+SKR_FORCEINLINE static uint32_t skr_atomicu32_load_relaxed(const SAtomicU32* pVar) { return *(pVar); }
+SKR_FORCEINLINE static uint32_t skr_atomicu32_store_relaxed(SAtomicU32* dst, uint32_t val) { return _InterlockedExchange( (volatile long*)(dst), val ); }
+SKR_FORCEINLINE static uint32_t skr_atomicu32_add_relaxed(SAtomicU32* dst, uint32_t val) { return _InterlockedExchangeAdd( (volatile long*)(dst), val ); }
+SKR_FORCEINLINE static uint32_t skr_atomicu32_cas_relaxed(SAtomicU32* dst, uint32_t cmp_val, uint32_t new_val) { return _InterlockedCompareExchange( (volatile long*)(dst), (new_val), (cmp_val) ); }
 
-FORCEINLINE static uint64_t skr_atomicu64_load_relaxed(const SAtomicU64* pVar) { return *(pVar); }
-FORCEINLINE static uint64_t skr_atomicu64_store_relaxed(SAtomicU64* dst, uint64_t val) { return _InterlockedExchange64( (volatile LONG64*)(dst), val ); }
-FORCEINLINE static uint64_t skr_atomicu64_add_relaxed(SAtomicU64* dst, uint64_t val) { return _InterlockedExchangeAdd64( (volatile LONG64*)(dst), val ); }
-FORCEINLINE static uint64_t skr_atomicu64_cas_relaxed(SAtomicU64* dst, uint64_t cmp_val, uint64_t new_val) { return _InterlockedCompareExchange64( (volatile LONG64*)(dst), (new_val), (cmp_val) ); }
+SKR_FORCEINLINE static uint64_t skr_atomicu64_load_relaxed(const SAtomicU64* pVar) { return *(pVar); }
+SKR_FORCEINLINE static uint64_t skr_atomicu64_store_relaxed(SAtomicU64* dst, uint64_t val) { return _InterlockedExchange64( (volatile LONG64*)(dst), val ); }
+SKR_FORCEINLINE static uint64_t skr_atomicu64_add_relaxed(SAtomicU64* dst, uint64_t val) { return _InterlockedExchangeAdd64( (volatile LONG64*)(dst), val ); }
+SKR_FORCEINLINE static uint64_t skr_atomicu64_cas_relaxed(SAtomicU64* dst, uint64_t cmp_val, uint64_t new_val) { return _InterlockedCompareExchange64( (volatile LONG64*)(dst), (new_val), (cmp_val) ); }
 
-FORCEINLINE static int32_t skr_atomic32_load_relaxed(const SAtomic32* pVar) { return *(pVar); }
-FORCEINLINE static int32_t skr_atomic32_store_relaxed(SAtomic32* dst, int32_t val) { return _InterlockedExchange( (volatile long*)(dst), val ); }
-FORCEINLINE static int32_t skr_atomic32_add_relaxed(SAtomic32* dst, int32_t val) { return _InterlockedExchangeAdd( (volatile long*)(dst), val ); }
-FORCEINLINE static int32_t skr_atomic32_cas_relaxed(SAtomic32* dst, int32_t cmp_val, int32_t new_val) { return _InterlockedCompareExchange( (volatile long*)(dst), (new_val), (cmp_val) ); }
+SKR_FORCEINLINE static int32_t skr_atomic32_load_relaxed(const SAtomic32* pVar) { return *(pVar); }
+SKR_FORCEINLINE static int32_t skr_atomic32_store_relaxed(SAtomic32* dst, int32_t val) { return _InterlockedExchange( (volatile long*)(dst), val ); }
+SKR_FORCEINLINE static int32_t skr_atomic32_add_relaxed(SAtomic32* dst, int32_t val) { return _InterlockedExchangeAdd( (volatile long*)(dst), val ); }
+SKR_FORCEINLINE static int32_t skr_atomic32_cas_relaxed(SAtomic32* dst, int32_t cmp_val, int32_t new_val) { return _InterlockedCompareExchange( (volatile long*)(dst), (new_val), (cmp_val) ); }
 
-FORCEINLINE static int64_t skr_atomic64_load_relaxed(const SAtomic64* pVar) { return *(pVar); }
-FORCEINLINE static int64_t skr_atomic64_store_relaxed(SAtomic64* dst, int64_t val) { return _InterlockedExchange64( (volatile LONG64*)(dst), val ); }
-FORCEINLINE static int64_t skr_atomic64_add_relaxed(SAtomic64* dst, int64_t val) { return _InterlockedExchangeAdd64( (volatile LONG64*)(dst), val ); }
-FORCEINLINE static int64_t skr_atomic64_cas_relaxed(SAtomic64* dst, int64_t cmp_val, int64_t new_val) { return _InterlockedCompareExchange64( (volatile LONG64*)(dst), (new_val), (cmp_val) ); }
+SKR_FORCEINLINE static int64_t skr_atomic64_load_relaxed(const SAtomic64* pVar) { return *(pVar); }
+SKR_FORCEINLINE static int64_t skr_atomic64_store_relaxed(SAtomic64* dst, int64_t val) { return _InterlockedExchange64( (volatile LONG64*)(dst), val ); }
+SKR_FORCEINLINE static int64_t skr_atomic64_add_relaxed(SAtomic64* dst, int64_t val) { return _InterlockedExchangeAdd64( (volatile LONG64*)(dst), val ); }
+SKR_FORCEINLINE static int64_t skr_atomic64_cas_relaxed(SAtomic64* dst, int64_t cmp_val, int64_t new_val) { return _InterlockedCompareExchange64( (volatile LONG64*)(dst), (new_val), (cmp_val) ); }
 
 #else
 
-FORCEINLINE static void skr_memorybarrier_acquire() { __asm__ __volatile__("": : :"memory"); }
-FORCEINLINE static void skr_memorybarrier_release() { __asm__ __volatile__("": : :"memory"); }
+SKR_FORCEINLINE static void skr_memorybarrier_acquire() { __asm__ __volatile__("": : :"memory"); }
+SKR_FORCEINLINE static void skr_memorybarrier_release() { __asm__ __volatile__("": : :"memory"); }
 
-FORCEINLINE static uint32_t skr_atomicu32_load_relaxed(const SAtomicU32* pVar) { return *(pVar); }
-FORCEINLINE static uint32_t skr_atomicu32_store_relaxed(SAtomicU32* dst, uint32_t val) { return __sync_lock_test_and_set( (volatile uint32_t*)(dst), val ); }
-FORCEINLINE static uint32_t skr_atomicu32_add_relaxed(SAtomicU32* dst, uint32_t val) { return __sync_fetch_and_add( (volatile uint32_t*)(dst), val ); }
-FORCEINLINE static uint32_t skr_atomicu32_cas_relaxed(SAtomicU32* dst, uint32_t cmp_val, uint32_t new_val) { return __sync_val_compare_and_swap( (volatile uint32_t*)(dst), (cmp_val), (new_val) ); }
+SKR_FORCEINLINE static uint32_t skr_atomicu32_load_relaxed(const SAtomicU32* pVar) { return *(pVar); }
+SKR_FORCEINLINE static uint32_t skr_atomicu32_store_relaxed(SAtomicU32* dst, uint32_t val) { return __sync_lock_test_and_set( (volatile uint32_t*)(dst), val ); }
+SKR_FORCEINLINE static uint32_t skr_atomicu32_add_relaxed(SAtomicU32* dst, uint32_t val) { return __sync_fetch_and_add( (volatile uint32_t*)(dst), val ); }
+SKR_FORCEINLINE static uint32_t skr_atomicu32_cas_relaxed(SAtomicU32* dst, uint32_t cmp_val, uint32_t new_val) { return __sync_val_compare_and_swap( (volatile uint32_t*)(dst), (cmp_val), (new_val) ); }
 
-FORCEINLINE static uint64_t skr_atomicu64_load_relaxed(const SAtomicU64* pVar) { return *(pVar); }
-FORCEINLINE static uint64_t skr_atomicu64_store_relaxed(SAtomicU64* dst, uint64_t val) { return __sync_lock_test_and_set( (volatile uint64_t*)(dst), val ); }
-FORCEINLINE static uint64_t skr_atomicu64_add_relaxed(SAtomicU64* dst, uint64_t val) { return __sync_fetch_and_add( (volatile uint64_t*)(dst), val ); }
-FORCEINLINE static uint64_t skr_atomicu64_cas_relaxed(SAtomicU64* dst, uint64_t cmp_val, uint64_t new_val) { return __sync_val_compare_and_swap( (volatile uint64_t*)(dst), (cmp_val), (new_val) ); }
+SKR_FORCEINLINE static uint64_t skr_atomicu64_load_relaxed(const SAtomicU64* pVar) { return *(pVar); }
+SKR_FORCEINLINE static uint64_t skr_atomicu64_store_relaxed(SAtomicU64* dst, uint64_t val) { return __sync_lock_test_and_set( (volatile uint64_t*)(dst), val ); }
+SKR_FORCEINLINE static uint64_t skr_atomicu64_add_relaxed(SAtomicU64* dst, uint64_t val) { return __sync_fetch_and_add( (volatile uint64_t*)(dst), val ); }
+SKR_FORCEINLINE static uint64_t skr_atomicu64_cas_relaxed(SAtomicU64* dst, uint64_t cmp_val, uint64_t new_val) { return __sync_val_compare_and_swap( (volatile uint64_t*)(dst), (cmp_val), (new_val) ); }
 
-FORCEINLINE static int32_t skr_atomic32_load_relaxed(const SAtomic32* pVar) { return *(pVar); }
-FORCEINLINE static int32_t skr_atomic32_store_relaxed(SAtomic32* dst, int32_t val) { return __sync_lock_test_and_set( (volatile int32_t*)(dst), val ); }
-FORCEINLINE static int32_t skr_atomic32_add_relaxed(SAtomic32* dst, int32_t val) { return __sync_fetch_and_add( (volatile int32_t*)(dst), val ); }
-FORCEINLINE static int32_t skr_atomic32_cas_relaxed(SAtomic32* dst, int32_t cmp_val, int32_t new_val) { return __sync_val_compare_and_swap( (volatile int32_t*)(dst), (cmp_val), (new_val) ); }
+SKR_FORCEINLINE static int32_t skr_atomic32_load_relaxed(const SAtomic32* pVar) { return *(pVar); }
+SKR_FORCEINLINE static int32_t skr_atomic32_store_relaxed(SAtomic32* dst, int32_t val) { return __sync_lock_test_and_set( (volatile int32_t*)(dst), val ); }
+SKR_FORCEINLINE static int32_t skr_atomic32_add_relaxed(SAtomic32* dst, int32_t val) { return __sync_fetch_and_add( (volatile int32_t*)(dst), val ); }
+SKR_FORCEINLINE static int32_t skr_atomic32_cas_relaxed(SAtomic32* dst, int32_t cmp_val, int32_t new_val) { return __sync_val_compare_and_swap( (volatile int32_t*)(dst), (cmp_val), (new_val) ); }
 
-FORCEINLINE static int64_t skr_atomic64_load_relaxed(const SAtomic64* pVar) { return *(pVar); }
-FORCEINLINE static int64_t skr_atomic64_store_relaxed(SAtomic64* dst, int64_t val) { return __sync_lock_test_and_set( (volatile int64_t*)(dst), val ); }
-FORCEINLINE static int64_t skr_atomic64_add_relaxed(SAtomic64* dst, int64_t val) { return __sync_fetch_and_add( (volatile int64_t*)(dst), val ); }
-FORCEINLINE static int64_t skr_atomic64_cas_relaxed(SAtomic64* dst, int64_t cmp_val, int64_t new_val) { return __sync_val_compare_and_swap( (volatile int64_t*)(dst), (cmp_val), (new_val) ); }
+SKR_FORCEINLINE static int64_t skr_atomic64_load_relaxed(const SAtomic64* pVar) { return *(pVar); }
+SKR_FORCEINLINE static int64_t skr_atomic64_store_relaxed(SAtomic64* dst, int64_t val) { return __sync_lock_test_and_set( (volatile int64_t*)(dst), val ); }
+SKR_FORCEINLINE static int64_t skr_atomic64_add_relaxed(SAtomic64* dst, int64_t val) { return __sync_fetch_and_add( (volatile int64_t*)(dst), val ); }
+SKR_FORCEINLINE static int64_t skr_atomic64_cas_relaxed(SAtomic64* dst, int64_t cmp_val, int64_t new_val) { return __sync_val_compare_and_swap( (volatile int64_t*)(dst), (cmp_val), (new_val) ); }
 
 #endif
 
 // Unsigned Atomic
 
-FORCEINLINE static uint32_t skr_atomicu32_load_acquire(const SAtomicU32* pVar)
+SKR_FORCEINLINE static uint32_t skr_atomicu32_load_acquire(const SAtomicU32* pVar)
 {
 	uint32_t value = skr_atomicu32_load_relaxed(pVar);
 	skr_memorybarrier_acquire();
 	return value;
 }
 
-FORCEINLINE static uint32_t skr_atomicu32_store_release(SAtomicU32* pVar, uint32_t val)
+SKR_FORCEINLINE static uint32_t skr_atomicu32_store_release(SAtomicU32* pVar, uint32_t val)
 {
 	skr_memorybarrier_release();
 	return skr_atomicu32_store_relaxed(pVar, val);
 }
 
-FORCEINLINE static uint32_t skr_atomicu32_max_relaxed(SAtomicU32* dst, uint32_t val)
+SKR_FORCEINLINE static uint32_t skr_atomicu32_max_relaxed(SAtomicU32* dst, uint32_t val)
 {
     uint32_t prev_val = val;
     do { prev_val = skr_atomicu32_cas_relaxed(dst, prev_val, val); } while (prev_val < val);
     return prev_val;
 }
 
-FORCEINLINE static uint64_t skr_atomicu64_load_acquire(const SAtomicU64* pVar)
+SKR_FORCEINLINE static uint64_t skr_atomicu64_load_acquire(const SAtomicU64* pVar)
 {
 	uint64_t value = skr_atomicu64_load_relaxed(pVar);
 	skr_memorybarrier_acquire();
 	return value;
 }
 
-FORCEINLINE static uint64_t skr_atomicu64_store_release(SAtomicU64* pVar, uint64_t val)
+SKR_FORCEINLINE static uint64_t skr_atomicu64_store_release(SAtomicU64* pVar, uint64_t val)
 {
 	skr_memorybarrier_release();
 	return skr_atomicu64_store_relaxed(pVar, val);
 }
 
-FORCEINLINE static uint64_t skr_atomicu64_max_relaxed(SAtomicU64* dst, uint64_t val)
+SKR_FORCEINLINE static uint64_t skr_atomicu64_max_relaxed(SAtomicU64* dst, uint64_t val)
 {
     uint64_t prev_val = val;
     do { prev_val = skr_atomicu64_cas_relaxed(dst, prev_val, val); } while (prev_val < val);
@@ -112,40 +112,40 @@ FORCEINLINE static uint64_t skr_atomicu64_max_relaxed(SAtomicU64* dst, uint64_t 
 
 // Atomic
 
-FORCEINLINE static int32_t skr_atomic32_load_acquire(const SAtomic32* pVar)
+SKR_FORCEINLINE static int32_t skr_atomic32_load_acquire(const SAtomic32* pVar)
 {
 	int32_t value = skr_atomic32_load_relaxed(pVar);
 	skr_memorybarrier_acquire();
 	return value;
 }
 
-FORCEINLINE static int32_t skr_atomic32_store_release(SAtomic32* pVar, int32_t val)
+SKR_FORCEINLINE static int32_t skr_atomic32_store_release(SAtomic32* pVar, int32_t val)
 {
 	skr_memorybarrier_release();
 	return skr_atomic32_store_relaxed(pVar, val);
 }
 
-FORCEINLINE static int32_t skr_atomic32_max_relaxed(SAtomic32* dst, int32_t val)
+SKR_FORCEINLINE static int32_t skr_atomic32_max_relaxed(SAtomic32* dst, int32_t val)
 {
     int32_t prev_val = val;
     do { prev_val = skr_atomic32_cas_relaxed(dst, prev_val, val); } while (prev_val < val);
     return prev_val;
 }
 
-FORCEINLINE static int64_t skr_atomic64_load_acquire(const SAtomic64* pVar)
+SKR_FORCEINLINE static int64_t skr_atomic64_load_acquire(const SAtomic64* pVar)
 {
 	int64_t value = skr_atomic64_load_relaxed(pVar);
 	skr_memorybarrier_acquire();
 	return value;
 }
 
-FORCEINLINE static int64_t skr_atomic64_store_release(SAtomic64* pVar, int64_t val)
+SKR_FORCEINLINE static int64_t skr_atomic64_store_release(SAtomic64* pVar, int64_t val)
 {
 	skr_memorybarrier_release();
 	return skr_atomic64_store_relaxed(pVar, val);
 }
 
-FORCEINLINE static int64_t skr_atomic64_max_relaxed(SAtomic64* dst, int64_t val)
+SKR_FORCEINLINE static int64_t skr_atomic64_max_relaxed(SAtomic64* dst, int64_t val)
 {
     int64_t prev_val = val;
     do { prev_val = skr_atomic64_cas_relaxed(dst, prev_val, val); } while (prev_val < val);
@@ -154,39 +154,39 @@ FORCEINLINE static int64_t skr_atomic64_max_relaxed(SAtomic64* dst, int64_t val)
 
 #if PTR_SIZE == 4
 
-FORCEINLINE static uintptr_t skr_atomicuptr_load_relaxed(SAtomicUPtr* pval) { return (uintptr_t)skr_atomicu32_load_relaxed((SAtomicU32*)pval); }
-FORCEINLINE static uintptr_t skr_atomicuptr_load_acquire(SAtomicUPtr* pval) { return (uintptr_t)skr_atomicu32_load_acquire((SAtomicU32*)pval); }
-FORCEINLINE static uintptr_t skr_atomicuptr_store_relaxed(SAtomicUPtr* pVar, uintptr_t val) { return (uintptr_t)skr_atomicu32_store_relaxed((SAtomicU32*)pVar, (uint32_t)val); }
-FORCEINLINE static uintptr_t skr_atomicuptr_store_release(SAtomicU32* pVar, uint32_t val) { return (uintptr_t)skr_atomicu32_store_release((SAtomicU32*)pVar, (uint32_t)val); }
-FORCEINLINE static uintptr_t skr_atomicuptr_add_relaxed(SAtomicUPtr* pVar, uintptr_t val) { return (uintptr_t)skr_atomicu32_add_relaxed((SAtomicU32*)pVar, (uint32_t)val); }
-FORCEINLINE static uintptr_t skr_atomicuptr_cas_relaxed(SAtomicUPtr* pVar, uintptr_t oldval, uintptr_t newval) { return (uintptr_t)skr_atomicu32_cas_relaxed((SAtomicU32*)pVar, (uint32_t)oldval, (uint32_t)newval); }
-FORCEINLINE static uintptr_t skr_atomicuptr_max_relaxed(SAtomicUPtr* pVar, uintptr_t val) { return (uintptr_t)skr_atomicu32_max_relaxed((SAtomicU32*)pVar, (uint32_t)val); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_load_relaxed(SAtomicUPtr* pval) { return (uintptr_t)skr_atomicu32_load_relaxed((SAtomicU32*)pval); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_load_acquire(SAtomicUPtr* pval) { return (uintptr_t)skr_atomicu32_load_acquire((SAtomicU32*)pval); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_store_relaxed(SAtomicUPtr* pVar, uintptr_t val) { return (uintptr_t)skr_atomicu32_store_relaxed((SAtomicU32*)pVar, (uint32_t)val); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_store_release(SAtomicU32* pVar, uint32_t val) { return (uintptr_t)skr_atomicu32_store_release((SAtomicU32*)pVar, (uint32_t)val); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_add_relaxed(SAtomicUPtr* pVar, uintptr_t val) { return (uintptr_t)skr_atomicu32_add_relaxed((SAtomicU32*)pVar, (uint32_t)val); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_cas_relaxed(SAtomicUPtr* pVar, uintptr_t oldval, uintptr_t newval) { return (uintptr_t)skr_atomicu32_cas_relaxed((SAtomicU32*)pVar, (uint32_t)oldval, (uint32_t)newval); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_max_relaxed(SAtomicUPtr* pVar, uintptr_t val) { return (uintptr_t)skr_atomicu32_max_relaxed((SAtomicU32*)pVar, (uint32_t)val); }
 
-FORCEINLINE static intptr_t skr_atomicptr_load_relaxed(SAtomicPtr* pval) { return (intptr_t)skr_atomic32_load_relaxed((SAtomic32*)pval); }
-FORCEINLINE static intptr_t skr_atomicptr_load_acquire(SAtomicPtr* pval) { return (intptr_t)skr_atomic32_load_acquire((SAtomic32*)pval); }
-FORCEINLINE static intptr_t skr_atomicptr_store_relaxed(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic32_store_relaxed((SAtomic32*)pVar, (int32_t)val); }
-FORCEINLINE static intptr_t skr_atomicptr_store_release(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic32_store_release((SAtomic32*)pVar, (int32_t)val); }
-FORCEINLINE static intptr_t skr_atomicptr_add_relaxed(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic32_add_relaxed((SAtomic32*)pVar, (int32_t)val); }
-FORCEINLINE static intptr_t skr_atomicptr_cas_relaxed(SAtomicPtr* pVar, intptr_t oldval, intptr_t newval) { return (intptr_t)skr_atomic32_cas_relaxed((SAtomic32*)pVar, (int32_t)oldval, (int32_t)newval); }
-FORCEINLINE static intptr_t skr_atomicptr_max_relaxed(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic32_max_relaxed((SAtomic32*)pVar, (int32_t)val); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_load_relaxed(SAtomicPtr* pval) { return (intptr_t)skr_atomic32_load_relaxed((SAtomic32*)pval); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_load_acquire(SAtomicPtr* pval) { return (intptr_t)skr_atomic32_load_acquire((SAtomic32*)pval); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_store_relaxed(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic32_store_relaxed((SAtomic32*)pVar, (int32_t)val); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_store_release(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic32_store_release((SAtomic32*)pVar, (int32_t)val); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_add_relaxed(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic32_add_relaxed((SAtomic32*)pVar, (int32_t)val); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_cas_relaxed(SAtomicPtr* pVar, intptr_t oldval, intptr_t newval) { return (intptr_t)skr_atomic32_cas_relaxed((SAtomic32*)pVar, (int32_t)oldval, (int32_t)newval); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_max_relaxed(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic32_max_relaxed((SAtomic32*)pVar, (int32_t)val); }
 
 #elif PTR_SIZE == 8
 
-FORCEINLINE static uintptr_t skr_atomicuptr_load_relaxed(SAtomicUPtr* pval) { return (uintptr_t)skr_atomicu64_load_relaxed((SAtomicU64*)pval); }
-FORCEINLINE static uintptr_t skr_atomicuptr_load_acquire(SAtomicUPtr* pval) { return (uintptr_t)skr_atomicu64_load_acquire((SAtomicU64*)pval); }
-FORCEINLINE static uintptr_t skr_atomicuptr_store_relaxed(SAtomicUPtr* pVar, uintptr_t val) { return (uintptr_t)skr_atomicu64_store_relaxed((SAtomicU64*)pVar, (uint64_t)val); }
-FORCEINLINE static uintptr_t skr_atomicuptr_store_release(SAtomicUPtr* pVar, uint32_t val) { return (uintptr_t)skr_atomicu64_store_release((SAtomicU64*)pVar, (uint64_t)val); }
-FORCEINLINE static uintptr_t skr_atomicuptr_add_relaxed(SAtomicUPtr* pVar, uintptr_t val) { return (uintptr_t)skr_atomicu64_add_relaxed((SAtomicU64*)pVar, (uint64_t)val); }
-FORCEINLINE static uintptr_t skr_atomicuptr_cas_relaxed(SAtomicUPtr* pVar, uintptr_t oldval, uintptr_t newval) { return (uintptr_t)skr_atomicu64_cas_relaxed((SAtomicU64*)pVar, (uint64_t)oldval, (uint64_t)newval); }
-FORCEINLINE static uintptr_t skr_atomicuptr_max_relaxed(SAtomicUPtr* pVar, uintptr_t val) { return (uintptr_t)skr_atomicu64_max_relaxed((SAtomicU64*)pVar, (uint64_t)val); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_load_relaxed(SAtomicUPtr* pval) { return (uintptr_t)skr_atomicu64_load_relaxed((SAtomicU64*)pval); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_load_acquire(SAtomicUPtr* pval) { return (uintptr_t)skr_atomicu64_load_acquire((SAtomicU64*)pval); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_store_relaxed(SAtomicUPtr* pVar, uintptr_t val) { return (uintptr_t)skr_atomicu64_store_relaxed((SAtomicU64*)pVar, (uint64_t)val); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_store_release(SAtomicUPtr* pVar, uint32_t val) { return (uintptr_t)skr_atomicu64_store_release((SAtomicU64*)pVar, (uint64_t)val); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_add_relaxed(SAtomicUPtr* pVar, uintptr_t val) { return (uintptr_t)skr_atomicu64_add_relaxed((SAtomicU64*)pVar, (uint64_t)val); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_cas_relaxed(SAtomicUPtr* pVar, uintptr_t oldval, uintptr_t newval) { return (uintptr_t)skr_atomicu64_cas_relaxed((SAtomicU64*)pVar, (uint64_t)oldval, (uint64_t)newval); }
+SKR_FORCEINLINE static uintptr_t skr_atomicuptr_max_relaxed(SAtomicUPtr* pVar, uintptr_t val) { return (uintptr_t)skr_atomicu64_max_relaxed((SAtomicU64*)pVar, (uint64_t)val); }
 
-FORCEINLINE static intptr_t skr_atomicptr_load_relaxed(SAtomicPtr* pval) { return (intptr_t)skr_atomic64_load_relaxed((SAtomic64*)pval); }
-FORCEINLINE static intptr_t skr_atomicptr_load_acquire(SAtomicPtr* pval) { return (intptr_t)skr_atomic64_load_acquire((SAtomic64*)pval); }
-FORCEINLINE static intptr_t skr_atomicptr_store_relaxed(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic64_store_relaxed((SAtomic64*)pVar, (int64_t)val); }
-FORCEINLINE static intptr_t skr_atomicptr_store_release(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic64_store_release((SAtomic64*)pVar, (int64_t)val); }
-FORCEINLINE static intptr_t skr_atomicptr_add_relaxed(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic64_add_relaxed((SAtomic64*)pVar, (int64_t)val); }
-FORCEINLINE static intptr_t skr_atomicptr_cas_relaxed(SAtomicPtr* pVar, intptr_t oldval, intptr_t newval) { return (intptr_t)skr_atomic64_cas_relaxed((SAtomic64*)pVar, (int64_t)oldval, (int64_t)newval); }
-FORCEINLINE static intptr_t skr_atomicptr_max_relaxed(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic64_max_relaxed((SAtomic64*)pVar, (int64_t)val); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_load_relaxed(SAtomicPtr* pval) { return (intptr_t)skr_atomic64_load_relaxed((SAtomic64*)pval); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_load_acquire(SAtomicPtr* pval) { return (intptr_t)skr_atomic64_load_acquire((SAtomic64*)pval); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_store_relaxed(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic64_store_relaxed((SAtomic64*)pVar, (int64_t)val); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_store_release(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic64_store_release((SAtomic64*)pVar, (int64_t)val); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_add_relaxed(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic64_add_relaxed((SAtomic64*)pVar, (int64_t)val); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_cas_relaxed(SAtomicPtr* pVar, intptr_t oldval, intptr_t newval) { return (intptr_t)skr_atomic64_cas_relaxed((SAtomic64*)pVar, (int64_t)oldval, (int64_t)newval); }
+SKR_FORCEINLINE static intptr_t skr_atomicptr_max_relaxed(SAtomicPtr* pVar, intptr_t val) { return (intptr_t)skr_atomic64_max_relaxed((SAtomic64*)pVar, (int64_t)val); }
 
 #endif
 

@@ -13,7 +13,7 @@ namespace skr {
 namespace io {
 
 template<typename T>
-[[nodiscard]] FORCEINLINE const T* io_component(const IIORequest* rq) SKR_NOEXCEPT
+[[nodiscard]] SKR_FORCEINLINE const T* io_component(const IIORequest* rq) SKR_NOEXCEPT
 {
     if (auto c = rq->get_component(CID<T>::Get()))
         return static_cast<const T*>(c);
@@ -21,7 +21,7 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] FORCEINLINE T* io_component(IIORequest* rq) SKR_NOEXCEPT
+[[nodiscard]] SKR_FORCEINLINE T* io_component(IIORequest* rq) SKR_NOEXCEPT
 {
     if (auto c = rq->get_component(CID<T>::Get()))
         return static_cast<T*>(c);
@@ -189,7 +189,7 @@ private:
     }
 
     template <size_t n, typename... T>
-    FORCEINLINE auto dynamic_get_impl(std::tuple<T...>& tpl, uint64_t i)
+    SKR_FORCEINLINE auto dynamic_get_impl(std::tuple<T...>& tpl, uint64_t i)
     {
         if (i == n)
             return static_cast<IORequestComponent*>(&std::get<n>(tpl));
@@ -203,13 +203,13 @@ private:
     }
 
     template <typename... T>
-    FORCEINLINE auto dynamic_get(std::tuple<T...>& tpl, uint64_t i)
+    SKR_FORCEINLINE auto dynamic_get(std::tuple<T...>& tpl, uint64_t i)
     {
         return dynamic_get_impl<0>(tpl, i);
     }
 
     template <size_t n, typename... T>
-    FORCEINLINE auto dynamic_get_impl(const std::tuple<T...>& tpl, uint64_t i) const
+    SKR_FORCEINLINE auto dynamic_get_impl(const std::tuple<T...>& tpl, uint64_t i) const
     {
         if (i == n)
             return static_cast<const IORequestComponent*>(&std::get<n>(tpl));
@@ -223,7 +223,7 @@ private:
     }
 
     template <typename... T>
-    FORCEINLINE auto dynamic_get(const std::tuple<T...>& tpl, uint64_t i) const
+    SKR_FORCEINLINE auto dynamic_get(const std::tuple<T...>& tpl, uint64_t i) const
     {
         return dynamic_get_impl<0>(tpl, i);
     }
