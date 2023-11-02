@@ -1,5 +1,6 @@
 #include "SkrRT/platform/process.h"
 #include "SkrRT/misc/log/log_sink.hpp"
+#include "log_manager.hpp"
 
 #include <stdio.h> // FILE
 #include "SkrProfile/profile.h"

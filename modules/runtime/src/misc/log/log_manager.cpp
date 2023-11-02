@@ -190,7 +190,9 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatte
             }
         }
     }
-    if (LogConstants::gFlushBehavior == LogFlushBehavior::kFlushImmediate)
+    const bool bInplaceLog = !LogManager::Get() || !LogManager::Get()->TryGetWorker();
+    const bool bFlushImmediate = LogConstants::gFlushBehavior == LogFlushBehavior::kFlushImmediate;
+    if (bInplaceLog || bFlushImmediate)
     {
         FlushAllSinks();
     }
