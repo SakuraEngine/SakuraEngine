@@ -7,7 +7,7 @@ namespace skr
 namespace gui
 {
 // TODO. roadmap
-//  1. hit test
+// //  1. hit test
 //  2. pointer events
 //  3. pointer events bind
 //  4. focus (Pointer)

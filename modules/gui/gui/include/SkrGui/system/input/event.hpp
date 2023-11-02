@@ -41,7 +41,7 @@ sreflect_struct(
     "guid": "06ecf250-43e8-44a3-b1e9-b52b1ab53e05",
     "rtti": true
 )
-Event {
+Event : virtual public skr::rttr::IObject {
     EEventRoutePhase phase  = EEventRoutePhase::None;
     EEventSource     source = EEventSource::None;
 };
