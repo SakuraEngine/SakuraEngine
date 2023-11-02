@@ -1236,7 +1236,6 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
     VkSubmitInfo submit_info = {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .pNext = NULL,
-        .pWaitDstStageMask = 0,
         .commandBufferCount = CmdCount,
         .pCommandBuffers = vkCmds,
         .waitSemaphoreCount = waitCount,
