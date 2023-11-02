@@ -14,7 +14,7 @@
 #define CGPU_COLOR_MASK_ALL CGPU_COLOR_MASK_RED | CGPU_COLOR_MASK_GREEN | CGPU_COLOR_MASK_BLUE | CGPU_COLOR_MASK_ALPHA
 #define CGPU_COLOR_MASK_NONE 0
 
-#if defined(SKR_PLATFORM_WA32)
+#if SKR_ARCH_WA32
 #define DEFINE_CGPU_OBJECT(name) struct name##Descriptor; typedef const host_ptr_t name##Id;
 #else
 #define DEFINE_CGPU_OBJECT(name) struct name##Descriptor; typedef const struct name* name##Id;

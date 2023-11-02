@@ -290,7 +290,7 @@ SKR_RUNTIME_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_
     return np;
 }
 
-#elif defined(SKR_PLATFORM_WA)
+#elif SKR_ARCH_WA
 
 #else
 

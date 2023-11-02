@@ -63,30 +63,6 @@ extern const char* $name;
     #define SKR_ENUM(inttype)
 #endif
 
-#ifndef SKR_MANUAL_CONFIG_CPU_ARCHITECTURE
-    #if defined(__x86_64__) || defined(_M_X64) || defined(_AMD64_) || defined(_M_AMD64)
-        #define SKR_PLATFORM_X86_64
-    #elif defined(__i386) || defined(_M_IX86) || defined(_X86_)
-        #define SKR_PLATFORM_X86
-    #elif defined(__aarch64__) || defined(__AARCH64) || defined(_M_ARM64)
-        #define SKR_PLATFORM_ARM64
-    #elif defined(__arm__) || defined(_M_ARM)
-        #define SKR_PLATFORM_ARM32
-    #elif defined(__POWERPC64__) || defined(__powerpc64__)
-        #define SKR_PLATFORM_POWERPC64
-    #elif defined(__POWERPC__) || defined(__powerpc__)
-        #define SKR_PLATFORM_POWERPC32
-    #elif defined(__wasm64__)
-        #define SKR_PLATFORM_WA
-        #define SKR_PLATFORM_WA64
-    #elif defined(__wasm__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
-        #define SKR_PLATFORM_WA
-        #define SKR_PLATFORM_WA32
-    #else
-        #error Unrecognized CPU was used.
-    #endif
-#endif
-
 #ifndef SKR_STATIC_API
     #define SKR_STATIC_API
 #endif
@@ -166,10 +142,10 @@ typedef SSIZE_T ssize_t;
             #error "Unsupported architecture for msvc compiler"
         #endif
     #endif
-#elif defined(SKR_PLATFORM_WA32)
+#elif SKR_ARCH_WA32
     #define size_t uint32_t;
 typedef int64_t host_ptr_t;
-#elif defined(SKR_PLATFORM_WA64)
+#elif SKR_ARCH_WA64
     #define size_t uint64_t;
 typedef int64_t host_ptr_t;
 #elif defined(__GNUC__) || defined(__clang__)
@@ -223,51 +199,6 @@ typedef int64_t host_ptr_t;
     #error Unknown language dialect
 #endif
 
-#ifndef SKR_MANUAL_CONFIG_CPU_TRAITS
-    #if defined(__AVX__)
-        #define SKR_PLATFORM_AVX
-    #endif
-    #if defined(__AVX2__)
-        #define SKR_PLATFORM_AVX2
-    #endif
-
-    #if defined(SKR_PLATFORM_X86)
-        #define SKR_PLATFORM_32BIT
-        #define SKR_PLATFORM_LITTLE_ENDIAN
-        #define SKR_PLATFORM_SSE
-        #define SKR_PLATFORM_SSE2
-    #endif
-
-    #if defined(SKR_PLATFORM_X86_64)
-        #define SKR_PLATFORM_64BIT
-        #define SKR_PLATFORM_LITTLE_ENDIAN
-        #define SKR_PLATFORM_SSE
-        #define SKR_PLATFORM_SSE2
-    #endif
-
-    #if defined(SKR_PLATFORM_ARM32)
-        #define SKR_PLATFORM_32BIT
-        #define SKR_PLATFORM_LITTLE_ENDIAN
-    #endif
-
-    #if defined(SKR_PLATFORM_ARM64)
-        #define SKR_PLATFORM_64BIT
-        #define SKR_PLATFORM_LITTLE_ENDIAN
-        #define SKR_PLATFORM_SSE
-        #define SKR_PLATFORM_SSE2
-    #endif
-
-    #if defined(SKR_PLATFORM_POWERPC32)
-        #define SKR_PLATFORM_32BIT
-        #define SKR_PLATFORM_BIG_ENDIAN
-    #endif
-
-    #if defined(SKR_PLATFORM_POWERPC64)
-        #define SKR_PLATFORM_64BIT
-        #define SKR_PLATFORM_BIG_ENDIAN
-    #endif
-#endif
-
 // Platform Specific Configure
 #define SKR_HEADER_SCOPE_DEFINING_PLATFORM_CONFIGURE
 #ifdef __APPLE__
@@ -282,17 +213,16 @@ typedef int64_t host_ptr_t;
 #undef SKR_HEADER_SCOPE_DEFINING_PLATFORM_CONFIGURE
 
 // Numbers
-#ifndef KINDA_SMALL_NUMBER
-    #define KINDA_SMALL_NUMBER (1.e-4)
+#ifndef SKR_KINDA_SMALL_NUMBER
+    #define SKR_KINDA_SMALL_NUMBER (1.e-4)
 #endif
 
-#ifndef SMALL_NUMBER
-    #define SMALL_NUMBER (1.e-8)
+#ifndef SKR_SMALL_NUMBER
+    #define SKR_SMALL_NUMBER (1.e-8)
 #endif
 
-#ifndef THRESH_VECTOR_NORMALIZED
-    #define THRESH_VECTOR_NORMALIZED 0.01
+#ifndef SKR_THRESH_VECTOR_NORMALIZED
+    #define SKR_THRESH_VECTOR_NORMALIZED 0.01
 #endif
 
-// TODO:
 #define SKR_RESOURCE_DEV_MODE
