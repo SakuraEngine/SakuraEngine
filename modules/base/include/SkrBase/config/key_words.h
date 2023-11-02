@@ -17,7 +17,9 @@
     #include <stdbool.h>
 #endif
 
-#if __has_include("stdint.h")
+#ifdef __cplusplus
+    #include <cstdint>
+#else
     #include <stdint.h>
 #endif
 
