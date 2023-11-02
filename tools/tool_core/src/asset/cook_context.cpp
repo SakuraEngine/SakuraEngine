@@ -117,8 +117,18 @@ void* SCookContextImpl::_Import()
         importerType = importerTypeGuid;
         //-----import raw data
         SkrZoneScopedN("Importer.Import");
-        const auto type_name = skr::rttr::get_type_from_guid(importerType)->name().c_str();
-        ZoneName((const char*)type_name, strlen((const char*)type_name));
+        skr::string name_holder  = u8"unknown";
+        if (auto type = skr::rttr::get_type_from_guid(importerType))
+        {
+            name_holder = type->name().u8_str();
+        }
+        else
+        {
+            name_holder = skr::format(u8"{}", importerType);
+            SKR_LOG_WARN(u8"[SCookContext::Cook] importer without RTTI INFO detected: %s", name_holder.c_str());
+        }
+        const char* type_name = name_holder.c_str();
+        ZoneName(type_name, strlen(type_name));
         auto rawData = importer->Import(ioService, this);
         SKR_LOG_INFO(u8"[SCookContext::Cook] asset imported for asset: %s", record->path.u8string().c_str());
         return rawData;

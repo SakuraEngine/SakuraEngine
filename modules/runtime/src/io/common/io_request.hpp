@@ -176,7 +176,7 @@ private:
     auto& acquire_cmap() const SKR_NOEXCEPT
     {
         static bool initialized = false;
-        static skr::flat_hash_map<skr_guid_t, uint32_t, skr::guid::hash> map = {};
+        static skr::parallel_flat_hash_map<skr_guid_t, uint32_t, skr::guid::hash> map = {};
         if (!initialized)
         {
             std::apply([&](const auto&... args) {

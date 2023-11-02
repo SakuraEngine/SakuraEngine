@@ -18,8 +18,7 @@ namespace asset sreflect
 {
 using RawAnimation = ozz::animation::offline::RawAnimation;
 
-sreflect_struct("guid"
-                : "37d07586-0901-480a-8dcd-1f1f8220569c")
+sreflect_struct("guid": "37d07586-0901-480a-8dcd-1f1f8220569c")
 sattr("serialize" : "json")
 SKR_ANIMTOOL_API SAnimGltfImporter : public skd::asset::SImporter
 {

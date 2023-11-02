@@ -33,7 +33,7 @@ skr_material_asset_t
 };
 
 sreflect_struct("guid" : "b5fc88c3-0770-4332-9eda-9e283e29c7dd")
-sattr("serialize" : "json")
+sattr("serialize" : "json", "rtti" : true)
 SKR_SHADER_COMPILER_API SMaterialImporter final : public SImporter
 {
     skr::string jsonPath;
