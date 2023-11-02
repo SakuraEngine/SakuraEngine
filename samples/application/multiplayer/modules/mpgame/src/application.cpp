@@ -33,7 +33,7 @@
 
 #include "SkrProfile/profile.h"
 
-#ifdef SKR_OS_WINDOWS
+#if SKR_PLAT_WINDOWS
     #include <shellscalingapi.h>
 #endif
 

@@ -1358,9 +1358,9 @@ CGPUSurfaceId cgpu_surface_from_ns_view(CGPUDeviceId device, CGPUNSView* window)
 
 CGPUSurfaceId cgpu_surface_from_native_view(CGPUDeviceId device, void* view)
 {
-#ifdef SKR_OS_MACOSX
+#if SKR_PLAT_MACOSX
     return cgpu_surface_from_ns_view(device, (CGPUNSView*)view);
-#elif defined(SKR_OS_WINDOWS)
+#elif SKR_PLAT_WINDOWS
     return cgpu_surface_from_hwnd(device, (HWND)view);
 #endif
     return CGPU_NULLPTR;

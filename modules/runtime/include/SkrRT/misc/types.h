@@ -67,12 +67,12 @@ extern const skr_guid_t $guid;
 #ifdef __cplusplus
 #define SKR_DECLARE_VEC2_BODY(TT, NAME) \
     TT x, y;\
-    FORCEINLINE bool operator == ( const NAME& vec ) const { return x==vec.x && y==vec.y; }\
-    FORCEINLINE bool operator != ( const NAME& vec ) const { return x!=vec.x || y!=vec.y; }\
-    FORCEINLINE NAME() = default;\
-    FORCEINLINE NAME(const NAME&) = default;\
-    FORCEINLINE NAME(TT X, TT Y) : x(X), y(Y) {} \
-    FORCEINLINE NAME(TT t) : x(t), y(t) {}
+    SKR_FORCEINLINE bool operator == ( const NAME& vec ) const { return x==vec.x && y==vec.y; }\
+    SKR_FORCEINLINE bool operator != ( const NAME& vec ) const { return x!=vec.x || y!=vec.y; }\
+    SKR_FORCEINLINE NAME() = default;\
+    SKR_FORCEINLINE NAME(const NAME&) = default;\
+    SKR_FORCEINLINE NAME(TT X, TT Y) : x(X), y(Y) {} \
+    SKR_FORCEINLINE NAME(TT t) : x(t), y(t) {}
 #else
 #define SKR_DECLARE_VEC2_BODY(TT, NAME) TT x, y;
 #endif

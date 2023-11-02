@@ -1,40 +1,11 @@
 #pragma once
+#include "SkrBase/config.h"
 #include "SkrRT/misc/macros.h"
 #ifndef __cplusplus
     #include <stdbool.h>
 #endif
 #if __has_include("stdint.h")
     #include <stdint.h>
-#endif
-
-#if defined(__cplusplus)
-    #define SKR_UNUSED [[maybe_unused]]
-#elif defined(__GNUC__) || defined(__clang__)
-    #define SKR_UNUSED __attribute__((unused))
-#elif defined(_MSC_VER)
-    #define SKR_UNUSED
-#endif
-
-#ifdef __cplusplus
-    #define SKR_IF_CPP(...) __VA_ARGS__
-#else
-    #define SKR_IF_CPP(...)
-#endif
-
-#if defined(_MSC_VER)
-    #define SKR_ALIGNAS(x) __declspec(align(x))
-#else
-    #define SKR_ALIGNAS(x) __attribute__((aligned(x)))
-#endif
-
-#ifndef SKR_ASSUME
-    #if defined(__clang__)
-        #define SKR_ASSUME(x) __builtin_assume(x)
-    #elif defined(_MSC_VER)
-        #define SKR_ASSUME(x) __assume(x)
-    #else
-        #define SKR_ASSUME(x)
-    #endif
 #endif
 
 #define sstatic_ctor_name_impl(index, expr) "\"StaticCtor" #index "\" : " #expr
@@ -86,82 +57,10 @@ typedef struct $Module {
 } $Module;
 extern const char* $name;
 
-#if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
-    #define SKR_OS_UNIX
-#endif
-
-#if defined(_MSC_VER)
-    #define SKR_DISABLE_OPTIMIZATION __pragma(optimize("", off))
-    #define SKR_ENABLE_OPTIMIZATION __pragma(optimize("", on))
-#elif defined(__clang__)
-    #define SKR_DISABLE_OPTIMIZATION #pragma clang optimize off
-    #define SKR_ENABLE_OPTIMIZATION #pragma clang optimize on
-#endif
-
-#if defined(__APPLE__) && defined(__MACH__)
-/* Apple OSX and iOS (Darwin). */
-    #include <TargetConditionals.h>
-    #if TARGET_IPHONE_SIMULATOR == 1
-    /* iOS in Xcode simulator */
-    #elif TARGET_OS_IPHONE == 1
-    /* iOS */
-    #elif TARGET_OS_MAC == 1
-        /* macOS */
-        #define SKR_OS_MACOSX
-    #endif
-#endif
-
-#if defined(_WIN32) || defined(_WIN64)
-    #define SKR_OS_WINDOWS
-#endif
-
-#if defined(_MSC_VER) && !defined(__clang__)
-    #ifndef FORCEINLINE
-        #define FORCEINLINE __forceinline
-    #endif
-    #define DEFINE_ALIGNED(def, a) __declspec(align(a)) def
-#else
-    #ifndef FORCEINLINE
-        #define FORCEINLINE inline __attribute__((always_inline))
-    #endif
-    #define DEFINE_ALIGNED(def, a) __attribute__((aligned(a))) def
-#endif
-
-#if defined(__cplusplus)
-    #define SKR_CONSTEXPR constexpr
-#else
-    #define SKR_CONSTEXPR const
-#endif
-
-#ifdef __cplusplus
-    #define SKR_EXTERN_C extern "C"
-#else
-    #define SKR_EXTERN_C extern
-#endif
-
 #if defined(__cplusplus)
     #define SKR_ENUM(inttype) : inttype
 #else
     #define SKR_ENUM(inttype)
-#endif
-
-#ifndef SKR_IMPORT
-    #if defined(_MSC_VER)
-        #define SKR_IMPORT __declspec(dllimport)
-    #else
-        #define SKR_IMPORT __attribute__((visibility("default")))
-    #endif
-#endif
-
-#ifndef SKR_EXPORT
-    #if defined(_MSC_VER)
-        // MSVC linker trims symbols, the 'dllexport' attribute prevents this.
-        // But we are not archiving DLL files with SHIPPING_ONE_ARCHIVE mode.
-        // TODO: do something with this workaround
-        #define SKR_EXPORT __declspec(dllexport)
-    #else
-        #define SKR_EXPORT __attribute__((visibility("default")))
-    #endif
 #endif
 
 #ifndef SKR_MANUAL_CONFIG_CPU_ARCHITECTURE
@@ -238,13 +137,8 @@ extern const char* $name;
     #endif
 #endif
 
-// PTR SIZE
-#if INTPTR_MAX == 0x7FFFFFFFFFFFFFFFLL
-    #define PTR_SIZE 8
-#elif INTPTR_MAX == 0x7FFFFFFF
-    #define PTR_SIZE 4
-#else
-    #error unsupported platform
+#ifndef FORCEINLINE
+#define FORCEINLINE SKR_FORCEINLINE
 #endif
 
 #if defined(_MSC_VER)

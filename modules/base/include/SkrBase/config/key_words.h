@@ -13,6 +13,10 @@
 // noexcept
 //-------------------------------------------------------------------------------
 
+#ifndef __cplusplus
+    #include <stdbool.h>
+#endif
+
 #if __has_include("stdint.h")
     #include <stdint.h>
 #endif
@@ -24,6 +28,18 @@
     #define SKR_UNUSED __attribute__((unused))
 #elif defined(_MSC_VER)
     #define SKR_UNUSED
+#endif
+
+#ifdef __cplusplus
+    #define SKR_IF_CPP(...) __VA_ARGS__
+#else
+    #define SKR_IF_CPP(...)
+#endif
+
+#if defined(__cplusplus)
+    #define SKR_CONSTEXPR constexpr
+#else
+    #define SKR_CONSTEXPR const
 #endif
 
 // ALIGNAS
