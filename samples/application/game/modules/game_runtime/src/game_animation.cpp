@@ -15,7 +15,7 @@ void InitializeAnimState(anim_state_t* state, skr::anim::SkeletonResource* skele
     state->local_transforms.resize(skeleton->skeleton.num_soa_joints());
 }
 
-void UpdateAnimState(anim_state_t* state, skr::anim::SkeletonResource* skeleton, float dt, skr_render_anim_comp_t* output)
+void UpdateAnimState(anim_state_t* state, skr::anim::SkeletonResource* skeleton, float dt, skr::anim::AnimComponent* output)
 {
     auto anim = state->animation_resource.get_resolved();
     if (!anim) return;

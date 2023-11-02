@@ -6,12 +6,15 @@
     #include "SkrAnim/components/skin_component.generated.h" // IWYU pragma: export
 #endif
 
+namespace skr sreflect {
+namespace anim sreflect {
+
 sreflect_struct("guid" : "05B43406-4BCF-4E59-B2D8-ACED7D37E776")
 sattr("component" :
 {
     "custom" : "::dual::managed_component"
 }) 
-skr_render_skin_comp_t
+SkinComponent
 {
     SKR_RESOURCE_FIELD(skr_skin_resource_t, skin_resource);
     sattr("transient": true)
@@ -22,7 +25,7 @@ skr_render_skin_comp_t
 };
 
 sreflect_struct("guid" : "F9195283-41E4-4BB7-8866-5C1BDC8B51C8")
-skr_skin_primitive_t 
+SkinPrimitive 
 {
     skr_vertex_buffer_entry_t position;
     skr_vertex_buffer_entry_t normal;
@@ -35,22 +38,24 @@ sattr("component" :
 {
     "custom" : "::dual::managed_component"
 }) 
-skr_render_anim_comp_t
+AnimComponent
 {
-    ~skr_render_anim_comp_t();
+    ~AnimComponent();
     bool use_dynamic_buffer = false;
 
     spush_attr("no-rtti": true, "transient": true)
     eastl::vector<ozz::math::Float4x4> joint_matrices;
-    eastl::vector<skr_skin_primitive_t> primitives;
+    eastl::vector<skr::anim::SkinPrimitive> primitives;
     eastl::vector<skr::IBlob*> buffers;
     eastl::vector<CGPUBufferId> vbs;
     eastl::vector<skr_vertex_buffer_view_t> views;
 };
 
-struct skr_render_skel_comp_t;
-SKR_ANIM_API void skr_init_skin_component(skr_render_skin_comp_t* component, const skr::anim::SkeletonResource* skeleton);
-SKR_ANIM_API void skr_init_anim_component(skr_render_anim_comp_t* component, const skr_mesh_resource_t* mesh, skr::anim::SkeletonResource* skeleton);
-SKR_ANIM_API void skr_init_anim_buffers(CGPUDeviceId device, skr_render_anim_comp_t* anim, const skr_mesh_resource_t* mesh);
+} // namespace anim
+} // namespace skr
 
-SKR_ANIM_API void skr_cpu_skin(skr_render_skin_comp_t* skin, const skr_render_anim_comp_t* anim, const skr_mesh_resource_t* mesh);
+SKR_ANIM_API void skr_init_skin_component(skr::anim::SkinComponent* component, const skr::anim::SkeletonResource* skeleton);
+SKR_ANIM_API void skr_init_anim_component(skr::anim::AnimComponent* component, const skr_mesh_resource_t* mesh, skr::anim::SkeletonResource* skeleton);
+SKR_ANIM_API void skr_init_anim_buffers(CGPUDeviceId device, skr::anim::AnimComponent* anim, const skr_mesh_resource_t* mesh);
+
+SKR_ANIM_API void skr_cpu_skin(skr::anim::SkinComponent* skin, const skr::anim::AnimComponent* anim, const skr_mesh_resource_t* mesh);

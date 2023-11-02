@@ -10,7 +10,7 @@
 
 #include "SkrProfile/profile.h"
 
-skr_render_anim_comp_t::~skr_render_anim_comp_t()
+skr::anim::AnimComponent::~AnimComponent()
 {
     for(auto vb : vbs)
     {
@@ -22,7 +22,7 @@ skr_render_anim_comp_t::~skr_render_anim_comp_t()
     }
 }
 
-void skr_init_skin_component(skr_render_skin_comp_t* component, const skr::anim::SkeletonResource* skeleton)
+void skr_init_skin_component(skr::anim::SkinComponent* component, const skr::anim::SkeletonResource* skeleton)
 {
     auto skin = component->skin_resource.get_resolved();
     if(!skin)
@@ -43,7 +43,7 @@ void skr_init_skin_component(skr_render_skin_comp_t* component, const skr::anim:
     }
 }
 
-void skr_init_anim_component(skr_render_anim_comp_t* component, const skr_mesh_resource_t* mesh, skr::anim::SkeletonResource* skeleton)
+void skr_init_anim_component(skr::anim::AnimComponent* component, const skr_mesh_resource_t* mesh, skr::anim::SkeletonResource* skeleton)
 {
     component->buffers.resize(1);
     component->vbs.resize(1);
@@ -109,7 +109,7 @@ void skr_init_anim_component(skr_render_anim_comp_t* component, const skr_mesh_r
     blob->add_refcount();
 }
 
-void skr_init_anim_buffers(CGPUDeviceId device, skr_render_anim_comp_t* anim, const skr_mesh_resource_t* mesh)
+void skr_init_anim_buffers(CGPUDeviceId device, skr::anim::AnimComponent* anim, const skr_mesh_resource_t* mesh)
 {
     auto mesh_resource = mesh;
     for (size_t j = 0u; j < anim->buffers.size(); j++)
@@ -176,7 +176,7 @@ void skr_init_anim_buffers(CGPUDeviceId device, skr_render_anim_comp_t* anim, co
     }
 }
 
-void skr_cpu_skin(skr_render_skin_comp_t* skin, const skr_render_anim_comp_t* anim, const skr_mesh_resource_t* mesh)
+void skr_cpu_skin(skr::anim::SkinComponent* skin, const skr::anim::AnimComponent* anim, const skr_mesh_resource_t* mesh)
 {
     auto skin_resource = skin->skin_resource.get_resolved();
     for (size_t i = 0; i < mesh->primitives.size(); ++i)

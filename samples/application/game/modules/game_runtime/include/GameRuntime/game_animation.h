@@ -9,7 +9,10 @@
 #include "GameRuntime/game_animation.generated.h" // IWYU pragma: export
 #endif
 
-struct skr_render_anim_comp_t;
+namespace skr::anim
+{
+    struct AnimComponent;
+}
 
 namespace game sreflect
 {  
@@ -30,5 +33,5 @@ namespace game sreflect
     };
 
     GAME_RUNTIME_API void InitializeAnimState(anim_state_t* state, skr::anim::SkeletonResource* skeleton);
-    GAME_RUNTIME_API void UpdateAnimState(anim_state_t* state, skr::anim::SkeletonResource* skeleton, float dt, skr_render_anim_comp_t* output);
+    GAME_RUNTIME_API void UpdateAnimState(anim_state_t* state, skr::anim::SkeletonResource* skeleton, float dt, skr::anim::AnimComponent* output);
 }
