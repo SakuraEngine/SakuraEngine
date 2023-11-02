@@ -107,3 +107,151 @@ private:
     };
 };
 } // namespace skr::rttr
+
+// #include "SkrRT/serde/binary/reader_fwd.h"
+// #include "SkrRT/serde/binary/writer_fwd.h"
+// namespace skr::binary
+// {
+// template <>
+// struct WriteTrait<skr::rttr::TypeDesc> {
+//     static int Write(skr_binary_writer_t* writer, const skr::rttr::TypeDesc& value)
+//     {
+//         using UT = std::underlying_type_t<skr::rttr::ETypeDescType>;
+//         if (auto result = skr::binary::WriteTrait<UT>::Write(writer, static_cast<UT>(value.type())))
+//             return result;
+//         switch (value.type())
+//         {
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_GUID:
+//                 if (auto result = skr::binary::WriteTrait<skr::GUID>::Write(writer, value.value_guid()))
+//                     return result;
+//                 break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_BOOL:
+//                 if (auto result = skr::binary::WriteTrait<bool>::Write(writer, value.value_bool()))
+//                     return result;
+//                 break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_INT8:
+//                 if (auto result = skr::binary::WriteTrait<int8_t>::Write(writer, value.value_int8()))
+//                     return result;
+//                 break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_INT16:
+//                 if (auto result = skr::binary::WriteTrait<int16_t>::Write(writer, value.value_int16()))
+//                     return result;
+//                 break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_INT32:
+//                 if (auto result = skr::binary::WriteTrait<int32_t>::Write(writer, value.value_int32()))
+//                     return result;
+//                 break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_INT64:
+//                 if (auto result = skr::binary::WriteTrait<int64_t>::Write(writer, value.value_int64()))
+//                     return result;
+//                 break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_UINT8:
+//                 if (auto result = skr::binary::WriteTrait<uint8_t>::Write(writer, value.value_uint8()))
+//                     return result;
+//                 break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_UINT16:
+//                 if (auto result = skr::binary::WriteTrait<uint16_t>::Write(writer, value.value_uint16()))
+//                     return result;
+//                 break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_UINT32:
+//                 if (auto result = skr::binary::WriteTrait<uint32_t>::Write(writer, value.value_uint32()))
+//                     return result;
+//                 break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_UINT64:
+//                 if (auto result = skr::binary::WriteTrait<uint64_t>::Write(writer, value.value_uint64()))
+//                     return result;
+//                 break;
+//             default:
+//                 SKR_UNREACHABLE_CODE()
+//                 break;
+//         }
+//     }
+// };
+// template <>
+// struct ReadTrait<skr::rttr::TypeDesc> {
+//     static int Read(skr_binary_reader_t* reader, skr::rttr::TypeDesc& value)
+//     {
+//         using UT = std::underlying_type_t<skr::rttr::ETypeDescType>;
+//         UT type;
+//         if (auto result = skr::binary::ReadTrait<UT>::Read(reader, type))
+//             return result;
+//         switch (static_cast<rttr::ETypeDescType>(type))
+//         {
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_GUID: {
+//                 GUID read_value;
+//                 if (auto result = skr::binary::ReadTrait<GUID>::Read(reader, read_value))
+//                     return result;
+//                 value = { read_value };
+//             }
+//             break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_BOOL: {
+//                 bool read_value;
+//                 if (auto result = skr::binary::ReadTrait<bool>::Read(reader, read_value))
+//                     return result;
+//                 value = { read_value };
+//             }
+//             break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_INT8: {
+//                 int8_t read_value;
+//                 if (auto result = skr::binary::ReadTrait<int8_t>::Read(reader, read_value))
+//                     return result;
+//                 value = { read_value };
+//             }
+//             break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_INT16: {
+//                 int16_t read_value;
+//                 if (auto result = skr::binary::ReadTrait<int16_t>::Read(reader, read_value))
+//                     return result;
+//                 value = { read_value };
+//             }
+//             break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_INT32: {
+//                 int32_t read_value;
+//                 if (auto result = skr::binary::ReadTrait<int32_t>::Read(reader, read_value))
+//                     return result;
+//                 value = { read_value };
+//             }
+//             break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_INT64: {
+//                 int64_t read_value;
+//                 if (auto result = skr::binary::ReadTrait<int64_t>::Read(reader, read_value))
+//                     return result;
+//                 value = { read_value };
+//             }
+//             break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_UINT8: {
+//                 uint8_t read_value;
+//                 if (auto result = skr::binary::ReadTrait<uint8_t>::Read(reader, read_value))
+//                     return result;
+//                 value = { read_value };
+//             }
+//             break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_UINT16: {
+//                 uint16_t read_value;
+//                 if (auto result = skr::binary::ReadTrait<uint16_t>::Read(reader, read_value))
+//                     return result;
+//                 value = { read_value };
+//             }
+//             break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_UINT32: {
+//                 uint32_t read_value;
+//                 if (auto result = skr::binary::ReadTrait<uint32_t>::Read(reader, read_value))
+//                     return result;
+//                 value = { read_value };
+//             }
+//             break;
+//             case skr::rttr::SKR_TYPE_DESC_TYPE_UINT64: {
+//                 uint64_t read_value;
+//                 if (auto result = skr::binary::ReadTrait<uint64_t>::Read(reader, read_value))
+//                     return result;
+//                 value = { read_value };
+//             }
+//             break;
+//             default:
+//                 SKR_UNREACHABLE_CODE()
+//                 break;
+//         }
+//         return 0;
+//     }
+// };
+// } // namespace skr::binary

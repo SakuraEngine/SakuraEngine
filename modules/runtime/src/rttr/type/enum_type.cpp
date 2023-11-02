@@ -8,32 +8,30 @@ EnumType::EnumType(Type* underlying_type, GUID type_id, string name)
 {
 }
 
-bool EnumType::call_ctor(void* ptr) const
+void EnumType::call_ctor(void* ptr) const
 {
-    return true;
 }
-bool EnumType::call_dtor(void* ptr) const
+void EnumType::call_dtor(void* ptr) const
 {
-    return true;
 }
-bool EnumType::call_copy(void* dst, const void* src) const
+void EnumType::call_copy(void* dst, const void* src) const
 {
-    return _underlying_type->call_copy(dst, src);
+    _underlying_type->call_copy(dst, src);
 }
-bool EnumType::call_move(void* dst, void* src) const
+void EnumType::call_move(void* dst, void* src) const
 {
-    return _underlying_type->call_move(dst, src);
+    _underlying_type->call_move(dst, src);
 }
-bool EnumType::call_assign(void* dst, const void* src) const
+void EnumType::call_assign(void* dst, const void* src) const
 {
-    return _underlying_type->call_assign(dst, src);
+    _underlying_type->call_assign(dst, src);
 }
-bool EnumType::call_move_assign(void* dst, void* src) const
+void EnumType::call_move_assign(void* dst, void* src) const
 {
-    return _underlying_type->call_move_assign(dst, src);
+    _underlying_type->call_move_assign(dst, src);
 }
-bool EnumType::call_hash(const void* ptr, size_t& result) const
+size_t EnumType::call_hash(const void* ptr) const
 {
-    return _underlying_type->call_hash(ptr, result);
+    return _underlying_type->call_hash(ptr);
 }
 } // namespace skr::rttr

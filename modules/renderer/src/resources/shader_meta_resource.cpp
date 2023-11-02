@@ -7,7 +7,7 @@
 
 bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
 {
-    eastl::set<eastl::u8string> keys;
+    eastl::set<eastl::u8string>                                                           keys;
     skr::flat_hash_map<skr::string, skr_shader_option_template_t, skr::hash<skr::string>> kvs;
     // collect all keys & ensure unique
     for (auto& src : srcs)
@@ -30,10 +30,10 @@ bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_opt
         dst.push_back(kvs[key.c_str()]);
     }
     // sort result by key
-    eastl::stable_sort(dst.begin(), dst.end(), 
-        [](const skr_shader_option_template_t& a, const skr_shader_option_template_t& b) {
-            return eastl::u8string(a.key.c_str()) < eastl::u8string(b.key.c_str()); 
-        });
+    eastl::stable_sort(dst.begin(), dst.end(),
+                       [](const skr_shader_option_template_t& a, const skr_shader_option_template_t& b) {
+                           return eastl::u8string(a.key.c_str()) < eastl::u8string(b.key.c_str());
+                       });
     return true;
 }
 
@@ -58,10 +58,10 @@ struct SKR_RENDERER_API SShaderOptionsFactoryImpl : public SShaderOptionsFactory
 
     ~SShaderOptionsFactoryImpl() noexcept = default;
 
-    bool AsyncIO() override { return false; }
-    skr_type_id_t GetResourceType() override
+    bool          AsyncIO() override { return false; }
+    skr_guid_t GetResourceType() override
     {
-        const auto collection_type = skr::type::type_id<skr_shader_options_resource_t>::get();
+        const auto collection_type = ::skr::rttr::type_id<skr_shader_options_resource_t>();
         return collection_type;
     }
 
@@ -97,5 +97,5 @@ void SShaderOptionsFactory::Destroy(SShaderOptionsFactory* factory)
 {
     return SkrDelete(factory);
 }
-} // namespace resource
+} // namespace renderer
 } // namespace skr

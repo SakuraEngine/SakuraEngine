@@ -10,12 +10,14 @@
 #include "option_utils.hpp"
 
 skr_stable_shader_hash_t::skr_stable_shader_hash_t(uint32_t a, uint32_t b, uint32_t c, uint32_t d) SKR_NOEXCEPT
-    : valuea(a), valueb(b), valuec(c), valued(d)
+    : valuea(a),
+      valueb(b),
+      valuec(c),
+      valued(d)
 {
-
 }
 
-size_t skr_stable_shader_hash_t::hasher::operator()(const skr_stable_shader_hash_t &hash) const
+size_t skr_stable_shader_hash_t::hasher::operator()(const skr_stable_shader_hash_t& hash) const
 {
     return skr_hash(&hash, sizeof(hash), 114514u);
 }
@@ -23,12 +25,12 @@ size_t skr_stable_shader_hash_t::hasher::operator()(const skr_stable_shader_hash
 skr_stable_shader_hash_t skr_stable_shader_hash_t::hash_string(const char* str, uint32_t size) SKR_NOEXCEPT
 {
     if (!size) return skr_stable_shader_hash_t(0, 0, 0, 0);
-    auto result = make_zeroed<skr_stable_shader_hash_t>();
+    auto           result   = make_zeroed<skr_stable_shader_hash_t>();
     const uint32_t seeds[4] = { 114u, 514u, 1919u, 810u };
-    result.valuea = skr_hash32(str, size, seeds[0]);
-    result.valueb = skr_hash32(str, size, seeds[1]);
-    result.valuec = skr_hash32(str, size, seeds[2]);
-    result.valued = skr_hash32(str, size, seeds[3]);
+    result.valuea           = skr_hash32(str, size, seeds[0]);
+    result.valueb           = skr_hash32(str, size, seeds[1]);
+    result.valuec           = skr_hash32(str, size, seeds[2]);
+    result.valued           = skr_hash32(str, size, seeds[3]);
     return result;
 }
 
@@ -101,23 +103,20 @@ using namespace skr::resource;
 
 ShaderCollectionResource::~ShaderCollectionResource() SKR_NOEXCEPT
 {
-
 }
 
-struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFactory
-{
+struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFactory {
     SShaderResourceFactoryImpl(const SShaderResourceFactory::Root& root)
         : root(root)
     {
-
     }
 
     ~SShaderResourceFactoryImpl() noexcept = default;
-    skr_type_id_t GetResourceType() override;
-    bool AsyncIO() override { return true; }
-    bool Unload(skr_resource_record_t* record) override;
+    skr_guid_t     GetResourceType() override;
+    bool              AsyncIO() override { return true; }
+    bool              Unload(skr_resource_record_t* record) override;
     ESkrInstallStatus Install(skr_resource_record_t* record) override;
-    bool Uninstall(skr_resource_record_t* record) override;
+    bool              Uninstall(skr_resource_record_t* record) override;
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
 
     Root root;
@@ -128,7 +127,7 @@ SShaderResourceFactory* SShaderResourceFactory::Create(const Root& root)
     return SkrNew<SShaderResourceFactoryImpl>(root);
 }
 
-void SShaderResourceFactory::Destroy(SShaderResourceFactory *factory)
+void SShaderResourceFactory::Destroy(SShaderResourceFactory* factory)
 {
     return SkrDelete(factory);
 }
@@ -137,21 +136,25 @@ ECGPUShaderBytecodeType SShaderResourceFactory::GetRuntimeBytecodeType(ECGPUBack
 {
     switch (backend)
     {
-    case CGPU_BACKEND_D3D12: return CGPU_SHADER_BYTECODE_TYPE_DXIL;
-    case CGPU_BACKEND_VULKAN: return CGPU_SHADER_BYTECODE_TYPE_SPIRV;
-    case CGPU_BACKEND_METAL: return CGPU_SHADER_BYTECODE_TYPE_MTL;
-    default: return CGPU_SHADER_BYTECODE_TYPE_COUNT;
+        case CGPU_BACKEND_D3D12:
+            return CGPU_SHADER_BYTECODE_TYPE_DXIL;
+        case CGPU_BACKEND_VULKAN:
+            return CGPU_SHADER_BYTECODE_TYPE_SPIRV;
+        case CGPU_BACKEND_METAL:
+            return CGPU_SHADER_BYTECODE_TYPE_MTL;
+        default:
+            return CGPU_SHADER_BYTECODE_TYPE_COUNT;
     }
 }
 
-skr_type_id_t SShaderResourceFactoryImpl::GetResourceType()
+skr_guid_t SShaderResourceFactoryImpl::GetResourceType()
 {
-    const auto resource_type = skr::type::type_id<skr_shader_collection_resource_t>::get();
+    const auto resource_type = ::skr::rttr::type_id<skr_shader_collection_resource_t>();
     return resource_type;
 }
 
 bool SShaderResourceFactoryImpl::Unload(skr_resource_record_t* record)
-{ 
+{
     auto shader_collection = (skr_shader_collection_resource_t*)record->resource;
     if (!root.dont_create_shader)
     {
@@ -167,22 +170,22 @@ bool SShaderResourceFactoryImpl::Unload(skr_resource_record_t* record)
         }
     }
     SkrDelete(shader_collection);
-    return true; 
+    return true;
 }
 
 ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* record)
 {
     if (root.dont_create_shader) return SKR_INSTALL_STATUS_SUCCEED;
-    
-    auto shader_collection = static_cast<skr_shader_collection_resource_t*>(record->resource);
+
+    auto   shader_collection   = static_cast<skr_shader_collection_resource_t*>(record->resource);
     auto&& root_switch_variant = shader_collection->GetRootStaticVariant();
     auto&& root_option_variant = root_switch_variant.GetRootDynamicVariants();
-    bool launch_success = false;
+    bool   launch_success      = false;
     // load bytecode and create CGPU shader
     for (uint32_t i = 0u; i < root_option_variant.size(); i++)
     {
-        const auto& identifier = root_option_variant[i];
-        const auto runtime_bytecode_type = SShaderResourceFactory::GetRuntimeBytecodeType(root.render_device->get_backend());
+        const auto& identifier            = root_option_variant[i];
+        const auto  runtime_bytecode_type = SShaderResourceFactory::GetRuntimeBytecodeType(root.render_device->get_backend());
         if (identifier.bytecode_type == runtime_bytecode_type)
         {
             const auto status = root.shadermap->install_shader(identifier);
@@ -198,7 +201,7 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
 
 bool SShaderResourceFactoryImpl::Uninstall(skr_resource_record_t* record)
 {
-    return true; 
+    return true;
 }
 
 ESkrInstallStatus SShaderResourceFactoryImpl::UpdateInstall(skr_resource_record_t* record)
@@ -206,5 +209,5 @@ ESkrInstallStatus SShaderResourceFactoryImpl::UpdateInstall(skr_resource_record_
     return SKR_INSTALL_STATUS_SUCCEED;
 }
 
-} // namespace resource
+} // namespace renderer
 } // namespace skr

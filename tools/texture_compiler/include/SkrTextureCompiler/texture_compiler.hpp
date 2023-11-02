@@ -2,6 +2,7 @@
 #include "SkrRT/platform/configure.h"
 #include "SkrTextureCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
+#include "SkrRT/containers/string.hpp"
 #ifndef __meta__
     #include "SkrTextureCompiler/texture_compiler.generated.h" // IWYU pragma: export
 #endif
@@ -11,7 +12,7 @@ namespace skd sreflect
 namespace asset sreflect
 {
 sreflect_struct("guid" : "a26c2436-9e5f-43c4-b4d7-e5373d353bae")
-sattr("serialize" : "json")
+sattr("serialize" : "json", "rtti" : true)
 SKR_TEXTURE_COMPILER_API STextureImporter final : public SImporter
 {
     sattr("no-default" : true)

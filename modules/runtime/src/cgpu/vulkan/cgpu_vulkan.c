@@ -1206,6 +1206,7 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
     }
     // Set wait semaphores
     SKR_DECLARE_ZERO_VLA(VkSemaphore, wait_semaphores, desc->wait_semaphore_count + 1)
+    SKR_DECLARE_ZERO_VLA(VkPipelineStageFlags, wait_stages, desc->wait_semaphore_count + 1)
     uint32_t waitCount = 0;
     CGPUSemaphore_Vulkan** WaitSemaphores = (CGPUSemaphore_Vulkan**)desc->wait_semaphores;
     for (uint32_t i = 0; i < desc->wait_semaphore_count; ++i)
@@ -1213,6 +1214,7 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
         if (WaitSemaphores[i]->mSignaled)
         {
             wait_semaphores[waitCount] = WaitSemaphores[i]->pVkSemaphore;
+            wait_stages[waitCount] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;            
             WaitSemaphores[i]->mSignaled = false;
             ++waitCount;
         }
@@ -1225,7 +1227,7 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
     {
         if (!SignalSemaphores[i]->mSignaled)
         {
-            wait_semaphores[signalCount] = SignalSemaphores[i]->pVkSemaphore;
+            signal_semaphores[signalCount] = SignalSemaphores[i]->pVkSemaphore;
             SignalSemaphores[i]->mSignaled = true;
             ++signalCount;
         }
@@ -1238,9 +1240,10 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
         .commandBufferCount = CmdCount,
         .pCommandBuffers = vkCmds,
         .waitSemaphoreCount = waitCount,
-        .pWaitSemaphores = signal_semaphores,
+        .pWaitSemaphores = wait_semaphores,
+        .pWaitDstStageMask = wait_stages,
         .signalSemaphoreCount = signalCount,
-        .pSignalSemaphores = wait_semaphores,
+        .pSignalSemaphores = signal_semaphores,
     };
 #ifdef CGPU_THREAD_SAFETY
     if (Q->pMutex) skr_mutex_acquire(Q->pMutex);

@@ -1,8 +1,9 @@
 #pragma once
-#include "SkrRT/module.configure.h"
 #include <cstdint>
 #include "SkrRT/rttr/guid.hpp"
 #include "SkrRT/containers/string.hpp"
+#include "SkrRT/serde/json/writer_fwd.h"
+#include "SkrRT/serde/json/reader_fwd.h"
 
 namespace skr::rttr
 {
@@ -16,6 +17,21 @@ enum ETypeCategory
     SKR_TYPE_CATEGORY_GENERIC,
 };
 
+enum class ETypeFeature : uint32_t
+{
+    Constructor,
+    Destructor,
+    Copy,
+    Move,
+    Assign,
+    MoveAssign,
+    Hash,
+    WriteBinary,
+    ReadBinary,
+    WriteJson,
+    ReadJson
+};
+
 struct SKR_RUNTIME_API Type {
     Type(ETypeCategory type_category, string name, GUID type_id, size_t size, size_t alignment);
     virtual ~Type() = default;
@@ -27,17 +43,23 @@ struct SKR_RUNTIME_API Type {
     SKR_INLINE size_t        size() const { return _size; }
     SKR_INLINE size_t        alignment() const { return _alignment; }
 
-    // call functions
-    virtual bool call_ctor(void* ptr) const                       = 0;
-    virtual bool call_dtor(void* ptr) const                       = 0;
-    virtual bool call_copy(void* dst, const void* src) const      = 0;
-    virtual bool call_move(void* dst, void* src) const            = 0;
-    virtual bool call_assign(void* dst, const void* src) const    = 0;
-    virtual bool call_move_assign(void* dst, void* src) const     = 0;
-    virtual bool call_hash(const void* ptr, size_t& result) const = 0;
+    // feature query
+    virtual bool query_feature(ETypeFeature feature) const = 0;
 
-    // TODO. convert
-    // TODO. serialize
+    // call functions
+    virtual void   call_ctor(void* ptr) const                    = 0;
+    virtual void   call_dtor(void* ptr) const                    = 0;
+    virtual void   call_copy(void* dst, const void* src) const   = 0;
+    virtual void   call_move(void* dst, void* src) const         = 0;
+    virtual void   call_assign(void* dst, const void* src) const = 0;
+    virtual void   call_move_assign(void* dst, void* src) const  = 0;
+    virtual size_t call_hash(const void* ptr) const              = 0;
+
+    // serialize
+    virtual int                   write_binary(const void* dst, skr_binary_writer_t* writer) const = 0;
+    virtual int                   read_binary(void* dst, skr_binary_reader_t* reader) const        = 0;
+    virtual void                  write_json(const void* dst, skr_json_writer_t* writer) const     = 0;
+    virtual skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const          = 0;
 
 private:
     // basic data

@@ -6,11 +6,16 @@
 #include "SkrRT/containers/detail/sptr.hpp"
 #include <variant> // TODO. use skr::variant, here for shit msvc
 
-namespace skr::gui
-{
+#ifndef __meta__
+    #include "SkrGui/render_objects/render_text.generated.h"
+#endif
 
+namespace skr sreflect
+{
+namespace gui sreflect
+{
 struct RenderText;
-struct Paragraph;
+struct IParagraph;
 struct FontFile;
 
 enum class EInlineAlignment : uint32_t
@@ -31,17 +36,31 @@ struct SKR_GUI_API BindText {
 struct InlineType : public std::variant<skr::string, RenderObject*, RenderText*, skr::SPtr<BindText>> {
 };
 
-struct SKR_GUI_API RenderText : public RenderBox {
+sreflect_struct(
+    "guid": "5179c185-bc7f-4f12-9c11-d979fc14e515",
+    "rtti": true
+)
+SKR_GUI_API RenderText : public RenderBox
+{
 public:
-    SKR_GUI_OBJECT(RenderText, "72e8d4de-c288-4675-a22f-4c7a6487cabd", RenderBox);
+    SKR_RTTR_GENERATE_BODY()
     using Super = RenderBox;
 
-    RenderText() {}
-    ~RenderText() {}
+    RenderText();
+    ~RenderText();
 
-    void perform_layout() SKR_NOEXCEPT override {}
-    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override {}
+    void perform_layout() SKR_NOEXCEPT override;
+    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override {}
-};
 
-} // namespace skr::gui
+    void          set_text(const string& text);
+    const string& text() const { return _text; }
+
+private:
+    //
+    spush_attr("no-rtti": true)
+    IParagraph* _paragraph = nullptr;
+    String      _text      = {};
+};
+} // namespace gui sreflect
+} // namespace skr sreflect

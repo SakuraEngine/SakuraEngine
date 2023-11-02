@@ -3,7 +3,7 @@
 
 namespace skr::gui
 {
-WindowLayer::WindowLayer(IWindow* window)
+WindowLayer::WindowLayer(INativeWindow* window)
     : _window(window)
 {
 }

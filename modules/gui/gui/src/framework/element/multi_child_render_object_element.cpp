@@ -15,7 +15,7 @@ void MultiChildRenderObjectElement::first_mount(NotNull<Element*> parent, Slot s
     {
         auto child_widget = multi_child_widget->children[i];
         auto new_child    = _inflate_widget(make_not_null(child_widget), Slot{ i });
-        _children.push_back(new_child);
+        _children.add(new_child);
     }
 }
 void MultiChildRenderObjectElement::visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT
@@ -38,7 +38,7 @@ void MultiChildRenderObjectElement::update(NotNull<Widget*> new_widget) SKR_NOEX
 void MultiChildRenderObjectElement::add_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
 {
     auto multi_child_render_object = render_object()->type_cast<IMultiChildRenderObject>();
-    if (!child->type_based_on(multi_child_render_object->accept_child_type()))
+    if (!child->type_is(multi_child_render_object->accept_child_type()))
     {
         SKR_GUI_LOG_ERROR(u8"child type not match");
     }

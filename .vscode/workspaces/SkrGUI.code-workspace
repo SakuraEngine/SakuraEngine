@@ -1,0 +1,48 @@
+{
+    "folders": [
+        {
+            "path": "../../",
+            "name": "root",
+        },
+        {
+            "path": "../../build/.gens/",
+            "name": "code-gen"
+        },
+        {
+            "path": "../../modules/base/",
+            "name": "base"
+        },
+        {
+            "path": "../../modules/runtime/",
+            "name": "runtime"
+        },
+        {
+            "path": "../../modules/gui/gui/",
+            "name": "gui"
+        },
+        {
+            "path": "../../build/.gens/SkrGui/",
+            "name": "gui-gen"
+        },
+        {
+            "path": "../../modules/gui/renderer",
+            "name": "gui-renderer"
+        },
+        {
+            "path": "../../build/.gens/SkrGuiRenderer/",
+            "name": "gui-renderer-gen"
+        }
+    ],
+    "settings": {
+        "dascript.server.connectTimeout": 10,
+        "xmake.additionalConfigArguments": [
+            "--use_profile=enable",
+            "--build_tests=y",
+            "--cxx_version=cxx20"
+        ],
+        "xmake.customDebugConfig": {
+            "stopAtEntry": false,
+        },
+        "editor.formatOnSave": true,
+    }
+}

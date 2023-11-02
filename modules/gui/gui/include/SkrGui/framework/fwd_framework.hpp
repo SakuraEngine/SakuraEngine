@@ -56,6 +56,14 @@ struct FocusManager;
 // backend
 struct ICanvas;
 struct WindowContext;
+struct INativeWindow;
+struct INativeDevice;
+
+// input
+struct Event;
+struct PointerEvent;
+struct HitTestResult;
+struct HitTestEntry;
 
 // misc
 struct State;

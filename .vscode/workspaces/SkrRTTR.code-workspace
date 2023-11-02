@@ -4,22 +4,18 @@
             "path": "../../",
             "name": "root",
         },
-        // {
-        //     "path": "../../modules/runtime/include/SkrRT/rttr/",
-        //     "name": "include"
-        // },
-        // {
-        //     "path": "../../modules/runtime/src/rttr/",
-        //     "name": "src"
-        // },
-        // {
-        //     "path": "../../modules/base/",
-        //     "name": "base"
-        // },
-        // {
-        //     "path": "../../build/.gens/",
-        //     "name": "code-gen"
-        // },
+        {
+            "path": "../../build/.gens/",
+            "name": "code-gen"
+        },
+        {
+            "path": "../../modules/base/",
+            "name": "base"
+        },
+        {
+            "path": "../../modules/runtime/",
+            "name": "runtime"
+        },
         {
             "path": "../../modules/gui/gui/",
             "name": "gui"
@@ -34,11 +30,11 @@
         "xmake.additionalConfigArguments": [
             "--use_profile=disable",
             "--build_tests=y",
-            "--cxx_version=cxx17"
+            "--cxx_version=cxx20"
         ],
         "xmake.customDebugConfig": {
             "stopAtEntry": false,
         },
-        "editor.formatOnSave": false,
+        "editor.formatOnSave": true,
     }
 }

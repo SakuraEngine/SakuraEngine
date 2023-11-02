@@ -30,7 +30,7 @@ namespace resource
     Loaded  => [requst & wait dependencies -> install/update install] => Installed
 */
 struct SKR_RUNTIME_API SResourceFactory {
-    virtual skr_type_id_t GetResourceType() = 0;
+    virtual skr_guid_t GetResourceType() = 0;
     virtual bool AsyncIO() { return true; }
     /*
         load factor range : [0, 100]

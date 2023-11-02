@@ -1,6 +1,9 @@
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/platform/debug.h"
+#include "SkrRT/rttr/type_registry.hpp"
+#include "SkrRT/rttr/type/type.hpp"
+#include "SkrRT/misc/log.hpp"
 
 namespace skr
 {
@@ -9,21 +12,22 @@ namespace resource
 
 int SResourceFactory::Deserialize(skr_resource_record_t* record, skr_binary_reader_t* reader)
 {
-    int serdeResult;
-    if (auto type = skr_get_type(&record->header.type))
+    if (auto type = skr::rttr::get_type_from_guid(record->header.type))
     {
-        auto obj = type->Malloc();
-        type->Construct(obj, nullptr, 0);
-        serdeResult = type->Deserialize(obj, reader);
-        if (serdeResult != 0)
+        auto p_obj = sakura_malloc_aligned(type->size(), type->alignment());
+        type->call_ctor(p_obj);
+        auto serde_result = type->read_binary(p_obj, reader);
+        if (serde_result != 0)
         {
-            type->Destruct(obj);
-            type->Free(obj);
-            obj = nullptr;
+            type->call_dtor(p_obj);
+            sakura_free_aligned(p_obj, type->alignment());
+            p_obj = nullptr;
         }
-        record->resource = obj;
-        return serdeResult;
+
+        record->resource = p_obj;
+        return serde_result;
     }
+    SKR_LOG_FMT_ERROR(u8"Failed to deserialize resource of type {}", record->header.type);
     SKR_UNREACHABLE_CODE();
     return 0;
 }

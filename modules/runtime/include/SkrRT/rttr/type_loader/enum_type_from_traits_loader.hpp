@@ -6,10 +6,11 @@ namespace skr::rttr
 {
 template <typename T>
 struct EnumTypeFromTraitsLoader final : public TypeLoader {
-    Type* load() override
+    Type* create() override
     {
         return SkrNew<EnumTypeFromTraits<T>>();
     }
+    void load(Type* type) override {}
     void destroy(Type* type) override
     {
         SkrDelete(type);

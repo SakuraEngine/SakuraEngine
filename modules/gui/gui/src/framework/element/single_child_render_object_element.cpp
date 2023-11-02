@@ -33,7 +33,7 @@ void SingleChildRenderObjectElement::update(NotNull<Widget*> new_widget) SKR_NOE
 void SingleChildRenderObjectElement::add_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
 {
     ISingleChildRenderObject* single_child_render_object = render_object()->type_cast<ISingleChildRenderObject>();
-    if (!child->type_based_on(single_child_render_object->accept_child_type()))
+    if (!child->type_is(single_child_render_object->accept_child_type()))
     {
         SKR_GUI_LOG_ERROR(u8"child type not match");
     }

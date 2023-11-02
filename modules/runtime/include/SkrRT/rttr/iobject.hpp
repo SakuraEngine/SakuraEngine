@@ -15,32 +15,32 @@ struct SKR_RUNTIME_API IObject {
 
     //=> Helper API
     template <typename TO>
-    TO* type_cast() const
+    inline TO* type_cast()
     {
-        BaseInfo result;
-        if (get_record_type()->find_base(RTTRTraits<TO>::get_type(), result))
-        {
-            uint8_t* p_head = reinterpret_cast<uint8_t*>(get_head_ptr());
-            return reinterpret_cast<TO*>(p_head + result.offset);
-        }
-        else
-        {
-            return nullptr;
-        }
+        void* cast_p = get_record_type()->cast_to(RTTRTraits<TO>::get_type(), get_head_ptr());
+        return reinterpret_cast<TO*>(cast_p);
     }
     template <typename TO>
-    const TO* type_cast() const
+    inline const TO* type_cast() const
     {
         return const_cast<IObject*>(this)->type_cast<TO>();
     }
     template <typename TO>
-    TO* type_cast_fast() const { return type_cast<TO>(); }
+    inline TO* type_cast_fast() const { return type_cast<TO>(); }
     template <typename TO>
-    TO* type_cast_fast() { return type_cast<TO>(); }
+    inline TO* type_cast_fast() { return type_cast<TO>(); }
     template <typename TO>
-    bool type_is() const noexcept
+    inline bool type_is() const noexcept
     {
         return type_cast<TO>() != nullptr;
+    }
+    inline bool type_is(const GUID& guid) const
+    {
+        return get_record_type()->cast_to(skr::rttr::get_type_from_guid(guid), get_head_ptr()) != nullptr;
+    }
+    inline GUID type_id() const
+    {
+        return get_record_type()->type_id();
     }
     //=> Helper API
 };
@@ -62,32 +62,3 @@ SKR_RTTR_TYPE(IObject, "19246699-65f8-4c0b-a82e-7886a0cb315d")
         ::skr::rttr::RecordType* get_record_type() const override { return nullptr; } \
         void*                    get_head_ptr() const override { return nullptr; }
 #endif
-
-// TODO. remove it
-#include "SkrRT/type/type_id.hpp"
-namespace skr::type
-{
-template <>
-struct type_id<::skr::rttr::IObject> {
-    inline static SKR_CONSTEXPR skr_guid_t get()
-    {
-        using namespace skr::guid::literals;
-        return u8"19246699-65f8-4c0b-a82e-7886a0cb315d"_guid;
-    }
-    inline static SKR_CONSTEXPR std::string_view str()
-    {
-        return "19246699-65f8-4c0b-a82e-7886a0cb315d";
-    }
-};
-template <>
-struct SKR_RUNTIME_API type_register<::skr::rttr::IObject> {
-    static void instantiate_type(RecordType* type)
-    {
-    }
-    inline static constexpr skr_guid_t get_id()
-    {
-        using namespace skr::guid::literals;
-        return u8"19246699-65f8-4c0b-a82e-7886a0cb315d"_guid;
-    }
-};
-} // namespace skr::type

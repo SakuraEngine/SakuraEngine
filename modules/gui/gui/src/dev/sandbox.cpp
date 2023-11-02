@@ -33,7 +33,7 @@ void Sandbox::set_content(NotNull<Widget*> content)
 void Sandbox::show(const WindowDesc& desc)
 {
     // create native window
-    auto native_window = SKR_GUI_CAST_FAST<INativeWindow>(_device->create_window().get());
+    auto native_window = _device->create_window()->type_cast_fast<INativeWindow>();
     native_window->init_normal(desc);
 
     // init root render native window
@@ -76,6 +76,15 @@ void Sandbox::paint()
 void Sandbox::compose()
 {
     _root_layer->update_window();
+}
+
+bool Sandbox::hit_test(HitTestResult* result, Offsetf global_position)
+{
+    return _root_render_object->hit_test(result, _root_render_object->window()->to_relative(global_position));
+}
+
+void Sandbox::resize_window(int32_t width, int32_t height)
+{
 }
 
 } // namespace skr::gui

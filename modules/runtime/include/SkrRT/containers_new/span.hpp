@@ -159,66 +159,74 @@ struct NewSpanReaderBitpacked {
 };
 
 template <class T>
-struct WriteTrait<const Span<T>&> {
-    template<class... Args>
+struct WriteTrait<Span<T>> {
+    template <class... Args>
     static int Write(skr_binary_writer_t* writer, const Span<T>& span, Args&&... args)
     {
-        for (const T& value : span) {
-            if(auto result = skr::binary::Archive(writer, value, std::forward<Args>(args)...); result != 0) {
+        for (const T& value : span)
+        {
+            if (auto result = skr::binary::Archive(writer, value, std::forward<Args>(args)...); result != 0)
+            {
                 return result;
             }
         }
         return 0;
     }
-    template<class... Args>
+    template <class... Args>
     static int Write(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const Span<T>& span, Args&&... args)
     {
-        auto ptr = (char*)span.data();
+        auto ptr    = (char*)span.data();
         auto buffer = (char*)arena.get_buffer();
         SKR_ASSERT(ptr >= buffer);
         uint32_t offset = (uint32_t)(ptr - buffer);
         SKR_ASSERT(!arena.get_size() || (offset < arena.get_size()) || span.empty());
         int ret = skr::binary::Archive(writer, (uint32_t)span.size());
-        if (ret != 0) {
+        if (ret != 0)
+        {
             return ret;
         }
-        if(span.empty())
+        if (span.empty())
             return 0;
         ret = skr::binary::Archive(writer, offset);
-        if (ret != 0) {
+        if (ret != 0)
+        {
             return ret;
         }
-        for(int i = 0; i < span.size(); ++i)
+        for (int i = 0; i < span.size(); ++i)
         {
             ret = skr::binary::ArchiveBlob(writer, arena, span[i], std::forward<Args>(args)...);
-            if (ret != 0) {
+            if (ret != 0)
+            {
                 return ret;
             }
         }
         return 0;
     }
-    template<class... Args>
+    template <class... Args>
     static int Write(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const Span<T>& span, NewSpanSerdeConfig cfg, Args&&... args)
     {
-        auto ptr = (char*)span.data();
+        auto ptr    = (char*)span.data();
         auto buffer = (char*)arena.get_buffer();
         SKR_ASSERT(ptr >= buffer);
         uint32_t offset = (uint32_t)(ptr - buffer);
         SKR_ASSERT(!arena.get_size() || (offset < arena.get_size()) || span.empty());
-        int ret = skr::binary::Archive(writer, (uint32_t)span.size(), IntegerPackConfig<uint32_t>{0, cfg.maxSize});
-        if (ret != 0) {
+        int ret = skr::binary::Archive(writer, (uint32_t)span.size(), IntegerPackConfig<uint32_t>{ 0, cfg.maxSize });
+        if (ret != 0)
+        {
             return ret;
         }
-        if(span.empty())
+        if (span.empty())
             return 0;
         ret = skr::binary::Archive(writer, offset);
-        if (ret != 0) {
+        if (ret != 0)
+        {
             return ret;
         }
-        for(int i = 0; i < span.size(); ++i)
+        for (int i = 0; i < span.size(); ++i)
         {
             ret = skr::binary::ArchiveBlob(writer, arena, span[i], std::forward<Args>(args)...);
-            if (ret != 0) {
+            if (ret != 0)
+            {
                 return ret;
             }
         }

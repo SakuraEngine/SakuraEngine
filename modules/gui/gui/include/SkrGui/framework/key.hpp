@@ -77,6 +77,8 @@ struct SKR_GUI_API Key final {
     void set_storage(float v) SKR_NOEXCEPT;
     void set_storage(const String& v) SKR_NOEXCEPT;
 
+    size_t _skr_hash() const SKR_NOEXCEPT;
+
 private:
     EKeyType _type = EKeyType::None;
     union
@@ -262,41 +264,34 @@ inline void Key::set_storage(float v) SKR_NOEXCEPT
     _type  = EKeyType::FloatStorage;
     _float = v;
 }
-} // namespace skr::gui
 
-// TODO. skr hash
-namespace phmap
+// hash
+inline size_t Key::_skr_hash() const SKR_NOEXCEPT
 {
-template <>
-struct Hash<::skr::gui::Key> {
-    size_t operator()(const ::skr::gui::Key& key) const SKR_NOEXCEPT
+    using namespace ::skr::gui;
+    switch (type())
     {
-        using namespace ::skr::gui;
-        switch (key.type())
-        {
-            case EKeyType::None:
-            case EKeyType::Unique:
-                return 0;
-            case EKeyType::KeepState:
-                return Hash<State*>()(key.get_state());
-            case EKeyType::Int:
-            case EKeyType::IntStorage:
-                return Hash<int64_t>()(key.get_int());
-            case EKeyType::Float:
-            case EKeyType::FloatStorage:
-                return Hash<float>()(key.get_float());
-            case EKeyType::Name:
-            case EKeyType::NameStorage:
-            {
-                const auto& x = key.get_name();
-                return ostr::hash_sequence_crc64(x.c_str(), x.size());
-            }
-            default:
-            {
-                SKR_UNREACHABLE_CODE();
-                return UINT64_MAX;
-            }
+        case EKeyType::None:
+        case EKeyType::Unique:
+            return 0;
+        case EKeyType::KeepState:
+            return Hash<State*>()(get_state());
+        case EKeyType::Int:
+        case EKeyType::IntStorage:
+            return Hash<int64_t>()(get_int());
+        case EKeyType::Float:
+        case EKeyType::FloatStorage:
+            return Hash<float>()(get_float());
+        case EKeyType::Name:
+        case EKeyType::NameStorage: {
+            const auto& x = get_name();
+            return ostr::hash_sequence_crc64(x.c_str(), x.size());
+        }
+        default: {
+            SKR_UNREACHABLE_CODE();
+            return UINT64_MAX;
         }
     }
-};
-} // namespace phmap
+}
+
+} // namespace skr::gui
