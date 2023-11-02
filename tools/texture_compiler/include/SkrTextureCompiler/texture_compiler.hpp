@@ -12,7 +12,7 @@ namespace skd sreflect
 namespace asset sreflect
 {
 sreflect_struct("guid" : "a26c2436-9e5f-43c4-b4d7-e5373d353bae")
-sattr("serialize" : "json")
+sattr("serialize" : "json", "rtti" : true)
 SKR_TEXTURE_COMPILER_API STextureImporter final : public SImporter
 {
     sattr("no-default" : true)
