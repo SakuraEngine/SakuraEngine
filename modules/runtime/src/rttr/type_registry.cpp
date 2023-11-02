@@ -23,6 +23,12 @@ static UMap<GUID, GenericTypeLoader*>& generic_type_loader()
     return s_generic_type_loaders;
 }
 
+static auto& load_type_mutex()
+{
+    static std::recursive_mutex s_load_type_mutex;
+    return s_load_type_mutex;
+}
+
 // type register (loader)
 void register_type_loader(const GUID& guid, TypeLoader* loader)
 {
@@ -66,6 +72,8 @@ void unregister_generic_type_loader(const GUID& generic_guid)
 // get type (after register)
 Type* get_type_from_guid(const GUID& guid)
 {
+    std::lock_guard _lock(load_type_mutex());
+
     auto loaded_result = loaded_types().find(guid);
     if (loaded_result)
     {
@@ -85,8 +93,11 @@ Type* get_type_from_guid(const GUID& guid)
 
     return nullptr;
 }
+
 Type* get_type_from_type_desc(Span<TypeDesc> type_desc)
 {
+    std::lock_guard _lock(load_type_mutex());
+
     if (type_desc.size() == 1)
     {
         return get_type_from_guid(type_desc[0].value_guid());
