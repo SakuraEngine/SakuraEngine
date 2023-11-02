@@ -2,13 +2,23 @@
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/math/layout.hpp"
 #include "SkrGui/framework/render_object/multi_child_render_object.hpp"
+#ifndef __meta__
+    #include "SkrGui/render_objects/render_stack.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 
-struct SKR_GUI_API RenderStack : public RenderBox, public IMultiChildRenderObject {
+sreflect_struct(
+    "guid": "977b69fd-b3c7-4030-8c9d-076bc94fdfbf",
+    "rtti": true
+)
+SKR_GUI_API RenderStack : public RenderBox,
+                          public IMultiChildRenderObject {
 public:
-    SKR_GUI_OBJECT(RenderStack, "b3c8ede6-d878-472c-a1c1-6b3acdc9f1f0", RenderBox, IMultiChildRenderObject);
+    SKR_RTTR_GENERATE_BODY()
     using Super = RenderBox;
 
     // intrinsic size
@@ -31,12 +41,17 @@ public:
     void set_child_fit(EPositionalFit fit) SKR_NOEXCEPT;
     void set_stack_size(EStackSize size) SKR_NOEXCEPT;
 
+    // hit test
+    bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
+
     struct SlotData {
         Offsetf offset = Offsetf::Zero();
     };
 
 private:
     friend struct _StackHelper;
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     Alignment      _stack_alignment = Alignment::TopLeft();
     EPositionalFit _child_fit       = EPositionalFit::PassThrough;
     EStackSize     _stack_size      = EStackSize::Shrink;
@@ -44,5 +59,5 @@ private:
     // MIXIN
     MULTI_CHILD_RENDER_OBJECT_MIX_IN(RenderStack, RenderBox, SlotData)
 };
-
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

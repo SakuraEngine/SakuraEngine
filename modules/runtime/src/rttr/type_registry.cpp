@@ -76,8 +76,9 @@ Type* get_type_from_guid(const GUID& guid)
         auto loader_result = type_loaders().find(guid);
         if (loader_result)
         {
-            auto type = loader_result->value->load();
+            auto type = loader_result->value->create();
             loaded_types().add(guid, type);
+            loader_result->value->load(type);
             return type;
         }
     }

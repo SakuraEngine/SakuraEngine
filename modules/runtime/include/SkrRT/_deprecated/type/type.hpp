@@ -1,7 +1,7 @@
 #pragma once
-#include "SkrRT/type/type.h"
+#include "SkrRT/_deprecated/type/type.h"
 #include "type_id.hpp"
-#include "SkrRT/type/type_helper.hpp"
+#include "SkrRT/_deprecated/type/type_helper.hpp"
 
 #include "SkrRT/containers/span.hpp"
 #include "SkrRT/containers/vector.hpp"

@@ -3,9 +3,16 @@
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/math/matrix.hpp"
 #include "SkrGui/framework/slot.hpp"
+#include "SkrGui/system/input/hit_test.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/render_object/render_object.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
+namespace gui sreflect
+{
+
 enum class ERenderObjectLifecycle : uint8_t
 {
     Initial,
@@ -14,9 +21,13 @@ enum class ERenderObjectLifecycle : uint8_t
     Destroyed,
 };
 
-struct SKR_GUI_API RenderObject SKR_GUI_OBJECT_BASE {
-    SKR_GUI_OBJECT_ROOT(RenderObject, "74844fa6-8994-4915-8f8e-ec944a1cbea4");
-    SKR_GUI_RAII_MIX_IN()
+sreflect_struct(
+    "guid" : "2f1b78a5-1be9-4799-a3ca-2f2d3b153f29",
+    "rtti" : true
+)
+SKR_GUI_API RenderObject : virtual public skr::rttr::IObject,
+                           public IHitTestTarget {
+    SKR_RTTR_GENERATE_BODY()
     friend struct PipelineOwner;
     using VisitFuncRef = FunctionRef<void(NotNull<RenderObject*>)>;
 
@@ -76,6 +87,9 @@ struct SKR_GUI_API RenderObject SKR_GUI_OBJECT_BASE {
     virtual void    apply_paint_transform(NotNull<RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT;
     virtual Matrix4 get_transform_to(RenderObject* ancestor) const SKR_NOEXCEPT;
 
+    // event
+    bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) override;
+
     // TODO
     // invoke_layout_callback：用于在 layout 过程中创建 child，通常用于 Sliver
     // layer：repaint_boundary 存储对应 layer 用于局部重绘
@@ -105,6 +119,8 @@ private:
     void _flush_relayout_boundary() SKR_NOEXCEPT;
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     // render object tree
     RenderObject*  _parent = nullptr;
     PipelineOwner* _owner  = nullptr;
@@ -135,4 +151,5 @@ private:
     Slot _slot = {};
 };
 
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

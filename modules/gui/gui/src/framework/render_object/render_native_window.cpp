@@ -12,7 +12,7 @@ RenderNativeWindow::RenderNativeWindow(INativeWindow* native_window)
 
 NotNull<OffsetLayer*> RenderNativeWindow::update_layer(OffsetLayer* old_layer)
 {
-    return old_layer ? make_not_null(old_layer) : make_not_null(SkrNew<NativeWindowLayer>(SKR_GUI_CAST_FAST<INativeWindow>(window())));
+    return old_layer ? make_not_null(old_layer) : make_not_null(SkrNew<NativeWindowLayer>(window()->type_cast<INativeWindow>()));
 }
 
 void RenderNativeWindow::prepare_initial_frame() SKR_NOEXCEPT
@@ -26,4 +26,15 @@ void RenderNativeWindow::prepare_initial_frame() SKR_NOEXCEPT
     _layer->attach(make_not_null(_owner));
     _owner->schedule_paint_for(make_not_null(this));
 }
+
+bool RenderNativeWindow::hit_test(HitTestResult* result, Offsetf local_position)
+{
+    if (child()->hit_test(result, local_position))
+    {
+        result->add(this);
+        return true;
+    }
+    return false;
+}
+
 } // namespace skr::gui

@@ -237,7 +237,7 @@ struct _NVGHelper {
                 }
             }
 
-            vertices.push_back(v);
+            vertices.add(v);
         };
         // auto& path = paths[i];
         if (path.nfill)
@@ -251,9 +251,9 @@ struct _NVGHelper {
                 if (j < path.nfill - 2)
                 {
                     const auto id = static_cast<PaintIndex>(vertices.size());
-                    indices.push_back(start);
-                    indices.push_back(id + 1);
-                    indices.push_back(id);
+                    indices.add(start);
+                    indices.add(id + 1);
+                    indices.add(id);
                 }
             }
         }
@@ -267,9 +267,9 @@ struct _NVGHelper {
                 if (j < path.nstroke - 2)
                 {
                     const auto id = static_cast<PaintIndex>(vertices.size() - 1);
-                    indices.push_back(id);
-                    indices.push_back(id + 1 + (j % 2));
-                    indices.push_back(id + 1 + !(j % 2));
+                    indices.add(id);
+                    indices.add(id + 1 + (j % 2));
+                    indices.add(id + 1 + !(j % 2));
                 }
             }
         }
@@ -284,7 +284,7 @@ struct _NVGHelper {
             // init data
             auto  canvas       = (ICanvas*)uptr;
             auto  invTransform = nvg__getMatrix(paint);
-            auto& command      = canvas->_commands.emplace_back();
+            auto& command      = *canvas->_commands.add_default();
             auto  begin        = canvas->_indices.size();
 
             // combine vertices
@@ -327,7 +327,7 @@ struct _NVGHelper {
         // init data
         auto  canvas       = (ICanvas*)uptr;
         auto  invTransform = nvg__getMatrix(paint);
-        auto& command      = canvas->_commands.emplace_back();
+        auto& command      = *canvas->_commands.add_default();
         auto  begin        = canvas->_indices.size();
         float aa           = (fringe * 0.5f + strokeWidth * 0.5f) / fringe;
 

@@ -1,10 +1,20 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_proxy_box.hpp"
+#ifndef __meta__
+    #include "SkrGui/render_objects/render_constrained_box.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct RenderConstrainedBox : public RenderProxyBox {
-    SKR_GUI_OBJECT(RenderConstrainedBox, "9a72f533-5afd-46dc-b78e-ef943957ecd4", RenderProxyBox)
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "4d40a67a-1bd4-457a-bd23-b5be13e7d04d",
+    "rtti": true
+)
+RenderConstrainedBox : public RenderProxyBox
+{
+    SKR_RTTR_GENERATE_BODY()
     using Super = RenderProxyBox;
 
     // getter setter
@@ -31,6 +41,9 @@ struct RenderConstrainedBox : public RenderProxyBox {
     void perform_layout() SKR_NOEXCEPT override;
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     BoxConstraints _additional_constraint = {};
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

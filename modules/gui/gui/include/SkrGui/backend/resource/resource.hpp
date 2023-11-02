@@ -1,6 +1,9 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/math/geometry.hpp"
+#ifndef __meta__
+    #include "SkrGui/backend/resource/resource.generated.h"
+#endif
 
 // def
 namespace skr::gui
@@ -10,7 +13,9 @@ struct IUpdatableImage;
 } // namespace skr::gui
 
 // resource service
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 enum class EPixelFormat
 {
@@ -39,8 +44,13 @@ enum class EResourceState : uint32_t
     Destroyed,      // 资源已经被释放，此时再调用 Request 必须重新加载
 };
 
-struct SKR_GUI_API IResource SKR_GUI_INTERFACE_BASE {
-    SKR_GUI_INTERFACE_ROOT(IResource, "26ede0ec-cd41-420b-ba29-893ab06bfce9")
+sreflect_struct(
+    "guid": "1d4ba81f-09b7-4186-b35a-f380c49302e4",
+    "rtti": true
+)
+SKR_GUI_API IResource : virtual skr::rttr::IObject
+{
+    SKR_RTTR_GENERATE_BODY()
     virtual ~IResource() = default;
 
     // resource state
@@ -50,24 +60,43 @@ struct SKR_GUI_API IResource SKR_GUI_INTERFACE_BASE {
     virtual void           destroy()                  = 0;
 };
 
-struct SKR_GUI_API ISurface : virtual public IResource {
-    SKR_GUI_INTERFACE(ISurface, "bcdb2a40-6d70-4b4e-9b7d-c07c82da9873", IResource)
+sreflect_struct(
+    "guid": "f0a63d5a-62ae-44fa-8f8f-6847af623cea",
+    "rtti": true
+)
+SKR_GUI_API ISurface : virtual public IResource{
+    SKR_RTTR_GENERATE_BODY()
 };
 
-struct SKR_GUI_API IMaterial : virtual public ISurface {
-    SKR_GUI_INTERFACE(IMaterial, "14f90556-f9ff-486e-bc33-6ee6aa4f535d", ISurface)
+sreflect_struct(
+    "guid": "41d08a49-c9fe-4ccb-a91d-fd16f946aca1",
+    "rtti": true
+)
+SKR_GUI_API IMaterial : virtual public ISurface{
+    SKR_RTTR_GENERATE_BODY()
 };
 
-struct SKR_GUI_API IImage : virtual public ISurface {
-    SKR_GUI_INTERFACE(IImage, "4cc917b5-2e84-491d-87ab-9f6b74c2c44c", ISurface)
+sreflect_struct(
+    "guid": "6cc1395f-9660-4431-b998-df32d1d363eb",
+    "rtti": true
+)
+SKR_GUI_API IImage : virtual public ISurface
+{
+    SKR_RTTR_GENERATE_BODY()
     virtual Sizei       size() const SKR_NOEXCEPT       = 0; // in image pixel
     virtual Rectf       uv_rect() const SKR_NOEXCEPT    = 0; // [0, 1]
     virtual EdgeInsetsf nine_inset() const SKR_NOEXCEPT = 0; // [0, size()]
 };
 
-struct SKR_GUI_API IUpdatableImage : virtual public IImage {
-    SKR_GUI_INTERFACE(IUpdatableImage, "e82f5c9e-3a79-4d86-99df-7e949a41fbdf", IImage)
+sreflect_struct(
+    "guid": "7ae28a98-10f2-44c4-b7aa-b50780435d03",
+    "rtti": true
+)
+SKR_GUI_API IUpdatableImage : virtual public IImage
+{
+    SKR_RTTR_GENERATE_BODY()
     virtual void                      update(const UpdatableImageDesc& desc) = 0;
     virtual const UpdatableImageDesc& desc() const SKR_NOEXCEPT              = 0;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

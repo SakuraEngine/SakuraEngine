@@ -5,11 +5,11 @@ enums = generator.filter_rtti(db.enums)
 
 <%doc>
 // BEGIN RTTI GENERATED
-#include "SkrRT/type/type.hpp"
+#include "SkrRT/_deprecated/type/type.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/misc/hash.h"
 #include "SkrRT/misc/log.h"
-#include "SkrRT/type/type_helper.hpp"
+#include "SkrRT/_deprecated/type/type_helper.hpp"
 
 [[maybe_unused]] static const char8_t* ArgumentNumMisMatchFormat = u8"Argument number mismatch while calling %s, expected %d, got %d.";
 [[maybe_unused]] static const char8_t* ArgumentIncompatibleFormat = u8"Argument %s is incompatible while calling %s. %s can not be converted to %s.";
@@ -239,7 +239,7 @@ skr::span<const skr_type_t*> skr_get_all_enums_${module}()
 
 namespace skr::rttr 
 {
-%for enum in generator.filter_rtti(db.enums):
+%for enum in generator.filter_guid(db.enums):
 Span<EnumItem<${enum.name}>> EnumTraits<${enum.name}>::items()
 {
     static EnumItem<${enum.name}> items[] = {
@@ -287,23 +287,27 @@ SKR_RTTR_EXEC_STATIC
         %>
     static struct InternalTypeLoader_${record.id} : public TypeLoader
     {
-        Type* load() override 
-        {
-            using namespace skr;
-            using namespace skr::rttr;
-
-            RecordType* result = SkrNew<RecordType>(
+        Type* create() override {
+            return SkrNew<RecordType>(
                 RTTRTraits<::${record.name}>::get_name(),
                 RTTRTraits<::${record.name}>::get_guid(),
                 sizeof(${record.name}),
                 alignof(${record.name}),
                 make_record_basic_method_table<${record.name}>()
             );
+        }
+
+        void load(Type* type) override 
+        {
+            using namespace skr;
+            using namespace skr::rttr;
+
+            RecordType* result = static_cast<RecordType*>(type);
 
         %if bases:
             result->set_base_types({
             %for base in bases:
-                {RTTRTraits<${base}>::get_guid(), {RTTRTraits<${base}>::get_type(), get_cast_offset<${record.name}, ${base}>()}},
+                {RTTRTraits<${base}>::get_guid(), {RTTRTraits<${base}>::get_type(), +[](void* p) -> void* { return static_cast<${base}*>(reinterpret_cast<${record.name}*>(p)); }}},
             %endfor
             });
         %endif
@@ -364,8 +368,6 @@ SKR_RTTR_EXEC_STATIC
             %endfor
             });
         %endif
-
-            return result;
         }
         void destroy(Type* type) override
         {
@@ -375,7 +377,7 @@ SKR_RTTR_EXEC_STATIC
     register_type_loader(RTTRTraits<${record.name}>::get_guid(), &LOADER__${record.id});
 %endfor
 
-%for enum in generator.filter_rtti(db.enums):
+%for enum in generator.filter_guid(db.enums):
     static EnumTypeFromTraitsLoader<${enum.name}> LOADER__${enum.id};
     register_type_loader(RTTRTraits<${enum.name}>::get_guid(), &LOADER__${enum.id});
 %endfor

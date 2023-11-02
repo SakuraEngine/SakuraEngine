@@ -3,14 +3,23 @@
 #include "SkrGui/backend/device/window.hpp"
 #include "SkrRT/platform/window.h"
 #include "SkrGui/backend/device/device.hpp"
+#ifndef __meta__
+    #include "SkrGuiRenderer/device/skr_native_window.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 struct SkrRenderWindow;
 struct SkrNativeDevice;
 
-struct SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
-    SKR_GUI_OBJECT(SkrNativeWindow, "093aa38f-f5f8-4aa9-92ed-5eafa6b797d5", INativeWindow)
+sreflect_struct(
+    "guid": "53ce54d5-329c-4455-91bc-fcc80444f19f",
+    "rtti": true
+)
+SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
+    SKR_RTTR_GENERATE_BODY()
 
     SkrNativeWindow(SkrNativeDevice* device);
     ~SkrNativeWindow();
@@ -30,14 +39,14 @@ struct SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
     Sizef   to_relative(const Sizef& absolute) SKR_NOEXCEPT override;
 
     // info
-    IDevice* device() SKR_NOEXCEPT override;
-    Offsetf  absolute_pos() SKR_NOEXCEPT override;
-    Sizef    absolute_size() SKR_NOEXCEPT override;
-    Rectf    absolute_work_area() SKR_NOEXCEPT override;
-    float    pixel_ratio() SKR_NOEXCEPT override;      // frame_buffer_pixel_size / logical_pixel_size
-    float    text_pixel_ratio() SKR_NOEXCEPT override; // text_texture_pixel_size / logical_pixel_size
-    bool     invisible() SKR_NOEXCEPT override;        // is viewport hidden or minimized or any invisible case
-    bool     focused() SKR_NOEXCEPT override;          // is viewport taken focus
+    INativeDevice* device() SKR_NOEXCEPT override;
+    Offsetf        absolute_pos() SKR_NOEXCEPT override;
+    Sizef          absolute_size() SKR_NOEXCEPT override;
+    Rectf          absolute_work_area() SKR_NOEXCEPT override;
+    float          pixel_ratio() SKR_NOEXCEPT override;      // frame_buffer_pixel_size / logical_pixel_size
+    float          text_pixel_ratio() SKR_NOEXCEPT override; // text_texture_pixel_size / logical_pixel_size
+    bool           invisible() SKR_NOEXCEPT override;        // is viewport hidden or minimized or any invisible case
+    bool           focused() SKR_NOEXCEPT override;          // is viewport taken focus
 
     // operators
     void set_absolute_pos(Offsetf absolute) SKR_NOEXCEPT override;
@@ -68,9 +77,12 @@ struct SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
     inline NativeWindowLayer* native_layer() const SKR_NOEXCEPT { return _native_layer; }
 
 private:
+    //
+    spush_attr("no-rtti": true)
     SkrNativeDevice*   _device        = nullptr;
     SWindowHandle      _window        = {};
     SkrRenderWindow*   _render_window = nullptr;
     NativeWindowLayer* _native_layer  = nullptr;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

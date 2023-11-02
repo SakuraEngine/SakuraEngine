@@ -80,11 +80,17 @@ struct Offset {
     // arithmetic ops
     inline Offset operator-() const SKR_NOEXCEPT { return { -x, -y }; }
 
-    inline Offset operator+(T rhs) const SKR_NOEXCEPT { return { x + rhs, y + rhs }; }
-    inline Offset operator-(T rhs) const SKR_NOEXCEPT { return { x - rhs, y - rhs }; }
-    inline Offset operator*(T rhs) const SKR_NOEXCEPT { return { x * rhs, y * rhs }; }
-    inline Offset operator/(T rhs) const SKR_NOEXCEPT { return { x / rhs, y / rhs }; }
-    inline Offset operator%(T rhs) const SKR_NOEXCEPT { return { _mod(x, rhs), _mod(y, rhs) }; }
+    friend inline Offset operator+(const Offset& lhs, T rhs) SKR_NOEXCEPT { return { lhs.x + rhs, lhs.y + rhs }; }
+    friend inline Offset operator-(const Offset& lhs, T rhs) SKR_NOEXCEPT { return { lhs.x - rhs, lhs.y - rhs }; }
+    friend inline Offset operator*(const Offset& lhs, T rhs) SKR_NOEXCEPT { return { lhs.x * rhs, lhs.y * rhs }; }
+    friend inline Offset operator/(const Offset& lhs, T rhs) SKR_NOEXCEPT { return { lhs.x / rhs, lhs.y / rhs }; }
+    friend inline Offset operator%(const Offset& lhs, T rhs) SKR_NOEXCEPT { return { _mod(lhs.x, rhs), _mod(lhs.y, rhs) }; }
+
+    friend inline Offset operator+(T lhs, const Offset& rhs) SKR_NOEXCEPT { return { lhs + rhs.x, lhs + rhs.y }; }
+    friend inline Offset operator-(T lhs, const Offset& rhs) SKR_NOEXCEPT { return { lhs - rhs.x, lhs - rhs.y }; }
+    friend inline Offset operator*(T lhs, const Offset& rhs) SKR_NOEXCEPT { return { lhs * rhs.x, lhs * rhs.y }; }
+    friend inline Offset operator/(T lhs, const Offset& rhs) SKR_NOEXCEPT { return { lhs / rhs.x, lhs / rhs.y }; }
+    friend inline Offset operator%(T lhs, const Offset& rhs) SKR_NOEXCEPT { return { _mod(lhs, rhs.x), _mod(lhs, rhs.y) }; }
 
     inline Offset operator+(const Offset& rhs) const SKR_NOEXCEPT { return { x + rhs.x, y + rhs.y }; }
     inline Offset operator-(const Offset& rhs) const SKR_NOEXCEPT { return { x - rhs.x, y - rhs.y }; }
@@ -199,11 +205,17 @@ struct Size {
     inline operator Size<U>() const SKR_NOEXCEPT { return { static_cast<U>(width), static_cast<U>(height) }; }
 
     // arithmetic ops
-    inline Size operator+(float rhs) const SKR_NOEXCEPT { return { width + rhs, height + rhs }; }
-    inline Size operator-(float rhs) const SKR_NOEXCEPT { return { width - rhs, height - rhs }; }
-    inline Size operator*(float rhs) const SKR_NOEXCEPT { return { width * rhs, height * rhs }; }
-    inline Size operator/(float rhs) const SKR_NOEXCEPT { return { width / rhs, height / rhs }; }
-    inline Size operator%(float rhs) const SKR_NOEXCEPT { return { _mod(width, rhs), _mod(height, rhs) }; }
+    friend inline Size operator+(const Size& lhs, float rhs) SKR_NOEXCEPT { return { lhs.width + rhs, lhs.height + rhs }; }
+    friend inline Size operator-(const Size& lhs, float rhs) SKR_NOEXCEPT { return { lhs.width - rhs, lhs.height - rhs }; }
+    friend inline Size operator*(const Size& lhs, float rhs) SKR_NOEXCEPT { return { lhs.width * rhs, lhs.height * rhs }; }
+    friend inline Size operator/(const Size& lhs, float rhs) SKR_NOEXCEPT { return { lhs.width / rhs, lhs.height / rhs }; }
+    friend inline Size operator%(const Size& lhs, float rhs) SKR_NOEXCEPT { return { _mod(lhs.width, rhs), _mod(lhs.height, rhs) }; }
+
+    friend inline Size operator+(float lhs, const Size& rhs) SKR_NOEXCEPT { return { lhs + rhs.width, lhs + rhs.height }; }
+    friend inline Size operator-(float lhs, const Size& rhs) SKR_NOEXCEPT { return { lhs - rhs.width, lhs - rhs.height }; }
+    friend inline Size operator*(float lhs, const Size& rhs) SKR_NOEXCEPT { return { lhs * rhs.width, lhs * rhs.height }; }
+    friend inline Size operator/(float lhs, const Size& rhs) SKR_NOEXCEPT { return { lhs / rhs.width, lhs / rhs.height }; }
+    friend inline Size operator%(float lhs, const Size& rhs) SKR_NOEXCEPT { return { _mod(lhs, rhs.width), _mod(lhs, rhs.height) }; }
 
     inline Size operator+(const Size& rhs) const SKR_NOEXCEPT { return { width + rhs.width, height + rhs.height }; }
     inline Size operator-(const Size& rhs) const SKR_NOEXCEPT { return { width - rhs.width, height - rhs.height }; }
@@ -429,11 +441,17 @@ struct Alignment {
     // arithmetic
     inline Alignment operator-() const SKR_NOEXCEPT { return { -x, -y }; }
 
-    inline Alignment operator+(float rhs) const SKR_NOEXCEPT { return { x + rhs, y + rhs }; }
-    inline Alignment operator-(float rhs) const SKR_NOEXCEPT { return { x - rhs, y - rhs }; }
-    inline Alignment operator*(float rhs) const SKR_NOEXCEPT { return { x * rhs, y * rhs }; }
-    inline Alignment operator/(float rhs) const SKR_NOEXCEPT { return { x / rhs, y / rhs }; }
-    inline Alignment operator%(float rhs) const SKR_NOEXCEPT { return { std::fmod(x, rhs), std::fmod(y, rhs) }; }
+    friend inline Alignment operator+(const Alignment& lhs, float rhs) SKR_NOEXCEPT { return { lhs.x + rhs, lhs.y + rhs }; }
+    friend inline Alignment operator-(const Alignment& lhs, float rhs) SKR_NOEXCEPT { return { lhs.x - rhs, lhs.y - rhs }; }
+    friend inline Alignment operator*(const Alignment& lhs, float rhs) SKR_NOEXCEPT { return { lhs.x * rhs, lhs.y * rhs }; }
+    friend inline Alignment operator/(const Alignment& lhs, float rhs) SKR_NOEXCEPT { return { lhs.x / rhs, lhs.y / rhs }; }
+    friend inline Alignment operator%(const Alignment& lhs, float rhs) SKR_NOEXCEPT { return { std::fmod(lhs.x, rhs), std::fmod(lhs.y, rhs) }; }
+
+    friend inline Alignment operator+(float lhs, const Alignment& rhs) SKR_NOEXCEPT { return { lhs + rhs.x, lhs + rhs.y }; }
+    friend inline Alignment operator-(float lhs, const Alignment& rhs) SKR_NOEXCEPT { return { lhs - rhs.x, lhs - rhs.y }; }
+    friend inline Alignment operator*(float lhs, const Alignment& rhs) SKR_NOEXCEPT { return { lhs * rhs.x, lhs * rhs.y }; }
+    friend inline Alignment operator/(float lhs, const Alignment& rhs) SKR_NOEXCEPT { return { lhs / rhs.x, lhs / rhs.y }; }
+    friend inline Alignment operator%(float lhs, const Alignment& rhs) SKR_NOEXCEPT { return { std::fmod(lhs, rhs.x), std::fmod(lhs, rhs.y) }; }
 
     inline Alignment operator+(const Alignment& rhs) const SKR_NOEXCEPT { return { x + rhs.x, y + rhs.y }; }
     inline Alignment operator-(const Alignment& rhs) const SKR_NOEXCEPT { return { x - rhs.x, y - rhs.y }; }

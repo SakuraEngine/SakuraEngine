@@ -13,7 +13,6 @@
 #include "rttr/type_loader/reference_type_loader.cpp"
 
 // rttr/
-#include "rttr/guid.cpp"
 #include "rttr/register_basic_types.cpp"
 #include "rttr/type_registry.cpp"
 

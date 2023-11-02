@@ -12,11 +12,11 @@ PipelineOwner::PipelineOwner(INativeDevice* native_device) SKR_NOEXCEPT
 // schedule
 void PipelineOwner::schedule_layout_for(NotNull<RenderObject*> node) SKR_NOEXCEPT
 {
-    _nodes_needing_layout.emplace_back(node);
+    _nodes_needing_layout.add(node);
 }
 void PipelineOwner::schedule_paint_for(NotNull<RenderObject*> node) SKR_NOEXCEPT
 {
-    _nodes_needing_paint.emplace_back(node);
+    _nodes_needing_paint.add(node);
 }
 
 // flush
@@ -38,6 +38,8 @@ void PipelineOwner::flush_layout()
             node->mark_needs_paint();
         }
     }
+
+    _nodes_needing_layout.clear();
 }
 void PipelineOwner::flush_paint()
 {
@@ -59,5 +61,7 @@ void PipelineOwner::flush_paint()
             PaintingContext::update_layer_properties(make_not_null(node));
         }
     }
+
+    _nodes_needing_paint.clear();
 }
 } // namespace skr::gui

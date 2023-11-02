@@ -1,5 +1,6 @@
+<%doc>
 //BEGIN TYPEID GENERATED
-#include "SkrRT/type/type.hpp"
+#include "SkrRT/_deprecated/type/type.hpp"
 
 <%
 types = generator.filter_types(db.records) + generator.filter_types(db.enums)
@@ -16,3 +17,4 @@ static struct RegisterName${type.id}Helper
 %endfor
 
 //END TYPEID GENERATED
+</%doc>

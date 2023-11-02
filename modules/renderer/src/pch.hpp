@@ -9,7 +9,6 @@
 #include "SkrRT/containers/sptr.hpp" // IWYU pragma: export
 #include "SkrRT/containers/hashmap.hpp" // IWYU pragma: export
 #include "SkrRT/containers/vector.hpp" // IWYU pragma: export
-#include "SkrRT/type/type_id.hpp"  // IWYU pragma: export
 #include "SkrRT/resource/resource_factory.h"  // IWYU pragma: export
 #include "SkrRT/resource/resource_system.h"  // IWYU pragma: export
 #include "SkrRT/async/thread_job.hpp" // IWYU pragma: export

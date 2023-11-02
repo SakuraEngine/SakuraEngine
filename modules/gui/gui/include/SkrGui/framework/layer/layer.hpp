@@ -1,13 +1,21 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/layer/layer.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-// TODO. Layer
-struct SKR_GUI_API Layer SKR_GUI_OBJECT_BASE {
-    SKR_GUI_OBJECT_ROOT(Layer, "04589d18-7688-4b30-8239-c9c91ca6c9f7")
-    SKR_GUI_RAII_MIX_IN()
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "a40f7782-8b8f-4059-ab2a-3d8e4ac2fdd5",
+    "rtti": true
+)
+SKR_GUI_API Layer : virtual public skr::rttr::IObject
+{
+    SKR_RTTR_GENERATE_BODY()
     using VisitFuncRef = FunctionRef<void(NotNull<Layer*>)>;
 
     // lifecycle & tree
@@ -30,6 +38,8 @@ struct SKR_GUI_API Layer SKR_GUI_OBJECT_BASE {
     inline int32_t        depth() const SKR_NOEXCEPT { return _depth; }
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     // layer tree
     Layer*         _parent = nullptr;
     PipelineOwner* _owner  = nullptr;
@@ -38,4 +48,5 @@ private:
     // dirty
     bool _needs_composite = true;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

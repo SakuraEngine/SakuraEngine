@@ -1,4 +1,3 @@
-#include "SkrRT/type/type.hpp"
 #include "SkrRT/resource/config_resource.h"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/defer.hpp"
@@ -15,7 +14,7 @@ namespace asset
 void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
     const auto assetRecord = context->GetAssetRecord();
-    auto type = skr_get_type(&configType);
+    auto type = skr::rttr::get_type_from_guid(configType);
     if (type == nullptr)
     {
         SKR_LOG_ERROR(u8"import resource %s failed, rtti is not load", assetRecord->path.u8string().c_str());
@@ -38,7 +37,7 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
     //skr::resource::SConfigFactory::NewConfig(configType);
     skr_config_resource_t* resource = SkrNew<skr_config_resource_t>();
     resource->SetType(configType);
-    type->DeserializeText(resource->configData, doc.get_value().value_unsafe());
+    type->read_json(resource->configData, doc.get_value().value_unsafe());
     return resource; //导入具体数据
 }
 
@@ -69,17 +68,18 @@ bool SConfigCooker::Cook(SCookContext* ctx)
     //-----cook resource
     // no cook needed for config, just binarize it
     //-----fetch runtime dependencies
-    auto type = (skr::type::RecordType*)skr_get_type(&resource->configType);
-    for (auto& field : type->GetFields())
-    {
-        if (field.type->Same(skr::type::type_of<skr_resource_handle_t>::get()))
-        {
-            auto handle = (skr_resource_handle_t*)((char*)resource->configData + field.offset);
-            if (handle->is_null())
-                continue;
-            ctx->AddRuntimeDependency(handle->get_guid());
-        }
-    }
+    // TODO. resume it
+    // auto type = (skr::type::RecordType*)skr_get_type(&resource->configType);
+    // for (auto& field : type->GetFields())
+    // {
+    //     if (field.type->Same(skr::type::type_of<skr_resource_handle_t>::get()))
+    //     {
+    //         auto handle = (skr_resource_handle_t*)((char*)resource->configData + field.offset);
+    //         if (handle->is_null())
+    //             continue;
+    //         ctx->AddRuntimeDependency(handle->get_guid());
+    //     }
+    // }
     ctx->Save(*resource);
     return true;
 }

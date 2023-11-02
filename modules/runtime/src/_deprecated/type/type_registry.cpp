@@ -5,8 +5,8 @@
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/serde/json/reader.h"
 #include "SkrRT/serde/json/writer.h"
-#include "SkrRT/type/type.hpp"
-#include "SkrRT/type/type_serde.h"
+#include "SkrRT/_deprecated/type/type.hpp"
+#include "SkrRT/_deprecated/type/type_serde.h"
 
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/containers/vector.hpp"
@@ -22,7 +22,7 @@ static auto& skr_get_type_name_map()
 const char8_t* skr_get_type_name(const skr_guid_t* typeId)
 {
     auto& type_name_map = skr_get_type_name_map();
-    auto it = type_name_map.find(*typeId);
+    auto  it            = type_name_map.find(*typeId);
     if (it != type_name_map.end())
     {
         return it->second;
@@ -37,7 +37,7 @@ const char8_t* skr_get_type_name(const skr_guid_t* typeId)
 
 void skr_register_type_name(const skr_guid_t* type, const char8_t* name)
 {
-    auto& type_name_map = skr_get_type_name_map();
+    auto& type_name_map  = skr_get_type_name_map();
     type_name_map[*type] = name;
 }
 
@@ -46,7 +46,7 @@ namespace skr::type
 struct STypeRegistryImpl final : public STypeRegistry {
     const skr_type_t* get_type(skr_guid_t guid) final
     {
-        if(outdatedTypesMap.contains(guid))
+        if (outdatedTypesMap.contains(guid))
             return nullptr;
         auto it = types.find(guid);
         if (it != types.end())
@@ -55,22 +55,22 @@ struct STypeRegistryImpl final : public STypeRegistry {
         }
         return nullptr;
     }
-    
-    RecordType* register_record(skr_guid_t tid, void(*initializer)(RecordType*)) final
+
+    RecordType* register_record(skr_guid_t tid, void (*initializer)(RecordType*)) final
     {
-        auto iter = types.find(tid);
+        auto iter  = types.find(tid);
         auto iter2 = outdatedTypesMap.find(tid);
-        if(iter2 != outdatedTypesMap.end())
+        if (iter2 != outdatedTypesMap.end())
         {
             outdatedTypesMap.erase(iter2);
             outdatedTypes.erase(iter2->second);
         }
-        if(iter != types.end())
+        if (iter != types.end())
         {
             SKR_ASSERT(iter->second->type == SKR_TYPE_CATEGORY_OBJ);
             return (RecordType*)(iter->second);
         }
-        else 
+        else
         {
             auto recordType = SkrNew<RecordType>(tid);
             types.insert({ tid, recordType });
@@ -79,21 +79,21 @@ struct STypeRegistryImpl final : public STypeRegistry {
         }
     }
 
-    EnumType* register_enum(skr_guid_t tid, void(*initializer)(EnumType*)) final
+    EnumType* register_enum(skr_guid_t tid, void (*initializer)(EnumType*)) final
     {
-        auto iter = types.find(tid);
+        auto iter  = types.find(tid);
         auto iter2 = outdatedTypesMap.find(tid);
-        if(iter2 != outdatedTypesMap.end())
+        if (iter2 != outdatedTypesMap.end())
         {
             outdatedTypesMap.erase(iter2);
             outdatedTypes.erase(iter2->second);
         }
-        if(iter != types.end())
+        if (iter != types.end())
         {
             SKR_ASSERT(iter->second->type == SKR_TYPE_CATEGORY_ENUM);
             return (EnumType*)(iter->second);
         }
-        else 
+        else
         {
             auto enumType = SkrNew<EnumType>(tid);
             types.insert({ tid, enumType });
@@ -106,7 +106,7 @@ struct STypeRegistryImpl final : public STypeRegistry {
     {
         auto iter = types.find(tid);
         SKR_ASSERT(iter != types.end());
-        //invalidate pointer
+        // invalidate pointer
         outdatedTypesMap.insert({ tid, iter->second });
         outdatedTypes.insert(iter->second);
     }
@@ -115,9 +115,9 @@ struct STypeRegistryImpl final : public STypeRegistry {
     {
         return outdatedTypes.contains(type);
     }
-    
+
     skr::flat_hash_map<skr_guid_t, const skr_type_t*, skr::guid::hash> outdatedTypesMap;
-    skr::flat_hash_set<const skr_type_t*> outdatedTypes;
+    skr::flat_hash_set<const skr_type_t*>                              outdatedTypes;
     skr::flat_hash_map<skr_guid_t, const skr_type_t*, skr::guid::hash> types;
 };
 
@@ -127,17 +127,17 @@ SKR_RUNTIME_API STypeRegistry* GetTypeRegistry()
     return &registry;
 }
 
-SKR_RUNTIME_API skr_type_t* InitializeAndAddToRegistry(skr_guid_t tid, void(*initializer)(RecordType*))
+SKR_RUNTIME_API skr_type_t* InitializeAndAddToRegistry(skr_guid_t tid, void (*initializer)(RecordType*))
 {
     auto registry = GetTypeRegistry();
-    auto type = registry->register_record(tid, initializer);
+    auto type     = registry->register_record(tid, initializer);
     return type;
 }
 
-SKR_RUNTIME_API skr_type_t* InitializeAndAddToRegistry(skr_guid_t tid, void(*initializer)(EnumType*))
+SKR_RUNTIME_API skr_type_t* InitializeAndAddToRegistry(skr_guid_t tid, void (*initializer)(EnumType*))
 {
     auto registry = GetTypeRegistry();
-    auto type = registry->register_enum(tid, initializer);
+    auto type     = registry->register_enum(tid, initializer);
     return type;
 }
 
@@ -151,29 +151,28 @@ skr_type_t::skr_type_t(skr_type_category_t type)
 skr_type_t::~skr_type_t() SKR_NOEXCEPT
 {
 }
-#define SKR_TYPE_TRIVAL1(fun)   \
-    fun(SKR_TYPE_CATEGORY_BOOL, bool)                    \
-    fun(SKR_TYPE_CATEGORY_I32, int32_t)                  \
-    fun(SKR_TYPE_CATEGORY_I64, int64_t)                  \
-    fun(SKR_TYPE_CATEGORY_U32, uint32_t)                 \
-    fun(SKR_TYPE_CATEGORY_U64, uint64_t)                 \
-    fun(SKR_TYPE_CATEGORY_F32, float)                    \
-    fun(SKR_TYPE_CATEGORY_F32_2, skr_float2_t)           \
-    fun(SKR_TYPE_CATEGORY_F32_3, skr_float3_t)           \
-    fun(SKR_TYPE_CATEGORY_F32_4, skr_float4_t)           \
-    fun(SKR_TYPE_CATEGORY_F32_4x4, skr_float4x4_t)       \
-    fun(SKR_TYPE_CATEGORY_ROT, skr_rotator_t)            \
-    fun(SKR_TYPE_CATEGORY_QUAT, skr_quaternion_t)        \
-    fun(SKR_TYPE_CATEGORY_F64, double)                   \
-    fun(SKR_TYPE_CATEGORY_GUID, skr_guid_t)              \
-    fun(SKR_TYPE_CATEGORY_MD5, skr_md5_t)              \
-    fun(SKR_TYPE_CATEGORY_STRV, skr::string_view)       
-
+#define SKR_TYPE_TRIVAL1(fun)                      \
+    fun(SKR_TYPE_CATEGORY_BOOL, bool)              \
+    fun(SKR_TYPE_CATEGORY_I32, int32_t)            \
+    fun(SKR_TYPE_CATEGORY_I64, int64_t)            \
+    fun(SKR_TYPE_CATEGORY_U32, uint32_t)           \
+    fun(SKR_TYPE_CATEGORY_U64, uint64_t)           \
+    fun(SKR_TYPE_CATEGORY_F32, float)              \
+    fun(SKR_TYPE_CATEGORY_F32_2, skr_float2_t)     \
+    fun(SKR_TYPE_CATEGORY_F32_3, skr_float3_t)     \
+    fun(SKR_TYPE_CATEGORY_F32_4, skr_float4_t)     \
+    fun(SKR_TYPE_CATEGORY_F32_4x4, skr_float4x4_t) \
+    fun(SKR_TYPE_CATEGORY_ROT, skr_rotator_t)      \
+    fun(SKR_TYPE_CATEGORY_QUAT, skr_quaternion_t)  \
+    fun(SKR_TYPE_CATEGORY_F64, double)             \
+    fun(SKR_TYPE_CATEGORY_GUID, skr_guid_t)        \
+    fun(SKR_TYPE_CATEGORY_MD5, skr_md5_t)          \
+    fun(SKR_TYPE_CATEGORY_STRV, skr::string_view)
 
 #define SKR_TYPE_TRIVAL(fun)                             \
     SKR_TYPE_TRIVAL1(fun)                                \
     fun(SKR_TYPE_CATEGORY_HANDLE, skr_resource_handle_t) \
-    fun(SKR_TYPE_CATEGORY_STR, skr::string)              
+    fun(SKR_TYPE_CATEGORY_STR, skr::string)
 
 uint64_t skr_type_t::Size() const
 {
@@ -206,8 +205,8 @@ uint64_t skr_type_t::Size() const
                     else
                         return sizeof(skr::SPtr<void>);
             }
-        case SKR_TYPE_CATEGORY_INVALID:
-            break;
+            case SKR_TYPE_CATEGORY_INVALID:
+                break;
         }
         case SKR_TYPE_CATEGORY_VARIANT:
             return ((VariantType*)this)->size;
@@ -290,7 +289,6 @@ const char8_t* skr_type_t::Name() const
             if (arr.name.is_empty())
             {
                 arr.name = skr::format(u8"{}[{}]", arr.elementType->Name(), arr.size);
-
             }
             return arr.name.u8_str();
         }
@@ -340,7 +338,7 @@ const char8_t* skr_type_t::Name() const
             if (!variant.name.is_empty())
                 return variant.name.u8_str();
             variant.name = u8"skr::variant<";
-            bool first = true;
+            bool first   = true;
             for (auto& type : variant.types)
             {
                 if (!first)
@@ -380,7 +378,7 @@ bool skr_type_t::Same(const skr_type_t* srcType) const
             return this == srcType; // 对象类型直接比较地址
         case SKR_TYPE_CATEGORY_REF: {
             {
-                auto ptr = ((ReferenceType*)this);
+                auto ptr  = ((ReferenceType*)this);
                 auto sptr = ((ReferenceType*)srcType);
                 if ((ptr->pointee == nullptr || sptr->pointee == nullptr) && ptr->pointee != sptr->pointee)
                     return false;
@@ -388,7 +386,7 @@ bool skr_type_t::Same(const skr_type_t* srcType) const
             }
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
-            auto ptr = ((VariantType*)this);
+            auto ptr  = ((VariantType*)this);
             auto sptr = ((VariantType*)srcType);
             if (ptr->types.size() != sptr->types.size())
                 return false;
@@ -405,7 +403,7 @@ bool skr_type_t::Same(const skr_type_t* srcType) const
 bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
 {
     using namespace skr::type;
-    auto stype = srcType->type;
+    auto                stype = srcType->type;
     skr::span<uint64_t> acceptIndices;
     if (Same(srcType))
         return true;
@@ -423,12 +421,12 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
             if (format)
             {
                 static uint64_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV, SKR_TYPE_CATEGORY_REF };
-                acceptIndices = accept;
+                acceptIndices            = accept;
             }
             else
             {
                 static uint64_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64, SKR_TYPE_CATEGORY_REF };
-                acceptIndices = accept;
+                acceptIndices            = accept;
             }
             break;
         }
@@ -448,12 +446,12 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
             if (format)
             {
                 static uint64_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
-                acceptIndices = accept;
+                acceptIndices            = accept;
             }
             else
             {
                 static uint64_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64 };
-                acceptIndices = accept;
+                acceptIndices            = accept;
             }
             break;
         case SKR_TYPE_CATEGORY_HANDLE: {
@@ -469,7 +467,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
             if (format)
             {
                 static uint64_t accept[] = { SKR_TYPE_CATEGORY_GUID, SKR_TYPE_CATEGORY_HANDLE, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
-                acceptIndices = accept;
+                acceptIndices            = accept;
                 break;
             }
             else
@@ -479,7 +477,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
             if (format)
             {
                 static uint64_t accept[] = { SKR_TYPE_CATEGORY_MD5, SKR_TYPE_CATEGORY_HANDLE, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
-                acceptIndices = accept;
+                acceptIndices            = accept;
                 break;
             }
             else
@@ -487,21 +485,21 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
         }
         case SKR_TYPE_CATEGORY_STRV: {
             static uint64_t accept[] = { SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
-            acceptIndices = accept;
+            acceptIndices            = accept;
             break;
         }
         case SKR_TYPE_CATEGORY_STR: {
             if (format)
                 return true;
             static uint64_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64, SKR_TYPE_CATEGORY_ENUM, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
-            acceptIndices = accept;
+            acceptIndices            = accept;
             break;
         }
         case SKR_TYPE_CATEGORY_ARR: {
             if (stype == SKR_TYPE_CATEGORY_ARR)
             {
                 auto& sarray = (const ArrayType&)(*srcType);
-                auto& array = (const ArrayType&)(*this);
+                auto& array  = (const ArrayType&)(*this);
                 if (array.num != sarray.num)
                     return false;
                 if (array.elementType->Convertible(sarray.elementType, format))
@@ -535,7 +533,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
         }
         case SKR_TYPE_CATEGORY_ARRV: {
             static uint64_t accept[] = { SKR_TYPE_CATEGORY_ARR, SKR_TYPE_CATEGORY_DYNARR, SKR_TYPE_CATEGORY_ARRV };
-            acceptIndices = accept;
+            acceptIndices            = accept;
             break;
         }
         case SKR_TYPE_CATEGORY_OBJ: {
@@ -580,7 +578,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                 else if (ptr.pointee->type == SKR_TYPE_CATEGORY_OBJ && sptr.pointee->type == SKR_TYPE_CATEGORY_OBJ)
                 {
                     auto& sobj = (const RecordType&)(*sptr.pointee);
-                    auto& obj = (const RecordType&)(*ptr.pointee);
+                    auto& obj  = (const RecordType&)(*ptr.pointee);
                     if (obj.IsBaseOf(sobj))
                         return true;
                     else
@@ -591,7 +589,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
             }
             if (stype == SKR_TYPE_CATEGORY_HANDLE) // TODO: handle's ownership?
             {
-                bool obs = ptr.ownership == ReferenceType::Observed;
+                bool  obs  = ptr.ownership == ReferenceType::Observed;
                 auto& sptr = (const HandleType&)(*srcType);
                 if (obs && (ptr.pointee == nullptr || sptr.pointee == nullptr))
                     return true;
@@ -676,28 +674,33 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
     case SKR_TYPE_CATEGORY_F64:      \
         dstV = (T) * (double*)src;   \
         break;
-#define STR_CONVERT                                                    \
-    case SKR_TYPE_CATEGORY_STR:                                        \
-        { const auto& txt = *(skr::string*)src; FromString(dst, txt.view(), policy); } break;\
-    case SKR_TYPE_CATEGORY_STRV:                                       \
-        { const auto& txt = *(skr::string_view*)src; FromString(dst, txt, policy); } break;
-        
-#define ENUM_CONVERT                                   \
-    case SKR_TYPE_CATEGORY_ENUM: {                     \
-        auto& enm = (const EnumType&)(*srcType);       \
+#define STR_CONVERT                                \
+    case SKR_TYPE_CATEGORY_STR: {                  \
+        const auto& txt = *(skr::string*)src;      \
+        FromString(dst, txt.view(), policy);       \
+    }                                              \
+    break;                                         \
+    case SKR_TYPE_CATEGORY_STRV: {                 \
+        const auto& txt = *(skr::string_view*)src; \
+        FromString(dst, txt, policy);              \
+    }                                              \
+    break;
+
+#define ENUM_CONVERT                                        \
+    case SKR_TYPE_CATEGORY_ENUM: {                          \
+        auto& enm = (const EnumType&)(*srcType);            \
         Convert(dst, src, enm.GetUnderlyingType(), policy); \
     }
 
     switch (type)
     {
         case SKR_TYPE_CATEGORY_BOOL: {
-            using T = bool;
+            using T    = bool;
             auto& dstV = *(T*)dst;
             switch (srcType->type)
             {
                 BASE_CONVERT
-                case SKR_TYPE_CATEGORY_STR:
-                {
+                case SKR_TYPE_CATEGORY_STR: {
                     const auto& txt = *(skr::string*)src;
                     policy->parse(policy, skr::string_view(txt.u8_str()), dst, this);
                 }
@@ -709,19 +712,19 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                     {
                         case ReferenceType::Observed: {
                             auto& srcV = *(void**)src;
-                            dstV = (bool)srcV;
+                            dstV       = (bool)srcV;
                             break;
                         }
                         case ReferenceType::Shared:
                             if (ref.object)
                             {
                                 auto& srcV = *(skr::SObjectPtr<skr::SInterface>*)src;
-                                dstV = (bool)srcV;
+                                dstV       = (bool)srcV;
                             }
                             else
                             {
                                 auto& srcV = *(skr::SPtr<void>*)src;
-                                dstV = (bool)srcV;
+                                dstV       = (bool)srcV;
                             }
                             break;
                     }
@@ -732,7 +735,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             break;
         }
         case SKR_TYPE_CATEGORY_I32: {
-            using T = int32_t;
+            using T    = int32_t;
             auto& dstV = *(T*)dst;
             switch (srcType->type)
             {
@@ -745,7 +748,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             break;
         }
         case SKR_TYPE_CATEGORY_I64: {
-            using T = int64_t;
+            using T    = int64_t;
             auto& dstV = *(T*)dst;
             switch (srcType->type)
             {
@@ -758,7 +761,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             break;
         }
         case SKR_TYPE_CATEGORY_U32: {
-            using T = uint32_t;
+            using T    = uint32_t;
             auto& dstV = *(T*)dst;
             switch (srcType->type)
             {
@@ -771,7 +774,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             break;
         }
         case SKR_TYPE_CATEGORY_U64: {
-            using T = uint64_t;
+            using T    = uint64_t;
             auto& dstV = *(T*)dst;
             switch (srcType->type)
             {
@@ -784,7 +787,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             break;
         }
         case SKR_TYPE_CATEGORY_F32: {
-            using T = float;
+            using T    = float;
             auto& dstV = *(T*)dst;
             switch (srcType->type)
             {
@@ -796,7 +799,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             break;
         }
         case SKR_TYPE_CATEGORY_F64: {
-            using T = double;
+            using T    = double;
             auto& dstV = *(T*)dst;
             switch (srcType->type)
             {
@@ -859,10 +862,9 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             auto& dstV = *(skr::string_view*)dst;
             switch (srcType->type)
             {
-                case SKR_TYPE_CATEGORY_STR:
-                {
+                case SKR_TYPE_CATEGORY_STR: {
                     const auto& txt = *(skr::string*)src;
-                    dstV = skr::string_view(txt.u8_str(), txt.size());
+                    dstV            = skr::string_view(txt.u8_str(), txt.size());
                     break;
                 }
                 default:
@@ -871,56 +873,56 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             break;
         }
         case SKR_TYPE_CATEGORY_ARR: {
-            auto& arr = (const ArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)dst;
-            auto& sarr = (const ArrayType&)(*srcType);
+            auto& arr      = (const ArrayType&)(*this);
+            auto  element  = arr.elementType;
+            auto  data     = (char*)dst;
+            auto& sarr     = (const ArrayType&)(*srcType);
             auto& selement = sarr.elementType;
-            auto sdata = (char*)src;
-            auto size = element->Size(), ssize = selement->Size();
+            auto  sdata    = (char*)src;
+            auto  size = element->Size(), ssize = selement->Size();
             for (int i = 0; i < arr.num; ++i)
                 element->Convert(data + i * size, sdata + i * ssize, selement);
             break;
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
-            auto& arr = (const DynArrayType&)(*this);
-            auto element = arr.elementType;
-            auto size = element->Size();
-            auto num = arr.Num(dst);
+            auto& arr     = (const DynArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  size    = element->Size();
+            auto  num     = arr.Num(dst);
             switch (srcType->type)
             {
                 case SKR_TYPE_CATEGORY_DYNARR: {
-                    auto& sarr = (const DynArrayType&)(*srcType);
+                    auto& sarr     = (const DynArrayType&)(*srcType);
                     auto& selement = sarr.elementType;
-                    auto ssize = selement->Size();
-                    auto snum = sarr.Num((void*)src);
+                    auto  ssize    = selement->Size();
+                    auto  snum     = sarr.Num((void*)src);
                     arr.Reset(dst, snum);
-                    auto data = (char*)arr.Get(dst, 0);
+                    auto data  = (char*)arr.Get(dst, 0);
                     auto sdata = (char*)sarr.Get((void*)src, 0);
                     for (int i = 0; i < snum; ++i)
                         element->Convert(data + i * size, sdata + i * ssize, selement);
                     break;
                 }
                 case SKR_TYPE_CATEGORY_ARR: {
-                    auto& sarr = (const ArrayType&)(*srcType);
+                    auto& sarr     = (const ArrayType&)(*srcType);
                     auto& selement = sarr.elementType;
-                    auto ssize = selement->Size();
+                    auto  ssize    = selement->Size();
                     arr.Reset(dst, sarr.num);
-                    auto data = (char*)arr.Get(dst, 0);
+                    auto data  = (char*)arr.Get(dst, 0);
                     auto sdata = (char*)src;
                     for (int i = 0; i < sarr.num; ++i)
                         element->Convert(data + i * size, sdata + i * ssize, selement);
                     break;
                 }
                 case SKR_TYPE_CATEGORY_ARRV: {
-                    auto& sarr = (const ArrayViewType&)(*srcType);
+                    auto& sarr     = (const ArrayViewType&)(*srcType);
                     auto& selement = sarr.elementType;
-                    auto ssize = selement->Size();
-                    auto sv = *(skr::span<char>*)src;
-                    auto snum = sv.size();
+                    auto  ssize    = selement->Size();
+                    auto  sv       = *(skr::span<char>*)src;
+                    auto  snum     = sv.size();
                     if (num != snum)
                         arr.Reset(dst, snum);
-                    auto data = (char*)arr.Get(dst, 0);
+                    auto data  = (char*)arr.Get(dst, 0);
                     auto sdata = sv.data();
                     for (int i = 0; i < snum; ++i)
                         element->Convert(data + i * size, sdata + i * ssize, selement);
@@ -940,10 +942,10 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                     dstV = { (char*)src, ((const ArrayType&)(*srcType)).num };
                     break;
                 case SKR_TYPE_CATEGORY_DYNARR: {
-                    auto& sarr = (const DynArrayType&)(*srcType);
-                    auto snum = sarr.Num((void*)src);
-                    auto sdata = (char*)sarr.Get((void*)src, 0);
-                    dstV = { sdata, snum };
+                    auto& sarr  = (const DynArrayType&)(*srcType);
+                    auto  snum  = sarr.Num((void*)src);
+                    auto  sdata = (char*)sarr.Get((void*)src, 0);
+                    dstV        = { sdata, snum };
                     break;
                 }
                 case SKR_TYPE_CATEGORY_ARRV:
@@ -976,7 +978,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                 {
                     auto& srcV = *(void**)src;
                     auto& dstV = *(void**)dst;
-                    dstV = srcV;
+                    dstV       = srcV;
                 }
                 else
                 {
@@ -986,13 +988,13 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                         if (ptr.ownership == ReferenceType::Observed)
                         {
                             auto& dstV = *(void**)dst;
-                            dstV = srcV.get();
+                            dstV       = srcV.get();
                         }
                         else if (ptr.ownership == ReferenceType::Shared)
                         {
                             SKR_ASSERT(ptr.object);
                             auto& dstV = *(skr::SObjectPtr<skr::SInterface>*)dst;
-                            dstV = srcV;
+                            dstV       = srcV;
                         }
                     }
                     else
@@ -1001,13 +1003,13 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                         if (ptr.ownership == ReferenceType::Observed)
                         {
                             auto& dstV = *(void**)dst;
-                            dstV = srcV.get();
+                            dstV       = srcV.get();
                         }
                         else if (ptr.ownership == ReferenceType::Shared)
                         {
                             SKR_ASSERT(!ptr.object);
                             auto& dstV = *(skr::SPtr<void>*)dst;
-                            dstV = srcV;
+                            dstV       = srcV;
                         }
                     }
                 }
@@ -1023,13 +1025,13 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             else if (ptr.ownership == ReferenceType::Observed)
             {
                 auto& dstV = *(void**)dst;
-                dstV = (void*)src;
+                dstV       = (void*)src;
             }
         }
         break;
         case SKR_TYPE_CATEGORY_VARIANT: {
-            auto& variant = (const VariantType&)(*this);
-            uint32_t i = 0;
+            auto&    variant = (const VariantType&)(*this);
+            uint32_t i       = 0;
             for (auto& type : variant.types)
             {
                 if (type->Same(srcType))
@@ -1096,7 +1098,7 @@ void skr_type_t::Construct(void* dst, skr::type::Value* args, uint64_t nargs) co
     SKR_ASSERT(args == nullptr && nargs == 0);
     using namespace skr::type;
 #define TRIVAL_TYPE_IMPL(name, type) \
-    case name:                       
+    case name:
     switch (type)
     {
         SKR_TYPE_TRIVAL1(TRIVAL_TYPE_IMPL)
@@ -1109,17 +1111,17 @@ void skr_type_t::Construct(void* dst, skr::type::Value* args, uint64_t nargs) co
             new (dst) skr::string();
             break;
         case SKR_TYPE_CATEGORY_ARR: {
-            auto& arr = (const ArrayType&)(*this);
-            auto element = arr.elementType;
-            auto d = (char*)dst;
-            auto size = element->Size();
+            auto& arr     = (const ArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  d       = (char*)dst;
+            auto  size    = element->Size();
             for (int i = 0; i < arr.num; ++i)
                 element->Construct(d + i * size, args, nargs);
         }
         break;
         case SKR_TYPE_CATEGORY_DYNARR: {
-            [[maybe_unused]] auto& arr = (const DynArrayType&)(*this);
-            auto storage = (DynArrayStorage*)dst;
+            [[maybe_unused]] auto& arr     = (const DynArrayType&)(*this);
+            auto                   storage = (DynArrayStorage*)dst;
             storage->begin = storage->end = storage->capacity = nullptr;
             break;
         }
@@ -1162,31 +1164,31 @@ uint64_t skr_type_t::Hash(const void* dst, uint64_t base) const
             return 0;
         }
         case SKR_TYPE_CATEGORY_ARR: {
-            auto& arr = (const ArrayType&)(*this);
-            auto element = arr.elementType;
-            auto d = (char*)dst;
-            auto size = element->Size();
+            auto& arr     = (const ArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  d       = (char*)dst;
+            auto  size    = element->Size();
             for (int i = 0; i < arr.num; ++i)
                 base = element->Hash(d + i * size, base);
             return base;
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
-            auto& arr = (const DynArrayType&)(*this);
-            auto element = arr.elementType;
-            auto d = (char*)arr.Get((void*)dst, 0);
-            auto n = arr.Num((void*)dst);
-            auto size = element->Size();
+            auto& arr     = (const DynArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  d       = (char*)arr.Get((void*)dst, 0);
+            auto  n       = arr.Num((void*)dst);
+            auto  size    = element->Size();
             for (int i = 0; i < n; ++i)
                 base = element->Hash(d + i * size, base);
             return base;
         }
         case SKR_TYPE_CATEGORY_ARRV: {
-            auto& arr = (const ArrayViewType&)(*this);
+            auto& arr     = (const ArrayViewType&)(*this);
             auto& element = arr.elementType;
-            auto size = element->Size();
-            auto v = *(skr::span<char>*)dst;
-            auto n = v.size();
-            auto d = v.data();
+            auto  size    = element->Size();
+            auto  v       = *(skr::span<char>*)dst;
+            auto  n       = v.size();
+            auto  d       = v.data();
             for (int i = 0; i < n; ++i)
                 base = element->Hash(d + i * size, base);
             return base;
@@ -1214,7 +1216,7 @@ uint64_t skr_type_t::Hash(const void* dst, uint64_t base) const
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
             auto variant = (const VariantType*)this;
-            auto index = variant->Index((void*)dst);
+            auto index   = variant->Index((void*)dst);
             return variant->types[index]->Hash(variant->Get((void*)dst, index), base);
         }
         case SKR_TYPE_CATEGORY_INVALID:
@@ -1250,23 +1252,23 @@ void skr_type_t::Destruct(void* address) const
             break;
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
-            auto& arr = (const DynArrayType&)(*this);
-            auto storage = (DynArrayStorage*)address;
-            auto element = arr.elementType;
-            auto data = (char*)storage->begin;
-            auto size = element->Size();
-            auto num = arr.Num(address);
-            for(int i = 0; i < num; ++i)
+            auto& arr     = (const DynArrayType&)(*this);
+            auto  storage = (DynArrayStorage*)address;
+            auto  element = arr.elementType;
+            auto  data    = (char*)storage->begin;
+            auto  size    = element->Size();
+            auto  num     = arr.Num(address);
+            for (int i = 0; i < num; ++i)
                 element->Destruct(data + i * size);
             sakura_free_aligned(storage->begin, element->Align());
             storage->begin = storage->end = storage->capacity = nullptr;
             break;
         }
         case SKR_TYPE_CATEGORY_ARR: {
-            auto& arr = (const ArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)address;
-            auto size = element->Size();
+            auto& arr     = (const ArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  data    = (char*)address;
+            auto  size    = element->Size();
             for (int i = 0; i < arr.num; ++i)
                 element->Destruct(data + i * size);
             break;
@@ -1322,24 +1324,24 @@ void skr_type_t::Copy(void* dst, const void* src) const
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
         case SKR_TYPE_CATEGORY_ARR: {
-            auto& arr = (const ArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)dst;
-            auto sdata = (char*)src;
-            auto size = element->Size();
+            auto& arr     = (const ArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  data    = (char*)dst;
+            auto  sdata   = (char*)src;
+            auto  size    = element->Size();
             for (int i = 0; i < arr.num; ++i)
                 element->Copy(data + i * size, sdata + i * size);
             break;
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
-            auto& arr = (const DynArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)arr.Get(dst, 0);
-            auto sdata = (char*)arr.Get((void*)src, 0);
-            auto size = element->Size();
-            auto num = arr.Num((void*)src);
+            auto& arr     = (const DynArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  data    = (char*)arr.Get(dst, 0);
+            auto  sdata   = (char*)arr.Get((void*)src, 0);
+            auto  size    = element->Size();
+            auto  num     = arr.Num((void*)src);
             arr.Reset(dst, num);
-            for (int i=0; i < num; ++i)
+            for (int i = 0; i < num; ++i)
                 element->Copy(data + i * size, sdata + i * size);
             break;
         }
@@ -1373,7 +1375,7 @@ void skr_type_t::Copy(void* dst, const void* src) const
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
             auto& variant = (const VariantType&)(*this);
-            auto index = variant.Index((void*)src);
+            auto  index   = variant.Index((void*)src);
             variant.types[index]->Copy(variant.Get(dst, index), variant.Get((void*)src, index));
             break;
         }
@@ -1400,24 +1402,24 @@ void skr_type_t::Move(void* dst, void* src) const
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
         case SKR_TYPE_CATEGORY_ARR: {
-            auto& arr = (const ArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)dst;
-            auto sdata = (char*)src;
-            auto size = element->Size();
+            auto& arr     = (const ArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  data    = (char*)dst;
+            auto  sdata   = (char*)src;
+            auto  size    = element->Size();
             for (int i = 0; i < arr.num; ++i)
                 element->Move(data + i * size, sdata + i * size);
             break;
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
-            auto& arr = (const DynArrayType&)(*this);\
-            auto element = arr.elementType;
-            auto data = (char*)arr.Get(dst, 0);
-            auto sdata = (char*)arr.Get((void*)src, 0);
-            auto size = element->Size();
-            auto num = arr.Num((void*)src);
+            auto& arr     = (const DynArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  data    = (char*)arr.Get(dst, 0);
+            auto  sdata   = (char*)arr.Get((void*)src, 0);
+            auto  size    = element->Size();
+            auto  num     = arr.Num((void*)src);
             arr.Reset(dst, num);
-            for (int i=0; i < num; ++i)
+            for (int i = 0; i < num; ++i)
                 element->Move(data + i * size, sdata + i * size);
             break;
         }
@@ -1467,7 +1469,7 @@ void skr_type_t::Move(void* dst, void* src) const
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
             auto& variant = (const VariantType&)(*this);
-            auto index = variant.Index((void*)src);
+            auto  index   = variant.Index((void*)src);
             variant.types[index]->Move(variant.Get(dst, index), variant.Get((void*)src, index));
             break;
         }
@@ -1550,21 +1552,21 @@ int skr_type_t::Serialize(const void* dst, skr_binary_writer_t* writer) const
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
         case SKR_TYPE_CATEGORY_ARR: {
-            auto& arr = (const ArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)dst;
-            auto size = element->Size();
+            auto& arr     = (const ArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  data    = (char*)dst;
+            auto  size    = element->Size();
             for (int i = 0; i < arr.num; ++i)
                 if (auto ret = element->Serialize(data + i * size, writer); ret != 0)
                     return ret;
             break;
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
-            auto& arr = (const DynArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)arr.Get((void*)dst, 0);
-            auto size = element->Size();
-            auto num = arr.Num((void*)dst);
+            auto& arr     = (const DynArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  data    = (char*)arr.Get((void*)dst, 0);
+            auto  size    = element->Size();
+            auto  num     = arr.Num((void*)dst);
             for (int i = 0; i < num; ++i)
                 if (auto ret = element->Serialize(data + i * size, writer); ret != 0)
                     return ret;
@@ -1599,8 +1601,8 @@ int skr_type_t::Serialize(const void* dst, skr_binary_writer_t* writer) const
             break;
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
-            auto& variant = (const VariantType&)(*this);
-            uint32_t index = (uint32_t)variant.Index((void*)dst);
+            auto&    variant = (const VariantType&)(*this);
+            uint32_t index   = (uint32_t)variant.Index((void*)dst);
             if (auto ret = skr::binary::Write(writer, index); ret != 0)
                 return ret;
             return variant.types[index]->Serialize(variant.Get((void*)dst, index), writer);
@@ -1616,7 +1618,7 @@ int skr_type_t::Serialize(const void* dst, skr_binary_writer_t* writer) const
 template <class T>
 void SerializeTextImpl(const void* dst, skr_json_writer_t* writer)
 {
-    if constexpr (skr::is_complete_v<skr::json::WriteTrait<const T&>>)
+    if constexpr (skr::is_complete_v<skr::json::WriteTrait<T>>)
         return skr::json::Write(writer, *(T*)dst);
     SKR_UNIMPLEMENTED_FUNCTION();
 }
@@ -1633,10 +1635,10 @@ void skr_type_t::SerializeText(const void* dst, skr_json_writer_t* writer) const
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
         case SKR_TYPE_CATEGORY_ARR: {
-            auto& arr = (const ArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)dst;
-            auto size = element->Size();
+            auto& arr     = (const ArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  data    = (char*)dst;
+            auto  size    = element->Size();
             writer->StartArray();
             for (int i = 0; i < arr.num; ++i)
                 element->SerializeText(data + i * size, writer);
@@ -1644,11 +1646,11 @@ void skr_type_t::SerializeText(const void* dst, skr_json_writer_t* writer) const
             break;
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
-            auto& arr = (const DynArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)arr.Get((void*)dst, 0);
-            auto size = element->Size();
-            auto num = arr.Num((void*)dst);
+            auto& arr     = (const DynArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  data    = (char*)arr.Get((void*)dst, 0);
+            auto  size    = element->Size();
+            auto  num     = arr.Num((void*)dst);
             writer->StartArray();
             for (int i = 0; i < num; ++i)
                 element->SerializeText(data + i * size, writer);
@@ -1684,8 +1686,8 @@ void skr_type_t::SerializeText(const void* dst, skr_json_writer_t* writer) const
             break;
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
-            auto& variant = (const VariantType&)(*this);
-            uint32_t index = (uint32_t)variant.Index((void*)dst);
+            auto&    variant = (const VariantType&)(*this);
+            uint32_t index   = (uint32_t)variant.Index((void*)dst);
             writer->StartObject();
             writer->Key(u8"type");
             skr::json::Write(writer, variant.types[index]->Id());
@@ -1724,21 +1726,21 @@ int skr_type_t::Deserialize(void* dst, skr_binary_reader_t* reader) const
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
         case SKR_TYPE_CATEGORY_ARR: {
-            auto& arr = (const ArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)dst;
-            auto size = element->Size();
+            auto& arr     = (const ArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  data    = (char*)dst;
+            auto  size    = element->Size();
             for (int i = 0; i < arr.num; ++i)
                 if (auto ret = element->Deserialize(data + i * size, reader); ret != 0)
                     return ret;
             break;
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
-            auto& arr = (const DynArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)arr.Get((void*)dst, 0);
-            auto size = element->Size();
-            auto num = arr.Num((void*)dst);
+            auto& arr     = (const DynArrayType&)(*this);
+            auto  element = arr.elementType;
+            auto  data    = (char*)arr.Get((void*)dst, 0);
+            auto  size    = element->Size();
+            auto  num     = arr.Num((void*)dst);
             for (int i = 0; i < num; ++i)
                 if (auto ret = element->Deserialize(data + i * size, reader); ret != 0)
                     return ret;
@@ -1764,8 +1766,7 @@ int skr_type_t::Deserialize(void* dst, skr_binary_reader_t* reader) const
                 case ReferenceType::Shared: {
                     void* ptr = ref.pointee->Malloc();
                     ref.pointee->Construct(ptr, nullptr, 0);
-                    auto deleter = [this](void* data)
-                    {
+                    auto deleter = [this](void* data) {
                         auto& ref = (*(ReferenceType*)this);
                         ref.pointee->Destruct(data);
                         ref.pointee->Free(data);
@@ -1775,7 +1776,7 @@ int skr_type_t::Deserialize(void* dst, skr_binary_reader_t* reader) const
                         deleter(ptr);
                         return ret;
                     }
-                    if (((ReferenceType*)this)->object) 
+                    if (((ReferenceType*)this)->object)
                         ((skr::SObjectPtr<skr::SInterface>*)dst)->reset((skr::SInterface*)ptr);
                     else
                         ((skr::SPtr<void>*)dst)->reset(ptr, deleter);
@@ -1785,11 +1786,11 @@ int skr_type_t::Deserialize(void* dst, skr_binary_reader_t* reader) const
             }
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
-            auto& variant = (const VariantType&)(*this);
-            uint32_t index = 0;
+            auto&    variant = (const VariantType&)(*this);
+            uint32_t index   = 0;
             if (auto ret = skr::binary::Read(reader, index); ret != 0)
                 return ret;
-            //TODO: ?
+            // TODO: ?
             variant.Set(dst, index, nullptr);
             return variant.types[index]->Deserialize(variant.Get(dst, index), reader);
             break;
@@ -1828,13 +1829,13 @@ skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
         case SKR_TYPE_CATEGORY_ARR: {
-            auto& arr = (const ArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)dst;
-            const auto size = element->Size();
-            auto jarray = reader.get_array();
+            auto&      arr         = (const ArrayType&)(*this);
+            auto       element     = arr.elementType;
+            auto       data        = (char*)dst;
+            const auto size        = element->Size();
+            auto       jarray      = reader.get_array();
             const auto jarray_size = static_cast<uint32_t>(jarray.count_elements().value_unsafe());
-            auto len = std::min<uint32_t>(jarray_size, (uint32_t)arr.num);
+            auto       len         = std::min<uint32_t>(jarray_size, (uint32_t)arr.num);
             for (uint32_t i = 0u; i < len; i++)
             {
                 if (auto ret = element->DeserializeText(data + i * size, jarray.at(i).value_unsafe()); ret != 0)
@@ -1845,14 +1846,14 @@ skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&
             break;
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
-            auto& arr = (const DynArrayType&)(*this);
-            auto element = arr.elementType;
-            auto data = (char*)arr.Get((void*)dst, 0);
-            auto size = element->Size();
-            auto num = arr.Num((void*)dst);
-            auto jarray = reader.get_array();
+            auto&      arr         = (const DynArrayType&)(*this);
+            auto       element     = arr.elementType;
+            auto       data        = (char*)arr.Get((void*)dst, 0);
+            auto       size        = element->Size();
+            auto       num         = arr.Num((void*)dst);
+            auto       jarray      = reader.get_array();
             const auto jarray_size = static_cast<uint32_t>(jarray.count_elements().value_unsafe());
-            auto len = std::min<uint32_t>(jarray_size, (uint32_t)num);
+            auto       len         = std::min<uint32_t>(jarray_size, (uint32_t)num);
             for (uint32_t i = 0u; i < len; i++)
             {
                 if (auto ret = element->DeserializeText(data + i * size, jarray.at(i).value_unsafe()); ret != 0)
@@ -1883,8 +1884,7 @@ skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&
                 case ReferenceType::Shared: {
                     void* ptr = ref.pointee->Malloc();
                     ref.pointee->Construct(ptr, nullptr, 0);
-                    auto deleter = [this](void* data)
-                    {
+                    auto deleter = [this](void* data) {
                         auto& ref = (*(ReferenceType*)this);
                         ref.pointee->Destruct(data);
                         ref.pointee->Free(data);
@@ -1903,21 +1903,21 @@ skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&
             }
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
-            auto& variant = (const VariantType&)(*this);
+            auto&      variant = (const VariantType&)(*this);
             skr_guid_t tid;
-            auto _tid = reader["type"];
-            if(auto error = _tid.error(); error != simdjson::SUCCESS)
+            auto       _tid = reader["type"];
+            if (auto error = _tid.error(); error != simdjson::SUCCESS)
                 return (skr::json::error_code)error;
             if (auto ret = skr::json::Read(std::move(_tid).value_unsafe(), tid); ret != skr::json::SUCCESS)
                 return ret;
             auto _value = reader["value"];
-            if(auto error = _value.error(); error != simdjson::SUCCESS)
+            if (auto error = _value.error(); error != simdjson::SUCCESS)
                 return (skr::json::error_code)error;
             uint32_t index;
-            for(index=0; index<variant.types.size(); ++index)
-                if(variant.types[index]->Id() == tid)
+            for (index = 0; index < variant.types.size(); ++index)
+                if (variant.types[index]->Id() == tid)
                     break;
-            //TODO:?
+            // TODO:?
             variant.Set(dst, index, nullptr);
             return variant.types[index]->DeserializeText(variant.Get(dst, index), std::move(reader));
         }
@@ -1936,7 +1936,7 @@ bool skr::type::RecordType::IsBaseOf(const RecordType& other) const
     return false;
 }
 
-const skr_type_t* skr_get_type(const skr_type_id_t* id)
+const skr_type_t* skr_get_type(const skr_guid_t* id)
 {
     auto registry = skr::type::GetTypeRegistry();
     return registry->get_type(*id);
@@ -1947,7 +1947,7 @@ void skr_get_derived_types(const struct skr_type_t* type, void (*callback)(void*
     SKR_UNIMPLEMENTED_FUNCTION();
 }
 
-void skr_get_type_id(const struct skr_type_t* type, skr_type_id_t* id)
+void skr_get_type_id(const struct skr_type_t* type, skr_guid_t* id)
 {
     *id = type->Id();
 }

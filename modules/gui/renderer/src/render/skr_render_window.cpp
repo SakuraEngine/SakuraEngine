@@ -1,6 +1,6 @@
 #include "SkrGuiRenderer/render/skr_render_window.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
-#include "SkrGui/framework/layer/offet_layer.hpp"
+#include "SkrGui/framework/layer/offset_layer.hpp"
 #include "SkrGui/framework/layer/geometry_layer.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include "SkrRT/math/rtm/qvvf.h"
@@ -125,8 +125,8 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
 
     // copy data
     auto canvas = layer->children().data()[0]->type_cast_fast<GeometryLayer>()->canvas();
-    _vertices.assign(canvas->vertices().begin(), canvas->vertices().end());
-    _indices.assign(canvas->indices().begin(), canvas->indices().end());
+    _vertices.assign(canvas->vertices().data(), canvas->vertices().size());
+    _indices.assign(canvas->indices().data(), canvas->indices().size());
     for (const auto& cmd : canvas->commands())
     {
         // copy command
@@ -138,7 +138,7 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
 
         // make transform
         auto       tb_cursor      = _transforms.size();
-        auto&      transform      = _transforms.emplace_back();
+        auto&      transform      = *_transforms.add_default();
         const auto scaleX         = 1.f;
         const auto scaleY         = 1.f;
         const auto scaleZ         = 1.f;
@@ -159,7 +159,7 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
 
         // make projection
         auto               pb_cursor    = _projections.size();
-        auto&              projection   = _projections.emplace_back();
+        auto&              projection   = *_projections.add_default();
         const skr_float2_t zero_point   = { window_size.width * 0.5f, window_size.height * 0.5f };
         const skr_float2_t eye_position = { zero_point.x, zero_point.y };
         const auto         view         = rtm::look_at_matrix(
@@ -172,7 +172,7 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
 
         // make render data
         auto  rb_cursor     = _render_data.size();
-        auto& render_data   = _render_data.emplace_back();
+        auto& render_data   = *_render_data.add_default();
         render_data.M[0][0] = static_cast<float>(cmd.texture_swizzle.r);
         render_data.M[0][1] = static_cast<float>(cmd.texture_swizzle.g);
         render_data.M[0][2] = static_cast<float>(cmd.texture_swizzle.b);
@@ -183,7 +183,7 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
         draw_cmd.projection_buffer_offset  = pb_cursor * sizeof(rtm::matrix4x4f);
         draw_cmd.render_data_buffer_offset = rb_cursor * sizeof(skr_float4x4_t);
 
-        _commands.push_back(draw_cmd);
+        _commands.add(draw_cmd);
     }
 }
 void SkrRenderWindow::_upload_draw_data()
@@ -407,7 +407,7 @@ void SkrRenderWindow::_render()
                                          0.f, 1.f);
         cgpu_render_encoder_set_scissor(ctx.encoder,
                                         0, 0,
-                                        (uint32_t)target_desc->width, 
+                                        (uint32_t)target_desc->width,
                                         (uint32_t)target_desc->height);
 
         SkrPipelineKey pipeline_key_cache = { ESkrPipelineFlag::__Count, CGPU_SAMPLE_COUNT_1 };
@@ -425,7 +425,7 @@ void SkrRenderWindow::_render()
 
             if (use_texture)
             {
-                const auto gui_texture = SKR_GUI_CAST<SkrUpdatableImage>(cmd.texture);
+                const auto gui_texture = cmd.texture->type_cast<SkrUpdatableImage>();
                 cgpux_render_encoder_bind_bind_table(ctx.encoder, gui_texture->bind_table());
             }
 

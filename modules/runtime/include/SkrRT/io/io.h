@@ -4,6 +4,7 @@
 #include "SkrRT/async/async_service.h"
 #ifdef __cplusplus
 #include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers/span.hpp"
 #endif
 
 #define SKR_IO_SERVICE_MAX_TASK_COUNT 32

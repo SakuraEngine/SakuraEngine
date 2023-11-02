@@ -2,14 +2,20 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
 #include "SkrGui/math/layout.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/render_object/render_box.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct HitTestRecord {
-};
-
-struct SKR_GUI_API RenderBox : public RenderObject {
-    SKR_GUI_OBJECT(RenderBox, "01a2eb19-1299-4069-962f-88db0c719134", RenderObject);
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "d4c45487-d696-42fb-bff1-f0a3f6adcea3",
+    "rtti": true
+)
+SKR_GUI_API RenderBox : public RenderObject {
+    SKR_RTTR_GENERATE_BODY()
 
 public:
     RenderBox();
@@ -38,6 +44,9 @@ public:
     // dry layout
     Sizef get_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT;
 
+    // hit test
+    virtual bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT;
+
     // TODO.
     // global_to_local
     // local_to_global
@@ -55,14 +64,20 @@ protected:
     // dry layout
     virtual Sizef compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT;
 
+    // helper function
+    using HitTestFuncRef = FunctionRef<bool(HitTestResult* result, Offsetf local_position)>;
+    bool _default_hit_test(HitTestResult* result, Offsetf local_position, HitTestFuncRef hit_test_self, HitTestFuncRef hit_test_children) const;
+
 private:
     void perform_resize() SKR_NOEXCEPT override; // override compute_dry_layout instead
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     Sizef          _size        = {};
     BoxConstraints _constraints = {};
 
     // TODO. cached data
 };
-
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

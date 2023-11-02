@@ -8,9 +8,8 @@
     #include "SkrRT/containers/variant.hpp"
     #include "SkrRT/containers/string.hpp"
     #include "SkrRT/containers/vector.hpp"
-    #include "SkrRT/type/type_id.hpp"
     #include "SkrRT/platform/guid.hpp"
-    #include "SkrRT/type/type_helper.hpp"
+    #include "SkrRT/rttr/rttr_traits.hpp"
 
 // forward declaration for resources
 struct skr_resource_handle_t;
@@ -20,105 +19,120 @@ template <class T>
 struct TResourceHandle;
 }
 // end forward declaration for resources
-// utils for codegen
-namespace skr
-{
-namespace json
+
+// helper functions
+namespace skr::json
 {
 struct error_code_info {
-    error_code code;
+    error_code  code;
     const char* message; // do not use a fancy std::string where a simple C string will do (no alloc, no destructor)
 };
 SKR_STATIC_API const char* error_message(error_code err) noexcept;
-SKR_STATIC_API void set_error_message(error_code err) noexcept;
+SKR_STATIC_API void        set_error_message(error_code err) noexcept;
 template <class T>
 error_code Read(simdjson::ondemand::value&& json, T& value);
+} // namespace skr::json
 
+// primitive types
+// bool
+// int/uint 8/16/32/64
+// float/double
+namespace skr::json
+{
 template <>
 struct SKR_STATIC_API ReadTrait<bool> {
     static error_code Read(simdjson::ondemand::value&& json, bool& value);
 };
-
 template <>
-struct SKR_STATIC_API ReadTrait<uint32_t> {
-    static error_code Read(simdjson::ondemand::value&& json, uint32_t& value);
+struct SKR_STATIC_API ReadTrait<int8_t> {
+    static error_code Read(simdjson::ondemand::value&& json, int8_t& value);
 };
-
 template <>
-struct SKR_STATIC_API ReadTrait<uint64_t> {
-    static error_code Read(simdjson::ondemand::value&& json, uint64_t& value);
+struct SKR_STATIC_API ReadTrait<int16_t> {
+    static error_code Read(simdjson::ondemand::value&& json, int16_t& value);
 };
-
 template <>
 struct SKR_STATIC_API ReadTrait<int32_t> {
     static error_code Read(simdjson::ondemand::value&& json, int32_t& value);
 };
-
 template <>
 struct SKR_STATIC_API ReadTrait<int64_t> {
     static error_code Read(simdjson::ondemand::value&& json, int64_t& value);
 };
-
+template <>
+struct SKR_STATIC_API ReadTrait<uint8_t> {
+    static error_code Read(simdjson::ondemand::value&& json, uint8_t& value);
+};
+template <>
+struct SKR_STATIC_API ReadTrait<uint16_t> {
+    static error_code Read(simdjson::ondemand::value&& json, uint16_t& value);
+};
+template <>
+struct SKR_STATIC_API ReadTrait<uint32_t> {
+    static error_code Read(simdjson::ondemand::value&& json, uint32_t& value);
+};
+template <>
+struct SKR_STATIC_API ReadTrait<uint64_t> {
+    static error_code Read(simdjson::ondemand::value&& json, uint64_t& value);
+};
 template <>
 struct SKR_STATIC_API ReadTrait<float> {
     static error_code Read(simdjson::ondemand::value&& json, float& value);
 };
-
 template <>
 struct SKR_STATIC_API ReadTrait<double> {
     static error_code Read(simdjson::ondemand::value&& json, double& value);
 };
+} // namespace skr::json
 
-template <>
-struct SKR_STATIC_API ReadTrait<skr::string> {
-    static error_code Read(simdjson::ondemand::value&& json, skr::string& value);
-};
-
-template <>
-struct SKR_STATIC_API ReadTrait<skr_guid_t> {
-    static error_code Read(simdjson::ondemand::value&& json, skr_guid_t& value);
-};
-
-template <>
-struct SKR_STATIC_API ReadTrait<skr_md5_t> {
-    static error_code Read(simdjson::ondemand::value&& json, skr_md5_t& md5);
-};
-
+// skr type
+namespace skr::json
+{
 template <>
 struct SKR_STATIC_API ReadTrait<skr_float2_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_float2_t& value);
 };
-
 template <>
 struct SKR_STATIC_API ReadTrait<skr_float3_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_float3_t& value);
 };
-
 template <>
 struct SKR_STATIC_API ReadTrait<skr_float4_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_float4_t& value);
 };
-
 template <>
 struct SKR_STATIC_API ReadTrait<skr_float4x4_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_float4x4_t& value);
 };
-
 template <>
 struct SKR_STATIC_API ReadTrait<skr_rotator_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_rotator_t& value);
 };
-
 template <>
 struct SKR_STATIC_API ReadTrait<skr_quaternion_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_quaternion_t& value);
 };
-
+template <>
+struct SKR_STATIC_API ReadTrait<skr_guid_t> {
+    static error_code Read(simdjson::ondemand::value&& json, skr_guid_t& value);
+};
+template <>
+struct SKR_STATIC_API ReadTrait<skr_md5_t> {
+    static error_code Read(simdjson::ondemand::value&& json, skr_md5_t& md5);
+};
 template <>
 struct SKR_STATIC_API ReadTrait<skr_resource_handle_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_resource_handle_t& value);
 };
+template <>
+struct SKR_STATIC_API ReadTrait<skr::string> {
+    static error_code Read(simdjson::ondemand::value&& json, skr::string& value);
+};
+} // namespace skr::json
 
+// container & template
+namespace skr::json
+{
 template <class K, class V, class Hash, class Eq>
 struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
     static error_code Read(simdjson::ondemand::value&& json, skr::flat_hash_map<K, V, Hash, Eq>& map)
@@ -134,7 +148,7 @@ struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
             auto value = pair.value();
             if (value.error() != simdjson::SUCCESS)
                 return (error_code)value.error();
-            V v;
+            V          v;
             error_code error = skr::json::Read<V>(std::move(value).value_unsafe(), v);
             if (error != SUCCESS)
                 return error;
@@ -142,7 +156,7 @@ struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
             const char* key_str = key.value_unsafe().raw();
             if constexpr (std::is_same_v<std::decay_t<K>, skr::string>)
             {
-                map.insert(std::make_pair(K{key_str}, std::move(v)));
+                map.insert(std::make_pair(K{ key_str }, std::move(v)));
             }
             else
             {
@@ -165,7 +179,7 @@ struct ReadTrait<skr::vector<V, Allocator>> {
         {
             if (value.error() != simdjson::SUCCESS)
                 return (error_code)value.error();
-            V v;
+            V          v;
             error_code error = skr::json::Read<V>(std::move(value).value_unsafe(), v);
             if (error != SUCCESS)
                 return error;
@@ -180,9 +194,9 @@ struct ReadTrait<skr::variant<Ts...>> {
     template <class T>
     static error_code ReadByIndex(simdjson::ondemand::value&& json, skr::variant<Ts...>& value, skr_guid_t index)
     {
-        if (index == skr::type::type_id<T>::get())
+        if (index == ::skr::rttr::type_id<T>())
         {
-            T t;
+            T          t;
             error_code ret = skr::json::Read(std::move(json), t);
             if (ret != error_code::SUCCESS)
                 return ret;
@@ -213,42 +227,43 @@ struct ReadTrait<skr::variant<Ts...>> {
 };
 
 template <class T>
-struct ReadTrait<TEnumAsByte<T>>
-{
-    static error_code Read(simdjson::ondemand::value&& json, TEnumAsByte<T>& value)
-    {
-        return skr::json::Read<typename TEnumAsByte<T>::UT>(std::move(json), value.as_byte());
-    }
-};
-
-template <class T>
 struct ReadTrait<skr::resource::TResourceHandle<T>> {
     static error_code Read(simdjson::ondemand::value&& json, skr::resource::TResourceHandle<T>& handle)
     {
         return skr::json::Read<skr_resource_handle_t>(std::move(json), (skr_resource_handle_t&)handle);
     }
 };
+} // namespace skr::json
 
+// helper functions impl
+namespace skr::json
+{
 template <class T>
 error_code Read(simdjson::ondemand::value&& json, T& value)
 {
     return ReadTrait<T>::Read(std::move(json), value);
 }
-} // namespace json
+} // namespace skr::json
 
+// serde complete check
+namespace skr
+{
 template <class K, class V, class Hash, class Eq>
-struct SerdeCompleteChecker<json::ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>>> 
-: std::bool_constant<is_complete_serde_v<json::ReadTrait<K>> && is_complete_serde_v<json::ReadTrait<V>>> {};
+struct SerdeCompleteChecker<json::ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>>>
+    : std::bool_constant<is_complete_serde_v<json::ReadTrait<K>> && is_complete_serde_v<json::ReadTrait<V>>> {
+};
 
 template <class V, class Allocator>
 struct SerdeCompleteChecker<json::ReadTrait<eastl::vector<V, Allocator>>>
-: std::bool_constant<is_complete_serde_v<json::ReadTrait<V>>> {};
+    : std::bool_constant<is_complete_serde_v<json::ReadTrait<V>>> {
+};
 
 template <class... Ts>
 struct SerdeCompleteChecker<json::ReadTrait<skr::variant<Ts...>>>
-: std::bool_constant<(is_complete_serde_v<json::ReadTrait<Ts>> && ...)> {};
-
+    : std::bool_constant<(is_complete_serde_v<json::ReadTrait<Ts>> && ...)> {
+};
 } // namespace skr
+
 #else
 typedef struct skr_json_reader_t skr_json_reader_t;
 #endif

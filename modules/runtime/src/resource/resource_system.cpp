@@ -30,9 +30,9 @@ public:
     void FlushResource(skr_resource_handle_t& handle) final override;
     ESkrLoadingStatus GetResourceStatus(const skr_guid_t& handle) final override;
 
-    SResourceFactory* FindFactory(skr_type_id_t type) const final override;
+    SResourceFactory* FindFactory(skr_guid_t type) const final override;
     void RegisterFactory(SResourceFactory* factory) final override;
-    void UnregisterFactory(skr_type_id_t type) final override;
+    void UnregisterFactory(skr_guid_t type) final override;
 
     SResourceRegistry* GetRegistry() const final override;
     skr_io_ram_service_t* GetRAMService() const final override;
@@ -70,7 +70,7 @@ protected:
     bool quit = false;
     skr::parallel_flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
     skr::parallel_flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
-    skr::parallel_flat_hash_map<skr_type_id_t, SResourceFactory*, skr::guid::hash> resourceFactories;
+    skr::parallel_flat_hash_map<skr_guid_t, SResourceFactory*, skr::guid::hash> resourceFactories;
 };
 
 SResourceSystemImpl::SResourceSystemImpl()
@@ -124,7 +124,7 @@ void SResourceSystemImpl::_DestroyRecord(skr_resource_record_t* record)
     SkrDelete(record);
 }
 
-SResourceFactory* SResourceSystemImpl::FindFactory(skr_type_id_t type) const
+SResourceFactory* SResourceSystemImpl::FindFactory(skr_guid_t type) const
 {
     auto iter = resourceFactories.find(type);
     if (iter != resourceFactories.end()) return iter->second;
@@ -149,7 +149,7 @@ skr_io_ram_service_t* SResourceSystemImpl::GetRAMService() const
     return ioService;
 }
 
-void SResourceSystemImpl::UnregisterFactory(skr_type_id_t type)
+void SResourceSystemImpl::UnregisterFactory(skr_guid_t type)
 {
     auto iter = resourceFactories.find(type);
     SKR_ASSERT(iter != resourceFactories.end());

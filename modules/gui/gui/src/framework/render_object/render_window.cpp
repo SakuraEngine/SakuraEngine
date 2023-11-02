@@ -6,7 +6,7 @@
 
 namespace skr::gui
 {
-RenderWindow::RenderWindow(IWindow* window)
+RenderWindow::RenderWindow(INativeWindow* window)
     : _window(window)
 {
 }

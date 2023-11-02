@@ -19,23 +19,23 @@
 
 #include "SkrProfile/profile.h"
 
-static struct SkrMeshResourceUtil
-{
-    struct RegisteredVertexLayout : public CGPUVertexLayout
-    {
+static struct SkrMeshResourceUtil {
+    struct RegisteredVertexLayout : public CGPUVertexLayout {
         RegisteredVertexLayout(const CGPUVertexLayout& layout, skr_vertex_layout_id id, const char8_t* name)
-            : CGPUVertexLayout(layout), id(id), name(name)
+            : CGPUVertexLayout(layout)
+            , id(id)
+            , name(name)
         {
             hash = cgpux::hash<CGPUVertexLayout>()(layout);
         }
         skr_vertex_layout_id id;
-        skr::string name;
-        uint64_t hash;
+        skr::string          name;
+        uint64_t             hash;
     };
 
-    using VertexLayoutIdMap = skr::flat_hash_map<skr_vertex_layout_id, skr::SPtr<RegisteredVertexLayout>, skr::guid::hash>;
+    using VertexLayoutIdMap   = skr::flat_hash_map<skr_vertex_layout_id, skr::SPtr<RegisteredVertexLayout>, skr::guid::hash>;
     using VertexLayoutHashMap = skr::flat_hash_map<uint64_t, RegisteredVertexLayout*>;
-    
+
     SkrMeshResourceUtil()
     {
         skr_init_mutex_recursive(&vertex_layouts_mutex_);
@@ -114,13 +114,13 @@ static struct SkrMeshResourceUtil
         return iter->second->name.c_str();
     }
 
-    static VertexLayoutIdMap id_map;
+    static VertexLayoutIdMap   id_map;
     static VertexLayoutHashMap hash_map;
-    static SMutex vertex_layouts_mutex_;
+    static SMutex              vertex_layouts_mutex_;
 } mesh_resource_util;
-SkrMeshResourceUtil::VertexLayoutIdMap SkrMeshResourceUtil::id_map;
+SkrMeshResourceUtil::VertexLayoutIdMap   SkrMeshResourceUtil::id_map;
 SkrMeshResourceUtil::VertexLayoutHashMap SkrMeshResourceUtil::hash_map;
-SMutex SkrMeshResourceUtil::vertex_layouts_mutex_;
+SMutex                                   SkrMeshResourceUtil::vertex_layouts_mutex_;
 
 void skr_mesh_resource_free(skr_mesh_resource_id mesh_resource)
 {
@@ -164,27 +164,25 @@ using namespace skr::resource;
 
 MeshResource::~MeshResource() SKR_NOEXCEPT
 {
-
 }
 
 // 1.deserialize mesh resource
 // 2.install indices/vertices to GPU
 // 3?.update LOD information during runtime
-struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
-{
+struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
     SMeshFactoryImpl(const SMeshFactory::Root& root)
         : root(root)
     {
-        dstorage_root = skr::string::from_utf8(root.dstorage_root);
+        dstorage_root            = skr::string::from_utf8(root.dstorage_root);
         this->root.dstorage_root = dstorage_root.u8_str();
     }
 
     ~SMeshFactoryImpl() noexcept = default;
-    skr_type_id_t GetResourceType() override;
-    bool AsyncIO() override { return true; }
-    bool Unload(skr_resource_record_t* record) override;
+    skr_guid_t     GetResourceType() override;
+    bool              AsyncIO() override { return true; }
+    bool              Unload(skr_resource_record_t* record) override;
     ESkrInstallStatus Install(skr_resource_record_t* record) override;
-    bool Uninstall(skr_resource_record_t* record) override;
+    bool              Uninstall(skr_resource_record_t* record) override;
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
 
     enum class ECompressMethod : uint32_t
@@ -194,45 +192,42 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
         COUNT
     };
 
-    struct InstallType
-    {
+    struct InstallType {
         ECompressMethod compress_method;
     };
 
-    struct BufferRequest
-    {
-        BufferRequest() SKR_NOEXCEPT = default;
+    struct BufferRequest {
+        BufferRequest() SKR_NOEXCEPT  = default;
         ~BufferRequest() SKR_NOEXCEPT = default;
 
-        eastl::vector<std::string> absPaths;
-        eastl::vector<skr_io_future_t> dFutures;
+        eastl::vector<std::string>             absPaths;
+        eastl::vector<skr_io_future_t>         dFutures;
         eastl::vector<skr::io::VRAMIOBufferId> dBuffers;
     };
 
-    struct UploadRequest
-    {
+    struct UploadRequest {
         UploadRequest() SKR_NOEXCEPT = default;
-        UploadRequest(SMeshFactoryImpl* factory,skr_mesh_resource_id mesh_resource) SKR_NOEXCEPT
-            : factory(factory), mesh_resource(mesh_resource)
+        UploadRequest(SMeshFactoryImpl* factory, skr_mesh_resource_id mesh_resource) SKR_NOEXCEPT
+            : factory(factory),
+              mesh_resource(mesh_resource)
         {
-
         }
         ~UploadRequest() SKR_NOEXCEPT = default;
-        
-        SMeshFactoryImpl* factory = nullptr;
-        skr_mesh_resource_id mesh_resource = nullptr;
-        eastl::vector<std::string> resource_uris;
-        eastl::vector<skr_io_future_t> ram_futures;
-        eastl::vector<skr::BlobId> blobs;
-        eastl::vector<skr_io_future_t> vram_futures;
+
+        SMeshFactoryImpl*                      factory       = nullptr;
+        skr_mesh_resource_id                   mesh_resource = nullptr;
+        eastl::vector<std::string>             resource_uris;
+        eastl::vector<skr_io_future_t>         ram_futures;
+        eastl::vector<skr::BlobId>             blobs;
+        eastl::vector<skr_io_future_t>         vram_futures;
         eastl::vector<skr::io::VRAMIOBufferId> uBuffers;
     };
 
     ESkrInstallStatus InstallImpl(skr_resource_record_t* record);
 
-    skr::string dstorage_root;
-    Root root;
-    skr::flat_hash_map<skr_mesh_resource_id, InstallType> mInstallTypes;
+    skr::string                                                   dstorage_root;
+    Root                                                          root;
+    skr::flat_hash_map<skr_mesh_resource_id, InstallType>         mInstallTypes;
     skr::flat_hash_map<skr_mesh_resource_id, SPtr<BufferRequest>> mRequests;
 };
 
@@ -246,9 +241,9 @@ void SMeshFactory::Destroy(SMeshFactory* factory)
     SkrDelete(factory);
 }
 
-skr_type_id_t SMeshFactoryImpl::GetResourceType()
+skr_guid_t SMeshFactoryImpl::GetResourceType()
 {
-    const auto resource_type = skr::type::type_id<skr_mesh_resource_t>::get();
+    const auto resource_type = ::skr::rttr::type_id<skr_mesh_resource_t>();
     return resource_type;
 }
 
@@ -278,13 +273,13 @@ ESkrInstallStatus SMeshFactoryImpl::Install(skr_resource_record_t* record)
 ESkrInstallStatus SMeshFactoryImpl::InstallImpl(skr_resource_record_t* record)
 {
     const auto noCompression = true;
-    auto vram_service = root.vram_service;
-    auto mesh_resource = (skr_mesh_resource_t*)record->resource;
-    auto guid = record->activeRequest->GetGuid();
+    auto       vram_service  = root.vram_service;
+    auto       mesh_resource = (skr_mesh_resource_t*)record->resource;
+    auto       guid          = record->activeRequest->GetGuid();
     if (auto render_device = root.render_device)
     {
         [[maybe_unused]] auto dsqueue = render_device->get_file_dstorage_queue();
-        auto batch = vram_service->open_batch(mesh_resource->bins.size());
+        auto                  batch   = vram_service->open_batch(mesh_resource->bins.size());
         if (noCompression)
         {
             auto dRequest = SPtr<BufferRequest>::Create();
@@ -298,21 +293,21 @@ ESkrInstallStatus SMeshFactoryImpl::InstallImpl(skr_resource_record_t* record)
                 // TODO: REFACTOR THIS WITH VFS PATH
                 // auto fullBinPath = skr::filesystem::path(root.dstorage_root) / binPath.c_str();
                 // auto&& thisPath = dRequest->absPaths[i];
-                const auto& thisBin = mesh_resource->bins[i];
-                auto&& thisFuture = dRequest->dFutures[i];
-                auto&& thisDestination = dRequest->dBuffers[i];
+                const auto& thisBin         = mesh_resource->bins[i];
+                auto&&      thisFuture      = dRequest->dFutures[i];
+                auto&&      thisDestination = dRequest->dBuffers[i];
 
                 CGPUResourceTypes flags = CGPU_RESOURCE_TYPE_NONE;
                 flags |= thisBin.used_with_index ? CGPU_RESOURCE_TYPE_INDEX_BUFFER : 0;
                 flags |= thisBin.used_with_vertex ? CGPU_RESOURCE_TYPE_VERTEX_BUFFER : 0;
 
                 CGPUBufferDescriptor bdesc = {};
-                bdesc.descriptors = flags;
-                bdesc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-                bdesc.flags = CGPU_BCF_NO_DESCRIPTOR_VIEW_CREATION;
-                bdesc.size = thisBin.byte_length;
-                bdesc.name = nullptr; // TODO: set name
-                
+                bdesc.descriptors          = flags;
+                bdesc.memory_usage         = CGPU_MEM_USAGE_GPU_ONLY;
+                bdesc.flags                = CGPU_BCF_NO_DESCRIPTOR_VIEW_CREATION;
+                bdesc.size                 = thisBin.byte_length;
+                bdesc.name                 = nullptr; // TODO: set name
+
                 auto request = vram_service->open_buffer_request();
                 request->set_vfs(root.vfs);
                 request->set_path(binPath.u8_str());
@@ -320,11 +315,11 @@ ESkrInstallStatus SMeshFactoryImpl::InstallImpl(skr_resource_record_t* record)
                 request->set_transfer_queue(render_device->get_cpy_queue());
                 if (mesh_resource->install_to_ram)
                 {
-                    auto blob = request->pin_staging_buffer();
+                    auto blob                   = request->pin_staging_buffer();
                     mesh_resource->bins[i].blob = blob.get();
                     blob->add_refcount();
                 }
-                auto result = batch->add_request(request, &thisFuture);
+                auto result     = batch->add_request(request, &thisFuture);
                 thisDestination = skr::static_pointer_cast<skr::io::IVRAMIOBuffer>(result);
             }
             mRequests.emplace(mesh_resource, dRequest);
@@ -333,20 +328,20 @@ ESkrInstallStatus SMeshFactoryImpl::InstallImpl(skr_resource_record_t* record)
         else
         {
             SKR_UNIMPLEMENTED_FUNCTION();
-        }  
+        }
         vram_service->request(batch);
     }
     else
     {
         SKR_UNREACHABLE_CODE();
-    }  
+    }
     return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
 }
 
 ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
 {
     auto mesh_resource = (skr_mesh_resource_t*)record->resource;
-    auto dRequest = mRequests.find(mesh_resource);
+    auto dRequest      = mRequests.find(mesh_resource);
     if (dRequest != mRequests.end())
     {
         bool okay = true;
@@ -363,7 +358,7 @@ ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
             render_mesh->buffers.resize(N);
             for (auto i = 0u; i < N; i++)
             {
-                auto pBuffer = dRequest->second->dBuffers[i]->get_buffer();
+                auto pBuffer            = dRequest->second->dBuffers[i]->get_buffer();
                 render_mesh->buffers[i] = pBuffer;
             }
             skr_render_mesh_initialize(render_mesh, mesh_resource);
@@ -381,10 +376,10 @@ ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
 }
 
 bool SMeshFactoryImpl::Unload(skr_resource_record_t* record)
-{ 
+{
     auto mesh_resource = (skr_mesh_resource_id)record->resource;
     SkrDelete(mesh_resource);
-    return true; 
+    return true;
 }
 
 bool SMeshFactoryImpl::Uninstall(skr_resource_record_t* record)
@@ -399,8 +394,8 @@ bool SMeshFactoryImpl::Uninstall(skr_resource_record_t* record)
     }
     skr_render_mesh_free(mesh_resource->render_mesh);
     mesh_resource->render_mesh = nullptr;
-    return true; 
+    return true;
 }
 
-} // namespace resource
+} // namespace renderer
 } // namespace skr
