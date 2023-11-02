@@ -135,7 +135,7 @@ CGPUBufferId cgpu_create_buffer_vulkan(CGPUDeviceId device, const struct CGPUBuf
                                  VMA_MEMORY_USAGE_AUTO;
         vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
     }
-    DECLARE_ZERO(VmaAllocationInfo, alloc_info)
+    SKR_DECLARE_ZERO(VmaAllocationInfo, alloc_info)
     VkBuffer pVkBuffer = VK_NULL_HANDLE;
     VmaAllocation mVmaAllocation = VK_NULL_HANDLE;
     VkResult bufferResult = vmaCreateBuffer(D->pVmaAllocator, &add_info, &vma_mem_reqs, &pVkBuffer, &mVmaAllocation, &alloc_info);
@@ -177,7 +177,7 @@ CGPUBufferId cgpu_create_buffer_vulkan(CGPUDeviceId device, const struct CGPUBuf
     if ((add_info.usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT) || (add_info.usage & VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT))
     {
         const VkFormat texel_format = VkUtil_FormatTranslateToVk(desc->format);
-        DECLARE_ZERO(VkFormatProperties, formatProps)
+        SKR_DECLARE_ZERO(VkFormatProperties, formatProps)
         vkGetPhysicalDeviceFormatProperties(A->pPhysicalDevice, texel_format, &formatProps);
         // Now We Use The Same View Info for Uniform & Storage BufferView on Vulkan Backend.
         VkBufferViewCreateInfo viewInfo = {
@@ -592,8 +592,8 @@ VkSparseImageMemoryRequirements VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D
     bool colorAspectFound = false;
     bool noneStandardLayoutFound = false;
     D->mVkDeviceTable.vkGetImageSparseMemoryRequirements(D->pVkDevice, pVkImage, &sparseMemoryReqsCount, NULL);  // Get count
-    DECLARE_ZERO(VkSparseImageMemoryRequirements, sparseReq);
-    DECLARE_ZERO_VLA(VkSparseImageMemoryRequirements, sparseMemoryReqs, sparseMemoryReqsCount);
+    SKR_DECLARE_ZERO(VkSparseImageMemoryRequirements, sparseReq);
+    SKR_DECLARE_ZERO_VLA(VkSparseImageMemoryRequirements, sparseMemoryReqs, sparseMemoryReqsCount);
     if (sparseMemoryReqsCount == 0)
     {
         cgpu_error("No memory requirements for the sparse image!");
@@ -767,7 +767,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
         if (arrayRequired)
             imageCreateInfo.flags |= VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT_KHR;
 
-        DECLARE_ZERO(VkFormatProperties, format_props);
+        SKR_DECLARE_ZERO(VkFormatProperties, format_props);
         vkGetPhysicalDeviceFormatProperties(A->pPhysicalDevice, imageCreateInfo.format, &format_props);
         if (isPlanarFormat) // multi-planar formats must have each plane separately bound to memory, rather than having a single memory binding for the whole image
         {
@@ -790,7 +790,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
         VkFormatFeatureFlags format_features = VkUtil_ImageUsageToFormatFeatures(imageCreateInfo.usage);
         VkFormatFeatureFlags flags = format_props.optimalTilingFeatures & format_features;
         cgpu_assert((flags != 0) && "Format is not supported for GPU local images (i.e. not host visible images)");
-        DECLARE_ZERO(VmaAllocationCreateInfo, mem_reqs)
+        SKR_DECLARE_ZERO(VmaAllocationCreateInfo, mem_reqs)
         if ((desc->flags & CGPU_TCF_ALIASING_RESOURCE) || (desc->flags & CGPU_TCF_TILED_RESOURCE))
         {
             VkResult res = D->mVkDeviceTable.vkCreateImage(D->pVkDevice, &imageCreateInfo, GLOBAL_VkAllocationCallbacks, &pVkImage);
@@ -1051,11 +1051,11 @@ void cgpu_queue_map_packed_mips_vulkan(CGPUQueueId queue, const struct CGPUTiled
         if (prev != VK_TILE_MAPPING_STATUS_PENDING) continue;
 
         const uint64_t kPageSize = T->pVkPackedMappings->mVkSparseTailSize;
-        DECLARE_ZERO(VkMemoryRequirements, memReqs);
+        SKR_DECLARE_ZERO(VkMemoryRequirements, memReqs);
         memReqs.size = kPageSize;
         memReqs.memoryTypeBits = T->pVkTileMappings->mVkMemoryTypeBits;
         memReqs.alignment = memReqs.size;
-        DECLARE_ZERO(VmaAllocationCreateInfo, vmaAllocInfo);
+        SKR_DECLARE_ZERO(VmaAllocationCreateInfo, vmaAllocInfo);
         VmaAllocation pAllocation;
         VmaAllocationInfo AllocationInfo;
         // do allocations
@@ -1076,7 +1076,7 @@ void cgpu_queue_map_packed_mips_vulkan(CGPUQueueId queue, const struct CGPUTiled
 
         M++;
     }
-    DECLARE_ZERO(VkBindSparseInfo, bindSparseInfo);
+    SKR_DECLARE_ZERO(VkBindSparseInfo, bindSparseInfo);
     bindSparseInfo.sType = VK_STRUCTURE_TYPE_BIND_SPARSE_INFO;
     bindSparseInfo.imageOpaqueBindCount = M;
     bindSparseInfo.pImageOpaqueBinds = bindInfos;
@@ -1149,11 +1149,11 @@ void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTil
     VmaAllocationInfo* pAllocationInfos = (VmaAllocationInfo*)(pAllocations + TotalTileCount);
     VkSparseImageMemoryBind* pBinds = (VkSparseImageMemoryBind*)(pAllocationInfos + TotalTileCount);
     CGPUTileMapping_Vulkan** ppMappings = (CGPUTileMapping_Vulkan**)(pBinds + TotalTileCount);
-	DECLARE_ZERO(VkMemoryRequirements, memReqs);
+	SKR_DECLARE_ZERO(VkMemoryRequirements, memReqs);
 	memReqs.size = kPageSize;
 	memReqs.memoryTypeBits = T->pVkTileMappings->mVkMemoryTypeBits;
 	memReqs.alignment = memReqs.size;
-	DECLARE_ZERO(VmaAllocationCreateInfo, vmaAllocInfo);
+	SKR_DECLARE_ZERO(VmaAllocationCreateInfo, vmaAllocInfo);
     // do allocations
     VkResult result = vmaAllocateMemoryPages(D->pVmaAllocator, &memReqs, &vmaAllocInfo, 
         TotalTileCount, pAllocations, pAllocationInfos);
@@ -1198,12 +1198,12 @@ void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTil
             }
     }
 
-	DECLARE_ZERO(VkSparseImageMemoryBindInfo, imageMemoryBindInfo);
+	SKR_DECLARE_ZERO(VkSparseImageMemoryBindInfo, imageMemoryBindInfo);
     imageMemoryBindInfo.image = T->pVkImage;
     imageMemoryBindInfo.bindCount = TotalTileCount;
     imageMemoryBindInfo.pBinds = pBinds;
 
-    DECLARE_ZERO(VkBindSparseInfo, bindSparseInfo);
+    SKR_DECLARE_ZERO(VkBindSparseInfo, bindSparseInfo);
     bindSparseInfo.sType = VK_STRUCTURE_TYPE_BIND_SPARSE_INFO;
     bindSparseInfo.imageBindCount = 1;
     bindSparseInfo.pImageBinds = &imageMemoryBindInfo;

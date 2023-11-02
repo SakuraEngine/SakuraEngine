@@ -93,110 +93,24 @@ extern const char* $name;
 #endif
 
 #if defined(__cplusplus)
-    #define DECLARE_ZERO(type, var)                                                                    \
+    #define SKR_DECLARE_ZERO(type, var)                                                                    \
         static_assert(std::is_trivially_constructible<type>::value, "not trival, 0 init is invalid!"); \
         type var = {};
 #else
-    #define DECLARE_ZERO(type, var) type var = { 0 };
+    #define SKR_DECLARE_ZERO(type, var) type var = { 0 };
 #endif
 
 // VLA
 #ifndef __cplusplus
     #if defined(_MSC_VER) && !defined(__clang__)
-        #define DECLARE_ZERO_VLA(type, var, num)              \
+        #define SKR_DECLARE_ZERO_VLA(type, var, num)              \
             type* var = (type*)_alloca(sizeof(type) * (num)); \
             memset((void*)(var), 0, sizeof(type) * (num));
     #else
-        #define DECLARE_ZERO_VLA(type, var, num) \
+        #define SKR_DECLARE_ZERO_VLA(type, var, num) \
             type var[(num)];                     \
             memset((void*)(var), 0, sizeof(type) * (num));
     #endif
-#endif
-
-#if defined(_MSC_VER)
-    #include <crtdbg.h>
-    #define COMPILE_ASSERT(exp) _STATIC_ASSERT(exp)
-
-    #include <BaseTsd.h>
-typedef SSIZE_T ssize_t;
-    #if defined(__clang__)
-        #define SKR_UNREF_PARAM(x) (void)x
-    #else
-        #define SKR_UNREF_PARAM(x) (x)
-    #endif
-    #define SKR_ALIGNAS(x) __declspec(align(x))
-    #define SKR_DEFINE_ALIGNED(def, a) __declspec(align(a)) def
-    #define SKR_CALLCONV __cdecl
-    #if !defined(__clang__)
-        #if !defined(_DEBUG) && !defined(NDEBUG)
-            #define NDEBUG
-        #endif
-
-        #if defined(_M_X64)
-            #define ARCH_X64
-            #define ARCH_X86_FAMILY
-        #elif defined(_M_IX86)
-            #define ARCH_X86
-            #define ARCH_X86_FAMILY
-        #else
-            #error "Unsupported architecture for msvc compiler"
-        #endif
-    #endif
-#elif SKR_ARCH_WA32
-    #define size_t uint32_t;
-typedef int64_t host_ptr_t;
-#elif SKR_ARCH_WA64
-    #define size_t uint64_t;
-typedef int64_t host_ptr_t;
-#elif defined(__GNUC__) || defined(__clang__)
-    #include <sys/types.h>
-    #include <assert.h>
-
-    #ifdef __OPTIMIZE__
-        // Some platforms define NDEBUG for Release builds
-        #ifndef NDEBUG
-            #define NDEBUG
-        #endif
-    #elif !defined(_MSC_VER)
-        #define _DEBUG 1
-    #endif
-
-    #ifdef __APPLE__
-        #define NOREFS __unsafe_unretained
-    #endif
-
-    #define SKR_UNREF_PARAM(x) ((void)(x))
-    #define SKR_ALIGNAS(x) __attribute__((aligned(x)))
-    #define SKR_DEFINE_ALIGNED(def, a) __attribute__((aligned(a))) def
-    #define SKR_CALLCONV
-
-    #ifdef __clang__
-        #define COMPILE_ASSERT(exp) _Static_assert(exp, #exp)
-    #else
-        #define COMPILE_ASSERT(exp) static_assert(exp, #exp)
-    #endif
-
-    #if defined(__i386__)
-        #define ARCH_X86
-        #define ARCH_X86_FAMILY
-    #elif defined(__x86_64__)
-        #define ARCH_X64
-        #define ARCH_X86_FAMILY
-    #elif defined(__arm__)
-        #define ARCH_ARM
-        #define ARCH_ARM_FAMILY
-    #elif defined(__aarch64__)
-        #define ARCH_ARM64
-        #define ARCH_ARM_FAMILY
-    #elif defined(__EMSCRIPTEN__) || defined(__wasi__)
-        #define ARCH_WA
-        #define ARCH_WEB_FAMILY
-    #else
-        #error "Unsupported architecture for gcc compiler"
-    #endif
-
-#else
-    #error Unknown language dialect
 #endif
 
 // Platform Specific Configure

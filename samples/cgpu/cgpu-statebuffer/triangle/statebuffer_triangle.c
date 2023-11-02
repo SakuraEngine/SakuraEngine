@@ -106,7 +106,7 @@ void initialize(void* usrdata)
     // Filter adapters
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, CGPU_NULLPTR, &adapters_count);
-    DECLARE_ZERO_VLA(CGPUAdapterId, adapters, adapters_count);
+    SKR_DECLARE_ZERO_VLA(CGPUAdapterId, adapters, adapters_count);
     cgpu_enum_adapters(instance, adapters, &adapters_count);
     adapter = adapters[0];
 

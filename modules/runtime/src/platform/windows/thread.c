@@ -25,7 +25,7 @@ SKR_FORCEINLINE static BOOL callOnceImpl(
 void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn)
 {
     INIT_ONCE* once_ = (INIT_ONCE*)pGuard->gdStorage_;
-    DECLARE_ZERO(SCallOnceFnWrapper, wrapper)
+    SKR_DECLARE_ZERO(SCallOnceFnWrapper, wrapper)
     wrapper.fn = pFn;
     InitOnceExecuteOnce(once_, callOnceImpl, &wrapper, NULL);
 }

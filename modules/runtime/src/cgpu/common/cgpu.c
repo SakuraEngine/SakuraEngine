@@ -15,7 +15,7 @@
     #include "TargetConditionals.h"
     #if TARGET_OS_MAC
         #define _MACOS
-        #if defined(ARCH_ARM64)
+        #if SKR_ARCH_ARM64
             #define TARGET_APPLE_ARM64
         #endif
     #endif
@@ -1285,7 +1285,7 @@ void cgpu_free_swapchain(CGPUSwapChainId swapchain)
 CGPUBufferId cgpux_create_mapped_constant_buffer(CGPUDeviceId device,
 uint64_t size, const char8_t* name, bool device_local_preferred)
 {
-    DECLARE_ZERO(CGPUBufferDescriptor, buf_desc)
+    SKR_DECLARE_ZERO(CGPUBufferDescriptor, buf_desc)
     buf_desc.descriptors = CGPU_RESOURCE_TYPE_BUFFER;
     buf_desc.size = size;
     buf_desc.name = name;
@@ -1303,7 +1303,7 @@ uint64_t size, const char8_t* name, bool device_local_preferred)
 SKR_RUNTIME_API CGPUBufferId cgpux_create_mapped_upload_buffer(CGPUDeviceId device,
 uint64_t size, const char8_t* name)
 {
-    DECLARE_ZERO(CGPUBufferDescriptor, buf_desc)
+    SKR_DECLARE_ZERO(CGPUBufferDescriptor, buf_desc)
     buf_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     buf_desc.size = size;
     buf_desc.name = name;

@@ -137,3 +137,19 @@
 #else
     #define SKR_NOEXCEPT
 #endif
+
+#if defined(_MSC_VER)
+    #if defined(__clang__)
+        #define SKR_UNREF_PARAM(x) (void)x
+    #else
+        #define SKR_UNREF_PARAM(x) (x)
+    #endif
+#elif defined(__GNUC__) || defined(__clang__)
+    #define SKR_UNREF_PARAM(x) ((void)(x))
+#endif
+
+#if defined(_MSC_VER)
+    #define SKR_CALLCONV __cdecl
+#elif defined(__GNUC__) || defined(__clang__)
+    #define SKR_CALLCONV
+#endif

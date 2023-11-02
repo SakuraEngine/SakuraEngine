@@ -9,7 +9,7 @@ class RootSignaturePool
 protected:
     void Initialize() SKR_NOEXCEPT
     {
-        DECLARE_ZERO(CGPUInstanceDescriptor, desc)
+        SKR_DECLARE_ZERO(CGPUInstanceDescriptor, desc)
         desc.backend = backend;
         desc.enable_debug_layer = true;
         desc.enable_gpu_based_validation = true;
@@ -27,7 +27,7 @@ protected:
         adapter = adapters[0];
 
         CGPUQueueGroupDescriptor G = { CGPU_QUEUE_TYPE_GRAPHICS, 1 };
-        DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
+        SKR_DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
         descriptor.queue_groups = &G;
         descriptor.queue_group_count = 1;
         device = cgpu_create_device(adapter, &descriptor);
@@ -38,7 +38,7 @@ protected:
     CGPUSwapChainId CreateSwapChainWithSurface(CGPUSurfaceId surface)
     {
         auto mainQueue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
-        DECLARE_ZERO(CGPUSwapChainDescriptor, descriptor)
+        SKR_DECLARE_ZERO(CGPUSwapChainDescriptor, descriptor)
         descriptor.present_queues = &mainQueue;
         descriptor.present_queues_count = 1;
         descriptor.surface = surface;

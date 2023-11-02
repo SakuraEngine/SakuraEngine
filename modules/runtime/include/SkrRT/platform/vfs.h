@@ -67,7 +67,7 @@ typedef struct skr_memory_stream_t {
 typedef struct skr_vfile_t {
     struct skr_vfs_t* fs;
     struct skr_vfile_t* base; // for chaining streams
-    ssize_t size;
+    int64_t size;
     ESkrFileMode mode;
 } skr_vfile_t;
 
@@ -79,7 +79,7 @@ typedef skr_vfile_t* (*SkrVFSProcFOpen)(struct skr_vfs_t* fs, const char8_t* pat
 typedef bool (*SkrVFSProcFClose)(skr_vfile_t* file);
 typedef size_t (*SkrVFSProcFRead)(skr_vfile_t* file, void* out_buffer, size_t offset, size_t size_in_bytes);
 typedef size_t (*SkrVFSProcFWrite)(skr_vfile_t* file, const void* in_buffer, size_t offset, size_t byte_count);
-typedef ssize_t (*SkrVFSProcFSize)(const skr_vfile_t* file);
+typedef int64_t (*SkrVFSProcFSize)(const skr_vfile_t* file);
 typedef bool (*SkrVFSProcFGetPropI64)(skr_vfile_t* file, int32_t prop, int64_t* out_value);
 typedef bool (*SkrVFSProcFSetPropI64)(skr_vfile_t* file, int32_t prop, int64_t value);
 
@@ -130,7 +130,7 @@ SKR_RUNTIME_API void skr_free_vfs(skr_vfs_t*) SKR_NOEXCEPT;
 SKR_RUNTIME_API skr_vfile_t* skr_vfs_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, ESkrFileCreation creation) SKR_NOEXCEPT;
 SKR_RUNTIME_API size_t skr_vfs_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT;
 SKR_RUNTIME_API size_t skr_vfs_fwrite(skr_vfile_t* file, const void* in_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT;
-SKR_RUNTIME_API ssize_t skr_vfs_fsize(const skr_vfile_t* file) SKR_NOEXCEPT;
+SKR_RUNTIME_API int64_t skr_vfs_fsize(const skr_vfile_t* file) SKR_NOEXCEPT;
 SKR_RUNTIME_API bool skr_vfs_fclose(skr_vfile_t* file) SKR_NOEXCEPT;
 
 SKR_RUNTIME_API void skr_vfs_get_native_procs(struct skr_vfs_proctable_t* procs) SKR_NOEXCEPT;
