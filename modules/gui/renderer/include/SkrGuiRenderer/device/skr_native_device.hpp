@@ -2,22 +2,30 @@
 #include "SkrGuiRenderer/module.configure.h"
 #include "SkrGui/backend/device/device.hpp"
 #include "SkrGui/backend/device/display.hpp"
+#ifndef __meta__
+    #include "SkrGuiRenderer/device/skr_native_device.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 struct SkrRenderDevice;
 struct SkrResourceDevice;
 struct SkrNativeWindow;
 
-struct SKR_GUI_RENDERER_API SkrNativeDevice final : public INativeDevice {
-    SKR_GUI_OBJECT(SkrNativeDevice, "27cf3f49-efda-4ae8-b5e6-89fb3bb0590e", INativeDevice)
+sreflect_struct(
+    "guid": "e3c81438-70e6-4727-8133-7a32a23b62c4"
+)
+SKR_GUI_RENDERER_API SkrNativeDevice final : public INativeDevice {
+    SKR_RTTR_GENERATE_BODY()
 
     void init();
     void shutdown();
 
     // view
-    NotNull<IWindow*> create_window() override;
-    void              destroy_window(NotNull<IWindow*> view) override;
+    NotNull<INativeWindow*> create_window() override;
+    void                    destroy_window(NotNull<INativeWindow*> view) override;
 
     // sub device
     inline NotNull<SkrRenderDevice*>   render_device() const SKR_NOEXCEPT { return make_not_null(_render_device); }
@@ -48,4 +56,5 @@ private:
     DisplayMetrics          _display_metrics = {};
     Array<SkrNativeWindow*> _all_windows     = {};
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

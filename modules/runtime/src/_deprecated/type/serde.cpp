@@ -1,5 +1,5 @@
 #include "SkrRT/platform/guid.hpp"
-#include "SkrRT/type/type_serde.h"
+#include "SkrRT/_deprecated/type/type_serde.h"
 #include "SkrRT/misc/fast_float.h"
 #include <charconv>
 

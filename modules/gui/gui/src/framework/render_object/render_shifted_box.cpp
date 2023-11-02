@@ -29,4 +29,23 @@ void RenderShiftedBox::paint(NotNull<PaintingContext*> context, Offsetf offset) 
         context->paint_child(make_not_null(child()), this->offset() + offset);
     }
 }
+
+// hit test
+bool RenderShiftedBox::hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
+{
+    return _default_hit_test(
+    result,
+    local_position,
+    nullptr, // shifted box 通常不会自主响应 hit test
+    [this](HitTestResult* result, Offsetf local_position) {
+        return child() &&
+               result->add_with_paint_offset(
+               _offset,
+               local_position,
+               [this](HitTestResult* result, Offsetf transformed_position) {
+                   return child()->hit_test(result, transformed_position);
+               });
+    });
+}
+
 } // namespace skr::gui

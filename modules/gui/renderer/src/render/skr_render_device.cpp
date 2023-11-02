@@ -128,7 +128,9 @@ void SkrRenderDevice::init()
         auto ioServiceDesc       = make_zeroed<skr_vram_io_service_desc_t>();
         ioServiceDesc.name       = SKR_UTF8("GUI-VRAMService");
         ioServiceDesc.sleep_time = 1000 / 60;
+        ioServiceDesc.gpu_device = _cgpu_device;
         _vram_service            = skr_io_vram_service_t::create(&ioServiceDesc);
+        _vram_service->run();
     }
 }
 void SkrRenderDevice::shutdown()

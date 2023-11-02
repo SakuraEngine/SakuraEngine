@@ -13,7 +13,6 @@
 #include "SkrRT/io/ram_io.hpp" // IWYU pragma: export
 
 #include "SkrRT/module/module.hpp" // IWYU pragma: export
-#include "SkrRT/type/type.hpp" // IWYU pragma: export
 #include "SkrRT/resource/config_resource.h" // IWYU pragma: export
 
 #include "SkrRT/containers/string.hpp" // IWYU pragma: export

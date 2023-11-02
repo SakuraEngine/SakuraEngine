@@ -1,11 +1,12 @@
 #pragma once
+#include "SkrRT/platform/configure.h"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/rttr/guid.hpp"
-#include "SkrRT/platform/configure.h"
 #include "SkrRT/rttr/type_desc.hpp"
 #include "SkrRT/rttr/type_registry.hpp"
 #include "SkrRT/rttr/type/type.hpp"
 #include "SkrRT/containers/string.hpp"
+#include "SkrRT/rttr/strongly_enum.hpp"
 
 // RTTR traits
 // 提供部分静态类型功能，从动态角度来说，实际上只是一层皮
@@ -18,20 +19,34 @@ struct RTTRTraits {
     inline static constexpr size_t type_desc_size = 1;
     static void                    write_type_desc(TypeDesc* desc)
     {
+#ifndef __meta__
         static_assert(std::is_same_v<T, T*>, "RTTRTraits<T>::write_type_desc() is not implemented");
+#endif
     }
 
     static string_view get_name()
     {
+#ifndef __meta__
         static_assert(std::is_same_v<T, T*>, "RTTRTraits<T>::write_type_desc() is not implemented");
+#else
+        return {};
+#endif
     }
     static GUID get_guid()
     {
+#ifndef __meta__
         static_assert(std::is_same_v<T, T*>, "RTTRTraits<T>::write_type_desc() is not implemented");
+#else
+        return {};
+#endif
     }
     static Type* get_type()
     {
+#ifndef __meta__
         static_assert(std::is_same_v<T, T*>, "RTTRTraits<T>::write_type_desc() is not implemented");
+#else
+        return nullptr;
+#endif
     }
 };
 
@@ -50,6 +65,11 @@ SKR_INLINE Span<TypeDesc> type_desc() SKR_NOEXCEPT
     }
 
     return { desc, RTTRTraits<T>::type_desc_size };
+}
+template <typename T>
+SKR_INLINE string_view type_name() SKR_NOEXCEPT
+{
+    return RTTRTraits<T>::get_name();
 }
 template <typename T>
 SKR_INLINE Type* type_of() SKR_NOEXCEPT
@@ -83,8 +103,12 @@ struct RTTRTraits<volatile T> : RTTRTraits<T> {
         }                                                                          \
                                                                                    \
         inline static string_view get_name() { return SKR_RTTR_MAKE_U8(#__TYPE); } \
-        inline static GUID        get_guid() { return u8##__GUID##_skr_guid; }     \
-        inline static Type*       get_type()                                       \
+        inline static GUID        get_guid()                                       \
+        {                                                                          \
+            using namespace skr::guid::literals;                                   \
+            return u8##__GUID##_guid;                                              \
+        }                                                                          \
+        inline static Type* get_type()                                             \
         {                                                                          \
             static Type* type = nullptr;                                           \
             if (!type)                                                             \
@@ -113,7 +137,7 @@ SKR_RTTR_TYPE(double, "9454d5cd-68dd-4039-8e67-07732de87e5c")
 // pointer type
 namespace skr::rttr
 {
-static constexpr inline GUID kPointerGenericGUID = u8"d2b6757d-3e32-4073-b483-62f41bc4bd8a"_skr_guid;
+static constexpr inline GUID kPointerGenericGUID = SKR_CONSTEXPR_GUID("d2b6757d-3e32-4073-b483-62f41bc4bd8a");
 template <typename T>
 struct RTTRTraits<T*> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 1;
@@ -149,7 +173,7 @@ struct RTTRTraits<T*> {
 // reference type
 namespace skr::rttr
 {
-static constexpr inline GUID kReferenceGenericGUID = u8"277d6af2-91e9-4ee3-a56f-b6e3becf88df"_skr_guid;
+static constexpr inline GUID kReferenceGenericGUID = SKR_CONSTEXPR_GUID("277d6af2-91e9-4ee3-a56f-b6e3becf88df");
 template <typename T>
 struct RTTRTraits<T&> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 1;
@@ -185,7 +209,7 @@ struct RTTRTraits<T&> {
 // array type
 namespace skr::rttr
 {
-static constexpr inline GUID kArrayGenericGUID = u8"b382ee62-3a82-4cf0-9b29-263f2cc848d9"_skr_guid;
+static constexpr inline GUID kArrayGenericGUID = SKR_CONSTEXPR_GUID("b382ee62-3a82-4cf0-9b29-263f2cc848d9");
 template <typename T, size_t N>
 struct RTTRTraits<T[N]> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 3;
@@ -220,10 +244,9 @@ struct RTTRTraits<T[N]> {
 };
 
 template <typename T, size_t N1, size_t N2>
-struct RTTRTraits<T[N1][N2]>
-{
+struct RTTRTraits<T[N1][N2]> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 4;
-    inline static void             write_type_desc(TypeDesc * desc)
+    inline static void             write_type_desc(TypeDesc* desc)
     {
         new (desc + 0) TypeDesc{ kArrayGenericGUID };
         new (desc + 1) TypeDesc{ uint64_t(2) };
@@ -255,10 +278,9 @@ struct RTTRTraits<T[N1][N2]>
 };
 
 template <typename T, size_t N1, size_t N2, size_t N3>
-struct RTTRTraits<T[N1][N2][N3]>
-{
+struct RTTRTraits<T[N1][N2][N3]> {
     inline static constexpr size_t type_desc_size = RTTRTraits<std::remove_cv_t<T>>::type_desc_size + 5;
-    inline static void             write_type_desc(TypeDesc * desc)
+    inline static void             write_type_desc(TypeDesc* desc)
     {
         new (desc + 0) TypeDesc{ kArrayGenericGUID };
         new (desc + 1) TypeDesc{ uint64_t(3) };
@@ -290,6 +312,31 @@ struct RTTRTraits<T[N1][N2][N3]>
     }
 };
 
+} // namespace skr::rttr
+
+// TODO. skr container
+namespace skr::rttr
+{
+template <typename T>
+struct RTTRTraits<skr::Array<T>> {
+    inline static constexpr size_t type_desc_size = 1;
+    inline static void             write_type_desc(TypeDesc* desc)
+    {
+    }
+
+    inline static string_view get_name()
+    {
+        return u8"Vector";
+    }
+    inline static GUID get_guid()
+    {
+        return {};
+    }
+    inline static Type* get_type()
+    {
+        return nullptr;
+    }
+};
 } // namespace skr::rttr
 
 // skr types
@@ -396,7 +443,7 @@ struct RTTRTraits<skr::SPtrHelper<T>> {
     }
 };
 template <typename T>
-struct RTTRTraits<skr::TEnumAsByte<T>> {
+struct RTTRTraits<skr::StronglyEnum<T>> {
     inline static constexpr size_t type_desc_size = 1;
     inline static void             write_type_desc(TypeDesc* desc)
     {

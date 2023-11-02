@@ -1,10 +1,20 @@
 #pragma once
 #include "SkrGui/framework/element/render_object_element.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/element/multi_child_render_object_element.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct MultiChildRenderObjectElement : public RenderObjectElement {
-    SKR_GUI_OBJECT(MultiChildRenderObjectElement, "145cedaa-cc1c-4a06-acab-f83a30d997a4", RenderObjectElement)
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "794d783e-9772-4abd-a2bb-06528963e72b",
+    "rtti": true
+)
+SKR_GUI_API MultiChildRenderObjectElement : public RenderObjectElement
+{
+    SKR_RTTR_GENERATE_BODY()
     using Super = RenderObjectElement;
     using Super::Super;
 
@@ -25,4 +35,5 @@ private:
     // TODO. 控件重用与 forgot_child
     // Array<Element*> _forgotten_children = {};
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

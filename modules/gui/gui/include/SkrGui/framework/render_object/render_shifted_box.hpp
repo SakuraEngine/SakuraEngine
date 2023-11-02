@@ -1,12 +1,22 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/framework/render_object/single_child_render_object.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/render_object/render_shifted_box.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 // 会对 child 施加布局偏移的 RenderBox
-struct RenderShiftedBox : public RenderBox, public ISingleChildRenderObject {
-    SKR_GUI_OBJECT(RenderShiftedBox, "58e69c83-86c1-4f86-90e0-a82d4f78038c", RenderBox, ISingleChildRenderObject);
+sreflect_struct(
+    "guid": "357e11e8-dbcd-4830-9256-869198ca7bed",
+    "rtti": true
+)
+RenderShiftedBox : public RenderBox,
+                   public ISingleChildRenderObject {
+    SKR_RTTR_GENERATE_BODY()
 
     inline Offsetf offset() const SKR_NOEXCEPT { return _offset; }
     inline void    set_offset(Offsetf offset) SKR_NOEXCEPT { _offset = offset; }
@@ -21,9 +31,15 @@ protected:
     // paint
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 
+    // hit test
+    bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
+
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     Offsetf _offset = {};
 
     SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(RenderShiftedBox, RenderBox)
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

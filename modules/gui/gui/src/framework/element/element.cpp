@@ -218,32 +218,32 @@ InheritedWidget* Element::depend_on_inherited_element(NotNull<InheritedElement*>
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-InheritedWidget* Element::depend_on_inherited_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT
+InheritedWidget* Element::depend_on_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-InheritedElement* Element::get_element_for_inherited_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT
+InheritedElement* Element::get_element_for_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-Widget* Element::find_ancestor_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT
+Widget* Element::find_ancestor_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-State* Element::find_ancestor_state_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT
+State* Element::find_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-State* Element::find_root_ancestor_state_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT
+State* Element::find_root_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-RenderObject* Element::find_ancestor_render_object_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT
+RenderObject* Element::find_ancestor_render_object_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
@@ -313,7 +313,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
     // step 1. update array size
     if (children.size() < new_widgets.size())
     {
-        children.resize(new_widgets.size());
+        children.resize(new_widgets.size(), nullptr);
     }
 
     // step 2. walk matched front part of children and update node
@@ -365,7 +365,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
             }
             else
             {
-                old_keyed_children.insert_or_assign(child->widget()->key, child);
+                old_keyed_children.add(child->widget()->key, child);
             }
         }
         ++children_match_front;
@@ -378,10 +378,9 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
         Element* child      = nullptr;
 
         // search old child
-        auto key_it = old_keyed_children.find(new_widget->key);
-        if (key_it != old_keyed_children.end())
+        if (auto found_child = old_keyed_children.find(new_widget->key))
         {
-            child = key_it->second;
+            child = found_child->value;
             if (!Widget::can_update(make_not_null(child->widget()), make_not_null(new_widget)))
             {
                 child = nullptr;
@@ -402,7 +401,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
     // step 5. cleanup unused children
     for (auto& child_pair : old_keyed_children)
     {
-        child_pair.second->unmount();
+        child_pair.value->unmount();
     }
 
     // step 6. walk back part and update

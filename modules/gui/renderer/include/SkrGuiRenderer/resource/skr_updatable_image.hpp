@@ -3,11 +3,20 @@
 #include "SkrGui/backend/resource/resource.hpp"
 #include "cgpu/api.h"
 #include "cgpu/cgpux.h"
+#ifndef __meta__
+    #include "SkrGuiRenderer/resource/skr_updatable_image.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 struct SkrRenderDevice;
-struct SKR_GUI_RENDERER_API SkrUpdatableImage final : public IUpdatableImage {
+sreflect_struct(
+    "guid": "18382aad-21e7-4476-9554-6464cbc21a77"
+)
+SKR_GUI_RENDERER_API SkrUpdatableImage final : public IUpdatableImage {
+    SKR_RTTR_GENERATE_BODY()
 
     SkrUpdatableImage(SkrRenderDevice* render_device);
     ~SkrUpdatableImage();
@@ -36,4 +45,5 @@ private:
 
     UpdatableImageDesc _desc = {};
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

@@ -1,6 +1,6 @@
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include "SkrGui/framework/painting_context.hpp"
-#include "backend/paragraph/paragraph.hpp"
+#include "SkrGui/_private/paragraph.hpp"
 #include "backend/text_server/text_paragraph.h"
 #include "backend/text_server/font.h"
 
@@ -55,7 +55,7 @@ void _EmbeddedParagraph::build()
 {
     if (_dirty)
     {
-        this->clear();
+        godot::TextParagraph::clear();
 
         for (const auto& text : _texts)
         {
@@ -70,7 +70,7 @@ void _EmbeddedParagraph::build()
 }
 void _EmbeddedParagraph::add_text(const String& text, const TextStyle& style)
 {
-    _texts.push_back(text);
+    _texts.add(text);
     _dirty = true;
 }
 Sizef _EmbeddedParagraph::layout(BoxConstraints constraints)

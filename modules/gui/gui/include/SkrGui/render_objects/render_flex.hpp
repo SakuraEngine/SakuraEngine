@@ -2,13 +2,22 @@
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/framework/render_object/multi_child_render_object.hpp"
 #include "SkrGui/math/layout.hpp"
+#ifndef __meta__
+    #include "SkrGui/render_objects/render_flex.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-class SKR_GUI_API RenderFlex : public RenderBox, public IMultiChildRenderObject
+namespace gui sreflect
 {
+sreflect_struct(
+    "guid": "1bc957ef-1203-489d-911d-94ba3fb81080",
+    "rtti": true
+)
+SKR_GUI_API RenderFlex : public RenderBox,
+                         public IMultiChildRenderObject {
 public:
-    SKR_GUI_OBJECT(RenderFlex, "d3987dfd-24d2-478a-910e-537f24c4bae7", RenderBox, IMultiChildRenderObject);
+    SKR_RTTR_GENERATE_BODY()
     using Super = RenderBox;
 
     // intrinsic size
@@ -32,6 +41,9 @@ public:
     void set_cross_axis_alignment(ECrossAxisAlignment value) SKR_NOEXCEPT;
     void set_main_axis_size(EMainAxisSize value) SKR_NOEXCEPT;
 
+    // hit test
+    bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
+
     struct SlotData {
         // slot data
         float    flex     = 1;
@@ -53,5 +65,5 @@ private:
     // MIXIN
     MULTI_CHILD_RENDER_OBJECT_MIX_IN(RenderFlex, RenderBox, SlotData)
 };
-
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

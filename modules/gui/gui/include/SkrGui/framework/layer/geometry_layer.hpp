@@ -1,10 +1,20 @@
 #pragma once
 #include "SkrGui/framework/layer/layer.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/layer/geometry_layer.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct GeometryLayer : public Layer {
-    SKR_GUI_OBJECT(GeometryLayer, "8594695b-da35-462a-b4bf-b4ab891088c5", Layer)
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "1d1fbcab-eb50-4a22-99f6-59c5f4aca3e9",
+    "rtti": true
+)
+GeometryLayer : public Layer
+{
+    SKR_RTTR_GENERATE_BODY()
     using Super = Layer;
 
     // lifecycle & tree
@@ -15,6 +25,9 @@ struct GeometryLayer : public Layer {
     inline ICanvas* canvas() const SKR_NOEXCEPT { return _canvas; }
 
 private:
+    // TODO. enable field reflection
+    spush_attr("no-rtti": true)
     ICanvas* _canvas = nullptr;
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

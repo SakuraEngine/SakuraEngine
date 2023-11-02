@@ -1,10 +1,20 @@
 #pragma once
 #include "SkrGui/framework/element/render_object_element.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/element/single_child_render_object_element.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
 {
-struct SingleChildRenderObjectElement : public RenderObjectElement {
-    SKR_GUI_OBJECT(SingleChildRenderObjectElement, "a4d38770-bc3b-4404-8224-963563234880", RenderObjectElement)
+namespace gui sreflect
+{
+sreflect_struct(
+    "guid": "a3f51c75-2995-4f99-95c7-1166b3ba17a6",
+    "rtti": true
+)
+SingleChildRenderObjectElement : public RenderObjectElement
+{
+    SKR_RTTR_GENERATE_BODY()
     using Super = RenderObjectElement;
     using Super::Super;
 
@@ -24,4 +34,5 @@ private:
     Element* _child = nullptr;
 };
 
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

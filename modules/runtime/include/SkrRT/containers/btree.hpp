@@ -29,7 +29,7 @@ struct ReadTrait<skr::btree_map<K, V, Eq>> {
     static int Read(skr_binary_reader_t* archive, skr::btree_map<K, V, Eq>& map)
     {
         skr::btree_map<K, V, Eq> temp;
-        uint32_t size;
+        uint32_t                 size;
         SKR_ARCHIVE(size);
 
         for (int i = 0; i < size; ++i)
@@ -46,7 +46,7 @@ struct ReadTrait<skr::btree_map<K, V, Eq>> {
 };
 
 template <class K, class V, class Eq>
-struct WriteTrait<const skr::btree_map<K, V, Eq>&> {
+struct WriteTrait<skr::btree_map<K, V, Eq>> {
     static int Write(skr_binary_writer_t* archive, const skr::btree_map<K, V, Eq>& map)
     {
         SKR_ARCHIVE((uint32_t)map.size());
@@ -60,14 +60,14 @@ struct WriteTrait<const skr::btree_map<K, V, Eq>&> {
 };
 } // namespace binary
 
-template<class K, class V, class Eq>
+template <class K, class V, class Eq>
 struct SerdeCompleteChecker<binary::ReadTrait<skr::btree_map<K, V, Eq>>>
     : std::bool_constant<is_complete_serde_v<binary::ReadTrait<K>> && is_complete_serde_v<binary::ReadTrait<V>>> {
 };
 
-template<class K, class V, class Eq>
-struct SerdeCompleteChecker<binary::WriteTrait<const skr::btree_map<K, V, Eq>&>>
-    : std::bool_constant<is_complete_serde_v<binary::WriteTrait<const K&>> && is_complete_serde_v<binary::WriteTrait<const V&>>> {
+template <class K, class V, class Eq>
+struct SerdeCompleteChecker<binary::WriteTrait<skr::btree_map<K, V, Eq>>>
+    : std::bool_constant<is_complete_serde_v<binary::WriteTrait<K>> && is_complete_serde_v<binary::WriteTrait<V>>> {
 };
 
 } // namespace skr

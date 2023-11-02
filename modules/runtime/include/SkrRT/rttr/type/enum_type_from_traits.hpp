@@ -12,7 +12,12 @@ struct EnumTypeFromTraits : public EnumType {
     {
     }
 
-    EnumValue value_from_string(string_view str) const
+    bool query_feature(ETypeFeature feature) const override
+    {
+        return true;
+    }
+
+    EnumValue value_from_string(string_view str) const override
     {
         T result;
         if (EnumTraits<T>::from_string(str, result))
@@ -24,7 +29,7 @@ struct EnumTypeFromTraits : public EnumType {
             return {};
         }
     }
-    string value_to_string(const EnumValue& value) const
+    string value_to_string(const EnumValue& value) const override
     {
         T result;
         if (value.cast_to(result))
@@ -34,6 +39,51 @@ struct EnumTypeFromTraits : public EnumType {
         else
         {
             return u8"";
+        }
+    }
+
+    int write_binary(const void* dst, skr_binary_writer_t* writer) const override
+    {
+        if constexpr (is_complete_serde<skr::binary::WriteTrait<T>>())
+        {
+            return skr::binary::WriteTrait<T>::Write(writer, *reinterpret_cast<const T*>(dst));
+        }
+        else
+        {
+            return underlying_type()->write_binary(dst, writer);
+        }
+    }
+    int read_binary(void* dst, skr_binary_reader_t* reader) const override
+    {
+        if constexpr (is_complete_serde<skr::binary::ReadTrait<T>>())
+        {
+            return skr::binary::ReadTrait<T>::Read(reader, *reinterpret_cast<T*>(dst));
+        }
+        else
+        {
+            return underlying_type()->read_binary(dst, reader);
+        }
+    }
+    void write_json(const void* dst, skr_json_writer_t* writer) const override
+    {
+        if constexpr (is_complete_serde<skr::json::WriteTrait<T>>())
+        {
+            skr::json::WriteTrait<T>::Write(writer, *reinterpret_cast<const T*>(dst));
+        }
+        else
+        {
+            underlying_type()->write_json(dst, writer);
+        }
+    }
+    skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const override
+    {
+        if constexpr (is_complete_serde<skr::json::ReadTrait<T>>())
+        {
+            return skr::json::ReadTrait<T>::Read(std::move(reader), *reinterpret_cast<T*>(dst));
+        }
+        else
+        {
+            return underlying_type()->read_json(dst, std::move(reader));
         }
     }
 };

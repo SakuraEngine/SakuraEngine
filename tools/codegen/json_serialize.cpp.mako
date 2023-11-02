@@ -15,35 +15,6 @@
 [[maybe_unused]] static const char8_t* JsonArrayFieldNotEnoughWarnFormat = u8"[SERDE/JSON] %s.%s got too few elements (%d expected, given %d), using default value";
 [[maybe_unused]] static const char8_t* JsonBaseArchiveFailedFormat = u8"[SERDE/JSON] Archive %s base %s failed: %d";
 
-namespace skr::type
-{
-%for enum in generator.filter_types(db.enums):
-skr::string_view EnumToStringTrait<${enum.name}>::ToString(${enum.name} value)
-{
-    switch (value)
-    {
-    %for name, value in vars(enum.values).items():
-    case ${enum.name}::${db.short_name(name)}: return u8"${db.short_name(name)}";
-    %endfor
-    default: SKR_UNREACHABLE_CODE(); return u8"${enum.name}::INVALID_ENUMERATOR";
-    }
-}
-bool EnumToStringTrait<${enum.name}>::FromString(skr::string_view enumStr, ${enum.name}& e)
-{
-    const std::string_view enumStrV = {(const char*)enumStr.raw().data(), (size_t)enumStr.size()};
-    const auto hash = hash_crc32(enumStrV);
-    switch(hash)
-    {
-    %for name, value in vars(enum.values).items():
-        case hash_crc32<char>("${db.short_name(name)}"): if(enumStr == u8"${db.short_name(name)}") e = ${name}; return true;
-    %endfor
-        default:
-            return false;
-    }
-}
-%endfor
-}
-
 namespace skr::json {
 %for enum in generator.filter_types(db.enums):
 error_code ReadTrait<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
@@ -54,7 +25,7 @@ error_code ReadTrait<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
         return (error_code)value.error();
     const auto rawView = value.value_unsafe();
     const auto enumStr = skr::string_view((const char8_t*)rawView.data(), (int32_t)rawView.size());
-    if(!skr::type::enum_from_string(enumStr, e))
+    if(!skr::rttr::EnumTraits<${enum.name}>::from_string(enumStr, e))
     {
         SKR_LOG_ERROR(u8"Unknown enumerator while reading enum ${enum.name}: %s", enumStr.raw().data());
         return error_code::ENUMERATOR_ERROR;
@@ -62,10 +33,10 @@ error_code ReadTrait<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
     return error_code::SUCCESS;
 } 
 
-void WriteTrait<const ${enum.name}&>::Write(skr_json_writer_t* writer, ${enum.name} e)
+void WriteTrait<${enum.name}>::Write(skr_json_writer_t* writer, ${enum.name} e)
 {
     SkrZoneScopedN("json::WriteTrait<${enum.name}>::Write");
-    writer->String(skr::type::enum_to_string(e));
+    writer->String(skr::rttr::EnumTraits<${enum.name}>::to_string(e));
 } 
 %endfor
 
@@ -152,24 +123,24 @@ error_code ReadTrait<${record.name}>::Read(value_t&& json, ${record.name}& recor
     return error_code::SUCCESS;
 } 
 %endif
-void WriteTrait<const ${record.name}&>::WriteFields(skr_json_writer_t* writer, const ${record.name}& record)
+void WriteTrait<${record.name}>::WriteFields(skr_json_writer_t* writer, const ${record.name}& record)
 {
     %for base in record.bases:
-    WriteTrait<const ${base}&>::WriteFields(writer, record);
+    WriteTrait<${base}>::WriteFields(writer, record);
     %endfor
     %for name, field in generator.filter_fields(record.fields):
     writer->Key(u8"${name}", ${len(name)});
     %if field.arraySize > 0:
     writer->StartArray();
     for(int i = 0; i < ${field.arraySize}; ++i)
-        skr::json::Write<const ${field.type}&>(writer, record.${name}[i]);
+        skr::json::Write<${field.type}>(writer, record.${name}[i]);
     writer->EndArray();
     %else:
-    skr::json::Write<const ${field.type}&>(writer, record.${name});
+    skr::json::Write<${field.type}>(writer, record.${name});
     %endif
     %endfor
 } 
-void WriteTrait<const ${record.name}&>::Write(skr_json_writer_t* writer, const ${record.name}& record)
+void WriteTrait<${record.name}>::Write(skr_json_writer_t* writer, const ${record.name}& record)
 {
     SkrZoneScopedN("json::WriteTrait<${record.name}>::Write");
     writer->StartObject();

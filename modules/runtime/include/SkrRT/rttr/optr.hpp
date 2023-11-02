@@ -86,31 +86,7 @@ struct OPtr final : public OPtrBase {
     template <typename U>
     SKR_INLINE OPtr<U> type_cast() const
     {
-        Type* origin_type = get_type();
-        Type* target_type = RTTRTraits<U>::get_type();
-
-        if (origin_type->type_category() == ETypeCategory::SKR_TYPE_CATEGORY_RECORD)
-        {
-            RecordType* record_origin_type = static_cast<RecordType*>(origin_type);
-            BaseInfo    info               = {};
-            if (record_origin_type->find_base(target_type, info))
-            {
-                uint8_t* p_head = reinterpret_cast<uint8_t*>(_ptr) - _head_offset;
-                return { reinterpret_cast<U*>(p_head + info.offset), info.offset };
-            }
-            else
-            {
-                return {};
-            }
-        }
-        else if (target_type == origin_type)
-        {
-            return *this;
-        }
-        else
-        {
-            return {};
-        }
+        return nullptr;
     }
 
     SKR_INLINE T& operator*() const

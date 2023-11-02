@@ -1,16 +1,28 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_window.hpp"
+#ifndef __meta__
+    #include "SkrGui/framework/render_object/render_native_window.generated.h"
+#endif
 
-namespace skr::gui
+namespace skr sreflect
+{
+namespace gui sreflect
 {
 struct INativeWindow;
-struct SKR_GUI_API RenderNativeWindow : public RenderWindow {
-    SKR_GUI_OBJECT(RenderNativeWindow, "f4611440-7768-4975-b24e-5c2c7156f661", RenderWindow)
+sreflect_struct(
+    "guid": "1681d4be-cb32-4b65-9f07-9f143ebe1c6e",
+    "rtti": true
+)
+SKR_GUI_API RenderNativeWindow : public RenderWindow {
+    SKR_RTTR_GENERATE_BODY()
     RenderNativeWindow(INativeWindow* native_window);
 
     NotNull<OffsetLayer*> update_layer(OffsetLayer* old_layer) override;
 
     void        prepare_initial_frame() SKR_NOEXCEPT;
     inline void setup_owner(PipelineOwner* owner) SKR_NOEXCEPT { _owner = owner; }
+
+    bool hit_test(HitTestResult* result, Offsetf local_position);
 };
-} // namespace skr::gui
+} // namespace gui sreflect
+} // namespace skr sreflect

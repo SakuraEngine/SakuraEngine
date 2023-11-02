@@ -13,7 +13,7 @@ void ContainerLayer::visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT
 void ContainerLayer::add_child(NotNull<Layer*> child) SKR_NOEXCEPT
 {
     child->mount(make_not_null(this));
-    _children.push_back(child);
+    _children.add(child);
 }
 bool ContainerLayer::has_children() const SKR_NOEXCEPT
 {

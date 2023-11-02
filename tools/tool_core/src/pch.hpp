@@ -10,7 +10,6 @@
 #include "SkrRT/misc/parallel_for.hpp" // IWYU pragma: export
 
 #include "SkrRT/module/module.hpp" // IWYU pragma: export
-#include "SkrRT/type/type.hpp" // IWYU pragma: export
 #include "SkrRT/resource/config_resource.h" // IWYU pragma: export
 
 #include "SkrRT/serde/json/reader.h" // IWYU pragma: export
