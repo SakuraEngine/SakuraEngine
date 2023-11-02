@@ -22,7 +22,7 @@ skr_render_anim_comp_t::~skr_render_anim_comp_t()
     }
 }
 
-void skr_init_skin_component(skr_render_skin_comp_t* component, const skr_skeleton_resource_t* skeleton)
+void skr_init_skin_component(skr_render_skin_comp_t* component, const skr::anim::SkeletonResource* skeleton)
 {
     auto skin = component->skin_resource.get_resolved();
     if(!skin)
@@ -43,7 +43,7 @@ void skr_init_skin_component(skr_render_skin_comp_t* component, const skr_skelet
     }
 }
 
-void skr_init_anim_component(skr_render_anim_comp_t* component, const skr_mesh_resource_t* mesh, skr_skeleton_resource_t* skeleton)
+void skr_init_anim_component(skr_render_anim_comp_t* component, const skr_mesh_resource_t* mesh, skr::anim::SkeletonResource* skeleton)
 {
     component->buffers.resize(1);
     component->vbs.resize(1);
