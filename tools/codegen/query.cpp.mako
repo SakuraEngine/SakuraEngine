@@ -9,14 +9,27 @@ void ${record.name}::Initialize(dual_storage_t* storage)
 
 ${record.name}::TaskContext::View ${record.name}::TaskContext::unpack()
 {
-    View result;
+    View result
+    {
 %for i, component in query.sequence():
-%if query.accesses[i].readonly:
-    result._${db.short_name(component)} = get_owned_ro<${component}, true>(${i});
-%else:
-    result._${db.short_name(component)} = get_owned_rw<${component}, true>(${i});
-%endif
+        (${"const" if query.accesses[i].readonly else ""} ${component}*)paramPtrs[${i}],
 %endfor
+    };
+    return result;
+}
+
+${record.name}::TaskContext::Ref ${record.name}::TaskContext::unpack(int i)
+{
+    Ref result
+    {
+%for i, component in query.sequence():
+    %if query.accesses[i].optional:
+        paramPtrs[${i}] ? (${"const" if query.accesses[i].readonly else ""} ${component}*)paramPtrs[${i}] + i : nullptr,
+    %else:
+        ((${"const" if query.accesses[i].readonly else ""} ${component}*)paramPtrs[${i}])[i],
+    %endif
+%endfor
+    };
     return result;
 }
 %endfor

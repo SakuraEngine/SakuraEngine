@@ -220,11 +220,11 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             ALL,
             NONE
         } selector = ALL;
-        if (part[i] == '[') // attr: [in] [out] [inout] [has]
+        if (part[i].get_codepoint() == '[') // attr: [in] [out] [inout] [has]
         {
             auto j = i + 1;
             errorPos = partBegin + i;
-            while (i < part.size() && part[i] != ']')
+            while (i < part.size() && part[i].get_codepoint() != ']')
                 ++i;
             if (i == part.size())
             {
@@ -269,7 +269,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         {
             auto j = i + 1;
             errorPos = partBegin + i;
-            while (i < part.size() && part[i] != '>')
+            while (i < part.size() && part[i].get_codepoint() != '>')
                 ++i;
             if (i == part.size())
             {
@@ -318,7 +318,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 shared = true;
                 ++i;
             }
-            if(operation.randomAccess == DOS_UNSEQ && part[i] != '?')
+            if(operation.randomAccess == DOS_UNSEQ && part[i].get_codepoint() != '?')
             {
                 errorPos = partBegin + i;
                 error = skr::format(u8"unseq component must be optional, loc {}.", errorPos);

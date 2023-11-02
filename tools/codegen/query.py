@@ -4,10 +4,11 @@ import re
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
 class Access(object):
-    def __init__(self, readonly, atomic, order):
+    def __init__(self, readonly, atomic, order, optional):
         self.readonly = readonly
         self.atomic = atomic
         self.order = order
+        self.optional = optional
 
 # literal grammar:
 #   [access]<order>?type'
@@ -28,6 +29,7 @@ class Query(object):
             endpos = part.find("]")
             access = part[1:endpos]
             part = part[endpos+1:]
+            optional = False
             #<order>
             order = "seq"
             if part[0] == "<":
@@ -40,6 +42,7 @@ class Query(object):
             elif part[0] == "?":
                 cat = None
                 part = part[1:]
+                optional = True
             elif part[0] == "|":
                 cat = self.any
                 part = part[1:]
@@ -56,7 +59,7 @@ class Query(object):
                 count = 0
             if access != "has" and cat is not self.none:
                 self.components.append(type)
-                acc = Access(access == "in", access == "atomic", order)
+                acc = Access(access == "in", access == "atomic", order, optional)
                 self.accesses.append(acc)
             if cat is not None:
                 cat.append(type)
