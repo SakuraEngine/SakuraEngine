@@ -32,7 +32,7 @@ struct ReadTrait<Array<V>> {
         {
             V value;
             if (auto ret = skr::binary::Archive(archive, value, std::forward<Args>(args)...); ret != 0) return ret;
-            temp.push_back(std::move(value));
+            temp.add(std::move(value));
         }
         vec = std::move(temp);
         return 0;
