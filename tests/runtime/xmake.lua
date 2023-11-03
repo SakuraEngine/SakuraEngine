@@ -90,6 +90,19 @@ executable_module("RTTRTest", "RTTR_TEST", engine_version)
     })
     add_files("rttr/rttr_test.cpp")
 
+    
+executable_module("TraitTest", "TRAIT_TEST", engine_version)
+    set_group("05.tests/base")
+    set_kind("binary")
+    public_dependency("SkrRT", engine_version)
+    add_deps("SkrTestFramework", {public = false})
+    add_rules("c++.codegen", {
+        files = {"trait/**.h", "trait/**.hpp"},
+        rootdir = "trait/",
+        api = "TRAIT_TEST"
+    })
+    add_files("trait/trait_test.cpp")
+
 
 -- includes("module/xmake.lua")
 -- includes("wasm/xmake.lua")
