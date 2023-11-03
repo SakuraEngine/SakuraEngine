@@ -83,55 +83,21 @@ extern const char* $name;
     #endif
 #endif
 
-#ifndef SKR_IMPORT_API
-    #define SKR_IMPORT_API SKR_EXTERN_C SKR_IMPORT
-#endif
-
-#if defined(__cplusplus)
-    #define SKR_DECLARE_ZERO(type, var)                                                                    \
-        static_assert(std::is_trivially_constructible<type>::value, "not trival, 0 init is invalid!"); \
-        type var = {};
-#else
-    #define SKR_DECLARE_ZERO(type, var) type var = { 0 };
-#endif
-
-// VLA
-#ifndef __cplusplus
-    #if defined(_MSC_VER) && !defined(__clang__)
-        #define SKR_DECLARE_ZERO_VLA(type, var, num)              \
-            type* var = (type*)_alloca(sizeof(type) * (num)); \
-            memset((void*)(var), 0, sizeof(type) * (num));
-    #else
-        #define SKR_DECLARE_ZERO_VLA(type, var, num) \
-            type var[(num)];                     \
-            memset((void*)(var), 0, sizeof(type) * (num));
-    #endif
-#endif
-
 // Platform Specific Configure
 #define SKR_HEADER_SCOPE_DEFINING_PLATFORM_CONFIGURE
+
 #ifdef __APPLE__
     #include "apple/configure.h"
 #endif
+
 #ifdef _WIN32
     #include "win/configure.h"
 #endif
+
 #ifndef OS_DPI
     #define OS_DPI 72
 #endif
+
 #undef SKR_HEADER_SCOPE_DEFINING_PLATFORM_CONFIGURE
-
-// Numbers
-#ifndef SKR_KINDA_SMALL_NUMBER
-    #define SKR_KINDA_SMALL_NUMBER (1.e-4)
-#endif
-
-#ifndef SKR_SMALL_NUMBER
-    #define SKR_SMALL_NUMBER (1.e-8)
-#endif
-
-#ifndef SKR_THRESH_VECTOR_NORMALIZED
-    #define SKR_THRESH_VECTOR_NORMALIZED 0.01
-#endif
 
 #define SKR_RESOURCE_DEV_MODE
