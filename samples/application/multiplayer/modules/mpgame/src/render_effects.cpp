@@ -23,8 +23,8 @@
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_group.h"
-#include "SkrAnim/components/skin_component.h"
-#include "SkrAnim/components/skeleton_component.h"
+#include "SkrAnim/components/skin_component.hpp"
+#include "SkrAnim/components/skeleton_component.hpp"
 
 #include "cube.hpp"
 #include "SkrRT/platform/vfs.h"
@@ -49,13 +49,13 @@ void RenderEffectForward::on_register(SRendererId renderer, dual_storage_t* stor
         auto guid = make_zeroed<skr_guid_t>();
         dual_make_guid(&guid);
         auto desc = make_zeroed<dual_type_description_t>();
-        desc.name = u8"forward_render_identity";
-        desc.size = sizeof(forward_effect_identity_t);
+        desc.name = u8"ForwardEffectToken";
+        desc.size = sizeof(ForwardEffectToken);
         desc.guid = guid;
-        desc.alignment = alignof(forward_effect_identity_t);
+        desc.alignment = alignof(ForwardEffectToken);
         identity_type = dualT_register_type(&desc);
         type_builder.with(identity_type);
-        type_builder.with<skr_render_mesh_comp_t>();
+        type_builder.with<skr::renderer::MeshComponent>();
         type_builder.with<skr_render_group_t>();
         typeset = type_builder.build();
     }
@@ -68,8 +68,8 @@ void RenderEffectForward::on_register(SRendererId renderer, dual_storage_t* stor
 void RenderEffectForward::initialize_queries(dual_storage_t* storage)
 {
     // initialize queries
-    mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t");
-    draw_mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
+    mesh_query = dualQ_from_literal(storage, "[in]ForwardEffectToken, [in]skr::renderer::MeshComponent");
+    draw_mesh_query = dualQ_from_literal(storage, "[in]ForwardEffectToken, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
 }
 
 void RenderEffectForward::release_queries()
@@ -82,7 +82,7 @@ void RenderEffectForward::on_unregister(SRendererId renderer, dual_storage_t* st
 {
     auto sweepFunction = [&](dual_chunk_view_t* r_cv) {
         auto resource_system = skr::resource::GetResourceSystem();
-        auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
+        auto meshes = dual::get_owned_rw<skr::renderer::MeshComponent>(r_cv);
         for (uint32_t i = 0; i < r_cv->count; i++)
         {
             auto status = meshes[i].mesh_resource.get_status();
@@ -118,7 +118,7 @@ dual_type_index_t RenderEffectForward::get_identity_type()
 void RenderEffectForward::initialize_data(SRendererId renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv)
 {
     auto game_ents = dualV_get_entities(game_cv);
-    auto identities = (forward_effect_identity_t*)dualV_get_owned_ro(render_cv, identity_type);
+    auto identities = (ForwardEffectToken*)dualV_get_owned_ro(render_cv, identity_type);
     for (uint32_t i = 0u; i < game_cv->count; ++i)
     {
         identities[i].game_entity = game_ents[i];
@@ -138,10 +138,10 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
     uint32_t primitiveCount = 0;
     auto counterF = [&](dual_chunk_view_t* r_cv) {
         SkrZoneScopedN("PreCalculateDrawCallCount");
-        const skr_render_mesh_comp_t* meshes = nullptr;
+        const skr::renderer::MeshComponent* meshes = nullptr;
         {
             SkrZoneScopedN("FetchRenderMeshes");
-            meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
+            meshes = dual::get_component_ro<skr::renderer::MeshComponent>(r_cv);
         }
         for (uint32_t i = 0; i < r_cv->count; i++)
         {
@@ -173,13 +173,13 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
         uint32_t r_idx = 0;
         uint32_t dc_idx = 0;
 
-        auto identities = (forward_effect_identity_t*)dualV_get_owned_ro(r_cv, identity_type);
+        auto identities = (ForwardEffectToken*)dualV_get_owned_ro(r_cv, identity_type);
         auto unbatched_g_ents = (dual_entity_t*)identities;
-        const skr_render_mesh_comp_t* meshes = nullptr;
+        const skr::renderer::MeshComponent* meshes = nullptr;
         const skr::anim::AnimComponent* anims = nullptr;
         {
             SkrZoneScopedN("FetchRenderMeshes");
-            meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
+            meshes = dual::get_component_ro<skr::renderer::MeshComponent>(r_cv);
         }
         {
             SkrZoneScopedN("FetchAnimComps");
@@ -570,12 +570,12 @@ void RenderEffectForwardSkin::on_register(SRendererId renderer, dual_storage_t* 
         dual_make_guid(&guid);
         auto desc = make_zeroed<dual_type_description_t>();
         desc.name = u8"forward_skin_render_identity";
-        desc.size = sizeof(forward_effect_identity_t);
+        desc.size = sizeof(ForwardEffectToken);
         desc.guid = guid;
-        desc.alignment = alignof(forward_effect_identity_t);
+        desc.alignment = alignof(ForwardEffectToken);
         identity_type = dualT_register_type(&desc);
         type_builder.with(identity_type)
-            .with<skr_render_mesh_comp_t>()
+            .with<skr::renderer::MeshComponent>()
             .with<skr_render_group_t>()
             .with<skr::anim::AnimComponent>()
             .with<skr::anim::SkeletonComponent>()
@@ -590,8 +590,8 @@ void RenderEffectForwardSkin::on_register(SRendererId renderer, dual_storage_t* 
 
 void RenderEffectForwardSkin::initialize_queries(dual_storage_t* storage)
 {
-    mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_mesh_comp_t");
-    draw_mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
+    mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent");
+    draw_mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
     install_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::anim::AnimComponent, [in]skr::anim::SkeletonComponent, [in]skr::anim::SkinComponent");
 }
 

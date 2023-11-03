@@ -1,6 +1,8 @@
 #pragma once
 #include "SkrRenderer/render_effect.h"
 
+namespace game {
+
 const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT_S8_UINT;
 
 static const skr_render_pass_name_t forward_pass_name = u8"ForwardPass";
@@ -20,3 +22,5 @@ struct RenderPassForward : public IPrimitiveRenderPass
     
     ECGPUShadingRate shading_rate = CGPU_SHADING_RATE_FULL;
 };
+
+} // namespace game

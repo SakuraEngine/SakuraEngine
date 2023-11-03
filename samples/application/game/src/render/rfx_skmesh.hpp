@@ -1,6 +1,8 @@
 #pragma once
 #include "rfx_mesh.hpp"
 
+namespace game {
+
 static const skr_render_effect_name_t forward_effect_skin_name = u8"ForwardEffectSkin";
 struct RenderEffectForwardSkin : public RenderEffectForward
 {
@@ -15,3 +17,5 @@ struct RenderEffectForwardSkin : public RenderEffectForward
 
     dual_query_t* install_query = nullptr;
 };
+
+}
