@@ -1,1 +1,1 @@
-#include "SkrAnim/components/skeleton_component.h"
+#include "SkrAnim/components/skeleton_component.hpp"

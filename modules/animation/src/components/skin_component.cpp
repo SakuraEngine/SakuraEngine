@@ -2,8 +2,8 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRenderer/render_mesh.h"
 
-#include "SkrAnim/components/skin_component.h"
-#include "SkrAnim/components/skeleton_component.h"
+#include "SkrAnim/components/skin_component.hpp"
+#include "SkrAnim/components/skeleton_component.hpp"
 #include "SkrAnim/ozz/geometry/skinning_job.h"
 #include "SkrAnim/ozz/base/span.h"
 #include "SkrRT/containers/sptr.hpp"
