@@ -103,11 +103,11 @@ private:
     skr::string _lastError;
     NativeLibHandle _handle = nullptr;
     // Linux implementation
-#if defined(SKR_OS_UNIX)
+#if SKR_PLAT_UNIX
     bool loadImpl(const char8_t* path);
     bool unloadImpl();
     void* getImpl(const char8_t* symbolName);
-#elif defined(SKR_OS_WINDOWS) // Windows implementation
+#elif SKR_PLAT_WINDOWS // Windows implementation
     // Return a string explaining the last error
     skr::string getWindowsError();
     bool loadImpl(const char8_t* path);

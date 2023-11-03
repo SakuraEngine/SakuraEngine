@@ -29,7 +29,7 @@
 #include "imgui/skr_imgui_rg.h"
 #include "SkrProfile/profile.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#ifdef SKR_OS_WINDOWS
+#if SKR_PLAT_WINDOWS
     #include <shellscalingapi.h>
 #endif
 #define BACK_BUFFER_WIDTH 900
@@ -76,7 +76,7 @@ skr_vfs_t* resource_vfs;
 
 int CreateMainWindow()
 {
-#ifdef SKR_OS_WINDOWS
+#if SKR_PLAT_WINDOWS
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 #endif
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;

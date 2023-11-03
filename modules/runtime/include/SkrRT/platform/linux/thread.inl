@@ -3,12 +3,12 @@
 #include <unistd.h>
 #include <sched.h>
 
-FORCEINLINE static void callOnce(SCallOnceGuard* pGuard, SCallOnceFn pFn)
+SKR_FORCEINLINE static void callOnce(SCallOnceGuard* pGuard, SCallOnceFn pFn)
 {
     pthread_once(pGuard, pFn);
 }
 
-FORCEINLINE static bool skr_init_mutex(SMutex* pMutex)
+SKR_FORCEINLINE static bool skr_init_mutex(SMutex* pMutex)
 {
     pMutex->mSpinCount = MUTEX_DEFAULT_SPIN_COUNT;
     pMutex->pHandle = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
@@ -20,7 +20,7 @@ FORCEINLINE static bool skr_init_mutex(SMutex* pMutex)
     return status == 0;
 }
 
-FORCEINLINE static bool skr_init_mutex_recursive(SMutex* pMutex)
+SKR_FORCEINLINE static bool skr_init_mutex_recursive(SMutex* pMutex)
 {
     pMutex->mSpinCount = MUTEX_DEFAULT_SPIN_COUNT;
     pMutex->pHandle = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
@@ -32,9 +32,9 @@ FORCEINLINE static bool skr_init_mutex_recursive(SMutex* pMutex)
     return status == 0;
 }
 
-FORCEINLINE static void skr_destroy_mutex(SMutex* pMutex) { pthread_mutex_destroy(&pMutex->pHandle); }
+SKR_FORCEINLINE static void skr_destroy_mutex(SMutex* pMutex) { pthread_mutex_destroy(&pMutex->pHandle); }
 
-FORCEINLINE static void skr_mutex_acquire(SMutex* pMutex)
+SKR_FORCEINLINE static void skr_mutex_acquire(SMutex* pMutex)
 {
     uint32_t count = 0;
 
@@ -49,11 +49,11 @@ FORCEINLINE static void skr_mutex_acquire(SMutex* pMutex)
     }
 }
 
-FORCEINLINE static bool skr_mutex_try_acquire(SMutex* pMutex) { return pthread_mutex_trylock(&pMutex->pHandle) == 0; }
+SKR_FORCEINLINE static bool skr_mutex_try_acquire(SMutex* pMutex) { return pthread_mutex_trylock(&pMutex->pHandle) == 0; }
 
-FORCEINLINE static void skr_mutex_release(SMutex* pMutex) { pthread_mutex_unlock(&pMutex->pHandle); }
+SKR_FORCEINLINE static void skr_mutex_release(SMutex* pMutex) { pthread_mutex_unlock(&pMutex->pHandle); }
 
-FORCEINLINE static bool skr_init_condition_var(SConditionVariable* pCv)
+SKR_FORCEINLINE static bool skr_init_condition_var(SConditionVariable* pCv)
 {
     pCv->pHandle = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
     int res = pthread_cond_init(&pCv->pHandle, NULL);
@@ -61,9 +61,9 @@ FORCEINLINE static bool skr_init_condition_var(SConditionVariable* pCv)
     return res == 0;
 }
 
-FORCEINLINE static void skr_destroy_condition_var(SConditionVariable* pCv) { pthread_cond_destroy(&pCv->pHandle); }
+SKR_FORCEINLINE static void skr_destroy_condition_var(SConditionVariable* pCv) { pthread_cond_destroy(&pCv->pHandle); }
 
-FORCEINLINE static ThreadResult skr_wait_condition_vars(SConditionVariable* pCv, const SMutex* mutex, uint32_t ms)
+SKR_FORCEINLINE static ThreadResult skr_wait_condition_vars(SConditionVariable* pCv, const SMutex* mutex, uint32_t ms)
 {
     pthread_mutex_t* mutexHandle = (pthread_mutex_t*)&mutex->pHandle;
     int ret = 0;
@@ -83,14 +83,14 @@ FORCEINLINE static ThreadResult skr_wait_condition_vars(SConditionVariable* pCv,
     return THREAD_RESULT_FAILED;
 }
 
-FORCEINLINE static void skr_wake_condition_var(SConditionVariable* pCv) { pthread_cond_signal(&pCv->pHandle); }
+SKR_FORCEINLINE static void skr_wake_condition_var(SConditionVariable* pCv) { pthread_cond_signal(&pCv->pHandle); }
 
-FORCEINLINE static void skr_wake_all_condition_vars(SConditionVariable* pCv) { pthread_cond_broadcast(&pCv->pHandle); }
+SKR_FORCEINLINE static void skr_wake_all_condition_vars(SConditionVariable* pCv) { pthread_cond_broadcast(&pCv->pHandle); }
 
-FORCEINLINE static void skr_thread_sleep(unsigned mMilliSecs) { usleep(mMilliSecs * 1000); }
+SKR_FORCEINLINE static void skr_thread_sleep(unsigned mMilliSecs) { usleep(mMilliSecs * 1000); }
 
 // threading class (Static functions)
-FORCEINLINE static unsigned int skr_cpu_cores_count(void)
+SKR_FORCEINLINE static unsigned int skr_cpu_cores_count(void)
 {
     size_t len;
     unsigned int ncpu;
@@ -98,14 +98,14 @@ FORCEINLINE static unsigned int skr_cpu_cores_count(void)
     return ncpu;
 }
 
-FORCEINLINE static void* ThreadFunctionStatic(void* data)
+SKR_FORCEINLINE static void* ThreadFunctionStatic(void* data)
 {
     SThreadDesc* pItem = (SThreadDesc*)(data);
     pItem->pFunc(pItem->pData);
     return 0;
 }
 
-FORCEINLINE static void skr_thread_set_affinity(SThreadHandle handle, uint64_t affinityMask)
+SKR_FORCEINLINE static void skr_thread_set_affinity(SThreadHandle handle, uint64_t affinityMask)
 {
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
@@ -119,21 +119,21 @@ FORCEINLINE static void skr_thread_set_affinity(SThreadHandle handle, uint64_t a
     pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
 }
 
-FORCEINLINE static void skr_init_thread(SThreadDesc* pData, SThreadHandle* pHandle)
+SKR_FORCEINLINE static void skr_init_thread(SThreadDesc* pData, SThreadHandle* pHandle)
 {
     int res = pthread_create(pHandle, NULL, ThreadFunctionStatic, pData);
     assert(res == 0);
 }
 
-FORCEINLINE static void skr_destroy_thread(SThreadHandle handle)
+SKR_FORCEINLINE static void skr_destroy_thread(SThreadHandle handle)
 {
     pthread_join(handle, NULL);
     handle = NULL;
 }
 
-FORCEINLINE static void skr_join_thread(SThreadHandle handle) { pthread_join(handle, NULL); }
+SKR_FORCEINLINE static void skr_join_thread(SThreadHandle handle) { pthread_join(handle, NULL); }
 
-FORCEINLINE SThreadID skr_current_thread_id(void)
+SKR_FORCEINLINE SThreadID skr_current_thread_id(void)
 {
     return skrGetCurrentPthreadID();
 }

@@ -14,7 +14,7 @@ class ResourceCreation
 protected:
     void Initialize() SKR_NOEXCEPT
     {
-        DECLARE_ZERO(CGPUInstanceDescriptor, desc)
+        SKR_DECLARE_ZERO(CGPUInstanceDescriptor, desc)
         desc.backend = backend;
         desc.enable_debug_layer = true;
         desc.enable_gpu_based_validation = true;
@@ -32,7 +32,7 @@ protected:
         adapter = adapters[0];
 
         CGPUQueueGroupDescriptor G = { CGPU_QUEUE_TYPE_GRAPHICS, 1 };
-        DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
+        SKR_DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
         descriptor.queue_groups = &G;
         descriptor.queue_group_count = 1;
         device = cgpu_create_device(adapter, &descriptor);
@@ -83,7 +83,7 @@ void ResourceCreation<backend>::test_all()
     {
     SUBCASE("CreateDStorageQueue")
     {
-        DECLARE_ZERO(CGPUDStorageQueueDescriptor, desc)
+        SKR_DECLARE_ZERO(CGPUDStorageQueueDescriptor, desc)
         desc.name = u8"DStorageQueue";
         desc.capacity = 1024;
         desc.priority = SKR_DSTORAGE_PRIORITY_NORMAL;
@@ -105,7 +105,7 @@ void ResourceCreation<backend>::test_all()
 
     SUBCASE("CreateIndexBuffer")
     {
-        DECLARE_ZERO(CGPUBufferDescriptor, desc)
+        SKR_DECLARE_ZERO(CGPUBufferDescriptor, desc)
         desc.flags = CGPU_BCF_NONE;
         desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
         desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
@@ -121,7 +121,7 @@ void ResourceCreation<backend>::test_all()
 
     SUBCASE("CreateTexture")
     {
-        DECLARE_ZERO(CGPUTextureDescriptor, desc)
+        SKR_DECLARE_ZERO(CGPUTextureDescriptor, desc)
         desc.name = u8"Texture";
         desc.flags = CGPU_TCF_DEDICATED_BIT;
         desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
@@ -139,7 +139,7 @@ void ResourceCreation<backend>::test_all()
     {
         if (backend == CGPU_BACKEND_D3D12)
         {
-            DECLARE_ZERO(CGPUTextureDescriptor, desc)
+            SKR_DECLARE_ZERO(CGPUTextureDescriptor, desc)
             desc.name = u8"Texture";
             desc.flags = CGPU_TCF_DEDICATED_BIT | CGPU_TCF_TILED_RESOURCE;
             desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
@@ -156,7 +156,7 @@ void ResourceCreation<backend>::test_all()
 
     SUBCASE("CreateUploadBuffer")
     {
-        DECLARE_ZERO(CGPUBufferDescriptor, desc)
+        SKR_DECLARE_ZERO(CGPUBufferDescriptor, desc)
         desc.flags = CGPU_BCF_NONE;
         desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_BUFFER;
         desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
@@ -166,7 +166,7 @@ void ResourceCreation<backend>::test_all()
         desc.name = u8"UploadBuffer";
         auto buffer = cgpu_create_buffer(device, &desc);
         EXPECT_NE(buffer, CGPU_NULLPTR);
-        DECLARE_ZERO(CGPUBufferRange, range);
+        SKR_DECLARE_ZERO(CGPUBufferRange, range);
         range.offset = 0;
         range.size = desc.size;
         {
@@ -190,7 +190,7 @@ void ResourceCreation<backend>::test_all()
 
     SUBCASE("CreateUploadBufferPersistent")
     {
-        DECLARE_ZERO(CGPUBufferDescriptor, desc)
+        SKR_DECLARE_ZERO(CGPUBufferDescriptor, desc)
         desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
         desc.descriptors = CGPU_RESOURCE_TYPE_BUFFER;
         desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
@@ -206,7 +206,7 @@ void ResourceCreation<backend>::test_all()
 
     SUBCASE("CreateHostVisibleDeviceMemory")
     {
-        DECLARE_ZERO(CGPUBufferDescriptor, desc)
+        SKR_DECLARE_ZERO(CGPUBufferDescriptor, desc)
         desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT | CGPU_BCF_HOST_VISIBLE;
         desc.descriptors = CGPU_RESOURCE_TYPE_BUFFER;
         desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
@@ -242,14 +242,14 @@ void ResourceCreation<backend>::test_all()
 
     SUBCASE("CreateModules")
     {
-        DECLARE_ZERO(CGPUShaderLibraryDescriptor, vdesc)
+        SKR_DECLARE_ZERO(CGPUShaderLibraryDescriptor, vdesc)
         vdesc.code = vertex_shaders[backend];
         vdesc.code_size = vertex_shader_sizes[backend];
         vdesc.name = u8"VertexShaderLibrary";
         vdesc.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_VERT;
         auto vertex_shader = cgpu_create_shader_library(device, &vdesc);
 
-        DECLARE_ZERO(CGPUShaderLibraryDescriptor, fdesc)
+        SKR_DECLARE_ZERO(CGPUShaderLibraryDescriptor, fdesc)
         fdesc.code = frag_shaders[backend];
         fdesc.code_size = frag_shader_sizes[backend];
         fdesc.name = u8"FragmentShaderLibrary";
@@ -268,14 +268,14 @@ void ResourceCreation<backend>::test_all()
 
     SUBCASE("CreateRootSignature")
     {
-        DECLARE_ZERO(CGPUShaderLibraryDescriptor, vdesc)
+        SKR_DECLARE_ZERO(CGPUShaderLibraryDescriptor, vdesc)
         vdesc.code = vertex_shaders[backend];
         vdesc.code_size = vertex_shader_sizes[backend];
         vdesc.name = u8"VertexShaderLibrary";
         vdesc.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_VERT;
         auto vertex_shader = cgpu_create_shader_library(device, &vdesc);
 
-        DECLARE_ZERO(CGPUShaderLibraryDescriptor, fdesc)
+        SKR_DECLARE_ZERO(CGPUShaderLibraryDescriptor, fdesc)
         fdesc.code = frag_shaders[backend];
         fdesc.code_size = frag_shader_sizes[backend];
         fdesc.name = u8"FragmentShaderLibrary";
@@ -305,7 +305,7 @@ void ResourceCreation<backend>::test_all()
 
     SUBCASE("CreateComputePipeline")
     {
-        DECLARE_ZERO(CGPUShaderLibraryDescriptor, csdesc)
+        SKR_DECLARE_ZERO(CGPUShaderLibraryDescriptor, csdesc)
         csdesc.code = compute_shaders[backend];
         csdesc.code_size = compute_shader_sizes[backend];
         csdesc.name = u8"ComputeShaderLibrary";
@@ -314,11 +314,11 @@ void ResourceCreation<backend>::test_all()
         EXPECT_NE(compute_shader, CGPU_NULLPTR);
 
         // Create root signature
-        DECLARE_ZERO(CGPUShaderEntryDescriptor, compute_shader_entry)
+        SKR_DECLARE_ZERO(CGPUShaderEntryDescriptor, compute_shader_entry)
         compute_shader_entry.entry = u8"main";
         compute_shader_entry.stage = CGPU_SHADER_STAGE_COMPUTE;
         compute_shader_entry.library = compute_shader;
-        DECLARE_ZERO(CGPURootSignatureDescriptor, root_desc)
+        SKR_DECLARE_ZERO(CGPURootSignatureDescriptor, root_desc)
         root_desc.shaders = &compute_shader_entry;
         root_desc.shader_count = 1;
         CGPURootSignatureId signature = cgpu_create_root_signature(device, &root_desc);

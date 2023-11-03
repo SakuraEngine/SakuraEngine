@@ -31,14 +31,14 @@ static void VkUtil_FindOrCreateFrameBuffer(const CGPUDevice_Vulkan* D, const str
 }
 
 // TODO: recycle cached render passes
-FORCEINLINE static void VkUtil_FreeFramebuffer(CGPUDevice_Vulkan* D, VkFramebuffer pFramebuffer)
+SKR_FORCEINLINE static void VkUtil_FreeFramebuffer(CGPUDevice_Vulkan* D, VkFramebuffer pFramebuffer)
 {
     D->mVkDeviceTable.vkDestroyFramebuffer(D->pVkDevice, pFramebuffer, GLOBAL_VkAllocationCallbacks);
 }
 
 // Render Pass Utils
 // TODO: recycle cached render passes
-FORCEINLINE static void VkUtil_FreeRenderPass(CGPUDevice_Vulkan* D, VkRenderPass pRenderPass)
+SKR_FORCEINLINE static void VkUtil_FreeRenderPass(CGPUDevice_Vulkan* D, VkRenderPass pRenderPass)
 {
     D->mVkDeviceTable.vkDestroyRenderPass(D->pVkDevice, pRenderPass, GLOBAL_VkAllocationCallbacks);
 }
@@ -268,7 +268,7 @@ CGPUFenceId cgpu_create_fence_vulkan(CGPUDeviceId device)
 void cgpu_wait_fences_vulkan(const CGPUFenceId* fences, uint32_t fence_count)
 {
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)fences[0]->device;
-    DECLARE_ZERO_VLA(VkFence, vfences, fence_count)
+    SKR_DECLARE_ZERO_VLA(VkFence, vfences, fence_count)
     uint32_t numValidFences = 0;
     for (uint32_t i = 0; i < fence_count; ++i)
     {
@@ -828,7 +828,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, con
 		.pVertexAttributeDescriptions = input_attributes
     };
     // Shader stages
-    DECLARE_ZERO(VkPipelineShaderStageCreateInfo, shaderStages[5])
+    SKR_DECLARE_ZERO(VkPipelineShaderStageCreateInfo, shaderStages[5])
     uint32_t stage_count = 0;
     for (uint32_t i = 0; i < 5; ++i)
     {
@@ -996,7 +996,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, con
         .lineWidth = 1.f
     };
     // Color blending state
-    DECLARE_ZERO(VkPipelineColorBlendAttachmentState, cb_attachments[CGPU_MAX_MRT_COUNT])
+    SKR_DECLARE_ZERO(VkPipelineColorBlendAttachmentState, cb_attachments[CGPU_MAX_MRT_COUNT])
 	int blendDescIndex = 0;
     const CGPUBlendStateDescriptor* pDesc = desc->blend_state;
     for (int i = 0; i < CGPU_MAX_MRT_COUNT; ++i)
@@ -1110,7 +1110,7 @@ CGPUQueryPoolId cgpu_create_query_pool_vulkan(CGPUDeviceId device, const struct 
     CGPUQueryPool_Vulkan* P = (CGPUQueryPool_Vulkan*)cgpu_calloc(1, sizeof(CGPUQueryPool_Vulkan));
     P->mType = VkUtil_ToVkQueryType(desc->type);
     P->super.count = desc->query_count;
-    DECLARE_ZERO(VkQueryPoolCreateInfo, createInfo)
+    SKR_DECLARE_ZERO(VkQueryPoolCreateInfo, createInfo)
     createInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
     createInfo.pNext = NULL;
     createInfo.queryCount = desc->query_count;
@@ -1199,14 +1199,14 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
     // execute given command list
     cgpu_assert(Q->pVkQueue != VK_NULL_HANDLE);
 
-    DECLARE_ZERO_VLA(VkCommandBuffer, vkCmds, CmdCount);
+    SKR_DECLARE_ZERO_VLA(VkCommandBuffer, vkCmds, CmdCount);
     for (uint32_t i = 0; i < CmdCount; ++i)
     {
         vkCmds[i] = Cmds[i]->pVkCmdBuf;
     }
     // Set wait semaphores
-    DECLARE_ZERO_VLA(VkSemaphore, wait_semaphores, desc->wait_semaphore_count + 1)
-    DECLARE_ZERO_VLA(VkPipelineStageFlags, wait_stages, desc->wait_semaphore_count + 1)
+    SKR_DECLARE_ZERO_VLA(VkSemaphore, wait_semaphores, desc->wait_semaphore_count + 1)
+    SKR_DECLARE_ZERO_VLA(VkPipelineStageFlags, wait_stages, desc->wait_semaphore_count + 1)
     uint32_t waitCount = 0;
     CGPUSemaphore_Vulkan** WaitSemaphores = (CGPUSemaphore_Vulkan**)desc->wait_semaphores;
     for (uint32_t i = 0; i < desc->wait_semaphore_count; ++i)
@@ -1220,7 +1220,7 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
         }
     }
     // Set signal semaphores
-    DECLARE_ZERO_VLA(VkSemaphore, signal_semaphores, desc->signal_semaphore_count + 1)
+    SKR_DECLARE_ZERO_VLA(VkSemaphore, signal_semaphores, desc->signal_semaphore_count + 1)
     uint32_t signalCount = 0;
     CGPUSemaphore_Vulkan** SignalSemaphores = (CGPUSemaphore_Vulkan**)desc->signal_semaphores;
     for (uint32_t i = 0; i < desc->signal_semaphore_count; ++i)
@@ -1236,7 +1236,6 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
     VkSubmitInfo submit_info = {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .pNext = NULL,
-        .pWaitDstStageMask = 0,
         .commandBufferCount = CmdCount,
         .pCommandBuffers = vkCmds,
         .waitSemaphoreCount = waitCount,
@@ -1282,7 +1281,7 @@ void cgpu_queue_present_vulkan(CGPUQueueId queue, const struct CGPUQueuePresentD
     if (SC)
     {
         // Set semaphores
-        DECLARE_ZERO_VLA(VkSemaphore, wait_semaphores, desc->wait_semaphore_count + 1)
+        SKR_DECLARE_ZERO_VLA(VkSemaphore, wait_semaphores, desc->wait_semaphore_count + 1)
         uint32_t waitCount = 0;
         CGPUSemaphore_Vulkan** Semaphores = (CGPUSemaphore_Vulkan**)desc->wait_semaphores;
         for (uint32_t i = 0; i < desc->wait_semaphore_count; ++i)
@@ -1447,7 +1446,7 @@ void cgpu_cmd_resource_barrier_vulkan(CGPUCommandBufferId cmd, const struct CGPU
     VkAccessFlags srcAccessFlags = 0;
     VkAccessFlags dstAccessFlags = 0;
 
-    DECLARE_ZERO_VLA(VkBufferMemoryBarrier, BBs, desc->buffer_barriers_count)
+    SKR_DECLARE_ZERO_VLA(VkBufferMemoryBarrier, BBs, desc->buffer_barriers_count)
     uint32_t bufferBarrierCount = 0;
     for (uint32_t i = 0; i < desc->buffer_barriers_count; i++)
     {
@@ -1501,7 +1500,7 @@ void cgpu_cmd_resource_barrier_vulkan(CGPUCommandBufferId cmd, const struct CGPU
         }
     }
 
-    DECLARE_ZERO_VLA(VkImageMemoryBarrier, TBs, desc->texture_barriers_count)
+    SKR_DECLARE_ZERO_VLA(VkImageMemoryBarrier, TBs, desc->texture_barriers_count)
     uint32_t imageBarrierCount = 0;
     for (uint32_t i = 0; i < desc->texture_barriers_count; i++)
     {
@@ -1662,7 +1661,7 @@ void cgpu_cmd_begin_event_vulkan(CGPUCommandBufferId cmd, const CGPUEventInfo* e
     CGPUInstance_Vulkan* I = (CGPUInstance_Vulkan*)cmd->device->adapter->instance;
     if (I->debug_report)
     {
-        DECLARE_ZERO(VkDebugMarkerMarkerInfoEXT, markerInfo)
+        SKR_DECLARE_ZERO(VkDebugMarkerMarkerInfoEXT, markerInfo)
         markerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
         markerInfo.pMarkerName = event->name;
         markerInfo.color[0] = event->color[0];
@@ -1673,7 +1672,7 @@ void cgpu_cmd_begin_event_vulkan(CGPUCommandBufferId cmd, const CGPUEventInfo* e
     }
     if (I->debug_utils)
     {
-        DECLARE_ZERO(VkDebugUtilsLabelEXT, markerInfo)
+        SKR_DECLARE_ZERO(VkDebugUtilsLabelEXT, markerInfo)
         markerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
         markerInfo.pLabelName = event->name;
         markerInfo.color[0] = event->color[0];
@@ -1691,7 +1690,7 @@ void cgpu_cmd_set_marker_vulkan(CGPUCommandBufferId cmd, const CGPUMarkerInfo* m
     CGPUInstance_Vulkan* I = (CGPUInstance_Vulkan*)cmd->device->adapter->instance;
     if (I->debug_utils)
     {
-        DECLARE_ZERO(VkDebugUtilsLabelEXT, label)
+        SKR_DECLARE_ZERO(VkDebugUtilsLabelEXT, label)
         label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
         label.pLabelName = marker->name;
         label.color[0] = marker->color[0];
@@ -1702,7 +1701,7 @@ void cgpu_cmd_set_marker_vulkan(CGPUCommandBufferId cmd, const CGPUMarkerInfo* m
     }
     if (I->debug_report)
     {
-        DECLARE_ZERO(VkDebugMarkerMarkerInfoEXT, info)
+        SKR_DECLARE_ZERO(VkDebugMarkerMarkerInfoEXT, info)
         info.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
         info.pMarkerName = marker->name;
         info.color[0] = marker->color[0];
@@ -2001,8 +2000,8 @@ const CGPUBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
     const CGPUBuffer_Vulkan** Buffers = (const CGPUBuffer_Vulkan**)buffers;
     const uint32_t final_buffer_count = cgpu_min(buffer_count, A->mPhysicalDeviceProps.properties.limits.maxVertexInputBindings);
 
-    DECLARE_ZERO(VkBuffer, vkBuffers[64]);
-    DECLARE_ZERO(VkDeviceSize, vkOffsets[64]);
+    SKR_DECLARE_ZERO(VkBuffer, vkBuffers[64]);
+    SKR_DECLARE_ZERO(VkDeviceSize, vkOffsets[64]);
 
     for (uint32_t i = 0; i < final_buffer_count; ++i)
     {
@@ -2100,13 +2099,13 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
     }
 
     // Surface format
-    DECLARE_ZERO(VkSurfaceFormatKHR, surface_format)
+    SKR_DECLARE_ZERO(VkSurfaceFormatKHR, surface_format)
     surface_format.format = VK_FORMAT_UNDEFINED;
     uint32_t surfaceFormatCount = 0;
     CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(
     A->pPhysicalDevice, vkSurface, &surfaceFormatCount, CGPU_NULLPTR));
     // Allocate and get surface formats
-    DECLARE_ZERO_VLA(VkSurfaceFormatKHR, formats, surfaceFormatCount)
+    SKR_DECLARE_ZERO_VLA(VkSurfaceFormatKHR, formats, surfaceFormatCount)
     CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(
     A->pPhysicalDevice, vkSurface, &surfaceFormatCount, formats))
 
@@ -2152,7 +2151,7 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
     CHECK_VKRESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(
     A->pPhysicalDevice, vkSurface, &swapChainImageCount, NULL));
     // Allocate and get present modes
-    DECLARE_ZERO_VLA(VkPresentModeKHR, modes, swapChainImageCount)
+    SKR_DECLARE_ZERO_VLA(VkPresentModeKHR, modes, swapChainImageCount)
     CHECK_VKRESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(
     A->pPhysicalDevice, vkSurface, &swapChainImageCount, modes));
     // Select Preferred Present Mode
@@ -2201,7 +2200,7 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
             // Get queue family properties
             uint32_t queueFamilyPropertyCount = 0;
             vkGetPhysicalDeviceQueueFamilyProperties(A->pPhysicalDevice, &queueFamilyPropertyCount, NULL);
-            DECLARE_ZERO_VLA(VkQueueFamilyProperties, queueFamilyProperties, queueFamilyPropertyCount)
+            SKR_DECLARE_ZERO_VLA(VkQueueFamilyProperties, queueFamilyProperties, queueFamilyPropertyCount)
             vkGetPhysicalDeviceQueueFamilyProperties(A->pPhysicalDevice, &queueFamilyPropertyCount, queueFamilyProperties);
             // Check if hardware provides dedicated present queue
             if (queueFamilyPropertyCount)
@@ -2307,7 +2306,7 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
     }
     S->pVkSwapChain = new_chain;
     S->super.buffer_count = buffer_count;
-    DECLARE_ZERO_VLA(VkImage, vimages, S->super.buffer_count)
+    SKR_DECLARE_ZERO_VLA(VkImage, vimages, S->super.buffer_count)
     CHECK_VKRESULT(D->mVkDeviceTable.vkGetSwapchainImagesKHR(D->pVkDevice, S->pVkSwapChain, &S->super.buffer_count, vimages));
     
     struct THeader

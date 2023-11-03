@@ -45,7 +45,7 @@ SKR_UNUSED static const VkBlendOp gVkBlendOpTranslator[CGPU_BLEND_MODE_COUNT] = 
 };
 
 // API Helpers
-FORCEINLINE static void VkUtil_GetVertexInputBindingAttrCount(const CGPUVertexLayout* pLayout, uint32_t* pBindingCount, uint32_t* pAttrCount)
+SKR_FORCEINLINE static void VkUtil_GetVertexInputBindingAttrCount(const CGPUVertexLayout* pLayout, uint32_t* pBindingCount, uint32_t* pAttrCount)
 {
     uint32_t input_binding_count = 0;
 	uint32_t input_attribute_count = 0;
@@ -74,7 +74,7 @@ FORCEINLINE static void VkUtil_GetVertexInputBindingAttrCount(const CGPUVertexLa
     if (pAttrCount) *pAttrCount = input_attribute_count;
 }
 
-FORCEINLINE static VkPrimitiveTopology VkUtil_TranslateTopology(ECGPUPrimitiveTopology prim_topology)
+SKR_FORCEINLINE static VkPrimitiveTopology VkUtil_TranslateTopology(ECGPUPrimitiveTopology prim_topology)
 {
     VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     switch (prim_topology)
@@ -90,7 +90,7 @@ FORCEINLINE static VkPrimitiveTopology VkUtil_TranslateTopology(ECGPUPrimitiveTo
     return topology;
 }
 
-FORCEINLINE static VkImageUsageFlags VkUtil_DescriptorTypesToImageUsage(CGPUResourceTypes descriptors)
+SKR_FORCEINLINE static VkImageUsageFlags VkUtil_DescriptorTypesToImageUsage(CGPUResourceTypes descriptors)
 {
     VkImageUsageFlags result = 0;
     if (CGPU_RESOURCE_TYPE_TEXTURE == (descriptors & CGPU_RESOURCE_TYPE_TEXTURE))
@@ -100,7 +100,7 @@ FORCEINLINE static VkImageUsageFlags VkUtil_DescriptorTypesToImageUsage(CGPUReso
     return result;
 }
 
-FORCEINLINE static VkFilter VkUtil_TranslateFilterType(ECGPUFilterType filter)
+SKR_FORCEINLINE static VkFilter VkUtil_TranslateFilterType(ECGPUFilterType filter)
 {
     switch (filter)
     {
@@ -113,7 +113,7 @@ FORCEINLINE static VkFilter VkUtil_TranslateFilterType(ECGPUFilterType filter)
     }
 }
 
-FORCEINLINE static VkSamplerMipmapMode VkUtil_TranslateMipMapMode(ECGPUMipMapMode mipMapMode)
+SKR_FORCEINLINE static VkSamplerMipmapMode VkUtil_TranslateMipMapMode(ECGPUMipMapMode mipMapMode)
 {
     switch (mipMapMode)
     {
@@ -127,7 +127,7 @@ FORCEINLINE static VkSamplerMipmapMode VkUtil_TranslateMipMapMode(ECGPUMipMapMod
     }
 }
 
-FORCEINLINE static VkSamplerAddressMode VkUtil_TranslateAddressMode(ECGPUAddressMode addressMode)
+SKR_FORCEINLINE static VkSamplerAddressMode VkUtil_TranslateAddressMode(ECGPUAddressMode addressMode)
 {
     switch (addressMode)
     {
@@ -144,7 +144,7 @@ FORCEINLINE static VkSamplerAddressMode VkUtil_TranslateAddressMode(ECGPUAddress
     }
 }
 
-FORCEINLINE static VkImageLayout VkUtil_ResourceStateToImageLayout(ECGPUResourceState usage)
+SKR_FORCEINLINE static VkImageLayout VkUtil_ResourceStateToImageLayout(ECGPUResourceState usage)
 {
     if (usage & CGPU_RESOURCE_STATE_COPY_SOURCE)
         return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -179,7 +179,7 @@ FORCEINLINE static VkImageLayout VkUtil_ResourceStateToImageLayout(ECGPUResource
     return VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
-FORCEINLINE static VkImageAspectFlags VkUtil_DeterminAspectMask(VkFormat format, bool includeStencilBit)
+SKR_FORCEINLINE static VkImageAspectFlags VkUtil_DeterminAspectMask(VkFormat format, bool includeStencilBit)
 {
     VkImageAspectFlags result = 0;
     switch (format)
@@ -210,7 +210,7 @@ FORCEINLINE static VkImageAspectFlags VkUtil_DeterminAspectMask(VkFormat format,
     return result;
 }
 
-FORCEINLINE static VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGPUResourceTypes descriptors, bool texel)
+SKR_FORCEINLINE static VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGPUResourceTypes descriptors, bool texel)
 {
     VkBufferUsageFlags result = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     if (descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER)
@@ -248,7 +248,7 @@ FORCEINLINE static VkBufferUsageFlags VkUtil_DescriptorTypesToBufferUsage(CGPURe
     return result;
 }
 
-FORCEINLINE static VkShaderStageFlags VkUtil_TranslateShaderUsages(CGPUShaderStages shader_stages)
+SKR_FORCEINLINE static VkShaderStageFlags VkUtil_TranslateShaderUsages(CGPUShaderStages shader_stages)
 {
     VkShaderStageFlags result = 0;
     if (CGPU_SHADER_STAGE_ALL_GRAPHICS == (shader_stages & CGPU_SHADER_STAGE_ALL_GRAPHICS))
@@ -285,7 +285,7 @@ FORCEINLINE static VkShaderStageFlags VkUtil_TranslateShaderUsages(CGPUShaderSta
     return result;
 }
 
-FORCEINLINE static uint32_t VkUtil_GetShadingRateX(ECGPUShadingRate shading_rate)
+SKR_FORCEINLINE static uint32_t VkUtil_GetShadingRateX(ECGPUShadingRate shading_rate)
 {
     switch (shading_rate)
     {
@@ -304,7 +304,7 @@ FORCEINLINE static uint32_t VkUtil_GetShadingRateX(ECGPUShadingRate shading_rate
     }
 }
 
-FORCEINLINE static uint32_t VkUtil_GetShadingRateY(ECGPUShadingRate shading_rate)
+SKR_FORCEINLINE static uint32_t VkUtil_GetShadingRateY(ECGPUShadingRate shading_rate)
 {
     switch (shading_rate)
     {
@@ -323,7 +323,7 @@ FORCEINLINE static uint32_t VkUtil_GetShadingRateY(ECGPUShadingRate shading_rate
     }
 }
 
-FORCEINLINE static VkFragmentShadingRateCombinerOpKHR VkUtil_TranslateShadingRateCombiner(ECGPUShadingRateCombiner combiner)
+SKR_FORCEINLINE static VkFragmentShadingRateCombinerOpKHR VkUtil_TranslateShadingRateCombiner(ECGPUShadingRateCombiner combiner)
 {
     switch (combiner)
     {
@@ -343,7 +343,7 @@ FORCEINLINE static VkFragmentShadingRateCombinerOpKHR VkUtil_TranslateShadingRat
 }
 
 /* clang-format off */
-FORCEINLINE static VkDescriptorType VkUtil_TranslateResourceType(ECGPUResourceType type)
+SKR_FORCEINLINE static VkDescriptorType VkUtil_TranslateResourceType(ECGPUResourceType type)
 {
 	switch (type)
 	{
@@ -368,7 +368,7 @@ FORCEINLINE static VkDescriptorType VkUtil_TranslateResourceType(ECGPUResourceTy
 	return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
-FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGPUAdapter_Vulkan* A, VkAccessFlags accessFlags, ECGPUQueueType queue_type)
+SKR_FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGPUAdapter_Vulkan* A, VkAccessFlags accessFlags, ECGPUQueueType queue_type)
 {
     VkPipelineStageFlags flags = 0;
 
@@ -442,7 +442,7 @@ FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGPUA
     return flags;
 }
 
-FORCEINLINE static VkAccessFlags VkUtil_ResourceStateToVkAccessFlags(ECGPUResourceState state)
+SKR_FORCEINLINE static VkAccessFlags VkUtil_ResourceStateToVkAccessFlags(ECGPUResourceState state)
 {
 	VkAccessFlags ret = VK_ACCESS_NONE;
 	if (state & CGPU_RESOURCE_STATE_COPY_SOURCE)
@@ -475,7 +475,7 @@ FORCEINLINE static VkAccessFlags VkUtil_ResourceStateToVkAccessFlags(ECGPUResour
 }
 
 #define VK_OBJ_TYPE_CASE(object) case VK_OBJECT_TYPE_##object: return VK_DEBUG_REPORT_OBJECT_TYPE_##object##_EXT;
-FORCEINLINE static VkDebugReportObjectTypeEXT VkUtil_ObjectTypeToDebugReportType(VkObjectType type)
+SKR_FORCEINLINE static VkDebugReportObjectTypeEXT VkUtil_ObjectTypeToDebugReportType(VkObjectType type)
 {
     switch (type)
     {

@@ -9,8 +9,8 @@ namespace godot
 #if defined(_WIN32) || defined(_WIN64)
     #define WINDOWS_ENABLED
 #endif
-#define _ALWAYS_INLINE_ FORCEINLINE
-#define _FORCE_INLINE_ FORCEINLINE
+#define _ALWAYS_INLINE_ SKR_FORCEINLINE
+#define _FORCE_INLINE_ SKR_FORCEINLINE
 // Turn argument to string constant:
 // https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html#Stringizing
 #ifndef _STR

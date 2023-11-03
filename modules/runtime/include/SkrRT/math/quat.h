@@ -7,7 +7,7 @@ namespace skr
 namespace math
 {
     template<typename T>
-    FORCEINLINE T clamp_axis( T Angle )
+    SKR_FORCEINLINE T clamp_axis( T Angle )
     {
         // returns Angle in the range (-360,360)
         Angle = fmod(Angle, (T)360.0);
@@ -22,7 +22,7 @@ namespace math
     }
 
     template<typename T>
-    FORCEINLINE T normalize_axis( T Angle )
+    SKR_FORCEINLINE T normalize_axis( T Angle )
     {
         // returns Angle in the range [0,360)
         Angle = clamp_axis(Angle);

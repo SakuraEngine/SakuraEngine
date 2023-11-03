@@ -42,7 +42,7 @@ SKR_EXTERN_C SKR_RUNTIME_API void containers_free_aligned(void* p, size_t alignm
 #define SKR_DEALLOC_TRACY_MARKER_COLOR 0x0000ff
 #if defined(SKR_PROFILE_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
 
-FORCEINLINE void* SkrMallocWithCZone(size_t size, const char* line, const char* pool_name)
+SKR_FORCEINLINE void* SkrMallocWithCZone(size_t size, const char* line, const char* pool_name)
 {
     SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     SkrCZoneText(z, line, strlen(line));
@@ -52,7 +52,7 @@ FORCEINLINE void* SkrMallocWithCZone(size_t size, const char* line, const char* 
     return ptr;
 }
 
-FORCEINLINE void* SkrCallocWithCZone(size_t count, size_t size, const char* line, const char* pool_name)
+SKR_FORCEINLINE void* SkrCallocWithCZone(size_t count, size_t size, const char* line, const char* pool_name)
 {
     SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     SkrCZoneText(z, line, strlen(line));
@@ -62,7 +62,7 @@ FORCEINLINE void* SkrCallocWithCZone(size_t count, size_t size, const char* line
     return ptr;
 }
 
-FORCEINLINE void* SkrMallocAlignedWithCZone(size_t size, size_t alignment, const char* line, const char* pool_name)
+SKR_FORCEINLINE void* SkrMallocAlignedWithCZone(size_t size, size_t alignment, const char* line, const char* pool_name)
 {
     SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     SkrCZoneText(z, line, strlen(line));
@@ -72,7 +72,7 @@ FORCEINLINE void* SkrMallocAlignedWithCZone(size_t size, size_t alignment, const
     return ptr;
 }
 
-FORCEINLINE void* SkrCallocAlignedWithCZone(size_t count, size_t size, size_t alignment, const char* line, const char* pool_name)
+SKR_FORCEINLINE void* SkrCallocAlignedWithCZone(size_t count, size_t size, size_t alignment, const char* line, const char* pool_name)
 {
     SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     SkrCZoneText(z, line, strlen(line));
@@ -82,7 +82,7 @@ FORCEINLINE void* SkrCallocAlignedWithCZone(size_t count, size_t size, size_t al
     return ptr;
 }
 
-FORCEINLINE void* SkrNewNWithCZone(size_t count, size_t size, const char* line, const char* pool_name)
+SKR_FORCEINLINE void* SkrNewNWithCZone(size_t count, size_t size, const char* line, const char* pool_name)
 {
     SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     SkrCZoneText(z, line, strlen(line));
@@ -92,7 +92,7 @@ FORCEINLINE void* SkrNewNWithCZone(size_t count, size_t size, const char* line, 
     return ptr;
 }
 
-FORCEINLINE void* SkrNewAlignedWithCZone(size_t size, size_t alignment, const char* line, const char* pool_name)
+SKR_FORCEINLINE void* SkrNewAlignedWithCZone(size_t size, size_t alignment, const char* line, const char* pool_name)
 {
     SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     SkrCZoneText(z, line, strlen(line));
@@ -102,7 +102,7 @@ FORCEINLINE void* SkrNewAlignedWithCZone(size_t size, size_t alignment, const ch
     return ptr;
 }
 
-FORCEINLINE void SkrFreeWithCZone(void* p, const char* line, const char* pool_name)
+SKR_FORCEINLINE void SkrFreeWithCZone(void* p, const char* line, const char* pool_name)
 {
     SkrCZoneC(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 1);
     SkrCZoneText(z, line, strlen(line));
@@ -111,7 +111,7 @@ FORCEINLINE void SkrFreeWithCZone(void* p, const char* line, const char* pool_na
     SkrCZoneEnd(z);
 }
 
-FORCEINLINE void SkrFreeAlignedWithCZone(void* p, size_t alignment, const char* line, const char* pool_name)
+SKR_FORCEINLINE void SkrFreeAlignedWithCZone(void* p, size_t alignment, const char* line, const char* pool_name)
 {
     SkrCZoneC(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 1);
     SkrCZoneText(z, line, strlen(line));
@@ -120,7 +120,7 @@ FORCEINLINE void SkrFreeAlignedWithCZone(void* p, size_t alignment, const char* 
     SkrCZoneEnd(z);
 }
 
-FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line, const char* pool_name)
+SKR_FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line, const char* pool_name)
 {
     SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     SkrCZoneText(z, line, strlen(line));
@@ -197,7 +197,7 @@ struct SkrTracedNew
     SkrTracedNew(std::string_view sourcelocation, const char* poolname) noexcept : sourcelocation(sourcelocation), poolname(poolname) {}
 
     template<class T>
-    [[nodiscard]] FORCEINLINE T* New()
+    [[nodiscard]] SKR_FORCEINLINE T* New()
     {
         const std::string_view name = skr::demangle<T>();
         SkrCMessage(name.data(), name.size());
@@ -207,7 +207,7 @@ struct SkrTracedNew
     }
 
     template<class T, class... TArgs>
-    [[nodiscard]] FORCEINLINE T* New(TArgs&&... params)
+    [[nodiscard]] SKR_FORCEINLINE T* New(TArgs&&... params)
     {
         const std::string_view name = skr::demangle<T>();
         SkrCMessage(name.data(), name.size());
@@ -217,7 +217,7 @@ struct SkrTracedNew
     }
 
     template<class T, class... TArgs>
-    [[nodiscard]] FORCEINLINE T* NewZeroed(TArgs&&... params)
+    [[nodiscard]] SKR_FORCEINLINE T* NewZeroed(TArgs&&... params)
     {
         const std::string_view name = skr::demangle<T>();
         SkrCMessage(name.data(), name.size());
@@ -228,7 +228,7 @@ struct SkrTracedNew
     }
 
     template<class T>
-    [[nodiscard]] FORCEINLINE T* NewZeroed()
+    [[nodiscard]] SKR_FORCEINLINE T* NewZeroed()
     {
         const std::string_view name = skr::demangle<T>();
         SkrCMessage(name.data(), name.size());
@@ -239,7 +239,7 @@ struct SkrTracedNew
     }
 
     template<class T, class... TArgs>
-    [[nodiscard]] FORCEINLINE T* NewSized(size_t size, TArgs&&... params)
+    [[nodiscard]] SKR_FORCEINLINE T* NewSized(size_t size, TArgs&&... params)
     {
         const std::string_view name = skr::demangle<T>();
         SkrCMessage(name.data(), name.size());
@@ -250,7 +250,7 @@ struct SkrTracedNew
     }
 
     template<class T>
-    [[nodiscard]] FORCEINLINE T* NewSized(size_t size)
+    [[nodiscard]] SKR_FORCEINLINE T* NewSized(size_t size)
     {
         const std::string_view name = skr::demangle<T>();
         SkrCMessage(name.data(), name.size());
@@ -261,7 +261,7 @@ struct SkrTracedNew
     }
 
     template<class F>
-    [[nodiscard]] FORCEINLINE F* NewLambda(F&& lambda)
+    [[nodiscard]] SKR_FORCEINLINE F* NewLambda(F&& lambda)
     {
         void* pMemory = SkrNewAlignedWithCZone(sizeof(F), alignof(F), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
@@ -294,7 +294,7 @@ struct SkrTracedNew
 
 #else
 template <typename T, typename... TArgs>
-[[nodiscard]] FORCEINLINE T* SkrNew(TArgs&&... params)
+[[nodiscard]] SKR_FORCEINLINE T* SkrNew(TArgs&&... params)
 {
     void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     SKR_ASSERT(pMemory != nullptr);
@@ -302,7 +302,7 @@ template <typename T, typename... TArgs>
 }
 
 template <typename T>
-[[nodiscard]] FORCEINLINE T* SkrNew()
+[[nodiscard]] SKR_FORCEINLINE T* SkrNew()
 {
     void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     SKR_ASSERT(pMemory != nullptr);
@@ -310,7 +310,7 @@ template <typename T>
 }
 
 template <typename T, typename... TArgs>
-[[nodiscard]] FORCEINLINE T* SkrNewZeroed(TArgs&&... params)
+[[nodiscard]] SKR_FORCEINLINE T* SkrNewZeroed(TArgs&&... params)
 {
     void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     memset(pMemory, 0, sizeof(T));
@@ -319,7 +319,7 @@ template <typename T, typename... TArgs>
 }
 
 template <typename T>
-[[nodiscard]] FORCEINLINE T* SkrNewZeroed()
+[[nodiscard]] SKR_FORCEINLINE T* SkrNewZeroed()
 {
     void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     memset(pMemory, 0, sizeof(T));
@@ -328,7 +328,7 @@ template <typename T>
 }
 
 template <typename T, typename... TArgs>
-[[nodiscard]] FORCEINLINE T* SkrNewSized(size_t size, TArgs&&... params)
+[[nodiscard]] SKR_FORCEINLINE T* SkrNewSized(size_t size, TArgs&&... params)
 {
     SKR_ASSERT(size >= sizeof(T));
     void* pMemory = sakura_new_aligned(size, alignof(T));
@@ -337,7 +337,7 @@ template <typename T, typename... TArgs>
 }
 
 template <typename T>
-[[nodiscard]] FORCEINLINE T* SkrNewSized(size_t size)
+[[nodiscard]] SKR_FORCEINLINE T* SkrNewSized(size_t size)
 {
     SKR_ASSERT(size >= sizeof(T));
     void* pMemory = sakura_new_aligned(size, alignof(T));
@@ -346,7 +346,7 @@ template <typename T>
 }
 
 template <typename F>
-[[nodiscard]] FORCEINLINE F* SkrNewLambda(F&& lambda)
+[[nodiscard]] SKR_FORCEINLINE F* SkrNewLambda(F&& lambda)
 {
     using ValueType = std::remove_reference_t<F>;
     void* pMemory = sakura_new_aligned(sizeof(ValueType), alignof(ValueType));

@@ -5,24 +5,24 @@
 
 #include "standard/stdio_vfs.cpp"
 #include "standard/crash_handler.cpp"
-#if defined(SKR_OS_UNIX)
-    #if defined(SKR_OS_MACOSX)
+#if SKR_PLAT_UNIX
+    #if SKR_PLAT_MACOSX
         #define UNIX_CRASH_HANDLER_IMPLEMENTED
         #include "apple/crash_handler.cpp"
-    #elif defined(SKR_OS_LINUX)
+    #elif SKR_PLAT_LINUX
         #define UNIX_CRASH_HANDLER_IMPLEMENTED
         #include "linux/crash_handler.cpp"
     #endif
     #include "unix/unix_vfs.cpp"
     #include "unix/process.cpp"
     #include "unix/crash_handler.cpp"
-#elif defined(SKR_OS_WINDOWS)
+#elif SKR_PLAT_WINDOWS
     #include "windows/windows_vfs.cpp"
     #include "windows/process.cpp"
     #include "windows/crash_handler.cpp"
 #endif
 
-#if defined(SKR_OS_WINDOWS)
+#if SKR_PLAT_WINDOWS
     #include "windows/windows_dstorage.cpp"
     #include "windows/windows_dstorage_decompress.cpp"
 #else

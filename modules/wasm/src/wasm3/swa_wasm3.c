@@ -129,8 +129,8 @@ SWAExecResult swa_exec_wasm3(SWAModuleId module, const char8_t* const name, SWAE
     SWARuntime_WASM3* RW = (SWARuntime_WASM3*)module->runtime;
     IM3Function function = WASM3RuntimeFunctionTableTryFind(RW->functions, name);
     SWAExecResult res = SWA_NULLPTR;
-    DECLARE_ZERO_VLA(const void*, ptrs, desc->param_count + 1)
-    DECLARE_ZERO_VLA(const void*, out_ptrs, desc->ret_count + 1)
+    SKR_DECLARE_ZERO_VLA(const void*, ptrs, desc->param_count + 1)
+    SKR_DECLARE_ZERO_VLA(const void*, out_ptrs, desc->ret_count + 1)
     if (!function)
     {
         res = m3_FindFunction(&function, RW->runtime, name);
