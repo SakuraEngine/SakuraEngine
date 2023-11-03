@@ -2,13 +2,15 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_viewport.h"
-#include "SkrAnim/components/skin_component.h"
+#include "SkrAnim/components/skin_component.hpp"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
 #include <EASTL/vector_map.h>
 
 #include "SkrProfile/profile.h"
+
+using namespace game;
 
 void RenderPassForward::on_update(const skr_primitive_pass_context_t* context) 
 {
@@ -22,7 +24,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
 
     if (!anim_query)
     {
-        auto sig = "[in]skr_render_mesh_comp_t, [in]skr::anim::AnimComponent";
+        auto sig = "[in]skr::renderer::MeshComponent, [in]skr::anim::AnimComponent";
         *anim_query = dualQ_from_literal(storage, sig);
     }
     // upload skin mesh data

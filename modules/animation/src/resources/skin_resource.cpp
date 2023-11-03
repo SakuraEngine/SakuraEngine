@@ -1,9 +1,10 @@
-#include "SkrAnim/resources/skin_resource.h"
+#include "SkrAnim/resources/skin_resource.hpp"
 
 namespace skr::resource
 {
 skr_guid_t SSkinFactory::GetResourceType()
 {
-    return skr::rttr::type_id<skr_skin_resource_t>();
+    using namespace skr::anim;
+    return skr::rttr::type_id<SkinResource>();
 }
 } // namespace skr::resource

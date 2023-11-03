@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrAnim/resources/skin_resource.h"
+#include "SkrAnim/resources/skin_resource.hpp"
 #include "SkrRenderer/primitive_draw.h"
 #include "SkrAnim/ozz/base/maths/simd_math.h"
 #ifndef __meta__
@@ -9,14 +9,10 @@
 namespace skr sreflect {
 namespace anim sreflect {
 
-sreflect_struct("guid" : "05B43406-4BCF-4E59-B2D8-ACED7D37E776")
-sattr("component" :
-{
-    "custom" : "::dual::managed_component"
-}) 
+sreflect_managed_component("guid" : "05B43406-4BCF-4E59-B2D8-ACED7D37E776")
 SkinComponent
 {
-    SKR_RESOURCE_FIELD(skr_skin_resource_t, skin_resource);
+    SKR_RESOURCE_FIELD(SkinResource, skin_resource);
     sattr("transient": true)
     eastl::vector<uint16_t> joint_remaps;
     
@@ -33,11 +29,7 @@ SkinPrimitive
     skr::span<skr_vertex_buffer_view_t> views;
 };
 
-sreflect_struct("guid" : "02753B87-0D94-4C35-B768-DE3BFE3E0DEB")
-sattr("component" :
-{
-    "custom" : "::dual::managed_component"
-}) 
+sreflect_managed_component("guid" : "02753B87-0D94-4C35-B768-DE3BFE3E0DEB")
 AnimComponent
 {
     ~AnimComponent();
