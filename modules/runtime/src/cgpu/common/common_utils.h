@@ -49,7 +49,7 @@ void CGPUUtil_FreeRootSignaturePool(CGPURootSignaturePoolId pool);
 
 #ifdef _CRTDBG_MAP_ALLOC
     #include <crtdbg.h>
-FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t alignment)
+SKR_FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t alignment)
 {
     void* memory = _aligned_malloc(nelem * elsize, alignment);
     if (memory != NULL) memset(memory, 0, nelem * elsize);

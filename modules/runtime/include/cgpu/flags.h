@@ -783,7 +783,7 @@ typedef enum ESkrDStorageCompression ECGPUDStorageCompression;
 typedef SkrDStorageCompression CGPUDStorageCompression;
 
 /* clang-format off */
-static FORCEINLINE bool FormatUtil_IsDepthStencilFormat(ECGPUFormat const fmt) {
+static SKR_FORCEINLINE bool FormatUtil_IsDepthStencilFormat(ECGPUFormat const fmt) {
     switch(fmt) {
         case CGPU_FORMAT_D24_UNORM_S8_UINT:
         case CGPU_FORMAT_D32_SFLOAT_S8_UINT:
@@ -797,7 +797,7 @@ static FORCEINLINE bool FormatUtil_IsDepthStencilFormat(ECGPUFormat const fmt) {
     return false;
 }
 
-static FORCEINLINE bool FormatUtil_IsDepthOnlyFormat(ECGPUFormat const fmt) {
+static SKR_FORCEINLINE bool FormatUtil_IsDepthOnlyFormat(ECGPUFormat const fmt) {
     switch(fmt) {
         case CGPU_FORMAT_D32_SFLOAT:
         case CGPU_FORMAT_D16_UNORM:
@@ -807,7 +807,7 @@ static FORCEINLINE bool FormatUtil_IsDepthOnlyFormat(ECGPUFormat const fmt) {
     return false;
 }
 
-static FORCEINLINE uint32_t FormatUtil_BitSizeOfBlock(ECGPUFormat const fmt) {
+static SKR_FORCEINLINE uint32_t FormatUtil_BitSizeOfBlock(ECGPUFormat const fmt) {
 	switch(fmt) {
 		case CGPU_FORMAT_UNDEFINED: return 0;
 		case CGPU_FORMAT_R1_UNORM: return 8;
@@ -980,7 +980,7 @@ static FORCEINLINE uint32_t FormatUtil_BitSizeOfBlock(ECGPUFormat const fmt) {
 	}
 }
 
-static FORCEINLINE uint32_t FormatUtil_WidthOfBlock(ECGPUFormat const fmt) {
+static SKR_FORCEINLINE uint32_t FormatUtil_WidthOfBlock(ECGPUFormat const fmt) {
     switch(fmt) {
     case CGPU_FORMAT_UNDEFINED: return 1;
     case CGPU_FORMAT_R1_UNORM: return 8;
@@ -1053,7 +1053,7 @@ static FORCEINLINE uint32_t FormatUtil_WidthOfBlock(ECGPUFormat const fmt) {
 	}
 }
 
-static FORCEINLINE uint32_t FormatUtil_HeightOfBlock(ECGPUFormat const fmt) {
+static SKR_FORCEINLINE uint32_t FormatUtil_HeightOfBlock(ECGPUFormat const fmt) {
 	switch(fmt) {
 		case CGPU_FORMAT_UNDEFINED: return 1;
 		case CGPU_FORMAT_DXBC1_RGB_UNORM: return 4;

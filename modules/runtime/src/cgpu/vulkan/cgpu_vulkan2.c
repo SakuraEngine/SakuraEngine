@@ -474,8 +474,8 @@ void cgpu_binder_bind_vertex_buffer_vulkan(CGPUBinderId binder, uint32_t first_b
     const CGPUBuffer_Vulkan** Buffers = (const CGPUBuffer_Vulkan**)buffers;
     const uint32_t final_buffer_count = cgpu_min(binding_count, A->mPhysicalDeviceProps.properties.limits.maxVertexInputBindings);
 
-    DECLARE_ZERO(VkBuffer, vkBuffers[64]);
-    DECLARE_ZERO(VkDeviceSize, vkOffsets[64]);
+    SKR_DECLARE_ZERO(VkBuffer, vkBuffers[64]);
+    SKR_DECLARE_ZERO(VkDeviceSize, vkOffsets[64]);
 
     for (uint32_t i = 0; i < final_buffer_count; ++i)
     {

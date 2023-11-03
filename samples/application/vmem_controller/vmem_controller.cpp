@@ -7,7 +7,7 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
-#ifdef SKR_OS_WINDOWS
+#if SKR_PLAT_WINDOWS
     #include <shellscalingapi.h>
 #endif
 

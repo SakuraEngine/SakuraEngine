@@ -100,7 +100,7 @@ void initialize(void* usrdata)
     // Filter adapters
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, CGPU_NULLPTR, &adapters_count);
-    DECLARE_ZERO_VLA(CGPUAdapterId, adapters, adapters_count);
+    SKR_DECLARE_ZERO_VLA(CGPUAdapterId, adapters, adapters_count);
     cgpu_enum_adapters(instance, adapters, &adapters_count);
     adapter = adapters[0];
 
@@ -309,8 +309,8 @@ int main(int argc, char* argv[])
     ProgramMain(backends);
 #else
     const uint32_t TEST_BACKEND_COUNT = sizeof(backends) / sizeof(ECGPUBackend);
-    DECLARE_ZERO_VLA(SThreadHandle, hdls, TEST_BACKEND_COUNT)
-    DECLARE_ZERO_VLA(SThreadDesc, thread_descs, TEST_BACKEND_COUNT)
+    SKR_DECLARE_ZERO_VLA(SThreadHandle, hdls, TEST_BACKEND_COUNT)
+    SKR_DECLARE_ZERO_VLA(SThreadDesc, thread_descs, TEST_BACKEND_COUNT)
     for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
     {
         thread_descs[i].pFunc = &ProgramMain;

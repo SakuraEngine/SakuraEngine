@@ -13,7 +13,7 @@
     #include "linux/time.c"
 #endif
 
-#ifdef SKR_OS_UNIX
+#if SKR_PLAT_UNIX
     #include "unix/unix_thread.c"
 #endif
 

@@ -5,7 +5,12 @@
 #ifndef __meta__
     #include "SkrAnimTool/animation_asset.generated.h" // IWYU pragma: export
 #endif
-struct skr_skeleton_resource_t;
+
+namespace skr::anim
+{
+struct SkeletonResource;
+} // namespace skr::anim
+
 namespace ozz::animation::offline
 {
 struct RawSkeleton;
@@ -18,8 +23,7 @@ namespace asset sreflect
 {
 using RawAnimation = ozz::animation::offline::RawAnimation;
 
-sreflect_struct("guid"
-                : "37d07586-0901-480a-8dcd-1f1f8220569c")
+sreflect_struct("guid": "37d07586-0901-480a-8dcd-1f1f8220569c")
 sattr("serialize" : "json")
 SKR_ANIMTOOL_API SAnimGltfImporter : public skd::asset::SImporter
 {
@@ -79,7 +83,7 @@ SAnimCookSettings
             }
         ]
     */
-    resource::TResourceHandle<skr_skeleton_resource_t> skeletonAsset;
+    resource::TResourceHandle<skr::anim::SkeletonResource> skeletonAsset;
     bool additive = false; //  Creates a delta animation that can be used for additive blending.
     SAnimAdditiveReference additiveReference = SAnimAdditiveReference::animation; //  Select reference pose to use to build additive/delta animation. Can be "animation" to use the 1st animation keyframe as reference, or "skeleton" to use skeleton rest pose.
     float samplingRate = 0.f; //  Selects animation sampling rate in hertz. Set a value <= 0 to use imported scene default frame rate.

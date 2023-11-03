@@ -3,6 +3,7 @@
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/rttr/type_registry.hpp"
 #include "SkrRT/rttr/type/type.hpp"
+#include "SkrRT/misc/log.hpp"
 
 namespace skr
 {
@@ -26,6 +27,7 @@ int SResourceFactory::Deserialize(skr_resource_record_t* record, skr_binary_read
         record->resource = p_obj;
         return serde_result;
     }
+    SKR_LOG_FMT_ERROR(u8"Failed to deserialize resource of type {}", record->header.type);
     SKR_UNREACHABLE_CODE();
     return 0;
 }

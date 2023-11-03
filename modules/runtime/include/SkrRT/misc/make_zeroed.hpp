@@ -5,7 +5,7 @@
 #include <string.h> // ::memset
 
 template <typename T, typename... Args>
-FORCEINLINE T make_zeroed(Args&&... args)
+SKR_FORCEINLINE T make_zeroed(Args&&... args)
 {
     eastl::aligned_storage_t<sizeof(T)> storage;
     ::memset(&storage, 0, sizeof(storage));

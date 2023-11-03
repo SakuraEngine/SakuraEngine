@@ -1,17 +1,17 @@
 #include "SkrRT/platform/shared_library.hpp"
-#if defined(SKR_OS_UNIX)
+#if SKR_PLAT_UNIX
     #include <dlfcn.h>
-#elif defined(SKR_OS_WINDOWS)
+#elif SKR_PLAT_WINDOWS
     #include <SkrRT/platform/filesystem.hpp>
 #endif
 
-#if defined(SKR_OS_MACOSX)
+#if SKR_PLAT_MACOSX
     static const char8_t* ___dl_prefix_name___ = u8"lib";
-#elif defined(SKR_OS_PROSPERO)
+#elif SKR_PLAT_PROSPERO
     static const char8_t* ___dl_prefix_name___ = u8"";
-#elif defined(SKR_OS_UNIX)
+#elif SKR_PLAT_UNIX
     const char8_t* ___dl_prefix_name___ = u8"lib";
-#elif defined(SKR_OS_WINDOWS)
+#elif SKR_PLAT_WINDOWS
     static const char8_t* ___dl_prefix_name___ = u8"";
 #endif    
 
@@ -20,13 +20,13 @@ const char8_t* skr::SharedLibrary::GetPlatformFilePrefixName()
     return ___dl_prefix_name___;
 }
 
-#if defined(SKR_OS_MACOSX)
+#if SKR_PLAT_MACOSX
     static const char8_t* ___dl_ext_name___ = u8".dylib";
-#elif defined(SKR_OS_PROSPERO)
+#elif SKR_PLAT_PROSPERO
     static const char8_t* ___dl_ext_name___ = u8".elf";
-#elif defined(SKR_OS_UNIX)
+#elif SKR_PLAT_UNIX
     static const char8_t* ___dl_ext_name___ = u8".so";
-#elif defined(SKR_OS_WINDOWS)
+#elif SKR_PLAT_WINDOWS
     static const char8_t* ___dl_ext_name___ = u8".dll";
 #endif    
 
@@ -81,7 +81,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
     return _handle;
 }
 
-#if defined(SKR_OS_UNIX)
+#if SKR_PLAT_UNIX
     bool skr::SharedLibrary::loadImpl(const char8_t* path)
     {
         _lastError.empty();
@@ -122,7 +122,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
         }
         return symbol;
     }
-#elif defined(SKR_OS_WINDOWS) // Windows implementation
+#elif SKR_PLAT_WINDOWS // Windows implementation
     // Return a string explaining the last error
     skr::string skr::SharedLibrary::getWindowsError()
     {

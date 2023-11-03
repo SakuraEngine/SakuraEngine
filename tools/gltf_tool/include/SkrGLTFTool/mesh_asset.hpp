@@ -12,7 +12,7 @@ namespace skd sreflect
 namespace asset sreflect
 {
 sreflect_struct("guid" : "D72E2056-3C12-402A-A8B8-148CB8EAB922")
-sattr("serialize" : "json")
+sattr("serialize" : "json", "rtti" : true)
 GLTFTOOL_API SGltfMeshImporter final : public SImporter
 {
     sattr("no-default" : true)

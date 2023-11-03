@@ -2,8 +2,6 @@
 
 #include "SkrRT/misc/make_zeroed.hpp"
 
-
-
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
 #include "SkrRenderer/skr_renderer.h"
@@ -34,7 +32,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
 
     if (!anim_query)
     {
-        auto sig = "[in]skr_render_mesh_comp_t, [in]skr_render_anim_comp_t";
+        auto sig = "[in]skr_render_mesh_comp_t, [in]skr::anim::AnimComponent";
         *anim_query = dualQ_from_literal(storage, sig);
     }
     // upload skin mesh data
@@ -44,7 +42,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
             SkrZoneScopedN("CalculateSkinMeshSize");
 
             auto calcUploadBufferSize = [&](dual_chunk_view_t* r_cv) {
-                const auto anims = dual::get_component_ro<skr_render_anim_comp_t>(r_cv);
+                const auto anims = dual::get_component_ro<skr::anim::AnimComponent>(r_cv);
                 for (uint32_t i = 0; i < r_cv->count; i++)
                 {
                     auto* anim = anims + i;
@@ -78,12 +76,12 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
             SkrZoneScopedN("CopySkinMesh");
 
             auto uploadVertices = [&](dual_chunk_view_t* r_cv) {
-                skr_render_anim_comp_t* anims = nullptr;
+                skr::anim::AnimComponent* anims = nullptr;
                 {
                     SkrZoneScopedN("FetchAnims");
 
                     // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done
-                    anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
+                    anims = dual::get_owned_rw<skr::anim::AnimComponent>(r_cv);
                 }
 
                 auto upload_buffer = context.resolve(upload_buffer_handle);
@@ -210,11 +208,11 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
             CGPUResourceBarrierDescriptor barrier_desc = {};
             skr::vector<CGPUBufferBarrier> barriers;
             auto barrierVertices = [&](dual_chunk_view_t* r_cv) {
-                skr_render_anim_comp_t* anims = nullptr;
+                skr::anim::AnimComponent* anims = nullptr;
                 {
                     SkrZoneScopedN("FetchAnims");
                     // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done
-                    anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
+                    anims = dual::get_owned_rw<skr::anim::AnimComponent>(r_cv);
                 }
                 for (uint32_t i = 0; i < r_cv->count; i++)
                 {

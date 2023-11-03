@@ -22,7 +22,7 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
-#ifdef SKR_OS_WINDOWS
+#if SKR_PLAT_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
     #endif
@@ -40,7 +40,7 @@ struct robjects_example_application : public robjects_application_t {
     CGPUSamplerId imgui_sampler = nullptr;
     bool          initialize()
     {
-#ifdef SKR_OS_WINDOWS
+#if SKR_PLAT_WINDOWS
         ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 #endif
         // initialize base app

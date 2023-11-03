@@ -7,7 +7,7 @@ class QueueOperations
 protected:
     QueueOperations()
     {
-        DECLARE_ZERO(CGPUInstanceDescriptor, desc)
+        SKR_DECLARE_ZERO(CGPUInstanceDescriptor, desc)
         desc.backend = backend;
         desc.enable_debug_layer = true;
         desc.enable_gpu_based_validation = true;
@@ -31,7 +31,7 @@ protected:
             if (gQueue > 0) queueGroup.push_back(CGPUQueueGroupDescriptor{ CGPU_QUEUE_TYPE_GRAPHICS, 1 });
             if (cQueue > 0) queueGroup.push_back(CGPUQueueGroupDescriptor{ CGPU_QUEUE_TYPE_COMPUTE, 1 });
             if (tQueue > 0) queueGroup.push_back(CGPUQueueGroupDescriptor{ CGPU_QUEUE_TYPE_TRANSFER, 1 });
-            DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
+            SKR_DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
             descriptor.queue_groups = queueGroup.data();
             descriptor.queue_group_count = (uint32_t)queueGroup.size();
 
@@ -100,7 +100,7 @@ void QueueOperations<backend>::test_all()
             auto pool = cgpu_create_command_pool(graphicsQueue, nullptr);
             EXPECT_NE(pool, CGPU_NULLPTR);
             {
-                DECLARE_ZERO(CGPUCommandBufferDescriptor, desc);
+                SKR_DECLARE_ZERO(CGPUCommandBufferDescriptor, desc);
                 desc.is_secondary = false;
                 auto cmd = cgpu_create_command_buffer(pool, &desc);
                 EXPECT_NE(cmd, CGPU_NULLPTR);
@@ -116,7 +116,7 @@ void QueueOperations<backend>::test_all()
         // Create Upload Buffer
         CGPUBufferId upload_buffer, index_buffer;
         {
-            DECLARE_ZERO(CGPUBufferDescriptor, desc)
+            SKR_DECLARE_ZERO(CGPUBufferDescriptor, desc)
             desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
             desc.descriptors = CGPU_RESOURCE_TYPE_BUFFER;
             desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
@@ -133,7 +133,7 @@ void QueueOperations<backend>::test_all()
             indices[2] = 3;
         }
         {
-            DECLARE_ZERO(CGPUBufferDescriptor, desc)
+            SKR_DECLARE_ZERO(CGPUBufferDescriptor, desc)
             desc.flags = CGPU_BCF_NONE;
             desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
             desc.start_state = CGPU_RESOURCE_STATE_COPY_DEST;
@@ -163,13 +163,13 @@ void QueueOperations<backend>::test_all()
             auto pool = cgpu_create_command_pool(transferQueue, nullptr);
             EXPECT_NE(pool, CGPU_NULLPTR);
             {
-                DECLARE_ZERO(CGPUCommandBufferDescriptor, desc);
+                SKR_DECLARE_ZERO(CGPUCommandBufferDescriptor, desc);
                 desc.is_secondary = false;
                 auto cmd = cgpu_create_command_buffer(pool, &desc);
                 EXPECT_NE(cmd, CGPU_NULLPTR);
                 {
                     cgpu_cmd_begin(cmd);
-                    DECLARE_ZERO(CGPUBufferToBufferTransfer, cpy_desc);
+                    SKR_DECLARE_ZERO(CGPUBufferToBufferTransfer, cpy_desc);
                     cpy_desc.src = upload_buffer;
                     cpy_desc.src_offset = 0;
                     cpy_desc.dst = index_buffer;
@@ -184,7 +184,7 @@ void QueueOperations<backend>::test_all()
                 cgpu_submit_queue(transferQueue, &submit_desc);
                 cgpu_wait_queue_idle(transferQueue);
                 {
-                    DECLARE_ZERO(CGPUBufferRange, range);
+                    SKR_DECLARE_ZERO(CGPUBufferRange, range);
                     range.offset = 0;
                     range.size = sizeof(uint16_t) * 3;
                     cgpu_map_buffer(index_buffer, &range);

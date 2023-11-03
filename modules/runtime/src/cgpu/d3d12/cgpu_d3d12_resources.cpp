@@ -1038,7 +1038,7 @@ inline D3D12_TEXTURE_LAYOUT D3D12Util_CalculateTextureLayout(const struct CGPUTe
 
 inline D3D12_CLEAR_VALUE D3D12Util_CalculateClearValue(DXGI_FORMAT dxFormat, const struct CGPUTextureDescriptor* desc)
 {
-    DECLARE_ZERO(D3D12_CLEAR_VALUE, clearValue);
+    SKR_DECLARE_ZERO(D3D12_CLEAR_VALUE, clearValue);
     clearValue.Format = dxFormat;
     if (desc->descriptors & CGPU_RESOURCE_TYPE_DEPTH_STENCIL)
     {
@@ -1690,7 +1690,7 @@ void cgpu_free_shader_library_d3d12(CGPUShaderLibraryId shader_library)
 // Util Implementations
 inline D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUBufferDescriptor* desc)
 {
-    DECLARE_ZERO(D3D12_RESOURCE_DESC, bufDesc);
+    SKR_DECLARE_ZERO(D3D12_RESOURCE_DESC, bufDesc);
     uint64_t allocationSize = desc->size;
     // Align the buffer size to multiples of the dynamic uniform buffer minimum size
     if (desc->descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER)
@@ -1736,7 +1736,7 @@ inline D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(CGPUAdapter_D3D12* A, CGPU
 inline D3D12MA::ALLOCATION_DESC D3D12Util_CreateAllocationDesc(const struct CGPUBufferDescriptor* desc)
 {
     // Alloc Info
-    DECLARE_ZERO(D3D12MA::ALLOCATION_DESC, alloc_desc)
+    SKR_DECLARE_ZERO(D3D12MA::ALLOCATION_DESC, alloc_desc)
     alloc_desc.HeapType = D3D12Util_TranslateHeapType(desc->memory_usage);
 
     if (desc->flags & CGPU_BCF_DEDICATED_BIT)
@@ -1866,7 +1866,7 @@ void D3D12Util_ReturnDescriptorHandles(
 #endif
     for (uint32_t i = 0; i < count; ++i)
     {
-        DECLARE_ZERO(D3D12Util_DescriptorHandle, Free)
+        SKR_DECLARE_ZERO(D3D12Util_DescriptorHandle, Free)
         Free.mCpu = { handle.ptr + pHeap->mDescriptorSize * i };
         Free.mGpu = { D3D12_GPU_VIRTUAL_ADDRESS_NULL };
         pHeap->mFreeList.push_back(Free);
