@@ -134,7 +134,7 @@ protected:
     }
 
     template <Attribute I, typename T>
-    FORCEINLINE void _set_arg_val(T const& arg)
+    SKR_FORCEINLINE void _set_arg_val(T const& arg)
     {
         const auto idx = order_index_[(size_t)I];
         if (idx != -1)

@@ -3,6 +3,7 @@
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/span.hpp"
 #include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 
 #include "SkrTestFramework/framework.hpp"
 
@@ -41,7 +42,7 @@ TEST_CASE_METHOD(BinarySerdeTests, "primitives")
     EXPECT_EQ(value2, readValue2);
 }
 
-TEST_CASE_METHOD(BinarySerdeTests, "arr")
+TEST_CASE_METHOD(BinarySerdeTests, "vector")
 {
     uint64_t value = 0x12345678;
     uint64_t value2 = 0x87654321;
@@ -53,6 +54,24 @@ TEST_CASE_METHOD(BinarySerdeTests, "arr")
     reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
 
     skr::vector<uint64_t> readArr;
+    skr::binary::Archive(&rarchive, readArr);
+
+    EXPECT_EQ(value, readArr[0]);
+    EXPECT_EQ(value2, readArr[1]);
+}
+
+TEST_CASE_METHOD(BinarySerdeTests, "arr")
+{
+    uint64_t value = 0x12345678;
+    uint64_t value2 = 0x87654321;
+    skr::Array<uint64_t> arr;
+    arr.add(value);
+    arr.add(value2);
+    skr::binary::Archive(&warchive, arr);
+
+    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+
+    skr::Array<uint64_t> readArr;
     skr::binary::Archive(&rarchive, readArr);
 
     EXPECT_EQ(value, readArr[0]);
@@ -72,7 +91,7 @@ TEST_CASE_METHOD(BinarySerdeTests, "str")
     EXPECT_EQ(str, readStr);
 }
 
-TEST_CASE_METHOD(BinarySerdeTests, "str_arr")
+TEST_CASE_METHOD(BinarySerdeTests, "str_vec")
 {
     skr::vector<skr::string> arr;
     arr.push_back(u8"Hello World");
@@ -82,6 +101,22 @@ TEST_CASE_METHOD(BinarySerdeTests, "str_arr")
     reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
 
     skr::vector<skr::string> readArr;
+    skr::binary::Archive(&rarchive, readArr);
+
+    EXPECT_EQ(arr[0], readArr[0]);
+    EXPECT_EQ(arr[1], readArr[1]);
+}
+
+TEST_CASE_METHOD(BinarySerdeTests, "str_arr")
+{
+    skr::Array<skr::string> arr;
+    arr.add(u8"Hello World");
+    arr.add(u8"Hello World2");
+    skr::binary::Archive(&warchive, arr);
+
+    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+
+    skr::Array<skr::string> readArr;
     skr::binary::Archive(&rarchive, readArr);
 
     EXPECT_EQ(arr[0], readArr[0]);

@@ -1,5 +1,5 @@
 /* clang-format off */
-FORCEINLINE static VkSampleCountFlagBits VkUtil_SampleCountTranslateToVk(const ECGPUSampleCount count)
+SKR_FORCEINLINE static VkSampleCountFlagBits VkUtil_SampleCountTranslateToVk(const ECGPUSampleCount count)
 {
 	VkSampleCountFlagBits result = VK_SAMPLE_COUNT_1_BIT;
 	switch (count)
@@ -14,7 +14,7 @@ FORCEINLINE static VkSampleCountFlagBits VkUtil_SampleCountTranslateToVk(const E
 	return result;
 }
 
-FORCEINLINE static VkFormat VkUtil_FormatTranslateToVk(const ECGPUFormat fmt)
+SKR_FORCEINLINE static VkFormat VkUtil_FormatTranslateToVk(const ECGPUFormat fmt)
 {
 switch (fmt) {
 
@@ -218,7 +218,7 @@ switch (fmt) {
 	return VK_FORMAT_UNDEFINED;
 }
 
-FORCEINLINE static ECGPUFormat VkUtil_FormatTranslateToCGPU(const VkFormat fmt)
+SKR_FORCEINLINE static ECGPUFormat VkUtil_FormatTranslateToCGPU(const VkFormat fmt)
 {
 switch (fmt) {
 

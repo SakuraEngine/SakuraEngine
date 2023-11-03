@@ -1,5 +1,6 @@
 #include "SkrRT/platform/process.h"
 #include "SkrRT/misc/log/log_sink.hpp"
+#include "log_manager.hpp"
 
 #include <stdio.h> // FILE
 #include "SkrProfile/profile.h"
@@ -261,7 +262,7 @@ void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_N
     const auto escape = GetAnsiEscapeCode(buf_cache_->buf, ColorSet.f, ColorSet.b, ColorSet.s);
 
     // output to console (use '\033[0m' to reset color)
-    ::printf("%s%s\033[0m", escape.data(), content.raw().data());
+    ::printf("%s%s\033[0m", escape.data(), (const char*)content.raw().data());
 }
 
 void LogConsoleSink::flush() SKR_NOEXCEPT

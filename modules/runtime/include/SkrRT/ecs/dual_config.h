@@ -12,13 +12,7 @@
 #endif
 
 // inline defs
-#ifndef DUAL_FORCEINLINE
-    #if defined(_MSC_VER)
-        #define DUAL_FORCEINLINE __forceinline
-    #else
-        #define DUAL_FORCEINLINE inline
-    #endif
-#endif
+#define DUAL_FORCEINLINE SKR_FORCEINLINE
 
 #include "inttypes.h" // IWYU pragma: keep
 typedef uint32_t EIndex;

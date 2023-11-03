@@ -12,10 +12,10 @@ typedef struct SCallOnceFnWrapper {
     SCallOnceFn fn;
 } SCallOnceFnWrapper;
 
-FORCEINLINE static BOOL callOnceImpl(
-PINIT_ONCE initOnce,
-PVOID pWrapper,
-PVOID* ppContext)
+SKR_FORCEINLINE static BOOL callOnceImpl(
+    PINIT_ONCE initOnce,
+    PVOID pWrapper,
+    PVOID* ppContext)
 {
     SCallOnceFn fn = ((SCallOnceFnWrapper*)pWrapper)->fn;
     if (fn) fn();
@@ -25,7 +25,7 @@ PVOID* ppContext)
 void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn)
 {
     INIT_ONCE* once_ = (INIT_ONCE*)pGuard->gdStorage_;
-    DECLARE_ZERO(SCallOnceFnWrapper, wrapper)
+    SKR_DECLARE_ZERO(SCallOnceFnWrapper, wrapper)
     wrapper.fn = pFn;
     InitOnceExecuteOnce(once_, callOnceImpl, &wrapper, NULL);
 }

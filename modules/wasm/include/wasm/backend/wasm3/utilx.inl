@@ -101,7 +101,7 @@ namespace detail
         constexpr static size_t n_args = sizeof...(Args);
         constexpr static const char signature[n_args + 4] = detail::m3_signature<Ret, Args...>::value;
         constexpr static const M3RawCall raw_call = &detail::wrap_helper<Ret(Args...)>::wrap_fn;
-        FORCEINLINE static void fill_linkage(SWAHostFunctionDescriptor& linkage,
+        SKR_FORCEINLINE static void fill_linkage(SWAHostFunctionDescriptor& linkage,
                                  const char * module_name,
                                  const char * function_name,
                                  Ret (*function)(Args...))

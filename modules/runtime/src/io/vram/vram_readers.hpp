@@ -70,11 +70,11 @@ struct GPUUploadCmd
     void start(SwapableCmdPool& swap_pool) SKR_NOEXCEPT;
     void finish() SKR_NOEXCEPT;
 
-    FORCEINLINE bool is_finished() const SKR_NOEXCEPT { return okay; }
-    FORCEINLINE CGPUQueueId get_queue() const SKR_NOEXCEPT { return queue; }
-    FORCEINLINE CGPUCommandBufferId get_cmdbuf() const SKR_NOEXCEPT { return cmdbuf; }
-    FORCEINLINE CGPUFenceId get_fence() const SKR_NOEXCEPT { return fence; }
-    FORCEINLINE IOBatchId get_batch() const SKR_NOEXCEPT { return batch; }
+    SKR_FORCEINLINE bool is_finished() const SKR_NOEXCEPT { return okay; }
+    SKR_FORCEINLINE CGPUQueueId get_queue() const SKR_NOEXCEPT { return queue; }
+    SKR_FORCEINLINE CGPUCommandBufferId get_cmdbuf() const SKR_NOEXCEPT { return cmdbuf; }
+    SKR_FORCEINLINE CGPUFenceId get_fence() const SKR_NOEXCEPT { return fence; }
+    SKR_FORCEINLINE IOBatchId get_batch() const SKR_NOEXCEPT { return batch; }
 
     eastl::fixed_vector<CGPUBufferId, 4> upload_buffers;
 protected:

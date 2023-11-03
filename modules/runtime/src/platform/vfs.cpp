@@ -41,7 +41,7 @@ size_t skr_vfs_fwrite(skr_vfile_t* file, const void* in_buffer, size_t offset, s
     return file->fs->procs.fwrite(file, in_buffer, offset, byte_count);
 }
 
-ssize_t skr_vfs_fsize(const skr_vfile_t* file) SKR_NOEXCEPT
+int64_t skr_vfs_fsize(const skr_vfile_t* file) SKR_NOEXCEPT
 {
     return file->fs->procs.fsize(file);
 }

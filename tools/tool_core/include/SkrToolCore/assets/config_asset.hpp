@@ -11,7 +11,7 @@ namespace skd sreflect
 {
 namespace asset sreflect
 {
-sreflect_struct("guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6")
+sreflect_struct("guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6", "rtti" : true)
 TOOL_CORE_API SJsonConfigImporter final : public SImporter
 {
     skr::string assetPath;

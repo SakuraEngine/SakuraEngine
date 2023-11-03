@@ -291,7 +291,7 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
     VkUtil_InitializeEnvironment(&I->super);
 
     // Create VkInstance.
-    DECLARE_ZERO(VkApplicationInfo, appInfo)
+    SKR_DECLARE_ZERO(VkApplicationInfo, appInfo)
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "CGPU";
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -308,7 +308,7 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
         blackboard.instance_extensions.data(),
         (uint32_t)blackboard.instance_extensions.size());
 
-    DECLARE_ZERO(VkInstanceCreateInfo, createInfo)
+    SKR_DECLARE_ZERO(VkInstanceCreateInfo, createInfo)
 #if defined(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME) && defined(_MACOS)
     createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
@@ -322,7 +322,7 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
     createInfo.ppEnabledExtensionNames = I->pExtensionNames;
 
     // List Validation Features
-    DECLARE_ZERO(VkValidationFeaturesEXT, validationFeaturesExt)
+    SKR_DECLARE_ZERO(VkValidationFeaturesEXT, validationFeaturesExt)
     validationFeaturesExt.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
     VkValidationFeatureEnableEXT enabledValidationFeatures[] = {
         VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT,
@@ -456,7 +456,7 @@ CGPUDeviceId cgpu_create_device_vulkan(CGPUAdapterId adapter, const CGPUDeviceDe
         cgpu_assert(info.queueCount <= A->pQueueFamilyProperties[info.queueFamilyIndex].queueCount && "allocated too many queues!");
     }
     // Create Device
-    DECLARE_ZERO(VkDeviceCreateInfo, createInfo)
+    SKR_DECLARE_ZERO(VkDeviceCreateInfo, createInfo)
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pNext = &A->mPhysicalDeviceFeatures;
     createInfo.queueCreateInfoCount = (uint32_t)queueCreateInfos.size();

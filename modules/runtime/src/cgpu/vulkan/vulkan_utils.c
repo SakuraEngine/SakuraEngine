@@ -52,7 +52,7 @@ VkUtil_MessageToSkip kSkippedMessages[] = {
 };
 
 
-FORCEINLINE bool VkUtil_TryIgnoreMessage(const char* MessageId, bool Scan)
+SKR_FORCEINLINE bool VkUtil_TryIgnoreMessage(const char* MessageId, bool Scan)
 {
     if (!MessageId)
         return false;
@@ -79,7 +79,7 @@ FORCEINLINE bool VkUtil_TryIgnoreMessage(const char* MessageId, bool Scan)
     return false;
 }
 
-FORCEINLINE void VkUtil_InitializeMessagesToSkip()
+SKR_FORCEINLINE void VkUtil_InitializeMessagesToSkip()
 {
     for (uint32_t i = 0; i < sizeof(kSkippedMessages) / sizeof(VkUtil_MessageToSkip); ++i)
     {
@@ -158,7 +158,7 @@ const char* const* device_extensions, uint32_t device_extension_count)
     {
         I->pVulkanAdapters =
         (CGPUAdapter_Vulkan*)cgpu_calloc(I->mPhysicalDeviceCount, sizeof(CGPUAdapter_Vulkan));
-        DECLARE_ZERO_VLA(VkPhysicalDevice, pysicalDevices, I->mPhysicalDeviceCount)
+        SKR_DECLARE_ZERO_VLA(VkPhysicalDevice, pysicalDevices, I->mPhysicalDeviceCount)
         vkEnumeratePhysicalDevices(I->pVkInstance, &I->mPhysicalDeviceCount, pysicalDevices);
         for (uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
         {
@@ -357,7 +357,7 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
         spvReflectEnumerateInputVariables(S->pReflect, &icount, NULL);
         if (icount > 0)
         {
-            DECLARE_ZERO_VLA(SpvReflectInterfaceVariable*, input_vars, icount)
+            SKR_DECLARE_ZERO_VLA(SpvReflectInterfaceVariable*, input_vars, icount)
             spvReflectEnumerateInputVariables(S->pReflect, &icount, input_vars);
             if ((entry->shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT))
             {
@@ -381,8 +381,8 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
         spvReflectEnumerateDescriptorSets(S->pReflect, &scount, NULL);
         if (scount > 0 || ccount > 0)
         {
-            DECLARE_ZERO_VLA(SpvReflectDescriptorSet*, descriptros_sets, scount + 1)
-            DECLARE_ZERO_VLA(SpvReflectBlockVariable*, root_sets, ccount + 1)
+            SKR_DECLARE_ZERO_VLA(SpvReflectDescriptorSet*, descriptros_sets, scount + 1)
+            SKR_DECLARE_ZERO_VLA(SpvReflectBlockVariable*, root_sets, ccount + 1)
             spvReflectEnumerateDescriptorSets(S->pReflect, &scount, descriptros_sets);
             spvReflectEnumeratePushConstantBlocks(S->pReflect, &ccount, root_sets);
             uint32_t bcount = 0;
@@ -630,9 +630,9 @@ void VkUtil_QueryHostVisbleVramInfo(CGPUAdapter_Vulkan* VkAdapter)
     #if VK_EXT_memory_budget
     if (vkGetPhysicalDeviceMemoryProperties2KHR)
     {
-        DECLARE_ZERO(VkPhysicalDeviceMemoryBudgetPropertiesEXT, budget)
+        SKR_DECLARE_ZERO(VkPhysicalDeviceMemoryBudgetPropertiesEXT, budget)
         budget.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT;
-        DECLARE_ZERO(VkPhysicalDeviceMemoryProperties2, mem_prop2)
+        SKR_DECLARE_ZERO(VkPhysicalDeviceMemoryProperties2, mem_prop2)
         mem_prop2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
         mem_prop2.pNext = &budget;
         vkGetPhysicalDeviceMemoryProperties2KHR(VkAdapter->pPhysicalDevice, &mem_prop2);
@@ -662,7 +662,7 @@ void VkUtil_QueryHostVisbleVramInfo(CGPUAdapter_Vulkan* VkAdapter)
     #endif
 #endif
     {
-        DECLARE_ZERO(VkPhysicalDeviceMemoryProperties, mem_prop)
+        SKR_DECLARE_ZERO(VkPhysicalDeviceMemoryProperties, mem_prop)
         vkGetPhysicalDeviceMemoryProperties(VkAdapter->pPhysicalDevice, &mem_prop);
         for (uint32_t j = 0; j < mem_prop.memoryTypeCount; j++)
         {
@@ -896,7 +896,7 @@ const char* const* instance_layers, uint32_t instance_layers_count)
         vkInstance->pLayerNames = cgpu_calloc(instance_layers_count, sizeof(const char*));
         vkInstance->pLayerProperties = cgpu_calloc(instance_layers_count, sizeof(VkLayerProperties));
 
-        DECLARE_ZERO_VLA(VkLayerProperties, layer_props, count)
+        SKR_DECLARE_ZERO_VLA(VkLayerProperties, layer_props, count)
         vkEnumerateInstanceLayerProperties(&count, layer_props);
         uint32_t filled_exts = 0;
         for (uint32_t j = 0; j < instance_layers_count; j++)
@@ -929,7 +929,7 @@ const char* const* instance_extensions, uint32_t instance_extension_count)
         VkInstance->pExtensionProperties = cgpu_calloc(instance_extension_count, sizeof(VkExtensionProperties));
         VkInstance->pExtensionNames = cgpu_calloc(instance_extension_count, sizeof(const char*));
 
-        DECLARE_ZERO_VLA(VkExtensionProperties, ext_props, count)
+        SKR_DECLARE_ZERO_VLA(VkExtensionProperties, ext_props, count)
         vkEnumerateInstanceExtensionProperties(layer_name, &count, ext_props);
         uint32_t filled_exts = 0;
         for (uint32_t j = 0; j < instance_extension_count; j++)
@@ -961,7 +961,7 @@ const char* const* device_layers, uint32_t device_layers_count)
         VkAdapter->pLayerNames = cgpu_calloc(device_layers_count, sizeof(const char*));
         VkAdapter->pLayerProperties = cgpu_calloc(device_layers_count, sizeof(VkLayerProperties));
 
-        DECLARE_ZERO_VLA(VkLayerProperties, layer_props, count)
+        SKR_DECLARE_ZERO_VLA(VkLayerProperties, layer_props, count)
         vkEnumerateDeviceLayerProperties(VkAdapter->pPhysicalDevice, &count, layer_props);
         uint32_t filled_exts = 0;
         for (uint32_t j = 0; j < device_layers_count; j++)
@@ -993,7 +993,7 @@ const char* const* device_extensions, uint32_t device_extension_count)
         VkAdapter->pExtensionProperties = cgpu_calloc(device_extension_count, sizeof(VkExtensionProperties));
         VkAdapter->pExtensionNames = cgpu_calloc(device_extension_count, sizeof(const char*));
 
-        DECLARE_ZERO_VLA(VkExtensionProperties, ext_props, count)
+        SKR_DECLARE_ZERO_VLA(VkExtensionProperties, ext_props, count)
         vkEnumerateDeviceExtensionProperties(VkAdapter->pPhysicalDevice, layer_name, &count, ext_props);
         uint32_t filled_exts = 0;
         for (uint32_t j = 0; j < device_extension_count; j++)
@@ -1016,7 +1016,7 @@ const char* const* device_extensions, uint32_t device_extension_count)
 }
 
 // Debug Callback
-FORCEINLINE static void VkUtil_DebugUtilsSetObjectName(VkDevice pDevice, uint64_t handle,
+SKR_FORCEINLINE static void VkUtil_DebugUtilsSetObjectName(VkDevice pDevice, uint64_t handle,
 VkObjectType type, const char* pName)
 {
     VkDebugUtilsObjectNameInfoEXT nameInfo = {
@@ -1028,7 +1028,7 @@ VkObjectType type, const char* pName)
     vkSetDebugUtilsObjectNameEXT(pDevice, &nameInfo);
 }
 
-FORCEINLINE static void VkUtil_DebugReportSetObjectName(VkDevice pDevice, uint64_t handle,
+SKR_FORCEINLINE static void VkUtil_DebugReportSetObjectName(VkDevice pDevice, uint64_t handle,
     VkDebugReportObjectTypeEXT type, const char* pName)
 {
     VkDebugMarkerObjectNameInfoEXT nameInfo = {

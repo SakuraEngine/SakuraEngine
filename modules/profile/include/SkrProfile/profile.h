@@ -1,6 +1,6 @@
 #pragma once
 
- #ifdef __OPTIMIZE__
+#ifdef __OPTIMIZE__
     // Some platforms define NDEBUG for Release builds
     #ifndef NDEBUG
         #define NDEBUG

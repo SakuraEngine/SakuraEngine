@@ -60,7 +60,7 @@ void SwapableCmdPool::finalize() SKR_NOEXCEPT
     pools[1] = nullptr;
 }
 
-FORCEINLINE SwapableCmdPool::RC SwapableCmdPool::get() SKR_NOEXCEPT
+SKR_FORCEINLINE SwapableCmdPool::RC SwapableCmdPool::get() SKR_NOEXCEPT
 {
     return RC(pools[index], &rcs[index]);
 }

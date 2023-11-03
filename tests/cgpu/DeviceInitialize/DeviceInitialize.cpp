@@ -28,12 +28,12 @@ protected:
 
 CGPUInstanceId init_instance(ECGPUBackend backend, bool enable_debug_layer, bool enableGPUValidation)
 {
-    DECLARE_ZERO(CGPUInstanceDescriptor, desc)
+    SKR_DECLARE_ZERO(CGPUInstanceDescriptor, desc)
     desc.backend = backend;
     desc.enable_debug_layer = enable_debug_layer;
     desc.enable_gpu_based_validation = enableGPUValidation;
     CGPUInstanceId instance = cgpu_create_instance(&desc);
-    DECLARE_ZERO(CGPUInstanceFeatures, instance_features)
+    SKR_DECLARE_ZERO(CGPUInstanceFeatures, instance_features)
     cgpu_query_instance_features(instance, &instance_features);
     if (backend == ECGPUBackend::CGPU_BACKEND_VULKAN)
     {
@@ -89,7 +89,7 @@ void test_create_device(CGPUInstanceId instance, bool enable_debug_layer, bool e
         if (gQueue > 0) queueGroup.push_back(CGPUQueueGroupDescriptor{ CGPU_QUEUE_TYPE_GRAPHICS, 1 });
         if (cQueue > 0) queueGroup.push_back(CGPUQueueGroupDescriptor{ CGPU_QUEUE_TYPE_COMPUTE, 1 });
         if (tQueue > 0) queueGroup.push_back(CGPUQueueGroupDescriptor{ CGPU_QUEUE_TYPE_TRANSFER, 1 });
-        DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
+        SKR_DECLARE_ZERO(CGPUDeviceDescriptor, descriptor)
         descriptor.queue_groups = queueGroup.data();
         descriptor.queue_group_count = (uint32_t)queueGroup.size();
 

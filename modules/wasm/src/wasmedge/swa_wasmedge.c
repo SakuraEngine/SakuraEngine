@@ -138,8 +138,8 @@ SWAExecResult swa_exec_WAEdge(SWAModuleId module, const char8_t* const name, SWA
     {
         const WasmEdge_String mod_name = MW->mod_name;
         WasmEdge_String func_name = WasmEdge_StringCreateByCString(name);
-        DECLARE_ZERO_VLA(WasmEdge_Value, params, desc->param_count + 1)
-        DECLARE_ZERO_VLA(WasmEdge_Value, rets, desc->ret_count + 1)
+        SKR_DECLARE_ZERO_VLA(WasmEdge_Value, params, desc->param_count + 1)
+        SKR_DECLARE_ZERO_VLA(WasmEdge_Value, rets, desc->ret_count + 1)
         for (uint32_t i = 0; i < desc->param_count; i++)
         {
             switch (desc->params[i].type)

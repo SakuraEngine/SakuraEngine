@@ -13,10 +13,6 @@
 // noexcept
 //-------------------------------------------------------------------------------
 
-#if __has_include("stdint.h")
-    #include <stdint.h>
-#endif
-
 // UNUSED
 #if defined(__cplusplus)
     #define SKR_UNUSED [[maybe_unused]]
@@ -24,6 +20,18 @@
     #define SKR_UNUSED __attribute__((unused))
 #elif defined(_MSC_VER)
     #define SKR_UNUSED
+#endif
+
+#ifdef __cplusplus
+    #define SKR_IF_CPP(...) __VA_ARGS__
+#else
+    #define SKR_IF_CPP(...)
+#endif
+
+#if defined(__cplusplus)
+    #define SKR_CONSTEXPR constexpr
+#else
+    #define SKR_CONSTEXPR const
 #endif
 
 // ALIGNAS
@@ -120,4 +128,20 @@
     #define SKR_NOEXCEPT noexcept
 #else
     #define SKR_NOEXCEPT
+#endif
+
+#if defined(_MSC_VER)
+    #if defined(__clang__)
+        #define SKR_UNREF_PARAM(x) (void)x
+    #else
+        #define SKR_UNREF_PARAM(x) (x)
+    #endif
+#elif defined(__GNUC__) || defined(__clang__)
+    #define SKR_UNREF_PARAM(x) ((void)(x))
+#endif
+
+#if defined(_MSC_VER)
+    #define SKR_CALLCONV __cdecl
+#elif defined(__GNUC__) || defined(__clang__)
+    #define SKR_CALLCONV
 #endif

@@ -64,7 +64,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
     using graph_name_string = skr::string;
 
     bool useCVV = true;
-#ifdef SKR_OS_MACOSX
+#if SKR_PLAT_MACOSX
     useCVV = false;
 #endif
     if (draw_data->TotalVtxCount > 0)

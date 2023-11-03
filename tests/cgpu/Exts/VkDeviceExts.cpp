@@ -17,7 +17,7 @@ void* pUserData);
 
 TEST_CASE_METHOD(VkDeviceExtsTest, "CreateVkInstance")
 {
-    DECLARE_ZERO(CGPUVulkanInstanceDescriptor, vkDesc)
+    SKR_DECLARE_ZERO(CGPUVulkanInstanceDescriptor, vkDesc)
     const char* exts[] = {
     #ifdef _WIN32
         VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
@@ -37,7 +37,7 @@ TEST_CASE_METHOD(VkDeviceExtsTest, "CreateVkInstance")
     #endif
 
     // Messenger Enable.
-    DECLARE_ZERO(VkDebugUtilsMessengerCreateInfoEXT, debugCreateInfo)
+    SKR_DECLARE_ZERO(VkDebugUtilsMessengerCreateInfoEXT, debugCreateInfo)
     debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
     debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
