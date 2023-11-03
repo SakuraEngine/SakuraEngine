@@ -37,14 +37,11 @@ struct __VTABLE_${record.short_name}_HELPER
     %>
     static ${method.retType} static_${db.short_name(method.name)}(${isConst} void* self ${params_expr}) noexcept
     {
-        auto memberAvailable = SKR_VALIDATOR((auto... args), static_cast<${isConst} T*>(0)->${db.short_name(method.name)}(args...));
-        auto freeAvailable = SKR_VALIDATOR((auto... args), ${db.short_name(method.name)}(static_cast<${isConst} T*>(0), args...));
-        if constexpr(memberAvailable(${args_expr}))
+        auto memberAvailable = SKR_VALIDATOR((auto obj, auto... args), obj->${db.short_name(method.name)}(args...));
+        if constexpr(memberAvailable(static_cast<${isConst} T*>(0), ${args_expr}))
             return static_cast<${isConst} T*>(self)->${db.short_name(method.name)}(${args_expr});
-        else if constexpr(freeAvailable(${args_expr}))
-            return ${db.short_name(method.name)}(static_cast<${isConst} T*>(self) ${", " + args_expr if args_expr != "" else ""});
         else
-            static_assert(false, "No method ${db.short_name(method.name)} found");
+            return ${db.short_name(method.name)}(static_cast<${isConst} T*>(self) ${", " + args_expr if args_expr != "" else ""});
     }
 %endfor
     static constexpr __VTABLE_${record.short_name} vtable = {

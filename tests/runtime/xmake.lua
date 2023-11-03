@@ -91,7 +91,7 @@ executable_module("RTTRTest", "RTTR_TEST", engine_version)
     add_files("rttr/rttr_test.cpp")
 
     
-executable_module("TraitTest", "TRAIT_TEST", engine_version)
+executable_module("TraitTest", "TRAIT_TEST", engine_version, {exception = true})
     set_group("05.tests/base")
     set_kind("binary")
     public_dependency("SkrRT", engine_version)

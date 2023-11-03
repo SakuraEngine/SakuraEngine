@@ -8,18 +8,18 @@
 sreflect_struct("guid" : "5CACA8C3-4F59-4814-8B0F-E6328FA0D361", "trait" : true)
 mytrait
 {
-    GENERATED_TRAIT_BODY(mytrait)
+    TRAIT_MIXIN(mytrait)
 
-    int getA() const;
+    int inc(int i) const;
 };
 
 struct myobject
 {
-    int getA() const { return 1233; }
+    int inc(int i) const { return i + 1233; }
 };
 
 
 struct myobject2
 {
 };
-inline int getA(const myobject2*) { return 1233; }
+inline int inc(const myobject2*, int i) { return i + 1233; }
