@@ -25,9 +25,9 @@
 #elif defined(__GNUC__)
     #define SKR_COMPILER_GCC 1
 #elif defined(_MSC_VER)
-    #if defined(__clang__)
+    #if defined(__clang__) && !defined (SKR_COMPILER_CLANG_CL)
         #define SKR_COMPILER_CLANG_CL 1
-    #else
+    #elif !defined(SKR_COMPILER_MSVC)
         #define SKR_COMPILER_MSVC 1
     #endif
 #endif
