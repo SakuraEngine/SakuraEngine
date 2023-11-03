@@ -10,6 +10,8 @@
 
 #include "SkrProfile/profile.h"
 
+using namespace game;
+
 void RenderPassForward::on_update(const skr_primitive_pass_context_t* context) 
 {
     namespace rg = skr::render_graph;

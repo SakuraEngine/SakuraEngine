@@ -6,9 +6,9 @@
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/containers/vector.hpp"
 
-typedef struct forward_effect_identity_t {
+typedef struct ForwardEffectToken {
     dual_entity_t game_entity;
-} forward_effect_identity_t;
+} ForwardEffectToken;
 
 static const skr_render_effect_name_t forward_effect_name = u8"ForwardEffect";
 

@@ -49,10 +49,10 @@ void RenderEffectForward::on_register(SRendererId renderer, dual_storage_t* stor
         auto guid = make_zeroed<skr_guid_t>();
         dual_make_guid(&guid);
         auto desc = make_zeroed<dual_type_description_t>();
-        desc.name = u8"forward_render_identity";
-        desc.size = sizeof(forward_effect_identity_t);
+        desc.name = u8"ForwardEffectToken";
+        desc.size = sizeof(ForwardEffectToken);
         desc.guid = guid;
-        desc.alignment = alignof(forward_effect_identity_t);
+        desc.alignment = alignof(ForwardEffectToken);
         identity_type = dualT_register_type(&desc);
         type_builder.with(identity_type);
         type_builder.with<skr::renderer::MeshComponent>();
@@ -68,8 +68,8 @@ void RenderEffectForward::on_register(SRendererId renderer, dual_storage_t* stor
 void RenderEffectForward::initialize_queries(dual_storage_t* storage)
 {
     // initialize queries
-    mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr::renderer::MeshComponent");
-    draw_mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
+    mesh_query = dualQ_from_literal(storage, "[in]ForwardEffectToken, [in]skr::renderer::MeshComponent");
+    draw_mesh_query = dualQ_from_literal(storage, "[in]ForwardEffectToken, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
 }
 
 void RenderEffectForward::release_queries()
@@ -118,7 +118,7 @@ dual_type_index_t RenderEffectForward::get_identity_type()
 void RenderEffectForward::initialize_data(SRendererId renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv)
 {
     auto game_ents = dualV_get_entities(game_cv);
-    auto identities = (forward_effect_identity_t*)dualV_get_owned_ro(render_cv, identity_type);
+    auto identities = (ForwardEffectToken*)dualV_get_owned_ro(render_cv, identity_type);
     for (uint32_t i = 0u; i < game_cv->count; ++i)
     {
         identities[i].game_entity = game_ents[i];
@@ -173,7 +173,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
         uint32_t r_idx = 0;
         uint32_t dc_idx = 0;
 
-        auto identities = (forward_effect_identity_t*)dualV_get_owned_ro(r_cv, identity_type);
+        auto identities = (ForwardEffectToken*)dualV_get_owned_ro(r_cv, identity_type);
         auto unbatched_g_ents = (dual_entity_t*)identities;
         const skr::renderer::MeshComponent* meshes = nullptr;
         const skr::anim::AnimComponent* anims = nullptr;
@@ -570,9 +570,9 @@ void RenderEffectForwardSkin::on_register(SRendererId renderer, dual_storage_t* 
         dual_make_guid(&guid);
         auto desc = make_zeroed<dual_type_description_t>();
         desc.name = u8"forward_skin_render_identity";
-        desc.size = sizeof(forward_effect_identity_t);
+        desc.size = sizeof(ForwardEffectToken);
         desc.guid = guid;
-        desc.alignment = alignof(forward_effect_identity_t);
+        desc.alignment = alignof(ForwardEffectToken);
         identity_type = dualT_register_type(&desc);
         type_builder.with(identity_type)
             .with<skr::renderer::MeshComponent>()
