@@ -29,7 +29,7 @@ typedef struct render_application_t
 inline int app_create_gfx_objects(render_application_t* pApp)
 {
     // Create instance
-    DECLARE_ZERO(CGPUInstanceDescriptor, instance_desc);
+    SKR_DECLARE_ZERO(CGPUInstanceDescriptor, instance_desc);
     instance_desc.backend = pApp->backend;
     instance_desc.enable_debug_layer = true;
     instance_desc.enable_gpu_based_validation = true;
@@ -44,10 +44,10 @@ inline int app_create_gfx_objects(render_application_t* pApp)
     pApp->adapter = adapters[0];
 
     // Create device
-    DECLARE_ZERO(CGPUQueueGroupDescriptor, queue_group_desc);
+    SKR_DECLARE_ZERO(CGPUQueueGroupDescriptor, queue_group_desc);
     queue_group_desc.queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
     queue_group_desc.queue_count = 1;
-    DECLARE_ZERO(CGPUDeviceDescriptor, device_desc);
+    SKR_DECLARE_ZERO(CGPUDeviceDescriptor, device_desc);
     device_desc.queue_groups = &queue_group_desc;
     device_desc.queue_group_count = 1;
     pApp->device = cgpu_create_device(pApp->adapter, &device_desc);
@@ -61,7 +61,7 @@ inline int app_create_gfx_objects(render_application_t* pApp)
     struct CGPUNSView* ns_view = (struct CGPUNSView*)nswindow_get_content_view(skr_window_get_native_handle(pApp->window_handle));
     pApp->surface = cgpu_surface_from_ns_view(pApp->device, ns_view);
 #endif
-    DECLARE_ZERO(CGPUSwapChainDescriptor, chain_desc);
+    SKR_DECLARE_ZERO(CGPUSwapChainDescriptor, chain_desc);
     chain_desc.present_queues = &pApp->gfx_queue;
     chain_desc.present_queues_count = 1;
     chain_desc.width = pApp->window_width;
@@ -78,7 +78,7 @@ inline static int app_create_window(render_application_t* pApp, uint32_t width, 
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     const char8_t* window_title = pApp->window_title ? pApp->window_title :gCGPUBackendNames[pApp->backend];
-    DECLARE_ZERO(SWindowDescroptor, window_desc);
+    SKR_DECLARE_ZERO(SWindowDescroptor, window_desc);
     window_desc.width = width;
     window_desc.height = height;
     window_desc.flags |= SKR_WINDOW_CENTERED;
@@ -96,7 +96,7 @@ inline int app_resize_window(render_application_t* pApp, uint32_t w, uint32_t h)
     cgpu_wait_queue_idle(pApp->gfx_queue);
     cgpu_free_swapchain(pApp->swapchain);
 
-    DECLARE_ZERO(CGPUSwapChainDescriptor, chain_desc);
+    SKR_DECLARE_ZERO(CGPUSwapChainDescriptor, chain_desc);
     chain_desc.present_queues = &pApp->gfx_queue;
     chain_desc.present_queues_count = 1;
     chain_desc.width = w;

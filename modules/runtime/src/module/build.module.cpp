@@ -8,7 +8,7 @@
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRuntimeModule, SkrRT);
 
-#ifdef SKR_OS_WINDOWS
+#if SKR_PLAT_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
     #endif
@@ -36,7 +36,7 @@ void SkrRuntimeModule::on_load(int argc, char8_t** argv)
     SkrDStorageConfig config = {};
     dstorageInstance = skr_create_dstorage_instance(&config);
 
-#ifdef SKR_OS_WINDOWS
+#if SKR_PLAT_WINDOWS
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     DPIAware = true;
 #endif
@@ -76,7 +76,7 @@ SKR_EXTERN_C SKR_RUNTIME_API bool skr_runtime_is_dpi_aware()
 {
     if (!SkrRuntimeModule::Get()) 
     {
-#ifdef SKR_OS_WINDOWS
+#if SKR_PLAT_WINDOWS
         PROCESS_DPI_AWARENESS awareness;
         GetProcessDpiAwareness(NULL, &awareness);
         return (awareness == PROCESS_PER_MONITOR_DPI_AWARE);

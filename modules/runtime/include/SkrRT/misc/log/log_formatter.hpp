@@ -33,7 +33,7 @@ struct LogFormatter
 };
 
 template <typename...Args>
-FORCEINLINE void ArgsList::push(Args&&...args) SKR_NOEXCEPT
+SKR_FORCEINLINE void ArgsList::push(Args&&...args) SKR_NOEXCEPT
 {
     format_ = [args = std::make_tuple(std::forward<Args>(args) ...)](const skr::string& format, LogFormatter& formatter) mutable {
         return std::apply([&](auto&& ... args){

@@ -155,7 +155,7 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
 
         for (uint32_t j = 0u; j < queueGroup.queue_count; j++)
         {
-            DECLARE_ZERO(D3D12_COMMAND_QUEUE_DESC, queueDesc)
+            SKR_DECLARE_ZERO(D3D12_COMMAND_QUEUE_DESC, queueDesc)
             switch (type)
             {
                 case CGPU_QUEUE_TYPE_GRAPHICS:
@@ -608,7 +608,7 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     // Serialize root signature
     ID3DBlob* error = NULL;
     ID3DBlob* rootSignatureString = NULL;
-    DECLARE_ZERO(D3D12_VERSIONED_ROOT_SIGNATURE_DESC, sig_desc);
+    SKR_DECLARE_ZERO(D3D12_VERSIONED_ROOT_SIGNATURE_DESC, sig_desc);
     sig_desc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
     sig_desc.Desc_1_1.NumParameters = paramCount;
     sig_desc.Desc_1_1.pParameters = rootParams;
@@ -896,13 +896,13 @@ CGPUComputePipelineId cgpu_create_compute_pipeline_d3d12(CGPUDeviceId device, co
     CGPUShaderLibrary_D3D12* SL = (CGPUShaderLibrary_D3D12*)desc->compute_shader->library;
     PPL->pRootSignature = RS->pDxRootSignature;
     // Add pipeline specifying its for compute purposes
-    DECLARE_ZERO(D3D12_SHADER_BYTECODE, CS);
+    SKR_DECLARE_ZERO(D3D12_SHADER_BYTECODE, CS);
     CS.BytecodeLength = SL->pShaderBlob->GetBufferSize();
     CS.pShaderBytecode = SL->pShaderBlob->GetBufferPointer();
-    DECLARE_ZERO(D3D12_CACHED_PIPELINE_STATE, cached_pso_desc);
+    SKR_DECLARE_ZERO(D3D12_CACHED_PIPELINE_STATE, cached_pso_desc);
     cached_pso_desc.pCachedBlob = NULL;
     cached_pso_desc.CachedBlobSizeInBytes = 0;
-    DECLARE_ZERO(D3D12_COMPUTE_PIPELINE_STATE_DESC, pipeline_state_desc);
+    SKR_DECLARE_ZERO(D3D12_COMPUTE_PIPELINE_STATE_DESC, pipeline_state_desc);
     pipeline_state_desc.pRootSignature = RS->pDxRootSignature;
     pipeline_state_desc.CS = CS;
     pipeline_state_desc.CachedPSO = cached_pso_desc;
@@ -1005,15 +1005,15 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
             }
         }
     }
-    DECLARE_ZERO(D3D12_INPUT_LAYOUT_DESC, input_layout_desc);
+    SKR_DECLARE_ZERO(D3D12_INPUT_LAYOUT_DESC, input_layout_desc);
     input_layout_desc.pInputElementDescs = input_elem_count ? input_elements : NULL;
     input_layout_desc.NumElements = input_elem_count;
     // Shader stages
-    DECLARE_ZERO(D3D12_SHADER_BYTECODE, VS);
-    DECLARE_ZERO(D3D12_SHADER_BYTECODE, PS);
-    DECLARE_ZERO(D3D12_SHADER_BYTECODE, DS);
-    DECLARE_ZERO(D3D12_SHADER_BYTECODE, HS);
-    DECLARE_ZERO(D3D12_SHADER_BYTECODE, GS);
+    SKR_DECLARE_ZERO(D3D12_SHADER_BYTECODE, VS);
+    SKR_DECLARE_ZERO(D3D12_SHADER_BYTECODE, PS);
+    SKR_DECLARE_ZERO(D3D12_SHADER_BYTECODE, DS);
+    SKR_DECLARE_ZERO(D3D12_SHADER_BYTECODE, HS);
+    SKR_DECLARE_ZERO(D3D12_SHADER_BYTECODE, GS);
     for (uint32_t i = 0; i < 5; ++i)
     {
         ECGPUShaderStage stage_mask = (ECGPUShaderStage)(1 << i);
@@ -1070,17 +1070,17 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
         }
     }
     // Stream out
-    DECLARE_ZERO(D3D12_STREAM_OUTPUT_DESC, stream_output_desc);
+    SKR_DECLARE_ZERO(D3D12_STREAM_OUTPUT_DESC, stream_output_desc);
     stream_output_desc.pSODeclaration = NULL;
     stream_output_desc.NumEntries = 0;
     stream_output_desc.pBufferStrides = NULL;
     stream_output_desc.NumStrides = 0;
     stream_output_desc.RasterizedStream = 0;
     // Sample
-    DECLARE_ZERO(DXGI_SAMPLE_DESC, sample_desc);
+    SKR_DECLARE_ZERO(DXGI_SAMPLE_DESC, sample_desc);
     sample_desc.Count = (UINT)(desc->sample_count ? desc->sample_count : 1);
     sample_desc.Quality = (UINT)(desc->sample_quality);
-    DECLARE_ZERO(D3D12_CACHED_PIPELINE_STATE, cached_pso_desc);
+    SKR_DECLARE_ZERO(D3D12_CACHED_PIPELINE_STATE, cached_pso_desc);
     cached_pso_desc.pCachedBlob = NULL;
     cached_pso_desc.CachedBlobSizeInBytes = 0;
     // Fill pipeline object desc
@@ -1683,7 +1683,7 @@ const CGPUBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
     CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)encoder;
 
     const CGPUBuffer_D3D12** Buffers = (const CGPUBuffer_D3D12**)buffers;
-    DECLARE_ZERO(D3D12_VERTEX_BUFFER_VIEW, views[CGPU_MAX_VERTEX_ATTRIBS]);
+    SKR_DECLARE_ZERO(D3D12_VERTEX_BUFFER_VIEW, views[CGPU_MAX_VERTEX_ATTRIBS]);
     for (uint32_t i = 0; i < buffer_count; ++i)
     {
         cgpu_assert(D3D12_GPU_VIRTUAL_ADDRESS_NULL != Buffers[i]->mDxGpuAddress);
@@ -1708,7 +1708,7 @@ uint32_t index_stride, uint64_t offset)
     cgpu_assert(CGPU_NULLPTR != Cmd->pDxCmdList);
     cgpu_assert(CGPU_NULLPTR != Buffer->pDxResource);
 
-    DECLARE_ZERO(D3D12_INDEX_BUFFER_VIEW, view);
+    SKR_DECLARE_ZERO(D3D12_INDEX_BUFFER_VIEW, view);
     view.BufferLocation = Buffer->mDxGpuAddress + offset;
     view.Format =
         (sizeof(uint16_t) == index_stride) ?
@@ -1737,11 +1737,11 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
     CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
 #ifdef __ID3D12GraphicsCommandList4_FWD_DEFINED__
     ID3D12GraphicsCommandList4* CmdList4 = (ID3D12GraphicsCommandList4*)Cmd->pDxCmdList;
-    DECLARE_ZERO(D3D12_CLEAR_VALUE, clearValues[CGPU_MAX_MRT_COUNT]);
-    DECLARE_ZERO(D3D12_CLEAR_VALUE, clearDepth);
-    DECLARE_ZERO(D3D12_CLEAR_VALUE, clearStencil);
-    DECLARE_ZERO(D3D12_RENDER_PASS_RENDER_TARGET_DESC, renderPassRenderTargetDescs[CGPU_MAX_MRT_COUNT]);
-    DECLARE_ZERO(D3D12_RENDER_PASS_DEPTH_STENCIL_DESC, renderPassDepthStencilDesc);
+    SKR_DECLARE_ZERO(D3D12_CLEAR_VALUE, clearValues[CGPU_MAX_MRT_COUNT]);
+    SKR_DECLARE_ZERO(D3D12_CLEAR_VALUE, clearDepth);
+    SKR_DECLARE_ZERO(D3D12_CLEAR_VALUE, clearStencil);
+    SKR_DECLARE_ZERO(D3D12_RENDER_PASS_RENDER_TARGET_DESC, renderPassRenderTargetDescs[CGPU_MAX_MRT_COUNT]);
+    SKR_DECLARE_ZERO(D3D12_RENDER_PASS_DEPTH_STENCIL_DESC, renderPassDepthStencilDesc);
     uint32_t colorTargetCount = 0;
     // color
     for (uint32_t i = 0; i < desc->render_target_count; i++)
@@ -1976,7 +1976,7 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
         S = cgpu_new_placed<CGPUSwapChain_D3D12>(Memory);
     }
     S->mDxSyncInterval = 0;
-    DECLARE_ZERO(DXGI_SWAP_CHAIN_DESC1, chain_desc1)
+    SKR_DECLARE_ZERO(DXGI_SWAP_CHAIN_DESC1, chain_desc1)
     chain_desc1.Width = desc->width;
     chain_desc1.Height = desc->height;
     chain_desc1.Format = DXGIUtil_TranslatePixelFormat(desc->format);

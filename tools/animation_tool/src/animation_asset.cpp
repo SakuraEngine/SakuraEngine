@@ -34,7 +34,7 @@ bool SAnimCooker::Cook(SCookContext *ctx)
     auto idx = ctx->AddStaticDependency(settings.skeletonAsset.get_serialized(), true);
     if(ctx->GetStaticDependency(idx).get_status() == SKR_LOADING_STATUS_ERROR)
         return false;
-    skr_skeleton_resource_t* skeletonResource = (skr_skeleton_resource_t*)ctx->GetStaticDependency(idx).get_ptr();
+    skr::anim::SkeletonResource* skeletonResource = (skr::anim::SkeletonResource*)ctx->GetStaticDependency(idx).get_ptr();
     auto& skeleton = skeletonResource->skeleton;
     //-----import resource object
     RawAnimation* rawAnimation = (RawAnimation*)ctx->Import<RawAnimation>();

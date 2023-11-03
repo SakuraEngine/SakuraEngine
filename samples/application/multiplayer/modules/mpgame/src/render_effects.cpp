@@ -176,14 +176,14 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
         auto identities = (forward_effect_identity_t*)dualV_get_owned_ro(r_cv, identity_type);
         auto unbatched_g_ents = (dual_entity_t*)identities;
         const skr_render_mesh_comp_t* meshes = nullptr;
-        const skr_render_anim_comp_t* anims = nullptr;
+        const skr::anim::AnimComponent* anims = nullptr;
         {
             SkrZoneScopedN("FetchRenderMeshes");
             meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
         }
         {
             SkrZoneScopedN("FetchAnimComps");
-            anims = dual::get_component_ro<skr_render_anim_comp_t>(r_cv);
+            anims = dual::get_component_ro<skr::anim::AnimComponent>(r_cv);
         }
         if (!unbatched_g_ents) return;
 
@@ -577,9 +577,9 @@ void RenderEffectForwardSkin::on_register(SRendererId renderer, dual_storage_t* 
         type_builder.with(identity_type)
             .with<skr_render_mesh_comp_t>()
             .with<skr_render_group_t>()
-            .with<skr_render_anim_comp_t>()
-            .with<skr_render_skel_comp_t>()
-            .with<skr_render_skin_comp_t>();
+            .with<skr::anim::AnimComponent>()
+            .with<skr::anim::SkeletonComponent>()
+            .with<skr::anim::SkinComponent>();
         typeset = type_builder.build();
     }
     initialize_queries(storage);
@@ -592,7 +592,7 @@ void RenderEffectForwardSkin::initialize_queries(dual_storage_t* storage)
 {
     mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_mesh_comp_t");
     draw_mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
-    install_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_anim_comp_t, [in]skr_render_skel_comp_t, [in]skr_render_skin_comp_t");
+    install_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::anim::AnimComponent, [in]skr::anim::SkeletonComponent, [in]skr::anim::SkinComponent");
 }
 
 void RenderEffectForwardSkin::release_queries()

@@ -113,21 +113,21 @@ void* skr_window_get_native_handle(SWindowHandle window)
     SDL_SysWMinfo wmInfo;
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo((SDL_Window*)window, &wmInfo);
-#ifdef SKR_OS_WINDOWS
+#if SKR_PLAT_WINDOWS
     return wmInfo.info.win.window;
-#elif defined(SKR_OS_MACOSX)
+#elif SKR_PLAT_MACOSX
     return wmInfo.info.cocoa.window;
 #endif
     return NULL;
 }
 
-#ifdef SKR_OS_MACOSX
+#if SKR_PLAT_MACOSX
     #include "SkrRT/platform/apple/macos/window.h"
 #endif
 
 void* skr_window_get_native_view(SWindowHandle window)
 {
-#ifdef SKR_OS_MACOSX
+#if SKR_PLAT_MACOSX
     void* ns_view =
         nswindow_get_content_view(skr_window_get_native_handle(window));
     return ns_view;

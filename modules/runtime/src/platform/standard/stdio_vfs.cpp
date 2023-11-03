@@ -113,7 +113,7 @@ size_t skr_stdio_fwrite(skr_vfile_t* file, const void* out_buffer, size_t offset
     return -1;
 }
 
-ssize_t skr_stdio_fsize(const skr_vfile_t* file) SKR_NOEXCEPT
+int64_t skr_stdio_fsize(const skr_vfile_t* file) SKR_NOEXCEPT
 {
     if (file)
     {

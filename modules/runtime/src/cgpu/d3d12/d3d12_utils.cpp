@@ -146,7 +146,7 @@ void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, b
          IID_PPV_ARGS(&_adapter)) != DXGI_ERROR_NOT_FOUND;
          i++)
     {
-        DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
+        SKR_DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
         IDXGIAdapter4* adapter = nullptr;
         _adapter->QueryInterface(IID_PPV_ARGS(&adapter));
         adapter->GetDesc3(&desc);
@@ -160,7 +160,7 @@ void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, b
                 ID3D12Device* pDevice = CGPU_NULLPTR;
                 if (SUCCEEDED(D3D12CreateDevice(adapter, d3d_feature_levels[level], __uuidof(ID3D12Device), (void**)&pDevice)))
                 {
-                    DECLARE_ZERO(CGPUAdapter_D3D12, cgpuAdapter)
+                    SKR_DECLARE_ZERO(CGPUAdapter_D3D12, cgpuAdapter)
                     HRESULT hres = adapter->QueryInterface(IID_PPV_ARGS(&cgpuAdapter.pDxActiveGPU));
                     if (SUCCEEDED(hres))
                     {
@@ -226,7 +226,7 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
     adapter_detail = make_zeroed<CGPUAdapterDetail>();
     auto& vendor_preset = adapter_detail.vendor_preset;
     // Vendor & Feature Cache
-    DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc3)
+    SKR_DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc3)
     adapter.pDxActiveGPU->GetDesc3(&desc3);
     vendor_preset.device_id = desc3.DeviceId;
     vendor_preset.vendor_id = desc3.VendorId;
@@ -247,7 +247,7 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
         cgpu_assert("[D3D12 Fatal]: Create D3D12Device Failed When Query Adapter Features!");
     }
     // Architecture features
-    DECLARE_ZERO(D3D12_FEATURE_DATA_ARCHITECTURE1, dxgi_feature)
+    SKR_DECLARE_ZERO(D3D12_FEATURE_DATA_ARCHITECTURE1, dxgi_feature)
     pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_ARCHITECTURE1, &dxgi_feature, sizeof(dxgi_feature));
     adapter_detail.is_uma = dxgi_feature.UMA;
     adapter_detail.is_cpu = (desc3.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE) ? 1 : 0;
@@ -447,7 +447,7 @@ void reflectionRecordShaderResources(ID3D12ReflectionT* d3d12reflection, ECGPUSh
     }
 }
 
-FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d3d12reflection, ECGPUShaderStage stage, CGPUShaderLibrary_D3D12* S)
+SKR_FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d3d12reflection, ECGPUShaderStage stage, CGPUShaderLibrary_D3D12* S)
 {
     // Get a description of this shader
     D3D12_SHADER_DESC shaderDesc;

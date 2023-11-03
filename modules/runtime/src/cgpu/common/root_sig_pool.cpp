@@ -53,7 +53,8 @@ public:
     {
 
     }
-    FORCEINLINE RSCharacteristic calculaeCharacteristic(CGPURootSignature* RSTables, const struct CGPURootSignatureDescriptor* desc)
+    
+    SKR_FORCEINLINE RSCharacteristic calculaeCharacteristic(CGPURootSignature* RSTables, const struct CGPURootSignatureDescriptor* desc)
     {
         // calculate characteristic
         RSCharacteristic newCharacteristic = {};

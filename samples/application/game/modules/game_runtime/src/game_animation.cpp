@@ -9,13 +9,13 @@
 
 namespace game
 {
-void InitializeAnimState(anim_state_t* state, skr_skeleton_resource_t* skeleton)
+void InitializeAnimState(anim_state_t* state, skr::anim::SkeletonResource* skeleton)
 {
     state->sampling_context.Resize(skeleton->skeleton.num_joints());
     state->local_transforms.resize(skeleton->skeleton.num_soa_joints());
 }
 
-void UpdateAnimState(anim_state_t* state, skr_skeleton_resource_t* skeleton, float dt, skr_render_anim_comp_t* output)
+void UpdateAnimState(anim_state_t* state, skr::anim::SkeletonResource* skeleton, float dt, skr::anim::AnimComponent* output)
 {
     auto anim = state->animation_resource.get_resolved();
     if (!anim) return;
