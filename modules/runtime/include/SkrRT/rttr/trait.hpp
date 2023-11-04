@@ -8,5 +8,5 @@
     const __VTABLE_##type##_t* vtable = nullptr; \
     template<class T> \
     type(T& t) noexcept \
-        : self(&t), vtable(&__VTABLE_##type<T>) {}
+        : self(&t), vtable(&__VTABLE_##type##_impl<T>::vtable) {}
 #endif
