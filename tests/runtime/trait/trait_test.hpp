@@ -11,15 +11,27 @@ mytrait
     TRAIT_MIXIN(mytrait)
 
     int inc(int i) const noexcept;
+
+    sattr("getter" : "a")
+    int get_a() const noexcept;
+
+    sattr("setter" : "a")
+    void set_a(int a) noexcept;
 };
 
+// class type
 struct myobject
 {
-    int inc(int i) const noexcept { return i + 1233; }
+    int inc(int i) const noexcept { return i + a; }
+    int a = 1233;
 };
 
-
+// pod type
 struct myobject2
 {
+    int a = 1233;
 };
-inline int inc(const myobject2*, int i) noexcept { return i + 1233; }
+//extend myobject2
+inline int inc(const myobject2* o, int i) noexcept { return i + o->a; }
+//override get_a
+inline int get_a(const myobject2* o) noexcept { return o->a + 1; }

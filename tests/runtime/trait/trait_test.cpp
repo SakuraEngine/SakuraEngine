@@ -18,4 +18,22 @@ TEST_CASE("simple trait test")
         mytrait t = o;
         REQUIRE_EQ(t.inc(0), 1233);
     }
+    SUBCASE("property")
+    {
+        myobject o;
+        REQUIRE_EQ(o.a, 1233);
+        mytrait t = o;
+        REQUIRE_EQ(t.get_a(), 1233);
+        t.set_a(1033);
+        REQUIRE_EQ(o.a, 1033);
+        REQUIRE_EQ(t.get_a(), 1033);
+    }
+    
+    SUBCASE("property override")
+    {
+        myobject2 o;
+        REQUIRE_EQ(o.a, 1233);
+        mytrait t = o;
+        REQUIRE_EQ(t.get_a(), 1234);
+    }
 }

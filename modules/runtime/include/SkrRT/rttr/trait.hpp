@@ -5,8 +5,8 @@
 #else
 #define TRAIT_MIXIN(type) \
     void* self = nullptr; \
-    const __VTABLE_##type* vtable = nullptr; \
+    const __VTABLE_##type##_t* vtable = nullptr; \
     template<class T> \
     type(T& t) noexcept \
-        : self(&t), vtable(&__VTABLE_##type##_HELPER<T>::vtable) {}
+        : self(&t), vtable(&__VTABLE_##type<T>) {}
 #endif
