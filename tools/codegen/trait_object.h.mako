@@ -34,8 +34,9 @@ struct __VTABLE_${record.short_name}_HELPER
             params_expr = ", " + params_expr
         args_expr = ", ".join(name for name, parameter in vars(method.parameters).items())
         isConst = "const" if method.isConst else ""
+        isNoexcept = "noexcept" if method.isNothrow else ""
     %>
-    static ${method.retType} static_${db.short_name(method.name)}(${isConst} void* self ${params_expr}) noexcept
+    static ${method.retType} static_${db.short_name(method.name)}(${isConst} void* self ${params_expr}) ${isNoexcept}
     {
         auto memberAvailable = SKR_VALIDATOR((auto obj, auto... args), obj->${db.short_name(method.name)}(args...));
         if constexpr(memberAvailable(static_cast<${isConst} T*>(0), ${args_expr}))

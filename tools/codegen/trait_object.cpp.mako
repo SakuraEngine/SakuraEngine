@@ -10,8 +10,9 @@
         if(args_expr != ""):
             args_expr = ", " + args_expr
         isConst = "const" if method.isConst else ""
+        isNoexcept = "noexcept" if method.isNothrow else ""
     %>
-    ${method.retType} ${method.name}(${params_expr}) ${isConst}
+    ${method.retType} ${method.name}(${params_expr}) ${isConst} ${isNoexcept}
     {
         return vtable->${db.short_name(method.name)}(self ${args_expr});
     }

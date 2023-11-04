@@ -10,16 +10,16 @@ mytrait
 {
     TRAIT_MIXIN(mytrait)
 
-    int inc(int i) const;
+    int inc(int i) const noexcept;
 };
 
 struct myobject
 {
-    int inc(int i) const { return i + 1233; }
+    int inc(int i) const noexcept { return i + 1233; }
 };
 
 
 struct myobject2
 {
 };
-inline int inc(const myobject2*, int i) { return i + 1233; }
+inline int inc(const myobject2*, int i) noexcept { return i + 1233; }
