@@ -209,6 +209,11 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
             os.projectdir()..vformat("/tools/codegen/query.hpp.mako"),
             os.projectdir()..vformat("/tools/codegen/query.cpp.mako"),
         },
+        {
+            os.projectdir()..vformat("/tools/codegen/trait_object.py"),
+            os.projectdir()..vformat("/tools/codegen/trait_object.cpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/trait_object.hpp.mako"),
+        },
     }
     -- calculate if strong makos need to be rebuild
     local dependfile = target:dependfile(target:name().."_mako.d")

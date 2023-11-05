@@ -43,7 +43,7 @@ if (os.host() == "macosx") then
     if (os.arch() == "x86_64") then
         --
         find_sdk.tool_from_github("dxc", "dxc-macosx-x86_64.zip")
-        find_sdk.tool_from_github("meta-v0.0.1-llvm_15.0.3", "meta-v0.0.1-llvm_15.0.3-macosx-x86_64.zip")
+        find_sdk.tool_from_github("meta-v1.0.0-llvm_17.0.1", "meta-v1.0.0-llvm_17.0.1-macosx-x86_64.zip")
         find_sdk.tool_from_github("tracy-gui-0.9.2a", "tracy-gui-0.9.2a-macosx-x86_64.zip")
         -- network
         find_sdk.lib_from_github("gns", "gns-macosx-x86_64.zip")
