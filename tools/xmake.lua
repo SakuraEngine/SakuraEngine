@@ -9,5 +9,6 @@ includes("shader_compiler/xmake.lua")
 includes("texture_compiler/xmake.lua")
 includes("resource_compiler/xmake.lua")
 includes("asset_tool/xmake.lua")
+includes("gameai_tool/xmake.lua")
 
 end

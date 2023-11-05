@@ -1,0 +1,1 @@
+#include "SkrGameAINav/resources/navmesh.hpp"
