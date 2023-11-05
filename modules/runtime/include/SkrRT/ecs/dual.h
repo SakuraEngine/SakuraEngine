@@ -539,6 +539,14 @@ SKR_RUNTIME_API void dualS_pack_entities(dual_storage_t* storage);
  */
 SKR_RUNTIME_API dual_query_t* dualQ_create(dual_storage_t* storage, const dual_filter_t* filter, const dual_parameters_t* params);
 /**
+ * @brief create an alias for a component with unique phase to work with overloded query
+ * 
+ * @param query 
+ * @param component 
+ * @param alias  
+ */
+SKR_RUNTIME_API void dualQ_make_alias(dual_storage_t* storage, const char* component, const char* alias);
+/**
  * @brief release a query
  * 
  * @param query 
@@ -966,9 +974,20 @@ namespace dual
         dual_type_index_t* localTypes;
         EIndex entityIndex;
         dual_query_t* query;
+        const void* paramPtrs[32];
+        dual_parameters_t params;
         task_context_t(dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex, dual_query_t* query)
             : storage(storage), view(view), localTypes(localTypes), entityIndex(entityIndex), query(query)
         {
+            SKR_ASSERT(params.length < 32); //TODO: support more than 32 params
+            dualQ_get(query, nullptr, &params);
+            for (int i = 0; i < params.length; ++i)
+            {
+                if(params.accesses[i].readonly)
+                    paramPtrs[i] = dualV_get_owned_ro_local(view, localTypes[i]);
+                else
+                    paramPtrs[i] = dualV_get_owned_rw_local(view, localTypes[i]);
+            }
         }
 
         auto count() { return view->count; }
@@ -988,8 +1007,6 @@ namespace dual
 
         void check_access(dual_type_index_t idx, bool readonly, bool random = false)
         {
-            dual_parameters_t params;
-            dualQ_get(query, nullptr, &params);
             SKR_ASSERT(params.accesses[idx].readonly == static_cast<int>(readonly));
             SKR_ASSERT(params.accesses[idx].randomAccess >= static_cast<int>(random));
         }
@@ -1002,7 +1019,7 @@ namespace dual
                 check_local_type<T>(idx);
                 check_access(idx, false);
             }
-            return (T*)dualV_get_owned_rw_local(view, localTypes[idx]);
+            return (T*)paramPtrs[idx];
         }
 
         template<class T, bool noCheck = false>
@@ -1024,7 +1041,7 @@ namespace dual
                 check_local_type<T>(idx);
                 check_access(idx, true);
             }
-            return (const T*)dualV_get_owned_ro_local(view, localTypes[idx]);
+            return (const T*)paramPtrs[idx];
         }
 
         template<class T, bool noCheck = false>

@@ -82,39 +82,36 @@ void MPServerWorld::SpawnPlayerEntity(int player, int connectionId, int localPla
         CMovement, CSphereCollider2D, CWeapon, CHealth, CSkill, CPlayer,
         CController, CPrefab, CAuth, CAuthTypeData, CRelevance, dual::dirty_comp_t>;
     spawner_t spawner;
-    
-    float spawnArea = 100.f;
     // allocate renderable
-    spawner(storage, 1, [&](spawner_t::View view)
+    auto view =  spawner(storage);
+    float spawnArea = 100.f;
+    auto [translations, rotations, scales, movements, 
+        collidors, weapons, healths, skills, players, 
+        controllers, prefabs, auths, authTypeDatas, relevances, 
+        dirties] = view.unpack();
+    for (uint32_t i = 0; i < view.count(); i++)
     {
-        auto [translations, rotations, scales, movements, 
-            collidors, weapons, healths, skills, players, 
-            controllers, prefabs, auths, authTypeDatas, relevances, 
-            dirties] = view.unpack();
-        for (uint32_t i = 0; i < view.count(); i++)
-        {
-            //randomize spawn position
-            translations[i].value = {rand() % (int)spawnArea - spawnArea / 2.f, 0.f, rand() % (int)spawnArea - spawnArea / 2.f };
-            rotations[i].euler = { 0.f, 0.f, 0.f };
-            scales[i].value = { 10.f, 1.f, 10.f };
-            players[i].speed = players[i].baseSpeed = 30.f;
-            controllers[i].playerId = player;
-            controllers[i].serverPlayerId = player;
-            controllers[i].connectionId = connectionId;
-            controllers[i].localPlayerId = localPlayerId;
-            collidors[i].radius = 8.f;
-            weapons[i].fireRate = 0.3;
-            weapons[i].fireTimer = 0.f;
-            healths[i].health = 100.f;
-            healths[i].maxHealth = 100.f;
-            skills[i].cooldown = 5.f;
-            skills[i].duration = 2.f;
-            skills[i].speedMultiplier = 2.f;
-            relevances[i].mask.reset();
-            relevances[i].mask.flip();
-            prefabs[i].prefab = GetPlayerPrefab();
-        }
-    });
+        //randomize spawn position
+        translations[i].value = {rand() % (int)spawnArea - spawnArea / 2.f, 0.f, rand() % (int)spawnArea - spawnArea / 2.f };
+        rotations[i].euler = { 0.f, 0.f, 0.f };
+        scales[i].value = { 10.f, 1.f, 10.f };
+        players[i].speed = players[i].baseSpeed = 30.f;
+        controllers[i].playerId = player;
+        controllers[i].serverPlayerId = player;
+        controllers[i].connectionId = connectionId;
+        controllers[i].localPlayerId = localPlayerId;
+        collidors[i].radius = 8.f;
+        weapons[i].fireRate = 0.3;
+        weapons[i].fireTimer = 0.f;
+        healths[i].health = 100.f;
+        healths[i].maxHealth = 100.f;
+        skills[i].cooldown = 5.f;
+        skills[i].duration = 2.f;
+        skills[i].speedMultiplier = 2.f;
+        relevances[i].mask.reset();
+        relevances[i].mask.flip();
+        prefabs[i].prefab = GetPlayerPrefab();
+    }
 }
 
 void MPServerWorld::InitializeScene()
