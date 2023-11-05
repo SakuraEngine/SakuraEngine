@@ -13,12 +13,13 @@
 void MPGameWorld::Initialize()
 {
     storage = dualS_create();
+    dualQ_make_alias(storage, "skr_translation_comp_t", "skr_translation_comp_t:move");
     controlQuery.Initialize(storage);
     healthCheckQuery.Initialize(storage);
     fireQuery.Initialize(storage);
     movementQuery.Initialize(storage);
     ballQuery.Initialize(storage);
-    ballChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t', [inout]CHealth, [in]CSphereCollider2D");
+    ballChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t@move, [inout]CHealth, [in]CSphereCollider2D");
     dualQ_add_child(ballQuery.query, ballChildQuery);
     killBallQuery.Initialize(storage);
     killZombieQuery.Initialize(storage);
@@ -267,42 +268,42 @@ void MPGameWorld::PlayerControl()
 {
     dual::schedule_task(controlQuery, 512, [this](QControl::TaskContext ctx)
     {
-        auto [controllers, movements, skills, players, dirtyMasks] = ctx.unpack();
         for(int i=0; i<ctx.count(); ++i)
         {
-            auto& input = this->input.inputs[controllers[i].playerId];
+            auto [controllers, movements, skills, players, dirtyMasks] = ctx.unpack(i);
+            auto& input = this->input.inputs[controllers.playerId];
             bool skillDirty = false;
-            if(skills[i].cooldownTimer > 0)
+            if(skills.cooldownTimer > 0)
             {
-                skills[i].cooldownTimer -= deltaTime;
-                if(skills[i].cooldownTimer <= 0)
+                skills.cooldownTimer -= deltaTime;
+                if(skills.cooldownTimer <= 0)
                 {
                     skillDirty = true;
                 }
             }
-            if(input.skill && skills[i].cooldownTimer <= 0)
+            if(input.skill && skills.cooldownTimer <= 0)
             {
-                skills[i].cooldownTimer = skills[i].cooldown;
-                skills[i].durationTimer = skills[i].duration;
-                players[i].speed = skills[i].speedMultiplier * players[i].baseSpeed;
+                skills.cooldownTimer = skills.cooldown;
+                skills.durationTimer = skills.duration;
+                players.speed = skills.speedMultiplier * players.baseSpeed;
                 skillDirty = true;
             }
-            if(skills[i].durationTimer > 0)
+            if(skills.durationTimer > 0)
             {
-                skills[i].durationTimer -= deltaTime;
-                if(skills[i].durationTimer <= 0)
+                skills.durationTimer -= deltaTime;
+                if(skills.durationTimer <= 0)
                 {
                     skillDirty = true;
-                    players[i].speed = players[i].baseSpeed;
+                    players.speed = players.baseSpeed;
                 }
             }
-            skr::math::store(rtm::vector_mul(skr::math::load(input.move), players[i].speed), movements[i].velocity);
+            skr::math::store(rtm::vector_mul(skr::math::load(input.move), players.speed), movements.velocity);
             if(dirtyMasks)
             {
-                ctx.set_dirty<CMovement>(dirtyMasks[i]);
+                ctx.set_dirty<CMovement>(*dirtyMasks);
                 if(skillDirty)
                 {
-                    ctx.set_dirty<CSkill>(dirtyMasks[i]);
+                    ctx.set_dirty<CSkill>(*dirtyMasks);
                 }
             }
         }

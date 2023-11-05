@@ -98,6 +98,17 @@ struct entity_spawner_T
         };
         dualS_allocate_type(storage, &type, count, trampoline, &f);
     }
+    View operator()(dual_storage_t* storage)
+    {
+        View view;
+        auto trampoline = +[](void* u, dual_chunk_view_t* v)
+        {
+            auto& view = *(View*)u;
+            view = {v, std::make_tuple(((T*)dualV_get_owned_ro(v, dual_id_of<T>::get()))...)};
+        };
+        dualS_allocate_type(storage, &type, 1, trampoline, &view);
+        return view;
+    }
 };
 
 } // namespace dual

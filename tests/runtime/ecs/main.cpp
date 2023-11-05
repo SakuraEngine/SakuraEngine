@@ -405,10 +405,10 @@ TEST_CASE_METHOD(ECSTest, "query_overload")
 
         e3 = dualV_get_entities(&view)[0];
     }
-    
-    auto query1 = dualQ_from_literal(storage, "[inout]test'");
-    auto query2 = dualQ_from_literal(storage, "[inout]test',[in]test2");
-    SKR_UNUSED auto query3 = dualQ_from_literal(storage, "[inout]test',[in]test3");
+    dualQ_make_alias(storage, "test", "test:a");
+    auto query1 = dualQ_from_literal(storage, "[inout]test:a");
+    auto query2 = dualQ_from_literal(storage, "[inout]test:a,[in]test2");
+    SKR_UNUSED auto query3 = dualQ_from_literal(storage, "[inout]test:a,[in]test3");
 
     {
         dual_chunk_view_t view;

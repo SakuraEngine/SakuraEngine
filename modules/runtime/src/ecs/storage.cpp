@@ -781,6 +781,14 @@ dual_storage_t* dual_storage_t::clone()
     return dst;
 }
 
+void dual_storage_t::make_alias(skr::string_view name, skr::string_view aliasName)
+{
+    auto& reg = dual::type_registry_t::get();
+    auto type = reg.get_type(name);
+    dual_phase_alias_t aliasPhase { type, ++aliasCount };
+    aliases.insert({ aliasName, aliasPhase });
+}
+
 extern "C" {
 dual_storage_t* dualS_create()
 {
@@ -997,6 +1005,11 @@ dual_query_t* dualQ_create(dual_storage_t* storage, const dual_filter_t* filter,
 {
     SKR_ASSERT(dual::ordered(*filter));
     return storage->make_query(*filter, *params);
+}
+
+void dualQ_make_alias(dual_storage_t* storage, const char* component, const char* alias)
+{
+    storage->make_alias((ochar8_t*)component, (ochar8_t*)alias);
 }
 
 void dualQ_release(dual_query_t *query)

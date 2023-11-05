@@ -71,13 +71,21 @@ struct equalto {
 struct scheduler_t;
 } // namespace dual
 
+struct dual_phase_alias_t {
+    dual_type_index_t type;
+    uint32_t phase;
+};
+
 struct dual_storage_t {
     using archetype_t = dual::archetype_t;
     using queries_t = eastl::vector<dual_query_t*>;
     using groups_t = skr::flat_hash_map<dual_entity_type_t, dual_group_t*, dual::hasher<dual_entity_type_t>, dual::equalto<dual_entity_type_t>>;
     using archetypes_t = skr::flat_hash_map<dual_type_set_t, archetype_t*, dual::hasher<dual_type_set_t>, dual::equalto<dual_type_set_t>>;
+    using phase_alias_t = skr::flat_hash_map<skr::string_view, dual_phase_alias_t, skr::hash<skr::string_view>>;
     archetypes_t archetypes;
     queries_t queries;
+    phase_alias_t aliases;
+    uint32_t aliasCount = 0;
     dual::phase_entry** phases = nullptr;
     uint32_t phaseCount = 0;
     bool queriesBuilt = false;
@@ -165,4 +173,6 @@ struct dual_storage_t {
     dual_chunk_view_t allocate_view(dual_group_t* group, EIndex count);
     dual_chunk_view_t allocate_view_strict(dual_group_t* group, EIndex count);
     void structural_change(dual_group_t* group, dual_chunk_t* chunk);
+
+    void make_alias(skr::string_view name, skr::string_view alias);
 };
