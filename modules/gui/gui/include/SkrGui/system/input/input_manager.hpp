@@ -8,7 +8,7 @@ namespace gui
 {
 // TODO. roadmap
 // //  1. hit test
-//  2. pointer events
+// //  2. pointer events
 //  3. pointer events bind
 //  4. focus (Pointer)
 //  5. keyboard events

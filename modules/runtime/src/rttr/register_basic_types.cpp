@@ -1,4 +1,6 @@
 #include "SkrRT/rttr/exec_static.hpp"
+#include "SkrRT/rttr/iobject.hpp"
+#include "SkrRT/rttr/type/record_type.hpp"
 #include "SkrRT/rttr/type_loader/array_type_loader.hpp"
 #include "SkrRT/rttr/type_loader/pointer_type_loader.hpp"
 #include "SkrRT/rttr/type_loader/primitive_type_loader.hpp"
@@ -49,4 +51,25 @@ SKR_RTTR_EXEC_STATIC
     // array
     static ArrayTypeLoader array_loader;
     register_generic_type_loader(kArrayGenericGUID, &array_loader);
+
+    // IObject
+    static struct IObjectLoader : public TypeLoader {
+        Type* create() override
+        {
+            return SkrNew<RecordType>(
+            RTTRTraits<::skr::rttr::IObject>::get_name(),
+            RTTRTraits<::skr::rttr::IObject>::get_guid(),
+            sizeof(skr::rttr::IObject),
+            alignof(skr::rttr::IObject),
+            make_record_basic_method_table<skr::rttr::IObject>());
+        }
+        void load(Type* type) override
+        {
+        }
+        void destroy(Type* type) override
+        {
+            SkrDelete(type);
+        }
+    } iobject_loader;
+    register_type_loader(type_id<skr::rttr::IObject>(), &iobject_loader);
 };

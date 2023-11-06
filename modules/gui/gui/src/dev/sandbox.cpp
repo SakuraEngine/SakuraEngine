@@ -8,6 +8,8 @@
 #include "SkrGui/framework/layer/native_window_layer.hpp"
 #include "SkrGui/backend/device/device.hpp"
 #include "SkrGui/backend/device/window.hpp"
+#include "SkrGui/system/input/event.hpp"
+#include "SkrGui/system/input/pointer_event.hpp"
 
 namespace skr::gui
 {
@@ -76,6 +78,26 @@ void Sandbox::paint()
 void Sandbox::compose()
 {
     _root_layer->update_window();
+}
+
+bool Sandbox::dispatch_event(Event* event)
+{
+    if (event->type_is<PointerDownEvent>())
+    {
+        auto pointer_event = event->type_cast_fast<PointerDownEvent>();
+
+        // hit test
+        HitTestResult result;
+        hit_test(&result, pointer_event->global_position);
+        skr::string path_str;
+        for (const auto& node : result.path())
+        {
+            path_str += node.target->get_record_type()->name();
+            path_str += u8"->";
+        }
+        SKR_LOG_INFO(u8"%s", path_str.c_str());
+    }
+    return false;
 }
 
 bool Sandbox::hit_test(HitTestResult* result, Offsetf global_position)

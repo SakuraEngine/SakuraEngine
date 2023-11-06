@@ -9,6 +9,7 @@
 #include "SkrGui/backend/device/window.hpp"
 #include "SkrInputSystem/input_system.hpp"
 #include "SkrInputSystem/input_trigger.hpp"
+#include "input_binding.hpp"
 
 // !!!! TestWidgets !!!!
 #include "SkrGui/widgets/stack.hpp"
@@ -94,40 +95,8 @@ int main(void)
         auto mapping_ctx = input_system->create_mapping_context();
         input_system->add_mapping_context(mapping_ctx, 0, {});
 
-        // build actions
-        auto action  = input_system->create_input_action(skr::input::EValueType::kBool);
-        auto trigger = input_system->create_trigger<skr::input::InputTriggerDown>();
-        action->add_trigger(trigger);
-        action->bind_event<bool>([](const bool& down) {
-            SKR_LOG_INFO(u8"Key F pressed: %d", down);
-        });
-
-        auto action2  = input_system->create_input_action(skr::input::EValueType::kBool);
-        auto trigger2 = input_system->create_trigger<skr::input::InputTriggerPressed>();
-        action2->add_trigger(trigger2);
-        action2->bind_event<bool>([sandbox](const bool& f2) {
-            int x, y;
-            skr_cursor_pos(&x, &y, ECursorCoordinate::CURSOR_COORDINATE_SCREEN);
-
-            HitTestResult result;
-            sandbox->hit_test(&result, { (float)x, (float)y });
-            skr::string path_str;
-            for (auto node : result.path())
-            {
-                path_str += node.target->get_record_type()->name();
-                path_str += u8"->";
-            }
-            SKR_LOG_INFO(u8"%s", path_str.c_str());
-        });
-
-        // mapping action <-> device keys
-        auto mapping    = input_system->create_mapping<skr::input::InputMapping_Keyboard>(EKeyCode::KEY_CODE_F);
-        mapping->action = action;
-        mapping_ctx->add_mapping(mapping);
-
-        auto mapping2    = input_system->create_mapping<skr::input::InputMapping_MouseButton>(EMouseKey::MOUSE_KEY_LB);
-        mapping2->action = action2;
-        mapping_ctx->add_mapping(mapping2);
+        // bind events
+        bind_pointer_event(input_system, mapping_ctx, sandbox);
     }
 
     // handler
