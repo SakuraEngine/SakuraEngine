@@ -3,6 +3,11 @@
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/math/geometry.hpp"
 
+namespace skr::input
+{
+struct InputSystem;
+}
+
 namespace skr::gui
 {
 struct INativeDevice;
@@ -24,6 +29,7 @@ struct SKR_GUI_API Sandbox {
     void paint();
     void compose();
 
+    bool dispatch_event(Event* event);
     bool hit_test(HitTestResult* result, Offsetf global_position);
 
     void resize_window(int32_t width, int32_t height);

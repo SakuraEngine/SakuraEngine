@@ -42,6 +42,7 @@ sreflect_struct(
     "rtti": true
 )
 Event : virtual public skr::rttr::IObject {
+    SKR_RTTR_GENERATE_BODY()
     EEventRoutePhase phase  = EEventRoutePhase::None;
     EEventSource     source = EEventSource::None;
 };

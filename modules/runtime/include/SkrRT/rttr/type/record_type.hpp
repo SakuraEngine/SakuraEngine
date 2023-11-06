@@ -138,9 +138,9 @@ struct SKR_RUNTIME_API RecordType : public Type {
     skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const override;
 
     // setup
-    SKR_INLINE void set_base_types(UMap<GUID, BaseInfo> base_types) { _base_types_map = std::move(base_types); }
-    SKR_INLINE void set_fields(MultiUMap<string, Field> fields) { _fields_map = std::move(fields); }
-    SKR_INLINE void set_methods(MultiUMap<string, Method> methods) { _methods_map = std::move(methods); }
+    void set_base_types(UMap<GUID, BaseInfo> base_types);
+    void set_fields(MultiUMap<string, Field> fields);
+    void set_methods(MultiUMap<string, Method> methods);
 
     // getter
     SKR_INLINE const UMap<GUID, BaseInfo>& base_types() const { return _base_types_map; }

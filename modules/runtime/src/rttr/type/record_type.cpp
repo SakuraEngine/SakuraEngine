@@ -209,4 +209,38 @@ skr::json::error_code RecordType::read_json(void* dst, skr::json::value_t&& read
     return skr::json::error_code::SUCCESS;
 }
 
+// setup
+void RecordType::set_base_types(UMap<GUID, BaseInfo> base_types)
+{
+    // validate
+    for (const auto& data : base_types)
+    {
+        if (data.value.type == nullptr)
+        {
+            string guid_str = skr::format(u8"{}", data.key);
+            SKR_LOG_ERROR(u8"[RTTR] type %s has a null base type.\n GUID: {%s}", name().c_str(), guid_str.c_str());
+        }
+    }
+
+    _base_types_map = std::move(base_types);
+}
+void RecordType::set_fields(MultiUMap<string, Field> fields)
+{
+    // validate
+    for (const auto& data : fields)
+    {
+        if (data.value.type == nullptr)
+        {
+            string guid_str = skr::format(u8"{}", data.key);
+            SKR_LOG_ERROR(u8"[RTTR] type %s has a null field type.\n GUID: {%s}", name().c_str(), guid_str.c_str());
+        }
+    }
+
+    _fields_map = std::move(fields);
+}
+void RecordType::set_methods(MultiUMap<string, Method> methods)
+{
+    _methods_map = std::move(methods);
+}
+
 } // namespace skr::rttr
