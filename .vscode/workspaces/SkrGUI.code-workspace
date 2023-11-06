@@ -40,9 +40,12 @@
             "--build_tests=y",
             "--cxx_version=cxx20"
         ],
-        "xmake.customDebugConfig": {
-            "stopAtEntry": false,
-        },
         "editor.formatOnSave": true,
+        "xmake.customDebugConfig": {
+            // "visualizerFile": "${workspaceFolder}\\SDKs\\natvis\\SkrContainer.natvis",
+            "stopAtEntry": false,
+            "type": "cppvsdbg",
+            "console": "externalTerminal"
+        }
     }
 }
