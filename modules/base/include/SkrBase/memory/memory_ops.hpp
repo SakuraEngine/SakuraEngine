@@ -217,8 +217,8 @@ SKR_INLINE void move(Dst* dst, Src* src, size_t count)
             }
             else if (dst > src)
             {
-                auto dst_end = dst + count;
-                auto src_end = src + count;
+                auto dst_end = dst + count - 1;
+                auto src_end = src + count - 1;
 
                 while (count)
                 {
@@ -264,8 +264,8 @@ SKR_INLINE void move_assign(Dst* dst, Src* src, size_t count)
             }
             else if (dst > src)
             {
-                auto dst_end = dst + count;
-                auto src_end = src + count;
+                auto dst_end = dst + count - 1;
+                auto src_end = src + count - 1;
 
                 while (count)
                 {
