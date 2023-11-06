@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+    <Type Name="ostr::codeunit_sequence_view">
+        <DisplayString>{data_,[size_]}[{size_}]</DisplayString>
+    </Type>
+
+    <Type Name="ostr::codeunit_sequence">
+        <DisplayString>{((ostr::codeunit_sequence::sso*)this)->alloc ? ((ostr::codeunit_sequence::norm*)this)->data : ((ostr::codeunit_sequence::sso*)this)->data._Elems}</DisplayString>
+        <Expand HideRawView="true">
+            <Item Name="allocated">(bool)(((ostr::codeunit_sequence::sso*)this)->alloc)</Item>
+            <Item Name="size">((ostr::codeunit_sequence::sso*)this)->alloc ? ((ostr::codeunit_sequence::norm*)this)->count : (ostr::u32)((ostr::codeunit_sequence::sso*)this)->size</Item>
+            <Item Name="capacity">((ostr::codeunit_sequence::sso*)this)->alloc ? ((ostr::codeunit_sequence::norm*)this)->capacity : ostr::codeunit_sequence::SSO_SIZE_MAX</Item>
+            <Item Name="data">((ostr::codeunit_sequence::sso*)this)->alloc ? ((ostr::codeunit_sequence::norm*)this)->data : (ostr::u32)((ostr::codeunit_sequence::sso*)this)->data._Elems</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="ostr::text_view">
+        <DisplayString>{this->view_}</DisplayString>
+    </Type>
+
+    <Type Name="ostr::text">
+        <DisplayString>{this->sequece_}</DisplayString>
+    </Type>
+
+</AutoVisualizer>
