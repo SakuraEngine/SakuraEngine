@@ -83,15 +83,34 @@ void bind_pointer_event(skr::input::InputSystem* system, SObjectPtr<input::Input
 
     // move
     {
-        auto move_action = system->create_input_action(skr::input::EValueType::kFloat2);
-        auto trigger     = system->create_trigger<skr::input::InputTriggerChanged>();
-        move_action->add_trigger(trigger);
-        move_action->bind_event<skr_float2_t>([sandbox](const skr_float2_t& delta) {
+        auto action  = system->create_input_action(skr::input::EValueType::kFloat2);
+        auto trigger = system->create_trigger<skr::input::InputTriggerChanged>();
+        action->add_trigger(trigger);
+        action->bind_event<skr_float2_t>([sandbox](const skr_float2_t& delta) {
             PointerMoveEvent event;
             _fill_pointer_event(&event);
             event.global_delta = { delta.x, delta.y };
             sandbox->dispatch_event(&event);
         });
+        auto mapping    = system->create_mapping<skr::input::InputMapping_MouseAxis>(EMouseAxis::MOUSE_AXIS_XY);
+        mapping->action = action;
+        ctx->add_mapping(mapping);
+    }
+
+    // wheel
+    {
+        auto action  = system->create_input_action(skr::input::EValueType::kFloat2);
+        auto trigger = system->create_trigger<skr::input::InputTriggerChanged>();
+        // action->add_trigger(trigger);
+        action->bind_event<skr_float2_t>([sandbox](const skr_float2_t& delta) {
+            PointerScrollEvent event;
+            _fill_pointer_event(&event);
+            event.scroll_delta = { delta.x, delta.y };
+            sandbox->dispatch_event(&event);
+        });
+        auto mapping    = system->create_mapping<skr::input::InputMapping_MouseAxis>(EMouseAxis::MOUSE_AXIS_WHEEL_XY);
+        mapping->action = action;
+        ctx->add_mapping(mapping);
     }
 }
 } // namespace skr::gui

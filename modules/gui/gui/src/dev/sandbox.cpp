@@ -82,9 +82,10 @@ void Sandbox::compose()
 
 bool Sandbox::dispatch_event(Event* event)
 {
-    if (event->type_is<PointerDownEvent>())
+    if (event->type_is<PointerDownEvent>() || event->type_is<PointerMoveEvent>())
     {
-        auto pointer_event = event->type_cast_fast<PointerDownEvent>();
+        // TODO. hit test
+        auto pointer_event = event->type_cast_fast<PointerEvent>();
 
         // hit test
         HitTestResult result;
@@ -95,8 +96,18 @@ bool Sandbox::dispatch_event(Event* event)
             path_str += node.target->get_record_type()->name();
             path_str += u8"->";
         }
-        SKR_LOG_INFO(u8"%s", path_str.c_str());
+        SKR_LOG_INFO(u8"%f, %f", pointer_event->global_delta.x, pointer_event->global_delta.y);
     }
+    else if (event->type_is<PointerUpEvent>())
+    {
+        // TODO. restore hit test path and remove
+    }
+    else if (event->type_is<PointerMoveEvent>())
+    {
+        auto pointer_event = event->type_cast_fast<PointerScrollEvent>();
+        SKR_LOG_INFO(u8"%f, %f", pointer_event->scroll_delta.x, pointer_event->scroll_delta.y);
+    }
+
     return false;
 }
 

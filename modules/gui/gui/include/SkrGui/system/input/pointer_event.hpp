@@ -69,14 +69,6 @@ PointerUpEvent : public PointerEvent {
 };
 
 sreflect_struct(
-    "guid": "6d6366d3-6755-4e0c-af3f-a5487deb2efa",
-    "rtti": true
-)
-PointerHoverEvent : public PointerEvent {
-    SKR_RTTR_GENERATE_BODY()
-};
-
-sreflect_struct(
     "guid": "453f7052-9740-4136-9831-55e8188827d2",
     "rtti": true
 )
@@ -98,6 +90,24 @@ sreflect_struct(
 )
 PointerExitEvent : public PointerEvent {
     SKR_RTTR_GENERATE_BODY()
+};
+
+sreflect_struct(
+    "guid": "51778097-47ab-4eb3-9193-3cecffedf8a0",
+    "rtti": true
+)
+PointerSignalEvent : public PointerEvent {
+    SKR_RTTR_GENERATE_BODY()
+};
+
+sreflect_struct(
+    "guid": "1da2a830-544a-44c4-8ba7-2f313194bced",
+    "rtti": true
+)
+PointerScrollEvent : public PointerEvent {
+    SKR_RTTR_GENERATE_BODY()
+    spush_attr("no-rtti": true)
+    Offsetf scroll_delta = {};
 };
 
 } // namespace gui sreflect
