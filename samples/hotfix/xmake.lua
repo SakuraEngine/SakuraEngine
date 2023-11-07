@@ -2,11 +2,6 @@ shared_module("HotfixTest", "HOTFIX_TEST", engine_version)
     set_group("04.examples/hotfix")
     public_dependency("SkrRT", engine_version)
     add_files("hotfix_module.cpp")
-    add_rules("c++.codegen", {
-        files = {"*.h", "*.hpp"},
-        rootdir = "./",
-        api = "HOTFIX_TEST"
-    })
 
 target("HotfixTestHost")
     set_group("04.examples/hotfix")
