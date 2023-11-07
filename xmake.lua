@@ -43,13 +43,6 @@ target("SkrRoot")
     add_deps("SkrProfile", {public = true})
     -- add OpenString defines
     add_defines("OPEN_STRING_API=SKR_RUNTIME_API", {public = true})
-    -- generate codegen fences
-    after_load(function(target)
-        import("meta_codegen")
-        if(has_config("use_async_codegen")) then
-            meta_codegen.generate_fences(nil)
-        end
-    end)
     -- dispatch codegen task
     before_build(function(target)
         import("core.base.option")
@@ -58,12 +51,9 @@ target("SkrRoot")
             import("core.project.task")
             task.run("run-codegen-jobs", {}, targetname)
         end
-        if(has_config("use_async_codegen")) then
-            import("core.base.scheduler")
-            scheduler.co_start(upzip_tasks, targetname)
-        else
-            upzip_tasks(targetname)
-        end
+
+        import("core.base.scheduler")
+        scheduler.co_start(upzip_tasks, targetname)
     end)
 target_end()
 

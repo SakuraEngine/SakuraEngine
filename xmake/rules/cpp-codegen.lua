@@ -1,35 +1,7 @@
 task("run-codegen-jobs")
     on_run(function (targetname)
         import("meta_codegen")
-        if(has_config("use_async_codegen")) then
-            import("core.base.scheduler")
-            scheduler.co_start(meta_codegen, targetname)
-        else
-            meta_codegen(target)
-        end
-    end)
-
-rule("c++.codegen.fence")
-    on_load(function (target, opt)
-        local rule = target:rule("c++.build"):clone()
-        rule:add("deps", "c++.codegen.fence", {order = true})
-        target:rule_add(rule)
-    end)
-    before_buildcmd_files(function (target, batchcmds, sourcebatch, opt)
-        -- avoid duplicate linking of object files
-        sourcebatch.objectfiles = {}
-        -- wait async codegen finish
-        if(has_config("use_async_codegen")) then
-            import("core.base.scheduler")
-            for _, dep in pairs(target:deps()) do
-                if dep:rule("c++.codegen") then
-                    scheduler.co_group_wait(dep:name()..".cpp-codegen")
-                end
-            end
-            if target:rule("c++.codegen") then
-                scheduler.co_group_wait(target:name()..".cpp-codegen")
-            end
-        end
+        meta_codegen(target)
     end)
 
 rule("c++.codegen")
@@ -65,7 +37,10 @@ rule("c++.codegen")
         local gendir = target:data("meta.codegen.dir")
         local sourcebatches = target:sourcebatches()
         local cppfiles = os.files(path.join(gendir, target:name(), "/*.cpp"))
-        
+        if #cppfiles == 0 then
+            cprint("${red}error: no codegen files found for target [%s]", target:name())
+        end
+
         -- compile generated cpp files
         for _, file in ipairs(cppfiles) do
             local sourcefile_cx = path.absolute(file)
