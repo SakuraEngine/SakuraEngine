@@ -1,5 +1,6 @@
 #pragma once
 #include <type_traits>
+
 namespace skr
 {
 namespace detail

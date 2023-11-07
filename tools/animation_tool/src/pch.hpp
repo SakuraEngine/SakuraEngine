@@ -20,7 +20,7 @@
 #include "SkrRT/misc/types.h" // IWYU pragma: export
 #include "SkrRT/misc/log.hpp" // IWYU pragma: export
 #include "SkrRT/misc/hash.h" // IWYU pragma: export
-#include "SkrRT/misc/defer.hpp" // IWYU pragma: export
+#include "SkrBase/misc/defer.hpp" // IWYU pragma: export
 
 #include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
 #include <SkrRT/containers/sptr.hpp> // IWYU pragma: export

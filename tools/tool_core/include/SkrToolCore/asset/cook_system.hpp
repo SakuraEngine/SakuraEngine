@@ -4,7 +4,7 @@
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/misc/log.hpp"
-#include "SkrRT/misc/defer.hpp"
+#include "SkrBase/misc/defer.hpp"
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/containers/function_ref.hpp"
 #include "SkrToolCore/asset/cooker.hpp"

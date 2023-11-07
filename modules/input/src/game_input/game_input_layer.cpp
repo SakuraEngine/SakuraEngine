@@ -3,7 +3,7 @@
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/misc/log.h"
-#include "SkrRT/misc/defer.hpp"
+#include "SkrBase/misc/defer.hpp"
 #include "GameInput/GameInput.h"
 #include "SkrRT/platform/shared_library.hpp"
 
