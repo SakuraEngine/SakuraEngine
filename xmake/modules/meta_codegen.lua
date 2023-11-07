@@ -76,7 +76,7 @@ function meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
             local verbose = option.get("verbose")
             -- build generated cpp to json
             meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
-        end, {dependfile = sourcefile .. ".d", files = headerfiles})
+        end, {dependfile = sourcefile .. ".meta.d", files = headerfiles})
     end
 end
 
@@ -216,7 +216,7 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
         },
     }
     -- calculate if strong makos need to be rebuild
-    local dependfile = target:dependfile(target:name().."_mako.d")
+    local dependfile = target:dependfile(target:name().."_mako")
     local files = os.files(path.join(metadir, "**.meta"));
     if #files ~= 0 then
         for _, generator_arr in ipairs(mako_generators) do

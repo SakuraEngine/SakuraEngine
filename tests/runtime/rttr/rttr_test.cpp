@@ -19,7 +19,6 @@ TEST_CASE("test serde")
     SUBCASE("from_string")
     {
         Types::TestEnum e;
-        constexpr auto d = skr::consteval_hash(u8"Value0");
         if (auto r = EnumTraits<Types::TestEnum>::from_string(u8"Value0", e))
         {
             REQUIRE_EQ(e, Types::TestEnum::Value0);
