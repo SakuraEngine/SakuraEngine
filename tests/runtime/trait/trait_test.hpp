@@ -8,7 +8,7 @@
 sreflect_struct("guid" : "5CACA8C3-4F59-4814-8B0F-E6328FA0D361", "trait" : true)
 mytrait
 {
-    TRAIT_MIXIN(mytrait)
+    SKR_TRAIT_MIXIN(mytrait)
 
     int inc(int i) const noexcept;
 
