@@ -38,11 +38,11 @@
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
-#include "SkrAnim/resources/animation_resource.h"
-#include "SkrAnim/resources/skeleton_resource.h"
-#include "SkrAnim/resources/skin_resource.h"
-#include "SkrAnim/components/skin_component.h"
-#include "SkrAnim/components/skeleton_component.h"
+#include "SkrAnim/resources/animation_resource.hpp"
+#include "SkrAnim/resources/skeleton_resource.hpp"
+#include "SkrAnim/resources/skin_resource.hpp"
+#include "SkrAnim/components/skin_component.hpp"
+#include "SkrAnim/components/skeleton_component.hpp"
 #include "GameRuntime/game_animation.h"
 
 #include "SkrRT/async/thread_job.hpp"
@@ -420,6 +420,8 @@ void create_test_scene(SRendererId renderer)
 
 void async_attach_skin_mesh(SRendererId renderer)
 {
+    using namespace skr;
+
     auto filter          = make_zeroed<dual_filter_t>();
     auto meta            = make_zeroed<dual_meta_filter_t>();
     auto renderable_type = make_zeroed<dual::type_builder_t>();
@@ -430,15 +432,15 @@ void async_attach_skin_mesh(SRendererId renderer)
     filter.none    = static_type.build();
     auto skin_type = make_zeroed<dual::type_builder_t>();
     auto filter2   = make_zeroed<dual_filter_t>();
-    filter2.all    = skin_type.with<skr_render_mesh_comp_t, skr::anim::SkinComponent, skr::anim::SkeletonComponent>().build();
+    filter2.all    = skin_type.with<renderer::MeshComponent, anim::SkinComponent, anim::SkeletonComponent>().build();
     auto attchFunc = [=](dual_chunk_view_t* view) {
         auto requestSetup = [=](dual_chunk_view_t* view) {
             using namespace skr::guid::literals;
 
-            auto mesh_comps = dual::get_owned_rw<skr_render_mesh_comp_t>(view);
-            auto skin_comps = dual::get_owned_rw<skr::anim::SkinComponent>(view);
-            auto skel_comps = dual::get_owned_rw<skr::anim::SkeletonComponent>(view);
-            // auto anim_comps = dual::get_owned_rw<skr::anim::AnimComponent>(view);
+            auto mesh_comps = dual::get_owned_rw<renderer::MeshComponent>(view);
+            auto skin_comps = dual::get_owned_rw<anim::SkinComponent>(view);
+            auto skel_comps = dual::get_owned_rw<anim::SkeletonComponent>(view);
+            // auto anim_comps = dual::get_owned_rw<anim::AnimComponent>(view);
 
             for (uint32_t i = 0; i < view->count; i++)
             {
@@ -473,11 +475,11 @@ void async_attach_render_mesh(SRendererId renderer)
     filter.none    = static_type.build();
     auto skin_type = make_zeroed<dual::type_builder_t>();
     auto filter2   = make_zeroed<dual_filter_t>();
-    filter2.all    = skin_type.with<skr_render_mesh_comp_t>().build();
+    filter2.all    = skin_type.with<skr::renderer::MeshComponent>().build();
     auto attchFunc = [=](dual_chunk_view_t* view) {
         auto requestSetup = [=](dual_chunk_view_t* view) {
             using namespace skr::guid::literals;
-            auto mesh_comps = dual::get_owned_rw<skr_render_mesh_comp_t>(view);
+            auto mesh_comps = dual::get_owned_rw<skr::renderer::MeshComponent>(view);
 
             for (uint32_t i = 0; i < view->count; i++)
             {
@@ -608,9 +610,9 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
     animQuery         = dualQ_from_literal(game_world,
                                            "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<unseq>skr::anim::AnimComponent, [in]<unseq>skr::anim::SkeletonComponent");
     initAnimSkinQuery = dualQ_from_literal(game_world,
-                                           "[inout]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr_render_mesh_comp_t, [in]skr::anim::SkeletonComponent");
+                                           "[inout]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
     skinQuery         = dualQ_from_literal(game_world,
-                                           "[in]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr_render_mesh_comp_t, [in]skr::anim::SkeletonComponent");
+                                           "[in]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
 
     auto handler = skr_system_get_default_handler();
     handler->add_window_close_handler(
@@ -817,7 +819,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
             SkrZoneScopedN("SkinSystem");
 
             auto initAnimSkinComps = [&](dual_chunk_view_t* r_cv) {
-                const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
+                const auto meshes = dual::get_component_ro<skr::renderer::MeshComponent>(r_cv);
                 const auto skels  = dual::get_component_ro<skr::anim::SkeletonComponent>(r_cv);
                 const auto anims  = dual::get_owned_rw<skr::anim::AnimComponent>(r_cv);
                 const auto skins  = dual::get_owned_rw<skr::anim::SkinComponent>(r_cv);
@@ -854,7 +856,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
             // skin dispatch for the frame
             auto cpuSkinJob = SkrNewLambda(
             [&](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
-                const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(view);
+                const auto meshes = dual::get_component_ro<skr::renderer::MeshComponent>(view);
                 const auto anims  = dual::get_component_ro<skr::anim::AnimComponent>(view);
                 auto       skins  = dual::get_owned_rw<skr::anim::SkinComponent>(view);
 

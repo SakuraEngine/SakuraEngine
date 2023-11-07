@@ -1,4 +1,4 @@
-#include "SkrAnim/resources/skin_resource.h"
+#include "SkrAnim/resources/skin_resource.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrAnimTool/skin_asset.h"
 #include "cgltf/cgltf.h"
@@ -7,6 +7,7 @@ namespace skd::asset
 {
 bool SSkinCooker::Cook(SCookContext* ctx)
 {
+    using namespace skr::anim;
     SkrZoneScopedNS("SSkinCooker::Cook", 4);
 
     cgltf_data* rawMesh = ctx->Import<cgltf_data>();
@@ -17,8 +18,8 @@ bool SSkinCooker::Cook(SCookContext* ctx)
     SKR_DEFER({ctx->Destroy(rawMesh);});
     //TODO; indexing skin
     cgltf_skin* rawSkin = &rawMesh->skins[0];
-    skr_skin_resource_t resource;
-    auto blob = skr::make_blob_builder<skr_skin_blob_view_t>();
+    SkinResource resource;
+    auto blob = skr::make_blob_builder<SkinBlobView>();
     blob.name = rawSkin->name ? (const char8_t*)rawSkin->name : u8"UnnamedSkin";
     blob.joint_remaps.reserve(rawSkin->joints_count);
     for (auto i = 0; i < rawSkin->joints_count; ++i)
@@ -30,7 +31,7 @@ bool SSkinCooker::Cook(SCookContext* ctx)
     SKR_ASSERT(components == 16);
     blob.inverse_bind_poses.resize(rawSkin->joints_count);
     std::memcpy(blob.inverse_bind_poses.data(), matrix, sizeof(cgltf_float) * components * rawSkin->joints_count);
-    resource.arena = skr::binary::make_arena<skr_skin_blob_view_t>(resource.blob, blob);
+    resource.arena = skr::binary::make_arena<SkinBlobView>(resource.blob, blob);
     return ctx->Save(resource);
 }
 } // namespace skd::asset

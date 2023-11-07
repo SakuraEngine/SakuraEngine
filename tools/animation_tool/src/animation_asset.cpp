@@ -10,8 +10,8 @@
 #include "SkrAnim/ozz/base/memory/unique_ptr.h"
 #include "SkrAnim/ozz/base/io/stream.h"
 #include "SkrAnim/ozz/base/io/archive.h"
-#include "SkrAnim/resources/skeleton_resource.h"
-#include "SkrAnim/resources/animation_resource.h"
+#include "SkrAnim/resources/skeleton_resource.hpp"
+#include "SkrAnim/resources/animation_resource.hpp"
 #include "SkrToolCore/asset/json_utils.hpp"
 
 #include "SkrProfile/profile.h"
@@ -20,6 +20,7 @@ namespace skd::asset
 {
 bool SAnimCooker::Cook(SCookContext *ctx)
 {
+    using namespace skr::anim;
     using namespace ozz::animation::offline;
     SkrZoneScopedNS("SAnimCooker::Cook", 4);
 
@@ -34,7 +35,7 @@ bool SAnimCooker::Cook(SCookContext *ctx)
     auto idx = ctx->AddStaticDependency(settings.skeletonAsset.get_serialized(), true);
     if(ctx->GetStaticDependency(idx).get_status() == SKR_LOADING_STATUS_ERROR)
         return false;
-    skr::anim::SkeletonResource* skeletonResource = (skr::anim::SkeletonResource*)ctx->GetStaticDependency(idx).get_ptr();
+    SkeletonResource* skeletonResource = (SkeletonResource*)ctx->GetStaticDependency(idx).get_ptr();
     auto& skeleton = skeletonResource->skeleton;
     //-----import resource object
     RawAnimation* rawAnimation = (RawAnimation*)ctx->Import<RawAnimation>();
@@ -119,7 +120,7 @@ bool SAnimCooker::Cook(SCookContext *ctx)
         SKR_LOG_ERROR(u8"Failed to build animation.");
         return false;
     }
-    skr_anim_resource_t resource;
+    AnimResource resource;
     resource.animation = std::move(*animation);
     //-----emit runtime dependencies
     // no runtime dependencies

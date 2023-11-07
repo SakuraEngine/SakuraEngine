@@ -1,5 +1,7 @@
 #include "SkrRT/misc/types.h"
 
+namespace game {
+
 struct CubeGeometry {
     const skr_float3_t g_Positions[24] = {
         { -0.5f, 0.5f, -0.5f }, // front face
@@ -137,3 +139,5 @@ struct CubeGeometry {
         20, 21, 22, 20, 23, 21, // bottom face
     };
 };
+
+} // namespace game

@@ -6,10 +6,9 @@
 #endif
 
 #ifdef __cplusplus
-namespace skr
-{
-namespace renderer
-{
+namespace skr sreflect{
+namespace renderer  sreflect{
+    
 struct RenderMesh 
 {
     skr_mesh_resource_id mesh_resource_id;
@@ -18,17 +17,18 @@ struct RenderMesh
     skr::vector<skr_index_buffer_view_t> index_buffer_views;
     skr::vector<PrimitiveCommand> primitive_commands;
 };
+
+sreflect_managed_component("guid" : "c66ab7ef-bde9-4e0f-8023-a2d99ba5134c")
+MeshComponent 
+{
+    SKR_RESOURCE_FIELD(MeshResource, mesh_resource);
+};
+
 } // namespace renderer
 } // namespace skr
 #endif
 
-sreflect_struct("guid" : "c66ab7ef-bde9-4e0f-8023-a2d99ba5134c")
-sattr("component" : true)
-skr_render_mesh_comp_t 
-{
-    SKR_RESOURCE_FIELD(skr_mesh_resource_t, mesh_resource);
-};
-typedef struct skr_render_mesh_comp_t skr_render_mesh_comp_t;
+
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API
 void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resource_id mesh_resource);

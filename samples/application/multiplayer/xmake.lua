@@ -22,11 +22,6 @@ shared_module("MPShared", "MP_SHARED", engine_version)
 
 executable_module("MPGame", "MP_GAME", engine_version)
     set_group("04.examples/network")
-    add_rules("c++.codegen", {
-        files = {"modules/mpgame/include/MPGame/**.h", "modules/mpgame/include/MPGame/**.hpp"},
-        rootdir = "modules/mpgame/include/MPGame",
-        api = "MP_GAME"
-    })
     add_includedirs("modules/mpgame/include", {public=true})
     public_dependency("SkrRenderer", engine_version)
     public_dependency("SkrImGui", engine_version)
@@ -42,11 +37,6 @@ executable_module("MPGame", "MP_GAME", engine_version)
 
 executable_module("MPServer", "MP_SERVER", engine_version)
     set_group("04.examples/network")
-    add_rules("c++.codegen", {
-        files = {"modules/mpserver/include/MPServer/**.h", "modules/mpserver/include/MPServer/**.hpp"},
-        rootdir = "modules/mpgame/include/MPServer",
-        api = "MP_SERVER"
-    })
     add_includedirs("modules/mpserver/include", {public=true})
     public_dependency("MPShared", engine_version)
     if (is_os("windows")) then 

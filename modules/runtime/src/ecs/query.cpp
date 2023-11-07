@@ -185,15 +185,13 @@ dual_query_t* dual_storage_t::make_query(const dual_filter_t& filter, const dual
 dual_query_t* dual_storage_t::make_query(const char* inDesc)
 {
     using namespace dual;
-    eastl::string desc(inDesc);
-#ifdef _WIN32
-    desc.erase(eastl::remove_if(desc.begin(), desc.end(), [](char c) -> bool { return std::isspace(c); }), desc.end());
-#else
-    desc.erase(eastl::remove_if(desc.begin(), desc.end(), isspace), desc.end());
-#endif
-    eastl::vector<eastl::string_view> parts;
-    eastl::string spliter = ",";
-    skr::split(desc, parts, spliter);
+    skr::string desc = skr::string::from_utf8((ochar8_t*)inDesc);
+    using namespace skr;
+    desc.replace(u8""_txtv, u8" "_txtv);
+    desc.replace(u8""_txtv, u8"\r"_txtv);
+    ostr::sequence<skr::string_view> parts;
+    auto spliter = u8","_txtv;
+    desc.split(spliter, parts, true);
     // todo: errorMsg? global error code?
     auto& error = get_error();
     int errorPos = 0;
@@ -222,11 +220,11 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             ALL,
             NONE
         } selector = ALL;
-        if (part[i] == '[') // attr: [in] [out] [inout] [has]
+        if (part[i].get_codepoint() == '[') // attr: [in] [out] [inout] [has]
         {
             auto j = i + 1;
             errorPos = partBegin + i;
-            while (i < part.size() && part[i] != ']')
+            while (i < part.size() && part[i].get_codepoint() != ']')
                 ++i;
             if (i == part.size())
             {
@@ -234,23 +232,23 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 SKR_ASSERT(false);
                 return nullptr;
             }
-            auto attr = part.substr(j, i - j);
+            auto attr = part.subview(j, i - j);
             errorPos = partBegin + j;
-            if (attr.compare("in") == 0)
+            if (attr == u8"in")
                 operation.readonly = true;
-            else if (attr.compare("inout") == 0)
+            else if (attr == u8"inout")
                 operation.readonly = false;
-            else if (attr.compare("out") == 0)
+            else if (attr == u8"out")
             {
                 operation.readonly = false;
                 operation.phase = 0;
             }
-            else if (attr.compare("atomic") == 0)
+            else if (attr == u8"atomic")
             {
                 operation.readonly = false;
                 operation.atomic = true;
             }
-            else if (attr.compare("has") == 0)
+            else if (attr == u8"has")
                 filterOnly = true;
             else
             {
@@ -271,7 +269,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         {
             auto j = i + 1;
             errorPos = partBegin + i;
-            while (i < part.size() && part[i] != '>')
+            while (i < part.size() && part[i].get_codepoint() != '>')
                 ++i;
             if (i == part.size())
             {
@@ -279,13 +277,13 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 SKR_ASSERT(false);
                 return nullptr;
             }
-            auto attr = part.substr(j, i - j);
+            auto attr = part.subview(j, i - j);
             errorPos = partBegin + j;
-            if (attr.compare("seq") == 0)
+            if (attr == u8"seq")
                 operation.randomAccess = DOS_SEQ;
-            else if (attr.compare("par") == 0)
+            else if (attr == u8"par")
                 operation.randomAccess = DOS_PAR;
-            else if (attr.compare("unseq") == 0)
+            else if (attr == u8"unseq")
             {
                 selector = OPT;
                 operation.randomAccess = DOS_UNSEQ;
@@ -305,7 +303,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             SKR_ASSERT(false);
             return nullptr;
         }
-        if (!std::isalpha(part[i]))
+        if (!std::isalpha(part[i].get_codepoint()))
         {
             if (part[i] == '$')
             {
@@ -320,7 +318,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 shared = true;
                 ++i;
             }
-            if(operation.randomAccess == DOS_UNSEQ && part[i] != '?')
+            if(operation.randomAccess == DOS_UNSEQ && part[i].get_codepoint() != '?')
             {
                 errorPos = partBegin + i;
                 error = skr::format(u8"unseq component must be optional, loc {}.", errorPos);
@@ -343,7 +341,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             }
             ++i;
         }
-        if (i == part.size() || !std::isalpha(part[i]))
+        if (i == part.size() || !std::isalpha(part[i].get_codepoint()))
         {
             errorPos = partBegin + i;
             error = skr::format(u8"no type specified, loc {}.", errorPos);
@@ -353,42 +351,38 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         else
         {
             auto j = i;
-            auto validNameChar = [](char c)
+            auto validNameChar = [](char32_t c)
             {
                 return std::isalpha(c) || c =='_' || (c > '0' && c <= '9') || c == ':';
             };
-            while (i < part.size() && validNameChar(part[i]))
+            while (i < part.size() && validNameChar(part[i].get_codepoint()))
                 ++i;
-            auto name = part.substr(j, i - j);
-            type = reg.get_type({(const char8_t*)name.data(), name.size()});
-            if (type == kInvalidTypeIndex)
+            auto name = part.subview(j, i - j);
+            auto iter = aliases.find(name);
+            if(iter != aliases.end())
             {
-                errorPos = partBegin + i;
-                error = skr::format(u8"unknown type name '{}', loc {}.", (const char8_t*)name.data(), errorPos);
-                SKR_ASSERT(false);
-                return nullptr;
+                type = iter->second.type;
+                
+                if (operation.phase == 0)
+                {
+                    errorPos = partBegin + j;
+                    error = skr::format(u8"unexpected phase alias.([out] is always phase 0), loc {}.", errorPos);
+                    SKR_ASSERT(false);
+                    return nullptr;
+                }
+                operation.phase = iter->second.phase;
             }
-        }
-        {
-            auto j = i;
-            while (i < part.size() && part[i] == '\'')
-                ++i;
-            if (i < part.size())
+            else
             {
-                errorPos = partBegin + i;
-                error = skr::format(u8"unexpected character, ',' expected, loc {}.", errorPos);
-                SKR_ASSERT(false);
-                return nullptr;
+                type = reg.get_type(name);
+                if (type == kInvalidTypeIndex)
+                {
+                    errorPos = partBegin + i;
+                    error = skr::format(u8"unknown type name or alias name '{}', loc {}.", name, errorPos);
+                    SKR_ASSERT(false);
+                    return nullptr;
+                }
             }
-            if (i > j && operation.phase == 0)
-            {
-                errorPos = partBegin + j;
-                error = skr::format(u8"unexpected phase modifier.([out] is always phase 0), loc {}.", errorPos);
-                SKR_ASSERT(false);
-                return nullptr;
-            }
-            if(i > j)
-                operation.phase = i - j;
         }
         if (shared)
         {
@@ -476,8 +470,11 @@ void dual_storage_t::build_queries()
         uint32_t phase;
         llvm_vecsmall::SmallVector<dual_query_t*, 8> queries;
     };
-    for(EIndex i = 0; i < phaseCount; ++i)
-        phases[i]->~phase_entry();
+    if(phases != nullptr)
+    {
+        for(EIndex i = 0; i < phaseCount; ++i)
+            phases[i]->~phase_entry();
+    }
     phaseCount = 0;
     queryBuildArena.reset();
     eastl::vector<phase_entry_builder> entries;

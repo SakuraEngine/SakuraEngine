@@ -209,6 +209,11 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
             os.projectdir()..vformat("/tools/codegen/query.hpp.mako"),
             os.projectdir()..vformat("/tools/codegen/query.cpp.mako"),
         },
+        {
+            os.projectdir()..vformat("/tools/codegen/trait_object.py"),
+            os.projectdir()..vformat("/tools/codegen/trait_object.cpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/trait_object.hpp.mako"),
+        },
     }
     -- calculate if strong makos need to be rebuild
     local dependfile = target:dependfile(target:name().."_mako.d")
@@ -257,24 +262,6 @@ function generate_fences(targetname)
     else
         targets = all_targets
     end
-
-    -- inject fence rules
-    for _, target in ipairs(targets) do
-        local need_fence = false
-        for __, dep in pairs(target:deps()) do
-            if (dep:rule("c++.codegen")) then
-                -- inject fence rule for dependency with c++.codegen rule
-                need_fence = true
-            end
-        end
-        if (target:rule("c++.codegen")) then
-            need_fence = true
-        end
-        if (need_fence) then
-            local fence = project.rule("c++.codegen.fence") or rule.rule("c++.codegen.fence")
-            target:rule_add(fence)
-        end
-    end
 end
     
 function generate_once(targetname)
@@ -312,7 +299,7 @@ function generate_once(targetname)
     for _, target in ipairs(targets) do
         if (target:rule("c++.codegen")) then
             -- resume meta compile
-            scheduler.co_group_begin(target:name()..".cpp-codegen.meta", function ()
+            scheduler.co_group_begin(target:name()..".cppgen.meta", function ()
                 meta_target = target:clone()
                 meta_target:set("pcxxheader", nil)
                 meta_target:set("pcheader", nil)
@@ -324,29 +311,25 @@ function generate_once(targetname)
     -- compile mako templates
     for _, target in ipairs(targets) do
         if (target:rule("c++.codegen")) then
-            scheduler.co_group_begin(target:name()..".cpp-codegen", function ()
-                -- wait self metas
-                for _, dep in pairs(target:deps()) do
-                    if dep:rule("c++.codegen") then
-                        scheduler.co_group_wait(dep:name()..".cpp-codegen.meta")
-                    end
+            -- wait self metas
+            for _, dep in pairs(target:deps()) do
+                if dep:rule("c++.codegen") then
+                    scheduler.co_group_wait(dep:name()..".cppgen.meta")
                 end
-                scheduler.co_group_wait(target:name()..".cpp-codegen.meta")
+            end
+            scheduler.co_group_wait(target:name()..".cppgen.meta")
+
+            scheduler.co_group_begin(target:name()..".cppgen.mako", function ()
                 scheduler.co_start(compile_task, mako_compile, target, opt)
             end)
         end
     end
 
-    if(not has_config("use_async_codegen")) then
-        -- wait all
-        for _, target in ipairs(targets) do
-            if (target:rule("c++.codegen")) then
-                scheduler.co_group_wait(target:name()..".cpp-codegen")
-            end
+    -- wait all
+    for _, target in ipairs(targets) do
+        if (target:rule("c++.codegen")) then
+            scheduler.co_group_wait(target:name()..".cppgen.mako")
         end
-        cprint("${dim}[rule]: c++.codegen${clear} wait all sync codegen.")
-    else
-        cprint("${dim}[rule]: c++.codegen${clear} use async codegen.")
     end
 end
 

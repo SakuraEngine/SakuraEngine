@@ -5,9 +5,11 @@
 #include "SkrRenderer/render_effect.h"
 #include "SkrRT/ecs/type_builder.hpp"
 
-typedef struct forward_effect_identity_t {
+namespace game {
+
+typedef struct ForwardEffectToken {
     dual_entity_t game_entity;
-} forward_effect_identity_t;
+} ForwardEffectToken;
 
 static const skr_render_effect_name_t forward_effect_name = u8"ForwardEffect";
 
@@ -63,3 +65,5 @@ protected:
     eastl::vector<PushConstants> push_constants;
     eastl::vector<skr_float4x4_t> model_matrices;
 };
+
+}

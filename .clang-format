@@ -116,6 +116,17 @@ Macros:
   - sreflect_struct(x,y,z,w,a,b,c)=struct
   - sreflect_struct(x,y,z,w,a,b,c,d)=struct
   - sreflect_struct(x,y,z,w,a,b,c,d,e)=struct
+  # struct
+  - sreflect_managed_component(x)=struct
+  - sreflect_managed_component(x,y)=struct
+  - sreflect_managed_component(x,y,z)=struct
+  - sreflect_managed_component(x,y,z)=struct
+  - sreflect_managed_component(x,y,z,w)=struct
+  - sreflect_managed_component(x,y,z,w,a)=struct
+  - sreflect_managed_component(x,y,z,w,a,b)=struct
+  - sreflect_managed_component(x,y,z,w,a,b,c)=struct
+  - sreflect_managed_component(x,y,z,w,a,b,c,d)=struct
+  - sreflect_managed_component(x,y,z,w,a,b,c,d,e)=struct
 
 ForEachMacros: ["forloop"]
 

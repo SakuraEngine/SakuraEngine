@@ -12,12 +12,6 @@ shared_module("SkrAssetTool", "SKR_ASSET_TOOL", engine_version)
     add_files("src/**.cpp")
     add_includedirs("include", {public=true})
     add_packages("nativefiledialog", {public=false})
-
-    add_rules("c++.codegen", {
-        files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/SkrAssetTool",
-        api = "SKR_ASSET_TOOL"
-    })
     set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
 
