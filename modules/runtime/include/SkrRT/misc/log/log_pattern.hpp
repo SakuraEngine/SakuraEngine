@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/memory.h"
-#include "SkrRT/misc/demangle.hpp"
+#include "SkrBase/misc/demangle.hpp"
 #include "SkrRT/misc/log/log_base.hpp"
 #include "SkrRT/containers/string.hpp"
 

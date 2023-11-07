@@ -1,5 +1,5 @@
 #include "SkrRT/platform/debug.h"
-#include "SkrRT/misc/hash.h"
+#include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include <EASTL/set.h>
 

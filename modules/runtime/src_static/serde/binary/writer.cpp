@@ -3,8 +3,8 @@
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/serde/binary/blob.h"
 #include "SkrRT/misc/bits.hpp"
-#include "SkrRT/math/rtm/scalarf.h"
-#include "SkrRT/math/rtm/scalard.h"
+#include "SkrBase/math/rtm/scalarf.h"
+#include "SkrBase/math/rtm/scalard.h"
 #include "SkrRT/misc/log.h"
 
 // help functions

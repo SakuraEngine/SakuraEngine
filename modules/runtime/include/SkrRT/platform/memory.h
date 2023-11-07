@@ -12,7 +12,7 @@
     #include <EASTL/internal/move_help.h>     // skr::forward
     namespace skr { using eastl::forward; using eastl::move; }
     #if defined(SKR_PROFILE_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
-    #include "SkrRT/misc/demangle.hpp"
+    #include "SkrBase/misc/demangle.hpp"
     #endif
 #endif
 

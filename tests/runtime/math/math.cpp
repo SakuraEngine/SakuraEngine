@@ -1,6 +1,6 @@
 #include "SkrRT/misc/types.h"
 #include "SkrRT/misc/traits.hpp"
-#include "SkrRT/math/quat.h"
+#include "SkrBase/math/quat.h"
 #include "SkrRT/containers/string.hpp"
 
 #include "SkrTestFramework/framework.hpp"

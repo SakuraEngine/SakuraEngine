@@ -1,7 +1,7 @@
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/lua/skr_lua.h"
 #include "SkrRT/platform/memory.h"
-#include "SkrRT/misc/defer.hpp"
+#include "SkrBase/misc/defer.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"
