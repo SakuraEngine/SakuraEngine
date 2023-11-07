@@ -38,6 +38,7 @@
         "xmake.additionalConfigArguments": [
             "--use_profile=enable",
             "--build_tests=y",
+            "--toolchain=clang-cl",
             "--cxx_version=cxx20"
         ],
         "editor.formatOnSave": true,
