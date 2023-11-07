@@ -9,7 +9,7 @@
 #include "SkrAnim/ozz/base/io/archive.h"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/serde/json/reader.h"
-#include "SkrAnim/resources/skeleton_resource.h"
+#include "SkrAnim/resources/skeleton_resource.hpp"
 
 namespace skd::asset
 {

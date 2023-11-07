@@ -17,8 +17,8 @@
 #include "SkrRenderer/resources/material_type_resource.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
 
-#include "SkrAnim/resources/skeleton_resource.h"
-#include "SkrAnim/resources/animation_resource.h"
+#include "SkrAnim/resources/skeleton_resource.hpp"
+#include "SkrAnim/resources/animation_resource.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"

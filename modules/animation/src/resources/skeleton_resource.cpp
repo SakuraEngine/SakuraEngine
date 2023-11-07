@@ -1,4 +1,4 @@
-#include "SkrAnim/resources/skeleton_resource.h"
+#include "SkrAnim/resources/skeleton_resource.hpp"
 #include "SkrAnim/ozz/base/io/archive.h"
 
 namespace skr::binary

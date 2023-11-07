@@ -82,10 +82,10 @@ skr_primitive_draw_packet_t IMeshRenderEffect::produce_draw_packets(const skr_pr
     uint32_t primitiveCount = 0;
     auto counterF = [&](dual_chunk_view_t* r_cv) {
         SkrZoneScopedN("PreCalculateDrawCallCount");
-        const skr_render_mesh_comp_t* meshes = nullptr;
+        const skr::renderer::MeshComponent* meshes = nullptr;
         {
             SkrZoneScopedN("FetchRenderMeshes");
-            meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
+            meshes = dual::get_component_ro<skr::renderer::MeshComponent>(r_cv);
         }
         for (uint32_t i = 0; i < r_cv->count; i++)
         {

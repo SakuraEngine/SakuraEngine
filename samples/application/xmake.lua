@@ -7,10 +7,6 @@ if(has_config("build_tools")) then
         set_group("04.examples/application")
         public_dependency("SkrToolCore", "0.1.0")
         public_dependency("GameRuntime", "0.1.0")
-        add_rules("c++.codegen", {
-            files = {"gametool/**.h", "gametool/**.hpp"},
-            rootdir = "gametool/"
-        })
         add_includedirs("gametool/include", {public=true})
         add_includedirs("./../common", {public = false})
         add_files("gametool/src/**.cpp")

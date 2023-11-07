@@ -145,3 +145,24 @@
 #elif defined(__GNUC__) || defined(__clang__)
     #define SKR_CALLCONV
 #endif
+
+#if defined(__cplusplus)
+    #define SKR_DECLARE_ZERO(type, var)                                                                    \
+        static_assert(std::is_trivially_constructible<type>::value, "not trival, 0 init is invalid!"); \
+        type var = {};
+#else
+    #define SKR_DECLARE_ZERO(type, var) type var = { 0 };
+#endif
+
+// VLA
+#ifndef __cplusplus
+    #if defined(_MSC_VER) && !defined(__clang__)
+        #define SKR_DECLARE_ZERO_VLA(type, var, num)              \
+            type* var = (type*)_alloca(sizeof(type) * (num)); \
+            memset((void*)(var), 0, sizeof(type) * (num));
+    #else
+        #define SKR_DECLARE_ZERO_VLA(type, var, num) \
+            type var[(num)];                     \
+            memset((void*)(var), 0, sizeof(type) * (num));
+    #endif
+#endif
