@@ -7,7 +7,7 @@ enums = generator.filter_rtti(db.enums)
 // BEGIN RTTI GENERATED
 #include "SkrRT/_deprecated/type/type.hpp"
 #include "SkrRT/platform/debug.h"
-#include "SkrRT/misc/hash.h"
+#include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/_deprecated/type/type_helper.hpp"
 
@@ -163,11 +163,11 @@ namespace skr::type
                 +[](void* self, skr::string_view enumStr)
                 {
                     auto& This = *((${enum.name}*)self);
-                    auto hash = hash_crc32<char8_t>({enumStr.raw().data(), (size_t)enumStr.size()});
+                    const auto hash = skr::constexpr_hash({enumStr.raw().data(), (size_t)enumStr.size()});
                     switch(hash)
                     {
                     %for name, enumerator in vars(enum.values).items():
-                        case hash_crc32<char>("${db.short_name(name)}"): if(enumStr == u8"${db.short_name(name)}") This = ${name}; return;
+                        case skr::consteval_hash(u8"${db.short_name(name)}"): if(enumStr == u8"${db.short_name(name)}") This = ${name}; return;
                     %endfor
                     }
                     SKR_UNREACHABLE_CODE();
@@ -261,12 +261,11 @@ skr::string_view EnumTraits<${enum.name}>::to_string(const ${enum.name}& value)
 }
 bool EnumTraits<${enum.name}>::from_string(string_view str, ${enum.name}& value)
 {
-    const std::string_view enumStrV = {(const char*)str.raw().data(), (size_t)str.size()};
-    const auto hash = hash_crc32(enumStrV);
+    const auto hash = skr_hash64(str.raw().data(), str.size(), 0);
     switch(hash)
     {
     %for name, value in vars(enum.values).items():
-        case hash_crc32<char>("${db.short_name(name)}"): if(str == u8"${db.short_name(name)}") value = ${name}; return true;
+        case skr::consteval_hash(u8"${db.short_name(name)}"): if(str == u8"${db.short_name(name)}") value = ${name}; return true;
     %endfor
         default:
             return false;

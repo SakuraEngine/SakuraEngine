@@ -4,7 +4,7 @@
 #include "d3d12_utils.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/misc/defer.hpp"
+#include "SkrBase/misc/defer.hpp"
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/concurrent_queue.h>
 #include <dxcapi.h>

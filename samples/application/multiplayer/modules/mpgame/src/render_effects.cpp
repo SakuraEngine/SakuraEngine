@@ -36,11 +36,11 @@
 
 #include "SkrProfile/profile.h"
 
-#include "SkrRT/math/rtm/quatf.h"
-#include "SkrRT/math/rtm/scalarf.h"
-#include "SkrRT/math/rtm/qvvf.h"
-#include "SkrRT/math/rtm/rtmx.h"
-#include "SkrRT/math/transform.h"
+#include "SkrBase/math/rtm/quatf.h"
+#include "SkrBase/math/rtm/scalarf.h"
+#include "SkrBase/math/rtm/qvvf.h"
+#include "SkrBase/math/rtm/rtmx.h"
+#include "SkrBase/math/transform.h"
 
 void RenderEffectForward::on_register(SRendererId renderer, dual_storage_t* storage)
 {

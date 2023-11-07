@@ -9,7 +9,7 @@ jobs:
       matrix:
         os: [ macos-12 ]
         arch: [ x86_64 ]
-        cxx: [ cxx17, cxx20 ]
+        cxx: [ cxx20 ]
 
     name: ${{ matrix.cxx }} + ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}

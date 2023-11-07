@@ -3,7 +3,7 @@
 #include "backend/text_server/memory.h"
 #include "backend/text_server/sort_array.h"
 
-#include "SkrRT/misc/hash.h"
+#include "SkrBase/misc/hash.h"
 
 #include <SkrRT/containers/vector.hpp>
 #include <EASTL/set.h>

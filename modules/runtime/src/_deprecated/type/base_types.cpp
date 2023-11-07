@@ -1,4 +1,4 @@
-#include "SkrRT/misc/hash.h"
+#include "SkrBase/misc/hash.h"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/_deprecated/type/type.hpp"

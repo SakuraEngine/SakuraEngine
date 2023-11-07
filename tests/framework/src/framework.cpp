@@ -1,4 +1,5 @@
 #define DOCTEST_CONFIG_IMPLEMENT
+#define DOCTEST_CONFIG_NO_EXCEPTIONS_BUT_WITH_ALL_ASSERTS
 #include "SkrTestFramework/framework.hpp"
 #include "doctest.cpp"
 

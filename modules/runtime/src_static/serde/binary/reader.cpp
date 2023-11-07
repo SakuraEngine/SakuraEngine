@@ -4,7 +4,7 @@
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/bits.hpp"
-#include "SkrRT/misc/demangle.hpp"
+#include "SkrBase/misc/demangle.hpp"
 #include <cmath>
 #include "SkrRT/containers/string.hpp"
 
