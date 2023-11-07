@@ -10,7 +10,7 @@
 #include "SkrProfile/profile.h"
 #include "pass_profiler.h"
 #include "SkrRT/platform/thread.h"
-#include "SkrRT/math/rtm/qvvf.h"
+#include "SkrBase/math/rtm/qvvf.h"
 
 thread_local SWindowHandle window;
 thread_local CGPUSurfaceId surface;

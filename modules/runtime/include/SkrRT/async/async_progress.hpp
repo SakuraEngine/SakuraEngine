@@ -3,7 +3,7 @@
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/platform/memory.h"
-#include "SkrRT/misc/defer.hpp"
+#include "SkrBase/misc/defer.hpp"
 
 #include <EASTL/atomic.h>
 #include <EASTL/queue.h>

@@ -2,7 +2,7 @@
 #include "SkrRT/rttr/rttr_traits.hpp"
 #include "SkrRT/rttr/type/record_type.hpp"
 #include "SkrRT/platform/memory.h"
-#include "SkrRT/misc/demangle.hpp"
+#include "SkrBase/misc/demangle.hpp"
 
 namespace skr::rttr
 {

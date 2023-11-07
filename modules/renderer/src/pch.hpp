@@ -13,8 +13,8 @@
 #include "SkrRT/resource/resource_system.h"  // IWYU pragma: export
 #include "SkrRT/async/thread_job.hpp" // IWYU pragma: export
 
-#include "SkrRT/math/rtm/vector4f.h" // IWYU pragma: export
-#include "SkrRT/math/rtm/rtmx.h" // IWYU pragma: export
+#include "SkrBase/math/rtm/vector4f.h" // IWYU pragma: export
+#include "SkrBase/math/rtm/rtmx.h" // IWYU pragma: export
 
 #include "SkrRT/ecs/dual.h" // IWYU pragma: export
 #include "SkrRT/ecs/array.hpp" // IWYU pragma: export

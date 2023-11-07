@@ -14,10 +14,10 @@
 #include "SkrRT/resource/resource_factory.h" // IWYU pragma: export
 #include "SkrRT/resource/resource_handle.h" // IWYU pragma: export
 
-#include "SkrRT/math/vector.h" // IWYU pragma: export
-#include "SkrRT/math/quat.h" // IWYU pragma: export
-#include "SkrRT/math/rtm/quatf.h" // IWYU pragma: export
-#include "SkrRT/math/rtm/rtmx.h" // IWYU pragma: export
+#include "SkrBase/math/vector.h" // IWYU pragma: export
+#include "SkrBase/math/quat.h" // IWYU pragma: export
+#include "SkrBase/math/rtm/quatf.h" // IWYU pragma: export
+#include "SkrBase/math/rtm/rtmx.h" // IWYU pragma: export
 
 #include "SkrRT/containers/bitset.h" // IWYU pragma: export
 #include <SkrRT/containers/sptr.hpp> // IWYU pragma: export

@@ -5,8 +5,8 @@
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/ecs/set.hpp"
-#include "SkrRT/math/vector.h"
-#include "SkrRT/math/quat.h"
+#include "SkrBase/math/vector.h"
+#include "SkrBase/math/quat.h"
 
 #include "SkrProfile/profile.h"
 

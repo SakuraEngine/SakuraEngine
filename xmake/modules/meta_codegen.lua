@@ -76,7 +76,7 @@ function meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
             local verbose = option.get("verbose")
             -- build generated cpp to json
             meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
-        end, {dependfile = sourcefile .. ".d", files = headerfiles})
+        end, {dependfile = sourcefile .. ".meta.d", files = headerfiles})
     end
 end
 
@@ -212,22 +212,24 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
         {
             os.projectdir()..vformat("/tools/codegen/trait_object.py"),
             os.projectdir()..vformat("/tools/codegen/trait_object.cpp.mako"),
-            os.projectdir()..vformat("/tools/codegen/trait_object.hpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/trait_object.h.mako"),
         },
     }
     -- calculate if strong makos need to be rebuild
-    local dependfile = target:dependfile(target:name().."_mako.d")
     local files = os.files(path.join(metadir, "**.meta"));
     if #files ~= 0 then
         for _, generator_arr in ipairs(mako_generators) do
             for _, generator in ipairs(generator_arr) do
+                if not os.exists(generator) then
+                    cprint("${red}FUCK!! '"..generator.."' is missing, fix your generator name!")
+                    raise()
+                end
                 table.insert(files, generator)
             end
         end
-
         depend.on_changed(function ()
             mako_compile_cmd(target, mako_generators, true, metadir, gendir, opt)
-        end, {dependfile = dependfile, files = files});
+        end, {dependfile = target:dependfile(target:name()..".mako"), files = files});
     end
 end
 

@@ -37,7 +37,7 @@ void CGPUUtil_FreeRootSignaturePool(CGPURootSignaturePoolId pool);
 } // end extern "C"
 #endif
 
-#include "SkrRT/misc/hash.h" // IWYU pragma: export
+#include "SkrBase/misc/hash.h" // IWYU pragma: export
 #include "SkrRT/misc/log.h" // IWYU pragma: export
 
 #define cgpu_trace(...) SKR_LOG_TRACE(__VA_ARGS__)
