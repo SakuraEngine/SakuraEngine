@@ -2,7 +2,7 @@
 #include "SkrRT/platform/win/misc.h"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/misc/defer.hpp"
+#include "SkrBase/misc/defer.hpp"
 #include "SkrRT/containers/vector.hpp"
 #include "SkrRT/containers/concurrent_queue.h"
 

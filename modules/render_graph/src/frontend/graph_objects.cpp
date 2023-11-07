@@ -2,7 +2,7 @@
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include <SkrRT/containers/hashmap.hpp>
-#include "SkrRT/misc/hash.h"
+#include "SkrBase/misc/hash.h"
 #include "SkrRT/containers/concurrent_queue.h"
 
 namespace skr

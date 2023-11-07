@@ -21,7 +21,7 @@
 
 #include <EASTL/fixed_vector.h>
 
-#include "SkrRT/math/rtm/matrix4x4f.h"
+#include "SkrBase/math/rtm/matrix4x4f.h"
 
 #include "SkrProfile/profile.h"
 

@@ -30,7 +30,7 @@
 
 #pragma once
 #include "config.h"
-#include "SkrRT/misc/hash.h"
+#include "SkrBase/misc/hash.h"
 #include <cmath>
 
 namespace godot{

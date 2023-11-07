@@ -6,7 +6,7 @@
 #include "SkrRT/platform/vfs.h" // IWYU pragma: export
 #include "SkrRT/platform/filesystem.hpp" // IWYU pragma: export
 #include "SkrRT/platform/guid.hpp" // IWYU pragma: export
-#include "SkrRT/misc/defer.hpp" // IWYU pragma: export
+#include "SkrBase/misc/defer.hpp" // IWYU pragma: export
 #include "SkrRT/misc/log.hpp" // IWYU pragma: export
 #include "SkrRT/misc/parallel_for.hpp" // IWYU pragma: export
 #include "SkrRT/async/fib_task.hpp" // IWYU pragma: export
