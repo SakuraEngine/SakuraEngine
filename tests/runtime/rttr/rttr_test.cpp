@@ -1,13 +1,34 @@
 #include "SkrTestFramework/framework.hpp"
 #include "SkrRT/rttr/type_registry.hpp"
-#include "rttr_test_types.hpp"
 #include "SkrRT/rttr/type/record_type.hpp"
 #include "SkrRT/rttr/optr.hpp"
+#include "types.hpp"
+#include "rttr_test_types.hpp"
 
 static void print_guid(const ::skr::GUID& g)
 {
     printf("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
            g.Data1(), g.Data2(), g.Data3(), g.Data4(0), g.Data4(1), g.Data4(2), g.Data4(3), g.Data4(4), g.Data4(5), g.Data4(6), g.Data4(7));
+}
+
+TEST_CASE("test serde")
+{
+    using namespace skr::rttr;
+    using namespace skr_rttr_test;
+
+    SUBCASE("from_string")
+    {
+        Types::TestEnum e;
+        constexpr auto d = skr::consteval_hash(u8"Value0");
+        if (auto r = EnumTraits<Types::TestEnum>::from_string(u8"Value0", e))
+        {
+            REQUIRE_EQ(e, Types::TestEnum::Value0);
+        }
+        if (auto r = EnumTraits<Types::TestEnum>::from_string(u8"Value1", e))
+        {
+            REQUIRE_EQ(e, Types::TestEnum::Value1);
+        }
+    }
 }
 
 // TODO. impl list

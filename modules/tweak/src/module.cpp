@@ -5,7 +5,7 @@
 #include "efsw/efsw.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/platform/thread.h"
-#include "SkrRT/misc/hash.h"
+#include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/log.h"
 #include <SkrRT/containers/hashmap.hpp>
 #include <EASTL/vector.h>

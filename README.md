@@ -217,6 +217,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - cgpu: [[api]](include/cgpu/api.h) [[design]](include/cgpu/README.md)
 
 ## 嵌入源码的开源库和版本
+- constexpr-xxh3 aebcee7 (BSD 2-Clause License)
 - sole 1.0.1 (zlib License)
 - marl e007bd3 (Apache-2.0)
 - folly (Apache-2.0)

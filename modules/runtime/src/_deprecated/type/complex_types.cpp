@@ -1,5 +1,5 @@
 #include "SkrRT/containers/variant.hpp"
-#include "SkrRT/misc/hash.h"
+#include "SkrBase/misc/hash.h"
 #include "SkrRT/_deprecated/type/type.hpp"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/vector.hpp"

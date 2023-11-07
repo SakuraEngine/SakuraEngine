@@ -6,9 +6,9 @@
 #include <SkrRT/containers/string.hpp>
 #include "SkrTestFramework/framework.hpp"
 #include <EASTL/unique_ptr.h>
-#include "RTTITestTypes/module.configure.h"
+#include "RTTRTest/module.configure.h"
 #if !defined(__meta__)
-    #include "RTTITestTypes/types.generated.h"
+    #include "RTTRTest/types.generated.h"
 #endif
 
 // TODO: Move To Core 
@@ -24,7 +24,7 @@ void XXXInformation()
     // SKR_TEST_INFO(u8"Static Ctor: {}", type->Name());
 }
 
-RTTI_TEST_TYPES_API void PrintField(const char* name);
+void PrintField(const char* name);
 
 inline void CreateBuffers()
 {
@@ -72,8 +72,8 @@ TestSon : public TestParent
     skr_resource_handle_t d; // SKR_TYPE_CATEGORY_HANDLE
     skr::resource::TResourceHandle<TestObject> e; // SKR_TYPE_CATEGORY_HANDLE
     TestEnum f; // SKR_TYPE_CATEGORY_ENUM
-    skr::vector<TestEnum> g; // SKR_TYPE_CATEGORY_DYNARR
-    skr::span<TestEnum> h; // SKR_TYPE_CATEGORY_ARRV
+    // skr::vector<TestEnum> g; // SKR_TYPE_CATEGORY_DYNARR
+    // skr::span<TestEnum> h; // SKR_TYPE_CATEGORY_ARRV
     TestEnum i[10]; // SKR_TYPE_CATEGORY_ARR
     skr::string_view k; // SKR_TYPE_CATEGORY_STRV
     TestParent* l; // SKR_TYPE_CATEGORY_REF
@@ -82,7 +82,7 @@ TestSon : public TestParent
     skr::variant<TestEnum, skr_guid_t> o; // SKR_TYPE_CATEGORY_VARIANT
     skr::SPtr<TestObject> p; // SKR_TYPE_CATEGORY_REF
     TestObject* q; // SKR_TYPE_CATEGORY_REF
-    skr::vector<skr::span<skr::variant<skr::SPtr<TestObject>, TestParent*>>> r;
+    // skr::vector<skr::span<skr::variant<skr::SPtr<TestObject>, TestParent*>>> r;
 }
 sstatic_ctor(XXXInformation<$T>());
 
@@ -91,7 +91,8 @@ sattr("rtti" : true)
 sattr("serialize" : ["json", "bin"])
 TestSerde
 {
-    skr::vector<skr::variant<uint32_t, skr::string, TestEnum>> c;
+    int i;
+    // skr::vector<skr::variant<uint32_t, skr::string, TestEnum>> c;
 };
 
 }
