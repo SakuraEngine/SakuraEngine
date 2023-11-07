@@ -20,8 +20,8 @@
 #include "SkrRT/serde/json/writer.h" // IWYU pragma: export
 
 #include "SkrRT/misc/bits.hpp" // IWYU pragma: export
-#include "SkrRT/math/rtm/scalarf.h" // IWYU pragma: export
-#include "SkrRT/math/rtm/scalard.h" // IWYU pragma: export
+#include "SkrBase/math/rtm/scalarf.h" // IWYU pragma: export
+#include "SkrBase/math/rtm/scalard.h" // IWYU pragma: export
 
 #include <SkrRT/containers/concurrent_queue.h> // IWYU pragma: export
 #include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
