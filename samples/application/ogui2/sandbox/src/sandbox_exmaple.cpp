@@ -21,6 +21,7 @@
 #include "SkrGui/widgets/sized_box.hpp"
 #include "SkrGui/widgets/text.hpp"
 #include "SkrGui/widgets/flex_slot.hpp"
+#include "SkrGui/widgets/mouse_region.hpp"
 
 int main(void)
 {
@@ -53,10 +54,17 @@ int main(void)
                 {
                     p.cross_axis_alignment = ECrossAxisAlignment::Start;
                     p.main_axis_alignment  = EMainAxisAlignment::Center;
-                    SNewChild(p.children, SizedBox)
+                    SNewChild(p.children, MouseRegin)
                     {
-                        p.size  = { 100, 300 };
-                        p.child = SNewWidget(ColoredBox) { p.color = Color::Linear("#F00"); };
+                        p.on_hover = [](PointerMoveEvent* event) {
+                            SKR_LOG_INFO(u8"mouse hover");
+                            return true;
+                        };
+                        p.child = SNewWidget(SizedBox)
+                        {
+                            p.size  = { 100, 300 };
+                            p.child = SNewWidget(ColoredBox) { p.color = Color::Linear("#F00"); };
+                        };
                     };
                     SNewChild(p.children, SizedBox)
                     {

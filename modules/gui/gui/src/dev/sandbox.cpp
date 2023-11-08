@@ -90,13 +90,16 @@ bool Sandbox::dispatch_event(Event* event)
         // hit test
         HitTestResult result;
         hit_test(&result, pointer_event->global_position);
-        skr::string path_str;
-        for (const auto& node : result.path())
+
+        // dispatch event
+        PointerMoveEvent event;
+        for (const auto& entry : result.path())
         {
-            path_str += node.target->get_record_type()->name();
-            path_str += u8"->";
+            if (entry.target->handle_event(make_not_null(&event), make_not_null(const_cast<HitTestEntry*>(&entry))))
+            {
+                return true;
+            }
         }
-        SKR_LOG_INFO(u8"%f, %f", pointer_event->global_delta.x, pointer_event->global_delta.y);
     }
     else if (event->type_is<PointerUpEvent>())
     {
