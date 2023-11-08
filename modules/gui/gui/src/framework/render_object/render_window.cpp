@@ -15,7 +15,7 @@ void RenderWindow::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_
 {
     if (child())
     {
-        context->paint_child(make_not_null(child()), offset);
+        context->paint_child(child(), offset);
     }
 }
 void RenderWindow::perform_layout() SKR_NOEXCEPT
@@ -29,6 +29,6 @@ void RenderWindow::perform_layout() SKR_NOEXCEPT
 
 NotNull<OffsetLayer*> RenderWindow::update_layer(OffsetLayer* old_layer)
 {
-    return old_layer ? make_not_null(old_layer) : make_not_null(SkrNew<WindowLayer>(_window));
+    return old_layer ? old_layer : SkrNew<WindowLayer>(_window);
 }
 } // namespace skr::gui

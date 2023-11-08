@@ -54,7 +54,7 @@ void RenderObjectElement::destroy() SKR_NOEXCEPT
     {
         if (_render_object)
         {
-            old_widget->did_unmount_render_object(make_not_null(_render_object));
+            old_widget->did_unmount_render_object(_render_object);
             _render_object->destroy();
             _render_object = nullptr;
         }
@@ -100,7 +100,7 @@ void RenderObjectElement::update_slot(Slot new_slot) SKR_NOEXCEPT
 
     if (_ancestor_render_object_element)
     {
-        _ancestor_render_object_element->move_render_object_child(make_not_null(_render_object), slot(), new_slot);
+        _ancestor_render_object_element->move_render_object_child(_render_object, slot(), new_slot);
     }
 }
 void RenderObjectElement::attach_render_object_to_parent(Slot slot) SKR_NOEXCEPT
@@ -113,13 +113,13 @@ void RenderObjectElement::attach_render_object_to_parent(Slot slot) SKR_NOEXCEPT
         SKR_GUI_LOG_ERROR(u8"cannot find ancestor render_object");
         return;
     }
-    _ancestor_render_object_element->add_render_object_child(make_not_null(_render_object), slot);
+    _ancestor_render_object_element->add_render_object_child(_render_object, slot);
 }
 void RenderObjectElement::detach_render_object_from_parent() SKR_NOEXCEPT
 {
     if (_ancestor_render_object_element)
     {
-        _ancestor_render_object_element->remove_render_object_child(make_not_null(_render_object), slot());
+        _ancestor_render_object_element->remove_render_object_child(_render_object, slot());
         _ancestor_render_object_element = nullptr;
     }
 }
@@ -136,7 +136,7 @@ void RenderObjectElement::_update_render_object() SKR_NOEXCEPT
     auto render_object_widget = widget()->type_cast_fast<RenderObjectWidget>();
     if (render_object_widget)
     {
-        render_object_widget->update_render_object(make_not_null(this), make_not_null(_render_object));
+        render_object_widget->update_render_object(this, _render_object);
     }
     else
     {

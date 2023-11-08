@@ -5,6 +5,6 @@ namespace skr::gui
 {
 NotNull<Element*> SingleChildRenderObjectWidget::create_element() SKR_NOEXCEPT
 {
-    return make_not_null(SkrNew<SingleChildRenderObjectElement>(make_not_null(this)));
+    return SkrNew<SingleChildRenderObjectElement>(this);
 }
 } // namespace skr::gui

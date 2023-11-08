@@ -6,7 +6,7 @@ namespace skr::gui
 
 NotNull<RenderObject*> Flex::create_render_object() SKR_NOEXCEPT
 {
-    auto result = make_not_null(SkrNew<RenderFlex>());
+    auto result = SkrNew<RenderFlex>();
     result->set_flex_direction(flex_direction);
     result->set_main_axis_alignment(main_axis_alignment);
     result->set_cross_axis_alignment(cross_axis_alignment);

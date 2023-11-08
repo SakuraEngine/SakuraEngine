@@ -6,7 +6,7 @@ namespace skr::gui
 
 NotNull<RenderObject*> SizedBox::create_render_object() SKR_NOEXCEPT
 {
-    auto result = make_not_null(SkrNew<RenderConstrainedBox>());
+    auto result = SkrNew<RenderConstrainedBox>();
     result->set_additional_constraint(BoxConstraints::Tight(size));
     return result;
 }

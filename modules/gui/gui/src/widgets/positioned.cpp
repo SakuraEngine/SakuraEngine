@@ -6,7 +6,7 @@ namespace skr::gui
 
 NotNull<RenderObject*> Positioned::create_render_object() SKR_NOEXCEPT
 {
-    auto result = make_not_null(SkrNew<RenderPositioned>());
+    auto result = SkrNew<RenderPositioned>();
     result->set_positional(positional);
     return result;
 }

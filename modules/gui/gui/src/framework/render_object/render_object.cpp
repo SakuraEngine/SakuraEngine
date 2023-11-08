@@ -47,8 +47,8 @@ void RenderObject::mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT
                 obj->visit_children(_RecursiveHelper{ owner });
             }
         };
-        _RecursiveHelper{ make_not_null(_parent->owner()) }(make_not_null(this));
-        this->visit_children(_RecursiveHelper{ make_not_null(_parent->owner()) });
+        _RecursiveHelper{ _parent->owner() }(this);
+        this->visit_children(_RecursiveHelper{ _parent->owner() });
     }
     _lifecycle = ERenderObjectLifecycle::Mounted;
 }
@@ -133,7 +133,7 @@ void RenderObject::mark_needs_layout() SKR_NOEXCEPT
         _needs_layout = true;
         if (_owner != nullptr)
         {
-            _owner->schedule_layout_for(make_not_null(this));
+            _owner->schedule_layout_for(this);
         }
     }
 }
@@ -147,7 +147,7 @@ void RenderObject::mark_needs_paint() SKR_NOEXCEPT
         {
             if (owner())
             {
-                owner()->schedule_paint_for(make_not_null(this));
+                owner()->schedule_paint_for(this);
             }
         }
         else if (parent() && parent()->type_is<RenderObject>())
@@ -206,7 +206,7 @@ bool RenderObject::is_repaint_boundary() const SKR_NOEXCEPT { return false; }
 // layer composite
 NotNull<OffsetLayer*> RenderObject::update_layer(OffsetLayer* old_layer)
 {
-    return old_layer != nullptr ? make_not_null(old_layer) : make_not_null(SkrNew<OffsetLayer>());
+    return old_layer != nullptr ? old_layer : SkrNew<OffsetLayer>();
 }
 
 // transform

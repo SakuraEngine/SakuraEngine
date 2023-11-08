@@ -28,8 +28,8 @@ SKR_GUI_RENDERER_API SkrNativeDevice final : public INativeDevice {
     void                    destroy_window(NotNull<INativeWindow*> view) override;
 
     // sub device
-    inline NotNull<SkrRenderDevice*>   render_device() const SKR_NOEXCEPT { return make_not_null(_render_device); }
-    inline NotNull<SkrResourceDevice*> resource_device() const SKR_NOEXCEPT { return make_not_null(_resource_device); }
+    inline NotNull<SkrRenderDevice*>   render_device() const SKR_NOEXCEPT { return _render_device; }
+    inline NotNull<SkrResourceDevice*> resource_device() const SKR_NOEXCEPT { return _resource_device; }
 
     void render_all_windows() SKR_NOEXCEPT;
 

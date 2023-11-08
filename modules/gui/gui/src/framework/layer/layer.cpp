@@ -39,7 +39,7 @@ void Layer::mount(NotNull<Layer*> parent) SKR_NOEXCEPT
                 obj->visit_children(_RecursiveHelper{ owner });
             }
         };
-        _RecursiveHelper{ make_not_null(parent->owner()) }(make_not_null(this));
+        _RecursiveHelper{ parent->owner() }(this);
     }
 }
 void Layer::unmount() SKR_NOEXCEPT

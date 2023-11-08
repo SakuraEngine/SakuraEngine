@@ -479,7 +479,7 @@ void RenderFlex::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NO
     {
         if (slot.child)
         {
-            context->paint_child(make_not_null(slot.child), slot.data.offset + offset);
+            context->paint_child(slot.child, slot.data.offset + offset);
         }
         else
         {

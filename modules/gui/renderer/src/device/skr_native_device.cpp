@@ -66,7 +66,7 @@ NotNull<INativeWindow*> SkrNativeDevice::create_window()
 {
     auto view = SkrNew<SkrNativeWindow>(this);
     _all_windows.add(view);
-    return make_not_null(view);
+    return view;
 }
 void SkrNativeDevice::destroy_window(NotNull<INativeWindow*> view)
 {
@@ -112,7 +112,7 @@ const DisplayMetrics& SkrNativeDevice::display_metrics() const
 NotNull<IUpdatableImage*> SkrNativeDevice::create_updatable_image(const UpdatableImageDesc& desc)
 {
     SKR_UNIMPLEMENTED_FUNCTION()
-    return make_not_null<IUpdatableImage*>(nullptr);
+    return nullptr;
 }
 void SkrNativeDevice::destroy_resource(NotNull<IResource*> resource)
 {

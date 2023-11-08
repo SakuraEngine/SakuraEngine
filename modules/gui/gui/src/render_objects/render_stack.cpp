@@ -117,7 +117,7 @@ void RenderStack::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_N
     {
         if (slot.child)
         {
-            context->paint_child(make_not_null(slot.child), slot.data.offset + offset);
+            context->paint_child(slot.child, slot.data.offset + offset);
         }
         else
         {

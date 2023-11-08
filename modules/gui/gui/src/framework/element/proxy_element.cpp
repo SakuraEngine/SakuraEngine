@@ -8,7 +8,7 @@ void ProxyElement::update(NotNull<Widget*> new_widget) SKR_NOEXCEPT
 {
     auto old_proxy_widget = widget()->type_cast<ProxyWidget>();
     Super::update(new_widget);
-    updated(make_not_null(old_proxy_widget));
+    updated(old_proxy_widget);
     rebuild(true);
 }
 

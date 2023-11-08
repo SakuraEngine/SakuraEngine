@@ -18,7 +18,7 @@ void SingleChildRenderObjectElement::visit_children(VisitFuncRef visitor) const 
 {
     if (_child)
     {
-        visitor(make_not_null(_child));
+        visitor(_child);
     }
 }
 

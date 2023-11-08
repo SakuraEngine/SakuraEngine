@@ -54,11 +54,11 @@ void PipelineOwner::flush_paint()
     {
         if (node->needs_paint())
         {
-            PaintingContext::repaint_composited_child(make_not_null(node));
+            PaintingContext::repaint_composited_child(node);
         }
         else
         {
-            PaintingContext::update_layer_properties(make_not_null(node));
+            PaintingContext::update_layer_properties(node);
         }
     }
 
