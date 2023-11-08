@@ -1,0 +1,24 @@
+#include "SkrGui/widgets/mouse_region.hpp"
+#include "SkrGui/render_objects/render_mouse_region.hpp"
+
+namespace skr::gui
+{
+NotNull<RenderObject*> MouseRegin::create_render_object() SKR_NOEXCEPT
+{
+    auto result = make_not_null(SkrNew<RenderMouseRegion>());
+
+    result->on_enter = std::move(on_enter);
+    result->on_exit  = std::move(on_exit);
+    result->on_hover = std::move(on_hover);
+
+    return result;
+}
+void MouseRegin::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
+{
+    auto mouse_region = render_object->type_cast_fast<RenderMouseRegion>();
+
+    mouse_region->on_enter = std::move(on_enter);
+    mouse_region->on_exit  = std::move(on_exit);
+    mouse_region->on_hover = std::move(on_hover);
+}
+} // namespace skr::gui
