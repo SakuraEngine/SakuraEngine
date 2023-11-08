@@ -16,7 +16,7 @@ sreflect_struct(
     "guid": "0de9790c-5a02-470f-92bd-81ca6fb282f2",
     "rtti": true
 )
-RenderMouseRegion : public RenderProxyBox {
+SKR_GUI_API RenderMouseRegion : public RenderProxyBox {
     using Super = RenderProxyBox;
     SKR_RTTR_GENERATE_BODY()
 
@@ -24,6 +24,8 @@ RenderMouseRegion : public RenderProxyBox {
     bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) override;
 
 public:
+    //
+    spush_attr("no-rtti": true)
     Function<bool(PointerEnterEvent*)> on_enter = {};
     Function<bool(PointerExitEvent*)>  on_exit  = {};
     Function<bool(PointerMoveEvent*)>  on_hover = {};

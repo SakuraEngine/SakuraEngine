@@ -16,12 +16,13 @@ sreflect_struct(
     "guid": "f7ee023d-dcd0-4dfc-a095-793128ac0ad9",
     "rtti": true
 )
-MouseRegin : public SingleChildRenderObjectWidget {
+SKR_GUI_API MouseRegin : public SingleChildRenderObjectWidget {
     SKR_RTTR_GENERATE_BODY()
 
-    NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
-    void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
+    NotNull<RenderObject*>             create_render_object() SKR_NOEXCEPT override;
+    void                               update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
 
+    spush_attr("no-rtti": true)
     Function<bool(PointerEnterEvent*)> on_enter = {};
     Function<bool(PointerExitEvent*)>  on_exit  = {};
     Function<bool(PointerMoveEvent*)>  on_hover = {};
