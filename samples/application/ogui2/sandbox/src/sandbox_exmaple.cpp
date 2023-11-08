@@ -89,7 +89,7 @@ int main(void)
                 p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };
             };
         };
-        sandbox->set_content(skr::make_not_null(widget));
+        sandbox->set_content(widget);
     }
 
     // input system

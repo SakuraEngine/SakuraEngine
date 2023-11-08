@@ -14,8 +14,7 @@ sreflect_struct(
     "guid": "5349672b-bfc5-46a9-9a02-40ef563c196d",
     "rtti": true
 )
-SKR_GUI_API ISingleChildRenderObject : virtual public skr::rttr::IObject
-{
+SKR_GUI_API ISingleChildRenderObject : virtual public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
     virtual ~ISingleChildRenderObject() = default;
 
@@ -36,7 +35,7 @@ struct SingleChildRenderObjectMixin {
     {
         if (_child) _child->unmount();
         _child = child->type_cast_fast<TChild>();
-        _child->mount(make_not_null(&self));
+        _child->mount(&self);
     }
     inline void remove_child(TSelf& self) SKR_NOEXCEPT
     {
@@ -45,7 +44,7 @@ struct SingleChildRenderObjectMixin {
     }
     inline void visit_children(const TSelf& self, RenderObject::VisitFuncRef visitor) const SKR_NOEXCEPT
     {
-        if (_child) visitor(make_not_null(_child));
+        if (_child) visitor(_child);
     }
 };
 } // namespace gui sreflect

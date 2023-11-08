@@ -95,7 +95,7 @@ bool Sandbox::dispatch_event(Event* event)
         PointerMoveEvent event;
         for (const auto& entry : result.path())
         {
-            if (entry.target->handle_event(make_not_null(&event), make_not_null(const_cast<HitTestEntry*>(&entry))))
+            if (entry.target->handle_event(&event, const_cast<HitTestEntry*>(&entry)))
             {
                 return true;
             }

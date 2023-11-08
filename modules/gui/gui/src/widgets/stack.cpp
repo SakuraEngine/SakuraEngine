@@ -5,7 +5,7 @@ namespace skr::gui
 {
 NotNull<RenderObject*> Stack::create_render_object() SKR_NOEXCEPT
 {
-    auto result = make_not_null(SkrNew<RenderStack>());
+    auto result = SkrNew<RenderStack>();
     result->set_stack_alignment(stack_alignment);
     result->set_child_fit(child_fit);
     result->set_stack_size(stack_size);

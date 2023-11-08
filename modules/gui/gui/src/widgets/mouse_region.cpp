@@ -5,7 +5,7 @@ namespace skr::gui
 {
 NotNull<RenderObject*> MouseRegin::create_render_object() SKR_NOEXCEPT
 {
-    auto result = make_not_null(SkrNew<RenderMouseRegion>());
+    auto result = SkrNew<RenderMouseRegion>();
 
     result->on_enter = std::move(on_enter);
     result->on_exit  = std::move(on_exit);

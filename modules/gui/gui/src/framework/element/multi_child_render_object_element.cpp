@@ -14,7 +14,7 @@ void MultiChildRenderObjectElement::first_mount(NotNull<Element*> parent, Slot s
     for (size_t i = 0; i < multi_child_widget->children.size(); ++i)
     {
         auto child_widget = multi_child_widget->children[i];
-        auto new_child    = _inflate_widget(make_not_null(child_widget), Slot{ i });
+        auto new_child    = _inflate_widget(child_widget, Slot{ i });
         _children.add(new_child);
     }
 }
@@ -23,7 +23,7 @@ void MultiChildRenderObjectElement::visit_children(VisitFuncRef visitor) const S
     for (auto child : _children)
     {
         // TODO. forgot child
-        visitor(make_not_null(child));
+        visitor(child);
     }
 }
 

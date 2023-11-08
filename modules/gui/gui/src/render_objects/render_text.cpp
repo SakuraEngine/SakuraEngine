@@ -13,7 +13,7 @@ RenderText::RenderText()
 RenderText::~RenderText()
 {
     // TODO. use window's font service
-    embedded_destroy_paragraph(make_not_null(_paragraph));
+    embedded_destroy_paragraph(_paragraph);
 }
 
 void RenderText::perform_layout() SKR_NOEXCEPT

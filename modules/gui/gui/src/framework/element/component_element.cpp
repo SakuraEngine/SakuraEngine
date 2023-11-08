@@ -10,7 +10,7 @@ void ComponentElement::first_mount(NotNull<Element*> parent, Slot slot) SKR_NOEX
 }
 void ComponentElement::visit_children(ComponentElement::VisitFuncRef visitor) const SKR_NOEXCEPT
 {
-    if (_child) visitor(make_not_null(_child));
+    if (_child) visitor(_child);
 }
 
 // build & update

@@ -10,7 +10,7 @@ FontAtlasImage::FontAtlasImage()
 }
 FontAtlasImage::~FontAtlasImage()
 {
-    if (_image) TS->get_resource_service()->destroy_resource(skr::make_not_null(_image));
+    if (_image) TS->get_resource_service()->destroy_resource(_image);
 }
 
 Ref<FontAtlasImage> FontAtlasImage::create(Sizei size, int32_t mip_count, Format format, Span<const uint8_t> data)
