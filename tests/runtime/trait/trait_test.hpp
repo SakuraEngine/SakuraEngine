@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrRT/rttr/trait.hpp"
 #if !defined(__meta__)
     #include "TraitTest/trait_test.generated.h"

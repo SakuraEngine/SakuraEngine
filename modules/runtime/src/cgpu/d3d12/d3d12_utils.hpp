@@ -1,6 +1,6 @@
 #pragma once
 #include "cgpu/d3d12/D3D12MemAlloc.h"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "./../common/common_utils.h"
 #ifdef __cplusplus

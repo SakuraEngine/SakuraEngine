@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include <string>
 #include <memory>
 

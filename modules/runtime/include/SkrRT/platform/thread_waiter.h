@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 
 #define SKR_WAITER_MODE_WIN32 0
 #define SKR_WAITER_MODE_CONDVAR 1
