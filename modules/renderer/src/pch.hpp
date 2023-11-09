@@ -4,7 +4,7 @@
 
 #include "SkrRT/platform/atomic.h" // IWYU pragma: export
 #include <SkrRT/platform/filesystem.hpp>  // IWYU pragma: export
-#include "SkrRT/platform/debug.h"  // IWYU pragma: export
+#include "SkrBase/misc/debug.h"   // IWYU pragma: export
 #include "SkrRT/misc/log.h" // IWYU pragma: export
 #include "SkrRT/containers/sptr.hpp" // IWYU pragma: export
 #include "SkrRT/containers/hashmap.hpp" // IWYU pragma: export

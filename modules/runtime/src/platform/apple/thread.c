@@ -1,5 +1,5 @@
 #include "SkrRT/platform/thread.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include <sys/sysctl.h>
 #include <time.h>
 #include <mach/clock.h>

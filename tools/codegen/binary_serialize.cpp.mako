@@ -1,6 +1,6 @@
 // BEGIN BINARY GENERATED
 #include "SkrBase/misc/hash.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/misc/log.h"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/serde/binary/writer.h"

@@ -1,6 +1,6 @@
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_header.hpp"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/rttr/type_registry.hpp"
 #include "SkrRT/rttr/type/type.hpp"
 #include "SkrRT/misc/log.hpp"

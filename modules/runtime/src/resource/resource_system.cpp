@@ -2,7 +2,7 @@
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/ecs/entities.hpp"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/platform/vfs.h"

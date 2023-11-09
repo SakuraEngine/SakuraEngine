@@ -28,7 +28,7 @@
 #ifndef OZZ_OZZ_BASE_MATHS_SOA_FLOAT_H_
 #define OZZ_OZZ_BASE_MATHS_SOA_FLOAT_H_
 
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 
 #include "SkrAnim/ozz/base/maths/math_constant.h"
 #include "SkrAnim/ozz/base/maths/simd_math.h"

@@ -8,7 +8,7 @@
 #endif
 #include "stdbool.h"
 #include "SkrRT/platform/win/misc.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/platform/memory.h"
 
 HANDLE __GetVolumeHandleForFile(const wchar_t* filePath)

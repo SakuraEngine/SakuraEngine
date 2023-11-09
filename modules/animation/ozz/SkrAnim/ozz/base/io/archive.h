@@ -79,7 +79,7 @@
 
 #include <stdint.h>
 
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 
 #include "SkrAnim/ozz/base/endianness.h"
 #include "SkrAnim/ozz/base/io/archive_traits.h"

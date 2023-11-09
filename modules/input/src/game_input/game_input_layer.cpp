@@ -1,7 +1,7 @@
 #include "SkrInput/input.h"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/atomic.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/misc/log.h"
 #include "SkrBase/misc/defer.hpp"
 #include "GameInput/GameInput.h"
