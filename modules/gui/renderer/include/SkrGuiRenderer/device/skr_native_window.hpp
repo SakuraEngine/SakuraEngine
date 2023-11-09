@@ -15,8 +15,7 @@ struct SkrRenderWindow;
 struct SkrNativeDevice;
 
 sreflect_struct(
-    "guid": "53ce54d5-329c-4455-91bc-fcc80444f19f",
-    "rtti": true
+    "guid": "53ce54d5-329c-4455-91bc-fcc80444f19f"
 )
 SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
     SKR_RTTR_GENERATE_BODY()
@@ -77,8 +76,6 @@ SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
     inline NativeWindowLayer* native_layer() const SKR_NOEXCEPT { return _native_layer; }
 
 private:
-    //
-    spush_attr("no-rtti": true)
     SkrNativeDevice*   _device        = nullptr;
     SWindowHandle      _window        = {};
     SkrRenderWindow*   _render_window = nullptr;

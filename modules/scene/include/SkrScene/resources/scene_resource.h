@@ -10,10 +10,7 @@
 #endif
 
 sreflect_struct("guid": "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A")
-sattr("rtti" : true) // this is required for the resource to be automatically deserialized
-skr_scene_resource_t
-{
-    sattr("no-rtti" : true)
+skr_scene_resource_t {
     dual_storage_t* storage;
 };
 

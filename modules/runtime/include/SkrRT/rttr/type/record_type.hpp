@@ -8,6 +8,29 @@
 
 namespace skr::rttr
 {
+namespace helper
+{
+namespace detail
+{
+template <typename T>
+using has_binary_write = decltype(skr::binary::WriteTrait<T>::Write(std::declval<skr_binary_writer_t*>(), std::declval<const T&>()));
+template <typename T>
+using has_binary_read = decltype(skr::binary::ReadTrait<T>::Read(std::declval<skr_binary_reader_t*>(), std::declval<T&>()));
+template <typename T>
+using has_json_write = decltype(skr::json::WriteTrait<T>::Write(std::declval<skr_json_writer_t*>(), std::declval<const T&>()));
+template <typename T>
+using has_json_read = decltype(skr::json::ReadTrait<T>::Read(std::declval<skr::json::value_t&&>(), std::declval<T&>()));
+} // namespace detail
+template <typename T>
+static constexpr bool has_binary_write_v = skr::is_detected_v<detail::has_binary_write, T>;
+template <typename T>
+static constexpr bool has_binary_read_v = skr::is_detected_v<detail::has_binary_read, T>;
+template <typename T>
+static constexpr bool has_json_write_v = skr::is_detected_v<detail::has_json_write, T>;
+template <typename T>
+static constexpr bool has_json_read_v = skr::is_detected_v<detail::has_json_read, T>;
+} // namespace helper
+
 struct BaseInfo {
     Type* type                     = nullptr;
     void* (*cast_func)(void* self) = nullptr;
@@ -91,25 +114,25 @@ SKR_INLINE RecordBasicMethodTable make_record_basic_method_table()
         };
     }
 
-    if constexpr (skr::is_complete_serde<skr::binary::WriteTrait<T>>())
+    if constexpr (helper::has_binary_write_v<T>)
     {
         table.write_binary = +[](const void* dst, skr_binary_writer_t* writer) {
             return skr::binary::WriteTrait<T>::Write(writer, *(const T*)dst);
         };
     }
-    if constexpr (skr::is_complete_serde<skr::binary::ReadTrait<T>>())
+    if constexpr (helper::has_binary_write_v<T>)
     {
         table.read_binary = +[](void* dst, skr_binary_reader_t* reader) {
             return skr::binary::ReadTrait<T>::Read(reader, *(T*)dst);
         };
     }
-    if constexpr (skr::is_complete_serde<skr::json::WriteTrait<T>>())
+    if constexpr (helper::has_json_write_v<T>)
     {
         table.write_json = +[](const void* dst, skr_json_writer_t* writer) {
             skr::json::WriteTrait<T>::Write(writer, *(const T*)dst);
         };
     }
-    if constexpr (skr::is_complete_serde<skr::json::ReadTrait<T>>())
+    if constexpr (helper::has_json_read_v<T>)
     {
         table.read_json = +[](void* dst, skr::json::value_t&& reader) {
             return skr::json::ReadTrait<T>::Read(std::forward<skr::json::value_t>(reader), *(T*)dst);

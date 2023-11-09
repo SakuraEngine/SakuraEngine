@@ -6,7 +6,7 @@
 #include "SkrRT/platform/guid.hpp"
 
 #ifndef __meta__
-#include "SkrShaderCompiler/assets/material_type_asset.generated.h" // IWYU pragma: export
+    #include "SkrShaderCompiler/assets/material_type_asset.generated.h" // IWYU pragma: export
 #endif
 
 namespace skd sreflect
@@ -14,9 +14,8 @@ namespace skd sreflect
 namespace asset sreflect
 {
 sreflect_struct("guid" : "329fddb1-73a6-4b4b-8f9f-f4acca58a6e5")
-sattr("rtti": true, "serialize" : ["json", "bin"])
-skr_material_type_asset_t
-{
+sattr("serialize" : ["json", "bin"])
+skr_material_type_asset_t {
     uint32_t version;
 
     // shader assets
@@ -37,24 +36,19 @@ skr_material_type_asset_t
 };
 
 sreflect_struct("guid" : "c0fc5581-f644-4752-bb30-0e7f652533b7")
-sattr("serialize" : "json", "rtti" : true)
-SKR_SHADER_COMPILER_API SMaterialTypeImporter final : public SImporter
-{
+sattr("serialize" : "json")
+SKR_SHADER_COMPILER_API SMaterialTypeImporter final : public SImporter {
     skr::string jsonPath;
 
     void* Import(skr_io_ram_service_t*, SCookContext* context) override;
-    void Destroy(void* resource) override;
-}
-sregister_importer();
-
+    void  Destroy(void* resource) override;
+} sregister_importer();
 
 sreflect_struct("guid" : "816f9dd4-9a49-47e5-a29a-3bdf7241ad35")
-SKR_SHADER_COMPILER_API SMaterialTypeCooker final : public SCooker
-{
-    bool Cook(SCookContext* ctx) override;
+SKR_SHADER_COMPILER_API SMaterialTypeCooker final : public SCooker {
+    bool     Cook(SCookContext* ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
-}
-sregister_default_cooker(u8"83264b35-3fde-4fff-8ee1-89abce2e445b");
+} sregister_default_cooker(u8"83264b35-3fde-4fff-8ee1-89abce2e445b");
 
-} // namespace asset
-} // namespace skd
+} // namespace asset sreflect
+} // namespace skd sreflect

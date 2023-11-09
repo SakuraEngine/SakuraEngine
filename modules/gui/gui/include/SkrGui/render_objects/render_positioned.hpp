@@ -9,11 +9,9 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "50971da8-2439-46c1-adcb-579f270e354d",
-    "rtti": true
+    "guid": "50971da8-2439-46c1-adcb-579f270e354d"
 )
-RenderPositioned : public RenderShiftedBox
-{
+RenderPositioned : public RenderShiftedBox {
     SKR_RTTR_GENERATE_BODY()
     using Super = RenderShiftedBox;
 
@@ -63,8 +61,6 @@ private:
     inline bool shrink_wrap_height() const SKR_NOEXCEPT { return _height_factor || !constraints().has_bounded_height(); }
 
 private:
-    // TODO. enable field reflection
-    spush_attr("no-rtti": true)
     Optional<float> _width_factor  = {}; // used in anchor mode
     Optional<float> _height_factor = {}; // used in anchor mode
     Positional      _positional    = {};

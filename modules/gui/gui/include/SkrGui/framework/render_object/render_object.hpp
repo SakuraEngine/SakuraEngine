@@ -22,8 +22,7 @@ enum class ERenderObjectLifecycle : uint8_t
 };
 
 sreflect_struct(
-    "guid" : "2f1b78a5-1be9-4799-a3ca-2f2d3b153f29",
-    "rtti" : true
+    "guid" : "2f1b78a5-1be9-4799-a3ca-2f2d3b153f29"
 )
 SKR_GUI_API RenderObject : virtual public skr::rttr::IObject,
                            public IHitTestTarget {
@@ -119,8 +118,6 @@ private:
     void _flush_relayout_boundary() SKR_NOEXCEPT;
 
 private:
-    // TODO. enable field reflection
-    spush_attr("no-rtti": true)
     // render object tree
     RenderObject*  _parent = nullptr;
     PipelineOwner* _owner  = nullptr;

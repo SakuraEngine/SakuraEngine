@@ -11,8 +11,7 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "d4c45487-d696-42fb-bff1-f0a3f6adcea3",
-    "rtti": true
+    "guid": "d4c45487-d696-42fb-bff1-f0a3f6adcea3"
 )
 SKR_GUI_API RenderBox : public RenderObject {
     SKR_RTTR_GENERATE_BODY()
@@ -72,8 +71,6 @@ private:
     void perform_resize() SKR_NOEXCEPT override; // override compute_dry_layout instead
 
 private:
-    // TODO. enable field reflection
-    spush_attr("no-rtti": true)
     Sizef          _size        = {};
     BoxConstraints _constraints = {};
 

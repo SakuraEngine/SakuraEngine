@@ -12,8 +12,7 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "409eaa24-5549-46e3-87c1-81649576d2cd",
-    "rtti": true
+    "guid": "409eaa24-5549-46e3-87c1-81649576d2cd"
 )
 SKR_GUI_API IMultiChildRenderObject : virtual public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
@@ -131,9 +130,8 @@ struct MultiChildRenderObjectMixin {
 #define MULTI_CHILD_RENDER_OBJECT_MIX_IN(__SELF, __CHILD, __SLOT_DATA)                      \
     /*===============> Begin Multi Child Render Object Mixin <===============*/             \
 private:                                                                                    \
-    sattr("no-rtti": true)                                                                  \
-          MultiChildRenderObjectMixin<__SELF, __CHILD, __SLOT_DATA>                         \
-          _multi_child_render_object_mix_in = {};                                           \
+    MultiChildRenderObjectMixin<__SELF, __CHILD, __SLOT_DATA>                               \
+    _multi_child_render_object_mix_in = {};                                                 \
                                                                                             \
 public:                                                                                     \
     GUID accept_child_type() const SKR_NOEXCEPT override                                    \

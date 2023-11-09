@@ -20,8 +20,7 @@ enum class EElementLifecycle : uint8_t
 };
 
 sreflect_struct(
-    "guid": "ec3aff75-d8d1-4e0f-aff3-5c8df4995a78",
-    "rtti": true
+    "guid": "ec3aff75-d8d1-4e0f-aff3-5c8df4995a78"
 )
 SKR_GUI_API Element : virtual public skr::rttr::IObject,
                       public IBuildContext {
@@ -95,8 +94,6 @@ protected:
 
 private:
     friend struct BuildOwner;
-    // TODO. enable field reflection
-    spush_attr("no-rtti": true)
     // element tree
     Element*    _parent = nullptr;
     BuildOwner* _owner  = nullptr;

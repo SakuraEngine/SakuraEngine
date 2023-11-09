@@ -10,11 +10,9 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "7a561ecb-03dc-4bc4-8577-ff51ce4469f2",
-    "rtti": true
+    "guid": "7a561ecb-03dc-4bc4-8577-ff51ce4469f2"
 )
-SKR_GUI_API SlotWidget : public ProxyWidget
-{
+SKR_GUI_API SlotWidget : public ProxyWidget {
     SKR_RTTR_GENERATE_BODY()
 
     NotNull<Element*> create_element() SKR_NOEXCEPT override;

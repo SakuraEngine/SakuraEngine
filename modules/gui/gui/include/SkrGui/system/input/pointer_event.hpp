@@ -9,8 +9,7 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_enum_class(
-    "guid": "7223961b-5309-4fac-8207-8476bf7f3b05",
-    "rtti": true
+    "guid": "7223961b-5309-4fac-8207-8476bf7f3b05"
 )
 EPointerDeviceType : int32_t
 {
@@ -22,8 +21,7 @@ EPointerDeviceType : int32_t
     // TrackPad,
 };
 sreflect_enum_class(
-    "guid": "3f6c7998-a93e-424e-9d95-c75800309a16",
-    "rtti": true
+    "guid": "3f6c7998-a93e-424e-9d95-c75800309a16"
 )
 EPointerButton : int32_t
 {
@@ -39,12 +37,10 @@ EPointerButton : int32_t
 };
 
 sreflect_struct(
-    "guid": "fa4706c4-5982-4056-a5b5-b12098c0963a",
-    "rtti": true
+    "guid": "fa4706c4-5982-4056-a5b5-b12098c0963a"
 )
 PointerEvent : public Event {
     SKR_RTTR_GENERATE_BODY()
-    spush_attr("no-rtti": true)
     EPointerDeviceType device_type     = EPointerDeviceType::Unknown; // 来源设备
     Offsetf            global_position = {};                          // 位置，全局空间的逻辑坐标
     Offsetf            global_delta    = {};                          // 距离上一次触发的位置变化量
@@ -53,60 +49,52 @@ PointerEvent : public Event {
 };
 
 sreflect_struct(
-    "guid": "91343bb8-4b20-4734-b491-23362b76aa17",
-    "rtti": true
+    "guid": "91343bb8-4b20-4734-b491-23362b76aa17"
 )
 PointerDownEvent : public PointerEvent {
     SKR_RTTR_GENERATE_BODY()
 };
 
 sreflect_struct(
-    "guid": "8817dd2b-7e0d-47f5-8ee5-72790bbf3f09",
-    "rtti": true
+    "guid": "8817dd2b-7e0d-47f5-8ee5-72790bbf3f09"
 )
 PointerUpEvent : public PointerEvent {
     SKR_RTTR_GENERATE_BODY()
 };
 
 sreflect_struct(
-    "guid": "453f7052-9740-4136-9831-55e8188827d2",
-    "rtti": true
+    "guid": "453f7052-9740-4136-9831-55e8188827d2"
 )
 PointerMoveEvent : public PointerEvent {
     SKR_RTTR_GENERATE_BODY()
 };
 
 sreflect_struct(
-    "guid": "6cddd04b-749c-4a5e-99b0-27396ef84d50",
-    "rtti": true
+    "guid": "6cddd04b-749c-4a5e-99b0-27396ef84d50"
 )
 PointerEnterEvent : public PointerEvent {
     SKR_RTTR_GENERATE_BODY()
 };
 
 sreflect_struct(
-    "guid": "f41e2f74-b813-411d-b065-5df10f5edaeb",
-    "rtti": true
+    "guid": "f41e2f74-b813-411d-b065-5df10f5edaeb"
 )
 PointerExitEvent : public PointerEvent {
     SKR_RTTR_GENERATE_BODY()
 };
 
 sreflect_struct(
-    "guid": "51778097-47ab-4eb3-9193-3cecffedf8a0",
-    "rtti": true
+    "guid": "51778097-47ab-4eb3-9193-3cecffedf8a0"
 )
 PointerSignalEvent : public PointerEvent {
     SKR_RTTR_GENERATE_BODY()
 };
 
 sreflect_struct(
-    "guid": "1da2a830-544a-44c4-8ba7-2f313194bced",
-    "rtti": true
+    "guid": "1da2a830-544a-44c4-8ba7-2f313194bced"
 )
 PointerScrollEvent : public PointerEvent {
     SKR_RTTR_GENERATE_BODY()
-    spush_attr("no-rtti": true)
     Offsetf scroll_delta = {};
 };
 
