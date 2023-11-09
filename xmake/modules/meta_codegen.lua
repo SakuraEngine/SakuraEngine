@@ -169,11 +169,6 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
     -- generate headers dummy
     local mako_generators = {
         {
-            os.projectdir()..vformat("/tools/codegen/typeid.py"),
-            os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
-            os.projectdir()..vformat("/tools/codegen/typeid.cpp.mako"),
-        },
-        {
             os.projectdir()..vformat("/tools/codegen/component.py"),
             os.projectdir()..vformat("/tools/codegen/component.cpp.mako"),
             os.projectdir()..vformat("/tools/codegen/component.hpp.mako"),
