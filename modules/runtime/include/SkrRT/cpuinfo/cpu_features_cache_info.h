@@ -15,7 +15,7 @@
 #ifndef CPU_FEATURES_INCLUDE_CPUINFO_COMMON_H_
 #define CPU_FEATURES_INCLUDE_CPUINFO_COMMON_H_
 
-#include "SkrRT/platform/cpu/cpu_features_macros.h"
+#include "SkrRT/cpuinfo/cpu_features_macros.h"
 
 CPU_FEATURES_START_CPP_NAMESPACE
 

@@ -104,7 +104,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     end
 
     -- cpu info private include dir
-    add_includedirs("include/SkrRT/platform/cpu", {public = false})
+    add_includedirs("include/SkrRT/cpuinfo", {public = false})
 
     -- mimalloc private include dir
     add_includedirs("src", {public = false})

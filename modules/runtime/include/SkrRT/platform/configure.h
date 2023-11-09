@@ -51,16 +51,6 @@ typedef struct $Module {
 } $Module;
 extern const char* $name;
 
-#if defined(__cplusplus)
-    #define SKR_ENUM(inttype) : inttype
-#else
-    #define SKR_ENUM(inttype)
-#endif
-
-#ifndef SKR_STATIC_API
-    #define SKR_STATIC_API
-#endif
-
 #ifndef SKR_RUNTIME_API // If the build file hasn't already defined this to be dllexport...
     #ifdef RUNTIME_SHARED
         #if defined(_MSC_VER)

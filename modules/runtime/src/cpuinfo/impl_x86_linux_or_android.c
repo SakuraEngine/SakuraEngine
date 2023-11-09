@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "SkrRT/platform/cpu/cpu_features_macros.h"
+#include "SkrRT/cpuinfo/cpu_features_macros.h"
 
 #ifdef CPU_FEATURES_ARCH_X86
 #if defined(CPU_FEATURES_OS_LINUX) || defined(CPU_FEATURES_OS_ANDROID)

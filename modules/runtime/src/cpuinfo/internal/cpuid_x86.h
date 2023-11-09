@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 
-#include "SkrRT/platform/cpu/cpu_features_macros.h"
+#include "SkrRT/cpuinfo/cpu_features_macros.h"
 
 CPU_FEATURES_START_CPP_NAMESPACE
 

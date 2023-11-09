@@ -14,7 +14,7 @@
 #ifndef WIN32_LEAN_AND_MEAN
 	#define WIN32_LEAN_AND_MEAN
 #endif
-#include "SkrRT/platform/cpu/cpu_features_macros.h"
+#include "SkrRT/cpuinfo/cpu_features_macros.h"
 
 #ifdef CPU_FEATURES_ARCH_X86
 #ifdef CPU_FEATURES_OS_WINDOWS

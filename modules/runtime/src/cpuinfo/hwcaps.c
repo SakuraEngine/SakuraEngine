@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "SkrRT/platform/cpu/cpu_features_macros.h"
+#include "SkrRT/cpuinfo/cpu_features_macros.h"
 #include "internal/filesystem.h"
 #include "internal/string_view.h"
 

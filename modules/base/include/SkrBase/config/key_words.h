@@ -167,6 +167,12 @@
     #endif
 #endif
 
+#if defined(__cplusplus)
+    #define SKR_ENUM(inttype) : inttype
+#else
+    #define SKR_ENUM(inttype)
+#endif
+
 #pragma region stringizing
 
 #ifndef SKR_STRINGIZING

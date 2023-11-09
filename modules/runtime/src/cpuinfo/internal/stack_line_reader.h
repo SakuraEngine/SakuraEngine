@@ -19,7 +19,7 @@
 
 #include <stdbool.h>
 
-#include "SkrRT/platform/cpu/cpu_features_macros.h"
+#include "SkrRT/cpuinfo/cpu_features_macros.h"
 #include "string_view.h"
 
 CPU_FEATURES_START_CPP_NAMESPACE
