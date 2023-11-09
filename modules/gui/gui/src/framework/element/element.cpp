@@ -110,7 +110,6 @@ void Element::attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT
 {
     // validate
     if (_widget == nullptr) { SKR_GUI_LOG_ERROR(u8"widget is nullptr"); }
-    if (owner == nullptr) { SKR_GUI_LOG_ERROR(u8"owner is nullptr"); }
 
     // update depth
     _owner = owner;
