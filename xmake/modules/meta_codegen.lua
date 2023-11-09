@@ -174,9 +174,9 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
             os.projectdir()..vformat("/tools/codegen/component.hpp.mako"),
         },
         {
-            os.projectdir()..vformat("/tools/codegen/rtti.py"),
-            os.projectdir()..vformat("/tools/codegen/rtti.cpp.mako"),
-            os.projectdir()..vformat("/tools/codegen/rtti.hpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/rttr.py"),
+            os.projectdir()..vformat("/tools/codegen/rttr.cpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/rttr.hpp.mako"),
         },
         {
             os.projectdir()..vformat("/tools/codegen/static_ctor.py"),
