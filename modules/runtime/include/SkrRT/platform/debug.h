@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 
 SKR_EXTERN_C SKR_RUNTIME_API void skr_debug_output(const char* msg);
 

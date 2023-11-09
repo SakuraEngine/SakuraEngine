@@ -1,7 +1,7 @@
 #include "cgpu/cgpu_config.h"
 #include "math.h"
 #include "lodepng.h"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrRT/platform/memory.h"
 #include "cgpu/api.h"
 #include "stdio.h"

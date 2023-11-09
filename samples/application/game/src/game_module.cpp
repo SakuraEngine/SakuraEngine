@@ -4,7 +4,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/platform/system.h"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/guid.hpp"

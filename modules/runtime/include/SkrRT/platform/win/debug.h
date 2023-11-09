@@ -30,8 +30,6 @@
     #endif
 
     #if !SKR_SHIPPING
-        #include "SkrRT/misc/macros.h"
-
         #define SKR_TRACE_MSG(msg) \
             printf(msg);           \
             printf("\n");

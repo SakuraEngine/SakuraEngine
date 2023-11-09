@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include <cstdint>
 #include "SkrRT/rttr/guid.hpp"
 

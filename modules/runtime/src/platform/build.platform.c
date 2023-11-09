@@ -1,6 +1,5 @@
 #include "memory.c"
 #include "timer.c"
-#include "cpuinfo/cpuinfo.c"
 #if defined(_WIN32)
     #include "windows/time.c"
     #include "windows/thread.c"

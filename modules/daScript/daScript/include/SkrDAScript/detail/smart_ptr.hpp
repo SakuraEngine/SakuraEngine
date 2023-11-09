@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include <type_traits>
 #include <functional>  // std::hash
 #include <cassert>

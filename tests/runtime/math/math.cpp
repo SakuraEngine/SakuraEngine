@@ -1,5 +1,5 @@
 #include "SkrRT/misc/types.h"
-#include "SkrRT/misc/traits.hpp"
+#include "SkrBase/misc/traits.hpp"
 #include "SkrBase/math/quat.h"
 #include "SkrRT/containers/string.hpp"
 

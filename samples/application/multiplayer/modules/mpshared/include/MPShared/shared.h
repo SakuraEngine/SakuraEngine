@@ -1,6 +1,6 @@
 #pragma once
 #include "MPShared/module.configure.h"
-#include "SkrRT/misc/traits.hpp"
+#include "SkrBase/misc/traits.hpp"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/containers/hashmap.hpp"

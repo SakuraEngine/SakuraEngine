@@ -1,4 +1,4 @@
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "debug.cpp"
 #include "vfs.cpp"
 #include "guid.cpp"

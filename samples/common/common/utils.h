@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "stdbool.h"
 #include "stdio.h"
 #include "stdlib.h"

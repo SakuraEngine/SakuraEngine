@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/misc/traits.hpp"
+#include "SkrBase/misc/traits.hpp"
 #include "SkrRT/serde/binary/serde.h"
 #include <limits>
 

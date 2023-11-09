@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 
 #define CGPU_USE_VULKAN
 
@@ -68,6 +68,7 @@
 #endif
 
 #ifndef CGPU_API
+#include "SkrRT/module.configure.h"
 #define CGPU_API SKR_RUNTIME_API
 #endif
 
