@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/misc/traits.hpp"
+#include "SkrBase/misc/traits.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/serde/binary/serde.h"
 #include "SkrRT/serde/binary/writer_fwd.h"

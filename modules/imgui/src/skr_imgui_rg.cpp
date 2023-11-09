@@ -1,6 +1,6 @@
 #include <EASTL/string.h>
 #include <EASTL/fixed_string.h>
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/misc/log.h"
 #include "SkrImGui/skr_imgui.h"

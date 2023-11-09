@@ -1,6 +1,6 @@
 /* clang-format off */
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 
 typedef volatile SKR_ALIGNAS(4) uint32_t SAtomicU32;
 typedef volatile SKR_ALIGNAS(8) uint64_t SAtomicU64;

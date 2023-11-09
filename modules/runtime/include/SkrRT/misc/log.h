@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>

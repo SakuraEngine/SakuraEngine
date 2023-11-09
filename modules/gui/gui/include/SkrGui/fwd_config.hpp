@@ -10,7 +10,7 @@
 #include <limits>
 
 // reflection
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrRT/rttr/iobject.hpp"
 
 // export macro

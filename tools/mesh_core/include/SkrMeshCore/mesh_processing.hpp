@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrMeshCore/module.configure.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"

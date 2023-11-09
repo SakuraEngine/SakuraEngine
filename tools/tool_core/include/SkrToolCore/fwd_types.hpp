@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrToolCore/module.configure.h"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 
 struct skr_vfs_t;
 struct SkrToolCoreModule;

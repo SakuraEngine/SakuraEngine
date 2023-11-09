@@ -26,7 +26,7 @@
 
 #include <atomic>
 #include <limits>
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 
 namespace ftl
 {
