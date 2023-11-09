@@ -11,8 +11,7 @@ namespace gui sreflect
 {
 // 概念性的 Window，并不一定是 Root，Root 通常是 RenderNativeWindow
 sreflect_struct(
-    "guid": "358b1333-d5b8-4529-b4ad-9c800d5c9caf",
-    "rtti": true
+    "guid": "358b1333-d5b8-4529-b4ad-9c800d5c9caf"
 )
 SKR_GUI_API RenderWindow : public RenderObject,
                            public ISingleChildRenderObject {

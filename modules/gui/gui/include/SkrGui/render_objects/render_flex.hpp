@@ -11,8 +11,7 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "1bc957ef-1203-489d-911d-94ba3fb81080",
-    "rtti": true
+    "guid": "1bc957ef-1203-489d-911d-94ba3fb81080"
 )
 SKR_GUI_API RenderFlex : public RenderBox,
                          public IMultiChildRenderObject {

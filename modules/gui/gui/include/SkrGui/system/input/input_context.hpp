@@ -10,8 +10,7 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "b4454cc3-68b6-4ac5-b5e1-b0dc5ba25334",
-    "rtti": true
+    "guid": "b4454cc3-68b6-4ac5-b5e1-b0dc5ba25334"
 )
 InputContext {
     InputContext(NotNull<RenderBox*> widget);

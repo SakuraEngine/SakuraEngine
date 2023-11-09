@@ -10,8 +10,7 @@ namespace gui sreflect
 {
 struct INativeWindow;
 sreflect_struct(
-    "guid": "1681d4be-cb32-4b65-9f07-9f143ebe1c6e",
-    "rtti": true
+    "guid": "1681d4be-cb32-4b65-9f07-9f143ebe1c6e"
 )
 SKR_GUI_API RenderNativeWindow : public RenderWindow {
     SKR_RTTR_GENERATE_BODY()

@@ -9,11 +9,9 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "4d40a67a-1bd4-457a-bd23-b5be13e7d04d",
-    "rtti": true
+    "guid": "4d40a67a-1bd4-457a-bd23-b5be13e7d04d"
 )
-RenderConstrainedBox : public RenderProxyBox
-{
+RenderConstrainedBox : public RenderProxyBox {
     SKR_RTTR_GENERATE_BODY()
     using Super = RenderProxyBox;
 
@@ -41,8 +39,6 @@ RenderConstrainedBox : public RenderProxyBox
     void perform_layout() SKR_NOEXCEPT override;
 
 private:
-    // TODO. enable field reflection
-    spush_attr("no-rtti": true)
     BoxConstraints _additional_constraint = {};
 };
 } // namespace gui sreflect
