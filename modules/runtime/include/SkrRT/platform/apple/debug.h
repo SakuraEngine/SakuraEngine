@@ -11,7 +11,6 @@
     void apple_assert_handler(int sig);
 
     #if !SKR_SHIPPING
-        #include "SkrRT/misc/macros.h"
         #include <assert.h>
         #include <stdio.h>
         #include <stdlib.h>

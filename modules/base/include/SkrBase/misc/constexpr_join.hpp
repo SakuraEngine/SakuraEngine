@@ -4,7 +4,7 @@
 namespace skr
 {
     template <std::string_view const&... Strs>
-    struct join
+    struct constexpr_join
     {
         // Join all strings into a single std::array of chars
         static constexpr auto impl() noexcept
@@ -25,5 +25,5 @@ namespace skr
     };
     // Helper to get the value out
     template <std::string_view const&... Strs>
-    static constexpr auto join_v = join<Strs...>::value;
+    static constexpr auto constexpr_join_v = constexpr_join<Strs...>::value;
 }

@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrRT/misc/macros.h"
 
 #define sstatic_ctor_name_impl(index, expr) "\"StaticCtor" #index "\" : " #expr
 #define sstatic_ctor_name(index, expr) sstatic_ctor_name_impl(index, #expr)
