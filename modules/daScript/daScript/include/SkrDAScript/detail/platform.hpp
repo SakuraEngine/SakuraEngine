@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrDAScript/module.configure.h"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include <type_traits>
 #include <utility>
 #include "SkrRT/misc/types.h"

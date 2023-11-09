@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h" // IWYU pragma: keep
+#include "SkrRT/config.h" // IWYU pragma: keep
 
 #if __cpp_impl_coroutine
 #include <atomic>

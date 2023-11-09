@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrTextureCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #ifndef __meta__
     #include "SkrTextureCompiler/texture_sampler_asset.generated.h" // IWYU pragma: export

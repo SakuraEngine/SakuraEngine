@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrProfile/profile.h"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrRT/platform/debug.h"
 #include <string.h>  // memset
 #ifdef __cplusplus

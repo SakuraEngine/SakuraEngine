@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrToolCore/module.configure.h"
 #ifndef __meta__
     #include "SkrToolCore/version.generated.h"

@@ -24,7 +24,7 @@ target("SkrRTStatic")
     add_files("src_static/**/build.*.cpp")
     -- add_files("src_static/**/build.*.c")
 
-shared_module("SkrRT", "RUNTIME", engine_version)
+shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     set_group("01.modules")
     add_deps("SkrRTStatic", {public = true, inherit = true})
     add_defines("SKR_RUNTIME_API=SKR_EXPORT", "SKR_RUNTIME_LOCAL=error")
@@ -104,7 +104,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     end
 
     -- cpu info private include dir
-    add_includedirs("include/SkrRT/platform/cpu", {public = false})
+    add_includedirs("include/SkrRT/cpuinfo", {public = false})
 
     -- mimalloc private include dir
     add_includedirs("src", {public = false})

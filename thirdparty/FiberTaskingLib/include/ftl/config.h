@@ -23,7 +23,7 @@
  */
 
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #ifndef FTL_DEBUG
     #ifndef NDEBUG
         #define FTL_DEBUG 1

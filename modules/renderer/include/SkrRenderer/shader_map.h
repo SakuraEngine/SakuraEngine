@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/fwd_types.h"
 #include "cgpu/api.h"

@@ -1,10 +1,10 @@
 #pragma once
+#include "SkrBase/misc/constexpr_join.hpp"
 #include "SkrRT/lua/bind_fwd.hpp"
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/resource/resource_handle.h"
-#include "SkrRT/misc/traits.hpp"
-#include "SkrRT/misc/join.hpp"
+#include "SkrBase/misc/traits.hpp"
 #include "SkrRT/rttr/rttr_traits.hpp"
 extern "C" {
 #include "lua.h"
@@ -66,7 +66,7 @@ struct DefaultBindTrait<T, std::enable_if_t<!std::is_enum_v<T> && skr::is_comple
         static constexpr std::string_view prefix = "[unique]";
         static constexpr std::string_view tid    = skr::rttr::type_name<T>();
         return push_unknown_value(
-        L, value, join_v<prefix, tid>, sizeof(T), +[](void* dst, const void* src) { new (dst) T(*(const T*)src); }, +[](void* dst) { ((T*)dst)->~T(); });
+        L, value, constexpr_join_v<prefix, tid>, sizeof(T), +[](void* dst, const void* src) { new (dst) T(*(const T*)src); }, +[](void* dst) { ((T*)dst)->~T(); });
     }
     static T& check(lua_State* L, int index)
     {
@@ -81,7 +81,7 @@ struct DefaultBindTrait<skr::SPtr<T>, std::enable_if_t<!std::is_enum_v<T> && skr
     {
         static constexpr std::string_view prefix = "[shared]";
         static constexpr std::string_view tid    = skr::rttr::type_name<T>();
-        return push_sptr(L, value, join_v<prefix, tid>);
+        return push_sptr(L, value, constexpr_join_v<prefix, tid>);
     }
     static skr::SPtr<T> check(lua_State* L, int index)
     {
@@ -95,7 +95,7 @@ struct DefaultBindTrait<skr::SObjectPtr<T>, std::enable_if_t<!std::is_enum_v<T> 
     {
         static constexpr std::string_view prefix = "[shared]";
         static constexpr std::string_view tid    = skr::rttr::type_name<T>();
-        return push_sobjectptr(L, value, join_v<prefix, tid>);
+        return push_sobjectptr(L, value, constexpr_join_v<prefix, tid>);
     }
     static skr::SObjectPtr<T> check(lua_State* L, int index)
     {

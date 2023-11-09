@@ -2,7 +2,7 @@
 #include "SkrBase/misc/hash.h"
 #include <string.h> // memset
 #if defined(__x86_64__) || defined(__i386__)
-#include "SkrRT/platform/cpu/cpuinfo_x86.h"
+#include "SkrRT/cpuinfo/cpuinfo_x86.h"
 #endif
 
 typedef struct

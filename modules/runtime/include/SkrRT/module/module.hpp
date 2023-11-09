@@ -26,7 +26,7 @@
  */
 #pragma once
 #include "SkrRT/misc/types.h"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #ifdef __cplusplus
 #include "SkrRT/platform/shared_library.hpp"
 #include <SkrRT/containers/string.hpp>

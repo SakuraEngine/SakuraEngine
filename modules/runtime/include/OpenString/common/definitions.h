@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h" // IWYU pragma: export
+#include "SkrRT/config.h" // IWYU pragma: export
 
 #ifndef OPEN_STRING_API
 #define OPEN_STRING_API

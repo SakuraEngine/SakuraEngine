@@ -118,3 +118,23 @@
 // other platform def
 #define SKR_PLAT_WINDOWS SKR_PLAT_WIN32 || SKR_PLAT_WIN64
 #define SKR_ARCH_WA SKR_ARCH_WA32 || SKR_ARCH_WA64
+
+// Platform Specific Configure
+#define SKR_HEADER_SCOPE_DEFINING_PLATFORM_CONFIGURE
+
+#ifdef __APPLE__
+    #include "apple/configure.h"
+#endif
+
+#ifdef _WIN32
+    #include "win/configure.h"
+#endif
+
+#ifndef OS_DPI
+    #define OS_DPI 72
+#endif
+
+#undef SKR_HEADER_SCOPE_DEFINING_PLATFORM_CONFIGURE
+
+// TODO: REMOVE THIS
+#define SKR_RESOURCE_DEV_MODE
