@@ -1,5 +1,5 @@
 #pragma once
-#include "configure.h"
+#include "SkrRT/config.h"
 #include "SkrRT/platform/memory.h"
 
 #ifndef SKR_MAX_THREAD_NAME_LENGTH

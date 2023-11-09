@@ -1,5 +1,5 @@
 #include "cgpu/api.h"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include <SkrRT/containers/string.hpp>
 
 #include <EASTL/vector.h>

@@ -4,7 +4,7 @@
 #include "SkrRT/platform/atomic.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "../common/common_utils.h"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "vulkan/vulkan_core.h"
 #include "vulkan_utils.h"
 #ifdef CGPU_THREAD_SAFETY

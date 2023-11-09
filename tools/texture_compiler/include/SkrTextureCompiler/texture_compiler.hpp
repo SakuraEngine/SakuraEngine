@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrTextureCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrRT/containers/string.hpp"

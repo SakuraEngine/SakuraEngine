@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/types.h"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 
 SKR_EXTERN_C SKR_RUNTIME_API void skr_make_guid(skr_guid_t* out_guid);
 

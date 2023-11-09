@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrLive2D/module.configure.h"
 
 #ifdef __cplusplus

@@ -1,7 +1,7 @@
 #pragma once
 #include <type_traits>
 #include "shared_rc.hpp"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #include "SkrRT/misc/types.h"
 
 namespace skr

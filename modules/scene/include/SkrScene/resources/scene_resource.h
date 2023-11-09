@@ -4,7 +4,7 @@
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/serde/binary/reader_fwd.h"
 #include "SkrRT/serde/binary/writer_fwd.h"
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #ifndef __meta__
     #include "SkrScene/resources/scene_resource.generated.h" // IWYU pragma: export
 #endif

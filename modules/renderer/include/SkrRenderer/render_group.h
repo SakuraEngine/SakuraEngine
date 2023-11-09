@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h" // IWYU pragma: export
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/config.h"
 #ifndef __meta__
     #include "SkrRenderer/render_group.generated.h" // IWYU pragma: export
 #endif
