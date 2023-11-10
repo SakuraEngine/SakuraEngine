@@ -39,8 +39,7 @@ private:
     INativeDevice* _device = nullptr;
 
     // owner
-    BuildOwner*    _build_owner    = nullptr;
-    PipelineOwner* _pipeline_owner = nullptr;
+    BuildOwner* _build_owner = nullptr;
 
     // root
     RenderNativeWindow*        _root_render_object = nullptr;

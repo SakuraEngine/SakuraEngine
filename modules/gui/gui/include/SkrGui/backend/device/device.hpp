@@ -17,12 +17,6 @@ struct IResource;
 struct UpdatableImageDesc;
 struct IParagraph;
 
-// Device/DeviceView 均通过 View/RenderView 注入到上下文中
-// View 代理可以通过创建自己的 View/RenderView 来覆写 BuildOwner/PipelineOwner
-// 从概念上来说，Device/DeviceView 本质上是 WidgetTree 的附属，而非宿主，仅提供必要的对 View 的操作
-// DeviceView 本身不持有任何 Widget/RenderObject，与 WidgetTree 的交互行为均交给持有其实例的 Widget/RenderObject 操作
-// 虽然 Device 是一个核心概念，但是资源创建并不一定适合放在 Device 中，因为资源创建本身是复杂并可拓展的
-
 // GUI 系统的对外诉求：
 // 1. 资源: Canvas & TextService & Resource
 // |-1.1. Material & Image & Updatable Image

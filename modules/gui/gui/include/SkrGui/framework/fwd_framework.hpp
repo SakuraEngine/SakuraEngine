@@ -47,7 +47,6 @@ struct WindowLayer;
 struct NativeWindowLayer;
 
 // binding
-struct PipelineOwner;
 struct PaintingContext;
 struct BuildOwner;
 struct IBuildContext;
