@@ -1,11 +1,17 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
+#include "SkrGui/math/geometry.hpp"
+#ifndef __meta__
+    #include "SkrGui/system/input/input_manager.generated.h"
+#endif
 
-namespace skr
+namespace skr sreflect
 {
-namespace gui
+namespace gui sreflect
 {
+struct InputContext;
+
 // TODO. roadmap
 // //  1. hit test
 // //  2. pointer events
@@ -15,7 +21,21 @@ namespace gui
 //  6. keyboard events
 //  7. keyboard events bind
 //  8. focus & navigation (keyboard)         // ! 可 TODO
-struct InputManager {
+
+// InputManager 管理 Context 提供全局 hit test 支持与事件分发
+// TODO. 其只是作为 InputContext 的一个中心，其实这个功能是否可以放在 BuildOwner 内部？
+sreflect_struct("guid": "5c9d7e26-c2a1-4785-8832-bda746906801")
+SKR_GUI_API InputManager {
+
+    // hit test
+    bool hit_test(HitTestResult* result, Offsetf global_position);
+
+    // register
+    void register_context(NotNull<InputContext*> context);
+    void unregister_context(NotNull<InputContext*> context);
+
+private:
+    Array<InputContext*> _contexts;
 };
-} // namespace gui
-} // namespace skr
+} // namespace gui sreflect
+} // namespace skr sreflect
