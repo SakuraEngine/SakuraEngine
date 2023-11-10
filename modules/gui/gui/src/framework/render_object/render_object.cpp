@@ -1,5 +1,5 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
-#include "SkrGui/framework/pipeline_owner.hpp"
+#include "SkrGui/framework/build_owner.hpp"
 #include "SkrGui/framework/layer/offset_layer.hpp"
 
 namespace skr::gui
@@ -39,7 +39,7 @@ void RenderObject::mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT
     if (parent->owner())
     {
         struct _RecursiveHelper {
-            NotNull<PipelineOwner*> owner;
+            NotNull<BuildOwner*> owner;
 
             inline void operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
             {
@@ -77,7 +77,7 @@ void RenderObject::destroy() SKR_NOEXCEPT
     // TODO. release layer
     _lifecycle = ERenderObjectLifecycle::Destroyed;
 }
-void RenderObject::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
+void RenderObject::attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT
 {
     // validate
     if (_owner != nullptr) { SKR_GUI_LOG_ERROR(u8"already attached"); }

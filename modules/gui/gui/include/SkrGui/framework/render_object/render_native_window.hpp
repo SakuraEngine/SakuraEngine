@@ -19,7 +19,7 @@ SKR_GUI_API RenderNativeWindow : public RenderWindow {
     NotNull<OffsetLayer*> update_layer(OffsetLayer* old_layer) override;
 
     void        prepare_initial_frame() SKR_NOEXCEPT;
-    inline void setup_owner(PipelineOwner* owner) SKR_NOEXCEPT { _owner = owner; }
+    inline void setup_owner(BuildOwner* owner) SKR_NOEXCEPT { _owner = owner; }
 
     bool hit_test(HitTestResult* result, Offsetf local_position);
 };

@@ -21,7 +21,7 @@ SKR_GUI_API Layer : virtual public skr::rttr::IObject {
     void         mount(NotNull<Layer*> parent) SKR_NOEXCEPT;
     void         unmount() SKR_NOEXCEPT;
     virtual void destroy() SKR_NOEXCEPT;
-    virtual void attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT;
+    virtual void attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT;
     virtual void detach() SKR_NOEXCEPT;
     virtual void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT = 0;
 
@@ -31,15 +31,15 @@ SKR_GUI_API Layer : virtual public skr::rttr::IObject {
     inline void cancel_needs_composite() SKR_NOEXCEPT { _needs_composite = false; }
 
     // getter
-    inline Layer*         parent() const SKR_NOEXCEPT { return _parent; }
-    inline PipelineOwner* owner() const SKR_NOEXCEPT { return _owner; }
-    inline int32_t        depth() const SKR_NOEXCEPT { return _depth; }
+    inline Layer*      parent() const SKR_NOEXCEPT { return _parent; }
+    inline BuildOwner* owner() const SKR_NOEXCEPT { return _owner; }
+    inline int32_t     depth() const SKR_NOEXCEPT { return _depth; }
 
 private:
     // layer tree
-    Layer*         _parent = nullptr;
-    PipelineOwner* _owner  = nullptr;
-    int32_t        _depth  = 0;
+    Layer*      _parent = nullptr;
+    BuildOwner* _owner  = nullptr;
+    int32_t     _depth  = 0;
 
     // dirty
     bool _needs_composite = true;

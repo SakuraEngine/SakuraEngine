@@ -17,7 +17,7 @@ GeometryLayer : public Layer {
 
     // lifecycle & tree
     // ctor -> mount <-> unmount -> destroy
-    void attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT override;
+    void attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT override;
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override;
 
     inline ICanvas* canvas() const SKR_NOEXCEPT { return _canvas; }

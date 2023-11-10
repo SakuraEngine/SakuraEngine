@@ -1,6 +1,5 @@
 #include "SkrGui/dev/sandbox.hpp"
 #include "SkrRT/platform/memory.h"
-#include "SkrGui/framework/pipeline_owner.hpp"
 #include "SkrGui/framework/build_owner.hpp"
 #include "SkrGui/framework/render_object/render_native_window.hpp"
 #include "SkrGui/framework/element/render_native_window_element.hpp"
@@ -21,8 +20,7 @@ Sandbox::Sandbox(INativeDevice* device) SKR_NOEXCEPT
 void Sandbox::init()
 {
     // init owner
-    _build_owner    = SkrNew<BuildOwner>();
-    _pipeline_owner = SkrNew<PipelineOwner>(_device);
+    _build_owner = SkrNew<BuildOwner>(_device);
 }
 void Sandbox::shutdown()
 {
@@ -42,7 +40,7 @@ void Sandbox::show(const WindowDesc& desc)
     // 这里做了倒序创建，主要目的是为了对 Root RenderObject 做先行的 Owner 处理
     // 因为在初始化过程中，无法由 Widget 给到 pipeline_owner
     _root_render_object = SkrNew<RenderNativeWindow>(native_window);
-    _root_render_object->setup_owner(_pipeline_owner);
+    _root_render_object->setup_owner(_build_owner);
     _root_render_object->prepare_initial_frame();
 
     // new widget
@@ -69,11 +67,11 @@ void Sandbox::update()
 }
 void Sandbox::layout()
 {
-    _pipeline_owner->flush_layout();
+    _build_owner->flush_layout();
 }
 void Sandbox::paint()
 {
-    _pipeline_owner->flush_paint();
+    _build_owner->flush_paint();
 }
 void Sandbox::compose()
 {

@@ -27,7 +27,7 @@ sreflect_struct(
 SKR_GUI_API RenderObject : virtual public skr::rttr::IObject,
                            public IHitTestTarget {
     SKR_RTTR_GENERATE_BODY()
-    friend struct PipelineOwner;
+    friend struct BuildOwner;
     using VisitFuncRef = FunctionRef<void(NotNull<RenderObject*>)>;
 
     RenderObject() SKR_NOEXCEPT;
@@ -35,13 +35,13 @@ SKR_GUI_API RenderObject : virtual public skr::rttr::IObject,
 
     // lifecycle & tree
     // ctor -> mount <-> unmount -> destroy
-    void                          mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT;  // 挂到父节点下
-    void                          unmount() SKR_NOEXCEPT;                             // 从父节点卸载
-    virtual void                  destroy() SKR_NOEXCEPT;                             // 销毁，生命周期结束
-    virtual void                  attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT; // 自身或子树挂载到带有 pipeline owner 的树下
-    virtual void                  detach() SKR_NOEXCEPT;                              // 自身或子树从带有 pipeline owner 的树下卸载
+    void                          mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT; // 挂到父节点下
+    void                          unmount() SKR_NOEXCEPT;                            // 从父节点卸载
+    virtual void                  destroy() SKR_NOEXCEPT;                            // 销毁，生命周期结束
+    virtual void                  attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT;   // 自身或子树挂载到带有 pipeline owner 的树下
+    virtual void                  detach() SKR_NOEXCEPT;                             // 自身或子树从带有 pipeline owner 的树下卸载
     inline ERenderObjectLifecycle lifecycle() const SKR_NOEXCEPT { return _lifecycle; }
-    inline PipelineOwner*         owner() const SKR_NOEXCEPT { return _owner; }
+    inline BuildOwner*            owner() const SKR_NOEXCEPT { return _owner; }
     virtual void                  visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT = 0;
 
     // layout & paint marks
@@ -119,9 +119,9 @@ private:
 
 private:
     // render object tree
-    RenderObject*  _parent = nullptr;
-    PipelineOwner* _owner  = nullptr;
-    int32_t        _depth  = 0;
+    RenderObject* _parent = nullptr;
+    BuildOwner*   _owner  = nullptr;
+    int32_t       _depth  = 0;
 
     // dirty marks
     bool _needs_layout       = true;
