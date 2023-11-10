@@ -2,15 +2,13 @@
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/module/module_manager.hpp"
 
-namespace skr
+namespace skr sreflect
 {
-struct SKR_RUNTIME_API ModuleSubsystem : public ModuleSubsystemBase
-{
+struct SKR_RUNTIME_API ModuleSubsystem : public ModuleSubsystemBase {
     virtual ~ModuleSubsystem() SKR_NOEXCEPT = default;
-    
-    template<typename this_type>
-    struct Registerer
-    {
+
+    template <typename this_type>
+    struct Registerer {
         inline Registerer(const char8_t* id, const char8_t* module_name)
         {
             auto module_manager = ::skr_get_module_manager();
@@ -23,6 +21,6 @@ struct SKR_RUNTIME_API ModuleSubsystem : public ModuleSubsystemBase
         }
     };
 };
-}
+} // namespace skr sreflect
 
-#define SKR_MODULE_SUBSYSTEM(Subsystem, ModuleName) static skr::ModuleSubsystem::Registerer<Subsystem> subMod##__FILE__##__LINE__((const char8_t*)SKR_MAKE_STRING(__FILE__)SKR_MAKE_STRING(__LINE__), (const char8_t*)#ModuleName);
+#define SKR_MODULE_SUBSYSTEM(Subsystem, ModuleName) static skr::ModuleSubsystem::Registerer<Subsystem> subMod##__FILE__##__LINE__((const char8_t*)SKR_MAKE_STRING(__FILE__) SKR_MAKE_STRING(__LINE__), (const char8_t*)#ModuleName);

@@ -11,13 +11,13 @@ def record_enable_rttr(record):
             return record.attrs.rttr.enable 
     return hasattr(record.attrs, "guid") # default enable if has [guid] field
 
-def record_enable_reflect_base(record):
+def record_enable_reflect_bases(record):
     if (hasattr(record.attrs, "rttr")):
-        if (not hasattr(record.attrs.rttr, "reflect_base")): 
+        if (not hasattr(record.attrs.rttr, "reflect_bases")): 
             return True # default enable
         else:  
-            return record.attrs.rttr.reflect_base
-    return False
+            return record.attrs.rttr.reflect_bases
+    return record_enable_rttr(record)
 
 def record_exclude_bases(record):
     if (hasattr(record.attrs, "rttr")):
@@ -79,7 +79,7 @@ class CodegenRecord(object):
         default_reflect_methods = record_enable_reflect_methods(record)
 
         # bases
-        if (record_enable_reflect_base(record)):
+        if (record_enable_reflect_bases(record)):
             self.bases = [base for base in record.bases if not base in exclude_bases]
 
         # fields & methods
