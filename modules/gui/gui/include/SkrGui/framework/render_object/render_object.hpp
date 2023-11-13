@@ -82,18 +82,15 @@ SKR_GUI_API RenderObject : virtual public skr::rttr::IObject,
 
     // transform
     // 用于做坐标点转换，通常用于 hit-test
-    virtual bool    paints_child(NotNull<RenderObject*> child) const SKR_NOEXCEPT;
-    virtual void    apply_paint_transform(NotNull<RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT;
-    virtual Matrix4 get_transform_to(RenderObject* ancestor) const SKR_NOEXCEPT;
+    virtual bool paints_child(NotNull<const RenderObject*> child) const SKR_NOEXCEPT; // 检测该 child 是否真的会发生 paint
+    virtual void apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT;
+    Matrix4      get_transform_to(const RenderObject* ancestor) const SKR_NOEXCEPT;
 
     // event
     bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) override;
 
     // TODO
     // invoke_layout_callback：用于在 layout 过程中创建 child，通常用于 Sliver
-    // layer：repaint_boundary 存储对应 layer 用于局部重绘
-    // _paint_with_context：call by PaintingContext
-    // handle_event：处理输入事件
     // show_on_screen：或许可以实现，用于 ScrollView 的目标追踪
 
     // getter

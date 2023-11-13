@@ -210,12 +210,54 @@ NotNull<OffsetLayer*> RenderObject::update_layer(OffsetLayer* old_layer)
 }
 
 // transform
-bool    RenderObject::paints_child(NotNull<RenderObject*> child) const SKR_NOEXCEPT { return true; }
-void    RenderObject::apply_paint_transform(NotNull<RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT {}
-Matrix4 RenderObject::get_transform_to(RenderObject* ancestor) const SKR_NOEXCEPT
+bool    RenderObject::paints_child(NotNull<const RenderObject*> child) const SKR_NOEXCEPT { return true; }
+void    RenderObject::apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT {}
+Matrix4 RenderObject::get_transform_to(const RenderObject* ancestor) const SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
-    return {};
+    // setup ancestor
+    if (ancestor == nullptr)
+    {
+        ancestor = this;
+        while (ancestor->parent() != nullptr)
+        {
+            ancestor = ancestor->parent();
+        }
+    }
+
+    // build path from this to ancestor
+    const RenderObject* path[2048];
+    int32_t             path_length = 0;
+    {
+        // fill path
+        for (auto cur_node = this; cur_node != ancestor; cur_node = cur_node->parent())
+        {
+            path[path_length] = cur_node;
+            ++path_length;
+
+            if (!cur_node->parent())
+            {
+                SKR_LOG_ERROR(u8"ancestor is not in the parent chain");
+                return {};
+            }
+            if (path_length >= 2048)
+            {
+                SKR_LOG_ERROR(u8"widget depth deeper than 2048, please check your widget tree");
+                return {};
+            }
+        }
+
+        // add ancestor
+        path[path_length] = ancestor;
+        ++path_length;
+    }
+
+    // build transform
+    Matrix4 transform;
+    for (int32_t idx = path_length - 1; idx > 0; --idx)
+    {
+        path[idx]->apply_paint_transform(path[idx - 1], transform);
+    }
+    return transform;
 }
 
 // event
