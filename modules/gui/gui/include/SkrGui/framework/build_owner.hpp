@@ -11,20 +11,19 @@ struct SKR_GUI_API BuildOwner final {
     BuildOwner(NotNull<INativeDevice*> native_device) SKR_NOEXCEPT;
 
     // schedule
+    void schedule_build_for(NotNull<Element*> element) SKR_NOEXCEPT;
     void schedule_layout_for(NotNull<RenderObject*> node) SKR_NOEXCEPT;
     void schedule_paint_for(NotNull<RenderObject*> node) SKR_NOEXCEPT;
 
     // flush
+    void flush_build() SKR_NOEXCEPT;
     void flush_layout();
     void flush_paint();
 
+    // getter
     inline INativeDevice* native_device() const SKR_NOEXCEPT { return _native_device; }
 
-    // build
-    void schedule_build_for(NotNull<Element*> element) SKR_NOEXCEPT;
-    void flush_build() SKR_NOEXCEPT;
-
-    // TODO. temporal impl for pass compile, move to global context
+    // TODO. build 过程中的 element 回收
     inline void drop_unmount_element(NotNull<Element*> element) SKR_NOEXCEPT {}
 
 private:
