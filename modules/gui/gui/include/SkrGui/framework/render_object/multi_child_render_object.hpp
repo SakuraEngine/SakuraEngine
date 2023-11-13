@@ -63,6 +63,7 @@ struct MultiChildRenderObjectMixin {
     }
     inline void remove_child(TSelf& self, NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
     {
+        // TODO. 使用 remove swap，保持 desired_slot 但是更新 child 的 slot
         auto& child_slot = _children[child->slot().index];
         if (child_slot.desired_slot != slot) { SKR_GUI_LOG_ERROR(u8"slot miss match when remove child"); }
         child_slot.child->unmount();

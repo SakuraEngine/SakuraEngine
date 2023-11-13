@@ -48,4 +48,9 @@ bool RenderShiftedBox::hit_test(HitTestResult* result, Offsetf local_position) c
     });
 }
 
+// transform
+void RenderShiftedBox::apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT
+{
+}
+
 } // namespace skr::gui
