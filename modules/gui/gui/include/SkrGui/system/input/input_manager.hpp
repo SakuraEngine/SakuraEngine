@@ -10,7 +10,7 @@ namespace skr sreflect
 {
 namespace gui sreflect
 {
-struct InputContext;
+struct RenderInputContext;
 
 // TODO. roadmap
 // //  1. hit test
@@ -23,7 +23,6 @@ struct InputContext;
 //  8. focus & navigation (keyboard)         // ! 可 TODO
 
 // InputManager 管理 Context 提供全局 hit test 支持与事件分发
-// TODO. 其只是作为 InputContext 的一个中心，其实这个功能是否可以放在 BuildOwner 内部？
 sreflect_struct("guid": "5c9d7e26-c2a1-4785-8832-bda746906801")
 SKR_GUI_API InputManager {
 
@@ -31,11 +30,11 @@ SKR_GUI_API InputManager {
     bool hit_test(HitTestResult* result, Offsetf global_position);
 
     // register
-    void register_context(NotNull<InputContext*> context);
-    void unregister_context(NotNull<InputContext*> context);
+    void register_context(NotNull<RenderInputContext*> context);
+    void unregister_context(NotNull<RenderInputContext*> context);
 
 private:
-    Array<InputContext*> _contexts;
+    Array<RenderInputContext*> _contexts;
 };
 } // namespace gui sreflect
 } // namespace skr sreflect

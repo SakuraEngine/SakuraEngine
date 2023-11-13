@@ -1,5 +1,5 @@
 #include "SkrGui/system/input/input_manager.hpp"
-#include "SkrGui/system/input/input_context.hpp"
+#include "SkrGui/system/input/render_input_context.hpp"
 
 namespace skr::gui
 {
@@ -17,11 +17,11 @@ bool InputManager::hit_test(HitTestResult* result, Offsetf global_position)
 }
 
 // register
-void InputManager::register_context(NotNull<InputContext*> context)
+void InputManager::register_context(NotNull<RenderInputContext*> context)
 {
     _contexts.add_unique(context.get());
 }
-void InputManager::unregister_context(NotNull<InputContext*> context)
+void InputManager::unregister_context(NotNull<RenderInputContext*> context)
 {
     _contexts.remove(context.get());
 }

@@ -18,6 +18,9 @@ RenderProxyBox : public RenderBox,
                  public ISingleChildRenderObject {
     SKR_RTTR_GENERATE_BODY()
 
+    // hit test
+    bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
+
 protected:
     // intrinsic size
     float compute_min_intrinsic_width(float height) const SKR_NOEXCEPT override;
@@ -33,9 +36,6 @@ protected:
 
     // paint
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
-
-    // hit test
-    bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 
     // MIXIN
     SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(RenderProxyBox, RenderBox);
