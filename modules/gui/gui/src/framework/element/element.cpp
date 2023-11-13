@@ -115,6 +115,7 @@ void Element::attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT
     _owner = owner;
     _depth = _parent ? _parent->_depth + 1 : 0;
 
+    // retaken case
     if (_lifecycle != EElementLifecycle::Initial)
     {
         // TODO. process dependencies
