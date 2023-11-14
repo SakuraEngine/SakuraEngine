@@ -24,8 +24,7 @@ enum class ERenderObjectLifecycle : uint8_t
 sreflect_struct(
     "guid" : "2f1b78a5-1be9-4799-a3ca-2f2d3b153f29"
 )
-SKR_GUI_API RenderObject : virtual public skr::rttr::IObject,
-                           public IHitTestTarget {
+SKR_GUI_API RenderObject : virtual public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
     friend struct BuildOwner;
     using VisitFuncRef = FunctionRef<void(NotNull<RenderObject*>)>;
@@ -91,7 +90,7 @@ SKR_GUI_API RenderObject : virtual public skr::rttr::IObject,
     Offsetf      local_to_system(Offsetf local_position) const SKR_NOEXCEPT;
 
     // event
-    bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) override;
+    virtual bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry);
 
     // TODO
     // invoke_layout_callback：用于在 layout 过程中创建 child，通常用于 Sliver
