@@ -37,4 +37,6 @@ struct ParamBuilder {
 } // namespace skr::gui
 
 #define SNewWidget(__TYPE) ::skr::gui::WidgetBuilder<__TYPE>{ __FILE__, __LINE__ } <<= [&](__TYPE & p)
+#define SNewWidget_N(__TYPE, __NAME) ::skr::gui::WidgetBuilder<__TYPE>{ __FILE__, __LINE__ } <<= [&](__TYPE & __NAME)
 #define SNewParam(__TYPE) ::skr::gui::ParamBuilder<__TYPE>{} <<= [&](__TYPE & p)
+#define SNewParam_N(__TYPE, __NAME) ::skr::gui::ParamBuilder<__TYPE>{} <<= [&](__TYPE & __NAME)
