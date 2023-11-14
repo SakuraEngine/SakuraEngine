@@ -3,9 +3,6 @@
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/math/matrix.hpp"
 #include "SkrGui/math/geometry.hpp"
-#ifndef __meta__
-    #include "SkrGui/system/input/hit_test.generated.h"
-#endif
 
 namespace skr sreflect
 {
@@ -14,27 +11,19 @@ namespace gui sreflect
 struct PointerEvent;
 struct HitTestEntry;
 
-sreflect_struct(
-    "guid": "72127868-ac63-46e0-a8e1-cb5c7c2c4382"
-)
-SKR_GUI_API IHitTestTarget : virtual public ::skr::rttr::IObject {
-    SKR_RTTR_GENERATE_BODY()
-    virtual bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) = 0;
-};
-
 struct HitTestEntry {
     // 通常我们会让 hit_test 为 const，但是 event dispatch 为非 const，这里是为了方便代码书写
-    inline HitTestEntry(const IHitTestTarget* target)
-        : target(const_cast<IHitTestTarget*>(target))
+    inline HitTestEntry(const RenderObject* target)
+        : target(const_cast<RenderObject*>(target))
     {
     }
-    inline HitTestEntry(const IHitTestTarget* target, Matrix4 transform)
-        : target(const_cast<IHitTestTarget*>(target))
+    inline HitTestEntry(const RenderObject* target, Matrix4 transform)
+        : target(const_cast<RenderObject*>(target))
         , transform(transform)
     {
     }
 
-    IHitTestTarget*   target    = nullptr;
+    RenderObject*     target    = nullptr;
     Optional<Matrix4> transform = {};
 };
 
