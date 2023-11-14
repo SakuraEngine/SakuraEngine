@@ -30,10 +30,11 @@ void Element::mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
         struct _RecursiveHelper {
             NotNull<BuildOwner*> owner;
 
-            void operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
+            bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
             {
                 obj->attach(owner);
                 obj->visit_children(_RecursiveHelper{ owner });
+                return true;
             }
         };
         _RecursiveHelper{ _parent->_owner }(this);
@@ -76,10 +77,11 @@ void Element::unmount() SKR_NOEXCEPT
 
         // recursive call detach()
         struct _RecursiveHelper {
-            void operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
+            bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
             {
                 obj->detach();
                 obj->visit_children(_RecursiveHelper{});
+                return true;
             }
         };
         _RecursiveHelper{}(this);
@@ -192,14 +194,10 @@ RenderObject* Element::find_render_object() const SKR_NOEXCEPT
         {
             cur_element->visit_children([&cur_element](NotNull<Element*> element) {
                 cur_element = element;
+                return true;
             });
         }
     }
-    return nullptr;
-}
-RenderObject* Element::find_ancestor_render_object() const SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
 Optional<Sizef> Element::render_box_size() const SKR_NOEXCEPT
@@ -213,52 +211,17 @@ Optional<Sizef> Element::render_box_size() const SKR_NOEXCEPT
     }
     return {};
 }
-InheritedWidget* Element::depend_on_inherited_element(NotNull<InheritedElement*> ancestor) SKR_NOEXCEPT
+void Element::visit_ancestor_elements(VisitFuncRef visitor) const SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
+    auto cur = parent();
+    while (cur && visitor(cur))
+    {
+        cur = cur->parent();
+    }
 }
-InheritedWidget* Element::depend_on_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-InheritedElement* Element::get_element_for_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-Widget* Element::find_ancestor_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-State* Element::find_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-State* Element::find_root_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-RenderObject* Element::find_ancestor_render_object_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-void Element::visit_ancestor_elements(FunctionRef<bool(NotNull<Element*>)> visitor) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-}
-void Element::visit_child_elements(FunctionRef<void(NotNull<Element*>)> visitor) SKR_NOEXCEPT
+void Element::visit_child_elements(VisitFuncRef visitor) const SKR_NOEXCEPT
 {
     visit_children(visitor);
-}
-void Element::dispatch_notification(NotNull<Notification*> notification) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
 }
 //==> End IBuildContext API
 
@@ -425,7 +388,7 @@ void Element::_update_slot_for_child(NotNull<Element*> child, Slot new_slot) SKR
 {
     struct _RecursiveHelper {
         Slot new_slot;
-        void operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
+        bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
         {
             obj->_slot = new_slot;
             if (auto render_object = obj->type_cast<RenderObjectElement>())
@@ -439,6 +402,7 @@ void Element::_update_slot_for_child(NotNull<Element*> child, Slot new_slot) SKR
             {
                 obj->visit_children(_RecursiveHelper{ new_slot });
             }
+            return true;
         }
     };
     child->visit_children(_RecursiveHelper{ new_slot });
@@ -447,7 +411,7 @@ void Element::_attach_render_object_children(Slot new_slot) SKR_NOEXCEPT
 {
     struct _RecursiveHelper {
         Slot new_slot;
-        void operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
+        bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
         {
             if (auto render_object = obj->type_cast<RenderObjectElement>())
             {
@@ -458,6 +422,7 @@ void Element::_attach_render_object_children(Slot new_slot) SKR_NOEXCEPT
                 obj->visit_children(_RecursiveHelper{ new_slot });
             }
             obj->_slot = new_slot;
+            return true;
         }
     };
     visit_children(_RecursiveHelper{ new_slot });
@@ -465,7 +430,7 @@ void Element::_attach_render_object_children(Slot new_slot) SKR_NOEXCEPT
 void Element::_detach_render_object_children() SKR_NOEXCEPT
 {
     struct _RecursiveHelper {
-        void operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
+        bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
         {
             if (auto render_object = obj->type_cast<RenderObjectElement>())
             {
@@ -477,6 +442,7 @@ void Element::_detach_render_object_children() SKR_NOEXCEPT
             }
             // clean up slot
             obj->_slot = Slot::Invalid();
+            return true;
         }
     };
     visit_children(_RecursiveHelper{});

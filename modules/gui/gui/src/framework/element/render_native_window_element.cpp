@@ -71,10 +71,11 @@ void RenderNativeWindowElement::prepare_initial_frame() SKR_NOEXCEPT
         struct _RecursiveHelper {
             NotNull<BuildOwner*> owner;
 
-            void operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
+            bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
             {
                 obj->attach(owner);
                 obj->visit_children(_RecursiveHelper{ owner });
+                return true;
             }
         };
         this->visit_children(_RecursiveHelper{ _owner });

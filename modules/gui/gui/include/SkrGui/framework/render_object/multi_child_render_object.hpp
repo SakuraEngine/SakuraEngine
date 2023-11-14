@@ -120,7 +120,10 @@ struct MultiChildRenderObjectMixin {
         {
             if (slot.child)
             {
-                visitor(slot.child);
+                if (!visitor(slot.child))
+                {
+                    return;
+                }
             }
         }
     }

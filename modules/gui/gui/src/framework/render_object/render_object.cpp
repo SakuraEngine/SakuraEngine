@@ -43,10 +43,11 @@ void RenderObject::mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT
         struct _RecursiveHelper {
             NotNull<BuildOwner*> owner;
 
-            inline void operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
+            inline bool operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
             {
                 obj->attach(owner);
                 obj->visit_children(_RecursiveHelper{ owner });
+                return true;
             }
         };
         _RecursiveHelper{ _parent->owner() }(this);
@@ -64,10 +65,11 @@ void RenderObject::unmount() SKR_NOEXCEPT
     if (owner())
     {
         struct _RecursiveHelper {
-            void operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
+            bool operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
             {
                 obj->detach();
                 obj->visit_children(_RecursiveHelper{});
+                return true;
             }
         };
         this->visit_children(_RecursiveHelper{});
@@ -179,7 +181,10 @@ void RenderObject::layout(bool parent_uses_size) SKR_NOEXCEPT
         if (relayout_boundary != _relayout_boundary)
         {
             _relayout_boundary = relayout_boundary;
-            visit_children([](RenderObject* child) { child->_flush_relayout_boundary(); });
+            visit_children([](RenderObject* child) {
+                child->_flush_relayout_boundary();
+                return true;
+            });
         }
     }
     else
@@ -302,7 +307,10 @@ void RenderObject::_flush_relayout_boundary() SKR_NOEXCEPT
         auto parent_relayout_boundary = _parent->_relayout_boundary;
         if (parent_relayout_boundary != _relayout_boundary)
         {
-            visit_children([](RenderObject* child) { child->_flush_relayout_boundary(); });
+            visit_children([](RenderObject* child) {
+                child->_flush_relayout_boundary();
+                return true;
+            });
         }
     }
 }
