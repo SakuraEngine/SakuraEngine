@@ -1,6 +1,8 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
 #include "SkrGui/framework/build_owner.hpp"
 #include "SkrGui/framework/layer/offset_layer.hpp"
+#include "SkrGui/framework/render_object/render_native_window.hpp"
+#include "SkrGui/backend/device/window.hpp"
 
 namespace skr::gui
 {
@@ -224,40 +226,60 @@ Matrix4 RenderObject::get_transform_to(const RenderObject* ancestor) const SKR_N
         }
     }
 
-    // build path from this to ancestor
-    const RenderObject* path[2048];
-    int32_t             path_length = 0;
+    // append transform
+    Matrix4 transform   = Matrix4::Identity();
+    auto    cur_node    = this;
+    auto    parent_node = cur_node->parent();
+    while (cur_node != ancestor)
     {
-        // fill path
-        for (auto cur_node = this; cur_node != ancestor; cur_node = cur_node->parent())
+        if (!parent_node)
         {
-            path[path_length] = cur_node;
-            ++path_length;
-
-            if (!cur_node->parent())
-            {
-                SKR_LOG_ERROR(u8"ancestor is not in the parent chain");
-                return {};
-            }
-            if (path_length >= 2048)
-            {
-                SKR_LOG_ERROR(u8"widget depth deeper than 2048, please check your widget tree");
-                return {};
-            }
+            SKR_LOG_ERROR(u8"ancestor is not in the parent chain");
+            return {};
         }
 
-        // add ancestor
-        path[path_length] = ancestor;
-        ++path_length;
-    }
-
-    // build transform
-    Matrix4 transform;
-    for (int32_t idx = path_length - 1; idx > 0; --idx)
-    {
-        path[idx]->apply_paint_transform(path[idx - 1], transform);
+        parent_node->apply_paint_transform(cur_node, transform);
+        cur_node    = parent_node;
+        parent_node = cur_node->parent();
     }
     return transform;
+}
+Offsetf RenderObject::global_to_local(Offsetf global_position, const RenderObject* ancestor) const SKR_NOEXCEPT
+{
+    Matrix4 transform = get_transform_to(ancestor);
+    Matrix4 inv_transform;
+    if (transform.try_inverse(inv_transform))
+    {
+        return inv_transform.transform(global_position);
+    }
+    return {};
+}
+Offsetf RenderObject::local_to_global(Offsetf local_position, const RenderObject* ancestor) const SKR_NOEXCEPT
+{
+    Matrix4 transform = get_transform_to(ancestor);
+    return transform.transform(local_position);
+}
+Offsetf RenderObject::system_to_local(Offsetf system_position) const SKR_NOEXCEPT
+{
+    auto root_widget = this;
+    while (root_widget->parent())
+    {
+        root_widget = root_widget->parent();
+    }
+    auto root_window = root_widget->type_cast_fast<RenderNativeWindow>();
+    auto global_pos  = root_window->window()->type_cast_fast<INativeWindow>()->to_relative(system_position);
+    return global_to_local(global_pos);
+}
+Offsetf RenderObject::local_to_system(Offsetf local_position) const SKR_NOEXCEPT
+{
+    auto root_widget = this;
+    while (root_widget->parent())
+    {
+        root_widget = root_widget->parent();
+    }
+    auto root_window = root_widget->type_cast_fast<RenderNativeWindow>();
+    auto global_pos  = local_to_global(local_position);
+    return root_window->window()->type_cast_fast<INativeWindow>()->to_absolute(global_pos);
 }
 
 // event

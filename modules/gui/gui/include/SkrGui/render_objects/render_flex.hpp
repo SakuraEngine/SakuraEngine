@@ -43,6 +43,9 @@ public:
     // hit test
     bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 
+    // transform
+    void apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT override;
+
     struct SlotData {
         // slot data
         float    flex     = 1;

@@ -27,7 +27,7 @@ sreflect_struct("guid": "5c9d7e26-c2a1-4785-8832-bda746906801")
 SKR_GUI_API InputManager {
 
     // hit test
-    bool hit_test(HitTestResult* result, Offsetf global_position);
+    bool hit_test(HitTestResult* result, Offsetf system_location);
 
     // register
     void register_context(NotNull<RenderInputContext*> context);

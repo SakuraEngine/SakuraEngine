@@ -26,7 +26,7 @@ struct SKR_RUNTIME_API IObject {
         return const_cast<IObject*>(this)->type_cast<TO>();
     }
     template <typename TO>
-    inline TO* type_cast_fast() const { return type_cast<TO>(); }
+    inline const TO* type_cast_fast() const { return type_cast<TO>(); }
     template <typename TO>
     inline TO* type_cast_fast() { return type_cast<TO>(); }
     template <typename TO>
