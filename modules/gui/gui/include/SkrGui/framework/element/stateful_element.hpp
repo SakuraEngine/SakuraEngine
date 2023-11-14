@@ -29,6 +29,9 @@ SKR_GUI_API StatefulElement : public ComponentElement {
     void detach() SKR_NOEXCEPT override;
     void destroy() SKR_NOEXCEPT override;
 
+    // getter
+    inline State* state() const SKR_NOEXCEPT { return _state; }
+
 private:
     State* _state = nullptr;
 };

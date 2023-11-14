@@ -23,7 +23,10 @@ void MultiChildRenderObjectElement::visit_children(VisitFuncRef visitor) const S
     for (auto child : _children)
     {
         // TODO. forgot child
-        visitor(child);
+        if (!visitor(child))
+        {
+            return;
+        }
     }
 }
 
