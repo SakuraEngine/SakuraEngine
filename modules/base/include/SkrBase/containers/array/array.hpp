@@ -94,6 +94,12 @@ struct Array {
     void append_at(SizeType idx, std::initializer_list<T> init_list);
     void append_at(SizeType idx, T* p, SizeType n);
 
+    // operator append
+    DataRef operator+=(const T& v);
+    DataRef operator+=(T&& v);
+    DataRef operator+=(std::initializer_list<T> init_list);
+    DataRef operator+=(const Array& arr);
+
     // remove
     void remove_at(SizeType index, SizeType n = 1);
     void remove_at_swap(SizeType index, SizeType n = 1);
@@ -735,6 +741,16 @@ SKR_INLINE void Array<T, Alloc>::append_at(SizeType idx, T* p, SizeType n)
         memory::copy(_data + idx, p, n);
     }
 }
+
+// operator append
+template <typename T, typename Alloc>
+SKR_INLINE Array<T, Alloc>::DataRef Array<T, Alloc>::operator+=(const T& v) { return add(v); }
+template <typename T, typename Alloc>
+SKR_INLINE Array<T, Alloc>::DataRef Array<T, Alloc>::operator+=(T&& v) { return add(std::move(v)); }
+template <typename T, typename Alloc>
+SKR_INLINE Array<T, Alloc>::DataRef Array<T, Alloc>::operator+=(std::initializer_list<T> init_list) { return append(init_list); }
+template <typename T, typename Alloc>
+SKR_INLINE Array<T, Alloc>::DataRef Array<T, Alloc>::operator+=(const Array<T, Alloc>& arr) { return append(arr); }
 
 // remove
 template <typename T, typename Alloc>
