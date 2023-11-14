@@ -9,6 +9,8 @@
 #include "SkrGui/backend/device/window.hpp"
 #include "SkrGui/system/input/event.hpp"
 #include "SkrGui/system/input/pointer_event.hpp"
+#include "SkrGui/system/input/input_manager.hpp"
+#include "SkrGui/system/input/input_context_widget.hpp"
 
 namespace skr::gui
 {
@@ -21,6 +23,9 @@ void Sandbox::init()
 {
     // init owner
     _build_owner = SkrNew<BuildOwner>(_device);
+
+    // init manager
+    _input_manager = SkrNew<InputManager>();
 }
 void Sandbox::shutdown()
 {
@@ -47,8 +52,12 @@ void Sandbox::show(const WindowDesc& desc)
     // 在这里创建 widget 主要是为了方便 element 进行 updateChild
     auto root_widget = SNewWidget(RenderNativeWindowWidget)
     {
-        p.child                       = _content;
         p.native_window_render_object = _root_render_object;
+        p.child                       = SNewWidget(InputContextWidget)
+        {
+            p.manager = _input_manager;
+            p.child   = _content;
+        };
     };
 
     // init element
@@ -114,7 +123,7 @@ bool Sandbox::dispatch_event(Event* event)
 
 bool Sandbox::hit_test(HitTestResult* result, Offsetf global_position)
 {
-    return _root_render_object->hit_test(result, _root_render_object->window()->to_relative(global_position));
+    return _input_manager->hit_test(result, global_position);
 }
 
 void Sandbox::resize_window(int32_t width, int32_t height)

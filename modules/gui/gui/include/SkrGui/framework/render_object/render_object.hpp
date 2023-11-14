@@ -84,7 +84,11 @@ SKR_GUI_API RenderObject : virtual public skr::rttr::IObject,
     // 用于做坐标点转换，通常用于 hit-test
     virtual bool paints_child(NotNull<const RenderObject*> child) const SKR_NOEXCEPT; // 检测该 child 是否真的会发生 paint
     virtual void apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT;
-    Matrix4      get_transform_to(const RenderObject* ancestor) const SKR_NOEXCEPT;
+    Matrix4      get_transform_to(const RenderObject* ancestor = nullptr) const SKR_NOEXCEPT;
+    Offsetf      global_to_local(Offsetf global_position, const RenderObject* ancestor = nullptr) const SKR_NOEXCEPT;
+    Offsetf      local_to_global(Offsetf local_position, const RenderObject* ancestor = nullptr) const SKR_NOEXCEPT;
+    Offsetf      system_to_local(Offsetf system_position) const SKR_NOEXCEPT;
+    Offsetf      local_to_system(Offsetf local_position) const SKR_NOEXCEPT;
 
     // event
     bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) override;

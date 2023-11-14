@@ -3,15 +3,11 @@
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/math/geometry.hpp"
 
-namespace skr::input
-{
-struct InputSystem;
-}
-
 namespace skr::gui
 {
 struct INativeDevice;
 struct WindowDesc;
+struct InputManager;
 
 // sandbox 是外部使用 GUI 系统的入口
 // 其思想是：输入事件、Backend 等信息，输出每帧的渲染三角与命令
@@ -45,6 +41,9 @@ private:
     RenderNativeWindow*        _root_render_object = nullptr;
     RenderNativeWindowElement* _root_element       = nullptr;
     NativeWindowLayer*         _root_layer         = nullptr;
+
+    // manager
+    InputManager* _input_manager = nullptr;
 
     // content
     Widget* _content = nullptr;

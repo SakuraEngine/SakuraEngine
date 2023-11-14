@@ -25,6 +25,10 @@ struct SKR_ALIGNAS(16) Matrix4 {
             }
         };
     }
+    inline static Matrix4 Translate(Offsetf offset) SKR_NOEXCEPT
+    {
+        return Translate(offset.x, offset.y, 0);
+    }
 
     // transform
     inline Offsetf transform(Offsetf pos) const SKR_NOEXCEPT
@@ -53,10 +57,10 @@ struct SKR_ALIGNAS(16) Matrix4 {
 
         result = { rtm::matrix_inverse(_m, zero_matrix) };
 
-        return rtm::vector_all_equal(result._m.x_axis, zero_vector) &&
-               rtm::vector_all_equal(result._m.y_axis, zero_vector) &&
-               rtm::vector_all_equal(result._m.z_axis, zero_vector) &&
-               rtm::vector_all_equal(result._m.w_axis, zero_vector);
+        return !(rtm::vector_all_equal(result._m.x_axis, zero_vector) &&
+                 rtm::vector_all_equal(result._m.y_axis, zero_vector) &&
+                 rtm::vector_all_equal(result._m.z_axis, zero_vector) &&
+                 rtm::vector_all_equal(result._m.w_axis, zero_vector));
     }
 
     // operators
