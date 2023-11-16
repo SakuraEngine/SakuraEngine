@@ -20,6 +20,9 @@ SKR_GUI_API State : public ::skr::rttr::IObject {
     virtual void on_element_detach() SKR_NOEXCEPT;
     virtual void on_element_destroy() SKR_NOEXCEPT;
 
+    void set_state(FunctionRef<void()> fn); // rebuild any way
+    void set_state(FunctionRef<bool()> fn); // return true if state changed
+
 private:
     friend struct StatefulElement;
     StatefulWidget*  _widget  = nullptr;

@@ -11,6 +11,7 @@
 #include "SkrInputSystem/input_trigger.hpp"
 #include "input_binding.hpp"
 #include "SkrGui/system/input/pointer_event.hpp"
+#include "counter_state.hpp"
 
 // !!!! TestWidgets !!!!
 #include "SkrGui/widgets/stack.hpp"
@@ -41,56 +42,7 @@ int main(void)
 
     // setup content
     {
-        auto widget = SNewWidget(Stack)
-        {
-            p.children += SNewWidget(Positioned)
-            {
-                p.positional.fill();
-                p.child = SNewWidget(GridPaper){};
-            };
-            p.children += SNewWidget(Positioned)
-            {
-                p.positional.anchor_LT(0.5_pct, 0).sized(400, 400).pivot({ 0.5, 0 });
-                p.child = SNewWidget(Flex)
-                {
-                    p.cross_axis_alignment = ECrossAxisAlignment::Start;
-                    p.main_axis_alignment  = EMainAxisAlignment::Center;
-                    p.children += SNewWidget(MouseRegin)
-                    {
-                        p.on_hover = [](PointerMoveEvent* event) {
-                            auto g_pos = event->global_position;
-                            SKR_LOG_INFO(u8"mouse hover, global(%f, %f)", g_pos.x, g_pos.y);
-                            return true;
-                        };
-                        p.child = SNewWidget(SizedBox)
-                        {
-                            p.size  = { 100, 300 };
-                            p.child = SNewWidget(ColoredBox) { p.color = Color::Linear("#F00"); };
-                        };
-                    };
-                    p.children += SNewWidget(SizedBox)
-                    {
-                        p.size  = { 100, 200 };
-                        p.child = SNewWidget(ColoredBox) { p.color = Color::Linear("#0F0"); };
-                    };
-                    p.children += SNewWidget(SizedBox)
-                    {
-                        p.size  = { 100, 400 };
-                        p.child = SNewWidget(ColoredBox) { p.color = Color::Linear("#00F"); };
-                    };
-                };
-            };
-            // p.children += SNewWidget(Positioned)
-            // {
-            //     p.positional.fill();
-            //     p.child = SNewWidget(ColorPicker){};
-            // };
-            p.children += SNewWidget(Positioned)
-            {
-                p.positional.anchor_LT(0.5_pct, 10_px).pivot({ 0.5, 0 });
-                p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };
-            };
-        };
+        auto widget = SNewWidget(Counter){};
         sandbox->set_content(widget);
     }
 

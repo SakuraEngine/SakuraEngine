@@ -27,6 +27,7 @@ sreflect_struct(
 SKR_GUI_API RenderObject : virtual public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
     friend struct BuildOwner;
+    friend struct PaintingContext;
     using VisitFuncRef = FunctionRef<bool(NotNull<RenderObject*>)>;
 
     RenderObject() SKR_NOEXCEPT;

@@ -19,8 +19,14 @@ Element::Element(Widget* widget) SKR_NOEXCEPT
 void Element::mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
 {
     // validate
-    if (_widget == nullptr) { SKR_GUI_LOG_ERROR(u8"widget is nullptr"); }
-    if (_parent != nullptr) { SKR_GUI_LOG_ERROR(u8"already mounted"); }
+    if (_widget == nullptr)
+    {
+        SKR_GUI_LOG_ERROR(u8"widget is nullptr");
+    }
+    if (_parent != nullptr)
+    {
+        SKR_GUI_LOG_ERROR(u8"already mounted");
+    }
 
     // mount
     _parent = parent;
@@ -155,7 +161,10 @@ void Element::mark_needs_build() SKR_NOEXCEPT
 void Element::rebuild(bool force) SKR_NOEXCEPT
 {
     // validate
-    if (_lifecycle == EElementLifecycle::Initial) { SKR_GUI_LOG_ERROR(u8"element is incomplete"); }
+    if (_lifecycle == EElementLifecycle::Initial)
+    {
+        SKR_GUI_LOG_ERROR(u8"element is incomplete");
+    }
     if (_lifecycle != EElementLifecycle::Mounted || (!_dirty && !force))
     {
         return;

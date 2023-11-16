@@ -5886,7 +5886,7 @@ _WHY_GODOT_INLINE_ void TextServerAdvanced::_add_features(const TextServerFeatur
 String get_default_locale()
 {
     // TODO: locale
-    SKR_UNIMPLEMENTED_FUNCTION();
+    // SKR_UNIMPLEMENTED_FUNCTION();
     return "zh";
 }
 

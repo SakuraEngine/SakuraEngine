@@ -13,6 +13,19 @@ void State::on_element_destroy() SKR_NOEXCEPT
 {
 }
 
+void State::set_state(FunctionRef<void()> fn)
+{
+    fn();
+    _element->mark_needs_build();
+}
+void State::set_state(FunctionRef<bool()> fn)
+{
+    if (fn())
+    {
+        _element->mark_needs_build();
+    }
+}
+
 NotNull<Element*> StatefulWidget::create_element() SKR_NOEXCEPT
 {
     return SkrNew<StatefulElement>(this);

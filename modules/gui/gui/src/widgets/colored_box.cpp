@@ -11,6 +11,8 @@ NotNull<RenderObject*> ColoredBox::create_render_object() SKR_NOEXCEPT
 }
 void ColoredBox::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
+    auto r_obj = render_object->type_cast_fast<RenderColoredBox>();
+
+    r_obj->set_color(color);
 }
 } // namespace skr::gui
