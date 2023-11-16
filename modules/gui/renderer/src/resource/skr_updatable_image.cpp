@@ -35,6 +35,8 @@ void SkrUpdatableImage::destroy()
     {
         cgpu_wait_queue_idle(_render_device->cgpu_queue());
         cgpu_free_texture(_cgpu_texture);
+        cgpu_free_texture_view(_texture_view);
+        cgpux_free_bind_table(_bind_table);
         _cgpu_texture = nullptr;
     }
     _state = EResourceState::Destroyed;
@@ -58,6 +60,8 @@ void SkrUpdatableImage::update(const UpdatableImageDesc& desc)
     {
         cgpu_wait_queue_idle(_render_device->cgpu_queue());
         cgpu_free_texture(_cgpu_texture);
+        cgpu_free_texture_view(_texture_view);
+        cgpux_free_bind_table(_bind_table);
         _cgpu_texture = nullptr;
     }
 

@@ -38,7 +38,10 @@ void StatefulElement::attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT
 {
     Super::attach(owner);
     _state->on_element_attach(owner);
-    mark_needs_build();
+    if (lifecycle() == EElementLifecycle::Unmounted)
+    {
+        mark_needs_build();
+    }
 }
 void StatefulElement::detach() SKR_NOEXCEPT
 {

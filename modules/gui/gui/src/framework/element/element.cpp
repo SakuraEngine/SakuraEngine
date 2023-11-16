@@ -318,6 +318,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
         }
         else
         {
+            //!!! don't update here, for keep update order
             children[widget_match_end] = child;
             --children_match_end;
             --widget_match_end;
@@ -377,12 +378,12 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
     }
 
     // step 6. walk back part and update
-    for (auto i = widget_match_end; i < children.size(); ++i)
+    for (widget_match_end = widget_match_end + 1; widget_match_end < children.size(); ++widget_match_end)
     {
-        auto& child      = children[i];
-        auto  new_widget = new_widgets[i];
+        auto& child      = children[widget_match_end];
+        auto  new_widget = new_widgets[widget_match_end];
 
-        child = _update_child(child, new_widget, Slot{ i });
+        child = _update_child(child, new_widget, Slot{ widget_match_end });
     }
 }
 NotNull<Element*> Element::_inflate_widget(NotNull<Widget*> new_widget, Slot slot) SKR_NOEXCEPT
@@ -399,13 +400,13 @@ void Element::_update_slot_for_child(NotNull<Element*> child, Slot new_slot) SKR
         Slot new_slot;
         bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
         {
-            obj->_slot = new_slot;
             if (auto render_object = obj->type_cast<RenderObjectElement>())
             {
                 if (render_object->slot() != new_slot)
                 {
                     render_object->update_slot(new_slot);
                 }
+                return false;
             }
             else
             {
@@ -414,7 +415,7 @@ void Element::_update_slot_for_child(NotNull<Element*> child, Slot new_slot) SKR
             return true;
         }
     };
-    child->visit_children(_RecursiveHelper{ new_slot });
+    _RecursiveHelper{ new_slot }(child);
 }
 void Element::_attach_render_object_children(Slot new_slot) SKR_NOEXCEPT
 {

@@ -58,6 +58,7 @@ void SkrNativeDevice::shutdown()
     {
         image->destroy();
     }
+    _all_updatable_images.clear();
 
     // shutdown resource device
     _resource_device->shutdown();
