@@ -17,6 +17,8 @@ void MultiChildRenderObjectElement::first_mount(NotNull<Element*> parent, Slot s
         auto new_child    = _inflate_widget(child_widget, Slot{ i });
         _children.add(new_child);
     }
+    auto multi_child_render_object = render_object()->type_cast<IMultiChildRenderObject>();
+    multi_child_render_object->flush_updates();
 }
 void MultiChildRenderObjectElement::visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT
 {
@@ -35,6 +37,8 @@ void MultiChildRenderObjectElement::update(NotNull<Widget*> new_widget) SKR_NOEX
 {
     Super::update(new_widget);
     _update_children(_children, widget()->type_cast_fast<MultiChildRenderObjectWidget>()->children);
+    auto multi_child_render_object = render_object()->type_cast<IMultiChildRenderObject>();
+    multi_child_render_object->flush_updates();
 }
 
 // child render object ops

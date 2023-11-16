@@ -42,6 +42,8 @@ void BuildOwner::flush_build() SKR_NOEXCEPT
     {
         element->rebuild();
     }
+
+    _dirty_elements.clear();
 }
 void BuildOwner::flush_layout()
 {

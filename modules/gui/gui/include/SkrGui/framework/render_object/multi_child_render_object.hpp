@@ -73,7 +73,6 @@ struct MultiChildRenderObjectMixin {
     }
     inline void move_child(TSelf& self, NotNull<RenderObject*> child, Slot from, Slot to) SKR_NOEXCEPT
     {
-        if (from != _children[child->slot().index].desired_slot) SKR_GUI_LOG_ERROR(u8"slot miss match when move child");
         _children[child->slot().index].desired_slot = to;
         _need_flush_updates                         = true;
     }
@@ -101,7 +100,10 @@ struct MultiChildRenderObjectMixin {
             for (size_t i = 0; i < _children.size(); ++i)
             {
                 const auto& slot = _children[i];
-                if (slot.desired_slot.index != i) SKR_GUI_LOG_ERROR(u8"slot index miss match");
+                if (slot.desired_slot.index != i)
+                {
+                    SKR_GUI_LOG_ERROR(u8"slot index miss match");
+                }
                 slot.child->set_slot(slot.desired_slot);
             }
         }

@@ -26,14 +26,14 @@ enum class EKeyType
 
 struct SKR_GUI_API Key final {
     // create
-    static Key unique() SKR_NOEXCEPT;
-    static Key keep_state(State* state) SKR_NOEXCEPT;
-    static Key value(int64_t v) SKR_NOEXCEPT;
-    static Key value(float v) SKR_NOEXCEPT;
-    static Key value(const String& v) SKR_NOEXCEPT;
-    static Key storage(int64_t v) SKR_NOEXCEPT;
-    static Key storage(float v) SKR_NOEXCEPT;
-    static Key storage(const String& v) SKR_NOEXCEPT;
+    static Key Unique() SKR_NOEXCEPT;
+    static Key Keep_state(State* state) SKR_NOEXCEPT;
+    static Key Value(int64_t v) SKR_NOEXCEPT;
+    static Key Value(float v) SKR_NOEXCEPT;
+    static Key Value(const String& v) SKR_NOEXCEPT;
+    static Key Storage(int64_t v) SKR_NOEXCEPT;
+    static Key Storage(float v) SKR_NOEXCEPT;
+    static Key Storage(const String& v) SKR_NOEXCEPT;
 
     // ctor & dtor & assign
     Key() SKR_NOEXCEPT;
@@ -91,49 +91,49 @@ private:
 };
 
 // create
-inline Key Key::unique() SKR_NOEXCEPT
+inline Key Key::Unique() SKR_NOEXCEPT
 {
     Key k;
     k.set_unique();
     return k;
 }
-inline Key Key::keep_state(State* state) SKR_NOEXCEPT
+inline Key Key::Keep_state(State* state) SKR_NOEXCEPT
 {
     Key k;
     k.set_keep_state(state);
     return k;
 }
-inline Key Key::value(int64_t v) SKR_NOEXCEPT
+inline Key Key::Value(int64_t v) SKR_NOEXCEPT
 {
     Key k;
     k.set_value(v);
     return k;
 }
-inline Key Key::value(float v) SKR_NOEXCEPT
+inline Key Key::Value(float v) SKR_NOEXCEPT
 {
     Key k;
     k.set_value(v);
     return k;
 }
-inline Key Key::value(const String& v) SKR_NOEXCEPT
+inline Key Key::Value(const String& v) SKR_NOEXCEPT
 {
     Key k;
     k.set_value(v);
     return k;
 }
-inline Key Key::storage(int64_t v) SKR_NOEXCEPT
+inline Key Key::Storage(int64_t v) SKR_NOEXCEPT
 {
     Key k;
     k.set_storage(v);
     return k;
 }
-inline Key Key::storage(float v) SKR_NOEXCEPT
+inline Key Key::Storage(float v) SKR_NOEXCEPT
 {
     Key k;
     k.set_storage(v);
     return k;
 }
-inline Key Key::storage(const String& v) SKR_NOEXCEPT
+inline Key Key::Storage(const String& v) SKR_NOEXCEPT
 {
     Key k;
     k.set_storage(v);
