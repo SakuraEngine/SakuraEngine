@@ -44,7 +44,6 @@ void Element::mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
             }
         };
         _RecursiveHelper{ _parent->_owner }(this);
-        this->visit_children(_RecursiveHelper{ _parent->_owner });
 
         // attach render object when retake
         if (_lifecycle == EElementLifecycle::Unmounted)
@@ -91,7 +90,6 @@ void Element::unmount() SKR_NOEXCEPT
             }
         };
         _RecursiveHelper{}(this);
-        this->visit_children(_RecursiveHelper{});
     }
     _lifecycle = EElementLifecycle::Unmounted;
 }
