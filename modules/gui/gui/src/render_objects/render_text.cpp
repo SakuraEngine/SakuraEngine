@@ -18,16 +18,14 @@ RenderText::~RenderText()
 
 void RenderText::perform_layout() SKR_NOEXCEPT
 {
-    // TODO. when impl update able texture
-    // _paragraph->clear();
-    // _paragraph->add_text(_text, {});
-    // _paragraph->build();
-    // _paragraph->layout(constraints());
+    _paragraph->clear();
+    _paragraph->add_text(_text, {});
+    _paragraph->build();
+    _paragraph->layout(constraints());
 }
 void RenderText::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
 {
-    // TODO. when impl update able texture
-    // _paragraph->paint(context, offset);
+    _paragraph->paint(context, offset);
 }
 
 void RenderText::set_text(const string& text)
