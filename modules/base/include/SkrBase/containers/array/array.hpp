@@ -744,13 +744,13 @@ SKR_INLINE void Array<T, Alloc>::append_at(SizeType idx, T* p, SizeType n)
 
 // operator append
 template <typename T, typename Alloc>
-SKR_INLINE Array<T, Alloc>::DataRef Array<T, Alloc>::operator+=(const T& v) { return add(v); }
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::operator+=(const T& v) { return add(v); }
 template <typename T, typename Alloc>
-SKR_INLINE Array<T, Alloc>::DataRef Array<T, Alloc>::operator+=(T&& v) { return add(std::move(v)); }
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::operator+=(T&& v) { return add(std::move(v)); }
 template <typename T, typename Alloc>
-SKR_INLINE Array<T, Alloc>::DataRef Array<T, Alloc>::operator+=(std::initializer_list<T> init_list) { return append(init_list); }
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::operator+=(std::initializer_list<T> init_list) { return append(init_list); }
 template <typename T, typename Alloc>
-SKR_INLINE Array<T, Alloc>::DataRef Array<T, Alloc>::operator+=(const Array<T, Alloc>& arr) { return append(arr); }
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::operator+=(const Array<T, Alloc>& arr) { return append(arr); }
 
 // remove
 template <typename T, typename Alloc>
