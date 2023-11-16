@@ -53,6 +53,12 @@ void SkrNativeDevice::shutdown()
     // shutdown text device
     embedded_shutdown_text_service();
 
+    // clean up all updatable images
+    for (auto image : _all_updatable_images)
+    {
+        image->destroy();
+    }
+
     // shutdown resource device
     _resource_device->shutdown();
     SkrDelete(_resource_device);
@@ -112,7 +118,9 @@ const DisplayMetrics& SkrNativeDevice::display_metrics() const
 // resource management
 NotNull<IUpdatableImage*> SkrNativeDevice::create_updatable_image()
 {
-    return SkrNew<SkrUpdatableImage>(_render_device);
+    auto image = SkrNew<SkrUpdatableImage>(_render_device);
+    _all_updatable_images.add(image);
+    return image;
 }
 
 // canvas management

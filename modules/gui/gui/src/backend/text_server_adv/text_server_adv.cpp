@@ -868,7 +868,7 @@ _WHY_GODOT_INLINE_ TextServerAdvanced::FontTexturePosition TextServerAdvanced::f
         ShelfPackTexture tex = ShelfPackTexture(texsize, texsize);
         tex.atlas.instantiate();
         tex.atlas->set_format(p_image_format);
-        tex.atlas->set_size({ p_width, p_height });
+        tex.atlas->set_size({ texsize, texsize });
         tex.atlas->resize_for_write(texsize * texsize * p_color_size);
         {
             // Zero texture.
