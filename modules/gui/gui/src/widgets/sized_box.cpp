@@ -12,7 +12,9 @@ NotNull<RenderObject*> SizedBox::create_render_object() SKR_NOEXCEPT
 }
 void SizedBox::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
+    auto r_obj = render_object->type_cast_fast<RenderConstrainedBox>();
+
+    r_obj->set_additional_constraint(BoxConstraints::Tight(size));
 }
 
 } // namespace skr::gui
