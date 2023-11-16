@@ -51,7 +51,6 @@ void RenderObject::mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT
             }
         };
         _RecursiveHelper{ _parent->owner() }(this);
-        this->visit_children(_RecursiveHelper{ _parent->owner() });
     }
     _lifecycle = ERenderObjectLifecycle::Mounted;
 }
@@ -72,7 +71,7 @@ void RenderObject::unmount() SKR_NOEXCEPT
                 return true;
             }
         };
-        this->visit_children(_RecursiveHelper{});
+        _RecursiveHelper{}(this);
     }
     _lifecycle = ERenderObjectLifecycle::Unmounted;
 }
