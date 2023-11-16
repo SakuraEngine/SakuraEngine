@@ -26,6 +26,10 @@ void RenderWindow::perform_layout() SKR_NOEXCEPT
         child()->layout();
     }
 }
+bool RenderWindow::is_repaint_boundary() const SKR_NOEXCEPT
+{
+    return true;
+}
 
 NotNull<OffsetLayer*> RenderWindow::update_layer(OffsetLayer* old_layer)
 {

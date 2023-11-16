@@ -59,6 +59,7 @@ struct MultiChildRenderObjectMixin {
     inline void add_child(TSelf& self, NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
     {
         _children.emplace(slot, child->type_cast_fast<TChild>());
+        child->mount(&self);
         _need_flush_updates = true;
     }
     inline void remove_child(TSelf& self, NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT

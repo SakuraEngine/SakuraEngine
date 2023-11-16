@@ -5,8 +5,8 @@ namespace skr::gui
 // element tree
 void ComponentElement::first_mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
 {
-    Super::mount(parent, slot);
-    rebuild();
+    Super::first_mount(parent, slot);
+    perform_rebuild();
 }
 void ComponentElement::visit_children(ComponentElement::VisitFuncRef visitor) const SKR_NOEXCEPT
 {

@@ -34,6 +34,7 @@ void RenderText::set_text(const string& text)
     {
         _text = text;
         mark_needs_layout();
+        mark_needs_paint();
     }
 }
 } // namespace skr::gui

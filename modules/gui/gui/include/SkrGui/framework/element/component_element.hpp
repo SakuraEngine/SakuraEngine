@@ -27,7 +27,7 @@ SKR_GUI_API ComponentElement : public Element {
     virtual Widget* build() SKR_NOEXCEPT = 0;
 
 private:
-    Element* _child;
+    Element* _child = nullptr;
 };
 } // namespace gui sreflect
 } // namespace skr sreflect
