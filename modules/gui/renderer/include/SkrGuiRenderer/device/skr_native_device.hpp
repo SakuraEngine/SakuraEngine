@@ -37,8 +37,7 @@ SKR_GUI_RENDERER_API SkrNativeDevice final : public INativeDevice {
     const DisplayMetrics& display_metrics() const override;
 
     // resource management
-    NotNull<IUpdatableImage*> create_updatable_image(const UpdatableImageDesc& desc) override;
-    void                      destroy_resource(NotNull<IResource*> resource) override;
+    NotNull<IUpdatableImage*> create_updatable_image() override;
 
     // canvas management
     NotNull<ICanvas*> create_canvas() override;

@@ -183,6 +183,12 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
         draw_cmd.projection_buffer_offset  = pb_cursor * sizeof(rtm::matrix4x4f);
         draw_cmd.render_data_buffer_offset = rb_cursor * sizeof(skr_float4x4_t);
 
+        // flag
+        if (draw_cmd.texture && draw_cmd.texture->state() == EResourceState::Okey)
+        {
+            draw_cmd.pipeline_flags = ESkrPipelineFlag(draw_cmd.pipeline_flags | ESkrPipelineFlag_Textured);
+        }
+
         _commands.add(draw_cmd);
     }
 }

@@ -51,8 +51,7 @@ SKR_GUI_API INativeDevice : virtual public skr::rttr::IObject {
     virtual const DisplayMetrics& display_metrics() const = 0;
 
     // resource management
-    virtual NotNull<IUpdatableImage*> create_updatable_image(const UpdatableImageDesc& desc) = 0;
-    virtual void                      destroy_resource(NotNull<IResource*> resource)         = 0;
+    virtual NotNull<IUpdatableImage*> create_updatable_image() = 0;
 
     // canvas management
     virtual NotNull<ICanvas*> create_canvas()                          = 0;

@@ -11,6 +11,7 @@
 #include <EASTL/list.h>
 #include <SkrRT/containers/hashmap.hpp>
 #include <EASTL/shared_ptr.h>
+#include <EASTL/span.h>
 
 #include "SkrRT/containers/sptr.hpp"
 
@@ -31,20 +32,20 @@ struct Comparator {
 };
 
 template <class T>
-class Span : public skr::span<T>
+class Span : public ::eastl::span<T>
 {
 public:
     Span() SKR_NOEXCEPT = default;
 
     template <typename U>
     Span(const skr::vector<U>& other) SKR_NOEXCEPT
-        : skr::span<T>(other.data(), other.size())
+        : eastl::span<T>(other.data(), other.size())
     {
     }
 
     template <typename U>
     Span(const U* ptr, size_t size) SKR_NOEXCEPT
-        : skr::span<T>(ptr, size)
+        : eastl::span<T>(ptr, size)
     {
     }
 };
@@ -53,7 +54,7 @@ template <class T>
 class Vector : public skr::vector<T>
 {
 public:
-    Vector() = default;
+    Vector()                       = default;
     Vector(const Vector<T>& other) = default;
     template <typename U>
     Vector(const Span<U>& other)
@@ -133,7 +134,7 @@ template <typename T>
 class TypedArray : public Vector<T>
 {
 public:
-    TypedArray() = default;
+    TypedArray()                           = default;
     TypedArray(const TypedArray<T>& other) = default;
     TypedArray(const Vector<T>& other)
     {
@@ -185,12 +186,13 @@ template <class K, class T, class Hasher = godot::Hasher<K>>
 class HashMap : public skr::flat_hash_map<K, T, Hasher>
 {
     using base = skr::flat_hash_map<K, T, Hasher>;
+
 public:
     bool has(const K& key) const
     {
         return this->find(key) != this->end();
     }
-    template<class KT, class TT>
+    template <class KT, class TT>
     void insert(KT&& key, TT&& value)
     {
         this->emplace(std::forward<KT>(key), std::forward<TT>(value));
@@ -243,16 +245,15 @@ public:
 template <class T>
 using List = eastl::list<T>;
 
-struct Variant
-{
+struct Variant {
     enum Type
     {
         INT,
         BOOL,
     };
-    Variant() = default;
+    Variant()  = default;
     void* data = nullptr;
-    bool operator==(const Variant& p_other) const
+    bool  operator==(const Variant& p_other) const
     {
         return data == p_other.data;
     }
@@ -262,14 +263,12 @@ struct Variant
     }
 };
 template <>
-struct Hasher<Variant>
-{
+struct Hasher<Variant> {
     uint32_t operator()(const Variant& p_key) const
     {
         return eastl::hash<void*>()(p_key.data);
     }
 };
-
 
 template <class T>
 struct Ref : public skr::SPtr<T> {
@@ -278,10 +277,10 @@ struct Ref : public skr::SPtr<T> {
     {
         this->reset(p_ptr);
     }
-    Ref(const Ref<T>& p_other) = default;
-    Ref(Ref<T>&& p_other) = default;
+    Ref(const Ref<T>& p_other)               = default;
+    Ref(Ref<T>&& p_other)                    = default;
     Ref<T>& operator=(const Ref<T>& p_other) = default;
-    Ref<T>& operator=(Ref<T>&& p_other) = default;
+    Ref<T>& operator=(Ref<T>&& p_other)      = default;
     Ref(const skr::SPtr<T>& p_other)
         : skr::SPtr<T>(p_other)
     {
@@ -322,7 +321,7 @@ public:
     _FORCE_INLINE_      BitField() = default;
     _FORCE_INLINE_      BitField(int64_t p_value) { value = p_value; }
     _FORCE_INLINE_      BitField(T p_value) { value = (int64_t)p_value; }
-    _FORCE_INLINE_ operator int64_t() const { return value; }
+    _FORCE_INLINE_      operator int64_t() const { return value; }
     //_FORCE_INLINE_ operator Variant() const { return value; }
     _FORCE_INLINE_ bool operator!=(const BitField<T>& p_other) const { return (int64_t)p_other != value; }
     _FORCE_INLINE_ bool operator==(const BitField<T>& p_other) const { return (int64_t)p_other == value; }
@@ -330,7 +329,7 @@ public:
 template <typename T>
 _FORCE_INLINE_ bool operator==(const BitField<T>& a, const BitField<T>& b) { return (int64_t)a == (int64_t)b; }
 
-using PackedByteArray = Vector<uint8_t>;
+using PackedByteArray  = Vector<uint8_t>;
 using PackedInt32Array = Vector<int32_t>;
 
 } // namespace godot

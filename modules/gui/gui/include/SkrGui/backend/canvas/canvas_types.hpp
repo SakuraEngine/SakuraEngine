@@ -25,6 +25,7 @@ enum class EBlendFactor : uint8_t
 
 enum class ESwizzleChannel
 {
+    Disable,
     R,
     G,
     B,
@@ -34,10 +35,10 @@ enum class ESwizzleChannel
 };
 
 struct Swizzle {
-    ESwizzleChannel r = ESwizzleChannel::R;
-    ESwizzleChannel g = ESwizzleChannel::G;
-    ESwizzleChannel b = ESwizzleChannel::B;
-    ESwizzleChannel a = ESwizzleChannel::A;
+    ESwizzleChannel r = ESwizzleChannel::Disable;
+    ESwizzleChannel g = ESwizzleChannel::Disable;
+    ESwizzleChannel b = ESwizzleChannel::Disable;
+    ESwizzleChannel a = ESwizzleChannel::Disable;
 };
 
 struct BlendMode {

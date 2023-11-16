@@ -5,6 +5,7 @@
 #include "SkrGuiRenderer/render/skr_render_window.hpp"
 #include "SkrGuiRenderer/resource/skr_resource_device.hpp"
 #include "SkrGui/framework/layer/native_window_layer.hpp"
+#include "SkrGuiRenderer/resource/skr_updatable_image.hpp"
 
 namespace skr::gui
 {
@@ -109,14 +110,9 @@ const DisplayMetrics& SkrNativeDevice::display_metrics() const
 }
 
 // resource management
-NotNull<IUpdatableImage*> SkrNativeDevice::create_updatable_image(const UpdatableImageDesc& desc)
+NotNull<IUpdatableImage*> SkrNativeDevice::create_updatable_image()
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
-    return nullptr;
-}
-void SkrNativeDevice::destroy_resource(NotNull<IResource*> resource)
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
+    return SkrNew<SkrUpdatableImage>(_render_device);
 }
 
 // canvas management

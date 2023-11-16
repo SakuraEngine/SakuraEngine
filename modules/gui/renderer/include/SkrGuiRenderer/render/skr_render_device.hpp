@@ -58,12 +58,8 @@ struct SKR_GUI_RENDERER_API SkrRenderDevice final {
     inline skr_io_vram_service_t* vram_service() const { return _vram_service; }
 
     // pipeline
-    CGPURenderPipelineId get_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count);
-    CGPURenderPipelineId create_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count);
-
-    // texture
-    // create texture
-    // update texture
+    CGPURenderPipelineId get_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count = CGPU_SAMPLE_COUNT_1);
+    CGPURenderPipelineId create_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count = CGPU_SAMPLE_COUNT_1);
 
 private:
     // cgpu device
