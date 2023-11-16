@@ -54,6 +54,8 @@ private:
 
     DisplayMetrics          _display_metrics = {};
     Array<SkrNativeWindow*> _all_windows     = {};
+
+    Array<IUpdatableImage*> _all_updatable_images = {};
 };
 } // namespace gui sreflect
 } // namespace skr sreflect
