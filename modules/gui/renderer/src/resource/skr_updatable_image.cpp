@@ -33,6 +33,7 @@ void SkrUpdatableImage::destroy()
 {
     if (_cgpu_texture)
     {
+        cgpu_wait_queue_idle(_render_device->cgpu_queue());
         cgpu_free_texture(_cgpu_texture);
         _cgpu_texture = nullptr;
     }
@@ -55,6 +56,7 @@ void SkrUpdatableImage::update(const UpdatableImageDesc& desc)
 {
     if (_cgpu_texture && (desc.size != _desc.size || _desc.format != desc.format))
     {
+        cgpu_wait_queue_idle(_render_device->cgpu_queue());
         cgpu_free_texture(_cgpu_texture);
         _cgpu_texture = nullptr;
     }
@@ -151,5 +153,8 @@ void SkrUpdatableImage::update(const UpdatableImageDesc& desc)
     data.binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
     data.textures     = &_texture_view;
     cgpux_bind_table_update(_bind_table, &data, 1);
+
+    // record desc
+    _desc = desc;
 }
 } // namespace skr::gui
