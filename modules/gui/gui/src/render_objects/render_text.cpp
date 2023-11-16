@@ -21,7 +21,7 @@ void RenderText::perform_layout() SKR_NOEXCEPT
     _paragraph->clear();
     _paragraph->add_text(_text, {});
     _paragraph->build();
-    _paragraph->layout(constraints());
+    set_size(_paragraph->layout(constraints()));
 }
 void RenderText::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
 {
