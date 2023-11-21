@@ -98,7 +98,7 @@ void RenderObjectElement::update_slot(Slot new_slot) SKR_NOEXCEPT
     if (parent() == nullptr) { SKR_GUI_LOG_ERROR(u8"parent is nullptr"); }
     if (parent() && parent()->lifecycle() != EElementLifecycle::Mounted) { SKR_GUI_LOG_ERROR(u8"parent is not active"); }
 
-    if (_ancestor_render_object_element)
+    if (_ancestor_render_object_element && slot() != new_slot)
     {
         _ancestor_render_object_element->move_render_object_child(_render_object, slot(), new_slot);
     }

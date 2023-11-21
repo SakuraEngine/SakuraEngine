@@ -281,6 +281,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
     size_t widget_match_end     = new_widgets.size() - 1;
 
     // step 1. update array size
+    bool need_shrink_children = children.size() > new_widgets.size();
     if (children.size() < new_widgets.size())
     {
         children.resize(new_widgets.size(), nullptr);
@@ -316,8 +317,12 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
         }
         else
         {
-            //!!! don't update here, for keep update order
-            children[widget_match_end] = child;
+            //!!! will update in the end, for keep update order
+            //!!! in shrink case, we can't move item, because it will destroy items in center
+            if (!need_shrink_children)
+            {
+                children[widget_match_end] = child;
+            }
             --children_match_end;
             --widget_match_end;
         }
@@ -376,7 +381,16 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
     }
 
     // step 6. walk back part and update
-    for (widget_match_end = widget_match_end + 1; widget_match_end < children.size(); ++widget_match_end)
+    if (need_shrink_children)
+    {
+        auto tail_count = new_widgets.size() - widget_match_end - 1;
+        for (int32_t i = 0; i < tail_count; ++i)
+        {
+            children[widget_match_end + 1 + i] = children[children_match_end + 1 + i];
+        }
+        children.resize_unsafe(new_widgets.size());
+    }
+    for (widget_match_end = widget_match_end + 1; widget_match_end < new_widgets.size(); ++widget_match_end)
     {
         auto& child      = children[widget_match_end];
         auto  new_widget = new_widgets[widget_match_end];
@@ -403,6 +417,7 @@ void Element::_update_slot_for_child(NotNull<Element*> child, Slot new_slot) SKR
                 if (render_object->slot() != new_slot)
                 {
                     render_object->update_slot(new_slot);
+                    render_object->_slot = new_slot;
                 }
                 return false;
             }
@@ -433,7 +448,7 @@ void Element::_attach_render_object_children(Slot new_slot) SKR_NOEXCEPT
             return true;
         }
     };
-    visit_children(_RecursiveHelper{ new_slot });
+    _RecursiveHelper{ new_slot }(this);
 }
 void Element::_detach_render_object_children() SKR_NOEXCEPT
 {
@@ -453,6 +468,6 @@ void Element::_detach_render_object_children() SKR_NOEXCEPT
             return true;
         }
     };
-    visit_children(_RecursiveHelper{});
+    _RecursiveHelper{}(this);
 }
 } // namespace skr::gui
