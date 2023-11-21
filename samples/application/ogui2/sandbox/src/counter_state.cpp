@@ -26,6 +26,7 @@ NotNull<Widget*> CounterState::build(NotNull<IBuildContext*> context) SKR_NOEXCE
                 };
             };
         };
+
         p.children += SNewWidget(MouseRegin)
         {
             p.on_hover = [this](PointerMoveEvent* event) {
@@ -34,10 +35,10 @@ NotNull<Widget*> CounterState::build(NotNull<IBuildContext*> context) SKR_NOEXCE
                 });
                 return true;
             };
-            p.child = SNewWidget(ColoredBox)
+            p.child = SNewWidget_S(ColoredBox)
             {
                 p.color = { 1, 0, 0, 1 };
-                p.child = SNewWidget(Text)
+                p.child = SNewWidget_S(Text)
                 {
                     p.text = u8"increment";
                 };

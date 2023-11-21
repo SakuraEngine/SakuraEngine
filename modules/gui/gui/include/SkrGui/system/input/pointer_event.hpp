@@ -14,11 +14,11 @@ sreflect_enum_class(
 EPointerDeviceType : int32_t
 {
     Unknown = 0,
-    Mouse,
-    Touch,
+    Mouse,    // 鼠标，Down/Up/Hover+Scroll/Scale
+    Touch,    // 触摸屏，Add/Remove/Move
+    TrackPad, // 触摸板，[光标的功能]+Pan/Zoom
     // Stylus,
     // InvertedStylus,
-    // TrackPad,
 };
 sreflect_enum_class(
     "guid": "3f6c7998-a93e-424e-9d95-c75800309a16"
