@@ -41,6 +41,8 @@ sreflect_struct(
 )
 PointerEvent : public Event {
     SKR_RTTR_GENERATE_BODY()
+
+    // TODO. 对于移动端可能不需要，但是对于桌面端，需要同时得到左右 Ctrl/Alt/Shift 等 Modifier 的信息
     EPointerDeviceType device_type     = EPointerDeviceType::Unknown; // 来源设备
     Offsetf            global_position = {};                          // 位置，全局空间的逻辑坐标
     Offsetf            global_delta    = {};                          // 距离上一次触发的位置变化量
