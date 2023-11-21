@@ -7,33 +7,25 @@ namespace skr::gui
 // dispatch event
 bool InputManager::dispatch_event(Event* event)
 {
+    HitTestResult result;
+
     if (event->type_is<PointerDownEvent>() || event->type_is<PointerMoveEvent>())
     {
-        // TODO. hit test
         auto pointer_event = event->type_cast_fast<PointerEvent>();
 
-        // hit test
-        HitTestResult result;
+        // do hit test
         hit_test(&result, pointer_event->global_position);
 
-        // dispatch event
-        PointerMoveEvent event;
-        for (const auto& entry : result.path())
+        if (event->type_is<PointerMoveEvent>())
         {
-            if (entry.target->handle_event(&event, const_cast<HitTestEntry*>(&entry)))
-            {
-                return true;
-            }
+            _dispatch_enter_exit(&result, pointer_event->type_cast_fast<PointerMoveEvent>());
         }
+
+        return _route_event(&result, event->type_cast<PointerEvent>());
     }
     else if (event->type_is<PointerUpEvent>())
     {
         // TODO. restore hit test path and remove
-    }
-    else if (event->type_is<PointerMoveEvent>())
-    {
-        auto pointer_event = event->type_cast_fast<PointerScrollEvent>();
-        SKR_LOG_INFO(u8"%f, %f", pointer_event->scroll_delta.x, pointer_event->scroll_delta.y);
     }
 
     return false;
@@ -61,5 +53,46 @@ void InputManager::register_context(NotNull<RenderInputContext*> context)
 void InputManager::unregister_context(NotNull<RenderInputContext*> context)
 {
     _contexts.remove(context.get());
+}
+
+// complex dispatch functional
+void InputManager::_dispatch_enter_exit(HitTestResult* result, PointerMoveEvent* event)
+{
+    for (auto& entry : result->path())
+    {
+        if (!_last_hover_path.path().contain_if([&](const auto& other_entry) {
+                return entry.target == other_entry.target;
+            }))
+        {
+            PointerEnterEvent enter_event;
+            entry.target->handle_event(&enter_event, const_cast<HitTestEntry*>(&entry));
+        }
+    }
+
+    for (auto& entry : _last_hover_path.path())
+    {
+        if (!result->path().contain_if([&](const auto& other_entry) {
+                return entry.target == other_entry.target;
+            }))
+        {
+            PointerExitEvent exit_event;
+            entry.target->handle_event(&exit_event, const_cast<HitTestEntry*>(&entry));
+        }
+    }
+
+    _last_hover_path = *result;
+}
+
+// route event
+bool InputManager::_route_event(HitTestResult* result, PointerEvent* event)
+{
+    for (const auto& entry : result->path())
+    {
+        if (entry.target->handle_event(event, const_cast<HitTestEntry*>(&entry)))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace skr::gui
