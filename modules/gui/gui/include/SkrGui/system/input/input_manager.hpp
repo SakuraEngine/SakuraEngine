@@ -2,6 +2,7 @@
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/math/geometry.hpp"
+#include "SkrGui/system/input/hit_test.hpp"
 #ifndef __meta__
     #include "SkrGui/system/input/input_manager.generated.h"
 #endif
@@ -11,6 +12,7 @@ namespace skr sreflect
 namespace gui sreflect
 {
 struct RenderInputContext;
+struct PointerMoveEvent;
 
 // TODO. roadmap
 // //  1. hit test
@@ -37,7 +39,16 @@ SKR_GUI_API InputManager {
     void unregister_context(NotNull<RenderInputContext*> context);
 
 private:
+    // complex dispatch functional
+    void _dispatch_enter_exit(HitTestResult* result, PointerMoveEvent* event);
+
+    // route event
+    bool _route_event(HitTestResult* result, PointerEvent* event);
+
+private:
     Array<RenderInputContext*> _contexts;
+
+    HitTestResult _last_hover_path;
 };
 } // namespace gui sreflect
 } // namespace skr sreflect

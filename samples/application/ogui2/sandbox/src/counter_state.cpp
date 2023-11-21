@@ -15,26 +15,33 @@ NotNull<Widget*> CounterState::build(NotNull<IBuildContext*> context) SKR_NOEXCE
         {
             p.text = skr::format(u8"count: {}", count);
         };
-        for (int32_t i = 0; i < count / 10; ++i)
+        for (int32_t i = 0; i < count; ++i)
         {
             p.children += SNewWidget(ColoredBox)
             {
                 p.color = { 0, 0, 1, 1 };
                 p.child = SNewWidget(Text)
                 {
-                    p.text = skr::format(u8"count {}", i * 10);
+                    p.text = skr::format(u8"count {}", i);
                 };
             };
         };
 
         p.children += SNewWidget(MouseRegin)
         {
-            p.on_hover = [this](PointerMoveEvent* event) {
+            p.on_enter = [this](PointerEnterEvent* event) {
                 set_state([this]() {
                     ++count;
                 });
                 return true;
             };
+            p.on_exit = [this](PointerExitEvent* event) {
+                set_state([this]() {
+                    --count;
+                });
+                return true;
+            };
+
             p.child = SNewWidget_S(ColoredBox)
             {
                 p.color = { 1, 0, 0, 1 };
