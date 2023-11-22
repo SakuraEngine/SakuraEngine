@@ -16,7 +16,7 @@ void RenderColoredBox::paint(NotNull<PaintingContext*> context, Offsetf offset) 
 
     if (child())
     {
-        context->paint_child(make_not_null(child()), offset);
+        context->paint_child(child(), offset);
     }
 }
 

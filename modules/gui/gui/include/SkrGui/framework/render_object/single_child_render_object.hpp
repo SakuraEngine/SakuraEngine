@@ -11,11 +11,9 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "5349672b-bfc5-46a9-9a02-40ef563c196d",
-    "rtti": true
+    "guid": "5349672b-bfc5-46a9-9a02-40ef563c196d"
 )
-SKR_GUI_API ISingleChildRenderObject : virtual public skr::rttr::IObject
-{
+SKR_GUI_API ISingleChildRenderObject : virtual public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
     virtual ~ISingleChildRenderObject() = default;
 
@@ -36,7 +34,7 @@ struct SingleChildRenderObjectMixin {
     {
         if (_child) _child->unmount();
         _child = child->type_cast_fast<TChild>();
-        _child->mount(make_not_null(&self));
+        _child->mount(&self);
     }
     inline void remove_child(TSelf& self) SKR_NOEXCEPT
     {
@@ -45,7 +43,7 @@ struct SingleChildRenderObjectMixin {
     }
     inline void visit_children(const TSelf& self, RenderObject::VisitFuncRef visitor) const SKR_NOEXCEPT
     {
-        if (_child) visitor(make_not_null(_child));
+        if (_child) visitor(_child);
     }
 };
 } // namespace gui sreflect
@@ -54,9 +52,8 @@ struct SingleChildRenderObjectMixin {
 #define SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(__SELF, __CHILD)                \
     /*===============> Begin Single Child Render Object Mixin <===============*/ \
 private:                                                                         \
-    sattr("no-rtti": true)                                                       \
-          SingleChildRenderObjectMixin<__SELF, __CHILD>                          \
-          _single_child_render_object_mixin = {};                                \
+    SingleChildRenderObjectMixin<__SELF, __CHILD>                                \
+    _single_child_render_object_mixin = {};                                      \
                                                                                  \
 public:                                                                          \
     GUID accept_child_type() const SKR_NOEXCEPT override                         \

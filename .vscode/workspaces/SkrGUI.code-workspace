@@ -38,11 +38,15 @@
         "xmake.additionalConfigArguments": [
             "--use_profile=enable",
             "--build_tests=y",
+            "--toolchain=clang-cl",
             "--cxx_version=cxx20"
         ],
-        "xmake.customDebugConfig": {
-            "stopAtEntry": false,
-        },
         "editor.formatOnSave": true,
+        "xmake.customDebugConfig": {
+            // "visualizerFile": "${workspaceFolder}\\SDKs\\natvis\\SkrContainer.natvis",
+            "stopAtEntry": false,
+            "type": "cppvsdbg",
+            "console": "externalTerminal"
+        }
     }
 }

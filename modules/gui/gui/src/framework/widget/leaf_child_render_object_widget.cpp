@@ -5,6 +5,6 @@ namespace skr::gui
 {
 NotNull<Element*> LeafRenderObjectWidget::create_element() SKR_NOEXCEPT
 {
-    return make_not_null(SkrNew<LeafRenderObjectElement>(make_not_null(this)));
+    return SkrNew<LeafRenderObjectElement>(this);
 }
 } // namespace skr::gui

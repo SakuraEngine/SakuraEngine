@@ -28,11 +28,11 @@ void PaintingContext::paint_child(NotNull<RenderObject*> child, Offsetf offset) 
     else if (child->was_repaint_boundary())
     {
         child->set_layer(nullptr);
-        child->paint(*this, offset);
+        _paint_with_context(child, offset);
     }
     else
     {
-        child->paint(*this, offset);
+        _paint_with_context(child, offset);
     }
 }
 void PaintingContext::add_layer(NotNull<Layer*> layer) SKR_NOEXCEPT
@@ -72,8 +72,8 @@ void PaintingContext::repaint_composited_child(NotNull<RenderObject*> child)
     child->cancel_needs_layer_update();
 
     // paint
-    PaintingContext ctx(make_not_null(child_layer));
-    child->paint(ctx, Offsetf::Zero());
+    PaintingContext ctx(child_layer);
+    ctx._paint_with_context(child, Offsetf::Zero());
     ctx._stop_recording();
 }
 void PaintingContext::update_layer_properties(NotNull<RenderObject*> child)
@@ -91,7 +91,7 @@ bool PaintingContext::_is_recording() const SKR_NOEXCEPT
 void PaintingContext::_start_recording() SKR_NOEXCEPT
 {
     _current_layer = SkrNew<GeometryLayer>();
-    _container_layer->add_child(make_not_null(_current_layer));
+    _container_layer->add_child(_current_layer);
 }
 void PaintingContext::_stop_recording() SKR_NOEXCEPT
 {
@@ -113,11 +113,17 @@ void PaintingContext::_composite_child(NotNull<RenderObject*> child, Offsetf off
 
     auto child_offset_layer = child->layer()->type_cast_fast<OffsetLayer>();
     child_offset_layer->set_offset(offset);
-    _append_layer(make_not_null(child_offset_layer));
+    _append_layer(child_offset_layer);
 }
 void PaintingContext::_append_layer(NotNull<Layer*> layer)
 {
     layer->unmount();
     _container_layer->add_child(layer);
+}
+void PaintingContext::_paint_with_context(NotNull<RenderObject*> render_object, Offsetf offset)
+{
+    render_object->cancel_needs_paint();
+    render_object->_was_repaint_boundary = render_object->is_repaint_boundary();
+    render_object->paint(*this, offset);
 }
 } // namespace skr::gui

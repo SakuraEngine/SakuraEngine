@@ -13,10 +13,10 @@ namespace gui sreflect
 // constraints 传递流程如下
 // parent-constraints ==> padding/child-constraints ==> child.layout()
 sreflect_enum_class(
-    "guid": "01092beb-ecd0-4292-8217-7998997a8746",
-    "rtti": true
+    "guid": "01092beb-ecd0-4292-8217-7998997a8746"
 )
-EPositionalFit : uint8_t{
+EPositionalFit : uint8_t
+{
     Loose,       // min = 0.0f
     Expand,      // min = max = max
     PassThrough, // non modify
@@ -24,10 +24,10 @@ EPositionalFit : uint8_t{
 
 // Canvas 如何决定自己的大小
 sreflect_enum_class(
-    "guid": "1a43aede-a6f7-4750-8f29-da2965b9abcb",
-    "rtti": true
+    "guid": "1a43aede-a6f7-4750-8f29-da2965b9abcb"
 )
-EStackSize : uint8_t{
+EStackSize : uint8_t
+{
     Shrink, // size = max(child_size)
     Expand, // size = constraints.biggest()
 };

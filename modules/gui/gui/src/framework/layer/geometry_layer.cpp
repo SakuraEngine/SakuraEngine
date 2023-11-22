@@ -1,10 +1,10 @@
 #include "SkrGui/framework/layer/geometry_layer.hpp"
-#include "SkrGui/framework/pipeline_owner.hpp"
 #include "SkrGui/backend/device/device.hpp"
+#include "SkrGui/framework/build_owner.hpp"
 
 namespace skr::gui
 {
-void GeometryLayer::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
+void GeometryLayer::attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT
 {
     Super::attach(owner);
     _canvas = owner->native_device()->create_canvas();

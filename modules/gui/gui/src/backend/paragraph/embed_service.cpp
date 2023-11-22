@@ -6,7 +6,7 @@ namespace skr::gui
 // canvas
 NotNull<ICanvas*> embedded_create_canvas() SKR_NOEXCEPT
 {
-    return make_not_null(SkrNew<ICanvas>());
+    return SkrNew<ICanvas>();
 }
 void embedded_destroy_canvas(NotNull<ICanvas*> canvas) SKR_NOEXCEPT
 {

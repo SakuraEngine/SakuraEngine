@@ -169,19 +169,14 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
     -- generate headers dummy
     local mako_generators = {
         {
-            os.projectdir()..vformat("/tools/codegen/typeid.py"),
-            os.projectdir()..vformat("/tools/codegen/typeid.hpp.mako"),
-            os.projectdir()..vformat("/tools/codegen/typeid.cpp.mako"),
-        },
-        {
             os.projectdir()..vformat("/tools/codegen/component.py"),
             os.projectdir()..vformat("/tools/codegen/component.cpp.mako"),
             os.projectdir()..vformat("/tools/codegen/component.hpp.mako"),
         },
         {
-            os.projectdir()..vformat("/tools/codegen/rtti.py"),
-            os.projectdir()..vformat("/tools/codegen/rtti.cpp.mako"),
-            os.projectdir()..vformat("/tools/codegen/rtti.hpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/rttr.py"),
+            os.projectdir()..vformat("/tools/codegen/rttr.cpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/rttr.hpp.mako"),
         },
         {
             os.projectdir()..vformat("/tools/codegen/static_ctor.py"),

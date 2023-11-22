@@ -9,24 +9,20 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "1d1fbcab-eb50-4a22-99f6-59c5f4aca3e9",
-    "rtti": true
+    "guid": "1d1fbcab-eb50-4a22-99f6-59c5f4aca3e9"
 )
-GeometryLayer : public Layer
-{
+GeometryLayer : public Layer {
     SKR_RTTR_GENERATE_BODY()
     using Super = Layer;
 
     // lifecycle & tree
     // ctor -> mount <-> unmount -> destroy
-    void attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT override;
+    void attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT override;
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override;
 
     inline ICanvas* canvas() const SKR_NOEXCEPT { return _canvas; }
 
 private:
-    // TODO. enable field reflection
-    spush_attr("no-rtti": true)
     ICanvas* _canvas = nullptr;
 };
 } // namespace gui sreflect

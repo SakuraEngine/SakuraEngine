@@ -10,11 +10,9 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "3b3208fe-f5df-419d-840c-6621dc1661d2",
-    "rtti": true
+    "guid": "3b3208fe-f5df-419d-840c-6621dc1661d2"
 )
-SKR_GUI_API ProxyWidget : public Widget
-{
+SKR_GUI_API ProxyWidget : public Widget {
     SKR_RTTR_GENERATE_BODY()
 
     Widget* child = nullptr;

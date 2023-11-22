@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <!-- Array -->
+  <Type Name="skr::container::Array&lt;*,*&gt;">
+    <DisplayString Condition="_size == 0">empty</DisplayString>
+    <DisplayString Condition="_size &gt; 0">size={_size}, capacity={_capacity}</DisplayString>
+    <Expand>
+      <ArrayItems>
+          <Size>_size</Size>
+          <ValuePointer>_data</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+  <!-- SparseArray -->
+  <Type Name="skr::container::SparseArray&lt;*,*,*&gt;">
+    <DisplayString Condition="_sparse_size - _num_hole &lt;= 0 &amp;&amp; _capacity == 0">empty</DisplayString>
+    <DisplayString Condition="_sparse_size - _num_hole &lt;= 0 &amp;&amp; _capacity &gt; 0">empty, capacity={_capacity}</DisplayString>
+    <DisplayString Condition="_sparse_size &lt;= _capacity">size={_sparse_size - _num_hole}, capacity={_capacity}, num_hole={_num_hole}</DisplayString>
+    <Expand>
+      <IndexListItems>
+        <Size>_sparse_size</Size>
+        <ValueNode Condition="(_bit_array[$i / BitAlgo::PerBlockSize]&gt;&gt;($i % BitAlgo::PerBlockSize) &amp; 1) != 0">_data[$i]._sparse_array_data</ValueNode>
+        <ValueNode Condition="(_bit_array[$i / BitAlgo::PerBlockSize]&gt;&gt;($i % BitAlgo::PerBlockSize) &amp; 1) == 0">"invalid",sb</ValueNode>
+      </IndexListItems>
+    </Expand>
+  </Type>
+  <!-- SparseHashSet -->
+  <Type Name="skr::container::SparseHashSet&lt;*,*,*,*,*,*,*&gt;">
+    <DisplayString Condition="_data._sparse_size &lt;= 0 &amp;&amp; _data._capacity == 0">empty</DisplayString>
+    <DisplayString Condition="_data._sparse_size - _data._num_hole &lt;= 0 &amp;&amp; _data._capacity &gt; 0">empty, capacity={_data._capacity}</DisplayString>
+    <DisplayString Condition="_data._sparse_size &lt;= _data._capacity">size={_data._sparse_size - _data._num_hole}, capacity={_data._capacity}, num_hole={_data._num_hole}</DisplayString>
+    <Expand>
+      <CustomListItems>
+        <Variable Name="index" InitialValue="0" />
+        <Size>_data._sparse_size - _data._num_hole</Size>
+        <Loop>
+          <If Condition="
+            (_data._bit_array[index / DataArr::BitAlgo::PerBlockSize]&gt;&gt;(index % DataArr::BitAlgo::PerBlockSize) &amp; 1) != 0
+          ">
+            <Item>_data._data[index]._sparse_array_data._sparse_hash_set_data</Item>
+          </If>
+          <Exec>++index</Exec>
+        </Loop>
+      </CustomListItems>
+    </Expand>
+    <!-- SparseHashMap -->
+  </Type>
+</AutoVisualizer>

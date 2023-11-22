@@ -47,7 +47,7 @@ void RenderProxyBox::paint(NotNull<PaintingContext*> context, Offsetf offset) SK
 {
     if (child())
     {
-        context->paint_child(make_not_null(child()), offset);
+        context->paint_child(child(), offset);
     }
 }
 

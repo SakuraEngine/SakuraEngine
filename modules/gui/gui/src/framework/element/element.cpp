@@ -19,8 +19,14 @@ Element::Element(Widget* widget) SKR_NOEXCEPT
 void Element::mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
 {
     // validate
-    if (_widget == nullptr) { SKR_GUI_LOG_ERROR(u8"widget is nullptr"); }
-    if (_parent != nullptr) { SKR_GUI_LOG_ERROR(u8"already mounted"); }
+    if (_widget == nullptr)
+    {
+        SKR_GUI_LOG_ERROR(u8"widget is nullptr");
+    }
+    if (_parent != nullptr)
+    {
+        SKR_GUI_LOG_ERROR(u8"already mounted");
+    }
 
     // mount
     _parent = parent;
@@ -30,14 +36,14 @@ void Element::mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
         struct _RecursiveHelper {
             NotNull<BuildOwner*> owner;
 
-            void operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
+            bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
             {
                 obj->attach(owner);
                 obj->visit_children(_RecursiveHelper{ owner });
+                return true;
             }
         };
-        _RecursiveHelper{ make_not_null(_parent->_owner) }(make_not_null(this));
-        this->visit_children(_RecursiveHelper{ make_not_null(_parent->_owner) });
+        _RecursiveHelper{ _parent->_owner }(this);
 
         // attach render object when retake
         if (_lifecycle == EElementLifecycle::Unmounted)
@@ -72,18 +78,18 @@ void Element::unmount() SKR_NOEXCEPT
         _detach_render_object_children();
 
         // drop self to owner
-        _owner->drop_unmount_element(make_not_null(this));
+        _owner->drop_unmount_element(this);
 
         // recursive call detach()
         struct _RecursiveHelper {
-            void operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
+            bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
             {
                 obj->detach();
                 obj->visit_children(_RecursiveHelper{});
+                return true;
             }
         };
-        _RecursiveHelper{}(make_not_null(this));
-        this->visit_children(_RecursiveHelper{});
+        _RecursiveHelper{}(this);
     }
     _lifecycle = EElementLifecycle::Unmounted;
 }
@@ -110,12 +116,12 @@ void Element::attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT
 {
     // validate
     if (_widget == nullptr) { SKR_GUI_LOG_ERROR(u8"widget is nullptr"); }
-    if (owner == nullptr) { SKR_GUI_LOG_ERROR(u8"owner is nullptr"); }
 
     // update depth
     _owner = owner;
     _depth = _parent ? _parent->_depth + 1 : 0;
 
+    // retaken case
     if (_lifecycle != EElementLifecycle::Initial)
     {
         // TODO. process dependencies
@@ -146,14 +152,17 @@ void Element::mark_needs_build() SKR_NOEXCEPT
 
     // dirty
     _dirty = true;
-    _owner->schedule_build_for(make_not_null(this));
+    _owner->schedule_build_for(this);
 }
 
 // build & update
 void Element::rebuild(bool force) SKR_NOEXCEPT
 {
     // validate
-    if (_lifecycle == EElementLifecycle::Initial) { SKR_GUI_LOG_ERROR(u8"element is incomplete"); }
+    if (_lifecycle == EElementLifecycle::Initial)
+    {
+        SKR_GUI_LOG_ERROR(u8"element is incomplete");
+    }
     if (_lifecycle != EElementLifecycle::Mounted || (!_dirty && !force))
     {
         return;
@@ -170,7 +179,7 @@ void Element::update(NotNull<Widget*> new_widget) SKR_NOEXCEPT
     if (_lifecycle != EElementLifecycle::Mounted) { SKR_GUI_LOG_ERROR(u8"element is not active"); }
     if (_widget == nullptr) { SKR_GUI_LOG_ERROR(u8"widget is nullptr"); }
     if (new_widget == _widget) { SKR_GUI_LOG_ERROR(u8"new_widget is same as old widget"); }
-    if (_widget && !Widget::can_update(make_not_null(_widget), new_widget)) { SKR_GUI_LOG_ERROR(u8"can not update widget"); }
+    if (_widget && !Widget::can_update(_widget, new_widget)) { SKR_GUI_LOG_ERROR(u8"can not update widget"); }
 
     _widget = new_widget;
 }
@@ -192,14 +201,10 @@ RenderObject* Element::find_render_object() const SKR_NOEXCEPT
         {
             cur_element->visit_children([&cur_element](NotNull<Element*> element) {
                 cur_element = element;
+                return true;
             });
         }
     }
-    return nullptr;
-}
-RenderObject* Element::find_ancestor_render_object() const SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
 Optional<Sizef> Element::render_box_size() const SKR_NOEXCEPT
@@ -213,52 +218,17 @@ Optional<Sizef> Element::render_box_size() const SKR_NOEXCEPT
     }
     return {};
 }
-InheritedWidget* Element::depend_on_inherited_element(NotNull<InheritedElement*> ancestor) SKR_NOEXCEPT
+void Element::visit_ancestor_elements(VisitFuncRef visitor) const SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
+    auto cur = parent();
+    while (cur && visitor(cur))
+    {
+        cur = cur->parent();
+    }
 }
-InheritedWidget* Element::depend_on_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-InheritedElement* Element::get_element_for_inherited_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-Widget* Element::find_ancestor_widget_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-State* Element::find_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-State* Element::find_root_ancestor_state_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-RenderObject* Element::find_ancestor_render_object_of_exact_type(const GUID& type_id) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-void Element::visit_ancestor_elements(FunctionRef<bool(NotNull<Element*>)> visitor) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-}
-void Element::visit_child_elements(FunctionRef<void(NotNull<Element*>)> visitor) SKR_NOEXCEPT
+void Element::visit_child_elements(VisitFuncRef visitor) const SKR_NOEXCEPT
 {
     visit_children(visitor);
-}
-void Element::dispatch_notification(NotNull<Notification*> notification) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
 }
 //==> End IBuildContext API
 
@@ -282,25 +252,25 @@ Element* Element::_update_child(Element* child, Widget* new_widget, Slot new_slo
     {
         if (child->_widget == new_widget)
         {
-            _update_slot_for_child(make_not_null(child), new_slot);
+            _update_slot_for_child(child, new_slot);
             return child;
         }
-        else if (Widget::can_update(make_not_null(child->_widget), make_not_null(new_widget)))
+        else if (Widget::can_update(child->_widget, new_widget))
         {
-            _update_slot_for_child(make_not_null(child), new_slot);
-            child->update(make_not_null(new_widget));
+            _update_slot_for_child(child, new_slot);
+            child->update(new_widget);
             return child;
         }
         else
         {
             child->unmount();
             if (child->_parent != nullptr) { SKR_LOG_ERROR(u8"child's parent is not nullptr after deactivate"); }
-            return _inflate_widget(make_not_null(new_widget), new_slot);
+            return _inflate_widget(new_widget, new_slot);
         }
     }
     else
     {
-        return _inflate_widget(make_not_null(new_widget), new_slot);
+        return _inflate_widget(new_widget, new_slot);
     }
 }
 void Element::_update_children(Array<Element*>& children, const Array<Widget*>& new_widgets)
@@ -311,6 +281,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
     size_t widget_match_end     = new_widgets.size() - 1;
 
     // step 1. update array size
+    bool need_shrink_children = children.size() > new_widgets.size();
     if (children.size() < new_widgets.size())
     {
         children.resize(new_widgets.size(), nullptr);
@@ -322,13 +293,13 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
         auto& child      = children[children_match_front];
         auto  new_widget = new_widgets[widget_match_front];
 
-        if (child == nullptr || !Widget::can_update(make_not_null(child->widget()), make_not_null(new_widget)))
+        if (child == nullptr || !Widget::can_update(child->widget(), new_widget))
         {
             break;
         }
         else
         {
-            child = _update_child(child, make_not_null(new_widget), Slot{ widget_match_front });
+            child = _update_child(child, new_widget, Slot{ widget_match_front });
             ++children_match_front;
             ++widget_match_front;
         }
@@ -340,13 +311,18 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
         auto& child      = children[children_match_end];
         auto  new_widget = new_widgets[widget_match_end];
 
-        if (child == nullptr || !Widget::can_update(make_not_null(child->widget()), make_not_null(new_widget)))
+        if (child == nullptr || !Widget::can_update(child->widget(), new_widget))
         {
             break;
         }
         else
         {
-            children[widget_match_end] = child;
+            //!!! will update in the end, for keep update order
+            //!!! in shrink case, we can't move item, because it will destroy items in center
+            if (!need_shrink_children)
+            {
+                children[widget_match_end] = child;
+            }
             --children_match_end;
             --widget_match_end;
         }
@@ -381,14 +357,14 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
         if (auto found_child = old_keyed_children.find(new_widget->key))
         {
             child = found_child->value;
-            if (!Widget::can_update(make_not_null(child->widget()), make_not_null(new_widget)))
+            if (!Widget::can_update(child->widget(), new_widget))
             {
                 child = nullptr;
             }
         }
 
         // update child
-        Element* new_child           = _update_child(child, make_not_null(new_widget), Slot{ widget_match_front });
+        Element* new_child           = _update_child(child, new_widget, Slot{ widget_match_front });
         children[widget_match_front] = new_child;
 
         ++widget_match_front;
@@ -405,12 +381,21 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
     }
 
     // step 6. walk back part and update
-    for (auto i = widget_match_end; i < children.size(); ++i)
+    if (need_shrink_children)
     {
-        auto& child      = children[i];
-        auto  new_widget = new_widgets[i];
+        auto tail_count = new_widgets.size() - widget_match_end - 1;
+        for (int32_t i = 0; i < tail_count; ++i)
+        {
+            children[widget_match_end + 1 + i] = children[children_match_end + 1 + i];
+        }
+        children.resize_unsafe(new_widgets.size());
+    }
+    for (widget_match_end = widget_match_end + 1; widget_match_end < new_widgets.size(); ++widget_match_end)
+    {
+        auto& child      = children[widget_match_end];
+        auto  new_widget = new_widgets[widget_match_end];
 
-        child = _update_child(child, make_not_null(new_widget), Slot{ i });
+        child = _update_child(child, new_widget, Slot{ widget_match_end });
     }
 }
 NotNull<Element*> Element::_inflate_widget(NotNull<Widget*> new_widget, Slot slot) SKR_NOEXCEPT
@@ -418,36 +403,38 @@ NotNull<Element*> Element::_inflate_widget(NotNull<Widget*> new_widget, Slot slo
     // TODO. process global key
 
     Element* const new_child = new_widget->create_element();
-    new_child->mount(make_not_null(this), slot);
-    return make_not_null(new_child);
+    new_child->mount(this, slot);
+    return new_child;
 }
 void Element::_update_slot_for_child(NotNull<Element*> child, Slot new_slot) SKR_NOEXCEPT
 {
     struct _RecursiveHelper {
         Slot new_slot;
-        void operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
+        bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
         {
-            obj->_slot = new_slot;
             if (auto render_object = obj->type_cast<RenderObjectElement>())
             {
                 if (render_object->slot() != new_slot)
                 {
                     render_object->update_slot(new_slot);
+                    render_object->_slot = new_slot;
                 }
+                return false;
             }
             else
             {
                 obj->visit_children(_RecursiveHelper{ new_slot });
             }
+            return true;
         }
     };
-    child->visit_children(_RecursiveHelper{ new_slot });
+    _RecursiveHelper{ new_slot }(child);
 }
 void Element::_attach_render_object_children(Slot new_slot) SKR_NOEXCEPT
 {
     struct _RecursiveHelper {
         Slot new_slot;
-        void operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
+        bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
         {
             if (auto render_object = obj->type_cast<RenderObjectElement>())
             {
@@ -458,14 +445,15 @@ void Element::_attach_render_object_children(Slot new_slot) SKR_NOEXCEPT
                 obj->visit_children(_RecursiveHelper{ new_slot });
             }
             obj->_slot = new_slot;
+            return true;
         }
     };
-    visit_children(_RecursiveHelper{ new_slot });
+    _RecursiveHelper{ new_slot }(this);
 }
 void Element::_detach_render_object_children() SKR_NOEXCEPT
 {
     struct _RecursiveHelper {
-        void operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
+        bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
         {
             if (auto render_object = obj->type_cast<RenderObjectElement>())
             {
@@ -477,8 +465,9 @@ void Element::_detach_render_object_children() SKR_NOEXCEPT
             }
             // clean up slot
             obj->_slot = Slot::Invalid();
+            return true;
         }
     };
-    visit_children(_RecursiveHelper{});
+    _RecursiveHelper{}(this);
 }
 } // namespace skr::gui

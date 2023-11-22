@@ -12,7 +12,7 @@ void RenderNativeWindowElement::perform_rebuild() SKR_NOEXCEPT
     {
         auto cache_widget = _new_child_widget;
         _new_child_widget = nullptr;
-        update(make_not_null(cache_widget));
+        update(cache_widget);
     }
     Super::perform_rebuild();
 }
@@ -43,7 +43,7 @@ void RenderNativeWindowElement::visit_children(VisitFuncRef visitor) const SKR_N
 {
     if (_child)
     {
-        visitor(make_not_null(_child));
+        visitor(_child);
     }
 }
 
@@ -71,13 +71,14 @@ void RenderNativeWindowElement::prepare_initial_frame() SKR_NOEXCEPT
         struct _RecursiveHelper {
             NotNull<BuildOwner*> owner;
 
-            void operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
+            bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
             {
                 obj->attach(owner);
                 obj->visit_children(_RecursiveHelper{ owner });
+                return true;
             }
         };
-        this->visit_children(_RecursiveHelper{ make_not_null(_owner) });
+        this->visit_children(_RecursiveHelper{ _owner });
     }
     _lifecycle = EElementLifecycle::Mounted;
 }
