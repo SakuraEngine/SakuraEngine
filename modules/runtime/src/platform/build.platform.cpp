@@ -1,5 +1,5 @@
 #include "SkrRT/config.h"
-#include "debug.cpp"
+#include "shared_library.cpp"
 #include "vfs.cpp"
 #include "guid.cpp"
 

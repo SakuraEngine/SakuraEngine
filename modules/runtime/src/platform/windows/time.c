@@ -1,7 +1,7 @@
 #include "winheaders.h"
 
 #include "SkrRT/platform/time.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/platform/thread.h"
 
 #include <time.h>

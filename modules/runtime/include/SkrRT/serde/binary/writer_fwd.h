@@ -1,10 +1,10 @@
 #pragma once
 #include "SkrBase/misc/traits.hpp"
 #include "SkrRT/serde/binary/blob_fwd.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 
 // FUCK MSVC COMPILER
-SKR_EXTERN_C SKR_RUNTIME_API void skr_debug_output(const char* msg);
+SKR_EXTERN_C SKR_STATIC_API void skr_debug_output(const char* msg);
 
 struct skr_binary_writer_t;
 

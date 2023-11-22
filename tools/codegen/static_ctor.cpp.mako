@@ -1,5 +1,5 @@
 //BEGIN STATIC_CTOR GENERATED
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/platform/memory.h"
 #if defined __has_include

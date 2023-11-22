@@ -1,7 +1,7 @@
 #include "SkrRT/misc/log.h"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/platform/memory.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrImageCoder/skr_image_coder.h"
 #include "image_coder_png.hpp"

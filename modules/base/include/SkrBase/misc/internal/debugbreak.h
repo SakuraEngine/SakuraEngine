@@ -23,8 +23,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef DEBUG_BREAK_H
-#define DEBUG_BREAK_H
+#pragma once
+#include "SkrRT/config.h"
 
 #ifdef _MSC_VER
 
@@ -164,5 +164,3 @@ __attribute__((always_inline)) __inline__ static void debug_break(void)
     #endif
 
 #endif /* ifdef _MSC_VER */
-
-#endif /* ifndef DEBUG_BREAK_H */

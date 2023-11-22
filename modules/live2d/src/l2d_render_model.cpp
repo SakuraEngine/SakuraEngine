@@ -4,7 +4,7 @@
 #include "SkrRT/io/vram_io.hpp"
 
 #include "SkrRT/platform/memory.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/platform/vfs.h"
 
 #include "SkrLive2D/l2d_render_model.h"

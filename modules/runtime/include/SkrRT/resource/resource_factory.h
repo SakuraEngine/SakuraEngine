@@ -9,13 +9,6 @@ typedef enum ESkrInstallStatus
     SKR_INSTALL_STATUS_FAILED,
 } ESkrInstallStatus;
 
-typedef enum ESkrLoadStatus
-{
-    SKR_LOAD_STATUS_INPROGRESS,
-    SKR_LOAD_STATUS_SUCCEED,
-    SKR_LOAD_STATUS_FAILED,
-} ESkrLoadStatus;
-
 typedef struct skr_vfs_t skr_vfs_t;
 #if defined(__cplusplus)
     #include "SkrRT/serde/binary/reader_fwd.h"

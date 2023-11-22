@@ -1,7 +1,7 @@
 #pragma once
 #include <functional>
 #include <type_traits>
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 namespace skr
 {
 namespace details

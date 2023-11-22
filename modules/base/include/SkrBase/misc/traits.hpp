@@ -31,6 +31,20 @@ constexpr static auto is_complete = SKR_VALIDATOR((auto t), sizeof(t));
 template<class T>
 constexpr bool is_complete_v = is_complete(SKR_TYPELIST(T));
 
+// is detected
+namespace detail
+{
+template <typename, template <typename...> class Op, typename... T>
+struct is_detected_impl : std::false_type {};
+template <template <typename...> class Op, typename... T>
+struct is_detected_impl<std::void_t<Op<T...>>, Op, T...> : std::true_type {};
+} // namespace detail
+
+template <template <typename...> class Op, typename... T>
+using is_detected = detail::is_detected_impl<void, Op, T...>;
+template <template <typename...> class Op, typename... T>
+inline constexpr bool is_detected_v = is_detected<Op, T...>::value;
+
 template<std::size_t N, class T>
 [[nodiscard]] constexpr T* assume_aligned(T* ptr)
 {

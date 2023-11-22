@@ -1,6 +1,6 @@
 #include <SkrRT/platform/filesystem.hpp>
 
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/io/ram_io.hpp"

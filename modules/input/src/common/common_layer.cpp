@@ -3,7 +3,7 @@
 #include "../common/reading_ring.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/atomic.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/misc/log.h"
 #include "SkrRT/containers/resizable_ring_buffer.hpp"
 #include "SDL2/SDL_timer.h"
