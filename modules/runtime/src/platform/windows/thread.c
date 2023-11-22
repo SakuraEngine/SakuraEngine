@@ -2,7 +2,7 @@
 #include <process.h> // _beginthreadex
 
 #include "SkrRT/platform/thread.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include <assert.h>
 #include <synchapi.h>
 

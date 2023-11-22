@@ -6,7 +6,7 @@ enums = generator.filter_rtti(db.enums)
 <%doc>
 // BEGIN RTTI GENERATED
 #include "SkrRT/_deprecated/type/type.hpp"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/_deprecated/type/type_helper.hpp"

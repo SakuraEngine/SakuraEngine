@@ -8,7 +8,7 @@
 #include <sys/file.h>
 #include <signal.h>
 
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/process.h"
 #include "SkrRT/misc/log.h"
