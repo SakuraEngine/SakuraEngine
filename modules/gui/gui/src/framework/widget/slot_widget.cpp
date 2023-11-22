@@ -5,6 +5,6 @@ namespace skr::gui
 {
 NotNull<Element*> SlotWidget::create_element() SKR_NOEXCEPT
 {
-    return make_not_null(SkrNew<SlotElement>(make_not_null(this)));
+    return SkrNew<SlotElement>(this);
 }
 } // namespace skr::gui

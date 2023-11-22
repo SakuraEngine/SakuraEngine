@@ -5,6 +5,7 @@
 #include "SkrGuiRenderer/render/skr_render_window.hpp"
 #include "SkrGuiRenderer/resource/skr_resource_device.hpp"
 #include "SkrGui/framework/layer/native_window_layer.hpp"
+#include "SkrGuiRenderer/resource/skr_updatable_image.hpp"
 
 namespace skr::gui
 {
@@ -52,6 +53,13 @@ void SkrNativeDevice::shutdown()
     // shutdown text device
     embedded_shutdown_text_service();
 
+    // clean up all updatable images
+    for (auto image : _all_updatable_images)
+    {
+        image->destroy();
+    }
+    _all_updatable_images.clear();
+
     // shutdown resource device
     _resource_device->shutdown();
     SkrDelete(_resource_device);
@@ -66,7 +74,7 @@ NotNull<INativeWindow*> SkrNativeDevice::create_window()
 {
     auto view = SkrNew<SkrNativeWindow>(this);
     _all_windows.add(view);
-    return make_not_null(view);
+    return view;
 }
 void SkrNativeDevice::destroy_window(NotNull<INativeWindow*> view)
 {
@@ -109,14 +117,11 @@ const DisplayMetrics& SkrNativeDevice::display_metrics() const
 }
 
 // resource management
-NotNull<IUpdatableImage*> SkrNativeDevice::create_updatable_image(const UpdatableImageDesc& desc)
+NotNull<IUpdatableImage*> SkrNativeDevice::create_updatable_image()
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
-    return make_not_null<IUpdatableImage*>(nullptr);
-}
-void SkrNativeDevice::destroy_resource(NotNull<IResource*> resource)
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
+    auto image = SkrNew<SkrUpdatableImage>(_render_device);
+    _all_updatable_images.add(image);
+    return image;
 }
 
 // canvas management

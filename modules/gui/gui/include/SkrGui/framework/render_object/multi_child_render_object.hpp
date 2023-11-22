@@ -12,8 +12,7 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "409eaa24-5549-46e3-87c1-81649576d2cd",
-    "rtti": true
+    "guid": "409eaa24-5549-46e3-87c1-81649576d2cd"
 )
 SKR_GUI_API IMultiChildRenderObject : virtual public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
@@ -60,10 +59,12 @@ struct MultiChildRenderObjectMixin {
     inline void add_child(TSelf& self, NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
     {
         _children.emplace(slot, child->type_cast_fast<TChild>());
+        child->mount(&self);
         _need_flush_updates = true;
     }
     inline void remove_child(TSelf& self, NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
     {
+        // TODO. 使用 remove swap，保持 desired_slot 但是更新 child 的 slot
         auto& child_slot = _children[child->slot().index];
         if (child_slot.desired_slot != slot) { SKR_GUI_LOG_ERROR(u8"slot miss match when remove child"); }
         child_slot.child->unmount();
@@ -72,7 +73,6 @@ struct MultiChildRenderObjectMixin {
     }
     inline void move_child(TSelf& self, NotNull<RenderObject*> child, Slot from, Slot to) SKR_NOEXCEPT
     {
-        if (from != _children[child->slot().index].desired_slot) SKR_GUI_LOG_ERROR(u8"slot miss match when move child");
         _children[child->slot().index].desired_slot = to;
         _need_flush_updates                         = true;
     }
@@ -100,7 +100,10 @@ struct MultiChildRenderObjectMixin {
             for (size_t i = 0; i < _children.size(); ++i)
             {
                 const auto& slot = _children[i];
-                if (slot.desired_slot.index != i) SKR_GUI_LOG_ERROR(u8"slot index miss match");
+                if (slot.desired_slot.index != i)
+                {
+                    SKR_GUI_LOG_ERROR(u8"slot index miss match");
+                }
                 slot.child->set_slot(slot.desired_slot);
             }
         }
@@ -120,7 +123,10 @@ struct MultiChildRenderObjectMixin {
         {
             if (slot.child)
             {
-                visitor(make_not_null(slot.child));
+                if (!visitor(slot.child))
+                {
+                    return;
+                }
             }
         }
     }
@@ -131,9 +137,8 @@ struct MultiChildRenderObjectMixin {
 #define MULTI_CHILD_RENDER_OBJECT_MIX_IN(__SELF, __CHILD, __SLOT_DATA)                      \
     /*===============> Begin Multi Child Render Object Mixin <===============*/             \
 private:                                                                                    \
-    sattr("no-rtti": true)                                                                  \
-          MultiChildRenderObjectMixin<__SELF, __CHILD, __SLOT_DATA>                         \
-          _multi_child_render_object_mix_in = {};                                           \
+    MultiChildRenderObjectMixin<__SELF, __CHILD, __SLOT_DATA>                               \
+    _multi_child_render_object_mix_in = {};                                                 \
                                                                                             \
 public:                                                                                     \
     GUID accept_child_type() const SKR_NOEXCEPT override                                    \

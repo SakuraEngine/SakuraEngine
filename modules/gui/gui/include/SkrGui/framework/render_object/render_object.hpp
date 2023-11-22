@@ -22,27 +22,26 @@ enum class ERenderObjectLifecycle : uint8_t
 };
 
 sreflect_struct(
-    "guid" : "2f1b78a5-1be9-4799-a3ca-2f2d3b153f29",
-    "rtti" : true
+    "guid" : "2f1b78a5-1be9-4799-a3ca-2f2d3b153f29"
 )
-SKR_GUI_API RenderObject : virtual public skr::rttr::IObject,
-                           public IHitTestTarget {
+SKR_GUI_API RenderObject : virtual public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
-    friend struct PipelineOwner;
-    using VisitFuncRef = FunctionRef<void(NotNull<RenderObject*>)>;
+    friend struct BuildOwner;
+    friend struct PaintingContext;
+    using VisitFuncRef = FunctionRef<bool(NotNull<RenderObject*>)>;
 
     RenderObject() SKR_NOEXCEPT;
     virtual ~RenderObject();
 
     // lifecycle & tree
     // ctor -> mount <-> unmount -> destroy
-    void                          mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT;  // 挂到父节点下
-    void                          unmount() SKR_NOEXCEPT;                             // 从父节点卸载
-    virtual void                  destroy() SKR_NOEXCEPT;                             // 销毁，生命周期结束
-    virtual void                  attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT; // 自身或子树挂载到带有 pipeline owner 的树下
-    virtual void                  detach() SKR_NOEXCEPT;                              // 自身或子树从带有 pipeline owner 的树下卸载
+    void                          mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT; // 挂到父节点下
+    void                          unmount() SKR_NOEXCEPT;                            // 从父节点卸载
+    virtual void                  destroy() SKR_NOEXCEPT;                            // 销毁，生命周期结束
+    virtual void                  attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT;   // 自身或子树挂载到带有 pipeline owner 的树下
+    virtual void                  detach() SKR_NOEXCEPT;                             // 自身或子树从带有 pipeline owner 的树下卸载
     inline ERenderObjectLifecycle lifecycle() const SKR_NOEXCEPT { return _lifecycle; }
-    inline PipelineOwner*         owner() const SKR_NOEXCEPT { return _owner; }
+    inline BuildOwner*            owner() const SKR_NOEXCEPT { return _owner; }
     virtual void                  visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT = 0;
 
     // layout & paint marks
@@ -83,18 +82,19 @@ SKR_GUI_API RenderObject : virtual public skr::rttr::IObject,
 
     // transform
     // 用于做坐标点转换，通常用于 hit-test
-    virtual bool    paints_child(NotNull<RenderObject*> child) const SKR_NOEXCEPT;
-    virtual void    apply_paint_transform(NotNull<RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT;
-    virtual Matrix4 get_transform_to(RenderObject* ancestor) const SKR_NOEXCEPT;
+    virtual bool paints_child(NotNull<const RenderObject*> child) const SKR_NOEXCEPT; // 检测该 child 是否真的会发生 paint
+    virtual void apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT;
+    Matrix4      get_transform_to(const RenderObject* ancestor = nullptr) const SKR_NOEXCEPT;
+    Offsetf      global_to_local(Offsetf global_position, const RenderObject* ancestor = nullptr) const SKR_NOEXCEPT;
+    Offsetf      local_to_global(Offsetf local_position, const RenderObject* ancestor = nullptr) const SKR_NOEXCEPT;
+    Offsetf      system_to_local(Offsetf system_position) const SKR_NOEXCEPT;
+    Offsetf      local_to_system(Offsetf local_position) const SKR_NOEXCEPT;
 
     // event
-    bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) override;
+    virtual bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry);
 
     // TODO
     // invoke_layout_callback：用于在 layout 过程中创建 child，通常用于 Sliver
-    // layer：repaint_boundary 存储对应 layer 用于局部重绘
-    // _paint_with_context：call by PaintingContext
-    // handle_event：处理输入事件
     // show_on_screen：或许可以实现，用于 ScrollView 的目标追踪
 
     // getter
@@ -119,12 +119,10 @@ private:
     void _flush_relayout_boundary() SKR_NOEXCEPT;
 
 private:
-    // TODO. enable field reflection
-    spush_attr("no-rtti": true)
     // render object tree
-    RenderObject*  _parent = nullptr;
-    PipelineOwner* _owner  = nullptr;
-    int32_t        _depth  = 0;
+    RenderObject* _parent = nullptr;
+    BuildOwner*   _owner  = nullptr;
+    int32_t       _depth  = 0;
 
     // dirty marks
     bool _needs_layout       = true;

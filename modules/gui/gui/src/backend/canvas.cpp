@@ -298,18 +298,26 @@ struct _NVGHelper {
             {
                 const auto surface_brush = static_cast<const SurfaceBrush*>(canvas->_tmp_brush);
                 command.texture_swizzle  = surface_brush->_swizzle;
+                if (surface_brush->_surface)
+                {
+                    command.material = surface_brush->_surface->type_cast<IMaterial>();
+                    command.texture  = surface_brush->_surface->type_cast<IImage>();
+                }
             }
             else if (canvas->_tmp_brush->type() == EBrushType::SurfaceNine)
             {
                 const auto surface_nine_brush = static_cast<const SurfaceBrush*>(canvas->_tmp_brush);
                 command.texture_swizzle       = surface_nine_brush->_swizzle;
+                if (surface_nine_brush->_surface)
+                {
+                    command.material = surface_nine_brush->_surface->type_cast<IMaterial>();
+                    command.texture  = surface_nine_brush->_surface->type_cast<IImage>();
+                }
             }
 
             command.index_begin = static_cast<uint32_t>(begin);
             command.index_count = static_cast<uint32_t>(canvas->_indices.size() - begin);
-            command.material    = static_cast<IMaterial*>(paint->material);
-            command.texture     = static_cast<IImage*>(paint->image);
-            if (command.texture && command.texture->state() == EResourceState::Okey)
+            if (command.texture && command.texture->state() != EResourceState::Okey)
             {
                 command.texture = nullptr;
             }
@@ -342,7 +350,7 @@ struct _NVGHelper {
         command.index_count = static_cast<uint32_t>(canvas->_indices.size() - begin);
         command.material    = static_cast<IMaterial*>(paint->material);
         command.texture     = static_cast<IImage*>(paint->image);
-        if (command.texture && command.texture->state() == EResourceState::Okey)
+        if (command.texture && command.texture->state() != EResourceState::Okey)
         {
             command.texture = nullptr;
         }
@@ -513,7 +521,37 @@ void ICanvas::path_end(const Pen& pen, const Brush& brush) SKR_NOEXCEPT
         switch (pen.type())
         {
             case EPenType::Fill: {
-                nvgFillColor(_nvg, nvgRGBAf(brush._color.r, brush._color.g, brush._color.b, brush._color.a));
+                if (brush.type() == EBrushType::Surface)
+                {
+                    auto surface_brush = brush.as_surface();
+                    nvgFillPaint(_nvg, nvgImagePattern(
+                                       _nvg,
+                                       surface_brush._uv_rect.left,
+                                       surface_brush._uv_rect.top,
+                                       surface_brush._uv_rect.width(),
+                                       surface_brush._uv_rect.height(),
+                                       surface_brush._rotation,
+                                       surface_brush._surface,
+                                       { surface_brush._color.r, surface_brush._color.g, surface_brush._color.b, surface_brush._color.a }));
+                }
+                else if (brush.type() == EBrushType::SurfaceNine)
+                {
+                    auto surface_nine_brush = brush.as_surface_nine();
+                    nvgFillPaint(_nvg, nvgImagePattern(
+                                       _nvg,
+                                       surface_nine_brush._uv_rect.left,
+                                       surface_nine_brush._uv_rect.top,
+                                       surface_nine_brush._uv_rect.width(),
+                                       surface_nine_brush._uv_rect.height(),
+                                       surface_nine_brush._rotation,
+                                       surface_nine_brush._surface,
+                                       { surface_nine_brush._color.r, surface_nine_brush._color.g, surface_nine_brush._color.b, surface_nine_brush._color.a }));
+                }
+                else if (brush.type() == EBrushType::Color)
+                {
+                    auto color_brush = brush.as_color();
+                    nvgFillColor(_nvg, nvgRGBAf(color_brush._color.r, color_brush._color.g, color_brush._color.b, color_brush._color.a));
+                }
 
                 const FillPen& fill_pen = pen.as_fill();
                 nvgShapeAntiAlias(_nvg, fill_pen._anti_alias);

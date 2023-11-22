@@ -28,8 +28,8 @@ SKR_GUI_RENDERER_API SkrNativeDevice final : public INativeDevice {
     void                    destroy_window(NotNull<INativeWindow*> view) override;
 
     // sub device
-    inline NotNull<SkrRenderDevice*>   render_device() const SKR_NOEXCEPT { return make_not_null(_render_device); }
-    inline NotNull<SkrResourceDevice*> resource_device() const SKR_NOEXCEPT { return make_not_null(_resource_device); }
+    inline NotNull<SkrRenderDevice*>   render_device() const SKR_NOEXCEPT { return _render_device; }
+    inline NotNull<SkrResourceDevice*> resource_device() const SKR_NOEXCEPT { return _resource_device; }
 
     void render_all_windows() SKR_NOEXCEPT;
 
@@ -37,8 +37,7 @@ SKR_GUI_RENDERER_API SkrNativeDevice final : public INativeDevice {
     const DisplayMetrics& display_metrics() const override;
 
     // resource management
-    NotNull<IUpdatableImage*> create_updatable_image(const UpdatableImageDesc& desc) override;
-    void                      destroy_resource(NotNull<IResource*> resource) override;
+    NotNull<IUpdatableImage*> create_updatable_image() override;
 
     // canvas management
     NotNull<ICanvas*> create_canvas() override;
@@ -55,6 +54,8 @@ private:
 
     DisplayMetrics          _display_metrics = {};
     Array<SkrNativeWindow*> _all_windows     = {};
+
+    Array<IUpdatableImage*> _all_updatable_images = {};
 };
 } // namespace gui sreflect
 } // namespace skr sreflect

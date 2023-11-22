@@ -11,8 +11,7 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "1bc957ef-1203-489d-911d-94ba3fb81080",
-    "rtti": true
+    "guid": "1bc957ef-1203-489d-911d-94ba3fb81080"
 )
 SKR_GUI_API RenderFlex : public RenderBox,
                          public IMultiChildRenderObject {
@@ -43,6 +42,9 @@ public:
 
     // hit test
     bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
+
+    // transform
+    void apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT override;
 
     struct SlotData {
         // slot data

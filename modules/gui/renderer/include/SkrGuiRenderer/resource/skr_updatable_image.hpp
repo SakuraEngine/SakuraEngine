@@ -44,6 +44,8 @@ private:
     CGPUXBindTableId  _bind_table   = nullptr;
 
     UpdatableImageDesc _desc = {};
+
+    EResourceState _state = EResourceState::Okey;
 };
 } // namespace gui sreflect
 } // namespace skr sreflect

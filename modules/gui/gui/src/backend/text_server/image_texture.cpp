@@ -10,7 +10,7 @@ FontAtlasImage::FontAtlasImage()
 }
 FontAtlasImage::~FontAtlasImage()
 {
-    if (_image) TS->get_resource_service()->destroy_resource(skr::make_not_null(_image));
+    if (_image) _image->destroy();
 }
 
 Ref<FontAtlasImage> FontAtlasImage::create(Sizei size, int32_t mip_count, Format format, Span<const uint8_t> data)
@@ -49,9 +49,10 @@ void FontAtlasImage::flush_update() SKR_NOEXCEPT
 
         if (_image == nullptr)
         {
-            _image = TS->get_resource_service()->create_updatable_image(desc);
+            _image = TS->get_resource_service()->create_updatable_image();
         }
-        else
+
+        if (desc.data.size() > 0 && desc.size != Sizei::Zero())
         {
             _image->update(desc);
         }

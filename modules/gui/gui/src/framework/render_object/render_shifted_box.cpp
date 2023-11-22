@@ -26,7 +26,7 @@ void RenderShiftedBox::paint(NotNull<PaintingContext*> context, Offsetf offset) 
 {
     if (child())
     {
-        context->paint_child(make_not_null(child()), this->offset() + offset);
+        context->paint_child(child(), this->offset() + offset);
     }
 }
 
@@ -46,6 +46,18 @@ bool RenderShiftedBox::hit_test(HitTestResult* result, Offsetf local_position) c
                    return child()->hit_test(result, transformed_position);
                });
     });
+}
+
+// transform
+void RenderShiftedBox::apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT
+{
+    if (child != this->child())
+    {
+        SKR_LOG_ERROR(u8"child is not a child of this object");
+        return;
+    }
+
+    transform = Matrix4::Translate(_offset) * transform;
 }
 
 } // namespace skr::gui

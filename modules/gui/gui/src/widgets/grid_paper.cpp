@@ -6,10 +6,10 @@ namespace skr::gui
 
 NotNull<RenderObject*> GridPaper::create_render_object() SKR_NOEXCEPT
 {
-    return make_not_null(SkrNew<RenderGridPaper>());
+    return SkrNew<RenderGridPaper>();
 }
 void GridPaper::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
+    auto r_obj = render_object->type_cast_fast<RenderGridPaper>();
 }
 } // namespace skr::gui

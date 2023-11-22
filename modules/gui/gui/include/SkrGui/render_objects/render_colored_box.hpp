@@ -10,8 +10,7 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "02cc61fb-9ca4-464b-95a5-2a5ad277abf8",
-    "rtti": true
+    "guid": "02cc61fb-9ca4-464b-95a5-2a5ad277abf8"
 )
 RenderColoredBox : public RenderProxyBox {
     SKR_RTTR_GENERATE_BODY()
@@ -33,8 +32,6 @@ RenderColoredBox : public RenderProxyBox {
     bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 
 private:
-    // TODO. enable field reflection
-    spush_attr("no-rtti": true)
     Color _color = {};
 };
 } // namespace gui sreflect

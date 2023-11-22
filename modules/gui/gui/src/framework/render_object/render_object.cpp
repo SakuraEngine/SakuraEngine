@@ -1,6 +1,8 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
-#include "SkrGui/framework/pipeline_owner.hpp"
+#include "SkrGui/framework/build_owner.hpp"
 #include "SkrGui/framework/layer/offset_layer.hpp"
+#include "SkrGui/framework/render_object/render_native_window.hpp"
+#include "SkrGui/backend/device/window.hpp"
 
 namespace skr::gui
 {
@@ -39,16 +41,16 @@ void RenderObject::mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT
     if (parent->owner())
     {
         struct _RecursiveHelper {
-            NotNull<PipelineOwner*> owner;
+            NotNull<BuildOwner*> owner;
 
-            inline void operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
+            inline bool operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
             {
                 obj->attach(owner);
                 obj->visit_children(_RecursiveHelper{ owner });
+                return true;
             }
         };
-        _RecursiveHelper{ make_not_null(_parent->owner()) }(make_not_null(this));
-        this->visit_children(_RecursiveHelper{ make_not_null(_parent->owner()) });
+        _RecursiveHelper{ _parent->owner() }(this);
     }
     _lifecycle = ERenderObjectLifecycle::Mounted;
 }
@@ -62,13 +64,14 @@ void RenderObject::unmount() SKR_NOEXCEPT
     if (owner())
     {
         struct _RecursiveHelper {
-            void operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
+            bool operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
             {
                 obj->detach();
                 obj->visit_children(_RecursiveHelper{});
+                return true;
             }
         };
-        this->visit_children(_RecursiveHelper{});
+        _RecursiveHelper{}(this);
     }
     _lifecycle = ERenderObjectLifecycle::Unmounted;
 }
@@ -77,7 +80,7 @@ void RenderObject::destroy() SKR_NOEXCEPT
     // TODO. release layer
     _lifecycle = ERenderObjectLifecycle::Destroyed;
 }
-void RenderObject::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
+void RenderObject::attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT
 {
     // validate
     if (_owner != nullptr) { SKR_GUI_LOG_ERROR(u8"already attached"); }
@@ -133,7 +136,7 @@ void RenderObject::mark_needs_layout() SKR_NOEXCEPT
         _needs_layout = true;
         if (_owner != nullptr)
         {
-            _owner->schedule_layout_for(make_not_null(this));
+            _owner->schedule_layout_for(this);
         }
     }
 }
@@ -147,7 +150,7 @@ void RenderObject::mark_needs_paint() SKR_NOEXCEPT
         {
             if (owner())
             {
-                owner()->schedule_paint_for(make_not_null(this));
+                owner()->schedule_paint_for(this);
             }
         }
         else if (parent() && parent()->type_is<RenderObject>())
@@ -177,7 +180,10 @@ void RenderObject::layout(bool parent_uses_size) SKR_NOEXCEPT
         if (relayout_boundary != _relayout_boundary)
         {
             _relayout_boundary = relayout_boundary;
-            visit_children([](RenderObject* child) { child->_flush_relayout_boundary(); });
+            visit_children([](RenderObject* child) {
+                child->_flush_relayout_boundary();
+                return true;
+            });
         }
     }
     else
@@ -206,16 +212,78 @@ bool RenderObject::is_repaint_boundary() const SKR_NOEXCEPT { return false; }
 // layer composite
 NotNull<OffsetLayer*> RenderObject::update_layer(OffsetLayer* old_layer)
 {
-    return old_layer != nullptr ? make_not_null(old_layer) : make_not_null(SkrNew<OffsetLayer>());
+    return old_layer != nullptr ? old_layer : SkrNew<OffsetLayer>();
 }
 
 // transform
-bool    RenderObject::paints_child(NotNull<RenderObject*> child) const SKR_NOEXCEPT { return true; }
-void    RenderObject::apply_paint_transform(NotNull<RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT {}
-Matrix4 RenderObject::get_transform_to(RenderObject* ancestor) const SKR_NOEXCEPT
+bool    RenderObject::paints_child(NotNull<const RenderObject*> child) const SKR_NOEXCEPT { return true; }
+void    RenderObject::apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT {}
+Matrix4 RenderObject::get_transform_to(const RenderObject* ancestor) const SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
+    // setup ancestor
+    if (ancestor == nullptr)
+    {
+        ancestor = this;
+        while (ancestor->parent() != nullptr)
+        {
+            ancestor = ancestor->parent();
+        }
+    }
+
+    // append transform
+    Matrix4 transform   = Matrix4::Identity();
+    auto    cur_node    = this;
+    auto    parent_node = cur_node->parent();
+    while (cur_node != ancestor)
+    {
+        if (!parent_node)
+        {
+            SKR_LOG_ERROR(u8"ancestor is not in the parent chain");
+            return {};
+        }
+
+        parent_node->apply_paint_transform(cur_node, transform);
+        cur_node    = parent_node;
+        parent_node = cur_node->parent();
+    }
+    return transform;
+}
+Offsetf RenderObject::global_to_local(Offsetf global_position, const RenderObject* ancestor) const SKR_NOEXCEPT
+{
+    Matrix4 transform = get_transform_to(ancestor);
+    Matrix4 inv_transform;
+    if (transform.try_inverse(inv_transform))
+    {
+        return inv_transform.transform(global_position);
+    }
     return {};
+}
+Offsetf RenderObject::local_to_global(Offsetf local_position, const RenderObject* ancestor) const SKR_NOEXCEPT
+{
+    Matrix4 transform = get_transform_to(ancestor);
+    return transform.transform(local_position);
+}
+Offsetf RenderObject::system_to_local(Offsetf system_position) const SKR_NOEXCEPT
+{
+    auto root_widget = this;
+    while (root_widget->parent())
+    {
+        root_widget = root_widget->parent();
+    }
+    auto root_window = root_widget->type_cast_fast<RenderNativeWindow>();
+    auto global_pos  = root_window->window()->type_cast_fast<INativeWindow>()->to_relative(system_position);
+    return global_to_local(global_pos);
+}
+Offsetf RenderObject::local_to_system(Offsetf local_position) const SKR_NOEXCEPT
+{
+    auto root_widget = this;
+    while (root_widget->parent())
+    {
+        root_widget = root_widget->parent();
+    }
+    auto root_window = root_widget->type_cast_fast<RenderNativeWindow>();
+    auto global_pos  = local_to_global(local_position);
+    return root_window->window()->type_cast_fast<INativeWindow>()->to_absolute(global_pos);
 }
 
 // event
@@ -238,7 +306,10 @@ void RenderObject::_flush_relayout_boundary() SKR_NOEXCEPT
         auto parent_relayout_boundary = _parent->_relayout_boundary;
         if (parent_relayout_boundary != _relayout_boundary)
         {
-            visit_children([](RenderObject* child) { child->_flush_relayout_boundary(); });
+            visit_children([](RenderObject* child) {
+                child->_flush_relayout_boundary();
+                return true;
+            });
         }
     }
 }

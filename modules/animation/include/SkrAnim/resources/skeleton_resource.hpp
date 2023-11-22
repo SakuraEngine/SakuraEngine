@@ -11,17 +11,19 @@
     #include "SkrRT/serde/binary/writer_fwd.h"
     #include "SkrRT/resource/resource_factory.h"
 
-namespace skr sreflect {
-namespace anim sreflect {
+namespace skr sreflect
+{
+namespace anim sreflect
+{
 
-sreflect_struct("guid": "1876BF35-E4DC-450B-B9D4-09259397F4BA", "rtti" : true)
+sreflect_struct("guid": "1876BF35-E4DC-450B-B9D4-09259397F4BA")
 SkeletonResource {
-    sattr("no-rtti" : true)
     ozz::animation::Skeleton skeleton;
 };
-} // namespace anim
+} // namespace anim sreflect
 
-namespace binary {
+namespace binary
+{
 template <>
 struct SKR_ANIM_API ReadTrait<skr::anim::SkeletonResource> {
     static int Read(skr_binary_reader_t* reader, skr::anim::SkeletonResource& value);
@@ -32,7 +34,8 @@ struct SKR_ANIM_API WriteTrait<skr::anim::SkeletonResource> {
 };
 } // namespace binary
 
-namespace resource {
+namespace resource
+{
 struct SKR_ANIM_API SSkelFactory : public SResourceFactory {
 public:
     virtual ~SSkelFactory() noexcept = default;
@@ -40,5 +43,5 @@ public:
     bool       AsyncIO() override { return true; }
 };
 } // namespace resource
-} // namespace skr
+} // namespace skr sreflect
 #endif

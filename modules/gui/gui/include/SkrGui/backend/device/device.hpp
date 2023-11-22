@@ -17,12 +17,6 @@ struct IResource;
 struct UpdatableImageDesc;
 struct IParagraph;
 
-// Device/DeviceView 均通过 View/RenderView 注入到上下文中
-// View 代理可以通过创建自己的 View/RenderView 来覆写 BuildOwner/PipelineOwner
-// 从概念上来说，Device/DeviceView 本质上是 WidgetTree 的附属，而非宿主，仅提供必要的对 View 的操作
-// DeviceView 本身不持有任何 Widget/RenderObject，与 WidgetTree 的交互行为均交给持有其实例的 Widget/RenderObject 操作
-// 虽然 Device 是一个核心概念，但是资源创建并不一定适合放在 Device 中，因为资源创建本身是复杂并可拓展的
-
 // GUI 系统的对外诉求：
 // 1. 资源: Canvas & TextService & Resource
 // |-1.1. Material & Image & Updatable Image
@@ -44,8 +38,7 @@ struct IParagraph;
 // 对使用方来说，无论如何，都有唯一且确定的 NativeDevice 贯穿整个 APP 的生命周期
 // 使用方需要思考这些问题，并将某些 API 转发到这个全局唯一的 NativeDevice 上，而不是另外处理
 sreflect_struct(
-    "guid": "8ba2ea3e-8a8e-4d88-a7d6-c98552219fc8",
-    "rtti": true
+    "guid": "8ba2ea3e-8a8e-4d88-a7d6-c98552219fc8"
 )
 SKR_GUI_API INativeDevice : virtual public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
@@ -58,8 +51,7 @@ SKR_GUI_API INativeDevice : virtual public skr::rttr::IObject {
     virtual const DisplayMetrics& display_metrics() const = 0;
 
     // resource management
-    virtual NotNull<IUpdatableImage*> create_updatable_image(const UpdatableImageDesc& desc) = 0;
-    virtual void                      destroy_resource(NotNull<IResource*> resource)         = 0;
+    virtual NotNull<IUpdatableImage*> create_updatable_image() = 0;
 
     // canvas management
     virtual NotNull<ICanvas*> create_canvas()                          = 0;

@@ -26,6 +26,7 @@ private:
     void _stop_recording() SKR_NOEXCEPT;
     void _composite_child(NotNull<RenderObject*> child, Offsetf offset) SKR_NOEXCEPT;
     void _append_layer(NotNull<Layer*> layer);
+    void _paint_with_context(NotNull<RenderObject*> render_object, Offsetf offset);
 
 private:
     ContainerLayer* _container_layer = nullptr;

@@ -11,14 +11,14 @@ void SingleChildRenderObjectElement::first_mount(NotNull<Element*> parent, Slot 
     Super::first_mount(parent, slot);
     if (widget()->type_cast_fast<SingleChildRenderObjectWidget>()->child)
     {
-        _child = _update_child(_child, widget()->type_cast_fast<SingleChildRenderObjectWidget>()->child, slot);
+        _child = _update_child(_child, widget()->type_cast_fast<SingleChildRenderObjectWidget>()->child, {});
     }
 }
 void SingleChildRenderObjectElement::visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT
 {
     if (_child)
     {
-        visitor(make_not_null(_child));
+        visitor(_child);
     }
 }
 
@@ -26,7 +26,7 @@ void SingleChildRenderObjectElement::visit_children(VisitFuncRef visitor) const 
 void SingleChildRenderObjectElement::update(NotNull<Widget*> new_widget) SKR_NOEXCEPT
 {
     Super::update(new_widget);
-    _child = _update_child(_child, widget()->type_cast<SingleChildRenderObjectWidget>()->child, slot());
+    _child = _update_child(_child, widget()->type_cast<SingleChildRenderObjectWidget>()->child, {});
 }
 
 // child render object ops

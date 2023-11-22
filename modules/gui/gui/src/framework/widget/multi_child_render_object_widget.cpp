@@ -5,6 +5,6 @@ namespace skr::gui
 {
 NotNull<Element*> MultiChildRenderObjectWidget::create_element() SKR_NOEXCEPT
 {
-    return make_not_null(SkrNew<MultiChildRenderObjectElement>(make_not_null(this)));
+    return SkrNew<MultiChildRenderObjectElement>(this);
 }
 } // namespace skr::gui

@@ -7,11 +7,13 @@ NotNull<RenderObject*> Text::create_render_object() SKR_NOEXCEPT
 {
     auto result = SkrNew<RenderText>();
     result->set_text(text);
-    return make_not_null(result);
+    return result;
 }
 
 void Text::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
+    auto r_obj = render_object->type_cast_fast<RenderText>();
+
+    r_obj->set_text(text);
 }
 } // namespace skr::gui

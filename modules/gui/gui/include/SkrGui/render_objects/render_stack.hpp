@@ -12,8 +12,7 @@ namespace gui sreflect
 {
 
 sreflect_struct(
-    "guid": "977b69fd-b3c7-4030-8c9d-076bc94fdfbf",
-    "rtti": true
+    "guid": "977b69fd-b3c7-4030-8c9d-076bc94fdfbf"
 )
 SKR_GUI_API RenderStack : public RenderBox,
                           public IMultiChildRenderObject {
@@ -44,14 +43,15 @@ public:
     // hit test
     bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 
+    // transform
+    void apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT override;
+
     struct SlotData {
         Offsetf offset = Offsetf::Zero();
     };
 
 private:
     friend struct _StackHelper;
-    // TODO. enable field reflection
-    spush_attr("no-rtti": true)
     Alignment      _stack_alignment = Alignment::TopLeft();
     EPositionalFit _child_fit       = EPositionalFit::PassThrough;
     EStackSize     _stack_size      = EStackSize::Shrink;

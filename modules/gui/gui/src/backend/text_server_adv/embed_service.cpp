@@ -26,7 +26,7 @@ void embedded_init_text_service(INativeDevice* native_device)
 }
 NotNull<IParagraph*> embedded_create_paragraph()
 {
-    return make_not_null(SkrNew<_EmbeddedParagraph>());
+    return SkrNew<_EmbeddedParagraph>();
 }
 void embedded_destroy_paragraph(NotNull<IParagraph*> paragraph)
 {

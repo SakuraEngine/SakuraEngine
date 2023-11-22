@@ -11,8 +11,7 @@ namespace gui sreflect
 {
 // 会对 child 施加布局偏移的 RenderBox
 sreflect_struct(
-    "guid": "357e11e8-dbcd-4830-9256-869198ca7bed",
-    "rtti": true
+    "guid": "357e11e8-dbcd-4830-9256-869198ca7bed"
 )
 RenderShiftedBox : public RenderBox,
                    public ISingleChildRenderObject {
@@ -34,9 +33,10 @@ protected:
     // hit test
     bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 
+    // transform
+    void apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT override;
+
 private:
-    // TODO. enable field reflection
-    spush_attr("no-rtti": true)
     Offsetf _offset = {};
 
     SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(RenderShiftedBox, RenderBox)

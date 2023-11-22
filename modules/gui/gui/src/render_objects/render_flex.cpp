@@ -479,7 +479,7 @@ void RenderFlex::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NO
     {
         if (slot.child)
         {
-            context->paint_child(make_not_null(slot.child), slot.data.offset + offset);
+            context->paint_child(slot.child, slot.data.offset + offset);
         }
         else
         {
@@ -549,4 +549,23 @@ bool RenderFlex::hit_test(HitTestResult* result, Offsetf local_position) const S
         return false;
     });
 }
+
+// transform
+void RenderFlex::apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT
+{
+    auto slot = child->slot();
+    if (!slot.is_valid() || !children().is_valid_index(slot.index))
+    {
+        SKR_GUI_LOG_ERROR(u8"child slot is invalid.");
+        return;
+    }
+    else if (children()[slot.index].child != child)
+    {
+        SKR_GUI_LOG_ERROR(u8"child is not a child of this object.");
+        return;
+    }
+
+    transform = Matrix4::Translate(children()[slot.index].data.offset) * transform;
+}
+
 } // namespace skr::gui

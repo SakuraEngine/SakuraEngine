@@ -13,21 +13,19 @@ RenderText::RenderText()
 RenderText::~RenderText()
 {
     // TODO. use window's font service
-    embedded_destroy_paragraph(make_not_null(_paragraph));
+    embedded_destroy_paragraph(_paragraph);
 }
 
 void RenderText::perform_layout() SKR_NOEXCEPT
 {
-    // TODO. when impl update able texture
-    // _paragraph->clear();
-    // _paragraph->add_text(_text, {});
-    // _paragraph->build();
-    // _paragraph->layout(constraints());
+    _paragraph->clear();
+    _paragraph->add_text(_text, {});
+    _paragraph->build();
+    set_size(_paragraph->layout(constraints()));
 }
 void RenderText::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
 {
-    // TODO. when impl update able texture
-    // _paragraph->paint(context, offset);
+    _paragraph->paint(context, offset);
 }
 
 void RenderText::set_text(const string& text)
@@ -36,6 +34,7 @@ void RenderText::set_text(const string& text)
     {
         _text = text;
         mark_needs_layout();
+        mark_needs_paint();
     }
 }
 } // namespace skr::gui
