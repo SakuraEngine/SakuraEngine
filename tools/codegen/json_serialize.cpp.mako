@@ -1,6 +1,6 @@
 // BEGIN JSON IMPLEMENTATION
 #include "SkrBase/misc/hash.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/misc/log.h"
 #include "SkrRT/serde/json/reader.h"
 #include "SkrRT/serde/json/writer.h"

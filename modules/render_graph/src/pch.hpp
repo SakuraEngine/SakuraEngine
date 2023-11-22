@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/memory.h" // IWYU pragma: export
-#include "SkrRT/platform/debug.h" // IWYU pragma: export
+#include "SkrBase/misc/debug.h"  // IWYU pragma: export
 #include "SkrRT/platform/thread.h" // IWYU pragma: export
 
 #include "SkrRT/io/ram_io.hpp" // IWYU pragma: export

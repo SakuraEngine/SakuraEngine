@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/misc/assert.h"
-#include "SkrBase/misc/debugbreak.h"
+#include "SkrBase/misc/debug.h"
 
 #ifdef __cplusplus
     #include "SkrBase/misc/bit.hpp"

@@ -10,9 +10,9 @@ using Span = container::Span<T, size_t>;
 
 #include "SkrRT/serde/binary/blob_fwd.h"
 #include "SkrRT/serde/binary/serde.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/serde/binary/reader_fwd.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/serde/binary/writer_fwd.h"
 
 namespace skr

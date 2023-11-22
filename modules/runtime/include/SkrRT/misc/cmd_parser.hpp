@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/containers/vector.hpp"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/misc/log.h"
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/hashmap.hpp"

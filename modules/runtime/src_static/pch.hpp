@@ -6,7 +6,7 @@
 #endif
 
 #include <chrono> // IWYU pragma: export
-#include "SkrRT/platform/debug.h" // IWYU pragma: export
+#include "SkrBase/misc/debug.h"  // IWYU pragma: export
 #include "SkrRT/platform/guid.hpp" // IWYU pragma: export
 #include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
 
