@@ -1,7 +1,7 @@
 #include "SkrRT/resource/config_resource.h"
 #include "EASTL/vector.h"
 #include "SkrRT/config.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/vfs.h"

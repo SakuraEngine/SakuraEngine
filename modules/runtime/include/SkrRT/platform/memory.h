@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrProfile/profile.h"
 #include "SkrRT/config.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include <string.h>  // memset
 #ifdef __cplusplus
     #include <new>         // 'operator new' function for non-allocating placement new expression

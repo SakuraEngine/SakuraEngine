@@ -1,9 +1,8 @@
 #pragma once
-#include <type_traits>
 #include <string_view>
-#include "internal/constexpr-xxh3.hpp"
 #include "SkrBase/config.h"
-#include "SkrBase/misc/is_detected.hpp"
+#include "SkrBase/misc/traits.hpp"
+#include "internal/constexpr-xxh3.hpp"
 
 namespace skr
 {

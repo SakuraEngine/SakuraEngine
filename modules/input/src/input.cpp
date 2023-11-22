@@ -1,7 +1,7 @@
 #include "SkrInput/input.h"
 #include "common/reading_pool.hpp"
 #include "SkrRT/platform/memory.h"
-#include "SkrRT/platform/debug.h"
+#include "SkrBase/misc/debug.h" 
 #include "SkrRT/platform/shared_library.hpp"
 #include <SkrRT/containers/vector.hpp>
 
