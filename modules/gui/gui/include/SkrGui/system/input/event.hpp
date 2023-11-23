@@ -15,7 +15,7 @@ namespace gui sreflect
 sreflect_enum_class(
     "guid": "51ed008c-6f63-495c-b229-204986d45cd5"
 )
-EEventRoutePhase : int32_t
+EEventRoutePhase : uint32_t
 {
     None        = 0,
     TrickleDown = 1 << 0,
@@ -29,7 +29,7 @@ EEventRoutePhase : int32_t
 sreflect_enum_class(
     "guid" : "03ff08f9-ba01-465a-991c-a6cfa294ddc4"
 )
-EEventSource : int32_t
+EEventSource : uint32_t
 {
     None = 0,
     Device,
