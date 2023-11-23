@@ -3,6 +3,7 @@
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/system/input/hit_test.hpp"
+#include "SkrGui/system/input/event.hpp"
 #ifndef __meta__
     #include "SkrGui/system/input/input_manager.generated.h"
 #endif
@@ -34,6 +35,9 @@ SKR_GUI_API InputManager {
     // hit test
     bool hit_test(HitTestResult* result, Offsetf system_location);
 
+    // route event
+    bool route_event(HitTestResult* result, PointerEvent* event, EEventRoutePhase phase = EEventRoutePhase::NoBroadcast);
+
     // register
     void register_context(NotNull<RenderInputContext*> context);
     void unregister_context(NotNull<RenderInputContext*> context);
@@ -41,9 +45,6 @@ SKR_GUI_API InputManager {
 private:
     // complex dispatch functional
     void _dispatch_enter_exit(HitTestResult* result, PointerMoveEvent* event);
-
-    // route event
-    bool _route_event(HitTestResult* result, PointerEvent* event);
 
 private:
     Array<RenderInputContext*> _contexts;

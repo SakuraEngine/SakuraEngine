@@ -1,4 +1,5 @@
 #include "SkrGui/system/input/input_manager.hpp"
+#include "SkrGui/system/input/event.hpp"
 #include "SkrGui/system/input/render_input_context.hpp"
 #include "SkrGui/system/input/pointer_event.hpp"
 
@@ -21,7 +22,7 @@ bool InputManager::dispatch_event(Event* event)
             _dispatch_enter_exit(&result, pointer_event->type_cast_fast<PointerMoveEvent>());
         }
 
-        return _route_event(&result, event->type_cast<PointerEvent>());
+        return route_event(&result, event->type_cast<PointerEvent>());
     }
     else if (event->type_is<PointerUpEvent>())
     {
@@ -42,6 +43,54 @@ bool InputManager::hit_test(HitTestResult* result, Offsetf system_location)
             return true;
         }
     }
+    return false;
+}
+
+// route event
+bool InputManager::route_event(HitTestResult* result, PointerEvent* event, EEventRoutePhase phase)
+{
+    if (flag_any(phase, EEventRoutePhase::TrickleDown))
+    {
+        for (uint64_t i = 0; i < result->path().size(); ++i)
+        {
+            auto& entry = result->path()[result->path().size() - i - 1];
+            if (entry.target->handle_event(event, const_cast<HitTestEntry*>(&entry)))
+            {
+                return true;
+            }
+        }
+    }
+    else if (flag_any(phase, EEventRoutePhase::Reach))
+    {
+        auto& entry = result->path()[0];
+        if (entry.target->handle_event(event, const_cast<HitTestEntry*>(&entry)))
+        {
+            return true;
+        }
+    }
+    else if (flag_any(phase, EEventRoutePhase::Broadcast))
+    {
+        bool handled = false;
+        for (const auto& entry : result->path())
+        {
+            handled |= entry.target->handle_event(event, const_cast<HitTestEntry*>(&entry));
+        }
+        if (handled)
+        {
+            return true;
+        }
+    }
+    else if (flag_any(phase, EEventRoutePhase::BubbleUp))
+    {
+        for (const auto& entry : result->path())
+        {
+            if (entry.target->handle_event(event, const_cast<HitTestEntry*>(&entry)))
+            {
+                return true;
+            }
+        }
+    }
+
     return false;
 }
 
@@ -81,18 +130,5 @@ void InputManager::_dispatch_enter_exit(HitTestResult* result, PointerMoveEvent*
     }
 
     _last_hover_path = *result;
-}
-
-// route event
-bool InputManager::_route_event(HitTestResult* result, PointerEvent* event)
-{
-    for (const auto& entry : result->path())
-    {
-        if (entry.target->handle_event(event, const_cast<HitTestEntry*>(&entry)))
-        {
-            return true;
-        }
-    }
-    return false;
 }
 } // namespace skr::gui

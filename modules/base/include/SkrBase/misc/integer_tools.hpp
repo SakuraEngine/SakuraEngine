@@ -11,25 +11,29 @@ template <typename T>
 SKR_INLINE bool flag_all(T val, T flags) noexcept
 {
     static_assert(std::is_integral_v<T> || std::is_enum_v<T>);
-    return (val & flags) == flags;
+    using UT = std::underlying_type_t<T>;
+    return (static_cast<UT>(val) & static_cast<UT>(flags)) == static_cast<UT>(flags);
 }
 template <typename T>
 SKR_INLINE bool flag_any(T val, T flags) noexcept
 {
     static_assert(std::is_integral_v<T> || std::is_enum_v<T>);
-    return val & flags;
+    using UT = std::underlying_type_t<T>;
+    return static_cast<UT>(val) & static_cast<UT>(flags);
 }
 template <typename T>
 SKR_INLINE T flag_set(T val, T flags) noexcept
 {
     static_assert(std::is_integral_v<T> || std::is_enum_v<T>);
-    return val | flags;
+    using UT = std::underlying_type_t<T>;
+    return static_cast<UT>(val) | static_cast<UT>(flags);
 }
 template <typename T>
 SKR_INLINE T flag_erase(T val, T flags) noexcept
 {
     static_assert(std::is_integral_v<T> || std::is_enum_v<T>);
-    return val & (~flags);
+    using UT = std::underlying_type_t<T>;
+    return static_cast<UT>(val) & (~static_cast<UT>(flags));
 }
 } // namespace skr
 

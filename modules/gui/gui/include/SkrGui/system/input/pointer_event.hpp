@@ -9,28 +9,45 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_enum_class("guid": "7223961b-5309-4fac-8207-8476bf7f3b05")
-EPointerDeviceType : int32_t
+EPointerDeviceType : uint32_t
 {
-    Unknown = 0,
-    Mouse,    // 鼠标，Down/Up/Hover+Scroll/Scale
-    Touch,    // 触摸屏，Add/Remove/Move
-    TrackPad, // 触摸板，[光标的功能]+Pan/Zoom
+    Unknown  = 0,
+    Mouse    = 1 << 0, // 鼠标，Down/Up/Hover+Scroll/Scale
+    TrackPad = 1 << 1, // 触摸板，[光标的功能]+Pan/Zoom
+
+    // TODO. Touch 和 Stylus 应放到 TouchEvent 里面去
+    // Touch,    // 触摸屏，Add/Remove/Move
     // Stylus,
     // InvertedStylus,
 };
 sreflect_enum_class("guid": "3f6c7998-a93e-424e-9d95-c75800309a16")
-EPointerButton : int32_t
+EPointerButton : uint32_t
 {
     Unknown = 0,
-    Left,
-    Right,
-    Middle,
-    X1B,
-    X2B,
-    X3B,
-    X4B,
-    X5B,
-    __COUNT,
+    Left    = 1 << 0,
+    Right   = 1 << 1,
+    Middle  = 1 << 2,
+    X1B     = 1 << 3,
+    X2B     = 1 << 4,
+    X3B     = 1 << 5,
+    X4B     = 1 << 6,
+    X5B     = 1 << 7,
+};
+
+sreflect_enum_class("guid": "f8f9a770-aa9a-4ce3-9ecf-613c8bda7c9a")
+EPointerModifier : uint32_t
+{
+    Unknown      = 0,
+    LeftCtrl     = 1 << 0, // mac  win
+    RightCtrl    = 1 << 1, //      win
+    LeftAlt      = 1 << 2, //      win
+    RightAlt     = 1 << 3, //      win
+    LeftShift    = 1 << 4, // mac  win
+    RightShift   = 1 << 5, // mac  win
+    LeftOption   = 1 << 6, // mac
+    RightOption  = 1 << 7, // mac
+    LeftCommand  = 1 << 8, // mac
+    RightCommand = 1 << 9, // mac
 };
 
 // TODO. Touch Event, 与 PointerEvent 分开实现
