@@ -10,11 +10,14 @@ namespace skr sreflect
 namespace gui sreflect
 {
 // 手势区分为：
-//  1. Pointer 手势，用于 desktop，通常只有 Click、Double Click、Drag-Drop 等，可以实现一些特殊操作，比如震动
+//  1. Pointer 手势，用于 desktop，通常只有 Click、Double Click、Drag-Drop 等，可以实现一些特殊操作，
+//     比如 houdini 的甩动节点等，desktop 的手势并不复杂，但是按键功能组合复杂
 //  2. Touch 手势，相比于 Pointer 手势更复杂，用于移动端，不一一展开
 sreflect_struct("guid": "8fb085fd-9412-4a1b-bc95-a518e32746f2")
 SKR_GUI_API GestureRecognizer : public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
+
+    bool handle_event(Event* event);
 };
 
 sreflect_struct("guid": "7ac4136e-e753-475c-98f2-9b7e44964000")

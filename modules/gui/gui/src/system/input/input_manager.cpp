@@ -2,31 +2,62 @@
 #include "SkrGui/system/input/event.hpp"
 #include "SkrGui/system/input/render_input_context.hpp"
 #include "SkrGui/system/input/pointer_event.hpp"
+#include "SkrGui/system/input/gesture_recognizer.hpp"
 
 namespace skr::gui
 {
 // dispatch event
 bool InputManager::dispatch_event(Event* event)
 {
-    HitTestResult result;
-
-    if (event->type_is<PointerDownEvent>() || event->type_is<PointerMoveEvent>())
+    if (auto pointer_down_event = event->type_cast<PointerDownEvent>())
     {
-        auto pointer_event = event->type_cast_fast<PointerEvent>();
-
         // do hit test
-        hit_test(&result, pointer_event->global_position);
+        HitTestResult result;
+        hit_test(&result, pointer_down_event->global_position);
 
-        if (event->type_is<PointerMoveEvent>())
-        {
-            _dispatch_enter_exit(&result, pointer_event->type_cast_fast<PointerMoveEvent>());
-        }
-
-        return route_event(&result, event->type_cast<PointerEvent>());
+        // route
+        return route_event(&result, pointer_down_event);
     }
-    else if (event->type_is<PointerUpEvent>())
+    else if (auto pointer_move_event = event->type_cast<PointerMoveEvent>())
     {
-        // TODO. restore hit test path and remove
+        // do hit test
+        HitTestResult result;
+        hit_test(&result, pointer_move_event->global_position);
+
+        // handle enter & exit
+        _dispatch_enter_exit(&result, pointer_move_event->type_cast_fast<PointerMoveEvent>());
+
+        // dispatch to gesture or route to widget
+        if (route_event_for_gesture(pointer_move_event))
+        {
+            return true;
+        }
+        else
+        {
+            // route
+            return route_event(&result, pointer_move_event);
+        }
+    }
+    else if (auto pointer_up_event = event->type_cast<PointerUpEvent>())
+    {
+        // do hit test
+        HitTestResult result;
+        hit_test(&result, pointer_down_event->global_position);
+
+        // dispatch to gesture or route to widget
+        if (route_event_for_gesture(pointer_up_event))
+        {
+            return true;
+        }
+        else
+        {
+            // route
+            return route_event(&result, pointer_up_event);
+        }
+    }
+
+    else // pan/zoom & scroll/scale
+    {
     }
 
     return false;
@@ -49,6 +80,11 @@ bool InputManager::hit_test(HitTestResult* result, Offsetf system_location)
 // route event
 bool InputManager::route_event(HitTestResult* result, PointerEvent* event, EEventRoutePhase phase)
 {
+    if (result->empty())
+    {
+        return false;
+    }
+
     if (flag_any(phase, EEventRoutePhase::TrickleDown))
     {
         for (uint64_t i = 0; i < result->path().size(); ++i)
@@ -102,6 +138,25 @@ void InputManager::register_context(NotNull<RenderInputContext*> context)
 void InputManager::unregister_context(NotNull<RenderInputContext*> context)
 {
     _contexts.remove(context.get());
+}
+
+// gesture
+void InputManager::add_gesture(NotNull<GestureRecognizer*> gesture)
+{
+    _gestures.add_unique(gesture.get());
+}
+void InputManager::remove_gesture(NotNull<GestureRecognizer*> gesture)
+{
+    _gestures.remove(gesture.get());
+}
+bool InputManager::route_event_for_gesture(PointerEvent* event)
+{
+    bool handled = false;
+    for (auto gesture : _gestures)
+    {
+        handled |= gesture->handle_event(event);
+    }
+    return handled;
 }
 
 // complex dispatch functional

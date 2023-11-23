@@ -28,6 +28,9 @@ struct HitTestEntry {
 };
 
 struct HitTestResult {
+    // info
+    inline bool empty() const SKR_NOEXCEPT { return _path.empty(); }
+
     // add
     inline void add(HitTestEntry entry)
     {

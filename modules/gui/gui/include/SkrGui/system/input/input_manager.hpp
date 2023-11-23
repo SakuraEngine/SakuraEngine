@@ -14,6 +14,7 @@ namespace gui sreflect
 {
 struct RenderInputContext;
 struct PointerMoveEvent;
+struct GestureRecognizer;
 
 // TODO. roadmap
 // //  1. hit test
@@ -38,9 +39,14 @@ SKR_GUI_API InputManager {
     // route event
     bool route_event(HitTestResult* result, PointerEvent* event, EEventRoutePhase phase = EEventRoutePhase::NoBroadcast);
 
-    // register
+    // register context
     void register_context(NotNull<RenderInputContext*> context);
     void unregister_context(NotNull<RenderInputContext*> context);
+
+    // gesture
+    void add_gesture(NotNull<GestureRecognizer*> gesture);
+    void remove_gesture(NotNull<GestureRecognizer*> gesture);
+    bool route_event_for_gesture(PointerEvent* event);
 
 private:
     // complex dispatch functional
@@ -48,6 +54,7 @@ private:
 
 private:
     Array<RenderInputContext*> _contexts;
+    Array<GestureRecognizer*>  _gestures;
 
     HitTestResult _last_hover_path;
 };

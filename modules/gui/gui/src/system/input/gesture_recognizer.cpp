@@ -2,6 +2,11 @@
 
 namespace skr::gui
 {
+bool GestureRecognizer::handle_event(Event* event)
+{
+    return false;
+}
+
 void PointerGestureRecognizer::add_pointer_pan_zoom(PointerPanZoomStartEvent* event)
 {
 }
