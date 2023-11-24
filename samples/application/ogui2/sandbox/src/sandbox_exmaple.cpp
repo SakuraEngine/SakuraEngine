@@ -87,19 +87,28 @@ int main(void)
     }
 
     // run application
+    auto prev_time    = std::chrono::high_resolution_clock::now();
+    auto startup_time = std::chrono::high_resolution_clock::now();
     while (!b_quit)
     {
+        // update time
+        auto cur_time       = std::chrono::high_resolution_clock::now();
+        auto delta          = cur_time - prev_time;
+        prev_time           = cur_time;
+        auto delta_sec      = std::chrono::duration<double>(delta).count();
+        auto time_stamp     = cur_time - startup_time;
+        auto time_stamp_sec = std::chrono::duration<double>(time_stamp).count();
+
         FrameMark;
-        float delta = 1.f / 60.f;
         {
             SkrZoneScopedN("SystemEvents");
-            handler->pump_messages(delta);
-            handler->process_messages(delta);
+            handler->pump_messages(delta_sec);
+            handler->process_messages(delta_sec);
         }
         {
             SkrZoneScopedN("InputSystem");
             skr::input::Input::GetInstance()->Tick();
-            input_system->update(delta);
+            input_system->update(delta_sec);
         }
         {
             SkrZoneScopedN("Sandbox");

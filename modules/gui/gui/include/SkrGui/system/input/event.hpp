@@ -12,16 +12,15 @@ namespace skr sreflect
 {
 namespace gui sreflect
 {
-sreflect_enum_class(
-    "guid": "51ed008c-6f63-495c-b229-204986d45cd5"
-)
+// Event Route 的作用被其它机制所替代，是否可以直接干掉 Route 概念
+sreflect_enum_class("guid": "51ed008c-6f63-495c-b229-204986d45cd5")
 EEventRoutePhase : uint32_t
 {
     None        = 0,
-    TrickleDown = 1 << 0,
-    Reach       = 1 << 1,
-    Broadcast   = 1 << 2,
-    BubbleUp    = 1 << 3,
+    TrickleDown = 1 << 0, // 预览事件，WPF 中一般用于 BubbleUp 被阻断的情况，通过 Notification 可能可以代替掉这一功能
+    Reach       = 1 << 1, // 事件由确定的目标引发，典型的如 Click 事件
+    Broadcast   = 1 << 2, // 一般没什么用
+    BubbleUp    = 1 << 3, // 常用的处理事件方式
     All         = TrickleDown | Reach | Broadcast | BubbleUp,
     NoBroadcast = TrickleDown | Reach | BubbleUp,
 };
