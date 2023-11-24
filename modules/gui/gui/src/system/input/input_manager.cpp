@@ -40,10 +40,6 @@ bool InputManager::dispatch_event(Event* event)
     }
     else if (auto pointer_up_event = event->type_cast<PointerUpEvent>())
     {
-        // do hit test
-        HitTestResult result;
-        hit_test(&result, pointer_down_event->global_position);
-
         // dispatch to gesture or route to widget
         if (route_event_for_gesture(pointer_up_event))
         {
@@ -51,6 +47,10 @@ bool InputManager::dispatch_event(Event* event)
         }
         else
         {
+            // do hit test
+            HitTestResult result;
+            hit_test(&result, pointer_down_event->global_position);
+
             // route
             return route_event(&result, pointer_up_event);
         }
