@@ -4,6 +4,7 @@
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/system/input/hit_test.hpp"
 #include "SkrGui/system/input/event.hpp"
+#include "SkrGui/system/input/gesture_recognizer.hpp"
 #ifndef __meta__
     #include "SkrGui/system/input/input_manager.generated.h"
 #endif
@@ -44,6 +45,7 @@ SKR_GUI_API InputManager {
     void unregister_context(NotNull<RenderInputContext*> context);
 
     // gesture
+    // TODO. add-remove => track-stop_track 并且 dispatch 形式也需要与 PointerId 和 ButtonId 有关
     void add_gesture(NotNull<GestureRecognizer*> gesture);
     void remove_gesture(NotNull<GestureRecognizer*> gesture);
     bool route_event_for_gesture(PointerEvent* event);
