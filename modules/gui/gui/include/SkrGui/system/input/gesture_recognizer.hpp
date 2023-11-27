@@ -9,10 +9,11 @@ namespace skr sreflect
 {
 namespace gui sreflect
 {
-static const uint32_t kGesturePriorityClickOrTap = 1; // 最低判定优先级，因为容易阻断其它手势的判定
-static const uint32_t kGesturePriorityLongPress  = 2;
-static const uint32_t kGesturePriorityDrag       = 3;
-
+// 关于手势优先级
+// Click 事件一般只接受被动触发
+// Double Click 事件会在第一次 Click 之后延长判定时长，并在第二次 click 后主动触发
+// Drag 事件会在抵达开始拖拽的距离之后主动触发
+// 如此 Drag 会最先主动触发，随后是 Double Click，Click 永远以被动姿态触发
 struct CombinePointerId {
     uint32_t pointer_id = 0;
     uint32_t button_id  = 0;
@@ -41,6 +42,10 @@ sreflect_struct("guid": "8fb085fd-9412-4a1b-bc95-a518e32746f2")
 SKR_GUI_API GestureRecognizer : public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
 
+    // 监听 pointer
+    void         add_pointer(NotNull<PointerDownEvent*> event);
+    virtual void add_allowed_pointer(NotNull<PointerDownEvent*> event) = 0;
+
     // 事件处理
     // TODO. 加上 TriggerPath 与 TriggerEvent
     virtual bool handle_event(Event* event);
@@ -48,8 +53,6 @@ SKR_GUI_API GestureRecognizer : public skr::rttr::IObject {
     // 手势竞争
     virtual void accept_gesture(CombinePointerId pointer);
     virtual void reject_gesture(CombinePointerId pointer);
-
-    uint32_t priority = 0;
 };
 
 } // namespace gui sreflect

@@ -74,7 +74,7 @@ SKR_INLINE void move(Dst* dst, Src* src)
 
         if constexpr (MemoryTraits<Dst, Src>::need_dtor_after_move)
         {
-            destruct(src);
+            ::skr::memory::destruct(src);
         }
     }
 }
@@ -94,7 +94,7 @@ SKR_INLINE void move_assign(Dst* dst, Src* src)
 
         if constexpr (MemoryTraits<Dst, Src>::need_dtor_after_move)
         {
-            destruct(src);
+            ::skr::memory::destruct(src);
         }
     }
 }
