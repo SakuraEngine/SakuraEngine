@@ -1,3 +1,4 @@
+#include <chrono>
 #include "SkrGui/system/input/hit_test.hpp"
 #include "SkrGuiRenderer/device/skr_native_device.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
