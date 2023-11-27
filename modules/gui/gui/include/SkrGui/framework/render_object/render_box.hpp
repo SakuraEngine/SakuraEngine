@@ -16,7 +16,6 @@ sreflect_struct(
 SKR_GUI_API RenderBox : public RenderObject {
     SKR_RTTR_GENERATE_BODY()
 
-public:
     RenderBox();
     ~RenderBox();
 
