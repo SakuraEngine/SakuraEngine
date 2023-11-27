@@ -25,6 +25,8 @@ SKR_GUI_API MouseRegin : public SingleChildRenderObjectWidget {
     Function<bool(PointerExitEvent*)>  on_exit  = {};
     Function<bool(PointerMoveEvent*)>  on_hover = {};
 
+    // TODO. down、up
+
     // bool opaque // 将 hit test 的 dispatch 截断于此，防止上层接收到事件，可以用路由解决
     // HitTestBehavior behaviour // hit test 行为，在 hit test 期间就阻断向下的传播
 };

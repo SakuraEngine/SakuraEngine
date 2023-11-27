@@ -155,11 +155,8 @@ void RenderStack::set_stack_size(EStackSize size) SKR_NOEXCEPT
 // hit test
 bool RenderStack::hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
 {
-    return _default_hit_test(
-    result,
-    local_position,
-    nullptr,
-    [this](HitTestResult* result, Offsetf local_position) {
+    if (size().contains(local_position))
+    {
         for (auto i = children().size(); i > 0; --i)
         {
             const auto& child_data = children()[i - 1];
@@ -176,8 +173,8 @@ bool RenderStack::hit_test(HitTestResult* result, Offsetf local_position) const 
                 return true;
             }
         }
-        return false;
-    });
+    }
+    return false;
 }
 
 // transform
