@@ -2,7 +2,7 @@
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/system/input/pointer_event.hpp"
 #ifndef __meta__
-    #include "SkrGui/system/input/gesture_recognizer.generated.h"
+    #include "SkrGui/system/input/gesture/gesture_recognizer.generated.h"
 #endif
 
 namespace skr sreflect

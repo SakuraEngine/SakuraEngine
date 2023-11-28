@@ -4,7 +4,7 @@
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/system/input/hit_test.hpp"
 #include "SkrGui/system/input/event.hpp"
-#include "SkrGui/system/input/gesture_recognizer.hpp"
+#include "SkrGui/system/input/gesture/gesture_recognizer.hpp"
 #ifndef __meta__
     #include "SkrGui/system/input/input_manager.generated.h"
 #endif
