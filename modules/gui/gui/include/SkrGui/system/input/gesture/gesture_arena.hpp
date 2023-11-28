@@ -1,7 +1,7 @@
 #pragma once
-#include "SkrGui/system/input/gesture_recognizer.hpp"
+#include "SkrGui/system/input/gesture/gesture_recognizer.hpp"
 #ifndef __meta__
-    #include "SkrGui/system/input/gesture_arena.generated.h"
+    #include "SkrGui/system/input/gesture/gesture_arena.generated.h"
 #endif
 
 namespace skr sreflect

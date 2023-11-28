@@ -2,7 +2,7 @@
 #include "SkrGui/system/input/event.hpp"
 #include "SkrGui/system/input/render_input_context.hpp"
 #include "SkrGui/system/input/pointer_event.hpp"
-#include "SkrGui/system/input/gesture_recognizer.hpp"
+#include "SkrGui/system/input/gesture/gesture_recognizer.hpp"
 
 namespace skr::gui
 {
