@@ -30,7 +30,7 @@ static struct inspect_system* _system = nullptr;
 struct inspect_system : public skr::ModuleSubsystem
 {
     using tweak_value_map_t = skr::btree_multimap<uint32_t, tweak_value_t>;
-    skr::flat_hash_map<skr::string, tweak_value_map_t, skr::hash<skr::string>> _tweak_files;
+    skr::flat_hash_map<skr::string, tweak_value_map_t, skr::Hash<skr::string>> _tweak_files;
     uint32_t counter = 0;
 
     void Initialize() override

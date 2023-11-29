@@ -156,8 +156,8 @@ public:
 
     SMutexObject _mutex;
     efsw::FileWatcher _watcher;
-    skr::flat_hash_set<skr::string, skr::hash<skr::string>> _watched_directories;
-    skr::flat_hash_map<skr::string, eastl::vector<TweakLine>, skr::hash<skr::string>> _tweak_files;
+    skr::flat_hash_set<skr::string, skr::Hash<skr::string>> _watched_directories;
+    skr::flat_hash_map<skr::string, eastl::vector<TweakLine>, skr::Hash<skr::string>> _tweak_files;
 };
 SkrTweakModule* SkrTweakModule::instance = nullptr;
 

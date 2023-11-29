@@ -233,7 +233,7 @@ void DynArrayType::Erase(void* addr, uint64_t index, bool bKeepOrder) const
 
 const skr_type_t* make_variant_type(const skr::span<const skr_type_t*> types)
 {
-    static skr::flat_hash_map<skr::string, const skr_type_t*, skr::hash<skr::string>> cache;
+    static skr::flat_hash_map<skr::string, const skr_type_t*, skr::Hash<skr::string>> cache;
     skr::string name;
     for (auto type : types) {
         name += type->Name();

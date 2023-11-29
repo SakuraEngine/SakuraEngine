@@ -3,7 +3,7 @@
 #include "SkrRT/platform/memory.h"
 #include "SkrBase/misc/debug.h" 
 #include "SkrRT/platform/shared_library.hpp"
-#include <SkrRT/containers/vector.hpp>
+#include <SkrRT/containers_new/array.hpp>
 
 namespace skr {
 namespace input {
@@ -23,7 +23,7 @@ struct InputImplementation : public Input
     void finalize() SKR_NOEXCEPT;
 
 protected:
-    skr::vector<InputLayer*> layers_;
+    skr::Array<InputLayer*> layers_;
 };
 
 #ifdef SKR_INPUT_USE_GAME_INPUT
@@ -41,7 +41,7 @@ void InputImplementation::initialize() SKR_NOEXCEPT
         auto game_input = Input_GameInput_Create();
         if (game_input->Initialize()) 
         {
-            layers_.emplace_back(game_input);
+            layers_.add(game_input);
         }
         else
         {
@@ -53,7 +53,7 @@ void InputImplementation::initialize() SKR_NOEXCEPT
         auto common_input = Input_Common_Create();
         if (common_input->Initialize()) 
         {
-            layers_.emplace_back(common_input);
+            layers_.add(common_input);
         }
         else
         {

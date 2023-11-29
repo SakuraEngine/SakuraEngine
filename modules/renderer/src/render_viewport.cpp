@@ -74,7 +74,7 @@ struct SViewportManagerImpl : public SViewportManager
 
     dual_query_t* camera_query = nullptr;
 
-    skr::parallel_flat_hash_map<skr::string, uint32_t, skr::hash<skr::string>> idMap;
+    skr::parallel_flat_hash_map<skr::string, uint32_t, skr::Hash<skr::string>> idMap;
     skr::vector<skr_render_viewport_t> viewports;
     skr::vector<uint32_t> free_list;
 };

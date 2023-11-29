@@ -11,12 +11,12 @@ using string      = ostr::text;
 using string_view = ostr::text_view;
 
 template <>
-struct hash<string> {
+struct Hash<string> {
     inline size_t operator()(const string& x) const { return ostr::hash_sequence_crc64(x.c_str(), x.size()); }
 };
 
 template <>
-struct hash<string_view> {
+struct Hash<string_view> {
     inline size_t operator()(const string_view& x) const { return ostr::hash_sequence_crc64(x.raw().data(), x.size()); }
 };
 

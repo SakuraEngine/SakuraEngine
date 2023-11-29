@@ -78,9 +78,9 @@ struct CGPURuntimeTable {
     }
     eastl::vector<CreatedQueue> created_queues;
     // TODO: replace with skr::hash_map
-    skr::flat_hash_map<skr::string, void*, skr::hash<skr::string>> custom_data_map;
-    skr::flat_hash_map<skr::string, eastl::function<void()>, skr::hash<skr::string>> custom_sweep_callbacks;
-    skr::flat_hash_map<skr::string, eastl::function<void()>, skr::hash<skr::string>> custom_early_sweep_callbacks;
+    skr::flat_hash_map<skr::string, void*, skr::Hash<skr::string>> custom_data_map;
+    skr::flat_hash_map<skr::string, eastl::function<void()>, skr::Hash<skr::string>> custom_sweep_callbacks;
+    skr::flat_hash_map<skr::string, eastl::function<void()>, skr::Hash<skr::string>> custom_early_sweep_callbacks;
 };
 
 struct CGPURuntimeTable* cgpu_create_runtime_table()

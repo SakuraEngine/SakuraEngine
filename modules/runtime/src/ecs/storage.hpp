@@ -81,7 +81,7 @@ struct dual_storage_t {
     using queries_t = eastl::vector<dual_query_t*>;
     using groups_t = skr::flat_hash_map<dual_entity_type_t, dual_group_t*, dual::hasher<dual_entity_type_t>, dual::equalto<dual_entity_type_t>>;
     using archetypes_t = skr::flat_hash_map<dual_type_set_t, archetype_t*, dual::hasher<dual_type_set_t>, dual::equalto<dual_type_set_t>>;
-    using phase_alias_t = skr::flat_hash_map<skr::string_view, dual_phase_alias_t, skr::hash<skr::string_view>>;
+    using phase_alias_t = skr::flat_hash_map<skr::string_view, dual_phase_alias_t, skr::Hash<skr::string_view>>;
     archetypes_t archetypes;
     queries_t queries;
     phase_alias_t aliases;

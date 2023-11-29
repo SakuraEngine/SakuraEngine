@@ -30,7 +30,7 @@ struct parser {
         if (m_argc - 1 < m_required) return abort();
 
         int num_required = 0;
-        skr::flat_hash_set<skr::string, skr::hash<skr::string>> parsed_shorthands;
+        skr::flat_hash_set<skr::string, skr::Hash<skr::string>> parsed_shorthands;
         parsed_shorthands.reserve(m_argc);
 
         for (int i = 1; i != m_argc; ++i)
@@ -204,8 +204,8 @@ private:
     int m_argc;
     char** m_argv;
     int m_required;
-    skr::flat_hash_map<skr::string, cmd, skr::hash<skr::string>> m_cmds;
-    skr::flat_hash_map<skr::string, int, skr::hash<skr::string>> m_shorthands;
+    skr::flat_hash_map<skr::string, cmd, skr::Hash<skr::string>> m_cmds;
+    skr::flat_hash_map<skr::string, int, skr::Hash<skr::string>> m_shorthands;
     skr::vector<skr::string> m_names;
 
     bool abort() const
