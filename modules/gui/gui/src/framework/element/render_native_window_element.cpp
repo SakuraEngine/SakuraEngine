@@ -3,6 +3,7 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
 #include "SkrGui/framework/widget/render_native_window_widget.hpp"
 #include "SkrGui/framework/render_object/render_native_window.hpp"
+#include "SkrGui/framework/build_owner.hpp"
 
 namespace skr::gui
 {
@@ -79,7 +80,15 @@ void RenderNativeWindowElement::prepare_initial_frame() SKR_NOEXCEPT
             }
         };
         this->visit_children(_RecursiveHelper{ _owner });
+
+        // register to owner
+        _owner->register_native_window(this);
     }
     _lifecycle = EElementLifecycle::Mounted;
+}
+void RenderNativeWindowElement::clean_up_for_close() SKR_NOEXCEPT
+{
+    // unregister from owner
+    _owner->unregister_native_window(this);
 }
 } // namespace skr::gui

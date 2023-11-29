@@ -1,8 +1,8 @@
 #include "SkrGui/system/input/input_manager.hpp"
 #include "SkrGui/system/input/event.hpp"
-#include "SkrGui/system/input/render_input_context.hpp"
 #include "SkrGui/system/input/pointer_event.hpp"
 #include "SkrGui/system/input/gesture/gesture_recognizer.hpp"
+#include "SkrGui/framework/render_object/render_native_window.hpp"
 
 namespace skr::gui
 {
@@ -131,11 +131,11 @@ bool InputManager::route_event(HitTestResult* result, PointerEvent* event, EEven
 }
 
 // register
-void InputManager::register_context(NotNull<RenderInputContext*> context)
+void InputManager::register_context(NotNull<RenderNativeWindow*> context)
 {
     _contexts.add_unique(context.get());
 }
-void InputManager::unregister_context(NotNull<RenderInputContext*> context)
+void InputManager::unregister_context(NotNull<RenderNativeWindow*> context)
 {
     _contexts.remove(context.get());
 }

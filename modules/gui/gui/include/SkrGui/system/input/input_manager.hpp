@@ -41,8 +41,8 @@ SKR_GUI_API InputManager {
     bool route_event(HitTestResult* result, PointerEvent* event, EEventRoutePhase phase = EEventRoutePhase::NoBroadcast);
 
     // register context
-    void register_context(NotNull<RenderInputContext*> context);
-    void unregister_context(NotNull<RenderInputContext*> context);
+    void register_context(NotNull<RenderNativeWindow*> context);
+    void unregister_context(NotNull<RenderNativeWindow*> context);
 
     // gesture
     // TODO. add-remove => track-stop_track 并且 dispatch 形式也需要与 PointerId 和 ButtonId 有关
@@ -55,7 +55,7 @@ private:
     void _dispatch_enter_exit(HitTestResult* result, PointerMoveEvent* event);
 
 private:
-    Array<RenderInputContext*> _contexts;
+    Array<RenderNativeWindow*> _contexts;
     Array<GestureRecognizer*>  _gestures;
 
     HitTestResult _last_hover_path;
