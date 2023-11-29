@@ -28,7 +28,7 @@ bool InputManager::dispatch_event(Event* event)
         _dispatch_enter_exit(&result, pointer_move_event->type_cast_fast<PointerMoveEvent>());
 
         // dispatch to gesture or route to widget
-        if (route_event_for_gesture(pointer_move_event))
+        if (_gesture_arena_manager.route_event(pointer_move_event))
         {
             return true;
         }
@@ -41,7 +41,7 @@ bool InputManager::dispatch_event(Event* event)
     else if (auto pointer_up_event = event->type_cast<PointerUpEvent>())
     {
         // dispatch to gesture or route to widget
-        if (route_event_for_gesture(pointer_up_event))
+        if (_gesture_arena_manager.route_event(pointer_up_event))
         {
             return true;
         }
@@ -138,25 +138,6 @@ void InputManager::register_context(NotNull<RenderNativeWindow*> context)
 void InputManager::unregister_context(NotNull<RenderNativeWindow*> context)
 {
     _contexts.remove(context.get());
-}
-
-// gesture
-void InputManager::add_gesture(NotNull<GestureRecognizer*> gesture)
-{
-    _gestures.add_unique(gesture.get());
-}
-void InputManager::remove_gesture(NotNull<GestureRecognizer*> gesture)
-{
-    _gestures.remove(gesture.get());
-}
-bool InputManager::route_event_for_gesture(PointerEvent* event)
-{
-    bool handled = false;
-    for (auto gesture : _gestures)
-    {
-        handled |= gesture->handle_event(event);
-    }
-    return handled;
 }
 
 // complex dispatch functional

@@ -56,10 +56,11 @@ PointerEvent : public Event {
     SKR_RTTR_GENERATE_BODY()
 
     EPointerDeviceType device_type     = EPointerDeviceType::Unknown; // 来源设备
-    Offsetf            global_position = {};                          // 位置，全局空间的逻辑坐标
-    Offsetf            global_delta    = {};                          // 距离上一次触发的位置变化量
-    EPointerButton     button          = EPointerButton::Unknown;     // 按键 id
-    Matrix4            transform       = {};                          // global->local 转换矩阵
+    uint32_t           pointer_id      = 0;
+    Offsetf            global_position = {};                      // 位置，全局空间的逻辑坐标
+    Offsetf            global_delta    = {};                      // 距离上一次触发的位置变化量
+    EPointerButton     button          = EPointerButton::Unknown; // 按键 id
+    Matrix4            transform       = {};                      // global->local 转换矩阵
 
     // TODO. get mouse button states
     // TODO. get modifier key states

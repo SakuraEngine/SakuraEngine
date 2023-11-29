@@ -31,7 +31,8 @@ SKR_GUI_API GestureArena {
     void reject_gesture(GestureRecognizer* member);
 
     // getter
-    inline GestureArenaState state() const { return _state; }
+    inline GestureArenaState                state() const { return _state; }
+    inline const Array<GestureRecognizer*>& members() { return _members; }
 
 private:
     // helper functions

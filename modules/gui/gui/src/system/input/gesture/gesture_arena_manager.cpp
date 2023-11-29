@@ -39,4 +39,23 @@ GestureArena* GestureArenaManager::find_arena_or_add(CombinePointerId pointer)
     }
     return result->value;
 }
+
+bool GestureArenaManager::route_event(Event* event)
+{
+    if (auto pointer_event = event->type_cast<PointerEvent>())
+    {
+        auto arena    = find_arena({ pointer_event->pointer_id, static_cast<uint32_t>(pointer_event->button) });
+        bool listened = false;
+        if (arena)
+        {
+            for (auto& member : arena->members())
+            {
+                listened &= member->handle_event(event);
+            }
+        }
+        return listened;
+    }
+
+    return false;
+}
 } // namespace skr::gui
