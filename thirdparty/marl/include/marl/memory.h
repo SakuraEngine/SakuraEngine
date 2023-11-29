@@ -45,6 +45,7 @@ namespace marl { using std::pair; using std::make_pair; }
 namespace marl { using std::array; using std::swap; }
 namespace marl { using std::unique_ptr; }
 namespace marl { using std::numeric_limits; }
+namespace marl { using std::make_shared; using std::shared_ptr; using std::weak_ptr; }
 namespace marl { using std::forward; using std::move; }
 namespace marl { using stdmutex = std::mutex; }
 #endif
@@ -167,7 +168,7 @@ class Allocator {
   // make_shared() returns a new object allocated from the allocator
   // wrapped in a std::shared_ptr that respects the alignment of the type.
   template <typename T, typename... ARGS>
-  inline eastl::shared_ptr<T> make_shared(ARGS&&... args);
+  inline marl::shared_ptr<T> make_shared(ARGS&&... args);
 
  protected:
   Allocator() = default;

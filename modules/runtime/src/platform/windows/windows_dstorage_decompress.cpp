@@ -6,7 +6,6 @@
 #include "SkrRT/async/thread_job.hpp"
 
 #include "platform/windows/windows_dstorage.hpp"
-#include <EASTL/string.h>
 #include <EASTL/vector_map.h>
 
 static void CALLBACK __decompressThreadPoolTask_DirectStorage(

@@ -14,7 +14,7 @@
 #include "SkrRT/misc/log.h"
 
 #include "SkrRT/containers/string.hpp"
-#include <EASTL/vector.h>
+#include "SkrRT/containers_new/array.hpp"
 
 typedef struct SProcess
 {
@@ -23,10 +23,10 @@ typedef struct SProcess
 
 SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments, uint32_t arg_count, const char8_t* stdout_file)
 {
-	eastl::vector<skr::string> Args;
+	skr::Array<skr::string> Args;
 	for (size_t i = 0; i < arg_count; ++i)
 	{
-        Args.emplace_back(arguments[i]);
+        Args.add(arguments[i]);
 	}
     char* Argv[256] = { NULL };
     const auto Argc = Args.size();
