@@ -13,7 +13,6 @@
 #include <EASTL/string.h>
 #include <EASTL/sort.h>
 #include <EASTL/algorithm.h>
-#include <EASTL/numeric.h>
 #include <SkrRT/containers/string.hpp>
 #include "SkrRT/misc/bits.hpp"
 #include "scheduler.hpp"
