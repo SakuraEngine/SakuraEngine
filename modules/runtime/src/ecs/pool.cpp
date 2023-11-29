@@ -1,7 +1,7 @@
 #include "SkrRT/ecs/dual_config.h"
 #include "pool.hpp"
 #include <EASTL/vector.h>
-#include <EASTL/numeric.h>
+#include <numeric>
 #include "SkrProfile/profile.h"
 
 const char* kDualMemoryName = "dual";
@@ -46,7 +46,7 @@ fixed_pool_t::fixed_pool_t(size_t blockSize, size_t blockCount)
     buffer = new char[blockSize * blockCount];
     eastl::vector<size_t> indicies;
     indicies.resize(blockCount);
-    eastl::iota(indicies.begin(), indicies.end(), 0);
+    std::iota(indicies.begin(), indicies.end(), 0);
     for (size_t i = 0; i < blockCount; ++i)
         blocks.try_enqueue_bulk(indicies.data(), blockCount);
 }
@@ -78,7 +78,7 @@ void fixed_pool_t::reset()
     blocks.swap(temp);
     eastl::vector<size_t> indicies;
     indicies.resize(blockCount);
-    eastl::iota(indicies.begin(), indicies.end(), 0);
+    std::iota(indicies.begin(), indicies.end(), 0);
     for (size_t i = 0; i < blockCount; ++i)
         blocks.try_enqueue_bulk(indicies.data(), blockCount);
 }
