@@ -1,7 +1,8 @@
 #pragma once
 #include "SkrRT/async/async_service.h"
 #include "io_request.hpp"
-#include <EASTL/utility.h>
+#include <vector>
+#include <utility>
 
 namespace skr { template <typename Artifact> struct IFuture; struct JobQueue; }
 
@@ -28,8 +29,8 @@ protected:
     virtual bool complete_(IIORequest* rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     virtual bool cancel_(IIORequest* rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 
-    skr::vector<IOBatchProcessorId> batch_processors; 
-    skr::vector<IORequestProcessorId> request_processors; 
+    std::vector<IOBatchProcessorId> batch_processors; 
+    std::vector<IORequestProcessorId> request_processors; 
     SAtomic64 processing_request_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
 private:
@@ -39,7 +40,7 @@ private:
     void phaseCompleteRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 
     IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    skr::vector<eastl::pair<skr::IFuture<bool>*, IORequestId>> finish_futures;
+    std::vector<std::pair<skr::IFuture<bool>*, IORequestId>> finish_futures;
     skr::JobQueue* job_queue = nullptr;
 };
 
