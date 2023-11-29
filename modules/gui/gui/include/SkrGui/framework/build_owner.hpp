@@ -6,6 +6,7 @@
 namespace skr::gui
 {
 class TimerManager;
+class InputManager;
 
 // 三颗控件树的总控制器，管理所有控件树的 update/layout/paint
 // 同时提供环境 InputManager/WindowManager
@@ -25,23 +26,33 @@ struct SKR_GUI_API BuildOwner final {
     // getter
     inline INativeDevice* native_device() const SKR_NOEXCEPT { return _native_device; }
     inline TimerManager*  timer_manager() const SKR_NOEXCEPT { return _timer_manager; }
+    inline InputManager*  input_manager() const SKR_NOEXCEPT { return _input_manager; }
 
     // setter
     inline void set_timer_manager(TimerManager* timer_manager) SKR_NOEXCEPT { _timer_manager = timer_manager; }
+    inline void set_input_manager(InputManager* input_manager) SKR_NOEXCEPT { _input_manager = input_manager; }
+
+    // register
+    void register_native_window(NotNull<RenderNativeWindowElement*> native_window);
+    void unregister_native_window(NotNull<RenderNativeWindowElement*> native_window);
 
     // TODO. build 过程中的 element 回收
-    inline void
-    drop_unmount_element(NotNull<Element*> element) SKR_NOEXCEPT
-    {
-    }
+    inline void drop_unmount_element(NotNull<Element*> element) SKR_NOEXCEPT {}
 
 private:
-    Array<Element*>      _dirty_elements;
+    // dirty array
+    Array<Element*>      _dirty_elements       = {};
     Array<RenderObject*> _nodes_needing_layout = {};
     Array<RenderObject*> _nodes_needing_paint  = {};
 
-    TimerManager* _timer_manager;
+    // service
+    TimerManager* _timer_manager = nullptr;
+    InputManager* _input_manager = nullptr;
 
+    // roots
+    Array<RenderNativeWindowElement*> _native_windows = {};
+
+    // TODO. move it to windows manager
     INativeDevice* _native_device = nullptr;
 };
 } // namespace skr::gui

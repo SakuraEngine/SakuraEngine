@@ -10,7 +10,6 @@
 #include "SkrGui/system/input/event.hpp"
 #include "SkrGui/system/input/pointer_event.hpp"
 #include "SkrGui/system/input/input_manager.hpp"
-#include "SkrGui/system/input/input_context_widget.hpp"
 
 namespace skr::gui
 {
@@ -26,6 +25,9 @@ void Sandbox::init()
 
     // init manager
     _input_manager = SkrNew<InputManager>();
+
+    // setup owner
+    _build_owner->set_input_manager(_input_manager);
 }
 void Sandbox::shutdown()
 {
@@ -53,11 +55,7 @@ void Sandbox::show(const WindowDesc& desc)
     auto root_widget = SNewWidget(RenderNativeWindowWidget)
     {
         p.native_window_render_object = _root_render_object;
-        p.child                       = SNewWidget(InputContextWidget)
-        {
-            p.manager = _input_manager;
-            p.child   = _content;
-        };
+        p.child                       = _content;
     };
 
     // init element

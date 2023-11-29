@@ -26,6 +26,7 @@ SKR_GUI_API RenderNativeWindowElement : public RenderWindowElement {
 
     inline void setup_owner(BuildOwner* owner) SKR_NOEXCEPT { _owner = owner; }
     void        prepare_initial_frame() SKR_NOEXCEPT;
+    void        clean_up_for_close() SKR_NOEXCEPT;
 
     void set_new_child_widget(Widget* widget) SKR_NOEXCEPT;
 
