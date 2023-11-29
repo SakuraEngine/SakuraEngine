@@ -2,12 +2,12 @@
 #include "SkrRT/platform/win/misc.h"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.h"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/containers/vector.hpp"
 #include "SkrRT/containers/concurrent_queue.h"
 
 #include "platform/windows/windows_dstorage.hpp"
-#include "EASTL/algorithm.h"
 
 struct StatusEventArray;
 SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::_this = nullptr;
@@ -463,7 +463,7 @@ void skr_dstorage_queue_trace_submit(SkrDStorageQueueId queue)
         tracer->fence->SetEventOnCompletion(tracer->fence_value, event_handle);
         {
             SMutexLock profile_lock(Q->profile_mutex);
-            Q->profile_tracers.emplace_back(tracer);
+            Q->profile_tracers.add(tracer);
         }
     }
     Q->pQueue->EnqueueSignal(tracer->fence, tracer->fence_value);

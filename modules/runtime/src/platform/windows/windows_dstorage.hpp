@@ -1,16 +1,16 @@
 #pragma once
-#include "SkrRT/platform/memory.h"
-#include "SkrRT/misc/log.h"
+#include "SkrProfile/profile.h"
 #include "SkrRT/platform/dstorage.h"
 #include "SkrRT/platform/shared_library.hpp"
-#include "SkrRT/platform/atomic.h"
-#include "SkrRT/platform/thread.h"
 #include "platform/windows/dstorage.h"
 
-#include "EASTL/vector.h"
-
 // #define TRACY_PROFILE_DIRECT_STORAGE
-#include "SkrProfile/profile.h"
+#ifdef TRACY_PROFILE_DIRECT_STORAGE
+    #include "SkrRT/platform/memory.h"
+    #include "SkrRT/platform/atomic.h"
+    #include "SkrRT/platform/thread.h"
+    #include "SkrRT/containers_new/array.hpp"
+#endif
 
 struct SkrWindowsDStorageInstance : public SkrDStorageInstance
 {
@@ -48,7 +48,7 @@ struct DStorageQueueWindows : public SkrDStorageQueue {
         uint32_t fence_value = 0;
         SAtomicU32 finished;
     };
-    eastl::vector<ProfileTracer*> profile_tracers;
+    skr::Array<ProfileTracer*> profile_tracers;
 #endif
 
     ~DStorageQueueWindows() SKR_NOEXCEPT {

@@ -4,7 +4,7 @@
 #include "SkrRT/misc/log/log_base.hpp"
 #include "SkrRT/containers/string.hpp"
 
-#include <EASTL/array.h>
+#include <array>
 
 namespace skr {
 namespace log {
@@ -146,9 +146,9 @@ protected:
 
     skr::string calculated_format_ = u8"";
     uint32_t _args_n = 0;
-    eastl::array<FormatArg, kAttributeCount> _args;
-    eastl::array<int64_t, kAttributeCount> order_index_;
-    eastl::array<bool, kAttributeCount> is_set_in_pattern_;
+    std::array<FormatArg, kAttributeCount> _args;
+    std::array<int64_t, kAttributeCount> order_index_;
+    std::array<bool, kAttributeCount> is_set_in_pattern_;
 
     skr::string formatted_string_ = u8"";
 };

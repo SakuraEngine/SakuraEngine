@@ -3,19 +3,23 @@
 #include "SkrRT/misc/log/logger.hpp"
 #include "SkrRT/misc/log/log_pattern.hpp"
 #include "SkrRT/containers/hashmap.hpp"
-#include <EASTL/string.h>
 #include "SkrProfile/profile.h"
+
+#include <array>
+// TODO: REMOVE THIS
+#include <string>
 
 namespace skr::log
 {
 
+using U8String = std::basic_string<char8_t, std::char_traits<char8_t>, skr_stl_allocator<char8_t>>;
 struct named_arg_info {
-    eastl::u8string name;
+    U8String name;
     int64_t id;
 };
 
 /***/
-LogPattern::Attribute attribute_from_string(eastl::u8string const& attribute_name)
+LogPattern::Attribute attribute_from_string(U8String const& attribute_name)
 {
     static skr::flat_hash_map<skr::string, LogPattern::Attribute, skr::Hash<skr::string>> const attr_map = {
         { u8"timestamp", LogPattern::Attribute::timestamp },
@@ -44,16 +48,16 @@ LogPattern::Attribute attribute_from_string(eastl::u8string const& attribute_nam
 }
 
 template <size_t, size_t>
-constexpr void _store_named_args(eastl::array<named_arg_info, kAttributeCount>&)
+constexpr void _store_named_args(std::array<named_arg_info, kAttributeCount>&)
 {
 }
 
 /***/
 template <size_t Idx, size_t NamedIdx, typename Arg, typename... Args>
-constexpr void _store_named_args(eastl::array<named_arg_info, kAttributeCount>& named_args_store,
+constexpr void _store_named_args(std::array<named_arg_info, kAttributeCount>& named_args_store,
     const Arg& arg, const Args&... args)
 {
-    named_args_store[NamedIdx] = { eastl::u8string(arg), Idx };
+    named_args_store[NamedIdx] = { U8String(arg), Idx };
     _store_named_args<Idx + 1, NamedIdx + 1>(named_args_store, args...);
 }
 
@@ -78,54 +82,54 @@ constexpr void _store_named_args(eastl::array<named_arg_info, kAttributeCount>& 
  * @return processed pattern
  */
 template <typename... Args>
-[[nodiscard]] eastl::pair<skr::string, eastl::array<int64_t, kAttributeCount>> _generate_fmt_format_string(
-    eastl::array<bool, kAttributeCount>& is_set_in_pattern, uint32_t& args_n, eastl::u8string pattern_string,
+[[nodiscard]] std::pair<skr::string, std::array<int64_t, kAttributeCount>> _generate_fmt_format_string(
+    std::array<bool, kAttributeCount>& is_set_in_pattern, uint32_t& args_n, U8String pattern_string,
     Args const&... args)
 {
     // Attribute enum and the args we are passing here must be in sync
     static_assert(kAttributeCount == sizeof...(Args));
 
-    eastl::array<int64_t, kAttributeCount> order_index{};
+    std::array<int64_t, kAttributeCount> order_index{};
     order_index.fill(-1);
 
-    eastl::array<named_arg_info, kAttributeCount> named_args{};
+    std::array<named_arg_info, kAttributeCount> named_args{};
     _store_named_args<0, 0>(named_args, args...);
     args_n = 0;
 
     // we will replace all %(....) with {} to construct a string to pass to fmt library
     size_t arg_identifier_pos = pattern_string.find_first_of('%');
-    while (arg_identifier_pos != eastl::u8string::npos)
+    while (arg_identifier_pos != U8String::npos)
     {
         size_t open_paren_pos = pattern_string.find_first_of('(', arg_identifier_pos);
-        if (open_paren_pos != eastl::u8string::npos && (open_paren_pos - arg_identifier_pos) == 1)
+        if (open_paren_pos != U8String::npos && (open_paren_pos - arg_identifier_pos) == 1)
         {
             // if we found '%(' we have a matching pattern and we now need to get the closed paren
             size_t closed_paren_pos = pattern_string.find_first_of(')', open_paren_pos);
 
-            if (closed_paren_pos == eastl::u8string::npos)
+            if (closed_paren_pos == U8String::npos)
             {
                 SKR_ASSERT(0 && "Invalid format pattern");
             }
 
             // We have everything, get the substring, this time including '%( )'
-            eastl::u8string attr = pattern_string.substr(arg_identifier_pos, (closed_paren_pos + 1) - arg_identifier_pos);
+            U8String attr = pattern_string.substr(arg_identifier_pos, (closed_paren_pos + 1) - arg_identifier_pos);
 
             // find any user format specifiers
             size_t const pos = attr.find(':');
-            eastl::u8string attr_name;
+            U8String attr_name;
 
-            if (pos != eastl::u8string::npos)
+            if (pos != U8String::npos)
             {
                 // we found user format specifiers that we want to keep.
                 // e.g. %(fileline:<32)
 
                 // Get only the format specifier
                 // e.g. :<32
-                eastl::u8string custom_format_specifier = attr.substr(pos);
+                U8String custom_format_specifier = attr.substr(pos);
                 custom_format_specifier.pop_back(); // remove the ")"
 
                 // replace with the pattern with the correct value
-                eastl::u8string value;
+                U8String value;
                 value += u8"{";
                 value += custom_format_specifier;
                 value += u8"}";
@@ -180,7 +184,7 @@ template <typename... Args>
     }
 
     skr::string pattern = pattern_string.c_str();
-    return eastl::make_pair(pattern, order_index);
+    return std::make_pair(pattern, order_index);
 }
 
 void LogPattern::_initialize() SKR_NOEXCEPT
@@ -238,7 +242,7 @@ struct Convert {
 };
 
 template <size_t... N>
-skr::string format_NArgs(eastl::index_sequence<N...>, const skr::string_view& fmt, const eastl::array<FormatArg, kAttributeCount>& args)
+skr::string format_NArgs(std::index_sequence<N...>, const skr::string_view& fmt, const std::array<FormatArg, kAttributeCount>& args)
 {
     return skr::format(fmt, args[N]...);
 }
@@ -352,7 +356,7 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
 
     {
         SkrZoneScopedN("LogPattern::FormatNArgs");
-        auto sequence = eastl::make_index_sequence<kAttributeCount>();
+        auto sequence = std::make_index_sequence<kAttributeCount>();
         formatted_string_ = format_NArgs(sequence, calculated_format_.view(), _args);
     }
 

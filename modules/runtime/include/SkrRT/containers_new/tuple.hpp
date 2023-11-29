@@ -1,11 +1,10 @@
 #pragma once
-#include <EASTL/tuple.h>
+#include <tuple>
 
 namespace skr
 {
-using eastl::tuple;
-using eastl::tuple_size_v;
-using eastl::tuple_element_t;
-using eastl::const_tuple_element_t;
-using eastl::get;
+using std::tuple;
+using std::tuple_size_v;
+using std::tuple_element_t;
+using std::get;
 } // namespace skr
