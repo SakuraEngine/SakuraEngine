@@ -3,7 +3,6 @@
 #include "SkrRT/containers/span.hpp"
 #include "SkrRT/containers_new/span.hpp"
 #include "SkrRT/containers/string.hpp"
-#include "EASTL/vector.h"
 
 namespace skr
 {

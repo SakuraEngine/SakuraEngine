@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/misc/assert.h"
+#include "SkrBase/misc/debug.h"
 #include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/misc/integer_tools.hpp"
 

@@ -11,8 +11,8 @@
 #include "common_utils.h"
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/hashmap.hpp>
-#include <EASTL/vector.h>
-#include <EASTL/functional.h>
+#include <SkrRT/containers_new/array.hpp>
+#include <functional>
 
 // Runtime Table
 struct CGPURuntimeTable {
@@ -28,7 +28,7 @@ struct CGPURuntimeTable {
             };
         };
         CGPUQueueId queue;
-        bool operator==(const CreatedQueue& rhs)
+        bool operator==(const CreatedQueue& rhs) const
         {
             return device == rhs.device && type_index == rhs.type_index;
         }
@@ -39,9 +39,7 @@ struct CGPURuntimeTable {
         to_find.device = device;
         to_find.type = type;
         to_find.index = index;
-        const auto& found = eastl::find(
-        created_queues.begin(), created_queues.end(), to_find);
-        if (found != created_queues.end())
+        if (auto found = created_queues.find(to_find);found.data)
         {
             return found->queue;
         }
@@ -54,7 +52,7 @@ struct CGPURuntimeTable {
         new_queue.type = type;
         new_queue.index = index;
         new_queue.queue = queue;
-        created_queues.push_back(new_queue);
+        created_queues.add(new_queue);
     }
     void early_sweep()
     {
@@ -76,11 +74,11 @@ struct CGPURuntimeTable {
             }
         }
     }
-    eastl::vector<CreatedQueue> created_queues;
+    skr::Array<CreatedQueue> created_queues;
     // TODO: replace with skr::hash_map
     skr::flat_hash_map<skr::string, void*, skr::Hash<skr::string>> custom_data_map;
-    skr::flat_hash_map<skr::string, eastl::function<void()>, skr::Hash<skr::string>> custom_sweep_callbacks;
-    skr::flat_hash_map<skr::string, eastl::function<void()>, skr::Hash<skr::string>> custom_early_sweep_callbacks;
+    skr::flat_hash_map<skr::string, std::function<void()>, skr::Hash<skr::string>> custom_sweep_callbacks;
+    skr::flat_hash_map<skr::string, std::function<void()>, skr::Hash<skr::string>> custom_early_sweep_callbacks;
 };
 
 struct CGPURuntimeTable* cgpu_create_runtime_table()
