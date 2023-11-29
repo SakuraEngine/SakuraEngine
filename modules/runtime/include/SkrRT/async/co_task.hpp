@@ -6,7 +6,6 @@
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/containers/vector.hpp"
-#include <EASTL/array.h>
 
 #if __cpp_lib_coroutine
     #include <coroutine>

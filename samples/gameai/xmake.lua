@@ -1,0 +1,5 @@
+target("GameAICoTest")
+    set_kind("binary")
+    set_group("04.examples/gameai")
+    public_dependency("SkrGameAICo", engine_version)
+    add_files("co/**.cpp")
