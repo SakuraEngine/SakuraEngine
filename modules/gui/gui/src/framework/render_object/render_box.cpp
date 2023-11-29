@@ -71,19 +71,4 @@ void RenderBox::perform_resize() SKR_NOEXCEPT
     if (!size().is_finite()) { SKR_GUI_LOG_ERROR(u8"Box that [is_sized_by_parent() == true] must return finite size"); }
 }
 
-// helper function
-bool RenderBox::_default_hit_test(HitTestResult* result, Offsetf local_position, HitTestFuncRef hit_test_self, HitTestFuncRef hit_test_children) const
-{
-    if (_size.contains(local_position))
-    {
-        if ((hit_test_children && hit_test_children(result, local_position)) ||
-            (hit_test_self && hit_test_self(result, local_position)))
-        {
-            result->add({ this });
-            return true;
-        }
-    }
-    return false;
-}
-
 } // namespace skr::gui
