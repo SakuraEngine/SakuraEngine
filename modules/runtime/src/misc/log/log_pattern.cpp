@@ -17,7 +17,7 @@ struct named_arg_info {
 /***/
 LogPattern::Attribute attribute_from_string(eastl::u8string const& attribute_name)
 {
-    static skr::flat_hash_map<skr::string, LogPattern::Attribute, skr::hash<skr::string>> const attr_map = {
+    static skr::flat_hash_map<skr::string, LogPattern::Attribute, skr::Hash<skr::string>> const attr_map = {
         { u8"timestamp", LogPattern::Attribute::timestamp },
         { u8"level_id", LogPattern::Attribute::level_id },
         { u8"level_name", LogPattern::Attribute::level_name },

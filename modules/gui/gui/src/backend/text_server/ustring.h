@@ -35,7 +35,7 @@
 
 #include "backend/text_server/char_utils.h"
 #include "backend/text_server/cowdata.h"
-#include "backend/text_server/containers.h"
+#include "backend/text_server/godot_containers.hpp"
 
 namespace godot
 {

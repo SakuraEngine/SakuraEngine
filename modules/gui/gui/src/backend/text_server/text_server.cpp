@@ -29,7 +29,7 @@
 /**************************************************************************/
 
 #include "backend/text_server/text_server.h"
-#include "backend/text_server/containers.h"
+#include "backend/text_server/godot_containers.hpp"
 #include <cmath>
 
 namespace godot

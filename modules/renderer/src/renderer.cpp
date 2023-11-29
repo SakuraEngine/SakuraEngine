@@ -176,7 +176,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
     SViewportManager* viewport_manager = nullptr;
 
     template<typename T>
-    using FlatStringMap = skr::flat_hash_map<skr::string, T, skr::hash<skr::string>>;
+    using FlatStringMap = skr::flat_hash_map<skr::string, T, skr::Hash<skr::string>>;
 
     eastl::vector<IPrimitiveRenderPass*> passes;
     FlatStringMap<IPrimitiveRenderPass*> passes_map;

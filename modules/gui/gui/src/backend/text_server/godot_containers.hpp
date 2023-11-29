@@ -3,17 +3,8 @@
 #include "backend/text_server/memory.h"
 #include "backend/text_server/sort_array.h"
 
-#include "SkrBase/misc/hash.h"
-
-#include <SkrRT/containers/vector.hpp>
-#include <EASTL/set.h>
-#include <EASTL/map.h>
-#include <EASTL/list.h>
-#include <SkrRT/containers/hashmap.hpp>
-#include <EASTL/shared_ptr.h>
-#include <EASTL/span.h>
-
-#include "SkrRT/containers/sptr.hpp"
+#include <map>
+#include <list>
 
 #ifdef DEBUG_ENABLED
     #define SORT_ARRAY_VALIDATE_ENABLED true
@@ -24,7 +15,7 @@
 namespace godot
 {
 template <class K>
-struct Hasher : public eastl::hash<K> {
+struct Hasher : public skr::Hash<K> {
 };
 
 template <class K>
@@ -32,33 +23,33 @@ struct Comparator {
 };
 
 template <class T>
-class Span : public ::eastl::span<T>
+class Span : public ::skr::Span<T>
 {
 public:
     Span() SKR_NOEXCEPT = default;
 
     template <typename U>
-    Span(const skr::vector<U>& other) SKR_NOEXCEPT
-        : eastl::span<T>(other.data(), other.size())
+    Span(const skr::Array<U>& other) SKR_NOEXCEPT
+        : skr::Span<T>(other.data(), other.size())
     {
     }
 
     template <typename U>
     Span(const U* ptr, size_t size) SKR_NOEXCEPT
-        : eastl::span<T>(ptr, size)
+        : skr::Span<T>(ptr, size)
     {
     }
 };
 
 template <class T>
-class Vector : public skr::vector<T>
+class Vector : public skr::Array<T>
 {
 public:
     Vector()                       = default;
     Vector(const Vector<T>& other) = default;
     template <typename U>
     Vector(const Span<U>& other)
-        : skr::vector<T>(other)
+        : skr::Array<T>(other)
     {
     }
     Vector& operator=(const Vector<T>& other) = default;
@@ -66,7 +57,7 @@ public:
     inline Vector& operator=(const Span<U>& other)
     {
         this->clear();
-        skr::vector<T>::insert(this->end(), other.begin(), other.end());
+        skr::Array<T>::insert(this->end(), other.begin(), other.end());
         return *this;
     }
 
@@ -86,13 +77,9 @@ public:
 
     bool has(const T& key) const
     {
-        return eastl::find(this->begin(), this->end(), key) != this->end();
+        return this->find(key);
     }
     void remove(size_t inPos)
-    {
-        this->erase(this->begin() + inPos);
-    }
-    void remove_at(size_t inPos)
     {
         this->erase(this->begin() + inPos);
     }
@@ -118,15 +105,24 @@ public:
     }
     void insert(size_t pos, const T& v)
     {
-        skr::vector<T>::insert(this->begin() + pos, v);
+        skr::Array<T>::add_at(pos, v);
+    }
+    void resize(size_t N)
+    {
+        skr::Array<T>::resize_default(N);
     }
     void append(const T& v)
     {
-        skr::vector<T>::emplace_back(v);
+        skr::Array<T>::add(v);
+    }
+    void push_back(const T& v)
+    {
+        skr::Array<T>::add(v);
     }
     void append_array(const Vector<T>& other)
     {
-        skr::vector<T>::insert(this->end(), other.begin(), other.end());
+        auto& _this = *this;
+        _this += other;
     }
 };
 
@@ -149,17 +145,17 @@ public:
 };
 
 template <class T>
-class Set : public eastl::set<T>
+class Set : public skr::USet<T>
 {
 public:
     bool has(const T& key) const
     {
-        return this->find(key) != this->end();
+        return this->contain(key);
     }
 };
 
 template <class K, class T>
-class Map : public eastl::map<K, T>
+class Map : public std::map<K, T>
 {
 public:
     bool is_empty() const
@@ -243,7 +239,7 @@ public:
 };
 
 template <class T>
-using List = eastl::list<T>;
+using List = std::list<T>;
 
 struct Variant {
     enum Type
@@ -262,11 +258,12 @@ struct Variant {
         return data != p_other.data;
     }
 };
+
 template <>
 struct Hasher<Variant> {
     uint32_t operator()(const Variant& p_key) const
     {
-        return eastl::hash<void*>()(p_key.data);
+        return std::hash<void*>()(p_key.data);
     }
 };
 

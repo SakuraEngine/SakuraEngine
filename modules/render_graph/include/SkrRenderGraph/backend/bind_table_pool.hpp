@@ -33,7 +33,7 @@ protected:
         uint32_t cursor = 0;
     };
     const CGPURootSignatureId root_sig;
-    skr::flat_hash_map<skr::string, BindTablesBlock, skr::hash<skr::string>> pool;
+    skr::flat_hash_map<skr::string, BindTablesBlock, skr::Hash<skr::string>> pool;
 };
 
 // TODO: lifetime management (GC)

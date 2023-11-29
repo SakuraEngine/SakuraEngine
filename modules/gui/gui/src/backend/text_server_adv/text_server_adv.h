@@ -221,7 +221,7 @@ class TextServerAdvanced : public TextServer
             }
             if (p_h <= (texture_h - y) && p_w <= texture_w)
             {
-                List<Shelf>::value_type& E = shelves.push_back();
+                List<Shelf>::value_type& E = shelves.emplace_back();
                 E                          = Shelf(0, y, texture_w, p_h);
                 return E.alloc_shelf(p_id, p_w, p_h);
             }

@@ -95,13 +95,13 @@ private:
     skr::string mainModuleName;
     // ModuleGraphImpl moduleDependecyGraph;
     skr::DependencyGraph* dependency_graph = nullptr;
-    skr::flat_hash_set<skr::string, skr::hash<skr::string>> hotfixTraversalSet;
-    skr::flat_hash_map<skr::string, ModuleContext, skr::hash<skr::string>> hotfixModules;
-    skr::flat_hash_map<skr::string, ModuleProperty*, skr::hash<skr::string>> nodeMap;
-    skr::flat_hash_map<skr::string, module_registerer, skr::hash<skr::string>> initializeMap;
-    skr::flat_hash_map<skr::string, eastl::unique_ptr<IModule>, skr::hash<skr::string>> modulesMap;
-    skr::flat_hash_map<skr::string, eastl::vector<skr::string>, skr::hash<skr::string>> subsystemIdMap;
-    skr::flat_hash_map<skr::string, eastl::vector<ModuleSubsystemBase::CreatePFN>, skr::hash<skr::string>> subsystemCreateMap;
+    skr::flat_hash_set<skr::string, skr::Hash<skr::string>> hotfixTraversalSet;
+    skr::flat_hash_map<skr::string, ModuleContext, skr::Hash<skr::string>> hotfixModules;
+    skr::flat_hash_map<skr::string, ModuleProperty*, skr::Hash<skr::string>> nodeMap;
+    skr::flat_hash_map<skr::string, module_registerer, skr::Hash<skr::string>> initializeMap;
+    skr::flat_hash_map<skr::string, eastl::unique_ptr<IModule>, skr::Hash<skr::string>> modulesMap;
+    skr::flat_hash_map<skr::string, eastl::vector<skr::string>, skr::Hash<skr::string>> subsystemIdMap;
+    skr::flat_hash_map<skr::string, eastl::vector<ModuleSubsystemBase::CreatePFN>, skr::Hash<skr::string>> subsystemCreateMap;
 
     SharedLibrary processSymbolTable;
 };
