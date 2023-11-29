@@ -10,6 +10,7 @@
 #include "SkrGui/system/input/event.hpp"
 #include "SkrGui/system/input/pointer_event.hpp"
 #include "SkrGui/system/input/input_manager.hpp"
+#include "SkrGui/framework/timer_manager.hpp"
 
 namespace skr::gui
 {
@@ -24,9 +25,11 @@ void Sandbox::init()
     _build_owner = SkrNew<BuildOwner>(_device);
 
     // init manager
+    _timer_manager = SkrNew<TimerManager>();
     _input_manager = SkrNew<InputManager>();
 
     // setup owner
+    _build_owner->set_timer_manager(_timer_manager);
     _build_owner->set_input_manager(_input_manager);
 }
 void Sandbox::shutdown()
@@ -68,8 +71,10 @@ void Sandbox::show(const WindowDesc& desc)
     _root_layer = _root_render_object->layer()->type_cast_fast<NativeWindowLayer>();
 }
 
-void Sandbox::update()
+void Sandbox::update(uint32_t time_stamp)
 {
+    _timer_manager->update(time_stamp);
+
     _build_owner->flush_build();
 }
 void Sandbox::layout()
