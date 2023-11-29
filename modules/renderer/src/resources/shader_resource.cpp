@@ -88,7 +88,7 @@ uint32_t skr_shader_option_sequence_t::find_value_index(skr::string_view in_key,
     return find_value_index(key_index, in_value);
 }
 
-skr_stable_shader_hash_t skr_shader_option_sequence_t::calculate_stable_hash(const skr_shader_option_sequence_t& seq, skr::span<uint32_t> indices)
+skr_stable_shader_hash_t skr_shader_option_sequence_t::calculate_stable_hash(const skr_shader_option_sequence_t& seq, skr::Span<uint32_t> indices)
 {
     skr::string signatureString;
     option_utils::stringfy(signatureString, seq, indices);

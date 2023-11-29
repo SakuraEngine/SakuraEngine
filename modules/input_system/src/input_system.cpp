@@ -1,11 +1,9 @@
+#include "SkrBase/misc/debug.h" 
+#include "SkrRT/misc/log.h"
+#include "SkrRT/containers_new/umap.hpp"
 #include "SkrInputSystem/input_system.hpp"
 #include "SkrInputSystem/input_modifier.hpp"
 #include "./input_action_impl.hpp"
-#include "SkrBase/misc/debug.h" 
-#include "SkrRT/misc/log.h"
-
-#include <EASTL/map.h>
-#include <EASTL/vector_map.h>
 
 namespace skr {
 namespace input {
@@ -31,7 +29,7 @@ struct InputSystemImpl : public InputSystem
     // create
     [[nodiscard]] SObjectPtr<InputAction> create_input_action(EValueType type) SKR_NOEXCEPT final;
 
-    eastl::map<int32_t, SObjectPtr<InputMappingContext>> contexts;
+    skr::UMap<int32_t, SObjectPtr<InputMappingContext>> contexts;
     struct RawInput
     {
         RawInput() SKR_NOEXCEPT = default;
@@ -44,7 +42,7 @@ struct InputSystemImpl : public InputSystem
         InputLayer* layer = nullptr;
         InputReading* reading = nullptr;
     };
-    eastl::vector_map<EInputKind, eastl::vector<RawInput>> inputs;
+    skr::UMap<EInputKind, eastl::vector<RawInput>> inputs;
     skr::vector<SObjectPtr<InputAction>> actions;
 };
 
@@ -65,23 +63,23 @@ void InputSystem::Destroy(InputSystem* system) SKR_NOEXCEPT
 
 InputSystemImpl::InputSystemImpl() SKR_NOEXCEPT
 {
-    inputs[InputKindControllerAxis] = {};
-    inputs[InputKindControllerButton] = {};
-    inputs[InputKindControllerSwitch] = {};
-    inputs[InputKindController] = {};
+    inputs.add_default(InputKindControllerAxis);
+    inputs.add_default(InputKindControllerButton);
+    inputs.add_default(InputKindControllerSwitch);
+    inputs.add_default(InputKindController);
 
-    inputs[InputKindKeyboard] = {};
-    inputs[InputKindMouse] = {};
-    inputs[InputKindGamepad] = {};
+    inputs.add_default(InputKindKeyboard);
+    inputs.add_default(InputKindMouse); 
+    inputs.add_default(InputKindGamepad);
 
-    inputs[InputKindTouch] = {};
-    inputs[InputKindMotion] = {};
+    inputs.add_default(InputKindTouch);
+    inputs.add_default(InputKindMotion);
 
-    inputs[InputKindArcadeStick] = {};
-    inputs[InputKindFlightStick] = {};
+    inputs.add_default(InputKindArcadeStick);
+    inputs.add_default(InputKindFlightStick);
 
-    inputs[InputKindRacingWheel] = {};
-    inputs[InputKindUiNavigation] = {};
+    inputs.add_default(InputKindRacingWheel);
+    inputs.add_default(InputKindUiNavigation);
 }
 
 void InputSystemImpl::update(float delta) SKR_NOEXCEPT
@@ -158,9 +156,9 @@ void InputSystemImpl::remove_mapping_context(SObjectPtr<InputMappingContext> ctx
 {
     for (auto it = contexts.begin(); it != contexts.end(); ++it)
     {
-        if (it->second == ctx)
+        if (it->value == ctx)
         {
-            contexts.erase(it);
+            contexts.remove(it->key);
             break;
         }
     }
@@ -168,13 +166,13 @@ void InputSystemImpl::remove_mapping_context(SObjectPtr<InputMappingContext> ctx
 
 SObjectPtr<InputMappingContext> InputSystemImpl::add_mapping_context(SObjectPtr<InputMappingContext> ctx, int32_t priority, const InputContextOptions& opts) SKR_NOEXCEPT
 {
-    auto it = contexts.emplace(priority, ctx);
-    if (!it.second)
+    auto it = contexts.add(priority, ctx);
+    if (it.already_exist)
     {
         SKR_LOG_ERROR(u8"InputSystemImpl::add_mapping_context: priority already exists");
-        SKR_ASSERT(it.second);
+        SKR_ASSERT(!it.already_exist);
     }
-    return it.first->second;
+    return it->value;
 }
 
 void InputSystemImpl::remove_all_contexts() SKR_NOEXCEPT

@@ -1,9 +1,7 @@
 #pragma once
 #include "SkrRT/misc/types.h"
-#include "SkrRT/io/vram_io.hpp"
 #include "SkrRenderer/primitive_draw.h"
 #include "l2d_model_resource.h"
-#include <EASTL/vector_map.h>
 
 typedef struct skr_live2d_clipping_manager_t skr_live2d_clipping_manager_t;
 typedef struct skr_live2d_clipping_manager_t* skr_live2d_clipping_manager_id;
@@ -47,7 +45,10 @@ SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API void
 skr_live2d_render_model_free(skr_live2d_render_model_id render_model);
 
 #ifdef __cplusplus
-#include <EASTL/vector.h>
+#include "SkrRT/io/vram_io.hpp"
+#include "SkrRT/containers_new/umap.hpp"
+#include "SkrRT/containers_new/array.hpp"
+
 struct skr_live2d_render_model_t {
     virtual ~skr_live2d_render_model_t() = default;
     skr_live2d_model_resource_id model_resource_id;
@@ -56,14 +57,14 @@ struct skr_live2d_render_model_t {
     // clipping 
     skr_live2d_clipping_manager_id clipping_manager;
     // pos-uv-pos-uv...
-    eastl::vector<CGPUTextureId> textures;
-    eastl::vector<CGPUTextureViewId> texture_views;
-    eastl::vector<skr::renderer::VertexBufferView> vertex_buffer_views;
-    eastl::vector<skr::renderer::IndexBufferView> index_buffer_views;
-    eastl::vector<skr::renderer::PrimitiveCommand> primitive_commands;
+    skr::Array<CGPUTextureId> textures;
+    skr::Array<CGPUTextureViewId> texture_views;
+    skr::Array<skr::renderer::VertexBufferView> vertex_buffer_views;
+    skr::Array<skr::renderer::IndexBufferView> index_buffer_views;
+    skr::Array<skr::renderer::PrimitiveCommand> primitive_commands;
     // bind table cache
-    eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> bind_tables;
-    eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;
+    skr::UMap<CGPUTextureViewId, CGPUXBindTableId> bind_tables;
+    skr::UMap<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;
 };
 
 #include "SkrRT/ecs/dual.h"

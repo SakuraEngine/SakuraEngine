@@ -8,6 +8,7 @@
     #include "SkrRT/containers/variant.hpp"
     #include "SkrRT/containers/string.hpp"
     #include "SkrRT/containers/vector.hpp"
+    #include "SkrRT/containers_new/array.hpp"
     #include "SkrRT/platform/guid.hpp"
     #include "SkrRT/rttr/rttr_traits.hpp"
 
@@ -167,6 +168,7 @@ struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
     }
 };
 
+// TODO: REMOVE THIS
 template <class V, class Allocator>
 struct ReadTrait<skr::vector<V, Allocator>> {
     static error_code Read(simdjson::ondemand::value&& json, skr::vector<V, Allocator>& vec)
@@ -184,6 +186,28 @@ struct ReadTrait<skr::vector<V, Allocator>> {
             if (error != SUCCESS)
                 return error;
             vec.push_back(std::move(v));
+        }
+        return SUCCESS;
+    }
+};
+
+template <class V>
+struct ReadTrait<skr::Array<V>> {
+    static error_code Read(simdjson::ondemand::value&& json, skr::Array<V>& vec)
+    {
+        auto array = json.get_array();
+        if (array.error() != simdjson::SUCCESS)
+            return (error_code)array.error();
+        vec.reserve(array.value_unsafe().count_elements().value_unsafe());
+        for (auto value : array.value_unsafe())
+        {
+            if (value.error() != simdjson::SUCCESS)
+                return (error_code)value.error();
+            V          v;
+            error_code error = skr::json::Read<V>(std::move(value).value_unsafe(), v);
+            if (error != SUCCESS)
+                return error;
+            vec.add(std::move(v));
         }
         return SUCCESS;
     }

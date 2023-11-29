@@ -4,7 +4,7 @@
 #include "SkrRT/async/async_service.h"
 #ifdef __cplusplus
 #include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers_new/span.hpp"
 #endif
 
 #define SKR_IO_SERVICE_MAX_TASK_COUNT 32
@@ -138,7 +138,7 @@ struct SKR_RUNTIME_API IIOBatch : public skr::SInterface
 {
     virtual void reserve(uint64_t size) SKR_NOEXCEPT = 0;
     virtual IOResultId add_request(IORequestId request, IOFuture* future) SKR_NOEXCEPT = 0;
-    virtual skr::span<IORequestId> get_requests() SKR_NOEXCEPT = 0;
+    virtual skr::Span<IORequestId> get_requests() SKR_NOEXCEPT = 0;
 
     virtual void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT = 0;
     virtual SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT = 0;

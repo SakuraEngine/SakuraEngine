@@ -3,17 +3,18 @@
 #include "SkrLive2D/skr_live2d.h"
 #include "CubismFramework.hpp"
 
-#include <EASTL/fixed_string.h>
+#include <SkrRT/containers_new/array.hpp>
 
 /**	Log out func register to cubism */
 static void Cubism_Log(const char* message)
 {
-    eastl::fixed_string<char, 32> buf;
-    buf = message;
+    static thread_local skr::Array<char> buf;
+    buf.clear();
+    buf.assign(message, ::strlen(message) + 1);
     // replace the last '\n' with '\0'
     if (buf[buf.size() - 1] == '\n')
         buf[buf.size() - 1] = '\0';
-	SKR_LOG_TRACE(u8"[Live2D] %s", buf.c_str());
+	SKR_LOG_TRACE(u8"[Live2D] %s", buf.data());
 }
 
 class CubismFrameWorkAllocator : public Csm::ICubismAllocator

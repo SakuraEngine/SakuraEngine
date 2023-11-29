@@ -5,7 +5,7 @@
 #include "cgpu/cgpux.h"
 
 #ifdef __cplusplus
-#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers_new/span.hpp"
 extern "C" {
 #endif
 
@@ -62,7 +62,7 @@ using VertexBufferView = skr_vertex_buffer_view_t;
 using IndexBufferView = skr_index_buffer_view_t;
 
 struct PrimitiveCommand {
-    skr::span<const skr_vertex_buffer_view_t> vbvs;
+    skr::Span<const skr_vertex_buffer_view_t> vbvs;
     const skr_index_buffer_view_t* ibv;
     uint32_t primitive_index;
     uint32_t material_index;

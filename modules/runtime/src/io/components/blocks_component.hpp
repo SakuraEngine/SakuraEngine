@@ -16,19 +16,19 @@ struct BlocksComponent : public IORequestComponent
 {
     BlocksComponent(IIORequest* const request) SKR_NOEXCEPT;
     
-    skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT 
+    skr::Span<skr_io_block_t> get_blocks() SKR_NOEXCEPT 
     { 
-        return blocks;
+        return {blocks.data(), blocks.size()};
     }
 
     void add_block(const skr_io_block_t& block) SKR_NOEXCEPT 
     {
-        blocks.emplace_back(block);
+        blocks.add(block);
     }
     
     void reset_blocks() SKR_NOEXCEPT { blocks.clear(); }
     
-    eastl::fixed_vector<skr_io_block_t, 1> blocks;
+    skr::Array<skr_io_block_t> blocks;
 };
 
 template <>
@@ -40,7 +40,7 @@ struct CompressedBlocksComponent : public IORequestComponent
 {
     CompressedBlocksComponent(IIORequest* const request) SKR_NOEXCEPT;
     
-    skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT 
+    skr::Span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT 
     { 
         SKR_UNIMPLEMENTED_FUNCTION();
         return {}; 

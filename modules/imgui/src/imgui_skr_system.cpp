@@ -1,8 +1,7 @@
 #include "SkrImGui/skr_imgui.config.h"
-#include <EASTL/optional.h>
-#include <EASTL/vector.h>
-#include <EASTL/fixed_vector.h>
+#include <SkrRT/containers/lite.hpp>
 #include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers_new/array.hpp>
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/input.h"
 #include "SkrRT/platform/system.h"
@@ -269,11 +268,12 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
         main_viewport->PlatformHandleRaw = skr_window_get_native_handle(window);
 
         // update monitors
-        eastl::fixed_vector<SMonitorHandle, 4> skr_monitors; // 4 inline monitors that I think is enough for non-allocation.
+        static thread_local skr::Array<SMonitorHandle> skr_monitors; 
+        skr_monitors.clear();
         platform_io.Monitors.resize(0);
         uint32_t monitor_count = 0;
         skr_get_all_monitors(&monitor_count, nullptr);
-        skr_monitors.resize(monitor_count);
+        skr_monitors.resize_default(monitor_count);
         skr_get_all_monitors(&monitor_count, skr_monitors.data());
         platform_io.Monitors.resize(monitor_count);
         for (uint32_t i = 0; i < monitor_count; i++)
