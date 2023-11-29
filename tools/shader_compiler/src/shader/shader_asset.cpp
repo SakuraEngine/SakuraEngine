@@ -1,5 +1,7 @@
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/parallel_for.hpp"
 #include "SkrRT/misc/cartesian_product.hpp"
+#include "SkrRT/serde/json/writer.h"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
@@ -158,7 +160,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         for (const auto dyn_hash : dynamic_stable_hashes)
         {
             outResource.option_variants[dyn_hash] = {};
-            outResource.option_variants[dyn_hash].resize(byteCodeFormats.size());
+            outResource.option_variants[dyn_hash].resize_default(byteCodeFormats.size());
         }
         SkrZoneScopedN("StaticPermutations::Compile");
 
@@ -288,22 +290,22 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         // add static seq
         for (auto&& static_switch : flat_static_options)
         {
-            switches_blob.types.emplace_back(static_switch.type);
-            switches_blob.keys.emplace_back(static_switch.key);
-            auto& values = switches_blob.values.emplace_back();
+            switches_blob.types.add(static_switch.type);
+            switches_blob.keys.add(static_switch.key);
+            auto& values = *switches_blob.values.add_default();
             for (const auto& value : static_switch.value_selections)
             {
-                values.emplace_back(value);
+                values.add(value);
             }
         }
         for (auto&& option_switch : flat_dynamic_options)
         {
-            options_blob.types.emplace_back(option_switch.type);
-            options_blob.keys.emplace_back(option_switch.key);
-            auto& values = options_blob.values.emplace_back();
+            options_blob.types.add(option_switch.type);
+            options_blob.keys.add(option_switch.key);
+            auto& values = *options_blob.values.add_default();
             for (const auto& value : option_switch.value_selections)
             {
-                values.emplace_back(value);
+                values.add(value);
             }
         }
         resource.switch_arena = skr::binary::make_arena<skr_shader_option_sequence_t>(resource.switch_sequence, switches_blob);

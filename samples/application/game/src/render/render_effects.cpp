@@ -595,7 +595,7 @@ void RenderEffectForwardSkin::initialize_queries(dual_storage_t* storage)
     mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent");
     mesh_write_query = dualQ_from_literal(storage, "[inout]forward_skin_render_identity, [inout]skr::renderer::MeshComponent");
     draw_mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
-    install_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::anim::AnimComponent, [in]skr::anim::SkeletonComponent, [in]skr::anim::SkinComponent");
+    install_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity,[in]skr::anim::AnimComponent,[in]skr::anim::SkeletonComponent,[in]skr::anim::SkinComponent");
 }
 
 void RenderEffectForwardSkin::release_queries()

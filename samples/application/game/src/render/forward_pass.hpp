@@ -10,7 +10,7 @@ struct RenderPassForward : public IPrimitiveRenderPass
 {
     void on_update(const skr_primitive_pass_context_t* context) override;
     void post_update(const skr_primitive_pass_context_t* context) override;
-    void execute(const skr_primitive_pass_context_t* context, skr::span<const skr_primitive_draw_packet_t> drawcalls) override;    
+    void execute(const skr_primitive_pass_context_t* context, skr::Span<const skr_primitive_draw_packet_t> drawcalls) override;    
 
     skr_render_pass_name_t identity() const override
     {

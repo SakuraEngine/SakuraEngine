@@ -16,6 +16,7 @@ typedef enum ESkrJsonType
     #include "SkrRT/containers/string.hpp"
     #include "SkrRT/containers/hashmap.hpp"
     #include "SkrRT/containers/span.hpp"
+    #include "SkrRT/containers_new/array.hpp"
     #include "SkrRT/rttr/rttr_traits.hpp"
 
 // forward declaration for resources
@@ -239,6 +240,7 @@ struct WriteTrait<skr::resource::TResourceHandle<T>> {
         skr::json::Write<skr_resource_handle_t>(json, (const skr_resource_handle_t&)handle);
     }
 };
+// TODO: REMOVE THIS
 template <class V, class Allocator>
 struct WriteTrait<eastl::vector<V, Allocator>> {
     static void Write(skr_json_writer_t* json, const eastl::vector<V, Allocator>& vec)
@@ -251,9 +253,34 @@ struct WriteTrait<eastl::vector<V, Allocator>> {
         json->EndArray();
     }
 };
+// TODO: REMOVE THIS
 template <class V>
 struct WriteTrait<eastl::span<V>> {
     static void Write(skr_json_writer_t* json, const eastl::span<V>& vec)
+    {
+        json->StartArray();
+        for (auto& v : vec)
+        {
+            skr::json::Write<V>(json, v);
+        }
+        json->EndArray();
+    }
+};
+template <class V>
+struct WriteTrait<skr::Array<V>> {
+    static void Write(skr_json_writer_t* json, const skr::Array<V>& vec)
+    {
+        json->StartArray();
+        for (auto& v : vec)
+        {
+            skr::json::Write<V>(json, v);
+        }
+        json->EndArray();
+    }
+};
+template <class V>
+struct WriteTrait<skr::Span<V>> {
+    static void Write(skr_json_writer_t* json, const skr::Span<V>& vec)
     {
         json->StartArray();
         for (auto& v : vec)

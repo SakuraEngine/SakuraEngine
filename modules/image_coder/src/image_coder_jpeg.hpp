@@ -1,5 +1,5 @@
 #pragma once
-#include <EASTL/string.h>
+#include <SkrRT/containers/string.hpp>
 #include "image_coder_base.hpp"
 
 namespace skr

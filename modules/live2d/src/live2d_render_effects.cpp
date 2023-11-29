@@ -249,7 +249,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                 drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                 {
                                     auto texture_view = skr_live2d_render_model_get_texture_view(render_model, drawable);
-                                    drawcall.bind_table = render_model->bind_tables[texture_view];
+                                    drawcall.bind_table = render_model->bind_tables.find(texture_view)->value;
                                 }
                             }
                         }
@@ -368,7 +368,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                         drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                         {
                                             auto texture_view = skr_live2d_render_model_get_texture_view(render_model, clipDrawIndex);
-                                            drawcall.bind_table = render_model->mask_bind_tables[texture_view];
+                                            drawcall.bind_table = render_model->mask_bind_tables.find(texture_view)->value;
                                         }
                                     }
                                 }
@@ -438,7 +438,7 @@ protected:
                     bind_table_desc.names = &color_texture_name;
                     bind_table_desc.names_count = 1;
                     auto bind_table = cgpux_create_bind_table(pipeline->device, &bind_table_desc);
-                    render_model->bind_tables[texture_view] = bind_table;
+                    render_model->bind_tables.add(texture_view, bind_table);
 
                     CGPUDescriptorData datas[1] = {};
                     datas[0] = make_zeroed<CGPUDescriptorData>();
@@ -460,7 +460,7 @@ protected:
                     bind_table_desc.names = &color_texture_name;
                     bind_table_desc.names_count = 1;
                     auto bind_table = cgpux_create_bind_table(pipeline->device, &bind_table_desc);
-                    render_model->mask_bind_tables[texture_view] = bind_table;
+                    render_model->mask_bind_tables.add(texture_view, bind_table);
                     
                     CGPUDescriptorData datas[1] = {};
                     datas[0] = make_zeroed<CGPUDescriptorData>();

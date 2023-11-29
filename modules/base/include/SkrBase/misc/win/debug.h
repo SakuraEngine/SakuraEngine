@@ -33,7 +33,8 @@
         #define SKR_TRACE_MSG(msg) \
             printf(msg);           \
             printf("\n");
-            
+        
+        #ifndef SKR_ASSERT
         #define SKR_ASSERT(cond)                                                      \
             do                                                                        \
             {                                                                         \
@@ -43,6 +44,8 @@
                     assert((cond));                                                   \
                 }                                                                     \
             } while (0)
+        #endif
+        
         #define SKR_BREAK() __debugbreak()
         #define SKR_HALT() __debugbreak()
 

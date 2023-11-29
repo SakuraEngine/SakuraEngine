@@ -46,7 +46,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
 
     }
 
-    void execute(const skr_primitive_pass_context_t* context, skr::span<const skr_primitive_draw_packet_t> drawcalls) override
+    void execute(const skr_primitive_pass_context_t* context, skr::Span<const skr_primitive_draw_packet_t> drawcalls) override
     {
         auto renderGraph = context->render_graph;
         auto backbuffer = renderGraph->get_texture(u8"backbuffer");
@@ -105,7 +105,8 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
                 SkrZoneScopedN("DrawCall");
 
                 auto&& dc = drawcalls[i].lists[j].drawcalls[k];
-                if (dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
+                if (dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) 
+                    continue;
 
                 if (old_pipeline != dc.pipeline)
                 {

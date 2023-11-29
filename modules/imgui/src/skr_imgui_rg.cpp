@@ -1,8 +1,5 @@
-#include <EASTL/string.h>
-#include <EASTL/fixed_string.h>
-#include "SkrRT/config.h"
+#include "SkrRT/containers/string.hpp"
 #include "SkrRT/platform/memory.h"
-#include "SkrRT/misc/log.h"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 

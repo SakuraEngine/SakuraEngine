@@ -53,7 +53,7 @@ void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resourc
             mesh_ibv.first_index = prim.index_buffer.first_index;
 
             draw_cmd.ibv = &mesh_ibv;
-            draw_cmd.vbvs = skr::span(render_mesh->vertex_buffer_views.data() + vbv_start, prim.vertex_buffers.size());
+            draw_cmd.vbvs = { render_mesh->vertex_buffer_views.data() + vbv_start, prim.vertex_buffers.size() };
             draw_cmd.primitive_index = prim_idx;
             draw_cmd.material_index = prim.material_index;
         }

@@ -70,7 +70,8 @@ void ChunkingVFSReadResolver::resolve(SkrAsyncServicePriority priority, IOBatchI
                     acc_offset += chunk_size;
                     acc_size -= chunk_size;
                 }
-                pComp->get_blocks().back().size += acc_size;
+                auto blocks = pComp->get_blocks();
+                blocks[blocks.size() - 1].size += acc_size;
             }
         }
     }

@@ -1,7 +1,6 @@
 #include "SkrBase/misc/debug.h" 
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include <EASTL/set.h>
 
 #include "SkrRenderGraph/backend/bind_table_pool.hpp"
 #include "SkrRenderGraph/backend/buffer_pool.hpp"
@@ -242,15 +241,13 @@ TextureViewPool::Key::Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& 
 uint32_t TextureViewPool::erase(CGPUTextureId texture)
 {
     auto prev_size = (uint32_t)views.size();
-    for (auto it = views.begin(); it != views.end();)
+    for (auto it = views.begin(); it != views.end(); ++it)
     {
-        if (it->first.texture == texture)
+        if (it->key.texture == texture)
         {
-            cgpu_free_texture_view(it->second.texture_view);
-            it = views.erase(it);
+            cgpu_free_texture_view(it->value.texture_view);
+            views.remove(it->key);
         }
-        else
-            ++it;
     }
     return prev_size - (uint32_t)views.size();
 }
@@ -269,7 +266,7 @@ void TextureViewPool::finalize()
 {
     for (auto&& view : views)
     {
-        cgpu_free_texture_view(view.second.texture_view);
+        cgpu_free_texture_view(view.value.texture_view);
     }
     views.clear();
 }
@@ -282,16 +279,16 @@ CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& des
     {
         // SKR_LOG_TRACE(u8"Reallocating texture view for texture %p (id %lld, old %lld)", desc.texture,
         //    key.texture->unique_id, found->second.texture_view->info.texture->unique_id);
-        found->second.mark.frame_index = frame_index;
-        SKR_ASSERT(found->first.texture);
-        return found->second.texture_view;
+        found->value.mark.frame_index = frame_index;
+        SKR_ASSERT(found->key.texture);
+        return found->value.texture_view;
     }
     else
     {
         // SKR_LOG_TRACE(u8"Creating texture view for texture %p (tex %p)", desc.texture, key.texture);
         CGPUTextureViewId new_view = cgpu_create_texture_view(device, &desc);
         AllocationMark mark = {frame_index, 0};
-        views[key] = PooledTextureView(new_view, mark);
+        views.add(key, PooledTextureView(new_view, mark));
         return new_view;
     }
 }

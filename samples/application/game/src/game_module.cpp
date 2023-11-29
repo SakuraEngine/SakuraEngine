@@ -604,15 +604,15 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
     dual_query_t*      cameraQuery;
     dual_query_t*      animQuery;
     moveQuery         = dualQ_from_literal(game_world,
-                                           "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t, !skr_camera_comp_t");
+                                           "[has]skr_movement_comp_t,[inout]skr_translation_comp_t,[in]skr_scale_comp_t,[in]skr_index_comp_t,!skr_camera_comp_t");
     cameraQuery       = dualQ_from_literal(game_world,
-                                           "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
+                                           "[has]skr_movement_comp_t,[inout]skr_translation_comp_t,[inout]skr_camera_comp_t");
     animQuery         = dualQ_from_literal(game_world,
-                                           "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<unseq>skr::anim::AnimComponent, [in]<unseq>skr::anim::SkeletonComponent");
+                                           "[in]skr_render_effect_t,[in]game::anim_state_t,[out]<unseq>skr::anim::AnimComponent,[in]<unseq>skr::anim::SkeletonComponent");
     initAnimSkinQuery = dualQ_from_literal(game_world,
-                                           "[inout]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
+                                           "[inout]skr::anim::AnimComponent,[inout]skr::anim::SkinComponent,[in]skr::renderer::MeshComponent,[in]skr::anim::SkeletonComponent");
     skinQuery         = dualQ_from_literal(game_world,
-                                           "[in]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
+                                           "[in]skr::anim::AnimComponent,[inout]skr::anim::SkinComponent,[in]skr::renderer::MeshComponent,[in]skr::anim::SkeletonComponent");
 
     auto handler = skr_system_get_default_handler();
     handler->add_window_close_handler(

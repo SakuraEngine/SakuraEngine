@@ -1,6 +1,6 @@
 #pragma once
-#include <EASTL/unordered_map.h>
 #include "cgpu/api.h"
+#include "SkrRT/containers_new/umap.hpp"
 
 namespace skr
 {
@@ -53,7 +53,7 @@ public:
     CGPUTextureViewId allocate(const CGPUTextureViewDescriptor& desc, uint64_t frame_index);
 protected:
     CGPUDeviceId device;
-    eastl::unordered_map<Key, PooledTextureView, Key::hasher> views;
+    skr::UMap<Key, PooledTextureView, Key::hasher> views;
 };
 } // namespace render_graph
 } // namespace skr

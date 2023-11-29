@@ -142,7 +142,7 @@ public:
         safe_comp<IOStatusComponent>()->add_finish_callback(point, callback, data);
     }
 
-    skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT 
+    skr::Span<skr_io_block_t> get_blocks() SKR_NOEXCEPT 
     { 
         return safe_comp<BlocksComponent>()->get_blocks(); 
     }
@@ -157,7 +157,7 @@ public:
         safe_comp<BlocksComponent>()->reset_blocks(); 
     }
 
-    skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT 
+    skr::Span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT 
     { 
         return safe_comp<CompressedBlocksComponent>()->get_compressed_blocks(); 
     }
@@ -230,7 +230,7 @@ private:
 };
 
 using IORequestQueue = IOConcurrentQueue<IORequestId>;  
-using IORequestArray = skr::vector<IORequestId>;
+using IORequestArray = skr::Array<IORequestId>;
 
 } // namespace io
 } // namespace skr
