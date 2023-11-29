@@ -55,10 +55,12 @@ namespace marl { using std::sort; using std::vector; }
 #include <thread>
 #endif
 
+#ifdef MARL_USE_EASTL
 size_t eastl::hash<std::thread::id>::operator()(const std::thread::id _Keyval) const noexcept {
     std::hash<std::thread::id> hasher;
     return hasher(_Keyval);
 }
+#endif
 
 namespace {
 
