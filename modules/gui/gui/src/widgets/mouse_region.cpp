@@ -7,9 +7,10 @@ NotNull<RenderObject*> MouseRegin::create_render_object() SKR_NOEXCEPT
 {
     auto result = SkrNew<RenderMouseRegion>();
 
-    result->on_enter = std::move(on_enter);
-    result->on_exit  = std::move(on_exit);
-    result->on_hover = std::move(on_hover);
+    result->hit_test_behavior = hit_test_behaviour;
+    result->on_enter          = std::move(on_enter);
+    result->on_exit           = std::move(on_exit);
+    result->on_hover          = std::move(on_hover);
 
     return result;
 }
@@ -17,8 +18,9 @@ void MouseRegin::update_render_object(NotNull<IBuildContext*> context, NotNull<R
 {
     auto mouse_region = render_object->type_cast_fast<RenderMouseRegion>();
 
-    mouse_region->on_enter = std::move(on_enter);
-    mouse_region->on_exit  = std::move(on_exit);
-    mouse_region->on_hover = std::move(on_hover);
+    mouse_region->hit_test_behavior = hit_test_behaviour;
+    mouse_region->on_enter          = std::move(on_enter);
+    mouse_region->on_exit           = std::move(on_exit);
+    mouse_region->on_hover          = std::move(on_hover);
 }
 } // namespace skr::gui
