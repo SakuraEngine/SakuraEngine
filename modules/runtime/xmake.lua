@@ -74,7 +74,7 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/build.*.cpp")
     
     -- add marl source
-    add_defines("MARL_USE_EASTL", {public = true})
+    -- add_defines("MARL_USE_EASTL", {public = true})
     local marl_source_dir = "$(projectdir)/thirdparty/marl"
     add_files(marl_source_dir.."/src/build.*.cpp")
     if not is_os("windows") then 

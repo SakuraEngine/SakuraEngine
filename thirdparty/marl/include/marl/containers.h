@@ -49,6 +49,7 @@ namespace marl { using std::map; using std::deque; using std::set; using std::un
 
 namespace marl {
 namespace containers {
+
 template <typename T>
 using deque = marl::deque<T, EASTLAllocator>;
 
@@ -69,6 +70,9 @@ template <typename K, typename H = eastl::hash<K>, typename E = eastl::equal_to<
 using unordered_set = marl::unordered_set<K, H, E, EASTLAllocator>;
 
 #else
+
+namespace marl {
+namespace containers {
 
 ////////////////////////////////////////////////////////////////////////////////
 // STL wrappers
@@ -181,7 +185,7 @@ class vector {
   size_t capacity = BASE_CAPACITY;
   TStorage buffer[BASE_CAPACITY];
   TStorage* elements = buffer;
-  Allocation allocation;
+  marl::Allocation allocation;
 };
 
 template <typename T, int BASE_CAPACITY>

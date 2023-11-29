@@ -15,7 +15,7 @@
 #ifndef marl_thread_h
 #define marl_thread_h
 
-#include "containers.h"
+#include "marl/containers.h"
 #include "export.h"
 
 #ifdef MARL_USE_EASTL
@@ -105,7 +105,7 @@ class Thread {
 
     MARL_EXPORT Affinity(std::initializer_list<Core>, Allocator* allocator);
 
-    MARL_EXPORT Affinity(const containers::vector<Core, 32>&,
+    MARL_EXPORT Affinity(const marl::containers::vector<Core, 32>&,
                          Allocator* allocator);
 
     // count() returns the number of enabled cores in the affinity.
