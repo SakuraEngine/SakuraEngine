@@ -13,6 +13,11 @@ rule("utils.ispc")
         import("find_sdk")
         ispc = find_sdk.find_program("ispc")
 
+        -- permission
+        if (os.host() == "macosx") then
+            os.exec("chmod -R 777 "..ispc.program)
+        end
+
         ispc_basename = path.filename(sourcefile_ispc):match("..+%..+")
         if (os.arch() == "x86_64" or os.arch() == "x64") then
             target_args = "--target=host"
@@ -31,6 +36,9 @@ rule("utils.ispc")
             sourcefile_ispc, obj_path)
         batchcmds:mkdir(obj_outputdir)
         batchcmds:mkdir(header_outputdir)
+        if ispc.wdir ~= nil then
+            batchcmds:cd(ispc.wdir)
+        end
         batchcmds:vrunv(ispc.vexec, 
             {"-O2",
             path.join(os.projectdir(), sourcefile_ispc),
