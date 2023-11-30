@@ -9,6 +9,8 @@ namespace skr sreflect
 {
 namespace gui sreflect
 {
+struct InputManager;
+
 // 关于手势优先级
 // Click 事件一般只接受被动触发
 // Double Click 事件会在第一次 Click 之后延长判定时长，并在第二次 click 后主动触发
@@ -42,16 +44,24 @@ sreflect_struct("guid": "8fb085fd-9412-4a1b-bc95-a518e32746f2")
 SKR_GUI_API GestureRecognizer : public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
 
+    GestureRecognizer(NotNull<InputManager*> manager);
+
     // 监听 pointer
-    virtual void add_pointer(NotNull<Event*> event);
+    virtual void add_pointer(NotNull<Event*> event) = 0;
 
     // 事件处理
-    virtual bool handle_event(Event* event);
-    virtual bool handle_event_from_widget(Event* event);
+    virtual bool handle_event(Event* event)             = 0;
+    virtual bool handle_event_from_widget(Event* event) = 0;
 
     // 手势竞争
-    virtual void accept_gesture(CombinePointerId pointer);
-    virtual void reject_gesture(CombinePointerId pointer);
+    virtual void accept_gesture(CombinePointerId pointer) = 0;
+    virtual void reject_gesture(CombinePointerId pointer) = 0;
+
+    // getter
+    inline InputManager* input_manager() const { return _input_manager; }
+
+private:
+    InputManager* _input_manager = nullptr;
 };
 
 } // namespace gui sreflect
