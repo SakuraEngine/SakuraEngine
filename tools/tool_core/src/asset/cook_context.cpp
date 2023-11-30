@@ -65,9 +65,9 @@ struct SCookContextImpl : public SCookContext
     skr::task::event_t counter;
 
     skr::filesystem::path outputPath;
-    skr::Array<skr_resource_handle_t> staticDependencies;
-    skr::Array<skr_guid_t> runtimeDependencies;
-    skr::Array<skr::filesystem::path> fileDependencies;
+    skr::vector<skr_resource_handle_t> staticDependencies;
+    skr::vector<skr_guid_t> runtimeDependencies;
+    skr::vector<skr::filesystem::path> fileDependencies;
 
     SCookContextImpl(skr_io_ram_service_t* ioService)
         : ioService(ioService)

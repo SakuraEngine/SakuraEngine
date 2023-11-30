@@ -98,7 +98,7 @@ struct VectorStorage : public AlignedStorage<24, 8> {
 };
 #else
 template <typename T>
-using VectorStorage = skr::Array<T>;
+using VectorStorage = skr::vector<T>;
 #endif
 
 #ifndef CONTAINER_LITE_IMPL

@@ -226,7 +226,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         text_input_handlers.erase(rid);
     }
 
-    skr::Array<ISystemMessageHandler*> message_handlers;
+    skr::vector<ISystemMessageHandler*> message_handlers;
     RIDMap<Handler<SWindowResizeHandlerProc>> window_resize_handlers;
     RIDMap<Handler<SWindowCloseHandlerProc>> window_close_handlers;
     RIDMap<Handler<SWindowMoveHandlerProc>> window_move_handlers;

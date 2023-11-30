@@ -30,8 +30,8 @@ static constexpr type_index_t kDirtyComponent = type_index_t(5, false, false, fa
 struct type_registry_t {
     type_registry_t(pool_t& pool);
     type_registry_t(const type_registry_t&) = delete;
-    skr::Array<type_description_t> descriptions;
-    skr::Array<intptr_t> entityFields;
+    skr::vector<type_description_t> descriptions;
+    skr::vector<intptr_t> entityFields;
     block_arena_t nameArena;
     skr::flat_hash_map<skr::string, type_index_t, skr::Hash<skr::string>> name2type;
     skr::flat_hash_map<guid_t, type_index_t, skr::guid::hash> guid2type;

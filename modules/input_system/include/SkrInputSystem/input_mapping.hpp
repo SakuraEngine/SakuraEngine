@@ -43,7 +43,7 @@ protected:
 
     bool runtime_mappable = false;
     //TODO: modifier ownership?
-    skr::Array<InputModifierId> modifiers;
+    skr::vector<InputModifierId> modifiers;
     InputValueStorage raw_value;
 };
 
@@ -65,7 +65,7 @@ public:
     void unmap_all() SKR_NOEXCEPT;
 
 protected:
-    skr::Array<SObjectPtr<InputMapping>> mappings_;
+    skr::vector<SObjectPtr<InputMapping>> mappings_;
 };
 
 struct SKR_INPUTSYSTEM_API InputMapping_Keyboard : public InputMapping

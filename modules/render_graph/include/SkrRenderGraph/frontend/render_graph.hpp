@@ -35,8 +35,8 @@ struct SKR_RENDER_GRAPH_API IRenderGraphPhase
     virtual void on_initialize(RenderGraph* graph) SKR_NOEXCEPT;
     virtual void on_finalize(RenderGraph* graph) SKR_NOEXCEPT;
 
-    skr::Array<ResourceNode*>& get_resources(RenderGraph* graph) SKR_NOEXCEPT;
-    skr::Array<PassNode*>& get_passes(RenderGraph* graph) SKR_NOEXCEPT;
+    skr::vector<ResourceNode*>& get_resources(RenderGraph* graph) SKR_NOEXCEPT;
+    skr::vector<PassNode*>& get_passes(RenderGraph* graph) SKR_NOEXCEPT;
 };
 
 class SKR_RENDER_GRAPH_API RenderGraph
@@ -283,8 +283,8 @@ protected:
     Blackboard* blackboard = nullptr;
     DependencyGraph* graph = nullptr;
 
-    skr::Array<PassNode*> passes;
-    skr::Array<ResourceNode*> resources;
+    skr::vector<PassNode*> passes;
+    skr::vector<ResourceNode*> resources;
 };
 using RenderGraphSetupFunction = RenderGraph::RenderGraphSetupFunction;
 using RenderGraphBuilder = RenderGraph::RenderGraphBuilder;

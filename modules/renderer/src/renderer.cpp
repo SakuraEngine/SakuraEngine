@@ -178,15 +178,15 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
     template<typename T>
     using FlatStringMap = skr::flat_hash_map<skr::string, T, skr::Hash<skr::string>>;
 
-    skr::Array<IPrimitiveRenderPass*> passes;
+    skr::vector<IPrimitiveRenderPass*> passes;
     FlatStringMap<IPrimitiveRenderPass*> passes_map;
 
-    skr::Array<IRenderEffectProcessor*> processors;
+    skr::vector<IRenderEffectProcessor*> processors;
     FlatStringMap<IRenderEffectProcessor*> processors_map;
 
-    skr::Array<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
+    skr::vector<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
 protected:
-    FlatStringMap<skr::Array<skr_primitive_draw_packet_t>> draw_packets;
+    FlatStringMap<skr::vector<skr_primitive_draw_packet_t>> draw_packets;
 
     SRenderDevice* render_device = nullptr;
     dual_storage_t* storage = nullptr;
@@ -335,7 +335,7 @@ void skr_render_effect_detach(SRendererId r, dual_chunk_view_t* cv, skr_render_e
 {
     if (cv && cv->count)
     {
-        static thread_local skr::Array<dual_entity_t> render_effects;
+        static thread_local skr::vector<dual_entity_t> render_effects;
         render_effects.clear();
         //render_effects.reserve(cv->count);
         auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
@@ -378,7 +378,7 @@ void skr_render_effect_add_delta(SRendererId r, dual_chunk_view_t* cv,
     {
         auto storage = dualC_get_storage(cv->chunk);
         SKR_ASSERT(storage && "No dual storage");
-        skr::Array<dual_entity_t> render_effects;
+        skr::vector<dual_entity_t> render_effects;
         render_effects.reserve(cv->count);
         // batch game ents to collect render effects
         auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
@@ -410,7 +410,7 @@ void skr_render_effect_access(SRendererId r, dual_chunk_view_t* cv, skr_render_e
     {
         auto storage = dualC_get_storage(cv->chunk);
         SKR_ASSERT(storage && "No dual storage");
-        skr::Array<dual_entity_t> batch_render_effects;
+        skr::vector<dual_entity_t> batch_render_effects;
         batch_render_effects.reserve(cv->count);
         // batch game ents to collect render effects
         auto effects_chunk = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());

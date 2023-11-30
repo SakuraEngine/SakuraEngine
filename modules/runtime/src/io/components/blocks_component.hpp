@@ -28,7 +28,7 @@ struct BlocksComponent : public IORequestComponent
     
     void reset_blocks() SKR_NOEXCEPT { blocks.clear(); }
     
-    skr::Array<skr_io_block_t> blocks;
+    skr::vector<skr_io_block_t> blocks;
 };
 
 template <>

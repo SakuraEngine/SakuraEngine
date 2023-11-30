@@ -134,7 +134,7 @@ using component_delta_apply_callback_t = skr::task::event_t (*)(dual_type_index_
 struct IWorldDeltaBuilder {
     virtual ~IWorldDeltaBuilder()                                             = default;
     virtual void Initialize(dual_storage_t* storage)                          = 0;
-    virtual void GenerateDelta(skr::Array<MPWorldDeltaViewBuilder>& builder) = 0;
+    virtual void GenerateDelta(skr::vector<MPWorldDeltaViewBuilder>& builder) = 0;
 };
 
 MP_SHARED_API IWorldDeltaBuilder* CreateWorldDeltaBuilder();

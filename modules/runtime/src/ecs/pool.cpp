@@ -44,7 +44,7 @@ fixed_pool_t::fixed_pool_t(size_t blockSize, size_t blockCount)
     , blocks(blockCount)
 {
     buffer = new char[blockSize * blockCount];
-    skr::Array<size_t> indicies;
+    skr::vector<size_t> indicies;
     indicies.resize_default(blockCount);
     std::iota(indicies.begin(), indicies.end(), 0);
     for (size_t i = 0; i < blockCount; ++i)
@@ -76,7 +76,7 @@ void fixed_pool_t::reset()
 {
     skr::ConcurrentQueue<size_t, ECSPoolConcurrentQueueTraits> temp(blockCount);
     blocks.swap(temp);
-    skr::Array<size_t> indicies;
+    skr::vector<size_t> indicies;
     indicies.resize_default(blockCount);
     std::iota(indicies.begin(), indicies.end(), 0);
     for (size_t i = 0; i < blockCount; ++i)

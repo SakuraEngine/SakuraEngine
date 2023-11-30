@@ -206,7 +206,7 @@ private:
     int m_required;
     skr::flat_hash_map<skr::string, cmd, skr::Hash<skr::string>> m_cmds;
     skr::flat_hash_map<skr::string, int, skr::Hash<skr::string>> m_shorthands;
-    skr::Array<skr::string> m_names;
+    skr::vector<skr::string> m_names;
 
     bool abort() const
     {

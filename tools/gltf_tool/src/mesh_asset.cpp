@@ -48,7 +48,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     }
     SKR_DEFER({ ctx->Destroy(gltf_data); });
     skr_mesh_resource_t mesh;
-    skr::Array<skr::Array<uint8_t>> blobs;
+    skr::vector<skr::vector<uint8_t>> blobs;
     auto importer = static_cast<SGltfMeshImporter*>(ctx->GetImporter());
     mesh.install_to_ram = importer->install_to_ram;
     mesh.install_to_vram = importer->install_to_vram;

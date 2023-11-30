@@ -109,7 +109,7 @@ protected:
 
     skr_guid_t guid;
 
-    skr::Array<CallbackWrapper> callbacks;
+    skr::vector<CallbackWrapper> callbacks;
     SMutex callbacks_lock;
 } SCrashHandler;
 

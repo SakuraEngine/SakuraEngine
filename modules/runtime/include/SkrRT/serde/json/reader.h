@@ -169,8 +169,8 @@ struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
 };
 
 template <class V>
-struct ReadTrait<skr::Array<V>> {
-    static error_code Read(simdjson::ondemand::value&& json, skr::Array<V>& vec)
+struct ReadTrait<skr::vector<V>> {
+    static error_code Read(simdjson::ondemand::value&& json, skr::vector<V>& vec)
     {
         auto array = json.get_array();
         if (array.error() != simdjson::SUCCESS)

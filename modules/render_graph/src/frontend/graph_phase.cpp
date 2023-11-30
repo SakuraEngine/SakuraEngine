@@ -38,12 +38,12 @@ void IRenderGraphPhase::on_finalize(RenderGraph* graph) SKR_NOEXCEPT
 
 }
 
-skr::Array<ResourceNode*>& IRenderGraphPhase::get_resources(RenderGraph* graph) SKR_NOEXCEPT
+skr::vector<ResourceNode*>& IRenderGraphPhase::get_resources(RenderGraph* graph) SKR_NOEXCEPT
 {
     return graph->resources;
 }
 
-skr::Array<PassNode*>& IRenderGraphPhase::get_passes(RenderGraph* graph) SKR_NOEXCEPT
+skr::vector<PassNode*>& IRenderGraphPhase::get_passes(RenderGraph* graph) SKR_NOEXCEPT
 {
     return graph->passes;
 }

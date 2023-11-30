@@ -128,9 +128,9 @@ void GetGLTFNodeTransform(const cgltf_node* node, skr_float3_t& translation, skr
         rotation = { node->rotation[0], node->rotation[1], node->rotation[2], node->rotation[3] };
 }
 
-void CookGLTFMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mesh_resource_t& out_resource, skr::Array<skr::Array<uint8_t>>& out_bins)
+void CookGLTFMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mesh_resource_t& out_resource, skr::vector<skr::vector<uint8_t>>& out_bins)
 {
-    skr::Array<uint8_t> buffer0 = {};
+    skr::vector<uint8_t> buffer0 = {};
     
     skr_guid_t shuffle_layout_id = cfg->vertexType;
     CGPUVertexLayout shuffle_layout = {};
@@ -153,7 +153,7 @@ void CookGLTFMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mes
         if (node_->mesh != nullptr)
         {
             SRawMesh raw_mesh = GenerateRawMeshForGLTFMesh(node_->mesh);
-            skr::Array<skr_mesh_primitive_t> new_primitives;
+            skr::vector<skr_mesh_primitive_t> new_primitives;
             // record all indices
             EmplaceAllRawMeshIndices(&raw_mesh, buffer0, new_primitives);
             EmplaceAllRawMeshVertices(&raw_mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer0, new_primitives);
@@ -181,10 +181,10 @@ void CookGLTFMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mes
     out_bins.add(buffer0);
 }
 
-void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mesh_resource_t& out_resource, skr::Array<skr::Array<uint8_t>>& out_bins)
+void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mesh_resource_t& out_resource, skr::vector<skr::vector<uint8_t>>& out_bins)
 {
-    skr::Array<uint8_t> buffer0 = {};
-    skr::Array<uint8_t> buffer1 = {};
+    skr::vector<uint8_t> buffer0 = {};
+    skr::vector<uint8_t> buffer1 = {};
     
     skr_guid_t shuffle_layout_id = cfg->vertexType;
     CGPUVertexLayout shuffle_layout = {};
@@ -207,7 +207,7 @@ void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, SMeshCookConfig* cf
         if (node_->mesh != nullptr)
         {
             SRawMesh raw_mesh = GenerateRawMeshForGLTFMesh(node_->mesh);
-            skr::Array<skr_mesh_primitive_t> new_primitives;
+            skr::vector<skr_mesh_primitive_t> new_primitives;
             // record all indices
             EmplaceAllRawMeshIndices(&raw_mesh, buffer0, new_primitives);
             EmplaceStaticRawMeshVertices(&raw_mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer0, 0, new_primitives);

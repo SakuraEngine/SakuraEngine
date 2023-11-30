@@ -266,8 +266,8 @@ struct WriteTrait<eastl::span<V>> {
     }
 };
 template <class V>
-struct WriteTrait<skr::Array<V>> {
-    static void Write(skr_json_writer_t* json, const skr::Array<V>& vec)
+struct WriteTrait<skr::vector<V>> {
+    static void Write(skr_json_writer_t* json, const skr::vector<V>& vec)
     {
         json->StartArray();
         for (auto& v : vec)

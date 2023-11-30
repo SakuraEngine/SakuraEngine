@@ -19,18 +19,18 @@ skr_material_type_asset_t {
     uint32_t version;
 
     // shader assets
-    skr::Array<skr_material_pass_t> passes;
+    skr::vector<skr_material_pass_t> passes;
 
     // properties are mapped to shader parameter bindings (scalars, vectors, matrices, buffers, textures, etc.)
-    skr::Array<skr_material_property_t> properties;
+    skr::vector<skr_material_property_t> properties;
 
     // default value for options
     // options can be provided variantly by each material, if not provided, the default value will be used
-    skr::Array<skr_shader_option_instance_t> switch_defaults;
+    skr::vector<skr_shader_option_instance_t> switch_defaults;
 
     // default value for options
     // options can be provided variantly at runtime, if not provided, the default value will be used
-    skr::Array<skr_shader_option_instance_t> option_defaults;
+    skr::vector<skr_shader_option_instance_t> option_defaults;
 
     skr_vertex_layout_id vertex_type;
 };

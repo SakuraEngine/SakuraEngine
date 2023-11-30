@@ -93,7 +93,7 @@ protected:
 
     uint64_t get_latest_finished_frame() SKR_NOEXCEPT;
 
-    skr::Array<skr::SPtr<IRenderGraphPhase>> phases;
+    skr::vector<skr::SPtr<IRenderGraphPhase>> phases;
 
     ECGPUBackend backend;
     CGPUDeviceId device;

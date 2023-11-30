@@ -268,7 +268,7 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
         main_viewport->PlatformHandleRaw = skr_window_get_native_handle(window);
 
         // update monitors
-        static thread_local skr::Array<SMonitorHandle> skr_monitors; 
+        static thread_local skr::vector<SMonitorHandle> skr_monitors; 
         skr_monitors.clear();
         platform_io.Monitors.resize(0);
         uint32_t monitor_count = 0;

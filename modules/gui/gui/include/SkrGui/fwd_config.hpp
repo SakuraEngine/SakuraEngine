@@ -77,7 +77,7 @@ using Span = skr::lite::LiteSpan<T>;
 using String     = skr::string;
 using StringView = skr::string_view;
 template <typename T>
-using Array = skr::Array<T>;
+using Array = skr::vector<T>;
 template <typename K, typename V>
 using Map = skr::UMap<K, V>;
 template <typename T>

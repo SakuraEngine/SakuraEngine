@@ -42,12 +42,12 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
     CGPUBufferId pos_buffer;
     CGPUBufferId uv_buffer;
 
-    skr::Array<skr_io_future_t> png_futures;
-    skr::Array<skr_io_future_t> texture_futures;
-    skr::Array<skr::io::VRAMIOTextureId> io_textures;
+    skr::vector<skr_io_future_t> png_futures;
+    skr::vector<skr_io_future_t> texture_futures;
+    skr::vector<skr::io::VRAMIOTextureId> io_textures;
 
-    skr::Array<skr_io_future_t> buffer_futures;
-    skr::Array<skr::io::VRAMIOBufferId> io_buffers;
+    skr::vector<skr_io_future_t> buffer_futures;
+    skr::vector<skr::io::VRAMIOBufferId> io_buffers;
 };
 
 struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
@@ -120,8 +120,8 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     skr::io::IRAMService* ram_service = nullptr;
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
-    skr::Array<skr::ImageDecoderId> decoders;
-    skr::Array<skr::BlobId> png_blobs;
+    skr::vector<skr::ImageDecoderId> decoders;
+    skr::vector<skr::BlobId> png_blobs;
 };
 
 bool skr_live2d_render_model_future_t::is_ready() const SKR_NOEXCEPT

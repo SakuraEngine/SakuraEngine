@@ -15,14 +15,14 @@ inline static size_t _element_count_of(Span<size_t> dimensions)
     return size;
 }
 
-ArrayType::ArrayType(Type* target_type, Span<size_t> dimensions, string name)
+VectorType::VectorType(Type* target_type, Span<size_t> dimensions, string name)
     : GenericType(kArrayGenericGUID, std::move(name), GUID::Create(), target_type->size() * _element_count_of(dimensions), target_type->alignment())
     , _size(_element_count_of(dimensions))
     , _dimensions(dimensions.data(), dimensions.size())
 {
 }
 
-bool ArrayType::query_feature(ETypeFeature feature) const
+bool VectorType::query_feature(ETypeFeature feature) const
 {
     switch (feature)
     {
@@ -33,7 +33,7 @@ bool ArrayType::query_feature(ETypeFeature feature) const
     }
 }
 
-void ArrayType::call_ctor(void* ptr) const
+void VectorType::call_ctor(void* ptr) const
 {
     if (_target_type->query_feature(ETypeFeature::Constructor))
     {
@@ -48,7 +48,7 @@ void ArrayType::call_ctor(void* ptr) const
         SKR_UNREACHABLE_CODE();
     }
 }
-void ArrayType::call_dtor(void* ptr) const
+void VectorType::call_dtor(void* ptr) const
 {
     if (_target_type->query_feature(ETypeFeature::Destructor))
     {
@@ -63,7 +63,7 @@ void ArrayType::call_dtor(void* ptr) const
         SKR_UNREACHABLE_CODE();
     }
 }
-void ArrayType::call_copy(void* dst, const void* src) const
+void VectorType::call_copy(void* dst, const void* src) const
 {
     if (_target_type->query_feature(ETypeFeature::Copy))
     {
@@ -78,7 +78,7 @@ void ArrayType::call_copy(void* dst, const void* src) const
         SKR_UNREACHABLE_CODE();
     }
 }
-void ArrayType::call_move(void* dst, void* src) const
+void VectorType::call_move(void* dst, void* src) const
 {
     if (_target_type->query_feature(ETypeFeature::Move))
     {
@@ -93,7 +93,7 @@ void ArrayType::call_move(void* dst, void* src) const
         SKR_UNREACHABLE_CODE();
     }
 }
-void ArrayType::call_assign(void* dst, const void* src) const
+void VectorType::call_assign(void* dst, const void* src) const
 {
     if (_target_type->query_feature(ETypeFeature::Assign))
     {
@@ -108,7 +108,7 @@ void ArrayType::call_assign(void* dst, const void* src) const
         SKR_UNREACHABLE_CODE();
     }
 }
-void ArrayType::call_move_assign(void* dst, void* src) const
+void VectorType::call_move_assign(void* dst, void* src) const
 {
     if (_target_type->query_feature(ETypeFeature::MoveAssign))
     {
@@ -123,14 +123,14 @@ void ArrayType::call_move_assign(void* dst, void* src) const
         SKR_UNREACHABLE_CODE();
     }
 }
-size_t ArrayType::call_hash(const void* ptr) const
+size_t VectorType::call_hash(const void* ptr) const
 {
     SKR_LOG_ERROR(u8"[RTTR] cpp array has no hash method, before call this function, please check the type feature by query_feature().");
     SKR_UNREACHABLE_CODE();
     return 0;
 }
 
-int ArrayType::write_binary(const void* dst, skr_binary_writer_t* writer) const
+int VectorType::write_binary(const void* dst, skr_binary_writer_t* writer) const
 {
     if (_target_type->query_feature(ETypeFeature::WriteBinary))
     {
@@ -152,7 +152,7 @@ int ArrayType::write_binary(const void* dst, skr_binary_writer_t* writer) const
     }
     return 0;
 }
-int ArrayType::read_binary(void* dst, skr_binary_reader_t* reader) const
+int VectorType::read_binary(void* dst, skr_binary_reader_t* reader) const
 {
     if (_target_type->query_feature(ETypeFeature::ReadBinary))
     {
@@ -174,7 +174,7 @@ int ArrayType::read_binary(void* dst, skr_binary_reader_t* reader) const
     }
     return 0;
 }
-void ArrayType::write_json(const void* dst, skr_json_writer_t* writer) const
+void VectorType::write_json(const void* dst, skr_json_writer_t* writer) const
 {
     if (_target_type->query_feature(ETypeFeature::WriteJson))
     {
@@ -192,7 +192,7 @@ void ArrayType::write_json(const void* dst, skr_json_writer_t* writer) const
         SKR_UNREACHABLE_CODE();
     }
 }
-skr::json::error_code ArrayType::read_json(void* dst, skr::json::value_t&& reader) const
+skr::json::error_code VectorType::read_json(void* dst, skr::json::value_t&& reader) const
 {
     if (_target_type->query_feature(ETypeFeature::ReadJson))
     {
