@@ -35,7 +35,7 @@ struct SystemHandler_SDL2 : public SystemHandlerBase
         return key;
     }
 
-    skr::Array<SDL2Message> messages;
+    skr::vector<SDL2Message> messages;
 };
 
 void SystemHandler_SDL2::pump_messages(float delta) SKR_NOEXCEPT
@@ -49,7 +49,7 @@ void SystemHandler_SDL2::pump_messages(float delta) SKR_NOEXCEPT
 
 void SystemHandler_SDL2::process_messages(float delta) SKR_NOEXCEPT
 {
-    skr::Array<SDL2Message> to_process = std::move(messages); 
+    skr::vector<SDL2Message> to_process = std::move(messages); 
     messages = {};
     for (auto message : to_process)
     {

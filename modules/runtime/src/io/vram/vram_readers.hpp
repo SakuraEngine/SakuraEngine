@@ -111,10 +111,10 @@ protected:
     IRAMService* ram_service = nullptr;
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue processed_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    skr::Array<IOBatchId> ramloading_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    skr::Array<IOBatchId> to_upload_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::vector<IOBatchId> ramloading_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::vector<IOBatchId> to_upload_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SwapableCmdPoolMap cmdpools;
-    skr::Array<GPUUploadCmd> gpu_uploads[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::vector<GPUUploadCmd> gpu_uploads[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
 
 } // namespace io

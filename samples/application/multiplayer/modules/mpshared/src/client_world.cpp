@@ -58,7 +58,7 @@ void MPClientWorld::ReceiveWorldDelta(const void* data, size_t dataLength)
 {
     SkrZoneScopedN("MPClientWorld::ReceiveWorldDelta");
     skr::span<uint8_t> span;
-    skr::Array<uint8_t> decompressedData;
+    skr::vector<uint8_t> decompressedData;
     {
         SkrZoneScopedN("Decompress");
         bandwidthCounter.AddRecord(dataLength);
@@ -154,18 +154,18 @@ void MPClientWorld::SendInput()
     //     i.fire = true;
     // }
     input.frame = inputFrame;
-    skr::Array<uint8_t> buffer;
+    skr::vector<uint8_t> buffer;
     buffer.resize_default(sizeof(uint32_t));
     *(uint32_t*)&buffer[0] = (uint32_t)MPEventType::Input;
-    skr::binary::ArrayWriter writer{&buffer};
+    skr::binary::VectorWriter writer{&buffer};
     skr_binary_writer_t archive(writer);
     skr::binary::Write(&archive, input);
     SteamNetworkingSockets()->SendMessageToConnection(serverConnection, buffer.data(), buffer.size(), k_nSteamNetworkingSend_Reliable, nullptr);
 }
 
-skr::Array<dual_chunk_view_t> merge_views(skr::Array<dual_chunk_view_t>& views)
+skr::vector<dual_chunk_view_t> merge_views(skr::vector<dual_chunk_view_t>& views)
 {
-    skr::Array<dual_chunk_view_t> merged;
+    skr::vector<dual_chunk_view_t> merged;
     std::sort(views.begin(), views.end(), [](const dual_chunk_view_t& lhs, const dual_chunk_view_t& rhs)
     {
         return lhs.start < rhs.start;
@@ -217,7 +217,7 @@ void MPClientWorld::Snapshot()
     //then create a snapshot entity to store those data
     auto callback = [&](dual_group_t* group) 
     {
-        skr::flat_hash_map<dual_chunk_t*, skr::Array<dual_chunk_view_t>> views;
+        skr::flat_hash_map<dual_chunk_t*, skr::vector<dual_chunk_view_t>> views;
         dual::type_builder_t predictedBuilder;
         for(auto query : {movementQuery.query, controlQuery.query})
         {
@@ -257,7 +257,7 @@ void MPClientWorld::Snapshot()
 
         for(auto& pair : views)
         {
-            skr::Array<dual_chunk_view_t> merged = merge_views(pair.second);
+            skr::vector<dual_chunk_view_t> merged = merge_views(pair.second);
             
             for(auto view : merged)
             {

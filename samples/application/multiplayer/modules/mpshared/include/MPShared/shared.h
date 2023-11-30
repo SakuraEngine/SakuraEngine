@@ -39,7 +39,7 @@ sreflect_struct(
 MPInputFrame
 {
     uint64_t frame;
-    skr::Array<MPPlayerInputFrame> inputs;
+    skr::vector<MPPlayerInputFrame> inputs;
 };
 
 sreflect_struct(

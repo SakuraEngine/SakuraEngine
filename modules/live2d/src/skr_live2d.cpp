@@ -8,7 +8,7 @@
 /**	Log out func register to cubism */
 static void Cubism_Log(const char* message)
 {
-    static thread_local skr::Array<char> buf;
+    static thread_local skr::vector<char> buf;
     buf.clear();
     buf.assign(message, ::strlen(message) + 1);
     // replace the last '\n' with '\0'

@@ -44,11 +44,11 @@ void SShaderImporter::Destroy(void* resource)
 }
 
 // [x: "on", y: "a", z: "1"]
-using unique_option_variant_t = skr::Array<skr_shader_option_instance_t>;
+using unique_option_variant_t = skr::vector<skr_shader_option_instance_t>;
 // [ [z: "on", y: "a", z: "1"], [x: "on", y: "a", z: "2"] ...]
-using option_variant_seq_t = skr::Array<unique_option_variant_t>;
-using variant_seq_hashe_seq_t = skr::Array<skr_stable_shader_hash_t>;
-void cartesian_variants(skr::span<skr_shader_options_resource_t*> options, skr::Array<skr_shader_option_template_t>& out_flatten_options,
+using option_variant_seq_t = skr::vector<unique_option_variant_t>;
+using variant_seq_hashe_seq_t = skr::vector<skr_stable_shader_hash_t>;
+void cartesian_variants(skr::span<skr_shader_options_resource_t*> options, skr::vector<skr_shader_option_template_t>& out_flatten_options,
 option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
 {
     // flat and well sorted
@@ -56,7 +56,7 @@ option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
     skr_shader_options_resource_t::flatten_options(out_flatten_options, options);
 
     // [ ["on", "off"], ["a", "b", "c"], ["1", "2"] ]
-    skr::Array<skr::Array<skr::string>> selection_seqs = {};
+    skr::vector<skr::vector<skr::string>> selection_seqs = {};
     selection_seqs.resize_default(out_flatten_options.size());
     for (size_t i = 0u; i < out_flatten_options.size(); ++i)
     {
@@ -72,7 +72,7 @@ option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
         skr::cartesian_product<skr::string> cartesian(selection_seqs);
         while (cartesian.has_next())
         {
-            skr::Array<skr_shader_option_instance_t> option_seq = {};
+            skr::vector<skr_shader_option_instance_t> option_seq = {};
             const auto sequence = cartesian.next();
             option_seq.resize_default(sequence.size());
             SKR_ASSERT(sequence.size() == out_flatten_options.size());
@@ -110,8 +110,8 @@ bool SShaderCooker::Cook(SCookContext* ctx)
     auto source_code = ctx->Import<ShaderSourceCode>();
     SKR_DEFER({ ctx->Destroy(source_code); });
     // Calculate all macro combines (shader variants)
-    skr::Array<skr_shader_options_resource_t*> switch_assets = {};
-    skr::Array<skr_shader_options_resource_t*> option_assets = {};
+    skr::vector<skr_shader_options_resource_t*> switch_assets = {};
+    skr::vector<skr_shader_options_resource_t*> option_assets = {};
     auto importer = static_cast<SShaderImporter*>(ctx->GetImporter());
     for (auto switch_asset : importer->switch_assets)
     {
@@ -128,25 +128,25 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         option_assets.add(opts_resource);
     }
 
-    skr::Array<skr_shader_option_template_t> flat_static_options = {};
+    skr::vector<skr_shader_option_template_t> flat_static_options = {};
     option_variant_seq_t static_variants = {};
     variant_seq_hashe_seq_t static_stable_hashes = {};
     cartesian_variants(switch_assets, flat_static_options, static_variants, static_stable_hashes);
 
-    skr::Array<skr_shader_option_template_t> flat_dynamic_options = {};
+    skr::vector<skr_shader_option_template_t> flat_dynamic_options = {};
     option_variant_seq_t dynamic_variants = {};
     variant_seq_hashe_seq_t dynamic_stable_hashes = {};
     cartesian_variants(option_assets, flat_dynamic_options, dynamic_variants, dynamic_stable_hashes);
 
     // Enumerate destination bytecode format
     // TODO: REFACTOR THIS
-    skr::Array<ECGPUShaderBytecodeType> byteCodeFormats = {
+    skr::vector<ECGPUShaderBytecodeType> byteCodeFormats = {
         ECGPUShaderBytecodeType::CGPU_SHADER_BYTECODE_TYPE_DXIL,
         ECGPUShaderBytecodeType::CGPU_SHADER_BYTECODE_TYPE_SPIRV
     };
     // begin compile
     // auto system = skd::asset::GetCookSystem();
-    skr::Array<skr_multi_shader_resource_t> allOutResources(static_variants.size());
+    skr::vector<skr_multi_shader_resource_t> allOutResources(static_variants.size());
     // foreach variants
     {
     SkrZoneScopedN("Permutations::Compile");

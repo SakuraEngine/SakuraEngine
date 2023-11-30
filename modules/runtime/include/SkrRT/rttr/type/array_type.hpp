@@ -5,8 +5,8 @@
 
 namespace skr::rttr
 {
-struct SKR_RUNTIME_API ArrayType : public GenericType {
-    ArrayType(Type* target_type, Span<size_t> dimensions, string name);
+struct SKR_RUNTIME_API VectorType : public GenericType {
+    VectorType(Type* target_type, Span<size_t> dimensions, string name);
 
     bool query_feature(ETypeFeature feature) const override;
 
@@ -26,6 +26,6 @@ struct SKR_RUNTIME_API ArrayType : public GenericType {
 private:
     Type*         _target_type;
     size_t        _size;
-    Array<size_t> _dimensions;
+    vector<size_t> _dimensions;
 };
 } // namespace skr::rttr

@@ -187,7 +187,7 @@ uint64_t skr_type_t::Size() const
         case SKR_TYPE_CATEGORY_ARR:
             return ((ArrayType*)this)->size;
         case SKR_TYPE_CATEGORY_DYNARR:
-            return sizeof(skr::Array<char8_t>);
+            return sizeof(skr::vector<char8_t>);
         case SKR_TYPE_CATEGORY_ARRV:
             return sizeof(skr::span<char8_t>);
         case SKR_TYPE_CATEGORY_OBJ:
@@ -228,7 +228,7 @@ uint64_t skr_type_t::Align() const
         case SKR_TYPE_CATEGORY_ARR:
             return ((ArrayType*)this)->elementType->Align();
         case SKR_TYPE_CATEGORY_DYNARR:
-            return alignof(skr::Array<char8_t>);
+            return alignof(skr::vector<char8_t>);
         case SKR_TYPE_CATEGORY_ARRV:
             return alignof(skr::span<char8_t>);
         case SKR_TYPE_CATEGORY_OBJ:
@@ -295,7 +295,7 @@ const char8_t* skr_type_t::Name() const
         case SKR_TYPE_CATEGORY_DYNARR: {
             auto& arr = (DynArrayType&)(*this);
             if (arr.name.is_empty())
-                arr.name = skr::format(u8"skr::Array<{}>", arr.elementType->Name());
+                arr.name = skr::format(u8"skr::vector<{}>", arr.elementType->Name());
             return arr.name.u8_str();
         }
         case SKR_TYPE_CATEGORY_ARRV: {

@@ -152,7 +152,7 @@ public:
         return this;
     }
 private:
-    skr::Array<IORequestResolverId> chain;
+    skr::vector<IORequestResolverId> chain;
 };
 
 } // namespace io

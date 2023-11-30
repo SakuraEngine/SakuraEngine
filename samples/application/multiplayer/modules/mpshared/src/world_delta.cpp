@@ -118,8 +118,8 @@ struct ComponentDeltaBuilder {
 };
 
 struct WorldDeltaBuilder : IWorldDeltaBuilder {
-    skr::Array<ComponentDeltaBuilder> components;
-    skr::Array<skr::task::event_t>    dependencies;
+    skr::vector<ComponentDeltaBuilder> components;
+    skr::vector<skr::task::event_t>    dependencies;
     dual_query_t*                      worldDeltaQuery;
     dual_query_t*                      clearDirtyQuery;
     dual_query_t*                      deadQuery;
@@ -154,7 +154,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
         }
     }
 
-    void GenerateDelta(skr::Array<MPWorldDeltaViewBuilder>& builder) override
+    void GenerateDelta(skr::vector<MPWorldDeltaViewBuilder>& builder) override
     {
         SKR_ASSERT(initialized);
         for (auto& delta : builder)
@@ -170,7 +170,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                 delta.components.add_default()->type = GetNetworkComponentIndex(cmps.data[i]);
             }
         }
-        skr::Array<skr::flat_hash_map<dual_entity_t, NetEntityId>> localMaps;
+        skr::vector<skr::flat_hash_map<dual_entity_t, NetEntityId>> localMaps;
         localMaps.resize_default(builder.size());
         auto GetNetworkEntityIndex = [&](dual_entity_t ent, uint32_t c) -> NetEntityId {
             auto it = localMaps[c].find(ent);
@@ -445,8 +445,8 @@ struct ComponentDeltaApplier {
 };
 
 struct WorldDeltaApplier : IWorldDeltaApplier {
-    skr::Array<ComponentDeltaApplier> components;
-    skr::Array<skr::task::event_t>    dependencies;
+    skr::vector<ComponentDeltaApplier> components;
+    skr::vector<skr::task::event_t>    dependencies;
     dual_storage_t*                    storage;
     SpawnPrefab_t                      spawnPrefab;
     DestroyEntity_t                    destroyEntity;
@@ -502,8 +502,8 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
             {
                 auto iter = map.find(delta.entities[pair.entity]);
                 SKR_ASSERT(iter != map.end());
-                skr::Array<dual_type_index_t> added;
-                skr::Array<dual_type_index_t> removed;
+                skr::vector<dual_type_index_t> added;
+                skr::vector<dual_type_index_t> removed;
                 added.reserve(pair.components.size());
                 removed.reserve(pair.deleted.size());
                 for (auto& comp : pair.components)
@@ -535,7 +535,7 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
             {
                 auto entity = delta.entities[pair.entity];
                 SKR_LOG_FMT_DEBUG(u8"New entity recived {}:{}", dual::e_id(entity), dual::e_version(entity));
-                skr::Array<dual_type_index_t> added;
+                skr::vector<dual_type_index_t> added;
                 added.reserve(pair.components.size());
                 for (auto& comp : pair.components)
                     added.add(GetNetworkComponent(comp));

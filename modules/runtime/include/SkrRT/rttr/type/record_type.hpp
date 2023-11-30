@@ -49,7 +49,7 @@ struct Method {
 
     string               name            = {};
     Type*                return_info     = nullptr;
-    Array<ParameterInfo> parameters_info = {};
+    vector<ParameterInfo> parameters_info = {};
     ExecutableType       executable      = {};
 };
 

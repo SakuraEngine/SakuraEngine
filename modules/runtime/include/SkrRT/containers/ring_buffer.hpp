@@ -25,7 +25,7 @@ public:
         return sz;
     }
 protected:
-    skr::Array<T> buffer;
+    skr::vector<T> buffer;
     SAtomicU64 head = 0;
     SAtomicU64 size = 0;
 };

@@ -25,18 +25,18 @@ MultiShaderResource {
     skr::StronglyEnum<ECGPUShaderStage> shader_stage;
     skr::string                         entry;
 
-    inline skr::Array<skr_platform_shader_identifier_t>& GetRootDynamicVariants() SKR_NOEXCEPT
+    inline skr::vector<skr_platform_shader_identifier_t>& GetRootDynamicVariants() SKR_NOEXCEPT
     {
         return GetDynamicVariants(kZeroStableShaderHash);
     }
-    inline skr::Array<skr_platform_shader_identifier_t>& GetDynamicVariants(stable_hash_t hash) SKR_NOEXCEPT
+    inline skr::vector<skr_platform_shader_identifier_t>& GetDynamicVariants(stable_hash_t hash) SKR_NOEXCEPT
     {
         auto found = option_variants.find(hash);
         SKR_ASSERT(found != option_variants.end());
         return found->second;
     }
 
-    skr::flat_hash_map<stable_hash_t, skr::Array<skr_platform_shader_identifier_t>, stable_hasher_t> option_variants;
+    skr::flat_hash_map<stable_hash_t, skr::vector<skr_platform_shader_identifier_t>, stable_hasher_t> option_variants;
 };
 
 sreflect_struct("guid": "8372f075-b4ce-400d-929f-fb0e57c1c887")
@@ -114,12 +114,12 @@ ShaderCollectionJSON {
     // hash=0 -> root_variant;
     skr::flat_hash_map<stable_hash_t, MultiShaderResource, stable_hasher_t> switch_variants;
 
-    skr::Array<skr::string>              switch_key_sequence;
-    skr::Array<EShaderOptionType>        switch_type_sequence;
-    skr::Array<skr::Array<skr::string>> switch_values_sequence;
-    skr::Array<skr::string>              option_key_sequence;
-    skr::Array<EShaderOptionType>        option_type_sequence;
-    skr::Array<skr::Array<skr::string>> option_values_sequence;
+    skr::vector<skr::string>              switch_key_sequence;
+    skr::vector<EShaderOptionType>        switch_type_sequence;
+    skr::vector<skr::vector<skr::string>> switch_values_sequence;
+    skr::vector<skr::string>              option_key_sequence;
+    skr::vector<EShaderOptionType>        option_type_sequence;
+    skr::vector<skr::vector<skr::string>> option_values_sequence;
 };
 
 struct SKR_RENDERER_API SShaderResourceFactory : public resource::SResourceFactory {

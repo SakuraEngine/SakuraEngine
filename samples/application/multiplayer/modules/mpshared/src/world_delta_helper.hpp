@@ -11,7 +11,7 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
 {
     static constexpr bool withHistory = !std::is_same_v<H, void>;
     using history_t = std::conditional_t<withHistory, dual::array_comp_T<H, 4>, void>;
-    using writer_t = std::conditional_t<bitpacking, skr::binary::ArrayWriterBitpacked, skr::binary::ArrayWriter>;
+    using writer_t = std::conditional_t<bitpacking, skr::binary::VectorWriterBitpacked, skr::binary::VectorWriter>;
     MPComponentDeltaViewBuilder& comps = *std::find_if(builder.components.begin(),builder.components.end(), [&](const MPComponentDeltaViewBuilder& comp)
     {
         return GetNetworkComponent(comp.type) == type;

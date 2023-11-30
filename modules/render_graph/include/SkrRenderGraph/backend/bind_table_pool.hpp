@@ -29,7 +29,7 @@ public:
 protected:
     struct BindTablesBlock
     {
-        skr::Array<CGPUXBindTableId> bind_tables;
+        skr::vector<CGPUXBindTableId> bind_tables;
         uint32_t cursor = 0;
     };
     const CGPURootSignatureId root_sig;

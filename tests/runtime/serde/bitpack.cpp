@@ -7,8 +7,8 @@
 class BinaryBitpackTests
 {
 protected:
-    skr::Array<uint8_t> buffer;
-    skr::binary::ArrayWriterBitpacked writer;
+    skr::vector<uint8_t> buffer;
+    skr::binary::VectorWriterBitpacked writer;
     skr::binary::SpanReaderBitpacked reader;
     BinaryBitpackTests()
     {

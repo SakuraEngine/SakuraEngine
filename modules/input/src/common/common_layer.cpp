@@ -256,7 +256,7 @@ struct Input_Common : public CommonInputLayer
     }
 
     ReadingRing<CommonInputReading*> GlobalReadingQueue;
-    skr::Array<CommonInputDevice*> devices;
+    skr::vector<CommonInputDevice*> devices;
     SAtomicU32 enabled = true;
 };
 

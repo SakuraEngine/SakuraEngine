@@ -94,7 +94,7 @@ void MPGameWorld::ClearDeadBall()
 {
     if(authoritative)
     {
-        skr::Array<dual_entity_t> ballsToKill;
+        skr::vector<dual_entity_t> ballsToKill;
         ballsToKill.reserve(16);
         auto collectBallsToKill = [&](dual_chunk_view_t* view)
         {
@@ -124,7 +124,7 @@ void MPGameWorld::ClearDeadZombie()
 {
     if(authoritative)
     {
-        skr::Array<dual_entity_t> zombiesToKill;
+        skr::vector<dual_entity_t> zombiesToKill;
         zombiesToKill.reserve(16);
         auto collectBallsToKill = [&](dual_chunk_view_t* view)
         {

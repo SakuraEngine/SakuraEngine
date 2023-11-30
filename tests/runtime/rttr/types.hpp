@@ -59,7 +59,7 @@ TestSon : public TestParent {
     skr_resource_handle_t                      d; // SKR_TYPE_CATEGORY_HANDLE
     skr::resource::TResourceHandle<TestObject> e; // SKR_TYPE_CATEGORY_HANDLE
     TestEnum                                   f; // SKR_TYPE_CATEGORY_ENUM
-    // skr::Array<TestEnum> g; // SKR_TYPE_CATEGORY_DYNARR
+    // skr::vector<TestEnum> g; // SKR_TYPE_CATEGORY_DYNARR
     // skr::span<TestEnum> h; // SKR_TYPE_CATEGORY_ARRV
     TestEnum                           i[10]; // SKR_TYPE_CATEGORY_ARR
     skr::string_view                   k;     // SKR_TYPE_CATEGORY_STRV
@@ -69,14 +69,14 @@ TestSon : public TestParent {
     skr::variant<TestEnum, skr_guid_t> o;     // SKR_TYPE_CATEGORY_VARIANT
     skr::SPtr<TestObject>              p;     // SKR_TYPE_CATEGORY_REF
     TestObject*                        q;     // SKR_TYPE_CATEGORY_REF
-    // skr::Array<skr::span<skr::variant<skr::SPtr<TestObject>, TestParent*>>> r;
+    // skr::vector<skr::span<skr::variant<skr::SPtr<TestObject>, TestParent*>>> r;
 } sstatic_ctor(XXXInformation<$T>());
 
 sreflect_struct("guid" : "17D3EC00-2817-4EAE-8BAF-976BF4124ABF")
 sattr("serialize" : ["json", "bin"])
 TestSerde {
     int i;
-    // skr::Array<skr::variant<uint32_t, skr::string, TestEnum>> c;
+    // skr::vector<skr::variant<uint32_t, skr::string, TestEnum>> c;
 };
 
 } // namespace Types sreflect

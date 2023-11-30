@@ -49,7 +49,7 @@ protected:
 private:
     SkrAsyncServicePriority priority;
     SRWMutex rw_lock;
-    skr::Array<IORequestId> requests;
+    skr::vector<IORequestId> requests;
 
 public:
     SInterfaceDeleter custom_deleter() const 
@@ -81,7 +81,7 @@ protected:
 
 using BatchPtr = skr::SObjectPtr<IIOBatch>;
 using IOBatchQueue = IOConcurrentQueue<BatchPtr>;  
-using IOBatchArray = skr::Array<BatchPtr>;
+using IOBatchArray = skr::vector<BatchPtr>;
 
 } // namespace io
 } // namespace skr

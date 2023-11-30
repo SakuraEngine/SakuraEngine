@@ -12,10 +12,10 @@ namespace renderer  sreflect{
 struct RenderMesh 
 {
     skr_mesh_resource_id mesh_resource_id;
-    skr::Array<CGPUBufferId> buffers;
-    skr::Array<skr_vertex_buffer_view_t> vertex_buffer_views;
-    skr::Array<skr_index_buffer_view_t> index_buffer_views;
-    skr::Array<PrimitiveCommand> primitive_commands;
+    skr::vector<CGPUBufferId> buffers;
+    skr::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
+    skr::vector<skr_index_buffer_view_t> index_buffer_views;
+    skr::vector<PrimitiveCommand> primitive_commands;
 };
 
 sreflect_managed_component("guid" : "c66ab7ef-bde9-4e0f-8023-a2d99ba5134c")

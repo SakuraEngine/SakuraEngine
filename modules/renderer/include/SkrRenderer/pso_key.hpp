@@ -13,15 +13,15 @@ struct PSOMapKey
 
     CGPURootSignatureId root_signature;
     CGPUShaderEntryDescriptor vertex_shader;
-    skr::Array<CGPUConstantSpecialization> vertex_specializations;
+    skr::vector<CGPUConstantSpecialization> vertex_specializations;
     CGPUShaderEntryDescriptor tesc_shader;
-    skr::Array<CGPUConstantSpecialization> tesc_specializations;
+    skr::vector<CGPUConstantSpecialization> tesc_specializations;
     CGPUShaderEntryDescriptor tese_shader;
-    skr::Array<CGPUConstantSpecialization> tese_specializations;
+    skr::vector<CGPUConstantSpecialization> tese_specializations;
     CGPUShaderEntryDescriptor geom_shader;
-    skr::Array<CGPUConstantSpecialization> geom_specializations;
+    skr::vector<CGPUConstantSpecialization> geom_specializations;
     CGPUShaderEntryDescriptor fragment_shader;
-    skr::Array<CGPUConstantSpecialization> fragment_specializations;
+    skr::vector<CGPUConstantSpecialization> fragment_specializations;
     CGPUVertexLayout vertex_layout;
     CGPUBlendStateDescriptor blend_state;
     CGPUDepthStateDescriptor depth_state;

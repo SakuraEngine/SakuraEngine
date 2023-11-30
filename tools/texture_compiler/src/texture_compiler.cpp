@@ -86,7 +86,7 @@ bool STextureCooker::Cook(SCookContext *ctx)
             break;
     }
     // DXT
-    skr::Array<uint8_t> compressed_data;
+    skr::vector<uint8_t> compressed_data;
     {
         SkrZoneScopedN("DXTCompress");
         compressed_data = Util_DXTCompressWithImageCoder(decoder, compressed_format);

@@ -116,9 +116,9 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction {
 
 protected:
     InputValueStorage current_value;
-    skr::Array<ActionEventStorage> events;
-    skr::Array<SObjectPtr<InputTrigger>> triggers;
-    skr::Array<SObjectPtr<InputModifier>> modifiers;
+    skr::vector<ActionEventStorage> events;
+    skr::vector<SObjectPtr<InputTrigger>> triggers;
+    skr::vector<SObjectPtr<InputModifier>> modifiers;
 };
 
 } // namespace input

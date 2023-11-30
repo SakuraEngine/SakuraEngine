@@ -89,8 +89,8 @@ namespace task2
     struct condvar_t
     {
         SConditionVariable cv;
-        skr::Array<std::coroutine_handle<skr_task_t::promise_type>> waiters;
-        skr::Array<int> workerIndices;
+        skr::vector<std::coroutine_handle<skr_task_t::promise_type>> waiters;
+        skr::vector<int> workerIndices;
         std::atomic<int> numWaiting = {0};
         std::atomic<int> numWaitingOnCondition = {0};
         condvar_t()

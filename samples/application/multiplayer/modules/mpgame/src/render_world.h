@@ -17,8 +17,8 @@ struct MPRenderWorld
     dual_query_t* cameraQuery;
     skr::flat_hash_map<dual_entity_t, dual_entity_t> renderToGameEntityMap;
     skr::flat_hash_map<dual_entity_t, dual_entity_t> gameToRenderEntityMap;
-    skr::Array<dual_entity_t> toDeleteRenderEntities;
-    skr::Array<dual_entity_t> newGameEntities;
+    skr::vector<dual_entity_t> toDeleteRenderEntities;
+    skr::vector<dual_entity_t> newGameEntities;
     SHiresTimer renderTimer;
 
     SRendererId renderer;

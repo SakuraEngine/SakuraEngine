@@ -24,7 +24,7 @@ Type* ArrayTypeLoader::load(Span<TypeDesc> desc)
         type_name.append(format(u8"[{}]", dimensions_buffer[dim_idx]));
     }
 
-    return SkrNew<ArrayType>(target_type, Span<size_t>{ dimensions_buffer, dim }, std::move(type_name));
+    return SkrNew<VectorType>(target_type, Span<size_t>{ dimensions_buffer, dim }, std::move(type_name));
 }
 void ArrayTypeLoader::destroy(Type* type)
 {

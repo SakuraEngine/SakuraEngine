@@ -46,7 +46,7 @@ TEST_CASE_METHOD(JSONSerdeTests, "structure")
 {
     struct Test
     {
-        skr::Array<uint64_t> arr;
+        skr::vector<uint64_t> arr;
         skr::string str;
     };
     Test value;
@@ -64,7 +64,7 @@ TEST_CASE_METHOD(JSONSerdeTests, "structure")
     simdjson::ondemand::document doc = parser.iterate(str);
     simdjson::ondemand::object obj = doc.get_object();
     simdjson::ondemand::value field = obj["arr"].value_unsafe();
-    skr::Array<uint64_t> readArr;
+    skr::vector<uint64_t> readArr;
     skr::json::Read(std::move(field), readArr);
     EXPECT_EQ(value.arr[0], readArr[0]);
     EXPECT_EQ(value.arr[1], readArr[1]);

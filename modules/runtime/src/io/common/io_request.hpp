@@ -230,7 +230,7 @@ private:
 };
 
 using IORequestQueue = IOConcurrentQueue<IORequestId>;  
-using IORequestArray = skr::Array<IORequestId>;
+using IORequestArray = skr::vector<IORequestId>;
 
 } // namespace io
 } // namespace skr

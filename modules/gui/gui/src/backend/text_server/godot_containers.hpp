@@ -28,7 +28,7 @@ public:
     Span() SKR_NOEXCEPT = default;
 
     template <typename U>
-    Span(const skr::Array<U>& other) SKR_NOEXCEPT
+    Span(const skr::vector<U>& other) SKR_NOEXCEPT
         : skr::Span<T>(other.data(), other.size())
     {
     }
@@ -41,14 +41,14 @@ public:
 };
 
 template <class T>
-class Vector : public skr::Array<T>
+class Vector : public skr::vector<T>
 {
 public:
     Vector()                       = default;
     Vector(const Vector<T>& other) = default;
     template <typename U>
     Vector(const Span<U>& other)
-        : skr::Array<T>(other)
+        : skr::vector<T>(other)
     {
     }
     Vector& operator=(const Vector<T>& other) = default;
@@ -56,7 +56,7 @@ public:
     inline Vector& operator=(const Span<U>& other)
     {
         this->clear();
-        skr::Array<T>::insert(this->end(), other.begin(), other.end());
+        skr::vector<T>::insert(this->end(), other.begin(), other.end());
         return *this;
     }
 
@@ -104,19 +104,19 @@ public:
     }
     void insert(size_t pos, const T& v)
     {
-        skr::Array<T>::add_at(pos, v);
+        skr::vector<T>::add_at(pos, v);
     }
     void resize(size_t N)
     {
-        skr::Array<T>::resize_default(N);
+        skr::vector<T>::resize_default(N);
     }
     void append(const T& v)
     {
-        skr::Array<T>::add(v);
+        skr::vector<T>::add(v);
     }
     void push_back(const T& v)
     {
-        skr::Array<T>::add(v);
+        skr::vector<T>::add(v);
     }
     void append_array(const Vector<T>& other)
     {

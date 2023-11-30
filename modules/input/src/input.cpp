@@ -23,7 +23,7 @@ struct InputImplementation : public Input
     void finalize() SKR_NOEXCEPT;
 
 protected:
-    skr::Array<InputLayer*> layers_;
+    skr::vector<InputLayer*> layers_;
 };
 
 #ifdef SKR_INPUT_USE_GAME_INPUT

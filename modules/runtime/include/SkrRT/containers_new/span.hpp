@@ -21,7 +21,7 @@ namespace binary
 {
 template <class T>
 struct BlobBuilderType<Span<T>> {
-    using type = Array<typename BlobBuilderType<T>::type>;
+    using type = vector<typename BlobBuilderType<T>::type>;
 };
 struct NewSpanSerdeConfig {
     uint32_t maxSize;

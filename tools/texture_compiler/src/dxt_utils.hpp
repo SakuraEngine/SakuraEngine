@@ -62,7 +62,7 @@ inline static skr::string Util_CompressedTypeString(ECGPUFormat format)
     }
 }
 
-inline static skr::Array<uint8_t> Util_DXTCompressWithImageCoder(skr::ImageDecoderId decoder, ECGPUFormat compressed_format)
+inline static skr::vector<uint8_t> Util_DXTCompressWithImageCoder(skr::ImageDecoderId decoder, ECGPUFormat compressed_format)
 {
     // fetch RGBA data
     const auto bit_depth = decoder->get_bit_depth();
@@ -97,7 +97,7 @@ inline static skr::Array<uint8_t> Util_DXTCompressWithImageCoder(skr::ImageDecod
     rgba_surface.width = image_width;
     rgba_surface.height = image_height;
     const auto compressed_size = Util_DXBCCompressedSize(image_width, image_height, compressed_format);
-    skr::Array<uint8_t> compressed_data(compressed_size);
+    skr::vector<uint8_t> compressed_data(compressed_size);
     switch (compressed_format)
     {
         case CGPU_FORMAT_DXBC1_RGB_UNORM:

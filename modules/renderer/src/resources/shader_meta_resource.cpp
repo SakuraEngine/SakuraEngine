@@ -5,7 +5,7 @@
 #include <EASTL/sort.h>
 #include <EASTL/string.h>
 
-bool skr_shader_options_resource_t::flatten_options(skr::Array<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
+bool skr_shader_options_resource_t::flatten_options(skr::vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
 {
     eastl::set<eastl::u8string>                                                           keys;
     skr::flat_hash_map<skr::string, skr_shader_option_template_t, skr::Hash<skr::string>> kvs;

@@ -318,7 +318,7 @@ struct RTTRTraits<T[N1][N2][N3]> {
 namespace skr::rttr
 {
 template <typename T>
-struct RTTRTraits<skr::Array<T>> {
+struct RTTRTraits<skr::vector<T>> {
     inline static constexpr size_t type_desc_size = 1;
     inline static void             write_type_desc(TypeDesc* desc)
     {

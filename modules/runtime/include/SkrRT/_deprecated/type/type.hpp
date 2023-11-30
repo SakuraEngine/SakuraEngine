@@ -386,7 +386,7 @@ struct DynArrayStorage
     uint8_t* capacity;
 };
 
-// skr::Array<T>
+// skr::vector<T>
 struct DynArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     skr::string name;
@@ -566,7 +566,7 @@ struct type_of_vector {
 };
 
 template <class T, class Allocator>
-struct type_of<skr::Array<T, Allocator>> : type_of_vector<skr::Array<T, Allocator>, T> 
+struct type_of<skr::vector<T, Allocator>> : type_of_vector<skr::vector<T, Allocator>, T> 
 {
 };
 
