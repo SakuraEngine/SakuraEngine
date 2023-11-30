@@ -43,12 +43,11 @@ SKR_GUI_API GestureRecognizer : public skr::rttr::IObject {
     SKR_RTTR_GENERATE_BODY()
 
     // 监听 pointer
-    void         add_pointer(NotNull<PointerDownEvent*> event);
-    virtual void add_allowed_pointer(NotNull<PointerDownEvent*> event) = 0;
+    virtual void add_pointer(NotNull<Event*> event);
 
     // 事件处理
-    // TODO. 加上 TriggerPath 与 TriggerEvent
     virtual bool handle_event(Event* event);
+    virtual bool handle_event_from_widget(Event* event);
 
     // 手势竞争
     virtual void accept_gesture(CombinePointerId pointer);

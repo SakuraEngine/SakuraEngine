@@ -27,33 +27,27 @@ bool InputManager::dispatch_event(Event* event)
         // handle enter & exit
         _dispatch_enter_exit(&result, pointer_move_event->type_cast_fast<PointerMoveEvent>());
 
-        // dispatch to gesture or route to widget
-        if (_gesture_arena_manager.route_event(pointer_move_event))
-        {
-            return true;
-        }
-        else
-        {
-            // route
-            return route_event(&result, pointer_move_event);
-        }
+        // dispatch to widget
+        bool handled = route_event(&result, pointer_move_event);
+
+        // dispatch to gesture
+        handled |= _gesture_arena_manager.route_event(pointer_move_event);
+
+        return handled;
     }
     else if (auto pointer_up_event = event->type_cast<PointerUpEvent>())
     {
-        // dispatch to gesture or route to widget
-        if (_gesture_arena_manager.route_event(pointer_up_event))
-        {
-            return true;
-        }
-        else
-        {
-            // do hit test
-            HitTestResult result;
-            hit_test(&result, pointer_down_event->global_position);
+        // do hit test
+        HitTestResult result;
+        hit_test(&result, pointer_down_event->global_position);
 
-            // route
-            return route_event(&result, pointer_up_event);
-        }
+        // dispatch to widget
+        bool handled = route_event(&result, pointer_up_event);
+
+        // dispatch to gesture
+        handled |= _gesture_arena_manager.route_event(pointer_up_event);
+
+        return handled;
     }
 
     else // pan/zoom & scroll/scale
