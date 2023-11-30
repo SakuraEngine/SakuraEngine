@@ -5,8 +5,8 @@
 #include <SkrRT/containers_new/span.hpp>
 #include <SkrRT/containers_new/vector.hpp>
 #include <SkrRT/containers_new/uset.hpp>
-#include <SkrRT/containers/hashmap.hpp>
-#include "SkrRT/containers/sptr.hpp"
+#include <SkrRT/containers_new/hashmap.hpp>
+#include "SkrRT/containers_new/sptr.hpp"
 
 #include <limits>
 #include <type_traits>

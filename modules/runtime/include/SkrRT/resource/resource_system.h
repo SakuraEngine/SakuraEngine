@@ -3,7 +3,7 @@
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/misc/types.h"
-#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers_new/span.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service)
 

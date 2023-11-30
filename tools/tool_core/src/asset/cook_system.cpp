@@ -3,7 +3,7 @@
 #include "SkrRT/misc/parallel_for.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/async/thread_job.hpp"
 

@@ -24,16 +24,16 @@
 #include "SkrRT/containers_new/umap.hpp"
 #include "SkrRT/containers_new/uset.hpp"
 
-#include "SkrRT/containers/lite.hpp"
-#include "SkrRT/containers/span.hpp"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers_new/lite.hpp"
+#include "SkrRT/containers_new/span.hpp"
+#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers_new/sptr.hpp"
 
 // function ref
-#include "SkrRT/containers/function_ref.hpp"
+#include "SkrRT/containers_new/function_ref.hpp"
 
 // not_null
-#include "SkrRT/containers/not_null.hpp"
+#include "SkrRT/containers_new/not_null.hpp"
 
 // assert
 #define SKR_GUI_ASSERT(__EXPR) SKR_ASSERT(__EXPR)

@@ -1,12 +1,12 @@
 #pragma once
 #include <EASTL/functional.h>
-#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers_new/span.hpp"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/misc/log.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/serde/binary/writer.h"
-#include "SkrRT/containers/function_ref.hpp"
+#include "SkrRT/containers_new/function_ref.hpp"
 #include "SkrToolCore/asset/cooker.hpp"
 #include "simdjson/padded_string.h"
 

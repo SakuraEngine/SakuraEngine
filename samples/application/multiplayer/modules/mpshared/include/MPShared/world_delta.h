@@ -1,10 +1,10 @@
 #pragma once
 #include "MPShared/module.configure.h"
-#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers_new/span.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/async/fib_task.hpp"
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/containers_new/vector.hpp"
 #include "EASTL/bonus/fixed_ring_buffer.h"
 #include "SkrRT/platform/time.h"

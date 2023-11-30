@@ -44,7 +44,7 @@ typedef enum EImageCoderCompression {
 typedef uint32_t ImageCoderCompression;
 
 #ifdef __cplusplus
-#include <SkrRT/containers/span.hpp>
+#include <SkrRT/containers_new/span.hpp>
 
 namespace skr
 {

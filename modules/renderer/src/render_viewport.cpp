@@ -1,6 +1,6 @@
 #include "SkrBase/math/rtm/vector4f.h"
 #include "SkrBase/math/rtm/rtmx.h"
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/containers_new/vector.hpp"
 
 #include "SkrRenderer/render_viewport.h"

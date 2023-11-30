@@ -1,7 +1,7 @@
 #include "../../../../samples/common/common/utils.h"
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/vfs.h"
-#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers_new/string.hpp>
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/io/vram_io.hpp"

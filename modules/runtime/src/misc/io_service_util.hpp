@@ -9,7 +9,7 @@
 #include <EASTL/deque.h>
 #include <EASTL/optional.h>
 #include <EASTL/sort.h>
-#include "SkrRT/containers/concurrent_queue.h"
+#include "SkrRT/containers_new/concurrent_queue.h"
 
 #include "SkrProfile/profile.h"
 #include "SkrProfile/profile.h"

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/misc/types.h"
 #include "SkrRT/platform/thread.h"
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers_new/sptr.hpp"
 #include "SkrRT/containers_new/umap.hpp"
 #include "SkrRT/containers_new/string.hpp"
 #include "SkrLightningStorage/mdb.h"

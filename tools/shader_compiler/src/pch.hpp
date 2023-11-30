@@ -12,10 +12,10 @@
 #include "SkrRT/resource/resource_factory.h" // IWYU pragma: export
 #include "SkrRT/io/ram_io.hpp" // IWYU pragma: export
 
-#include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/sptr.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/vector.hpp> // IWYU pragma: export
-#include <SkrRT/containers/string.hpp> // IWYU pragma: export
-#include <SkrRT/containers/hashmap.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/string.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/hashmap.hpp> // IWYU pragma: export
 
 #include "SkrRT/serde/json/reader.h" // IWYU pragma: export
 #include "SkrRT/serde/json/writer.h" // IWYU pragma: export

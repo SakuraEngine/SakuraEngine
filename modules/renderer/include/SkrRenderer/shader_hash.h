@@ -2,7 +2,7 @@
 #include "SkrRenderer/fwd_types.h"
 #include "cgpu/flags.h"
 #ifdef __cplusplus
-    #include "SkrRT/containers/string.hpp"
+    #include "SkrRT/containers_new/string.hpp"
     #include "SkrRT/rttr/strongly_enum.hpp"
 #endif
 

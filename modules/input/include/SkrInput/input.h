@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrInput/module.configure.h"
-#include "SkrRT/containers/lite.hpp"
+#include "SkrRT/containers_new/lite.hpp"
 #include "SkrRT/platform/input.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::input, InputDevice, skr_input_device)

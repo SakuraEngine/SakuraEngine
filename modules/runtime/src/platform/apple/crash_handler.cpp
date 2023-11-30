@@ -2,7 +2,7 @@
 #include "SkrRT/platform/process.h"
 #include "SkrRT/platform/crash.h"
 
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 
 namespace 
 {

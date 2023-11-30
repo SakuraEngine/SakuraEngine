@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrAnimTool/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 #ifndef __meta__
     #include "SkrAnimTool/animation_asset.generated.h" // IWYU pragma: export
 #endif

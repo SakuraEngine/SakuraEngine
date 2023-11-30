@@ -1,4 +1,4 @@
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers_new/sptr.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/platform/memory.h"
@@ -6,7 +6,7 @@
 #include "SkrRT/misc/bits.hpp"
 #include "SkrBase/misc/demangle.hpp"
 #include <cmath>
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 
 #include <EASTL/fixed_string.h>
 

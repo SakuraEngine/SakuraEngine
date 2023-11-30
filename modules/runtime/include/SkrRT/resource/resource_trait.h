@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers/function_ref.hpp" // IWYU pragma: keep
+#include "SkrRT/containers_new/function_ref.hpp" // IWYU pragma: keep
 
 namespace skr::resource
 {

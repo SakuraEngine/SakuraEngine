@@ -6,8 +6,8 @@
 
 #include "SkrProfile/profile.h"
 
-#include <SkrRT/containers/string.hpp>
-#include <SkrRT/containers/hashmap.hpp>
+#include <SkrRT/containers_new/string.hpp>
+#include <SkrRT/containers_new/hashmap.hpp>
 
 namespace skr
 {

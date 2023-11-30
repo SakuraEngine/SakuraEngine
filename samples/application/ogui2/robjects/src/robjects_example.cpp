@@ -1,7 +1,7 @@
 #include "robjects_application.h"
 #include "gui_render_graph.hpp"
 
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 
 #include "SkrRT/platform/system.h"
 #include "SkrRT/misc/log.h"
