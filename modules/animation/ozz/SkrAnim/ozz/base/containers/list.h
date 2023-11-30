@@ -34,6 +34,7 @@
 #pragma warning(disable : 4127)
 #endif  // _MSC_VER
 
+#include "SkrRT/platform/memory.h"
 #include <list>
 
 #ifdef _MSC_VER
@@ -46,6 +47,6 @@ namespace ozz {
 // Redirects std::list to ozz::list in order to replace std default allocator by
 // ozz::StdAllocator.
 template <class _Ty>
-using list = std::list<_Ty>;
+using list = std::list<_Ty, skr_stl_allocator<_Ty>>;
 }  // namespace ozz
 #endif  // OZZ_OZZ_BASE_CONTAINERS_LIST_H_

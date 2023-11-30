@@ -14,8 +14,6 @@
 #include "scheduler.hpp"
 #include "type_registry.hpp"
 
-#include <EASTL/bitset.h>
-
 namespace dual
 {
 static dual_array_comp_t* new_array(void* ptr, size_t cap, size_t elemSize, size_t align)

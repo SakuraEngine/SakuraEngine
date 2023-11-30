@@ -1,11 +1,8 @@
 #pragma once
 #include "SkrShaderCompiler/module.configure.h"
-#include "SkrRT/config.h"
 #include "cgpu/flags.h"
-#include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/containers/span.hpp"
 #include "SkrRT/containers/string.hpp"
-#include <EASTL/functional.h>
 #ifndef __meta__
     #include "SkrShaderCompiler/shader_compiler.generated.h" // IWYU pragma: export
 #endif

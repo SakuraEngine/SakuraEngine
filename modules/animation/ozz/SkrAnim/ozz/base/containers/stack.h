@@ -28,14 +28,13 @@
 #ifndef OZZ_OZZ_BASE_CONTAINERS_STACK_H_
 #define OZZ_OZZ_BASE_CONTAINERS_STACK_H_
 
-#include "EASTL/stack.h"
-
 #include "deque.h"
+#include <stack>
 
 namespace ozz {
 // Redirects std::stack to ozz::stack in order to replace std default allocator
 // by ozz::StdAllocator.
 template <class _Ty, class _Container = typename ozz::deque<_Ty>>
-using stack = eastl::stack<_Ty>;
+using stack = std::stack<_Ty>;
 }  // namespace ozz
 #endif  // OZZ_OZZ_BASE_CONTAINERS_STACK_H_

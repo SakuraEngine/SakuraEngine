@@ -1,7 +1,4 @@
-#include <EASTL/algorithm.h>
-
 #include "../../../../samples/common/common/utils.h"
-
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/vfs.h"
 #include <SkrRT/containers/string.hpp>
@@ -16,14 +13,13 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
-
-
 #include "SkrProfile/profile.h"
 
 #include "SkrAssetTool/gltf_factory.h"
 #include "imgui_impl_sdl.h"
 #include "SkrImGui/imgui_utils.h"
 #include "nfd.h"
+#include <algorithm>
 
 class SAssetImportModule : public skr::IDynamicModule
 {

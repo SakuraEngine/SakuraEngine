@@ -11,8 +11,7 @@
 #include "archetype.hpp"
 #include "type_registry.hpp"
 
-#include <EASTL/sort.h>
-#include <EASTL/bitset.h>
+#include <algorithm>
 
 namespace dual
 {
@@ -103,7 +102,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         if (!ti.is_chunk() && desc.entityFieldsCount != 0)
             proto.sizeToPatch += desc.size;
     }
-    eastl::sort(proto.stableOrder, proto.stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
+    std::sort(proto.stableOrder, proto.stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
         return guid_compare_t{}(guids[lhs], guids[rhs]);
     });
     size_t caps[] = { kSmallBinSize - sizeof(dual_chunk_t), kFastBinSize - sizeof(dual_chunk_t), kLargeBinSize - sizeof(dual_chunk_t) };

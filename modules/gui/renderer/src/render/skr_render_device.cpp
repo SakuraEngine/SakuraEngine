@@ -170,9 +170,9 @@ CGPURenderPipelineId SkrRenderDevice::get_pipeline(ESkrPipelineFlag flags, ECGPU
 {
     SkrPipelineKey key = { flags, sample_count };
     auto           it  = _pipelines.find(key);
-    if (it != _pipelines.end()) return it->second;
+    if (it != _pipelines.end()) return it->value;
     auto pipeline   = create_pipeline(flags, sample_count);
-    _pipelines[key] = pipeline;
+    _pipelines.add(key, pipeline);
     return pipeline;
 }
 CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count)
