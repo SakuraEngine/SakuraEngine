@@ -3,8 +3,7 @@
 #include "SkrBase/misc/demangle.hpp"
 #include "SkrRT/misc/log/log_base.hpp"
 #include "SkrRT/containers/string.hpp"
-
-#include <array>
+#include "SkrRT/containers/array.hpp"
 
 namespace skr {
 namespace log {
@@ -146,9 +145,9 @@ protected:
 
     skr::string calculated_format_ = u8"";
     uint32_t _args_n = 0;
-    std::array<FormatArg, kAttributeCount> _args;
-    std::array<int64_t, kAttributeCount> order_index_;
-    std::array<bool, kAttributeCount> is_set_in_pattern_;
+    skr::array<FormatArg, kAttributeCount> _args;
+    skr::array<int64_t, kAttributeCount> order_index_;
+    skr::array<bool, kAttributeCount> is_set_in_pattern_;
 
     skr::string formatted_string_ = u8"";
 };

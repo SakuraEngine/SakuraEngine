@@ -981,7 +981,7 @@ namespace dual
         {
             SKR_ASSERT(params.length < 32); //TODO: support more than 32 params
             dualQ_get(query, nullptr, &params);
-            for (int i = 0; i < params.length; ++i)
+            for (TIndex i = 0; i < params.length; ++i)
             {
                 if(params.accesses[i].readonly)
                     paramPtrs[i] = dualV_get_owned_ro_local(view, localTypes[i]);

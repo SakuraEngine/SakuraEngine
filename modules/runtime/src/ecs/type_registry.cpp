@@ -34,7 +34,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.alignment = 0;
         desc.entityFieldsCount = 0;
         desc.flags = 0;
-        descriptions.push_back(desc);
+        descriptions.add(desc);
         guid2type.emplace(desc.guid, kDisableComponent);
         name2type.emplace(desc.name, kDisableComponent);
     }
@@ -48,7 +48,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.alignment = 0;
         desc.entityFieldsCount = 0;
         desc.flags = 0;
-        descriptions.push_back(desc);
+        descriptions.add(desc);
         guid2type.emplace(desc.guid, kDeadComponent);
         name2type.emplace(desc.name, kDeadComponent);
     }
@@ -61,10 +61,10 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.elementSize = sizeof(dual_entity_t);
         desc.alignment = alignof(dual_entity_t);
         desc.entityFieldsCount = 1;
-        entityFields.push_back(0);
+        entityFields.add(0);
         desc.entityFields = 0;
         desc.flags = 0;
-        descriptions.push_back(desc);
+        descriptions.add(desc);
         guid2type.emplace(desc.guid, kLinkComponent);
         name2type.emplace(desc.name, kLinkComponent);
     }
@@ -78,7 +78,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.alignment = DUAL_MASK_ALIGN;
         desc.entityFieldsCount = 0;
         desc.flags = 0;
-        descriptions.push_back(desc);
+        descriptions.add(desc);
         guid2type.emplace(desc.guid, kMaskComponent);
         name2type.emplace(desc.name, kMaskComponent);
     }
@@ -92,7 +92,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.alignment = alignof(dual_guid_t);
         desc.entityFieldsCount = 0;
         desc.flags = 0;
-        descriptions.push_back(desc);
+        descriptions.add(desc);
         guid2type.emplace(desc.guid, kGuidComponent);
         name2type.emplace(desc.name, kGuidComponent);
     }
@@ -106,7 +106,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         desc.alignment = DUAL_MASK_ALIGN;
         desc.entityFieldsCount = 0;
         desc.flags = 0;
-        descriptions.push_back(desc);
+        descriptions.add(desc);
         guid2type.emplace(desc.guid, kDirtyComponent);
         name2type.emplace(desc.name, kDirtyComponent);
     }
@@ -133,7 +133,7 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
         intptr_t* efs = (intptr_t*)desc.entityFields;
         desc.entityFields = entityFields.size();
         for (uint32_t i = 0; i < desc.entityFieldsCount; ++i)
-            entityFields.push_back(efs[i]);
+            entityFields.add(efs[i]);
     }
     bool tag = false;
     bool pin = false;
@@ -176,7 +176,7 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
         oldDesc = desc;
         return i->second;
     }
-    descriptions.push_back(desc);
+    descriptions.add(desc);
     guid2type.emplace(desc.guid, index);
     name2type.emplace(desc.name, index);
     return index;

@@ -6,7 +6,7 @@
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrRT/containers/string.hpp"
 
 #include <numeric> // std::iota
@@ -14,8 +14,8 @@
 
 void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
 {
-    skr::vector<dual_entity_t> entities;
-    skr::vector<skr_guid_t> guids;
+    skr::Array<dual_entity_t> entities;
+    skr::Array<skr_guid_t> guids;
     auto entityCount = dualS_count(world, true, false);
     entities.reserve(entityCount);
     guids.reserve(entityCount);
@@ -26,15 +26,14 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
         if(!cguids)
             return;
         //append to vector
-        entities.insert(entities.end(), centities, centities + view->count);
-        guids.insert(guids.end(), cguids, cguids + view->count);
+        entities.append({centities, view->count});
+        guids.append({cguids, view->count});
         
     };
     dualS_all(world, true, false, DUAL_LAMBDA(accumulate));
-    skr::vector<dual_entity_t> indices;
-    indices.resize(guids.size());
-    using iter = skr::vector<dual_entity_t>::iterator;
-    skr::parallel_for(indices.begin(), indices.end(), 2048, [&](iter begin, iter end)
+    skr::Array<dual_entity_t> indices;
+    indices.resize_default(guids.size());
+    skr::parallel_for(indices.begin(), indices.end(), 2048, [&](auto&& begin, auto&& end)
     {
         std::iota(begin, end, begin - indices.begin());
     });
@@ -47,9 +46,9 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
     {
         return std::lexicographical_compare(&guids[a].Storage0, &guids[a].Storage3, &guids[b].Storage0, &guids[b].Storage3);
     });
-    skr::vector<dual_entity_t> sortedEntities;
-    sortedEntities.resize(guids.size());
-    skr::parallel_for(indices.begin(), indices.end(), 2048, [&](iter begin, iter end)
+    skr::Array<dual_entity_t> sortedEntities;
+    sortedEntities.resize_default(guids.size());
+    skr::parallel_for(indices.begin(), indices.end(), 2048, [&](auto&& begin, auto&& end)
     {
         for (auto it = begin; it != end; ++it)
         {

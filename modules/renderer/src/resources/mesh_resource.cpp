@@ -355,7 +355,7 @@ ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
             auto render_mesh = mesh_resource->render_mesh = SkrNew<skr_render_mesh_t>();
             // TODO: remove these requests
             const auto N = dRequest->second->dBuffers.size();
-            render_mesh->buffers.resize(N);
+            render_mesh->buffers.resize_default(N);
             for (auto i = 0u; i < N; i++)
             {
                 auto pBuffer            = dRequest->second->dBuffers[i]->get_buffer();

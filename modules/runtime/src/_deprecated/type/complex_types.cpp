@@ -2,7 +2,7 @@
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/_deprecated/type/type.hpp"
 #include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 
 namespace skr {
 namespace type {

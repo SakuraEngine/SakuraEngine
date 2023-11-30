@@ -77,8 +77,8 @@ struct Input_Common : public CommonInputLayer
     bool Initialize() SKR_NOEXCEPT final
     {
         // Add SDL2 keyboard device
-        devices.emplace_back(CreateInputDevice_SDL2Keyboard(this));
-        devices.emplace_back(CreateInputDevice_SDL2Mouse(this));
+        devices.add(CreateInputDevice_SDL2Keyboard(this));
+        devices.add(CreateInputDevice_SDL2Mouse(this));
 
         return true;
     }
@@ -256,7 +256,7 @@ struct Input_Common : public CommonInputLayer
     }
 
     ReadingRing<CommonInputReading*> GlobalReadingQueue;
-    skr::vector<CommonInputDevice*> devices;
+    skr::Array<CommonInputDevice*> devices;
     SAtomicU32 enabled = true;
 };
 

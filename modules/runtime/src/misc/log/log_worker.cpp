@@ -157,7 +157,7 @@ ThreadToken* LogQueue::on_push(const LogEvent& ev, bool backtrace) SKR_NOEXCEPT
     if (iter == thread_id_map_.end())
     {
         skr_rw_mutex_acquire_w(&tids_mutex_);
-        tids_.emplace_back(tid);
+        tids_.add(tid);
         skr_rw_mutex_release_w(&tids_mutex_);
 
         thread_id_map_.emplace(tid, eastl::make_unique<ThreadToken>(*this));
@@ -199,13 +199,13 @@ LogWorker::~LogWorker() SKR_NOEXCEPT
 void LogWorker::add_logger(Logger* logger) SKR_NOEXCEPT
 {
     drain();
-    loggers_.emplace_back(logger);
+    loggers_.add(logger);
 }
 
 void LogWorker::remove_logger(Logger* logger) SKR_NOEXCEPT
 {
     drain();
-    loggers_.erase(std::remove(loggers_.begin(), loggers_.end(), logger), loggers_.end());
+    loggers_.remove(logger);
 }
 
 bool LogWorker::predicate() SKR_NOEXCEPT

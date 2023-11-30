@@ -577,8 +577,8 @@ namespace task2
     void condvar_t::add_waiter(std::coroutine_handle<skr_task_t::promise_type> handle, int workerIdx)
     {
         ++numWaiting;
-        waiters.push_back(handle);
-        workerIndices.push_back(workerIdx);
+        waiters.add(handle);
+        workerIndices.add(workerIdx);
     }
 
     void condvar_t::wait(SMutex& mutex)

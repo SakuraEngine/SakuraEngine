@@ -596,6 +596,14 @@ TEST_CASE("test array")
         {
             REQUIRE_EQ(a[i], 114514);
         }
+
+        TestArray aa = {5, 1, 2, 5, 5, 2, 5};
+        aa.remove_all(5);
+        REQUIRE_EQ(aa.size(), 3);
+        for (uint32_t i = 0; i < aa.size(); ++i)
+        {
+            REQUIRE_NE(aa[i], 5);
+        }
     }
 
     // [test in remove] remove if

@@ -11,31 +11,31 @@ PSOMapKey::PSOMapKey(const CGPURenderPipelineDescriptor& desc, uint64_t frame) S
     if (desc.vertex_shader)
     {
         vertex_shader = *desc.vertex_shader;
-        vertex_specializations = skr::vector<CGPUConstantSpecialization>(desc.vertex_shader->constants, desc.vertex_shader->constants + desc.vertex_shader->num_constants);
+        vertex_specializations = skr::Array<CGPUConstantSpecialization>(desc.vertex_shader->constants, desc.vertex_shader->num_constants);
         descriptor.vertex_shader = &vertex_shader;
     }
     if (desc.tesc_shader)
     {
         tesc_shader = *desc.tesc_shader;
-        tesc_specializations = skr::vector<CGPUConstantSpecialization>(desc.tesc_shader->constants, desc.tesc_shader->constants + desc.tesc_shader->num_constants);
+        tesc_specializations = skr::Array<CGPUConstantSpecialization>(desc.tesc_shader->constants, desc.tesc_shader->num_constants);
         descriptor.tesc_shader = &tesc_shader;
     }
     if (desc.tese_shader)
     {
         tese_shader = *desc.tese_shader;
-        tese_specializations = skr::vector<CGPUConstantSpecialization>(desc.tese_shader->constants, desc.tese_shader->constants + desc.tese_shader->num_constants);
+        tese_specializations = skr::Array<CGPUConstantSpecialization>(desc.tese_shader->constants, desc.tese_shader->num_constants);
         descriptor.tese_shader = &tese_shader;
     }
     if (desc.geom_shader)
     {
         geom_shader = *desc.geom_shader;
-        geom_specializations = skr::vector<CGPUConstantSpecialization>(desc.geom_shader->constants, desc.geom_shader->constants + desc.geom_shader->num_constants);
+        geom_specializations = skr::Array<CGPUConstantSpecialization>(desc.geom_shader->constants, desc.geom_shader->num_constants);
         descriptor.geom_shader = &geom_shader;
     }
     if (desc.fragment_shader)
     {
         fragment_shader = *desc.fragment_shader;
-        fragment_specializations = skr::vector<CGPUConstantSpecialization>(desc.fragment_shader->constants, desc.fragment_shader->constants + desc.fragment_shader->num_constants);
+        fragment_specializations = skr::Array<CGPUConstantSpecialization>(desc.fragment_shader->constants, desc.fragment_shader->num_constants);
         descriptor.fragment_shader = &fragment_shader;
     }
     if (desc.vertex_layout) vertex_layout = *desc.vertex_layout;

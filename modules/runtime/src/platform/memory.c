@@ -290,6 +290,28 @@ SKR_RUNTIME_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_
     return np;
 }
 
+SKR_RUNTIME_API void* _sakura_realloc_aligned(void* p, size_t newsize, size_t alignment, const char* pool_name) 
+{
+    if (pool_name)
+    {
+        SkrCFreeN(p, pool_name);
+    }
+    else
+    {
+        SkrCFree(p);
+    }
+    void* np = mi_realloc_aligned(p, newsize, alignment);
+    if (pool_name)
+    {
+        SkrCAllocN(np, newsize, pool_name);
+    }
+    else
+    {
+        SkrCAlloc(np, newsize);
+    }
+    return np;
+}
+
 #elif SKR_ARCH_WA
 
 #else
@@ -338,6 +360,11 @@ SKR_RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment, const char*
 SKR_RUNTIME_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_name) 
 {
     return traced_os_realloc(p, newsize, pool_name);
+}
+
+SKR_RUNTIME_API void* _sakura_realloc_aligned(void* p, size_t newsize, size_t align, const char* pool_name) 
+{
+    return traced_os_realloc_aligned(p, newsize, align, pool_name);
 }
 
 #endif

@@ -141,8 +141,8 @@ public:
     skr::string name = u8"JobItemQueue";
     SAtomic32 is_end_job_queued = false;
 
-    skr::vector<JobItem*> list_runnable;
-    skr::vector<JobItem*> list_consumed;
+    skr::stl_vector<JobItem*> list_runnable;
+    skr::stl_vector<JobItem*> list_consumed;
     JobQueueCond* cond = nullptr;
 
 };
@@ -279,7 +279,7 @@ int JobQueue::finalize() SKR_NOEXCEPT
     // Queue as many JobFinalizeItems as the number of worker threads to finish the worker threads.
     // Since the worker thread that received JobFinalizeItem will always end without taking the next Job,
     // This will terminate all worker threads.
-    skr::vector<JobFinalizeItem> finalJobs;
+    skr::stl_vector<JobFinalizeItem> finalJobs;
     finalJobs.reserve(thread_list.size());
     for (int i = 0; i < thread_list.size(); ++i)
     {

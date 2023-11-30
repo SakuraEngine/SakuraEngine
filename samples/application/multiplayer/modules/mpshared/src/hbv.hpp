@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include <algorithm>
 #include "SkrRT/misc/bits.hpp"
 
@@ -58,11 +58,11 @@ namespace hbv
 		{
 			//硬编码4层
 			flag_t& _layer0;
-			skr::vector<flag_t>& _layer1;
-			skr::vector<flag_t>& _layer2;
-			skr::vector<flag_t>& _layer3;
+			skr::Array<flag_t>& _layer1;
+			skr::Array<flag_t>& _layer2;
+			skr::Array<flag_t>& _layer3;
 		public:
-			hbv(flag_t& layer0, skr::vector<flag_t>& layer1, skr::vector<flag_t>& layer2, skr::vector<flag_t>& layer3) noexcept
+			hbv(flag_t& layer0, skr::Array<flag_t>& layer1, skr::Array<flag_t>& layer2, skr::Array<flag_t>& layer3) noexcept
                 : _layer0(layer0), _layer1(layer1), _layer2(layer2), _layer3(layer3)
             {
             }

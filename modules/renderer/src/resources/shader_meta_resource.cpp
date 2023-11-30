@@ -5,7 +5,7 @@
 #include <EASTL/sort.h>
 #include <EASTL/string.h>
 
-bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
+bool skr_shader_options_resource_t::flatten_options(skr::Array<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
 {
     eastl::set<eastl::u8string>                                                           keys;
     skr::flat_hash_map<skr::string, skr_shader_option_template_t, skr::Hash<skr::string>> kvs;
@@ -27,7 +27,7 @@ bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_opt
     dst.reserve(keys.size());
     for (auto& key : keys)
     {
-        dst.push_back(kvs[key.c_str()]);
+        dst.add(kvs[key.c_str()]);
     }
     // sort result by key
     eastl::stable_sort(dst.begin(), dst.end(),

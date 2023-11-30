@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/containers/concurrent_queue.h"
 #include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrRT/containers/SPtr.hpp"
 #include "SkrRT/containers/function.hpp"
 #include "SkrRT/containers/function_ref.hpp"

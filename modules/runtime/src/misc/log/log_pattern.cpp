@@ -2,10 +2,9 @@
 #include "SkrRT/platform/process.h"
 #include "SkrRT/misc/log/logger.hpp"
 #include "SkrRT/misc/log/log_pattern.hpp"
+#include "SkrRT/containers/array.hpp"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrProfile/profile.h"
-
-#include <array>
 // TODO: REMOVE THIS
 #include <string>
 
@@ -48,13 +47,13 @@ LogPattern::Attribute attribute_from_string(U8String const& attribute_name)
 }
 
 template <size_t, size_t>
-constexpr void _store_named_args(std::array<named_arg_info, kAttributeCount>&)
+constexpr void _store_named_args(skr::array<named_arg_info, kAttributeCount>&)
 {
 }
 
 /***/
 template <size_t Idx, size_t NamedIdx, typename Arg, typename... Args>
-constexpr void _store_named_args(std::array<named_arg_info, kAttributeCount>& named_args_store,
+constexpr void _store_named_args(skr::array<named_arg_info, kAttributeCount>& named_args_store,
     const Arg& arg, const Args&... args)
 {
     named_args_store[NamedIdx] = { U8String(arg), Idx };
@@ -82,17 +81,17 @@ constexpr void _store_named_args(std::array<named_arg_info, kAttributeCount>& na
  * @return processed pattern
  */
 template <typename... Args>
-[[nodiscard]] std::pair<skr::string, std::array<int64_t, kAttributeCount>> _generate_fmt_format_string(
-    std::array<bool, kAttributeCount>& is_set_in_pattern, uint32_t& args_n, U8String pattern_string,
+[[nodiscard]] std::pair<skr::string, skr::array<int64_t, kAttributeCount>> _generate_fmt_format_string(
+    skr::array<bool, kAttributeCount>& is_set_in_pattern, uint32_t& args_n, U8String pattern_string,
     Args const&... args)
 {
     // Attribute enum and the args we are passing here must be in sync
     static_assert(kAttributeCount == sizeof...(Args));
 
-    std::array<int64_t, kAttributeCount> order_index{};
+    skr::array<int64_t, kAttributeCount> order_index{};
     order_index.fill(-1);
 
-    std::array<named_arg_info, kAttributeCount> named_args{};
+    skr::array<named_arg_info, kAttributeCount> named_args{};
     _store_named_args<0, 0>(named_args, args...);
     args_n = 0;
 
@@ -242,7 +241,7 @@ struct Convert {
 };
 
 template <size_t... N>
-skr::string format_NArgs(std::index_sequence<N...>, const skr::string_view& fmt, const std::array<FormatArg, kAttributeCount>& args)
+skr::string format_NArgs(std::index_sequence<N...>, const skr::string_view& fmt, const skr::array<FormatArg, kAttributeCount>& args)
 {
     return skr::format(fmt, args[N]...);
 }

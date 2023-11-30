@@ -3,7 +3,7 @@
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/ecs/type_builder.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrRT/ecs/set.hpp"
 
 #include "SkrRT/ecs/array.hpp"
@@ -118,8 +118,8 @@ struct ComponentDeltaBuilder {
 };
 
 struct WorldDeltaBuilder : IWorldDeltaBuilder {
-    skr::vector<ComponentDeltaBuilder> components;
-    skr::vector<skr::task::event_t>    dependencies;
+    skr::Array<ComponentDeltaBuilder> components;
+    skr::Array<skr::task::event_t>    dependencies;
     dual_query_t*                      worldDeltaQuery;
     dual_query_t*                      clearDirtyQuery;
     dual_query_t*                      deadQuery;
@@ -137,8 +137,8 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
         ComponentDeltaBuilderRegistry& registry = ComponentDeltaBuilderRegistry::Get();
         for (auto& pair : registry.builders)
         {
-            components.emplace_back(pair.second);
-            components.back().Initialize(storage);
+            components.add(pair.second);
+            components[components.size() - 1].Initialize(storage);
         }
         initialized = true;
     }
@@ -154,7 +154,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
         }
     }
 
-    void GenerateDelta(skr::vector<MPWorldDeltaViewBuilder>& builder) override
+    void GenerateDelta(skr::Array<MPWorldDeltaViewBuilder>& builder) override
     {
         SKR_ASSERT(initialized);
         for (auto& delta : builder)
@@ -167,17 +167,17 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
             auto cmps = GetNetworkComponents();
             for (int i = 0; i < cmps.length; ++i)
             {
-                delta.components.emplace_back().type = GetNetworkComponentIndex(cmps.data[i]);
+                delta.components.add_default()->type = GetNetworkComponentIndex(cmps.data[i]);
             }
         }
-        skr::vector<skr::flat_hash_map<dual_entity_t, NetEntityId>> localMaps;
-        localMaps.resize(builder.size());
+        skr::Array<skr::flat_hash_map<dual_entity_t, NetEntityId>> localMaps;
+        localMaps.resize_default(builder.size());
         auto GetNetworkEntityIndex = [&](dual_entity_t ent, uint32_t c) -> NetEntityId {
             auto it = localMaps[c].find(ent);
             if (it != localMaps[c].end())
                 return it->second;
             NetEntityId index = builder[c].entities.size();
-            builder[c].entities.emplace_back(ent);
+            builder[c].entities.add(ent);
             localMaps[c].insert(std::make_pair(ent, index));
             return index;
         };
@@ -233,7 +233,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                     {
                         auths[i].mappedConnection[j]      = true;
                         auths[i].initializedConnection[j] = false;
-                        auto& data                        = delta.created.emplace_back();
+                        auto& data                        = *delta.created.add_default();
                         auto  netEntity                   = GetNetworkEntityIndex(entities[i], j);
                         data.entity                       = netEntity;
                         data.prefab                       = prefabs[i].prefab.get_serialized();
@@ -243,7 +243,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                             if (networkType.data[k] == ControllerId)
                                 if (j != controller[i].connectionId)
                                     continue;
-                            data.components.push_back(GetNetworkComponentIndex(networkType.data[k]));
+                            data.components.add(GetNetworkComponentIndex(networkType.data[k]));
                             if (!DUAL_IS_TAG(networkType.data[k]))
                             {
                                 for (auto z = 0; z < delta.components.size(); ++z)
@@ -251,7 +251,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                                     auto t = GetNetworkComponent(delta.components[z].type);
                                     if (t == networkType.data[k])
                                     {
-                                        delta.components[z].entities.emplace_back(netEntity);
+                                        delta.components[z].entities.add(netEntity);
                                         break;
                                     }
                                 }
@@ -262,7 +262,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                     else if (auths[i].mappedConnection[j] && !relevant)
                     {
                         auths[i].mappedConnection[j] = false;
-                        delta.dead.emplace_back(GetNetworkEntityIndex(entities[i], j));
+                        delta.dead.add(GetNetworkEntityIndex(entities[i], j));
                     }
                     // relevant, check if changed
                     else if (auths[i].mappedConnection[j] && relevant)
@@ -277,7 +277,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                             continue;
                         if (deleted.length != 0 || added.length != 0)
                         {
-                            MPEntityDeltaViewBuilder& changed   = delta.changed.emplace_back();
+                            MPEntityDeltaViewBuilder& changed   = *delta.changed.add_default();
                             auto                      netEntity = GetNetworkEntityIndex(entities[i], j);
                             changed.entity                      = netEntity;
                             changed.components.reserve(added.length);
@@ -287,7 +287,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                                 if (added.data[k] == ControllerId)
                                     if (j != controller[i].connectionId)
                                         continue;
-                                changed.components.push_back(GetNetworkComponentIndex(added.data[k]));
+                                changed.components.add(GetNetworkComponentIndex(added.data[k]));
                                 if (!DUAL_IS_TAG(added.data[k]))
                                 {
                                     for (auto z = 0; z < delta.components.size(); ++z)
@@ -295,14 +295,14 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                                         auto t = GetNetworkComponent(delta.components[z].type);
                                         if (t == added.data[k])
                                         {
-                                            delta.components[z].entities.emplace_back(netEntity);
+                                            delta.components[z].entities.add(netEntity);
                                             break;
                                         }
                                     }
                                 }
                             }
                             for (int k = 0; k < deleted.length; ++k)
-                                changed.deleted.push_back(GetNetworkComponentIndex(deleted.data[k]));
+                                changed.deleted.add(GetNetworkComponentIndex(deleted.data[k]));
                         }
                         for (int k = 0; k < type.type.length; ++k)
                             if ((dirtyMasks[i] & (1 << k)))
@@ -318,7 +318,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                                         if (t == type.type.data[k])
                                         {
                                             auto netEntity = GetNetworkEntityIndex(entities[i], j);
-                                            delta.components[z].entities.emplace_back(netEntity);
+                                            delta.components[z].entities.add(netEntity);
                                             break;
                                         }
                                     }
@@ -346,7 +346,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                     if (auths[i].mappedConnection[j])
                     {
                         auto netEntity = GetNetworkEntityIndex(entities[i], j);
-                        delta.dead.push_back(netEntity);
+                        delta.dead.add(netEntity);
                     }
                 }
             }
@@ -357,7 +357,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
             uint32_t i = 0;
             for (auto& delta : builder)
             {
-                dependencies.emplace_back(component.GenerateDelta(i, builder.size(), delta));
+                dependencies.add(component.GenerateDelta(i, builder.size(), delta));
                 ++i;
             }
         }
@@ -394,7 +394,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
         {
             for (auto& delta : builder)
             {
-                delta.components.erase(std::remove_if(delta.components.begin(), delta.components.end(), [](auto& c) { return c.data.size() == 0; }), delta.components.end());
+                delta.components.remove_all_if([](auto& c) { return c.data.size() == 0; });
             }
         }
     }
@@ -445,8 +445,8 @@ struct ComponentDeltaApplier {
 };
 
 struct WorldDeltaApplier : IWorldDeltaApplier {
-    skr::vector<ComponentDeltaApplier> components;
-    skr::vector<skr::task::event_t>    dependencies;
+    skr::Array<ComponentDeltaApplier> components;
+    skr::Array<skr::task::event_t>    dependencies;
     dual_storage_t*                    storage;
     SpawnPrefab_t                      spawnPrefab;
     DestroyEntity_t                    destroyEntity;
@@ -463,8 +463,8 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
         ComponentDeltaApplierRegistry& registry = ComponentDeltaApplierRegistry::Get();
         for (auto& pair : registry.appliers)
         {
-            components.emplace_back(pair.second);
-            components.back().Initialize(storage);
+            components.add(pair.second);
+            components[components.size() - 1].Initialize(storage);
         }
         worldDeltaQuery = dualQ_from_literal(storage, "[in]CNetwork");
         initialized     = true;
@@ -502,14 +502,14 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
             {
                 auto iter = map.find(delta.entities[pair.entity]);
                 SKR_ASSERT(iter != map.end());
-                skr::vector<dual_type_index_t> added;
-                skr::vector<dual_type_index_t> removed;
+                skr::Array<dual_type_index_t> added;
+                skr::Array<dual_type_index_t> removed;
                 added.reserve(pair.components.size());
                 removed.reserve(pair.deleted.size());
                 for (auto& comp : pair.components)
-                    added.push_back(GetNetworkComponent(comp));
+                    added.add(GetNetworkComponent(comp));
                 for (auto& comp : pair.deleted)
-                    removed.push_back(GetNetworkComponent(comp));
+                    removed.add(GetNetworkComponent(comp));
                 dual_delta_type_t delta   = make_zeroed<dual_delta_type_t>();
                 delta.added.type.data     = added.data();
                 delta.added.type.length   = added.size();
@@ -535,10 +535,10 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
             {
                 auto entity = delta.entities[pair.entity];
                 SKR_LOG_FMT_DEBUG(u8"New entity recived {}:{}", dual::e_id(entity), dual::e_version(entity));
-                skr::vector<dual_type_index_t> added;
+                skr::Array<dual_type_index_t> added;
                 added.reserve(pair.components.size());
                 for (auto& comp : pair.components)
-                    added.push_back(GetNetworkComponent(comp));
+                    added.add(GetNetworkComponent(comp));
 
                 dual_entity_type_t type;
                 type.type.data   = added.data();
@@ -552,7 +552,7 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
             {
                 auto event = component.ApplyDelta(delta, map);
                 if (event)
-                    dependencies.emplace_back(std::move(event));
+                    dependencies.add(std::move(event));
             }
             {
                 SkrZoneScopedN("Syncing");
@@ -623,6 +623,7 @@ int skr::binary::ReadTrait<packed_entity_t>::Read(skr_binary_reader_t* reader, p
     value.entity = DUAL_ENTITY(id, version);
     return 0;
 }
+
 #include "SkrRT/serde/json/writer.h"
 void skr::json::WriteTrait<packed_entity_t>::Write(skr_json_writer_t* writer, const packed_entity_t& value)
 {

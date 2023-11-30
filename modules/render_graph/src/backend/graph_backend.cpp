@@ -6,8 +6,8 @@
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/btree.hpp"
 #include "cgpu/cgpux.hpp"
-#include <EASTL/set.h>
 
 #include "SkrRenderGraph/phases/cull_phase.hpp"
 
@@ -156,8 +156,7 @@ RenderGraphBackend::RenderGraphBackend(const RenderGraphBuilder& builder)
     , device(builder.device)
     , gfx_queue(builder.gfx_queue)
 {
-    phases.emplace_back(
-    skr::SPtr<CullPhase>::Create());
+    phases.add(skr::SPtr<CullPhase>::Create());
 }
 
 RenderGraph* RenderGraph::create(const RenderGraphSetupFunction& setup) SKR_NOEXCEPT

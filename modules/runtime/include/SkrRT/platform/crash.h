@@ -3,7 +3,7 @@
 #ifdef __cplusplus
 #include "SkrRT/platform/thread.h"
 #include <SkrRT/containers/span.hpp>
-#include <SkrRT/containers/vector.hpp>
+#include <SkrRT/containers_new/array.hpp>
 
 extern "C" {
 #endif
@@ -109,7 +109,7 @@ protected:
 
     skr_guid_t guid;
 
-    skr::vector<CallbackWrapper> callbacks;
+    skr::Array<CallbackWrapper> callbacks;
     SMutex callbacks_lock;
 } SCrashHandler;
 

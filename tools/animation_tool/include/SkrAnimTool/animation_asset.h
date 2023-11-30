@@ -90,7 +90,7 @@ SAnimCookSettings
     bool optimize = true; //  Activates keyframes reduction optimization.
     float tolerance = 0.001f; //  The maximum error that an optimization is allowed to generate on a whole joint hierarchy.
     float distance = 0.1f; //  The distance (from the joint) at which error is measured. This allows to emulate effect on skinning.
-    eastl::vector<SAnimOptimizationOverride> override; //  Per joint optimization setting override
+    skr::Array<SAnimOptimizationOverride> override; //  Per joint optimization setting override
 };
 
 sreflect_struct("guid" : "81F1C813-1ABA-41BE-8D7A-F6C88E73E891")

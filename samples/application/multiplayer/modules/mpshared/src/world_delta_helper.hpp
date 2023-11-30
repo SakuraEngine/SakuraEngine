@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "MPShared/world_delta.h"
 #include "MPShared/components.h"
 
@@ -11,7 +11,7 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
 {
     static constexpr bool withHistory = !std::is_same_v<H, void>;
     using history_t = std::conditional_t<withHistory, dual::array_comp_T<H, 4>, void>;
-    using writer_t = std::conditional_t<bitpacking, skr::binary::VectorWriterBitpacked, skr::binary::VectorWriter>;
+    using writer_t = std::conditional_t<bitpacking, skr::binary::ArrayWriterBitpacked, skr::binary::ArrayWriter>;
     MPComponentDeltaViewBuilder& comps = *std::find_if(builder.components.begin(),builder.components.end(), [&](const MPComponentDeltaViewBuilder& comp)
     {
         return GetNetworkComponent(comp.type) == type;
@@ -72,7 +72,7 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
             return false;
         };
         if constexpr(withHistory)
-            comps.entities.erase(std::remove_if(comps.entities.begin(), comps.entities.end(), serde), comps.entities.end());
+            comps.entities.remove_all_if(serde);
         else
         {
             for(auto ent : comps.entities)

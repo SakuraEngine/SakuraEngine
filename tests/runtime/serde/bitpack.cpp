@@ -1,14 +1,14 @@
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/containers/span.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrTestFramework/framework.hpp"
 
 class BinaryBitpackTests
 {
 protected:
-    eastl::vector<uint8_t> buffer;
-    skr::binary::VectorWriterBitpacked writer;
+    skr::Array<uint8_t> buffer;
+    skr::binary::ArrayWriterBitpacked writer;
     skr::binary::SpanReaderBitpacked reader;
     BinaryBitpackTests()
     {

@@ -1,6 +1,6 @@
 #pragma once
 /* #ifdef CONTAINER_LITE_IMPL
-    #include "SkrRT/containers/vector.hpp"
+    #include "SkrRT/containers_new/array.hpp"
     #include "SkrRT/containers/string.hpp"
     #include "SkrRT/containers/hashmap.hpp"
     #include <new> // placement new operator
@@ -98,7 +98,7 @@ struct VectorStorage : public AlignedStorage<24, 8> {
 };
 #else
 template <typename T>
-using VectorStorage = skr::vector<T>;
+using VectorStorage = skr::Array<T>;
 #endif
 
 #ifndef CONTAINER_LITE_IMPL

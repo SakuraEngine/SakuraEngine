@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/atomic.h"
-#include <SkrRT/containers/vector.hpp>
+#include <SkrRT/containers_new/array.hpp>
 
 namespace skr 
 {
@@ -14,7 +14,7 @@ public:
     ring_buffer(uint64_t length)
     {
         const auto l = length ? length : 32;
-        buffer.resize(l);
+        buffer.resize_zeroed(l);
         skr_atomicu64_store_release(&size, l);
     }
     T add(T value);
@@ -25,7 +25,7 @@ public:
         return sz;
     }
 protected:
-    skr::vector<T> buffer;
+    skr::Array<T> buffer;
     SAtomicU64 head = 0;
     SAtomicU64 size = 0;
 };

@@ -6,7 +6,7 @@ namespace skr
 using eastl::span;
 }
 
-#include "EASTL/vector.h"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrRT/serde/binary/blob_fwd.h"
 #include "SkrRT/serde/binary/serde.h"
 
@@ -14,7 +14,7 @@ namespace skr::binary
 {
 template <class T>
 struct BlobBuilderType<skr::span<T>> {
-    using type = eastl::vector<typename BlobBuilderType<T>::type>;
+    using type = skr::Array<typename BlobBuilderType<T>::type>;
 };
 struct SpanSerdeConfig {
     uint32_t maxSize;

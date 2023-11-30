@@ -107,7 +107,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
         // install shaders
         for (auto& pass_template : matType->passes)
         {
-            auto& installed_pass = material->installed_passes.emplace_back();
+            auto& installed_pass = *material->installed_passes.add_default();
             installed_pass.name  = pass_template.pass;
             for (auto& shader : pass_template.shader_resources)
             {
@@ -133,7 +133,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
                                 const auto status = shader_map->install_shader(platform_id);
                                 if (status != SKR_SHADER_MAP_SHADER_STATUS_FAILED)
                                 {
-                                    auto& installed_shader      = installed_pass.shaders.emplace_back();
+                                    auto& installed_shader      = *installed_pass.shaders.add_default();
                                     installed_shader.identifier = platform_id;
                                     installed_shader.entry      = multiShader.entry.u8_str();
                                     installed_shader.stage      = multiShader.shader_stage;
@@ -348,7 +348,8 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
             blend_state.blend_alpha_modes[i] = CGPU_BLEND_MODE_ADD;
             blend_state.masks[i]             = CGPU_COLOR_MASK_ALL;
             const auto blend_mode            = (blend_modes.size() > i) ? blend_modes[i] :
-                                                                          (blend_modes.size() ? blend_modes.back() : EMaterialBlendMode::Opaque);
+                                                                          (blend_modes.size() ? blend_modes[blend_modes.size() - 1] :
+                                                                                                EMaterialBlendMode::Opaque);
             switch (blend_mode)
             {
                 case EMaterialBlendMode::Opaque: {

@@ -1,10 +1,9 @@
 #pragma once
+#include "SkrRT/containers_new/stl_list.hpp"
 #include "backend/text_server/config.h"
 #include "backend/text_server/memory.h"
 #include "backend/text_server/sort_array.h"
-
 #include <map>
-#include <list>
 
 #ifdef DEBUG_ENABLED
     #define SORT_ARRAY_VALIDATE_ENABLED true
@@ -239,7 +238,7 @@ public:
 };
 
 template <class T>
-using List = std::list<T>;
+using List = skr::list<T>;
 
 struct Variant {
     enum Type

@@ -31,14 +31,14 @@ void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resourc
         {
             SKR_ASSERT(render_mesh->index_buffer_views.capacity() >= render_mesh->index_buffer_views.size());
             SKR_ASSERT(render_mesh->vertex_buffer_views.capacity() >= render_mesh->vertex_buffer_views.size());
-            auto& draw_cmd = render_mesh->primitive_commands.emplace_back();
+            auto& draw_cmd = *render_mesh->primitive_commands.add_default();
             auto& prim = mesh_resource->primitives[prim_idx];
-            auto& mesh_ibv = render_mesh->index_buffer_views.emplace_back();
+            auto& mesh_ibv = *render_mesh->index_buffer_views.add_default();
             auto vbv_start = render_mesh->vertex_buffer_views.size();
             // 3.1 fill vbvs
             for (uint32_t j = 0; j < prim.vertex_buffers.size(); j++)
             {
-                auto& mesh_vbv = render_mesh->vertex_buffer_views.emplace_back();
+                auto& mesh_vbv = *render_mesh->vertex_buffer_views.add_default();
                 const auto buffer_index = prim.vertex_buffers[j].buffer_index;
                 mesh_vbv.buffer = render_mesh->buffers[buffer_index];
                 mesh_vbv.offset = prim.vertex_buffers[j].offset;

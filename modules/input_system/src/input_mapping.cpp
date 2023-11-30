@@ -13,20 +13,13 @@ InputMapping::~InputMapping() SKR_NOEXCEPT
 
 void InputMapping::add_modifier(InputModifier& modifier) SKR_NOEXCEPT
 {
-    modifiers.emplace_back(&modifier);
+    modifiers.add(&modifier);
 }
 
 void InputMapping::remove_modifier(InputModifier& modifier) SKR_NOEXCEPT
 {
     auto& modifiers_ = modifiers;
-    for (auto it = modifiers_.begin(); it != modifiers_.end(); ++it)
-    {
-        if (*it == &modifier)
-        {
-            modifiers_.erase(it);
-            break;
-        }
-    }
+    modifiers_.remove_all_if([&modifier](InputModifier* m) { return m == &modifier; });
 }
 
 lite::LiteSpan<InputModifierId> InputMapping::get_modifiers() SKR_NOEXCEPT
@@ -61,19 +54,12 @@ lite::LiteSpan<SObjectPtr<InputMapping> const> InputMappingContext::get_mappings
 
 SObjectPtr<InputMapping> InputMappingContext::add_mapping(SObjectPtr<InputMapping> mapping) SKR_NOEXCEPT
 {
-    return mappings_.emplace_back(mapping);
+    return *mappings_.add(mapping).data;
 }
 
 void InputMappingContext::remove_mapping(SObjectPtr<InputMapping> mapping) SKR_NOEXCEPT
 {
-    for (auto it = mappings_.begin(); it != mappings_.end(); ++it)
-    {
-        if (*it == mapping)
-        {
-            mappings_.erase(it);
-            break;
-        }
-    }
+    mappings_.remove_all_if([&mapping](SObjectPtr<InputMapping> m) { return m == mapping; });
 }
 
 void InputMappingContext::unmap_all() SKR_NOEXCEPT

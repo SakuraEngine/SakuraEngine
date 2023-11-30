@@ -3,7 +3,7 @@
 #include "SkrRT/async/async_progress.hpp"
 
 #include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/stl_vector.hpp"
 #include <EASTL/list.h>
 
 enum ESkrJobItemStatus
@@ -145,7 +145,7 @@ private:
     JobItemQueue* itemList;
     JobQueueDesc desc;
 
-    skr::vector<JobItem*> pending_queue;
+    skr::stl_vector<JobItem*> pending_queue;
     SRWMutex pending_queue_mutex;
     SAtomic32 cancel_requested = 0;
 };

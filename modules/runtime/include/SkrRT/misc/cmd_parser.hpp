@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrBase/misc/debug.h" 
 #include "SkrRT/misc/log.h"
 #include "SkrRT/containers/string.hpp"
@@ -104,7 +104,7 @@ struct parser {
         if (ret)
         {
             if (is_required) m_required += 1;
-            m_names.push_back(name);
+            m_names.add(name);
             m_shorthands.emplace(shorthand, m_names.size() - 1);
         }
         return ret;
@@ -206,7 +206,7 @@ private:
     int m_required;
     skr::flat_hash_map<skr::string, cmd, skr::Hash<skr::string>> m_cmds;
     skr::flat_hash_map<skr::string, int, skr::Hash<skr::string>> m_shorthands;
-    skr::vector<skr::string> m_names;
+    skr::Array<skr::string> m_names;
 
     bool abort() const
     {

@@ -42,8 +42,8 @@ struct InputSystemImpl : public InputSystem
         InputLayer* layer = nullptr;
         InputReading* reading = nullptr;
     };
-    skr::UMap<EInputKind, eastl::vector<RawInput>> inputs;
-    skr::vector<SObjectPtr<InputAction>> actions;
+    skr::UMap<EInputKind, skr::Array<RawInput>> inputs;
+    skr::Array<SObjectPtr<InputAction>> actions;
 };
 
 InputSystem::~InputSystem() SKR_NOEXCEPT
@@ -97,7 +97,7 @@ void InputSystemImpl::update(float delta) SKR_NOEXCEPT
         auto r = inputInst->GetCurrentReading(kind, nullptr, &layer, &reading);
         if (r == EInputResult::INPUT_RESULT_OK)
         {
-            raw_inputs.emplace_back(layer, reading, kind);
+            raw_inputs.add({layer, reading, kind});
         }
     }
 
@@ -185,7 +185,7 @@ void InputSystemImpl::remove_all_contexts() SKR_NOEXCEPT
 SObjectPtr<InputAction> InputSystemImpl::create_input_action(EValueType type) SKR_NOEXCEPT 
 {
     auto result = SObjectPtr<InputActionImpl>::Create(type);
-    actions.push_back(result);
+    actions.add(result);
     return result;
 }
 #pragma endregion

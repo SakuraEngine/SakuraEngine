@@ -81,7 +81,7 @@ void DestroyResourceSystem(skd::SProject& proj)
     SkrDelete(registry);
 }
 
-skr::vector<skd::SProject*> open_projects(int argc, char** argv)
+skr::Array<skd::SProject*> open_projects(int argc, char** argv)
 {
     skr::cmd::parser parser(argc, argv);
     parser.add(u8"project", u8"project path", u8"-p", false);
@@ -107,11 +107,11 @@ skr::vector<skd::SProject*> open_projects(int argc, char** argv)
         iter.increment(ec);
     }
     
-    skr::vector<skd::SProject*> result;
+    skr::Array<skd::SProject*> result;
     for (auto& projectFile : projectFiles)
     {
         if(auto proj = skd::SProject::OpenProject(projectFile))
-            result.push_back(proj);
+            result.add(proj);
     }
     return result;
 }

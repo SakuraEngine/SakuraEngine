@@ -72,8 +72,8 @@ public:
         }
         SKR_DEFER({ fclose(file); });
         //------write resource object
-        skr::vector<uint8_t> buffer;
-        skr::binary::VectorWriter writer{&buffer};
+        skr::Array<uint8_t> buffer;
+        skr::binary::ArrayWriter writer{&buffer};
         skr_binary_writer_t archive(writer);
         if(int result = skr::binary::Archive(&archive, resource); result != 0)
         {

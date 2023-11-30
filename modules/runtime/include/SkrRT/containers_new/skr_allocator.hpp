@@ -33,12 +33,7 @@ struct SkrAllocator : container::AllocTemplate<SkrAllocator, size_t> {
     static void* realloc_raw(void* p, size_t size, size_t alignment)
     {
         SkrCZoneNCS(z, "containers::realloc", SKR_DEALLOC_TRACY_MARKER_COLOR, 16, 1);
-        void* new_mem = sakura_malloc_alignedN(size, alignment, kContainersDefaultPoolName);
-        if (p)
-        {
-            memcpy(new_mem, p, size);
-            sakura_free_alignedN(p, alignment, kContainersDefaultPoolName);
-        }
+        void* new_mem = sakura_realloc_alignedN(p, size, alignment, kContainersDefaultPoolName);
         SkrCZoneEnd(z);
         return new_mem;
     }

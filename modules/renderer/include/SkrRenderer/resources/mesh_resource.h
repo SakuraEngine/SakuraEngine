@@ -3,7 +3,7 @@
 #include "SkrRenderer/fwd_types.h"
 
 #include <SkrRT/containers/string.hpp>
-#include <SkrRT/containers/vector.hpp>
+#include <SkrRT/containers_new/array.hpp>
 
 #ifndef __meta__
     #include "SkrRenderer/resources/mesh_resource.generated.h" // IWYU pragma: export
@@ -76,7 +76,7 @@ sattr("serialize" : "bin")
 MeshPrimitive {
     skr_vertex_layout_id           vertex_layout_id;
     uint32_t                       material_index;
-    skr::vector<VertexBufferEntry> vertex_buffers;
+    skr::Array<VertexBufferEntry> vertex_buffers;
     IndexBufferEntry               index_buffer;
     uint32_t                       vertex_count;
 };
@@ -88,7 +88,7 @@ MeshSection {
     skr_float3_t          translation;
     skr_float3_t          scale;
     skr_float4_t          rotation;
-    skr::vector<uint32_t> primive_indices;
+    skr::Array<uint32_t> primive_indices;
 };
 
 sreflect_struct("guid" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1") 
@@ -97,12 +97,12 @@ MeshResource {
     SKR_RENDERER_API ~MeshResource() SKR_NOEXCEPT;
 
     skr::string                name;
-    skr::vector<MeshSection>   sections;
-    skr::vector<MeshPrimitive> primitives;
-    skr::vector<MeshBuffer>    bins;
+    skr::Array<MeshSection>   sections;
+    skr::Array<MeshPrimitive> primitives;
+    skr::Array<MeshBuffer>    bins;
 
     using material_handle_t = skr::resource::TResourceHandle<skr_material_resource_t>;
-    skr::vector<material_handle_t> materials;
+    skr::Array<material_handle_t> materials;
 
     bool install_to_vram           SKR_IF_CPP(= true);
     bool install_to_ram            SKR_IF_CPP(= true); // TODO: configure this in asset
