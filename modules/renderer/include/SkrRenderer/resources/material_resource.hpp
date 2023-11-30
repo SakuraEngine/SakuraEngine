@@ -90,28 +90,28 @@ MaterialShaderVariant {
     skr_stable_shader_hash_t switch_hash;
 
     // static switch value selection indices, const during runtime
-    skr::Span<uint32_t> switch_indices;
+    skr::span<uint32_t> switch_indices;
 
     // variant hash of default options -> skr_platform_shader_identifier_t
     skr_stable_shader_hash_t option_hash;
 
     // options value selection indices, immutable during runtime
-    skr::Span<uint32_t> option_indices;
+    skr::span<uint32_t> option_indices;
 };
 GENERATED_BLOB_BUILDER(MaterialShaderVariant)
 
 sreflect_struct("guid": "e81946ee-fb88-4cde-abd5-b4ae56dbaa89") 
 sattr("blob" : true)
 MaterialOverrides {
-    skr::Span<MaterialShaderVariant> switch_variants;
-    skr::Span<MaterialValueBool>     bools;
-    skr::Span<MaterialValueFloat>    floats;
-    skr::Span<MaterialValueFloat2>   float2s;
-    skr::Span<MaterialValueFloat3>   float3s;
-    skr::Span<MaterialValueFloat4>   float4s;
-    skr::Span<MaterialValueDouble>   doubles;
-    skr::Span<MaterialValueTexture>  textures;
-    skr::Span<MaterialValueSampler>  samplers;
+    skr::span<MaterialShaderVariant> switch_variants;
+    skr::span<MaterialValueBool>     bools;
+    skr::span<MaterialValueFloat>    floats;
+    skr::span<MaterialValueFloat2>   float2s;
+    skr::span<MaterialValueFloat3>   float3s;
+    skr::span<MaterialValueFloat4>   float4s;
+    skr::span<MaterialValueDouble>   doubles;
+    skr::span<MaterialValueTexture>  textures;
+    skr::span<MaterialValueSampler>  samplers;
 };
 GENERATED_BLOB_BUILDER(MaterialOverrides)
 

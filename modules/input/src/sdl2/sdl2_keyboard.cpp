@@ -71,7 +71,7 @@ struct InputDevice_SDL2Keyboard : public CommonInputDeviceBase<InputReading_SDL2
         eastl::fixed_vector<uint8_t, 16> ScanCodes;
         updateScan(ScanCodes, (uint32_t)ScanCodes.capacity());
         const auto LastReading = ReadingQueue.get();
-        if (!LastReading || !LastReading->Equal(ScanCodes))
+        if (!LastReading || !LastReading->Equal({ScanCodes.data(), ScanCodes.size()}))
         {
             if (auto old = ReadingQueue.add(
                 ReadingPool.acquire(&ReadingPool, this, std::move(ScanCodes), layer->GetCurrentTimestampUSec())

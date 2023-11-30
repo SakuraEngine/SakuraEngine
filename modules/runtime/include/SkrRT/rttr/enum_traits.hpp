@@ -12,7 +12,7 @@ struct EnumItem {
 
 template <class T>
 struct EnumTraits {
-    static Span<EnumItem<T>> items()
+    static span<EnumItem<T>> items()
     {
 #ifndef __meta__
         static_assert(std::is_same_v<T, T*>, "EnumTraits<T>::items is not implemented");

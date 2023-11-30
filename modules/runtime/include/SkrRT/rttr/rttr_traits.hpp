@@ -56,7 +56,7 @@ SKR_INLINE GUID type_id() SKR_NOEXCEPT
     return RTTRTraits<T>::get_guid();
 }
 template <typename T>
-SKR_INLINE Span<TypeDesc> type_desc() SKR_NOEXCEPT
+SKR_INLINE span<TypeDesc> type_desc() SKR_NOEXCEPT
 {
     static TypeDesc desc[RTTRTraits<T>::type_desc_size];
     if (desc[0].type == ETypeDescType::SKR_TYPE_DESC_TYPE_VOID)
@@ -383,7 +383,7 @@ struct RTTRTraits<eastl::vector<T>> {
     }
 };
 template <typename T>
-struct RTTRTraits<eastl::span<T>> {
+struct RTTRTraits<skr::span<T>> {
     inline static constexpr size_t type_desc_size = 1;
     inline static void             write_type_desc(TypeDesc* desc)
     {

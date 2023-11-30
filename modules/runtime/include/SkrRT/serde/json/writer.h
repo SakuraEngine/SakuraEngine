@@ -252,19 +252,6 @@ struct WriteTrait<eastl::vector<V, Allocator>> {
         json->EndArray();
     }
 };
-// TODO: REMOVE THIS
-template <class V>
-struct WriteTrait<eastl::span<V>> {
-    static void Write(skr_json_writer_t* json, const eastl::span<V>& vec)
-    {
-        json->StartArray();
-        for (auto& v : vec)
-        {
-            skr::json::Write<V>(json, v);
-        }
-        json->EndArray();
-    }
-};
 template <class V>
 struct WriteTrait<skr::vector<V>> {
     static void Write(skr_json_writer_t* json, const skr::vector<V>& vec)
@@ -278,8 +265,8 @@ struct WriteTrait<skr::vector<V>> {
     }
 };
 template <class V>
-struct WriteTrait<skr::Span<V>> {
-    static void Write(skr_json_writer_t* json, const skr::Span<V>& vec)
+struct WriteTrait<skr::span<V>> {
+    static void Write(skr_json_writer_t* json, const skr::span<V>& vec)
     {
         json->StartArray();
         for (auto& v : vec)

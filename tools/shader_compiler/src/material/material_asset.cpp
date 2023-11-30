@@ -90,8 +90,8 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
             // TODO: override
         }
         // calculate hashes and record
-        auto switch_indices_span = skr::Span<uint32_t>(variant.switch_indices.data(), variant.switch_indices.size());
-        auto option_indices_span = skr::Span<uint32_t>(variant.option_indices.data(), variant.option_indices.size());
+        auto switch_indices_span = skr::span<uint32_t>(variant.switch_indices.data(), variant.switch_indices.size());
+        auto option_indices_span = skr::span<uint32_t>(variant.option_indices.data(), variant.option_indices.size());
         const auto switch_hash = skr_shader_option_sequence_t::calculate_stable_hash(shader_collection->switch_sequence, switch_indices_span);
         const auto option_hash = skr_shader_option_sequence_t::calculate_stable_hash(shader_collection->option_sequence, option_indices_span);
     

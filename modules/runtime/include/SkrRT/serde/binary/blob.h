@@ -14,7 +14,6 @@ struct SKR_STATIC_API BlobTrait<skr::string_view> {
     static void Remap(skr_blob_arena_t& arena, skr::string_view& dst);
 };
 
-// TODO: REMOVE THIS
 template <class T>
 struct BlobTrait<skr::span<T>> {
     static void BuildArena(skr_blob_arena_builder_t& arena, skr::span<T>& dst, const typename BlobBuilderType<skr::span<T>>::type& src)
@@ -27,8 +26,8 @@ struct BlobTrait<skr::span<T>> {
             {
                 T dstV{};
                 BlobTrait<T>::BuildArena(arena, dstV, src[i]);
-                skr::span<T> span = { (T*)((char*)arena.get_buffer() + offset), src.size() };
-                span[i]           = dstV;
+                skr::span<T> _span = { (T*)((char*)arena.get_buffer() + offset), src.size() };
+                _span[i]           = dstV;
             }
         }
         else
@@ -42,44 +41,6 @@ struct BlobTrait<skr::span<T>> {
     static void Remap(skr_blob_arena_t& arena, skr::span<T>& dst)
     {
         dst = skr::span<T>((T*)((char*)arena.get_buffer() + ((size_t)dst.data() - arena.base())), dst.size());
-
-        if constexpr (is_complete_v<BlobTrait<T>>)
-        {
-            for (auto& dstV : dst)
-            {
-                BlobTrait<T>::Remap(arena, dstV);
-            }
-        }
-    }
-};
-
-template <class T>
-struct BlobTrait<skr::Span<T>> {
-    static void BuildArena(skr_blob_arena_builder_t& arena, skr::Span<T>& dst, const typename BlobBuilderType<skr::Span<T>>::type& src)
-    {
-        size_t offset = arena.allocate(src.size() * sizeof(T), alignof(T));
-
-        if constexpr (is_complete_v<BlobTrait<T>>)
-        {
-            for (int i = 0; i < src.size(); ++i)
-            {
-                T dstV{};
-                BlobTrait<T>::BuildArena(arena, dstV, src[i]);
-                skr::Span<T> _span = { (T*)((char*)arena.get_buffer() + offset), src.size() };
-                _span[i]           = dstV;
-            }
-        }
-        else
-        {
-            auto buffer = (char*)arena.get_buffer() + offset;
-            memcpy(buffer, src.data(), src.size() * sizeof(T));
-        }
-        // store offset inplace
-        dst = skr::Span<T>((T*)(offset), src.size());
-    }
-    static void Remap(skr_blob_arena_t& arena, skr::Span<T>& dst)
-    {
-        dst = skr::Span<T>((T*)((char*)arena.get_buffer() + ((size_t)dst.data() - arena.base())), dst.size());
 
         if constexpr (is_complete_v<BlobTrait<T>>)
         {

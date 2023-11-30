@@ -32,7 +32,7 @@ TEST_CASE_METHOD(BinarySerdeTests, "primitives")
     skr::binary::Archive(&warchive, value);
     skr::binary::Archive(&warchive, value2);
 
-    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+    reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
 
     uint64_t readValue = 0;
     uint64_t readValue2 = 0;
@@ -51,7 +51,7 @@ TEST_CASE_METHOD(BinarySerdeTests, "vector")
     arr.add(value2);
     skr::binary::Archive(&warchive, arr);
 
-    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+    reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
 
     skr::vector<uint64_t> readArr;
     skr::binary::Archive(&rarchive, readArr);
@@ -69,7 +69,7 @@ TEST_CASE_METHOD(BinarySerdeTests, "arr")
     arr.add(value2);
     skr::binary::Archive(&warchive, arr);
 
-    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+    reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
 
     skr::vector<uint64_t> readArr;
     skr::binary::Archive(&rarchive, readArr);
@@ -83,7 +83,7 @@ TEST_CASE_METHOD(BinarySerdeTests, "str")
     skr::string str = u8"Hello World";
     skr::binary::Archive(&warchive, str);
 
-    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+    reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
 
     skr::string readStr;
     skr::binary::Archive(&rarchive, readStr);
@@ -98,7 +98,7 @@ TEST_CASE_METHOD(BinarySerdeTests, "str_vec")
     arr.add(u8"Hello World2");
     skr::binary::Archive(&warchive, arr);
 
-    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+    reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
 
     skr::vector<skr::string> readArr;
     skr::binary::Archive(&rarchive, readArr);
@@ -114,7 +114,7 @@ TEST_CASE_METHOD(BinarySerdeTests, "str_arr")
     arr.add(u8"Hello World2");
     skr::binary::Archive(&warchive, arr);
 
-    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+    reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
 
     skr::vector<skr::string> readArr;
     skr::binary::Archive(&rarchive, readArr);

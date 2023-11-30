@@ -547,8 +547,8 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     pass_context.graph             = this;
     pass_context.pass              = pass;
     pass_context.bind_table        = alloc_update_pass_bind_table(executor, pass, pass->root_signature);
-    pass_context.resolved_buffers  = resolved_buffers;
-    pass_context.resolved_textures = resolved_textures;
+    pass_context.resolved_buffers  = { resolved_buffers.data(), resolved_buffers.size() };
+    pass_context.resolved_textures = { resolved_textures.data(), resolved_textures.size() };
     pass_context.executor          = &executor;
     // call cgpu apis
     CGPUResourceBarrierDescriptor barriers = {};
@@ -603,8 +603,8 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_context.graph             = this;
     pass_context.pass              = pass;
     pass_context.bind_table        = alloc_update_pass_bind_table(executor, pass, pass->root_signature);
-    pass_context.resolved_buffers  = resolved_buffers;
-    pass_context.resolved_textures = resolved_textures;
+    pass_context.resolved_buffers  = { resolved_buffers.data(), resolved_buffers.size() };
+    pass_context.resolved_textures = { resolved_textures.data(), resolved_textures.size() };
     pass_context.executor          = &executor;
     // call cgpu apis
     CGPUResourceBarrierDescriptor barriers = {};
@@ -809,8 +809,8 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
     {
         CopyPassContext stack   = {};
         stack.cmd               = executor.gfx_cmd_buf;
-        stack.resolved_buffers  = resolved_buffers;
-        stack.resolved_textures = resolved_textures;
+        stack.resolved_buffers  = { resolved_buffers.data(), resolved_buffers.size() };
+        stack.resolved_textures = { resolved_textures.data(), resolved_textures.size() };
         pass->executor(*this, stack);
         for (auto [buffer_handle, state] : pass->bbarriers)
         {
