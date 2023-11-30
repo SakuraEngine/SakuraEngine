@@ -138,7 +138,7 @@ struct SKR_RUNTIME_API IIOBatch : public skr::SInterface
 {
     virtual void reserve(uint64_t size) SKR_NOEXCEPT = 0;
     virtual IOResultId add_request(IORequestId request, IOFuture* future) SKR_NOEXCEPT = 0;
-    virtual skr::Span<IORequestId> get_requests() SKR_NOEXCEPT = 0;
+    virtual skr::span<IORequestId> get_requests() SKR_NOEXCEPT = 0;
 
     virtual void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT = 0;
     virtual SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT = 0;

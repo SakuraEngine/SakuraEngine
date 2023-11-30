@@ -52,7 +52,7 @@ ERawVertexStreamType : uint32_t {
 sreflect_struct("guid" : "d0513fc5-e768-4bb6-a5e2-560175a1340d")
 MESH_CORE_API SRawDataStream
 {
-    eastl::span<const uint8_t> buffer_view;
+    skr::span<const uint8_t> buffer_view;
     uint64_t count;
     uint64_t stride;
     uint64_t offset;

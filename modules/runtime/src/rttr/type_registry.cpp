@@ -94,7 +94,7 @@ Type* get_type_from_guid(const GUID& guid)
     return nullptr;
 }
 
-Type* get_type_from_type_desc(Span<TypeDesc> type_desc)
+Type* get_type_from_type_desc(span<TypeDesc> type_desc)
 {
     std::lock_guard _lock(load_type_mutex());
 

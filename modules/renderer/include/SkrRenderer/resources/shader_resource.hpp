@@ -42,9 +42,9 @@ MultiShaderResource {
 sreflect_struct("guid": "8372f075-b4ce-400d-929f-fb0e57c1c887")
 sattr("blob" : true)
 ShaderOptionSequence {
-    skr::Span<EShaderOptionType>           types;
-    skr::Span<skr::string_view>            keys;
-    skr::Span<skr::Span<skr::string_view>> values;
+    skr::span<EShaderOptionType>           types;
+    skr::span<skr::string_view>            keys;
+    skr::span<skr::span<skr::string_view>> values;
 
     SKR_RENDERER_API
     uint32_t find_key_index(skr::string_view key) const SKR_NOEXCEPT;
@@ -56,7 +56,7 @@ ShaderOptionSequence {
     uint32_t find_value_index(uint32_t key_index, skr::string_view value) const SKR_NOEXCEPT;
 
     SKR_RENDERER_API
-    static skr_stable_shader_hash_t calculate_stable_hash(const ShaderOptionSequence& seq, skr::Span<uint32_t> indices);
+    static skr_stable_shader_hash_t calculate_stable_hash(const ShaderOptionSequence& seq, skr::span<uint32_t> indices);
 };
 GENERATED_BLOB_BUILDER(ShaderOptionSequence)
 

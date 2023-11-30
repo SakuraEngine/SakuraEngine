@@ -8,7 +8,7 @@ namespace skr::rttr
 template <>
 struct ${api} EnumTraits<${enum.name}>
 {
-    static Span<EnumItem<${enum.name}>> items();
+    static span<EnumItem<${enum.name}>> items();
     static string_view                  to_string(const ${enum.name}& value);
     static bool                         from_string(string_view str, ${enum.name}& value);
 };

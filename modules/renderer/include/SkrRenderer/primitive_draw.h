@@ -62,7 +62,7 @@ using VertexBufferView = skr_vertex_buffer_view_t;
 using IndexBufferView = skr_index_buffer_view_t;
 
 struct PrimitiveCommand {
-    skr::Span<const skr_vertex_buffer_view_t> vbvs;
+    skr::span<const skr_vertex_buffer_view_t> vbvs;
     const skr_index_buffer_view_t* ibv;
     uint32_t primitive_index;
     uint32_t material_index;

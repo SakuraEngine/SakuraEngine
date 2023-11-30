@@ -1,3 +1,4 @@
+#include "SkrRT/misc/log.h"
 #include "SkrRT/rttr/type/vector_type.hpp"
 #include "SkrRT/rttr/rttr_traits.hpp"
 #include "SkrRT/serde/json/writer.h"
@@ -5,7 +6,7 @@
 
 namespace skr::rttr
 {
-inline static size_t _element_count_of(Span<size_t> dimensions)
+inline static size_t _element_count_of(span<size_t> dimensions)
 {
     size_t size = 1;
     for (auto d : dimensions)
@@ -15,7 +16,7 @@ inline static size_t _element_count_of(Span<size_t> dimensions)
     return size;
 }
 
-VectorType::VectorType(Type* target_type, Span<size_t> dimensions, string name)
+VectorType::VectorType(Type* target_type, span<size_t> dimensions, string name)
     : GenericType(kArrayGenericGUID, std::move(name), GUID::Create(), target_type->size() * _element_count_of(dimensions), target_type->alignment())
     , _size(_element_count_of(dimensions))
     , _dimensions(dimensions.data(), dimensions.size())

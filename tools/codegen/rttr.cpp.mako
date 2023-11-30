@@ -8,7 +8,7 @@
 namespace skr::rttr 
 {
 %for enum in generator.enums:
-Span<EnumItem<${enum.name}>> EnumTraits<${enum.name}>::items()
+span<EnumItem<${enum.name}>> EnumTraits<${enum.name}>::items()
 {
     static EnumItem<${enum.name}> items[] = {
     %for name, value in vars(enum.values).items():
@@ -64,7 +64,7 @@ SKR_RTTR_EXEC_STATIC
             using namespace skr;
             using namespace skr::rttr;
 
-            RecordType* result = static_cast<RecordType*>(type);
+            [[maybe_unused]] RecordType* result = static_cast<RecordType*>(type);
 
         %if record.bases:
             result->set_base_types({

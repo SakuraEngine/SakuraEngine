@@ -16,7 +16,7 @@ struct BlocksComponent : public IORequestComponent
 {
     BlocksComponent(IIORequest* const request) SKR_NOEXCEPT;
     
-    skr::Span<skr_io_block_t> get_blocks() SKR_NOEXCEPT 
+    skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT 
     { 
         return {blocks.data(), blocks.size()};
     }
@@ -40,7 +40,7 @@ struct CompressedBlocksComponent : public IORequestComponent
 {
     CompressedBlocksComponent(IIORequest* const request) SKR_NOEXCEPT;
     
-    skr::Span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT 
+    skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT 
     { 
         SKR_UNIMPLEMENTED_FUNCTION();
         return {}; 

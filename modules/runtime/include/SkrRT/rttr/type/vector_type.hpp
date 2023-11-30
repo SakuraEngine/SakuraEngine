@@ -6,7 +6,7 @@
 namespace skr::rttr
 {
 struct SKR_RUNTIME_API VectorType : public GenericType {
-    VectorType(Type* target_type, Span<size_t> dimensions, string name);
+    VectorType(Type* target_type, span<size_t> dimensions, string name);
 
     bool query_feature(ETypeFeature feature) const override;
 

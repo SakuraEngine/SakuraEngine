@@ -46,7 +46,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
 
     }
 
-    void execute(const skr_primitive_pass_context_t* context, skr::Span<const skr_primitive_draw_packet_t> drawcalls) override
+    void execute(const skr_primitive_pass_context_t* context, skr::span<const skr_primitive_draw_packet_t> drawcalls) override
     {
         auto renderGraph = context->render_graph;
         auto backbuffer = renderGraph->get_texture(u8"backbuffer");

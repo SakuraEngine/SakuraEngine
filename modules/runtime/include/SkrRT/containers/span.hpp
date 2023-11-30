@@ -1,9 +1,11 @@
 #pragma once
-#include <EASTL/span.h>
+#include "SkrBase/containers/misc/span.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 
 namespace skr
 {
-using eastl::span;
+template <typename T, size_t Extent = container::kDynamicExtent>
+using span = container::Span<T, size_t, Extent>;
 }
 
 #include "SkrRT/containers_new/vector.hpp"

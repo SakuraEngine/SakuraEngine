@@ -162,7 +162,7 @@ void skr_init_anim_buffers(CGPUDeviceId device, skr::anim::AnimComponent* anim, 
                     else
                         anim->views.push_back(vbv);
                 }
-                prim.views = skr::span(anim->views.data() + vbv_start, renderMesh->primitive_commands[k].vbvs.size());
+                prim.views = skr::span<skr_vertex_buffer_view_t>(anim->views.data() + vbv_start, renderMesh->primitive_commands[k].vbvs.size());
             }
         }
         const auto vertex_size = anim->buffers[j]->get_size();
