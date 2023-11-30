@@ -8,7 +8,6 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
-#include <EASTL/vector.h>
 #include <EASTL/fixed_vector.h>
 
 #include "SkrProfile/profile.h"

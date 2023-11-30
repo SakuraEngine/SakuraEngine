@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
-#include <EASTL/set.h>
-#include <SkrRT/containers_new/string.hpp>
 #include "../common/common_utils.h"
+#include <SkrRT/containers_new/uset.hpp>
+#include <SkrRT/containers_new/string.hpp>
 #include "SkrRT/platform/shared_library.hpp"
 #include "cgpu/extensions/cgpu_nsight.h"
 #include "cgpu_nsight_tracker.hpp"
@@ -36,7 +36,7 @@ inline static void AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_Result _result)
 void CGPUNSightSingleton::register_tracker(CGPUNSightTrackerId tracker) SKR_NOEXCEPT
 {
     trackers_mutex.lock();
-    all_trackers.emplace_back(tracker);
+    all_trackers.add(tracker);
     trackers_mutex.unlock();
     CGPUNSightSingleton::rc = (uint32_t)all_trackers.size();
 }
@@ -44,7 +44,7 @@ void CGPUNSightSingleton::register_tracker(CGPUNSightTrackerId tracker) SKR_NOEX
 void CGPUNSightSingleton::remove_tracker(CGPUNSightTrackerId tracker) SKR_NOEXCEPT
 {
     trackers_mutex.lock();
-    all_trackers.erase(eastl::remove(all_trackers.begin(), all_trackers.end(), tracker));
+    all_trackers.remove(tracker);
     trackers_mutex.unlock();
     CGPUNSightSingleton::rc = (uint32_t)all_trackers.size();
     if (!CGPUNSightSingleton::rc)
@@ -83,7 +83,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
             GFSDK_Aftermath_GpuCrashDumpDescriptionKey_ApplicationName,
             &applicationNameLength));
 
-        eastl::vector<char8_t> applicationName(applicationNameLength, '\0');
+        skr::vector<char8_t> applicationName(applicationNameLength, '\0');
         if (applicationNameLength)
         {
             AFTERMATH_CHECK_ERROR(aftermath_GpuCrashDump_GetDescription(
@@ -124,7 +124,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
     {
         auto _this = (CGPUNSightSingleton*)pUserData;
         SKR_LOG_TRACE(u8"NSIGHT GPU Crash Dump Callback");
-        eastl::set<struct ID3D12Device*> devices; 
+        skr::USet<struct ID3D12Device*> devices; 
         for (auto tracker : _this->all_trackers)
         {
             auto tracker_impl = static_cast<CGPUNSightTrackerBase*>(tracker);

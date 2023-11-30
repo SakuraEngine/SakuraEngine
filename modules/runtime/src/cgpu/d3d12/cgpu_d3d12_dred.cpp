@@ -2,8 +2,8 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/containers_new/span.hpp"
 
-#include <EASTL/string.h>
-#include <EASTL/vector_map.h>
+#include <SkrRT/containers_new/stl_string.hpp>
+#include <SkrRT/containers_new/umap.hpp>
 
 // Should match all valid values from D3D12_DRED_ALLOCATION_TYPE
 static const TCHAR* D3D12_AllocTypesNames[] =
@@ -180,8 +180,8 @@ void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
     {
         cgpu_error(u8"DRED: Last tracked GPU operations:");
 
-        eastl::wstring ContextStr;
-        eastl::vector_map<int32_t, const wchar_t*> ContextStrings;
+        skr::stl_wstring ContextStr;
+        skr::UMap<int32_t, const wchar_t*> ContextStrings;
 
         uint32_t TracedCommandLists = 0;
         auto Node = breadcrumbs->pHeadAutoBreadcrumbNode;
@@ -212,7 +212,7 @@ void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
                     if (OpContextStr)
                     {
                         ContextStr = TEXT(" [");
-                        ContextStr += OpContextStr->second;
+                        ContextStr += OpContextStr->value;
                         ContextStr += TEXT("]");
                     }
                     else

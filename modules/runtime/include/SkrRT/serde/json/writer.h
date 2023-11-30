@@ -15,7 +15,7 @@ typedef enum ESkrJsonType
     #include "SkrRT/containers_new/string.hpp"
     #include "SkrRT/containers_new/hashmap.hpp"
     #include "SkrRT/containers_new/span.hpp"
-    #include "SkrRT/containers_new/vector.hpp"
+    #include "SkrRT/containers_new/stl_vector.hpp"
     #include "SkrRT/rttr/rttr_traits.hpp"
 
 // forward declaration for resources
@@ -83,9 +83,9 @@ protected:
     bool _Prefix(ESkrJsonType type);
     bool _NewLine();
 
-    bool                 _hasRoot = false;
-    eastl::vector<Level> _levelStack;
-    skr_json_format_t    _format;
+    bool               _hasRoot = false;
+    skr::stl_vector<Level> _levelStack;
+    skr_json_format_t  _format;
 };
 #else
 typedef struct skr_json_writer_t skr_json_writer_t;
@@ -239,19 +239,6 @@ struct WriteTrait<skr::resource::TResourceHandle<T>> {
         skr::json::Write<skr_resource_handle_t>(json, (const skr_resource_handle_t&)handle);
     }
 };
-// TODO: REMOVE THIS
-template <class V, class Allocator>
-struct WriteTrait<eastl::vector<V, Allocator>> {
-    static void Write(skr_json_writer_t* json, const eastl::vector<V, Allocator>& vec)
-    {
-        json->StartArray();
-        for (auto& v : vec)
-        {
-            skr::json::Write<V>(json, v);
-        }
-        json->EndArray();
-    }
-};
 template <class V>
 struct WriteTrait<skr::vector<V>> {
     static void Write(skr_json_writer_t* json, const skr::vector<V>& vec)
@@ -280,7 +267,7 @@ template <class... Ts>
 struct WriteTrait<skr::variant<Ts...>> {
     static void Write(skr_json_writer_t* json, const skr::variant<Ts...>& v)
     {
-        eastl::visit([&](auto&& value) {
+        std::visit([&](auto&& value) {
             using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
             json->StartObject();
             json->Key(u8"type");
@@ -289,7 +276,7 @@ struct WriteTrait<skr::variant<Ts...>> {
             skr::json::Write<decltype(value)>(json, value);
             json->EndObject();
         },
-                     v);
+                   v);
     }
 };
 } // namespace skr::json
@@ -312,8 +299,8 @@ struct SerdeCompleteChecker<json::WriteTrait<skr::flat_hash_map<K, V, Hash, Eq>>
     : std::bool_constant<is_complete_serde_v<json::WriteTrait<K>> && is_complete_serde_v<json::WriteTrait<V>>> {
 };
 
-template <class V, class Allocator>
-struct SerdeCompleteChecker<json::WriteTrait<eastl::vector<V, Allocator>>>
+template <class V>
+struct SerdeCompleteChecker<json::WriteTrait<skr::vector<V>>>
     : std::bool_constant<is_complete_serde_v<json::WriteTrait<V>>> {
 };
 

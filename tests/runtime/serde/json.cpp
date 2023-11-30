@@ -7,7 +7,7 @@
 struct JSONSerdeTests
 {
 protected:
-    eastl::vector<uint8_t> buffer;
+    skr::vector<uint8_t> buffer;
     skr_json_writer_t writer{3};
     simdjson::ondemand::parser parser;
     JSONSerdeTests()

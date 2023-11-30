@@ -5,6 +5,7 @@
 
 #include <SkrRT/containers_new/hashmap.hpp>
 #include <SkrRT/containers_new/vector.hpp>
+#include <SkrRT/containers_new/array.hpp>
 
 namespace dual
 {
@@ -13,7 +14,7 @@ using guid_t = dual_guid_t;
 struct guid_compare_t {
     bool operator()(const guid_t& a, const guid_t& b) const
     {
-        using value_type = eastl::array<char, 16>;
+        using value_type = skr::array<char, 16>;
         return reinterpret_cast<const value_type&>(a) < reinterpret_cast<const value_type&>(b);
     }
 };

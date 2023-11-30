@@ -5,11 +5,11 @@
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrBase/misc/defer.hpp"
+#include <SkrRT/containers_new/stl_string.hpp>
 #include <SkrRT/containers_new/string.hpp>
 #include <SkrRT/containers_new/concurrent_queue.h>
 #include <dxcapi.h>
-
-#include <EASTL/string.h>
+#include <memory>
 
 #include "SkrProfile/profile.h"
 
@@ -1195,7 +1195,7 @@ bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPU
     return result == S_OK;
 }
 
-const eastl::wstring shared_texture_name_format = L"cgpu-shared-texture-";
+const skr::stl_wstring shared_texture_name_format = L"cgpu-shared-texture-";
 uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc)
 {
     HRESULT result = S_OK;
@@ -1209,8 +1209,8 @@ uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const stru
     uint64_t hdl = (pid << 32) | shared_id;
 
     // calculate name
-    eastl::wstring name = shared_texture_name_format;
-    name += eastl::to_wstring(hdl);
+    skr::stl_wstring name = shared_texture_name_format;
+    name += std::to_wstring(hdl);
 
     // create shared resource handle
     result = D->pDxDevice->CreateSharedHandle(T->pDxResource, 
@@ -1239,8 +1239,8 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     HANDLE namedResourceHandle = (HANDLE)LongToHandle((long)desc->shared_handle);
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
 
-    eastl::wstring name = shared_texture_name_format;
-    name += eastl::to_wstring(desc->shared_handle);
+    skr::stl_wstring name = shared_texture_name_format;
+    name += std::to_wstring(desc->shared_handle);
 
     result = D->pDxDevice->OpenSharedHandleByName(name.c_str(), GENERIC_ALL, &namedResourceHandle);
     if (FAILED(result))
@@ -1788,9 +1788,7 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(D3D12Util_Descript
         {
             if (descriptorCount == 1)
             {
-                D3D12Util_DescriptorHandle ret = pHeap->mFreeList.back();
-                pHeap->mFreeList.pop_back();
-                return ret;
+                return pHeap->mFreeList.stack_pop_get();
             }
 
             // search for continuous free items in the list
@@ -1806,7 +1804,7 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(D3D12Util_Descript
 
                 if (freeCount == descriptorCount)
                 {
-                    pHeap->mFreeList.erase(pHeap->mFreeList.begin() + index, pHeap->mFreeList.begin() + index + descriptorCount);
+                    pHeap->mFreeList.remove_at(index, descriptorCount);
                     return mDescHandle;
                 }
             }
@@ -1869,7 +1867,7 @@ void D3D12Util_ReturnDescriptorHandles(
         SKR_DECLARE_ZERO(D3D12Util_DescriptorHandle, Free)
         Free.mCpu = { handle.ptr + pHeap->mDescriptorSize * i };
         Free.mGpu = { D3D12_GPU_VIRTUAL_ADDRESS_NULL };
-        pHeap->mFreeList.push_back(Free);
+        pHeap->mFreeList.add(Free);
     }
 }
 
@@ -1890,7 +1888,7 @@ static void D3D12Util_FreeDescriptorHeap(D3D12Util_DescriptorHeap* pHeap)
     cgpu_free(pHeap->pMutex);
 #endif
 
-    pHeap->mFreeList.~vector();
+    std::destroy_at(&pHeap->mFreeList);
 
     cgpu_free(pHeap->pHandles);
     cgpu_free(pHeap);

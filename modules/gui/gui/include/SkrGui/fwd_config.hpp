@@ -28,6 +28,7 @@
 #include "SkrRT/containers_new/span.hpp"
 #include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/containers_new/sptr.hpp"
+#include "SkrRT/containers_new/function.hpp"
 
 // function ref
 #include "SkrRT/containers_new/function_ref.hpp"
@@ -57,7 +58,7 @@ template <typename F>
 using FunctionRef = ::skr::function_ref<F>;
 
 template <typename F>
-using Function = ::eastl::function<F>;
+using Function = ::skr::function<F>;
 
 // smart ptr
 template <typename T>
