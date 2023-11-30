@@ -6,7 +6,7 @@
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/containers/string.hpp"
 
 #include <numeric> // std::iota

@@ -1,6 +1,6 @@
 #include "SkrRT/serde/json/writer.h"
 #include "SkrRT/serde/json/reader.h"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 
 #include "SkrTestFramework/framework.hpp"
 

@@ -20,7 +20,7 @@
 #include "SkrRT/misc/types.h"
 
 // skr containers
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/containers_new/umap.hpp"
 #include "SkrRT/containers_new/uset.hpp"
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "MPShared/world_delta.h"
 #include "MPShared/components.h"
 

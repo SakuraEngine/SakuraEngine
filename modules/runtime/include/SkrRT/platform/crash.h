@@ -3,7 +3,7 @@
 #ifdef __cplusplus
 #include "SkrRT/platform/thread.h"
 #include <SkrRT/containers/span.hpp>
-#include <SkrRT/containers_new/array.hpp>
+#include <SkrRT/containers_new/vector.hpp>
 
 extern "C" {
 #endif

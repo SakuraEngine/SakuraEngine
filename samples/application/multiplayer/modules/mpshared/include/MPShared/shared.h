@@ -4,7 +4,7 @@
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "SkrScene/scene.h"
 #include "MPShared/components.h"
 #include "EASTL/fixed_vector.h"

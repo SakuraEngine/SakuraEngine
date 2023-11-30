@@ -1,6 +1,6 @@
 #pragma once
 /* #ifdef CONTAINER_LITE_IMPL
-    #include "SkrRT/containers_new/array.hpp"
+    #include "SkrRT/containers_new/vector.hpp"
     #include "SkrRT/containers/string.hpp"
     #include "SkrRT/containers/hashmap.hpp"
     #include <new> // placement new operator

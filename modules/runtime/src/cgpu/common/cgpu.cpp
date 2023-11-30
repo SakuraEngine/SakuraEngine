@@ -11,7 +11,7 @@
 #include "common_utils.h"
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/hashmap.hpp>
-#include <SkrRT/containers_new/array.hpp>
+#include <SkrRT/containers_new/vector.hpp>
 #include <functional>
 
 // Runtime Table

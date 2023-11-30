@@ -6,7 +6,7 @@
 #include "SkrRT/misc/log/log_formatter.hpp"
 
 #include "SkrRT/containers/concurrent_queue.h"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/containers/resizable_ring_buffer.hpp"
 #include <EASTL/unique_ptr.h>
 

@@ -5,7 +5,7 @@
 #include <atomic>
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include <EASTL/array.h>
 
 #if __cpp_lib_coroutine

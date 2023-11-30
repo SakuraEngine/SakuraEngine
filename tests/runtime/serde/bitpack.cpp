@@ -1,7 +1,7 @@
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/containers/span.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "SkrTestFramework/framework.hpp"
 
 class BinaryBitpackTests

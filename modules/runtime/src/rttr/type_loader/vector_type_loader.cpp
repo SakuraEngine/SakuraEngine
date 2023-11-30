@@ -1,10 +1,10 @@
 #include "SkrRT/rttr/type_loader/array_type_loader.hpp"
-#include "SkrRT/rttr/type/array_type.hpp"
+#include "SkrRT/rttr/type/vector_type.hpp"
 #include "SkrRT/rttr/rttr_traits.hpp"
 
 namespace skr::rttr
 {
-Type* ArrayTypeLoader::load(Span<TypeDesc> desc)
+Type* VectorTypeLoader::load(Span<TypeDesc> desc)
 {
     SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_GUID);
     SKR_ASSERT(desc[0].value_guid() == kArrayGenericGUID);
@@ -26,7 +26,7 @@ Type* ArrayTypeLoader::load(Span<TypeDesc> desc)
 
     return SkrNew<VectorType>(target_type, Span<size_t>{ dimensions_buffer, dim }, std::move(type_name));
 }
-void ArrayTypeLoader::destroy(Type* type)
+void VectorTypeLoader::destroy(Type* type)
 {
     SkrDelete(type);
 }

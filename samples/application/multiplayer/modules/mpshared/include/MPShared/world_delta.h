@@ -5,7 +5,7 @@
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "EASTL/bonus/fixed_ring_buffer.h"
 #include "SkrRT/platform/time.h"
 

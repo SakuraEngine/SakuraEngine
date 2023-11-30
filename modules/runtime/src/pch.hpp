@@ -22,7 +22,7 @@
 #include <SkrRT/containers/concurrent_queue.h> // IWYU pragma: export
 #include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
 #include <SkrRT/containers/string.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/array.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/vector.hpp> // IWYU pragma: export
 #include <SkrRT/containers/hashmap.hpp> // IWYU pragma: export
 #include <SkrRT/containers/btree.hpp> // IWYU pragma: export
 

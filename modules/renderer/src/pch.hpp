@@ -8,7 +8,7 @@
 #include "SkrRT/misc/log.h" // IWYU pragma: export
 #include "SkrRT/containers/sptr.hpp" // IWYU pragma: export
 #include "SkrRT/containers/hashmap.hpp" // IWYU pragma: export
-#include "SkrRT/containers_new/array.hpp" // IWYU pragma: export
+#include "SkrRT/containers_new/vector.hpp" // IWYU pragma: export
 #include "SkrRT/resource/resource_factory.h"  // IWYU pragma: export
 #include "SkrRT/resource/resource_system.h"  // IWYU pragma: export
 #include "SkrRT/async/thread_job.hpp" // IWYU pragma: export

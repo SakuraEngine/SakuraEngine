@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/rttr/type/generic_type.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/containers_new/span.hpp"
 
 namespace skr::rttr

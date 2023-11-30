@@ -6,7 +6,7 @@ namespace skr
 using eastl::span;
 }
 
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/serde/binary/blob_fwd.h"
 #include "SkrRT/serde/binary/serde.h"
 

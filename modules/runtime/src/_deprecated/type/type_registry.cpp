@@ -9,7 +9,7 @@
 #include "SkrRT/_deprecated/type/type_serde.h"
 
 #include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/string.hpp"
 

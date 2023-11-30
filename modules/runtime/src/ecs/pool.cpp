@@ -1,6 +1,6 @@
 #include "SkrProfile/profile.h"
 #include "SkrRT/ecs/dual_config.h"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "pool.hpp"
 #include <numeric>
 

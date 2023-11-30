@@ -9,7 +9,7 @@
     #include "SkrRT/platform/memory.h"
     #include "SkrRT/platform/atomic.h"
     #include "SkrRT/platform/thread.h"
-    #include "SkrRT/containers_new/array.hpp"
+    #include "SkrRT/containers_new/vector.hpp"
 #endif
 
 struct SkrWindowsDStorageInstance : public SkrDStorageInstance

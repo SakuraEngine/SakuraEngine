@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/containers/misc/span.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 
 namespace skr
 {

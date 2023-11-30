@@ -3,7 +3,7 @@
 #include "SkrRT/config.h"
 
 #include <SkrRT/containers_new/span.hpp>
-#include <SkrRT/containers_new/array.hpp>
+#include <SkrRT/containers_new/vector.hpp>
 #include <SkrRT/containers_new/uset.hpp>
 #include <SkrRT/containers/hashmap.hpp>
 #include "SkrRT/containers/sptr.hpp"

@@ -6,7 +6,7 @@
 #include "SkrRT/misc/log.h"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/containers_new/stl_vector.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/containers/concurrent_queue.h"
 
 #include "platform/windows/windows_dstorage.hpp"
