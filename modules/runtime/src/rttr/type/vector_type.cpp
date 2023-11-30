@@ -1,4 +1,4 @@
-#include "SkrRT/rttr/type/array_type.hpp"
+#include "SkrRT/rttr/type/vector_type.hpp"
 #include "SkrRT/rttr/rttr_traits.hpp"
 #include "SkrRT/serde/json/writer.h"
 #include "SkrRT/serde/json/reader.h"

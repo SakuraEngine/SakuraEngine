@@ -3,7 +3,7 @@
 #include "SkrRenderer/fwd_types.h"
 
 #include <SkrRT/containers/string.hpp>
-#include <SkrRT/containers_new/array.hpp>
+#include <SkrRT/containers_new/vector.hpp>
 
 #ifndef __meta__
     #include "SkrRenderer/resources/mesh_resource.generated.h" // IWYU pragma: export

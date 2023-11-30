@@ -14,7 +14,7 @@
 #include "SkrRT/misc/log.h"
 
 #include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 
 typedef struct SProcess
 {

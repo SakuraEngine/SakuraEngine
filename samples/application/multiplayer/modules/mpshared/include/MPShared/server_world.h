@@ -5,7 +5,7 @@
 #include "MPShared/world_delta.h"
 #include "SkrScene/scene.h"
 #include "SkrRT/platform/time.h"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 
 struct MP_SHARED_API MPServerWorld : MPGameWorld
 {

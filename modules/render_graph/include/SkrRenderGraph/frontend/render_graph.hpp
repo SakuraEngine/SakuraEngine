@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRenderGraph/frontend/base_types.hpp"
 #include "SkrRenderGraph/frontend/blackboard.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include <EASTL/functional.h>
 
 #ifndef RG_MAX_FRAME_IN_FLIGHT

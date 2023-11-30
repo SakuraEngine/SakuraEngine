@@ -4,7 +4,7 @@
 #include "SkrRT/containers_new/umap.hpp"
 #include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/containers_new/span.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 
 namespace skr::rttr
 {

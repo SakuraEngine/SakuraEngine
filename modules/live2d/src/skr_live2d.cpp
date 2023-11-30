@@ -3,7 +3,7 @@
 #include "SkrLive2D/skr_live2d.h"
 #include "CubismFramework.hpp"
 
-#include <SkrRT/containers_new/array.hpp>
+#include <SkrRT/containers_new/vector.hpp>
 
 /**	Log out func register to cubism */
 static void Cubism_Log(const char* message)

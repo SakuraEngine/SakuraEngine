@@ -5,7 +5,7 @@
 #include "SkrRenderer/resources/mesh_resource.h"
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/span.hpp>
-#include <SkrRT/containers_new/array.hpp>
+#include <SkrRT/containers_new/vector.hpp>
 #ifndef __meta__
 #include "SkrMeshCore/mesh_processing.generated.h" // IWYU pragma: export
 #endif
