@@ -50,7 +50,7 @@ bool GestureArenaManager::route_event(Event* event)
         {
             for (auto& member : arena->members())
             {
-                listened &= member->handle_event(event);
+                listened |= member->handle_event(event);
             }
         }
         return listened;
