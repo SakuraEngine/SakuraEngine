@@ -5,7 +5,7 @@
 #include "SkrRT/resource/resource_factory.h" // IWYU pragma: export
 #include "SkrRT/containers/sptr.hpp" // IWYU pragma: export
 #include <SkrRT/containers/string.hpp> // IWYU pragma: export
-#include <SkrRT/containers/vector.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/array.hpp> // IWYU pragma: export
 
 /* TODO: MAYBE THIS IS AN XMAKE PCH BUG
 #include "SkrAnim/ozz/geometry/skinning_job.h" // IWYU pragma: export
