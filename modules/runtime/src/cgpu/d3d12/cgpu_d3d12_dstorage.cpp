@@ -1,9 +1,7 @@
-#include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "../common/common_utils.h"
-
+#include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "platform/windows/windows_dstorage.hpp"
-
-#include "EASTL/vector_map.h"
+#include <SkrRT/containers_new/umap.hpp>
 
 #define SKR_DSTORAGE_SINGLETON_NAME u8"CGPUDStorageSingleton"
 
@@ -26,7 +24,7 @@ struct CGPUDStorageSingleton
         }
         return nullptr;
     }
-    eastl::vector_map<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
+    skr::UMap<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
 };
 
 inline static IDStorageFactory* GetDStorageFactory(CGPUInstanceId instance)
@@ -46,14 +44,14 @@ ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId de
     {
         if (!GetDStorageFactory(instance))
         {
-            _this->availability_map[device] = SKR_DSTORAGE_AVAILABILITY_NONE;
+            _this->availability_map.add(device, SKR_DSTORAGE_AVAILABILITY_NONE);
         }
         else
         {
-            _this->availability_map[device] = SKR_DSTORAGE_AVAILABILITY_HARDWARE;
+            _this->availability_map.add(device, SKR_DSTORAGE_AVAILABILITY_HARDWARE);
         }
     }
-    return _this->availability_map[device];
+    return _this->availability_map.find(device)->value;
 }
 
 using CGPUDStorageQueueD3D12 = DStorageQueueWindows;

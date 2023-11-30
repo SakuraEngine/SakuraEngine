@@ -2,9 +2,7 @@
 #include "shader_compiler.hpp"
 #include "SkrRT/module/subsystem.hpp"
 #include "SkrRT/platform/shared_library.hpp"
-
-#include <EASTL/string.h>
-
+#include "SkrRT/containers_new/stl_string.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #ifndef __meta__
     #include "SkrShaderCompiler/dxc_compiler.generated.h" // IWYU pragma: export
@@ -76,18 +74,18 @@ public:
     void SetIncludeHandler(IDxcIncludeHandler* includeHandler) SKR_NOEXCEPT;
 
 protected:
-    void createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, eastl::vector<eastl::wstring>& def_args) SKR_NOEXCEPT;
+    void createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, skr::vector<skr::stl_wstring>& def_args) SKR_NOEXCEPT;
 
     IDxcUtils*          utils          = nullptr;
     IDxcCompiler3*      compiler       = nullptr;
     IDxcIncludeHandler* includeHandler = nullptr;
 
-    eastl::vector<skr_shader_option_template_t> switch_defs;
-    eastl::vector<skr_shader_option_instance_t> switches;
+    skr::vector<skr_shader_option_template_t> switch_defs;
+    skr::vector<skr_shader_option_instance_t> switches;
     skr_stable_shader_hash_t                    switches_hash = {};
 
-    eastl::vector<skr_shader_option_template_t> option_defs;
-    eastl::vector<skr_shader_option_instance_t> options;
+    skr::vector<skr_shader_option_template_t> option_defs;
+    skr::vector<skr_shader_option_instance_t> options;
     skr_stable_shader_hash_t                    options_hash = {};
 };
 

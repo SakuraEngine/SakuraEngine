@@ -1,8 +1,8 @@
 #include "SkrShaderCompiler/dxc_compiler.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
+#include <dxcapi.h>
 
-#include <EASTL/string.h> //sv::starts_with
-#include <EASTL/unique_ptr.h>
+#include "SkrRT/containers_new/stl_string.hpp" //sv::starts_with
 
 #include "SkrProfile/profile.h"
 
@@ -202,7 +202,7 @@ bool SDXCCompiler::IsSupportedTargetFormat(ECGPUShaderBytecodeType format) const
 
 inline static ECGPUShaderStage getShaderStageFromTargetString(const char* target)
 {
-    eastl::string_view sv = target;
+    skr::stl_string_view sv = target;
     if (sv.starts_with("vs")) return CGPU_SHADER_STAGE_VERT;
     if (sv.starts_with("gs")) return CGPU_SHADER_STAGE_GEOM;
     if (sv.starts_with("ds")) return CGPU_SHADER_STAGE_DOMAIN;
@@ -215,19 +215,19 @@ inline static ECGPUShaderStage getShaderStageFromTargetString(const char* target
 
 void SDXCCompiler::SetShaderOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options_view, const skr_stable_shader_hash_t& option_hash) SKR_NOEXCEPT
 {
-    option_defs = eastl::vector<skr_shader_option_template_t>(opt_defs.data(), opt_defs.data() + opt_defs.size());
-    options = eastl::vector<skr_shader_option_instance_t>(options_view.data(), options_view.data() + options_view.size());
+    option_defs = skr::vector<skr_shader_option_template_t>(opt_defs.data(), opt_defs.size());
+    options = skr::vector<skr_shader_option_instance_t>(options_view.data(), options_view.size());
     options_hash = option_hash;
 }
 
 void SDXCCompiler::SetShaderSwitches(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options_view, const skr_stable_shader_hash_t& option_hash) SKR_NOEXCEPT
 {
-    switch_defs = eastl::vector<skr_shader_option_template_t>(opt_defs.data(), opt_defs.data() + opt_defs.size());
-    switches = eastl::vector<skr_shader_option_instance_t>(options_view.data(), options_view.data() + options_view.size());
+    switch_defs = skr::vector<skr_shader_option_template_t>(opt_defs.data(), opt_defs.size());
+    switches = skr::vector<skr_shader_option_instance_t>(options_view.data(), options_view.size());
     switches_hash = option_hash;
 }
 
-eastl::wstring utf8_to_utf16(const skr::string& utf8)
+skr::stl_wstring utf8_to_utf16(const skr::string& utf8)
 {
     std::vector<unsigned long> unicode;
     size_t i = 0;
@@ -294,7 +294,7 @@ eastl::wstring utf8_to_utf16(const skr::string& utf8)
         }
         unicode.push_back(uni);
     }
-    eastl::wstring utf16;
+    skr::stl_wstring utf16;
     for (size_t i = 0; i < unicode.size(); ++i)
     {
         unsigned long uni = unicode[i];
@@ -312,7 +312,7 @@ eastl::wstring utf8_to_utf16(const skr::string& utf8)
     return utf16;
 }
 
-void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, eastl::vector<eastl::wstring>& outArgs) SKR_NOEXCEPT
+void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, skr::vector<skr::stl_wstring>& outArgs) SKR_NOEXCEPT
 {
     using namespace skr::renderer;
     skr_shader_option_template_t* optdef = nullptr;
@@ -335,20 +335,20 @@ void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_template
         const auto opt_type = optdef->type;
         if (opt_type == EShaderOptionType::VALUE)
         {
-            auto prefix = eastl::wstring(L"-D") + utf8_to_utf16(option.key).c_str();
-            if (option.value == u8"on") outArgs.emplace_back(prefix);
-            else if (option.value == u8"off") continue;//allArgs.emplace_back(prefix);
+            auto prefix = skr::stl_wstring(L"-D") + utf8_to_utf16(option.key).c_str();
+            if (option.value == u8"on") outArgs.add(prefix);
+            else if (option.value == u8"off") continue;//allArgs.add(prefix);
             else
             {
-                auto wvalue =  eastl::wstring(utf8_to_utf16(option.value).c_str());
+                auto wvalue =  skr::stl_wstring(utf8_to_utf16(option.value).c_str());
                 auto defination = prefix + L"=" + wvalue; 
-                outArgs.emplace_back(defination);  
+                outArgs.add(defination);  
             }
         }
         else if (opt_type == EShaderOptionType::SELECT)
         {
-            auto defination = eastl::wstring(L"-D") + utf8_to_utf16(option.value).c_str();
-            outArgs.emplace_back(defination);
+            auto defination = skr::stl_wstring(L"-D") + utf8_to_utf16(option.value).c_str();
+            outArgs.add(defination);
         }
         else if (opt_type == EShaderOptionType::LEVEL)
         {
@@ -363,8 +363,8 @@ void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_template
             }
             for (size_t i = 0u; i <= lv; ++i)
             {
-                auto defination = eastl::wstring(L"-D") + utf8_to_utf16(optdef->value_selections[i]).c_str();
-                outArgs.emplace_back(defination);
+                auto defination = skr::stl_wstring(L"-D") + utf8_to_utf16(optdef->value_selections[i]).c_str();
+                outArgs.add(defination);
             }
         }
         else
@@ -392,54 +392,54 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     const auto wEntryString = utf8_to_utf16(importer.entry);
     const auto wNameString = utf8_to_utf16(source.source_name);
     const auto shader_stage = getShaderStageFromTargetString(importer.target.c_str());
-    eastl::vector<eastl::wstring> allArgs;
-    allArgs.emplace_back(wNameString.c_str());
+    skr::vector<skr::stl_wstring> allArgs;
+    allArgs.add(wNameString.c_str());
     if (format == CGPU_SHADER_BYTECODE_TYPE_DXIL)
     {
-        allArgs.emplace_back(L"-Wno-ignored-attributes");
-        allArgs.emplace_back(DXC_ARG_ALL_RESOURCES_BOUND);
+        allArgs.add(L"-Wno-ignored-attributes");
+        allArgs.add(DXC_ARG_ALL_RESOURCES_BOUND);
     }
     if (format == CGPU_SHADER_BYTECODE_TYPE_SPIRV)
     {
-        allArgs.emplace_back(L"-spirv");
-        allArgs.emplace_back(L"-fspv-target-env=vulkan1.1");
+        allArgs.add(L"-spirv");
+        allArgs.add(L"-fspv-target-env=vulkan1.1");
     }
     // entry point
-    allArgs.emplace_back(L"-E");
-    allArgs.emplace_back(wEntryString.c_str()); 
+    allArgs.add(L"-E");
+    allArgs.add(wEntryString.c_str()); 
     // target profile
-    allArgs.emplace_back(L"-T");
-    allArgs.emplace_back(wTargetString.c_str()); 
+    allArgs.add(L"-T");
+    allArgs.add(wTargetString.c_str()); 
     // optimization
 #if _DEBUG
-    allArgs.emplace_back(DXC_ARG_DEBUG);
-    allArgs.emplace_back(DXC_ARG_SKIP_OPTIMIZATIONS);
+    allArgs.add(DXC_ARG_DEBUG);
+    allArgs.add(DXC_ARG_SKIP_OPTIMIZATIONS);
 #else
-    allArgs.emplace_back(DXC_ARG_OPTIMIZATION_LEVEL3);
+    allArgs.add(DXC_ARG_OPTIMIZATION_LEVEL3);
 #endif
-    allArgs.emplace_back(L"-Qstrip_debug"); 
+    allArgs.add(L"-Qstrip_debug"); 
 
     createDefArgsFromOptions(switch_defs, switches, allArgs);
     createDefArgsFromOptions(option_defs, options, allArgs);
 
 #ifdef SKR_PROFILE_ENABLE
-    eastl::wstring wArgsString;
+    skr::stl_wstring wArgsString;
     for (auto&& arg : allArgs)
     {
         wArgsString += arg + L" ";
     }
-    eastl::string msg;
+    skr::stl_string msg;
     for(char x : wArgsString) msg += x;
     SkrMessage(msg.c_str(), msg.size());
 #endif
 
     // do compile
     {
-        eastl::vector<LPCWSTR> pszArgs;
+        skr::vector<LPCWSTR> pszArgs;
         pszArgs.reserve(allArgs.size());
         for (auto& arg : allArgs)
         {
-            pszArgs.emplace_back(arg.c_str());
+            pszArgs.add(arg.c_str());
         }
         auto hres = compiler->Compile(
             &SourceBuffer,                // Source buffer.

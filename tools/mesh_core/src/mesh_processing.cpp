@@ -1,10 +1,10 @@
 #include "SkrRT/async/fib_task.hpp"
+#include "SkrRT/containers_new/stl_string.hpp"
 #include "SkrMeshCore/mesh_processing.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "cgpu/api.h"
 
-#include <EASTL/string.h>
 #include "SkrProfile/profile.h"
 
 namespace skd
@@ -43,7 +43,7 @@ skr::span<const uint8_t> GetRawPrimitiveAttributeView(const SRawPrimitive* primi
     for (uint32_t type = 0; type < kVertexStreamTypesCount; type++)
     {
         const auto refStr = kRawAttributeTypeNameLUT[type];
-        eastl::string_view semantics_sv = semantics;
+        skr::stl_string_view semantics_sv = semantics;
         if (semantics_sv.starts_with(refStr))
         {
             out_type = static_cast<ERawVertexStreamType>(type);
@@ -131,7 +131,7 @@ void EmplaceRawMeshVerticesWithRange(skr::span<const ESkrVertexAttribute> range,
                 bool within = false;
                 for (auto type : range)
                 {
-                    const eastl::string semantic = kRawAttributeTypeNameLUT[type];
+                    const skr::stl_string semantic = kRawAttributeTypeNameLUT[type];
                     if (semantic == (const char*)shuffle_attrib.semantic_name)
                     {
                         within = true;

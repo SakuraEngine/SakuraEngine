@@ -17,4 +17,9 @@
 #include <SkrRT/containers_new/btree.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/concurrent_queue.h> // IWYU pragma: export
 
+#include <SkrRT/containers_new/stl_vector.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/stl_list.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/stl_deque.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/stl_string.hpp> // IWYU pragma: export
+
 #include "SkrProfile/profile.h" // IWYU pragma: export

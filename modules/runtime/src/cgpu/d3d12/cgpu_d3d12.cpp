@@ -1,8 +1,8 @@
+#include "../common/common_utils.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "d3d12_utils.hpp"
-#include "../common/common_utils.h"
-
-#include <EASTL/string_hash_map.h>
+#include <SkrRT/containers_new/umap.hpp>
+#include <SkrRT/containers_new/string.hpp>
 
 #if !defined(XBOX)
     #pragma comment(lib, "d3d12.lib")
@@ -971,7 +971,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
     // Vertex input state
     if (desc->vertex_layout != nullptr)
     {
-        eastl::string_hash_map<uint32_t> semanticIndexMap = {};
+        skr::UMap<skr::string, uint32_t> semanticIndexMap = {};
         uint32_t fill_index = 0;
         for (uint32_t attrib_index = 0; attrib_index < desc->vertex_layout->attribute_count; ++attrib_index)
         {
@@ -979,15 +979,13 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
             for (uint32_t arr_index = 0; arr_index < attrib->array_size; arr_index++)
             {
                 input_elements[fill_index].SemanticName = (const char*)attrib->semantic_name;
-                if (semanticIndexMap.find((const char*)attrib->semantic_name) != semanticIndexMap.end())
-                {
-                    semanticIndexMap[(const char*)attrib->semantic_name]++;
-                }
+                auto found = semanticIndexMap.find(attrib->semantic_name);
+                if (found)
+                    found->value += 1;
                 else
-                {
-                    semanticIndexMap[(const char*)attrib->semantic_name] = 0;
-                }
-                input_elements[fill_index].SemanticIndex = semanticIndexMap[(const char*)attrib->semantic_name];
+                    semanticIndexMap.add(attrib->semantic_name, 0);
+                found = semanticIndexMap.find(attrib->semantic_name);
+                input_elements[fill_index].SemanticIndex = found->value;
                 input_elements[fill_index].Format = DXGIUtil_TranslatePixelFormat(attrib->format);
                 input_elements[fill_index].InputSlot = attrib->binding;
                 input_elements[fill_index].AlignedByteOffset = attrib->offset + arr_index * FormatUtil_BitSizeOfBlock(attrib->format) / 8;

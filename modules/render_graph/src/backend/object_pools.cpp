@@ -329,9 +329,9 @@ void BufferPool::finalize()
     }
 }
 
-eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBufferDescriptor& desc, AllocationMark mark, uint64_t min_frame_index)
+std::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBufferDescriptor& desc, AllocationMark mark, uint64_t min_frame_index)
 {
-    eastl::pair<CGPUBufferId, ECGPUResourceState> allocated = {
+    std::pair<CGPUBufferId, ECGPUResourceState> allocated = {
         nullptr, CGPU_RESOURCE_STATE_UNDEFINED
     };
     auto key = make_zeroed<BufferPool::Key>(device, desc);

@@ -24,7 +24,7 @@ struct dual_query_t {
     dual_filter_t filter;
     dual_meta_filter_t meta;
     dual_parameters_t parameters;
-    eastl::vector<uint8_t> data;
+    skr::vector<uint8_t> data;
     llvm_vecsmall::SmallVector<dual_query_t*, 2> subqueries;
 
     //cache
@@ -34,5 +34,4 @@ struct dual_query_t {
     bool includeDisabled = false;
     bool includeDead = false;
     llvm_vecsmall::SmallVector<dual_group_t*, 32> groups;
-    using iterator = eastl::vector<dual_group_t*>::iterator;
 };

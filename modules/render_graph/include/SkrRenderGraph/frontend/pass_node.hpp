@@ -2,7 +2,6 @@
 #include "SkrRenderGraph/frontend/base_types.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/resource_edge.hpp"
-#include <EASTL/vector.h>
 
 #ifdef RG_USE_FIXED_VECTOR
 #include <EASTL/fixed_vector.h>

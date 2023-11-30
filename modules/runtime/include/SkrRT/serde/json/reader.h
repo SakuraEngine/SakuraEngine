@@ -254,8 +254,8 @@ struct SerdeCompleteChecker<json::ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>>>
     : std::bool_constant<is_complete_serde_v<json::ReadTrait<K>> && is_complete_serde_v<json::ReadTrait<V>>> {
 };
 
-template <class V, class Allocator>
-struct SerdeCompleteChecker<json::ReadTrait<eastl::vector<V, Allocator>>>
+template <class V>
+struct SerdeCompleteChecker<json::ReadTrait<skr::vector<V>>>
     : std::bool_constant<is_complete_serde_v<json::ReadTrait<V>>> {
 };
 
