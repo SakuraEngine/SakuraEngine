@@ -25,12 +25,11 @@ void entity_registry_t::shrink()
         entries.clear();
         return;
     }
-    entries.resize(lastValid + 1);
-    entries.shrink_to_fit();
-    freeEntries.erase(std::remove_if(freeEntries.begin(), freeEntries.end(), [&](EIndex i) {
+    entries.resize_default(lastValid + 1);
+    entries.shrink();
+    freeEntries.remove_if([&](EIndex i) {
         return i > lastValid;
-    }),
-    freeEntries.end());
+    });
 }
 
 void entity_registry_t::new_entities(dual_entity_t* dst, EIndex count)
@@ -47,12 +46,12 @@ void entity_registry_t::new_entities(dual_entity_t* dst, EIndex count)
         dst[i] = e_version(id, entries[id].version);
         i++;
     }
-    freeEntries.resize(fn - rn);
+    freeEntries.resize_default(fn - rn);
     if (i == count)
         return;
     // new entities
     EIndex newId = static_cast<EIndex>(entries.size());
-    entries.resize(entries.size() + count - i);
+    entries.resize_default(entries.size() + count - i);
     while (i < count)
     {
         dst[i] = e_version(newId, entries[newId].version);
@@ -72,7 +71,7 @@ void entity_registry_t::free_entities(const dual_entity_t* dst, EIndex count)
         auto id = e_id(dst[i]);
         entry_t& freeData = entries[id];
         freeData = { nullptr, 0, e_inc_version(freeData.version) };
-        freeEntries.push_back(id);
+        freeEntries.add(id);
     }
 }
 

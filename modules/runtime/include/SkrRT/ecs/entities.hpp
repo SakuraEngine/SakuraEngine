@@ -1,7 +1,7 @@
 #pragma once
-#include <EASTL/vector.h>
 #include "dual.h"
 #include "SkrRT/platform/thread.h"
+#include "SkrRT/containers_new/array.hpp"
 
 namespace dual
 {
@@ -11,8 +11,8 @@ struct entity_registry_t {
         uint32_t indexInChunk : 24;
         uint32_t version : 8;
     };
-    eastl::vector<entry_t> entries;
-    eastl::vector<EIndex> freeEntries;
+    skr::Array<entry_t> entries;
+    skr::Array<EIndex> freeEntries;
     SMutexObject mutex;
 
     void reset();
