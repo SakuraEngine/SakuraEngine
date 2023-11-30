@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "SkrRT/rttr/guid.hpp"
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/serde/json/writer_fwd.h"
 #include "SkrRT/serde/json/reader_fwd.h"
 

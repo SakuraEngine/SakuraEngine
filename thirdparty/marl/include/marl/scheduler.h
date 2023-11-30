@@ -32,7 +32,7 @@
 #include <functional>
 #include <thread>
 
-#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers_new/string.hpp>
 
 namespace marl {
 

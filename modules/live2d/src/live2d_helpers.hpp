@@ -13,7 +13,7 @@
 #include "Utils/CubismString.hpp" // IWYU pragma: export
 
 #include <EASTL/vector_map.h>
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 
 namespace L2DF = Live2D::Cubism::Framework;
 

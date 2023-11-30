@@ -2,7 +2,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/ecs/array.hpp"
-#include <SkrRT/containers/hashmap.hpp>
+#include <SkrRT/containers_new/hashmap.hpp>
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRenderer/skr_renderer.h"

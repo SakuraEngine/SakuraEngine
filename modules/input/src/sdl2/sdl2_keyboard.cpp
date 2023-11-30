@@ -1,6 +1,6 @@
 #include "../common/common_device_base.hpp"
 #include <SDL2/SDL_keyboard.h>
-#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers_new/span.hpp"
 #include <EASTL/fixed_vector.h>
 #include <algorithm>
 

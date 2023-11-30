@@ -3,7 +3,7 @@
 
 #include <EASTL/sort.h>
 #include <EASTL/vector.h>
-#include <SkrRT/containers/btree.hpp>
+#include <SkrRT/containers_new/btree.hpp>
 
 extern "C" {
 bool CGPUUtil_ShaderResourceIsStaticSampler(CGPUShaderResource* resource, const struct CGPURootSignatureDescriptor* desc)

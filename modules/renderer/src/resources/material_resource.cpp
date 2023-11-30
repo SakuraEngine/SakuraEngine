@@ -1,6 +1,6 @@
 #include <EASTL/fixed_vector.h>
 #include "SkrRT/platform/guid.hpp"
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers_new/sptr.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
 

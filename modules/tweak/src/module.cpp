@@ -7,10 +7,10 @@
 #include "SkrRT/platform/thread.h"
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/log.h"
-#include <SkrRT/containers/hashmap.hpp>
+#include <SkrRT/containers_new/hashmap.hpp>
 #include <EASTL/vector.h>
-#include <SkrRT/containers/variant.hpp>
-#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers_new/variant.hpp>
+#include <SkrRT/containers_new/string.hpp>
 
 struct skr_tweak_value_t
 {

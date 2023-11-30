@@ -3,7 +3,7 @@
 #include "type.hpp"
 #include "SkrRT/platform/guid.hpp"
 
-#include <SkrRT/containers/hashmap.hpp>
+#include <SkrRT/containers_new/hashmap.hpp>
 #include <SkrRT/containers_new/vector.hpp>
 
 namespace dual

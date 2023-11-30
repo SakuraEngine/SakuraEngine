@@ -7,7 +7,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 
 #include "SkrRT/containers_new/vector.hpp"
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 
 #include <numeric> // std::iota
 #include <execution>

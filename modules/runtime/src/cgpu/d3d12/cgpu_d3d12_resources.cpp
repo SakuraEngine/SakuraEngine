@@ -5,8 +5,8 @@
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrBase/misc/defer.hpp"
-#include <SkrRT/containers/string.hpp>
-#include <SkrRT/containers/concurrent_queue.h>
+#include <SkrRT/containers_new/string.hpp>
+#include <SkrRT/containers_new/concurrent_queue.h>
 #include <dxcapi.h>
 
 #include <EASTL/string.h>

@@ -1,5 +1,5 @@
 #pragma once
-#include <SkrRT/containers/hashmap.hpp>
+#include <SkrRT/containers_new/hashmap.hpp>
 #include <EASTL/deque.h>
 #include "cgpu/api.h"
 

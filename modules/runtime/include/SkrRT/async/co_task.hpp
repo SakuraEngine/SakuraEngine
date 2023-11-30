@@ -4,7 +4,7 @@
 #if __cpp_impl_coroutine
 #include <atomic>
 #include "SkrRT/platform/thread.h"
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers_new/sptr.hpp"
 #include "SkrRT/containers_new/vector.hpp"
 #include <EASTL/array.h>
 

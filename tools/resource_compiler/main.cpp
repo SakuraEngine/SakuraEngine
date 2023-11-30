@@ -4,7 +4,7 @@
 #include "SkrRT/misc/cmd_parser.hpp"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/parallel_for.hpp"
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/resource/resource_system.h"

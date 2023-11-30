@@ -3,11 +3,11 @@
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/ecs/entities.hpp"
 #include "SkrBase/misc/debug.h" 
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
-#include "SkrRT/containers/concurrent_queue.h"
+#include "SkrRT/containers_new/concurrent_queue.h"
 
 namespace skr::resource
 {

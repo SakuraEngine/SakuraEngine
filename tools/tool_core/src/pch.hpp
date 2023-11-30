@@ -20,8 +20,8 @@
 #include "SkrRT/async/fib_task.hpp" // IWYU pragma: export
 #include "SkrRT/async/thread_job.hpp" // IWYU pragma: export
 
-#include "SkrRT/containers/string.hpp" // IWYU pragma: export
+#include "SkrRT/containers_new/string.hpp" // IWYU pragma: export
 #include "SkrRT/containers_new/vector.hpp" // IWYU pragma: export
-#include "SkrRT/containers/hashmap.hpp" // IWYU pragma: export
+#include "SkrRT/containers_new/hashmap.hpp" // IWYU pragma: export
 
 #include "SkrProfile/profile.h" // IWYU pragma: export

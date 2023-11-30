@@ -3,7 +3,7 @@
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/platform/atomic.h"
 
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 
 namespace skr
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include <cmath>
 #include <limits>
-#include "SkrRT/containers/string.hpp"  // IWYU pragma: export
+#include "SkrRT/containers_new/string.hpp"  // IWYU pragma: export
 
 #define DOCTEST_CONFIG_NO_EXCEPTIONS_BUT_WITH_ALL_ASSERTS
 #include "doctest_fwd.h" // IWYU pragma: export

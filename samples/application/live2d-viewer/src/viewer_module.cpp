@@ -8,7 +8,7 @@
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/filesystem.hpp"
-#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers_new/string.hpp>
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
 #include "SkrRT/async/thread_job.hpp"

@@ -3,7 +3,7 @@
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/async/async_service.h"
 #ifdef __cplusplus
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers_new/sptr.hpp"
 #include "SkrRT/containers_new/span.hpp"
 #endif
 

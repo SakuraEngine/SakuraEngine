@@ -3,7 +3,7 @@
 #include "SkrBase/misc/traits.hpp"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/ecs/dual.h"
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/containers_new/vector.hpp"
 #include "SkrScene/scene.h"
 #include "MPShared/components.h"

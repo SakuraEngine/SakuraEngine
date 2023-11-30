@@ -1,6 +1,6 @@
 #include "cgpu/api.h"
 #include "SkrRT/config.h"
-#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers_new/string.hpp>
 
 #include <EASTL/vector.h>
 #include "spirv.h"

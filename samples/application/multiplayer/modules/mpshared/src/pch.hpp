@@ -20,10 +20,10 @@
 #include "SkrBase/math/rtm/rtmx.h" // IWYU pragma: export
 
 #include "SkrRT/containers/bitset.h" // IWYU pragma: export
-#include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/sptr.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/vector.hpp> // IWYU pragma: export
-#include <SkrRT/containers/string.hpp> // IWYU pragma: export
-#include <SkrRT/containers/hashmap.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/string.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/hashmap.hpp> // IWYU pragma: export
 
 #include "SkrRT/ecs/dual.h" // IWYU pragma: export
 #include "SkrRT/ecs/set.hpp" // IWYU pragma: export

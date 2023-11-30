@@ -5,7 +5,7 @@
 #include "log_worker.hpp"
 #include "tscns.hpp"
 
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers_new/hashmap.hpp"
 #include <EASTL/unique_ptr.h>
 
 namespace skr {

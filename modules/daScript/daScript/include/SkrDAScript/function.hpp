@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers/array.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrDAScript/type.hpp"
 
 namespace skr {

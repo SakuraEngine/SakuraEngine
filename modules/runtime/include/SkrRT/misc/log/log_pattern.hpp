@@ -2,8 +2,8 @@
 #include "SkrRT/platform/memory.h"
 #include "SkrBase/misc/demangle.hpp"
 #include "SkrRT/misc/log/log_base.hpp"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/array.hpp"
+#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers_new/array.hpp"
 
 namespace skr {
 namespace log {

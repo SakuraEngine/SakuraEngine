@@ -13,9 +13,9 @@
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRenderer/render_device.h"
 
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers_new/sptr.hpp"
+#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers_new/hashmap.hpp"
 
 #include "SkrProfile/profile.h"
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/memory.h"
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 
 #include <tuple>
 #include <EASTL/fixed_function.h>

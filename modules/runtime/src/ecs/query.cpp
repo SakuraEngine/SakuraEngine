@@ -13,10 +13,10 @@
 #include <EASTL/string.h>
 #include <EASTL/sort.h>
 #include <EASTL/algorithm.h>
-#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers_new/string.hpp>
 #include "SkrRT/misc/bits.hpp"
 #include "scheduler.hpp"
-#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers_new/span.hpp"
 #if __SSE2__
     #include <emmintrin.h>
 #endif

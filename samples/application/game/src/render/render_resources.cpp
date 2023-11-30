@@ -4,7 +4,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
 
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/ecs/type_builder.hpp"

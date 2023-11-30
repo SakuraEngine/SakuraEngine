@@ -1,5 +1,4 @@
 #pragma once
-
 #include "EASTL/bitset.h"
 #include "SkrRT/serde/binary/writer_fwd.h"
 #include "SkrRT/serde/binary/reader_fwd.h"

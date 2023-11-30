@@ -6,7 +6,7 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRT/platform/vfs.h"
 
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers_new/string.hpp"
 
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"

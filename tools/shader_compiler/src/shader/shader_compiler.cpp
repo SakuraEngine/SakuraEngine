@@ -1,4 +1,4 @@
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/module/module.hpp"
 
 #include "SkrShaderCompiler/module.configure.h"

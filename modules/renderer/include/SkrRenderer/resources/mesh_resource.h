@@ -2,7 +2,7 @@
 #include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/fwd_types.h"
 
-#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers_new/string.hpp>
 #include <SkrRT/containers_new/vector.hpp>
 
 #ifndef __meta__
