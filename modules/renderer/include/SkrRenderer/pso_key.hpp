@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRenderer/pso_map.h"
 #include "SkrRT/platform/atomic.h"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 
 namespace skr {
 namespace renderer {
@@ -13,15 +13,15 @@ struct PSOMapKey
 
     CGPURootSignatureId root_signature;
     CGPUShaderEntryDescriptor vertex_shader;
-    skr::vector<CGPUConstantSpecialization> vertex_specializations;
+    skr::Array<CGPUConstantSpecialization> vertex_specializations;
     CGPUShaderEntryDescriptor tesc_shader;
-    skr::vector<CGPUConstantSpecialization> tesc_specializations;
+    skr::Array<CGPUConstantSpecialization> tesc_specializations;
     CGPUShaderEntryDescriptor tese_shader;
-    skr::vector<CGPUConstantSpecialization> tese_specializations;
+    skr::Array<CGPUConstantSpecialization> tese_specializations;
     CGPUShaderEntryDescriptor geom_shader;
-    skr::vector<CGPUConstantSpecialization> geom_specializations;
+    skr::Array<CGPUConstantSpecialization> geom_specializations;
     CGPUShaderEntryDescriptor fragment_shader;
-    skr::vector<CGPUConstantSpecialization> fragment_specializations;
+    skr::Array<CGPUConstantSpecialization> fragment_specializations;
     CGPUVertexLayout vertex_layout;
     CGPUBlendStateDescriptor blend_state;
     CGPUDepthStateDescriptor depth_state;

@@ -2,7 +2,7 @@
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/span.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrRT/containers_new/array.hpp"
 
 #include "SkrTestFramework/framework.hpp"
@@ -10,8 +10,8 @@
 struct BinarySerdeTests
 {
 protected:
-    eastl::vector<uint8_t> buffer;
-    skr::binary::VectorWriter writer;
+    skr::Array<uint8_t> buffer;
+    skr::binary::ArrayWriter writer;
     skr::binary::SpanReader reader;
     skr_binary_writer_t warchive{writer};
     skr_binary_reader_t rarchive{reader};
@@ -46,14 +46,14 @@ TEST_CASE_METHOD(BinarySerdeTests, "vector")
 {
     uint64_t value = 0x12345678;
     uint64_t value2 = 0x87654321;
-    skr::vector<uint64_t> arr;
-    arr.push_back(value);
-    arr.push_back(value2);
+    skr::Array<uint64_t> arr;
+    arr.add(value);
+    arr.add(value2);
     skr::binary::Archive(&warchive, arr);
 
     reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
 
-    skr::vector<uint64_t> readArr;
+    skr::Array<uint64_t> readArr;
     skr::binary::Archive(&rarchive, readArr);
 
     EXPECT_EQ(value, readArr[0]);
@@ -93,14 +93,14 @@ TEST_CASE_METHOD(BinarySerdeTests, "str")
 
 TEST_CASE_METHOD(BinarySerdeTests, "str_vec")
 {
-    skr::vector<skr::string> arr;
-    arr.push_back(u8"Hello World");
-    arr.push_back(u8"Hello World2");
+    skr::Array<skr::string> arr;
+    arr.add(u8"Hello World");
+    arr.add(u8"Hello World2");
     skr::binary::Archive(&warchive, arr);
 
     reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
 
-    skr::vector<skr::string> readArr;
+    skr::Array<skr::string> readArr;
     skr::binary::Archive(&rarchive, readArr);
 
     EXPECT_EQ(arr[0], readArr[0]);

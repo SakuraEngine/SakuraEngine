@@ -1,6 +1,6 @@
 #include "SkrRT/serde/json/writer.h"
 #include "SkrRT/serde/json/reader.h"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 
 #include "SkrTestFramework/framework.hpp"
 
@@ -46,12 +46,12 @@ TEST_CASE_METHOD(JSONSerdeTests, "structure")
 {
     struct Test
     {
-        skr::vector<uint64_t> arr;
+        skr::Array<uint64_t> arr;
         skr::string str;
     };
     Test value;
-    value.arr.push_back(0x12345678);
-    value.arr.push_back(0x87654321);
+    value.arr.add(0x12345678);
+    value.arr.add(0x87654321);
     value.str = u8"test";
     writer.StartObject();
     writer.Key(u8"arr");
@@ -64,7 +64,7 @@ TEST_CASE_METHOD(JSONSerdeTests, "structure")
     simdjson::ondemand::document doc = parser.iterate(str);
     simdjson::ondemand::object obj = doc.get_object();
     simdjson::ondemand::value field = obj["arr"].value_unsafe();
-    skr::vector<uint64_t> readArr;
+    skr::Array<uint64_t> readArr;
     skr::json::Read(std::move(field), readArr);
     EXPECT_EQ(value.arr[0], readArr[0]);
     EXPECT_EQ(value.arr[1], readArr[1]);

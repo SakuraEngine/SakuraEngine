@@ -21,7 +21,7 @@
 #include "SkrRT/async/thread_job.hpp" // IWYU pragma: export
 
 #include "SkrRT/containers/string.hpp" // IWYU pragma: export
-#include "SkrRT/containers/vector.hpp" // IWYU pragma: export
+#include "SkrRT/containers_new/array.hpp" // IWYU pragma: export
 #include "SkrRT/containers/hashmap.hpp" // IWYU pragma: export
 
 #include "SkrProfile/profile.h" // IWYU pragma: export

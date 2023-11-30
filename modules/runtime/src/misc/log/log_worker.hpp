@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/async/async_service.h"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrRT/containers/sptr.hpp"
 #include "log_queue.hpp"
 
@@ -37,7 +37,7 @@ protected:
 
     friend struct Logger;
     skr::SPtr<LogQueue> queue_;
-    skr::vector<Logger*> loggers_;
+    skr::Array<Logger*> loggers_;
     LogFormatter formatter_;
 };
 

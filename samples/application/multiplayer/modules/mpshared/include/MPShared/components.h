@@ -2,7 +2,7 @@
 #include "MPShared/module.configure.h"
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/containers/bitset.h"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #ifndef __meta__
 #include "MPShared/components.generated.h" // IWYU pragma: export
@@ -20,7 +20,7 @@ MPWeaponConfig
     float projectileDamage;
     float projectileRadius;
     int burstCount;
-    skr::vector<float> spreadAngles;
+    skr::Array<float> spreadAngles;
     float randomSpreadAngle;
     //skr_resource_handle_t projectilePrefab;
 };
@@ -41,7 +41,7 @@ MPGameModeConfig
     int ZombieCountPerWave;
     float ZombieWaveInterval;
     int AdditionalZombieCountPerWave;
-    skr::vector<MPWeaponConfig> Weapons;
+    skr::Array<MPWeaponConfig> Weapons;
 };
 
 sreflect_struct(

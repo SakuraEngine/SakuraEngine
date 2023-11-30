@@ -134,7 +134,7 @@ MaterialResource {
 
     typedef struct installed_pass {
         skr::string                   name;
-        skr::vector<installed_shader> shaders;
+        skr::Array<installed_shader> shaders;
         ESkrInstallStatus             status;
         CGPURootSignatureId           root_signature;
         skr_pso_map_key_id            key;
@@ -143,7 +143,7 @@ MaterialResource {
     } installed_pass;
 
     spush_attr("transient": true)
-    skr::vector<installed_pass> installed_passes;
+    skr::Array<installed_pass> installed_passes;
 };
 
 struct SKR_RENDERER_API SMaterialFactory : public resource::SResourceFactory {

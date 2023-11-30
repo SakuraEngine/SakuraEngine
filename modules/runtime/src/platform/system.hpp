@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/system.h"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 
 #include <EASTL/vector_map.h>
 
@@ -110,14 +110,12 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
 
     inline void add_message_handler(ISystemMessageHandler* handler) SKR_NOEXCEPT
     {
-        message_handlers.emplace_back(handler);
+        message_handlers.add(handler);
     }
 
     inline void remove_message_handler(ISystemMessageHandler* handler) SKR_NOEXCEPT
     {
-        message_handlers.erase(
-            eastl::find(message_handlers.begin(), message_handlers.end(), handler)
-        );
+        message_handlers.remove(handler);
     }
 
     inline int64_t add_window_resize_handler(SWindowResizeHandlerProc proc, void* usr_data) SKR_NOEXCEPT
@@ -228,7 +226,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         text_input_handlers.erase(rid);
     }
 
-    skr::vector<ISystemMessageHandler*> message_handlers;
+    skr::Array<ISystemMessageHandler*> message_handlers;
     RIDMap<Handler<SWindowResizeHandlerProc>> window_resize_handlers;
     RIDMap<Handler<SWindowCloseHandlerProc>> window_close_handlers;
     RIDMap<Handler<SWindowMoveHandlerProc>> window_move_handlers;

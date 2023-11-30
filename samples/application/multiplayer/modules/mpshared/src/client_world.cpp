@@ -25,7 +25,7 @@ void MPClientWorld::Initialize()
     dualJ_bind_storage(storage);
     snapshotStorage = nullptr;
     skr_init_hires_timer(&timer);
-    input.inputs.resize(1);
+    input.inputs.resize_default(1);
     lastTime = predictedGameTime = skr_hires_timer_get_seconds(&timer, false);
     snapshotQuery = dualQ_from_literal(storage, "[in]CNetwork");
     healthQuery = dualQ_from_literal(storage, "[in]CHealth, [has]CController");
@@ -58,7 +58,7 @@ void MPClientWorld::ReceiveWorldDelta(const void* data, size_t dataLength)
 {
     SkrZoneScopedN("MPClientWorld::ReceiveWorldDelta");
     skr::span<uint8_t> span;
-    skr::vector<uint8_t> decompressedData;
+    skr::Array<uint8_t> decompressedData;
     {
         SkrZoneScopedN("Decompress");
         bandwidthCounter.AddRecord(dataLength);
@@ -67,7 +67,7 @@ void MPClientWorld::ReceiveWorldDelta(const void* data, size_t dataLength)
         data = (uint8_t*)data + sizeof(uint64_t);
         dataLength -= sizeof(uint64_t);
         compressRatio = (double)dataLength / size;
-        decompressedData.resize(LZ4_COMPRESSBOUND(size));
+        decompressedData.resize_default(LZ4_COMPRESSBOUND(size));
         auto decompressedSize = LZ4_decompress_safe((const char*)data, (char*)decompressedData.data(), dataLength, decompressedData.size());
         SKR_ASSERT(decompressedSize == size);
         span = {(uint8_t*)decompressedData.data(), size};
@@ -154,18 +154,18 @@ void MPClientWorld::SendInput()
     //     i.fire = true;
     // }
     input.frame = inputFrame;
-    skr::vector<uint8_t> buffer;
-    buffer.resize(sizeof(uint32_t));
+    skr::Array<uint8_t> buffer;
+    buffer.resize_default(sizeof(uint32_t));
     *(uint32_t*)&buffer[0] = (uint32_t)MPEventType::Input;
-    skr::binary::VectorWriter writer{&buffer};
+    skr::binary::ArrayWriter writer{&buffer};
     skr_binary_writer_t archive(writer);
     skr::binary::Write(&archive, input);
     SteamNetworkingSockets()->SendMessageToConnection(serverConnection, buffer.data(), buffer.size(), k_nSteamNetworkingSend_Reliable, nullptr);
 }
 
-skr::vector<dual_chunk_view_t> merge_views(skr::vector<dual_chunk_view_t>& views)
+skr::Array<dual_chunk_view_t> merge_views(skr::Array<dual_chunk_view_t>& views)
 {
-    skr::vector<dual_chunk_view_t> merged;
+    skr::Array<dual_chunk_view_t> merged;
     std::sort(views.begin(), views.end(), [](const dual_chunk_view_t& lhs, const dual_chunk_view_t& rhs)
     {
         return lhs.start < rhs.start;
@@ -174,18 +174,18 @@ skr::vector<dual_chunk_view_t> merge_views(skr::vector<dual_chunk_view_t>& views
     {
         if(merged.empty())
         {
-            merged.push_back(view);
+            merged.add(view);
         }
         else 
         {
-            auto& curr = merged.back();
+            auto& curr = merged[merged.size() - 1];
             if(view.start < curr.start + curr.count)
             {
                 curr.count = std::max(curr.count, view.start+view.count-curr.start);
             }
             else 
             {
-                merged.push_back(view);
+                merged.add(view);
             }
         }
     }
@@ -217,7 +217,7 @@ void MPClientWorld::Snapshot()
     //then create a snapshot entity to store those data
     auto callback = [&](dual_group_t* group) 
     {
-        skr::flat_hash_map<dual_chunk_t*, skr::vector<dual_chunk_view_t>> views;
+        skr::flat_hash_map<dual_chunk_t*, skr::Array<dual_chunk_view_t>> views;
         dual::type_builder_t predictedBuilder;
         for(auto query : {movementQuery.query, controlQuery.query})
         {
@@ -226,7 +226,7 @@ void MPClientWorld::Snapshot()
             {
                 match = true;
                 //match end point
-                views[view->chunk].push_back(*view);
+                views[view->chunk].add(*view);
             };
             dualQ_get_views_group(query, group, DUAL_LAMBDA(callback));
             
@@ -257,7 +257,7 @@ void MPClientWorld::Snapshot()
 
         for(auto& pair : views)
         {
-            skr::vector<dual_chunk_view_t> merged = merge_views(pair.second);
+            skr::Array<dual_chunk_view_t> merged = merge_views(pair.second);
             
             for(auto view : merged)
             {

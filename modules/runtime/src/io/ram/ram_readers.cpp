@@ -101,7 +101,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     if (fetched_requests[priority].try_dequeue(rq))
     {
         auto launcher = VFSReaderFutureLauncher(job_queue);
-        loaded_futures[priority].emplace_back(
+        loaded_futures[priority].add(
             launcher.async([this, rq, priority](){
                 SkrZoneScopedN("VFSReadTask");
                 dispatchFunction(priority, rq);
@@ -135,11 +135,7 @@ void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
             future = nullptr;
         }
     }
-    auto it = eastl::remove_if(arr.begin(), arr.end(), 
-        [](skr::IFuture<bool>* future) {
-            return (future == nullptr);
-        });
-    arr.erase(it, arr.end());
+    arr.remove_all_if([](skr::IFuture<bool>* future) { return (future == nullptr); });
 }
 
 } // namespace io

@@ -4,7 +4,7 @@
 #include "SkrRT/_deprecated/type/type_helper.hpp"
 
 #include "SkrRT/containers/span.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrRT/containers/string.hpp"
 
 #if defined(__cplusplus)
@@ -386,7 +386,7 @@ struct DynArrayStorage
     uint8_t* capacity;
 };
 
-// skr::vector<T>
+// skr::Array<T>
 struct DynArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     skr::string name;
@@ -566,7 +566,7 @@ struct type_of_vector {
 };
 
 template <class T, class Allocator>
-struct type_of<skr::vector<T, Allocator>> : type_of_vector<skr::vector<T, Allocator>, T> 
+struct type_of<skr::Array<T, Allocator>> : type_of_vector<skr::Array<T, Allocator>, T> 
 {
 };
 

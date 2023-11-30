@@ -208,7 +208,7 @@ void CommonVRAMReader::addRAMRequests(SkrAsyncServicePriority priority) SKR_NOEX
         }
     }
     if(vram_batch != nullptr) 
-        ramloading_batches[priority].emplace_back(vram_batch); 
+        ramloading_batches[priority].add(vram_batch); 
     }
     if (ram_batch != nullptr)
         ram_service->request(ram_batch);        
@@ -218,16 +218,14 @@ void CommonVRAMReader::ensureRAMRequests(SkrAsyncServicePriority priority) SKR_N
 {
     auto&& batches = ramloading_batches[priority];
     // erase null batches
-    batches.erase(
-    eastl::remove_if(batches.begin(), batches.end(), [](auto& batch) {
+    batches.remove_all_if([](auto&& batch) {
         return (batch == nullptr);
-    }), batches.end());
+    });
 
     // erase empty batches
-    batches.erase(
-    eastl::remove_if(batches.begin(), batches.end(), [](auto& batch) {
+    batches.remove_all_if([](auto&& batch) {
         return batch->get_requests().empty();
-    }), batches.end());
+    });
 
     for (auto&& batch : batches)
     {
@@ -261,7 +259,7 @@ void CommonVRAMReader::ensureRAMRequests(SkrAsyncServicePriority priority) SKR_N
         }
         else if (finished_cnt == requests.size()) // batch is all finished
         {
-            to_upload_batches[priority].emplace_back(batch);
+            to_upload_batches[priority].add(batch);
             batch.reset();
         }
     }
@@ -425,7 +423,7 @@ void CommonVRAMReader::addUploadRequests(SkrAsyncServicePriority priority) SKR_N
             SkrZoneScopedN("SubmitCmds");
             for (auto&& [key, cmd] : cmds)
             {
-                gpu_uploads[priority].emplace_back(cmd);
+                gpu_uploads[priority].add(cmd);
 
                 auto cmdbuf = cmd.get_cmdbuf();
                 auto fence = cmd.get_fence();
@@ -476,10 +474,9 @@ void CommonVRAMReader::ensureUploadRequests(SkrAsyncServicePriority priority) SK
         }
     }
     // erase all finished uploads
-    gpu_uploads[priority].erase(std::remove_if(
-        gpu_uploads[priority].begin(), gpu_uploads[priority].end(), [](auto&& upload) {
+    gpu_uploads[priority].remove_all_if([](auto&& upload) {
             return upload.is_finished();
-        }), gpu_uploads[priority].end());
+        });
 }
 
 } // namespace io

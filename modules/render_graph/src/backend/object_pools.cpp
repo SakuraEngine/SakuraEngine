@@ -110,7 +110,7 @@ void BindTablePool::expand(const char8_t* keys, const CGPUXName* names, uint32_t
         table_desc.names = names;
         table_desc.names_count = names_count;
         auto new_table = cgpux_create_bind_table(root_sig->device, &table_desc);
-        block.bind_tables.emplace_back(new_table);
+        block.bind_tables.add(new_table);
     }
 }
 

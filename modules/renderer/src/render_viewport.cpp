@@ -1,7 +1,7 @@
 #include "SkrBase/math/rtm/vector4f.h"
 #include "SkrBase/math/rtm/rtmx.h"
 #include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/skr_renderer.h"
@@ -28,7 +28,7 @@ struct SViewportManagerImpl : public SViewportManager
             return found->second;
         }
         uint32_t idx = static_cast<uint32_t>(viewports.size());
-        auto newViewport = viewports.emplace_back();
+        auto& newViewport = *viewports.add_default();
         idMap[viewport_name] = newViewport.index = idx;
         return idx;
     }
@@ -68,15 +68,15 @@ struct SViewportManagerImpl : public SViewportManager
 
     void remove_viewport(uint32_t index) SKR_NOEXCEPT final override
     {
-        free_list.emplace_back(index);
+        free_list.add(index);
         viewports[index].index = UINT32_MAX;
     }
 
     dual_query_t* camera_query = nullptr;
 
     skr::parallel_flat_hash_map<skr::string, uint32_t, skr::Hash<skr::string>> idMap;
-    skr::vector<skr_render_viewport_t> viewports;
-    skr::vector<uint32_t> free_list;
+    skr::Array<skr_render_viewport_t> viewports;
+    skr::Array<uint32_t> free_list;
 };
 
 SViewportManager* SViewportManager::Create(dual_storage_t* storage)

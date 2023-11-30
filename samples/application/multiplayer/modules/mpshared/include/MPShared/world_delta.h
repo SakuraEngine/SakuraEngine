@@ -5,7 +5,7 @@
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "EASTL/bonus/fixed_ring_buffer.h"
 #include "SkrRT/platform/time.h"
 
@@ -134,7 +134,7 @@ using component_delta_apply_callback_t = skr::task::event_t (*)(dual_type_index_
 struct IWorldDeltaBuilder {
     virtual ~IWorldDeltaBuilder()                                             = default;
     virtual void Initialize(dual_storage_t* storage)                          = 0;
-    virtual void GenerateDelta(skr::vector<MPWorldDeltaViewBuilder>& builder) = 0;
+    virtual void GenerateDelta(skr::Array<MPWorldDeltaViewBuilder>& builder) = 0;
 };
 
 MP_SHARED_API IWorldDeltaBuilder* CreateWorldDeltaBuilder();

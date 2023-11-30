@@ -87,7 +87,7 @@ struct Array {
     // append
     DataRef append(const Array& arr);
     DataRef append(std::initializer_list<T> init_list);
-    DataRef append(T* p, SizeType n);
+    DataRef append(const T* p, SizeType n);
 
     // append at
     void append_at(SizeType idx, const Array& arr);
@@ -699,7 +699,7 @@ SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::append(std::initia
     return data() ? DataRef(data() + size(), size()) : DataRef();
 }
 template <typename T, typename Alloc>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::append(T* p, SizeType n)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::append(const T* p, SizeType n)
 {
     if (n)
     {

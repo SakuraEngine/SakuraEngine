@@ -1,3 +1,4 @@
+#include "simdjson.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrToolCore/asset/importer.hpp"
@@ -64,9 +65,9 @@ struct SCookContextImpl : public SCookContext
     skr::task::event_t counter;
 
     skr::filesystem::path outputPath;
-    skr::vector<skr_resource_handle_t> staticDependencies;
-    skr::vector<skr_guid_t> runtimeDependencies;
-    skr::vector<skr::filesystem::path> fileDependencies;
+    skr::Array<skr_resource_handle_t> staticDependencies;
+    skr::Array<skr_guid_t> runtimeDependencies;
+    skr::Array<skr::filesystem::path> fileDependencies;
 
     SCookContextImpl(skr_io_ram_service_t* ioService)
         : ioService(ioService)
@@ -182,7 +183,7 @@ skr::filesystem::path SCookContextImpl::AddFileDependency(const skr::filesystem:
 {
     auto iter = std::find_if(fileDependencies.begin(), fileDependencies.end(), [&](const auto &dep) { return dep == inPath; });
     if (iter == fileDependencies.end())
-        fileDependencies.push_back(inPath);
+        fileDependencies.add(inPath);
     return record->path.parent_path() / inPath;
 }
 
@@ -214,7 +215,7 @@ void SCookContextImpl::AddRuntimeDependency(skr_guid_t resource)
 {
     auto iter = std::find_if(runtimeDependencies.begin(), runtimeDependencies.end(), [&](const auto &dep) { return dep == resource; });
     if (iter == runtimeDependencies.end())
-        runtimeDependencies.push_back(resource);
+        runtimeDependencies.add(resource);
     GetCookSystem()->EnsureCooked(resource); // try launch new cook task, non blocking
 }
 
@@ -264,7 +265,7 @@ uint32_t SCookContextImpl::AddStaticDependency(skr_guid_t resource, bool install
                 event.wait(false);
             }
         }
-        staticDependencies.push_back(std::move(handle));
+        staticDependencies.add(std::move(handle));
         return (uint32_t)(staticDependencies.size() - 1);
     }
     return (uint32_t)(staticDependencies.end() - iter);

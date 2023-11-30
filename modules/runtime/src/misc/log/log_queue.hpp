@@ -6,7 +6,7 @@
 #include "SkrRT/misc/log/log_formatter.hpp"
 
 #include "SkrRT/containers/concurrent_queue.h"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrRT/containers/resizable_ring_buffer.hpp"
 #include <EASTL/unique_ptr.h>
 
@@ -92,9 +92,9 @@ private:
     skr::parallel_flat_hash_map<uint64_t, eastl::unique_ptr<ThreadToken>> thread_id_map_;
     skr::ConcurrentQueue<LogElement, LogQueueTraits<256>> queue_;
 
-    skr::vector<uint64_t> tids_;
+    skr::Array<uint64_t> tids_;
     mutable SRWMutex tids_mutex_;
-    mutable skr::vector<uint64_t> tids_cpy_;
+    mutable skr::Array<uint64_t> tids_cpy_;
 };
 
 } } // namespace skr::log

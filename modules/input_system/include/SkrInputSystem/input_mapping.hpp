@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/containers/lite.hpp"
 #include "SkrInput/input.h"
@@ -43,7 +43,7 @@ protected:
 
     bool runtime_mappable = false;
     //TODO: modifier ownership?
-    vector<InputModifierId> modifiers;
+    skr::Array<InputModifierId> modifiers;
     InputValueStorage raw_value;
 };
 
@@ -65,7 +65,7 @@ public:
     void unmap_all() SKR_NOEXCEPT;
 
 protected:
-    vector<SObjectPtr<InputMapping>> mappings_;
+    skr::Array<SObjectPtr<InputMapping>> mappings_;
 };
 
 struct SKR_INPUTSYSTEM_API InputMapping_Keyboard : public InputMapping

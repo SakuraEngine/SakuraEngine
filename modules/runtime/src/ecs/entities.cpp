@@ -27,7 +27,7 @@ void entity_registry_t::shrink()
     }
     entries.resize_default(lastValid + 1);
     entries.shrink();
-    freeEntries.remove_if([&](EIndex i) {
+    freeEntries.remove_all_if([&](EIndex i) {
         return i > lastValid;
     });
 }

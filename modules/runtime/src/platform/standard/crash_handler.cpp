@@ -184,7 +184,7 @@ void SCrashHandler::beforeHandlingSignal(CrashTerminateCode code) SKR_NOEXCEPT
 void SCrashHandler::add_callback(SCrashHandler::CallbackWrapper callback) SKR_NOEXCEPT
 {
     SMutexLock _(callbacks_lock);
-    callbacks.emplace_back(callback);
+    callbacks.add(callback);
 }
 
 extern "C"

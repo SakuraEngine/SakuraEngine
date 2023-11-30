@@ -1,10 +1,12 @@
 #include "cgpu/extensions/cgpu_d3d12_exts.h"
 #include "SkrRT/platform/win/misc.h"
+#include "SkrRT/platform/thread.h"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/stl_vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrRT/containers/concurrent_queue.h"
 
 #include "platform/windows/windows_dstorage.hpp"
@@ -145,7 +147,7 @@ private:
     {
         skr_rw_mutex_acquire_w(&arrMutex);
         SKR_DEFER({ skr_rw_mutex_release_w(&arrMutex); });
-        auto it = eastl::find(statusArrays.begin(), statusArrays.end(), pArray);
+        auto it = std::find(statusArrays.begin(), statusArrays.end(), pArray);
         if (it != statusArrays.end())
         {
             SkrDelete(*it);
@@ -165,7 +167,7 @@ private:
     }
 
     SRWMutex arrMutex;
-    skr::vector<StatusEventArray*> statusArrays;
+    skr::stl_vector<StatusEventArray*> statusArrays;
     IDStorageFactory* pFactory = nullptr;
 };
 

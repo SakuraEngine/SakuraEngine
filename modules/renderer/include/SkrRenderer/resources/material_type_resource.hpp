@@ -80,8 +80,8 @@ sreflect_struct("guid" : "ed2e3476-90a3-4f2f-ac97-808f63d1eb11")
 sattr("serialize" : ["json", "bin"])
 MaterialPass {
     skr::string                                 pass;
-    skr::vector<skr_shader_collection_handle_t> shader_resources;
-    skr::vector<EMaterialBlendMode>             blend_modes;
+    skr::Array<skr_shader_collection_handle_t> shader_resources;
+    skr::Array<EMaterialBlendMode>             blend_modes;
     bool                                        two_sided = false;
 };
 
@@ -90,10 +90,10 @@ sattr("serialize" : ["json", "bin"])
 MaterialTypeResource {
     uint32_t version;
 
-    skr::vector<MaterialPass>                 passes;
-    skr::vector<MaterialValue>                default_values;
-    skr::vector<skr_shader_option_instance_t> switch_defaults;
-    skr::vector<skr_shader_option_instance_t> option_defaults;
+    skr::Array<MaterialPass>                 passes;
+    skr::Array<MaterialValue>                default_values;
+    skr::Array<skr_shader_option_instance_t> switch_defaults;
+    skr::Array<skr_shader_option_instance_t> option_defaults;
     skr_vertex_layout_id                      vertex_type;
 };
 

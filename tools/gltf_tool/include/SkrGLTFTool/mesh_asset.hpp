@@ -17,7 +17,7 @@ GLTFTOOL_API SGltfMeshImporter final : public SImporter {
     sattr("no-default" : true)
     skr::string assetPath;
 
-    skr::vector<skr_guid_t> materials;
+    skr::Array<skr_guid_t> materials;
 
     bool invariant_vertices = false;
     bool install_to_ram     = false;

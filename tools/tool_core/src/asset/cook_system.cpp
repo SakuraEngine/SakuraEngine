@@ -65,11 +65,11 @@ struct SCookSystemImpl : public skd::asset::SCookSystem {
     {
         ParallelFor(assets.begin(), assets.end(), batch,
                     [f, batch](auto begin, auto end) {
-                        skr::vector<SAssetRecord*> records;
+                        skr::Array<SAssetRecord*> records;
                         records.reserve(batch);
                         for (auto it = begin; it != end; ++it)
                         {
-                            records.emplace_back(it->second);
+                            records.add(it->second);
                         }
                         f(records);
                     });
@@ -241,8 +241,8 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 SKR_LOG_INFO(u8"[CookTask] resource %s cook finished! updating resource metas.", metaAsset->path.u8string().c_str());
                 auto headerPath = jobContext->GetOutputPath();
                 headerPath.replace_extension("rh");
-                eastl::vector<uint8_t>    buffer;
-                skr::binary::VectorWriter writer{ &buffer };
+                skr::Array<uint8_t>    buffer;
+                skr::binary::ArrayWriter writer{ &buffer };
                 skr_binary_writer_t       archive(writer);
                 jobContext->WriteHeader(archive, cooker);
                 auto file = fopen(headerPath.string().c_str(), "wb");

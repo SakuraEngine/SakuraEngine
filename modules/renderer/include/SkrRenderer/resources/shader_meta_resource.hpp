@@ -40,7 +40,7 @@ sattr("serialize" : ["json", "bin"])
 ShaderOptionTemplate {
     EShaderOptionType        type;
     skr::string              key;
-    skr::vector<skr::string> value_selections; // { "on", "off" } or { "1", "2", "3" }
+    skr::Array<skr::string> value_selections; // { "on", "off" } or { "1", "2", "3" }
     // TODO: target platforms filter
 };
 
@@ -50,9 +50,9 @@ ShaderOptionsResource {
     using shader_options_handle_t = skr::resource::TResourceHandle<ShaderOptionsResource>;
 
     SKR_RENDERER_API
-    static bool flatten_options(skr::vector<ShaderOptionTemplate>& dst, skr::span<ShaderOptionsResource*> srcs) SKR_NOEXCEPT;
+    static bool flatten_options(skr::Array<ShaderOptionTemplate>& dst, skr::span<ShaderOptionsResource*> srcs) SKR_NOEXCEPT;
 
-    skr::vector<ShaderOptionTemplate> options;
+    skr::Array<ShaderOptionTemplate> options;
 };
 
 struct SKR_RENDERER_API SShaderOptionsFactory : public resource::SResourceFactory {

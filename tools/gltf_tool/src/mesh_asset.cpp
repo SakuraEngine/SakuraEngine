@@ -1,3 +1,4 @@
+#include "cgltf/cgltf.h"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/misc/log.hpp"
@@ -27,7 +28,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr_io_ram_service_t* ioService, SCo
 
 void skd::asset::SGltfMeshImporter::Destroy(void* resource)
 {
-    cgltf_free((cgltf_data*)resource);
+    ::cgltf_free((cgltf_data*)resource);
 }
 
 bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
@@ -47,7 +48,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     }
     SKR_DEFER({ ctx->Destroy(gltf_data); });
     skr_mesh_resource_t mesh;
-    eastl::vector<eastl::vector<uint8_t>> blobs;
+    skr::Array<skr::Array<uint8_t>> blobs;
     auto importer = static_cast<SGltfMeshImporter*>(ctx->GetImporter());
     mesh.install_to_ram = importer->install_to_ram;
     mesh.install_to_vram = importer->install_to_vram;
@@ -149,7 +150,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     for (const auto material : importer->materials)
     {
         ctx->AddRuntimeDependency(material);
-        mesh.materials.emplace_back(material);
+        mesh.materials.add(material);
     }
 
     //----- write resource object

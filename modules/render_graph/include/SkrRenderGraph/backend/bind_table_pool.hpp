@@ -2,7 +2,7 @@
 #include "SkrRenderGraph/module.configure.h"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include <EASTL/fixed_vector.h>
 #include "cgpu/cgpux.h"
 
@@ -29,7 +29,7 @@ public:
 protected:
     struct BindTablesBlock
     {
-        skr::vector<CGPUXBindTableId> bind_tables;
+        skr::Array<CGPUXBindTableId> bind_tables;
         uint32_t cursor = 0;
     };
     const CGPURootSignatureId root_sig;

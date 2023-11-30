@@ -4,7 +4,7 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRT/ecs/type_builder.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 
 typedef struct ForwardEffectToken {
     dual_entity_t game_entity;
@@ -40,7 +40,7 @@ protected:
     dual_type_set_t typeset;
     skr_vfs_t* resource_vfs;
 
-    skr::vector<skr_primitive_draw_t> mesh_drawcalls;
+    skr::Array<skr_primitive_draw_t> mesh_drawcalls;
     skr_primitive_draw_list_view_t mesh_draw_list;
     
 protected:
@@ -60,6 +60,6 @@ protected:
     struct PushConstants {
         skr_float4x4_t model;
     };
-    skr::vector<PushConstants> push_constants;
-    skr::vector<skr_float4x4_t> model_matrices;
+    skr::Array<PushConstants> push_constants;
+    skr::Array<skr_float4x4_t> model_matrices;
 };

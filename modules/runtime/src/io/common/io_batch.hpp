@@ -3,7 +3,7 @@
 #include "pool.hpp"
 #include "SkrRT/platform/thread.h"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include <EASTL/fixed_vector.h>
 
 namespace skr {
@@ -43,7 +43,7 @@ protected:
     {
         skr_rw_mutex_acquire_w(&rw_lock);
         SKR_DEFER( { skr_rw_mutex_release_w(&rw_lock); });
-        requests.remove_if([rq](IORequestId r) { return r == rq; });
+        requests.remove_all_if([rq](IORequestId r) { return r == rq; });
     }
 
 private:
@@ -81,7 +81,7 @@ protected:
 
 using BatchPtr = skr::SObjectPtr<IIOBatch>;
 using IOBatchQueue = IOConcurrentQueue<BatchPtr>;  
-using IOBatchArray = skr::vector<BatchPtr>;
+using IOBatchArray = skr::Array<BatchPtr>;
 
 } // namespace io
 } // namespace skr

@@ -89,7 +89,7 @@ void MPRenderWorld::UpdateStructuralChanges()
             }
             else 
             {
-                newGameEntities.push_back(entities[i]);
+                newGameEntities.add(entities[i]);
             }
         }
     };
@@ -98,7 +98,7 @@ void MPRenderWorld::UpdateStructuralChanges()
     {
         if(gameToRenderEntityMap.find(pair.second) == gameToRenderEntityMap.end())
         {
-            toDeleteRenderEntities.push_back(pair.first);
+            toDeleteRenderEntities.add(pair.first);
         }
     }
     auto deleteRenderEntity = [&](dual_chunk_view_t* view)
@@ -236,7 +236,7 @@ void MPRenderWorld::Update()
             auto gameRotations = (skr_rotation_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_rotation_comp_t>::get());
             auto gameTranslations = (skr_translation_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_comp_t>::get());
             auto gameScales = (skr_scale_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_scale_comp_t>::get());
-            for(int i = 0; i < view->count; ++i)
+            for(EIndex i = 0; i < view->count; ++i)
             {
                 auto gameRotation = gameRotations[i].euler.yaw;
                 auto gameTranslation = skr::math::load(gameTranslations[i].value);

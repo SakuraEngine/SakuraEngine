@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRenderGraph/frontend/base_types.hpp"
 #include "SkrRenderGraph/frontend/blackboard.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include <EASTL/functional.h>
 
 #ifndef RG_MAX_FRAME_IN_FLIGHT
@@ -35,8 +35,8 @@ struct SKR_RENDER_GRAPH_API IRenderGraphPhase
     virtual void on_initialize(RenderGraph* graph) SKR_NOEXCEPT;
     virtual void on_finalize(RenderGraph* graph) SKR_NOEXCEPT;
 
-    skr::vector<ResourceNode*>& get_resources(RenderGraph* graph) SKR_NOEXCEPT;
-    skr::vector<PassNode*>& get_passes(RenderGraph* graph) SKR_NOEXCEPT;
+    skr::Array<ResourceNode*>& get_resources(RenderGraph* graph) SKR_NOEXCEPT;
+    skr::Array<PassNode*>& get_passes(RenderGraph* graph) SKR_NOEXCEPT;
 };
 
 class SKR_RENDER_GRAPH_API RenderGraph
@@ -283,8 +283,8 @@ protected:
     Blackboard* blackboard = nullptr;
     DependencyGraph* graph = nullptr;
 
-    skr::vector<PassNode*> passes;
-    skr::vector<ResourceNode*> resources;
+    skr::Array<PassNode*> passes;
+    skr::Array<ResourceNode*> resources;
 };
 using RenderGraphSetupFunction = RenderGraph::RenderGraphSetupFunction;
 using RenderGraphBuilder = RenderGraph::RenderGraphBuilder;

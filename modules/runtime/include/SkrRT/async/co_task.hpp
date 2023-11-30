@@ -5,7 +5,7 @@
 #include <atomic>
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include <EASTL/array.h>
 
 #if __cpp_lib_coroutine
@@ -89,8 +89,8 @@ namespace task2
     struct condvar_t
     {
         SConditionVariable cv;
-        skr::vector<std::coroutine_handle<skr_task_t::promise_type>> waiters;
-        skr::vector<int> workerIndices;
+        skr::Array<std::coroutine_handle<skr_task_t::promise_type>> waiters;
+        skr::Array<int> workerIndices;
         std::atomic<int> numWaiting = {0};
         std::atomic<int> numWaitingOnCondition = {0};
         condvar_t()

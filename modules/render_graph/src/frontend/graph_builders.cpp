@@ -50,7 +50,7 @@ PassHandle RenderGraph::add_render_pass(const RenderPassSetupFunction& setup, co
 
     const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = node_factory->Allocate<RenderPassNode>(passes_size);
-    passes.emplace_back(newPass);
+    passes.add(newPass);
     graph->insert(newPass);
     // build up
     RenderPassBuilder builder(*this, *newPass);
@@ -214,7 +214,7 @@ PassHandle RenderGraph::add_compute_pass(const ComputePassSetupFunction& setup, 
 {
     const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = node_factory->Allocate<ComputePassNode>(passes_size);
-    passes.emplace_back(newPass);
+    passes.add(newPass);
     graph->insert(newPass);
     // build up
     ComputePassBuilder builder(*this, *newPass);
@@ -314,7 +314,7 @@ PassHandle RenderGraph::add_copy_pass(const CopyPassSetupFunction& setup, const 
 {
     const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = node_factory->Allocate<CopyPassNode>(passes_size);
-    passes.emplace_back(newPass);
+    passes.add(newPass);
     graph->insert(newPass);
     // build up
     CopyPassBuilder builder(*this, *newPass);
@@ -360,7 +360,7 @@ PassHandle RenderGraph::add_present_pass(const PresentPassSetupFunction& setup) 
 {
     const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = node_factory->Allocate<PresentPassNode>(passes_size);
-    passes.emplace_back(newPass);
+    passes.add(newPass);
     graph->insert(newPass);
     // build up
     PresentPassBuilder builder(*this, *newPass);
@@ -496,7 +496,7 @@ BufferHandle RenderGraph::create_buffer(const BufferSetupFunction& setup) SKR_NO
     SkrZoneScopedN("RenderGraph::create_buffer(handle)");
 
     auto newBuf = node_factory->Allocate<BufferNode>();
-    resources.emplace_back(newBuf);
+    resources.add(newBuf);
     graph->insert(newBuf);
     BufferBuilder builder(*this, *newBuf);
     setup(*this, builder);
@@ -624,7 +624,7 @@ TextureHandle RenderGraph::create_texture(const TextureSetupFunction& setup) SKR
     SkrZoneScopedN("RenderGraph::create_texture(handle)");
 
     auto newTex = node_factory->Allocate<TextureNode>();
-    resources.emplace_back(newTex);
+    resources.add(newTex);
     graph->insert(newTex);
     TextureBuilder builder(*this, *newTex);
     setup(*this, builder);

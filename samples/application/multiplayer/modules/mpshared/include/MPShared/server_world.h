@@ -5,17 +5,17 @@
 #include "MPShared/world_delta.h"
 #include "SkrScene/scene.h"
 #include "SkrRT/platform/time.h"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 
 struct MP_SHARED_API MPServerWorld : MPGameWorld
 {
     MPServerWorld();
     ~MPServerWorld();
-    skr::vector<HSteamNetConnection> connections;
-    skr::vector<MPWorldDeltaViewBuilder> worldDelta;
+    skr::Array<HSteamNetConnection> connections;
+    skr::Array<MPWorldDeltaViewBuilder> worldDelta;
     uint64_t gameFrame;
     MPInputFrame queuedInputs[128];
-    skr::vector<std::vector<uint32_t>> playerMap;
+    skr::Array<std::vector<uint32_t>> playerMap;
     SHiresTimer timer;
     double lastGameTime;
     int playerId = 0;
@@ -34,7 +34,7 @@ struct MP_SHARED_API MPServerWorld : MPGameWorld
     void GenerateWorldDelta();
     void SendWorldDelta();
     void LogNetworkStatics();
-    skr::vector<uint8_t> SerializeWorldDelta(const MPWorldDeltaViewBuilder& deltaBuilder);
+    skr::Array<uint8_t> SerializeWorldDelta(const MPWorldDeltaViewBuilder& deltaBuilder);
     void AccumulateInput(uint32_t connectionId, const MPInputFrame& inputs);
 
     template<class T, class F>

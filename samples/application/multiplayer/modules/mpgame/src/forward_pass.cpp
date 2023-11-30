@@ -91,7 +91,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
                 {
                     SkrZoneScopedN("Barriers");
                     CGPUResourceBarrierDescriptor barrier_desc = {};
-                    skr::vector<CGPUBufferBarrier> barriers;
+                    skr::Array<CGPUBufferBarrier> barriers;
                     for (uint32_t i = 0; i < r_cv->count; i++)
                     {
                         auto* anim = anims + i;
@@ -100,7 +100,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
                             const bool use_dynamic_buffer = anim->use_dynamic_buffer;
                             if (anim->vbs[j] && !use_dynamic_buffer)
                             {
-                                CGPUBufferBarrier& barrier = barriers.emplace_back();
+                                CGPUBufferBarrier& barrier = *barriers.add_default();
                                 barrier.buffer = anim->vbs[j];
                                 barrier.src_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
                                 barrier.dst_state = CGPU_RESOURCE_STATE_COPY_DEST;
@@ -206,7 +206,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context){
             SkrZoneScopedN("BarrierSkinMeshes");
             CGPUResourceBarrierDescriptor barrier_desc = {};
-            skr::vector<CGPUBufferBarrier> barriers;
+            skr::Array<CGPUBufferBarrier> barriers;
             auto barrierVertices = [&](dual_chunk_view_t* r_cv) {
                 skr::anim::AnimComponent* anims = nullptr;
                 {
@@ -222,7 +222,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                         const bool use_dynamic_buffer = anim->use_dynamic_buffer;
                         if (anim->vbs[j] && !use_dynamic_buffer)
                         {
-                            CGPUBufferBarrier& barrier = barriers.emplace_back();
+                            CGPUBufferBarrier& barrier = *barriers.add_default();
                             barrier.buffer = anim->vbs[j];
                             barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
                             barrier.dst_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
