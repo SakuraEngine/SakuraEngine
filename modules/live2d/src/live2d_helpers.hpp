@@ -12,8 +12,10 @@
 #include "CubismDefaultParameterId.hpp" // IWYU pragma: export
 #include "Utils/CubismString.hpp" // IWYU pragma: export
 
-#include <EASTL/vector_map.h>
 #include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers_new/stl_vector.hpp"
+// TODO: REMOVE EASTL
+#include <EASTL/vector_map.h>
 
 namespace L2DF = Live2D::Cubism::Framework;
 
@@ -77,7 +79,7 @@ namespace Live2D { namespace Cubism { namespace Framework {
         Csm::CubismMotionQueueEntryHandle startRandomMotion(csmMotionMap* motion_map, const Csm::csmChar* group, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL) SKR_NOEXCEPT;
     
         // Model States
-        eastl::vector<uint32_t> _sorted_drawable_list;
+        skr::stl_vector<uint32_t> _sorted_drawable_list;
         Csm::ICubismModelSetting* _modelSetting;
         Csm::csmVector<Csm::CubismIdHandle> _eyeBlinkIds;
         Csm::csmVector<Csm::CubismIdHandle> _lipSyncIds; ///< モデルに設定されたリップシンク機能用パラメータID
@@ -109,8 +111,8 @@ namespace Live2D { namespace Cubism { namespace Framework {
         ~csmExpressionMap() SKR_NOEXCEPT;
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
 
-        eastl::vector<skr_io_future_t> expressionFutures;
-        eastl::vector<skr::BlobId> expressionBlobs;
+        skr::stl_vector<skr_io_future_t> expressionFutures;
+        skr::stl_vector<skr::BlobId> expressionBlobs;
         eastl::vector_map<skr_io_future_t*, skr::string> expressionNames;
         eastl::vector_map<skr_io_future_t*, skr::string> expressionPaths;
         L2DRequestCallbackData* cbData;
@@ -122,8 +124,8 @@ namespace Live2D { namespace Cubism { namespace Framework {
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
         void on_finished() SKR_NOEXCEPT final;
 
-        eastl::vector<skr_io_future_t> motionFutures;
-        eastl::vector<skr::BlobId> motionBlobs;
+        skr::stl_vector<skr_io_future_t> motionFutures;
+        skr::stl_vector<skr::BlobId> motionBlobs;
         eastl::vector_map<skr_io_future_t*, eastl::pair<skr::string, uint32_t>> motionEntries;
         eastl::vector_map<skr_io_future_t*, skr::string> motionPaths;
         L2DRequestCallbackData* cbData;
