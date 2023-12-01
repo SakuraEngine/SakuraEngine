@@ -453,23 +453,23 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
     uint32_t* dstCallbackFlags = dstType->callbackFlags;
     uint32_t maskValue = uint32_t(1 << dstTypes.length) - 1;
     
-    eastl::bitset<32>*srcMasks = nullptr, *dstMasks = nullptr;
+    std::bitset<32>*srcMasks = nullptr, *dstMasks = nullptr;
     if (srcType->withMask && dstType->withMask)
     {
         SIndex srcMaskId = srcType->index(kMaskComponent);
         SIndex dstMaskId = dstType->index(kMaskComponent);
-        dstMasks = (eastl::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
-        srcMasks = (eastl::bitset<32>*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
+        dstMasks = (std::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
+        srcMasks = (std::bitset<32>*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
         std::memset(dstMasks, 0, sizeof(uint32_t) * dstV.count);
     }
 
-    eastl::bitset<32>*srcDirtys = nullptr, *dstDirtys = nullptr;
+    std::bitset<32>*srcDirtys = nullptr, *dstDirtys = nullptr;
     if (srcType->withDirty && dstType->withDirty)
     {
         SIndex srcMaskId = srcType->index(kDirtyComponent);
         SIndex dstMaskId = dstType->index(kDirtyComponent);
-        dstDirtys = (eastl::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
-        srcDirtys = (eastl::bitset<32>*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
+        dstDirtys = (std::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
+        srcDirtys = (std::bitset<32>*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
         std::memset(dstDirtys, 0, sizeof(uint32_t) * dstV.count);
     }
 
@@ -585,21 +585,21 @@ void duplicate_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, EIn
     uint32_t* dstCallbackFlags = dstType->callbackFlags;
     uint32_t maskValue = uint32_t(1 << dstTypes.length) - 1;
     
-    eastl::bitset<32>*srcMasks = nullptr, *dstMasks = nullptr;
+    std::bitset<32>*srcMasks = nullptr, *dstMasks = nullptr;
     if (srcType->withMask && dstType->withMask)
     {
         SIndex srcMaskId = srcType->index(kMaskComponent);
         SIndex dstMaskId = dstType->index(kMaskComponent);
-        dstMasks = (eastl::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
-        srcMasks = (eastl::bitset<32>*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
+        dstMasks = (std::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
+        srcMasks = (std::bitset<32>*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
         std::memset(dstMasks, 1, sizeof(uint32_t) * dstV.count);
     }
 
-    eastl::bitset<32>* dstDirtys = nullptr;
+    std::bitset<32>* dstDirtys = nullptr;
     if (srcType->withDirty && dstType->withDirty)
     {
         SIndex dstMaskId = dstType->index(kDirtyComponent);
-        dstDirtys = (eastl::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
+        dstDirtys = (std::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
         std::memset(dstDirtys, 1, sizeof(uint32_t) * dstV.count);
     }
 

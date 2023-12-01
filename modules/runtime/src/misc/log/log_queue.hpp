@@ -7,8 +7,8 @@
 
 #include "SkrRT/containers_new/concurrent_queue.h"
 #include "SkrRT/containers_new/vector.hpp"
+#include "SkrRT/containers_new/sptr.hpp"
 #include "SkrRT/containers_new/resizable_ring_buffer.hpp"
-#include <EASTL/unique_ptr.h>
 
 namespace skr {
 namespace log {
@@ -89,7 +89,7 @@ private:
     SAtomic64 total_cnt_ = 0;
     // MPSC
     skr::ConsumerToken ctok_;
-    skr::parallel_flat_hash_map<uint64_t, eastl::unique_ptr<ThreadToken>> thread_id_map_;
+    skr::parallel_flat_hash_map<uint64_t, skr::SPtr<ThreadToken>> thread_id_map_;
     skr::ConcurrentQueue<LogElement, LogQueueTraits<256>> queue_;
 
     skr::vector<uint64_t> tids_;

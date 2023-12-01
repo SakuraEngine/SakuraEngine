@@ -160,7 +160,7 @@ ThreadToken* LogQueue::on_push(const LogEvent& ev, bool backtrace) SKR_NOEXCEPT
         tids_.add(tid);
         skr_rw_mutex_release_w(&tids_mutex_);
 
-        thread_id_map_.emplace(tid, eastl::make_unique<ThreadToken>(*this));
+        thread_id_map_.emplace(tid, skr::SPtr<ThreadToken>::Create(*this));
     }
     
     if (auto token = thread_id_map_[tid].get())

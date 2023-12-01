@@ -2,7 +2,6 @@
 #include "SkrRT/io/io.h"
 #include "SkrRT/platform/guid.hpp"
 #include "../components/component.hpp"
-#include <EASTL/fixed_vector.h>
 
 namespace skr {
 namespace io {

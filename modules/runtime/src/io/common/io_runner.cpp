@@ -86,7 +86,7 @@ void RunnerBase::phaseRecycle() SKR_NOEXCEPT
             }
         }
         auto cleaner = [](auto& future_kv) { return (future_kv.first == nullptr); };
-        auto it = eastl::remove_if(futures.begin(), futures.end(), cleaner);
+        auto it = std::remove_if(futures.begin(), futures.end(), cleaner);
         futures.erase(it, futures.end());
 
         for (auto processor : batch_processors)
