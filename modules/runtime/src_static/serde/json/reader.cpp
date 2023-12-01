@@ -1,6 +1,5 @@
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/serde/json/reader.h"
-#include "EASTL/string.h"
 #include "SkrProfile/profile.h"
 
 // help functions

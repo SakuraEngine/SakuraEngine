@@ -8,9 +8,9 @@
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/log.h"
 #include <SkrRT/containers_new/hashmap.hpp>
-#include <EASTL/vector.h>
 #include <SkrRT/containers_new/variant.hpp>
 #include <SkrRT/containers_new/string.hpp>
+#include <SkrRT/containers_new/stl_vector.hpp>
 
 struct skr_tweak_value_t
 {
@@ -33,7 +33,7 @@ public:
     struct TweakLine
     {
         int line_number;
-        eastl::vector<skr_tweak_value_t*> tweaks;
+        skr::stl_vector<skr_tweak_value_t*> tweaks;
     };
 
     void handleFileAction(efsw::WatchID watchid, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename = "" ) override
@@ -157,7 +157,7 @@ public:
     SMutexObject _mutex;
     efsw::FileWatcher _watcher;
     skr::flat_hash_set<skr::string, skr::Hash<skr::string>> _watched_directories;
-    skr::flat_hash_map<skr::string, eastl::vector<TweakLine>, skr::Hash<skr::string>> _tweak_files;
+    skr::flat_hash_map<skr::string, skr::stl_vector<TweakLine>, skr::Hash<skr::string>> _tweak_files;
 };
 SkrTweakModule* SkrTweakModule::instance = nullptr;
 

@@ -321,7 +321,7 @@ void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEX
     }
 
     // remove empty events
-    auto cleaner = eastl::remove_if(submitted[priority].begin(), submitted[priority].end(), [](const auto& e) { return !e; });
+    auto cleaner = std::remove_if(submitted[priority].begin(), submitted[priority].end(), [](const auto& e) { return !e; });
     submitted[priority].erase(cleaner, submitted[priority].end());
 }
 

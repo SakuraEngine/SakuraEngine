@@ -1,5 +1,4 @@
 #include "math.h"
-#include <EASTL/algorithm.h>
 #include "common/utils.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"

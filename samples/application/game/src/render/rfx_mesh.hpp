@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrRT/ecs/dual.h"
-
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRT/ecs/type_builder.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 
 namespace game {
 
@@ -41,7 +41,7 @@ protected:
     dual_type_set_t typeset;
     skr_vfs_t* resource_vfs;
 
-    eastl::vector<skr_primitive_draw_t> mesh_drawcalls;
+    skr::vector<skr_primitive_draw_t> mesh_drawcalls;
     skr_primitive_draw_list_view_t mesh_draw_list;
     
 protected:
@@ -62,8 +62,8 @@ protected:
     struct PushConstants {
         skr_float4x4_t model;
     };
-    eastl::vector<PushConstants> push_constants;
-    eastl::vector<skr_float4x4_t> model_matrices;
+    skr::vector<PushConstants> push_constants;
+    skr::vector<skr_float4x4_t> model_matrices;
 };
 
 }

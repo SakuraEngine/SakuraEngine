@@ -7,6 +7,7 @@
 #include "SkrRT/containers_new/vector.hpp"
 #include "SkrScene/scene.h"
 #include "MPShared/components.h"
+// TODO: REMOVE EASTL
 #include "EASTL/fixed_vector.h"
 #ifndef __meta__
     #include "MPShared/shared.generated.h" // IWYU pragma: export

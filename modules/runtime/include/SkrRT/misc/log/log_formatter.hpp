@@ -1,9 +1,8 @@
 #pragma once
 #include "SkrMemory/memory.h"
 #include "SkrRT/containers_new/string.hpp"
-
-#include <tuple>
-#include <EASTL/fixed_function.h>
+#include "SkrRT/containers_new/function.hpp"
+#include "SkrRT/containers_new/tuple.hpp"
 
 namespace skr {
 namespace log {
@@ -17,7 +16,7 @@ struct ArgsList
 
 protected:
     friend struct LogFormatter;
-    eastl::fixed_function<8 * sizeof(uint64_t), bool(const skr::string& format, LogFormatter&)> format_;
+    skr::function<bool(const skr::string& format, LogFormatter&)> format_;
 };
 
 struct LogFormatter

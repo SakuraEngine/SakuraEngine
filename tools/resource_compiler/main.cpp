@@ -5,6 +5,7 @@
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/parallel_for.hpp"
 #include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers_new/stl_vector.hpp"
 #include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/resource/resource_system.h"
@@ -97,7 +98,7 @@ skr::vector<skd::SProject*> open_projects(int argc, char** argv)
     skr::filesystem::path workspace{parser.get<skr::string>(u8"workspace").u8_str()};
     skd::SProject::SetWorkspace(workspace);
     skr::filesystem::recursive_directory_iterator iter(workspace, ec);
-    eastl::vector<skr::filesystem::path> projectFiles;
+    skr::stl_vector<skr::filesystem::path> projectFiles;
     while (iter != end(iter))
     {
         if(iter->is_regular_file(ec) && iter->path().extension() == ".sproject")
@@ -123,7 +124,7 @@ int compile_project(skd::SProject* project)
     std::error_code ec = {};
     skr::filesystem::recursive_directory_iterator iter(project->GetAssetPath(), ec);
     //----- scan project directory
-    eastl::vector<skr::filesystem::path> paths;
+    skr::stl_vector<skr::filesystem::path> paths;
     while (iter != end(iter))
     {
         if (iter->is_regular_file(ec) && IsAsset(iter->path()))

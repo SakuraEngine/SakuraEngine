@@ -1,5 +1,4 @@
 #include "common/utils.h"
-#include <EASTL/shared_ptr.h>
 #include "GameRuntime/gamert.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/filesystem.hpp"

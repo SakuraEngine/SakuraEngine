@@ -166,7 +166,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
     model_matrices.clear();
     push_constants.clear();
     mesh_drawcalls.clear();
-    model_matrices.resize(primitiveCount);
+    model_matrices.resize_zeroed(primitiveCount);
     push_constants.reserve(primitiveCount);
     mesh_drawcalls.reserve(primitiveCount);
 
@@ -283,9 +283,9 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                                 proper_pipeline = pass.pso;
                                 proper_bind_table = pass.bind_table;
                             }
-                            auto& push_const = push_constants.emplace_back();
+                            auto& push_const = *push_constants.add_default();
                             push_const.model = model_matrix;
-                            auto& drawcall = mesh_drawcalls.emplace_back();
+                            auto& drawcall = *mesh_drawcalls.add_default();
                             drawcall.pipeline = proper_pipeline;
                             drawcall.bind_table = proper_bind_table;
                             drawcall.push_const_name = push_constants_name;
@@ -311,9 +311,9 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                                 proper_pipeline = pass.pso;
                                 proper_bind_table = pass.bind_table;
                             }
-                            auto& push_const = push_constants.emplace_back();
+                            auto& push_const = *push_constants.add_default();
                             push_const.model = model_matrix;
-                            auto& drawcall = mesh_drawcalls.emplace_back();
+                            auto& drawcall = *mesh_drawcalls.add_default();
                             drawcall.pipeline = proper_pipeline;
                             drawcall.bind_table = proper_bind_table;
                             drawcall.push_const_name = push_constants_name;
@@ -327,9 +327,9 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                 }
                 else
                 {
-                    auto& push_const = push_constants.emplace_back();
+                    auto& push_const = *push_constants.add_default();
                     push_const.model = model_matrix;
-                    auto& drawcall = mesh_drawcalls.emplace_back();
+                    auto& drawcall = *mesh_drawcalls.add_default();
                     drawcall.pipeline = pipeline;
                     drawcall.push_const_name = push_constants_name;
                     drawcall.push_const = (const uint8_t*)(&push_const);
