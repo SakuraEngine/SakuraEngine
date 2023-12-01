@@ -20,6 +20,7 @@
 /// IN THE SOFTWARE.
 
 #pragma once
+#include <SkrBase/misc/debug.h>
 #include <SkrBase/containers/lru/cache-tags.hpp>
 #include <SkrBase/containers/lru/error.hpp>
 #include <SkrBase/containers/lru/internal/base-cache.hpp>
@@ -169,7 +170,7 @@ class Cache
   /// \returns The most-recently inserted element.
   const Key& front() const noexcept {
     if (is_empty()) {
-      throw LRU::Error::EmptyCache("front");
+      SKR_ASSERT(0 && "Empty cache: front!");
     } else {
       // The queue is reversed for natural order of iteration.
       return _order.back();
@@ -179,7 +180,7 @@ class Cache
   /// \returns The least-recently inserted element.
   const Key& back() const noexcept {
     if (is_empty()) {
-      throw LRU::Error::EmptyCache("back");
+      SKR_ASSERT(0 && "Empty cache: back!");
     } else {
       // The queue is reversed for natural order of iteration.
       return _order.front();
