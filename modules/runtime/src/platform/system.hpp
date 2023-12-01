@@ -2,6 +2,7 @@
 #include "SkrRT/platform/system.h"
 #include "SkrRT/containers_new/vector.hpp"
 
+// TODO: REMOVE EASTL
 #include <EASTL/vector_map.h>
 
 namespace skr {
@@ -9,7 +10,7 @@ namespace skr {
 struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
 {
     template <typename T>
-    using Handler = eastl::pair<T, void*>;
+    using Handler = std::pair<T, void*>;
     template <typename T>
     using RIDMap = eastl::vector_map<int64_t, T>;
 

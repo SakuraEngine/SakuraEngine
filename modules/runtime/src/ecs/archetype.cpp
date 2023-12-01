@@ -26,7 +26,7 @@ bool archetype_t::with_chunk_component() const noexcept
 SIndex archetype_t::index(dual_type_index_t inType) const noexcept
 {
     auto end = type.data + type.length;
-    const dual_type_index_t* result = eastl::lower_bound(type.data, end, inType);
+    const dual_type_index_t* result = std::lower_bound(type.data, end, inType);
     if (result != end && *result == inType)
         return (SIndex)(result - type.data);
     else
@@ -232,7 +232,7 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     }
     if(toCleanCount == proto.type.type.length)
         toClean[toCleanCount++] = kDeadComponent;
-    // eastl::sort(&toClean[0], &toClean[toCleanCount]); dead is always smaller
+    // std::sort(&toClean[0], &toClean[toCleanCount]); dead is always smaller
     proto.archetype = archetype;
     proto.size = 0;
     proto.timestamp = 0;
@@ -417,8 +417,8 @@ void dual_group_t::mark_free(dual_chunk_t* chunk)
     SKR_ASSERT(chunk->index < firstFree);
     firstFree--;
     auto& slot = chunks[chunk->index];
-    eastl::swap(chunks[firstFree]->index, chunk->index);
-    eastl::swap(chunks[firstFree], slot);
+    std::swap(chunks[firstFree]->index, chunk->index);
+    std::swap(chunks[firstFree], slot);
 }
 
 void dual_group_t::mark_full(dual_chunk_t* chunk)
@@ -427,8 +427,8 @@ void dual_group_t::mark_full(dual_chunk_t* chunk)
     
     SKR_ASSERT(chunk->index >= firstFree);
     auto& slot = chunks[chunk->index];
-    eastl::swap(chunks[firstFree]->index, chunk->index);
-    eastl::swap(chunks[firstFree], slot);
+    std::swap(chunks[firstFree]->index, chunk->index);
+    std::swap(chunks[firstFree], slot);
     firstFree++;
 }
 
@@ -451,7 +451,7 @@ TIndex dual_group_t::index(dual_type_index_t inType) const noexcept
 {
     using namespace dual;
     auto end = type.type.data + type.type.length;
-    const dual_type_index_t* result = eastl::lower_bound(type.type.data, end, inType);
+    const dual_type_index_t* result = std::lower_bound(type.type.data, end, inType);
     if (result != end && *result == inType)
         return (TIndex)(result - type.type.data);
     else

@@ -2,6 +2,7 @@
 #include "SkrRT/platform/atomic.h"
 #include "vram_service.hpp"
 
+// TODO: REMOVE EASTL
 #include <EASTL/fixed_vector.h>
 #include <EASTL/vector_map.h>
 
@@ -146,7 +147,7 @@ struct SKR_RUNTIME_API DStorageVRAMReader final
     
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue processed_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    eastl::vector<skr::SObjectPtr<DStorageEvent>> submitted[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::vector<skr::SObjectPtr<DStorageEvent>> submitted[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     SmartPoolPtr<DStorageEvent> events[SKR_ASYNC_SERVICE_PRIORITY_COUNT] = { nullptr, nullptr, nullptr };
 };

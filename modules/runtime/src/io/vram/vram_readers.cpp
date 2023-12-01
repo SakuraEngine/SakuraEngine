@@ -2,8 +2,10 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include "vram_readers.hpp"
-#include <EASTL/fixed_map.h>
 #include <tuple>
+
+// TODO: REMOVE EASTL
+#include <EASTL/fixed_map.h>
 
 // VFS READER IMPLEMENTATION
 
@@ -693,7 +695,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
         if (const auto enqueued = event->batches.size())
         {
             skr_dstorage_queue_submit(event->queue, event->event);
-            submitted[priority].emplace_back(event);
+            submitted[priority].add(event);
         }
     }
 }
@@ -731,8 +733,7 @@ void DStorageVRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOE
     }
 
     // remove empty events
-    auto cleaner = eastl::remove_if(submitted[priority].begin(), submitted[priority].end(), [](const auto& e) { return !e; });
-    submitted[priority].erase(cleaner, submitted[priority].end());
+    submitted[priority].remove_all_if([](const auto& e) { return !e; });
 }
 
 void DStorageVRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
