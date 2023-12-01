@@ -38,7 +38,7 @@ struct gdi_example_application : public gdi_application_t {
             background_element->stroke_color(0u, 200u, 64u, 200u);
             for (uint32_t i = 0; i < 10; ++i)
             {
-                const auto pos = eastl::max(i * unitY * 10.f, epsillon);
+                const auto pos = estd::max(i * unitY * 10.f, epsillon);
                 background_element->move_to(0.f, pos);
                 background_element->line_to(window_width, pos);
             }
@@ -51,7 +51,7 @@ struct gdi_example_application : public gdi_application_t {
             background_element->stroke_color(200u, 0u, 64u, 200u);
             for (uint32_t i = 0; i < 10; ++i)
             {
-                const auto pos = eastl::max(i * unitX * 10.f, epsillon);
+                const auto pos = estd::max(i * unitX * 10.f, epsillon);
                 background_element->move_to(pos, 0.f);
                 background_element->line_to(pos, window_height);
             }
@@ -64,13 +64,13 @@ struct gdi_example_application : public gdi_application_t {
         background_element->stroke_color(125u, 125u, 255u, 200u);
         for (uint32_t i = 0; i < gfx.window_height / absUnitY / 10; ++i)
         {
-            const auto pos = eastl::max(i * absUnitY * 10.f, epsillon);
+            const auto pos = estd::max(i * absUnitY * 10.f, epsillon);
             background_element->move_to(0.f, pos);
             background_element->line_to(window_width, pos);
         }
         for (uint32_t i = 0; i < gfx.window_width / absUnitX / 10; ++i)
         {
-            const auto pos = eastl::max(i * absUnitX * 10.f, epsillon);
+            const auto pos = estd::max(i * absUnitX * 10.f, epsillon);
             background_element->move_to(pos, 0.f);
             background_element->line_to(pos, window_height);
         }
@@ -82,13 +82,13 @@ struct gdi_example_application : public gdi_application_t {
         background_element->stroke_color(88u, 88u, 222u, 180u);
         for (uint32_t i = 0; i < gfx.window_height / absUnitY; ++i)
         {
-            const auto pos = eastl::max(i * absUnitY, epsillon);
+            const auto pos = estd::max(i * absUnitY, epsillon);
             background_element->move_to(0.f, pos);
             background_element->line_to(window_width, pos);
         }
         for (uint32_t i = 0; i < gfx.window_width / absUnitX; ++i)
         {
-            const auto pos = eastl::max(i * absUnitX, epsillon);
+            const auto pos = estd::max(i * absUnitX, epsillon);
             background_element->move_to(pos, 0.f);
             background_element->line_to(pos, window_height);
         }

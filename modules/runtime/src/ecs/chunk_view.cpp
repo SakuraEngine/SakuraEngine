@@ -20,7 +20,7 @@ static dual_array_comp_t* new_array(void* ptr, size_t cap, size_t elemSize, size
 {
     size_t arraySize = cap - sizeof(dual_array_comp_t);
     void* arrayData = (char*)ptr + sizeof(dual_array_comp_t);
-    eastl::align(align, elemSize, arrayData, arraySize);
+    std::align(align, elemSize, arrayData, arraySize);
     return new (ptr) dual_array_comp_t{ arrayData, arraySize };
 }
 

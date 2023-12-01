@@ -2,7 +2,6 @@
 #include "SkrRT/config.h"
 #include <SkrRT/containers_new/string.hpp>
 
-#include <EASTL/vector.h>
 #include "spirv.h"
 #include "dxil.h"
 

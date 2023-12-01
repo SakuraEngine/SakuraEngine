@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/ecs/SmallVector.h"
-#include <EASTL/unique_ptr.h>
 
 #include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/containers_new/span.hpp"

@@ -5,7 +5,6 @@
 #include "SkrRT/resource/resource_handle.h"
 #include <SkrRT/containers_new/string.hpp>
 #include "SkrTestFramework/framework.hpp"
-#include <EASTL/unique_ptr.h>
 #include "RTTRTest/module.configure.h"
 #if !defined(__meta__)
     #include "RTTRTest/types.generated.h"
@@ -83,13 +82,6 @@ TestSerde {
 
 template <typename T>
 struct XXXInformationAttribute : public SRuntimeAttribute {
-};
-
-template <>
-struct eastl::default_delete<struct SRuntimeAttribue> {
-    void operator()(struct SRuntimeAttribue* p) const
-    {
-    }
 };
 
 inline static void DontCreateObject()

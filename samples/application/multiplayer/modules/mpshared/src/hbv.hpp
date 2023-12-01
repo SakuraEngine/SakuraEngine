@@ -1,5 +1,7 @@
 #pragma once
+#include "SkrRT/containers_new/span.hpp"
 #include "SkrRT/containers_new/vector.hpp"
+#include "SkrRT/containers_new/array.hpp"
 #include <algorithm>
 #include "SkrRT/misc/bits.hpp"
 
@@ -250,8 +252,8 @@ namespace hbv
 		template<index_t Level = 3, typename T, typename F>
 		void for_each(const T& vec, const F& f) noexcept
 		{
-			eastl::array<flag_t, Level + 1> nodes{};
-			eastl::array<index_t, Level + 1> prefix{};
+			skr::array<flag_t, Level + 1> nodes{};
+			skr::array<index_t, Level + 1> prefix{};
 			nodes[0] = vec.layer0();
 			index_t level = 0;
 			if (nodes[0] == EmptyNode) return;

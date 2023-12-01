@@ -48,7 +48,7 @@ public:
         CGPUQueryDescriptor query_desc = {};
         query_desc.index = query_cursor++;
         query_desc.stage = CGPU_SHADER_STAGE_NONE;
-        query_names.emplace_back(u8"cmd_begin");
+        query_names.add(u8"cmd_begin");
         cgpu_cmd_begin_query(executor.gfx_cmd_buf, query_pool, &query_desc);
     }
     virtual void on_cmd_end(class skr::render_graph::RenderGraph&, class skr::render_graph::RenderGraphFrameExecutor& executor)
@@ -64,7 +64,7 @@ public:
         CGPUQueryDescriptor query_desc = {};
         query_desc.index = query_cursor++;
         query_desc.stage = CGPU_SHADER_STAGE_ALL_GRAPHICS;
-        query_names.emplace_back(pass.get_name());
+        query_names.add(pass.get_name());
         cgpu_cmd_begin_query(executor.gfx_cmd_buf, query_pool, &query_desc);
     }
     virtual void before_commit(class skr::render_graph::RenderGraph&, class skr::render_graph::RenderGraphFrameExecutor&) {}
@@ -73,7 +73,7 @@ public:
     CGPUQueryPoolId query_pool = nullptr;
     CGPUBufferId query_buffer = nullptr;
     uint32_t query_cursor = 0;
-    eastl::vector<float> times_ms;
-    eastl::vector<skr::string> query_names;
+    skr::vector<float> times_ms;
+    skr::vector<skr::string> query_names;
     uint64_t frame_index;
 };

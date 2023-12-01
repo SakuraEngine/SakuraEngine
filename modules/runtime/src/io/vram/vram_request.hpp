@@ -5,8 +5,6 @@
 #include "io/common/io_request.hpp"
 #include "cgpu/api.h"
 
-#include <EASTL/fixed_vector.h>
-#include <EASTL/variant.h>
 #include <string.h> // ::strlen
 
 namespace skr {

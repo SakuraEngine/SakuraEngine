@@ -126,6 +126,7 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
     updateDescSetsIfDirty();
 }
 
+// TODO: REMOVE EASTL
 #include <EASTL/fixed_set.h>
 
 void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
