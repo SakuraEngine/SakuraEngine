@@ -4,8 +4,8 @@
 
 namespace skr
 {
-template <typename T>
-using vector = container::Array<T, SkrAllocator>;
+template <typename T, typename Alloc = SkrAllocator>
+using vector = container::Array<T, Alloc>;
 }
 
 // serde

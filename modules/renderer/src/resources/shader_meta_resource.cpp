@@ -1,39 +1,37 @@
 #include <SkrRT/containers_new/hashmap.hpp>
+#include <SkrRT/containers_new/uset.hpp>
+#include <SkrRT/containers_new/string.hpp>
 #include "option_utils.hpp"
-
-#include <EASTL/set.h>
-#include <EASTL/sort.h>
-#include <EASTL/string.h>
 
 bool skr_shader_options_resource_t::flatten_options(skr::vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
 {
-    eastl::set<eastl::u8string>                                                           keys;
+    skr::USet<skr::string>                                                           keys;
     skr::flat_hash_map<skr::string, skr_shader_option_template_t, skr::Hash<skr::string>> kvs;
     // collect all keys & ensure unique
     for (auto& src : srcs)
     {
         for (auto& opt : src->options)
         {
-            auto&& found = keys.find(opt.key.u8_str());
+            auto&& found = keys.find(opt.key);
             if (found != keys.end())
             {
                 dst.empty();
                 return false;
             }
-            keys.insert(opt.key.u8_str());
+            keys.add(opt.key);
             kvs.insert({ opt.key, opt });
         }
     }
     dst.reserve(keys.size());
     for (auto& key : keys)
     {
-        dst.add(kvs[key.c_str()]);
+        dst.add(kvs[key]);
     }
     // sort result by key
-    eastl::stable_sort(dst.begin(), dst.end(),
-                       [](const skr_shader_option_template_t& a, const skr_shader_option_template_t& b) {
-                           return eastl::u8string(a.key.c_str()) < eastl::u8string(b.key.c_str());
-                       });
+    std::stable_sort(dst.begin(), dst.end(),
+        [](const skr_shader_option_template_t& a, const skr_shader_option_template_t& b) {
+            return skr::Hash<skr::string>()(a.key) < skr::Hash<skr::string>()(b.key);
+        });
     return true;
 }
 
