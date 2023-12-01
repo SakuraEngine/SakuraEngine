@@ -79,9 +79,9 @@ struct dual_phase_alias_t {
 struct dual_storage_t {
     using archetype_t = dual::archetype_t;
     using queries_t = skr::stl_vector<dual_query_t*>;
-    using groups_t = skr::flat_hash_map<dual_entity_type_t, dual_group_t*, dual::hasher<dual_entity_type_t>, dual::equalto<dual_entity_type_t>>;
-    using archetypes_t = skr::flat_hash_map<dual_type_set_t, archetype_t*, dual::hasher<dual_type_set_t>, dual::equalto<dual_type_set_t>>;
-    using phase_alias_t = skr::flat_hash_map<skr::string_view, dual_phase_alias_t, skr::Hash<skr::string_view>>;
+    using groups_t = skr::FlatHashMap<dual_entity_type_t, dual_group_t*, dual::hasher<dual_entity_type_t>, dual::equalto<dual_entity_type_t>>;
+    using archetypes_t = skr::FlatHashMap<dual_type_set_t, archetype_t*, dual::hasher<dual_type_set_t>, dual::equalto<dual_type_set_t>>;
+    using phase_alias_t = skr::FlatHashMap<skr::StringView, dual_phase_alias_t, skr::Hash<skr::StringView>>;
     archetypes_t archetypes;
     queries_t queries;
     phase_alias_t aliases;
@@ -124,7 +124,7 @@ struct dual_storage_t {
     bool components_enabled(const dual_entity_t src, const dual_type_set_t& type);
     bool exist(dual_entity_t e) const noexcept;
 
-    using batchmap_t = skr::flat_hash_map<dual_chunk_t*, dual_chunk_view_t>;
+    using batchmap_t = skr::FlatHashMap<dual_chunk_t*, dual_chunk_view_t>;
     void destroy(const dual_chunk_view_t& view);
     void destroy(const dual_meta_filter_t& meta);
     void free(const dual_chunk_view_t& view);
@@ -174,5 +174,5 @@ struct dual_storage_t {
     dual_chunk_view_t allocate_view_strict(dual_group_t* group, EIndex count);
     void structural_change(dual_group_t* group, dual_chunk_t* chunk);
 
-    void make_alias(skr::string_view name, skr::string_view alias);
+    void make_alias(skr::StringView name, skr::StringView alias);
 };

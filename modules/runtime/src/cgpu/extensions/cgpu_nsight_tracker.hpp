@@ -13,7 +13,7 @@ struct CGPUNSightSingleton {
 
     uint32_t                           rc;
     std::mutex                         trackers_mutex;
-    skr::vector<CGPUNSightTrackerId> all_trackers;
+    skr::Vector<CGPUNSightTrackerId> all_trackers;
 };
 
 #define CGPU_NSIGNT_SINGLETON_NAME u8"CGPUNSightSingleton"

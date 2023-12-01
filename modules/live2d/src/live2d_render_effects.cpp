@@ -138,7 +138,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     }
 
     eastl::vector_map<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
-    eastl::vector_map<skr_live2d_render_model_id, skr::fixed_vector<uint32_t, 4>> sorted_mask_drawable_lists;
+    eastl::vector_map<skr_live2d_render_model_id, skr::FixedVector<uint32_t, 4>> sorted_mask_drawable_lists;
     const float kMotionFramesPerSecond = 240.0f;
     eastl::vector_map<skr_live2d_render_model_id, STimer> motion_timers;
     uint32_t last_ms = 0;
@@ -538,7 +538,7 @@ protected:
                     {
                         imported_vbs_map[view.buffer] = render_graph->create_buffer(
                             [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
-                            skr::string name = skr::format(u8"live2d_vb-{}{}", (uint64_t)render_model, j);
+                            skr::String name = skr::format(u8"live2d_vb-{}{}", (uint64_t)render_model, j);
                             builder.set_name((const char8_t*)name.c_str())
                                     .import(view.buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                             });
@@ -556,7 +556,7 @@ protected:
                     [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
                     SkrZoneScopedN("ConstructUploadPass");
 
-                    skr::string name = skr::format(u8"live2d_upload-{}", (uint64_t)render_model);
+                    skr::String name = skr::format(u8"live2d_upload-{}", (uint64_t)render_model);
                     builder.set_name((const char8_t*)name.c_str())
                             .size(totalVertexSize)
                             .with_tags(kRenderGraphDefaultResourceTag)
@@ -565,7 +565,7 @@ protected:
                 render_graph->add_copy_pass(
                 [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
                     SkrZoneScopedN("ConstructCopyPass");
-                    skr::string name = skr::format(u8"live2d_copy-{}", (uint64_t)render_model);
+                    skr::String name = skr::format(u8"live2d_copy-{}", (uint64_t)render_model);
                     builder.set_name((const char8_t*)name.c_str());
                     uint64_t range_cursor = 0;
                     for (uint32_t j = 0; j < vb_c; j++)
@@ -643,7 +643,7 @@ uint32_t* RenderEffectLive2D::read_shader_bytes(SRendererId renderer, const char
     const auto render_device = renderer->get_render_device();
     const auto cgpu_device = render_device->get_cgpu_device();
     const auto backend = cgpu_device->adapter->instance->backend;
-    skr::string shader_name = name;
+    skr::String shader_name = name;
     shader_name.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
     auto shader_file = skr_vfs_fopen(resource_vfs, shader_name.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     const uint32_t shader_length = (uint32_t)skr_vfs_fsize(shader_file);

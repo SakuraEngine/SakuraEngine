@@ -92,7 +92,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
                 {
                     SkrZoneScopedN("Barriers");
                     CGPUResourceBarrierDescriptor barrier_desc = {};
-                    skr::vector<CGPUBufferBarrier> barriers;
+                    skr::Vector<CGPUBufferBarrier> barriers;
                     for (uint32_t i = 0; i < r_cv->count; i++)
                     {
                         auto* anim = anims + i;
@@ -207,7 +207,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context){
             SkrZoneScopedN("BarrierSkinMeshes");
             CGPUResourceBarrierDescriptor barrier_desc = {};
-            skr::vector<CGPUBufferBarrier> barriers;
+            skr::Vector<CGPUBufferBarrier> barriers;
             auto barrierVertices = [&](dual_chunk_view_t* r_cv) {
                 skr::anim::AnimComponent* anims = nullptr;
                 {

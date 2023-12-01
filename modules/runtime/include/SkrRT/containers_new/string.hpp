@@ -7,20 +7,20 @@
 namespace skr
 {
 using namespace ostr;
-using string      = ostr::text;
-using string_view = ostr::text_view;
+using String      = ostr::text;
+using StringView = ostr::text_view;
 
 template <>
-struct Hash<string> {
-    inline size_t operator()(const string& x) const { return ostr::hash_sequence_crc64(x.c_str(), x.size()); }
+struct Hash<String> {
+    inline size_t operator()(const String& x) const { return ostr::hash_sequence_crc64(x.c_str(), x.size()); }
 };
 
 template <>
-struct Hash<string_view> {
-    inline size_t operator()(const string_view& x) const { return ostr::hash_sequence_crc64(x.raw().data(), x.size()); }
+struct Hash<StringView> {
+    inline size_t operator()(const StringView& x) const { return ostr::hash_sequence_crc64(x.raw().data(), x.size()); }
 };
 
-namespace string_literals
+namespace StringLiterals
 {
 }
 
@@ -68,8 +68,8 @@ struct argument_formatter<skr_guid_t> {
 namespace skr::binary
 {
 template <>
-struct BlobBuilderType<skr::string_view> {
-    using type = skr::string;
+struct BlobBuilderType<skr::StringView> {
+    using type = skr::String;
 };
 } // namespace skr::binary
 
@@ -81,13 +81,13 @@ namespace skr
 namespace binary
 {
 template <>
-struct SKR_STATIC_API ReadTrait<skr::string> {
-    static int Read(skr_binary_reader_t* reader, skr::string& str);
+struct SKR_STATIC_API ReadTrait<skr::String> {
+    static int Read(skr_binary_reader_t* reader, skr::String& str);
 };
 
 template <>
-struct SKR_STATIC_API ReadTrait<skr::string_view> {
-    static int Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena, skr::string_view& str);
+struct SKR_STATIC_API ReadTrait<skr::StringView> {
+    static int Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena, skr::StringView& str);
 };
 } // namespace binary
 } // namespace skr
@@ -101,14 +101,14 @@ namespace binary
 {
 
 template <>
-struct SKR_STATIC_API WriteTrait<skr::string> {
-    static int Write(skr_binary_writer_t* writer, const skr::string& str);
+struct SKR_STATIC_API WriteTrait<skr::String> {
+    static int Write(skr_binary_writer_t* writer, const skr::String& str);
 };
 
 template <>
-struct SKR_STATIC_API WriteTrait<skr::string_view> {
-    static int Write(skr_binary_writer_t* writer, const skr::string_view& str);
-    static int Write(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const skr::string_view& str);
+struct SKR_STATIC_API WriteTrait<skr::StringView> {
+    static int Write(skr_binary_writer_t* writer, const skr::StringView& str);
+    static int Write(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const skr::StringView& str);
 };
 
 } // namespace binary

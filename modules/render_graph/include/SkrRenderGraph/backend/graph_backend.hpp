@@ -36,21 +36,21 @@ public:
     CGPUCommandBufferId gfx_cmd_buf = nullptr;
     CGPUFenceId exec_fence = nullptr;
     uint64_t exec_frame = 0;
-    skr::vector<CGPUTextureId> aliasing_textures;
-    skr::flat_hash_map<CGPURootSignatureId, BindTablePool*> bind_table_pools;
+    skr::Vector<CGPUTextureId> aliasing_textures;
+    skr::FlatHashMap<CGPURootSignatureId, BindTablePool*> bind_table_pools;
 
     CGPUMarkerBufferId marker_buffer = nullptr;
     uint32_t marker_idx = 0;
     uint32_t valid_marker_val = 1;
-    skr::vector<graph_big_object_string> marker_messages;
+    skr::Vector<graph_big_object_string> marker_messages;
 protected:
-    skr::flat_hash_map<CGPURootSignatureId, MergedBindTablePool*> merged_table_pools;
+    skr::FlatHashMap<CGPURootSignatureId, MergedBindTablePool*> merged_table_pools;
 };
 
 // TODO: optimize stack allocation
 static constexpr size_t stack_vector_fixed_count = 8;
 template <typename T>
-using stack_vector = skr::fixed_vector<T, stack_vector_fixed_count>;
+using stack_vector = skr::FixedVector<T, stack_vector_fixed_count>;
 template <typename T>
 using stack_set = eastl::fixed_set<T, stack_vector_fixed_count>;
 
@@ -95,7 +95,7 @@ protected:
 
     uint64_t get_latest_finished_frame() SKR_NOEXCEPT;
 
-    skr::vector<skr::SPtr<IRenderGraphPhase>> phases;
+    skr::Vector<skr::SPtr<IRenderGraphPhase>> phases;
 
     ECGPUBackend backend;
     CGPUDeviceId device;

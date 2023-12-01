@@ -16,7 +16,7 @@ namespace skr::binary
 {
 template <class T>
 struct BlobBuilderType<skr::span<T>> {
-    using type = skr::vector<typename BlobBuilderType<T>::type>;
+    using type = skr::Vector<typename BlobBuilderType<T>::type>;
 };
 struct SpanSerdeConfig {
     uint32_t maxSize;

@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/containers_new/detail/sptr.hpp"
-#include "SkrRT/containers_new/variant.hpp"
+#include "SkrRT/containers/variant.hpp"
 #include "SkrRT/config.h"
 #include "SkrRT/resource/resource_handle.h"
 #include <SkrRT/containers_new/string.hpp>
@@ -47,7 +47,7 @@ TestObject : skr::SInterface {
 
 sreflect_struct("guid" : "25809bab-41e8-48c5-806b-1ae4af3edfef")
 TestParent {
-    skr::string buffer;
+    skr::String buffer;
 } sstatic_ctor(CreateBuffers());
 
 sreflect_struct("guid" : "d55175b2-9d7f-47b8-bccd-a06aeac55240")
@@ -58,24 +58,24 @@ TestSon : public TestParent {
     skr_resource_handle_t                      d; // SKR_TYPE_CATEGORY_HANDLE
     skr::resource::TResourceHandle<TestObject> e; // SKR_TYPE_CATEGORY_HANDLE
     TestEnum                                   f; // SKR_TYPE_CATEGORY_ENUM
-    // skr::vector<TestEnum> g; // SKR_TYPE_CATEGORY_DYNARR
+    // skr::Vector<TestEnum> g; // SKR_TYPE_CATEGORY_DYNARR
     // skr::span<TestEnum> h; // SKR_TYPE_CATEGORY_ARRV
     TestEnum                           i[10]; // SKR_TYPE_CATEGORY_ARR
-    skr::string_view                   k;     // SKR_TYPE_CATEGORY_STRV
+    skr::StringView                   k;     // SKR_TYPE_CATEGORY_STRV
     TestParent*                        l;     // SKR_TYPE_CATEGORY_REF
     skr::SPtr<TestParent>              m;     // SKR_TYPE_CATEGORY_REF
     TestParent&                        n;     // SKR_TYPE_CATEGORY_REF
     skr::variant<TestEnum, skr_guid_t> o;     // SKR_TYPE_CATEGORY_VARIANT
     skr::SPtr<TestObject>              p;     // SKR_TYPE_CATEGORY_REF
     TestObject*                        q;     // SKR_TYPE_CATEGORY_REF
-    // skr::vector<skr::span<skr::variant<skr::SPtr<TestObject>, TestParent*>>> r;
+    // skr::Vector<skr::span<skr::variant<skr::SPtr<TestObject>, TestParent*>>> r;
 } sstatic_ctor(XXXInformation<$T>());
 
 sreflect_struct("guid" : "17D3EC00-2817-4EAE-8BAF-976BF4124ABF")
 sattr("serialize" : ["json", "bin"])
 TestSerde {
     int i;
-    // skr::vector<skr::variant<uint32_t, skr::string, TestEnum>> c;
+    // skr::Vector<skr::variant<uint32_t, skr::String, TestEnum>> c;
 };
 
 } // namespace Types sreflect

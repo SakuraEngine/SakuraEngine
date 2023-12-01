@@ -2,7 +2,7 @@
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/_deprecated/type/type.h"
-#include <string_view> // TODO: replace with skr::string_view
+#include <string_view> // TODO: replace with skr::StringView
 
 // fwd declares
 namespace skr
@@ -105,9 +105,9 @@ SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr_float4x4_t, "E49D2F13-9DFF-4A7B-8D43-27F6
 // {51977A88-7095-4FA7-8467-541698803936}
 SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr_quaternion_t, "51977A88-7095-4FA7-8467-541698803936");
 // {214ed643-54bd-4213-be37-e336a77fde84}
-SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr::string, "214ED643-54BD-4213-BE37-E336A77FDE84");
+SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr::String, "214ED643-54BD-4213-BE37-E336A77FDE84");
 // {b799ba81-6009-405d-9131-e4b6101660dc}
-SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr::string_view, "B799BA81-6009-405D-9131-E4B6101660DC");
+SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr::StringView, "B799BA81-6009-405D-9131-E4B6101660DC");
 
 } // namespace type
 } // namespace skr

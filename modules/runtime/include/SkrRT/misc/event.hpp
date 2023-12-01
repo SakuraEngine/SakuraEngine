@@ -3,7 +3,7 @@
 #include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/containers_new/SPtr.hpp"
-#include "SkrRT/containers_new/function.hpp"
+#include "SkrRT/containers_new/stl_function.hpp"
 #include "SkrRT/containers_new/function_ref.hpp"
 
 namespace skr
@@ -22,9 +22,9 @@ namespace skr
     {
         flat_hash_map<void*, void(*)(void*, Args...)> methods;
         flat_hash_map<SWeakPtr<void>, void(*)(void*, Args...)> weakMethods;
-        flat_hash_map<void*, skr::function<void(Args...)>> methodLambdas;
-        flat_hash_map<SWeakPtr<void>, skr::function<void(Args...)>> weakMethodLambdas;
-        flat_hash_map<int, skr::function<void(Args...)>> lambdas;
+        flat_hash_map<void*, skr::stl_function<void(Args...)>> methodLambdas;
+        flat_hash_map<SWeakPtr<void>, skr::stl_function<void(Args...)>> weakMethodLambdas;
+        flat_hash_map<int, skr::stl_function<void(Args...)>> lambdas;
         int currentHandle = 0;
 
         void Clear()

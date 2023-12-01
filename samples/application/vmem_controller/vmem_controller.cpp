@@ -45,7 +45,7 @@ class SVMemCCModule : public skr::IDynamicModule
 
     float vbuffer_size = 0.001f;
     float sbuffer_size = 0.001f;
-    skr::vector<CGPUBufferId> buffers;
+    skr::Vector<CGPUBufferId> buffers;
 
     skr::render_graph::RenderGraph* graph = nullptr;
 };

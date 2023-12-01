@@ -44,7 +44,7 @@ struct ReceiverRenderer
 
 void ReceiverRenderer::create_window()
 {
-    skr::string title = u8"Cross-Process Receiver [";
+    skr::String title = u8"Cross-Process Receiver [";
     title += gCGPUBackendNames[backend];
     title += u8"]";
     title += u8" PID: ";

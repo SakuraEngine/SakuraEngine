@@ -33,7 +33,7 @@ private:
 
     LogEvent event;
     struct ThreadToken* tok;
-    skr::string format;
+    skr::String format;
     ArgsList args;
     bool need_format = true;
     bool valid = false;
@@ -50,7 +50,7 @@ protected:
     SAtomic64 tls_cnt_ = 0;
     SAtomic32 flush_status_ = kNoFlush;
     skr::ProducerToken ptok_;
-    skr::resizable_ring_buffer<LogElement> backtraces_;
+    skr::ResizableRingBuffer<LogElement> backtraces_;
 };
 
 struct LogQueue
@@ -59,8 +59,8 @@ public:
     LogQueue() SKR_NOEXCEPT;
     ~LogQueue() SKR_NOEXCEPT;
 
-    void push(LogEvent ev, const skr::string&& what, bool backtrace) SKR_NOEXCEPT;
-    void push(LogEvent ev, const skr::string_view format, ArgsList&& args, bool backtrace) SKR_NOEXCEPT;
+    void push(LogEvent ev, const skr::String&& what, bool backtrace) SKR_NOEXCEPT;
+    void push(LogEvent ev, const skr::StringView format, ArgsList&& args, bool backtrace) SKR_NOEXCEPT;
     void mark_flushing(SThreadID tid) SKR_NOEXCEPT;
     
     bool try_dequeue(LogElement& element) SKR_NOEXCEPT;
@@ -89,12 +89,12 @@ private:
     SAtomic64 total_cnt_ = 0;
     // MPSC
     skr::ConsumerToken ctok_;
-    skr::parallel_flat_hash_map<uint64_t, skr::SPtr<ThreadToken>> thread_id_map_;
+    skr::ParallelFlatHashMap<uint64_t, skr::SPtr<ThreadToken>> thread_id_map_;
     skr::ConcurrentQueue<LogElement, LogQueueTraits<256>> queue_;
 
-    skr::vector<uint64_t> tids_;
+    skr::Vector<uint64_t> tids_;
     mutable SRWMutex tids_mutex_;
-    mutable skr::vector<uint64_t> tids_cpy_;
+    mutable skr::Vector<uint64_t> tids_cpy_;
 };
 
 } } // namespace skr::log

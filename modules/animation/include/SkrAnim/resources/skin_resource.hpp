@@ -14,8 +14,8 @@ namespace anim sreflect
 sreflect_struct("guid": "C387FD0E-83BE-4617-9A79-589862F3F941") 
 sattr("blob" : true)
 SkinBlobView {
-    skr::string_view            name;
-    skr::span<skr::string_view> joint_remaps;
+    skr::StringView            name;
+    skr::span<skr::StringView> joint_remaps;
     skr::span<skr_float4x4_t>   inverse_bind_poses;
 };
 

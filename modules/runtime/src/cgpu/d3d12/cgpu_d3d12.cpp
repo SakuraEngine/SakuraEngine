@@ -971,7 +971,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
     // Vertex input state
     if (desc->vertex_layout != nullptr)
     {
-        skr::UMap<skr::string, uint32_t> semanticIndexMap = {};
+        skr::UMap<skr::String, uint32_t> semanticIndexMap = {};
         uint32_t fill_index = 0;
         for (uint32_t attrib_index = 0; attrib_index < desc->vertex_layout->attribute_count; ++attrib_index)
         {

@@ -10,11 +10,11 @@ class SGLTFImporterFactoryImpl : public SImporterFactory
 {
 public:
     virtual ~SGLTFImporterFactoryImpl() = default;
-    bool CanImport(const skr::string& path) const override;
-    int Import(const skr::string& path) override;
+    bool CanImport(const skr::String& path) const override;
+    int Import(const skr::String& path) override;
     int Update() override;
-    skr::string GetName() const override { return u8"GLTF Importer"; }
-    skr::string GetDescription() const override { return u8"GLTF Importer"; }
+    skr::String GetName() const override { return u8"GLTF Importer"; }
+    skr::String GetDescription() const override { return u8"GLTF Importer"; }
     void Clear();
 
     cgltf_data* data;
@@ -26,13 +26,13 @@ SImporterFactory* GetGLTFImporterFactory()
     return &factory;
 }
 
-bool SGLTFImporterFactoryImpl::CanImport(const skr::string& path) const
+bool SGLTFImporterFactoryImpl::CanImport(const skr::String& path) const
 {
     return skr::stl_u8string_view(path.u8_str()).ends_with(u8".gltf") || 
         skr::stl_u8string_view(path.u8_str()).ends_with(u8".glb");
 }
 
-int SGLTFImporterFactoryImpl::Import(const skr::string& path)
+int SGLTFImporterFactoryImpl::Import(const skr::String& path)
 {
     auto options = make_zeroed<cgltf_options>();
     auto result = cgltf_parse_file(&options, path.c_str(), &data);

@@ -39,7 +39,7 @@ sreflect_struct(
 MPInputFrame
 {
     uint64_t frame;
-    skr::vector<MPPlayerInputFrame> inputs;
+    skr::Vector<MPPlayerInputFrame> inputs;
 };
 
 sreflect_struct(
@@ -146,7 +146,6 @@ inline constexpr skr_guid_t GetBulletPrefab()
     return skr::guid::make_guid_unsafe(u8"8698AA92-F3E3-4DDA-B0B9-59D004538988");
 }
 
-
 sreflect_struct(
     "guid" : "E8B8B447-4BBE-4A1E-A29E-FD28F046864E",
     "component" :
@@ -161,7 +160,7 @@ CCollisionScene
         dual_entity_t entity;
         CSphereCollider2D collider;
     };
-    skr::parallel_flat_hash_map<int, skr::fixed_vector<CollisionEntity, 4>> cells;
+    skr::ParallelFlatHashMap<int, skr::FixedVector<CollisionEntity, 4>> cells;
 };
 
 struct MP_SHARED_API MPGameWorld

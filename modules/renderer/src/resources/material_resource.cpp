@@ -192,7 +192,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
         // TODO: multi bind table
         CGPUXBindTableDescriptor table_desc = {};
         table_desc.root_signature           = root_signature;
-        skr::fixed_vector<const char8_t*, 16> slot_names;
+        skr::FixedVector<const char8_t*, 16> slot_names;
         for (uint32_t i = 0; i < root_signature->table_count; i++)
         {
             const auto& table = root_signature->tables[i];
@@ -230,7 +230,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
         const auto bind_table  = cgpux_create_bind_table(root.device, &table_desc);
 
         // 2.update values
-        skr::fixed_vector<CGPUDescriptorData, 16> updates;
+        skr::FixedVector<CGPUDescriptorData, 16> updates;
         for (const auto& override : material->overrides.samplers)
         {
             skr::resource::TResourceHandle<skr_texture_sampler_resource_t> hdl = override.value;
@@ -421,7 +421,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
     ESkrInstallStatus UpdateInstall_Pass(skr_resource_record_t* record, skr_material_resource_t::installed_pass& installed_pass)
     {
         // 1.all shaders are installed ?
-        skr::fixed_vector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
+        skr::FixedVector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
         for (const auto& identifier : installed_pass.shaders)
         {
             if (auto library = shader_map->find_shader(identifier.identifier))
@@ -481,10 +481,10 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
         SMaterialFactoryImpl*                                             factory        = nullptr;
         CGPURootSignatureId                                               root_signature = nullptr;
         CGPUXBindTableId                                                  bind_table     = nullptr;
-        skr::fixed_vector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
+        skr::FixedVector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
     };
 
-    skr::flat_hash_map<skr_guid_t, SPtr<RootSignatureRequest>, skr::guid::hash> mRootSignatureRequests;
+    skr::FlatHashMap<skr_guid_t, SPtr<RootSignatureRequest>, skr::guid::hash> mRootSignatureRequests;
     skr::SPtr<MaterialFutureLancher>                                            launcher = nullptr;
 
     skr_shader_map_id       shader_map = nullptr;

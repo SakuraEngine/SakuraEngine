@@ -268,7 +268,7 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
         main_viewport->PlatformHandleRaw = skr_window_get_native_handle(window);
 
         // update monitors
-        static thread_local skr::vector<SMonitorHandle> skr_monitors; 
+        static thread_local skr::Vector<SMonitorHandle> skr_monitors; 
         skr_monitors.clear();
         platform_io.Monitors.resize(0);
         uint32_t monitor_count = 0;
@@ -313,7 +313,7 @@ void skr::imgui::imgui_create_window(ImGuiViewport* viewport)
     desc.height = (uint32_t)viewport->Size.y;
     desc.posx = (uint32_t)viewport->Pos.x;
     desc.posy = (uint32_t)viewport->Pos.y;
-    skr::string title = skr::format(u8"imgui-{}", viewport->ID);
+    skr::String title = skr::format(u8"imgui-{}", viewport->ID);
     auto new_window = skr_create_window((const char8_t*)title.c_str(), &desc);
 
     viewport->PlatformUserData = viewport;

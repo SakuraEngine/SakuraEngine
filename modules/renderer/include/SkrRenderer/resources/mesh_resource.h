@@ -76,7 +76,7 @@ sattr("serialize" : "bin")
 MeshPrimitive {
     skr_vertex_layout_id           vertex_layout_id;
     uint32_t                       material_index;
-    skr::vector<VertexBufferEntry> vertex_buffers;
+    skr::Vector<VertexBufferEntry> vertex_buffers;
     IndexBufferEntry               index_buffer;
     uint32_t                       vertex_count;
 };
@@ -88,7 +88,7 @@ MeshSection {
     skr_float3_t          translation;
     skr_float3_t          scale;
     skr_float4_t          rotation;
-    skr::vector<uint32_t> primive_indices;
+    skr::Vector<uint32_t> primive_indices;
 };
 
 sreflect_struct("guid" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1") 
@@ -96,13 +96,13 @@ sattr("serialize" : "bin")
 MeshResource {
     SKR_RENDERER_API ~MeshResource() SKR_NOEXCEPT;
 
-    skr::string                name;
-    skr::vector<MeshSection>   sections;
-    skr::vector<MeshPrimitive> primitives;
-    skr::vector<MeshBuffer>    bins;
+    skr::String                name;
+    skr::Vector<MeshSection>   sections;
+    skr::Vector<MeshPrimitive> primitives;
+    skr::Vector<MeshBuffer>    bins;
 
     using material_handle_t = skr::resource::TResourceHandle<skr_material_resource_t>;
-    skr::vector<material_handle_t> materials;
+    skr::Vector<material_handle_t> materials;
 
     bool install_to_vram           SKR_IF_CPP(= true);
     bool install_to_ram            SKR_IF_CPP(= true); // TODO: configure this in asset

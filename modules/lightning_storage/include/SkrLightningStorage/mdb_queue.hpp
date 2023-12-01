@@ -23,30 +23,30 @@ struct TopicDesc {
 
 struct TopicStatus{
     uint64_t producer_head;
-    skr::UMap<skr::string, uint64_t> consumer_heads;
+    skr::UMap<skr::String, uint64_t> consumer_heads;
 };
 
 struct Environment {
 public:
     ~Environment();
 
-    const skr::string& get_root() { return _root; }
+    const skr::String& get_root() { return _root; }
     skr::mdb::EnvironmentId get_mdb_env() { return _env; }
 
-    Topic* get_topic(const skr::string& name);
+    Topic* get_topic(const skr::String& name);
 
 private:
     friend struct EnvironmentManager;
     friend struct Transaction;
 
-    Environment(const skr::string& root, EnvironmentDesc* desc);
+    Environment(const skr::String& root, EnvironmentDesc* desc);
     Environment(const Environment&);
     Environment& operator=(const Environment&);
 
     using TopicPtr = skr::SPtr<Topic>;
-    using TopicMap = skr::UMap<skr::string, TopicPtr>;
+    using TopicMap = skr::UMap<skr::String, TopicPtr>;
 
-    skr::string _root;
+    skr::String _root;
     skr::mdb::EnvironmentId _env;
     SMutex _mtx;
     TopicMap _topics;
@@ -54,11 +54,11 @@ private:
 
 struct EnvironmentManager {
 public:
-    static Environment* GetEnv(const skr::string& root, EnvironmentDesc* desc = nullptr);
+    static Environment* GetEnv(const skr::String& root, EnvironmentDesc* desc = nullptr);
 
 private:
     using EnvPtr = skr::SPtr<Environment>;
-    using EnvMap = skr::UMap<skr::string, EnvPtr>;
+    using EnvMap = skr::UMap<skr::String, EnvPtr>;
     SMutex _mtx;
     EnvMap _envMap;
 };

@@ -30,12 +30,12 @@ static struct SkrMeshResourceUtil {
             hash = cgpux::hash<CGPUVertexLayout>()(layout);
         }
         skr_vertex_layout_id id;
-        skr::string          name;
+        skr::String          name;
         uint64_t             hash;
     };
 
-    using VertexLayoutIdMap   = skr::flat_hash_map<skr_vertex_layout_id, skr::SPtr<RegisteredVertexLayout>, skr::guid::hash>;
-    using VertexLayoutHashMap = skr::flat_hash_map<uint64_t, RegisteredVertexLayout*>;
+    using VertexLayoutIdMap   = skr::FlatHashMap<skr_vertex_layout_id, skr::SPtr<RegisteredVertexLayout>, skr::guid::hash>;
+    using VertexLayoutHashMap = skr::FlatHashMap<uint64_t, RegisteredVertexLayout*>;
 
     SkrMeshResourceUtil()
     {
@@ -174,7 +174,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
     SMeshFactoryImpl(const SMeshFactory::Root& root)
         : root(root)
     {
-        dstorage_root            = skr::string::from_utf8(root.dstorage_root);
+        dstorage_root            = skr::String::from_utf8(root.dstorage_root);
         this->root.dstorage_root = dstorage_root.u8_str();
     }
 
@@ -201,9 +201,9 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
         BufferRequest() SKR_NOEXCEPT  = default;
         ~BufferRequest() SKR_NOEXCEPT = default;
 
-        skr::vector<std::string>             absPaths;
-        skr::vector<skr_io_future_t>         dFutures;
-        skr::vector<skr::io::VRAMIOBufferId> dBuffers;
+        skr::Vector<std::string>             absPaths;
+        skr::Vector<skr_io_future_t>         dFutures;
+        skr::Vector<skr::io::VRAMIOBufferId> dBuffers;
     };
 
     struct UploadRequest {
@@ -217,19 +217,19 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
 
         SMeshFactoryImpl*                      factory       = nullptr;
         skr_mesh_resource_id                   mesh_resource = nullptr;
-        skr::vector<std::string>             resource_uris;
-        skr::vector<skr_io_future_t>         ram_futures;
-        skr::vector<skr::BlobId>             blobs;
-        skr::vector<skr_io_future_t>         vram_futures;
-        skr::vector<skr::io::VRAMIOBufferId> uBuffers;
+        skr::Vector<std::string>             resource_uris;
+        skr::Vector<skr_io_future_t>         ram_futures;
+        skr::Vector<skr::BlobId>             blobs;
+        skr::Vector<skr_io_future_t>         vram_futures;
+        skr::Vector<skr::io::VRAMIOBufferId> uBuffers;
     };
 
     ESkrInstallStatus InstallImpl(skr_resource_record_t* record);
 
-    skr::string                                                   dstorage_root;
+    skr::String                                                   dstorage_root;
     Root                                                          root;
-    skr::flat_hash_map<skr_mesh_resource_id, InstallType>         mInstallTypes;
-    skr::flat_hash_map<skr_mesh_resource_id, SPtr<BufferRequest>> mRequests;
+    skr::FlatHashMap<skr_mesh_resource_id, InstallType>         mInstallTypes;
+    skr::FlatHashMap<skr_mesh_resource_id, SPtr<BufferRequest>> mRequests;
 };
 
 SMeshFactory* SMeshFactory::Create(const Root& root)

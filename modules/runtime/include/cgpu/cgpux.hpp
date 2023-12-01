@@ -22,9 +22,9 @@ protected:
     bool binded = false;
     CGPUDescriptorData data = {};
     // arena
-    skr::fixed_vector<const void*, 1> resources;
-    skr::fixed_vector<uint64_t, 1> offsets;
-    skr::fixed_vector<uint64_t, 1> sizes;
+    skr::FixedVector<const void*, 1> resources;
+    skr::FixedVector<uint64_t, 1> offsets;
+    skr::FixedVector<uint64_t, 1> sizes;
 };
 
 struct CGPUXBindTableLocation

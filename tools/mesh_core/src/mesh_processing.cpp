@@ -53,7 +53,7 @@ skr::span<const uint8_t> GetRawPrimitiveAttributeView(const SRawPrimitive* primi
     return {};
 }
 
-void EmplaceRawPrimitiveIndexBuffer(const SRawPrimitive* primitve, skr::vector<uint8_t>& buffer, skr_index_buffer_entry_t& index_buffer)
+void EmplaceRawPrimitiveIndexBuffer(const SRawPrimitive* primitve, skr::Vector<uint8_t>& buffer, skr_index_buffer_entry_t& index_buffer)
 {
     uint32_t index_stride = 0;
     const auto ib_view = GetRawPrimitiveIndicesView(primitve, index_stride);
@@ -66,7 +66,7 @@ void EmplaceRawPrimitiveIndexBuffer(const SRawPrimitive* primitve, skr::vector<u
     buffer.append(ib_view.data(), ib_view.size());
 }
 
-void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, ERawVertexStreamType type, uint32_t idx, skr::vector<uint8_t>& buffer, skr_vertex_buffer_entry_t& out_vbv)
+void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, ERawVertexStreamType type, uint32_t idx, skr::Vector<uint8_t>& buffer, skr_vertex_buffer_entry_t& out_vbv)
 {
     skr::span<const uint8_t> vertex_attribtue_slice = {};
     uint32_t attribute_stride = 0;
@@ -81,7 +81,7 @@ void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, ERa
     buffer.append(vertex_attribtue_slice.data(), vertex_attribtue_slice.size());
 }
 
-void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, const char* semantics, uint32_t idx, skr::vector<uint8_t>& buffer, skr_vertex_buffer_entry_t& out_vbv)
+void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, const char* semantics, uint32_t idx, skr::Vector<uint8_t>& buffer, skr_vertex_buffer_entry_t& out_vbv)
 {
     skr::span<const uint8_t> vertex_attribtue_slice = {};
     uint32_t attribute_stride = 0;
@@ -97,7 +97,7 @@ void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, con
     buffer.append(vertex_attribtue_slice.data(), vertex_attribtue_slice.size());
 }
 
-void EmplaceAllRawMeshIndices(const SRawMesh* mesh, skr::vector<uint8_t>& buffer, skr::vector<skr_mesh_primitive_t>& out_primitives)
+void EmplaceAllRawMeshIndices(const SRawMesh* mesh, skr::Vector<uint8_t>& buffer, skr::Vector<skr_mesh_primitive_t>& out_primitives)
 {
     out_primitives.resize_default(mesh->primitives.size());
     // record all indices
@@ -109,7 +109,7 @@ void EmplaceAllRawMeshIndices(const SRawMesh* mesh, skr::vector<uint8_t>& buffer
 }
 
 void EmplaceRawMeshVerticesWithRange(skr::span<const ESkrVertexAttribute> range, uint32_t buffer_idx,  const SRawMesh* mesh, 
-    const CGPUVertexLayout* layout, skr::vector<uint8_t>& buffer, skr::vector<skr_mesh_primitive_t>& out_primitives)
+    const CGPUVertexLayout* layout, skr::Vector<uint8_t>& buffer, skr::Vector<skr_mesh_primitive_t>& out_primitives)
 {
     if (layout != nullptr)
     {
@@ -153,17 +153,17 @@ void EmplaceRawMeshVerticesWithRange(skr::span<const ESkrVertexAttribute> range,
     }
 }
 
-void EmplaceAllRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::vector<uint8_t>& buffer, skr::vector<skr_mesh_primitive_t>& out_primitives)
+void EmplaceAllRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::Vector<uint8_t>& buffer, skr::Vector<skr_mesh_primitive_t>& out_primitives)
 {
     EmplaceRawMeshVerticesWithRange(kRawAttributeTypeLUT, 0, mesh, layout, buffer, out_primitives);
 }
 
-void EmplaceSkinRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::vector<uint8_t>& buffer, uint32_t buffer_idx, skr::vector<skr_mesh_primitive_t>& out_primitives)
+void EmplaceSkinRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::Vector<uint8_t>& buffer, uint32_t buffer_idx, skr::Vector<skr_mesh_primitive_t>& out_primitives)
 {
     EmplaceRawMeshVerticesWithRange(kRawSkinAttributes, buffer_idx, mesh, layout, buffer, out_primitives);
 }
 
-void EmplaceStaticRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::vector<uint8_t>& buffer, uint32_t buffer_idx, skr::vector<skr_mesh_primitive_t>& out_primitives)
+void EmplaceStaticRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::Vector<uint8_t>& buffer, uint32_t buffer_idx, skr::Vector<skr_mesh_primitive_t>& out_primitives)
 {
     EmplaceRawMeshVerticesWithRange(kRawStaticAttributes, buffer_idx, mesh, layout, buffer, out_primitives);
 }

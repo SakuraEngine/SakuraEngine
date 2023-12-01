@@ -89,8 +89,8 @@ protected:
     CGPUAdapterId adapter = nullptr;
     CGPUDeviceId device = nullptr;
     CGPUQueueId gfx_queue = nullptr;
-    skr::vector<CGPUQueueId> cpy_queues;
-    skr::vector<CGPUQueueId> cmpt_queues;
+    skr::Vector<CGPUQueueId> cpy_queues;
+    skr::Vector<CGPUQueueId> cmpt_queues;
     CGPUSamplerId linear_sampler = nullptr;
     CGPUDStorageQueueId file_dstorage_queue = nullptr;
     CGPUDStorageQueueId memory_dstorage_queue = nullptr;
@@ -184,7 +184,7 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     // create device
     const auto cpy_queue_count_ =  cgpu_min(cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER), MAX_CPY_QUEUE_COUNT);
     const auto cmpt_queue_count_ = cgpu_min(cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_COMPUTE), MAX_CMPT_QUEUE_COUNT);
-    skr::vector<CGPUQueueGroupDescriptor> Gs;
+    skr::Vector<CGPUQueueGroupDescriptor> Gs;
     auto& GfxDesc = *Gs.add_default();
     GfxDesc.queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
     GfxDesc.queue_count = 1;

@@ -42,12 +42,12 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
     CGPUBufferId pos_buffer;
     CGPUBufferId uv_buffer;
 
-    skr::vector<skr_io_future_t> png_futures;
-    skr::vector<skr_io_future_t> texture_futures;
-    skr::vector<skr::io::VRAMIOTextureId> io_textures;
+    skr::Vector<skr_io_future_t> png_futures;
+    skr::Vector<skr_io_future_t> texture_futures;
+    skr::Vector<skr::io::VRAMIOTextureId> io_textures;
 
-    skr::vector<skr_io_future_t> buffer_futures;
-    skr::vector<skr::io::VRAMIOBufferId> io_buffers;
+    skr::Vector<skr_io_future_t> buffer_futures;
+    skr::Vector<skr::io::VRAMIOBufferId> io_buffers;
 };
 
 struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
@@ -120,8 +120,8 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     skr::io::IRAMService* ram_service = nullptr;
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
-    skr::vector<skr::ImageDecoderId> decoders;
-    skr::vector<skr::BlobId> png_blobs;
+    skr::Vector<skr::ImageDecoderId> decoders;
+    skr::Vector<skr::BlobId> png_blobs;
 };
 
 bool skr_live2d_render_model_future_t::is_ready() const SKR_NOEXCEPT
@@ -177,7 +177,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         SkrZoneScopedN("CreateLive2DIndexBuffer");
 
         auto ib_desc = make_zeroed<CGPUBufferDescriptor>();
-        skr::string name = (const char8_t*)resource->model_setting->GetModelFileName();
+        skr::String name = (const char8_t*)resource->model_setting->GetModelFileName();
         auto ind_name = name;
         ind_name += u8"-i";
         ib_desc.name = ind_name.u8_str();
@@ -333,7 +333,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         SkrZoneScopedN("CreateLive2DVertexBuffer");
 
         auto vb_desc = make_zeroed<CGPUBufferDescriptor>();
-        skr::string name = (const char8_t*)resource->model_setting->GetModelFileName();
+        skr::String name = (const char8_t*)resource->model_setting->GetModelFileName();
         auto pos_name = name;
         pos_name += u8"-pos";
         vb_desc.name = pos_name.u8_str();

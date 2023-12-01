@@ -20,21 +20,21 @@ skr_material_asset_t {
     skr_material_type_handle_t material_type;
 
     // properties are mapped to shader parameter bindings (scalars, vectors, matrices, buffers, textures, etc.)
-    skr::vector<skr_material_value_t> override_values;
+    skr::Vector<skr_material_value_t> override_values;
 
     // final values for options
     // options can be provided variantly by each material, if not provided, the default value will be used
-    skr::vector<skr_shader_option_instance_t> switch_values;
+    skr::Vector<skr_shader_option_instance_t> switch_values;
 
     // default value for options
     // options can be provided variantly at runtime, if not provided, the default value will be used
-    skr::vector<skr_shader_option_instance_t> option_defaults;
+    skr::Vector<skr_shader_option_instance_t> option_defaults;
 };
 
 sreflect_struct("guid" : "b5fc88c3-0770-4332-9eda-9e283e29c7dd")
 sattr("serialize" : "json")
 SKR_SHADER_COMPILER_API SMaterialImporter final : public SImporter {
-    skr::string jsonPath;
+    skr::String jsonPath;
 
     // stable hash for material paramters, can be used by PSO cache or other places.
     uint64_t identity[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };

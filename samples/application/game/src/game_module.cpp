@@ -314,7 +314,7 @@ void SGameModule::on_load(int argc, char8_t** argv)
 
     if (!job_queue)
     {
-        skr::string qn             = u8"GameJobQueue";
+        skr::String qn             = u8"GameJobQueue";
         auto        job_queueDesc  = make_zeroed<skr::JobQueueDesc>();
         job_queueDesc.thread_count = 2;
         job_queueDesc.priority     = SKR_THREAD_NORMAL;

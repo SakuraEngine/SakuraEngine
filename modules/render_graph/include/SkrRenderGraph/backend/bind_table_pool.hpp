@@ -29,11 +29,11 @@ public:
 protected:
     struct BindTablesBlock
     {
-        skr::vector<CGPUXBindTableId> bind_tables;
+        skr::Vector<CGPUXBindTableId> bind_tables;
         uint32_t cursor = 0;
     };
     const CGPURootSignatureId root_sig;
-    skr::flat_hash_map<skr::string, BindTablesBlock, skr::Hash<skr::string>> pool;
+    skr::FlatHashMap<skr::String, BindTablesBlock, skr::Hash<skr::String>> pool;
 };
 
 // TODO: lifetime management (GC)
@@ -65,7 +65,7 @@ class MergedBindTablePool
             : tables(tables, tables + count)
         {
         }
-        skr::fixed_vector<CGPUXBindTableId, 3> tables;
+        skr::FixedVector<CGPUXBindTableId, 3> tables;
     };
     static_assert(sizeof(Key) <= 8 * sizeof(size_t), "Key should be under single cacheline!");
     struct GuradedMergedBindTable
@@ -85,7 +85,7 @@ public:
 
 protected:
     const CGPURootSignatureId root_sig;
-    skr::flat_hash_map<Key, GuradedMergedBindTable, Key::hasher, Key::equal_to> pool;
+    skr::FlatHashMap<Key, GuradedMergedBindTable, Key::hasher, Key::equal_to> pool;
 };
 } // namespace render_graph
 } // namespace skr

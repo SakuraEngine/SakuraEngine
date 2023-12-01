@@ -54,7 +54,7 @@ public:
 
 protected:
     CGPUDeviceId device;
-    skr::flat_hash_map<Key, skr::deque<PooledTexture>, Key::hasher> textures;
+    skr::FlatHashMap<Key, skr::stl_deque<PooledTexture>, Key::hasher> textures;
 };
 } // namespace render_graph
 } // namespace skr

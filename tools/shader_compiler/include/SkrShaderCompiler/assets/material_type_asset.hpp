@@ -19,18 +19,18 @@ skr_material_type_asset_t {
     uint32_t version;
 
     // shader assets
-    skr::vector<skr_material_pass_t> passes;
+    skr::Vector<skr_material_pass_t> passes;
 
     // properties are mapped to shader parameter bindings (scalars, vectors, matrices, buffers, textures, etc.)
-    skr::vector<skr_material_property_t> properties;
+    skr::Vector<skr_material_property_t> properties;
 
     // default value for options
     // options can be provided variantly by each material, if not provided, the default value will be used
-    skr::vector<skr_shader_option_instance_t> switch_defaults;
+    skr::Vector<skr_shader_option_instance_t> switch_defaults;
 
     // default value for options
     // options can be provided variantly at runtime, if not provided, the default value will be used
-    skr::vector<skr_shader_option_instance_t> option_defaults;
+    skr::Vector<skr_shader_option_instance_t> option_defaults;
 
     skr_vertex_layout_id vertex_type;
 };
@@ -38,7 +38,7 @@ skr_material_type_asset_t {
 sreflect_struct("guid" : "c0fc5581-f644-4752-bb30-0e7f652533b7")
 sattr("serialize" : "json")
 SKR_SHADER_COMPILER_API SMaterialTypeImporter final : public SImporter {
-    skr::string jsonPath;
+    skr::String jsonPath;
 
     void* Import(skr_io_ram_service_t*, SCookContext* context) override;
     void  Destroy(void* resource) override;

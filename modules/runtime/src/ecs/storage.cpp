@@ -781,7 +781,7 @@ dual_storage_t* dual_storage_t::clone()
     return dst;
 }
 
-void dual_storage_t::make_alias(skr::string_view name, skr::string_view aliasName)
+void dual_storage_t::make_alias(skr::StringView name, skr::StringView aliasName)
 {
     auto& reg = dual::type_registry_t::get();
     auto type = reg.get_type(name);

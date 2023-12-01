@@ -190,7 +190,7 @@ type_index_t type_registry_t::get_type(const guid_t& guid)
     return kInvalidTypeIndex;
 }
 
-type_index_t type_registry_t::get_type(skr::string_view name)
+type_index_t type_registry_t::get_type(skr::StringView name)
 {
     auto i = name2type.find(name);
     if (i != name2type.end())

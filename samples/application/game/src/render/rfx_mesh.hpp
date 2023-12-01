@@ -41,7 +41,7 @@ protected:
     dual_type_set_t typeset;
     skr_vfs_t* resource_vfs;
 
-    skr::vector<skr_primitive_draw_t> mesh_drawcalls;
+    skr::Vector<skr_primitive_draw_t> mesh_drawcalls;
     skr_primitive_draw_list_view_t mesh_draw_list;
     
 protected:
@@ -62,8 +62,8 @@ protected:
     struct PushConstants {
         skr_float4x4_t model;
     };
-    skr::vector<PushConstants> push_constants;
-    skr::vector<skr_float4x4_t> model_matrices;
+    skr::Vector<PushConstants> push_constants;
+    skr::Vector<skr_float4x4_t> model_matrices;
 };
 
 }

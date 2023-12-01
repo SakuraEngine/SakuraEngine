@@ -60,11 +60,11 @@ namespace hbv
 		{
 			//硬编码4层
 			flag_t& _layer0;
-			skr::vector<flag_t>& _layer1;
-			skr::vector<flag_t>& _layer2;
-			skr::vector<flag_t>& _layer3;
+			skr::Vector<flag_t>& _layer1;
+			skr::Vector<flag_t>& _layer2;
+			skr::Vector<flag_t>& _layer3;
 		public:
-			hbv(flag_t& layer0, skr::vector<flag_t>& layer1, skr::vector<flag_t>& layer2, skr::vector<flag_t>& layer3) noexcept
+			hbv(flag_t& layer0, skr::Vector<flag_t>& layer1, skr::Vector<flag_t>& layer2, skr::Vector<flag_t>& layer3) noexcept
                 : _layer0(layer0), _layer1(layer1), _layer2(layer2), _layer3(layer3)
             {
             }
@@ -252,8 +252,8 @@ namespace hbv
 		template<index_t Level = 3, typename T, typename F>
 		void for_each(const T& vec, const F& f) noexcept
 		{
-			skr::array<flag_t, Level + 1> nodes{};
-			skr::array<index_t, Level + 1> prefix{};
+			skr::Array<flag_t, Level + 1> nodes{};
+			skr::Array<index_t, Level + 1> prefix{};
 			nodes[0] = vec.layer0();
 			index_t level = 0;
 			if (nodes[0] == EmptyNode) return;

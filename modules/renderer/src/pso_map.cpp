@@ -264,8 +264,8 @@ struct PSOMapImpl : public skr_pso_map_t
 
     SPtr<PSOFutureLauncher> future_launcher;
     skr_pso_map_root_t root;
-    skr::parallel_flat_hash_set<SPtr<PSOMapKey>, key_ptr_hasher, key_ptr_equal> sets;
-    skr::parallel_flat_hash_map<skr_pso_map_key_id, SPtr<PSOProgress>> mPSOProgresses;
+    skr::ParallelFlatHashSet<SPtr<PSOMapKey>, key_ptr_hasher, key_ptr_equal> sets;
+    skr::ParallelFlatHashMap<skr_pso_map_key_id, SPtr<PSOProgress>> mPSOProgresses;
     SAtomicU64 keys_counter = 0;
     uint64_t frame_index;
 };

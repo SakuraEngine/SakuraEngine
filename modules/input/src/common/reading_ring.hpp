@@ -5,10 +5,10 @@ namespace skr {
 namespace input {
 
 template<typename T>
-struct ReadingRing : public resizable_ring_buffer<T>
+struct ReadingRing : public ResizableRingBuffer<T>
 {
     ReadingRing() SKR_NOEXCEPT
-        : resizable_ring_buffer<T>(256)
+        : ResizableRingBuffer<T>(256)
     {
 
     }

@@ -42,7 +42,7 @@ void replaceAll(skr::stl_u8string& str, const skr::stl_u8string_view& from, cons
     }
 }
 
-static skr::flat_hash_map<lua_State*, void*> ExtraSpace;
+static skr::FlatHashMap<lua_State*, void*> ExtraSpace;
 void** lua_getextraspace(lua_State* L)
 {
     return &ExtraSpace[L];
@@ -69,7 +69,7 @@ int skr_lua_loadfile(lua_State* L, const char* filename)
     }
     SKR_DEFER({ skr_vfs_fclose(file); });
     auto size = skr_vfs_fsize(file);
-    skr::vector<char> buffer(size);
+    skr::Vector<char> buffer(size);
     skr_vfs_fread(file, buffer.data(), 0, size);
     auto name = skr::stl_u8string(u8"@") + (const char8_t*)filename;
     size_t bytecodeSize = 0;
@@ -449,7 +449,7 @@ void bind_skr_resource_handle(lua_State* L)
 }
 
 
-inline void split(const skr::stl_u8string_view& s, skr::vector<skr::stl_u8string_view>& tokens, const skr::stl_u8string_view& delimiters = u8" ")
+inline void split(const skr::stl_u8string_view& s, skr::Vector<skr::stl_u8string_view>& tokens, const skr::stl_u8string_view& delimiters = u8" ")
 {
     using namespace::skr;
     skr::stl_u8string::size_type lastPos = s.find_first_not_of(delimiters, 0);
@@ -463,7 +463,7 @@ inline void split(const skr::stl_u8string_view& s, skr::vector<skr::stl_u8string
     }
 }
 
-inline skr::stl_u8string join(const skr::vector<skr::stl_u8string_view>& tokens, const skr::stl_u8string_view& delimiters = u8" ")
+inline skr::stl_u8string join(const skr::Vector<skr::stl_u8string_view>& tokens, const skr::stl_u8string_view& delimiters = u8" ")
 {
     skr::stl_u8string s;
     for (auto& token : tokens)
@@ -498,7 +498,7 @@ int skr_lua_log(lua_State* L)
             Source = Source.substr(0, Source.size() - 4);
         if (Source.starts_with(u8"@"))
             Source = Source.substr(1);
-        skr::vector<skr::stl_u8string_view> tokens;
+        skr::Vector<skr::stl_u8string_view> tokens;
         split(Source, tokens, u8"/");
         
         const auto modulename = join(tokens, u8".");
@@ -574,7 +574,7 @@ long long opt_enum(lua_State *L, int index, long long def)
     return luaL_optinteger(L, index, def);
 }
 
-int push_string(lua_State* L, const skr::string& str)
+int push_string(lua_State* L, const skr::String& str)
 {
     lua_pushstring(L, str.c_str());
     return 1;
@@ -586,12 +586,12 @@ int push_string(lua_State* L, skr::stl_u8string_view str)
     return 1;
 }
 
-skr::string check_string(lua_State* L, int index)
+skr::String check_string(lua_State* L, int index)
 {
     return (const char8_t*)lua_tostring(L, index);
 }
 
-skr::string opt_string(lua_State* L, int index, const skr::string& def)
+skr::String opt_string(lua_State* L, int index, const skr::String& def)
 {
     return { (const char8_t*)luaL_optstring(L, index, def.c_str()) };
 }

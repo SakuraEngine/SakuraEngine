@@ -93,14 +93,14 @@ public:
      * @description: Get the last error string.
      * @author: SaeruHikari
      */
-    skr::string errorString() const;
+    skr::String errorString() const;
     /**
      * @description: Get the native handle of lib on the system.
      * @author: SaeruHikari
      */
     NativeLibHandle handle() const;
 private:
-    skr::string _lastError;
+    skr::String _lastError;
     NativeLibHandle _handle = nullptr;
     // Linux implementation
 #if SKR_PLAT_UNIX
@@ -109,7 +109,7 @@ private:
     void* getImpl(const char8_t* symbolName);
 #elif SKR_PLAT_WINDOWS // Windows implementation
     // Return a string explaining the last error
-    skr::string getWindowsError();
+    skr::String getWindowsError();
     bool loadImpl(const char8_t* path);
     bool unloadImpl();
     void* getImpl(const char8_t* symbolName);

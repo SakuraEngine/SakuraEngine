@@ -42,8 +42,8 @@ struct InputSystemImpl : public InputSystem
         InputLayer* layer = nullptr;
         InputReading* reading = nullptr;
     };
-    skr::UMap<EInputKind, skr::vector<RawInput>> inputs;
-    skr::vector<SObjectPtr<InputAction>> actions;
+    skr::UMap<EInputKind, skr::Vector<RawInput>> inputs;
+    skr::Vector<SObjectPtr<InputAction>> actions;
 };
 
 InputSystem::~InputSystem() SKR_NOEXCEPT

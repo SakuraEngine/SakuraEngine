@@ -24,7 +24,7 @@ error_code ReadTrait<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
     if (value.error() != simdjson::SUCCESS)
         return (error_code)value.error();
     const auto rawView = value.value_unsafe();
-    const auto enumStr = skr::string_view((const char8_t*)rawView.data(), (int32_t)rawView.size());
+    const auto enumStr = skr::StringView((const char8_t*)rawView.data(), (int32_t)rawView.size());
     if(!skr::rttr::EnumTraits<${enum.name}>::from_string(enumStr, e))
     {
         SKR_LOG_ERROR(u8"Unknown enumerator while reading enum ${enum.name}: %s", enumStr.raw().data());

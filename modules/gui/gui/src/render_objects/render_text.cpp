@@ -28,7 +28,7 @@ void RenderText::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NO
     _paragraph->paint(context, offset);
 }
 
-void RenderText::set_text(const string& text)
+void RenderText::set_text(const skr::String& text)
 {
     if (text != _text)
     {

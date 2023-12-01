@@ -14,8 +14,8 @@
 
 void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
 {
-    skr::vector<dual_entity_t> entities;
-    skr::vector<skr_guid_t> guids;
+    skr::Vector<dual_entity_t> entities;
+    skr::Vector<skr_guid_t> guids;
     auto entityCount = dualS_count(world, true, false);
     entities.reserve(entityCount);
     guids.reserve(entityCount);
@@ -31,7 +31,7 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
         
     };
     dualS_all(world, true, false, DUAL_LAMBDA(accumulate));
-    skr::vector<dual_entity_t> indices;
+    skr::Vector<dual_entity_t> indices;
     indices.resize_default(guids.size());
     skr::parallel_for(indices.begin(), indices.end(), 2048, [&](auto&& begin, auto&& end)
     {
@@ -46,7 +46,7 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
     {
         return std::lexicographical_compare(&guids[a].Storage0, &guids[a].Storage3, &guids[b].Storage0, &guids[b].Storage3);
     });
-    skr::vector<dual_entity_t> sortedEntities;
+    skr::Vector<dual_entity_t> sortedEntities;
     sortedEntities.resize_default(guids.size());
     skr::parallel_for(indices.begin(), indices.end(), 2048, [&](auto&& begin, auto&& end)
     {
@@ -100,7 +100,7 @@ void skr_load_scene(dual_storage_t* world, skr_json_reader_t* reader)
             continue;
         skr_guid_t guid;
         auto keyStr = key.value_unsafe();
-        if(!skr::guid::make_guid(skr::string_view((const char8_t*)keyStr.data(), (int32_t)keyStr.length()), guid))
+        if(!skr::guid::make_guid(skr::StringView((const char8_t*)keyStr.data(), (int32_t)keyStr.length()), guid))
             continue;
         auto entity = field.value().get_object();
         if(entity.error() != simdjson::error_code::SUCCESS)

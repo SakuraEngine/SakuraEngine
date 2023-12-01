@@ -37,7 +37,7 @@ ShaderSourceCode {
     ~ShaderSourceCode() SKR_NOEXCEPT;
 
     skr::BlobId             blob = nullptr;
-    skr::string             source_name;
+    skr::String             source_name;
     const EShaderSourceType source_type = EShaderSourceType::INVALID;
 };
 

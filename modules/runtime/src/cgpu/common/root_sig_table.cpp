@@ -135,7 +135,7 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
             RS->pipeline_type = CGPU_PIPELINE_TYPE_GRAPHICS;
     }
     // Merge
-    skr::btree_set<uint32_t> valid_sets;
+    skr::BTreeSet<uint32_t> valid_sets;
     skr::stl_vector<CGPUShaderResource> RST_resources;
     RST_resources.reserve(all_resources.size());
     for (auto&& shader_resource : all_resources)

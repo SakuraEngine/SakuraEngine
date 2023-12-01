@@ -56,7 +56,7 @@ void LogQueue::finish(const LogElement& e) SKR_NOEXCEPT
     }
 }
 
-void LogQueue::push(LogEvent ev, const skr::string&& what, bool backtrace) SKR_NOEXCEPT
+void LogQueue::push(LogEvent ev, const skr::String&& what, bool backtrace) SKR_NOEXCEPT
 {
     auto ptok_ = on_push(ev, backtrace);
     SKR_ASSERT(ptok_);
@@ -72,7 +72,7 @@ void LogQueue::push(LogEvent ev, const skr::string&& what, bool backtrace) SKR_N
         ptok_->backtraces_.add(element);
 }
 
-void LogQueue::push(LogEvent ev, const skr::string_view format, ArgsList&& args, bool backtrace) SKR_NOEXCEPT
+void LogQueue::push(LogEvent ev, const skr::StringView format, ArgsList&& args, bool backtrace) SKR_NOEXCEPT
 {
     auto ptok_ = on_push(ev, backtrace);
     SKR_ASSERT(ptok_);

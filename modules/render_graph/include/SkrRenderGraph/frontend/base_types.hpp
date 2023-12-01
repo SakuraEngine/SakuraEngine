@@ -2,11 +2,11 @@
 #include "SkrRenderGraph/rg_config.h"
 #include "SkrRT/misc/dependency_graph.hpp"
 #include "SkrRT/containers_new/span.hpp"
-#include "SkrRT/containers_new/function.hpp"
+#include "SkrRT/containers_new/stl_function.hpp"
 #include "SkrRT/containers_new/string.hpp"
 
-using graph_object_string = skr::string;
-using graph_big_object_string = skr::string;
+using graph_object_string = skr::String;
+using graph_big_object_string = skr::String;
 
 enum
 {
@@ -39,9 +39,9 @@ class ComputePassNode;
 class CopyPassNode;
 class PresentPassNode;
 
-using CopyPassExecuteFunction = skr::function<void(class RenderGraph&, CopyPassContext&)>;
-using ComputePassExecuteFunction = skr::function<void(class RenderGraph&, ComputePassContext&)>;
-using RenderPassExecuteFunction = skr::function<void(class RenderGraph&, RenderPassContext&)>;
+using CopyPassExecuteFunction = skr::stl_function<void(class RenderGraph&, CopyPassContext&)>;
+using ComputePassExecuteFunction = skr::stl_function<void(class RenderGraph&, ComputePassContext&)>;
+using RenderPassExecuteFunction = skr::stl_function<void(class RenderGraph&, RenderPassContext&)>;
 
 typedef uint64_t handle_t;
 enum class EObjectType : uint8_t
@@ -300,7 +300,7 @@ struct RenderGraphNode : public DependencyGraphNode {
     RenderGraphNode(EObjectType type);
     SKR_RENDER_GRAPH_API void set_name(const char8_t* n);
     SKR_RENDER_GRAPH_API const char8_t* get_name() const;
-    SKR_RENDER_GRAPH_API const skr::string_view get_name_view() const;
+    SKR_RENDER_GRAPH_API const skr::StringView get_name_view() const;
     const EObjectType type;
     const uint32_t pooled_size = 0;
 protected:

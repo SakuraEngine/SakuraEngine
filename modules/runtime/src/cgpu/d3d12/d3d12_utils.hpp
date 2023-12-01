@@ -85,7 +85,7 @@ typedef struct D3D12Util_DescriptorHeap {
     /// Start position in the heap
     D3D12Util_DescriptorHandle mStartHandle;
     /// Free List used for CPU only descriptor heaps
-    skr::vector<D3D12Util_DescriptorHandle> mFreeList;
+    skr::Vector<D3D12Util_DescriptorHandle> mFreeList;
     /// Description
     D3D12_DESCRIPTOR_HEAP_DESC mDesc;
     /// DescriptorInfo Increment Size

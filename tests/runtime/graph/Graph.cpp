@@ -18,7 +18,7 @@ public:
     {
     }
 
-    skr::string name;
+    skr::String name;
 };
 
 TEST_CASE_METHOD(GraphTest, "DependencyGraph")

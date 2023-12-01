@@ -6,7 +6,7 @@
 
 #include <signal.h>
 
-skr::parallel_flat_hash_map<uint64_t, skr::string> error_map;
+skr::ParallelFlatHashMap<uint64_t, skr::String> error_map;
 
 void SCrashHandler::terminateProcess(int32_t code) SKR_NOEXCEPT
 {

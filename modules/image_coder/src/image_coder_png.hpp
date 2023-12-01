@@ -29,7 +29,7 @@ struct SKR_IMAGE_CODER_API PNGImageDecoder : public BaseImageDecoder
     uint8_t _padding = 0;
     uint64_t read_offset = 0;
     uint64_t png_color_type = 0;
-    skr::string error;
+    skr::String error;
 };
 
 }

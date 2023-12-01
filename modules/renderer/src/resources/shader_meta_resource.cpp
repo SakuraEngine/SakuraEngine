@@ -3,10 +3,10 @@
 #include <SkrRT/containers_new/string.hpp>
 #include "option_utils.hpp"
 
-bool skr_shader_options_resource_t::flatten_options(skr::vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
+bool skr_shader_options_resource_t::flatten_options(skr::Vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
 {
-    skr::USet<skr::string>                                                           keys;
-    skr::flat_hash_map<skr::string, skr_shader_option_template_t, skr::Hash<skr::string>> kvs;
+    skr::USet<skr::String>                                                           keys;
+    skr::FlatHashMap<skr::String, skr_shader_option_template_t, skr::Hash<skr::String>> kvs;
     // collect all keys & ensure unique
     for (auto& src : srcs)
     {
@@ -30,14 +30,14 @@ bool skr_shader_options_resource_t::flatten_options(skr::vector<skr_shader_optio
     // sort result by key
     std::stable_sort(dst.begin(), dst.end(),
         [](const skr_shader_option_template_t& a, const skr_shader_option_template_t& b) {
-            return skr::Hash<skr::string>()(a.key) < skr::Hash<skr::string>()(b.key);
+            return skr::Hash<skr::String>()(a.key) < skr::Hash<skr::String>()(b.key);
         });
     return true;
 }
 
 skr_stable_shader_hash_t skr_shader_option_instance_t::calculate_stable_hash(skr::span<skr_shader_option_instance_t> ordered_options)
 {
-    skr::string signatureString;
+    skr::String signatureString;
     option_utils::stringfy(signatureString, ordered_options);
     return skr_stable_shader_hash_t::hash_string(signatureString.c_str(), (uint32_t)signatureString.size());
 }

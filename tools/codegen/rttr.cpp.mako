@@ -17,7 +17,7 @@ span<EnumItem<${enum.name}>> EnumTraits<${enum.name}>::items()
     };
     return items;
 }
-skr::string_view EnumTraits<${enum.name}>::to_string(const ${enum.name}& value)
+skr::StringView EnumTraits<${enum.name}>::to_string(const ${enum.name}& value)
 {
     switch (value)
     {
@@ -27,7 +27,7 @@ skr::string_view EnumTraits<${enum.name}>::to_string(const ${enum.name}& value)
     default: SKR_UNREACHABLE_CODE(); return u8"${enum.name}::INVALID_ENUMERATOR";
     }
 }
-bool EnumTraits<${enum.name}>::from_string(string_view str, ${enum.name}& value)
+bool EnumTraits<${enum.name}>::from_string(skr::StringView str, ${enum.name}& value)
 {
     const auto hash = skr_hash64(str.raw().data(), str.size(), 0);
     switch(hash)

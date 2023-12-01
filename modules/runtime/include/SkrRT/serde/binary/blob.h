@@ -9,9 +9,9 @@ namespace skr
 namespace binary
 {
 template <>
-struct SKR_STATIC_API BlobTrait<skr::string_view> {
-    static void BuildArena(skr_blob_arena_builder_t& arena, skr::string_view& dst, const skr::string& src);
-    static void Remap(skr_blob_arena_t& arena, skr::string_view& dst);
+struct SKR_STATIC_API BlobTrait<skr::StringView> {
+    static void BuildArena(skr_blob_arena_builder_t& arena, skr::StringView& dst, const skr::String& src);
+    static void Remap(skr_blob_arena_t& arena, skr::StringView& dst);
 };
 
 template <class T>

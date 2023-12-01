@@ -8,10 +8,10 @@ namespace skd::asset
     {
     public:
         virtual ~SImporterFactory() = default;
-        virtual bool CanImport(const skr::string& path) const = 0;
-        virtual int Import(const skr::string& path) = 0;
+        virtual bool CanImport(const skr::String& path) const = 0;
+        virtual int Import(const skr::String& path) = 0;
         virtual int Update() = 0;
-        virtual skr::string GetName() const = 0;
-        virtual skr::string GetDescription() const = 0;
+        virtual skr::String GetName() const = 0;
+        virtual skr::String GetDescription() const = 0;
     };
 }

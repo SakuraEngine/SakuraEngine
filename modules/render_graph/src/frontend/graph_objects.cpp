@@ -75,7 +75,7 @@ struct SKR_RENDER_GRAPH_API NodeAndEdgeFactoryImpl final : public NodeAndEdgeFac
         }
         return pool->second->allocate();
     }
-    skr::flat_hash_map<size_t, factory_pool_t*> pools;
+    skr::FlatHashMap<size_t, factory_pool_t*> pools;
 };
 
 NodeAndEdgeFactory* NodeAndEdgeFactory::Create()
@@ -104,7 +104,7 @@ const char8_t* RenderGraphNode::get_name() const
     return (const char8_t*)name.c_str();
 }
 
-const skr::string_view RenderGraphNode::get_name_view() const
+const skr::StringView RenderGraphNode::get_name_view() const
 {
     return name.view();
 }
@@ -176,7 +176,7 @@ skr::span<TextureReadWriteEdge*> PassNode::tex_readwrite_edges()
     return skr::span<TextureReadWriteEdge*>(inout_texture_edges.data(), inout_texture_edges.size());
 }
 
-void PassNode::foreach_textures(skr::function<void(TextureNode*, TextureEdge*)> f)
+void PassNode::foreach_textures(skr::stl_function<void(TextureNode*, TextureEdge*)> f)
 {
     for (auto&& e : tex_read_edges())
         f(e->get_texture_node(), e);
@@ -201,7 +201,7 @@ skr::span<PipelineBufferEdge*> PassNode::buf_ppl_edges()
     return skr::span<PipelineBufferEdge*>(ppl_buffer_edges.data(), ppl_buffer_edges.size());
 }
 
-void PassNode::foreach_buffers(skr::function<void(BufferNode*, BufferEdge*)> f)
+void PassNode::foreach_buffers(skr::stl_function<void(BufferNode*, BufferEdge*)> f)
 {
     for (auto&& e : buf_read_edges())
         f(e->get_buffer_node(), e);
@@ -241,7 +241,7 @@ TextureEdge::TextureEdge(ERelationshipType type, ECGPUResourceState requested_st
 
 // 3.1 Texture Read Edge
 
-TextureReadEdge::TextureReadEdge(const skr::string_view name, TextureSRVHandle handle, ECGPUResourceState state)
+TextureReadEdge::TextureReadEdge(const skr::StringView name, TextureSRVHandle handle, ECGPUResourceState state)
     : TextureEdge(ERelationshipType::TextureRead, state)
     , name_hash(cgpu_name_hash(name.raw().data(), name.size()))
     , name(name)
@@ -281,7 +281,7 @@ PassNode* TextureRenderEdge::get_pass_node()
 
 // 3.3 Texture UAV edge
 
-TextureReadWriteEdge::TextureReadWriteEdge(const skr::string_view name, TextureUAVHandle handle, ECGPUResourceState state)
+TextureReadWriteEdge::TextureReadWriteEdge(const skr::StringView name, TextureUAVHandle handle, ECGPUResourceState state)
     : TextureEdge(ERelationshipType::TextureReadWrite, state)
     , name_hash(cgpu_name_hash(name.raw().data(), name.size()))
     , name(name)
@@ -321,7 +321,7 @@ PassNode* PipelineBufferEdge::get_pass_node()
 
 // 3.5 Buffer read edge
 
-BufferReadEdge::BufferReadEdge(const skr::string_view name, BufferRangeHandle handle, ECGPUResourceState state)
+BufferReadEdge::BufferReadEdge(const skr::StringView name, BufferRangeHandle handle, ECGPUResourceState state)
     : BufferEdge(ERelationshipType::BufferRead, state)
     , name_hash(cgpu_name_hash(name.raw().data(), name.size()))
     , name(name)

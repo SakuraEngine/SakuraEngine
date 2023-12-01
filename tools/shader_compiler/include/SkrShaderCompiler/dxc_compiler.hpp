@@ -74,18 +74,18 @@ public:
     void SetIncludeHandler(IDxcIncludeHandler* includeHandler) SKR_NOEXCEPT;
 
 protected:
-    void createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, skr::vector<skr::stl_wstring>& def_args) SKR_NOEXCEPT;
+    void createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, skr::Vector<skr::stl_wstring>& def_args) SKR_NOEXCEPT;
 
     IDxcUtils*          utils          = nullptr;
     IDxcCompiler3*      compiler       = nullptr;
     IDxcIncludeHandler* includeHandler = nullptr;
 
-    skr::vector<skr_shader_option_template_t> switch_defs;
-    skr::vector<skr_shader_option_instance_t> switches;
+    skr::Vector<skr_shader_option_template_t> switch_defs;
+    skr::Vector<skr_shader_option_instance_t> switches;
     skr_stable_shader_hash_t                    switches_hash = {};
 
-    skr::vector<skr_shader_option_template_t> option_defs;
-    skr::vector<skr_shader_option_instance_t> options;
+    skr::Vector<skr_shader_option_template_t> option_defs;
+    skr::Vector<skr_shader_option_instance_t> options;
     skr_stable_shader_hash_t                    options_hash = {};
 };
 

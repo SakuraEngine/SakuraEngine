@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/config.h"
-#include "SkrRT/containers_new/function.hpp"
+#include "SkrRT/containers_new/stl_function.hpp"
 
 namespace skr
 {
@@ -20,10 +20,10 @@ public:
     const dag_id_t get_id() const SKR_NOEXCEPT { return id; }
     uint32_t outgoing_edges() SKR_NOEXCEPT;
     uint32_t incoming_edges() SKR_NOEXCEPT;
-    uint32_t foreach_neighbors(skr::function<void(DependencyGraphNode* neig)>) SKR_NOEXCEPT;
-    uint32_t foreach_neighbors(skr::function<void(const DependencyGraphNode* neig)>) const SKR_NOEXCEPT;
-    uint32_t foreach_inv_neighbors(skr::function<void(DependencyGraphNode* inv_neig)>) SKR_NOEXCEPT;
-    uint32_t foreach_inv_neighbors(skr::function<void(const DependencyGraphNode* inv_neig)>) const SKR_NOEXCEPT;
+    uint32_t foreach_neighbors(skr::stl_function<void(DependencyGraphNode* neig)>) SKR_NOEXCEPT;
+    uint32_t foreach_neighbors(skr::stl_function<void(const DependencyGraphNode* neig)>) const SKR_NOEXCEPT;
+    uint32_t foreach_inv_neighbors(skr::stl_function<void(DependencyGraphNode* inv_neig)>) SKR_NOEXCEPT;
+    uint32_t foreach_inv_neighbors(skr::stl_function<void(const DependencyGraphNode* inv_neig)>) const SKR_NOEXCEPT;
 
 private:
     class DependencyGraph* graph;
@@ -71,27 +71,27 @@ public:
     // virtual bool unlink(dag_id_t from, dag_id_t to) SKR_NOEXCEPT = 0;
     virtual Node* from_node(Edge* edge) SKR_NOEXCEPT = 0;
     virtual Node* to_node(Edge* edge) SKR_NOEXCEPT = 0;
-    virtual uint32_t foreach_neighbors(Node* node, skr::function<void(Node* neig)>) SKR_NOEXCEPT = 0;
-    virtual uint32_t foreach_neighbors(dag_id_t node, skr::function<void(Node* neig)>) SKR_NOEXCEPT = 0;
-    virtual uint32_t foreach_neighbors(const Node* node, skr::function<void(const Node* neig)>) const SKR_NOEXCEPT = 0;
-    virtual uint32_t foreach_neighbors(const dag_id_t node, skr::function<void(const Node* neig)>) const SKR_NOEXCEPT = 0;
-    virtual uint32_t foreach_inv_neighbors(Node* node, skr::function<void(Node* inv_neig)>) SKR_NOEXCEPT = 0;
-    virtual uint32_t foreach_inv_neighbors(dag_id_t node, skr::function<void(Node* inv_neig)>) SKR_NOEXCEPT = 0;
-    virtual uint32_t foreach_inv_neighbors(const Node* node, skr::function<void(const Node* inv_neig)>) const SKR_NOEXCEPT = 0;
-    virtual uint32_t foreach_inv_neighbors(const dag_id_t node, skr::function<void(const Node* inv_neig)>) const SKR_NOEXCEPT = 0;
+    virtual uint32_t foreach_neighbors(Node* node, skr::stl_function<void(Node* neig)>) SKR_NOEXCEPT = 0;
+    virtual uint32_t foreach_neighbors(dag_id_t node, skr::stl_function<void(Node* neig)>) SKR_NOEXCEPT = 0;
+    virtual uint32_t foreach_neighbors(const Node* node, skr::stl_function<void(const Node* neig)>) const SKR_NOEXCEPT = 0;
+    virtual uint32_t foreach_neighbors(const dag_id_t node, skr::stl_function<void(const Node* neig)>) const SKR_NOEXCEPT = 0;
+    virtual uint32_t foreach_inv_neighbors(Node* node, skr::stl_function<void(Node* inv_neig)>) SKR_NOEXCEPT = 0;
+    virtual uint32_t foreach_inv_neighbors(dag_id_t node, skr::stl_function<void(Node* inv_neig)>) SKR_NOEXCEPT = 0;
+    virtual uint32_t foreach_inv_neighbors(const Node* node, skr::stl_function<void(const Node* inv_neig)>) const SKR_NOEXCEPT = 0;
+    virtual uint32_t foreach_inv_neighbors(const dag_id_t node, skr::stl_function<void(const Node* inv_neig)>) const SKR_NOEXCEPT = 0;
     virtual uint32_t outgoing_edges(const Node* node) SKR_NOEXCEPT = 0;
     virtual uint32_t outgoing_edges(dag_id_t id) SKR_NOEXCEPT = 0;
     virtual uint32_t foreach_outgoing_edges(dag_id_t node,
-    skr::function<void(Node* from, Node* to, Edge* edge)>) SKR_NOEXCEPT = 0;
+    skr::stl_function<void(Node* from, Node* to, Edge* edge)>) SKR_NOEXCEPT = 0;
     virtual uint32_t foreach_outgoing_edges(Node* node,
-    skr::function<void(Node* from, Node* to, Edge* edge)>) SKR_NOEXCEPT = 0;
+    skr::stl_function<void(Node* from, Node* to, Edge* edge)>) SKR_NOEXCEPT = 0;
     virtual uint32_t incoming_edges(const Node* node) SKR_NOEXCEPT = 0;
     virtual uint32_t incoming_edges(dag_id_t id) SKR_NOEXCEPT = 0;
     virtual uint32_t foreach_incoming_edges(Node* node,
-    skr::function<void(Node* from, Node* to, Edge* edge)>) SKR_NOEXCEPT = 0;
+    skr::stl_function<void(Node* from, Node* to, Edge* edge)>) SKR_NOEXCEPT = 0;
     virtual uint32_t foreach_incoming_edges(dag_id_t node,
-    skr::function<void(Node* from, Node* to, Edge* edge)>) SKR_NOEXCEPT = 0;
-    virtual uint32_t foreach_edges(skr::function<void(Node* from, Node* to, Edge* edge)>) SKR_NOEXCEPT = 0;
+    skr::stl_function<void(Node* from, Node* to, Edge* edge)>) SKR_NOEXCEPT = 0;
+    virtual uint32_t foreach_edges(skr::stl_function<void(Node* from, Node* to, Edge* edge)>) SKR_NOEXCEPT = 0;
 };
 
 inline DependencyGraphNode* DependencyGraphEdge::from() SKR_NOEXCEPT

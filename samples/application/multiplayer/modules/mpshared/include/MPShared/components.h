@@ -20,7 +20,7 @@ MPWeaponConfig
     float projectileDamage;
     float projectileRadius;
     int burstCount;
-    skr::vector<float> spreadAngles;
+    skr::Vector<float> spreadAngles;
     float randomSpreadAngle;
     //skr_resource_handle_t projectilePrefab;
 };
@@ -41,7 +41,7 @@ MPGameModeConfig
     int ZombieCountPerWave;
     float ZombieWaveInterval;
     int AdditionalZombieCountPerWave;
-    skr::vector<MPWeaponConfig> Weapons;
+    skr::Vector<MPWeaponConfig> Weapons;
 };
 
 sreflect_struct(

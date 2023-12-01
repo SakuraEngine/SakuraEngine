@@ -19,7 +19,7 @@ struct scheduler_t {
     dual::entity_registry_t registry;
     skr::task::counter_t allCounter;
     skr::stl_vector<dual::job_dependency_entry_t> allResources;
-    skr::flat_hash_map<dual::archetype_t*, skr::stl_vector<job_dependency_entry_t>> dependencyEntries;
+    skr::FlatHashMap<dual::archetype_t*, skr::stl_vector<job_dependency_entry_t>> dependencyEntries;
     SMutexObject entryMutex;
     SMutexObject resourceMutex;
     skr::stl_vector<dual_storage_t*> storages;

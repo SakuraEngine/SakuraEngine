@@ -224,19 +224,19 @@ inline static ECGPUShaderStage getShaderStageFromTargetString(const char* target
 
 void SDXCCompiler::SetShaderOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options_view, const skr_stable_shader_hash_t& option_hash) SKR_NOEXCEPT
 {
-    option_defs = skr::vector<skr_shader_option_template_t>(opt_defs.data(), opt_defs.size());
-    options = skr::vector<skr_shader_option_instance_t>(options_view.data(), options_view.size());
+    option_defs = skr::Vector<skr_shader_option_template_t>(opt_defs.data(), opt_defs.size());
+    options = skr::Vector<skr_shader_option_instance_t>(options_view.data(), options_view.size());
     options_hash = option_hash;
 }
 
 void SDXCCompiler::SetShaderSwitches(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options_view, const skr_stable_shader_hash_t& option_hash) SKR_NOEXCEPT
 {
-    switch_defs = skr::vector<skr_shader_option_template_t>(opt_defs.data(), opt_defs.size());
-    switches = skr::vector<skr_shader_option_instance_t>(options_view.data(), options_view.size());
+    switch_defs = skr::Vector<skr_shader_option_template_t>(opt_defs.data(), opt_defs.size());
+    switches = skr::Vector<skr_shader_option_instance_t>(options_view.data(), options_view.size());
     switches_hash = option_hash;
 }
 
-skr::stl_wstring utf8_to_utf16(const skr::string& utf8)
+skr::stl_wstring utf8_to_utf16(const skr::String& utf8)
 {
     std::vector<unsigned long> unicode;
     size_t i = 0;
@@ -321,7 +321,7 @@ skr::stl_wstring utf8_to_utf16(const skr::string& utf8)
     return utf16;
 }
 
-void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, skr::vector<skr::stl_wstring>& outArgs) SKR_NOEXCEPT
+void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, skr::Vector<skr::stl_wstring>& outArgs) SKR_NOEXCEPT
 {
     using namespace skr::renderer;
     skr_shader_option_template_t* optdef = nullptr;
@@ -401,7 +401,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     const auto wEntryString = utf8_to_utf16(importer.entry);
     const auto wNameString = utf8_to_utf16(source.source_name);
     const auto shader_stage = getShaderStageFromTargetString(importer.target.c_str());
-    skr::vector<skr::stl_wstring> allArgs;
+    skr::Vector<skr::stl_wstring> allArgs;
     allArgs.add(wNameString.c_str());
     if (format == CGPU_SHADER_BYTECODE_TYPE_DXIL)
     {
@@ -444,7 +444,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
 
     // do compile
     {
-        skr::vector<LPCWSTR> pszArgs;
+        skr::Vector<LPCWSTR> pszArgs;
         pszArgs.reserve(allArgs.size());
         for (auto& arg : allArgs)
         {
@@ -488,7 +488,7 @@ SDXCLibrary* SDXCLibrary::Get() SKR_NOEXCEPT
 
 void SDXCLibrary::LoadDXCLibrary() SKR_NOEXCEPT
 {
-    skr::string filename = u8"";
+    skr::String filename = u8"";
     auto dxcInstance = SDXCLibrary::Get();
     auto& dxc_library = dxcInstance->dxc_library;
     filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
@@ -521,7 +521,7 @@ void SDXCLibrary::LoadDXCLibrary() SKR_NOEXCEPT
 
 void SDXCLibrary::LoadDXILLibrary() SKR_NOEXCEPT
 {
-    skr::string filename;
+    skr::String filename;
     auto dxcInstance = SDXCLibrary::Get();
     filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
             .append(u8"dxil")

@@ -50,15 +50,15 @@ protected:
     SResourceFactory* factory;
     skr_vfs_t* vfs;
 
-    skr::fixed_vector<skr_guid_t, 4> dependencies;
+    skr::FixedVector<skr_guid_t, 4> dependencies;
     skr_resource_record_t* resourceRecord;
     skr_io_future_t dataFuture;
     skr::BlobId dataBlob;
-    skr::string resourceUrl;
+    skr::String resourceUrl;
 #ifdef SKR_RESOURCE_DEV_MODE
     skr_io_future_t artifactsFuture;
     skr::BlobId artifactsBlob;
-    skr::string artifactsUrl;
+    skr::String artifactsUrl;
 #endif
 
     skr::task::event_t serdeEvent;

@@ -28,7 +28,7 @@ public:
     Span() SKR_NOEXCEPT = default;
 
     template <typename U>
-    Span(const skr::vector<U>& other) SKR_NOEXCEPT
+    Span(const skr::Vector<U>& other) SKR_NOEXCEPT
         : skr::span<T>(other.data(), other.size())
     {
     }
@@ -41,14 +41,14 @@ public:
 };
 
 template <class T>
-class Vector : public skr::vector<T>
+class Vector : public skr::Vector<T>
 {
 public:
     Vector()                       = default;
     Vector(const Vector<T>& other) = default;
     template <typename U>
     Vector(const Span<U>& other)
-        : skr::vector<T>(other)
+        : skr::Vector<T>(other)
     {
     }
     Vector& operator=(const Vector<T>& other) = default;
@@ -56,7 +56,7 @@ public:
     inline Vector& operator=(const Span<U>& other)
     {
         this->clear();
-        skr::vector<T>::insert(this->end(), other.begin(), other.end());
+        skr::Vector<T>::insert(this->end(), other.begin(), other.end());
         return *this;
     }
 
@@ -104,19 +104,19 @@ public:
     }
     void insert(size_t pos, const T& v)
     {
-        skr::vector<T>::add_at(pos, v);
+        skr::Vector<T>::add_at(pos, v);
     }
     void resize(size_t N)
     {
-        skr::vector<T>::resize_default(N);
+        skr::Vector<T>::resize_default(N);
     }
     void append(const T& v)
     {
-        skr::vector<T>::add(v);
+        skr::Vector<T>::add(v);
     }
     void push_back(const T& v)
     {
-        skr::vector<T>::add(v);
+        skr::Vector<T>::add(v);
     }
     void append_array(const Vector<T>& other)
     {
@@ -178,9 +178,9 @@ public:
 };
 
 template <class K, class T, class Hasher = godot::Hasher<K>>
-class HashMap : public skr::flat_hash_map<K, T, Hasher>
+class HashMap : public skr::FlatHashMap<K, T, Hasher>
 {
-    using base = skr::flat_hash_map<K, T, Hasher>;
+    using base = skr::FlatHashMap<K, T, Hasher>;
 
 public:
     bool has(const K& key) const
@@ -238,7 +238,7 @@ public:
 };
 
 template <class T>
-using List = skr::list<T>;
+using List = skr::stl_list<T>;
 
 struct Variant {
     enum Type

@@ -145,7 +145,7 @@ LogSink* LogManager::QuerySink(skr_guid_t guid)
     return nullptr;
 }
 
-void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatted_message) SKR_NOEXCEPT
+void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
 {
     eastl::fixed_hash_set<skr_guid_t, 4, 5, true, skr::guid::hash> patterns_;
     {

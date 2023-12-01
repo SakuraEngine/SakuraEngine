@@ -5,7 +5,7 @@
 namespace skr
 {
 template <typename T, typename Alloc = SkrAllocator>
-using vector = container::Array<T, Alloc>;
+using Vector = container::Array<T, Alloc>;
 }
 
 // serde
@@ -19,11 +19,11 @@ namespace skr
 namespace binary
 {
 template <class V>
-struct ReadTrait<vector<V>> {
+struct ReadTrait<Vector<V>> {
     template <class... Args>
-    static int Read(skr_binary_reader_t* archive, vector<V>& vec, Args&&... args)
+    static int Read(skr_binary_reader_t* archive, Vector<V>& vec, Args&&... args)
     {
-        vector<V> temp;
+        Vector<V> temp;
         uint32_t size;
         SKR_ARCHIVE(size);
 
@@ -39,14 +39,14 @@ struct ReadTrait<vector<V>> {
     }
 
     template <class... Args>
-    static int Read(skr_binary_reader_t* archive, vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
+    static int Read(skr_binary_reader_t* archive, Vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
     {
-        vector<V> temp;
+        Vector<V> temp;
         uint32_t size;
         SKR_ARCHIVE(size);
         if (size > cfg.max || size < cfg.min)
         {
-            // SKR_LOG_ERROR(u8"vector size %d is out of range [%d, %d]", size, cfg.min, cfg.max);
+            // SKR_LOG_ERROR(u8"Vector size %d is out of range [%d, %d]", size, cfg.min, cfg.max);
             return -2;
         }
 
@@ -62,9 +62,9 @@ struct ReadTrait<vector<V>> {
     }
 };
 template <class V>
-struct WriteTrait<vector<V>> {
+struct WriteTrait<Vector<V>> {
     template <class... Args>
-    static int Write(skr_binary_writer_t* archive, const vector<V>& vec, Args&&... args)
+    static int Write(skr_binary_writer_t* archive, const Vector<V>& vec, Args&&... args)
     {
         SKR_ARCHIVE((uint32_t)vec.size());
         for (auto& value : vec)
@@ -74,11 +74,11 @@ struct WriteTrait<vector<V>> {
         return 0;
     }
     template <class... Args>
-    static int Write(skr_binary_writer_t* archive, const vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
+    static int Write(skr_binary_writer_t* archive, const Vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
     {
         if (vec.size() > cfg.max || vec.size() < cfg.min)
         {
-            // SKR_LOG_ERROR(u8"vector size %d is out of range [%d, %d]", vec.size(), cfg.min, cfg.max);
+            // SKR_LOG_ERROR(u8"Vector size %d is out of range [%d, %d]", vec.size(), cfg.min, cfg.max);
             return -2;
         }
         SKR_ARCHIVE((uint32_t)vec.size());
@@ -91,7 +91,7 @@ struct WriteTrait<vector<V>> {
 };
 
 struct VectorWriter {
-    vector<uint8_t>* buffer;
+    Vector<uint8_t>* buffer;
 
     int write(const void* data, size_t size)
     {
@@ -101,7 +101,7 @@ struct VectorWriter {
 };
 
 struct VectorWriterBitpacked {
-    vector<uint8_t>* buffer;
+    Vector<uint8_t>* buffer;
     uint8_t         bitOffset = 0;
     int             write(const void* data, size_t size)
     {
@@ -150,7 +150,7 @@ struct VectorWriterBitpacked {
 };
 } // namespace binary
 template <typename V>
-struct SerdeCompleteChecker<binary::ReadTrait<vector<V>>>
+struct SerdeCompleteChecker<binary::ReadTrait<Vector<V>>>
     : std::bool_constant<is_complete_serde_v<binary::ReadTrait<V>>> {
 };
 } // namespace skr
