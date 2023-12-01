@@ -1,13 +1,19 @@
 #pragma once
-#include "MPShared/module.configure.h"
-#include "SkrRT/containers_new/span.hpp"
 #include "SkrRT/misc/types.h"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/platform/time.h"
 #include "SkrRT/async/fib_task.hpp"
+#include "SkrRT/ecs/dual.h"
+#include "SkrRT/containers_new/span.hpp"
+#include "SkrRT/containers_new/function.hpp"
 #include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/containers_new/vector.hpp"
-#include "EASTL/bonus/fixed_ring_buffer.h"
-#include "SkrRT/platform/time.h"
+#include "SkrRT/serde/json/reader_fwd.h"
+#include "SkrRT/serde/json/writer_fwd.h"
+#include "SkrRT/serde/binary/reader_fwd.h"
+#include "SkrRT/serde/binary/writer_fwd.h"
+#include "MPShared/module.configure.h"
+
+#include <EASTL/bonus/fixed_ring_buffer.h>
 
 // override the default serialization of dual_entity_t to use a packed version
 struct packed_entity_t {
@@ -141,8 +147,8 @@ MP_SHARED_API IWorldDeltaBuilder* CreateWorldDeltaBuilder();
 void                              RegisterComponentDeltaBuilder(dual_type_index_t component, component_delta_build_callback_t inCallback, dual_type_index_t historyComponent = dual::kInvalidTypeIndex);
 
 struct IWorldDeltaApplier {
-    using SpawnPrefab_t                                                                                          = eastl::function<dual_entity_t(dual_storage_t*, dual_entity_t entity, skr_guid_t prefab, dual_entity_type_t* type)>;
-    using DestroyEntity_t                                                                                        = eastl::function<void(dual_storage_t*, dual_entity_t entity)>;
+    using SpawnPrefab_t                                                                                          = skr::function<dual_entity_t(dual_storage_t*, dual_entity_t entity, skr_guid_t prefab, dual_entity_type_t* type)>;
+    using DestroyEntity_t                                                                                        = skr::function<void(dual_storage_t*, dual_entity_t entity)>;
     virtual ~IWorldDeltaApplier()                                                                                = default;
     virtual void   Initialize(dual_storage_t* storage, SpawnPrefab_t spawnPrefab, DestroyEntity_t destroyPrefab) = 0;
     virtual void   ApplyDelta(const MPWorldDeltaView& delta, entity_map_t& map)                                  = 0;

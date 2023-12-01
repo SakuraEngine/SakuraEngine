@@ -37,7 +37,7 @@ public:
     SKR_RENDER_GRAPH_API skr::span<TextureReadEdge*> tex_read_edges();
     SKR_RENDER_GRAPH_API skr::span<TextureRenderEdge*> tex_write_edges();
     SKR_RENDER_GRAPH_API skr::span<TextureReadWriteEdge*> tex_readwrite_edges();
-    SKR_RENDER_GRAPH_API void foreach_textures(eastl::function<void(TextureNode*, TextureEdge*)>);
+    SKR_RENDER_GRAPH_API void foreach_textures(skr::function<void(TextureNode*, TextureEdge*)>);
     inline uint32_t textures_count() const
     {
         return (uint32_t)(in_texture_edges.size() + out_texture_edges.size() + inout_texture_edges.size());
@@ -46,7 +46,7 @@ public:
     SKR_RENDER_GRAPH_API skr::span<BufferReadEdge*> buf_read_edges();
     SKR_RENDER_GRAPH_API skr::span<BufferReadWriteEdge*> buf_readwrite_edges();
     SKR_RENDER_GRAPH_API skr::span<PipelineBufferEdge*> buf_ppl_edges();
-    SKR_RENDER_GRAPH_API void foreach_buffers(eastl::function<void(BufferNode*, BufferEdge*)>);
+    SKR_RENDER_GRAPH_API void foreach_buffers(skr::function<void(BufferNode*, BufferEdge*)>);
     inline uint32_t buffers_count() const
     {
         return (uint32_t)(in_buffer_edges.size() + out_buffer_edges.size() + ppl_buffer_edges.size());

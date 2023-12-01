@@ -2,7 +2,7 @@
 #include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 
 #include "SkrProfile/profile.h"
 
@@ -219,7 +219,7 @@ bool RenderGraph::compile() SKR_NOEXCEPT
     return true;
 }
 
-uint32_t RenderGraph::foreach_textures(eastl::function<void(TextureNode*)> f) SKR_NOEXCEPT
+uint32_t RenderGraph::foreach_textures(skr::function<void(TextureNode*)> f) SKR_NOEXCEPT
 {
     uint32_t num = 0;
     for (auto&& resource : resources)
@@ -234,7 +234,7 @@ uint32_t RenderGraph::foreach_textures(eastl::function<void(TextureNode*)> f) SK
 }
 
 uint32_t RenderGraph::foreach_writer_passes(TextureHandle texture,
-    eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
+    skr::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
 {
     return graph->foreach_incoming_edges(
     texture,
@@ -247,7 +247,7 @@ uint32_t RenderGraph::foreach_writer_passes(TextureHandle texture,
 }
 
 uint32_t RenderGraph::foreach_reader_passes(TextureHandle texture,
-    eastl::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
+    skr::function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
 {
     return graph->foreach_outgoing_edges(
     texture,
@@ -260,7 +260,7 @@ uint32_t RenderGraph::foreach_reader_passes(TextureHandle texture,
 }
 
 uint32_t RenderGraph::foreach_writer_passes(BufferHandle buffer,
-    eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
+    skr::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
 {
     return graph->foreach_incoming_edges(
     buffer,
@@ -273,7 +273,7 @@ uint32_t RenderGraph::foreach_writer_passes(BufferHandle buffer,
 }
 
 uint32_t RenderGraph::foreach_reader_passes(BufferHandle buffer,
-    eastl::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
+    skr::function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
 {
     return graph->foreach_outgoing_edges(
     buffer,

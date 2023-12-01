@@ -30,8 +30,8 @@
 #ifdef __cplusplus
 #include "SkrRT/platform/shared_library.hpp"
 #include <SkrRT/containers_new/string.hpp>
-#include <EASTL/vector.h>
-#include <EASTL/unique_ptr.h>
+#include <SkrRT/containers_new/sptr.hpp>
+#include <SkrRT/containers_new/vector.hpp>
 
 namespace skr
 {
@@ -65,7 +65,7 @@ struct ModuleInfo {
     skr::string url;          //!< url of the plugin
     skr::string copyright;    //!< copyright of the plugin
     // Dependencies array
-    eastl::vector<ModuleDependency> dependencies;
+    skr::vector<ModuleDependency> dependencies;
 };
 
 struct SKR_RUNTIME_API ModuleSubsystemBase
@@ -102,11 +102,17 @@ public:
 
 protected:
     ModuleInfo information;
-    eastl::vector<ModuleSubsystemBase*> subsystems;
+    skr::vector<ModuleSubsystemBase*> subsystems;
 };
 
 struct SKR_RUNTIME_API IDynamicModule : public IModule {
-    eastl::unique_ptr<SharedLibrary> sharedLib;
+    virtual ~IDynamicModule() override
+    {
+        if (sharedLib)
+        {
+            delete sharedLib;
+        }
+    }
     virtual const char8_t* get_meta_data(void) override
     {
         skr::string symbolname = u8"__skr_module_meta__";
@@ -114,6 +120,7 @@ struct SKR_RUNTIME_API IDynamicModule : public IModule {
         const char8_t* symbol_str = symbolname.u8_str();
         return sharedLib->get<const char8_t*>(symbol_str);
     }
+    SharedLibrary* sharedLib = nullptr;
 };
 struct IStaticModule : public IModule {
 };

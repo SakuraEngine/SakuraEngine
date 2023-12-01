@@ -1,7 +1,7 @@
 //BEGIN STATIC_CTOR GENERATED
 #include "SkrBase/misc/debug.h" 
 #include "SkrRT/platform/guid.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #if defined __has_include
     #if  __has_include ("binary/reader_fwd.h")
     #include "SkrRT/serde/binary/reader.h"

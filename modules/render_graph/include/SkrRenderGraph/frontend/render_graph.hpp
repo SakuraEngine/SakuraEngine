@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrRenderGraph/frontend/base_types.hpp"
 #include "SkrRenderGraph/frontend/blackboard.hpp"
+#include "SkrRT/containers_new/function.hpp"
 #include "SkrRT/containers_new/vector.hpp"
-#include <EASTL/functional.h>
 
 #ifndef RG_MAX_FRAME_IN_FLIGHT
 #define RG_MAX_FRAME_IN_FLIGHT 3
@@ -61,7 +61,7 @@ public:
         CGPUDeviceId device;
         CGPUQueueId gfx_queue;
     };
-    using RenderGraphSetupFunction = eastl::function<void(class RenderGraph::RenderGraphBuilder&)>;
+    using RenderGraphSetupFunction = skr::function<void(class RenderGraph::RenderGraphBuilder&)>;
     static RenderGraph* create(const RenderGraphSetupFunction& setup) SKR_NOEXCEPT;
     static void destroy(RenderGraph* g) SKR_NOEXCEPT;
     
@@ -99,7 +99,7 @@ public:
         RenderGraph& graph;
         RenderPassNode& node;
     };
-    using RenderPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::RenderPassBuilder&)>;
+    using RenderPassSetupFunction = skr::function<void(RenderGraph&, class RenderGraph::RenderPassBuilder&)>;
     PassHandle add_render_pass(const RenderPassSetupFunction& setup, const RenderPassExecuteFunction& executor) SKR_NOEXCEPT;
 
     class SKR_RENDER_GRAPH_API ComputePassBuilder
@@ -123,7 +123,7 @@ public:
         RenderGraph& graph;
         ComputePassNode& node;
     };
-    using ComputePassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::ComputePassBuilder&)>;
+    using ComputePassSetupFunction = skr::function<void(RenderGraph&, class RenderGraph::ComputePassBuilder&)>;
     PassHandle add_compute_pass(const ComputePassSetupFunction& setup, const ComputePassExecuteFunction& executor) SKR_NOEXCEPT;
 
     class SKR_RENDER_GRAPH_API CopyPassBuilder
@@ -142,7 +142,7 @@ public:
         RenderGraph& graph;
         CopyPassNode& node;
     };
-    using CopyPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::CopyPassBuilder&)>;
+    using CopyPassSetupFunction = skr::function<void(RenderGraph&, class RenderGraph::CopyPassBuilder&)>;
     PassHandle add_copy_pass(const CopyPassSetupFunction& setup, const CopyPassExecuteFunction& executor) SKR_NOEXCEPT;
 
     class SKR_RENDER_GRAPH_API PresentPassBuilder
@@ -159,7 +159,7 @@ public:
         RenderGraph& graph;
         PresentPassNode& node;
     };
-    using PresentPassSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::PresentPassBuilder&)>;
+    using PresentPassSetupFunction = skr::function<void(RenderGraph&, class RenderGraph::PresentPassBuilder&)>;
     PassHandle add_present_pass(const PresentPassSetupFunction& setup) SKR_NOEXCEPT;
 
     class SKR_RENDER_GRAPH_API BufferBuilder
@@ -188,7 +188,7 @@ public:
         RenderGraph& graph;
         BufferNode& node;
     };
-    using BufferSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::BufferBuilder&)>;
+    using BufferSetupFunction = skr::function<void(RenderGraph&, class RenderGraph::BufferBuilder&)>;
     BufferHandle create_buffer(const BufferSetupFunction& setup) SKR_NOEXCEPT;
     inline BufferHandle get_buffer(const char8_t* name) SKR_NOEXCEPT;
     const ECGPUResourceState get_lastest_state(const BufferNode* buffer, const PassNode* pending_pass) const SKR_NOEXCEPT;
@@ -217,7 +217,7 @@ public:
         TextureNode& node;
         CGPUTextureId imported = nullptr;
     };
-    using TextureSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::TextureBuilder&)>;
+    using TextureSetupFunction = skr::function<void(RenderGraph&, class RenderGraph::TextureBuilder&)>;
     TextureHandle create_texture(const TextureSetupFunction& setup) SKR_NOEXCEPT;
     TextureHandle get_texture(const char8_t* name) SKR_NOEXCEPT;
     const ECGPUResourceState get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const SKR_NOEXCEPT;
@@ -266,15 +266,15 @@ protected:
     virtual void finalize() SKR_NOEXCEPT;
 
 protected:
-    uint32_t foreach_textures(eastl::function<void(TextureNode*)> texture) SKR_NOEXCEPT;
+    uint32_t foreach_textures(skr::function<void(TextureNode*)> texture) SKR_NOEXCEPT;
     uint32_t foreach_writer_passes(TextureHandle texture,
-        eastl::function<void(PassNode* writer, TextureNode* tex, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
+        skr::function<void(PassNode* writer, TextureNode* tex, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
     uint32_t foreach_reader_passes(TextureHandle texture,
-        eastl::function<void(PassNode* reader, TextureNode* tex, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
+        skr::function<void(PassNode* reader, TextureNode* tex, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
     uint32_t foreach_writer_passes(BufferHandle buffer,
-        eastl::function<void(PassNode* writer, BufferNode* buf, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
+        skr::function<void(PassNode* writer, BufferNode* buf, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
     uint32_t foreach_reader_passes(BufferHandle buffer,
-        eastl::function<void(PassNode* reader, BufferNode* buf, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
+        skr::function<void(PassNode* reader, BufferNode* buf, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
 
     bool aliasing_enabled;
     uint64_t frame_index = 0;

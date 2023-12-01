@@ -1,10 +1,10 @@
 #if __cpp_impl_coroutine
 
 #include "SkrRT/async/co_task.hpp"
-#include "EASTL/deque.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/containers_new/function_ref.hpp"
+#include "SkrRT/containers_new/stl_deque.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/containers_new/atomic_queue/atomic_queue.h"
 #include "SkrRT/containers_new/concurrent_queue.h"
@@ -65,13 +65,13 @@ namespace task2
 
     struct Task
     {
-        eastl::function<void()> func;
+        skr::function<void()> func;
         std::coroutine_handle<skr_task_t::promise_type> coro;
 
         Task() {}
         Task(nullptr_t) {}
 
-        Task(eastl::function<void()>&& func)
+        Task(skr::function<void()>&& func)
             : func(std::move(func))
         {
         }
@@ -372,7 +372,7 @@ namespace task2
         struct Work 
         {
             std::atomic<uint64_t> num = 0;
-            eastl::deque<Task, eastl::allocator_sakura, 128> pinnedTask;
+            skr::deque<Task> pinnedTask;
             WorkQueue tasks;
             bool notifyAdded = true;
             SConditionVariable added;
@@ -444,7 +444,7 @@ namespace task2
         }
     }
 
-    void scheduler_t::schedule(eastl::function<void ()>&& function)
+    void scheduler_t::schedule(skr::function<void ()>&& function)
     {
         enqueue(Task(std::move(function)), -1);
     }

@@ -176,7 +176,7 @@ skr::span<TextureReadWriteEdge*> PassNode::tex_readwrite_edges()
     return skr::span<TextureReadWriteEdge*>(inout_texture_edges.data(), inout_texture_edges.size());
 }
 
-void PassNode::foreach_textures(eastl::function<void(TextureNode*, TextureEdge*)> f)
+void PassNode::foreach_textures(skr::function<void(TextureNode*, TextureEdge*)> f)
 {
     for (auto&& e : tex_read_edges())
         f(e->get_texture_node(), e);
@@ -201,7 +201,7 @@ skr::span<PipelineBufferEdge*> PassNode::buf_ppl_edges()
     return skr::span<PipelineBufferEdge*>(ppl_buffer_edges.data(), ppl_buffer_edges.size());
 }
 
-void PassNode::foreach_buffers(eastl::function<void(BufferNode*, BufferEdge*)> f)
+void PassNode::foreach_buffers(skr::function<void(BufferNode*, BufferEdge*)> f)
 {
     for (auto&& e : buf_read_edges())
         f(e->get_buffer_node(), e);

@@ -1,7 +1,7 @@
 #include "common_layer.hpp"
 #include "reading_pool.hpp"
 #include "../common/reading_ring.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/atomic.h"
 #include "SkrBase/misc/debug.h" 
 #include "SkrRT/misc/log.h"

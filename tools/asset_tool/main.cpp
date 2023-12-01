@@ -72,8 +72,8 @@ extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_gr
 int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
 {
     skr::string filePath;
-    eastl::vector<skd::asset::SImporterFactory*> factories;
-    eastl::vector<skd::asset::SImporterFactory*> availableFactories;
+    skr::vector<skd::asset::SImporterFactory*> factories;
+    skr::vector<skd::asset::SImporterFactory*> availableFactories;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) 
         return -1;
@@ -177,11 +177,11 @@ int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
                 {
                     for(auto factory : factories)
                         if(factory->CanImport(filePath))
-                            availableFactories.push_back(factory);
+                            availableFactories.add(factory);
                     if(availableFactories.empty())
                         SKR_LOG_ERROR(u8"No importer found for file: %s", filePath.c_str());
                     if(availableFactories.size() == 1)
-                        if(availableFactories.front()->Import(filePath) != 0)
+                        if(availableFactories[0]->Import(filePath) != 0)
                         {
                             availableFactories.clear();
                             SKR_LOG_ERROR(u8"Failed to import file: %s", filePath.c_str());
@@ -197,12 +197,12 @@ int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
                         if(factory->Import(filePath) == 0)
                         {
                             availableFactories.clear();
-                            availableFactories.push_back(factory);
+                            availableFactories.add(factory);
                             break;
                         }
                         else
                         {
-                            availableFactories.erase(std::find(availableFactories.begin(), availableFactories.end(), factory));
+                            availableFactories.remove(factory);
                             SKR_LOG_ERROR(u8"Failed to import file: %s", filePath.c_str());
                             break;
                         }
@@ -211,7 +211,7 @@ int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
             }
             else if(availableFactories.size() == 1)
             {
-                if(availableFactories.front()->Update() != 0)
+                if(availableFactories[0]->Update() != 0)
                     availableFactories.clear();
             }
             ImGui::End();

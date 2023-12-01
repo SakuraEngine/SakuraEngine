@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/io/ram_io.hpp"
@@ -10,6 +10,7 @@
 #include <EASTL/optional.h>
 #include <EASTL/sort.h>
 #include "SkrRT/containers_new/concurrent_queue.h"
+#include "SkrRT/containers_new/function.hpp"
 
 #include "SkrProfile/profile.h"
 #include "SkrProfile/profile.h"
@@ -257,13 +258,13 @@ struct TaskContainer
         return eastl::nullopt;
     }
 
-    void visit_(eastl::function<void(Task&)> kernel) SKR_NOEXCEPT
+    void visit_(skr::function<void(Task&)> kernel) SKR_NOEXCEPT
     {
         optionalLockTasks();
         SKR_DEFER({ optionalUnlockTasks(); });
-        eastl::for_each(tasks.begin(), tasks.end(), kernel);
+        std::for_each(tasks.begin(), tasks.end(), kernel);
         tasks.erase(
-            eastl::remove_if(tasks.begin(), tasks.end(),
+            std::remove_if(tasks.begin(), tasks.end(),
             [&](Task& t) {
                 const auto status = t.getTaskStatus();
                 return status == SKR_IO_STAGE_LOADED || status == SKR_IO_STAGE_CANCELLED;

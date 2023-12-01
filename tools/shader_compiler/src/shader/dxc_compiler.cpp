@@ -473,7 +473,7 @@ void SDXCCompiler::SetIncludeHandler(IDxcIncludeHandler* handler) SKR_NOEXCEPT
 
 SDXCLibrary* SDXCLibrary::Get() SKR_NOEXCEPT
 {
-    static eastl::unique_ptr<SDXCLibrary> _this = eastl::make_unique<SDXCLibrary>();
+    static auto _this = skr::SPtr<SDXCLibrary>::Create();
     return _this.get();
 }
 

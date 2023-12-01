@@ -1,7 +1,7 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 
 #include "cgpu/api.h"
 #include "cgpu/cgpux.h"

@@ -2,7 +2,7 @@
 #include "cgpu/d3d12/D3D12MemAlloc.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "d3d12_utils.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include <SkrRT/containers_new/stl_string.hpp>

@@ -24,7 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 #pragma once
-#include "SkrRT/config.h"
+#include "SkrBase/config.h"
 
 #ifdef _MSC_VER
 
