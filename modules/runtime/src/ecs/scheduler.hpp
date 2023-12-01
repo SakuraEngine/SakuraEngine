@@ -6,22 +6,23 @@
 #include "archetype.hpp"
 
 #include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers_new/stl_vector.hpp"
 
 namespace dual
 {
 struct job_dependency_entry_t {
-    eastl::vector<skr::task::weak_event_t> owned;
-    eastl::vector<skr::task::weak_event_t> shared;
+    skr::stl_vector<skr::task::weak_event_t> owned;
+    skr::stl_vector<skr::task::weak_event_t> shared;
 };
 
 struct scheduler_t {
     dual::entity_registry_t registry;
     skr::task::counter_t allCounter;
-    eastl::vector<dual::job_dependency_entry_t> allResources;
-    skr::flat_hash_map<dual::archetype_t*, eastl::vector<job_dependency_entry_t>> dependencyEntries;
+    skr::stl_vector<dual::job_dependency_entry_t> allResources;
+    skr::flat_hash_map<dual::archetype_t*, skr::stl_vector<job_dependency_entry_t>> dependencyEntries;
     SMutexObject entryMutex;
     SMutexObject resourceMutex;
-    eastl::vector<dual_storage_t*> storages;
+    skr::stl_vector<dual_storage_t*> storages;
     SMutexObject storageMutex;
 
     scheduler_t();
@@ -40,9 +41,9 @@ struct scheduler_t {
     void gc_entries();
     void sync_storage(const dual_storage_t* storage);
     skr::task::event_t schedule_ecs_job(dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources);
-    eastl::vector<skr::task::weak_event_t> update_dependencies(dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources);
+    skr::stl_vector<skr::task::weak_event_t> update_dependencies(dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources);
     skr::task::event_t schedule_job(dual_query_t* query, dual_schedule_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources);
-    eastl::vector<skr::task::event_t> sync_resources(const skr::task::event_t& counter, dual_resource_operation_t* resources);
+    skr::stl_vector<skr::task::event_t> sync_resources(const skr::task::event_t& counter, dual_resource_operation_t* resources);
 };
 } // namespace dual
 
@@ -57,7 +58,7 @@ struct dual_job_t {
     dual::scheduler_t* scheduler;
     dual_job_type type;
     skr::task::event_t counter;
-    eastl::vector<skr::task::event_t> dependencies;
+    skr::stl_vector<skr::task::event_t> dependencies;
     int dependencyCount;
     dual_job_t(dual::scheduler_t& scheduler);
     virtual ~dual_job_t();
@@ -68,9 +69,9 @@ struct dual_ecs_job_t : dual_job_t {
     dual_group_t** groups;
     uint32_t groupCount;
     dual_type_index_t* localTypes;
-    eastl::bitset<32>* readonly;
-    eastl::bitset<32>* atomic;
-    eastl::bitset<32>* randomAccess;
+    std::bitset<32>* readonly;
+    std::bitset<32>* atomic;
+    std::bitset<32>* randomAccess;
     bool hasRandomWrite;
     EIndex entityCount;
     dual_resource_operation_t resources;

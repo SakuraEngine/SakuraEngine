@@ -44,9 +44,9 @@ template <typename ModuleClass>
 struct SStaticallyLinkedModuleRegistrant {
     SStaticallyLinkedModuleRegistrant(const char8_t* InModuleName)
     {
-        skr::function<skr::SPtr<IModule>(void)> func =
+        skr::function<IModule*(void)> func =
         []() {
-            return skr::SPtr<ModuleClass>::Create();
+            return new ModuleClass();
         };
         skr_get_module_manager()->registerStaticallyLinkedModule(InModuleName, func);
     }

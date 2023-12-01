@@ -28,7 +28,7 @@ void skr_init_skin_component(skr::anim::SkinComponent* component, const skr::ani
     if(!skin)
         return;
     SKR_ASSERT(skeleton);
-    component->joint_remaps.resize(skin->blob.joint_remaps.size());
+    component->joint_remaps.resize_zeroed(skin->blob.joint_remaps.size());
     for (size_t i = 0; i < skin->blob.joint_remaps.size(); ++i)
     {
         for (size_t j = 0; j < skeleton->skeleton.num_joints(); ++j)
@@ -45,10 +45,10 @@ void skr_init_skin_component(skr::anim::SkinComponent* component, const skr::ani
 
 void skr_init_anim_component(skr::anim::AnimComponent* component, const skr_mesh_resource_t* mesh, skr::anim::SkeletonResource* skeleton)
 {
-    component->buffers.resize(1);
-    component->vbs.resize(1);
-    component->primitives.resize(mesh->primitives.size());
-    component->joint_matrices.resize(skeleton->skeleton.num_joints());
+    component->buffers.resize_zeroed(1);
+    component->vbs.resize_zeroed(1);
+    component->primitives.resize_default(mesh->primitives.size());
+    component->joint_matrices.resize_zeroed(skeleton->skeleton.num_joints());
     for (size_t i = 0; i < skeleton->skeleton.num_joints(); ++i)
         component->joint_matrices[i] = ozz::math::Float4x4::identity();
     size_t buffer_size = 0, position_offset = 0, normal_offset = 0, tangent_offset = 0;
@@ -140,27 +140,27 @@ void skr_init_anim_buffers(CGPUDeviceId device, skr::anim::AnimComponent* anim, 
                     auto attr = mesh_resource->primitives[k].vertex_buffers[z].attribute;
                     if(attr == SKR_VERT_ATTRIB_POSITION)
                     {
-                        auto& view = anim->views.emplace_back();
+                        auto& view = *anim->views.add_default();
                         view.buffer = anim->vbs[j];
                         view.offset = prim.position.offset;
                         view.stride = prim.position.stride;
                     }
                     else if(attr == SKR_VERT_ATTRIB_NORMAL)
                     {
-                        auto& view = anim->views.emplace_back();
+                        auto& view = *anim->views.add_default();
                         view.buffer = anim->vbs[j];
                         view.offset = prim.normal.offset;
                         view.stride = prim.normal.stride;
                     }
                     else if(attr == SKR_VERT_ATTRIB_TANGENT)
                     {
-                        auto& view = anim->views.emplace_back();
+                        auto& view = *anim->views.add_default();
                         view.buffer = anim->vbs[j];
                         view.offset = prim.tangent.offset;
                         view.stride = prim.tangent.stride;
                     }
                     else
-                        anim->views.push_back(vbv);
+                        anim->views.add(vbv);
                 }
                 prim.views = skr::span<skr_vertex_buffer_view_t>(anim->views.data() + vbv_start, renderMesh->primitive_commands[k].vbvs.size());
             }
@@ -206,7 +206,7 @@ void skr_cpu_skin(skr::anim::SkinComponent* skin, const skr::anim::AnimComponent
             auto offset = mesh->bins[buffer->buffer_index].blob->get_data() + buffer->offset;
             return ozz::span<const T>{ (T*)offset, vertex_count * comps };
         };
-        skin->skin_matrices.resize(anim->joint_matrices.size());
+        skin->skin_matrices.resize_zeroed(anim->joint_matrices.size());
         for(size_t i = 0; i < skin->joint_remaps.size(); ++i)
         {
             auto inverse = skin_resource->blob.inverse_bind_poses[i];
