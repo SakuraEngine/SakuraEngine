@@ -1,10 +1,8 @@
 #pragma once
 #include "SkrRT/platform/atomic.h"
+#include "SkrRT/containers_new/umap.hpp"
+#include "SkrRT/containers/fixed_vector.hpp"
 #include "vram_service.hpp"
-
-// TODO: REMOVE EASTL
-#include <EASTL/fixed_vector.h>
-#include <EASTL/vector_map.h>
 
 namespace skr { template <typename Artifact> struct IFuture; struct JobQueue; }
 
@@ -61,7 +59,7 @@ private:
     SAtomic32 rcs[2] = { 0, 0 };
     uint32_t index = 0;
 };
-using SwapableCmdPoolMap = eastl::vector_map<CGPUQueueId, SwapableCmdPool>;
+using SwapableCmdPoolMap = skr::UMap<CGPUQueueId, SwapableCmdPool>;
 
 struct GPUUploadCmd
 {
@@ -77,7 +75,7 @@ struct GPUUploadCmd
     SKR_FORCEINLINE CGPUFenceId get_fence() const SKR_NOEXCEPT { return fence; }
     SKR_FORCEINLINE IOBatchId get_batch() const SKR_NOEXCEPT { return batch; }
 
-    eastl::fixed_vector<CGPUBufferId, 4> upload_buffers;
+    skr::fixed_vector<CGPUBufferId, 4> upload_buffers;
 protected:
     IOBatchId batch = nullptr;        
     CGPUQueueId queue = nullptr;

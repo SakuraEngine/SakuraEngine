@@ -3,9 +3,8 @@
 #include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/containers_new/vector.hpp"
+#include "SkrRT/containers/fixed_vector.hpp"
 #include "cgpu/cgpux.h"
-// TODO: REMOVE EASTL
-#include <EASTL/fixed_vector.h>
 
 namespace skr
 {
@@ -66,7 +65,7 @@ class MergedBindTablePool
             : tables(tables, tables + count)
         {
         }
-        eastl::fixed_vector<CGPUXBindTableId, 3> tables;
+        skr::fixed_vector<CGPUXBindTableId, 3> tables;
     };
     static_assert(sizeof(Key) <= 8 * sizeof(size_t), "Key should be under single cacheline!");
     struct GuradedMergedBindTable

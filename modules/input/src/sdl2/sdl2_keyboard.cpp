@@ -1,15 +1,14 @@
 #include "../common/common_device_base.hpp"
 #include <SDL2/SDL_keyboard.h>
+#include "SkrRT/containers/fixed_vector.hpp"
 #include "SkrRT/containers_new/span.hpp"
 #include <algorithm>
-// TODO: REMOVE EASTL
-#include <EASTL/fixed_vector.h>
 
 namespace skr {
 namespace input {
 static EKeyCode KeyCodeTranslator(SDL_Scancode keycode);
 
-using ScanCodeBuffer = eastl::fixed_vector<uint8_t, 16>;
+using ScanCodeBuffer = skr::fixed_vector<uint8_t, 16>;
 struct InputReading_SDL2Keyboard : public CommonInputReading
 {
     InputReading_SDL2Keyboard(CommonInputReadingProxy* pPool, struct CommonInputDevice* pDevice, ScanCodeBuffer&& InScanCodes, uint64_t Timestamp) SKR_NOEXCEPT
@@ -69,7 +68,7 @@ struct InputDevice_SDL2Keyboard : public CommonInputDeviceBase<InputReading_SDL2
 
     void Tick() SKR_NOEXCEPT final
     {
-        eastl::fixed_vector<uint8_t, 16> ScanCodes;
+        skr::fixed_vector<uint8_t, 16> ScanCodes;
         updateScan(ScanCodes, (uint32_t)ScanCodes.capacity());
         const auto LastReading = ReadingQueue.get();
         if (!LastReading || !LastReading->Equal({ScanCodes.data(), ScanCodes.size()}))

@@ -290,12 +290,12 @@ struct StackCmdAllocator : public eastl::fixed_map<StackCmdMapKey, GPUUploadCmd,
         }
         auto& cmd = cmds[key];
         auto cmdqueue = cmd.get_queue();
-        if (cmdpools.find(cmdqueue) == cmdpools.end())
+        if (!cmdpools.contain(cmdqueue))
         {
-            auto&& [iter, sucess] = cmdpools.emplace(cmdqueue, SwapableCmdPool());
-            iter->second.initialize(cmdqueue);
+            auto pool = cmdpools.add(cmdqueue, SwapableCmdPool()).data;
+            pool->value.initialize(cmdqueue);
         }
-        auto&& cmdpool = cmdpools[cmdqueue];
+        auto&& cmdpool = cmdpools.find(cmdqueue).data->value;
         if (cmd.get_cmdbuf() == nullptr)
         {
             SkrZoneScopedN("PrepareCmd");

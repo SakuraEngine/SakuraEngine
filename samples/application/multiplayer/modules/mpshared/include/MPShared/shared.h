@@ -7,8 +7,7 @@
 #include "SkrRT/containers_new/vector.hpp"
 #include "SkrScene/scene.h"
 #include "MPShared/components.h"
-// TODO: REMOVE EASTL
-#include "EASTL/fixed_vector.h"
+#include "SkrRT/containers/fixed_vector.hpp"
 #ifndef __meta__
     #include "MPShared/shared.generated.h" // IWYU pragma: export
 #endif
@@ -162,7 +161,7 @@ CCollisionScene
         dual_entity_t entity;
         CSphereCollider2D collider;
     };
-    skr::parallel_flat_hash_map<int, eastl::fixed_vector<CollisionEntity, 4>> cells;
+    skr::parallel_flat_hash_map<int, skr::fixed_vector<CollisionEntity, 4>> cells;
 };
 
 struct MP_SHARED_API MPGameWorld

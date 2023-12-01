@@ -1,6 +1,7 @@
 #pragma once
 #include "cgpu/extensions/cgpu_marker_buffer.h"
 #include "SkrRT/containers_new/sptr.hpp"
+#include "SkrRT/containers/fixed_vector.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderGraph/backend/texture_pool.hpp"
 #include "SkrRenderGraph/backend/buffer_pool.hpp"
@@ -49,7 +50,7 @@ protected:
 // TODO: optimize stack allocation
 static constexpr size_t stack_vector_fixed_count = 8;
 template <typename T>
-using stack_vector = eastl::fixed_vector<T, stack_vector_fixed_count>;
+using stack_vector = skr::fixed_vector<T, stack_vector_fixed_count>;
 template <typename T>
 using stack_set = eastl::fixed_set<T, stack_vector_fixed_count>;
 

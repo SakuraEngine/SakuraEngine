@@ -3,7 +3,7 @@
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include <SkrRT/containers_new/hashmap.hpp>
 #include "SkrBase/misc/hash.h"
-#include "SkrRT/containers_new/concurrent_queue.h"
+#include "SkrRT/containers_new/concurrent_queue.hpp"
 
 namespace skr
 {

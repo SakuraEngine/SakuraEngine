@@ -7,7 +7,7 @@
 #include "SkrRT/containers_new/stl_deque.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/containers_new/atomic_queue/atomic_queue.h"
-#include "SkrRT/containers_new/concurrent_queue.h"
+#include "SkrRT/containers_new/concurrent_queue.hpp"
 
 inline void nop() {
 #if defined(_WIN32)

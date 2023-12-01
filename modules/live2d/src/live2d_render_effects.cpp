@@ -1,10 +1,11 @@
+#include "SkrBase/math/rtm/matrix4x4f.h"
 #include "SkrMemory/memory.h"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/guid.hpp"
-#include "SkrRT/misc/make_zeroed.hpp"
-
 #include "SkrRT/ecs/type_builder.hpp"
+#include "SkrRT/containers/fixed_vector.hpp"
 
 #include "SkrLive2D/l2d_render_effect.h"
 #include "SkrLive2D/l2d_render_model.h"
@@ -18,11 +19,6 @@
 #include "live2d_model_pass.hpp"
 #include "live2d_mask_pass.hpp"
 #include "live2d_clipping.hpp"
-
-// TODO: REMOVE EASTL
-#include <EASTL/fixed_vector.h>
-
-#include "SkrBase/math/rtm/matrix4x4f.h"
 
 #include "SkrProfile/profile.h"
 
@@ -142,7 +138,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     }
 
     eastl::vector_map<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
-    eastl::vector_map<skr_live2d_render_model_id, eastl::fixed_vector<uint32_t, 4>> sorted_mask_drawable_lists;
+    eastl::vector_map<skr_live2d_render_model_id, skr::fixed_vector<uint32_t, 4>> sorted_mask_drawable_lists;
     const float kMotionFramesPerSecond = 240.0f;
     eastl::vector_map<skr_live2d_render_model_id, STimer> motion_timers;
     uint32_t last_ms = 0;

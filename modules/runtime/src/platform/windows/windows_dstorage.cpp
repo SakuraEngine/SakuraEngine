@@ -7,7 +7,7 @@
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/containers_new/stl_vector.hpp"
 #include "SkrRT/containers_new/vector.hpp"
-#include "SkrRT/containers_new/concurrent_queue.h"
+#include "SkrRT/containers_new/concurrent_queue.hpp"
 
 #include "platform/windows/windows_dstorage.hpp"
 

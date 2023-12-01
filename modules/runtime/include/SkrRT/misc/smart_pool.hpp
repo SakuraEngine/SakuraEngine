@@ -2,7 +2,7 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/containers_new/sptr.hpp"
-#include "SkrRT/containers_new/concurrent_queue.h"
+#include "SkrRT/containers_new/concurrent_queue.hpp"
 
 namespace skr {
 
