@@ -33,6 +33,7 @@
 
 #include "backend/text_server/text_server.h"
 #include "backend/text_server/hashfuncs.h"
+// TODO: REMOVE EASTL
 #include <EASTL/bonus/lru_cache.h>
 
 namespace godot

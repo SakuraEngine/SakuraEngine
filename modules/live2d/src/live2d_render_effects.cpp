@@ -19,6 +19,7 @@
 #include "live2d_mask_pass.hpp"
 #include "live2d_clipping.hpp"
 
+// TODO: REMOVE EASTL
 #include <EASTL/fixed_vector.h>
 
 #include "SkrBase/math/rtm/matrix4x4f.h"

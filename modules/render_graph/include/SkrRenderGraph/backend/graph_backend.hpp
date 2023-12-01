@@ -7,6 +7,7 @@
 #include "SkrRenderGraph/backend/texture_view_pool.hpp"
 #include "SkrRenderGraph/backend/bind_table_pool.hpp"
 
+// TODO: REMOVE EASTL
 #include <EASTL/fixed_set.h>
 
 namespace skr

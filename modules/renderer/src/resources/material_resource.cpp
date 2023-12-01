@@ -1,4 +1,3 @@
-#include <EASTL/fixed_vector.h>
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/containers_new/sptr.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
@@ -12,6 +11,9 @@
 
 #include "SkrRenderer/pso_map.h"
 #include "SkrRT/platform/guid.hpp"
+
+// TODO: REMOVE EASTL
+#include <EASTL/fixed_vector.h>
 
 namespace skr
 {

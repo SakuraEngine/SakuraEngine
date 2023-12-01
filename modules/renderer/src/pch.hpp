@@ -13,6 +13,9 @@
 #include "SkrRT/resource/resource_system.h"  // IWYU pragma: export
 #include "SkrRT/async/thread_job.hpp" // IWYU pragma: export
 
+#include "SkrRT/containers_new/stl_vector.hpp" // IWYU pragma: export
+#include "SkrRT/containers_new/stl_string.hpp" // IWYU pragma: export
+
 #include "SkrBase/math/rtm/vector4f.h" // IWYU pragma: export
 #include "SkrBase/math/rtm/rtmx.h" // IWYU pragma: export
 
@@ -20,12 +23,5 @@
 #include "SkrRT/ecs/array.hpp" // IWYU pragma: export
 
 #include "SkrImGui/skr_imgui.h" // IWYU pragma: export
-
-#include <EASTL/set.h> // IWYU pragma: export
-#include <EASTL/sort.h> // IWYU pragma: export
-#include <EASTL/vector.h> // IWYU pragma: export
-#include <EASTL/vector_map.h> // IWYU pragma: export
-#include <EASTL/string.h> // IWYU pragma: export
-#include <EASTL/fixed_vector.h> // IWYU pragma: export
 
 #include "SkrProfile/profile.h"  // IWYU pragma: export

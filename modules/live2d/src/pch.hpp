@@ -5,9 +5,6 @@
 #include <new.h> // IWYU pragma: export
 #endif
 
-#include <EASTL/fixed_vector.h> // IWYU pragma: export
-#include <EASTL/fixed_string.h> // IWYU pragma: export
-
 #include "SkrBase/misc/debug.h"  // IWYU pragma: export
 #include "SkrRT/platform/guid.hpp" // IWYU pragma: export
 #include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
@@ -31,6 +28,10 @@
 #include <SkrRT/containers_new/string.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/vector.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/hashmap.hpp> // IWYU pragma: export
+
+#include <SkrRT/containers_new/stl_vector.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/stl_deque.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/stl_string.hpp> // IWYU pragma: export
 
 #include "SkrRenderGraph/frontend/render_graph.hpp" // IWYU pragma: export
 

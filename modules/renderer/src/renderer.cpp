@@ -8,8 +8,6 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
-#include <EASTL/fixed_vector.h>
-
 #include "SkrProfile/profile.h"
 
 struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectProcessor {
@@ -224,7 +222,9 @@ void skr_renderer_remove_render_pass(SRendererId r, skr_render_pass_name_t name)
     if (auto&& pass = renderer->passes_map.find(name); pass != renderer->passes_map.end())
     {
         renderer->passes_map.erase(pass);
-        eastl::remove_if(renderer->passes.begin(), renderer->passes.end(), [pass](auto&& p) { return p == pass->second; });
+        renderer->passes.remove_all_if(
+            [pass](auto&& p) { return p == pass->second; }
+        );
     }
 }
 
@@ -268,7 +268,9 @@ void skr_renderer_remove_render_effect(SRendererId r, skr_render_effect_name_t n
     {
         _->second->on_unregister(r, storage);
         renderer->processors_map.erase(_);
-        eastl::remove_if(renderer->processors.begin(), renderer->processors.end(), [_](auto&& p) { return p == _->second; });
+        renderer->processors.remove_all_if(
+            [_](auto&& p) { return p == _->second; }
+        );
     }
 }
 
