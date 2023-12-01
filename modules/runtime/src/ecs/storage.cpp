@@ -184,7 +184,7 @@ void dual_storage_t::prefab_to_linked(const dual_entity_t* src, uint32_t size)
 void dual_storage_t::instantiate_prefab(const dual_entity_t* src, uint32_t size, uint32_t count, dual_view_callback_t callback, void* u)
 {
     using namespace dual;
-    eastl::vector<dual_entity_t> ents;
+    skr::stl_vector<dual_entity_t> ents;
     ents.resize(count * size);
     entities.new_entities(ents.data(), (EIndex)ents.size());
     struct mapper_t {
@@ -201,7 +201,7 @@ void dual_storage_t::instantiate_prefab(const dual_entity_t* src, uint32_t size,
         }
     } m;
     m.size = size;
-    eastl::vector<dual_entity_t> localEnts;
+    skr::stl_vector<dual_entity_t> localEnts;
     localEnts.resize(count);
     forloop (i, 0, size)
     {
@@ -314,7 +314,7 @@ bool dual_storage_t::exist(dual_entity_t e) const noexcept
 
 void dual_storage_t::validate_meta()
 {
-    eastl::vector<dual_group_t*> groupsToFix;
+    skr::stl_vector<dual_group_t*> groupsToFix;
     for (auto i = groups.begin(); i != groups.end(); ++i)
     {
         auto g = i->second;
@@ -388,13 +388,13 @@ void dual_storage_t::defragment()
             normalCount++;
 
         // step 2 : grab and sort existing chunk for reuse
-        eastl::vector<dual_chunk_t*> chunks = std::move(g->chunks);
+        skr::stl_vector<dual_chunk_t*> chunks = std::move(g->chunks);
         std::sort(chunks.begin(), chunks.end(), [](dual_chunk_t* lhs, dual_chunk_t* rhs) {
             return lhs->pt > rhs->pt || lhs->count > rhs->count;
         });
 
         // step 3 : reaverage data into new layout
-        eastl::vector<dual_chunk_t*> newChunks;
+        skr::stl_vector<dual_chunk_t*> newChunks;
         int o = 0;
         int j = (int)(chunks.size() - 1);
         auto fillChunk = [&](dual_chunk_t* chunk) {
@@ -450,7 +450,7 @@ void dual_storage_t::pack_entities()
         SKR_ASSERT(scheduler->is_main_thread(this));
         scheduler->sync_storage(this);
     }
-    eastl::vector<EIndex> map;
+    skr::stl_vector<EIndex> map;
     auto& entries = entities.entries;
     map.resize(entries.size());
     entities.freeEntries.clear();
@@ -466,7 +466,7 @@ void dual_storage_t::pack_entities()
         }
     }
     struct mapper {
-        eastl::vector<EIndex>* data;
+        skr::stl_vector<EIndex>* data;
         void move() {}
         void reset() {}
         void map(dual_entity_t& e)
@@ -476,7 +476,7 @@ void dual_storage_t::pack_entities()
         }
     } m;
     m.data = &map;
-    eastl::vector<dual_group_t*> gs;
+    skr::stl_vector<dual_group_t*> gs;
     for (auto& pair : groups)
         gs.push_back(pair.second);
     groups.clear();
@@ -649,13 +649,13 @@ void dual_storage_t::merge(dual_storage_t& src)
         scheduler->sync_storage(&src);
     }
     auto& sents = src.entities;
-    eastl::vector<dual_entity_t> map;
+    skr::stl_vector<dual_entity_t> map;
     map.resize(sents.entries.size());
     EIndex moveCount = 0;
     for (auto& e : sents.entries)
         if (e.chunk != nullptr)
             moveCount++;
-    eastl::vector<dual_entity_t> newEnts;
+    skr::stl_vector<dual_entity_t> newEnts;
     newEnts.resize(moveCount);
     entities.new_entities(newEnts.data(), moveCount);
     int j = 0;
@@ -681,12 +681,12 @@ void dual_storage_t::merge(dual_storage_t& src)
     } m;
     m.count = (uint32_t)map.size();
     m.data = map.data();
-    eastl::vector<dual_chunk_t*> chunks;
+    skr::stl_vector<dual_chunk_t*> chunks;
     struct payload_t {
         mapper* m;
         uint32_t start, end;
     };
-    eastl::vector<payload_t> payloads;
+    skr::stl_vector<payload_t> payloads;
     payload_t payload;
     payload.m = &m;
     payload.start = payload.end = 0;

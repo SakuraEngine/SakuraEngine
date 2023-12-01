@@ -15,6 +15,7 @@
 
 #include "SkrRT/containers_new/sptr.hpp"
 #include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/containers_new/hashmap.hpp"
 
 #include "SkrProfile/profile.h"
@@ -200,9 +201,9 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
         BufferRequest() SKR_NOEXCEPT  = default;
         ~BufferRequest() SKR_NOEXCEPT = default;
 
-        eastl::vector<std::string>             absPaths;
-        eastl::vector<skr_io_future_t>         dFutures;
-        eastl::vector<skr::io::VRAMIOBufferId> dBuffers;
+        skr::vector<std::string>             absPaths;
+        skr::vector<skr_io_future_t>         dFutures;
+        skr::vector<skr::io::VRAMIOBufferId> dBuffers;
     };
 
     struct UploadRequest {
@@ -216,11 +217,11 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
 
         SMeshFactoryImpl*                      factory       = nullptr;
         skr_mesh_resource_id                   mesh_resource = nullptr;
-        eastl::vector<std::string>             resource_uris;
-        eastl::vector<skr_io_future_t>         ram_futures;
-        eastl::vector<skr::BlobId>             blobs;
-        eastl::vector<skr_io_future_t>         vram_futures;
-        eastl::vector<skr::io::VRAMIOBufferId> uBuffers;
+        skr::vector<std::string>             resource_uris;
+        skr::vector<skr_io_future_t>         ram_futures;
+        skr::vector<skr::BlobId>             blobs;
+        skr::vector<skr_io_future_t>         vram_futures;
+        skr::vector<skr::io::VRAMIOBufferId> uBuffers;
     };
 
     ESkrInstallStatus InstallImpl(skr_resource_record_t* record);
@@ -283,9 +284,9 @@ ESkrInstallStatus SMeshFactoryImpl::InstallImpl(skr_resource_record_t* record)
         if (noCompression)
         {
             auto dRequest = SPtr<BufferRequest>::Create();
-            dRequest->absPaths.resize(mesh_resource->bins.size());
-            dRequest->dFutures.resize(mesh_resource->bins.size());
-            dRequest->dBuffers.resize(mesh_resource->bins.size());
+            dRequest->absPaths.resize_default(mesh_resource->bins.size());
+            dRequest->dFutures.resize_default(mesh_resource->bins.size());
+            dRequest->dBuffers.resize_zeroed(mesh_resource->bins.size());
             InstallType installType = { ECompressMethod::NONE };
             for (auto i = 0u; i < mesh_resource->bins.size(); i++)
             {
