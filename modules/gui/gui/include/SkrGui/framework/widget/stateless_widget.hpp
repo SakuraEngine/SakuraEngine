@@ -14,6 +14,10 @@ sreflect_struct(
 )
 SKR_GUI_API StatelessWidget : public Widget {
     SKR_RTTR_GENERATE_BODY()
+
+    NotNull<Element*> create_element() SKR_NOEXCEPT override;
+
+    virtual NotNull<Widget*> build(NotNull<IBuildContext*> context) SKR_NOEXCEPT = 0;
 };
 } // namespace gui sreflect
 } // namespace skr sreflect
