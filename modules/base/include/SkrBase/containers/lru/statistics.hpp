@@ -30,6 +30,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include <SkrBase/misc/debug.h>
 #include <SkrBase/containers/lru/error.hpp>
 #include <SkrBase/containers/lru/internal/utility.hpp>
 #include <SkrBase/containers/lru/key-statistics.hpp>
@@ -152,7 +153,7 @@ class Statistics {
   const KeyStatistics& stats_for(const Key& key) const {
     auto iterator = _key_map.find(key);
     if (iterator == _key_map.end()) {
-      throw LRU::Error::UnmonitoredKey();
+      SKR_ASSERT(0 && "UnmonitoredKey!");
     }
 
     return iterator->second;
@@ -182,7 +183,7 @@ class Statistics {
   void unmonitor(const Key& key) {
     auto iterator = _key_map.find(key);
     if (iterator == _key_map.end()) {
-      throw LRU::Error::UnmonitoredKey();
+      SKR_ASSERT(0 && "UnmonitoredKey!");
     } else {
       _key_map.erase(iterator);
     }
@@ -199,7 +200,7 @@ class Statistics {
   void reset_key(const Key& key) {
     auto iterator = _key_map.find(key);
     if (iterator == _key_map.end()) {
-      throw LRU::Error::UnmonitoredKey();
+      SKR_ASSERT(0 && "UnmonitoredKey!");
     } else {
       iterator->second.reset();
     }

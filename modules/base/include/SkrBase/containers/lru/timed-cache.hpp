@@ -33,6 +33,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include <SkrBase/misc/debug.h>
 #include <SkrBase/containers/lru/error.hpp>
 #include <SkrBase/containers/lru/internal/base-cache.hpp>
 #include <SkrBase/containers/lru/internal/last-accessed.hpp>
@@ -321,7 +322,7 @@ class TimedCache
   throw_if_invalid(UnorderedConstIterator unordered_iterator) const override {
     super::throw_if_invalid(unordered_iterator);
     if (has_expired(unordered_iterator)) {
-      throw LRU::Error::KeyExpired();
+      SKR_ASSERT(0 && "KeyExpired!");
     }
   }
 
@@ -331,7 +332,7 @@ class TimedCache
   void throw_if_invalid(OrderedConstIterator ordered_iterator) const override {
     super::throw_if_invalid(ordered_iterator);
     if (has_expired(ordered_iterator)) {
-      throw LRU::Error::KeyExpired();
+      SKR_ASSERT(0 && "KeyExpired!");
     }
   }
 
@@ -350,7 +351,7 @@ class TimedCache
   Value& _value_for_last_accessed() override {
     auto& information = _last_accessed.information();
     if (_has_expired(information)) {
-      throw LRU::Error::KeyExpired();
+      SKR_ASSERT(0 && "KeyExpired!");
     } else {
       return information.value;
     }
@@ -362,7 +363,7 @@ class TimedCache
   const Value& _value_for_last_accessed() const override {
     const auto& information = _last_accessed.information();
     if (_has_expired(information)) {
-      throw LRU::Error::KeyExpired();
+      SKR_ASSERT(0 && "KeyExpired!");
     } else {
       return information.value;
     }

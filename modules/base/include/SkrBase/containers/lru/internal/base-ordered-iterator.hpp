@@ -27,6 +27,7 @@
 #include <iterator>
 #include <type_traits>
 
+#include <SkrBase/misc/debug.h>
 #include <SkrBase/containers/lru/entry.hpp>
 #include <SkrBase/containers/lru/error.hpp>
 #include <SkrBase/containers/lru/internal/base-iterator.hpp>
@@ -327,7 +328,7 @@ class BaseOrderedIterator
     // cache. If an exception is thrown, the state of the ordered iterator is
     // unchanged compared to before the assignment.
     if (unordered_iterator == unordered_iterator._cache->unordered_end()) {
-      throw LRU::Error::InvalidIteratorConversion();
+      SKR_ASSERT(0 && "InvalidIteratorConversion!");
     }
   }
 };

@@ -28,6 +28,8 @@
 #include <tuple>
 #include <unordered_map>
 #include <utility>
+
+#include <SkrBase/misc/debug.h>
 #include <SkrBase/containers/lru/insertion-result.hpp>
 #include <SkrBase/containers/lru/internal/base-ordered-iterator.hpp>
 #include <SkrBase/containers/lru/internal/base-unordered-iterator.hpp>
@@ -747,7 +749,7 @@ class BaseCache {
   virtual void
   throw_if_invalid(UnorderedConstIterator unordered_iterator) const {
     if (unordered_iterator == unordered_end()) {
-      throw LRU::Error::InvalidIterator();
+      SKR_ASSERT(0 && "InvalidIterator!");
     }
   }
 
@@ -760,7 +762,7 @@ class BaseCache {
   /// \throws LRU::Error::InvalidIterator if the iterator is the end iterator.
   virtual void throw_if_invalid(OrderedConstIterator ordered_iterator) const {
     if (ordered_iterator == ordered_end()) {
-      throw LRU::Error::InvalidIterator();
+      SKR_ASSERT(0 && "InvalidIterator!");
     }
   }
 
@@ -813,7 +815,8 @@ class BaseCache {
 
     auto iterator = find(key);
     if (iterator == end()) {
-      throw LRU::Error::KeyNotFound();
+      SKR_ASSERT(0 && "KeyNotFound!");
+      return iterator.value();
     } else {
       return iterator.value();
     }
@@ -840,7 +843,8 @@ class BaseCache {
 
     auto iterator = find(key);
     if (iterator == end()) {
-      throw LRU::Error::KeyNotFound();
+      SKR_ASSERT(0 && "KeyNotFound!");
+      return iterator.value();
     } else {
       return iterator.value();
     }
@@ -1114,7 +1118,7 @@ class BaseCache {
     /// We have this overload to avoid the extra conversion-construction from
     /// unordered to ordered iterator (and renewed hash lookup)
     if (iterator == unordered_cend()) {
-      throw LRU::Error::InvalidIterator();
+      SKR_ASSERT(0 && "InvalidIterator!");
     } else {
       _erase(iterator._iterator);
     }
@@ -1127,7 +1131,7 @@ class BaseCache {
   /// \throws LRU::Error::InvalidIterator if the iterator is the end iterator.
   virtual void erase(OrderedConstIterator iterator) {
     if (iterator == ordered_cend()) {
-      throw LRU::Error::InvalidIterator();
+      SKR_ASSERT(0 && "InvalidIterator!");
     } else {
       _erase(_map.find(iterator.key()));
     }
@@ -1280,7 +1284,7 @@ class BaseCache {
   /// monitoring.
   virtual Statistics<Key>& stats() {
     if (!is_monitoring()) {
-      throw LRU::Error::NotMonitoring();
+      SKR_ASSERT(0 && "NotMonitoring!");
     }
     return _stats.get();
   }
@@ -1290,7 +1294,7 @@ class BaseCache {
   /// monitoring.
   virtual const Statistics<Key>& stats() const {
     if (!is_monitoring()) {
-      throw LRU::Error::NotMonitoring();
+      SKR_ASSERT(0 && "NotMonitoring!");
     }
     return _stats.get();
   }
