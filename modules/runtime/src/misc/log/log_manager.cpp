@@ -1,5 +1,5 @@
 #include "SkrProfile/profile.h"
-#include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "misc/log/log_manager.hpp"
 
 namespace skr {

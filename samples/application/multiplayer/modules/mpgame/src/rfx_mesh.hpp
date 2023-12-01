@@ -4,7 +4,7 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRT/ecs/type_builder.hpp"
-#include "SkrRT/containers_new/vector.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 typedef struct ForwardEffectToken {
     dual_entity_t game_entity;

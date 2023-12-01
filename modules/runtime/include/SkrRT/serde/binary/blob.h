@@ -1,8 +1,8 @@
 #pragma once
 #include "blob_fwd.h"
-#include "SkrRT/containers_new/span.hpp"
-#include "SkrRT/containers_new/span.hpp"
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/string.hpp"
 
 namespace skr
 {

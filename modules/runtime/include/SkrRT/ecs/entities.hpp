@@ -1,7 +1,7 @@
 #pragma once
 #include "dual.h"
 #include "SkrRT/platform/thread.h"
-#include "SkrRT/containers_new/vector.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 namespace dual
 {

@@ -2,7 +2,7 @@
 #include "SkrRT/platform/process.h"
 #include "mdb_utils.h"
 #include <SkrRT/platform/filesystem.hpp>
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include "common/utils.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 

@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include "../common/common_utils.h"
-#include <SkrRT/containers_new/uset.hpp>
-#include <SkrRT/containers_new/string.hpp>
+#include <SkrRT/containers/uset.hpp>
+#include <SkrRT/containers/string.hpp>
 #include "SkrRT/platform/shared_library.hpp"
 #include "cgpu/extensions/cgpu_nsight.h"
 #include "cgpu_nsight_tracker.hpp"

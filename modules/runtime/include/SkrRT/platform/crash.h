@@ -2,8 +2,8 @@
 #include "SkrRT/misc/types.h"
 #ifdef __cplusplus
 #include "SkrRT/platform/thread.h"
-#include <SkrRT/containers_new/span.hpp>
-#include <SkrRT/containers_new/vector.hpp>
+#include <SkrRT/containers/span.hpp>
+#include <SkrRT/containers/vector.hpp>
 
 extern "C" {
 #endif

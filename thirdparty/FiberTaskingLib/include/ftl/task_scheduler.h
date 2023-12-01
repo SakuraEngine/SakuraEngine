@@ -23,8 +23,8 @@
  */
 
 #pragma once
-#include "SkrRT/containers_new/stl_vector.hpp"
-#include "SkrRT/containers_new/stl_function.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
+#include "SkrRT/containers/stl_function.hpp"
 #include "ftl/callbacks.h"
 #include "ftl/fiber.h"
 #include "ftl/task.h"

@@ -5,7 +5,7 @@
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/async/thread_job.hpp"
 
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
 // bool initialize_gdi_application(gdi_application_t* app)
 // {

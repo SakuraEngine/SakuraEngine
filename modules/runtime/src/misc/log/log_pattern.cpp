@@ -2,8 +2,8 @@
 #include "SkrRT/platform/process.h"
 #include "SkrRT/misc/log/logger.hpp"
 #include "SkrRT/misc/log/log_pattern.hpp"
-#include "SkrRT/containers_new/array.hpp"
-#include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers/array.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "SkrProfile/profile.h"
 // TODO: REMOVE THIS
 #include <string>

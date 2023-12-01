@@ -1,6 +1,6 @@
 #pragma once
-#include <SkrRT/containers_new/string.hpp>
-#include <SkrRT/containers_new/span.hpp>
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/span.hpp>
 
 namespace skr::rttr
 {

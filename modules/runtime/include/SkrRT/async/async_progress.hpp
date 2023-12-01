@@ -5,7 +5,7 @@
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrMemory/memory.h"
-#include "SkrRT/containers_new/stl_queue.hpp"
+#include "SkrRT/containers/stl_queue.hpp"
 
 namespace skr
 {

@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/containers/misc/span.hpp"
-#include "SkrRT/containers_new/vector.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 namespace skr
 {
@@ -8,7 +8,7 @@ template <typename T, size_t Extent = container::kDynamicExtent>
 using span = container::Span<T, size_t, Extent>;
 }
 
-#include "SkrRT/containers_new/vector.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include "SkrRT/serde/binary/blob_fwd.h"
 #include "SkrRT/serde/binary/serde.h"
 

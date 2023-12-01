@@ -1,10 +1,10 @@
 #pragma once
-#include "SkrRT/containers_new/concurrent_queue.hpp"
-#include "SkrRT/containers_new/hashmap.hpp"
-#include "SkrRT/containers_new/vector.hpp"
-#include "SkrRT/containers_new/SPtr.hpp"
-#include "SkrRT/containers_new/stl_function.hpp"
-#include "SkrRT/containers_new/function_ref.hpp"
+#include "SkrRT/containers/concurrent_queue.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/SPtr.hpp"
+#include "SkrRT/containers/stl_function.hpp"
+#include "SkrRT/containers/function_ref.hpp"
 
 namespace skr
 {

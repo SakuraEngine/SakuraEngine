@@ -1,4 +1,4 @@
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/misc/log.h"
 

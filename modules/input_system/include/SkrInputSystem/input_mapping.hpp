@@ -1,7 +1,7 @@
 #pragma once
-#include "SkrRT/containers_new/vector.hpp"
-#include "SkrRT/containers_new/sptr.hpp"
-#include "SkrRT/containers_new/lite.hpp"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers/lite.hpp"
 #include "SkrInput/input.h"
 #include "SkrInputSystem/input_value.hpp"
 

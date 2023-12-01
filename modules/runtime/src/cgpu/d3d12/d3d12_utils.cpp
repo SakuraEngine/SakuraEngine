@@ -6,7 +6,7 @@
 #include <d3d12shader.h>
 #include "D3D12MemAlloc.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/containers_new/stl_vector.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
 #include <comutil.h>
 
 #define USE_PIX

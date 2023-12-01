@@ -1,7 +1,7 @@
 #include "common_utils.h"
 #include "wasm/api.h"
-#include "SkrRT/containers_new/hashmap.hpp"
-#include "SkrRT/containers_new/stl_string.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/stl_string.hpp"
 #include <time.h>
 
 struct SWANamedObjectTable : skr::FlatHashMap<skr::stl_string, void*> {

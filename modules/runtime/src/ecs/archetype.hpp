@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/ecs/dual.h"
-#include "SkrRT/containers_new/stl_vector.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
 
 namespace dual
 {

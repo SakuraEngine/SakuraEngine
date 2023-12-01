@@ -1,8 +1,8 @@
 ﻿#pragma once
 #include "type.hpp"
-#include <SkrRT/containers_new/vector.hpp>
-#include <SkrRT/containers_new/sptr.hpp>
-#include <SkrRT/containers_new/span.hpp>
+#include <SkrRT/containers/vector.hpp>
+#include <SkrRT/containers/sptr.hpp>
+#include <SkrRT/containers/span.hpp>
 #include <SkrRT/containers/deprecated.hpp>
 #include "SkrRT/resource/resource_handle.h"
 

@@ -23,14 +23,14 @@
 #include "SkrBase/misc/defer.hpp" // IWYU pragma: export
 
 #include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/sptr.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/vector.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/string.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/hashmap.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/btree.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/concurrent_queue.hpp> // IWYU pragma: export
-#include "SkrRT/containers_new/span.hpp" // IWYU pragma: export
-#include "SkrRT/containers_new/function_ref.hpp" // IWYU pragma: export
+#include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
+#include <SkrRT/containers/vector.hpp> // IWYU pragma: export
+#include <SkrRT/containers/string.hpp> // IWYU pragma: export
+#include <SkrRT/containers/hashmap.hpp> // IWYU pragma: export
+#include <SkrRT/containers/btree.hpp> // IWYU pragma: export
+#include <SkrRT/containers/concurrent_queue.hpp> // IWYU pragma: export
+#include "SkrRT/containers/span.hpp" // IWYU pragma: export
+#include "SkrRT/containers/function_ref.hpp" // IWYU pragma: export
 
 #include "SkrRT/io/ram_io.hpp" // IWYU pragma: export
 #include "SkrRT/resource/resource_header.hpp" // IWYU pragma: export

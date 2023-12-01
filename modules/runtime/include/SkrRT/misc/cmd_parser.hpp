@@ -1,9 +1,9 @@
 #pragma once
-#include "SkrRT/containers_new/vector.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include "SkrBase/misc/debug.h" 
 #include "SkrRT/misc/log.h"
-#include "SkrRT/containers_new/string.hpp"
-#include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/misc/fast_float.h"
 #include <charconv>
 #include <optional>

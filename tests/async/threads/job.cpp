@@ -49,8 +49,8 @@ TEST_CASE("JobQueue")
 
 #include "SkrRT/misc/log.h"
 #include "SkrRT/async/async_progress.hpp"
-#include <SkrRT/containers_new/string.hpp>
-#include <SkrRT/containers_new/sptr.hpp>
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/sptr.hpp>
 
 using Progress = int;
 using InputParam1 = int;

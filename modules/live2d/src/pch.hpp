@@ -23,15 +23,15 @@
 #include "SkrRT/misc/log.h" // IWYU pragma: export
 #include "SkrRT/misc/log.hpp" // IWYU pragma: export
 
-#include <SkrRT/containers_new/concurrent_queue.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/sptr.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/string.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/vector.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/hashmap.hpp> // IWYU pragma: export
+#include <SkrRT/containers/concurrent_queue.hpp> // IWYU pragma: export
+#include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
+#include <SkrRT/containers/string.hpp> // IWYU pragma: export
+#include <SkrRT/containers/vector.hpp> // IWYU pragma: export
+#include <SkrRT/containers/hashmap.hpp> // IWYU pragma: export
 
-#include <SkrRT/containers_new/stl_vector.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/stl_deque.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/stl_string.hpp> // IWYU pragma: export
+#include <SkrRT/containers/stl_vector.hpp> // IWYU pragma: export
+#include <SkrRT/containers/stl_deque.hpp> // IWYU pragma: export
+#include <SkrRT/containers/stl_string.hpp> // IWYU pragma: export
 
 #include "SkrRenderGraph/frontend/render_graph.hpp" // IWYU pragma: export
 

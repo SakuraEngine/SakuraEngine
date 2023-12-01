@@ -13,8 +13,8 @@
 #include "signal_client.h"
 #include "SkrRT/misc/log.h"
 #include <imgui/imgui.h>
-#include "SkrRT/containers_new/stl_string.hpp"
-#include "SkrRT/containers_new/stl_vector.hpp"
+#include "SkrRT/containers/stl_string.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
 #include "SkrRT/module/module_manager.hpp"
 #include "SkrMemory/memory.h"
 #include "SkrRT/platform/vfs.h"

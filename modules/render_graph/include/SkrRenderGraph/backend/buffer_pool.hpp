@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/config.h"
-#include <SkrRT/containers_new/hashmap.hpp>
-#include <SkrRT/containers_new/stl_deque.hpp>
+#include <SkrRT/containers/hashmap.hpp>
+#include <SkrRT/containers/stl_deque.hpp>
 #include "cgpu/api.h"
 #include "SkrBase/config.h"
 

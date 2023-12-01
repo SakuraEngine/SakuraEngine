@@ -1,8 +1,8 @@
 #include "cgpu/cgpux.hpp"
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/async/thread_job.hpp"
-#include "SkrRT/containers_new/sptr.hpp"
-#include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
 #include "SkrRenderer/pso_key.hpp"
 #include "SkrRenderer/pso_map.h"

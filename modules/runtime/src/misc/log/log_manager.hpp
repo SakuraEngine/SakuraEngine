@@ -2,7 +2,7 @@
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/log/log_sink.hpp"
 #include "SkrRT/misc/log/log_pattern.hpp"
-#include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "log_worker.hpp"
 #include "tscns.hpp"
 

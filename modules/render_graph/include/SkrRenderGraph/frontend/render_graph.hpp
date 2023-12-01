@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrRenderGraph/frontend/base_types.hpp"
 #include "SkrRenderGraph/frontend/blackboard.hpp"
-#include "SkrRT/containers_new/stl_function.hpp"
-#include "SkrRT/containers_new/vector.hpp"
+#include "SkrRT/containers/stl_function.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 #ifndef RG_MAX_FRAME_IN_FLIGHT
 #define RG_MAX_FRAME_IN_FLIGHT 3

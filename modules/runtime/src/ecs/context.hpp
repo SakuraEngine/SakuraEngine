@@ -3,7 +3,7 @@
 #include "scheduler.hpp"
 #include "type_registry.hpp"
 
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
 struct dual_context_t {
     dual_context_t();

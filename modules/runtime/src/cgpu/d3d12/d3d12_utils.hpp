@@ -5,8 +5,8 @@
 #include "./../common/common_utils.h"
 #ifdef __cplusplus
     #include "D3D12MemAlloc.h"
-    #include <SkrRT/containers_new/hashmap.hpp>
-    #include <SkrRT/containers_new/vector.hpp>
+    #include <SkrRT/containers/hashmap.hpp>
+    #include <SkrRT/containers/vector.hpp>
 #endif
 #ifdef CGPU_THREAD_SAFETY
     #include "SkrRT/platform/thread.h"

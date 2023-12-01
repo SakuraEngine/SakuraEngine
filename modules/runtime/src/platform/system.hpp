@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/platform/system.h"
-#include "SkrRT/containers_new/vector.hpp"
-#include "SkrRT/containers_new/umap.hpp"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/umap.hpp"
 
 namespace skr {
 

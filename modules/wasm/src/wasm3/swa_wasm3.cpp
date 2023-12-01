@@ -1,6 +1,6 @@
 #include "utils.h"
-#include "SkrRT/containers_new/hashmap.hpp"
-#include "SkrRT/containers_new/stl_string.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/stl_string.hpp"
 
 struct WASM3RuntimeFunctionTable : skr::FlatHashMap<skr::stl_string, IM3Function> {
 };

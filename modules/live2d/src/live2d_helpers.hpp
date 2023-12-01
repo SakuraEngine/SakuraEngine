@@ -12,9 +12,9 @@
 #include "CubismDefaultParameterId.hpp" // IWYU pragma: export
 #include "Utils/CubismString.hpp" // IWYU pragma: export
 
-#include "SkrRT/containers_new/string.hpp"
-#include "SkrRT/containers_new/stl_vector.hpp"
-#include "SkrRT/containers_new/umap.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
+#include "SkrRT/containers/umap.hpp"
 
 namespace L2DF = Live2D::Cubism::Framework;
 

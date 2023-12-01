@@ -1,8 +1,8 @@
 ﻿#include "cgpu/api.h"
 #include "common_utils.h"
 
-#include <SkrRT/containers_new/btree.hpp>
-#include <SkrRT/containers_new/stl_vector.hpp>
+#include <SkrRT/containers/btree.hpp>
+#include <SkrRT/containers/stl_vector.hpp>
 
 extern "C" {
 bool CGPUUtil_ShaderResourceIsStaticSampler(CGPUShaderResource* resource, const struct CGPURootSignatureDescriptor* desc)

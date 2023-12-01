@@ -2,12 +2,12 @@
 #ifdef INSPECT_USABLE
 #include "SkrRT/module/subsystem.hpp"
 #include "SkrRT/platform/filesystem.hpp"
-#include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/platform/thread.h"
-#include "SkrRT/containers_new/btree.hpp"
-#include "SkrRT/containers_new/optional.hpp"
+#include "SkrRT/containers/btree.hpp"
+#include "SkrRT/containers/optional.hpp"
 #include <SkrRT/containers/deprecated.hpp>
-#include <SkrRT/containers_new/string.hpp>
+#include <SkrRT/containers/string.hpp>
 #include <chrono>
 #include "SkrImGui/skr_imgui.h"
 #include "SkrBase/misc/defer.hpp"

@@ -1,7 +1,7 @@
 #pragma once
-#include "SkrRT/containers_new/span.hpp"
-#include "SkrRT/containers_new/vector.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/array.hpp"
 #include <algorithm>
 #include "SkrRT/misc/bits.hpp"
 

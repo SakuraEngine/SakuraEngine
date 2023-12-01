@@ -1,10 +1,10 @@
 #pragma once
 #include "SkrRT/rttr/type/type.hpp"
-#include "SkrRT/containers_new/multi_umap.hpp"
-#include "SkrRT/containers_new/umap.hpp"
-#include "SkrRT/containers_new/string.hpp"
-#include "SkrRT/containers_new/span.hpp"
-#include "SkrRT/containers_new/vector.hpp"
+#include "SkrRT/containers/multi_umap.hpp"
+#include "SkrRT/containers/umap.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 namespace skr::rttr
 {

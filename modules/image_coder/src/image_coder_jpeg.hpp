@@ -1,5 +1,5 @@
 #pragma once
-#include <SkrRT/containers_new/string.hpp>
+#include <SkrRT/containers/string.hpp>
 #include "image_coder_base.hpp"
 
 namespace skr

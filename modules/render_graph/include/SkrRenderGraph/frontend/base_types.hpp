@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrRenderGraph/rg_config.h"
 #include "SkrRT/misc/dependency_graph.hpp"
-#include "SkrRT/containers_new/span.hpp"
-#include "SkrRT/containers_new/stl_function.hpp"
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/stl_function.hpp"
+#include "SkrRT/containers/string.hpp"
 
 using graph_object_string = skr::String;
 using graph_big_object_string = skr::String;

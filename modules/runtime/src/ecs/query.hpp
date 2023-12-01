@@ -2,9 +2,9 @@
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/ecs/SmallVector.h"
 
-#include "SkrRT/containers_new/string.hpp"
-#include "SkrRT/containers_new/span.hpp"
-#include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
 namespace dual
 {

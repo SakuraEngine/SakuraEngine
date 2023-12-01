@@ -2,7 +2,7 @@
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/ecs/set.hpp"
 #include "SkrRT/ecs/entities.hpp"
-#include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/async/fib_task.hpp"
 
 #include <memory>
