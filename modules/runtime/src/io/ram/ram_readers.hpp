@@ -48,7 +48,7 @@ struct VFSRAMReader final : public RAMReaderBase<IIORequestProcessor>
     skr::JobQueue* job_queue = nullptr;
     IORequestQueue fetched_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IORequestQueue loaded_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    skr::vector<skr::IFuture<bool>*> loaded_futures[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::Vector<skr::IFuture<bool>*> loaded_futures[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
 
 } // namespace io

@@ -57,11 +57,11 @@ struct skr_live2d_render_model_t {
     // clipping 
     skr_live2d_clipping_manager_id clipping_manager;
     // pos-uv-pos-uv...
-    skr::vector<CGPUTextureId> textures;
-    skr::vector<CGPUTextureViewId> texture_views;
-    skr::vector<skr::renderer::VertexBufferView> vertex_buffer_views;
-    skr::vector<skr::renderer::IndexBufferView> index_buffer_views;
-    skr::vector<skr::renderer::PrimitiveCommand> primitive_commands;
+    skr::Vector<CGPUTextureId> textures;
+    skr::Vector<CGPUTextureViewId> texture_views;
+    skr::Vector<skr::renderer::VertexBufferView> vertex_buffer_views;
+    skr::Vector<skr::renderer::IndexBufferView> index_buffer_views;
+    skr::Vector<skr::renderer::PrimitiveCommand> primitive_commands;
     // bind table cache
     skr::UMap<CGPUTextureViewId, CGPUXBindTableId> bind_tables;
     skr::UMap<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;

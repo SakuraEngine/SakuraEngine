@@ -4,7 +4,7 @@
 
 namespace skr::rttr
 {
-Type* VectorTypeLoader::load(span<TypeDesc> desc)
+Type* VectorTypeLoader::load(skr::span<TypeDesc> desc)
 {
     SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_GUID);
     SKR_ASSERT(desc[0].value_guid() == kArrayGenericGUID);
@@ -18,7 +18,7 @@ Type* VectorTypeLoader::load(span<TypeDesc> desc)
     }
 
     Type*  target_type = get_type_from_type_desc(desc.subspan(2 + dim));
-    string type_name   = target_type->name();
+    skr::String type_name   = target_type->name();
     for (int dim_idx = 0; dim_idx < dim; ++dim_idx)
     {
         type_name.append(format(u8"[{}]", dimensions_buffer[dim_idx]));

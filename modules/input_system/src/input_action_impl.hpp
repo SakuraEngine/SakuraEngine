@@ -5,7 +5,7 @@
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/containers_new/sptr.hpp"
-#include "SkrRT/containers_new/function.hpp"
+#include "SkrRT/containers_new/stl_function.hpp"
 
 namespace skr
 {
@@ -13,7 +13,7 @@ namespace input
 {
 
 struct ActionEventStorage {
-    skr::function<void()> callback;
+    skr::stl_function<void()> callback;
     skr_guid_t event_id = kEventId_Invalid;
 };
 
@@ -116,9 +116,9 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction {
 
 protected:
     InputValueStorage current_value;
-    skr::vector<ActionEventStorage> events;
-    skr::vector<SObjectPtr<InputTrigger>> triggers;
-    skr::vector<SObjectPtr<InputModifier>> modifiers;
+    skr::Vector<ActionEventStorage> events;
+    skr::Vector<SObjectPtr<InputTrigger>> triggers;
+    skr::Vector<SObjectPtr<InputModifier>> modifiers;
 };
 
 } // namespace input

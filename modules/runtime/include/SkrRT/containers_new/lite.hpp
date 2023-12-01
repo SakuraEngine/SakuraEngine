@@ -98,7 +98,7 @@ struct VectorStorage : public AlignedStorage<24, 8> {
 };
 #else
 template <typename T>
-using VectorStorage = skr::vector<T>;
+using VectorStorage = skr::Vector<T>;
 #endif
 
 #ifndef CONTAINER_LITE_IMPL
@@ -113,7 +113,7 @@ struct TextStorage : public AlignedStorage<16, 1> {
     TextStorage& operator=(TextStorage&&);
 };
 #else
-using TextStorage = skr::string;
+using TextStorage = skr::String;
 #endif
 
 #ifndef CONTAINER_LITE_IMPL
@@ -129,7 +129,7 @@ struct HashMapStorage : public AlignedStorage<48, 8> {
 };
 #else
 template <typename K, typename V>
-using HashMapStorage = skr::flat_hash_map<K, V>;
+using HashMapStorage = skr::FlatHashMap<K, V>;
 #endif */
 
 } // namespace lite

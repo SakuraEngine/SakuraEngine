@@ -1,22 +1,23 @@
 #pragma once
 #include "SkrRT/config.h"
-#include <variant>
+// TODO: REMOVE EASTL
+#include <EASTL/variant.h>
 
 namespace skr
 {
 template <class... Ts>
-using variant = std::variant<Ts...>;
+using variant = eastl::variant<Ts...>;
 template <class... Ts>
 struct overload : Ts... {
     using Ts::operator()...;
 };
 template <class... Ts>
 overload(Ts...) -> overload<Ts...>;
-using std::get_if;
-using std::get;
-using std::visit;
-using std::variant_size_v;
-using std::variant_npos;
+using eastl::get_if;
+using eastl::get;
+using eastl::visit;
+using eastl::variant_size_v;
+using eastl::variant_npos;
 } // namespace skr
 
 // binary reader
@@ -80,7 +81,7 @@ struct WriteTrait<skr::variant<Ts...>> {
     {
         SKR_ARCHIVE((uint32_t)variant.index());
         int ret;
-        std::visit([&](auto&& value) {
+        skr::visit([&](auto&& value) {
             ret = skr::binary::Archive(archive, value);
         },
                      variant);

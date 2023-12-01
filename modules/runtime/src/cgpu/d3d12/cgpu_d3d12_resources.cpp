@@ -671,7 +671,7 @@ FAIL:
 
 struct CGPUTextureAliasing_D3D12 : public CGPUTexture_D3D12 {
     D3D12_RESOURCE_DESC mDxDesc;
-    skr::string name;
+    skr::String name;
     CGPUTextureAliasing_D3D12(const D3D12_RESOURCE_DESC& dxDesc, const char8_t* name)
         : CGPUTexture_D3D12()
         , mDxDesc(dxDesc)

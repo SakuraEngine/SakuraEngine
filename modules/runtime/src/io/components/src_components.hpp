@@ -22,7 +22,7 @@ struct PathSrcComponent : public IORequestComponent
     skr_vfs_t* get_vfs() const SKR_NOEXCEPT { return vfs; }
     const char8_t* get_path() const SKR_NOEXCEPT { return path.is_empty() ? nullptr : path.u8_str(); }
 private:
-    skr::string path;
+    skr::String path;
     skr_vfs_t* vfs = nullptr;
 };
 

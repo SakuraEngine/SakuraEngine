@@ -73,7 +73,7 @@ public:
     CGPUQueryPoolId query_pool = nullptr;
     CGPUBufferId query_buffer = nullptr;
     uint32_t query_cursor = 0;
-    skr::vector<float> times_ms;
-    skr::vector<skr::string> query_names;
+    skr::Vector<float> times_ms;
+    skr::Vector<skr::String> query_names;
     uint64_t frame_index;
 };

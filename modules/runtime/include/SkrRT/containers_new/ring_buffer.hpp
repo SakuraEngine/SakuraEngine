@@ -6,12 +6,12 @@ namespace skr
 {
 
 template <typename T>
-struct ring_buffer 
+struct RingBuffer 
 {
     template <typename U>
-    friend struct resizable_ring_buffer;
+    friend struct ResizableRingBuffer;
 public:
-    ring_buffer(uint64_t length)
+    RingBuffer(uint64_t length)
     {
         const auto l = length ? length : 32;
         buffer.resize_zeroed(l);
@@ -25,13 +25,13 @@ public:
         return sz;
     }
 protected:
-    skr::vector<T> buffer;
+    skr::Vector<T> buffer;
     SAtomicU64 head = 0;
     SAtomicU64 size = 0;
 };
 
 template <typename T>
-T ring_buffer<T>::add(T value) 
+T RingBuffer<T>::add(T value) 
 {
     const auto currentSize = skr_atomicu64_load_acquire(&size);
     const auto currentHead = skr_atomicu64_load_acquire(&head);
@@ -43,7 +43,7 @@ T ring_buffer<T>::add(T value)
 }
 
 template <typename T>
-T ring_buffer<T>::get(uint64_t index) 
+T RingBuffer<T>::get(uint64_t index) 
 {
     const auto currentSize = skr_atomicu64_load_acquire(&size);
     const auto currentHead = skr_atomicu64_load_acquire(&head);

@@ -16,7 +16,7 @@ namespace dual
     auto get_trampoline()
     {
         using T = std::decay_t<F>;
-        using raw = typename skr::function_trait<T>::raw;
+        using raw = typename skr::FunctionTrait<T>::raw;
         return get_trampoline<T>(skr::type_t<raw>{});
     }
 }

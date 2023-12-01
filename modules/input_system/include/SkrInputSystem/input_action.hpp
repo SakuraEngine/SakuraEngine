@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrInputSystem/input_value.hpp"
-#include "SkrRT/containers_new/function.hpp" // IWYU pragma: keep
+#include "SkrRT/containers_new/stl_function.hpp" // IWYU pragma: keep
 
 namespace skr {
 namespace input {
@@ -9,7 +9,7 @@ struct InputModifier;
 struct InputTrigger;
 
 template<typename ValueType>
-using ActionEvent = skr::function<void(const ValueType&)>;
+using ActionEvent = skr::stl_function<void(const ValueType&)>;
 
 using ActionEventId = skr_guid_t;
 

@@ -5,5 +5,5 @@
 namespace skr
 {
 template <typename T, size_t N>
-using fixed_vector = eastl::fixed_vector<T, N>;
+using FixedVector = eastl::fixed_vector<T, N>;
 }

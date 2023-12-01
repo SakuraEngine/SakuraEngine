@@ -143,7 +143,7 @@ void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
     }
     for (auto setIdx : needsUpdateIndices)
     {
-        skr::fixed_vector<CGPUDescriptorData, 4> datas;
+        skr::FixedVector<CGPUDescriptorData, 4> datas;
         for (uint32_t i = 0; i < names_count; i++)
         {
             const auto& location = name_locations[i];
@@ -305,7 +305,7 @@ void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tabl
 
     auto to_update = merged[tbl_idx];
     // TODO: refactor & remove this vector
-    skr::vector<CGPUDescriptorData> datas;
+    skr::Vector<CGPUDescriptorData> datas;
     // foreach table location to update values
     for (uint32_t i = 0; i < count; i++)
     {

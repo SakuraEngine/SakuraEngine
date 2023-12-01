@@ -4,5 +4,5 @@
 namespace skr
 {
     template<typename T>
-    using function = std::function<T>;
+    using stl_function = std::function<T>;
 }

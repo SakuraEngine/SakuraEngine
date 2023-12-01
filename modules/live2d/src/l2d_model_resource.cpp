@@ -581,19 +581,19 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
             = SkrNew<L2DF::CubismModelSettingJson>(cbData->settingBlob->get_data(), (L2DF::csmSizeInt)cbData->settingBlob->get_size());
         cbData->settingBlob.reset();
         // setup models & expressions count
-        if (auto _ = skr::string((const char8_t*)model_setting->GetModelFileName()); !_.is_empty())
+        if (auto _ = skr::String((const char8_t*)model_setting->GetModelFileName()); !_.is_empty())
         {
             cbData->model_count = 1;
         }
-        if (auto _ = skr::string((const char8_t*)model_setting->GetPhysicsFileName()); !_.is_empty())
+        if (auto _ = skr::String((const char8_t*)model_setting->GetPhysicsFileName()); !_.is_empty())
         {
             cbData->phys_count = 1;
         }
-        if (auto _ = skr::string((const char8_t*)model_setting->GetPoseFileName()); !_.is_empty())
+        if (auto _ = skr::String((const char8_t*)model_setting->GetPoseFileName()); !_.is_empty())
         {
             cbData->pose_count = 1;
         }
-        if (auto _ = skr::string((const char8_t*)model_setting->GetUserDataFile()); !_.is_empty())
+        if (auto _ = skr::String((const char8_t*)model_setting->GetUserDataFile()); !_.is_empty())
         {
             cbData->usr_data_count = 1;
         }
@@ -616,7 +616,7 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
     callbackData->live2dRequest = live2dRequest;
     callbackData->ioService = ioService;
     // TODO: replace this with newer VFS API
-    skr::string l2dHomePathStr;
+    skr::String l2dHomePathStr;
     {
         SkrZoneScopedN("ioRAM Live2D Path Calc");
         auto l2dPath = skr::filesystem::path(path);

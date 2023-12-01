@@ -35,7 +35,7 @@ LogFormatter::~LogFormatter() SKR_NOEXCEPT
 
 }
 
-skr::string const& LogFormatter::format(const skr::string& format, const ArgsList& args_list)
+skr::String const& LogFormatter::format(const skr::String& format, const ArgsList& args_list)
 {
     args_list.format_(format, *this);
     return formatted_string;
@@ -74,7 +74,7 @@ void Logger::onLog(const LogEvent& ev) SKR_NOEXCEPT
     }
 }
 
-void Logger::sinkDefaultImmediate(const LogEvent& e, skr::string_view what) const SKR_NOEXCEPT
+void Logger::sinkDefaultImmediate(const LogEvent& e, skr::StringView what) const SKR_NOEXCEPT
 {
     skr::log::LogManager::Get()->PatternAndSink(e, what);
 }
@@ -85,7 +85,7 @@ bool Logger::canPushToQueue() const SKR_NOEXCEPT
     return worker;
 }
 
-bool Logger::tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList&& args_list) SKR_NOEXCEPT
+bool Logger::tryPushToQueue(LogEvent ev, skr::StringView format, ArgsList&& args_list) SKR_NOEXCEPT
 {
     auto worker = LogManager::Get()->TryGetWorker();
     if (worker)
@@ -98,7 +98,7 @@ bool Logger::tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList&& arg
     return false;
 }
 
-bool Logger::tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT
+bool Logger::tryPushToQueue(LogEvent ev, skr::String&& what) SKR_NOEXCEPT
 {
     auto worker = LogManager::Get()->TryGetWorker();
     if (worker)

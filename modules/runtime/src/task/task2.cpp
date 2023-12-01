@@ -65,13 +65,13 @@ namespace task2
 
     struct Task
     {
-        skr::function<void()> func;
+        skr::stl_function<void()> func;
         std::coroutine_handle<skr_task_t::promise_type> coro;
 
         Task() {}
         Task(nullptr_t) {}
 
-        Task(skr::function<void()>&& func)
+        Task(skr::stl_function<void()>&& func)
             : func(std::move(func))
         {
         }
@@ -372,7 +372,7 @@ namespace task2
         struct Work 
         {
             std::atomic<uint64_t> num = 0;
-            skr::deque<Task> pinnedTask;
+            skr::stl_deque<Task> pinnedTask;
             WorkQueue tasks;
             bool notifyAdded = true;
             SConditionVariable added;
@@ -444,7 +444,7 @@ namespace task2
         }
     }
 
-    void scheduler_t::schedule(skr::function<void ()>&& function)
+    void scheduler_t::schedule(skr::stl_function<void ()>&& function)
     {
         enqueue(Task(std::move(function)), -1);
     }

@@ -4,7 +4,7 @@
 #include "SkrRT/containers_new/stl_string.hpp"
 #include <time.h>
 
-struct SWANamedObjectTable : skr::flat_hash_map<skr::stl_string, void*> {
+struct SWANamedObjectTable : skr::FlatHashMap<skr::stl_string, void*> {
     ~SWANamedObjectTable()
     {
         if (deletor)

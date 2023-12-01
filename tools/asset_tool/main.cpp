@@ -71,9 +71,9 @@ extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_gr
 
 int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
 {
-    skr::string filePath;
-    skr::vector<skd::asset::SImporterFactory*> factories;
-    skr::vector<skd::asset::SImporterFactory*> availableFactories;
+    skr::String filePath;
+    skr::Vector<skd::asset::SImporterFactory*> factories;
+    skr::Vector<skd::asset::SImporterFactory*> availableFactories;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) 
         return -1;

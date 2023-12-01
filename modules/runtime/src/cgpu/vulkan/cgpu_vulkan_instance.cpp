@@ -112,8 +112,8 @@ struct CGPUVkPassTable //
         }
     };
 
-    skr::flat_hash_map<VkUtil_RenderPassDesc, CGPUCachedRenderPass, rpdesc_hash, rpdesc_eq> cached_renderpasses;
-    skr::flat_hash_map<VkUtil_FramebufferDesc, CGPUCachedFramebuffer, fbdesc_hash, fbdesc_eq> cached_framebuffers;
+    skr::FlatHashMap<VkUtil_RenderPassDesc, CGPUCachedRenderPass, rpdesc_hash, rpdesc_eq> cached_renderpasses;
+    skr::FlatHashMap<VkUtil_FramebufferDesc, CGPUCachedFramebuffer, fbdesc_hash, fbdesc_eq> cached_framebuffers;
 };
 
 VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGPUVkPassTable* table, const VkUtil_FramebufferDesc* desc)
@@ -160,7 +160,7 @@ void VkUtil_RenderPassTableAdd(struct CGPUVkPassTable* table, const struct VkUti
     table->cached_renderpasses[*desc] = new_pass;
 }
 
-struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<skr::stl_string, bool> //
+struct CGPUVkExtensionsTable : public skr::ParallelFlatHashMap<skr::stl_string, bool> //
 {
     static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
@@ -235,7 +235,7 @@ struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<skr::stl_strin
     }
 };
 
-struct CGPUVkLayersTable : public skr::parallel_flat_hash_map<skr::stl_string, bool> //
+struct CGPUVkLayersTable : public skr::ParallelFlatHashMap<skr::stl_string, bool> //
 {
     static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {

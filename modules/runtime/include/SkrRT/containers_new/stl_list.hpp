@@ -6,6 +6,6 @@ namespace skr
 {
 
 template<typename T, typename Alloc = skr_stl_allocator<T>>
-using list = std::list<T, Alloc>;
+using stl_list = std::list<T, Alloc>;
 
 } // namespace skr

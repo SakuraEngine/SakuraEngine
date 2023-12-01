@@ -20,7 +20,7 @@ SLightningEnvironmentId skr_lightning_environment_create(const char8_t* name)
     mdb_env_set_mapsize(env->env, (size_t)1048576 * (size_t)16); // 1MB * 16
     if (const int rc = mdb_env_open(env->env, (const char*)name, 0, 0664)) 
     {
-        skr::string err = (const char8_t*)mdb_strerror(rc);
+        skr::String err = (const char8_t*)mdb_strerror(rc);
         SKR_LOG_ERROR(u8"mdb_env_open failed: %d, %s", rc, err.c_str());
     }
     return env;
@@ -41,7 +41,7 @@ SLightningStorageId skr_lightning_storage_open(SLightningEnvironmentId environme
     MDB_dbi dbi;
     if (const int rc = mdb_txn_begin(env, nullptr, readonly ? MDB_RDONLY : 0, &txn)) 
     {
-        skr::string err = (const char8_t*)mdb_strerror(rc);
+        skr::String err = (const char8_t*)mdb_strerror(rc);
         SKR_LOG_ERROR(u8"mdb_txn_begin failed: %d, %s", rc, err.c_str());
     }
     auto dbi_flags = 0;
@@ -51,14 +51,14 @@ SLightningStorageId skr_lightning_storage_open(SLightningEnvironmentId environme
     }
     if (const int rc = mdb_dbi_open(txn, (const char*)desc->name, dbi_flags, &dbi)) 
     {
-        skr::string err = (const char8_t*)mdb_strerror(rc);
+        skr::String err = (const char8_t*)mdb_strerror(rc);
         SKR_LOG_ERROR(u8"mdb_dbi_open failed: %d, %s", rc, err.c_str());
     }
     else if (!readonly)
     {
         if (const int rc = mdb_drop(txn, dbi, 0) )
         {
-            skr::string err = (const char8_t*)mdb_strerror(rc);
+            skr::String err = (const char8_t*)mdb_strerror(rc);
             SKR_LOG_ERROR(u8"mdb_dbi_drop failed: %d, %s", rc, err.c_str());
         }
     }
@@ -81,7 +81,7 @@ SLightningTXNId skr_lightning_transaction_open(SLightningEnvironmentId env, SLig
     MDB_txn* _parent = (MDB_txn*)parent;
     if (auto rc = mdb_txn_begin(env->env, _parent, flags, &_txn))
     {
-        skr::string err = (const char8_t*)mdb_strerror(rc);
+        skr::String err = (const char8_t*)mdb_strerror(rc);
         SKR_LOG_ERROR(u8"mdb_txn_begin failed: %d, %s", rc, err.c_str());
     }
     return (SLightningTXNId)_txn;
@@ -96,7 +96,7 @@ bool skr_lightning_storage_read(SLightningTXNId txn, SLightningStorageId storage
     {
         if (rc != MDB_NOTFOUND)
         {
-            skr::string err = (const char8_t*)mdb_strerror(rc);
+            skr::String err = (const char8_t*)mdb_strerror(rc);
             SKR_LOG_ERROR(u8"e failed: %d, %s", rc, err.c_str());
         }
         return false;
@@ -113,7 +113,7 @@ bool skr_lightning_storage_write(SLightningTXNId txn, SLightningStorageId storag
     auto dbi = (MDB_dbi)storage->mdbi;
     if (auto rc = mdb_put((MDB_txn*)txn, dbi, &_key, &_value, 0))
     {
-        skr::string err = (const char8_t*)mdb_strerror(rc);
+        skr::String err = (const char8_t*)mdb_strerror(rc);
         SKR_LOG_ERROR(u8"e failed: %d, %s", rc, err.c_str());
         return false;
     }
@@ -126,7 +126,7 @@ bool skr_lightning_storage_del(SLightningTXNId txn, SLightningStorageId storage,
     auto dbi = (MDB_dbi)storage->mdbi;
     if (auto rc = mdb_del((MDB_txn*)txn, dbi, &_key, nullptr))
     {
-        skr::string err = (const char8_t*)mdb_strerror(rc);
+        skr::String err = (const char8_t*)mdb_strerror(rc);
         SKR_LOG_ERROR(u8"e failed: %d, %s", rc, err.c_str());
         return false;
     }
@@ -137,7 +137,7 @@ bool skr_lightning_transaction_commit(SLightningTXNId txn)
 {
     if (auto rc = mdb_txn_commit((MDB_txn*)txn))
     {
-        skr::string err = (const char8_t*)mdb_strerror(rc);
+        skr::String err = (const char8_t*)mdb_strerror(rc);
         SKR_LOG_ERROR(u8"mdb_txn_commit failed: %d, %s", rc, err.c_str());
         return false;
     }

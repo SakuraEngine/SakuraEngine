@@ -373,7 +373,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
     {
         executor.bind_table_pools.emplace(root_sig, SkrNew<BindTablePool>(root_sig));
     }
-    skr::string bind_table_keys = u8"";
+    skr::String bind_table_keys = u8"";
     // Bind resources
     stack_vector<CGPUDescriptorData> desc_set_updates;
     stack_vector<const char8_t*>     bindTableValueNames = {};
@@ -934,7 +934,7 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
         {
             SkrZoneScopedN("GraphExecutorBeginEvent");
 
-            skr::string   frameLabel = skr::format(u8"Frame-{}", frame_index);
+            skr::String   frameLabel = skr::format(u8"Frame-{}", frame_index);
             CGPUEventInfo event      = { (const char8_t*)frameLabel.c_str(), { 0.8f, 0.8f, 0.8f, 1.f } };
             cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
         }
@@ -1033,7 +1033,7 @@ bool RenderGraphBackend::compile() SKR_NOEXCEPT
         // 2.calc aliasing
         // - 先在aliasing chain里找一圈，如果有不重合的，直接把它加入到aliasing chain里
         // - 如果没找到，在所有resource中找一个合适的加入到aliasing chain
-        skr::btree_map<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
+        skr::BTreeMap<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
         foreach_textures([&](TextureNode* texture) SKR_NOEXCEPT {
             if (texture->imported) return;
             for (auto&& [aliased, aliaed_span] : alliasing_lifespans)

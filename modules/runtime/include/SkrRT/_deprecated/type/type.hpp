@@ -40,8 +40,8 @@ SKR_RUNTIME_API uint64_t Hash(double value, uint64_t base);
 SKR_RUNTIME_API uint64_t Hash(const skr_guid_t& value, uint64_t base);
 SKR_RUNTIME_API uint64_t Hash(const skr_md5_t& value, uint64_t base);
 SKR_RUNTIME_API uint64_t Hash(const skr_resource_handle_t& value, uint64_t base);
-SKR_RUNTIME_API uint64_t Hash(const skr::string& value, uint64_t base);
-SKR_RUNTIME_API uint64_t Hash(const skr::string_view& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr::String& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr::StringView& value, uint64_t base);
 
 template <class T>
 auto GetCopyCtor();
@@ -67,8 +67,8 @@ struct SKR_RUNTIME_API skr_type_t {
     bool Same(const skr_type_t* srcType) const;
     bool Convertible(const skr_type_t* srcType, bool format = false) const;
     void Convert(void* dst, const void* src, const skr_type_t* srcType, skr::type::ValueSerializePolicy* policy = nullptr) const;
-    skr::string ToString(const void* dst, skr::type::ValueSerializePolicy* policy = nullptr) const;
-    void FromString(void* dst, skr::string_view str, skr::type::ValueSerializePolicy* policy = nullptr) const;
+    skr::String ToString(const void* dst, skr::type::ValueSerializePolicy* policy = nullptr) const;
+    void FromString(void* dst, skr::StringView str, skr::type::ValueSerializePolicy* policy = nullptr) const;
     uint64_t Hash(const void* dst, uint64_t base) const;
     // lifetime operator
     void Destruct(void* dst) const;
@@ -138,7 +138,7 @@ struct SKR_ALIGNAS(16) SKR_RUNTIME_API skr_value_t {
     const void* Ptr() const;
 
     uint64_t Hash() const;
-    skr::string ToString() const;
+    skr::String ToString() const;
 
     void Reset();
 
@@ -190,7 +190,7 @@ struct SKR_RUNTIME_API skr_value_ref_t {
     T Convert();
 
     uint64_t Hash() const;
-    skr::string ToString() const;
+    skr::String ToString() const;
     void Reset();
 #endif
 };
@@ -323,7 +323,7 @@ struct SKR_RUNTIME_API HandleType : skr_type_t {
     }
 };
 
-// skr::string
+// skr::String
 struct SKR_RUNTIME_API StringType : skr_type_t {
     StringType()
         : skr_type_t{ SKR_TYPE_CATEGORY_STR }
@@ -331,7 +331,7 @@ struct SKR_RUNTIME_API StringType : skr_type_t {
     }
 };
 
-// skr::string_view
+// skr::StringView
 struct SKR_RUNTIME_API StringViewType : skr_type_t {
     StringViewType()
         : skr_type_t{ SKR_TYPE_CATEGORY_STRV }
@@ -344,7 +344,7 @@ struct SKR_RUNTIME_API ArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     uint64_t num;
     uint64_t size;
-    skr::string name;
+    skr::String name;
     ArrayType(const struct skr_type_t* elementType, uint64_t num, uint64_t size)
         : skr_type_t{ SKR_TYPE_CATEGORY_ARR }
         , elementType(elementType)
@@ -370,7 +370,7 @@ struct ObjectMethodTable {
 // skr::span<T>
 struct SKR_RUNTIME_API ArrayViewType : skr_type_t {
     const struct skr_type_t* elementType;
-    skr::string name;
+    skr::String name;
     ArrayViewType(const skr_type_t* elementType)
         : skr_type_t{ SKR_TYPE_CATEGORY_ARRV }
         , elementType(elementType)
@@ -386,10 +386,10 @@ struct DynArrayStorage
     uint8_t* capacity;
 };
 
-// skr::vector<T>
+// skr::Vector<T>
 struct DynArrayType : skr_type_t {
     const struct skr_type_t* elementType;
-    skr::string name;
+    skr::String name;
     SKR_RUNTIME_API uint64_t Num(void* data) const;
     SKR_RUNTIME_API void* Get(void* data, uint64_t index) const;
     SKR_RUNTIME_API void Reset(void* data, uint64_t size) const;
@@ -415,7 +415,7 @@ struct SKR_RUNTIME_API RecordType : skr_type_t
 
     }
     RecordType(RecordType&&) = default;
-    void initialize(uint64_t size, uint64_t align, skr::string_view name, 
+    void initialize(uint64_t size, uint64_t align, skr::StringView name, 
         bool object, const RecordType* base, ObjectMethodTable nativeMethods,
         const skr::span<struct skr_field_t> fields, const skr::span<struct skr_method_t> methods)
     {
@@ -435,7 +435,7 @@ struct SKR_RUNTIME_API RecordType : skr_type_t
     bool IsObject() const { return object; }
     const ObjectMethodTable& GetObjectMethods() const { return nativeMethods; }
     const skr::span<const skr_field_t> GetFields() const { return fields; }
-    const skr::string_view GetName() const { return name; }
+    const skr::StringView GetName() const { return name; }
     const RecordType* GetBaseType() const { return base; }
     bool IsBaseOf(const RecordType& other) const;
 
@@ -445,7 +445,7 @@ private:
     uint64_t align = 0;
     bool object = false; // true if inherits from SInterface
 
-    skr::string_view name = u8"";
+    skr::StringView name = u8"";
     const RecordType* base = nullptr;
     skr::span<struct skr_field_t> fields = {};
     skr::span<struct skr_method_t> methods = {};
@@ -455,7 +455,7 @@ private:
 // enum T
 struct SKR_RUNTIME_API EnumType : skr_type_t {
     struct Enumerator {
-        const skr::string_view name;
+        const skr::StringView name;
         int64_t value;
     };
     EnumType(skr_guid_t guid)
@@ -464,9 +464,9 @@ struct SKR_RUNTIME_API EnumType : skr_type_t {
 
     }
     EnumType(EnumType&&) = default;
-    void initialize(const skr_type_t* underlyingType, const skr::string_view name,
-        void (*fromString)(void* self, skr::string_view str),
-        skr::string (*toString)(const void* self), const skr::span<Enumerator> enumerators)
+    void initialize(const skr_type_t* underlyingType, const skr::StringView name,
+        void (*fromString)(void* self, skr::StringView str),
+        skr::String (*toString)(const void* self), const skr::span<Enumerator> enumerators)
     {
         this->type = SKR_TYPE_CATEGORY_ENUM;
         this->underlyingType = underlyingType;
@@ -479,15 +479,15 @@ struct SKR_RUNTIME_API EnumType : skr_type_t {
     
     const skr_type_t* GetUnderlyingType() const { return underlyingType; }
     skr_guid_t GetGuid() const { return guid; }
-    void FromString(void* self, skr::string_view str) const { fromString(self, str); }
+    void FromString(void* self, skr::StringView str) const { fromString(self, str); }
     auto ToString(const void* self) const { return toString(self); }
-    const skr::string_view GetName() const { return name; }
+    const skr::StringView GetName() const { return name; }
     const skr::span<const Enumerator> GetEnumerators() const { return enumerators; }
 private:
     const skr_type_t* underlyingType = nullptr;
-    skr::string_view name = {};
-    void (*fromString)(void* self, skr::string_view str);
-    skr::string (*toString)(const void* self);
+    skr::StringView name = {};
+    void (*fromString)(void* self, skr::StringView str);
+    skr::String (*toString)(const void* self);
     skr::span<Enumerator> enumerators;
 };
 
@@ -501,7 +501,7 @@ struct SKR_RUNTIME_API ReferenceType : skr_type_t {
     bool nullable;
     bool object;
     const struct skr_type_t* pointee;
-    skr::string name;
+    skr::String name;
     ReferenceType(Ownership ownership, bool nullable, bool object, const skr_type_t* pointee)
         : skr_type_t{ SKR_TYPE_CATEGORY_REF }
         , ownership(ownership)
@@ -566,7 +566,7 @@ struct type_of_vector {
 };
 
 template <class T, class Allocator>
-struct type_of<skr::vector<T, Allocator>> : type_of_vector<skr::vector<T, Allocator>, T> 
+struct type_of<skr::Vector<T, Allocator>> : type_of_vector<skr::Vector<T, Allocator>, T> 
 {
 };
 

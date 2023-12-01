@@ -330,11 +330,11 @@ void CommonVRAMReader::addUploadRequests(SkrAsyncServicePriority priority) SKR_N
                     // prepare upload buffer
                     SkrZoneScopedN("PrepareUploadBuffer");
 #ifdef SKR_PROFILE_ENABLE
-                    skr::string Name = u8"BufferUpload-";
+                    skr::String Name = u8"BufferUpload-";
                     Name += pPath->get_path();
                     SkrMessage(Name.c_str(), Name.size());
 #endif
-                    skr::string name = /*pBuffer->name ? buffer_io.vbuffer.buffer_name :*/ u8"";
+                    skr::String name = /*pBuffer->name ? buffer_io.vbuffer.buffer_name :*/ u8"";
                     name += u8"-upload";
                     upload_buffer = cgpux_create_mapped_upload_buffer(cmdqueue->device, pUpload->src_size, name.u8_str());
                     cmd.upload_buffers.emplace_back(upload_buffer);
@@ -377,11 +377,11 @@ void CommonVRAMReader::addUploadRequests(SkrAsyncServicePriority priority) SKR_N
                     // prepare upload buffer
                     SkrZoneScopedN("PrepareUploadBuffer");
 #ifdef SKR_PROFILE_ENABLE
-                    skr::string Name = u8"TextureUpload-";
+                    skr::String Name = u8"TextureUpload-";
                     Name += pPath->get_path();
                     SkrMessage(Name.c_str(), Name.size());
 #endif
-                    skr::string name = /*pBuffer->name ? buffer_io.vbuffer.buffer_name :*/ u8"";
+                    skr::String name = /*pBuffer->name ? buffer_io.vbuffer.buffer_name :*/ u8"";
                     name += u8"-upload";
                     upload_buffer = cgpux_create_mapped_upload_buffer(cmdqueue->device, pUpload->src_size, name.u8_str());
                     cmd.upload_buffers.emplace_back(upload_buffer);

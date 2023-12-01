@@ -20,7 +20,7 @@ struct parser {
     }
 
     struct cmd {
-        skr::string shorthand, value, descr;
+        skr::String shorthand, value, descr;
         bool is_required, is_boolean;
     };
 
@@ -30,12 +30,12 @@ struct parser {
         if (m_argc - 1 < m_required) return abort();
 
         int num_required = 0;
-        skr::flat_hash_set<skr::string, skr::Hash<skr::string>> parsed_shorthands;
+        skr::FlatHashSet<skr::String, skr::Hash<skr::String>> parsed_shorthands;
         parsed_shorthands.reserve(m_argc);
 
         for (int i = 1; i != m_argc; ++i)
         {
-            skr::string parsed((char8_t*)m_argv[i]);
+            skr::String parsed((char8_t*)m_argv[i]);
             if (parsed.view() == u8"-h" || parsed == u8"--help") return abort();
             int id = 0;
             if (const auto it = m_shorthands.find(parsed); it == m_shorthands.end())
@@ -94,7 +94,7 @@ struct parser {
         SKR_LOG_WARN(u8" [-h,--help]\n\tPrint this help text and silently exits.");
     }
 
-    bool add(skr::string const& name, skr::string const& descr, skr::string const& shorthand,
+    bool add(skr::String const& name, skr::String const& descr, skr::String const& shorthand,
     bool is_required, bool is_boolean = false)
     {
         bool ret = m_cmds
@@ -111,7 +111,7 @@ struct parser {
     }
 
     template <typename T>
-    T get(skr::string const& name) const
+    T get(skr::String const& name) const
     {
         auto it = m_cmds.find(name);
         if (it == m_cmds.end())
@@ -124,7 +124,7 @@ struct parser {
     }
 
     template <typename T>
-    std::optional<T> get_optional(skr::string const& name) const
+    std::optional<T> get_optional(skr::String const& name) const
     {
         auto it = m_cmds.find(name);
         if (it == m_cmds.end()) return std::nullopt;
@@ -132,7 +132,7 @@ struct parser {
         return parse<T>(value);
     }
 
-    bool parsed(skr::string const& name) const
+    bool parsed(skr::String const& name) const
     {
         auto it = m_cmds.find(name);
         if (it == m_cmds.end()) return false;
@@ -147,9 +147,9 @@ struct parser {
     }
 
     template <typename T>
-    T parse(skr::string const& value) const
+    T parse(skr::String const& value) const
     {
-        if constexpr (std::is_same<T, skr::string>::value)
+        if constexpr (std::is_same<T, skr::String>::value)
         {
             return value;
         }
@@ -204,9 +204,9 @@ private:
     int m_argc;
     char** m_argv;
     int m_required;
-    skr::flat_hash_map<skr::string, cmd, skr::Hash<skr::string>> m_cmds;
-    skr::flat_hash_map<skr::string, int, skr::Hash<skr::string>> m_shorthands;
-    skr::vector<skr::string> m_names;
+    skr::FlatHashMap<skr::String, cmd, skr::Hash<skr::String>> m_cmds;
+    skr::FlatHashMap<skr::String, int, skr::Hash<skr::String>> m_shorthands;
+    skr::Vector<skr::String> m_names;
 
     bool abort() const
     {

@@ -137,7 +137,7 @@ public:
     }
 
     SAtomic32 waiting_workers_count = 0;
-    skr::string name = u8"JobItemQueue";
+    skr::String name = u8"JobItemQueue";
     SAtomic32 is_end_job_queued = false;
 
     skr::stl_vector<JobItem*> list_runnable;
@@ -243,7 +243,7 @@ JobResult JobQueue::initialize() SKR_NOEXCEPT
         {
             return ASYNC_RESULT_ERROR_OUT_OF_MEMORY;
         }
-        skr::string tname = n ? n : u8"UnknownJobQueue";
+        skr::String tname = n ? n : u8"UnknownJobQueue";
         auto taftfix = skr::format(u8"_{}"_cuqv, (int32_t)i);
         tname.append(taftfix);
         NamedThreadDesc tdesc = {};

@@ -4,7 +4,7 @@
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/containers_new/span.hpp"
-#include "SkrRT/containers_new/function.hpp"
+#include "SkrRT/containers_new/stl_function.hpp"
 #include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/serde/json/reader_fwd.h"
@@ -133,7 +133,7 @@ struct MPWorldDeltaBuildContext {
     dual_type_index_t historyComponent;
 };
 
-using entity_map_t = skr::flat_hash_map<dual_entity_t, dual_entity_t>;
+using entity_map_t = skr::FlatHashMap<dual_entity_t, dual_entity_t>;
 
 using component_delta_build_callback_t = skr::task::event_t (*)(dual_type_index_t type, dual_query_t* query, MPWorldDeltaBuildContext ctx, MPWorldDeltaViewBuilder& builder);
 using component_delta_apply_callback_t = skr::task::event_t (*)(dual_type_index_t type, dual_query_t* query, const MPWorldDeltaView& delta, const entity_map_t& map);
@@ -141,15 +141,15 @@ using component_delta_apply_callback_t = skr::task::event_t (*)(dual_type_index_
 struct IWorldDeltaBuilder {
     virtual ~IWorldDeltaBuilder()                                             = default;
     virtual void Initialize(dual_storage_t* storage)                          = 0;
-    virtual void GenerateDelta(skr::vector<MPWorldDeltaViewBuilder>& builder) = 0;
+    virtual void GenerateDelta(skr::Vector<MPWorldDeltaViewBuilder>& builder) = 0;
 };
 
 MP_SHARED_API IWorldDeltaBuilder* CreateWorldDeltaBuilder();
 void                              RegisterComponentDeltaBuilder(dual_type_index_t component, component_delta_build_callback_t inCallback, dual_type_index_t historyComponent = dual::kInvalidTypeIndex);
 
 struct IWorldDeltaApplier {
-    using SpawnPrefab_t                                                                                          = skr::function<dual_entity_t(dual_storage_t*, dual_entity_t entity, skr_guid_t prefab, dual_entity_type_t* type)>;
-    using DestroyEntity_t                                                                                        = skr::function<void(dual_storage_t*, dual_entity_t entity)>;
+    using SpawnPrefab_t                                                                                          = skr::stl_function<dual_entity_t(dual_storage_t*, dual_entity_t entity, skr_guid_t prefab, dual_entity_type_t* type)>;
+    using DestroyEntity_t                                                                                        = skr::stl_function<void(dual_storage_t*, dual_entity_t entity)>;
     virtual ~IWorldDeltaApplier()                                                                                = default;
     virtual void   Initialize(dual_storage_t* storage, SpawnPrefab_t spawnPrefab, DestroyEntity_t destroyPrefab) = 0;
     virtual void   ApplyDelta(const MPWorldDeltaView& delta, entity_map_t& map)                                  = 0;

@@ -115,7 +115,7 @@ public:
         return access_node(edge->to_node);
     }
 
-    virtual uint32_t foreach_neighbors(dag_id_t id, skr::function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
+    virtual uint32_t foreach_neighbors(dag_id_t id, skr::stl_function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
     {
         const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
@@ -128,7 +128,7 @@ public:
         return count;
     }
 
-    virtual uint32_t foreach_neighbors(const dag_id_t id, skr::function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
+    virtual uint32_t foreach_neighbors(const dag_id_t id, skr::stl_function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
     {
         const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
@@ -141,17 +141,17 @@ public:
         return count;
     }
     
-    virtual uint32_t foreach_neighbors(Node* node, skr::function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
+    virtual uint32_t foreach_neighbors(Node* node, skr::stl_function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
     {
         return foreach_neighbors(node->get_id(), f);
     }
 
-    virtual uint32_t foreach_neighbors(const Node* node, skr::function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
+    virtual uint32_t foreach_neighbors(const Node* node, skr::stl_function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
     {
         return foreach_neighbors(node->get_id(), f);
     }
 
-    virtual uint32_t foreach_inv_neighbors(dag_id_t id, skr::function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
+    virtual uint32_t foreach_inv_neighbors(dag_id_t id, skr::stl_function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
     {
         const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
@@ -164,7 +164,7 @@ public:
         return count;
     }
 
-    virtual uint32_t foreach_inv_neighbors(const dag_id_t id, skr::function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
+    virtual uint32_t foreach_inv_neighbors(const dag_id_t id, skr::stl_function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
     {
         const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
@@ -177,17 +177,17 @@ public:
         return count;
     }
 
-    virtual uint32_t foreach_inv_neighbors(Node* node, skr::function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
+    virtual uint32_t foreach_inv_neighbors(Node* node, skr::stl_function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
     {
         return foreach_inv_neighbors(node->get_id(), f);
     }
 
-    virtual uint32_t foreach_inv_neighbors(const Node* node, skr::function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
+    virtual uint32_t foreach_inv_neighbors(const Node* node, skr::stl_function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
     {
         return foreach_inv_neighbors(node->get_id(), f);
     }
 
-    virtual uint32_t foreach_outgoing_edges(dag_id_t id, skr::function<void(Node* from, Node* to, Edge* edge)> f) SKR_NOEXCEPT final
+    virtual uint32_t foreach_outgoing_edges(dag_id_t id, skr::stl_function<void(Node* from, Node* to, Edge* edge)> f) SKR_NOEXCEPT final
     {
         const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
@@ -200,12 +200,12 @@ public:
         return count;
     }
 
-    virtual uint32_t foreach_outgoing_edges(Node* node, skr::function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
+    virtual uint32_t foreach_outgoing_edges(Node* node, skr::stl_function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
     {
         return foreach_outgoing_edges(node->id, func);
     }
 
-    virtual uint32_t foreach_incoming_edges(dag_id_t id, skr::function<void(Node* from, Node* to, Edge* edge)> f) SKR_NOEXCEPT final
+    virtual uint32_t foreach_incoming_edges(dag_id_t id, skr::stl_function<void(Node* from, Node* to, Edge* edge)> f) SKR_NOEXCEPT final
     {
         const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
@@ -219,12 +219,12 @@ public:
     }
 
     virtual uint32_t foreach_incoming_edges(Node* node,
-        skr::function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
+        skr::stl_function<void(Node* from, Node* to, Edge* edge)> func) SKR_NOEXCEPT final
     {
         return foreach_incoming_edges(node->id, func);
     }
 
-    virtual uint32_t foreach_edges(skr::function<void(Node* from, Node* to, Edge* edge)> f) SKR_NOEXCEPT final
+    virtual uint32_t foreach_edges(skr::stl_function<void(Node* from, Node* to, Edge* edge)> f) SKR_NOEXCEPT final
     {
         uint32_t count = 0;
         for (ListDigraph::ArcIt arcIt(graph); arcIt != INVALID; ++arcIt) 
@@ -279,22 +279,22 @@ uint32_t DependencyGraphNode::incoming_edges() SKR_NOEXCEPT
     return graph->incoming_edges(this);
 }
 
-uint32_t DependencyGraphNode::foreach_neighbors(skr::function<void(DependencyGraphNode* neig)> f) SKR_NOEXCEPT
+uint32_t DependencyGraphNode::foreach_neighbors(skr::stl_function<void(DependencyGraphNode* neig)> f) SKR_NOEXCEPT
 {
     return graph->foreach_neighbors(this, f);
 }
 
-uint32_t DependencyGraphNode::foreach_neighbors(skr::function<void(const DependencyGraphNode* neig)> f) const SKR_NOEXCEPT
+uint32_t DependencyGraphNode::foreach_neighbors(skr::stl_function<void(const DependencyGraphNode* neig)> f) const SKR_NOEXCEPT
 {
     return graph->foreach_neighbors(this, f);
 }
 
-uint32_t DependencyGraphNode::foreach_inv_neighbors(skr::function<void(DependencyGraphNode* inv_neig)> f) SKR_NOEXCEPT
+uint32_t DependencyGraphNode::foreach_inv_neighbors(skr::stl_function<void(DependencyGraphNode* inv_neig)> f) SKR_NOEXCEPT
 {
     return graph->foreach_inv_neighbors(this, f);
 }
 
-uint32_t DependencyGraphNode::foreach_inv_neighbors(skr::function<void(const DependencyGraphNode* inv_neig)> f) const SKR_NOEXCEPT
+uint32_t DependencyGraphNode::foreach_inv_neighbors(skr::stl_function<void(const DependencyGraphNode* inv_neig)> f) const SKR_NOEXCEPT
 {
     return graph->foreach_inv_neighbors(this, f);
 }

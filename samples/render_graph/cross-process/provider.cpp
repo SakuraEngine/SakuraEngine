@@ -42,7 +42,7 @@ struct ProviderRenderer
 
 void ProviderRenderer::create_window()
 {
-    auto title = skr::string::from_utf8(SKR_UTF8("Cross-Process Provider ["));
+    auto title = skr::String::from_utf8(SKR_UTF8("Cross-Process Provider ["));
     title += gCGPUBackendNames[backend];
     title += SKR_UTF8("]");
     title += SKR_UTF8(" PID: ");
@@ -246,7 +246,7 @@ int provider_set_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provider_id
         // Txn body: write db
         {
             //Initialize the key with the key we're looking for
-            skr::string keyString = skr::format(u8"{}", provider_id);
+            skr::String keyString = skr::format(u8"{}", provider_id);
             MDB_val key = { (size_t)keyString.size(), (void*)keyString.c_str() };
             MDB_val data = { sizeof(info), (void*)&info };
 

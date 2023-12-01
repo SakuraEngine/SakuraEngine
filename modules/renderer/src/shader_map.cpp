@@ -26,7 +26,7 @@ struct ShaderProgress : public skr::AsyncProgress<skr::FutureLauncher<bool>, int
     bool do_in_background() override;
 
     ShaderMapImpl* factory = nullptr;
-    skr::string bytes_uri;
+    skr::String bytes_uri;
     skr_io_future_t data_future;
     skr::BlobId blob = nullptr;
     skr_platform_shader_identifier_t identifier = {};
@@ -72,8 +72,8 @@ struct ShaderMapImpl : public skr_shader_map_t
     uint64_t frame_index = 0;
     skr_shader_map_root_t root;
 
-    skr::parallel_flat_hash_map<skr_platform_shader_identifier_t, SPtr<MappedShader>, skr_platform_shader_identifier_t::hasher> mShaderMap;
-    skr::parallel_flat_hash_map<skr_platform_shader_identifier_t, SPtr<ShaderProgress>, skr_platform_shader_identifier_t::hasher> mShaderTasks;
+    skr::ParallelFlatHashMap<skr_platform_shader_identifier_t, SPtr<MappedShader>, skr_platform_shader_identifier_t::hasher> mShaderMap;
+    skr::ParallelFlatHashMap<skr_platform_shader_identifier_t, SPtr<ShaderProgress>, skr_platform_shader_identifier_t::hasher> mShaderTasks;
 };
 
 bool ShaderProgress::do_in_background()

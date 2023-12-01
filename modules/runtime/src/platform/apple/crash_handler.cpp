@@ -20,7 +20,7 @@ struct MacCrashHandler : public SUnixCrashHandler
         return SUnixCrashHandler::Initialize();
     }
 
-    skr::string app_name;
+    skr::String app_name;
 };
 MacCrashHandler mac_crash_handler;
 }

@@ -28,9 +28,9 @@ sattr("serialize" : "json")
 SKR_ANIMTOOL_API SAnimGltfImporter : public skd::asset::SImporter
 {
     sattr("no-default" : true)
-    skr::string assetPath;
+    skr::String assetPath;
     sattr("no-default" : true)
-    skr::string animationName;
+    skr::String animationName;
     float samplingRate = 30.f;
     virtual ~SAnimGltfImporter() = default;
     virtual void* Import(skr_io_ram_service_t*, SCookContext * context) override;
@@ -57,7 +57,7 @@ SAnimOptimizationOverride
         "distance" : 0.1 //  The distance (from the joint) at which error is measured. This allows to emulate effect on skinning.
     }
     */
-    skr::string name = u8"*";
+    skr::String name = u8"*";
     float tolerance = 0.001f;
     float distance = 0.1f;
 };
@@ -90,7 +90,7 @@ SAnimCookSettings
     bool optimize = true; //  Activates keyframes reduction optimization.
     float tolerance = 0.001f; //  The maximum error that an optimization is allowed to generate on a whole joint hierarchy.
     float distance = 0.1f; //  The distance (from the joint) at which error is measured. This allows to emulate effect on skinning.
-    skr::vector<SAnimOptimizationOverride> override; //  Per joint optimization setting override
+    skr::Vector<SAnimOptimizationOverride> override; //  Per joint optimization setting override
 };
 
 sreflect_struct("guid" : "81F1C813-1ABA-41BE-8D7A-F6C88E73E891")

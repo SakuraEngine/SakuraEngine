@@ -91,7 +91,7 @@ NamedThreadFunction* NamedThread::get_function() const SKR_NOEXCEPT
 AsyncResult NamedThread::initialize(const NamedThreadDesc& pdesc) SKR_NOEXCEPT
 {
     desc = pdesc;
-    tname = skr::string::from_utf8(desc.name ? desc.name : u8"unnamed");
+    tname = skr::String::from_utf8(desc.name ? desc.name : u8"unnamed");
     skr_atomic32_store_relaxed(&priority, priority);
     return ASYNC_RESULT_OK;
 }

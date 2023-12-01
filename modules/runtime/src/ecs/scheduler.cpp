@@ -136,7 +136,7 @@ bool dual::scheduler_t::sync_query(dual_query_t* query)
         groups.push_back(group);
     };
     query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
-    skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
+    skr::FlatHashSet<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
 
     auto sync_entry_once = [&](dual::archetype_t* type, dual_type_index_t i, bool readonly, bool atomic) -> bool
     {
@@ -254,7 +254,7 @@ struct hash_shared_ptr {
         return value.hash();
     }
 };
-using DependencySet = skr::flat_hash_set<skr::task::event_t, hash_shared_ptr>;
+using DependencySet = skr::FlatHashSet<skr::task::event_t, hash_shared_ptr>;
 void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool readonly, bool atomic, DependencySet& dependencies)
 {
     SKR_ASSERT(job);
@@ -583,7 +583,7 @@ skr::stl_vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(
         }
     }
 
-    skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
+    skr::FlatHashSet<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
     auto sync_entry = [&](const dual_group_t* group, dual_type_index_t localType, bool readonly, bool atomic) {
         if (localType == kInvalidTypeIndex)
             return;

@@ -19,10 +19,10 @@ SKR_RUNTIME_API long long         opt_enum(lua_State* L, int index, long long de
 SKR_RUNTIME_API int               push_guid(lua_State* L, const skr_guid_t* guid);
 SKR_RUNTIME_API const skr_guid_t* check_guid(lua_State* L, int index);
 SKR_RUNTIME_API const skr_guid_t* opt_guid(lua_State* L, int index, const skr_guid_t* def);
-SKR_RUNTIME_API int               push_string(lua_State* L, const skr::string& str);
-SKR_RUNTIME_API int               push_string(lua_State* L, skr::string_view str);
-SKR_RUNTIME_API skr::string check_string(lua_State* L, int index);
-SKR_RUNTIME_API skr::string                  opt_string(lua_State* L, int index, const skr::string& def);
+SKR_RUNTIME_API int               push_string(lua_State* L, const skr::String& str);
+SKR_RUNTIME_API int               push_string(lua_State* L, skr::StringView str);
+SKR_RUNTIME_API skr::String check_string(lua_State* L, int index);
+SKR_RUNTIME_API skr::String                  opt_string(lua_State* L, int index, const skr::String& def);
 SKR_RUNTIME_API int                          push_resource(lua_State* L, const skr_resource_handle_t* resource);
 SKR_RUNTIME_API const skr_resource_handle_t* check_resource(lua_State* L, int index);
 SKR_RUNTIME_API const skr_resource_handle_t* opt_resource(lua_State* L, int index, const skr_resource_handle_t* def);
@@ -70,7 +70,7 @@ struct DefaultBindTrait<T, std::enable_if_t<!std::is_enum_v<T> && skr::is_comple
     }
     static T& check(lua_State* L, int index)
     {
-        ::skr::string type_name = skr::rttr::type_name<T>();
+        ::skr::String type_name = skr::rttr::type_name<T>();
         return *(T*)check_unknown(L, index, { type_name.c_str(), type_name.size() });
     }
 };
@@ -298,27 +298,27 @@ struct BindTrait<resource::TResourceHandle<T>> {
 };
 
 template <>
-struct BindTrait<skr::string> {
-    static int push(lua_State* L, const skr::string& str)
+struct BindTrait<skr::String> {
+    static int push(lua_State* L, const skr::String& str)
     {
         return push_string(L, str);
     }
 
-    static skr::string check(lua_State* L, int index, int& used)
+    static skr::String check(lua_State* L, int index, int& used)
     {
         used = 1;
         return check_string(L, index);
     }
 
-    static skr::string opt(lua_State* L, int index, const skr::string& def)
+    static skr::String opt(lua_State* L, int index, const skr::String& def)
     {
         return opt_string(L, index, def);
     }
 };
 
 template <>
-struct BindTrait<skr::string_view> {
-    static int push(lua_State* L, skr::string_view str)
+struct BindTrait<skr::StringView> {
+    static int push(lua_State* L, skr::StringView str)
     {
         return push_string(L, str);
     }

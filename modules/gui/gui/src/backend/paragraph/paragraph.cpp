@@ -237,7 +237,7 @@ void _EmbeddedParagraph::_draw(godot::TextServer::TextDrawProxy* proxy, const sk
 //     for (auto& inl : inlines_)
 //     {
 //         std::visit(overloaded{
-//                    [&](skr::string& text) {
+//                    [&](skr::String& text) {
 //                        godot::Color color(txt.color.x, txt.color.y, txt.color.z, txt.color.w);
 //                        /*
 //                        godot::Color decorationColor(txt.textDecorationColor.X, txt.textDecorationColor.Y, txt.textDecorationColor.Z, txt.textDecorationColor.W);

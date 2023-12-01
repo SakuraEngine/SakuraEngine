@@ -16,7 +16,7 @@ public:
         append(args...);
     }
 
-    cartesian_product(skr::vector<skr::vector<T>> const& sequences) 
+    cartesian_product(skr::Vector<skr::Vector<T>> const& sequences) 
         : count(1)
     {
         tuples.reserve(sequences.size());
@@ -26,7 +26,7 @@ public:
         }
     }
 
-    cartesian_product(skr::vector<skr::vector<T>>&& sequences)
+    cartesian_product(skr::Vector<skr::Vector<T>>&& sequences)
         : cartesian_product(sequences)
     {
 
@@ -36,9 +36,9 @@ public:
     bool has_next() { return count > 0; }
 
     // next combination
-    skr::vector<T> next()
+    skr::Vector<T> next()
     {
-        skr::vector<T> res(tuples.size());
+        skr::Vector<T> res(tuples.size());
         auto s = res.end() - 1;
 
         for (auto p = tuples.end() - 1; p >= tuples.begin(); --p, --s) {
@@ -66,17 +66,17 @@ public:
 private:
     using I = const T*;
     using E = std::tuple<I, std::size_t, std::size_t>;
-    skr::vector<E> tuples;
+    skr::Vector<E> tuples;
     int64_t count;
 
     template <typename... Args>
-    void append(skr::vector<T> const& vec, Args&&... args)
+    void append(skr::Vector<T> const& vec, Args&&... args)
     {
         append(vec);
         append(args...);
     }
 
-    void append(skr::vector<T> const& vec)
+    void append(skr::Vector<T> const& vec)
     {
         count *= vec.size();
         tuples.emplace_back(std::cbegin(vec), 0ul, vec.size());

@@ -466,7 +466,7 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     const auto backend = device->adapter->instance->backend;
 
     // read shaders
-    skr::string vsname = u8"shaders/Game/gbuffer_vs";
+    skr::String vsname = u8"shaders/Game/gbuffer_vs";
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
     auto vsfile = skr_vfs_fopen(resource_vfs, vsname.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t _vs_length = (uint32_t)skr_vfs_fsize(vsfile);
@@ -474,7 +474,7 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     skr_vfs_fread(vsfile, _vs_bytes, 0, _vs_length);
     skr_vfs_fclose(vsfile);
 
-    skr::string fsname = u8"shaders/Game/gbuffer_fs";
+    skr::String fsname = u8"shaders/Game/gbuffer_fs";
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
     auto fsfile = skr_vfs_fopen(resource_vfs, fsname.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t _fs_length = (uint32_t)skr_vfs_fsize(fsfile);

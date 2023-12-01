@@ -5,7 +5,7 @@
 namespace skr
 {
 
-template<typename T, typename Container = skr::deque<T>>
+template<typename T, typename Container = skr::stl_deque<T>>
 using queue = std::queue<T, Container>;
 
 } // namespace skr

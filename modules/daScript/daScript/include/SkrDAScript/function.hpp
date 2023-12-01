@@ -67,9 +67,9 @@ private:
 };
 
 template <typename RetT, size_t N, typename ...Args>
-FORCEINLINE skr::array<TypeDecl, N> make_builtin_args(const Library* lib)
+FORCEINLINE skr::Array<TypeDecl, N> make_builtin_args(const Library* lib)
 {
-    skr::array<TypeDecl, N> args = { TypeDecl::MakeType<RetT>(lib), TypeDecl::MakeArgumentType<Args>(lib)... };
+    skr::Array<TypeDecl, N> args = { TypeDecl::MakeType<RetT>(lib), TypeDecl::MakeArgumentType<Args>(lib)... };
     return std::move(args);
 }
 
@@ -86,7 +86,7 @@ namespace das {
 template<typename R, typename ...Args>
 struct make_func_args<R(Args...)> 
 {
-    static FORCEINLINE skr::array<TypeDecl, 1 + sizeof...(Args)> make(const Library* lib) 
+    static FORCEINLINE skr::Array<TypeDecl, 1 + sizeof...(Args)> make(const Library* lib) 
     {
         return std::move(make_builtin_args<R, 1 + sizeof...(Args), Args...>(lib));
     }

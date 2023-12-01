@@ -2,7 +2,7 @@
 #include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/containers_new/stl_string.hpp"
 
-struct WASM3RuntimeFunctionTable : skr::flat_hash_map<skr::stl_string, IM3Function> {
+struct WASM3RuntimeFunctionTable : skr::FlatHashMap<skr::stl_string, IM3Function> {
 };
 
 struct WASM3RuntimeFunctionTable* WASM3RuntimeFunctionTableCreate()

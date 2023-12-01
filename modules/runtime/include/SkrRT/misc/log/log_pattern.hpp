@@ -64,8 +64,8 @@ struct FormatArg
     }
 
 private:
-    skr::string name;
-    skr::string demangle_name;
+    skr::String name;
+    skr::String demangle_name;
     void* data = nullptr;
     FormatFunc formatter = nullptr;
     void(*deleter)(void*) = nullptr;
@@ -101,12 +101,12 @@ public:
     };
     static constexpr uint64_t kAttributeCount = (uint64_t)LogPattern::Attribute::Count;
 
-    [[nodiscard]] skr::string const& pattern(
+    [[nodiscard]] skr::String const& pattern(
         const LogEvent& event,
-        skr::string_view formatted_message
+        skr::StringView formatted_message
     ) SKR_NOEXCEPT;
 
-    [[nodiscard]] skr::string const& last_result() SKR_NOEXCEPT;
+    [[nodiscard]] skr::String const& last_result() SKR_NOEXCEPT;
 
     LogPattern(const char8_t* format_pattern) SKR_NOEXCEPT
     {
@@ -122,7 +122,7 @@ public:
 
 protected:
     void _initialize() SKR_NOEXCEPT;
-    void _set_pattern(skr::string pattern) SKR_NOEXCEPT;
+    void _set_pattern(skr::String pattern) SKR_NOEXCEPT;
 
     template <Attribute I, typename T>
     void _set_arg(const char8_t* name)
@@ -143,13 +143,13 @@ protected:
 
     uint64_t pid_ = 0;
 
-    skr::string calculated_format_ = u8"";
+    skr::String calculated_format_ = u8"";
     uint32_t _args_n = 0;
-    skr::array<FormatArg, kAttributeCount> _args;
-    skr::array<int64_t, kAttributeCount> order_index_;
-    skr::array<bool, kAttributeCount> is_set_in_pattern_;
+    skr::Array<FormatArg, kAttributeCount> _args;
+    skr::Array<int64_t, kAttributeCount> order_index_;
+    skr::Array<bool, kAttributeCount> is_set_in_pattern_;
 
-    skr::string formatted_string_ = u8"";
+    skr::String formatted_string_ = u8"";
 };
 
 static constexpr uint64_t kAttributeCount = LogPattern::kAttributeCount;

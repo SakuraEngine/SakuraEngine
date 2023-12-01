@@ -10,7 +10,7 @@
 #include "cgpu/drivers/nsight/GFSDK_Aftermath_GpuCrashDump.h"
 #include "cgpu/drivers/nsight/GFSDK_Aftermath_GpuCrashDumpDecoding.h"
 
-inline skr::string AftermathErrorMessage(GFSDK_Aftermath_Result result)
+inline skr::String AftermathErrorMessage(GFSDK_Aftermath_Result result)
 {
     switch (result)
     {
@@ -83,7 +83,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
             GFSDK_Aftermath_GpuCrashDumpDescriptionKey_ApplicationName,
             &applicationNameLength));
 
-        skr::vector<char8_t> applicationName(applicationNameLength, '\0');
+        skr::Vector<char8_t> applicationName(applicationNameLength, '\0');
         if (applicationNameLength)
         {
             AFTERMATH_CHECK_ERROR(aftermath_GpuCrashDump_GetDescription(
@@ -98,12 +98,12 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         // driver release) we may see redundant crash dumps. As a workaround,
         // attach a unique count to each generated file name.
         static int count = 0;
-        const skr::string baseFileNameFmt = applicationNameLength ? skr::string(applicationName.data()) : skr::string(u8"CGPUApplication-{}-{}");
+        const skr::String baseFileNameFmt = applicationNameLength ? skr::String(applicationName.data()) : skr::String(u8"CGPUApplication-{}-{}");
         const auto baseFileName = skr::format(baseFileNameFmt, baseInfo.pid, ++count);
 
         // Write the crash dump data to a file using the .nv-gpudmp extension
         // registered with Nsight Graphics.
-        skr::string crashDumpFileName = baseFileName;
+        skr::String crashDumpFileName = baseFileName;
         crashDumpFileName += u8".nv-gpudmp";
         std::ofstream dumpFile(crashDumpFileName.c_str(), std::ios::out | std::ios::binary);
         if (dumpFile)

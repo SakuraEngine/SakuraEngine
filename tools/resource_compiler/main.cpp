@@ -82,7 +82,7 @@ void DestroyResourceSystem(skd::SProject& proj)
     SkrDelete(registry);
 }
 
-skr::vector<skd::SProject*> open_projects(int argc, char** argv)
+skr::Vector<skd::SProject*> open_projects(int argc, char** argv)
 {
     skr::cmd::parser parser(argc, argv);
     parser.add(u8"project", u8"project path", u8"-p", false);
@@ -92,10 +92,10 @@ skr::vector<skd::SProject*> open_projects(int argc, char** argv)
         SKR_LOG_ERROR(u8"Failed to parse command line arguments.");
         return {};
     }
-    auto projectPath = parser.get_optional<skr::string>(u8"project");
+    auto projectPath = parser.get_optional<skr::String>(u8"project");
 
     std::error_code ec = {};
-    skr::filesystem::path workspace{parser.get<skr::string>(u8"workspace").u8_str()};
+    skr::filesystem::path workspace{parser.get<skr::String>(u8"workspace").u8_str()};
     skd::SProject::SetWorkspace(workspace);
     skr::filesystem::recursive_directory_iterator iter(workspace, ec);
     skr::stl_vector<skr::filesystem::path> projectFiles;
@@ -108,7 +108,7 @@ skr::vector<skd::SProject*> open_projects(int argc, char** argv)
         iter.increment(ec);
     }
     
-    skr::vector<skd::SProject*> result;
+    skr::Vector<skd::SProject*> result;
     for (auto& projectFile : projectFiles)
     {
         if(auto proj = skd::SProject::OpenProject(projectFile))

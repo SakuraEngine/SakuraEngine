@@ -5,7 +5,7 @@
 
 namespace option_utils
 {
-inline void stringfy(skr::string& string, skr::span<skr_shader_option_instance_t> ordered_options)
+inline void stringfy(skr::String& string, skr::span<skr_shader_option_instance_t> ordered_options)
 {
     for (auto&& option : ordered_options)
     {
@@ -16,7 +16,7 @@ inline void stringfy(skr::string& string, skr::span<skr_shader_option_instance_t
     }
 }
 
-inline void stringfy(skr::string& string, const skr_shader_option_sequence_t& seq, skr::span<uint32_t> indices)
+inline void stringfy(skr::String& string, const skr_shader_option_sequence_t& seq, skr::span<uint32_t> indices)
 {
     for (uint32_t i = 0; i < seq.keys.size(); i++)
     {

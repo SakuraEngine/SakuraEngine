@@ -11,8 +11,8 @@ struct entity_registry_t {
         uint32_t indexInChunk : 24;
         uint32_t version : 8;
     };
-    skr::vector<entry_t> entries;
-    skr::vector<EIndex> freeEntries;
+    skr::Vector<entry_t> entries;
+    skr::Vector<EIndex> freeEntries;
     SMutexObject mutex;
 
     void reset();

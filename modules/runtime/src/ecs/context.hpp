@@ -12,5 +12,5 @@ struct dual_context_t {
     dual::pool_t smallPool;
     dual::type_registry_t typeRegistry;
     dual::scheduler_t scheduler;
-    skr::string error;
+    skr::String error;
 };

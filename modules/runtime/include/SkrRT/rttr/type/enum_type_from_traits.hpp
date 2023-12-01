@@ -17,7 +17,7 @@ struct EnumTypeFromTraits : public EnumType {
         return true;
     }
 
-    EnumValue value_from_string(string_view str) const override
+    EnumValue value_from_string(StringView str) const override
     {
         T result;
         if (EnumTraits<T>::from_string(str, result))
@@ -29,7 +29,7 @@ struct EnumTypeFromTraits : public EnumType {
             return {};
         }
     }
-    string value_to_string(const EnumValue& value) const override
+    String value_to_string(const EnumValue& value) const override
     {
         T result;
         if (value.cast_to(result))

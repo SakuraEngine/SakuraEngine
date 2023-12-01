@@ -28,7 +28,7 @@
 #include "SkrRT/containers_new/span.hpp"
 #include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/containers_new/sptr.hpp"
-#include "SkrRT/containers_new/function.hpp"
+#include "SkrRT/containers_new/stl_function.hpp"
 
 // function ref
 #include "SkrRT/containers_new/function_ref.hpp"
@@ -55,10 +55,10 @@ namespace skr::gui
 {
 // !!! 生命周期无法保证，仅用于参数或局部使用
 template <typename F>
-using FunctionRef = ::skr::function_ref<F>;
+using FunctionRef = ::skr::FunctionRef<F>;
 
 template <typename F>
-using Function = ::skr::function<F>;
+using Function = ::skr::stl_function<F>;
 
 // smart ptr
 template <typename T>
@@ -75,10 +75,10 @@ template <typename T>
 using Span = skr::lite::LiteSpan<T>;
 
 // containers
-using String     = skr::string;
-using StringView = skr::string_view;
+using String     = skr::String;
+using StringView = skr::StringView;
 template <typename T>
-using Array = skr::vector<T>;
+using Array = skr::Vector<T>;
 template <typename K, typename V>
 using Map = skr::UMap<K, V>;
 template <typename T>

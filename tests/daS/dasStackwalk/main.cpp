@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     auto library = skr::das::Library::Create(lib_desc);
 
     // compile script
-    skr::string script_path = skr::das::Environment::GetRootDir();
+    skr::String script_path = skr::das::Environment::GetRootDir();
     script_path += TUTORIAL_NAME;
     auto program = skr::das::Environment::compile_dascript(
         script_path.u8_str(), faccess, tout, library);

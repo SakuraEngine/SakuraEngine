@@ -182,11 +182,11 @@ dual_query_t* dual_storage_t::make_query(const dual_filter_t& filter, const dual
 dual_query_t* dual_storage_t::make_query(const char* inDesc)
 {
     using namespace dual;
-    skr::string desc = skr::string::from_utf8((ochar8_t*)inDesc);
+    skr::String desc = skr::String::from_utf8((ochar8_t*)inDesc);
     using namespace skr;
     desc.replace(u8""_txtv, u8" "_txtv);
     desc.replace(u8""_txtv, u8"\r"_txtv);
-    ostr::sequence<skr::string_view> parts;
+    ostr::sequence<skr::StringView> parts;
     auto spliter = u8","_txtv;
     desc.split(spliter, parts, true);
     // todo: errorMsg? global error code?

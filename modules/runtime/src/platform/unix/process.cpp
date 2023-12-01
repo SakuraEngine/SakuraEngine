@@ -23,7 +23,7 @@ typedef struct SProcess
 
 SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments, uint32_t arg_count, const char8_t* stdout_file)
 {
-	skr::vector<skr::string> Args;
+	skr::Vector<skr::String> Args;
 	for (size_t i = 0; i < arg_count; ++i)
 	{
         Args.add(arguments[i]);

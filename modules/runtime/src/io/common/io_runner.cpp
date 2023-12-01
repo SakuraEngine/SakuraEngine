@@ -290,8 +290,8 @@ void RunnerBase::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     if (fatal)
     {
         {
-            skr::string processing_message = u8"batch processing: ";
-            skr::string processed_message = u8"batch processed: ";
+            skr::String processing_message = u8"batch processing: ";
+            skr::String processed_message = u8"batch processed: ";
             for (auto processor : batch_processors)
             {
                 processing_message += skr::format(u8"{} ", processor->processing_count(priority));
@@ -301,8 +301,8 @@ void RunnerBase::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
             SKR_LOG_FATAL(processed_message.u8_str());
         }
         {
-            skr::string processing_message = u8"request processing: ";
-            skr::string processed_message = u8"request processed: ";
+            skr::String processing_message = u8"request processing: ";
+            skr::String processed_message = u8"request processed: ";
             for (auto processor : request_processors)
             {
                 processing_message += skr::format(u8"{} ", processor->processing_count(priority));

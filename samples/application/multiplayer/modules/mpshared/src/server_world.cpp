@@ -143,12 +143,12 @@ void MPServerWorld::GenerateWorldDelta()
 }
 
 
-skr::vector<uint8_t> MPServerWorld::SerializeWorldDelta(const MPWorldDeltaViewBuilder& deltaBuilder)
+skr::Vector<uint8_t> MPServerWorld::SerializeWorldDelta(const MPWorldDeltaViewBuilder& deltaBuilder)
 {
     MPWorldDelta delta;
     delta.arena = skr::binary::make_arena<MPWorldDeltaView>(delta.blob, deltaBuilder);
     delta.frame = gameFrame;
-    skr::vector<uint8_t> buffer;
+    skr::Vector<uint8_t> buffer;
     skr::binary::VectorWriterBitpacked writer{&buffer};
     skr_binary_writer_t archive(writer);
     skr::binary::Write(&archive, delta);
@@ -161,11 +161,11 @@ void MPServerWorld::SendWorldDelta()
     for(int i=0; i<count; ++i)
     {
         auto result = SerializeWorldDelta(worldDelta[i]);
-        skr::vector<uint8_t> compressed;
+        skr::Vector<uint8_t> compressed;
         compressed.resize_default(LZ4_COMPRESSBOUND(result.size()));
         int compressedSize = LZ4_compress_default((const char*)result.data(), (char*)compressed.data(), result.size(), compressed.size());
         SKR_ASSERT(compressedSize > 0);
-        skr::vector<uint8_t> data;
+        skr::Vector<uint8_t> data;
         data.resize_default(sizeof(uint32_t) + sizeof(uint64_t) + compressedSize);
         auto current = &data[0];
         *(uint32_t*)current = (uint32_t)MPEventType::SyncWorld;
@@ -175,7 +175,7 @@ void MPServerWorld::SendWorldDelta()
         memcpy(current, compressed.data(), compressedSize);
 
         {
-            skr::vector<uint8_t> decompressedData;
+            skr::Vector<uint8_t> decompressedData;
             decompressedData.resize_default(result.size());
             int decompressedSize = LZ4_decompress_safe((const char*)current, (char*)decompressedData.data(), compressedSize, decompressedData.size());
             SKR_ASSERT(decompressedSize == decompressedData.size());

@@ -11,8 +11,8 @@
 namespace skr {
 namespace log {
 
-using LogPatternMap = skr::parallel_flat_hash_map<skr_guid_t, eastl::unique_ptr<LogPattern>, skr::guid::hash>;
-using LogSinkMap = skr::parallel_flat_hash_map<skr_guid_t, eastl::unique_ptr<LogSink>, skr::guid::hash>;
+using LogPatternMap = skr::ParallelFlatHashMap<skr_guid_t, eastl::unique_ptr<LogPattern>, skr::guid::hash>;
+using LogSinkMap = skr::ParallelFlatHashMap<skr_guid_t, eastl::unique_ptr<LogSink>, skr::guid::hash>;
 
 struct SKR_RUNTIME_API LogManager
 {
@@ -34,7 +34,7 @@ struct SKR_RUNTIME_API LogManager
     bool RegisterSink(skr_guid_t guid, eastl::unique_ptr<LogSink> sink);
     LogSink* QuerySink(skr_guid_t guid);
 
-    void PatternAndSink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT;
+    void PatternAndSink(const LogEvent& event, skr::StringView content) SKR_NOEXCEPT;
     void FlushAllSinks() SKR_NOEXCEPT;
     bool ShouldBacktrace(const LogEvent& event) SKR_NOEXCEPT;
 

@@ -56,7 +56,7 @@ public:
 
 protected:
     CGPUDeviceId                                                     device;
-    skr::flat_hash_map<Key, skr::deque<PooledBuffer>, Key::hasher> buffers;
+    skr::FlatHashMap<Key, skr::stl_deque<PooledBuffer>, Key::hasher> buffers;
 };
 } // namespace render_graph
 } // namespace skr

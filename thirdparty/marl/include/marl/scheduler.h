@@ -271,7 +271,7 @@ class Scheduler {
     static const char* toString(State state);
 
 #ifdef SKR_PROFILE_ENABLE
-    skr::string name;
+    skr::String name;
 #endif
     Allocator::unique_ptr<OSFiber> const impl;
     Worker* const worker;

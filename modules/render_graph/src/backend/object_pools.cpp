@@ -99,7 +99,7 @@ void BindTablePool::expand(const char8_t* keys, const CGPUXName* names, uint32_t
     auto existed_block = pool.find(keys);
     if (existed_block == pool.end())
     {
-        pool.emplace(skr::string(keys), BindTablesBlock{});
+        pool.emplace(skr::String(keys), BindTablesBlock{});
     }
     auto& block = pool[keys];
     block.bind_tables.reserve(block.bind_tables.size() + set_count);
@@ -119,7 +119,7 @@ CGPUXBindTableId BindTablePool::pop(const char8_t* keys, const CGPUXName* names,
     auto existed_block = pool.find(keys);
     if (existed_block == pool.end())
     {
-        pool.insert(std::make_pair( skr::string(keys), BindTablesBlock{} ));
+        pool.insert(std::make_pair( skr::String(keys), BindTablesBlock{} ));
     }
     auto& block = pool[keys];
     if (block.cursor >= block.bind_tables.size())

@@ -6,15 +6,15 @@ namespace skr
 {
 
 template <typename T>
-struct resizable_ring_buffer
+struct ResizableRingBuffer
 {
 public:
-    resizable_ring_buffer(uint64_t length)
+    ResizableRingBuffer(uint64_t length)
         : ring(length)
     {
         skr_init_rw_mutex(&rw_mutex);
     }
-    ~resizable_ring_buffer()
+    ~ResizableRingBuffer()
     {
         skr_destroy_rw_mutex(&rw_mutex);
     }
@@ -32,12 +32,12 @@ public:
     void acquire_read() { skr_rw_mutex_acquire_r(&rw_mutex); }
     void release_read() { skr_rw_mutex_release_r(&rw_mutex); }
 protected:
-    ring_buffer<T> ring;
+    RingBuffer<T> ring;
     mutable SRWMutex rw_mutex;
 };
 
 template <typename T>
-void resizable_ring_buffer<T>::resize(int newSize) 
+void ResizableRingBuffer<T>::resize(int newSize) 
 {
     const auto currentSize = skr_atomicu64_load_acquire(&ring.size);
     if (newSize == currentSize) return;
@@ -72,7 +72,7 @@ void resizable_ring_buffer<T>::resize(int newSize)
 }
 
 template <typename T>
-void resizable_ring_buffer<T>::zero()
+void ResizableRingBuffer<T>::zero()
 {
     skr_rw_mutex_acquire_w(&rw_mutex);
     for (int i = 0; i < ring.buffer.size(); i++) 
@@ -83,7 +83,7 @@ void resizable_ring_buffer<T>::zero()
 }
 
 template <typename T>
-T resizable_ring_buffer<T>::add(T value) 
+T ResizableRingBuffer<T>::add(T value) 
 {
     skr_rw_mutex_acquire_r(&rw_mutex);
     const auto old = ring.add(value);
@@ -92,7 +92,7 @@ T resizable_ring_buffer<T>::add(T value)
 }
 
 template <typename T>
-T resizable_ring_buffer<T>::get(uint64_t index) 
+T ResizableRingBuffer<T>::get(uint64_t index) 
 {
     skr_rw_mutex_acquire_r(&rw_mutex);
     auto result = ring.get(index);

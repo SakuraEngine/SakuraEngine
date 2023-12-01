@@ -29,7 +29,7 @@ struct L2DRequestCallbackData
     IAsyncL2DResourceInterface* model_resource;
     IAsyncL2DResourceInterface* motions_resource;
     skr_live2d_ram_io_future_t* live2dRequest;   
-    skr::string u8HomePath;
+    skr::String u8HomePath;
 
     skr::BlobId settingBlob;
 
@@ -72,7 +72,7 @@ namespace Live2D { namespace Cubism { namespace Framework {
         void update(csmMotionMap* motion_map, float delta_time) SKR_NOEXCEPT;
         const uint32_t* get_sorted_drawlist() const SKR_NOEXCEPT;
 
-        skr::string homePath;
+        skr::String homePath;
 
     protected:
         Csm::CubismMotionQueueEntryHandle startMotion(csmMotionMap* motion_map, const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL) SKR_NOEXCEPT;
@@ -91,10 +91,10 @@ namespace Live2D { namespace Cubism { namespace Framework {
         const Csm::CubismId* _idParamEyeBallY; ///< パラメータID: ParamEyeBallXY
 
         // Async Requests
-        skr::string posePath;
-        skr::string modelPath;
-        skr::string pyhsicsPath;
-        skr::string usrDataPath;
+        skr::String posePath;
+        skr::String modelPath;
+        skr::String pyhsicsPath;
+        skr::String usrDataPath;
         skr_io_future_t poseFuture;
         skr::BlobId poseBlob;
         skr_io_future_t modelFuture;
@@ -113,8 +113,8 @@ namespace Live2D { namespace Cubism { namespace Framework {
 
         skr::stl_vector<skr_io_future_t> expressionFutures;
         skr::stl_vector<skr::BlobId> expressionBlobs;
-        eastl::vector_map<skr_io_future_t*, skr::string> expressionNames;
-        eastl::vector_map<skr_io_future_t*, skr::string> expressionPaths;
+        eastl::vector_map<skr_io_future_t*, skr::String> expressionNames;
+        eastl::vector_map<skr_io_future_t*, skr::String> expressionPaths;
         L2DRequestCallbackData* cbData;
     };
     class csmMotionMap : public csmMap<csmString, csmVector<ACubismMotion*>>, public IAsyncL2DResourceInterface
@@ -126,8 +126,8 @@ namespace Live2D { namespace Cubism { namespace Framework {
 
         skr::stl_vector<skr_io_future_t> motionFutures;
         skr::stl_vector<skr::BlobId> motionBlobs;
-        eastl::vector_map<skr_io_future_t*, std::pair<skr::string, uint32_t>> motionEntries;
-        eastl::vector_map<skr_io_future_t*, skr::string> motionPaths;
+        eastl::vector_map<skr_io_future_t*, std::pair<skr::String, uint32_t>> motionEntries;
+        eastl::vector_map<skr_io_future_t*, skr::String> motionPaths;
         L2DRequestCallbackData* cbData;
     };
 }}}

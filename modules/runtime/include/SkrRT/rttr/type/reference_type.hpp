@@ -4,7 +4,7 @@
 namespace skr::rttr
 {
 struct SKR_RUNTIME_API ReferenceType : public GenericType {
-    ReferenceType(Type* target_type, string name);
+    ReferenceType(Type* target_type, skr::String name);
 
     bool query_feature(ETypeFeature feature) const override;
 
