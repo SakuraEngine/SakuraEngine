@@ -1,9 +1,10 @@
 #include "common_utils.h"
 #include "wasm/api.h"
-#include <EASTL/string_map.h>
+#include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers_new/stl_string.hpp"
 #include <time.h>
 
-struct SWANamedObjectTable : eastl::string_map<void*> {
+struct SWANamedObjectTable : skr::flat_hash_map<skr::stl_string, void*> {
     ~SWANamedObjectTable()
     {
         if (deletor)
@@ -12,7 +13,7 @@ struct SWANamedObjectTable : eastl::string_map<void*> {
             cpy.deletor = nullptr;
             for (auto iter : cpy)
             {
-                deletor(this, iter.first, iter.second);
+                deletor(this, iter.first.c_str(), iter.second);
             }
         }
     }
@@ -31,12 +32,12 @@ void SWAObjectTableSetDeletor(struct SWANamedObjectTable* table, SWANamedObjectT
 
 const char* SWAObjectTableAdd(struct SWANamedObjectTable* table, const char* name, void* object)
 {
-    eastl::string auto_name;
+    skr::stl_string auto_name;
     if (name == SWA_NULLPTR)
     {
         srand((uint32_t)time(NULL));
         auto_name = "object#";
-        auto_name.append(eastl::to_string(rand()));
+        auto_name.append(std::to_string(rand()));
         name = auto_name.c_str();
     }
     const auto& iter = table->find(name);
@@ -45,7 +46,7 @@ const char* SWAObjectTableAdd(struct SWANamedObjectTable* table, const char* nam
         swa_warn(u8"SWA object named %s already exists in table!", name);
         return SWA_NULLPTR;
     }
-    return table->insert(name, object).first->first;
+    return table->emplace(name, object).first->first.c_str();
 }
 
 void* SWAObjectTableTryFind(struct SWANamedObjectTable* table, const char* name)
@@ -65,7 +66,7 @@ void SWAObjectTableRemove(struct SWANamedObjectTable* table, const char* name, b
     {
         if (delete_object)
         {
-            table->deletor(table, iter->first, iter->second);
+            table->deletor(table, iter->first.c_str(), iter->second);
         }
         table->erase(name);
     }

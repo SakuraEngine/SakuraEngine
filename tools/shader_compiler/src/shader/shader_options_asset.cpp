@@ -4,8 +4,6 @@
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #include "SkrShaderCompiler/shader_compiler.hpp"
 
-#include <EASTL/array.h>
-
 #include "SkrProfile/profile.h"
 
 namespace skd

@@ -8,6 +8,7 @@
 #include <cmath>
 #include "SkrRT/containers_new/string.hpp"
 
+// TODO: REMOVE EASTL
 #include <EASTL/fixed_string.h>
 
 // blob arena

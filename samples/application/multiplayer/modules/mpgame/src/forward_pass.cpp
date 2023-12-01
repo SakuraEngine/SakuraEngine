@@ -15,6 +15,7 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
+// TODO: REMOVE EASTL
 #include <EASTL/fixed_string.h>
 #include <EASTL/vector_map.h>
 

@@ -13,6 +13,7 @@
 #include "SkrRT/serde/binary/writer_fwd.h"
 #include "MPShared/module.configure.h"
 
+// TODO: REMOVE EASTL
 #include <EASTL/bonus/fixed_ring_buffer.h>
 
 // override the default serialization of dual_entity_t to use a packed version

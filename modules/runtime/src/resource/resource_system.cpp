@@ -4,6 +4,7 @@
 #include "SkrRT/ecs/entities.hpp"
 #include "SkrBase/misc/debug.h" 
 #include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers_new/stl_vector.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
@@ -61,9 +62,9 @@ protected:
 
     // these requests are only handled inside this system and is thread-unsafe
 
-    eastl::vector<SResourceRequest*> failedRequests;
-    eastl::vector<SResourceRequest*> toUpdateRequests;
-    eastl::vector<SResourceRequest*> serdeBatch;
+    skr::stl_vector<SResourceRequest*> failedRequests;
+    skr::stl_vector<SResourceRequest*> toUpdateRequests;
+    skr::stl_vector<SResourceRequest*> serdeBatch;
 
     dual::entity_registry_t resourceIds;
     task::counter_t counter;

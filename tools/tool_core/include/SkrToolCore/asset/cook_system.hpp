@@ -1,5 +1,4 @@
 #pragma once
-#include <EASTL/functional.h>
 #include "SkrRT/containers_new/span.hpp"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/platform/filesystem.hpp"

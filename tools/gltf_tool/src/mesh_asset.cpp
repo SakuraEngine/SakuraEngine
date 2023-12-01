@@ -1,8 +1,9 @@
 #include "cgltf/cgltf.h"
-#include "SkrRT/platform/guid.hpp"
 #include "SkrBase/misc/defer.hpp"
+#include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/parallel_for.hpp"
+#include "SkrRT/containers_new/stl_vector.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/json_utils.hpp"
@@ -86,7 +87,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
         const auto index_offset = prim.index_buffer.index_offset;
         const auto index_count = prim.index_buffer.index_count;
         const auto vertex_count = prim.vertex_count;
-        eastl::vector<uint64_t> optimized_indices;
+        skr::stl_vector<uint64_t> optimized_indices;
         optimized_indices.resize(index_count);
         uint64_t* indices_ptr = optimized_indices.data();
         for (size_t i = 0; i < index_count; i++)
@@ -115,7 +116,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
             {
                 auto& vertices_blob = blobs[vb.buffer_index];
                 const auto vertex_stride = vb.stride;(void)vertex_stride;
-                eastl::vector<skr_float3_t> vertices;
+                skr::stl_vector<skr_float3_t> vertices;
                 vertices.resize(vertex_count);
                 for (size_t i = 0; i < vertex_count; i++)
                 {

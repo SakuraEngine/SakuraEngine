@@ -24,6 +24,8 @@
 #include <SkrRT/containers_new/vector.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/string.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/hashmap.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/stl_vector.hpp> // IWYU pragma: export
+#include <SkrRT/containers_new/stl_string.hpp> // IWYU pragma: export
 
 #include "SkrRT/ecs/dual.h" // IWYU pragma: export
 #include "SkrRT/ecs/set.hpp" // IWYU pragma: export
@@ -31,8 +33,6 @@
 
 #include "SkrRT/serde/json/reader.h" // IWYU pragma: export
 #include "SkrRT/serde/json/writer.h" // IWYU pragma: export
-
-#include <EASTL/string.h> // IWYU pragma: export
 
 #include "SkrProfile/profile.h" // IWYU pragma: export
 

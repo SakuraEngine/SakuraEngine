@@ -12,9 +12,9 @@
 #include <steam/isteamnetworkingutils.h>
 #include "signal_client.h"
 #include "SkrRT/misc/log.h"
-#include <EASTL/vector.h>
 #include <imgui/imgui.h>
-#include <EASTL/string_hash_map.h>
+#include "SkrRT/containers_new/stl_string.hpp"
+#include "SkrRT/containers_new/stl_vector.hpp"
 #include "SkrRT/module/module_manager.hpp"
 #include "SkrMemory/memory.h"
 #include "SkrRT/platform/vfs.h"
@@ -442,9 +442,9 @@ struct ChatClient {
     struct Connection {
         HSteamNetConnection handle;
         SteamNetworkingIdentity id;
-        eastl::vector<eastl::string> messages;
+        skr::stl_vector<skr::stl_string> messages;
     };
-    eastl::vector<Connection> connections;
+    skr::stl_vector<Connection> connections;
 
     ~ChatClient()
     {
