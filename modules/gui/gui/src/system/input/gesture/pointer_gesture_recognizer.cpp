@@ -22,4 +22,36 @@ void PointerGestureRecognizer::add_pointer(NotNull<Event*> event)
     }
 }
 
+// accept or reject
+void PointerGestureRecognizer::request_accept(CombinePointerId pointer)
+{
+    if (auto found = _tracing_pointers.find(pointer))
+    {
+        found->value->accept_gesture(this);
+    }
+}
+void PointerGestureRecognizer::request_reject(CombinePointerId pointer)
+{
+    if (auto found = _tracing_pointers.find(pointer))
+    {
+        found->value->reject_gesture(this);
+    }
+}
+void PointerGestureRecognizer::request_accept_all()
+{
+    for (auto& pair : _tracing_pointers)
+    {
+        pair.value->accept_gesture(this);
+    }
+    _tracing_pointers.clear();
+}
+void PointerGestureRecognizer::request_reject_all()
+{
+    for (auto& pair : _tracing_pointers)
+    {
+        pair.value->reject_gesture(this);
+    }
+    _tracing_pointers.clear();
+}
+
 } // namespace skr::gui

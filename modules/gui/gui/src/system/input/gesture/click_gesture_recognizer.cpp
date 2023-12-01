@@ -10,21 +10,75 @@ void ClickGestureRecognizer::on_pointer_added(PointerDownEvent* event)
 // 事件处理
 bool ClickGestureRecognizer::handle_event(Event* event)
 {
-    // TODO. handle up event
+    if (auto pointer_up_event = event->type_cast<PointerUpEvent>())
+    {
+        _up_event = *pointer_up_event;
+        if (_has_preview_up_event)
+        {
+            _check_up();
+        }
+        else
+        {
+            _check_cancel();
+            request_reject_all();
+        }
+        return true;
+    }
     return false;
 }
 bool ClickGestureRecognizer::handle_event_from_widget(Event* event)
 {
-    // TODO. handle up event and record state
+    if (event->type_is<PointerUpEvent>())
+    {
+        _has_preview_up_event = true;
+        return true;
+    }
     return false;
 }
 
 // 手势竞争
 void ClickGestureRecognizer::accept_gesture(CombinePointerId pointer)
 {
-    // TODO. apply recorded state, for this reason, we may need to copy(or keep) input event
+    _won_arena = true;
+    _check_down();
+    if (_has_preview_up_event)
+    {
+        _check_up();
+    }
+    else
+    {
+        _check_cancel();
+        request_accept_all();
+    }
 }
 void ClickGestureRecognizer::reject_gesture(CombinePointerId pointer)
 {
+    _reset();
+}
+
+// help functions
+void ClickGestureRecognizer::_check_down()
+{
+    on_click_down(&_down_event.get());
+}
+void ClickGestureRecognizer::_check_up()
+{
+    if (_won_arena && _up_event)
+    {
+        on_click_up(&_up_event.get());
+        on_click();
+        _reset();
+    }
+}
+void ClickGestureRecognizer::_check_cancel()
+{
+    on_cancel();
+}
+void ClickGestureRecognizer::_reset()
+{
+    _down_event           = Optional<PointerDownEvent>{};
+    _up_event             = Optional<PointerUpEvent>{};
+    _has_preview_up_event = false;
+    _won_arena            = false;
 }
 } // namespace skr::gui

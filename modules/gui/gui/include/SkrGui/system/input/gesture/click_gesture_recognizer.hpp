@@ -29,12 +29,20 @@ private:
     void _check_cancel();
     void _reset();
 
+public:
+    // TODO. click 没有事件，但是是否应该传入一个 context 来存储 modifier key 的情况
+    Function<void(PointerDownEvent*)> on_click_down = {};
+    Function<void(PointerUpEvent*)>   on_click_up   = {};
+    Function<void()>                  on_click      = {};
+    Function<void()>                  on_cancel     = {};
+
 private:
     // recorded state
     // TODO. use smart ptr
-    Optional<PointerDownEvent> _down_event = {};
-    Optional<PointerUpEvent>   _up_event   = {};
-    bool                       _won_arena  = false;
+    Optional<PointerDownEvent> _down_event           = {};
+    Optional<PointerUpEvent>   _up_event             = {};
+    bool                       _has_preview_up_event = false;
+    bool                       _won_arena            = false;
 };
 
 } // namespace gui sreflect
