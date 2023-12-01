@@ -481,7 +481,6 @@ int ReadTrait<skr::String>::Read(skr_binary_reader_t* reader, skr::String& str)
         SKR_LOG_FATAL(u8"failed to read string buffer size! ret code: %d", ret);
         return ret;
     }
-
     str = skr::String(skr::StringView((const char8_t*)temp.c_str(), (int32_t)temp.size()));
     return ret;
 }

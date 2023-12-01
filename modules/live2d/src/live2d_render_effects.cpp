@@ -6,6 +6,7 @@
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/containers/fixed_vector.hpp"
+#include "SkrRT/containers_new/umap.hpp"
 
 #include "SkrLive2D/l2d_render_effect.h"
 #include "SkrLive2D/l2d_render_model.h"
@@ -137,10 +138,10 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
 
     }
 
-    eastl::vector_map<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
-    eastl::vector_map<skr_live2d_render_model_id, skr::FixedVector<uint32_t, 4>> sorted_mask_drawable_lists;
+    skr::UMap<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
+    skr::UMap<skr_live2d_render_model_id, skr::FixedVector<uint32_t, 4>> sorted_mask_drawable_lists;
     const float kMotionFramesPerSecond = 240.0f;
-    eastl::vector_map<skr_live2d_render_model_id, STimer> motion_timers;
+    skr::UMap<skr_live2d_render_model_id, STimer> motion_timers;
     uint32_t last_ms = 0;
     const bool use_high_precision_mask = false;
 
@@ -187,13 +188,13 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                 {
                     auto&& render_model = models[i].vram_future.render_model;
                     const auto& cmds = render_model->primitive_commands;
-                    push_constants[render_model].resize(0);
+                    push_constants.find(render_model)->value.resize(0);
 
                     auto&& model_resource = models[i].ram_future.model_resource;
                     const auto list = skr_live2d_model_get_sorted_drawable_list(model_resource);
                     if(!list) continue;
-                    auto drawable_list = sorted_drawable_list[render_model] = { list , render_model->index_buffer_views.size() };
-                    push_constants[render_model].resize(drawable_list.size());
+                    auto drawable_list = sorted_drawable_list.find(render_model)->value = { list , render_model->index_buffer_views.size() };
+                    push_constants.find(render_model)->value.resize(drawable_list.size());
                     // record constant parameters
                     auto clipping_manager = render_model->clipping_manager;
                     if (auto clipping_list = clipping_manager->GetClippingContextListForDraw())
@@ -201,7 +202,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                         for (auto drawable : drawable_list)
                         {
                             const auto& cmd = cmds[drawable];
-                            auto& push_const = push_constants[render_model][drawable];
+                            auto& push_const = push_constants.find(render_model)->value[drawable];
                             CubismClippingContext* clipping_context = (*clipping_list)[drawable];
                             push_const.use_mask = clipping_context && clipping_context->_isUsing;
                             if (push_const.use_mask)
@@ -240,7 +241,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                             {
                                 drawcall.pipeline = proper_pipeline;
                                 drawcall.push_const_name = push_constants_name;
-                                drawcall.push_const = (const uint8_t*)(push_constants[render_model].data() + drawable);
+                                drawcall.push_const = (const uint8_t*)(push_constants.find(render_model)->value.data() + drawable);
                                 drawcall.index_buffer = *cmd.ibv;
                                 drawcall.vertex_buffers = cmd.vbvs.data();
                                 drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
@@ -265,7 +266,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
             SkrZoneScopedN("FrameCleanUp");
 
             mask_drawcalls.resize(0);
-            sorted_mask_drawable_lists.resize(0);
+            sorted_mask_drawable_lists.clear();
         }
         auto updateMaskF = [&](dual_chunk_view_t* r_cv) {
             SkrZoneScopedN("UpdateMaskF");
@@ -278,7 +279,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                 {
                     auto&& render_model = models[i].vram_future.render_model;
                     auto&& model_resource = models[i].ram_future.model_resource;
-                    mask_push_constants[render_model].resize(0);
+                    mask_push_constants.find(render_model)->value.resize(0);
 
                     // TODO: move this to (some manager?) other than update morph/phys in a render pass
                     updateModelMotion(context->render_graph, render_model);
@@ -327,8 +328,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                     {
                                         continue;
                                     }
-                                    sorted_mask_drawable_lists[render_model].emplace_back(clipDrawIndex);
-                                    auto&& push_const = mask_push_constants[render_model].emplace_back();
+                                    sorted_mask_drawable_lists.find(render_model)->value.emplace_back(clipDrawIndex);
+                                    auto&& push_const = mask_push_constants.find(render_model)->value.emplace_back();
                                     const auto proj_mat = rtm::matrix_set(
                                         rtm::vector_load( &clipping_context->_matrixForMask.GetArray()[4 * 0] ),
                                         rtm::vector_load( &clipping_context->_matrixForMask.GetArray()[4 * 1] ),
@@ -494,7 +495,7 @@ protected:
         SkrZoneScopedN("Live2D::updateModelMotion");
 
         const auto model_resource = render_model->model_resource_id;
-        last_ms = skr_timer_get_msec(&motion_timers[render_model], true);
+        last_ms = skr_timer_get_msec(&motion_timers.find(render_model)->value, true);
         static float delta_sum = 0.f;
         delta_sum += ((float)last_ms / 1000.f);
         if (delta_sum > (1.f / kMotionFramesPerSecond))
@@ -519,7 +520,7 @@ protected:
             else if (vb_c)
             {
                 uint64_t totalVertexSize = 0;
-                eastl::vector_map<CGPUBufferId, skr::render_graph::BufferHandle> imported_vbs_map;
+                skr::UMap<CGPUBufferId, skr::render_graph::BufferHandle> imported_vbs_map;
                 skr::stl_vector<skr::render_graph::BufferHandle> imported_vbs;
                 skr::stl_vector<uint64_t> vb_sizes;
                 skr::stl_vector<uint64_t> vb_offsets;
@@ -536,14 +537,14 @@ protected:
                     const void* pSrc = getVBData(render_model, j, vcount); (void)pSrc;
                     if (imported_vbs_map.find(view.buffer) == imported_vbs_map.end())
                     {
-                        imported_vbs_map[view.buffer] = render_graph->create_buffer(
+                        imported_vbs_map.find(view.buffer)->value = render_graph->create_buffer(
                             [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
                             skr::String name = skr::format(u8"live2d_vb-{}{}", (uint64_t)render_model, j);
                             builder.set_name((const char8_t*)name.c_str())
                                     .import(view.buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                             });
                     }
-                    imported_vbs[j] = imported_vbs_map[view.buffer];
+                    imported_vbs[j] = imported_vbs_map.find(view.buffer)->value;
                     vb_sizes[j] = vcount * view.stride;
                     vb_offsets[j] = view.offset;
                     totalVertexSize += vcount * view.stride;
@@ -618,8 +619,8 @@ protected:
         float pad1;
         float pad2;
     };
-    eastl::vector_map<skr_live2d_render_model_id, skr::stl_vector<PushConstants>> push_constants;
-    eastl::vector_map<skr_live2d_render_model_id, skr::stl_vector<PushConstants>> mask_push_constants;
+    skr::UMap<skr_live2d_render_model_id, skr::stl_vector<PushConstants>> push_constants;
+    skr::UMap<skr_live2d_render_model_id, skr::stl_vector<PushConstants>> mask_push_constants;
 
     CGPUVertexLayout vertex_layout = {};
     CGPURasterizerStateDescriptor rs_state = {};
