@@ -1,5 +1,4 @@
 #include "SkrRT/platform/guid.hpp"
-#include "SkrRT/containers/fixed_vector.hpp"
 #include "SkrRT/containers_new/sptr.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
@@ -12,6 +11,8 @@
 
 #include "SkrRenderer/pso_map.h"
 #include "SkrRT/platform/guid.hpp"
+
+#include "SkrRT/containers/deprecated.hpp"
 
 namespace skr
 {

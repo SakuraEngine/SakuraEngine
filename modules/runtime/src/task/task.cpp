@@ -11,12 +11,12 @@ scheudler_config_t::scheudler_config_t()
 
 counter_t::counter_t(bool inverse)
 {
-    internal = eastl::make_shared<ftl::TaskCounter>(nullptr, inverse);
+    internal = skr::make_shared<ftl::TaskCounter>(nullptr, inverse);
 }
 
 event_t::event_t()
 {
-    internal = eastl::make_shared<ftl::TaskCounter>(nullptr);
+    internal = skr::make_shared<ftl::TaskCounter>(nullptr);
     internal->Add(1);
 }
 

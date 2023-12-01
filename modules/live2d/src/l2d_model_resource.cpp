@@ -398,27 +398,25 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
     cbData = data;
 
     auto settings = data->live2dRequest->model_resource->model_setting;
-    expressionNames.resize(settings->GetExpressionCount());
-    expressionPaths.resize(settings->GetExpressionCount());
+    expressionNames.reserve(settings->GetExpressionCount());
+    expressionPaths.reserve(settings->GetExpressionCount());
     expressionFutures.resize(settings->GetExpressionCount());
     expressionBlobs.resize(settings->GetExpressionCount());
     auto batch = ioService->open_batch(expressionFutures.size());
     for (uint32_t i = 0; i < expressionFutures.size(); i++)
     {
         auto& future = expressionFutures[i];
-        auto&& [pRequest, path] = expressionPaths.at(i);
-        auto&& [pRequest_, name] = expressionNames.at(i);
 
-        name = (const char8_t*)settings->GetExpressionName(i);
+        auto name = (const char8_t*)settings->GetExpressionName(i);
         auto file = settings->GetExpressionFileName(i);
-        pRequest = &future;
-        pRequest_ = &future;
 
-        path = data->u8HomePath;
+        auto path = data->u8HomePath;
         path += u8"/";
         path += (const char8_t*)file;
+        expressionPaths.add(&future, path);
+        expressionNames.add(&future, name);
 
-        SKR_LOG_TRACE(u8"Request Live2D Expression %s at %s", name.c_str(), file);
+        SKR_LOG_TRACE(u8"Request Live2D Expression %s at %s", name, file);
 
         auto rq = ioService->open_request();
         rq->set_vfs(cbData->live2dRequest->vfs_override);
@@ -429,7 +427,7 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
             SkrZoneScopedN("Create Live2D Expression");
 
             auto _this = (csmExpressionMap*)data;
-            auto name = _this->expressionNames[future];
+            const auto& name = _this->expressionNames.find(future)->value;
             auto index = future - _this->expressionFutures.data();
             auto& blob = _this->expressionBlobs[index];
             
@@ -466,8 +464,8 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
     cbData->motions_resource = this;
 
     auto settings = data->live2dRequest->model_resource->model_setting;
-    motionEntries.resize(cbData->motion_count);
-    motionPaths.resize(cbData->motion_count);
+    motionEntries.reserve(cbData->motion_count);
+    motionPaths.reserve(cbData->motion_count);
     motionFutures.resize(cbData->motion_count);
     motionBlobs.resize(cbData->motion_count);
     uint32_t slot = 0;
@@ -482,14 +480,12 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         for (uint32_t j = 0; j < (uint32_t)settings->GetMotionCount(group); j++)
         {
             auto& request = motionFutures[slot];
-            auto&& [pRequest, path] = motionPaths.at(slot);
-            auto&& [pRequest_, entry] = motionEntries.at(slot);
-            entry.first = (const char8_t*)group;
-            entry.second = j;
-            pRequest = &request;
-            pRequest_ = &request;
+            std::pair<skr::String, uint32_t> entry = {(const char8_t*)group, j };
             auto file = settings->GetMotionFileName(group, j);
-            path = skr::format(u8"{}/{}", data->u8HomePath, (const char8_t*)file);
+            auto path = skr::format(u8"{}/{}", data->u8HomePath, (const char8_t*)file);
+
+            motionPaths.add(&request, path);
+            motionEntries.add(&request, entry);
             slot++;
         }
     }
@@ -499,8 +495,8 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         SkrZoneScopedN("Request Motion");
 
         auto& future = motionFutures[i];
-        auto&& [pRequest, path] = motionPaths.at(i);
-        auto&& [pRequest_, entry] = motionEntries.at(i);
+        const auto& path = motionPaths.data_arr()[i]._sparse_hash_set_data.value;
+        const auto& entry = motionEntries.data_arr()[i]._sparse_hash_set_data.value;
         SKR_LOG_TRACE(u8"Request Live2D Motion in group %s at %d", entry.first.c_str(), entry.second);
 
         auto rq = ioService->open_request();
@@ -512,7 +508,7 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             SkrZoneScopedN("Create Live2D Motion");
 
             auto _this = (csmMotionMap*)data;
-            auto entry = _this->motionEntries[future];
+            const auto& entry = _this->motionEntries.find(future)->value;
             auto index = future - _this->motionFutures.data();
             auto& blob = _this->motionBlobs[index];
             

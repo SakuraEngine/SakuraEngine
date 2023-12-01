@@ -1,8 +1,9 @@
 #include "../common/common_device_base.hpp"
 #include <SDL2/SDL_keyboard.h>
-#include "SkrRT/containers/fixed_vector.hpp"
 #include "SkrRT/containers_new/span.hpp"
 #include <algorithm>
+
+#include "SkrRT/containers/deprecated.hpp"
 
 namespace skr {
 namespace input {

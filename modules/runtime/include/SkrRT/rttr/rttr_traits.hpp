@@ -5,8 +5,11 @@
 #include "SkrRT/rttr/type_desc.hpp"
 #include "SkrRT/rttr/type_registry.hpp"
 #include "SkrRT/rttr/type/type.hpp"
+#include "SkrRT/containers_new/sptr.hpp"
 #include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/rttr/strongly_enum.hpp"
+
+#include "SkrRT/containers/deprecated.hpp"
 
 // RTTR traits
 // 提供部分静态类型功能，从动态角度来说，实际上只是一层皮
@@ -331,8 +334,6 @@ SKR_RTTR_TYPE(::skr::SInterface, "244617fe-5274-47bc-aa3d-acd76dbbeddd");
 
 // template types
 // TODO. 仅仅为了过编译
-#include "SkrRT/containers_new/sptr.hpp"
-#include "SkrRT/containers/variant.hpp"
 
 namespace skr::rttr
 {

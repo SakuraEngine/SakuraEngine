@@ -667,7 +667,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
         resource_system->Update();
 
         // Update camera
-        auto cameraUpdate = [=](dual_chunk_view_t* view) {
+        auto cameraUpdate = [this](dual_chunk_view_t* view) {
             auto cameras = dual::get_owned_rw<skr_camera_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {

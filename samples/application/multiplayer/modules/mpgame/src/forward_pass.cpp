@@ -13,8 +13,7 @@
 #include "SkrImGui/skr_imgui_rg.h"
 #include "forward_pass.hpp"
 
-// TODO: REMOVE EASTL
-#include <EASTL/fixed_string.h>
+#include "SkrRT/containers/deprecated.hpp"
 
 
 void RenderPassForward::on_update(const skr_primitive_pass_context_t* context) 
@@ -170,7 +169,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
     const char* shadingRateNames[] = {
         "1x1", "2x2", "4x4", "1x2", "2x1", "2x4", "4x2"
     };
-    eastl::fixed_string<char, 64> ButtonText = "SwitchShadingRate-";
+    skr::FixedString<char, 64> ButtonText = "SwitchShadingRate-";
     ImGui::Begin("ShadingRate");
     ButtonText += shadingRateNames[shading_rate];
     if (ImGui::Button(ButtonText.c_str()))

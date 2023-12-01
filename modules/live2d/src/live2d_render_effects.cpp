@@ -1,3 +1,4 @@
+#include "SkrProfile/profile.h"
 #include "SkrBase/math/rtm/matrix4x4f.h"
 #include "SkrMemory/memory.h"
 #include "SkrRT/misc/make_zeroed.hpp"
@@ -5,23 +6,18 @@
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/ecs/type_builder.hpp"
-#include "SkrRT/containers/fixed_vector.hpp"
 #include "SkrRT/containers_new/umap.hpp"
-
-#include "SkrLive2D/l2d_render_effect.h"
-#include "SkrLive2D/l2d_render_model.h"
-
-#include "Framework/Math/CubismMatrix44.hpp"
-
 #include "SkrRenderer/primitive_draw.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
-
+#include "SkrLive2D/l2d_render_effect.h"
+#include "SkrLive2D/l2d_render_model.h"
+#include "Framework/Math/CubismMatrix44.hpp"
 #include "live2d_model_pass.hpp"
 #include "live2d_mask_pass.hpp"
 #include "live2d_clipping.hpp"
 
-#include "SkrProfile/profile.h"
+#include "SkrRT/containers/deprecated.hpp"
 
 static struct RegisterComponentskr_live2d_render_model_comp_tHelper
 {

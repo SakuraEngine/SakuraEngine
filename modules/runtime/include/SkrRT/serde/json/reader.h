@@ -5,7 +5,7 @@
     #define SIMDJSON_AVX512_ALLOWED 0
     #include "simdjson.h"
     #include "SkrRT/containers_new/hashmap.hpp"
-    #include "SkrRT/containers/variant.hpp"
+    #include "SkrRT/containers/deprecated.hpp"
     #include "SkrRT/containers_new/string.hpp"
     #include "SkrRT/containers_new/vector.hpp"
     #include "SkrRT/containers_new/vector.hpp"

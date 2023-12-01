@@ -1,13 +1,10 @@
 #pragma once
+#include "SkrRT/containers_new/stl_vector.hpp"
 #include "SkrRenderGraph/frontend/base_types.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/resource_edge.hpp"
 
-#ifdef RG_USE_FIXED_VECTOR
-#include "SkrRT/containers/fixed_vector.hpp"
-#else
-#include "SkrRT/containers_new/stl_vector.hpp"
-#endif
+#include "SkrRT/containers/deprecated.hpp"
 
 namespace skr {
 namespace render_graph

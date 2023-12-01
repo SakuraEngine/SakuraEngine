@@ -1,7 +1,8 @@
 #pragma once
 #include "../common/io_request.hpp"
 #include "SkrRT/platform/dstorage.h"
-#include "SkrRT/containers/fixed_vector.hpp"
+
+#include "SkrRT/containers/deprecated.hpp"
 
 namespace skr {
 namespace io {
