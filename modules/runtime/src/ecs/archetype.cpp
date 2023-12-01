@@ -496,7 +496,7 @@ bool dual_group_t::share(const dual_type_set_t& subtype) const noexcept
 dual_mask_comp_t dual_group_t::get_shared_mask(const dual_type_set_t& subtype) const noexcept
 {
     using namespace dual;
-    eastl::bitset<32> mask;
+    std::bitset<32> mask;
     for (SIndex i = 0; i < subtype.length; ++i)
     {
         if (share(subtype.data[i]))
@@ -564,7 +564,7 @@ const void* dual_group_t::get_shared_ro(dual_type_index_t t) const noexcept
 dual_mask_comp_t dual_group_t::get_mask(const dual_type_set_t& subtype) const noexcept
 {
     using namespace dual;
-    eastl::bitset<32> mask;
+    std::bitset<32> mask;
     SIndex i = 0, j = 0;
     auto stype = type.type;
     while (i < stype.length && j < subtype.length)

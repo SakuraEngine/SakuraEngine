@@ -54,6 +54,7 @@ struct VFSRAMReader final : public RAMReaderBase<IIORequestProcessor>
 } // namespace io
 } // namespace skr
 
+#include "SkrRT/containers_new/stl_vector.hpp"
 #include "../dstorage/dstorage_event.hpp"
 
 namespace skr {
@@ -79,7 +80,7 @@ struct SKR_RUNTIME_API DStorageRAMReader final
     
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue processed_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    eastl::vector<skr::SObjectPtr<DStorageEvent>> submitted[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::stl_vector<skr::SObjectPtr<DStorageEvent>> submitted[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     SmartPoolPtr<DStorageEvent> events[SKR_ASYNC_SERVICE_PRIORITY_COUNT] = { nullptr, nullptr, nullptr };
 };

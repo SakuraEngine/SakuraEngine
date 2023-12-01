@@ -1,12 +1,12 @@
-#include "SkrRT/platform/win/dstorage_windows.h"
 #include "SkrMemory/memory.h"
+#include "SkrRT/platform/win/dstorage_windows.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
+#include "SkrRT/containers_new/umap.hpp"
 
 #include "platform/windows/windows_dstorage.hpp"
-#include <EASTL/vector_map.h>
 
 static void CALLBACK __decompressThreadPoolTask_DirectStorage(
     TP_CALLBACK_INSTANCE*,
@@ -60,7 +60,7 @@ struct skr_win_dstorage_decompress_service_t
     };
     IDStorageCustomDecompressionQueue* decompress_queue = nullptr;
     HANDLE event_handle = nullptr;
-    eastl::vector_map<SkrDStorageCompression, DecompressionResolver> resolvers;
+    skr::UMap<SkrDStorageCompression, DecompressionResolver> resolvers;
     // threadpool items
     TP_WAIT* thread_pool_wait = nullptr;
     // thread items
@@ -106,7 +106,7 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
                         skrRequest.src_buffer = request.SrcBuffer;
                         skrRequest.dst_size = request.DstSize;
                         skrRequest.dst_buffer = request.DstBuffer;
-                        auto result = resolver->second.callback(&skrRequest, resolver->second.user_data);
+                        auto result = resolver->value.callback(&skrRequest, resolver->value.user_data);
                         DSTORAGE_CUSTOM_DECOMPRESSION_RESULT failResult = {};
                         failResult.Result = result;
                         failResult.Id = request.Id;
@@ -136,7 +136,7 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
                     future = nullptr;
                 }
             }
-            auto it = eastl::remove_if(arr.begin(), arr.end(), 
+            auto it = std::remove_if(arr.begin(), arr.end(), 
                 [](skr::IFuture<bool>* future) {
                     return (future == nullptr);
                 });
@@ -224,7 +224,7 @@ bool skr_win_dstorage_decompress_service_register_callback(skr_win_dstorage_deco
     SKR_ASSERT(!registered && "Callback already registered for this compression");
     if (registered) return false;
     SKR_ASSERT(callback && "Callback must be valid");
-    service->resolvers[compression] = { callback, user_data };
+    service->resolvers.add(compression, { callback, user_data });
     return true;
 }
 
