@@ -11,6 +11,8 @@ namespace gui sreflect
 struct PointerEnterEvent;
 struct PointerExitEvent;
 struct PointerMoveEvent;
+struct PointerDownEvent;
+struct PointerUpEvent;
 
 sreflect_struct(
     "guid": "0de9790c-5a02-470f-92bd-81ca6fb282f2"
@@ -26,6 +28,8 @@ public:
     Function<bool(PointerEnterEvent*)> on_enter = {};
     Function<bool(PointerExitEvent*)>  on_exit  = {};
     Function<bool(PointerMoveEvent*)>  on_hover = {};
+    Function<bool(PointerDownEvent*)>  on_down  = {};
+    Function<bool(PointerUpEvent*)>    on_up    = {};
 };
 } // namespace gui sreflect
 } // namespace skr sreflect

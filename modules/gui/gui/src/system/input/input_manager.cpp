@@ -39,7 +39,7 @@ bool InputManager::dispatch_event(Event* event)
     {
         // do hit test
         HitTestResult result;
-        hit_test(&result, pointer_down_event->global_position);
+        hit_test(&result, pointer_up_event->global_position);
 
         // dispatch to widget
         bool handled = route_event(&result, pointer_up_event);
