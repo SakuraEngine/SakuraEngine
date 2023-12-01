@@ -24,7 +24,7 @@ constexpr auto size(const C& c) -> decltype(c.size()) { return c.size(); }
 
 // HasSizeAndData
 //
-// custom type trait to determine if eastl::data(Container) and eastl::size(Container) are well-formed.
+// custom type trait to determine if ::data(Container) and ::size(Container) are well-formed.
 //
 template <typename, typename = void>
 struct HasSizeAndData : std::false_type {
