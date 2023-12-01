@@ -1,7 +1,8 @@
+#include "SkrProfile/profile.h"
+#include "SkrRT/containers/fixed_vector.hpp"
+#include "SkrRT/containers_new/vector.hpp"
 #include "common_utils.h"
 #include "cgpu/cgpux.hpp"
-
-#include "SkrProfile/profile.h"
 
 // CGPUX bind table apis
 
@@ -142,7 +143,7 @@ void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
     }
     for (auto setIdx : needsUpdateIndices)
     {
-        eastl::fixed_vector<CGPUDescriptorData, 4> datas;
+        skr::fixed_vector<CGPUDescriptorData, 4> datas;
         for (uint32_t i = 0; i < names_count; i++)
         {
             const auto& location = name_locations[i];
@@ -304,7 +305,7 @@ void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tabl
 
     auto to_update = merged[tbl_idx];
     // TODO: refactor & remove this vector
-    eastl::vector<CGPUDescriptorData> datas;
+    skr::vector<CGPUDescriptorData> datas;
     // foreach table location to update values
     for (uint32_t i = 0; i < count; i++)
     {
@@ -315,7 +316,7 @@ void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tabl
             {
                 SkrZoneScopedN("CGPUXMergedBindTable::UpdateDescriptor");
                 // batch update for better performance
-                datas.emplace_back(location.value.data);
+                datas.add(location.value.data);
             }
         }
     }

@@ -1,10 +1,9 @@
 #pragma once
+#include <atomic>
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/async/fib_task.hpp"
-#include <atomic>
-// TODO: REMOVE EASTL
-#include <EASTL/fixed_vector.h>
+#include "SkrRT/containers/fixed_vector.hpp"
 
 namespace skr
 {
@@ -51,7 +50,7 @@ protected:
     SResourceFactory* factory;
     skr_vfs_t* vfs;
 
-    eastl::fixed_vector<skr_guid_t, 4> dependencies;
+    skr::fixed_vector<skr_guid_t, 4> dependencies;
     skr_resource_record_t* resourceRecord;
     skr_io_future_t dataFuture;
     skr::BlobId dataBlob;

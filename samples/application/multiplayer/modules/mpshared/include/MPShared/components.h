@@ -1,7 +1,7 @@
 #pragma once
 #include "MPShared/module.configure.h"
 #include "SkrRT/ecs/dual.h"
-#include "SkrRT/containers/bitset.h"
+#include "SkrRT/containers/bitset.hpp"
 #include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #ifndef __meta__

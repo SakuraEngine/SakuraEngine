@@ -23,7 +23,7 @@
 #include "SkrBase/math/rtm/scalarf.h" // IWYU pragma: export
 #include "SkrBase/math/rtm/scalard.h" // IWYU pragma: export
 
-#include <SkrRT/containers_new/concurrent_queue.h> // IWYU pragma: export
+#include <SkrRT/containers_new/concurrent_queue.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/sptr.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/string.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/vector.hpp> // IWYU pragma: export

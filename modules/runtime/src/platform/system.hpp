@@ -1,9 +1,7 @@
 #pragma once
 #include "SkrRT/platform/system.h"
 #include "SkrRT/containers_new/vector.hpp"
-
-// TODO: REMOVE EASTL
-#include <EASTL/vector_map.h>
+#include "SkrRT/containers_new/umap.hpp"
 
 namespace skr {
 
@@ -12,7 +10,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     template <typename T>
     using Handler = std::pair<T, void*>;
     template <typename T>
-    using RIDMap = eastl::vector_map<int64_t, T>;
+    using RIDMap = skr::UMap<int64_t, T>;
 
     void on_window_resized(SWindowHandle window, int32_t w, int32_t h) SKR_NOEXCEPT
     {
@@ -22,7 +20,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         }
         for (auto& handler : window_resize_handlers)
         {
-            handler.second.first(window, w, h, handler.second.second);
+            handler.value.first(window, w, h, handler.value.second);
         }
     }
     void on_window_closed(SWindowHandle window) SKR_NOEXCEPT
@@ -33,7 +31,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         }
         for (auto& handler : window_close_handlers)
         {
-            handler.second.first(window, handler.second.second);
+            handler.value.first(window, handler.value.second);
         }
     }
 
@@ -45,7 +43,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         }
         for (auto& handler : mouse_wheel_handlers)
         {
-            handler.second.first(wheelX, wheelY, handler.second.second);
+            handler.value.first(wheelX, wheelY, handler.value.second);
         }
     }
 
@@ -57,7 +55,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         }
         for (auto& handler : mouse_button_down_handlers)
         {
-            handler.second.first(button, x, y, handler.second.second);
+            handler.value.first(button, x, y, handler.value.second);
         }
     }
 
@@ -69,7 +67,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         }
         for (auto& handler : mouse_button_up_handlers)
         {
-            handler.second.first(button, x, y, handler.second.second);
+            handler.value.first(button, x, y, handler.value.second);
         }
     }
 
@@ -81,7 +79,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         }
         for (auto& handler : key_down_handlers)
         {
-            handler.second.first(key, handler.second.second);
+            handler.value.first(key, handler.value.second);
         }
     }
 
@@ -93,7 +91,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         }
         for (auto& handler : key_up_handlers)
         {
-            handler.second.first(key, handler.second.second);
+            handler.value.first(key, handler.value.second);
         }
     }
 
@@ -105,7 +103,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         }
         for (auto& handler : text_input_handlers)
         {
-            handler.second.first(text, handler.second.second);
+            handler.value.first(text, handler.value.second);
         }
     }
 
@@ -122,109 +120,109 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     inline int64_t add_window_resize_handler(SWindowResizeHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        window_resize_handlers[rid] = { proc, usr_data };
+        window_resize_handlers.add(rid, { proc, usr_data });
         return rid;
     }
 
     void remove_window_resize_handler(int64_t rid) SKR_NOEXCEPT
     {
-        window_resize_handlers.erase(rid);
+        window_resize_handlers.remove(rid);
     }
 
     int64_t add_window_close_handler(SWindowCloseHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        window_close_handlers[rid] = { proc, usr_data };
+        window_close_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
     void remove_window_close_handler(int64_t rid) SKR_NOEXCEPT
     {
-        window_close_handlers.erase(rid);
+        window_close_handlers.remove(rid);
     }
 
     int64_t add_window_move_handler(SWindowMoveHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        window_move_handlers[rid] = { proc, usr_data };
+        window_move_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
     void remove_window_move_handler(int64_t rid) SKR_NOEXCEPT
     {
-        window_move_handlers.erase(rid);
+        window_move_handlers.remove(rid);
     }
 
     int64_t add_mouse_wheel_handler(SMouseWheelHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        mouse_wheel_handlers[rid] = { proc, usr_data };
+        mouse_wheel_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
     void remove_mouse_wheel_handler(int64_t rid) SKR_NOEXCEPT
     {
-        mouse_wheel_handlers.erase(rid);
+        mouse_wheel_handlers.remove(rid);
     }
 
     int64_t add_mouse_button_down_handler(SMouseButtonDownHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        mouse_button_down_handlers[rid] = { proc, usr_data };
+        mouse_button_down_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
     void remove_mouse_button_down_handler(int64_t rid) SKR_NOEXCEPT
     {
-        mouse_button_down_handlers.erase(rid);
+        mouse_button_down_handlers.remove(rid);
     }
 
     int64_t add_mouse_button_up_handler(SMouseButtonUpHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        mouse_button_up_handlers[rid] = { proc, usr_data };
+        mouse_button_up_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
     void remove_mouse_button_up_handler(int64_t rid) SKR_NOEXCEPT
     {
-        mouse_button_up_handlers.erase(rid);
+        mouse_button_up_handlers.remove(rid);
     }
 
     int64_t add_key_down_handler(SKeyDownHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        key_down_handlers[rid] = { proc, usr_data };
+        key_down_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
     void remove_key_down_handler(int64_t rid) SKR_NOEXCEPT
     {
-        key_down_handlers.erase(rid);
+        key_down_handlers.remove(rid);
     }
 
     int64_t add_key_up_handler(SKeyUpHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        key_up_handlers[rid] = { proc, usr_data };
+        key_up_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
     void remove_key_up_handler(int64_t rid) SKR_NOEXCEPT
     {
-        key_up_handlers.erase(rid);
+        key_up_handlers.remove(rid);
     }
 
     int64_t add_text_input_handler(STextInputHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        text_input_handlers[rid] = { proc, usr_data };
+        text_input_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
     void remove_text_input_handler(int64_t rid) SKR_NOEXCEPT
     {
-        text_input_handlers.erase(rid);
+        text_input_handlers.remove(rid);
     }
 
     skr::vector<ISystemMessageHandler*> message_handlers;

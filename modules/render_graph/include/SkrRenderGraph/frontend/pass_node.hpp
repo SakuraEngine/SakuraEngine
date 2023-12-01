@@ -4,8 +4,7 @@
 #include "SkrRenderGraph/frontend/resource_edge.hpp"
 
 #ifdef RG_USE_FIXED_VECTOR
-// TODO: REMOVE EASTL
-#include <EASTL/fixed_vector.h>
+#include "SkrRT/containers/fixed_vector.hpp"
 #else
 #include "SkrRT/containers_new/stl_vector.hpp"
 #endif
@@ -15,7 +14,7 @@ namespace render_graph
 {
 #ifdef RG_USE_FIXED_VECTOR
     template<typename T, uint32_t N = 4>
-    using graph_edges_vector = eastl::fixed_vector<T, N>;  
+    using graph_edges_vector = skr::fixed_vector<T, N>;  
 #else
     template<typename T, uint32_t N = 4>
     using graph_edges_vector = skr::stl_vector<T>;

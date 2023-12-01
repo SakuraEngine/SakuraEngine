@@ -13,7 +13,7 @@
 #include "SkrRT/misc/log.h" // IWYU pragma: export
 #include "SkrRT/misc/log.hpp" // IWYU pragma: export
 
-#include <SkrRT/containers_new/concurrent_queue.h> // IWYU pragma: export
+#include <SkrRT/containers_new/concurrent_queue.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/sptr.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/string.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/vector.hpp> // IWYU pragma: export

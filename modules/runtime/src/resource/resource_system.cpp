@@ -8,7 +8,7 @@
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
-#include "SkrRT/containers_new/concurrent_queue.h"
+#include "SkrRT/containers_new/concurrent_queue.hpp"
 
 namespace skr::resource
 {

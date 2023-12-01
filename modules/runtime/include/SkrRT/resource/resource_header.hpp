@@ -2,20 +2,18 @@
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/resource/resource_handle.h"
 #include <SkrRT/containers_new/vector.hpp>
+#include <SkrRT/containers/fixed_vector.hpp>
 #include <SkrRT/containers_new/stl_vector.hpp>
 
 #include "SkrRT/serde/binary/reader_fwd.h"
 #include "SkrRT/serde/binary/writer_fwd.h"
-
-// TODO: REMOVE EASTL
-#include <EASTL/fixed_vector.h>
 
 typedef struct skr_resource_header_t {
     uint32_t                                      version;
     skr_guid_t                                    guid;
     skr_guid_t                                    type;
     SKR_RUNTIME_API int                           ReadWithoutDeps(skr_binary_reader_t* archive);
-    eastl::fixed_vector<skr_resource_handle_t, 4> dependencies;
+    skr::fixed_vector<skr_resource_handle_t, 4> dependencies;
 } skr_resource_header_t;
 
 namespace skr::binary

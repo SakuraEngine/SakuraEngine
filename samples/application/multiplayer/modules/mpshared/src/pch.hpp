@@ -19,7 +19,7 @@
 #include "SkrBase/math/rtm/quatf.h" // IWYU pragma: export
 #include "SkrBase/math/rtm/rtmx.h" // IWYU pragma: export
 
-#include "SkrRT/containers/bitset.h" // IWYU pragma: export
+#include "SkrRT/containers/bitset.hpp" // IWYU pragma: export
 #include <SkrRT/containers_new/sptr.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/vector.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/string.hpp> // IWYU pragma: export

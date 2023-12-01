@@ -5,7 +5,7 @@
 #include "SkrRT/misc/log/log_base.hpp"
 #include "SkrRT/misc/log/log_formatter.hpp"
 
-#include "SkrRT/containers_new/concurrent_queue.h"
+#include "SkrRT/containers_new/concurrent_queue.hpp"
 #include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/containers_new/sptr.hpp"
 #include "SkrRT/containers_new/resizable_ring_buffer.hpp"

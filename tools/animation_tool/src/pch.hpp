@@ -28,7 +28,7 @@
 #include <SkrRT/containers_new/string.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/hashmap.hpp> // IWYU pragma: export
 #include <SkrRT/containers_new/btree.hpp> // IWYU pragma: export
-#include <SkrRT/containers_new/concurrent_queue.h> // IWYU pragma: export
+#include <SkrRT/containers_new/concurrent_queue.hpp> // IWYU pragma: export
 #include "SkrRT/containers_new/span.hpp" // IWYU pragma: export
 #include "SkrRT/containers_new/function_ref.hpp" // IWYU pragma: export
 

@@ -7,7 +7,7 @@
 #include "SkrBase/misc/defer.hpp"
 #include <SkrRT/containers_new/stl_string.hpp>
 #include <SkrRT/containers_new/string.hpp>
-#include <SkrRT/containers_new/concurrent_queue.h>
+#include <SkrRT/containers_new/concurrent_queue.hpp>
 #include <dxcapi.h>
 #include <memory>
 
