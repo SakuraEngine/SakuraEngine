@@ -25,7 +25,8 @@ namespace skr::task
 #if !defined(SKR_TASK_MARL)
 #include "ftl/task_scheduler.h"
 #include "ftl/task_counter.h"
-#include "EASTL/shared_ptr.h"
+// TODO: REMOVE EASTL
+#include <EASTL/shared_ptr.h>
 
 namespace skr::task
 {
@@ -114,7 +115,7 @@ namespace skr::task
         void initialize(const scheudler_config_t&);
         void bind();
         void unbind();
-        template<struct F>
+        template<typename F>
         void schedule(F&& lambda, event_t* event, const char* name = nullptr)
         {
             auto f = SkrNewLambda(std::forward<F>(lambda));
@@ -130,7 +131,7 @@ namespace skr::task
             if(event) event->internal->Decrement();
         }
         
-        template<struct F>
+        template<typename F>
         void wait(bool pin, F&& lambda)
         {
             internal->WaitForPredicate(std::forward<F>(lambda), pin);
@@ -144,7 +145,7 @@ namespace skr::task
         friend struct event_t;
     };
 
-    template<struct F>
+    template<typename F>
     void schedule(F&& lambda, event_t* event, const char* name = nullptr);
 
     void* current_fiber();
@@ -155,14 +156,14 @@ namespace skr::task
         static scheduler_t* get_scheduler();
         friend struct counter_t;
         friend struct event_t;
-        template<struct F>
+        template<typename F>
         friend void schedule(F&& lambda, event_t* event, const char* name);
-        template<struct F>
+        template<typename F>
         friend void wait(bool pin, F&& lambda);
         friend void* current_fiber();
     };
 
-    template<struct F>
+    template<typename F>
     void schedule(F&& lambda, event_t* event, const char* name)
     {
         scheduler_t* scheduler = details::get_scheduler();
@@ -170,7 +171,7 @@ namespace skr::task
         scheduler->schedule(std::forward<F>(lambda), event, name);
     }
 
-    template<struct F>
+    template<typename F>
     void wait(bool pin, F&& lambda)
     {
         scheduler_t* scheduler = details::get_scheduler();

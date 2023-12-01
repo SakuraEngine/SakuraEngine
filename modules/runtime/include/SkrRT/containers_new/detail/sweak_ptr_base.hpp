@@ -119,7 +119,7 @@ template <typename T>
 skr::SWeakPtrBase<T>::SWeakPtrBase(this_type&& lp) SKR_NOEXCEPT
     : SRCInst<true>()
 {
-    p = lp.get();
+    p = lp.p;
     lp.p = nullptr;
 
     {
@@ -132,7 +132,7 @@ template <typename U>
 skr::SWeakPtrBase<T>::SWeakPtrBase(SWeakPtrBase<U>&& lp, typename std::enable_if<std::is_convertible<U*, T*>::value>::type*) SKR_NOEXCEPT
     : SRCInst<true>()
 {
-    p = lp.get();
+    p = lp.p;
     ((this_type*)&lp)->p = nullptr;
 
     {

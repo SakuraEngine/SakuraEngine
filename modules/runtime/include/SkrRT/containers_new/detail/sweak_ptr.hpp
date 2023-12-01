@@ -5,9 +5,9 @@
 namespace skr
 {
 template <typename T>
-struct SWeakPtr : public SWeakPtrBase<T>
-{
+struct SWeakPtr : public SWeakPtrBase<T> {
     using this_type = SWeakPtr<T>;
+
 public:
     SWeakPtr() SKR_NOEXCEPT = default;
     SWeakPtr(const this_type& lp) SKR_NOEXCEPT;
@@ -20,7 +20,7 @@ public:
     SWeakPtr(const SPtr<U>& lp, typename std::enable_if<std::is_convertible<U*, T*>::value>::type* = 0) SKR_NOEXCEPT;
     ~SWeakPtr() SKR_NOEXCEPT;
 
-    void release() SKR_NOEXCEPT;
+    void           release() SKR_NOEXCEPT;
     inline SPtr<T> lock() const SKR_NOEXCEPT
     {
         // We can't just return shared_ptr<T>(*this), as the object may go stale while we are doing this.
@@ -32,10 +32,28 @@ public:
         return temp;
     }
 
+    template <typename U>
+    void assign(const SWeakPtr<U>& weakPtr,
+                typename std::enable_if<std::is_convertible<U*, T*>::value>::type* = 0) noexcept
+    {
+        if (this->block != weakPtr.block) // This check encompasses assignment to self.
+        {
+            // Release old reference
+            if (this->block )
+                this->block->weak_release();
+
+            // Add new reference
+            this->p    = weakPtr.p;
+            this->block = weakPtr.block;
+            if (this->block)
+                this->block ->add_weak_refcount();
+        }
+    }
+
     this_type& operator=(const this_type& lp) SKR_NOEXCEPT;
     template <typename U>
     typename std::enable_if<std::is_convertible<U*, T*>::value, this_type&>::type
-    operator=(const SWeakPtr<U>& lp) SKR_NOEXCEPT;
+               operator=(const SWeakPtr<U>& lp) SKR_NOEXCEPT;
     this_type& operator=(this_type&& lp) SKR_NOEXCEPT;
     template <typename U>
     typename std::enable_if<std::is_convertible<U*, T*>::value, this_type&>::type
@@ -47,34 +65,34 @@ public:
 
     explicit operator bool() const SKR_NOEXCEPT;
 
-    template <typename U, bool B> friend struct SPtrHelper;
-    template <typename U> friend struct SWeakPtr;
-};  
-}
+    template <typename U, bool B>
+    friend struct SPtrHelper;
+    template <typename U>
+    friend struct SWeakPtr;
+};
+} // namespace skr
 
 // implement SWeakPtr
 
 // default ctors
 template <typename T>
-skr::SWeakPtr<T>::SWeakPtr(const this_type& lp) SKR_NOEXCEPT : SWeakPtrBase<T>(lp) { }
+skr::SWeakPtr<T>::SWeakPtr(const this_type& lp) SKR_NOEXCEPT : SWeakPtrBase<T>(lp) {}
 
 template <typename T>
 template <typename U>
 skr::SWeakPtr<T>::SWeakPtr(const SWeakPtr<U>& lp, typename std::enable_if<std::is_convertible<U*, T*>::value>::type*) SKR_NOEXCEPT
     : SWeakPtrBase<T>(lp)
 {
-
 }
 
 template <typename T>
-skr::SWeakPtr<T>::SWeakPtr(this_type&& lp) SKR_NOEXCEPT  : SWeakPtrBase<T>(std::move(lp)) { }
+skr::SWeakPtr<T>::SWeakPtr(this_type&& lp) SKR_NOEXCEPT : SWeakPtrBase<T>(std::move(lp)) {}
 
 template <typename T>
 template <typename U>
 skr::SWeakPtr<T>::SWeakPtr(SWeakPtr<U>&& lp, typename std::enable_if<std::is_convertible<U*, T*>::value>::type*) SKR_NOEXCEPT
     : SWeakPtrBase<T>(std::move(lp))
 {
-    
 }
 
 template <typename T>
@@ -82,13 +100,12 @@ template <typename U>
 skr::SWeakPtr<T>::SWeakPtr(const SPtr<U>& lp, typename std::enable_if<std::is_convertible<U*, T*>::value>::type*) SKR_NOEXCEPT
     : SWeakPtrBase<T>(lp)
 {
-
 }
 
 template <typename T>
 skr::SWeakPtr<T>::~SWeakPtr() SKR_NOEXCEPT
 {
-    if (this->block) 
+    if (this->block)
         this->block->weak_release();
 }
 
@@ -119,10 +136,7 @@ void skr::SWeakPtr<T>::release() SKR_NOEXCEPT
 template <typename T>
 skr::SWeakPtr<T>& skr::SWeakPtr<T>::operator=(const this_type& lp) SKR_NOEXCEPT
 {
-    if (!this->equivalent_ownership(lp))
-    {
-        SPtr<T>(lp).Swap(*this);
-    }
+    assign(lp);
     return *this;
 }
 
@@ -131,10 +145,7 @@ template <typename U>
 typename std::enable_if<std::is_convertible<U*, T*>::value, skr::SWeakPtr<T>&>::type
 skr::SWeakPtr<T>::operator=(const skr::SWeakPtr<U>& lp) SKR_NOEXCEPT
 {
-    if (!this->equivalent_ownership(lp))
-    {
-        SPtr<T>(lp).Swap(*this);
-    }
+    assign(lp);
     return *this;
 }
 
@@ -142,10 +153,7 @@ skr::SWeakPtr<T>::operator=(const skr::SWeakPtr<U>& lp) SKR_NOEXCEPT
 template <typename T>
 skr::SWeakPtr<T>& skr::SWeakPtr<T>::operator=(this_type&& lp) SKR_NOEXCEPT
 {
-    if (!this->equivalent_ownership(lp))
-    {
-        SPtr<T>(std::move(lp)).Swap(*this);
-    }
+    SWeakPtr(std::move(lp)).Swap(*this);
     return *this;
 }
 
@@ -154,10 +162,7 @@ template <typename U>
 typename std::enable_if<std::is_convertible<U*, T*>::value, skr::SWeakPtr<T>&>::type
 skr::SWeakPtr<T>::operator=(skr::SWeakPtr<U>&& lp) SKR_NOEXCEPT
 {
-    if (!this->equivalent_ownership(lp))
-    {
-        SPtr<T>(std::move(lp)).Swap(*this);
-    }
+    SWeakPtr(std::move(lp)).Swap(*this);
     return *this;
 }
 
@@ -175,12 +180,12 @@ skr::SWeakPtr<T>::operator=(const SPtr<U>& lp) SKR_NOEXCEPT
         {
             // Release old reference
             {
-                if(this->block)
+                if (this->block)
                     this->block->weak_release();
             }
             this->CopyRCBlockFrom(lp);
             {
-                if(this->block)
+                if (this->block)
                     this->block->add_weak_refcount();
             }
         }
@@ -250,7 +255,7 @@ inline bool operator!=(std::nullptr_t, const skr::SWeakPtr<T>& b) SKR_NOEXCEPT
     return b;
 }
 
-}
+} // namespace skr
 
 // c++ STL functions equivalent
 namespace skr
@@ -262,11 +267,10 @@ inline SWeakPtr<T> reinterpret_pointer_cast(SWeakPtr<U> const& r) SKR_NOEXCEPT
     return SWeakPtr<T>(r, reinterpret_cast<T*>(r.get()));
 }
 
-template<typename T, typename U> 
-SWeakPtr<T> static_pointer_cast( const SWeakPtr<U>& r ) SKR_NOEXCEPT
+template <typename T, typename U>
+SWeakPtr<T> static_pointer_cast(const SWeakPtr<U>& r) SKR_NOEXCEPT
 {
     return SWeakPtr<T>(r, static_cast<T*>(r.get()));
 }
 
-
-}
+} // namespace skr

@@ -1,6 +1,7 @@
 #pragma once
 #include "cgpu/cgpux.h"
 #include "SkrRT/misc/make_zeroed.hpp"
+// TODO: REMOVE EASTL
 #include <EASTL/fixed_vector.h>
 
 struct CGPUXBindTableLocation;
