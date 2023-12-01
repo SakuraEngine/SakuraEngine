@@ -22,6 +22,12 @@ SKR_GUI_API PointerGestureRecognizer : public GestureRecognizer {
     // event
     virtual void on_pointer_added(PointerDownEvent* event) = 0;
 
+    // accept or reject
+    void request_accept(CombinePointerId pointer);
+    void request_reject(CombinePointerId pointer);
+    void request_accept_all();
+    void request_reject_all();
+
 private:
     UMap<CombinePointerId, GestureArena*> _tracing_pointers;
 };
