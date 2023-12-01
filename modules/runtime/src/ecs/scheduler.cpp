@@ -1,4 +1,4 @@
-#include "SkrRT/containers_new/sptr.hpp"
+#include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/ecs/SmallVector.h"
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/ecs/entity.hpp"

@@ -7,7 +7,7 @@
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/window.h"
 #include "SkrRT/platform/filesystem.hpp"
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
 #include "SkrInputSystem/input_trigger.hpp"
 #include "SkrInputSystem/input_modifier.hpp"

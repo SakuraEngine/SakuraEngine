@@ -4,7 +4,7 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
-#include "SkrRT/containers_new/umap.hpp"
+#include "SkrRT/containers/umap.hpp"
 
 #include "platform/windows/windows_dstorage.hpp"
 

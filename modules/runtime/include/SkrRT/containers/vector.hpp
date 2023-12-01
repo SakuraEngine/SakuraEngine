@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers_new/skr_allocator.hpp"
+#include "SkrRT/containers/skr_allocator.hpp"
 #include "SkrBase/containers/array/array.hpp"
 
 namespace skr

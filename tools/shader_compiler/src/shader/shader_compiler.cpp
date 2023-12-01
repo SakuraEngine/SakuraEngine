@@ -1,7 +1,7 @@
 #include "SkrRT/module/module.hpp"
-#include "SkrRT/containers_new/vector.hpp"
-#include "SkrRT/containers_new/hashmap.hpp"
-#include "SkrRT/containers_new/stl_function.hpp"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/stl_function.hpp"
 #include "SkrShaderCompiler/module.configure.h"
 #include "SkrShaderCompiler/shader_compiler.hpp"
 

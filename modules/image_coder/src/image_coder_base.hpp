@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/atomic.h"
-#include "SkrRT/containers_new/span.hpp"
+#include "SkrRT/containers/span.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrImageCoder/skr_image_coder.h"
 

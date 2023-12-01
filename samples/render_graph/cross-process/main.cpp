@@ -2,7 +2,7 @@
 #include "SkrRT/misc/log.h"
 #include "lmdb/lmdb.h"
 #include <SkrRT/platform/filesystem.hpp>
-#include <SkrRT/containers_new/string.hpp>
+#include <SkrRT/containers/string.hpp>
 
 #include "SkrProfile/profile.h"
 

@@ -1,10 +1,10 @@
 #include "vulkan_utils.h"
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
 
-#include <SkrRT/containers_new/stl_vector.hpp>
-#include <SkrRT/containers_new/stl_string.hpp>
-#include <SkrRT/containers_new/string.hpp>
-#include <SkrRT/containers_new/hashmap.hpp>
+#include <SkrRT/containers/stl_vector.hpp>
+#include <SkrRT/containers/stl_string.hpp>
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/hashmap.hpp>
 
 class VkUtil_Blackboard
 {

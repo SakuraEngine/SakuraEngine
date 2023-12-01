@@ -3,7 +3,7 @@
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/parallel_for.hpp"
-#include "SkrRT/containers_new/stl_vector.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/json_utils.hpp"

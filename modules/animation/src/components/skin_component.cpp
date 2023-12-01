@@ -6,7 +6,7 @@
 #include "SkrAnim/components/skeleton_component.hpp"
 #include "SkrAnim/ozz/geometry/skinning_job.h"
 #include "SkrAnim/ozz/base/span.h"
-#include "SkrRT/containers_new/sptr.hpp"
+#include "SkrRT/containers/sptr.hpp"
 
 #include "SkrProfile/profile.h"
 

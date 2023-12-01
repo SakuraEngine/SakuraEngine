@@ -2,10 +2,10 @@
 #include "SkrMemory/memory.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/bits.hpp"
-#include "SkrRT/containers_new/sptr.hpp"
+#include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/resource/resource_handle.h"
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include <cmath>
 
 #include "SkrRT/containers/deprecated.hpp"

@@ -5,8 +5,8 @@
 #include "SkrRT/rttr/type_desc.hpp"
 #include "SkrRT/rttr/type_registry.hpp"
 #include "SkrRT/rttr/type/type.hpp"
-#include "SkrRT/containers_new/sptr.hpp"
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers/string.hpp"
 #include "SkrRT/rttr/strongly_enum.hpp"
 
 #include "SkrRT/containers/deprecated.hpp"

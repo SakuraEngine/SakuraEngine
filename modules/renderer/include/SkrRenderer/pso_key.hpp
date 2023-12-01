@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRenderer/pso_map.h"
 #include "SkrRT/platform/atomic.h"
-#include "SkrRT/containers_new/vector.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 namespace skr {
 namespace renderer {

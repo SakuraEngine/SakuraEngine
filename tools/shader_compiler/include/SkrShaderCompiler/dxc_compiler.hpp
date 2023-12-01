@@ -2,7 +2,7 @@
 #include "shader_compiler.hpp"
 #include "SkrRT/module/subsystem.hpp"
 #include "SkrRT/platform/shared_library.hpp"
-#include "SkrRT/containers_new/stl_string.hpp"
+#include "SkrRT/containers/stl_string.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #ifndef __meta__
     #include "SkrShaderCompiler/dxc_compiler.generated.h" // IWYU pragma: export

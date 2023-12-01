@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrToolCore/fwd_types.hpp"
 #include "SkrRT/platform/filesystem.hpp"
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #ifndef __meta__
 #include "SkrToolCore/project/project.generated.h" // IWYU pragma: export
 #endif

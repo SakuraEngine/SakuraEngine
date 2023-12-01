@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers_new/skr_allocator.hpp"
+#include "SkrRT/containers/skr_allocator.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
 #include "SkrBase/misc/hash.hpp"
 #include "SkrBase/algo/utils.hpp"

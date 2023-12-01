@@ -29,7 +29,7 @@
 #include "ftl/fiber.h"
 #include "ftl/task_counter.h"
 #include "ftl/thread_abstraction.h"
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include <memory>
 #include <mutex>
 #include "SkrMemory/memory.h"
@@ -49,7 +49,7 @@
 #endif
 
 #ifdef SKR_PROFILE_ENABLE
-    #include <SkrRT/containers_new/string.hpp>
+    #include <SkrRT/containers/string.hpp>
 #endif
 
 namespace ftl

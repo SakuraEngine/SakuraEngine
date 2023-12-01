@@ -1,6 +1,6 @@
 #pragma once
 #include "cgpu/extensions/cgpu_nsight.h"
-#include <SkrRT/containers_new/vector.hpp>
+#include <SkrRT/containers/vector.hpp>
 #include <mutex>
 
 struct CGPUNSightSingleton {

@@ -1,7 +1,7 @@
 #include "SkrImGui/skr_imgui.config.h"
-#include <SkrRT/containers_new/lite.hpp>
-#include <SkrRT/containers_new/string.hpp>
-#include <SkrRT/containers_new/vector.hpp>
+#include <SkrRT/containers/lite.hpp>
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/vector.hpp>
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/input.h"
 #include "SkrRT/platform/system.h"

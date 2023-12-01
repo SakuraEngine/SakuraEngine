@@ -1,7 +1,7 @@
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/serde/json/writer.h"
 #include "SkrBase/misc/debug.h" 
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include "SkrProfile/profile.h"
 
 // json writer

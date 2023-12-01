@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers_new/span.hpp"
+#include "SkrRT/containers/span.hpp"
 #include "SkrRT/rttr/type_desc.hpp"
 #include "SkrRT/rttr/guid.hpp"
 

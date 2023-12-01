@@ -3,7 +3,7 @@
 #include "../components/src_components.hpp"
 #include "../components/blocks_component.hpp"
 #include "SkrRT/platform/guid.hpp"
-#include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
 #include <tuple>
 #include "pool.hpp"

@@ -1,7 +1,7 @@
 #include "SkrRT/platform/process.h"
 #include "SkrRT/platform/crash.h"
 
-#include "SkrRT/containers_new/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
 #include <signal.h>
 #include <Dbghelp.h>

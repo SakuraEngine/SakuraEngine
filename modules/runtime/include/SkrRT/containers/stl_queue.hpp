@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers_new/stl_deque.hpp"
+#include "SkrRT/containers/stl_deque.hpp"
 #include <queue>
 
 namespace skr

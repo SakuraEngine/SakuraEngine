@@ -1,8 +1,8 @@
 #include "cgpu/extensions/cgpu_nsight.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrMemory/memory.h"
-#include "SkrRT/containers_new/vector.hpp"
-#include "SkrRT/containers_new/umap.hpp"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/umap.hpp"
 #include "SkrRT/io/vram_io.hpp"
 #ifdef _WIN32
 #include "SkrRT/platform/win/dstorage_windows.h"

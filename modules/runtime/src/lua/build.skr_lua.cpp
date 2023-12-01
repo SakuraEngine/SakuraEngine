@@ -1,4 +1,4 @@
-#include "SkrRT/containers_new/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/lua/skr_lua.h"
 #include "SkrMemory/memory.h"
 #include "SkrBase/misc/defer.hpp"
@@ -14,9 +14,9 @@ extern "C"
 #include "luacode.h"
 }
 
-#include "SkrRT/containers_new/stl_string.hpp"
-#include "SkrRT/containers_new/string.hpp"
-#include "SkrRT/containers_new/vector.hpp"
+#include "SkrRT/containers/stl_string.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 namespace skr::lua
 {

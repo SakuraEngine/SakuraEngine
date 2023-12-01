@@ -6,15 +6,15 @@
 #include <SkrRT/platform/filesystem.hpp>  // IWYU pragma: export
 #include "SkrBase/misc/debug.h"   // IWYU pragma: export
 #include "SkrRT/misc/log.h" // IWYU pragma: export
-#include "SkrRT/containers_new/sptr.hpp" // IWYU pragma: export
-#include "SkrRT/containers_new/hashmap.hpp" // IWYU pragma: export
-#include "SkrRT/containers_new/vector.hpp" // IWYU pragma: export
+#include "SkrRT/containers/sptr.hpp" // IWYU pragma: export
+#include "SkrRT/containers/hashmap.hpp" // IWYU pragma: export
+#include "SkrRT/containers/vector.hpp" // IWYU pragma: export
 #include "SkrRT/resource/resource_factory.h"  // IWYU pragma: export
 #include "SkrRT/resource/resource_system.h"  // IWYU pragma: export
 #include "SkrRT/async/thread_job.hpp" // IWYU pragma: export
 
-#include "SkrRT/containers_new/stl_vector.hpp" // IWYU pragma: export
-#include "SkrRT/containers_new/stl_string.hpp" // IWYU pragma: export
+#include "SkrRT/containers/stl_vector.hpp" // IWYU pragma: export
+#include "SkrRT/containers/stl_string.hpp" // IWYU pragma: export
 
 #include "SkrBase/math/rtm/vector4f.h" // IWYU pragma: export
 #include "SkrBase/math/rtm/rtmx.h" // IWYU pragma: export

@@ -5,8 +5,8 @@
 #include "SkrRT/platform/thread.h"
 #include "archetype.hpp"
 
-#include "SkrRT/containers_new/hashmap.hpp"
-#include "SkrRT/containers_new/stl_vector.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
 
 namespace dual
 {

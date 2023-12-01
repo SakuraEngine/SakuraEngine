@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrBase/misc/constexpr_join.hpp"
 #include "SkrRT/lua/bind_fwd.hpp"
-#include "SkrRT/containers_new/string.hpp"
-#include "SkrRT/containers_new/sptr.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrBase/misc/traits.hpp"
 #include "SkrRT/rttr/rttr_traits.hpp"

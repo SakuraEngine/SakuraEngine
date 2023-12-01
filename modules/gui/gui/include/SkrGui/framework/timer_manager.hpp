@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
-#include "SkrRT/containers_new/sparse_array.hpp"
+#include "SkrRT/containers/sparse_array.hpp"
 #ifndef __meta__
     #include "SkrGui/framework/timer_manager.generated.h"
 #endif

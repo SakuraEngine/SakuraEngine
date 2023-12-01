@@ -10,11 +10,11 @@
 #include "storage.hpp"
 #include "type.hpp"
 
-#include <SkrRT/containers_new/string.hpp>
-#include <SkrRT/containers_new/stl_string.hpp>
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/stl_string.hpp>
 #include "SkrRT/misc/bits.hpp"
 #include "scheduler.hpp"
-#include "SkrRT/containers_new/span.hpp"
+#include "SkrRT/containers/span.hpp"
 #if __SSE2__
     #include <emmintrin.h>
 #endif
