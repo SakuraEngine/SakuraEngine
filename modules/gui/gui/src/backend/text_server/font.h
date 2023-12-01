@@ -33,8 +33,7 @@
 
 #include "backend/text_server/text_server.h"
 #include "backend/text_server/hashfuncs.h"
-// TODO: REMOVE EASTL
-#include <EASTL/bonus/lru_cache.h>
+#include "SkrBase/containers/lru/lru.hpp"
 
 namespace godot
 {
@@ -81,13 +80,13 @@ struct ShapedTextKeyHasher {
 };
 } // namespace godot
 
-namespace eastl
+namespace std
 {
 template <>
 struct hash<godot::ShapedTextKey> {
     size_t operator()(const godot::ShapedTextKey& p) const { return godot::ShapedTextKeyHasher::hash(p); }
 };
-} // namespace eastl
+} // namespace std
 
 namespace godot
 {
@@ -97,8 +96,8 @@ namespace godot
 class Font
 {
     // Shaped string cache.
-    using TextLineCache = eastl::lru_cache<ShapedTextKey, Ref<TextLine>>;
-    using TextParagraphCache = eastl::lru_cache<ShapedTextKey, Ref<TextParagraph>>;
+    using TextLineCache = skr::container::LRU::Cache<ShapedTextKey, Ref<TextLine>>;
+    using TextParagraphCache = skr::container::LRU::Cache<ShapedTextKey, Ref<TextParagraph>>;
 
     mutable TextLineCache      cache = TextLineCache(64);
     mutable TextParagraphCache cache_wrap = TextParagraphCache(16);
