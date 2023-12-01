@@ -1109,7 +1109,7 @@ uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame, ui
         }
         uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
-        eastl::remove_if(queue.begin(), queue.end(),
+        std::remove_if(queue.begin(), queue.end(),
                          [&](auto& element) {
                              return element.texture == nullptr;
                          }),
@@ -1143,7 +1143,7 @@ uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame, uin
         }
         uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
-        eastl::remove_if(queue.begin(), queue.end(),
+        std::remove_if(queue.begin(), queue.end(),
                          [&](auto& element) {
                              return element.buffer == nullptr;
                          }),

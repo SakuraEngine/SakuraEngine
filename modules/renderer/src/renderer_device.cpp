@@ -9,8 +9,6 @@
 #endif
 #include "SkrRenderer/render_device.h"
 
-#include <EASTL/fixed_vector.h>
-
 namespace skr
 {
 struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
@@ -186,19 +184,19 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     // create device
     const auto cpy_queue_count_ =  cgpu_min(cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER), MAX_CPY_QUEUE_COUNT);
     const auto cmpt_queue_count_ = cgpu_min(cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_COMPUTE), MAX_CMPT_QUEUE_COUNT);
-    eastl::fixed_vector<CGPUQueueGroupDescriptor, 3> Gs;
-    auto& GfxDesc = Gs.emplace_back();
+    skr::vector<CGPUQueueGroupDescriptor> Gs;
+    auto& GfxDesc = *Gs.add_default();
     GfxDesc.queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
     GfxDesc.queue_count = 1;
     if (cpy_queue_count_)
     {
-        auto& CpyDesc = Gs.emplace_back();
+        auto& CpyDesc = *Gs.add_default();
         CpyDesc.queue_type = CGPU_QUEUE_TYPE_TRANSFER;
         CpyDesc.queue_count = cpy_queue_count_;
     }
     if (cmpt_queue_count_)
     {
-        auto& CmptDesc = Gs.emplace_back();
+        auto& CmptDesc = *Gs.add_default();
         CmptDesc.queue_type = CGPU_QUEUE_TYPE_COMPUTE;
         CmptDesc.queue_count = cmpt_queue_count_;
     }

@@ -3,8 +3,9 @@
 #include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/containers_new/vector.hpp"
-#include <EASTL/fixed_vector.h>
 #include "cgpu/cgpux.h"
+// TODO: REMOVE EASTL
+#include <EASTL/fixed_vector.h>
 
 namespace skr
 {

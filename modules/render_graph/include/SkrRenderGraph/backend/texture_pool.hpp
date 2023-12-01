@@ -1,6 +1,6 @@
 #pragma once
 #include <SkrRT/containers_new/hashmap.hpp>
-#include <EASTL/deque.h>
+#include <SkrRT/containers_new/stl_deque.hpp>
 #include "cgpu/api.h"
 
 namespace skr
@@ -49,12 +49,12 @@ public:
     friend class RenderGraphBackend;
     void initialize(CGPUDeviceId device);
     void finalize();
-    eastl::pair<CGPUTextureId, ECGPUResourceState> allocate(const CGPUTextureDescriptor& desc, AllocationMark mark);
+    std::pair<CGPUTextureId, ECGPUResourceState> allocate(const CGPUTextureDescriptor& desc, AllocationMark mark);
     void deallocate(const CGPUTextureDescriptor& desc, CGPUTextureId texture, ECGPUResourceState final_state, AllocationMark mark);
 
 protected:
     CGPUDeviceId device;
-    skr::flat_hash_map<Key, eastl::deque<PooledTexture>, Key::hasher> textures;
+    skr::flat_hash_map<Key, skr::deque<PooledTexture>, Key::hasher> textures;
 };
 } // namespace render_graph
 } // namespace skr

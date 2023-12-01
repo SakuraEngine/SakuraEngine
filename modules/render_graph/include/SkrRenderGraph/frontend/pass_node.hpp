@@ -4,6 +4,7 @@
 #include "SkrRenderGraph/frontend/resource_edge.hpp"
 
 #ifdef RG_USE_FIXED_VECTOR
+// TODO: REMOVE EASTL
 #include <EASTL/fixed_vector.h>
 #endif
 

@@ -8,8 +8,6 @@
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #include "SkrShaderCompiler/shader_compiler.hpp"
 
-#include <EASTL/array.h>
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

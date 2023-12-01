@@ -190,9 +190,9 @@ void TexturePool::finalize()
     }
 }
 
-eastl::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(const CGPUTextureDescriptor& desc, AllocationMark mark)
+std::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(const CGPUTextureDescriptor& desc, AllocationMark mark)
 {
-    eastl::pair<CGPUTextureId, ECGPUResourceState> allocated = {
+    std::pair<CGPUTextureId, ECGPUResourceState> allocated = {
         nullptr, CGPU_RESOURCE_STATE_UNDEFINED
     };
     auto key = make_zeroed<TexturePool::Key>(device, desc);

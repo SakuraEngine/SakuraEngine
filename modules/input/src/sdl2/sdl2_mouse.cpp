@@ -1,7 +1,6 @@
 #include "../common/common_device_base.hpp"
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_events.h>
-#include <EASTL/fixed_vector.h>
 #include <algorithm>
 
 namespace skr {

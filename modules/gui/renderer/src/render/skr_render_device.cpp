@@ -287,7 +287,7 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
 //     const auto                    frame_index = graph->get_frame_index();
 //     GDITextureUpdate_RenderGraph* update = nullptr;
 //     // 1. filter request_updates to pending_updates
-//     eastl::vector_map<IGDITexture*, GDITextureUpdate_RenderGraph*> filter_map;
+//     skr::vector_map<IGDITexture*, GDITextureUpdate_RenderGraph*> filter_map;
 //     while (request_updates.try_dequeue(update))
 //     {
 //         auto iter = filter_map.find(update->texture);
@@ -302,8 +302,8 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
 //         pending_updates.enqueue(update);
 //     }
 //     // 2. filter pending_updates to copies
-//     eastl::fixed_vector<GDITextureUpdate_RenderGraph*, 8> copies;
-//     eastl::fixed_vector<GDITextureUpdate_RenderGraph*, 8> pending;
+//     skr::fixed_vector<GDITextureUpdate_RenderGraph*, 8> copies;
+//     skr::fixed_vector<GDITextureUpdate_RenderGraph*, 8> pending;
 //     while (pending_updates.try_dequeue(update))
 //     {
 //         if (update->texture->get_state() == EGDIResourceState::Okay)

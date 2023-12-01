@@ -1,10 +1,19 @@
+#include "SkrProfile/profile.h"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/containers_new/stl_string.hpp" //sv::starts_with
 #include "SkrShaderCompiler/dxc_compiler.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
-#include <dxcapi.h>
 
-#include "SkrRT/containers_new/stl_string.hpp" //sv::starts_with
-
-#include "SkrProfile/profile.h"
+#ifdef _WIN32
+    #ifndef WIN32_LEAN_AND_MEAN
+	#define WIN32_LEAN_AND_MEAN
+    #endif
+    #include <wtypes.h> // IWYU pragma: export
+    #include <unknwn.h> // IWYU pragma: export
+    #include <winbase.h> // IWYU pragma: export
+    #include <winioctl.h> // IWYU pragma: export
+#endif
+#include "./../dxc/dxcapi.h" 
 
 // helper
 namespace skd
