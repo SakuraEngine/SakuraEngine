@@ -11,7 +11,7 @@
 #include "SkrBase/misc/debug.h"  // IWYU pragma: export
 #include "SkrRT/platform/guid.hpp" // IWYU pragma: export
 #include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
-#include "SkrRT/platform/memory.h" // IWYU pragma: export
+#include "SkrMemory/memory.h" // IWYU pragma: export
 #include "SkrRT/platform/vfs.h" // IWYU pragma: export
 #include "SkrRT/platform/time.h" // IWYU pragma: export
 #include "SkrRT/platform/guid.hpp" // IWYU pragma: export

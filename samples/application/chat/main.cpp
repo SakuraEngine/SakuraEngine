@@ -16,7 +16,7 @@
 #include <imgui/imgui.h>
 #include <EASTL/string_hash_map.h>
 #include "SkrRT/module/module_manager.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/window.h"
 #include <SDL2/SDL.h>

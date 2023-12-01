@@ -1,7 +1,7 @@
 #include <SkrRT/platform/filesystem.hpp>
 
 #include "SkrBase/misc/debug.h" 
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/platform/vfs.h"

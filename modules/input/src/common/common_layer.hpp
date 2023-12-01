@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrInput/input.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/atomic.h"
 
 namespace skr {

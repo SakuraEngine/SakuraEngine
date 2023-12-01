@@ -1,12 +1,11 @@
 #pragma once
+#include <atomic>
 #include <type_traits>
+#include "SkrBase/misc/defer.hpp"
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/platform/thread.h"
-#include "SkrRT/platform/memory.h"
-#include "SkrBase/misc/defer.hpp"
-
-#include <EASTL/atomic.h>
-#include <EASTL/queue.h>
+#include "SkrMemory/memory.h"
+#include "SkrRT/containers_new/stl_queue.hpp"
 
 namespace skr
 {
@@ -355,7 +354,7 @@ private:
         std::is_trivially_copyable_v<Progress> && std::is_copy_constructible_v<Progress> && std::is_move_constructible_v<Progress> && std::is_copy_assignable_v<Progress> && std::is_move_assignable_v<Progress>;
 
     using ProgressContainer = 
-        typename std::conditional<isProgressAtomicCompatible, eastl::atomic<Progress>, ThreadSafeContainer<Progress>>::type;
+        typename std::conditional<isProgressAtomicCompatible, std::atomic<Progress>, ThreadSafeContainer<Progress>>::type;
 
     ProgressContainer mProgress;
 
@@ -389,7 +388,7 @@ private:
     template <typename Data>
     struct ThreadSafeQueue {
     private:
-        eastl::queue<Data> mData{};
+        skr::queue<Data> mData{};
         mutable SRWMutex mMutex{};
 
     public:
@@ -416,7 +415,7 @@ private:
             skr_rw_mutex_release_w(&mMutex);
         }
 
-        eastl::queue<Data> move()
+        skr::queue<Data> move()
         {
             skr_rw_mutex_acquire_w(&mMutex);
             auto const mDataMoved = std::move(mData);

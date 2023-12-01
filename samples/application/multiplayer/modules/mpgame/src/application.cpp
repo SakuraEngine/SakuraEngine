@@ -3,7 +3,7 @@
 #include "SkrRT/runtime_module.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/module/module_manager.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/window.h"
 #include "SkrRT/platform/filesystem.hpp"

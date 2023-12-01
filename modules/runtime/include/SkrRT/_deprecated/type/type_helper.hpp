@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/misc/traits.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/serde/binary/serde.h"
 #include "SkrRT/serde/binary/writer_fwd.h"
 #include "SkrRT/serde/binary/reader_fwd.h"

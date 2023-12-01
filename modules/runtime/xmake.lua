@@ -14,7 +14,7 @@ target("SkrRTStatic")
     set_group("01.modules")
     set_optimize("fastest")
     set_exceptions("no-cxx")
-    add_deps("SkrRoot", "SkrBase", {public = true})
+    add_deps("SkrRoot", "SkrBase", "SkrMemory", {public = true})
     add_defines("SKR_RUNTIME_API=SKR_IMPORT", "SKR_RUNTIME_LOCAL=error")
     add_packages("eastl", "parallel-hashmap", "simdjson", {public = true, inherit = true})
     add_packages("lemon", {public = false, inherit = false})
@@ -26,7 +26,7 @@ target("SkrRTStatic")
 
 shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     set_group("01.modules")
-    add_deps("SkrRTStatic", {public = true, inherit = true})
+    add_deps("SkrRTStatic", "SkrMemory", {public = true, inherit = true})
     add_defines("SKR_RUNTIME_API=SKR_EXPORT", "SKR_RUNTIME_LOCAL=error")
 
     -- internal packages

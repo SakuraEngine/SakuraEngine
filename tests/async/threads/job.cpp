@@ -85,7 +85,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
         {
             ~JI() override { SKR_TEST_INFO(u8"Job Instance dtor"); }
             skr::JobResult run() SKR_NOEXCEPT override { return runner(); }
-            eastl::function<skr::JobResult()> runner;
+            skr::function<skr::JobResult()> runner;
         };
         JI* ji = SkrNew<JI>();
         ji->runner = [=](){ ji->result = _f(args...); return skr::ASYNC_RESULT_OK; };

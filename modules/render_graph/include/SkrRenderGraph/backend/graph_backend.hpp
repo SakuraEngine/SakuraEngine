@@ -34,13 +34,13 @@ public:
     CGPUCommandBufferId gfx_cmd_buf = nullptr;
     CGPUFenceId exec_fence = nullptr;
     uint64_t exec_frame = 0;
-    eastl::vector<CGPUTextureId> aliasing_textures;
+    skr::vector<CGPUTextureId> aliasing_textures;
     skr::flat_hash_map<CGPURootSignatureId, BindTablePool*> bind_table_pools;
 
     CGPUMarkerBufferId marker_buffer = nullptr;
     uint32_t marker_idx = 0;
     uint32_t valid_marker_val = 1;
-    eastl::vector<graph_big_object_string> marker_messages;
+    skr::vector<graph_big_object_string> marker_messages;
 protected:
     skr::flat_hash_map<CGPURootSignatureId, MergedBindTablePool*> merged_table_pools;
 };
@@ -81,8 +81,8 @@ protected:
     CGPUBufferId resolve(RenderGraphFrameExecutor& executor, const BufferNode& node) SKR_NOEXCEPT;
 
     void calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
-        stack_vector<CGPUTextureBarrier>& tex_barriers, stack_vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
-        stack_vector<CGPUBufferBarrier>& buf_barriers, stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT;
+        stack_vector<CGPUTextureBarrier>& tex_barriers, stack_vector<std::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
+        stack_vector<CGPUBufferBarrier>& buf_barriers, stack_vector<std::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT;
     CGPUXBindTableId alloc_update_pass_bind_table(RenderGraphFrameExecutor& executor, PassNode* pass, CGPURootSignatureId root_sig) SKR_NOEXCEPT;
     void deallocate_resources(PassNode* pass) SKR_NOEXCEPT;
 

@@ -331,7 +331,7 @@ JobResult JobQueue::check() SKR_NOEXCEPT
     need_cancel = skr_atomic32_load_acquire(&cancel_requested);
     if (need_cancel)
     {
-        eastl::for_each(pending_queue.begin(), pending_queue.end(), 
+        std::for_each(pending_queue.begin(), pending_queue.end(), 
         [](auto ptr) {
             if (ptr->is_none() == false) 
             {
@@ -353,7 +353,7 @@ JobResult JobQueue::check() SKR_NOEXCEPT
 
             // Since enqueue may be done while unlocking, it cannot be used
             // so re-search the list
-            it = eastl::find(pending_queue.begin(), pending_queue.end(), jobItemPtr);
+            it = std::find(pending_queue.begin(), pending_queue.end(), jobItemPtr);
             it = pending_queue.erase(it);
         }
         else {

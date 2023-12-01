@@ -2,9 +2,10 @@
 #include "SkrRT/async/result.hpp"
 #include "SkrRT/async/async_progress.hpp"
 
+#include "SkrRT/containers_new/function.hpp"
 #include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/containers_new/stl_vector.hpp"
-#include <EASTL/list.h>
+#include "SkrRT/containers_new/stl_list.hpp"
 
 enum ESkrJobItemStatus
 {
@@ -90,7 +91,7 @@ private:
     JobItemDesc desc;
 };
 
-using JobQueueThreadList = eastl::list<JobQueueThread*>;
+using JobQueueThreadList = skr::list<JobQueueThread*>;
 
 struct SKR_STATIC_API JobQueue
 {
@@ -198,7 +199,7 @@ struct SKR_STATIC_API ThreadedJobQueueFuture : public skr::IFuture<Artifact>
             auto ret = runner();
             return ret; 
         }
-        eastl::function<skr::JobResult()> runner;
+        skr::function<skr::JobResult()> runner;
     };
 
 protected:

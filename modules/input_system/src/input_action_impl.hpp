@@ -3,9 +3,9 @@
 #include "SkrInputSystem/input_trigger.hpp"
 #include "SkrInputSystem/input_modifier.hpp"
 #include "SkrRT/platform/guid.hpp"
-#include <EASTL/functional.h>
 #include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/containers_new/sptr.hpp"
+#include "SkrRT/containers_new/function.hpp"
 
 namespace skr
 {
@@ -13,7 +13,7 @@ namespace input
 {
 
 struct ActionEventStorage {
-    eastl::function<void()> callback;
+    skr::function<void()> callback;
     skr_guid_t event_id = kEventId_Invalid;
 };
 

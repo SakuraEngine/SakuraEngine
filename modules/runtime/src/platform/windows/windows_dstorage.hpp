@@ -6,7 +6,7 @@
 
 // #define TRACY_PROFILE_DIRECT_STORAGE
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
-    #include "SkrRT/platform/memory.h"
+    #include "SkrMemory/memory.h"
     #include "SkrRT/platform/atomic.h"
     #include "SkrRT/platform/thread.h"
     #include "SkrRT/containers_new/vector.hpp"

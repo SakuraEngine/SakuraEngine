@@ -1,4 +1,4 @@
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/misc/log.h"
 #include "image_coder_base.hpp"
 

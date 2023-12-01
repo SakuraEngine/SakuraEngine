@@ -2,6 +2,7 @@
 #include "SkrRenderGraph/rg_config.h"
 #include "SkrRT/misc/dependency_graph.hpp"
 #include "SkrRT/containers_new/span.hpp"
+#include "SkrRT/containers_new/function.hpp"
 #include "SkrRT/containers_new/string.hpp"
 
 using graph_object_string = skr::string;
@@ -38,9 +39,9 @@ class ComputePassNode;
 class CopyPassNode;
 class PresentPassNode;
 
-using CopyPassExecuteFunction = eastl::function<void(class RenderGraph&, CopyPassContext&)>;
-using ComputePassExecuteFunction = eastl::function<void(class RenderGraph&, ComputePassContext&)>;
-using RenderPassExecuteFunction = eastl::function<void(class RenderGraph&, RenderPassContext&)>;
+using CopyPassExecuteFunction = skr::function<void(class RenderGraph&, CopyPassContext&)>;
+using ComputePassExecuteFunction = skr::function<void(class RenderGraph&, ComputePassContext&)>;
+using RenderPassExecuteFunction = skr::function<void(class RenderGraph&, RenderPassContext&)>;
 
 typedef uint64_t handle_t;
 enum class EObjectType : uint8_t
@@ -316,8 +317,8 @@ struct SKR_RENDER_GRAPH_API PassContext {
     PassNode* pass = nullptr;
     skr::render_graph::RenderGraphBackend* graph = nullptr;
     CGPUCommandBufferId cmd;
-    skr::span<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
-    skr::span<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures;
+    skr::span<std::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
+    skr::span<std::pair<TextureHandle, CGPUTextureId>> resolved_textures;
 
     CGPUBufferId resolve(BufferHandle buffer_handle) const;
     CGPUTextureId resolve(TextureHandle tex_handle) const;

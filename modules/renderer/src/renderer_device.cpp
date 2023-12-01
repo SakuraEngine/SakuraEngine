@@ -1,6 +1,6 @@
 #include "cgpu/extensions/cgpu_nsight.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/containers_new/vector.hpp"
 #include "SkrRT/containers_new/umap.hpp"
 #include "SkrRT/io/vram_io.hpp"

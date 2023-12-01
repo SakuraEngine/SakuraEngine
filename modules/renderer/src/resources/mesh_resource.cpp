@@ -1,5 +1,5 @@
 #include "SkrRenderer/resources/mesh_resource.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/guid.hpp"
 #include "cgpu/cgpux.hpp"

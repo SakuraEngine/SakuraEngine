@@ -5,7 +5,7 @@
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/platform/system.h"
 #include "SkrRT/config.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/platform/window.h"

@@ -2,7 +2,7 @@
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "SkrBase/misc/debug.h" 
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/containers_new/string.hpp"
@@ -92,7 +92,7 @@ void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
 void RenderGraphFrameExecutor::write_marker(const char8_t* message)
 {
     cgpu_marker_buffer_write(gfx_cmd_buf, marker_buffer, marker_idx++, valid_marker_val);
-    marker_messages.push_back(message);
+    marker_messages.add(message);
 }
 
 void RenderGraphFrameExecutor::print_error_trace(uint64_t frame_index)
@@ -235,7 +235,7 @@ CGPUTextureId RenderGraphBackend::try_aliasing_allocate(RenderGraphFrameExecutor
             ((TextureNode&)node).descriptor.flags &= ~CGPU_TCF_ALIASING_RESOURCE;
             return nullptr;
         }
-        executor.aliasing_textures.emplace_back(aliasing_texture);
+        executor.aliasing_textures.add(aliasing_texture);
         return aliasing_texture;
     }
     return nullptr;
@@ -291,8 +291,8 @@ CGPUBufferId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, con
 }
 
 void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
-                                            stack_vector<CGPUTextureBarrier>& tex_barriers, stack_vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
-                                            stack_vector<CGPUBufferBarrier>& buf_barriers, stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT
+                                            stack_vector<CGPUTextureBarrier>& tex_barriers, stack_vector<std::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
+                                            stack_vector<CGPUBufferBarrier>& buf_barriers, stack_vector<std::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT
 {
     stack_set<TextureHandle> tex_resolve_set;
     stack_set<BufferHandle>  buf_resolve_set;
@@ -537,9 +537,9 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     ComputePassContext pass_context = {};
     // resource de-virtualize
     stack_vector<CGPUTextureBarrier>                        tex_barriers      = {};
-    stack_vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
+    stack_vector<std::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
     stack_vector<CGPUBufferBarrier>                         buffer_barriers   = {};
-    stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>   resolved_buffers  = {};
+    stack_vector<std::pair<BufferHandle, CGPUBufferId>>   resolved_buffers  = {};
     calculate_barriers(executor, pass,
                        tex_barriers, resolved_textures,
                        buffer_barriers, resolved_buffers);
@@ -547,8 +547,8 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     pass_context.graph             = this;
     pass_context.pass              = pass;
     pass_context.bind_table        = alloc_update_pass_bind_table(executor, pass, pass->root_signature);
-    pass_context.resolved_buffers  = { resolved_buffers.data(), resolved_buffers.size() };
-    pass_context.resolved_textures = { resolved_textures.data(), resolved_textures.size() };
+    pass_context.resolved_buffers  = resolved_buffers;
+    pass_context.resolved_textures = resolved_textures;
     pass_context.executor          = &executor;
     // call cgpu apis
     CGPUResourceBarrierDescriptor barriers = {};
@@ -593,9 +593,9 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     RenderPassContext pass_context = {};
     // resource de-virtualize
     stack_vector<CGPUTextureBarrier>                        tex_barriers      = {};
-    stack_vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
+    stack_vector<std::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
     stack_vector<CGPUBufferBarrier>                         buffer_barriers   = {};
-    stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>   resolved_buffers  = {};
+    stack_vector<std::pair<BufferHandle, CGPUBufferId>>   resolved_buffers  = {};
     calculate_barriers(executor, pass,
                        tex_barriers, resolved_textures,
                        buffer_barriers, resolved_buffers);
@@ -782,9 +782,9 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
     ZoneName(pass->name.c_str(), pass->name.size());
     // resource de-virtualize
     stack_vector<CGPUTextureBarrier>                        tex_barriers      = {};
-    stack_vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
+    stack_vector<std::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
     stack_vector<CGPUBufferBarrier>                         buffer_barriers   = {};
-    stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>   resolved_buffers  = {};
+    stack_vector<std::pair<BufferHandle, CGPUBufferId>>   resolved_buffers  = {};
     calculate_barriers(executor, pass,
                        tex_barriers, resolved_textures,
                        buffer_barriers, resolved_buffers);

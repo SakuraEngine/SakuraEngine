@@ -2,7 +2,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/config.h"
 #include "SkrRT/platform/filesystem.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/runtime_module.h"

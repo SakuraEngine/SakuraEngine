@@ -47,7 +47,7 @@
 #define SKR_GUI_LOG_DEBUG(...) SKR_LOG_DEBUG(__VA_ARGS__)
 
 // memory
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #define SKR_GUI_NEW SkrNew
 #define SKR_GUI_DELETE SkrDelete
 

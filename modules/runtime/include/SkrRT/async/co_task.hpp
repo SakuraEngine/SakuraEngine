@@ -4,9 +4,10 @@
 #if __cpp_impl_coroutine
 #include <atomic>
 #include "SkrRT/platform/thread.h"
+#include "SkrRT/containers_new/array.hpp"
 #include "SkrRT/containers_new/sptr.hpp"
 #include "SkrRT/containers_new/vector.hpp"
-#include <EASTL/array.h>
+#include "SkrRT/containers_new/function.hpp"
 
 #if __cpp_lib_coroutine
     #include <coroutine>
@@ -238,7 +239,7 @@ namespace task2
         void shutdown();
         static scheduler_t* instance();
         void schedule(skr_task_t&& task);
-        void schedule(eastl::function<void()>&& function);
+        void schedule(skr::function<void()>&& function);
         struct SKR_RUNTIME_API EventAwaitable
         {
             EventAwaitable(scheduler_t& s, event_t event, int workerIdx = -1);
@@ -261,10 +262,10 @@ namespace task2
         };
         void sync(event_t event);
         void sync(counter_t counter);
-        eastl::array<std::atomic<int>, 8> spinningWorkers;
+        skr::array<std::atomic<int>, 8> spinningWorkers;
         std::atomic<unsigned int> nextSpinningWorkerIdx = {0x8000000};
         std::atomic<unsigned int> nextEnqueueIndex = {0};
-        eastl::array<void*, 256> workers;
+        skr::array<void*, 256> workers;
         void* mainWorker = nullptr;
         scheudler_config_t config;
         bool initialized = false;
@@ -275,7 +276,7 @@ namespace task2
     {
         scheduler_t::instance()->schedule(std::move(task));
     }
-    inline void schedule(eastl::function<void()>&& function)
+    inline void schedule(skr::function<void()>&& function)
     {
         scheduler_t::instance()->schedule(std::move(function));
     }

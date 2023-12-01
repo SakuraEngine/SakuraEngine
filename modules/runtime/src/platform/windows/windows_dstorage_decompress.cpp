@@ -1,5 +1,5 @@
 #include "SkrRT/platform/win/dstorage_windows.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
