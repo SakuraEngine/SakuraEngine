@@ -24,15 +24,16 @@ SKR_GUI_API GestureArena {
     void open();
     void add(GestureRecognizer* gesture);
     void close();
-    void sweep(CombinePointerId pointer);
+    void sweep();
     void hold();
-    void release(CombinePointerId pointer);
+    void release();
     void accept_gesture(GestureRecognizer* member);
     void reject_gesture(GestureRecognizer* member);
 
     // getter
     inline GestureArenaState                state() const { return _state; }
     inline const Array<GestureRecognizer*>& members() { return _members; }
+    inline bool                             is_held() const { return _is_held; }
 
 private:
     // helper functions

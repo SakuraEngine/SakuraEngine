@@ -45,11 +45,6 @@ void ClickGestureRecognizer::accept_gesture(CombinePointerId pointer)
     {
         _check_up();
     }
-    else
-    {
-        _check_cancel();
-        request_accept_all();
-    }
 }
 void ClickGestureRecognizer::reject_gesture(CombinePointerId pointer)
 {
@@ -59,20 +54,32 @@ void ClickGestureRecognizer::reject_gesture(CombinePointerId pointer)
 // help functions
 void ClickGestureRecognizer::_check_down()
 {
-    on_click_down(&_down_event.get());
+    if (on_click_down)
+    {
+        on_click_down(&_down_event.get());
+    }
 }
 void ClickGestureRecognizer::_check_up()
 {
     if (_won_arena && _up_event)
     {
-        on_click_up(&_up_event.get());
-        on_click();
+        if (on_click_up)
+        {
+            on_click_up(&_up_event.get());
+        }
+        if (on_click)
+        {
+            on_click();
+        }
         _reset();
     }
 }
 void ClickGestureRecognizer::_check_cancel()
 {
-    on_cancel();
+    if (on_cancel)
+    {
+        on_cancel();
+    }
 }
 void ClickGestureRecognizer::_reset()
 {
@@ -80,5 +87,7 @@ void ClickGestureRecognizer::_reset()
     _up_event             = Optional<PointerUpEvent>{};
     _has_preview_up_event = false;
     _won_arena            = false;
+
+    clean_tracing_pointers();
 }
 } // namespace skr::gui

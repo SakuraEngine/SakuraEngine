@@ -28,6 +28,9 @@ SKR_GUI_API PointerGestureRecognizer : public GestureRecognizer {
     void request_accept_all();
     void request_reject_all();
 
+    // clean
+    inline void clean_tracing_pointers() { _tracing_pointers.clear(); }
+
 private:
     UMap<CombinePointerId, GestureArena*> _tracing_pointers;
 };
