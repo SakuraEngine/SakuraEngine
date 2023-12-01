@@ -8,7 +8,7 @@
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/log.h"
 #include <SkrRT/containers/hashmap.hpp>
-#include <SkrRT/containers/deprecated.hpp>
+#include "SkrRT/containers/variant.hpp"
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/stl_vector.hpp>
 

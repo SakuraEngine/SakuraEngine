@@ -1,12 +1,11 @@
 #pragma once
-#include "SkrRT/containers/detail/sptr.hpp"
 #include "SkrRT/config.h"
 #include "SkrRT/resource/resource_handle.h"
-#include <SkrRT/containers/string.hpp>
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/variant.hpp"
+#include "SkrRT/containers/sptr.hpp"
 #include "SkrTestFramework/framework.hpp"
 #include "RTTRTest/module.configure.h"
-
-#include "SkrRT/containers/deprecated.hpp"
 
 #if !defined(__meta__)
     #include "RTTRTest/types.generated.h"

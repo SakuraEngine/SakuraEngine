@@ -7,9 +7,8 @@
 #include "SkrRT/rttr/type/type.hpp"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/variant.hpp"
 #include "SkrRT/rttr/strongly_enum.hpp"
-
-#include "SkrRT/containers/deprecated.hpp"
 
 // RTTR traits
 // 提供部分静态类型功能，从动态角度来说，实际上只是一层皮
