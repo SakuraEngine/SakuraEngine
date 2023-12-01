@@ -38,33 +38,26 @@ inline static void _bind_mouse_button(skr::input::InputSystem* system, SObjectPt
             break;
     }
 
-    // down
+    // down/up
     {
         auto action  = system->create_input_action(skr::input::EValueType::kBool);
-        auto trigger = system->create_trigger<skr::input::InputTriggerPressed>();
-        action->add_trigger(trigger);
-        action->bind_event<bool>(
-        [sandbox, button](const bool& down) {
-            PointerDownEvent event;
-            _fill_pointer_event(&event);
-            event.button = button;
-            sandbox->dispatch_event(&event);
-        });
-        auto mapping    = system->create_mapping<skr::input::InputMapping_MouseButton>(key);
-        mapping->action = action;
-        ctx->add_mapping(mapping);
-    }
-
-    // up
-    {
-        auto action  = system->create_input_action(skr::input::EValueType::kBool);
-        auto trigger = system->create_trigger<skr::input::InputTriggerPressed>();
+        auto trigger = system->create_trigger<skr::input::InputTriggerChanged>();
         action->add_trigger(trigger);
         action->bind_event<bool>([sandbox, button](const bool& down) {
-            PointerUpEvent event;
-            _fill_pointer_event(&event);
-            event.button = button;
-            sandbox->dispatch_event(&event);
+            if (down)
+            {
+                PointerDownEvent event;
+                _fill_pointer_event(&event);
+                event.button = button;
+                sandbox->dispatch_event(&event);
+            }
+            else
+            {
+                PointerUpEvent event;
+                _fill_pointer_event(&event);
+                event.button = button;
+                sandbox->dispatch_event(&event);
+            }
         });
         auto mapping    = system->create_mapping<skr::input::InputMapping_MouseButton>(key);
         mapping->action = action;

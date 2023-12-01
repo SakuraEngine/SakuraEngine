@@ -29,13 +29,13 @@ NotNull<Widget*> CounterState::build(NotNull<IBuildContext*> context) SKR_NOEXCE
 
         p.children += SNewWidget(MouseRegin)
         {
-            p.on_enter = [this](PointerEnterEvent* event) {
+            p.on_down = [this](PointerDownEvent* event) {
                 set_state([this]() {
                     ++count;
                 });
                 return true;
             };
-            p.on_exit = [this](PointerExitEvent* event) {
+            p.on_up = [this](PointerUpEvent* event) {
                 set_state([this]() {
                     --count;
                 });

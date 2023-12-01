@@ -30,6 +30,20 @@ bool RenderMouseRegion::handle_event(NotNull<PointerEvent*> event, NotNull<HitTe
             return on_exit(exit_event);
         }
     }
+    else if (auto down_event = event->type_cast<PointerDownEvent>())
+    {
+        if (on_down)
+        {
+            return on_down(down_event);
+        }
+    }
+    else if (auto up_event = event->type_cast<PointerUpEvent>())
+    {
+        if (on_up)
+        {
+            return on_up(up_event);
+        }
+    }
     return false;
 }
 } // namespace skr::gui

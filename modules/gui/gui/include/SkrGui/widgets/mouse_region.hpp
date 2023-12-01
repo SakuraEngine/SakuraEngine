@@ -12,6 +12,8 @@ namespace gui sreflect
 struct PointerEnterEvent;
 struct PointerExitEvent;
 struct PointerMoveEvent;
+struct PointerDownEvent;
+struct PointerUpEvent;
 
 sreflect_struct(
     "guid": "f7ee023d-dcd0-4dfc-a095-793128ac0ad9"
@@ -27,8 +29,8 @@ SKR_GUI_API MouseRegin : public SingleChildRenderObjectWidget {
     Function<bool(PointerEnterEvent*)> on_enter = {};
     Function<bool(PointerExitEvent*)>  on_exit  = {};
     Function<bool(PointerMoveEvent*)>  on_hover = {};
-
-    // TODO. down、up
+    Function<bool(PointerDownEvent*)>  on_down  = {};
+    Function<bool(PointerUpEvent*)>    on_up    = {};
 };
 } // namespace gui sreflect
 } // namespace skr sreflect

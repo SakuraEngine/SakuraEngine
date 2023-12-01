@@ -28,7 +28,8 @@ GestureArena* GestureArenaManager::add_gesture(CombinePointerId pointer, Gesture
 
 GestureArena* GestureArenaManager::find_arena(CombinePointerId pointer)
 {
-    return _arenas.find(pointer)->value;
+    auto result = _arenas.find(pointer);
+    return result ? _arenas.find(pointer)->value : nullptr;
 }
 GestureArena* GestureArenaManager::find_arena_or_add(CombinePointerId pointer)
 {
