@@ -1,8 +1,6 @@
-#include "misc/log/log_manager.hpp"
-
-#include <EASTL/fixed_hash_set.h>
-
 #include "SkrProfile/profile.h"
+#include "SkrRT/containers_new/hashmap.hpp"
+#include "misc/log/log_manager.hpp"
 
 namespace skr {
 namespace log {
@@ -147,14 +145,14 @@ LogSink* LogManager::QuerySink(skr_guid_t guid)
 
 void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
 {
-    eastl::fixed_hash_set<skr_guid_t, 4, 5, true, skr::guid::hash> patterns_;
+    static thread_local skr::FlatHashSet<skr_guid_t, skr::guid::hash> patterns_set_;
     {
         SkrZoneScopedN("PatternAll");
         for (auto&& [id, sink] : sinks_)
         {
             auto pattern_id = sink->get_pattern();
-            auto&& iter = patterns_.find(pattern_id);
-            if (iter != patterns_.end())
+            auto&& iter = patterns_set_.find(pattern_id);
+            if (iter != patterns_set_.end())
                 continue;
             
             if (auto p = LogManager::QueryPattern(pattern_id))
@@ -163,7 +161,7 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted
 
                 [[maybe_unused]] 
                 auto& _ = p->pattern(event, formatted_message);
-                patterns_.insert(pattern_id);
+                patterns_set_.insert(pattern_id);
             }
             else
             {

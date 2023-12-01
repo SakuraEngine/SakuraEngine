@@ -23,14 +23,13 @@
  */
 
 #pragma once
-
+#include "SkrRT/containers_new/stl_vector.hpp"
 #include "ftl/callbacks.h"
 #include "ftl/fiber.h"
 #include "ftl/task.h"
 #include "ftl/thread_abstraction.h"
 #include "ftl/wait_free_queue.h"
 #include "EASTL/shared_ptr.h"
-#include "EASTL/vector.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -133,7 +132,7 @@ private:
         std::atomic<bool>* OldFiberStoredFlag{ nullptr };
 
         /* The queue of ready waiting Fibers that were pinned to this thread */
-        eastl::vector<ReadyFiberBundle*> PinnedReadyFibers;
+        skr::stl_vector<ReadyFiberBundle*> PinnedReadyFibers;
 
         /**
          * The current fiber implementation requires that fibers created from threads finish on the same thread where
