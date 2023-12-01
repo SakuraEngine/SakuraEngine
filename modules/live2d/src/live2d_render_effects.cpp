@@ -148,7 +148,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     uint32_t last_ms = 0;
     const bool use_high_precision_mask = false;
 
-    eastl::vector<skr_primitive_draw_t> model_drawcalls;
+    skr::stl_vector<skr_primitive_draw_t> model_drawcalls;
     skr_primitive_draw_list_view_t model_draw_list;
     inline CGPURenderPipelineId get_pipeline() const
     {
@@ -261,7 +261,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
     }
 
-    eastl::vector<skr_primitive_draw_t> mask_drawcalls;
+    skr::stl_vector<skr_primitive_draw_t> mask_drawcalls;
     skr_primitive_draw_list_view_t mask_draw_list;
     void produce_mask_drawcall(const skr_primitive_draw_context_t* context, dual_storage_t* storage) 
     {
@@ -524,9 +524,9 @@ protected:
             {
                 uint64_t totalVertexSize = 0;
                 eastl::vector_map<CGPUBufferId, skr::render_graph::BufferHandle> imported_vbs_map;
-                eastl::vector<skr::render_graph::BufferHandle> imported_vbs;
-                eastl::vector<uint64_t> vb_sizes;
-                eastl::vector<uint64_t> vb_offsets;
+                skr::stl_vector<skr::render_graph::BufferHandle> imported_vbs;
+                skr::stl_vector<uint64_t> vb_sizes;
+                skr::stl_vector<uint64_t> vb_offsets;
                 if (!render_model->use_dynamic_buffer)
                 {
                     imported_vbs.resize(vb_c);
@@ -622,8 +622,8 @@ protected:
         float pad1;
         float pad2;
     };
-    eastl::vector_map<skr_live2d_render_model_id, eastl::vector<PushConstants>> push_constants;
-    eastl::vector_map<skr_live2d_render_model_id, eastl::vector<PushConstants>> mask_push_constants;
+    eastl::vector_map<skr_live2d_render_model_id, skr::stl_vector<PushConstants>> push_constants;
+    eastl::vector_map<skr_live2d_render_model_id, skr::stl_vector<PushConstants>> mask_push_constants;
 
     CGPUVertexLayout vertex_layout = {};
     CGPURasterizerStateDescriptor rs_state = {};

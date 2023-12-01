@@ -6,6 +6,8 @@
 #ifdef RG_USE_FIXED_VECTOR
 // TODO: REMOVE EASTL
 #include <EASTL/fixed_vector.h>
+#else
+#include "SkrRT/containers_new/stl_vector.hpp"
 #endif
 
 namespace skr {
@@ -16,7 +18,7 @@ namespace render_graph
     using graph_edges_vector = eastl::fixed_vector<T, N>;  
 #else
     template<typename T, uint32_t N = 4>
-    using graph_edges_vector = eastl::vector<T>;
+    using graph_edges_vector = skr::stl_vector<T>;
 #endif
 }
 }
@@ -110,11 +112,11 @@ public:
     CopyPassNode(uint32_t order);
 protected:
     CopyPassExecuteFunction executor;
-    graph_edges_vector<eastl::pair<TextureSubresourceHandle, TextureSubresourceHandle>, 2> t2ts;
-    graph_edges_vector<eastl::pair<BufferRangeHandle, BufferRangeHandle>, 2> b2bs;
-    graph_edges_vector<eastl::pair<BufferRangeHandle, TextureSubresourceHandle>, 2> b2ts;
-    graph_edges_vector<eastl::pair<BufferHandle, ECGPUResourceState>, 2> bbarriers;
-    graph_edges_vector<eastl::pair<TextureHandle, ECGPUResourceState>, 2> tbarriers;
+    graph_edges_vector<std::pair<TextureSubresourceHandle, TextureSubresourceHandle>, 2> t2ts;
+    graph_edges_vector<std::pair<BufferRangeHandle, BufferRangeHandle>, 2> b2bs;
+    graph_edges_vector<std::pair<BufferRangeHandle, TextureSubresourceHandle>, 2> b2ts;
+    graph_edges_vector<std::pair<BufferHandle, ECGPUResourceState>, 2> bbarriers;
+    graph_edges_vector<std::pair<TextureHandle, ECGPUResourceState>, 2> tbarriers;
 };
 
 class PresentPassNode : public PassNode

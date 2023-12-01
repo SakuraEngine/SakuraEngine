@@ -126,7 +126,7 @@ namespace Live2D { namespace Cubism { namespace Framework {
 
         skr::stl_vector<skr_io_future_t> motionFutures;
         skr::stl_vector<skr::BlobId> motionBlobs;
-        eastl::vector_map<skr_io_future_t*, eastl::pair<skr::string, uint32_t>> motionEntries;
+        eastl::vector_map<skr_io_future_t*, std::pair<skr::string, uint32_t>> motionEntries;
         eastl::vector_map<skr_io_future_t*, skr::string> motionPaths;
         L2DRequestCallbackData* cbData;
     };
