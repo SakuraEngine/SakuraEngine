@@ -1,8 +1,9 @@
-#include "SkrRT/containers/variant.hpp"
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/_deprecated/type/type.hpp"
 #include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/containers_new/vector.hpp"
+
+#include "SkrRT/containers/deprecated.hpp"
 
 namespace skr {
 namespace type {

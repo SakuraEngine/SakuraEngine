@@ -25,15 +25,15 @@ namespace skr::task
 #if !defined(SKR_TASK_MARL)
 #include "ftl/task_scheduler.h"
 #include "ftl/task_counter.h"
-// TODO: REMOVE EASTL
-#include <EASTL/shared_ptr.h>
+
+#include "SkrRT/containers/deprecated.hpp"
 
 namespace skr::task
 {
     struct SKR_RUNTIME_API counter_t
     {
     public:
-        using internal_t = eastl::shared_ptr<ftl::TaskCounter>;
+        using internal_t = skr::shared_ptr<ftl::TaskCounter>;
         counter_t(bool inverse = false);
         counter_t(std::nullptr_t) {}
 
@@ -54,7 +54,7 @@ namespace skr::task
     struct SKR_RUNTIME_API weak_counter_t
     {
     public:
-        using internal_t = eastl::weak_ptr<ftl::TaskCounter>;
+        using internal_t = skr::weak_ptr<ftl::TaskCounter>;
         weak_counter_t() = default;
         weak_counter_t(const counter_t& counter) { internal = counter.internal; }
         weak_counter_t(const weak_counter_t& other) { internal = other.internal; }
@@ -72,7 +72,7 @@ namespace skr::task
     struct SKR_RUNTIME_API event_t
     {
     public:
-        using internal_t = eastl::shared_ptr<ftl::TaskCounter>;
+        using internal_t = skr::shared_ptr<ftl::TaskCounter>;
         event_t();
         event_t(std::nullptr_t) {}
         bool operator==(const event_t& other) const { return internal == other.internal; }
@@ -93,7 +93,7 @@ namespace skr::task
     struct SKR_RUNTIME_API weak_event_t
     {
     public:
-        using internal_t = eastl::weak_ptr<ftl::TaskCounter>;
+        using internal_t = skr::weak_ptr<ftl::TaskCounter>;
         weak_event_t() = default;
         weak_event_t(const event_t& event) { internal = event.internal; }
         weak_event_t(const weak_event_t& other) { internal = other.internal; }

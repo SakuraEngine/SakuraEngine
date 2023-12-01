@@ -1,15 +1,14 @@
-#include "SkrRT/containers_new/sptr.hpp"
-#include "SkrRT/resource/resource_handle.h"
-#include "SkrRT/serde/binary/reader.h"
+#include "SkrBase/misc/demangle.hpp"
 #include "SkrMemory/memory.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/bits.hpp"
-#include "SkrBase/misc/demangle.hpp"
-#include <cmath>
+#include "SkrRT/containers_new/sptr.hpp"
+#include "SkrRT/serde/binary/reader.h"
+#include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/containers_new/string.hpp"
+#include <cmath>
 
-// TODO: REMOVE EASTL
-#include <EASTL/fixed_string.h>
+#include "SkrRT/containers/deprecated.hpp"
 
 // blob arena
 skr_blob_arena_t::skr_blob_arena_t()
@@ -473,7 +472,7 @@ int ReadTrait<skr::String>::Read(skr_binary_reader_t* reader, skr::String& str)
         SKR_LOG_FATAL(u8"failed to read string buffer size! ret code: %d", ret);
         return ret;
     }
-    eastl::fixed_string<char8_t, 64> temp;
+    skr::FixedString<char8_t, 64> temp;
     temp.resize(size);
     ret = ReadBytes(reader, (void*)temp.c_str(), temp.size());
     if (ret != 0)

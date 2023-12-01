@@ -4,8 +4,7 @@
 #include "vram_readers.hpp"
 #include <tuple>
 
-// TODO: REMOVE EASTL
-#include <EASTL/fixed_map.h>
+#include "SkrRT/containers/deprecated.hpp"
 
 // VFS READER IMPLEMENTATION
 
@@ -277,7 +276,7 @@ struct StackCmdMapKey
     }
 };
 template <size_t N = 1>
-struct StackCmdAllocator : public eastl::fixed_map<StackCmdMapKey, GPUUploadCmd, N>
+struct StackCmdAllocator : public skr::FixedMap<StackCmdMapKey, GPUUploadCmd, N>
 {
     auto& allocate(IOBatchId& batch, SwapableCmdPoolMap& cmdpools, VRAMUploadComponent* pUpload)
     {
@@ -562,7 +561,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
 {
     auto instance = skr_get_dstorage_instnace();
     IOBatchId batch;
-    eastl::fixed_map<SkrDStorageQueueId, skr::SObjectPtr<DStorageEvent>, 2> _events;
+    skr::FixedMap<SkrDStorageQueueId, skr::SObjectPtr<DStorageEvent>, 2> _events;
 #ifdef SKR_PROFILE_ENABLE
     SkrCZoneCtx Zone;
     bool bZoneSet = false;

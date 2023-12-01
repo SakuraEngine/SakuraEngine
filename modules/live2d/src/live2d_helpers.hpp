@@ -14,8 +14,7 @@
 
 #include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/containers_new/stl_vector.hpp"
-// TODO: REMOVE EASTL
-#include <EASTL/vector_map.h>
+#include "SkrRT/containers_new/umap.hpp"
 
 namespace L2DF = Live2D::Cubism::Framework;
 
@@ -113,8 +112,8 @@ namespace Live2D { namespace Cubism { namespace Framework {
 
         skr::stl_vector<skr_io_future_t> expressionFutures;
         skr::stl_vector<skr::BlobId> expressionBlobs;
-        eastl::vector_map<skr_io_future_t*, skr::String> expressionNames;
-        eastl::vector_map<skr_io_future_t*, skr::String> expressionPaths;
+        skr::UMap<skr_io_future_t*, skr::String> expressionNames;
+        skr::UMap<skr_io_future_t*, skr::String> expressionPaths;
         L2DRequestCallbackData* cbData;
     };
     class csmMotionMap : public csmMap<csmString, csmVector<ACubismMotion*>>, public IAsyncL2DResourceInterface
@@ -126,8 +125,8 @@ namespace Live2D { namespace Cubism { namespace Framework {
 
         skr::stl_vector<skr_io_future_t> motionFutures;
         skr::stl_vector<skr::BlobId> motionBlobs;
-        eastl::vector_map<skr_io_future_t*, std::pair<skr::String, uint32_t>> motionEntries;
-        eastl::vector_map<skr_io_future_t*, skr::String> motionPaths;
+        skr::UMap<skr_io_future_t*, std::pair<skr::String, uint32_t>> motionEntries;
+        skr::UMap<skr_io_future_t*, skr::String> motionPaths;
         L2DRequestCallbackData* cbData;
     };
 }}}

@@ -1,8 +1,9 @@
 #include "SkrProfile/profile.h"
-#include "SkrRT/containers/fixed_vector.hpp"
 #include "SkrRT/containers_new/vector.hpp"
 #include "common_utils.h"
 #include "cgpu/cgpux.hpp"
+
+#include "SkrRT/containers/deprecated.hpp"
 
 // CGPUX bind table apis
 
@@ -127,12 +128,9 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
     updateDescSetsIfDirty();
 }
 
-// TODO: REMOVE EASTL
-#include <EASTL/fixed_set.h>
-
 void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
 {
-    eastl::fixed_set<uint32_t, 4> needsUpdateIndices;
+    skr::FixedSet<uint32_t, 4> needsUpdateIndices;
     for (uint32_t i = 0; i < names_count; i++)
     {
         const auto& location = name_locations[i];

@@ -3,7 +3,7 @@
 #include "SkrRT/containers_new/hashmap.hpp"
 #include "SkrRT/containers_new/string.hpp"
 #include "SkrRT/containers_new/vector.hpp"
-#include "SkrRT/containers/fixed_vector.hpp"
+#include "SkrRT/containers/deprecated.hpp"
 #include "cgpu/cgpux.h"
 
 namespace skr
