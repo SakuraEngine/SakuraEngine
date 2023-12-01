@@ -29,9 +29,9 @@ void GestureArena::close()
     _state = GestureArenaState::Closed;
     _try_to_resolve_arena();
 }
-void GestureArena::sweep(CombinePointerId pointer)
+void GestureArena::sweep()
 {
-    if (_state != GestureArenaState::Closed)
+    if (_state != GestureArenaState::Closed && _state != GestureArenaState::Resolved)
     {
         SKR_LOG_ERROR(u8"sweep a non-closed arena is not allowed");
     }
@@ -40,16 +40,21 @@ void GestureArena::sweep(CombinePointerId pointer)
     {
         _has_pending_sweep = true;
     }
+    else if (_state == GestureArenaState::Resolved)
+    {
+        _members.clear();
+    }
     else
     {
         // 没有期望赢家，直接接受第一个手势，拒绝其余手势
         if (!_members.empty())
         {
-            _members[0]->accept_gesture(pointer);
+            _members[0]->accept_gesture(_pointer);
             for (uint32_t i = 0; i < _members.size(); ++i)
             {
-                _members[i]->reject_gesture(pointer);
+                _members[i]->reject_gesture(_pointer);
             }
+            _members.clear();
         }
 
         _state = GestureArenaState::Resolved;
@@ -59,12 +64,12 @@ void GestureArena::hold()
 {
     _is_held = true;
 }
-void GestureArena::release(CombinePointerId pointer)
+void GestureArena::release()
 {
     _is_held = false;
     if (_has_pending_sweep)
     {
-        sweep(pointer);
+        sweep();
     }
 }
 void GestureArena::accept_gesture(GestureRecognizer* member)
@@ -86,7 +91,7 @@ void GestureArena::reject_gesture(GestureRecognizer* member)
 {
     if (_state == GestureArenaState::Resolved)
     {
-        SKR_LOG_ERROR(u8"reject gesture in a resolved arena is not allowed");
+        return;
     }
 
     _members.remove(member);

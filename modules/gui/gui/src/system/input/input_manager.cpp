@@ -11,12 +11,28 @@ bool InputManager::dispatch_event(Event* event)
 {
     if (auto pointer_down_event = event->type_cast<PointerDownEvent>())
     {
+        // reopen gesture arena
+        CombinePointerId pointer_id = { pointer_down_event->pointer_id, static_cast<uint32_t>(pointer_down_event->button) };
+        auto             arena      = _gesture_arena_manager.find_arena_or_add(pointer_id);
+        if (arena && !arena->is_held())
+        {
+            arena->open();
+        }
+
         // do hit test
         HitTestResult result;
         hit_test(&result, pointer_down_event->global_position);
 
-        // route
-        return route_event(&result, pointer_down_event);
+        // route event
+        bool handled = route_event(&result, pointer_down_event);
+
+        // close arena
+        if (arena)
+        {
+            arena->close();
+        }
+
+        return handled;
     }
     else if (auto pointer_move_event = event->type_cast<PointerMoveEvent>())
     {
@@ -46,6 +62,14 @@ bool InputManager::dispatch_event(Event* event)
 
         // dispatch to gesture
         handled |= _gesture_arena_manager.route_event(pointer_up_event);
+
+        // sweep gesture arena
+        CombinePointerId pointer_id = { pointer_up_event->pointer_id, static_cast<uint32_t>(pointer_up_event->button) };
+        auto             arena      = _gesture_arena_manager.find_arena(pointer_id);
+        if (arena)
+        {
+            arena->sweep();
+        }
 
         return handled;
     }
@@ -81,6 +105,7 @@ bool InputManager::route_event(HitTestResult* result, PointerEvent* event, EEven
 
     if (flag_any(phase, EEventRoutePhase::TrickleDown))
     {
+        event->phase = EEventRoutePhase::TrickleDown;
         for (uint64_t i = 0; i < result->path().size(); ++i)
         {
             auto& entry = result->path()[result->path().size() - i - 1];
@@ -90,16 +115,18 @@ bool InputManager::route_event(HitTestResult* result, PointerEvent* event, EEven
             }
         }
     }
-    else if (flag_any(phase, EEventRoutePhase::Reach))
+    if (flag_any(phase, EEventRoutePhase::Reach))
     {
-        auto& entry = result->path()[0];
+        event->phase = EEventRoutePhase::Reach;
+        auto& entry  = result->path()[0];
         if (entry.target->handle_event(event, const_cast<HitTestEntry*>(&entry)))
         {
             return true;
         }
     }
-    else if (flag_any(phase, EEventRoutePhase::Broadcast))
+    if (flag_any(phase, EEventRoutePhase::Broadcast))
     {
+        event->phase = EEventRoutePhase::Broadcast;
         bool handled = false;
         for (const auto& entry : result->path())
         {
@@ -110,8 +137,9 @@ bool InputManager::route_event(HitTestResult* result, PointerEvent* event, EEven
             return true;
         }
     }
-    else if (flag_any(phase, EEventRoutePhase::BubbleUp))
+    if (flag_any(phase, EEventRoutePhase::BubbleUp))
     {
+        event->phase = EEventRoutePhase::BubbleUp;
         for (const auto& entry : result->path())
         {
             if (entry.target->handle_event(event, const_cast<HitTestEntry*>(&entry)))
