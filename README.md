@@ -218,7 +218,6 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 
 ## 嵌入源码的开源库和版本
 - constexpr-xxh3 aebcee7 (BSD 2-Clause License)
-- [concurrent_deferred_rc](https://github.com/cmuparlay/concurrent_deferred_rc) f1fb49b (MIT)
 - [lru-cache](https://github.com/goldsborough/lru-cache) 13f30ad MIT
 - sole 1.0.1 (zlib License)
 - marl e007bd3 (Apache-2.0)

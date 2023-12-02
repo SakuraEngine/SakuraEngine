@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/config.h" // IWYU pragma: keep
+#include "SkrRT/config.h"
 #include "SkrRT/serde/binary/writer_fwd.h"
 #include "SkrRT/serde/binary/reader_fwd.h"
 // TODO: REMOVE EASTL
@@ -14,8 +14,15 @@
 namespace skr
 {
 template <typename T>
+using shared_ptr = eastl::shared_ptr<T>;
+
+template <typename T>
+using weak_ptr = eastl::weak_ptr<T>;
+
+template <typename T>
 using unique_ptr = eastl::unique_ptr<T>;
 
+using eastl::make_shared;
 using eastl::make_unique;
 }
 
