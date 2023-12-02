@@ -2,7 +2,7 @@ target("SkrMemory")
     set_group("01.modules")
     set_kind("shared")
     -- add source files
-    add_files("src/memory.c")
+    add_files("src/memory.c", "src/smart_ptr.cpp")
     add_deps("SkrBase", "SkrProfile", {public = true, inherit = true})
     add_deps("mimalloc", {public = false})
     add_includedirs("include", {public = true})
