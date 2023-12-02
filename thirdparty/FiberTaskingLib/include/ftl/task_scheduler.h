@@ -25,7 +25,6 @@
 #pragma once
 #include "SkrRT/containers/stl_vector.hpp"
 #include "SkrRT/containers/stl_function.hpp"
-#include "SkrRT/containers/shared_ptr.hpp"
 #include "ftl/callbacks.h"
 #include "ftl/fiber.h"
 #include "ftl/task.h"
