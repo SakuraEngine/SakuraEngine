@@ -264,16 +264,16 @@ TEST_CASE("test bit array")
     {
         BitArray a(30, true), b(30, false);
 
-        REQUIRE_EQ(a.find(false), npos_of<size_t>);
-        REQUIRE_EQ(b.find(true), npos_of<size_t>);
+        REQUIRE_EQ(a.find(false).index, npos_of<size_t>);
+        REQUIRE_EQ(b.find(true).index, npos_of<size_t>);
 
         a[20] = a[10] = false;
         b[20] = b[10] = true;
 
-        REQUIRE_EQ(a.find(false), 10);
-        REQUIRE_EQ(a.find_last(false), 20);
-        REQUIRE_EQ(b.find(true), 10);
-        REQUIRE_EQ(b.find_last(true), 20);
+        REQUIRE_EQ(a.find(false).index, 10);
+        REQUIRE_EQ(a.find_last(false).index, 20);
+        REQUIRE_EQ(b.find(true).index, 10);
+        REQUIRE_EQ(b.find_last(true).index, 20);
     }
 
     // [included in above tests] setRange()

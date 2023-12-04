@@ -17,6 +17,7 @@ struct BitArray final {
     using It       = BitIt<TBlock, SizeType, false>;
     using CIt      = BitIt<TBlock, SizeType, true>;
     using TIt      = TrueBitIt<TBlock, SizeType, true>;
+    using DataRef  = BitDataRef<TBlock, SizeType>;
 
     // ctor & dtor
     BitArray(Alloc alloc = {});
@@ -55,20 +56,24 @@ struct BitArray final {
     void resize_unsafe(SizeType size);
 
     // add
-    SizeType add(bool v);
-    SizeType add(bool v, SizeType n);
+    DataRef add(bool v);
+    DataRef add(bool v, SizeType n);
 
     // remove
-    void remove_at(SizeType start, SizeType n = 1);
-    void remove_at_swap(SizeType start, SizeType n = 1);
+    DataRef remove(bool v);
+    DataRef remove_last(bool v);
+    DataRef remove_swap(bool v);
+    DataRef remove_last_swap(bool v);
+    void    remove_at(SizeType start, SizeType n = 1);
+    void    remove_at_swap(SizeType start, SizeType n = 1);
 
     // modify
     BitRef<TBlock> operator[](SizeType idx);
     bool           operator[](SizeType idx) const;
 
     // find
-    SizeType find(bool v) const;
-    SizeType find_last(bool v) const;
+    DataRef find(bool v) const;
+    DataRef find_last(bool v) const;
 
     // contain
     bool contain(bool v) const;
@@ -84,9 +89,10 @@ struct BitArray final {
 
 private:
     // helper
-    void _realloc(SizeType new_capacity);
-    void _free();
-    void _grow(SizeType size);
+    void           _realloc(SizeType new_capacity);
+    void           _free();
+    void           _grow(SizeType size);
+    BitRef<TBlock> _bit_ref_at(SizeType idx) const;
 
 private:
     TBlock*  _data     = nullptr;
@@ -168,6 +174,11 @@ SKR_INLINE void BitArray<TBlock, Alloc>::_grow(SizeType size)
 
     // update size
     _size += size;
+}
+template <typename TBlock, typename Alloc>
+SKR_INLINE BitRef<TBlock> BitArray<TBlock, Alloc>::_bit_ref_at(SizeType idx) const
+{
+    return BitRef<TBlock>(_data[idx >> Algo::PerBlockSizeLog2], TBlock(1) << (idx & Algo::PerBlockSizeMask));
 }
 
 // ctor & dtor
@@ -350,7 +361,7 @@ SKR_INLINE void BitArray<TBlock, Alloc>::resize_unsafe(SizeType size)
 
 // add
 template <typename TBlock, typename Alloc>
-SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::add(bool v)
+SKR_INLINE typename BitArray<TBlock, Alloc>::DataRef BitArray<TBlock, Alloc>::add(bool v)
 {
     // do grow
     auto old_size = _size;
@@ -358,10 +369,11 @@ SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::a
 
     // set value
     (*this)[old_size] = v;
-    return old_size;
+
+    return { _bit_ref_at(old_size), old_size };
 }
 template <typename TBlock, typename Alloc>
-SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::add(bool v, SizeType n)
+SKR_INLINE typename BitArray<TBlock, Alloc>::DataRef BitArray<TBlock, Alloc>::add(bool v, SizeType n)
 {
     // do grow
     auto old_size = _size;
@@ -369,10 +381,51 @@ SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::a
 
     // set value
     set_range(old_size, n, v);
-    return old_size;
+
+    return { _bit_ref_at(old_size), old_size };
 }
 
 // remove
+template <typename TBlock, typename Alloc>
+SKR_INLINE typename BitArray<TBlock, Alloc>::DataRef BitArray<TBlock, Alloc>::remove(bool v)
+{
+    if (auto result = find(v))
+    {
+        remove_at(result.index);
+        return result;
+    }
+    return {};
+}
+template <typename TBlock, typename Alloc>
+SKR_INLINE typename BitArray<TBlock, Alloc>::DataRef BitArray<TBlock, Alloc>::remove_last(bool v)
+{
+    if (auto result = find_last(v))
+    {
+        remove_at(result.index);
+        return result;
+    }
+    return {};
+}
+template <typename TBlock, typename Alloc>
+SKR_INLINE typename BitArray<TBlock, Alloc>::DataRef BitArray<TBlock, Alloc>::remove_swap(bool v)
+{
+    if (auto result = find(v))
+    {
+        remove_at_swap(result.index);
+        return result;
+    }
+    return {};
+}
+template <typename TBlock, typename Alloc>
+SKR_INLINE typename BitArray<TBlock, Alloc>::DataRef BitArray<TBlock, Alloc>::remove_last_swap(bool v)
+{
+    if (auto result = find_last(v))
+    {
+        remove_at_swap(result.index);
+        return result;
+    }
+    return {};
+}
 template <typename TBlock, typename Alloc>
 SKR_INLINE void BitArray<TBlock, Alloc>::remove_at(SizeType start, SizeType n)
 {
@@ -414,7 +467,7 @@ template <typename TBlock, typename Alloc>
 SKR_INLINE BitRef<TBlock> BitArray<TBlock, Alloc>::operator[](SizeType idx)
 {
     SKR_ASSERT(is_valid_index(idx));
-    return BitRef<TBlock>(_data[idx >> Algo::PerBlockSizeLog2], TBlock(1) << (idx & Algo::PerBlockSizeMask));
+    return _bit_ref_at(idx);
 }
 template <typename TBlock, typename Alloc>
 SKR_INLINE bool BitArray<TBlock, Alloc>::operator[](SizeType idx) const
@@ -425,14 +478,16 @@ SKR_INLINE bool BitArray<TBlock, Alloc>::operator[](SizeType idx) const
 
 // find
 template <typename TBlock, typename Alloc>
-SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::find(bool v) const
+SKR_INLINE typename BitArray<TBlock, Alloc>::DataRef BitArray<TBlock, Alloc>::find(bool v) const
 {
-    return Algo::find(_data, SizeType(0), _size, v);
+    auto result = Algo::find(_data, SizeType(0), _size, v);
+    return result == npos_of<SizeType> ? DataRef{} : DataRef{ _bit_ref_at(result), result };
 }
 template <typename TBlock, typename Alloc>
-SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::find_last(bool v) const
+SKR_INLINE typename BitArray<TBlock, Alloc>::DataRef BitArray<TBlock, Alloc>::find_last(bool v) const
 {
-    return Algo::find_last(_data, SizeType(0), _size, v);
+    auto result = Algo::find_last(_data, SizeType(0), _size, v);
+    return result == npos_of<SizeType> ? DataRef{} : DataRef{ _bit_ref_at(result), result };
 }
 
 // contain
