@@ -136,6 +136,16 @@ struct Array {
     T&       last(SizeType index = 0);
     const T& last(SizeType index = 0) const;
 
+    // front/back
+    T&       front();
+    const T& front() const;
+    T&       back();
+    const T& back() const;
+    void     push_back(const T& v);
+    void     push_back(T&& v);
+    void     pop_back();
+    T&       pop_back_get();
+
     // find
     template <typename TK>
     DataRef find(const TK& v);
@@ -945,6 +955,52 @@ SKR_INLINE const T& Array<T, Alloc>::last(SizeType index) const
     index = _size - index - 1;
     SKR_ASSERT(is_valid_index(index));
     return *(_data + index);
+}
+
+// front/back
+template <typename T, typename Alloc>
+SKR_INLINE T& Array<T, Alloc>::front()
+{
+    SKR_ASSERT(_size > 0 && "visit an empty array");
+    return _data[0];
+}
+template <typename T, typename Alloc>
+SKR_INLINE const T& Array<T, Alloc>::front() const
+{
+    SKR_ASSERT(_size > 0 && "visit an empty array");
+    return _data[0];
+}
+template <typename T, typename Alloc>
+SKR_INLINE T& Array<T, Alloc>::back()
+{
+    SKR_ASSERT(_size > 0 && "visit an empty array");
+    return _data[_size - 1];
+}
+template <typename T, typename Alloc>
+SKR_INLINE const T& Array<T, Alloc>::back() const
+{
+    SKR_ASSERT(_size > 0 && "visit an empty array");
+    return _data[_size - 1];
+}
+template <typename T, typename Alloc>
+SKR_INLINE void Array<T, Alloc>::push_back(const T& v)
+{
+    add(v);
+}
+template <typename T, typename Alloc>
+SKR_INLINE void Array<T, Alloc>::push_back(T&& v)
+{
+    add(std::move(v));
+}
+template <typename T, typename Alloc>
+SKR_INLINE void Array<T, Alloc>::pop_back()
+{
+    stack_pop();
+}
+template <typename T, typename Alloc>
+SKR_INLINE T& Array<T, Alloc>::pop_back_get()
+{
+    return stack_pop_get();
 }
 
 // find
