@@ -178,7 +178,7 @@ SKR_INLINE void BitArray<TBlock, Alloc>::_grow(SizeType size)
 template <typename TBlock, typename Alloc>
 SKR_INLINE BitRef<TBlock> BitArray<TBlock, Alloc>::_bit_ref_at(SizeType idx) const
 {
-    return BitRef<TBlock>(_data[idx >> Algo::PerBlockSizeLog2], TBlock(1) << (idx & Algo::PerBlockSizeMask));
+    return BitRef<TBlock>::At(const_cast<TBlock*>(_data), idx);
 }
 
 // ctor & dtor

@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrRT/containers/optional.hpp"
+#include "SkrBase/algo/bit_algo.hpp"
 #include <type_traits>
 
 namespace skr::container
@@ -8,6 +9,12 @@ namespace skr::container
 template <typename TBlock>
 struct BitRef {
     static_assert(std::is_integral_v<TBlock> && !std::is_signed_v<TBlock>);
+    using Algo = algo::BitAlgo<TBlock>;
+
+    SKR_INLINE static BitRef<TBlock> At(TBlock* data, TBlock idx)
+    {
+        return { data[idx >> Algo::PerBlockSizeLog2], TBlock(1) << (idx & Algo::PerBlockSizeMask) };
+    }
 
     SKR_INLINE BitRef(TBlock& data, TBlock mask)
         : _data(data)
