@@ -84,7 +84,7 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, THash, THa
     void rehash() const;
     bool rehash_if_need() const;
 
-    // add
+    // add, move behavior may not happened here, just for easy to use
     DataRef add(const K& key, const V& value);
     DataRef add(const K& key, V&& value);
     DataRef add(K&& key, const V& value);
@@ -99,6 +99,13 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, THash, THa
     DataRef add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor);
     template <typename Comparer>
     DataRef add_ex_unsafe(HashType hash, Comparer&& comparer);
+
+    // add or assign, try to use this api, instead of operator[]
+    // move behavior or key may not happened here, just for easy to use
+    DataRef add_or_assign(const K& key, const V& value);
+    DataRef add_or_assign(const K& key, V&& value);
+    DataRef add_or_assign(K&& key, const V& value);
+    DataRef add_or_assign(K&& key, V&& value);
 
     // emplace
     template <typename... Args>
@@ -546,6 +553,88 @@ template <typename Comparer>
 SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_ex_unsafe(HashType hash, Comparer&& comparer)
 {
     auto ref = Base::add_ex_unsafe(hash, std::forward<Comparer>(comparer));
+    return ref;
+}
+
+// add or assign, instead of operator[]
+template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_or_assign(const K& key, const V& value)
+{
+    HashType hash = HasherType()(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(key);
+        new (&ref->value) V(value);
+    }
+    else
+    {
+        ref->value = value;
+    }
+
+    return ref;
+}
+template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_or_assign(const K& key, V&& value)
+{
+    HashType hash = HasherType()(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(key);
+        new (&ref->value) V(std::move(value));
+    }
+    else
+    {
+        ref->value = std::move(value);
+    }
+
+    return ref;
+}
+template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_or_assign(K&& key, const V& value)
+{
+    HashType hash = HasherType()(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(std::move(key));
+        new (&ref->value) V(value);
+    }
+    else
+    {
+        ref->value = value;
+    }
+
+    return ref;
+}
+template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_or_assign(K&& key, V&& value)
+{
+    HashType hash = HasherType()(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(std::move(key));
+        new (&ref->value) V(std::move(value));
+    }
+    else
+    {
+        ref->value = std::move(value);
+    }
+
     return ref;
 }
 
