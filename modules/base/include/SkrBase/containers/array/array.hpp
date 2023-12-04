@@ -59,6 +59,7 @@ struct Array {
     void reserve(SizeType capacity);
     void shrink();
     void resize(SizeType size, const T& new_value);
+    void resize(SizeType size);
     void resize_unsafe(SizeType size);
     void resize_default(SizeType size);
     void resize_zeroed(SizeType size);
@@ -483,6 +484,28 @@ SKR_INLINE void Array<T, Alloc>::resize(SizeType size, const T& new_value)
         {
             new (_data + i) T(new_value);
         }
+    }
+    else if (size < _size)
+    {
+        memory::destruct(_data + size, _size - size);
+    }
+
+    // set size
+    _size = size;
+}
+template <typename T, typename Alloc>
+SKR_INLINE void Array<T, Alloc>::resize(SizeType size)
+{
+    // realloc memory if need
+    if (size > _capacity)
+    {
+        _realloc(size);
+    }
+
+    // construct item or destruct item if need
+    if (size > _size)
+    {
+        memory::construct_stl_ub(_data + _size, size - _size);
     }
     else if (size < _size)
     {
