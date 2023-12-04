@@ -103,7 +103,7 @@ struct SparseHashSet {
 
     //  try to add (first check existence, then add, never assign)
     DataRef add(const T& v);
-    DataRef add(T&& v); // TODO. remove it, move behaviour may be unexpected, it always work when allow multi key
+    DataRef add(T&& v); // move behavior may not happened here, just for easy to use
     template <typename Comparer, typename Constructor>
     DataRef add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor);
     template <typename Comparer>

@@ -270,6 +270,28 @@ TEST_CASE("test sparse hash map")
         REQUIRE(a.contain(100));
     }
 
+    SUBCASE("add or assign")
+    {
+        TestHashMap a({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
+        a.add_or_assign(1, 2);
+        a.add_or_assign(4, 5);
+        a.add_or_assign(5, 6);
+        a.add_or_assign(10, 10);
+        REQUIRE_EQ(a.size(), 4);
+        REQUIRE_EQ(a.sparse_size(), 4);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), 4);
+        REQUIRE_GE(a.bucket_size(), 4);
+        REQUIRE(a.contain(1));
+        REQUIRE(a.contain(4));
+        REQUIRE(a.contain(5));
+        REQUIRE(a.contain(10));
+        REQUIRE_EQ(a.find(1)->value, 2);
+        REQUIRE_EQ(a.find(4)->value, 5);
+        REQUIRE_EQ(a.find(5)->value, 6);
+        REQUIRE_EQ(a.find(10)->value, 10);
+    }
+
     SUBCASE("emplace")
     {
         TestHashMap a({ { { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } } });
