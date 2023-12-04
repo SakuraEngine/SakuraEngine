@@ -854,5 +854,26 @@ TEST_CASE("test sparse array")
         {
             printf("%d\n", n);
         }
+
+        TestSparseArray b;
+        b.reserve(1000);
+        for (int i = 0; i < 1000; ++i)
+        {
+            b.add(i);
+        }
+        for (int i = 0; i < 1000; ++i)
+        {
+            if (i % 2 == 0)
+            {
+                b.remove_at(i);
+            }
+        }
+        uint32_t count = 0;
+        for (auto n : b)
+        {
+            REQUIRE_EQ(n, count * 2 + 1);
+            ++count;
+        }
+        REQUIRE_EQ(count, 500);
     }
 }
