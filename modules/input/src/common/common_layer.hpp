@@ -2,17 +2,18 @@
 #include "SkrInput/input.h"
 #include "SkrMemory/memory.h"
 #include "SkrRT/platform/atomic.h"
+#include "SkrRT/containers/span.hpp"
 
-namespace skr {
-namespace input {
-
-struct CommonInputReadingProxy
+namespace skr
 {
+namespace input
+{
+
+struct CommonInputReadingProxy {
     virtual void release(struct CommonInputReading* ptr) SKR_NOEXCEPT = 0;
 };
 
-struct SKR_INPUT_API CommonInputReading 
-{
+struct SKR_INPUT_API CommonInputReading {
     CommonInputReading(CommonInputReadingProxy* pPool, struct CommonInputDevice* pDevice) SKR_NOEXCEPT;
     virtual ~CommonInputReading() SKR_NOEXCEPT;
 
@@ -32,45 +33,44 @@ struct SKR_INPUT_API CommonInputReading
         return rc;
     }
 
-    virtual uint32_t GetKeyState(uint32_t stateArrayCount, InputKeyState* stateArray) SKR_NOEXCEPT = 0;
-    virtual bool GetMouseState(InputMouseState* state) SKR_NOEXCEPT = 0;
-    virtual uint64_t GetTimestamp() const SKR_NOEXCEPT = 0;
-    virtual EInputKind GetInputKind() const SKR_NOEXCEPT = 0;
+    virtual uint32_t   GetKeyState(uint32_t stateArrayCount, InputKeyState* stateArray) SKR_NOEXCEPT = 0;
+    virtual bool       GetMouseState(InputMouseState* state) SKR_NOEXCEPT                            = 0;
+    virtual uint64_t   GetTimestamp() const SKR_NOEXCEPT                                             = 0;
+    virtual EInputKind GetInputKind() const SKR_NOEXCEPT                                             = 0;
 
-    void Fill(InputReading** output) 
-    { 
-        if (output) 
+    void Fill(InputReading** output)
+    {
+        if (output)
         {
-            *output = (InputReading*)this; 
+            *output = (InputReading*)this;
             this->add_ref();
         }
     }
 
-    SAtomicU32 ref_count = 0;
-    CommonInputReadingProxy* pool = nullptr;
-    struct CommonInputDevice* device = nullptr;
+    SAtomicU32                ref_count = 0;
+    CommonInputReadingProxy*  pool      = nullptr;
+    struct CommonInputDevice* device    = nullptr;
 };
 
-struct SKR_INPUT_API CommonInputDevice
-{
+struct SKR_INPUT_API CommonInputDevice {
     CommonInputDevice(struct CommonInputLayer* pLayer) SKR_NOEXCEPT;
     virtual ~CommonInputDevice() SKR_NOEXCEPT;
 
     virtual void Tick() SKR_NOEXCEPT = 0;
 
-    virtual lite::LiteSpan<const EInputKind> ReportKinds() const SKR_NOEXCEPT = 0;
-    virtual bool SupportKind(EInputKind kind) const SKR_NOEXCEPT = 0;
+    virtual span<const EInputKind> ReportKinds() const SKR_NOEXCEPT                = 0;
+    virtual bool                   SupportKind(EInputKind kind) const SKR_NOEXCEPT = 0;
 
-    virtual EInputResult GetCurrentReading(EInputKind kind, InputReading** out_reading) SKR_NOEXCEPT = 0;
-    virtual EInputResult GetNextReading(InputReading* reference, EInputKind kind, InputReading** out_reading) SKR_NOEXCEPT = 0;
+    virtual EInputResult GetCurrentReading(EInputKind kind, InputReading** out_reading) SKR_NOEXCEPT                           = 0;
+    virtual EInputResult GetNextReading(InputReading* reference, EInputKind kind, InputReading** out_reading) SKR_NOEXCEPT     = 0;
     virtual EInputResult GetPreviousReading(InputReading* reference, EInputKind kind, InputReading** out_reading) SKR_NOEXCEPT = 0;
 
     CommonInputLayer* layer = nullptr;
 };
 
-struct SKR_INPUT_API CommonInputLayer : public InputLayer
-{
+struct SKR_INPUT_API CommonInputLayer : public InputLayer {
     virtual ~CommonInputLayer() SKR_NOEXCEPT;
 };
 
-} }
+} // namespace input
+} // namespace skr
