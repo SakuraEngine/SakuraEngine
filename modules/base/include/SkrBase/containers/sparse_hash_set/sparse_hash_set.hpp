@@ -101,20 +101,23 @@ struct SparseHashSet {
     void rehash() const;
     bool rehash_if_need() const;
 
-    // add
-    // check existence then add
+    //  try to add (first check existence, then add, never assign)
     DataRef add(const T& v);
-    DataRef add(T&& v);
+    DataRef add(T&& v); // TODO. remove it, move behaviour may be unexpected, it always work when allow multi key
     template <typename Comparer, typename Constructor>
     DataRef add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor);
     template <typename Comparer>
     DataRef add_ex_unsafe(HashType hash, Comparer&& comparer);
 
+    // add or assign (first check existence, then add or assign)
+    DataRef add_or_assign(const T& v);
+    DataRef add_or_assign(T&& v);
+
     // emplace
     template <typename... Args>
-    DataRef emplace(Args&&... args);
+    DataRef emplace(Args&&... args); // first construct, then add or destroy
     template <typename Comparer, typename... Args>
-    DataRef emplace_ex(HashType hash, Comparer&& comparer, Args&&... args);
+    DataRef emplace_ex(HashType hash, Comparer&& comparer, Args&&... args); // first check existence, if not exist, then add
 
     // append
     void append(const SparseHashSet& set);
@@ -724,6 +727,46 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, THash, THasher, TComparer, Allow
         _add_to_bucket(*data_arr_ref, data_arr_ref.index);
         return { &data_arr_ref->_sparse_hash_set_data, data_arr_ref.index, false };
     }
+}
+
+// add or assign (first check existence, then add or assign)
+template <typename T, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+SKR_INLINE typename SparseHashSet<T, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashSet<T, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_or_assign(const T& v)
+{
+    HashType hash       = hash_of(v);
+    DataRef  add_result = add_ex_unsafe(hash, [this, &v](const KeyType& k) { return ComparerType()(k, key_of(v)); });
+
+    // if not exist, construct it
+    if (!add_result.already_exist)
+    {
+        new (add_result.data) T(v);
+        SKR_ASSERT(_data[add_result.index]._sparse_hash_set_hash == hash_of(*add_result.data));
+    }
+    else // else assign it
+    {
+        *add_result.data = v;
+    }
+
+    return add_result;
+}
+template <typename T, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+SKR_INLINE typename SparseHashSet<T, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashSet<T, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_or_assign(T&& v)
+{
+    HashType hash       = hash_of(v);
+    DataRef  add_result = add_ex_unsafe(hash, [this, &v](const KeyType& k) { return ComparerType()(k, key_of(v)); });
+
+    // if not exist, construct it
+    if (!add_result.already_exist)
+    {
+        new (add_result.data) T(std::move(v));
+        SKR_ASSERT(_data[add_result.index]._sparse_hash_set_hash == hash_of(*add_result.data));
+    }
+    else // else assign it
+    {
+        *add_result.data = std::move(v);
+    }
+
+    return add_result;
 }
 
 // emplace

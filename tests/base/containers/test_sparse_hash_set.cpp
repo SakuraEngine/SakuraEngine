@@ -1,3 +1,4 @@
+#include "SkrBase/containers/sparse_hash_map/kvpair.hpp"
 #include "SkrTestFramework/framework.hpp"
 #include "skr_test_allocator.hpp"
 
@@ -293,6 +294,44 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE(a.contain(5));
         REQUIRE(a.contain(10));
         REQUIRE(a.contain(100));
+    }
+
+    SUBCASE("add or assign")
+    {
+        TestHashSet a({ 1, 1, 4, 5, 1, 4 });
+        a.add_or_assign(1);
+        a.add_or_assign(4);
+        a.add_or_assign(10);
+        REQUIRE_EQ(a.size(), 4);
+        REQUIRE_EQ(a.sparse_size(), 4);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), 4);
+        REQUIRE_GE(a.bucket_size(), 4);
+        REQUIRE(a.contain(1));
+        REQUIRE(a.contain(4));
+        REQUIRE(a.contain(5));
+        REQUIRE(a.contain(10));
+
+        using TestAddOrAssignValue = KVPair<ValueType, ValueType>;
+        using TestAddOrAssignSet   = SparseHashSet<TestAddOrAssignValue, uint64_t, size_t, Hash<ValueType>, Equal<ValueType>, false, SkrTestAllocator>;
+        TestAddOrAssignSet b({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
+        b.add_or_assign({ 1, 2 });
+        b.add_or_assign({ 4, 5 });
+        b.add_or_assign({ 5, 6 });
+        b.add_or_assign({ 10, 10 });
+        REQUIRE_EQ(b.size(), 4);
+        REQUIRE_EQ(b.sparse_size(), 4);
+        REQUIRE_EQ(b.hole_size(), 0);
+        REQUIRE_GE(b.capacity(), 4);
+        REQUIRE_GE(b.bucket_size(), 4);
+        REQUIRE(b.contain(1));
+        REQUIRE(b.contain(4));
+        REQUIRE(b.contain(5));
+        REQUIRE(b.contain(10));
+        REQUIRE_EQ(b.find(1)->value, 2);
+        REQUIRE_EQ(b.find(4)->value, 5);
+        REQUIRE_EQ(b.find(5)->value, 6);
+        REQUIRE_EQ(b.find(10)->value, 10);
     }
 
     SUBCASE("emplace")
