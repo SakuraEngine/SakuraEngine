@@ -96,8 +96,8 @@ struct HitTestResult {
         bool is_hit;
         if (paint_offset)
         {
-            push_offset(-paint_offset.get());
-            is_hit = hit_test(this, position - (paint_offset.get()));
+            push_offset(-paint_offset.value());
+            is_hit = hit_test(this, position - (paint_offset.value()));
             pop_transform();
         }
         else
