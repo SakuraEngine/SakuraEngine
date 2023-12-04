@@ -16,6 +16,18 @@ SKR_INLINE void construct(T* p)
     }
 }
 template <typename T>
+SKR_INLINE void construct_stl_ub(T* p)
+{
+    if constexpr (MemoryTraits<T>::use_ctor)
+    {
+        new (p) T();
+    }
+    else
+    {
+        std::memset(p, 0, sizeof(T));
+    }
+}
+template <typename T>
 SKR_INLINE void destruct(T* p)
 {
     if constexpr (MemoryTraits<T>::use_dtor)
@@ -130,6 +142,23 @@ SKR_INLINE void construct(T* p, size_t count)
             ++p;
             --count;
         }
+    }
+}
+template <typename T>
+SKR_INLINE void construct_stl_ub(T* p, size_t count)
+{
+    if constexpr (MemoryTraits<T>::use_ctor)
+    {
+        while (count)
+        {
+            new (p) T();
+            ++p;
+            --count;
+        }
+    }
+    else
+    {
+        std::memset(p, 0, sizeof(T) * count);
     }
 }
 template <typename T>
