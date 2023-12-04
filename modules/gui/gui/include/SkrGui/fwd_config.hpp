@@ -72,7 +72,7 @@ using NotNull = ::skr::not_null<T>;
 template <typename T>
 using Optional = skr::lite::LiteOptional<T>;
 template <typename T>
-using Span = skr::lite::LiteSpan<T>;
+using Span = skr::span<T>;
 
 // containers
 using String     = skr::String;
