@@ -3,6 +3,9 @@
 #include <cstdint>
 #include <limits>
 #include <type_traits>
+#if SKR_CXX_VERSION >= 20
+    #include <bit>
+#endif
 
 // TODO. 使用 EASTL 的实现
 namespace skr
@@ -94,40 +97,75 @@ template <typename T>
 SKR_INLINE T countl_zero(T v)
 {
     static_assert(std::is_integral_v<T> && !std::is_signed_v<T>);
-
+#if SKR_CXX_VERSION >= 20
+    return std::countl_zero(v);
+#else
     return detail::countl_zero_fallback(v);
+#endif
 }
 template <typename T>
 SKR_INLINE T countr_zero(T v)
 {
     static_assert(std::is_integral_v<T> && !std::is_signed_v<T>);
-
+#if SKR_CXX_VERSION >= 20
+    return std::countr_zero(v);
+#else
     return detail::countr_zero_fallback(v);
+#endif
 }
 
 // countLOne & countROne
 // 得到 bit 中左（高位起）和右（低位起）的 1 个数
 template <typename T>
-SKR_INLINE T countl_one(T v) { return countl_zero(static_cast<T>(~v)); }
+SKR_INLINE T countl_one(T v)
+{
+#if SKR_CXX_VERSION >= 20
+    return std::countl_one(v);
+#else
+    return countl_zero(static_cast<T>(~v));
+#endif
+}
 template <typename T>
-SKR_INLINE T countr_one(T v) { return countr_zero(static_cast<T>(~v)); }
+SKR_INLINE T countr_one(T v)
+{
+#if SKR_CXX_VERSION >= 20
+    return std::countr_one(v);
+#else
+    return countr_zero(static_cast<T>(~v));
+#endif
+}
 
 // bitWidth
 // 得到存储这个数所需要的位数
 template <typename T>
-T bit_width(T v) { return std::numeric_limits<T>::digits - countl_zero(v); }
+T bit_width(T v)
+{
+#if SKR_CXX_VERSION >= 20
+    return std::bit_width(v);
+#else
+    return std::numeric_limits<T>::digits - countl_zero(v);
+#endif
+}
 
 // bitFloor & bitCeil
 // 相当于得到最近的一个小于/大于该数的二次幂（2^n）
 template <typename T>
 T bit_floor(T v)
 {
+#if SKR_CXX_VERSION >= 20
+    return std::bit_floor(v);
+#else
     return v == 0 ? 0 : static_cast<T>(T(1) << (std::numeric_limits<T>::digits - 1 - countl_zero(v)));
+#endif
 }
 template <typename T>
 T bit_ceil(T v)
 {
+#if SKR_CXX_VERSION >= 20
+    return std::bit_ceil(v);
+#else
     return v <= 1 ? 1 : static_cast<T>(T(1) << (std::numeric_limits<T>::digits - countl_zero(static_cast<T>(v - 1))));
+#endif
 }
 
 // bitFloorLog2 & bitCeilLog2
@@ -149,6 +187,10 @@ template <typename T>
 T pop_count(T v)
 {
     static_assert(std::is_integral_v<T> && !std::is_signed_v<T>);
+#if SKR_CXX_VERSION >= 20
+    return std::popcount(v);
+#else
     return detail::pop_count_fallback(v);
+#endif
 }
 } // namespace skr
