@@ -23,6 +23,11 @@ struct BitRef {
         , _mask(mask)
     {
     }
+    SKR_INLINE bool operator~() const
+    {
+        SKR_ASSERT(_data != nullptr && "BitRef is invalid");
+        return !((*_data) & _mask);
+    }
     SKR_INLINE operator bool() const
     {
         SKR_ASSERT(_data != nullptr && "BitRef is invalid");
@@ -38,6 +43,11 @@ struct BitRef {
     {
         *this = (bool)rhs;
         return *this;
+    }
+    SKR_INLINE void flip()
+    {
+        SKR_ASSERT(_data != nullptr && "BitRef is invalid");
+        (*_data) ^= _mask;
     }
 
     SKR_INLINE bool is_valid() const { return _data != nullptr; }
