@@ -38,7 +38,7 @@ struct Bitset {
     Bitset  operator&(const Bitset& x);
     Bitset  operator|(const Bitset& x);
     Bitset  operator^(const Bitset& x);
-    Bitset& operator~() const;
+    Bitset  operator~() const;
 
     // bit move
     Bitset& operator<<=(SizeType n);
@@ -222,7 +222,7 @@ inline Bitset<N, TBlock> Bitset<N, TBlock>::operator^(const Bitset& x)
     return result;
 }
 template <size_t N, typename TBlock>
-inline Bitset<N, TBlock>& Bitset<N, TBlock>::operator~() const
+inline Bitset<N, TBlock> Bitset<N, TBlock>::operator~() const
 {
     Bitset result(*this);
     result.flip();
