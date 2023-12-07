@@ -14,6 +14,8 @@ struct Array {
     using SizeType = typename Alloc::SizeType;
     using DataRef  = ArrayDataRef<T, SizeType>;
     using CDataRef = ArrayDataRef<const T, SizeType>;
+    using It       = T*;
+    using CIt      = const T*;
 
     // ctor & dtor
     Array(Alloc alloc = {});
@@ -131,6 +133,12 @@ struct Array {
     template <typename TP>
     SizeType remove_all_if_swap(TP&& p);
 
+    // erase
+    It  erase(const It& it);
+    CIt erase(const CIt& it);
+    It  erase_swap(const It& it);
+    CIt erase_swap(const CIt& it);
+
     // modify
     T&       operator[](SizeType index);
     const T& operator[](SizeType index) const;
@@ -210,10 +218,10 @@ struct Array {
     const T& stack_bottom() const;
 
     // support foreach
-    T*       begin();
-    T*       end();
-    const T* begin() const;
-    const T* end() const;
+    It  begin();
+    It  end();
+    CIt begin() const;
+    CIt end() const;
 
 private:
     // helper
@@ -952,6 +960,32 @@ SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::remove_all_if_swa
     return n;
 }
 
+// erase
+template <typename T, typename Alloc>
+typename Array<T, Alloc>::It Array<T, Alloc>::erase(const It& it)
+{
+    remove_at(it - _data);
+    return it;
+}
+template <typename T, typename Alloc>
+typename Array<T, Alloc>::CIt Array<T, Alloc>::erase(const CIt& it)
+{
+    remove_at(it - _data);
+    return it;
+}
+template <typename T, typename Alloc>
+typename Array<T, Alloc>::It Array<T, Alloc>::erase_swap(const It& it)
+{
+    remove_at_swap(it - _data);
+    return it;
+}
+template <typename T, typename Alloc>
+typename Array<T, Alloc>::CIt Array<T, Alloc>::erase_swap(const CIt& it)
+{
+    remove_at_swap(it - _data);
+    return it;
+}
+
 // modify
 template <typename T, typename Alloc>
 SKR_INLINE T& Array<T, Alloc>::operator[](SizeType index)
@@ -1223,11 +1257,11 @@ SKR_INLINE const T& Array<T, Alloc>::stack_bottom() const { return *_data; }
 
 // support foreach
 template <typename T, typename Alloc>
-SKR_INLINE T* Array<T, Alloc>::begin() { return _data; }
+SKR_INLINE typename Array<T, Alloc>::It Array<T, Alloc>::begin() { return _data; }
 template <typename T, typename Alloc>
-SKR_INLINE T* Array<T, Alloc>::end() { return _data + _size; }
+SKR_INLINE typename Array<T, Alloc>::It Array<T, Alloc>::end() { return _data + _size; }
 template <typename T, typename Alloc>
-SKR_INLINE const T* Array<T, Alloc>::begin() const { return _data; }
+SKR_INLINE typename Array<T, Alloc>::CIt Array<T, Alloc>::begin() const { return _data; }
 template <typename T, typename Alloc>
-SKR_INLINE const T* Array<T, Alloc>::end() const { return _data + _size; }
+SKR_INLINE typename Array<T, Alloc>::CIt Array<T, Alloc>::end() const { return _data + _size; }
 } // namespace skr::container

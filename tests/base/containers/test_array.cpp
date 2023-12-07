@@ -597,7 +597,7 @@ TEST_CASE("test array")
             REQUIRE_EQ(a[i], 114514);
         }
 
-        TestArray aa = {5, 1, 2, 5, 5, 2, 5};
+        TestArray aa = { 5, 1, 2, 5, 5, 2, 5 };
         aa.remove_all(5);
         REQUIRE_EQ(aa.size(), 3);
         for (uint32_t i = 0; i < aa.size(); ++i)
@@ -607,6 +607,80 @@ TEST_CASE("test array")
     }
 
     // [test in remove] remove if
+
+    SUBCASE("erase")
+    {
+        uint32_t raw_data_group[]     = { 1, 1, 4, 5, 1, 4 };
+        uint32_t removed_data_group[] = { 4, 5, 4 };
+
+        TestArray a(114514), b(114514);
+        for (uint32_t i = 0; i < 114514; ++i)
+        {
+            a[i] = raw_data_group[i % 6];
+            b[i] = raw_data_group[i % 6];
+        }
+
+        for (auto it = a.begin(); it != a.end();)
+        {
+            if (*it == 1)
+            {
+                it = a.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+
+        for (uint32_t i = 0; i < a.size(); ++i)
+        {
+            REQUIRE_EQ(a[i], removed_data_group[i % 3]);
+        }
+
+        for (auto it = a.begin(); it != a.end();)
+        {
+            if (*it == 5)
+            {
+                it = a.erase_swap(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+        REQUIRE(!a.contain(5));
+
+        const TestArray& cb = b;
+        for (auto it = cb.begin(); it != cb.end();)
+        {
+            if (*it == 1)
+            {
+                it = b.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+
+        for (uint32_t i = 0; i < b.size(); ++i)
+        {
+            REQUIRE_EQ(b[i], removed_data_group[i % 3]);
+        }
+
+        for (auto it = cb.begin(); it != cb.end();)
+        {
+            if (*it == 5)
+            {
+                it = b.erase_swap(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+        REQUIRE(!b.contain(5));
+    }
 
     // [needn't test] modify
 
