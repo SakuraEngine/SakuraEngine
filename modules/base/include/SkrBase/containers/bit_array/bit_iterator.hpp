@@ -81,10 +81,16 @@ struct TrueBitIt {
         _bit_index = result == npos_of<TBlock> ? _bit_size : result;
         return *this;
     }
+    SKR_INLINE TrueBitIt& operator--()
+    {
+        TS result  = Algo::find_last(_data, 0, _bit_index, true);
+        _bit_index = result == npos_of<TBlock> ? _bit_size : result;
+        return *this;
+    }
 
     SKR_INLINE bool     operator==(const TrueBitIt& rhs) const { return _bit_index == rhs._bit_index && _data == rhs._data; }
     SKR_INLINE bool     operator!=(const TrueBitIt& rhs) const { return !(*this == rhs); }
-    SKR_INLINE explicit operator bool() const { return _bit_index < _bit_size; }
+    SKR_INLINE explicit operator bool() const { return _bit_index < _bit_size; } // !!!Only support in increasing order currently
     SKR_INLINE bool     operator!() const { return !(bool)*this; }
     SKR_INLINE RefType  value() const
     {
@@ -97,9 +103,13 @@ struct TrueBitIt {
             return BitRef<TBlock>::At(_data, _bit_index);
         }
     }
+    SKR_INLINE void flip() requires(!Const)
+    {
+        SKR_ASSERT(_bit_index < _bit_size && "flip an invalid iterator");
+        BitRef<TBlock>::At(_data, _bit_index) = false;
+    }
     SKR_INLINE TS index() const { return _bit_index; }
 
-private:
 private:
     DataPtr _data;
     TS      _bit_size;

@@ -26,9 +26,9 @@ struct SparseHashSetIt {
         ++_bit_it;
         return *this;
     }
-    SKR_INLINE bool operator==(const SparseHashSetIt& rhs) const { return _bit_it == rhs._bit_it && _array == rhs._array; }
-    SKR_INLINE bool operator!=(const SparseHashSetIt& rhs) const { return !(*this == rhs); }
-    SKR_INLINE operator bool() const { return (bool)_bit_it; }
+    SKR_INLINE bool       operator==(const SparseHashSetIt& rhs) const { return _bit_it == rhs._bit_it && _array == rhs._array; }
+    SKR_INLINE bool       operator!=(const SparseHashSetIt& rhs) const { return !(*this == rhs); }
+    SKR_INLINE            operator bool() const { return (bool)_bit_it; }
     SKR_INLINE bool       operator!() const { return !(bool)*this; }
     SKR_INLINE ValueType& operator*() const { return _array[index()]._sparse_array_data._sparse_hash_set_data; }
     SKR_INLINE ValueType* operator->() const { return &_array[index()]._sparse_array_data._sparse_hash_set_data; }

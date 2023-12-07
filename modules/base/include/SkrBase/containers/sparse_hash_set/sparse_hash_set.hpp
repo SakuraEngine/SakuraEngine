@@ -132,6 +132,10 @@ struct SparseHashSet {
     template <typename Comparer>
     SizeType remove_all_ex(HashType hash, Comparer&& comparer); // [multi set extend]
 
+    // erase, needn't update iterator, erase directly is safe
+    void erase(const It& it);
+    void erase(const CIt& it);
+
     // find
     DataRef  find(const KeyType& key);
     CDataRef find(const KeyType& key) const;
@@ -245,11 +249,11 @@ SKR_INLINE bool SparseHashSet<T, TBitBlock, THash, THasher, TComparer, AllowMult
                 // alloc new memory
                 SizeType* new_memory = _data.allocator().template alloc<SizeType>(new_bucket_size);
 
-                // move items
-                if (_bucket_size)
-                {
-                    memory::move(new_memory, _bucket, _bucket_size);
-                }
+                // needn't move items here, because we always rehash after resize bucket
+                // if (_bucket_size)
+                // {
+                //     memory::move(new_memory, _bucket, std::min(new_bucket_size, _bucket_size));
+                // }
 
                 // release old memory
                 _data.allocator().free(_bucket);
@@ -942,6 +946,20 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, THash, THasher, TComparer, Allow
         search_index = next;
     }
     return count;
+}
+
+// erase, needn't update iterator, erase directly is safe
+template <typename T, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+SKR_INLINE void SparseHashSet<T, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::erase(const It& it)
+{
+    _remove_from_bucket(it.index());
+    _data.remove_at(it.index());
+}
+template <typename T, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+SKR_INLINE void SparseHashSet<T, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::erase(const CIt& it)
+{
+    _remove_from_bucket(it.index());
+    _data.remove_at(it.index());
 }
 
 // find
