@@ -365,6 +365,47 @@ TEST_CASE("test sparse hash map")
         REQUIRE_FALSE(a.contain(114514));
     }
 
+    SUBCASE("erase")
+    {
+        TestHashMap a(100), b(100);
+        for (int32_t i = 0; i < 100; ++i)
+        {
+            a.add(i, i + 1);
+            b.add(i, i + 1);
+        }
+
+        for (auto it = a.begin(); it != a.end(); ++it)
+        {
+            if (it->key % 3 == 0)
+            {
+                a.erase(it);
+            }
+        }
+
+        const TestHashMap& cb = b;
+        for (auto it = cb.begin(); it != cb.end(); ++it)
+        {
+            if (it->key % 3 == 0)
+            {
+                b.erase(it);
+            }
+        }
+
+        for (int32_t i = 0; i < 100; ++i)
+        {
+            if (i % 3 == 0)
+            {
+                REQUIRE_FALSE(a.contain(i));
+                REQUIRE_FALSE(b.contain(i));
+            }
+            else
+            {
+                REQUIRE(a.contain(i));
+                REQUIRE(b.contain(i));
+            }
+        }
+    }
+
     SUBCASE("find")
     {
         TestHashMap a({ { { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 114514 }, { 1, 1 }, { 4, 4 } } });

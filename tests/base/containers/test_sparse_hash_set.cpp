@@ -422,6 +422,47 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_FALSE(a.contain(114514));
     }
 
+    SUBCASE("erase")
+    {
+        TestHashSet a(100), b(100);
+        for (int32_t i = 0; i < 100; ++i)
+        {
+            a.add(i);
+            b.add(i);
+        }
+
+        for (auto it = a.begin(); it != a.end(); ++it)
+        {
+            if (*it % 3 == 0)
+            {
+                a.erase(it);
+            }
+        }
+
+        const TestHashSet& cb = b;
+        for (auto it = cb.begin(); it != cb.end(); ++it)
+        {
+            if (*it % 3 == 0)
+            {
+                b.erase(it);
+            }
+        }
+
+        for (int32_t i = 0; i < 100; ++i)
+        {
+            if (i % 3 == 0)
+            {
+                REQUIRE_FALSE(a.contain(i));
+                REQUIRE_FALSE(b.contain(i));
+            }
+            else
+            {
+                REQUIRE(a.contain(i));
+                REQUIRE(b.contain(i));
+            }
+        }
+    }
+
     SUBCASE("find")
     {
         TestHashSet a({ 1, 1, 4, 5, 1, 4 });

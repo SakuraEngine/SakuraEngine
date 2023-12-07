@@ -349,7 +349,6 @@ SKR_INLINE TS BitAlgo<T>::find_last(const T* data, TS start, TS num, bool v)
 // find then flip
 namespace skr::algo
 {
-// TODO. 更高性能的实现
 template <typename T>
 SKR_INLINE T BitAlgo<T>::find_flip_block_masked(T& b, T mask, bool v)
 {
