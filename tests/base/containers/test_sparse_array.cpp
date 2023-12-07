@@ -428,6 +428,7 @@ TEST_CASE("test sparse array")
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 2);
         REQUIRE_EQ(a.capacity(), 6);
+        a.release();
 
         a.clear();
         a.append({ 1, 1, 4, 5, 1, 4 });
@@ -752,6 +753,57 @@ TEST_CASE("test sparse array")
         REQUIRE_EQ(a[3], 5);
         // REQUIRE_EQ(a[4], 1);
         // REQUIRE_EQ(a[5], 4);
+    }
+
+    SUBCASE("erase")
+    {
+        uint32_t raw_data_group[] = { 1, 1, 4, 5, 1, 4 };
+
+        TestSparseArray a(114514), b(114514);
+        for (uint32_t i = 0; i < 114514; ++i)
+        {
+            a[i] = raw_data_group[i % 6];
+            b[i] = raw_data_group[i % 6];
+        }
+
+        for (auto it = a.begin(); it != a.end(); ++it)
+        {
+            if (*it == 1)
+            {
+                a.erase(it);
+            }
+        }
+
+        for (uint32_t i = 0; i < 114514; ++i)
+        {
+            bool     has_data    = a.has_data(i);
+            uint32_t except_data = raw_data_group[i % 6];
+            REQUIRE_EQ(has_data, except_data != 1);
+            if (has_data)
+            {
+                REQUIRE_EQ(a[i], except_data);
+            }
+        }
+
+        const TestSparseArray& cb = b;
+        for (auto it = cb.begin(); it != cb.end(); ++it)
+        {
+            if (*it == 1)
+            {
+                b.erase(it);
+            }
+        }
+
+        for (uint32_t i = 0; i < 114514; ++i)
+        {
+            bool     has_data    = b.has_data(i);
+            uint32_t except_data = raw_data_group[i % 6];
+            REQUIRE_EQ(has_data, except_data != 1);
+            if (has_data)
+            {
+                REQUIRE_EQ(b[i], except_data);
+            }
+        }
     }
 
     // [needn't test] modify

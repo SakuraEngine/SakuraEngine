@@ -113,6 +113,10 @@ struct SparseArray {
     template <typename TK>
     SizeType remove_all(const TK& v);
 
+    // erase, needn't update iterator, erase directly is safe
+    void erase(const It& it);
+    void erase(const CIt& it);
+
     // remove if
     template <typename TP>
     DataRef remove_if(TP&& p);
@@ -250,7 +254,7 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_realloc(SizeType new_capacity
             // move items
             if (_bit_array_size)
             {
-                memory::move(new_memory, _bit_array, old_block_size);
+                memory::move(new_memory, _bit_array, std::min(new_block_size, old_block_size));
             }
 
             // release old memory
@@ -1127,6 +1131,18 @@ template <typename TK>
 SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::SizeType SparseArray<T, TBitBlock, Alloc>::remove_all(const TK& v)
 {
     return remove_all_if([&v](const T& a) { return a == v; });
+}
+
+// erase, needn't update iterator, erase directly is safe
+template <typename T, typename TBitBlock, typename Alloc>
+SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::erase(const It& it)
+{
+    remove_at(it.index());
+}
+template <typename T, typename TBitBlock, typename Alloc>
+SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::erase(const CIt& it)
+{
+    remove_at(it.index());
 }
 
 // remove if

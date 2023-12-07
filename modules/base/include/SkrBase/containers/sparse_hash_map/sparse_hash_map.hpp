@@ -126,6 +126,10 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, THash, THa
     template <typename Comparer>
     SizeType remove_all_ex(HashType hash, Comparer&& comparer); // [multi map extend]
 
+    // erase, needn't update iterator, erase directly is safe
+    void erase(const It& it);
+    void erase(const CIt& it);
+
     // find
     DataRef  find(const K& key);
     CDataRef find(const K& key) const;
@@ -713,6 +717,18 @@ template <typename Comparer>
 SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::remove_all_ex(HashType hash, Comparer&& comparer)
 {
     return Base::remove_all_ex(hash, std::forward<Comparer>(comparer));
+}
+
+// erase, needn't update iterator, erase directly is safe
+template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::erase(const It& it)
+{
+    Base::erase(it);
+}
+template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::erase(const CIt& it)
+{
+    Base::erase(it);
 }
 
 // find
