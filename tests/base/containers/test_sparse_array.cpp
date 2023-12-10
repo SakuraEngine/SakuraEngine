@@ -1,3 +1,4 @@
+#include "SkrBase/containers/array/array_memory.hpp"
 #include "SkrTestFramework/framework.hpp"
 #include "skr_test_allocator.hpp"
 
@@ -9,7 +10,7 @@ TEST_CASE("test sparse array")
     using namespace skr;
     using namespace skr::container;
     using TestSparseArray = SparseArray<uint32_t, uint64_t, SkrTestAllocator>;
-    using TestArray       = Array<uint32_t, SkrTestAllocator>;
+    using TestArray       = Array<uint32_t, ArrayMemory<uint32_t, uint64_t, SkrTestAllocator_New>>;
 
     SUBCASE("ctor")
     {
