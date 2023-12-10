@@ -4,308 +4,400 @@
 #include "SkrBase/misc/debug.h"
 #include "SkrBase/containers/misc/placeholder.hpp"
 #include "SkrBase/containers/allocator/allocator.hpp"
+#include "SkrBase/memory/memory_ops.hpp"
 
 namespace skr::container
 {
-// TODO. 此处不如参考 EASTL 的 VectorBase，将内存相关的操作直接封装到 Memory 系统内部去，这样可以天然避免代码的割裂
-// 从数据层面，Memory 需要记录所有的数据，这样，表层的 Allocator 就成为了只需要关注算法调度执行的外层，同时，这也是无可奈何的，因为 Copy 和 Move 需要知悉所有的情况
-// ArrayMemory 提供只与内存相关联的最简化 API：
-//      ctor、dtor、copy、move、assign、move assign
-//      _realloc
-//      _free
-//      _grow (或 get_grow)
-//      _shrink (或 get_shrink)
-template <typename T, typename TS, typename HeapAllocator>
-struct ArrayMemory : private HeapAllocator {
-    // configure
-    using SizeType                           = TS;
-    using CtorParam                          = typename HeapAllocator::CtorParam;
-    static constexpr bool with_inline_memory = false;
+template <typename T, typename TS, typename Allocator>
+struct ArrayMemory : public Allocator {
+    using SizeType           = TS;
+    using AllocatorCtorParam = typename Allocator::CtorParam;
 
-    // ctor
-    ArrayMemory() requires(std::same_as<CtorParam, void>);
-    ArrayMemory(CtorParam param = {}) requires(!std::same_as<CtorParam, void>);
+    // ctor & dtor
+    ArrayMemory(AllocatorCtorParam param) noexcept;
+    ~ArrayMemory() noexcept;
 
     // copy & move
-    ArrayMemory(const ArrayMemory& other) requires(std::same_as<CtorParam, void>);
-    ArrayMemory(const ArrayMemory& other, CtorParam param = {}) requires(!std::same_as<CtorParam, void>);
-    ArrayMemory(ArrayMemory&& other);
+    ArrayMemory(const ArrayMemory& other, AllocatorCtorParam param) noexcept;
+    ArrayMemory(ArrayMemory&& other) noexcept;
 
     // assign & move assign
-    ArrayMemory& operator=(const ArrayMemory& other);
-    ArrayMemory& operator=(ArrayMemory&& other);
+    ArrayMemory& operator=(const ArrayMemory& rhs) noexcept;
+    ArrayMemory& operator=(ArrayMemory&& rhs) noexcept;
 
-    // grow/shrink policy
-    SizeType get_grow(SizeType expect_size, SizeType capacity) const;
-    SizeType get_shrink(SizeType expect_size, SizeType capacity) const;
-
-    // alloc policy
-    void free();
-    template <bool kDesiredRealloc, typename MoveFunc>
-    void realloc(SizeType new_size, MoveFunc&& move_func); // move func: void(T* new_memory, T* old_memory);
-
-    // inline memory (need copy data when move)
-    bool is_using_inline_memory() const;
+    // memory operations
+    void realloc(SizeType new_capacity) noexcept;
+    void free() noexcept;
+    void grow(SizeType new_size) noexcept;
+    void shrink() noexcept;
 
     // getter
-    T*       data();
-    const T* data() const;
-    SizeType capacity() const;
+    T*       data() noexcept;
+    const T* data() const noexcept;
+    SizeType size() const noexcept;
+    SizeType capacity() const noexcept;
+
+    // setter
+    void set_size(SizeType new_size) noexcept;
 
 private:
     T*       _data     = nullptr;
+    SizeType _size     = 0;
     SizeType _capacity = 0;
 };
 
-template <typename T, typename TS, size_t kCount>
+template <typename T, typename TS, uint64_t kCount>
 struct FixedArrayMemory {
-    // configure
-    using SizeType                           = TS;
-    using CtorParam                          = void;
-    static constexpr bool with_inline_memory = true;
+    static_assert(kCount > 0, "FixedArrayMemory must have a capacity larger than 0");
+    struct DummyParam {
+    };
+    using SizeType           = TS;
+    using AllocatorCtorParam = DummyParam;
 
-    // ctor
-    FixedArrayMemory();
+    // ctor & dtor
+    FixedArrayMemory(AllocatorCtorParam) noexcept;
+    ~FixedArrayMemory() noexcept;
 
     // copy & move
-    FixedArrayMemory(const FixedArrayMemory& other);
-    FixedArrayMemory(FixedArrayMemory&& other);
+    FixedArrayMemory(const FixedArrayMemory& other, AllocatorCtorParam) noexcept;
+    FixedArrayMemory(FixedArrayMemory&& other) noexcept;
 
     // assign & move assign
-    FixedArrayMemory& operator=(const FixedArrayMemory& other);
-    FixedArrayMemory& operator=(FixedArrayMemory&& other);
+    FixedArrayMemory& operator=(const FixedArrayMemory& rhs) noexcept;
+    FixedArrayMemory& operator=(FixedArrayMemory&& rhs) noexcept;
 
-    // grow/shrink policy
-    SizeType get_grow(SizeType expect_size, SizeType capacity) const;
-    SizeType get_shrink(SizeType expect_size, SizeType capacity) const;
-
-    // alloc policy
-    void free();
-    template <bool kDesiredRealloc, typename MoveFunc>
-    void realloc(SizeType new_size, MoveFunc&& move_func); // move func: void(T* new_memory, T* old_memory);
-
-    // inline memory (need copy data when move)
-    bool is_using_inline_memory() const;
+    // memory operations
+    void realloc(SizeType new_capacity) noexcept;
+    void free() noexcept;
+    void grow(SizeType new_size) noexcept;
+    void shrink() noexcept;
 
     // getter
-    T*       data();
-    const T* data() const;
-    SizeType capacity() const;
+    T*       data() noexcept;
+    const T* data() const noexcept;
+    SizeType size() const noexcept;
+    SizeType capacity() const noexcept;
+
+    // setter
+    void set_size(SizeType new_size) noexcept;
 
 private:
     Placeholder<T, kCount> _placeholder;
-};
-
-template <typename T, typename TS, size_t kCOunt, typename HeapAllocator>
-struct InlineArrayMemory {
-    // configure
-    using SizeType                           = TS;
-    using CtorParam                          = typename HeapAllocator::CtorParam;
-    static constexpr bool with_inline_memory = true;
-
-    // ctor
-    InlineArrayMemory();
-
-    // copy & move
-    InlineArrayMemory(const InlineArrayMemory& other);
-    InlineArrayMemory(InlineArrayMemory&& other);
-
-    // assign & move assign
-    InlineArrayMemory& operator=(const InlineArrayMemory& other);
-    InlineArrayMemory& operator=(InlineArrayMemory&& other);
-
-    // grow/shrink policy
-    SizeType get_grow(SizeType expect_size, SizeType capacity) const;
-    SizeType get_shrink(SizeType expect_size, SizeType capacity) const;
-
-    // alloc policy
-    void free();
-    template <bool kDesiredRealloc, typename MoveFunc>
-    void realloc(SizeType new_size, MoveFunc&& move_func); // move func: void(T* new_memory, T* old_memory);
-
-    // inline memory (need copy data when move)
-    bool is_using_inline_memory() const;
-
-    // getter
-    T*       data();
-    const T* data() const;
-    SizeType capacity() const;
-
-private:
-    union
-    {
-        Placeholder<T, kCOunt> _placeholder;
-        SizeType               _capacity;
-    };
-    T* _heap_data;
+    SizeType               _size = 0;
 };
 } // namespace skr::container
 
-// common memory
+// util array memory
 namespace skr::container
 {
-// ctor
-template <typename T, typename TS, typename HeapAllocator>
-inline ArrayMemory<T, TS, HeapAllocator>::ArrayMemory() requires(std::same_as<CtorParam, void>) = default;
-template <typename T, typename TS, typename HeapAllocator>
-inline ArrayMemory<T, TS, HeapAllocator>::ArrayMemory(CtorParam param) requires(!std::same_as<CtorParam, void>)
-    : HeapAllocator(std::move(param))
+// ctor & dtor
+template <typename T, typename TS, typename Allocator>
+inline ArrayMemory<T, TS, Allocator>::ArrayMemory(AllocatorCtorParam param) noexcept
+    : Allocator(std::move(param))
 {
+}
+template <typename T, typename TS, typename Allocator>
+inline ArrayMemory<T, TS, Allocator>::~ArrayMemory() noexcept
+{
+    free();
 }
 
 // copy & move
-template <typename T, typename TS, typename HeapAllocator>
-inline ArrayMemory<T, TS, HeapAllocator>::ArrayMemory(const ArrayMemory& other) requires(std::same_as<CtorParam, void>)
-    : HeapAllocator()
+template <typename T, typename TS, typename Allocator>
+inline ArrayMemory<T, TS, Allocator>::ArrayMemory(const ArrayMemory& other, AllocatorCtorParam param) noexcept
+    : Allocator(std::move(param))
 {
-    if (other._capacity > 0)
+    if (other._size > 0)
     {
-        _data     = HeapAllocator::allocate(other._capacity);
-        _capacity = other._capacity;
+        realloc(other._size);
+        memory::copy(_data, other._data, other._size);
+        _size = other._size;
     }
 }
-template <typename T, typename TS, typename HeapAllocator>
-inline ArrayMemory<T, TS, HeapAllocator>::ArrayMemory(const ArrayMemory& other, CtorParam param) requires(!std::same_as<CtorParam, void>)
-    : HeapAllocator(std::move(param))
+template <typename T, typename TS, typename Allocator>
+inline ArrayMemory<T, TS, Allocator>::ArrayMemory(ArrayMemory&& other) noexcept
+    : Allocator(std::move(other))
+    , _data(other._data)
+    , _size(other._size)
+    , _capacity(other._capacity)
 {
-    if (other._capacity > 0)
-    {
-        _data     = HeapAllocator::allocate(other._capacity);
-        _capacity = other._capacity;
-    }
+    other._data     = nullptr;
+    other._size     = 0;
+    other._capacity = 0;
 }
-template <typename T, typename TS, typename HeapAllocator>
-inline ArrayMemory<T, TS, HeapAllocator>::ArrayMemory(ArrayMemory&& other)
-    : HeapAllocator(std::move(other))
-{
-    if (other._capacity > 0)
-    {
-        // move data
-        _data     = other._data;
-        _capacity = other._capacity;
 
-        // invalidate other
-        other._data     = nullptr;
-        other._capacity = 0;
+// assign & move assign
+template <typename T, typename TS, typename Allocator>
+inline ArrayMemory<T, TS, Allocator>& ArrayMemory<T, TS, Allocator>::operator=(const ArrayMemory& rhs) noexcept
+{
+    if (this != &rhs)
+    {
+        // clear
+        free();
+
+        // copy data
+        if (rhs._size > 0)
+        {
+            Allocator::operator=(rhs);
+            realloc(rhs._size);
+            memory::copy(_data, rhs._data, rhs._size);
+            _size = rhs._size;
+        }
+    }
+    return *this;
+}
+template <typename T, typename TS, typename Allocator>
+inline ArrayMemory<T, TS, Allocator>& ArrayMemory<T, TS, Allocator>::operator=(ArrayMemory&& rhs) noexcept
+{
+    if (this != &rhs)
+    {
+        // clear
+        free();
+
+        // move data
+        Allocator::operator=(std::move(rhs));
+        _data     = rhs._data;
+        _size     = rhs._size;
+        _capacity = rhs._capacity;
+
+        rhs._data     = nullptr;
+        rhs._size     = 0;
+        rhs._capacity = 0;
+    }
+    return *this;
+}
+
+// memory operations
+template <typename T, typename TS, typename Allocator>
+inline void ArrayMemory<T, TS, Allocator>::realloc(SizeType new_capacity) noexcept
+{
+    SKR_ASSERT(new_capacity != _capacity);
+    SKR_ASSERT(new_capacity > 0);
+    SKR_ASSERT(_size <= new_capacity);
+    SKR_ASSERT((_capacity > 0 && _data != nullptr) || (_capacity == 0 && _data == nullptr));
+
+    if constexpr (memory::MemoryTraits<T>::use_realloc && Allocator::support_realloc)
+    {
+        _data     = Allocator::template realloc<T>(_data, new_capacity);
+        _capacity = new_capacity;
+    }
+    else
+    {
+        // alloc new memory
+        T* new_memory = Allocator::template alloc<T>(new_capacity);
+
+        // move items
+        if (_size)
+        {
+            memory::move(new_memory, _data, _size);
+        }
+
+        // release old memory
+        Allocator::template free<T>(_data);
+
+        // update data
+        _data     = new_memory;
+        _capacity = new_capacity;
+    }
+}
+template <typename T, typename TS, typename Allocator>
+inline void ArrayMemory<T, TS, Allocator>::free() noexcept
+{
+    if (_data)
+    {
+        Allocator::template free<T>(_data);
+        _data     = nullptr;
+        _size     = 0;
+        _capacity = 0;
+    }
+}
+template <typename T, typename TS, typename Allocator>
+inline void ArrayMemory<T, TS, Allocator>::grow(SizeType new_size) noexcept
+{
+    SKR_ASSERT(new_size > _size);
+
+    SizeType new_capacity = default_get_grow<T>(new_size, _capacity);
+    SKR_ASSERT(new_capacity >= _capacity);
+    if (new_capacity >= _capacity)
+    {
+        realloc(new_capacity);
+    }
+}
+template <typename T, typename TS, typename Allocator>
+inline void ArrayMemory<T, TS, Allocator>::shrink() noexcept
+{
+    SizeType new_capacity = default_get_shrink<T>(_size, _capacity);
+    SKR_ASSERT(new_capacity >= _size);
+    if (new_capacity < _capacity)
+    {
+        if (new_capacity)
+        {
+            realloc(new_capacity);
+        }
+        else
+        {
+            free();
+        }
+    }
+}
+
+// getter
+template <typename T, typename TS, typename Allocator>
+inline T* ArrayMemory<T, TS, Allocator>::data() noexcept
+{
+    return _data;
+}
+template <typename T, typename TS, typename Allocator>
+inline const T* ArrayMemory<T, TS, Allocator>::data() const noexcept
+{
+    return _data;
+}
+template <typename T, typename TS, typename Allocator>
+inline typename ArrayMemory<T, TS, Allocator>::SizeType ArrayMemory<T, TS, Allocator>::size() const noexcept
+{
+    return _size;
+}
+template <typename T, typename TS, typename Allocator>
+inline typename ArrayMemory<T, TS, Allocator>::SizeType ArrayMemory<T, TS, Allocator>::capacity() const noexcept
+{
+    return _capacity;
+}
+
+// setter
+template <typename T, typename TS, typename Allocator>
+inline void ArrayMemory<T, TS, Allocator>::set_size(SizeType new_size) noexcept
+{
+    _size = new_size;
+}
+} // namespace skr::container
+
+// fixed array memory
+namespace skr::container
+{
+// ctor & dtor
+template <typename T, typename TS, uint64_t kCount>
+inline FixedArrayMemory<T, TS, kCount>::FixedArrayMemory(AllocatorCtorParam) noexcept
+{
+}
+template <typename T, typename TS, uint64_t kCount>
+inline FixedArrayMemory<T, TS, kCount>::~FixedArrayMemory() noexcept
+{
+    free();
+}
+
+// copy & move
+template <typename T, typename TS, uint64_t kCount>
+inline FixedArrayMemory<T, TS, kCount>::FixedArrayMemory(const FixedArrayMemory& other, AllocatorCtorParam) noexcept
+{
+    if (other._size > 0)
+    {
+        memory::copy(data(), other.data(), other._size);
+        _size = other._size;
+    }
+}
+template <typename T, typename TS, uint64_t kCount>
+inline FixedArrayMemory<T, TS, kCount>::FixedArrayMemory(FixedArrayMemory&& other) noexcept
+{
+    if (other._size > 0)
+    {
+        memory::move(data(), other.data(), other._size);
+        _size = other._size;
+
+        other._size = 0;
     }
 }
 
 // assign & move assign
-template <typename T, typename TS, typename HeapAllocator>
-inline ArrayMemory<T, TS, HeapAllocator>& ArrayMemory<T, TS, HeapAllocator>::operator=(const ArrayMemory& other)
+template <typename T, typename TS, uint64_t kCount>
+inline FixedArrayMemory<T, TS, kCount>& FixedArrayMemory<T, TS, kCount>::operator=(const FixedArrayMemory& rhs) noexcept
 {
-    if (this != &other)
+    if (this != &rhs)
     {
-        // free old memory
+        // clear
         free();
 
-        // allocate new memory
-        if (other._capacity > 0)
+        // copy data
+        if (rhs._size > 0)
         {
-            _data     = HeapAllocator::alloc(other._capacity * sizeof(T), alignof(T));
-            _capacity = other._capacity;
+            memory::copy(data(), rhs.data(), rhs._size);
+            _size = rhs._size;
         }
     }
     return *this;
 }
-template <typename T, typename TS, typename HeapAllocator>
-inline ArrayMemory<T, TS, HeapAllocator>& ArrayMemory<T, TS, HeapAllocator>::operator=(ArrayMemory&& other)
+template <typename T, typename TS, uint64_t kCount>
+inline FixedArrayMemory<T, TS, kCount>& FixedArrayMemory<T, TS, kCount>::operator=(FixedArrayMemory&& rhs) noexcept
 {
-    if (this != &other)
+    if (this != &rhs)
     {
-        // free old memory
+        // clear
         free();
 
         // move data
-        _data     = other._data;
-        _capacity = other._capacity;
+        if (rhs._size > 0)
+        {
+            memory::move(data(), rhs.data(), rhs._size);
+            _size = rhs._size;
 
-        // invalidate other
-        other._data     = nullptr;
-        other._capacity = 0;
+            rhs._size = 0;
+        }
     }
     return *this;
 }
 
-// grow/shrink policy
-template <typename T, typename TS, typename HeapAllocator>
-inline typename ArrayMemory<T, TS, HeapAllocator>::SizeType ArrayMemory<T, TS, HeapAllocator>::get_grow(SizeType expect_size, SizeType capacity) const
+// memory operations
+template <typename T, typename TS, uint64_t kCount>
+inline void FixedArrayMemory<T, TS, kCount>::realloc(SizeType new_capacity) noexcept
 {
-    default_get_grow<T>(expect_size, capacity);
+    SKR_ASSERT(new_capacity <= kCount && "FixedArrayMemory can't alloc memory that larger than kCount");
 }
-template <typename T, typename TS, typename HeapAllocator>
-inline typename ArrayMemory<T, TS, HeapAllocator>::SizeType ArrayMemory<T, TS, HeapAllocator>::get_shrink(SizeType expect_size, SizeType capacity) const
+template <typename T, typename TS, uint64_t kCount>
+inline void FixedArrayMemory<T, TS, kCount>::free() noexcept
 {
-    default_get_shrink<T>(expect_size, capacity);
-}
-
-// alloc policy
-template <typename T, typename TS, typename HeapAllocator>
-inline void ArrayMemory<T, TS, HeapAllocator>::free()
-{
-    if (_data)
+    if (_size)
     {
-        HeapAllocator::free(_data, alignof(T));
-        _data     = nullptr;
-        _capacity = 0;
+        memory::destruct(data(), _size);
+        _size = 0;
     }
 }
-template <typename T, typename TS, typename HeapAllocator>
-template <bool kDesiredRealloc, typename MoveFunc>
-inline void ArrayMemory<T, TS, HeapAllocator>::realloc(SizeType new_size, MoveFunc&& move_func)
+template <typename T, typename TS, uint64_t kCount>
+inline void FixedArrayMemory<T, TS, kCount>::grow(SizeType new_size) noexcept
 {
-    if constexpr (kDesiredRealloc && HeapAllocator::support_realloc)
-    {
-        if (_data)
-        {
-            _data = HeapAllocator::realloc(_data, new_size * sizeof(T), alignof(T));
-        }
-        else
-        {
-            _data = HeapAllocator::alloc(new_size * sizeof(T), alignof(T));
-        }
-    }
-    else
-    {
-        // allocate new memory
-        T* new_memory = HeapAllocator::alloc(new_size * sizeof(T), alignof(T));
-
-        // move data
-        if (_data)
-        {
-            move_func(new_memory, _data);
-        }
-
-        // free old memory
-        HeapAllocator::free(_data, alignof(T));
-
-        // update data
-        _data     = new_memory;
-        _capacity = new_size;
-    }
+    SKR_ASSERT(new_size <= kCount && "FixedArrayMemory can't alloc memory that larger than kCount");
+    // do noting
 }
-
-// inline memory (need copy data when move)
-template <typename T, typename TS, typename HeapAllocator>
-inline bool ArrayMemory<T, TS, HeapAllocator>::is_using_inline_memory() const
+template <typename T, typename TS, uint64_t kCount>
+inline void FixedArrayMemory<T, TS, kCount>::shrink() noexcept
 {
-    return false;
+    // do noting
 }
 
 // getter
-template <typename T, typename TS, typename HeapAllocator>
-inline T* ArrayMemory<T, TS, HeapAllocator>::data()
+template <typename T, typename TS, uint64_t kCount>
+inline T* FixedArrayMemory<T, TS, kCount>::data() noexcept
 {
-    return _data;
+    return reinterpret_cast<T*>(_placeholder.storage);
 }
-template <typename T, typename TS, typename HeapAllocator>
-inline const T* ArrayMemory<T, TS, HeapAllocator>::data() const
+template <typename T, typename TS, uint64_t kCount>
+inline const T* FixedArrayMemory<T, TS, kCount>::data() const noexcept
 {
-    return _data;
+    return reinterpret_cast<const T*>(_placeholder.storage);
 }
-template <typename T, typename TS, typename HeapAllocator>
-inline typename ArrayMemory<T, TS, HeapAllocator>::SizeType ArrayMemory<T, TS, HeapAllocator>::capacity() const
+template <typename T, typename TS, uint64_t kCount>
+inline typename FixedArrayMemory<T, TS, kCount>::SizeType FixedArrayMemory<T, TS, kCount>::size() const noexcept
 {
-    return _capacity;
+    return _size;
+}
+template <typename T, typename TS, uint64_t kCount>
+inline typename FixedArrayMemory<T, TS, kCount>::SizeType FixedArrayMemory<T, TS, kCount>::capacity() const noexcept
+{
+    return kCount;
+}
+
+// setter
+template <typename T, typename TS, uint64_t kCount>
+inline void FixedArrayMemory<T, TS, kCount>::set_size(SizeType new_size) noexcept
+{
+    _size = new_size;
 }
 } // namespace skr::container
