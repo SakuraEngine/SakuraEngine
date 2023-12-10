@@ -10,8 +10,8 @@ struct AlignedStorage {
     alignas(Align) uint8_t storage[Size];
 };
 
-template <typename T>
-struct Placeholder : AlignedStorage<sizeof(T), alignof(T)> {
+template <typename T, uint64_t N = 1>
+struct Placeholder : AlignedStorage<sizeof(T) * N, alignof(T)> {
 };
 
 }; // namespace skr::container

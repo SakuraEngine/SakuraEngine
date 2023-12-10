@@ -11,11 +11,8 @@
 // 除了 add 需要完整的元素方便添加操作外，其余的操作（find/remove/contain/count）均使用 key 进行操作以便在不构造完整元素的前提下进行查询
 // xxx_as 是异构查询的便利函数，用于一些构造开销巨大的对象（比如使用字面量查询 string），更复杂的异构查找需要使用 xxx_ex，异构查找需要保证 hash 的求值方式一致
 // add_ex_unsafe 是一个非常底层的 add 操作，它不会做任何构造行为，如果没有既存的查询元素，它会在申请空间后直接返回，在这种情况下，需要用户自行进行初始化和 add to bucket
-// TODO. 移除 key_of、key_equal 等 API
 // TODO. bucket 与碰撞统计，以及更好的 bucket 分配策略
-// TODO. xxxx_as 依旧需要，除了异构查询之外，还有使用某个特定成员作为 key 的情况，这时候，我们会需要使用便利的异构查找
 // TODO. compare 成本较小的情况下可以省去 hash 先行比较，可以通过 traits 实现
-// TODO. Hasher 与 Comparer 应当配合 KeyTraits
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
