@@ -95,10 +95,13 @@ namespace skr::container
 {
 template <typename T, typename TBitBlock, typename TS, typename Allocator>
 struct SparseArrayMemory : public Allocator {
-    using SizeType                        = TS;
+    // configure
+    using SizeType           = TS;
+    using AllocatorCtorParam = typename Allocator::CtorParam;
+
+    // helper data
     using BitBlockType                    = TBitBlock;
     using DataType                        = SparseArrayData<T, SizeType>;
-    using AllocatorCtorParam              = typename Allocator::CtorParam;
     using BitAlgo                         = algo::BitAlgo<TBitBlock>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
@@ -131,7 +134,7 @@ struct SparseArrayMemory : public Allocator {
             _capacity       = other._capacity;
             _bit_array_size = other._bit_array_size;
             _freelist_head  = other._freelist_head;
-            _num_hole       = other._num_hole;
+            _hole_size      = other._hole_size;
         }
     }
     inline SparseArrayMemory(SparseArrayMemory&& other) noexcept
@@ -142,7 +145,7 @@ struct SparseArrayMemory : public Allocator {
         , _capacity(other._capacity)
         , _bit_array_size(other._bit_array_size)
         , _freelist_head(other._freelist_head)
-        , _num_hole(other._num_hole)
+        , _hole_size(other._hole_size)
     {
         other._data           = nullptr;
         other._bit_array      = nullptr;
@@ -150,7 +153,7 @@ struct SparseArrayMemory : public Allocator {
         other._capacity       = 0;
         other._bit_array_size = 0;
         other._freelist_head  = npos;
-        other._num_hole       = 0;
+        other._hole_size      = 0;
     }
 
     // assign & move assign
@@ -163,7 +166,7 @@ struct SparseArrayMemory : public Allocator {
         Allocator::operator=(rhs);
 
         // copy data
-        if ((rhs._sparse_size - rhs._num_hole) > 0)
+        if ((rhs._sparse_size - rhs._hole_size) > 0)
         {
             // reserve data
             if (_capacity < rhs._sparse_size)
@@ -178,13 +181,16 @@ struct SparseArrayMemory : public Allocator {
             _capacity       = rhs._capacity;
             _bit_array_size = rhs._bit_array_size;
             _freelist_head  = rhs._freelist_head;
-            _num_hole       = rhs._num_hole;
+            _hole_size      = rhs._hole_size;
         }
     }
     inline void operator=(SparseArrayMemory&& rhs) noexcept
     {
         SKR_ASSERT(this != &rhs && "before call operator=, you must check this != &rhs");
-        SKR_ASSERT(_data == nullptr && "before move memory, you must free the memory first");
+        SKR_ASSERT(_sparse_size == 0 && "before move memory, you must clean up the memory first");
+
+        // free
+        free();
 
         // move allocator
         Allocator::operator=(std::move(rhs));
@@ -196,14 +202,14 @@ struct SparseArrayMemory : public Allocator {
         _capacity           = rhs._capacity;
         _bit_array_size     = rhs._bit_array_size;
         _freelist_head      = rhs._freelist_head;
-        _num_hole           = rhs._num_hole;
+        _hole_size          = rhs._hole_size;
         rhs._data           = nullptr;
         rhs._bit_array      = nullptr;
         rhs._sparse_size    = 0;
         rhs._capacity       = 0;
         rhs._bit_array_size = 0;
         rhs._freelist_head  = npos;
-        rhs._num_hole       = 0;
+        rhs._hole_size      = 0;
     }
 
     // memory operations
@@ -294,7 +300,7 @@ struct SparseArrayMemory : public Allocator {
             _capacity       = 0;
             _bit_array_size = 0;
             _freelist_head  = npos;
-            _num_hole       = 0;
+            _hole_size      = 0;
         }
     }
     inline void grow(SizeType grow_size) noexcept
@@ -331,11 +337,12 @@ struct SparseArrayMemory : public Allocator {
     inline SizeType            capacity() const noexcept { return _capacity; }
     inline SizeType            bit_array_size() const noexcept { return _bit_array_size; }
     inline SizeType            freelist_head() const noexcept { return _freelist_head; }
+    inline SizeType            hole_size() const noexcept { return _hole_size; }
 
     // setter
-    inline void set_sparse_size(SizeType new_size) noexcept { _sparse_size = new_size; }
-    inline void set_freelist_head(SizeType new_freelist_head) noexcept { _freelist_head = new_freelist_head; }
-    inline void set_num_hole(SizeType new_num_hole) noexcept { _num_hole = new_num_hole; }
+    inline void set_sparse_size(SizeType value) noexcept { _sparse_size = value; }
+    inline void set_freelist_head(SizeType value) noexcept { _freelist_head = value; }
+    inline void set_hole_size(SizeType value) noexcept { _hole_size = value; }
 
 private:
     DataType*     _data           = nullptr;
@@ -344,6 +351,6 @@ private:
     SizeType      _capacity       = 0;
     SizeType      _bit_array_size = 0;
     SizeType      _freelist_head  = npos;
-    SizeType      _num_hole       = 0;
+    SizeType      _hole_size      = 0;
 };
 } // namespace skr::container
