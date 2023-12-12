@@ -4,11 +4,18 @@
 #include "SkrBase/misc/debug.h"
 
 // TODO. allocator 行为规范
-// allocator 需要关注 move 行为（主要是 pmr）来防止非法的内存转移
-// 但是 allocator 不需要关注 copy 行为，因为 copy 不会引起非法的内存转移
-// allocator 在 move assign 时不应该将自身状态 move 过去，只是检查内存转移是否合法
-// 在 copy/move 构造中，应当提供有参与无参版本，其中有参版本不应赋予默认值
+//  - 提供 ctor/move/copy 这三个构造正常构造行为
+//  - 不提供 assign/move assign 行为（容器不应当使用），但是提供 check API 来检查内存转移是否合法
+//  - 对容器来说，copy/move 中应该支持就地构造与 copy/move 构造行为
+//  - 在 copy/move 构造中，应当提供有参与无参版本，其中有参版本不应赋予默认值
 // TODO. 空容器下的 API 安全性试验
+//  - Array
+//  - BitArray
+//  - SparseArray
+//  - SparseHashSet
+//  - SparseHashMap
+// TODO. memory ctor/assign 行为的特殊性
+// 为了解决双重 this != &rhs 判断问题，并提升功能实现的纯粹性，先行的内存清理（析构）应该由容器执行
 namespace skr::container
 {
 

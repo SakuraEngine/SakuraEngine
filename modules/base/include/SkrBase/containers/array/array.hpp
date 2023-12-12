@@ -310,10 +310,7 @@ SKR_INLINE Array<T, Memory>& Array<T, Memory>::operator=(const Array& rhs)
 {
     if (this != &rhs)
     {
-        // clean up memory
         clear();
-
-        // copy memory
         Memory::operator=(rhs);
     }
 
@@ -324,10 +321,7 @@ SKR_INLINE Array<T, Memory>& Array<T, Memory>::operator=(Array&& rhs) noexcept
 {
     if (this != &rhs)
     {
-        // release memory
-        Memory::free();
-
-        // move memory
+        clear();
         Memory::operator=(std::move(rhs));
     }
 

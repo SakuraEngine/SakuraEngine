@@ -72,7 +72,10 @@ struct ArrayMemory : public Allocator {
     inline void operator=(ArrayMemory&& rhs) noexcept
     {
         SKR_ASSERT(this != &rhs && "before call operator=, you must check this != &rhs");
-        SKR_ASSERT(_data == nullptr && "before move memory, you must free the memory first");
+        SKR_ASSERT(_size == 0 && "before move memory, you must clean up the memory first");
+
+        // free
+        free();
 
         // move allocator
         Allocator::operator=(std::move(rhs));
@@ -170,7 +173,7 @@ struct ArrayMemory : public Allocator {
     inline SizeType capacity() const noexcept { return _capacity; }
 
     // setter
-    inline void set_size(SizeType new_size) noexcept { _size = new_size; }
+    inline void set_size(SizeType value) noexcept { _size = value; }
 
 private:
     T*       _data     = nullptr;
@@ -280,7 +283,7 @@ struct FixedArrayMemory {
     inline SizeType capacity() const noexcept { return kCount; }
 
     // setter
-    inline void set_size(SizeType new_size) noexcept { _size = new_size; }
+    inline void set_size(SizeType value) noexcept { _size = value; }
 
 private:
     Placeholder<T, kCount> _placeholder;
