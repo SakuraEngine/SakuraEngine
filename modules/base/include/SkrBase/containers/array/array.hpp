@@ -308,13 +308,29 @@ SKR_INLINE Array<T, Memory>::Array(Array&& other) noexcept
 template <typename T, typename Memory>
 SKR_INLINE Array<T, Memory>& Array<T, Memory>::operator=(const Array& rhs)
 {
-    Memory::operator=(rhs);
+    if (this != &rhs)
+    {
+        // clean up memory
+        clear();
+
+        // copy memory
+        Memory::operator=(rhs);
+    }
+
     return *this;
 }
 template <typename T, typename Memory>
 SKR_INLINE Array<T, Memory>& Array<T, Memory>::operator=(Array&& rhs) noexcept
 {
-    Memory::operator=(std::move(rhs));
+    if (this != &rhs)
+    {
+        // release memory
+        Memory::free();
+
+        // move memory
+        Memory::operator=(std::move(rhs));
+    }
+
     return *this;
 }
 
@@ -577,17 +593,7 @@ SKR_INLINE typename Array<T, Memory>::DataRef Array<T, Memory>::add_unique(const
 template <typename T, typename Memory>
 SKR_INLINE typename Array<T, Memory>::DataRef Array<T, Memory>::add_unsafe(SizeType n)
 {
-    auto old_size = size();
-    auto new_size = size() + n;
-
-    // grow memory
-    if (new_size > capacity())
-    {
-        Memory::grow(new_size);
-    }
-
-    // update size
-    _set_size(new_size);
+    SizeType old_size = Memory::grow(n);
     return { data() + old_size, old_size };
 }
 template <typename T, typename Memory>

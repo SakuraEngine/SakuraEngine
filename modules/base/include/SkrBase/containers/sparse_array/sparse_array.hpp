@@ -1242,7 +1242,7 @@ template <typename T, typename TBitBlock, typename Alloc>
 template <typename TP>
 SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::DataRef SparseArray<T, TBitBlock, Alloc>::find_last_if(TP&& p)
 {
-    // TODO. reserve iterator
+    // TODO. reverse iterator
     // for (auto it = begin(); it != end(); ++it)
     // {
     //     if (p(*it))

@@ -81,7 +81,7 @@ SKR_INLINE void move(Dst* dst, Src* src)
         }
         else
         {
-            std::memcpy(dst, src, sizeof(Src));
+            std::memmove(dst, src, sizeof(Src));
         }
 
         if constexpr (MemoryTraits<Dst, Src>::need_dtor_after_move)

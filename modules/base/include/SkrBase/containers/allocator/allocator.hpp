@@ -3,6 +3,12 @@
 #include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/misc/debug.h"
 
+// TODO. allocator 行为规范
+// allocator 需要关注 move 行为（主要是 pmr）来防止非法的内存转移
+// 但是 allocator 不需要关注 copy 行为，因为 copy 不会引起非法的内存转移
+// allocator 在 move assign 时不应该将自身状态 move 过去，只是检查内存转移是否合法
+// 在 copy/move 构造中，应当提供有参与无参版本，其中有参版本不应赋予默认值
+// TODO. 空容器下的 API 安全性试验
 namespace skr::container
 {
 
