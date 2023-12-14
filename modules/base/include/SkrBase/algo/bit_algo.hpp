@@ -5,6 +5,7 @@
 #include <limits>
 #include <type_traits>
 #include <memory>
+#include "SkrBase/misc/debug.h"
 
 namespace skr::algo
 {

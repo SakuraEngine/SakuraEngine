@@ -19,7 +19,10 @@ struct SkrTestAllocator : AllocTemplate<SkrTestAllocator, size_t> {
         return nullptr;
     }
 };
+} // namespace skr::container
 
+namespace skr
+{
 struct SkrTestAllocator_New {
     struct DummyParam {
     };
@@ -47,4 +50,4 @@ struct SkrTestAllocator_New {
         ::operator delete(reinterpret_cast<void*>(p), std::align_val_t(alignof(T)));
     }
 };
-} // namespace skr::container
+} // namespace skr

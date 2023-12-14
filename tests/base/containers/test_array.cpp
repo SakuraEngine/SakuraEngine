@@ -1,14 +1,10 @@
 #include "SkrTestFramework/framework.hpp"
-
-#include "SkrBase/containers/array/array.hpp"
-#include "SkrBase/containers/array/array_memory.hpp"
-#include "skr_test_allocator.hpp"
+#include "test_types.hpp"
 
 TEST_CASE("test array")
 {
     using namespace skr;
-    using namespace skr::container;
-    using TestArray = Array<uint32_t, ArrayMemory<uint32_t, uint64_t, SkrTestAllocator_New>>;
+    using TestArray = Array<uint32_t>;
 
     SUBCASE("ctor")
     {
@@ -783,7 +779,8 @@ TEST_CASE("test fixed array")
     using namespace skr;
     using namespace skr::container;
     static constexpr uint64_t kTestArrayCapacity = 200;
-    using TestArray                              = Array<uint32_t, FixedArrayMemory<uint32_t, uint64_t, kTestArrayCapacity>>;
+
+    using TestArray = FixedArray<uint32_t, kTestArrayCapacity>;
 
     SUBCASE("ctor")
     {

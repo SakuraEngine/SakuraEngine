@@ -6,7 +6,7 @@
 namespace skr
 {
 template <typename T, typename Alloc = SkrAllocator>
-using Vector = container::Array<T, container::ArrayMemory<T, uint64_t, SkrAllocator_New>>;
+using Vector = container::Array<container::ArrayMemory<T, uint64_t, SkrAllocator_New>>;
 }
 
 // serde

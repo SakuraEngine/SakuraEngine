@@ -1,17 +1,11 @@
-#include "SkrBase/containers/sparse_hash_map/kvpair.hpp"
 #include "SkrTestFramework/framework.hpp"
-#include "skr_test_allocator.hpp"
-
-#include "SkrBase/misc/hash.hpp"
-#include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
-#include <chrono>
+#include "test_types.hpp"
 
 TEST_CASE("test sparse hash set (Single)")
 {
     using namespace skr;
-    using namespace skr::container;
     using ValueType   = int32_t;
-    using TestHashSet = SparseHashSet<ValueType, uint64_t, size_t, Hash<ValueType>, Equal<ValueType>, false, SkrTestAllocator>;
+    using TestHashSet = SparseHashSet<ValueType>;
 
     SUBCASE("ctor & dtor")
     {
@@ -20,7 +14,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 0);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_EQ(a.capacity(), 0);
-        REQUIRE_EQ(a.bucket_size(), 0);
         REQUIRE_EQ(a.data_arr().data(), nullptr);
 
         TestHashSet b(100);
@@ -28,7 +21,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(b.sparse_size(), 0);
         REQUIRE_EQ(b.hole_size(), 0);
         REQUIRE_GE(b.capacity(), 100);
-        REQUIRE_EQ(b.bucket_size(), 0);
         for (size_t i = 0; i < 100; ++i)
         {
             REQUIRE_FALSE(b.has_data(i));
@@ -39,7 +31,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(c.sparse_size(), 3);
         REQUIRE_EQ(c.hole_size(), 0);
         REQUIRE_GE(c.capacity(), 3);
-        REQUIRE_GE(c.bucket_size(), 4);
         REQUIRE(c.contain(1));
         REQUIRE(c.contain(4));
         REQUIRE(c.contain(5));
@@ -50,7 +41,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(c.sparse_size(), 3);
         REQUIRE_EQ(c.hole_size(), 0);
         REQUIRE_GE(c.capacity(), 3);
-        REQUIRE_GE(c.bucket_size(), 4);
         REQUIRE(c.contain(1));
         REQUIRE(c.contain(4));
         REQUIRE(c.contain(5));
@@ -63,7 +53,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 3);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 3);
-        REQUIRE_GE(a.bucket_size(), 4);
         REQUIRE(a.contain(1));
         REQUIRE(a.contain(4));
         REQUIRE(a.contain(5));
@@ -73,7 +62,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(b.sparse_size(), 3);
         REQUIRE_EQ(b.hole_size(), 0);
         REQUIRE_GE(b.capacity(), 3);
-        REQUIRE_GE(a.bucket_size(), 4);
         REQUIRE(b.contain(1));
         REQUIRE(b.contain(4));
         REQUIRE(b.contain(5));
@@ -84,7 +72,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 0);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_EQ(a.capacity(), 0);
-        REQUIRE_EQ(a.bucket_size(), 0);
         REQUIRE_EQ(a.data_arr().data(), nullptr);
         REQUIRE_EQ(c.size(), 3);
         REQUIRE_EQ(c.sparse_size(), 3);
@@ -106,7 +93,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(b.sparse_size(), 3);
         REQUIRE_EQ(b.hole_size(), 0);
         REQUIRE_GE(b.capacity(), 3);
-        REQUIRE_GE(b.bucket_size(), 4);
         REQUIRE(b.contain(1));
         REQUIRE(b.contain(4));
         REQUIRE(b.contain(5));
@@ -118,13 +104,11 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 0);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_EQ(a.capacity(), 0);
-        REQUIRE_EQ(a.bucket_size(), 0);
         REQUIRE_EQ(a.data_arr().data(), nullptr);
         REQUIRE_EQ(c.size(), 3);
         REQUIRE_EQ(c.sparse_size(), 3);
         REQUIRE_EQ(c.hole_size(), 0);
         REQUIRE_EQ(c.capacity(), old_capacity);
-        REQUIRE_GE(c.bucket_size(), 3);
         REQUIRE(c.contain(1));
         REQUIRE(c.contain(4));
         REQUIRE(c.contain(5));
@@ -171,44 +155,37 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 1);
         REQUIRE_GE(a.capacity(), 6);
-        REQUIRE_GE(a.bucket_size(), 8);
 
-        auto old_capacity    = a.capacity();
-        auto old_bucket_size = a.bucket_size();
+        auto old_capacity = a.capacity();
         a.clear();
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.sparse_size(), 0);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_EQ(a.capacity(), old_capacity);
-        REQUIRE_EQ(a.bucket_size(), old_bucket_size);
 
         a.release();
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.sparse_size(), 0);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_EQ(a.capacity(), 0);
-        REQUIRE_EQ(a.bucket_size(), 0);
 
         a.release(5);
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.sparse_size(), 0);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_EQ(a.capacity(), 5);
-        REQUIRE_GE(a.bucket_size(), 0);
 
         a.reserve(100);
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.sparse_size(), 0);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 100);
-        REQUIRE_GE(a.bucket_size(), 0);
 
         a.append({ 1, 11, 114, 1145, 11451, 114514 });
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 100);
-        REQUIRE_GE(a.bucket_size(), 8);
 
         a.remove(11451);
         a.remove(114514);
@@ -217,7 +194,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 2);
         REQUIRE_GE(a.capacity(), 6);
-        REQUIRE_GE(a.bucket_size(), 4);
 
         a.clear();
         a.append({ 1, 11, 114, 1145, 11451, 114514 });
@@ -261,7 +237,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 4);
-        REQUIRE_GE(a.bucket_size(), 4);
         REQUIRE(a.contain(1));
         REQUIRE(a.contain(4));
         REQUIRE(a.contain(5));
@@ -275,7 +250,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 5);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 5);
-        REQUIRE_GE(a.bucket_size(), 8);
         REQUIRE(a.contain(1));
         REQUIRE(a.contain(4));
         REQUIRE(a.contain(5));
@@ -288,7 +262,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 6);
-        REQUIRE_GE(a.bucket_size(), 8);
         REQUIRE(a.contain(1));
         REQUIRE(a.contain(4));
         REQUIRE(a.contain(5));
@@ -306,14 +279,22 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 4);
-        REQUIRE_GE(a.bucket_size(), 4);
         REQUIRE(a.contain(1));
         REQUIRE(a.contain(4));
         REQUIRE(a.contain(5));
         REQUIRE(a.contain(10));
 
+        using container::KVPair;
         using TestAddOrAssignValue = KVPair<ValueType, ValueType>;
-        using TestAddOrAssignSet   = SparseHashSet<TestAddOrAssignValue, uint64_t, size_t, Hash<ValueType>, Equal<ValueType>, false, SkrTestAllocator>;
+        using TestAddOrAssignSet   = container::SparseHashSet<container::SparseHashSetMemory<
+        TestAddOrAssignValue,
+        uint64_t,
+        uint64_t,
+        Hash<ValueType>,
+        Equal<ValueType>,
+        false,
+        uint64_t,
+        SkrTestAllocator_New>>;
         TestAddOrAssignSet b({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
         b.add_or_assign({ 1, 2 });
         b.add_or_assign({ 4, 5 });
@@ -323,7 +304,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(b.sparse_size(), 4);
         REQUIRE_EQ(b.hole_size(), 0);
         REQUIRE_GE(b.capacity(), 4);
-        REQUIRE_GE(b.bucket_size(), 4);
         REQUIRE(b.contain(1));
         REQUIRE(b.contain(4));
         REQUIRE(b.contain(5));
@@ -346,7 +326,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 4);
-        REQUIRE_GE(a.bucket_size(), 4);
         REQUIRE(a.contain(1));
         REQUIRE(a.contain(4));
         REQUIRE(a.contain(5));
@@ -360,7 +339,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 5);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 5);
-        REQUIRE_GE(a.bucket_size(), 8);
         REQUIRE(a.contain(1));
         REQUIRE(a.contain(4));
         REQUIRE(a.contain(5));
@@ -377,7 +355,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 6);
-        REQUIRE_GE(a.bucket_size(), 8);
         REQUIRE(a.contain(1));
         REQUIRE(a.contain(4));
         REQUIRE(a.contain(5));
@@ -391,7 +368,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(b.sparse_size(), 6);
         REQUIRE_EQ(b.hole_size(), 0);
         REQUIRE_GE(b.capacity(), 6);
-        REQUIRE_GE(b.bucket_size(), 8);
         REQUIRE(b.contain(1));
         REQUIRE(b.contain(4));
         REQUIRE(b.contain(5));
@@ -409,7 +385,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_LE(a.sparse_size(), 3);
         REQUIRE_LE(a.hole_size(), 2);
         REQUIRE_GE(a.capacity(), 3);
-        REQUIRE_GE(a.bucket_size(), 4);
         REQUIRE(a.contain(5));
         REQUIRE_FALSE(a.contain(1));
         REQUIRE_FALSE(a.contain(4));
@@ -509,7 +484,6 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 100);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_EQ(a.capacity(), 100);
-        REQUIRE_GE(a.bucket_size(), 64);
         for (auto i = 0; i < 100; ++i)
         {
             REQUIRE(a.contain(i));

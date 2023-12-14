@@ -5,7 +5,7 @@
 
 namespace skr::gui
 {
-class TimerManager;
+struct TimerManager;
 
 // 三颗控件树的总控制器，管理所有控件树的 update/layout/paint
 // 同时提供环境 InputManager/WindowManager
