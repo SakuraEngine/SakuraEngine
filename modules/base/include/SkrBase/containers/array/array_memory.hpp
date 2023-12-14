@@ -11,6 +11,7 @@ namespace skr::container
 {
 template <typename T, typename TS, typename Allocator>
 struct ArrayMemory : public Allocator {
+    using DataType           = T;
     using SizeType           = TS;
     using AllocatorCtorParam = typename Allocator::CtorParam;
 
@@ -49,44 +50,50 @@ struct ArrayMemory : public Allocator {
     // assign & move assign
     inline void operator=(const ArrayMemory& rhs) noexcept
     {
-        SKR_ASSERT(this != &rhs && "before call operator=, you must check this != &rhs");
-        SKR_ASSERT(_size == 0 && "before copy memory, you must clean up the memory first");
-
-        // copy allocator
-        Allocator::operator=(rhs);
-
-        // copy data
-        if (rhs._size > 0)
+        if (this != &rhs)
         {
-            // reserve memory
-            if (_capacity < rhs._size)
-            {
-                realloc(rhs._size);
-            }
+            // clean up self
+            clear();
+
+            // copy allocator
+            Allocator::operator=(rhs);
 
             // copy data
-            memory::copy(_data, rhs._data, rhs._size);
-            _size = rhs._size;
+            if (rhs._size > 0)
+            {
+                // reserve memory
+                if (_capacity < rhs._size)
+                {
+                    realloc(rhs._size);
+                }
+
+                // copy data
+                memory::copy(_data, rhs._data, rhs._size);
+                _size = rhs._size;
+            }
         }
     }
     inline void operator=(ArrayMemory&& rhs) noexcept
     {
-        SKR_ASSERT(this != &rhs && "before call operator=, you must check this != &rhs");
-        SKR_ASSERT(_size == 0 && "before move memory, you must clean up the memory first");
+        if (this != &rhs)
+        {
+            // clean up self
+            clear();
 
-        // free
-        free();
+            // free
+            free();
 
-        // move allocator
-        Allocator::operator=(std::move(rhs));
+            // move allocator
+            Allocator::operator=(std::move(rhs));
 
-        // move data
-        _data         = rhs._data;
-        _size         = rhs._size;
-        _capacity     = rhs._capacity;
-        rhs._data     = nullptr;
-        rhs._size     = 0;
-        rhs._capacity = 0;
+            // move data
+            _data         = rhs._data;
+            _size         = rhs._size;
+            _capacity     = rhs._capacity;
+            rhs._data     = nullptr;
+            rhs._size     = 0;
+            rhs._capacity = 0;
+        }
     }
 
     // memory operations
@@ -165,6 +172,14 @@ struct ArrayMemory : public Allocator {
             }
         }
     }
+    inline void clear() noexcept
+    {
+        if (_size)
+        {
+            memory::destruct(_data, _size);
+            _size = 0;
+        }
+    }
 
     // getter
     inline T*       data() noexcept { return _data; }
@@ -190,6 +205,7 @@ struct FixedArrayMemory {
     static_assert(kCount > 0, "FixedArrayMemory must have a capacity larger than 0");
     struct DummyParam {
     };
+    using DataType           = T;
     using SizeType           = TS;
     using AllocatorCtorParam = DummyParam;
 
@@ -225,28 +241,34 @@ struct FixedArrayMemory {
     // assign & move assign
     inline void operator=(const FixedArrayMemory& rhs) noexcept
     {
-        SKR_ASSERT(this != &rhs && "before call operator=, you must check this != &rhs");
-        SKR_ASSERT(_size == 0 && "before copy memory, you must clean up the memory first");
-
-        // copy data
-        if (rhs._size > 0)
+        if (this != &rhs)
         {
-            memory::copy(data(), rhs.data(), rhs._size);
-            _size = rhs._size;
+            // clean up self
+            clear();
+
+            // copy data
+            if (rhs._size > 0)
+            {
+                memory::copy(data(), rhs.data(), rhs._size);
+                _size = rhs._size;
+            }
         }
     }
     inline void operator=(FixedArrayMemory&& rhs) noexcept
     {
-        SKR_ASSERT(this != &rhs && "before call operator=, you must check this != &rhs");
-        SKR_ASSERT(_size == 0 && "before move memory, you must clean up the memory first");
-
-        // move data
-        if (rhs._size > 0)
+        if (this != &rhs)
         {
-            memory::move(data(), rhs.data(), rhs._size);
-            _size = rhs._size;
+            // clean up self
+            clear();
 
-            rhs._size = 0;
+            // move data
+            if (rhs._size > 0)
+            {
+                memory::move(data(), rhs.data(), rhs._size);
+                _size = rhs._size;
+
+                rhs._size = 0;
+            }
         }
     }
 
@@ -274,6 +296,14 @@ struct FixedArrayMemory {
     inline void shrink() noexcept
     {
         // do noting
+    }
+    inline void clear() noexcept
+    {
+        if (_size)
+        {
+            memory::destruct(data(), _size);
+            _size = 0;
+        }
     }
 
     // getter

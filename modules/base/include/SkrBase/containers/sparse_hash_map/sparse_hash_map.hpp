@@ -8,38 +8,38 @@
 // TODO. remove/find/contain/count value
 namespace skr::container
 {
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc> {
-    using Base = SparseHashSet<KVPair<K, V>, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>;
+template <typename Memory>
+struct SparseHashMap : protected SparseHashSet<Memory> {
+    using Super = SparseHashSet<Memory>;
 
-    // basic
-    using SizeType     = typename Alloc::SizeType;
-    using DataType     = KVPair<K, V>;
-    using BaseDataType = typename Base::DataType;
-    using DataArr      = typename Base::DataArr;
+    // configure
+    using typename Memory::KeyType;
+    using typename Memory::ValueType;
+    using SizeType = typename Memory::SizeType;
+    using typename Memory::AllocatorCtorParam;
+    using SparseHashMapStorageType = KVPair<KeyType, ValueType>;
+    using DataArr                  = typename Super::DataArr;
 
     // from base
-    using HashType      = typename Base::HashType;
-    using KeyType       = typename Base::KeyType;
-    using keyMapperType = typename Base::keyMapperType;
-    using HasherType    = typename Base::HasherType;
-    using ComparerType  = typename Base::ComparerType;
+    using HashType     = typename Super::HashType;
+    using HasherType   = typename Super::HasherType;
+    using ComparerType = typename Super::ComparerType;
 
     // data ref & iterator
-    using DataRef  = typename Base::DataRef;
-    using CDataRef = typename Base::CDataRef;
-    using It       = typename Base::It;
-    using CIt      = typename Base::CIt;
+    using DataRef  = typename Super::DataRef;
+    using CDataRef = typename Super::CDataRef;
+    using It       = typename Super::It;
+    using CIt      = typename Super::CIt;
 
     // ctor & dtor
-    SparseHashMap(Alloc alloc = {});
-    SparseHashMap(SizeType reserve_size, Alloc alloc = {});
-    SparseHashMap(const DataType* p, SizeType n, Alloc alloc = {});
-    SparseHashMap(std::initializer_list<DataType> init_list, Alloc alloc = {});
+    SparseHashMap(AllocatorCtorParam param = {});
+    SparseHashMap(SizeType reserve_size, AllocatorCtorParam param = {});
+    SparseHashMap(const SparseHashMapStorageType* p, SizeType n, AllocatorCtorParam param = {});
+    SparseHashMap(std::initializer_list<SparseHashMapStorageType> init_list, AllocatorCtorParam param = {});
     ~SparseHashMap();
 
     // copy & move
-    SparseHashMap(const SparseHashMap& other, Alloc alloc = {});
+    SparseHashMap(const SparseHashMap& other, AllocatorCtorParam param = {});
     SparseHashMap(SparseHashMap&& other);
 
     // assign & move assign
@@ -59,10 +59,10 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, THash, THa
     bool           empty() const;
     DataArr&       data_arr();
     const DataArr& data_arr() const;
-    Base&          data_set();
-    const Base&    data_set() const;
-    Alloc&         allocator();
-    const Alloc&   allocator() const;
+    Super&         data_set();
+    const Super&   data_set() const;
+    Memory&        memory();
+    const Memory&  memory() const;
 
     // validate
     bool has_data(SizeType idx) const;
@@ -85,16 +85,16 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, THash, THa
     bool rehash_if_need() const;
 
     // add, move behavior may not happened here, just for easy to use
-    DataRef add(const K& key, const V& value);
-    DataRef add(const K& key, V&& value);
-    DataRef add(K&& key, const V& value);
-    DataRef add(K&& key, V&& value);
-    DataRef add_unsafe(const K& key);
-    DataRef add_unsafe(K&& key);
-    DataRef add_default(const K& key);
-    DataRef add_default(K&& key);
-    DataRef add_zeroed(const K& key);
-    DataRef add_zeroed(K&& key);
+    DataRef add(const KeyType& key, const ValueType& value);
+    DataRef add(const KeyType& key, ValueType&& value);
+    DataRef add(KeyType&& key, const ValueType& value);
+    DataRef add(KeyType&& key, ValueType&& value);
+    DataRef add_unsafe(const KeyType& key);
+    DataRef add_unsafe(KeyType&& key);
+    DataRef add_default(const KeyType& key);
+    DataRef add_default(KeyType&& key);
+    DataRef add_zeroed(const KeyType& key);
+    DataRef add_zeroed(KeyType&& key);
     template <typename Comparer, typename Constructor>
     DataRef add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor);
     template <typename Comparer>
@@ -102,25 +102,25 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, THash, THa
 
     // add or assign, try to use this api, instead of operator[]
     // move behavior or key may not happened here, just for easy to use
-    DataRef add_or_assign(const K& key, const V& value);
-    DataRef add_or_assign(const K& key, V&& value);
-    DataRef add_or_assign(K&& key, const V& value);
-    DataRef add_or_assign(K&& key, V&& value);
+    DataRef add_or_assign(const KeyType& key, const ValueType& value);
+    DataRef add_or_assign(const KeyType& key, ValueType&& value);
+    DataRef add_or_assign(KeyType&& key, const ValueType& value);
+    DataRef add_or_assign(KeyType&& key, ValueType&& value);
 
     // emplace
     template <typename... Args>
-    DataRef emplace(const K& key, Args&&... args);
+    DataRef emplace(const KeyType& key, Args&&... args);
     template <typename... Args>
-    DataRef emplace(K&& key, Args&&... args);
+    DataRef emplace(KeyType&& key, Args&&... args);
 
     // append
     void append(const SparseHashMap& set);
-    void append(std::initializer_list<DataType> init_list);
-    void append(const DataType* p, SizeType n);
+    void append(std::initializer_list<SparseHashMapStorageType> init_list);
+    void append(const SparseHashMapStorageType* p, SizeType n);
 
     // remove
-    DataRef  remove(const K& key);
-    SizeType remove_all(const K& key); // [multi map extend]
+    DataRef  remove(const KeyType& key);
+    SizeType remove_all(const KeyType& key); // [multi map extend]
     template <typename Comparer>
     DataRef remove_ex(HashType hash, Comparer&& comparer);
     template <typename Comparer>
@@ -131,25 +131,25 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, THash, THa
     void erase(const CIt& it);
 
     // find
-    DataRef  find(const K& key);
-    CDataRef find(const K& key) const;
+    DataRef  find(const KeyType& key);
+    CDataRef find(const KeyType& key) const;
     template <typename Comparer>
     DataRef find_ex(HashType hash, Comparer&& comparer);
     template <typename Comparer>
     CDataRef find_ex(HashType hash, Comparer&& comparer) const;
 
     // contain
-    bool     contain(const K& key) const;
-    SizeType count(const K& key) const; // [multi map extend]
+    bool     contain(const KeyType& key) const;
+    SizeType count(const KeyType& key) const; // [multi map extend]
     template <typename Comparer>
     bool contain_ex(HashType hash, Comparer&& comparer) const;
     template <typename Comparer>
     SizeType count_ex(HashType hash, Comparer&& comparer) const; // [multi map extend]
 
     // sort
-    template <typename TP = Less<K>>
+    template <typename TP = Less<KeyType>>
     void sort(TP&& p = {});
-    template <typename TP = Less<K>>
+    template <typename TP = Less<KeyType>>
     void sort_stable(TP&& p = {});
 
     // set ops
@@ -171,379 +171,379 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, THash, THa
 namespace skr::container
 {
 // ctor & dtor
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SparseHashMap(Alloc alloc)
-    : Base(std::move(alloc))
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory>::SparseHashMap(AllocatorCtorParam param)
+    : Super(std::move(param))
 {
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SparseHashMap(SizeType reserve_size, Alloc alloc)
-    : Base(reserve_size, std::move(alloc))
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory>::SparseHashMap(SizeType reserve_size, AllocatorCtorParam param)
+    : Super(reserve_size, std::move(param))
 {
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SparseHashMap(const DataType* p, SizeType n, Alloc alloc)
-    : Base(p, n, std::move(alloc))
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory>::SparseHashMap(const SparseHashMapStorageType* p, SizeType n, AllocatorCtorParam param)
+    : Super(p, n, std::move(param))
 {
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SparseHashMap(std::initializer_list<DataType> init_list, Alloc alloc)
-    : Base(init_list, std::move(alloc))
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory>::SparseHashMap(std::initializer_list<SparseHashMapStorageType> init_list, AllocatorCtorParam param)
+    : Super(init_list, std::move(param))
 {
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::~SparseHashMap()
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory>::~SparseHashMap()
 {
 }
 
 // copy & move
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SparseHashMap(const SparseHashMap& other, Alloc alloc)
-    : Base(other, std::move(alloc))
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory>::SparseHashMap(const SparseHashMap& other, AllocatorCtorParam param)
+    : Super(other, std::move(param))
 {
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SparseHashMap(SparseHashMap&& other)
-    : Base(std::move(other))
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory>::SparseHashMap(SparseHashMap&& other)
+    : Super(std::move(other))
 {
 }
 
 // assign & move assign
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>& SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::operator=(const SparseHashMap& rhs)
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory>& SparseHashMap<Memory>::operator=(const SparseHashMap& rhs)
 {
-    Base::operator=(rhs);
+    Super::operator=(rhs);
     return *this;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>& SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::operator=(SparseHashMap&& rhs)
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory>& SparseHashMap<Memory>::operator=(SparseHashMap&& rhs)
 {
-    Base::operator=(std::move(rhs));
+    Super::operator=(std::move(rhs));
     return *this;
 }
 
 // getter
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::size() const
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::size() const
 {
-    return Base::size();
+    return Super::size();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::capacity() const
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::capacity() const
 {
-    return Base::capacity();
+    return Super::capacity();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::slack() const
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::slack() const
 {
-    return Base::slack();
+    return Super::slack();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::sparse_size() const
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::sparse_size() const
 {
-    return Base::sparse_size();
+    return Super::sparse_size();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::hole_size() const
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::hole_size() const
 {
-    return Base::hole_size();
+    return Super::hole_size();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::bit_array_size() const
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::bit_array_size() const
 {
-    return Base::bit_array_size();
+    return Super::bit_array_size();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::free_list_head() const
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::free_list_head() const
 {
-    return Base::free_list_head();
+    return Super::free_list_head();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::bucket_size() const
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::bucket_size() const
 {
-    return Base::bucket_size();
+    return Super::bucket_size();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::is_compact() const
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::is_compact() const
 {
-    return Base::is_compact();
+    return Super::is_compact();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::empty() const
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::empty() const
 {
-    return Base::empty();
+    return Super::empty();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataArr& SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::data_arr()
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataArr& SparseHashMap<Memory>::data_arr()
 {
-    return Base::data_arr();
+    return Super::data_arr();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE const typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataArr& SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::data_arr() const
+template <typename Memory>
+SKR_INLINE const typename SparseHashMap<Memory>::DataArr& SparseHashMap<Memory>::data_arr() const
 {
-    return Base::data_arr();
+    return Super::data_arr();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::Base& SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::data_set()
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::Super& SparseHashMap<Memory>::data_set()
 {
     return (*this);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE const typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::Base& SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::data_set() const
+template <typename Memory>
+SKR_INLINE const typename SparseHashMap<Memory>::Super& SparseHashMap<Memory>::data_set() const
 {
     return (*this);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE Alloc& SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::allocator()
+template <typename Memory>
+SKR_INLINE Memory& SparseHashMap<Memory>::memory()
 {
-    return Base::allocator();
+    return *this;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE const Alloc& SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::allocator() const
+template <typename Memory>
+SKR_INLINE const Memory& SparseHashMap<Memory>::memory() const
 {
-    return Base::allocator();
+    return *this;
 }
 
 // validate
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::has_data(SizeType idx) const
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::has_data(SizeType idx) const
 {
-    return Base::has_data(idx);
+    return Super::has_data(idx);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::is_hole(SizeType idx) const
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::is_hole(SizeType idx) const
 {
-    return Base::is_hole(idx);
+    return Super::is_hole(idx);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::is_valid_index(SizeType idx) const
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::is_valid_index(SizeType idx) const
 {
-    return Base::is_valid_index(idx);
+    return Super::is_valid_index(idx);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::is_valid_pointer(const void* p) const
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::is_valid_pointer(const void* p) const
 {
-    return Base::is_valid_pointer(p);
+    return Super::is_valid_pointer(p);
 }
 
 // memory op
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::clear()
+template <typename Memory>
+SKR_INLINE void SparseHashMap<Memory>::clear()
 {
-    Base::clear();
+    Super::clear();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::release(SizeType capacity)
+template <typename Memory>
+SKR_INLINE void SparseHashMap<Memory>::release(SizeType capacity)
 {
-    Base::release(capacity);
+    Super::release(capacity);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::reserve(SizeType capacity)
+template <typename Memory>
+SKR_INLINE void SparseHashMap<Memory>::reserve(SizeType capacity)
 {
-    Base::reserve(capacity);
+    Super::reserve(capacity);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::shrink()
+template <typename Memory>
+SKR_INLINE void SparseHashMap<Memory>::shrink()
 {
-    Base::shrink();
+    Super::shrink();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::compact()
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::compact()
 {
-    return Base::compact();
+    return Super::compact();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::compact_stable()
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::compact_stable()
 {
-    return Base::compact_stable();
+    return Super::compact_stable();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::compact_top()
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::compact_top()
 {
-    return Base::compact_top();
+    return Super::compact_top();
 }
 
 // rehash
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::need_rehash() const
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::need_rehash() const
 {
-    return Base::need_rehash();
+    return Super::need_rehash();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::rehash() const
+template <typename Memory>
+SKR_INLINE void SparseHashMap<Memory>::rehash() const
 {
-    Base::rehash();
+    Super::rehash();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::rehash_if_need() const
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::rehash_if_need() const
 {
-    return Base::rehash_if_need();
+    return Super::rehash_if_need();
 }
 
 // add
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add(const K& key, const V& value)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(const KeyType& key, const ValueType& value)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(key);
-        new (&ref->value) V(value);
+        new (&ref->key) KeyType(key);
+        new (&ref->value) ValueType(value);
     }
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add(const K& key, V&& value)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(const KeyType& key, ValueType&& value)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(key);
-        new (&ref->value) V(std::move(value));
+        new (&ref->key) KeyType(key);
+        new (&ref->value) ValueType(std::move(value));
     }
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add(K&& key, const V& value)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(KeyType&& key, const ValueType& value)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(std::move(key));
-        new (&ref->value) V(value);
+        new (&ref->key) KeyType(std::move(key));
+        new (&ref->value) ValueType(value);
     }
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add(K&& key, V&& value)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(KeyType&& key, ValueType&& value)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(std::move(key));
-        new (&ref->value) V(std::move(value));
+        new (&ref->key) KeyType(std::move(key));
+        new (&ref->value) ValueType(std::move(value));
     }
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_unsafe(const K& key)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_unsafe(const KeyType& key)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(std::move(key));
+        new (&ref->key) KeyType(std::move(key));
     }
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_unsafe(K&& key)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_unsafe(KeyType&& key)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(std::move(key));
+        new (&ref->key) KeyType(std::move(key));
     }
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_default(const K& key)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_default(const KeyType& key)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(key);
-        new (&ref->value) V();
+        new (&ref->key) KeyType(key);
+        new (&ref->value) ValueType();
     }
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_default(K&& key)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_default(KeyType&& key)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(std::move(key));
-        new (&ref->value) V();
+        new (&ref->key) KeyType(std::move(key));
+        new (&ref->value) ValueType();
     }
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_zeroed(const K& key)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_zeroed(const KeyType& key)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(key);
-        memset(&ref->value, 0, sizeof(V));
+        new (&ref->key) KeyType(key);
+        memset(&ref->value, 0, sizeof(ValueType));
     }
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_zeroed(K&& key)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_zeroed(KeyType&& key)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(std::move(key));
-        memset(&ref->value, 0, sizeof(V));
+        new (&ref->key) KeyType(std::move(key));
+        memset(&ref->value, 0, sizeof(ValueType));
     }
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+template <typename Memory>
 template <typename Comparer, typename Constructor>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor)
 {
-    auto ref = Base::add_ex_unsafe(hash, std::forward<Comparer>(comparer));
+    auto ref = Super::add_ex_unsafe(hash, std::forward<Comparer>(comparer));
 
     if (!ref.already_exist)
     {
@@ -552,27 +552,27 @@ SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, Al
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+template <typename Memory>
 template <typename Comparer>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_ex_unsafe(HashType hash, Comparer&& comparer)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ex_unsafe(HashType hash, Comparer&& comparer)
 {
-    auto ref = Base::add_ex_unsafe(hash, std::forward<Comparer>(comparer));
+    auto ref = Super::add_ex_unsafe(hash, std::forward<Comparer>(comparer));
     return ref;
 }
 
 // add or assign, instead of operator[]
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_or_assign(const K& key, const V& value)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(const KeyType& key, const ValueType& value)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(key);
-        new (&ref->value) V(value);
+        new (&ref->key) KeyType(key);
+        new (&ref->value) ValueType(value);
     }
     else
     {
@@ -581,18 +581,18 @@ SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, Al
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_or_assign(const K& key, V&& value)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(const KeyType& key, ValueType&& value)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(key);
-        new (&ref->value) V(std::move(value));
+        new (&ref->key) KeyType(key);
+        new (&ref->value) ValueType(std::move(value));
     }
     else
     {
@@ -601,18 +601,18 @@ SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, Al
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_or_assign(K&& key, const V& value)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(KeyType&& key, const ValueType& value)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(std::move(key));
-        new (&ref->value) V(value);
+        new (&ref->key) KeyType(std::move(key));
+        new (&ref->value) ValueType(value);
     }
     else
     {
@@ -621,18 +621,18 @@ SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, Al
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::add_or_assign(K&& key, V&& value)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(KeyType&& key, ValueType&& value)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(std::move(key));
-        new (&ref->value) V(std::move(value));
+        new (&ref->key) KeyType(std::move(key));
+        new (&ref->value) ValueType(std::move(value));
     }
     else
     {
@@ -643,202 +643,202 @@ SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, Al
 }
 
 // emplace
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+template <typename Memory>
 template <typename... Args>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::emplace(const K& key, Args&&... args)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplace(const KeyType& key, Args&&... args)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(key);
-        new (&ref->value) V(std::forward<Args>(args)...);
+        new (&ref->key) KeyType(key);
+        new (&ref->value) ValueType(std::forward<Args>(args)...);
     }
 
     return ref;
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+template <typename Memory>
 template <typename... Args>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::emplace(K&& key, Args&&... args)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplace(KeyType&& key, Args&&... args)
 {
     HashType hash = HasherType()(key);
-    auto     ref  = Base::add_ex_unsafe(
+    auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const K& k) { return ComparerType()(k, key); });
+    [&key](const KeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) K(std::move(key));
-        new (&ref->value) V(std::forward<Args>(args)...);
+        new (&ref->key) KeyType(std::move(key));
+        new (&ref->value) ValueType(std::forward<Args>(args)...);
     }
 
     return ref;
 }
 
 // append
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::append(const SparseHashMap& set)
+template <typename Memory>
+SKR_INLINE void SparseHashMap<Memory>::append(const SparseHashMap& set)
 {
-    Base::append(set);
+    Super::append(set);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::append(std::initializer_list<DataType> init_list)
+template <typename Memory>
+SKR_INLINE void SparseHashMap<Memory>::append(std::initializer_list<SparseHashMapStorageType> init_list)
 {
-    Base::append(init_list);
+    Super::append(init_list);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::append(const DataType* p, SizeType n)
+template <typename Memory>
+SKR_INLINE void SparseHashMap<Memory>::append(const SparseHashMapStorageType* p, SizeType n)
 {
-    Base::append(p, n);
+    Super::append(p, n);
 }
 
 // remove
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::remove(const K& key)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::remove(const KeyType& key)
 {
-    return Base::remove(key);
+    return Super::remove(key);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::remove_all(const K& key)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::remove_all(const KeyType& key)
 {
-    return Base::remove_all(key);
+    return Super::remove_all(key);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+template <typename Memory>
 template <typename Comparer>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::remove_ex(HashType hash, Comparer&& comparer)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::remove_ex(HashType hash, Comparer&& comparer)
 {
-    return Base::remove_ex(hash, std::forward<Comparer>(comparer));
+    return Super::remove_ex(hash, std::forward<Comparer>(comparer));
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+template <typename Memory>
 template <typename Comparer>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::remove_all_ex(HashType hash, Comparer&& comparer)
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::remove_all_ex(HashType hash, Comparer&& comparer)
 {
-    return Base::remove_all_ex(hash, std::forward<Comparer>(comparer));
+    return Super::remove_all_ex(hash, std::forward<Comparer>(comparer));
 }
 
 // erase, needn't update iterator, erase directly is safe
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::erase(const It& it)
+template <typename Memory>
+SKR_INLINE void SparseHashMap<Memory>::erase(const It& it)
 {
-    Base::erase(it);
+    Super::erase(it);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::erase(const CIt& it)
+template <typename Memory>
+SKR_INLINE void SparseHashMap<Memory>::erase(const CIt& it)
 {
-    Base::erase(it);
+    Super::erase(it);
 }
 
 // find
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::find(const K& key)
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find(const KeyType& key)
 {
-    return Base::find(key);
+    return Super::find(key);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::CDataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::find(const K& key) const
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find(const KeyType& key) const
 {
-    return Base::find(key);
+    return Super::find(key);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+template <typename Memory>
 template <typename Comparer>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::find_ex(HashType hash, Comparer&& comparer)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_ex(HashType hash, Comparer&& comparer)
 {
-    return Base::find_ex(hash, std::forward<Comparer>(comparer));
+    return Super::find_ex(hash, std::forward<Comparer>(comparer));
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+template <typename Memory>
 template <typename Comparer>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::CDataRef SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::find_ex(HashType hash, Comparer&& comparer) const
+SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_ex(HashType hash, Comparer&& comparer) const
 {
-    return Base::find_ex(hash, std::forward<Comparer>(comparer));
+    return Super::find_ex(hash, std::forward<Comparer>(comparer));
 }
 
 // contain
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::contain(const K& key) const
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::contain(const KeyType& key) const
 {
-    return Base::contain(key);
+    return Super::contain(key);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::count(const K& key) const
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::count(const KeyType& key) const
 {
-    return Base::count(key);
+    return Super::count(key);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+template <typename Memory>
 template <typename Comparer>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::contain_ex(HashType hash, Comparer&& comparer) const
+SKR_INLINE bool SparseHashMap<Memory>::contain_ex(HashType hash, Comparer&& comparer) const
 {
-    return Base::contain_ex(hash, std::forward<Comparer>(comparer));
+    return Super::contain_ex(hash, std::forward<Comparer>(comparer));
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+template <typename Memory>
 template <typename Comparer>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::count_ex(HashType hash, Comparer&& comparer) const
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::count_ex(HashType hash, Comparer&& comparer) const
 {
-    return Base::count_ex(hash, std::forward<Comparer>(comparer));
+    return Super::count_ex(hash, std::forward<Comparer>(comparer));
 }
 
 // sort
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+template <typename Memory>
 template <typename TP>
-SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::sort(TP&& p)
+SKR_INLINE void SparseHashMap<Memory>::sort(TP&& p)
 {
-    Base::sort(std::forward<TP>(p));
+    Super::sort(std::forward<TP>(p));
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
+template <typename Memory>
 template <typename TP>
-SKR_INLINE void SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::sort_stable(TP&& p)
+SKR_INLINE void SparseHashMap<Memory>::sort_stable(TP&& p)
 {
-    Base::sort_stable(std::forward<TP>(p));
+    Super::sort_stable(std::forward<TP>(p));
 }
 
 // set ops
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc> SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::operator&(const SparseHashMap& rhs) const
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory> SparseHashMap<Memory>::operator&(const SparseHashMap& rhs) const
 {
-    return Base::operator&(rhs);
+    return Super::operator&(rhs);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc> SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::operator|(const SparseHashMap& rhs) const
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory> SparseHashMap<Memory>::operator|(const SparseHashMap& rhs) const
 {
-    return Base::operator|(rhs);
+    return Super::operator|(rhs);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc> SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::operator^(const SparseHashMap& rhs) const
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory> SparseHashMap<Memory>::operator^(const SparseHashMap& rhs) const
 {
-    return Base::operator^(rhs);
+    return Super::operator^(rhs);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc> SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::operator-(const SparseHashMap& rhs) const
+template <typename Memory>
+SKR_INLINE SparseHashMap<Memory> SparseHashMap<Memory>::operator-(const SparseHashMap& rhs) const
 {
-    return Base::operator-(rhs);
+    return Super::operator-(rhs);
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE bool SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::is_sub_set_of(const SparseHashMap& rhs) const
+template <typename Memory>
+SKR_INLINE bool SparseHashMap<Memory>::is_sub_set_of(const SparseHashMap& rhs) const
 {
-    return Base::is_sub_set_of(rhs);
+    return Super::is_sub_set_of(rhs);
 }
 
 // support foreach
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::It SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::begin()
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::It SparseHashMap<Memory>::begin()
 {
-    return Base::begin();
+    return Super::begin();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::It SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::end()
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::It SparseHashMap<Memory>::end()
 {
-    return Base::end();
+    return Super::end();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::CIt SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::begin() const
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::CIt SparseHashMap<Memory>::begin() const
 {
-    return Base::begin();
+    return Super::begin();
 }
-template <typename K, typename V, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename Alloc>
-SKR_INLINE typename SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::CIt SparseHashMap<K, V, TBitBlock, THash, THasher, TComparer, AllowMultiKey, Alloc>::end() const
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::CIt SparseHashMap<Memory>::end() const
 {
-    return Base::end();
+    return Super::end();
 }
 } // namespace skr::container

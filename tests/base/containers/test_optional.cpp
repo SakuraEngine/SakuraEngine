@@ -8,5 +8,5 @@ TEST_CASE("test optional")
 {
     using namespace skr;
     using namespace skr::container;
-    using TestArray = Array<Optional<uint32_t>, SkrTestAllocator>;
+    // using TestArray = Array<Optional<uint32_t>, SkrTestAllocator>;
 }
