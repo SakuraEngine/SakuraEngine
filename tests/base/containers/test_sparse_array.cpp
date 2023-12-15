@@ -421,9 +421,9 @@ TEST_CASE("test sparse array")
         a.remove_at(5);
         a.shrink();
         REQUIRE_EQ(a.size(), 4);
-        REQUIRE_EQ(a.sparse_size(), 6);
-        REQUIRE_EQ(a.hole_size(), 2);
-        REQUIRE_EQ(a.capacity(), 6);
+        REQUIRE_EQ(a.sparse_size(), 4);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_EQ(a.capacity(), 4);
         a.release();
 
         a.clear();
