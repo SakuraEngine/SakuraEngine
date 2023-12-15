@@ -96,13 +96,11 @@ namespace skr::container
 template <typename T, typename TBitBlock, typename TS, typename Allocator>
 struct SparseArrayMemory : public Allocator {
     // configure
-    using SizeType                        = TS;
-    using DataType                        = T;
-    using StorageType                     = SparseArrayData<T, SizeType>;
-    using BitBlockType                    = TBitBlock;
-    using AllocatorCtorParam              = typename Allocator::CtorParam;
-    using BitAlgo                         = algo::BitAlgo<TBitBlock>;
-    static inline constexpr SizeType npos = npos_of<SizeType>;
+    using SizeType           = TS;
+    using DataType           = T;
+    using StorageType        = SparseArrayData<T, SizeType>;
+    using BitBlockType       = TBitBlock;
+    using AllocatorCtorParam = typename Allocator::CtorParam;
 
     // ctor & dtor
     inline SparseArrayMemory(AllocatorCtorParam param) noexcept
@@ -369,6 +367,11 @@ struct SparseArrayMemory : public Allocator {
     inline void set_sparse_size(SizeType value) noexcept { _sparse_size = value; }
     inline void set_freelist_head(SizeType value) noexcept { _freelist_head = value; }
     inline void set_hole_size(SizeType value) noexcept { _hole_size = value; }
+
+private:
+    // algo
+    using BitAlgo                         = algo::BitAlgo<TBitBlock>;
+    static inline constexpr SizeType npos = npos_of<SizeType>;
 
 private:
     StorageType*  _data           = nullptr;
