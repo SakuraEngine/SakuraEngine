@@ -7,6 +7,7 @@
 #include "SkrBase/misc/debug.h"
 #include "SkrBase/containers/misc/placeholder.hpp"
 #include "SkrBase/containers/allocator/allocator.hpp"
+#include <algorithm>
 
 // helper function
 namespace skr::container

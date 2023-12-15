@@ -5,6 +5,7 @@
 #include "SkrBase/algo/bit_algo.hpp"
 #include "bit_ref.hpp"
 #include "bit_iterator.hpp"
+#include <algorithm>
 
 // BitArray def
 // TODO. 包装一个更安全的 SizeType 作为查找返回
