@@ -496,6 +496,15 @@ TEST_CASE("test sparse array")
         REQUIRE_EQ(a[5], 4);
         REQUIRE_EQ(a[6], 100);
 
+        for (int32_t i = 0; i < 114514; ++i)
+        {
+            a.add(i);
+        }
+        for (int32_t i = 0; i < 114514; ++i)
+        {
+            REQUIRE_EQ(a[i + 7], i);
+        }
+
         a.remove_at(1);
         a.add_zeroed();
         REQUIRE_EQ(a[0], 1);
