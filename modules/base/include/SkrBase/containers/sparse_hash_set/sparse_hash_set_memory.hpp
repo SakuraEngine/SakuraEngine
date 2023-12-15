@@ -93,6 +93,9 @@ struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, T
         {
             Super::operator=(rhs);
 
+            // clean up bucket
+            clean_bucket();
+
             // copy bucket
             if (rhs._bucket_size)
             {
@@ -154,6 +157,16 @@ struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, T
             _bucket_mask = 0;
         }
     }
+    inline void clean_bucket() noexcept
+    {
+        if (_bucket)
+        {
+            for (SizeType i = 0; i < _bucket_size; ++i)
+            {
+                _bucket[i] = npos;
+            }
+        }
+    }
     inline SizeType bucket_index(SizeType hash) const noexcept
     {
         return hash & _bucket_mask;
@@ -166,9 +179,10 @@ struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, T
     // getter
     inline const SizeType* bucket() const noexcept { return _bucket; }
     inline SizeType*       bucket() noexcept { return _bucket; }
-    inline SizeType        bucket_size() const noexcept { return _bucket_size; }
 
 private:
+    static inline constexpr SizeType npos = npos_of<SizeType>;
+
     inline void _realloc_bucket(SizeType capacity)
     {
         SKR_ASSERT(pop_count(capacity) == 1 && "capacity must be power of 2");

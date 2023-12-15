@@ -66,7 +66,6 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
     SizeType       hole_size() const;
     SizeType       bit_array_size() const;
     SizeType       free_list_head() const;
-    SizeType       bucket_size() const;
     bool           is_compact() const;
     bool           empty() const;
     DataArr&       data_arr();
@@ -269,11 +268,6 @@ template <typename Memory>
 SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::free_list_head() const
 {
     return Super::free_list_head();
-}
-template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::bucket_size() const
-{
-    return Super::bucket_size();
 }
 template <typename Memory>
 SKR_INLINE bool SparseHashMap<Memory>::is_compact() const
