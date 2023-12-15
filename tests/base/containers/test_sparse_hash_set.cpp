@@ -406,20 +406,28 @@ TEST_CASE("test sparse hash set (Single)")
             b.add(i);
         }
 
-        for (auto it = a.begin(); it != a.end(); ++it)
+        for (auto it = a.begin(); it != a.end();)
         {
             if (*it % 3 == 0)
             {
-                a.erase(it);
+                it = a.erase(it);
+            }
+            else
+            {
+                ++it;
             }
         }
 
         const TestHashSet& cb = b;
-        for (auto it = cb.begin(); it != cb.end(); ++it)
+        for (auto it = cb.begin(); it != cb.end();)
         {
             if (*it % 3 == 0)
             {
-                b.erase(it);
+                it = b.erase(it);
+            }
+            else
+            {
+                ++it;
             }
         }
 

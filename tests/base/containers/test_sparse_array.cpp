@@ -762,11 +762,15 @@ TEST_CASE("test sparse array")
             b[i] = raw_data_group[i % 6];
         }
 
-        for (auto it = a.begin(); it != a.end(); ++it)
+        for (auto it = a.begin(); it != a.end();)
         {
             if (*it == 1)
             {
-                a.erase(it);
+                it = a.erase(it);
+            }
+            else
+            {
+                ++it;
             }
         }
 
@@ -782,11 +786,15 @@ TEST_CASE("test sparse array")
         }
 
         const TestSparseArray& cb = b;
-        for (auto it = cb.begin(); it != cb.end(); ++it)
+        for (auto it = cb.begin(); it != cb.end();)
         {
             if (*it == 1)
             {
-                b.erase(it);
+                it = b.erase(it);
+            }
+            else
+            {
+                ++it;
             }
         }
 
