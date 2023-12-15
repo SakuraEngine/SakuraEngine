@@ -93,9 +93,6 @@ struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, T
         {
             Super::operator=(rhs);
 
-            // clean up bucket
-            clean_bucket();
-
             // copy bucket
             if (rhs._bucket_size)
             {
