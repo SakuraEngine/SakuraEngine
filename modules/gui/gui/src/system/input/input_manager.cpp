@@ -164,7 +164,7 @@ void InputManager::_dispatch_enter_exit(HitTestResult* result, PointerMoveEvent*
 {
     for (auto& entry : result->path())
     {
-        if (!_last_hover_path.path().contain_if([&](const auto& other_entry) {
+        if (!_last_hover_path.path().contains_if([&](const auto& other_entry) {
                 return entry.target == other_entry.target;
             }))
         {
@@ -175,7 +175,7 @@ void InputManager::_dispatch_enter_exit(HitTestResult* result, PointerMoveEvent*
 
     for (auto& entry : _last_hover_path.path())
     {
-        if (!result->path().contain_if([&](const auto& other_entry) {
+        if (!result->path().contains_if([&](const auto& other_entry) {
                 return entry.target == other_entry.target;
             }))
         {

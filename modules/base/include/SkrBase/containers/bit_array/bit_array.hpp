@@ -80,8 +80,8 @@ struct BitArray final : protected Memory {
     DataRef find(bool v) const;
     DataRef find_last(bool v) const;
 
-    // contain
-    bool contain(bool v) const;
+    // contains
+    bool contains(bool v) const;
 
     // set range
     void set_range(SizeType start, SizeType n, bool v);
@@ -435,9 +435,9 @@ SKR_INLINE typename BitArray<Memory>::DataRef BitArray<Memory>::find_last(bool v
     return result == npos_of<SizeType> ? DataRef{} : DataRef{ _bit_ref_at(result), result };
 }
 
-// contain
+// contains
 template <typename Memory>
-SKR_INLINE bool BitArray<Memory>::contain(bool v) const { return find(v) != npos_of<SizeType>; }
+SKR_INLINE bool BitArray<Memory>::contains(bool v) const { return find(v) != npos_of<SizeType>; }
 
 // set range
 template <typename Memory>

@@ -184,7 +184,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                 {
                     auto&& render_model = models[i].vram_future.render_model;
                     const auto& cmds = render_model->primitive_commands;
-                    if (!push_constants.contain(render_model))
+                    if (!push_constants.contains(render_model))
                         push_constants.add(render_model, {});
                     push_constants.find(render_model)->value.resize(0);
 
@@ -192,7 +192,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                     const auto list = skr_live2d_model_get_sorted_drawable_list(model_resource);
                     if(!list) continue;
 
-                    if (!sorted_drawable_list.contain(render_model))
+                    if (!sorted_drawable_list.contains(render_model))
                         sorted_drawable_list.add(render_model, {});
                     auto drawable_list = sorted_drawable_list.find(render_model)->value = { list , render_model->index_buffer_views.size() };
                     push_constants.find(render_model)->value.resize(drawable_list.size());
@@ -280,7 +280,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                 {
                     auto&& render_model = models[i].vram_future.render_model;
                     auto&& model_resource = models[i].ram_future.model_resource;
-                    if (!mask_push_constants.contain(render_model))
+                    if (!mask_push_constants.contains(render_model))
                         mask_push_constants.add(render_model, {});
                     mask_push_constants.find(render_model)->value.resize(0);
 
@@ -331,7 +331,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                     {
                                         continue;
                                     }
-                                    if (!sorted_mask_drawable_lists.contain(render_model))
+                                    if (!sorted_mask_drawable_lists.contains(render_model))
                                         sorted_mask_drawable_lists.add(render_model, {});
                                     sorted_mask_drawable_lists.find(render_model)->value.emplace_back(clipDrawIndex);
                                     auto&& push_const = mask_push_constants.find(render_model)->value.emplace_back();
@@ -500,7 +500,7 @@ protected:
         SkrZoneScopedN("Live2D::updateModelMotion");
 
         const auto model_resource = render_model->model_resource_id;
-        if (!motion_timers.contain(render_model))
+        if (!motion_timers.contains(render_model))
             motion_timers.add(render_model, {});
         last_ms = skr_timer_get_msec(&motion_timers.find(render_model)->value, true);
         static float delta_sum = 0.f;

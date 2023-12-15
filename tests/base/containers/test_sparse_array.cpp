@@ -816,18 +816,18 @@ TEST_CASE("test sparse array")
 
     // [test in remove] find if
 
-    SUBCASE("contain")
+    SUBCASE("contains")
     {
         TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
 
-        REQUIRE(a.contain(5));
+        REQUIRE(a.contains(5));
         a.remove_all(5);
-        REQUIRE_FALSE(a.contain(5));
+        REQUIRE_FALSE(a.contains(5));
 
         auto cond = [](const u32& a) { return a < 4; };
-        REQUIRE(a.contain_if(cond));
+        REQUIRE(a.contains_if(cond));
         a.remove_all_if(cond);
-        REQUIRE_FALSE(a.contain_if(cond));
+        REQUIRE_FALSE(a.contains_if(cond));
     }
 
     SUBCASE("sort")
