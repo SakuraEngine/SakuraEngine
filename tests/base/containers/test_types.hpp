@@ -7,6 +7,8 @@
 #include "SkrBase/containers/sparse_array/sparse_array_memory.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_memory.hpp"
+#include "SkrBase/containers/bit_array/bit_array.hpp"
+#include "SkrBase/containers/bit_array/bit_array_memory.hpp"
 
 #include "SkrBase/misc/hash.hpp"
 #include "skr_test_allocator.hpp"
@@ -57,6 +59,12 @@ TestHashType,
 Hash<K>,
 Equal<K>,
 false,
+TestSizeType,
+TestAllocatorType>>;
+
+template <typename TBitBlock>
+using BitArray = container::BitArray<container::BitArrayMemory<
+TBitBlock,
 TestSizeType,
 TestAllocatorType>>;
 

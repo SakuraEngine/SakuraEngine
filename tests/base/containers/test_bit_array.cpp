@@ -1,13 +1,11 @@
 #include "SkrTestFramework/framework.hpp"
 
-#include "SkrBase/containers/bit_array/bit_array.hpp"
-#include "skr_test_allocator.hpp"
+#include "test_types.hpp"
 
 TEST_CASE("test bit array")
 {
     using namespace skr;
-    using namespace skr::container;
-    using BitArray = BitArray<uint64_t, SkrTestAllocator>;
+    using BitArray = BitArray<uint64_t>;
 
     SUBCASE("test ctor")
     {
