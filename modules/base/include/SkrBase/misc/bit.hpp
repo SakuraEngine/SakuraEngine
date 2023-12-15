@@ -7,7 +7,6 @@
     #include <bit>
 #endif
 
-// TODO. 使用 EASTL 的实现
 namespace skr
 {
 // countLZero & countRZero

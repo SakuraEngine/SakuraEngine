@@ -7,7 +7,10 @@ namespace skr
 {
 template <typename T, typename Alloc = SkrAllocator_New>
 using Vector = container::Array<container::ArrayMemory<T, uint64_t, Alloc>>;
-}
+
+template <typename T, uint64_t N>
+using FixedVector = container::Array<container::FixedArrayMemory<T, uint64_t, N>>;
+} // namespace skr
 
 // serde
 #include "SkrRT/serde/binary/serde.h"

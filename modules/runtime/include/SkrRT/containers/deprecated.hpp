@@ -24,7 +24,7 @@ using unique_ptr = eastl::unique_ptr<T>;
 
 using eastl::make_shared;
 using eastl::make_unique;
-}
+} // namespace skr
 
 // FIXED CONTAINERS
 namespace skr
@@ -40,7 +40,7 @@ using FixedMap = eastl::fixed_map<K, V, N>;
 
 template <typename CharT, size_t N>
 using FixedString = eastl::fixed_string<CharT, N>;
-}
+} // namespace skr
 // FIXED CONTAINERS
 
 // BITSET
@@ -77,6 +77,6 @@ struct ReadTrait<skr::bitset<N, WordType>> {
         return 0;
     }
 };
-}
-}
-// BITSET
+} // namespace binary
+} // namespace skr
+  // BITSET
