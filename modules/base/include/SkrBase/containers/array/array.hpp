@@ -180,11 +180,11 @@ struct Array : protected Memory {
     template <typename TP>
     CDataRef find_last_if(TP&& p) const;
 
-    // contain
+    // contains
     template <typename TK>
-    bool contain(const TK& v) const;
+    bool contains(const TK& v) const;
     template <typename TP>
-    bool contain_if(TP&& p) const;
+    bool contains_if(TP&& p) const;
 
     // sort
     template <typename TP = Less<DataType>>
@@ -1080,13 +1080,13 @@ SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last_if(TP&& p) 
     return { ref.data, ref.index };
 }
 
-// contain
+// contains
 template <typename Memory>
 template <typename TK>
-SKR_INLINE bool Array<Memory>::contain(const TK& v) const { return (bool)find(v); }
+SKR_INLINE bool Array<Memory>::contains(const TK& v) const { return (bool)find(v); }
 template <typename Memory>
 template <typename TP>
-SKR_INLINE bool Array<Memory>::contain_if(TP&& p) const
+SKR_INLINE bool Array<Memory>::contains_if(TP&& p) const
 {
     return (bool)find_if(std::forward<TP>(p));
 }

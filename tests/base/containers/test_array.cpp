@@ -645,7 +645,7 @@ TEST_CASE("test array")
                 ++it;
             }
         }
-        REQUIRE(!a.contain(5));
+        REQUIRE(!a.contains(5));
 
         const TestArray& cb = b;
         for (auto it = cb.begin(); it != cb.end();)
@@ -676,7 +676,7 @@ TEST_CASE("test array")
                 ++it;
             }
         }
-        REQUIRE(!b.contain(5));
+        REQUIRE(!b.contains(5));
     }
 
     // [needn't test] modify
@@ -697,7 +697,7 @@ TEST_CASE("test array")
 
     // [test in find] find if
 
-    // [test in find] contain
+    // [test in find] contains
 
     SUBCASE("sort")
     {
@@ -1412,7 +1412,7 @@ TEST_CASE("test fixed array")
                 ++it;
             }
         }
-        REQUIRE(!a.contain(5));
+        REQUIRE(!a.contains(5));
 
         const TestArray& cb = b;
         for (auto it = cb.begin(); it != cb.end();)
@@ -1443,7 +1443,7 @@ TEST_CASE("test fixed array")
                 ++it;
             }
         }
-        REQUIRE(!b.contain(5));
+        REQUIRE(!b.contains(5));
     }
 
     // [needn't test] modify
@@ -1464,7 +1464,7 @@ TEST_CASE("test fixed array")
 
     // [test in find] find if
 
-    // [test in find] contain
+    // [test in find] contains
 
     SUBCASE("sort")
     {

@@ -8,7 +8,7 @@
 
 // SparseHashSet def
 // set 在 add/emplace 时候从不覆盖既存元素，主要是 key 是元素的某个 Field 的情况比较少见，出现这种情况时，覆盖行为也需要用户自己关注，不应该 by default
-// 除了 add 需要完整的元素方便添加操作外，其余的操作（find/remove/contain/count）均使用 key 进行操作以便在不构造完整元素的前提下进行查询
+// 除了 add 需要完整的元素方便添加操作外，其余的操作（find/remove/contains/count）均使用 key 进行操作以便在不构造完整元素的前提下进行查询
 // xxx_as 是异构查询的便利函数，用于一些构造开销巨大的对象（比如使用字面量查询 string），更复杂的异构查找需要使用 xxx_ex，异构查找需要保证 hash 的求值方式一致
 // add_ex_unsafe 是一个非常底层的 add 操作，它不会做任何构造行为，如果没有既存的查询元素，它会在申请空间后直接返回，在这种情况下，需要用户自行进行初始化和 add to bucket
 // TODO. bucket 与碰撞统计，以及更好的 bucket 分配策略
@@ -151,11 +151,11 @@ struct SparseHashSet : protected SparseArray<Memory> {
     template <typename Comparer>
     CDataRef find_ex(HashType hash, Comparer&& comparer) const;
 
-    // contain
-    bool     contain(const KeyType& key) const;
+    // contains
+    bool     contains(const KeyType& key) const;
     SizeType count(const KeyType& key) const; // [multi set extend]
     template <typename Comparer>
-    bool contain_ex(HashType hash, Comparer&& comparer) const;
+    bool contains_ex(HashType hash, Comparer&& comparer) const;
     template <typename Comparer>
     SizeType count_ex(HashType hash, Comparer&& comparer) const; // [multi set extend]
 
@@ -901,9 +901,9 @@ SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find_
     return { info.data, info.index };
 }
 
-// contain
+// contains
 template <typename Memory>
-SKR_INLINE bool SparseHashSet<Memory>::contain(const KeyType& key) const
+SKR_INLINE bool SparseHashSet<Memory>::contains(const KeyType& key) const
 {
     return (bool)find(key);
 }
@@ -915,7 +915,7 @@ SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::count
 }
 template <typename Memory>
 template <typename Comparer>
-SKR_INLINE bool SparseHashSet<Memory>::contain_ex(HashType hash, Comparer&& comparer) const
+SKR_INLINE bool SparseHashSet<Memory>::contains_ex(HashType hash, Comparer&& comparer) const
 {
     return (bool)find_ex(hash, std::forward<Comparer>(comparer));
 }
@@ -971,7 +971,7 @@ SKR_INLINE SparseHashSet<Memory> SparseHashSet<Memory>::operator&(const SparseHa
 
     for (const auto& v : a)
     {
-        if (b.contain(key_of(v)))
+        if (b.contains(key_of(v)))
         {
             result.add(v);
         }
@@ -996,7 +996,7 @@ SKR_INLINE SparseHashSet<Memory> SparseHashSet<Memory>::operator^(const SparseHa
 
     for (const auto& v : *this)
     {
-        if (!rhs.contain(key_of(v)))
+        if (!rhs.contains(key_of(v)))
         {
             result.add(v);
         }
@@ -1004,7 +1004,7 @@ SKR_INLINE SparseHashSet<Memory> SparseHashSet<Memory>::operator^(const SparseHa
 
     for (const auto& v : rhs)
     {
-        if (!contain(v))
+        if (!contains(v))
         {
             result.add(v);
         }
@@ -1019,7 +1019,7 @@ SKR_INLINE SparseHashSet<Memory> SparseHashSet<Memory>::operator-(const SparseHa
 
     for (const auto& v : *this)
     {
-        if (!rhs.contain(key_of(v)))
+        if (!rhs.contains(key_of(v)))
         {
             result.add(v);
         }
@@ -1034,7 +1034,7 @@ SKR_INLINE bool SparseHashSet<Memory>::is_sub_set_of(const SparseHashSet& rhs) c
     {
         for (const auto& v : *this)
         {
-            if (!rhs.contain(key_of(v)))
+            if (!rhs.contains(key_of(v)))
             {
                 return false;
             }

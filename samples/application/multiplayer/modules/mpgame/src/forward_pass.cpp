@@ -293,7 +293,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                 }
 
                 CGPURootSignatureId dcRS = dc.pipeline->root_signature;
-                if (!bind_tables.contain(dcRS))
+                if (!bind_tables.contains(dcRS))
                 {
                     bind_tables.add(dcRS, pass_context.create_and_update_bind_table(dc.pipeline->root_signature));
                 }

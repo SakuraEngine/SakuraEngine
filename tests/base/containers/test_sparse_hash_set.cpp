@@ -31,9 +31,9 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(c.sparse_size(), 3);
         REQUIRE_EQ(c.hole_size(), 0);
         REQUIRE_GE(c.capacity(), 3);
-        REQUIRE(c.contain(1));
-        REQUIRE(c.contain(4));
-        REQUIRE(c.contain(5));
+        REQUIRE(c.contains(1));
+        REQUIRE(c.contains(4));
+        REQUIRE(c.contains(5));
 
         int32_t     data[] = { 1, 1, 4, 5, 1, 4 };
         TestHashSet d(data, 6);
@@ -41,9 +41,9 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(c.sparse_size(), 3);
         REQUIRE_EQ(c.hole_size(), 0);
         REQUIRE_GE(c.capacity(), 3);
-        REQUIRE(c.contain(1));
-        REQUIRE(c.contain(4));
-        REQUIRE(c.contain(5));
+        REQUIRE(c.contains(1));
+        REQUIRE(c.contains(4));
+        REQUIRE(c.contains(5));
     }
 
     SUBCASE("copy & move")
@@ -53,18 +53,18 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 3);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 3);
-        REQUIRE(a.contain(1));
-        REQUIRE(a.contain(4));
-        REQUIRE(a.contain(5));
+        REQUIRE(a.contains(1));
+        REQUIRE(a.contains(4));
+        REQUIRE(a.contains(5));
 
         TestHashSet b(a);
         REQUIRE_EQ(b.size(), 3);
         REQUIRE_EQ(b.sparse_size(), 3);
         REQUIRE_EQ(b.hole_size(), 0);
         REQUIRE_GE(b.capacity(), 3);
-        REQUIRE(b.contain(1));
-        REQUIRE(b.contain(4));
-        REQUIRE(b.contain(5));
+        REQUIRE(b.contains(1));
+        REQUIRE(b.contains(4));
+        REQUIRE(b.contains(5));
 
         auto        old_capacity = a.capacity();
         TestHashSet c(std::move(a));
@@ -77,9 +77,9 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(c.sparse_size(), 3);
         REQUIRE_EQ(c.hole_size(), 0);
         REQUIRE_EQ(c.capacity(), old_capacity);
-        REQUIRE(c.contain(1));
-        REQUIRE(c.contain(4));
-        REQUIRE(c.contain(5));
+        REQUIRE(c.contains(1));
+        REQUIRE(c.contains(4));
+        REQUIRE(c.contains(5));
     }
 
     SUBCASE("assign & move assign")
@@ -93,10 +93,10 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(b.sparse_size(), 3);
         REQUIRE_EQ(b.hole_size(), 0);
         REQUIRE_GE(b.capacity(), 3);
-        REQUIRE(b.contain(1));
-        REQUIRE(b.contain(4));
-        REQUIRE(b.contain(5));
-        REQUIRE_FALSE(b.contain(114514));
+        REQUIRE(b.contains(1));
+        REQUIRE(b.contains(4));
+        REQUIRE(b.contains(5));
+        REQUIRE_FALSE(b.contains(114514));
 
         auto old_capacity = a.capacity();
         c                 = std::move(a);
@@ -109,11 +109,11 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(c.sparse_size(), 3);
         REQUIRE_EQ(c.hole_size(), 0);
         REQUIRE_EQ(c.capacity(), old_capacity);
-        REQUIRE(c.contain(1));
-        REQUIRE(c.contain(4));
-        REQUIRE(c.contain(5));
-        REQUIRE_FALSE(c.contain(114514));
-        REQUIRE_FALSE(a.contain(1));
+        REQUIRE(c.contains(1));
+        REQUIRE(c.contains(4));
+        REQUIRE(c.contains(5));
+        REQUIRE_FALSE(c.contains(114514));
+        REQUIRE_FALSE(a.contains(1));
     }
 
     SUBCASE("compare")
@@ -204,10 +204,10 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 6);
-        REQUIRE(a.contain(11));
-        REQUIRE(a.contain(114));
-        REQUIRE(a.contain(1145));
-        REQUIRE(a.contain(114514));
+        REQUIRE(a.contains(11));
+        REQUIRE(a.contains(114));
+        REQUIRE(a.contains(1145));
+        REQUIRE(a.contains(114514));
 
         a.clear();
         a.append({ 1, 11, 114, 1145, 11451, 114514 });
@@ -218,10 +218,10 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 6);
-        REQUIRE(a.contain(1));
-        REQUIRE(a.contain(1145));
-        REQUIRE(a.contain(11451));
-        REQUIRE(a.contain(114514));
+        REQUIRE(a.contains(1));
+        REQUIRE(a.contains(1145));
+        REQUIRE(a.contains(11451));
+        REQUIRE(a.contains(114514));
     }
 
     // [needn't test] data op
@@ -237,10 +237,10 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 4);
-        REQUIRE(a.contain(1));
-        REQUIRE(a.contain(4));
-        REQUIRE(a.contain(5));
-        REQUIRE(a.contain(10));
+        REQUIRE(a.contains(1));
+        REQUIRE(a.contains(4));
+        REQUIRE(a.contains(5));
+        REQUIRE(a.contains(10));
 
         a.add_ex(
         Hash<ValueType>()(100),
@@ -250,11 +250,11 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 5);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 5);
-        REQUIRE(a.contain(1));
-        REQUIRE(a.contain(4));
-        REQUIRE(a.contain(5));
-        REQUIRE(a.contain(10));
-        REQUIRE(a.contain(100));
+        REQUIRE(a.contains(1));
+        REQUIRE(a.contains(4));
+        REQUIRE(a.contains(5));
+        REQUIRE(a.contains(10));
+        REQUIRE(a.contains(100));
 
         auto ref = a.add_ex_unsafe(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; });
         new (ref.data) ValueType(114514);
@@ -262,11 +262,11 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 6);
-        REQUIRE(a.contain(1));
-        REQUIRE(a.contain(4));
-        REQUIRE(a.contain(5));
-        REQUIRE(a.contain(10));
-        REQUIRE(a.contain(100));
+        REQUIRE(a.contains(1));
+        REQUIRE(a.contains(4));
+        REQUIRE(a.contains(5));
+        REQUIRE(a.contains(10));
+        REQUIRE(a.contains(100));
     }
 
     SUBCASE("add or assign")
@@ -279,10 +279,10 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 4);
-        REQUIRE(a.contain(1));
-        REQUIRE(a.contain(4));
-        REQUIRE(a.contain(5));
-        REQUIRE(a.contain(10));
+        REQUIRE(a.contains(1));
+        REQUIRE(a.contains(4));
+        REQUIRE(a.contains(5));
+        REQUIRE(a.contains(10));
 
         using container::KVPair;
         using TestAddOrAssignValue = KVPair<ValueType, ValueType>;
@@ -304,10 +304,10 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(b.sparse_size(), 4);
         REQUIRE_EQ(b.hole_size(), 0);
         REQUIRE_GE(b.capacity(), 4);
-        REQUIRE(b.contain(1));
-        REQUIRE(b.contain(4));
-        REQUIRE(b.contain(5));
-        REQUIRE(b.contain(10));
+        REQUIRE(b.contains(1));
+        REQUIRE(b.contains(4));
+        REQUIRE(b.contains(5));
+        REQUIRE(b.contains(10));
         REQUIRE_EQ(b.find(1)->value, 2);
         REQUIRE_EQ(b.find(4)->value, 5);
         REQUIRE_EQ(b.find(5)->value, 6);
@@ -326,10 +326,10 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 4);
-        REQUIRE(a.contain(1));
-        REQUIRE(a.contain(4));
-        REQUIRE(a.contain(5));
-        REQUIRE(a.contain(10));
+        REQUIRE(a.contains(1));
+        REQUIRE(a.contains(4));
+        REQUIRE(a.contains(5));
+        REQUIRE(a.contains(10));
 
         a.emplace_ex(
         Hash<ValueType>()(100),
@@ -339,11 +339,11 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 5);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 5);
-        REQUIRE(a.contain(1));
-        REQUIRE(a.contain(4));
-        REQUIRE(a.contain(5));
-        REQUIRE(a.contain(10));
-        REQUIRE(a.contain(100));
+        REQUIRE(a.contains(1));
+        REQUIRE(a.contains(4));
+        REQUIRE(a.contains(5));
+        REQUIRE(a.contains(10));
+        REQUIRE(a.contains(100));
     }
 
     SUBCASE("append")
@@ -355,12 +355,12 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), 6);
-        REQUIRE(a.contain(1));
-        REQUIRE(a.contain(4));
-        REQUIRE(a.contain(5));
-        REQUIRE(a.contain(114));
-        REQUIRE(a.contain(514));
-        REQUIRE(a.contain(114514));
+        REQUIRE(a.contains(1));
+        REQUIRE(a.contains(4));
+        REQUIRE(a.contains(5));
+        REQUIRE(a.contains(114));
+        REQUIRE(a.contains(514));
+        REQUIRE(a.contains(114514));
 
         TestHashSet b;
         b.append(a);
@@ -368,12 +368,12 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(b.sparse_size(), 6);
         REQUIRE_EQ(b.hole_size(), 0);
         REQUIRE_GE(b.capacity(), 6);
-        REQUIRE(b.contain(1));
-        REQUIRE(b.contain(4));
-        REQUIRE(b.contain(5));
-        REQUIRE(b.contain(114));
-        REQUIRE(b.contain(514));
-        REQUIRE(b.contain(114514));
+        REQUIRE(b.contains(1));
+        REQUIRE(b.contains(4));
+        REQUIRE(b.contains(5));
+        REQUIRE(b.contains(114));
+        REQUIRE(b.contains(514));
+        REQUIRE(b.contains(114514));
     }
 
     SUBCASE("remove")
@@ -385,16 +385,16 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_LE(a.sparse_size(), 3);
         REQUIRE_LE(a.hole_size(), 2);
         REQUIRE_GE(a.capacity(), 3);
-        REQUIRE(a.contain(5));
-        REQUIRE_FALSE(a.contain(1));
-        REQUIRE_FALSE(a.contain(4));
+        REQUIRE(a.contains(5));
+        REQUIRE_FALSE(a.contains(1));
+        REQUIRE_FALSE(a.contains(4));
 
         a.append({ 114514, 114514, 114, 514 });
         a.remove_ex(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; });
-        REQUIRE(a.contain(5));
-        REQUIRE(a.contain(114));
-        REQUIRE(a.contain(514));
-        REQUIRE_FALSE(a.contain(114514));
+        REQUIRE(a.contains(5));
+        REQUIRE(a.contains(114));
+        REQUIRE(a.contains(514));
+        REQUIRE_FALSE(a.contains(114514));
     }
 
     SUBCASE("erase")
@@ -435,13 +435,13 @@ TEST_CASE("test sparse hash set (Single)")
         {
             if (i % 3 == 0)
             {
-                REQUIRE_FALSE(a.contain(i));
-                REQUIRE_FALSE(b.contain(i));
+                REQUIRE_FALSE(a.contains(i));
+                REQUIRE_FALSE(b.contains(i));
             }
             else
             {
-                REQUIRE(a.contain(i));
-                REQUIRE(b.contain(i));
+                REQUIRE(a.contains(i));
+                REQUIRE(b.contains(i));
             }
         }
     }
@@ -461,17 +461,17 @@ TEST_CASE("test sparse hash set (Single)")
         }
     }
 
-    SUBCASE("contain")
+    SUBCASE("contains")
     {
         TestHashSet a({ 1, 1, 4, 5, 1, 4 });
-        REQUIRE(a.contain(1));
-        REQUIRE(a.contain(4));
-        REQUIRE(a.contain(5));
-        REQUIRE_FALSE(a.contain(114514));
-        REQUIRE(a.contain_ex(Hash<ValueType>()(1), [](const ValueType& key) { return key == 1; }));
-        REQUIRE(a.contain_ex(Hash<ValueType>()(4), [](const ValueType& key) { return key == 4; }));
-        REQUIRE(a.contain_ex(Hash<ValueType>()(5), [](const ValueType& key) { return key == 5; }));
-        REQUIRE_FALSE(a.contain_ex(Hash<ValueType>()(114514), [](const ValueType& key) { return key == 114514; }));
+        REQUIRE(a.contains(1));
+        REQUIRE(a.contains(4));
+        REQUIRE(a.contains(5));
+        REQUIRE_FALSE(a.contains(114514));
+        REQUIRE(a.contains_ex(Hash<ValueType>()(1), [](const ValueType& key) { return key == 1; }));
+        REQUIRE(a.contains_ex(Hash<ValueType>()(4), [](const ValueType& key) { return key == 4; }));
+        REQUIRE(a.contains_ex(Hash<ValueType>()(5), [](const ValueType& key) { return key == 5; }));
+        REQUIRE_FALSE(a.contains_ex(Hash<ValueType>()(114514), [](const ValueType& key) { return key == 114514; }));
     }
 
     SUBCASE("sort")
@@ -481,7 +481,7 @@ TEST_CASE("test sparse hash set (Single)")
         for (auto i = 0; i < 100; ++i)
         {
             auto k = rand() % 100;
-            while (a.contain(k))
+            while (a.contains(k))
             {
                 k = rand() % 100;
             }
@@ -494,7 +494,7 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE_EQ(a.capacity(), 100);
         for (auto i = 0; i < 100; ++i)
         {
-            REQUIRE(a.contain(i));
+            REQUIRE(a.contains(i));
             REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data, i);
         }
     }

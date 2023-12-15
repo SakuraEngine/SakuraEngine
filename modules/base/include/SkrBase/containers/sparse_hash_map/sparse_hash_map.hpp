@@ -5,7 +5,7 @@
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
 
 // SparseHashMap def
-// TODO. remove/find/contain/count value
+// TODO. remove/find/contains/count value
 namespace skr::container
 {
 template <typename Memory>
@@ -149,11 +149,11 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
     template <typename Comparer>
     CDataRef find_ex(HashType hash, Comparer&& comparer) const;
 
-    // contain
-    bool     contain(const MapKeyType& key) const;
+    // contains
+    bool     contains(const MapKeyType& key) const;
     SizeType count(const MapKeyType& key) const; // [multi map extend]
     template <typename Comparer>
-    bool contain_ex(HashType hash, Comparer&& comparer) const;
+    bool contains_ex(HashType hash, Comparer&& comparer) const;
     template <typename Comparer>
     SizeType count_ex(HashType hash, Comparer&& comparer) const; // [multi map extend]
 
@@ -761,11 +761,11 @@ SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_
     return Super::find_ex(hash, std::forward<Comparer>(comparer));
 }
 
-// contain
+// contains
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::contain(const MapKeyType& key) const
+SKR_INLINE bool SparseHashMap<Memory>::contains(const MapKeyType& key) const
 {
-    return Super::contain(key);
+    return Super::contains(key);
 }
 template <typename Memory>
 SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::count(const MapKeyType& key) const
@@ -774,9 +774,9 @@ SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::count
 }
 template <typename Memory>
 template <typename Comparer>
-SKR_INLINE bool SparseHashMap<Memory>::contain_ex(HashType hash, Comparer&& comparer) const
+SKR_INLINE bool SparseHashMap<Memory>::contains_ex(HashType hash, Comparer&& comparer) const
 {
-    return Super::contain_ex(hash, std::forward<Comparer>(comparer));
+    return Super::contains_ex(hash, std::forward<Comparer>(comparer));
 }
 template <typename Memory>
 template <typename Comparer>

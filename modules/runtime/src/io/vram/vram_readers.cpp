@@ -289,7 +289,7 @@ struct StackCmdAllocator : public skr::FixedMap<StackCmdMapKey, GPUUploadCmd, N>
         }
         auto& cmd = cmds[key];
         auto cmdqueue = cmd.get_queue();
-        if (!cmdpools.contain(cmdqueue))
+        if (!cmdpools.contains(cmdqueue))
         {
             auto pool = cmdpools.add(cmdqueue, SwapableCmdPool()).data;
             pool->value.initialize(cmdqueue);
