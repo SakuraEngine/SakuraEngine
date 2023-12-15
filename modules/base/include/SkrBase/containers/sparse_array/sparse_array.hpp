@@ -576,6 +576,7 @@ SKR_INLINE void SparseArray<Memory>::reserve(SizeType expect_capacity)
 template <typename Memory>
 SKR_INLINE void SparseArray<Memory>::shrink()
 {
+    compact_top();
     Memory::shrink();
 }
 template <typename Memory>

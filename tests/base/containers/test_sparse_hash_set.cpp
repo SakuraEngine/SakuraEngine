@@ -191,9 +191,9 @@ TEST_CASE("test sparse hash set (Single)")
         a.remove(114514);
         a.shrink();
         REQUIRE_EQ(a.size(), 4);
-        REQUIRE_EQ(a.sparse_size(), 6);
-        REQUIRE_EQ(a.hole_size(), 2);
-        REQUIRE_GE(a.capacity(), 6);
+        REQUIRE_EQ(a.sparse_size(), 4);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), 4);
 
         a.clear();
         a.append({ 1, 11, 114, 1145, 11451, 114514 });
