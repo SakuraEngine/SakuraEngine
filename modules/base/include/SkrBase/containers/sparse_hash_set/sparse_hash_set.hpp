@@ -141,8 +141,8 @@ struct SparseHashSet : protected SparseArray<Memory> {
     SizeType remove_all_ex(HashType hash, Comparer&& comparer); // [multi set extend]
 
     // erase, needn't update iterator, erase directly is safe
-    void erase(const It& it);
-    void erase(const CIt& it);
+    It  erase(const It& it);
+    CIt erase(const CIt& it);
 
     // find
     DataRef  find(const KeyType& key);
@@ -858,16 +858,22 @@ SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::remov
 
 // erase, needn't update iterator, erase directly is safe
 template <typename Memory>
-SKR_INLINE void SparseHashSet<Memory>::erase(const It& it)
+SKR_INLINE typename SparseHashSet<Memory>::It SparseHashSet<Memory>::erase(const It& it)
 {
     _remove_from_bucket(it.index());
     data_arr().remove_at(it.index());
+    It new_it(it);
+    ++new_it;
+    return new_it;
 }
 template <typename Memory>
-SKR_INLINE void SparseHashSet<Memory>::erase(const CIt& it)
+SKR_INLINE typename SparseHashSet<Memory>::CIt SparseHashSet<Memory>::erase(const CIt& it)
 {
     _remove_from_bucket(it.index());
     data_arr().remove_at(it.index());
+    CIt new_it(it);
+    ++new_it;
+    return new_it;
 }
 
 // find

@@ -139,8 +139,8 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
     SizeType remove_all_ex(HashType hash, Comparer&& comparer); // [multi map extend]
 
     // erase, needn't update iterator, erase directly is safe
-    void erase(const It& it);
-    void erase(const CIt& it);
+    It  erase(const It& it);
+    CIt erase(const CIt& it);
 
     // find
     DataRef  find(const MapKeyType& key);
@@ -733,14 +733,14 @@ SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::remov
 
 // erase, needn't update iterator, erase directly is safe
 template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::erase(const It& it)
+SKR_INLINE typename SparseHashMap<Memory>::It SparseHashMap<Memory>::erase(const It& it)
 {
-    Super::erase(it);
+    return Super::erase(it);
 }
 template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::erase(const CIt& it)
+SKR_INLINE typename SparseHashMap<Memory>::CIt SparseHashMap<Memory>::erase(const CIt& it)
 {
-    Super::erase(it);
+    return Super::erase(it);
 }
 
 // find

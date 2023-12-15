@@ -119,8 +119,8 @@ struct SparseArray : protected Memory {
     SizeType remove_all(const TK& v);
 
     // erase, needn't update iterator, erase directly is safe
-    void erase(const It& it);
-    void erase(const CIt& it);
+    It  erase(const It& it);
+    CIt erase(const CIt& it);
 
     // remove if
     template <typename TP>
@@ -957,14 +957,20 @@ SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_al
 
 // erase, needn't update iterator, erase directly is safe
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::erase(const It& it)
+SKR_INLINE typename SparseArray<Memory>::It SparseArray<Memory>::erase(const It& it)
 {
     remove_at(it.index());
+    It new_it(it);
+    ++new_it;
+    return new_it;
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::erase(const CIt& it)
+SKR_INLINE typename SparseArray<Memory>::CIt SparseArray<Memory>::erase(const CIt& it)
 {
     remove_at(it.index());
+    CIt new_it(it);
+    ++new_it;
+    return new_it;
 }
 
 // remove if
