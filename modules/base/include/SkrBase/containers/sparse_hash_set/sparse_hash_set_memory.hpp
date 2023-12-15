@@ -36,16 +36,21 @@ template <typename T, typename TBitBlock, typename THash, typename THasher, type
 struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, THash>, TBitBlock, TS, Allocator> {
     using Super = SparseArrayMemory<SparseHashSetData<T, TS, THash>, TBitBlock, TS, Allocator>;
 
-    // configure
-    using HashType      = THash;
-    using HasherType    = THasher;
-    using KeyType       = typename KeyTraits<T>::KeyType;
-    using KeyMapperType = typename KeyTraits<T>::KeyMapperType;
-    using ComparerType  = TComparer;
+    // sparse array configure
     using typename Super::SizeType;
-    using SparseHashSetDataType    = T;
-    using SparseHashSetStorageType = SparseHashSetData<T, TS, THash>;
+    using typename Super::DataType;
+    using typename Super::StorageType;
+    using typename Super::BitBlockType;
     using typename Super::AllocatorCtorParam;
+
+    // sparse hash set configure
+    using HashType                        = THash;
+    using HasherType                      = THasher;
+    using KeyType                         = typename KeyTraits<T>::KeyType;
+    using KeyMapperType                   = typename KeyTraits<T>::KeyMapperType;
+    using ComparerType                    = TComparer;
+    using SetDataType                     = T;
+    using SetStorageType                  = SparseHashSetData<T, TS, THash>;
     static constexpr bool allow_multi_key = AllowMultiKey;
 
     // ctor & dtor

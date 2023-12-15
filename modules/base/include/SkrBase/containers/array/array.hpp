@@ -11,7 +11,7 @@ namespace skr::container
 {
 template <typename Memory>
 struct Array : protected Memory {
-    // from core
+    // from memory
     using typename Memory::DataType;
     using typename Memory::SizeType;
     using typename Memory::AllocatorCtorParam;

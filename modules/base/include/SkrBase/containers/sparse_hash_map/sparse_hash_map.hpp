@@ -12,18 +12,30 @@ template <typename Memory>
 struct SparseHashMap : protected SparseHashSet<Memory> {
     using Super = SparseHashSet<Memory>;
 
-    // configure
-    using typename Memory::KeyType;
-    using typename Memory::ValueType;
-    using SizeType = typename Memory::SizeType;
+    // sparse array configure
+    using typename Memory::SizeType;
+    using typename Memory::DataType;
+    using typename Memory::StorageType;
+    using typename Memory::BitBlockType;
     using typename Memory::AllocatorCtorParam;
-    using SparseHashMapStorageType = KVPair<KeyType, ValueType>;
-    using DataArr                  = typename Super::DataArr;
 
-    // from base
-    using HashType     = typename Super::HashType;
-    using HasherType   = typename Super::HasherType;
-    using ComparerType = typename Super::ComparerType;
+    // sparse hash set configure
+    using typename Memory::HashType;
+    using typename Memory::KeyType;
+    using typename Memory::KeyMapperType;
+    using typename Memory::HasherType;
+    using typename Memory::ComparerType;
+    using typename Memory::SetDataType;
+    using typename Memory::SetStorageType;
+    using Memory::allow_multi_key;
+
+    // sparse hash map configure
+    using typename Memory::MapKeyType;
+    using typename Memory::MapValueType;
+    using typename Memory::MapDataType;
+
+    // from super
+    using DataArr = typename Super::DataArr;
 
     // data ref & iterator
     using DataRef  = typename Super::DataRef;
@@ -34,8 +46,8 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
     // ctor & dtor
     SparseHashMap(AllocatorCtorParam param = {});
     SparseHashMap(SizeType reserve_size, AllocatorCtorParam param = {});
-    SparseHashMap(const SparseHashMapStorageType* p, SizeType n, AllocatorCtorParam param = {});
-    SparseHashMap(std::initializer_list<SparseHashMapStorageType> init_list, AllocatorCtorParam param = {});
+    SparseHashMap(const MapDataType* p, SizeType n, AllocatorCtorParam param = {});
+    SparseHashMap(std::initializer_list<MapDataType> init_list, AllocatorCtorParam param = {});
     ~SparseHashMap();
 
     // copy & move
@@ -85,16 +97,16 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
     bool rehash_if_need() const;
 
     // add, move behavior may not happened here, just for easy to use
-    DataRef add(const KeyType& key, const ValueType& value);
-    DataRef add(const KeyType& key, ValueType&& value);
-    DataRef add(KeyType&& key, const ValueType& value);
-    DataRef add(KeyType&& key, ValueType&& value);
-    DataRef add_unsafe(const KeyType& key);
-    DataRef add_unsafe(KeyType&& key);
-    DataRef add_default(const KeyType& key);
-    DataRef add_default(KeyType&& key);
-    DataRef add_zeroed(const KeyType& key);
-    DataRef add_zeroed(KeyType&& key);
+    DataRef add(const MapKeyType& key, const MapValueType& value);
+    DataRef add(const MapKeyType& key, MapValueType&& value);
+    DataRef add(MapKeyType&& key, const MapValueType& value);
+    DataRef add(MapKeyType&& key, MapValueType&& value);
+    DataRef add_unsafe(const MapKeyType& key);
+    DataRef add_unsafe(MapKeyType&& key);
+    DataRef add_default(const MapKeyType& key);
+    DataRef add_default(MapKeyType&& key);
+    DataRef add_zeroed(const MapKeyType& key);
+    DataRef add_zeroed(MapKeyType&& key);
     template <typename Comparer, typename Constructor>
     DataRef add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor);
     template <typename Comparer>
@@ -102,25 +114,25 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
 
     // add or assign, try to use this api, instead of operator[]
     // move behavior or key may not happened here, just for easy to use
-    DataRef add_or_assign(const KeyType& key, const ValueType& value);
-    DataRef add_or_assign(const KeyType& key, ValueType&& value);
-    DataRef add_or_assign(KeyType&& key, const ValueType& value);
-    DataRef add_or_assign(KeyType&& key, ValueType&& value);
+    DataRef add_or_assign(const MapKeyType& key, const MapValueType& value);
+    DataRef add_or_assign(const MapKeyType& key, MapValueType&& value);
+    DataRef add_or_assign(MapKeyType&& key, const MapValueType& value);
+    DataRef add_or_assign(MapKeyType&& key, MapValueType&& value);
 
     // emplace
     template <typename... Args>
-    DataRef emplace(const KeyType& key, Args&&... args);
+    DataRef emplace(const MapKeyType& key, Args&&... args);
     template <typename... Args>
-    DataRef emplace(KeyType&& key, Args&&... args);
+    DataRef emplace(MapKeyType&& key, Args&&... args);
 
     // append
     void append(const SparseHashMap& set);
-    void append(std::initializer_list<SparseHashMapStorageType> init_list);
-    void append(const SparseHashMapStorageType* p, SizeType n);
+    void append(std::initializer_list<MapDataType> init_list);
+    void append(const MapDataType* p, SizeType n);
 
     // remove
-    DataRef  remove(const KeyType& key);
-    SizeType remove_all(const KeyType& key); // [multi map extend]
+    DataRef  remove(const MapKeyType& key);
+    SizeType remove_all(const MapKeyType& key); // [multi map extend]
     template <typename Comparer>
     DataRef remove_ex(HashType hash, Comparer&& comparer);
     template <typename Comparer>
@@ -131,25 +143,25 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
     void erase(const CIt& it);
 
     // find
-    DataRef  find(const KeyType& key);
-    CDataRef find(const KeyType& key) const;
+    DataRef  find(const MapKeyType& key);
+    CDataRef find(const MapKeyType& key) const;
     template <typename Comparer>
     DataRef find_ex(HashType hash, Comparer&& comparer);
     template <typename Comparer>
     CDataRef find_ex(HashType hash, Comparer&& comparer) const;
 
     // contain
-    bool     contain(const KeyType& key) const;
-    SizeType count(const KeyType& key) const; // [multi map extend]
+    bool     contain(const MapKeyType& key) const;
+    SizeType count(const MapKeyType& key) const; // [multi map extend]
     template <typename Comparer>
     bool contain_ex(HashType hash, Comparer&& comparer) const;
     template <typename Comparer>
     SizeType count_ex(HashType hash, Comparer&& comparer) const; // [multi map extend]
 
     // sort
-    template <typename TP = Less<KeyType>>
+    template <typename TP = Less<MapKeyType>>
     void sort(TP&& p = {});
-    template <typename TP = Less<KeyType>>
+    template <typename TP = Less<MapKeyType>>
     void sort_stable(TP&& p = {});
 
     // set ops
@@ -182,12 +194,12 @@ SKR_INLINE SparseHashMap<Memory>::SparseHashMap(SizeType reserve_size, Allocator
 {
 }
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory>::SparseHashMap(const SparseHashMapStorageType* p, SizeType n, AllocatorCtorParam param)
+SKR_INLINE SparseHashMap<Memory>::SparseHashMap(const MapDataType* p, SizeType n, AllocatorCtorParam param)
     : Super(p, n, std::move(param))
 {
 }
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory>::SparseHashMap(std::initializer_list<SparseHashMapStorageType> init_list, AllocatorCtorParam param)
+SKR_INLINE SparseHashMap<Memory>::SparseHashMap(std::initializer_list<MapDataType> init_list, AllocatorCtorParam param)
     : Super(init_list, std::move(param))
 {
 }
@@ -382,159 +394,159 @@ SKR_INLINE bool SparseHashMap<Memory>::rehash_if_need() const
 
 // add
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(const KeyType& key, const ValueType& value)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(const MapKeyType& key, const MapValueType& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(key);
-        new (&ref->value) ValueType(value);
+        new (&ref->key) MapKeyType(key);
+        new (&ref->value) MapValueType(value);
     }
 
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(const KeyType& key, ValueType&& value)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(const MapKeyType& key, MapValueType&& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(key);
-        new (&ref->value) ValueType(std::move(value));
+        new (&ref->key) MapKeyType(key);
+        new (&ref->value) MapValueType(std::move(value));
     }
 
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(KeyType&& key, const ValueType& value)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(MapKeyType&& key, const MapValueType& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(std::move(key));
-        new (&ref->value) ValueType(value);
+        new (&ref->key) MapKeyType(std::move(key));
+        new (&ref->value) MapValueType(value);
     }
 
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(KeyType&& key, ValueType&& value)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(MapKeyType&& key, MapValueType&& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(std::move(key));
-        new (&ref->value) ValueType(std::move(value));
+        new (&ref->key) MapKeyType(std::move(key));
+        new (&ref->value) MapValueType(std::move(value));
     }
 
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_unsafe(const KeyType& key)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_unsafe(const MapKeyType& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(std::move(key));
+        new (&ref->key) MapKeyType(std::move(key));
     }
 
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_unsafe(KeyType&& key)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_unsafe(MapKeyType&& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(std::move(key));
+        new (&ref->key) MapKeyType(std::move(key));
     }
 
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_default(const KeyType& key)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_default(const MapKeyType& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(key);
-        new (&ref->value) ValueType();
+        new (&ref->key) MapKeyType(key);
+        new (&ref->value) MapValueType();
     }
 
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_default(KeyType&& key)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_default(MapKeyType&& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(std::move(key));
-        new (&ref->value) ValueType();
+        new (&ref->key) MapKeyType(std::move(key));
+        new (&ref->value) MapValueType();
     }
 
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_zeroed(const KeyType& key)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_zeroed(const MapKeyType& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(key);
-        memset(&ref->value, 0, sizeof(ValueType));
+        new (&ref->key) MapKeyType(key);
+        memset(&ref->value, 0, sizeof(MapValueType));
     }
 
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_zeroed(KeyType&& key)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_zeroed(MapKeyType&& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(std::move(key));
-        memset(&ref->value, 0, sizeof(ValueType));
+        new (&ref->key) MapKeyType(std::move(key));
+        memset(&ref->value, 0, sizeof(MapValueType));
     }
 
     return ref;
@@ -562,17 +574,17 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ex
 
 // add or assign, instead of operator[]
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(const KeyType& key, const ValueType& value)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(const MapKeyType& key, const MapValueType& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(key);
-        new (&ref->value) ValueType(value);
+        new (&ref->key) MapKeyType(key);
+        new (&ref->value) MapValueType(value);
     }
     else
     {
@@ -582,17 +594,17 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(const KeyType& key, ValueType&& value)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(const MapKeyType& key, MapValueType&& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(key);
-        new (&ref->value) ValueType(std::move(value));
+        new (&ref->key) MapKeyType(key);
+        new (&ref->value) MapValueType(std::move(value));
     }
     else
     {
@@ -602,17 +614,17 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(KeyType&& key, const ValueType& value)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(MapKeyType&& key, const MapValueType& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(std::move(key));
-        new (&ref->value) ValueType(value);
+        new (&ref->key) MapKeyType(std::move(key));
+        new (&ref->value) MapValueType(value);
     }
     else
     {
@@ -622,17 +634,17 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(KeyType&& key, ValueType&& value)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(MapKeyType&& key, MapValueType&& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(std::move(key));
-        new (&ref->value) ValueType(std::move(value));
+        new (&ref->key) MapKeyType(std::move(key));
+        new (&ref->value) MapValueType(std::move(value));
     }
     else
     {
@@ -645,34 +657,34 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
 // emplace
 template <typename Memory>
 template <typename... Args>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplace(const KeyType& key, Args&&... args)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplace(const MapKeyType& key, Args&&... args)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(key);
-        new (&ref->value) ValueType(std::forward<Args>(args)...);
+        new (&ref->key) MapKeyType(key);
+        new (&ref->value) MapValueType(std::forward<Args>(args)...);
     }
 
     return ref;
 }
 template <typename Memory>
 template <typename... Args>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplace(KeyType&& key, Args&&... args)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplace(MapKeyType&& key, Args&&... args)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
     hash,
-    [&key](const KeyType& k) { return ComparerType()(k, key); });
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
 
     if (!ref.already_exist)
     {
-        new (&ref->key) KeyType(std::move(key));
-        new (&ref->value) ValueType(std::forward<Args>(args)...);
+        new (&ref->key) MapKeyType(std::move(key));
+        new (&ref->value) MapValueType(std::forward<Args>(args)...);
     }
 
     return ref;
@@ -685,24 +697,24 @@ SKR_INLINE void SparseHashMap<Memory>::append(const SparseHashMap& set)
     Super::append(set);
 }
 template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::append(std::initializer_list<SparseHashMapStorageType> init_list)
+SKR_INLINE void SparseHashMap<Memory>::append(std::initializer_list<MapDataType> init_list)
 {
     Super::append(init_list);
 }
 template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::append(const SparseHashMapStorageType* p, SizeType n)
+SKR_INLINE void SparseHashMap<Memory>::append(const MapDataType* p, SizeType n)
 {
     Super::append(p, n);
 }
 
 // remove
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::remove(const KeyType& key)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::remove(const MapKeyType& key)
 {
     return Super::remove(key);
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::remove_all(const KeyType& key)
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::remove_all(const MapKeyType& key)
 {
     return Super::remove_all(key);
 }
@@ -733,12 +745,12 @@ SKR_INLINE void SparseHashMap<Memory>::erase(const CIt& it)
 
 // find
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find(const KeyType& key)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find(const MapKeyType& key)
 {
     return Super::find(key);
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find(const KeyType& key) const
+SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find(const MapKeyType& key) const
 {
     return Super::find(key);
 }
@@ -757,12 +769,12 @@ SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_
 
 // contain
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::contain(const KeyType& key) const
+SKR_INLINE bool SparseHashMap<Memory>::contain(const MapKeyType& key) const
 {
     return Super::contain(key);
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::count(const KeyType& key) const
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::count(const MapKeyType& key) const
 {
     return Super::count(key);
 }

@@ -1,5 +1,6 @@
 #include "SkrTestFramework/framework.hpp"
 #include "test_types.hpp"
+#include <chrono>
 
 TEST_CASE("test sparse hash map")
 {
