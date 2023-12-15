@@ -79,7 +79,6 @@ struct SparseHashSet : protected SparseArray<Memory> {
     const DataArr&  data_arr() const;
     SizeType*       bucket();
     const SizeType* bucket() const;
-    SizeType        bucket_size() const;
     Memory&         memory();
     const Memory&   memory() const;
 
@@ -202,15 +201,7 @@ SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::_buck
 template <typename Memory>
 SKR_INLINE void SparseHashSet<Memory>::_clean_bucket()
 {
-    if (bucket())
-    {
-        SizeType* begin = bucket();
-        SizeType* end   = bucket() + bucket_size();
-        for (; begin != end; ++begin)
-        {
-            *begin = npos;
-        }
-    }
+    Memory::clean_bucket();
 }
 template <typename Memory>
 SKR_INLINE bool SparseHashSet<Memory>::_resize_bucket() // resize bucket (nocopy)
@@ -416,11 +407,6 @@ template <typename Memory>
 SKR_INLINE const typename SparseHashSet<Memory>::SizeType* SparseHashSet<Memory>::bucket() const
 {
     return Memory::bucket();
-}
-template <typename Memory>
-SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::bucket_size() const
-{
-    return Memory::bucket_size();
 }
 
 template <typename Memory>
