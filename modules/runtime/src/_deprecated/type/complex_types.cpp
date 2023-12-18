@@ -3,8 +3,6 @@
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/vector.hpp"
 
-#include "SkrRT/containers/deprecated.hpp"
-
 namespace skr {
 namespace type {
 const skr_type_t* make_pointer_type(const skr_type_t* type)

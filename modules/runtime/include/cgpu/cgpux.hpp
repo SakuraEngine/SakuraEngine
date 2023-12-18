@@ -1,7 +1,7 @@
 #pragma once
 #include "cgpu/cgpux.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/containers/deprecated.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 struct CGPUXBindTableLocation;
 struct CGPUXBindTable;

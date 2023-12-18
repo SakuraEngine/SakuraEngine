@@ -4,8 +4,6 @@
 #include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/resource_edge.hpp"
 
-#include "SkrRT/containers/deprecated.hpp"
-
 namespace skr {
 namespace render_graph
 {

@@ -4,7 +4,6 @@
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/async/fib_task.hpp"
 
-#include "SkrRT/containers/deprecated.hpp"
 
 namespace skr
 {

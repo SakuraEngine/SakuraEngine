@@ -4,8 +4,6 @@
 #include <algorithm>
 #include "SkrRT/containers/span.hpp"
 
-#include "SkrRT/containers/deprecated.hpp"
-
 namespace skr
 {
 namespace input
@@ -107,7 +105,7 @@ void InputDevice_SDL2Keyboard::updateScan(ScanCodeBuffer& output, uint32_t max_c
     {
         if (state[scancode])
         {
-            output.emplace_back(KeyCodeTranslator((SDL_Scancode)scancode));
+            output.emplace(KeyCodeTranslator((SDL_Scancode)scancode));
         }
     }
 }

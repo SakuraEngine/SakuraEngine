@@ -36,7 +36,7 @@ struct BitArrayMemory : public Allocator {
             realloc(Algo::num_blocks(other._size));
 
             // copy
-            memory::copy<BitBlockType>(_data, other._data, Algo::num_blocks(other._size));
+            memory::copy(_data, other._data, Algo::num_blocks(other._size));
             _size = other._size;
         }
     }
@@ -72,7 +72,7 @@ struct BitArrayMemory : public Allocator {
                 }
 
                 // copy
-                memory::copy<BitBlockType>(_data, rhs._data, Algo::num_blocks(rhs._size));
+                memory::copy(_data, rhs._data, Algo::num_blocks(rhs._size));
                 _size = rhs._size;
             }
         }

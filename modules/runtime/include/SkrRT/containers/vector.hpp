@@ -5,11 +5,19 @@
 
 namespace skr
 {
-template <typename T, typename Alloc = SkrAllocator_New>
-using Vector = container::Array<container::ArrayMemory<T, uint64_t, Alloc>>;
+template <typename T, typename Allocator = SkrAllocator_New>
+using Vector = container::Array<container::ArrayMemory<
+T,        /*type*/
+uint64_t, /*size type*/
+Allocator /*allocator*/
+>>;
 
-// template <typename T, uint64_t N>
-// using FixedVector = container::Array<container::FixedArrayMemory<T, uint64_t, N>>;
+template <typename T, uint64_t kCount>
+using FixedVector = container::Array<container::FixedArrayMemory<
+T,        /*type*/
+uint64_t, /*size type*/
+kCount    /*allocator*/
+>>;
 } // namespace skr
 
 // serde

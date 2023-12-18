@@ -95,12 +95,14 @@ struct Array : protected Memory {
     // append
     DataRef append(const Array& arr);
     DataRef append(std::initializer_list<DataType> init_list);
-    DataRef append(const DataType* p, SizeType n);
+    template <typename U>
+    DataRef append(const U* p, SizeType n);
 
     // append at
     void append_at(SizeType idx, const Array& arr);
     void append_at(SizeType idx, std::initializer_list<DataType> init_list);
-    void append_at(SizeType idx, DataType* p, SizeType n);
+    template <typename U>
+    void append_at(SizeType idx, const U* p, SizeType n);
 
     // operator append
     DataRef operator+=(const DataType& v);
@@ -686,7 +688,8 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(std::initialize
     return data() ? DataRef(data() + size(), size()) : DataRef();
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(const DataType* p, SizeType n)
+template <typename U>
+SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(const U* p, SizeType n)
 {
     if (n)
     {
@@ -719,7 +722,8 @@ SKR_INLINE void Array<Memory>::append_at(SizeType idx, std::initializer_list<Dat
     }
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::append_at(SizeType idx, DataType* p, SizeType n)
+template <typename U>
+SKR_INLINE void Array<Memory>::append_at(SizeType idx, const U* p, SizeType n)
 {
     SKR_ASSERT(is_valid_index(idx));
     if (n)

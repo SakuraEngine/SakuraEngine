@@ -12,8 +12,6 @@
 #include "SkrRenderer/pso_map.h"
 #include "SkrRT/platform/guid.hpp"
 
-#include "SkrRT/containers/deprecated.hpp"
-
 namespace skr
 {
 namespace renderer
@@ -206,7 +204,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
                     {
                         if (override.slot_name.starts_with(resource.name) && strlen((const char*)resource.name) == override.slot_name.size()) // slot name matches
                         {
-                            slot_names.emplace_back(resource.name);
+                            slot_names.emplace(resource.name);
                         }
                     }
                 }
@@ -216,7 +214,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
                     {
                         if (override.slot_name.starts_with(resource.name) && strlen((const char*)resource.name) == override.slot_name.size()) // slot name matches
                         {
-                            slot_names.emplace_back(resource.name);
+                            slot_names.emplace(resource.name);
                         }
                     }
                 }
@@ -237,7 +235,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
             skr::resource::TResourceHandle<skr_texture_sampler_resource_t> hdl = override.value;
             hdl.resolve(true, nullptr);
 
-            auto& update        = updates.emplace_back();
+            auto& update        = *updates.emplace();
             update.name         = override.slot_name.raw().data();
             update.count        = 1;
             update.samplers     = &hdl.get_resolved()->sampler;
@@ -248,7 +246,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
             skr::resource::TResourceHandle<skr_texture_resource_t> hdl = override.value;
             hdl.resolve(true, nullptr);
 
-            auto& update        = updates.emplace_back();
+            auto& update        = *updates.emplace();
             update.name         = override.slot_name.raw().data();
             update.count        = 1; // TODO: Tex array parameter
             update.textures     = &hdl.get_resolved()->texture_view;
@@ -427,7 +425,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
         {
             if (auto library = shader_map->find_shader(identifier.identifier))
             {
-                shaders.emplace_back(library);
+                shaders.emplace(library);
             }
             else
             {
@@ -466,7 +464,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
             : material(material)
             , installed_pass(installed_pass)
             , factory(factory)
-            , shaders(shaders.data(), shaders.data() + shaders.size())
+            , shaders(shaders.data(), shaders.size())
         {
         }
 

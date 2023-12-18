@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrRT/containers/uset.hpp"
 #include "cgpu/extensions/cgpu_marker_buffer.h"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
@@ -6,8 +7,6 @@
 #include "SkrRenderGraph/backend/buffer_pool.hpp"
 #include "SkrRenderGraph/backend/texture_view_pool.hpp"
 #include "SkrRenderGraph/backend/bind_table_pool.hpp"
-
-#include "SkrRT/containers/deprecated.hpp"
 
 namespace skr
 {
@@ -50,7 +49,7 @@ static constexpr size_t stack_vector_fixed_count = 8;
 template <typename T>
 using stack_vector = skr::FixedVector<T, stack_vector_fixed_count>;
 template <typename T>
-using stack_set = skr::FixedSet<T, stack_vector_fixed_count>;
+using stack_set = skr::FixedUSet<T, stack_vector_fixed_count>;
 
 class RenderGraphBackend : public RenderGraph
 {

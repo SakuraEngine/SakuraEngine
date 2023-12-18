@@ -277,7 +277,7 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
             }
 
         }
-        event->batches.emplace_back(batch);
+        event->batches.emplace(batch);
     }
     if (event)
     {
