@@ -122,6 +122,10 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
 
     // emplace
     template <typename... Args>
+    DataRef find_or_emplace(const MapKeyType& key, Args&&... args);
+    template <typename... Args>
+    DataRef find_or_emplace(MapKeyType&& key, Args&&... args);
+    template <typename... Args>
     DataRef emplace(const MapKeyType& key, Args&&... args);
     template <typename... Args>
     DataRef emplace(MapKeyType&& key, Args&&... args);
@@ -683,6 +687,41 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
 }
 
 // emplace
+
+template <typename Memory>
+template <typename... Args>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_or_emplace(const MapKeyType& key, Args&&... args)
+{
+    HashType hash = HasherType()(key);
+    auto     ref  = Super::find_or_add_ex_unsafe(
+    hash,
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        memory::copy(&ref->key, &key);
+        new (&ref->value) MapValueType(std::forward<Args>(args)...);
+    }
+
+    return ref;
+}
+template <typename Memory>
+template <typename... Args>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_or_emplace(MapKeyType&& key, Args&&... args)
+{
+    HashType hash = HasherType()(key);
+    auto     ref  = Super::find_or_add_ex_unsafe(
+    hash,
+    [&key](const MapKeyType& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        memory::move(&ref->key, &key);
+        new (&ref->value) MapValueType(std::forward<Args>(args)...);
+    }
+
+    return ref;
+}
 template <typename Memory>
 template <typename... Args>
 SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplace(const MapKeyType& key, Args&&... args)
@@ -696,6 +735,12 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplac
     {
         memory::copy(&ref->key, &key);
         new (&ref->value) MapValueType(std::forward<Args>(args)...);
+    }
+    else
+    {
+        memory::assign(&ref->key, &key);
+        MapValueType v(std::forward<Args>(args)...);
+        memory::move_assign(&ref->value, &v);
     }
 
     return ref;
@@ -713,6 +758,12 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplac
     {
         memory::move(&ref->key, &key);
         new (&ref->value) MapValueType(std::forward<Args>(args)...);
+    }
+    else
+    {
+        memory::move_assign(&ref->key, &key);
+        MapValueType v(std::forward<Args>(args)...);
+        memory::move_assign(&ref->value, &v);
     }
 
     return ref;
