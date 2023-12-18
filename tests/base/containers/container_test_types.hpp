@@ -60,6 +60,17 @@ false,
 TestSizeType,
 TestAllocatorType>>;
 
+template <typename T, uint64_t kCount>
+using FixedSparseHashSet = container::SparseHashSet<container::FixedSparseHashSetMemory<
+T,
+TestBitBlockType,
+TestHashType,
+Hash<T>,
+Equal<T>,
+false,
+TestSizeType,
+kCount>>;
+
 //===========Sparse Hash Map===================================================================
 template <typename K, typename V>
 using SparseHashMap = container::SparseHashMap<container::SparseHashMapMemory<

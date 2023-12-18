@@ -528,7 +528,7 @@ SKR_INLINE const Memory& SparseArray<Memory>::memory() const
 template <typename Memory>
 SKR_INLINE bool SparseArray<Memory>::has_data(SizeType idx) const
 {
-    return BitAlgo::get(bit_array(), idx);
+    return idx < sparse_size() && BitAlgo::get(bit_array(), idx);
 }
 template <typename Memory>
 SKR_INLINE bool SparseArray<Memory>::is_hole(SizeType idx) const

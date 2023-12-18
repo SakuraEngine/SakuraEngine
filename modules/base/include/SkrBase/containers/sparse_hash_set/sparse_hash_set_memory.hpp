@@ -8,11 +8,11 @@
 namespace skr::container
 {
 template <typename TS>
-inline TS sparse_hash_set_calc_bucket_size(TS capacity) noexcept
+inline constexpr TS sparse_hash_set_calc_bucket_size(TS capacity) noexcept
 {
-    static constexpr TS min_size_to_hash    = 4;
-    static constexpr TS basic_bucket_size   = 8;
-    static constexpr TS avg_bucket_capacity = 2;
+    constexpr TS min_size_to_hash    = 4;
+    constexpr TS basic_bucket_size   = 8;
+    constexpr TS avg_bucket_capacity = 2;
 
     if (capacity >= min_size_to_hash)
     {
@@ -29,7 +29,7 @@ inline TS sparse_hash_set_calc_bucket_size(TS capacity) noexcept
 }
 } // namespace skr::container
 
-// util sparse array memory
+// util sparse hash set memory
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename TS, typename Allocator>
@@ -213,5 +213,117 @@ private:
     SizeType* _bucket      = nullptr;
     SizeType  _bucket_size = 0;
     SizeType  _bucket_mask = 0;
+};
+} // namespace skr::container
+
+// fixed sparse hash set memory
+namespace skr::container
+{
+template <typename T, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename TS, uint64_t kCount>
+struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetData<T, TS, THash>, TBitBlock, TS, kCount> {
+    using Super = FixedSparseArrayMemory<SparseHashSetData<T, TS, THash>, TBitBlock, TS, kCount>;
+
+    // sparse array configure
+    using typename Super::SizeType;
+    using typename Super::DataType;
+    using typename Super::StorageType;
+    using typename Super::BitBlockType;
+    using typename Super::AllocatorCtorParam;
+
+    // sparse hash set configure
+    using HashType                        = THash;
+    using HasherType                      = THasher;
+    using KeyType                         = typename KeyTraits<T>::KeyType;
+    using KeyMapperType                   = typename KeyTraits<T>::KeyMapperType;
+    using ComparerType                    = TComparer;
+    using SetDataType                     = T;
+    using SetStorageType                  = SparseHashSetData<T, TS, THash>;
+    static constexpr bool allow_multi_key = AllowMultiKey;
+
+    // ctor & dtor
+    inline FixedSparseHashSetMemory(AllocatorCtorParam param) noexcept
+        : Super(std::move(param))
+    {
+        clean_bucket();
+    }
+    inline ~FixedSparseHashSetMemory() noexcept
+    {
+        free_bucket();
+    }
+
+    // copy & move
+    inline FixedSparseHashSetMemory(const FixedSparseHashSetMemory& other, AllocatorCtorParam param) noexcept
+        : Super(other, std::move(param))
+    {
+        memory::copy<SizeType>(bucket(), other.bucket(), kBucketSize);
+    }
+    inline FixedSparseHashSetMemory(FixedSparseHashSetMemory&& other) noexcept
+        : Super(std::move(other))
+    {
+        memory::copy<SizeType>(bucket(), other.bucket(), kBucketSize);
+        other.clean_bucket();
+    }
+
+    // assign & move assign
+    inline void
+    operator=(const FixedSparseHashSetMemory& rhs) noexcept
+    {
+        if (this != &rhs)
+        {
+            Super::operator=(rhs);
+
+            // copy bucket
+            memory::copy<SizeType>(bucket(), rhs.bucket(), kBucketSize);
+        }
+    }
+    inline void operator=(FixedSparseHashSetMemory&& rhs) noexcept
+    {
+        if (this != &rhs)
+        {
+            Super::operator=(std::move(rhs));
+
+            // copy bucket
+            memory::copy<SizeType>(bucket(), rhs.bucket(), kBucketSize);
+            rhs.clean_bucket();
+        }
+    }
+
+    // memory operations
+    inline bool resize_bucket() noexcept
+    {
+        // do noting
+        return false;
+    }
+    inline void free_bucket() noexcept
+    {
+        // do noting
+    }
+    inline void clean_bucket() noexcept
+    {
+        for (SizeType i = 0; i < kBucketSize; ++i)
+        {
+            bucket()[i] = npos;
+        }
+    }
+    inline SizeType bucket_index(SizeType hash) const noexcept
+    {
+        return hash & kBucketMask;
+    }
+    inline bool need_rehash() const noexcept
+    {
+        return false;
+    }
+
+    // getter
+    inline const SizeType* bucket() const noexcept { return _bucket_placeholder.data_typed(); }
+    inline SizeType*       bucket() noexcept { return _bucket_placeholder.data_typed(); }
+
+private:
+    static constexpr SizeType npos        = npos_of<SizeType>;
+    static constexpr SizeType kBucketSize = sparse_hash_set_calc_bucket_size(kCount);
+    static constexpr SizeType kBucketMask = kBucketSize - 1;
+
+private:
+    Placeholder<SizeType, kBucketSize> _bucket_placeholder;
 };
 } // namespace skr::container
