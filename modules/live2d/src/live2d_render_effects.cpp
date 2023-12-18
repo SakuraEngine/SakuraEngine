@@ -182,17 +182,13 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                 {
                     auto&& render_model = models[i].vram_future.render_model;
                     const auto& cmds = render_model->primitive_commands;
-                    if (!push_constants.contains(render_model))
-                        push_constants.add(render_model, {});
-                    push_constants.find(render_model)->value.resize(0);
+                    push_constants.find_or_add(render_model)->value.resize(0);
 
                     auto&& model_resource = models[i].ram_future.model_resource;
                     const auto list = skr_live2d_model_get_sorted_drawable_list(model_resource);
                     if(!list) continue;
 
-                    if (!sorted_drawable_list.contains(render_model))
-                        sorted_drawable_list.add(render_model, {});
-                    auto drawable_list = sorted_drawable_list.find(render_model)->value = { list , render_model->index_buffer_views.size() };
+                    auto drawable_list  = sorted_drawable_list.add_or_assign(render_model, { list , render_model->index_buffer_views.size() })->value;
                     push_constants.find(render_model)->value.resize(drawable_list.size());
                     // record constant parameters
                     auto clipping_manager = render_model->clipping_manager;
@@ -279,7 +275,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                     auto&& render_model = models[i].vram_future.render_model;
                     auto&& model_resource = models[i].ram_future.model_resource;
                     if (!mask_push_constants.contains(render_model))
-                        mask_push_constants.add(render_model, {});
+                        mask_push_constants.find_or_add(render_model);
                     mask_push_constants.find(render_model)->value.resize(0);
 
                     // TODO: move this to (some manager?) other than update morph/phys in a render pass
@@ -329,9 +325,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                     {
                                         continue;
                                     }
-                                    if (!sorted_mask_drawable_lists.contains(render_model))
-                                        sorted_mask_drawable_lists.add(render_model, {});
-                                    sorted_mask_drawable_lists.find(render_model)->value.emplace(clipDrawIndex);
+
+                                    sorted_mask_drawable_lists.find_or_add(render_model)->value.emplace(clipDrawIndex);
                                     auto&& push_const = mask_push_constants.find(render_model)->value.emplace_back();
                                     const auto proj_mat = rtm::matrix_set(
                                         rtm::vector_load( &clipping_context->_matrixForMask.GetArray()[4 * 0] ),
@@ -438,7 +433,7 @@ protected:
                     bind_table_desc.names = &color_texture_name;
                     bind_table_desc.names_count = 1;
                     auto bind_table = cgpux_create_bind_table(pipeline->device, &bind_table_desc);
-                    render_model->bind_tables.add(texture_view, bind_table);
+                    render_model->bind_tables.add_or_assign(texture_view, bind_table);
 
                     CGPUDescriptorData datas[1] = {};
                     datas[0] = make_zeroed<CGPUDescriptorData>();
@@ -459,7 +454,7 @@ protected:
                     bind_table_desc.names = &color_texture_name;
                     bind_table_desc.names_count = 1;
                     auto bind_table = cgpux_create_bind_table(pipeline->device, &bind_table_desc);
-                    render_model->mask_bind_tables.add(texture_view, bind_table);
+                    render_model->mask_bind_tables.add_or_assign(texture_view, bind_table);
                     
                     CGPUDescriptorData datas[1] = {};
                     datas[0] = make_zeroed<CGPUDescriptorData>();
@@ -497,7 +492,7 @@ protected:
 
         const auto model_resource = render_model->model_resource_id;
         if (!motion_timers.contains(render_model))
-            motion_timers.add(render_model, {});
+            motion_timers.find_or_add(render_model);
         last_ms = skr_timer_get_msec(&motion_timers.find(render_model)->value, true);
         static float delta_sum = 0.f;
         delta_sum += ((float)last_ms / 1000.f);

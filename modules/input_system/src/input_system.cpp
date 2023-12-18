@@ -63,23 +63,23 @@ void InputSystem::Destroy(InputSystem* system) SKR_NOEXCEPT
 
 InputSystemImpl::InputSystemImpl() SKR_NOEXCEPT
 {
-    inputs.add_default(InputKindControllerAxis);
-    inputs.add_default(InputKindControllerButton);
-    inputs.add_default(InputKindControllerSwitch);
-    inputs.add_default(InputKindController);
+    inputs.find_or_add(InputKindControllerAxis);
+    inputs.find_or_add(InputKindControllerButton);
+    inputs.find_or_add(InputKindControllerSwitch);
+    inputs.find_or_add(InputKindController);
 
-    inputs.add_default(InputKindKeyboard);
-    inputs.add_default(InputKindMouse); 
-    inputs.add_default(InputKindGamepad);
+    inputs.find_or_add(InputKindKeyboard);
+    inputs.find_or_add(InputKindMouse); 
+    inputs.find_or_add(InputKindGamepad);
 
-    inputs.add_default(InputKindTouch);
-    inputs.add_default(InputKindMotion);
+    inputs.find_or_add(InputKindTouch);
+    inputs.find_or_add(InputKindMotion);
 
-    inputs.add_default(InputKindArcadeStick);
-    inputs.add_default(InputKindFlightStick);
+    inputs.find_or_add(InputKindArcadeStick);
+    inputs.find_or_add(InputKindFlightStick);
 
-    inputs.add_default(InputKindRacingWheel);
-    inputs.add_default(InputKindUiNavigation);
+    inputs.find_or_add(InputKindRacingWheel);
+    inputs.find_or_add(InputKindUiNavigation);
 }
 
 void InputSystemImpl::update(float delta) SKR_NOEXCEPT
@@ -166,7 +166,7 @@ void InputSystemImpl::remove_mapping_context(SObjectPtr<InputMappingContext> ctx
 
 SObjectPtr<InputMappingContext> InputSystemImpl::add_mapping_context(SObjectPtr<InputMappingContext> ctx, int32_t priority, const InputContextOptions& opts) SKR_NOEXCEPT
 {
-    auto it = contexts.add(priority, ctx);
+    auto it = contexts.find_or_add(priority, ctx);
     if (it.already_exist)
     {
         SKR_LOG_ERROR(u8"InputSystemImpl::add_mapping_context: priority already exists");

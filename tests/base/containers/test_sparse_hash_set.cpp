@@ -228,12 +228,12 @@ TEST_CASE("test sparse hash set (Single)")
     // [needn't test] data op
     // [needn't test] bucket op
 
-    SUBCASE("add")
+    SUBCASE("find_or_add")
     {
         TestHashSet a({ 1, 1, 4, 5, 1, 4 });
-        a.add(1);
-        a.add(4);
-        a.add(10);
+        a.find_or_add(1);
+        a.find_or_add(4);
+        a.find_or_add(10);
         REQUIRE_EQ(a.size(), 4);
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -243,7 +243,7 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
 
-        a.add_ex(
+        a.find_or_add_ex(
         Hash<ValueType>()(100),
         [](const ValueType& v) { return v == 100; },
         [](void* p) { new (p) ValueType(100); });
@@ -257,7 +257,7 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE(a.contains(10));
         REQUIRE(a.contains(100));
 
-        auto ref = a.add_ex_unsafe(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; });
+        auto ref = a.find_or_add_ex_unsafe(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; });
         new (ref.data) ValueType(114514);
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
@@ -270,7 +270,7 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE(a.contains(100));
     }
 
-    SUBCASE("add or assign")
+    SUBCASE("find_or_add or assign")
     {
         TestHashSet a({ 1, 1, 4, 5, 1, 4 });
         a.add_or_assign(1);
@@ -403,8 +403,8 @@ TEST_CASE("test sparse hash set (Single)")
         TestHashSet a(100), b(100);
         for (int32_t i = 0; i < 100; ++i)
         {
-            a.add(i);
-            b.add(i);
+            a.find_or_add(i);
+            b.find_or_add(i);
         }
 
         for (auto it = a.begin(); it != a.end();)
@@ -486,7 +486,7 @@ TEST_CASE("test sparse hash set (Single)")
             {
                 k = rand() % 100;
             }
-            a.add(k);
+            a.find_or_add(k);
         }
         a.sort();
         REQUIRE_EQ(a.size(), 100);
@@ -761,12 +761,12 @@ TEST_CASE("test fixed sparse hash set (Single)")
     // [needn't test] data op
     // [needn't test] bucket op
 
-    SUBCASE("add")
+    SUBCASE("find_or_add")
     {
         TestHashSet a({ 1, 1, 4, 5, 1, 4 });
-        a.add(1);
-        a.add(4);
-        a.add(10);
+        a.find_or_add(1);
+        a.find_or_add(4);
+        a.find_or_add(10);
         REQUIRE_EQ(a.size(), 4);
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -776,7 +776,7 @@ TEST_CASE("test fixed sparse hash set (Single)")
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
 
-        a.add_ex(
+        a.find_or_add_ex(
         Hash<ValueType>()(100),
         [](const ValueType& v) { return v == 100; },
         [](void* p) { new (p) ValueType(100); });
@@ -790,7 +790,7 @@ TEST_CASE("test fixed sparse hash set (Single)")
         REQUIRE(a.contains(10));
         REQUIRE(a.contains(100));
 
-        auto ref = a.add_ex_unsafe(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; });
+        auto ref = a.find_or_add_ex_unsafe(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; });
         new (ref.data) ValueType(114514);
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
@@ -803,7 +803,7 @@ TEST_CASE("test fixed sparse hash set (Single)")
         REQUIRE(a.contains(100));
     }
 
-    SUBCASE("add or assign")
+    SUBCASE("find_or_add or assign")
     {
         TestHashSet a({ 1, 1, 4, 5, 1, 4 });
         a.add_or_assign(1);
@@ -936,8 +936,8 @@ TEST_CASE("test fixed sparse hash set (Single)")
         TestHashSet a(kFixedCapacity), b(kFixedCapacity);
         for (int32_t i = 0; i < kFixedCapacity; ++i)
         {
-            a.add(i);
-            b.add(i);
+            a.find_or_add(i);
+            b.find_or_add(i);
         }
 
         for (auto it = a.begin(); it != a.end();)
@@ -1019,7 +1019,7 @@ TEST_CASE("test fixed sparse hash set (Single)")
             {
                 k = rand() % 100;
             }
-            a.add(k);
+            a.find_or_add(k);
         }
         a.sort();
         REQUIRE_EQ(a.size(), 100);
