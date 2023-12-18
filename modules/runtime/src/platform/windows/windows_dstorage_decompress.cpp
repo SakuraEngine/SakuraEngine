@@ -95,8 +95,7 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
                 auto& future = service->decompress_futures.emplace_back();
                 future = DSDecompressFutureLauncher(service->job_queue).async(
                 [service, request = requests[i]](){
-                    auto resolver = service->resolvers.find(request.CompressionFormat);
-                    if (resolver != service->resolvers.end())
+                    if (auto resolver = service->resolvers.find(request.CompressionFormat))
                     {
                         auto skrRequest = make_zeroed<skr_win_dstorage_decompress_request_t>();
                         skrRequest.id = request.Id;
@@ -220,7 +219,7 @@ skr_win_dstorage_decompress_service_id skr_win_dstorage_create_decompress_servic
 bool skr_win_dstorage_decompress_service_register_callback(skr_win_dstorage_decompress_service_id service, 
     SkrDStorageCompression compression, skr_win_dstorage_decompress_callback_t callback, void* user_data)
 {
-    const auto registered = (service->resolvers.find(compression) != service->resolvers.end());
+    const auto registered = (service->resolvers.contains(compression));
     SKR_ASSERT(!registered && "Callback already registered for this compression");
     if (registered) return false;
     SKR_ASSERT(callback && "Callback must be valid");

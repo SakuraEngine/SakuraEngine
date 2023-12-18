@@ -47,7 +47,7 @@ protected:
 // TODO: optimize stack allocation
 static constexpr size_t stack_vector_fixed_count = 8;
 template <typename T>
-using stack_vector = skr::FixedVector<T, stack_vector_fixed_count>;
+using stack_vector = skr::InlineVector<T, stack_vector_fixed_count>;
 template <typename T>
 using stack_set = skr::FixedUSet<T, stack_vector_fixed_count>;
 

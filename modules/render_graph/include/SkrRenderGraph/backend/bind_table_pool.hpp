@@ -64,7 +64,7 @@ class MergedBindTablePool
             : tables(tables, count)
         {
         }
-        skr::FixedVector<CGPUXBindTableId, 3> tables;
+        skr::InlineVector<CGPUXBindTableId, 3> tables;
     };
     static_assert(sizeof(Key) <= 8 * sizeof(size_t), "Key should be under single cacheline!");
     struct GuradedMergedBindTable

@@ -159,7 +159,7 @@ CCollisionScene
         dual_entity_t entity;
         CSphereCollider2D collider;
     };
-    skr::ParallelFlatHashMap<int, skr::FixedVector<CollisionEntity, 4>> cells;
+    skr::ParallelFlatHashMap<int, skr::InlineVector<CollisionEntity, 4>> cells;
 };
 
 struct MP_SHARED_API MPGameWorld

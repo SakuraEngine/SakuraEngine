@@ -75,7 +75,7 @@ struct GPUUploadCmd
     SKR_FORCEINLINE CGPUFenceId get_fence() const SKR_NOEXCEPT { return fence; }
     SKR_FORCEINLINE IOBatchId get_batch() const SKR_NOEXCEPT { return batch; }
 
-    skr::FixedVector<CGPUBufferId, 4> upload_buffers;
+    skr::InlineVector<CGPUBufferId, 4> upload_buffers;
 protected:
     IOBatchId batch = nullptr;        
     CGPUQueueId queue = nullptr;

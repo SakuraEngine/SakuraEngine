@@ -18,6 +18,14 @@ T,        /*type*/
 uint64_t, /*size type*/
 kCount    /*allocator*/
 >>;
+
+template <typename T, uint64_t kCount, typename Allocator = SkrAllocator_New>
+using InlineVector = container::Array<container::InlineArrayMemory<
+T,        /*type*/
+uint64_t, /*size type*/
+kCount,   /*allocator*/
+Allocator /*allocator*/
+>>;
 } // namespace skr
 
 // serde

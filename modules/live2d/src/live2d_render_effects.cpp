@@ -133,7 +133,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     }
 
     skr::UMap<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
-    skr::UMap<skr_live2d_render_model_id, skr::FixedVector<uint32_t, 4>> sorted_mask_drawable_lists;
+    skr::UMap<skr_live2d_render_model_id, skr::InlineVector<uint32_t, 4>> sorted_mask_drawable_lists;
     const float kMotionFramesPerSecond = 240.0f;
     skr::UMap<skr_live2d_render_model_id, STimer> motion_timers;
     uint32_t last_ms = 0;
@@ -429,8 +429,7 @@ protected:
         {
             auto texture_view = skr_live2d_render_model_get_texture_view(render_model, j);
             {
-                auto iter = render_model->bind_tables.find(texture_view);
-                if (iter == render_model->bind_tables.end())
+                if (!render_model->bind_tables.contains(texture_view))
                 {
                     SkrZoneScopedN("Live2D::createBindTable");
 
@@ -451,8 +450,7 @@ protected:
                 }
             }
             {
-                auto iter = render_model->mask_bind_tables.find(texture_view);
-                if (iter == render_model->mask_bind_tables.end())
+                if (!render_model->mask_bind_tables.contains(texture_view))
                 {
                     SkrZoneScopedN("Live2D::createBindTable");
 
@@ -540,15 +538,12 @@ protected:
                     auto& view = render_model->vertex_buffer_views[j];
                     uint32_t vcount = 0;
                     const void* pSrc = getVBData(render_model, j, vcount); (void)pSrc;
-                    if (imported_vbs_map.find(view.buffer) == imported_vbs_map.end())
-                    {
-                        imported_vbs_map.find(view.buffer)->value = render_graph->create_buffer(
+                    imported_vbs_map.add_or_assign(view.buffer, render_graph->create_buffer(
                             [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
                             skr::String name = skr::format(u8"live2d_vb-{}{}", (uint64_t)render_model, j);
                             builder.set_name((const char8_t*)name.c_str())
                                     .import(view.buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-                            });
-                    }
+                            }));
                     imported_vbs[j] = imported_vbs_map.find(view.buffer)->value;
                     vb_sizes[j] = vcount * view.stride;
                     vb_offsets[j] = view.offset;
