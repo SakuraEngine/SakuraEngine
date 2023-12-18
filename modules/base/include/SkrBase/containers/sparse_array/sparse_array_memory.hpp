@@ -77,6 +77,14 @@ inline void copy_sparse_array_bit_array(TBitBlock* dst, const TBitBlock* src, TS
     using BitAlgo = algo::BitAlgo<TBitBlock>;
     std::memcpy(dst, src, sizeof(TBitBlock) * BitAlgo::num_blocks(size));
 }
+template <typename TBitBlock, typename TS>
+inline void move_sparse_array_bit_array(TBitBlock* dst, TBitBlock* src, TS size) noexcept
+{
+    using BitAlgo       = algo::BitAlgo<TBitBlock>;
+    const TS byte_count = sizeof(TBitBlock) * BitAlgo::num_blocks(size);
+    std::memcpy(dst, src, byte_count);
+    std::memset(src, 0, byte_count);
+}
 template <typename T, typename TBitBlock, typename TS>
 inline void destruct_sparse_array_data(SparseArrayData<T, TS>* data, const TBitBlock* bit_array, TS size) noexcept
 {
@@ -302,9 +310,11 @@ struct SparseArrayMemory : public Allocator {
             _hole_size      = 0;
         }
     }
-    inline void grow(SizeType grow_size) noexcept
+    inline SizeType grow(SizeType grow_size) noexcept
     {
+        SizeType old_size        = _sparse_size;
         SizeType new_sparse_size = _sparse_size + grow_size;
+
         if (new_sparse_size > _capacity)
         {
             auto new_capacity = default_get_grow<DataType>(new_sparse_size, _capacity);
@@ -316,6 +326,7 @@ struct SparseArrayMemory : public Allocator {
         }
 
         _sparse_size = new_sparse_size;
+        return old_size;
     }
     inline void shrink() noexcept
     {
@@ -331,14 +342,7 @@ struct SparseArrayMemory : public Allocator {
         if (_sparse_size)
         {
             // destruct items
-            if constexpr (memory::MemoryTraits<DataType>::use_dtor)
-            {
-                TrueBitIt<TBitBlock, SizeType, false> it(_bit_array, _sparse_size);
-                for (; it; ++it)
-                {
-                    memory::destruct<DataType>(&_data[it.index()]._sparse_array_data);
-                }
-            }
+            destruct_sparse_array_data(_data, _bit_array, _sparse_size);
 
             // clean up bit array
             if (_bit_array)
@@ -382,5 +386,183 @@ private:
     SizeType      _bit_array_size = 0;
     SizeType      _freelist_head  = npos;
     SizeType      _hole_size      = 0;
+};
+} // namespace skr::container
+
+// fixed sparse array memory
+namespace skr::container
+{
+template <typename T, typename TBitBlock, typename TS, uint64_t kCount>
+struct FixedSparseArrayMemory {
+    static_assert(kCount > 0, "FixedArrayMemory must have a capacity larger than 0");
+    struct DummyParam {
+    };
+
+    // configure
+    using SizeType           = TS;
+    using DataType           = T;
+    using StorageType        = SparseArrayData<T, SizeType>;
+    using BitBlockType       = TBitBlock;
+    using AllocatorCtorParam = DummyParam;
+
+    // ctor & dtor
+    inline FixedSparseArrayMemory(AllocatorCtorParam) noexcept
+    {
+    }
+    inline ~FixedSparseArrayMemory() noexcept
+    {
+        free();
+    }
+
+    // copy & move
+    inline FixedSparseArrayMemory(const FixedSparseArrayMemory& other, AllocatorCtorParam) noexcept
+    {
+        if (other._sparse_size)
+        {
+            // copy data
+            copy_sparse_array_data(data(), other.data(), other.bit_array(), other.sparse_size());
+            copy_sparse_array_bit_array(bit_array(), other.bit_array(), other.sparse_size());
+            _sparse_size   = other._sparse_size;
+            _freelist_head = other._freelist_head;
+            _hole_size     = other._hole_size;
+        }
+    }
+    inline FixedSparseArrayMemory(FixedSparseArrayMemory&& other) noexcept
+    {
+        if (other._sparse_size)
+        {
+            move_sparse_array_data(data(), other.data(), other.bit_array(), other.sparse_size());
+            move_sparse_array_bit_array(bit_array(), other.bit_array(), other.sparse_size());
+            _sparse_size   = other._sparse_size;
+            _freelist_head = other._freelist_head;
+            _hole_size     = other._hole_size;
+
+            other._sparse_size   = 0;
+            other._freelist_head = npos;
+            other._hole_size     = 0;
+        }
+    }
+
+    // assign & move assign
+    inline void operator=(const FixedSparseArrayMemory& rhs) noexcept
+    {
+        if (this != &rhs)
+        {
+            // clean up self
+            clear();
+
+            // copy data
+            if ((rhs._sparse_size - rhs._hole_size) > 0)
+            {
+                // copy data
+                copy_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
+                copy_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
+                _sparse_size   = rhs._sparse_size;
+                _freelist_head = rhs._freelist_head;
+                _hole_size     = rhs._hole_size;
+            }
+        }
+    }
+    inline void operator=(FixedSparseArrayMemory&& rhs) noexcept
+    {
+        if (this != &rhs)
+        {
+            // clean up self
+            clear();
+
+            // move data
+            if ((rhs.sparse_size() - rhs.hole_size()) > 0)
+            {
+                // move data
+                move_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
+                move_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
+                _sparse_size   = rhs._sparse_size;
+                _freelist_head = rhs._freelist_head;
+                _hole_size     = rhs._hole_size;
+
+                rhs._sparse_size   = 0;
+                rhs._freelist_head = npos;
+                rhs._hole_size     = 0;
+            }
+        }
+    }
+
+    // memory operations
+    inline void realloc(SizeType new_capacity) noexcept
+    {
+        SKR_ASSERT(new_capacity <= kCount && "FixedSparseArrayMemory can't alloc memory that larger than kCount");
+    }
+    inline void free() noexcept
+    {
+        if (_sparse_size - _hole_size)
+        {
+            // destruct items
+            destruct_sparse_array_data(data(), bit_array(), sparse_size());
+
+            // reset data
+            _sparse_size   = 0;
+            _freelist_head = npos;
+            _hole_size     = 0;
+        }
+    }
+    inline SizeType grow(SizeType grow_size) noexcept
+    {
+        SKR_ASSERT((_sparse_size + grow_size) <= kCount && "FixedSparseArrayMemory can't alloc memory that larger than kCount");
+
+        SizeType old_size = _sparse_size;
+        _sparse_size += grow_size;
+        return old_size;
+    }
+    inline void shrink() noexcept
+    {
+        // do noting
+    }
+    inline void clear() noexcept
+    {
+        if (_sparse_size)
+        {
+            // destruct items
+            destruct_sparse_array_data(data(), bit_array(), sparse_size());
+
+            // clean up bit array
+            BitAlgo::set_blocks(bit_array(), SizeType(0), BitAlgo::num_blocks(_sparse_size), false);
+
+            // clean up data
+            _hole_size     = 0;
+            _sparse_size   = 0;
+            _freelist_head = npos;
+        }
+    }
+
+    // getter
+    inline StorageType*        data() noexcept { return _data_placeholder.data_typed(); }
+    inline const StorageType*  data() const noexcept { return _data_placeholder.data_typed(); }
+    inline BitBlockType*       bit_array() noexcept { return _bit_array_placeholder.data_typed(); }
+    inline const BitBlockType* bit_array() const noexcept { return _bit_array_placeholder.data_typed(); }
+    inline SizeType            sparse_size() const noexcept { return _sparse_size; }
+    inline SizeType            capacity() const noexcept { return kCount; }
+    inline SizeType            bit_array_size() const noexcept { return kCount; }
+    inline SizeType            freelist_head() const noexcept { return _freelist_head; }
+    inline SizeType            hole_size() const noexcept { return _hole_size; }
+
+    // setter
+    inline void set_sparse_size(SizeType value) noexcept { _sparse_size = value; }
+    inline void set_freelist_head(SizeType value) noexcept { _freelist_head = value; }
+    inline void set_hole_size(SizeType value) noexcept { _hole_size = value; }
+
+private:
+    // algo
+    using BitAlgo                         = algo::BitAlgo<TBitBlock>;
+    static inline constexpr SizeType npos = npos_of<SizeType>;
+
+    // helper functions
+    static constexpr SizeType block_count = int_div_ceil(kCount, BitAlgo::PerBlockSize);
+
+private:
+    Placeholder<StorageType, kCount>       _data_placeholder;
+    Placeholder<BitBlockType, block_count> _bit_array_placeholder;
+    SizeType                               _sparse_size   = 0;
+    SizeType                               _hole_size     = 0;
+    SizeType                               _freelist_head = npos;
 };
 } // namespace skr::container

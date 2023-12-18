@@ -295,11 +295,11 @@ inline void Optional<T>::emplace(Args&&... args)
 template <typename T>
 inline T* Optional<T>::_data_ptr()
 {
-    return reinterpret_cast<T*>(&_placeholder);
+    return _placeholder.data_typed();
 }
 template <typename T>
 inline const T* Optional<T>::_data_ptr() const
 {
-    return reinterpret_cast<const T*>(&_placeholder);
+    return _placeholder.data_typed();
 }
 } // namespace skr::container

@@ -174,14 +174,14 @@ struct SparseArray : protected Memory {
 
 private:
     // helper
-    void _realloc(SizeType new_capacity);
-    void _free();
-    void _grow(SizeType grow_size);
-    void _set_sparse_size(SizeType value);
-    void _set_freelist_head(SizeType value);
-    void _set_hole_size(SizeType value);
-    void _copy_compacted_data(StorageType* dst, const DataType* src, SizeType size);
-    void _break_freelist_at(SizeType index);
+    void     _realloc(SizeType new_capacity);
+    void     _free();
+    SizeType _grow(SizeType grow_size);
+    void     _set_sparse_size(SizeType value);
+    void     _set_freelist_head(SizeType value);
+    void     _set_hole_size(SizeType value);
+    void     _copy_compacted_data(StorageType* dst, const DataType* src, SizeType size);
+    void     _break_freelist_at(SizeType index);
 };
 } // namespace skr::container
 
@@ -200,9 +200,9 @@ SKR_INLINE void SparseArray<Memory>::_free()
     Memory::free();
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::_grow(SizeType grow_size)
+SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::_grow(SizeType grow_size)
 {
-    Memory::grow(grow_size);
+    return Memory::grow(grow_size);
 }
 template <typename Memory>
 SKR_INLINE void SparseArray<Memory>::_set_sparse_size(SizeType value)
@@ -734,8 +734,7 @@ SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add_unsafe
     }
     else // no hole case
     {
-        index = sparse_size();
-        _grow(1);
+        index = _grow(1);
     }
 
     // setup bit
