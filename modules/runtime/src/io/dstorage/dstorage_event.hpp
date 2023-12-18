@@ -39,7 +39,7 @@ protected:
     }
     friend struct DStorageRAMReader;
     friend struct DStorageVRAMReader;
-    skr::FixedVector<IOBatchId, 32> batches;
+    skr::InlineVector<IOBatchId, 32> batches;
     SkrDStorageQueueId queue = nullptr;
     ISmartPoolPtr<DStorageEvent> pool = nullptr;
     SkrDStorageEventId event = nullptr;

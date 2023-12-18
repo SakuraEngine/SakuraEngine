@@ -471,7 +471,7 @@ int ReadTrait<skr::String>::Read(skr_binary_reader_t* reader, skr::String& str)
         SKR_LOG_FATAL(u8"failed to read string buffer size! ret code: %d", ret);
         return ret;
     }
-    skr::FixedVector<char8_t, 64> temp;
+    skr::InlineVector<char8_t, 64> temp;
     temp.resize(size);
     ret = ReadBytes(reader, (void*)temp.data(), temp.size());
     if (ret != 0)

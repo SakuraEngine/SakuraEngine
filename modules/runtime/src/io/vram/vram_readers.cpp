@@ -577,8 +577,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
     while (fetched_batches[priority].try_dequeue(batch))
     {
         auto addOrGetEvent = [&](SkrDStorageQueueId queue) {
-            auto&& iter = _events.find(queue);
-            if (iter == _events.end())
+            if (!_events.contains(queue))
             {
                 _events.emplace(queue, events[priority]->allocate(queue));
             }

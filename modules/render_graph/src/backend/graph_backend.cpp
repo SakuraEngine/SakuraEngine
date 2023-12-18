@@ -301,7 +301,7 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
     pass->foreach_textures(
     [&](TextureNode* texture, TextureEdge* edge) {
         auto tex_resolved = resolve(executor, *texture);
-        if (tex_resolve_set.find(texture->get_handle()) == tex_resolve_set.end())
+        if (!tex_resolve_set.contains(texture->get_handle()) )
         {
             resolved_textures.emplace(texture->get_handle(), tex_resolved);
             tex_resolve_set.add(texture->get_handle());
@@ -321,7 +321,7 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
     pass->foreach_buffers(
     [&](BufferNode* buffer, BufferEdge* edge) {
         auto buf_resolved = resolve(executor, *buffer);
-        if (buf_resolve_set.find(buffer->get_handle()) == buf_resolve_set.end())
+        if (!buf_resolve_set.find(buffer->get_handle()) )
         {
             resolved_buffers.emplace(buffer->get_handle(), buf_resolved);
             buf_resolve_set.add(buffer->get_handle());

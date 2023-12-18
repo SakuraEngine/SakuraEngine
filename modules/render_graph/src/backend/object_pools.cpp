@@ -274,8 +274,7 @@ void TextureViewPool::finalize()
 CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& desc, uint64_t frame_index)
 {
     const auto key = make_zeroed<TextureViewPool::Key>(device, desc);
-    auto found = views.find(key);
-    if (found != views.end())
+    if (auto found = views.find(key))
     {
         // SKR_LOG_TRACE(u8"Reallocating texture view for texture %p (id %lld, old %lld)", desc.texture,
         //    key.texture->unique_id, found->second.texture_view->info.texture->unique_id);
