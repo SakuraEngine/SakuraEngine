@@ -295,7 +295,7 @@ TEST_CASE("test sparse hash set (Single)")
         Equal<ValueType>,
         false,
         uint64_t,
-        SkrTestAllocator_New>>;
+        SkrTestAllocator>>;
         TestAddOrAssignSet b({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
         b.add_or_assign({ 1, 2 });
         b.add_or_assign({ 4, 5 });
