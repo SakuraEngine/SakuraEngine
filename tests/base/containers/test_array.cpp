@@ -778,25 +778,25 @@ TEST_CASE("test fixed array")
 {
     using namespace skr;
     using namespace skr::container;
-    static constexpr uint64_t kTestArrayCapacity = 200;
+    static constexpr uint64_t kFixedCapacity = 200;
 
-    using TestArray = FixedArray<uint32_t, kTestArrayCapacity>;
+    using TestArray = FixedArray<uint32_t, kFixedCapacity>;
 
     SUBCASE("ctor")
     {
         TestArray a;
         REQUIRE_EQ(a.size(), 0);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
 
         TestArray b(20);
         REQUIRE_EQ(b.size(), 20);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(b.data(), nullptr);
 
         TestArray c(20, 114514);
         REQUIRE_EQ(c.size(), 20);
-        REQUIRE_EQ(c.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(c.capacity(), kFixedCapacity);
         REQUIRE_NE(c.data(), nullptr);
         for (uint32_t i = 0; i < 20; ++i)
         {
@@ -805,7 +805,7 @@ TEST_CASE("test fixed array")
 
         TestArray d(c.data(), c.size() - 5);
         REQUIRE_EQ(d.size(), 15);
-        REQUIRE_EQ(d.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(d.capacity(), kFixedCapacity);
         REQUIRE_NE(d.data(), nullptr);
         for (uint32_t i = 0; i < 15; ++i)
         {
@@ -814,7 +814,7 @@ TEST_CASE("test fixed array")
 
         TestArray e({ 1, 1, 4, 5, 1, 4 });
         REQUIRE_EQ(e.size(), 6);
-        REQUIRE_EQ(e.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(e.capacity(), kFixedCapacity);
         REQUIRE_NE(e.data(), nullptr);
         REQUIRE_EQ(e[0], 1);
         REQUIRE_EQ(e[1], 1);
@@ -830,16 +830,16 @@ TEST_CASE("test fixed array")
 
         TestArray b = a;
         REQUIRE_EQ(b.size(), a.size());
-        REQUIRE_EQ(b.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(b.capacity(), kFixedCapacity);
         REQUIRE_NE(b.data(), nullptr);
 
         auto      old_size = a.size();
         TestArray c        = std::move(a);
         REQUIRE_EQ(a.size(), 0);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
         REQUIRE_EQ(c.size(), old_size);
-        REQUIRE_EQ(c.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(c.capacity(), kFixedCapacity);
         REQUIRE_NE(c.data(), nullptr);
     }
 
@@ -849,16 +849,16 @@ TEST_CASE("test fixed array")
 
         b = a;
         REQUIRE_EQ(b.size(), a.size());
-        REQUIRE_EQ(b.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(b.capacity(), kFixedCapacity);
         REQUIRE_NE(b.data(), nullptr);
 
         auto old_size = a.size();
         c             = std::move(a);
         REQUIRE_EQ(a.size(), 0);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
         REQUIRE_EQ(c.size(), old_size);
-        REQUIRE_EQ(c.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(c.capacity(), kFixedCapacity);
         REQUIRE_NE(c.data(), nullptr);
     }
 
@@ -869,7 +869,7 @@ TEST_CASE("test fixed array")
 
         a.assign({ 1, 1, 4, 5, 1, 4 });
         REQUIRE_EQ(a.size(), 6);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_EQ(a[0], 1);
         REQUIRE_EQ(a[1], 1);
         REQUIRE_EQ(a[2], 4);
@@ -879,7 +879,7 @@ TEST_CASE("test fixed array")
 
         a.assign(b.data(), b.size());
         REQUIRE_EQ(a.size(), 200);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         for (uint32_t i = 0; i < 200; ++i)
         {
             REQUIRE_EQ(a[i], 114);
@@ -934,32 +934,32 @@ TEST_CASE("test fixed array")
 
         a.clear();
         REQUIRE_EQ(a.size(), 0);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
 
         a = { 1, 1, 4, 5, 1, 4 };
         a.release(20);
         REQUIRE_EQ(a.size(), 0);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
 
         a.release();
         REQUIRE_EQ(a.size(), 0);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
 
         a.reserve(60);
         REQUIRE_EQ(a.size(), 0);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
 
         a.shrink();
         REQUIRE_EQ(a.size(), 0);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
 
         a = TestArray(10, 114514);
         a.resize(40, 1145140);
         REQUIRE_EQ(a.size(), 40);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
         for (uint32_t i = 0; i < 10; ++i)
         {
@@ -973,19 +973,19 @@ TEST_CASE("test fixed array")
         a.clear();
         a.resize_unsafe(36);
         REQUIRE_EQ(a.size(), 36);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
 
         a.clear();
         a.resize_default(38);
         REQUIRE_EQ(a.size(), 38);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
 
         a.clear();
         a.resize_zeroed(21);
         REQUIRE_EQ(a.size(), 21);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
         for (uint32_t i = 0; i < 21; ++i)
         {
@@ -999,7 +999,7 @@ TEST_CASE("test fixed array")
         a.add(1145140, 5);
         a.add(114514, 20);
         REQUIRE_EQ(a.size(), 35);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
         for (uint32_t i = 0; i < 10; ++i)
         {
@@ -1043,7 +1043,7 @@ TEST_CASE("test fixed array")
         a.add_default(10);
         REQUIRE_EQ(a.size(), 26);
 
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
     }
 
     SUBCASE("add at")
@@ -1112,13 +1112,13 @@ TEST_CASE("test fixed array")
         TestArray a(10, 114514);
         a.emplace(10);
         REQUIRE_EQ(a.size(), 11);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
         REQUIRE_EQ(a[10], 10);
 
         a.emplace_at(5, 25);
         REQUIRE_EQ(a.size(), 12);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_NE(a.data(), nullptr);
         for (uint32_t i = 0; i < 5; ++i)
         {
@@ -1139,7 +1139,7 @@ TEST_CASE("test fixed array")
 
         a.append(b);
         REQUIRE_EQ(a.size(), 30);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         for (uint32_t i = 0; i < 20; ++i)
         {
             REQUIRE_EQ(a[i], 114514);
@@ -1151,7 +1151,7 @@ TEST_CASE("test fixed array")
 
         a.append({ 1, 1, 4, 5, 1, 4 });
         REQUIRE_EQ(a.size(), 36);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         for (uint32_t i = 0; i < 20; ++i)
         {
             REQUIRE_EQ(a[i], 114514);
@@ -1169,7 +1169,7 @@ TEST_CASE("test fixed array")
 
         a.append(b.data(), 5);
         REQUIRE_EQ(a.size(), 41);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         for (uint32_t i = 0; i < 20; ++i)
         {
             REQUIRE_EQ(a[i], 114514);
@@ -1197,7 +1197,7 @@ TEST_CASE("test fixed array")
 
         a.append_at(10, b);
         REQUIRE_EQ(a.size(), 30);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         for (uint32_t i = 0; i < 10; ++i)
         {
             REQUIRE_EQ(a[i], 114514);
@@ -1213,7 +1213,7 @@ TEST_CASE("test fixed array")
 
         a.append_at(20, { 1, 1, 4, 5, 1, 4 });
         REQUIRE_EQ(a.size(), 36);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         for (uint32_t i = 0; i < 10; ++i)
         {
             REQUIRE_EQ(a[i], 114514);
@@ -1235,7 +1235,7 @@ TEST_CASE("test fixed array")
 
         a.append_at(10, b.data(), 5);
         REQUIRE_EQ(a.size(), 41);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         for (uint32_t i = 0; i < 10; ++i)
         {
             REQUIRE_EQ(a[i], 114514);
@@ -1263,7 +1263,7 @@ TEST_CASE("test fixed array")
 
         a.remove_at(0, 2);
         REQUIRE_EQ(a.size(), 24);
-        REQUIRE_EQ(a.capacity(), kTestArrayCapacity);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
         REQUIRE_EQ(a[0], 4);
         REQUIRE_EQ(a[1], 5);
         REQUIRE_EQ(a[2], 1);
@@ -1377,8 +1377,8 @@ TEST_CASE("test fixed array")
         uint32_t raw_data_group[]     = { 1, 1, 4, 5, 1, 4 };
         uint32_t removed_data_group[] = { 4, 5, 4 };
 
-        TestArray a(kTestArrayCapacity), b(kTestArrayCapacity);
-        for (uint32_t i = 0; i < kTestArrayCapacity; ++i)
+        TestArray a(kFixedCapacity), b(kFixedCapacity);
+        for (uint32_t i = 0; i < kFixedCapacity; ++i)
         {
             a[i] = raw_data_group[i % 6];
             b[i] = raw_data_group[i % 6];
