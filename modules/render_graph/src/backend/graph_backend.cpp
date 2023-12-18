@@ -304,7 +304,7 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
         if (!tex_resolve_set.contains(texture->get_handle()) )
         {
             resolved_textures.emplace(texture->get_handle(), tex_resolved);
-            tex_resolve_set.add(texture->get_handle());
+            tex_resolve_set.add_or_assign(texture->get_handle());
 
             const auto current_state = get_lastest_state(texture, pass);
             const auto dst_state     = edge->requested_state;
@@ -324,7 +324,7 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
         if (!buf_resolve_set.find(buffer->get_handle()) )
         {
             resolved_buffers.emplace(buffer->get_handle(), buf_resolved);
-            buf_resolve_set.add(buffer->get_handle());
+            buf_resolve_set.add_or_assign(buffer->get_handle());
 
             const auto current_state = get_lastest_state(buffer, pass);
             const auto dst_state     = edge->requested_state;

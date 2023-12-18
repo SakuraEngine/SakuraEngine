@@ -49,6 +49,7 @@ SKR_INLINE void copy(Dst* dst, Src* src)
         }
         else
         {
+            static_assert(sizeof(Dst) == sizeof(Src));
             std::memcpy(dst, src, sizeof(Src));
         }
     }
@@ -64,6 +65,7 @@ SKR_INLINE void assign(Dst* dst, Src* src)
         }
         else
         {
+            static_assert(sizeof(Dst) == sizeof(Src));
             std::memcpy(dst, src, sizeof(Src));
         }
     }
@@ -81,6 +83,7 @@ SKR_INLINE void move(Dst* dst, Src* src)
         }
         else
         {
+            static_assert(sizeof(Dst) == sizeof(Src));
             std::memmove(dst, src, sizeof(Src));
         }
 
@@ -101,7 +104,8 @@ SKR_INLINE void move_assign(Dst* dst, Src* src)
         }
         else
         {
-            std::memcpy(dst, src);
+            static_assert(sizeof(Dst) == sizeof(Src));
+            std::memcpy(dst, src, sizeof(Src));
         }
 
         if constexpr (MemoryTraits<Dst, Src>::need_dtor_after_move)
