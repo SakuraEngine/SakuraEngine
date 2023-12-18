@@ -4,19 +4,19 @@
 
 namespace skr
 {
-struct SkrTestAllocator_New {
+struct SkrTestAllocator {
     struct DummyParam {
     };
     using CtorParam                       = DummyParam; // dummy ctor param
     static constexpr bool support_realloc = false;      // realloc not supported
 
-    inline SkrTestAllocator_New(DummyParam) noexcept {}
-    inline SkrTestAllocator_New() noexcept {}
-    inline ~SkrTestAllocator_New() noexcept {}
-    inline SkrTestAllocator_New(const SkrTestAllocator_New&) {}
-    inline SkrTestAllocator_New(SkrTestAllocator_New&&) noexcept {}
-    inline SkrTestAllocator_New& operator=(const SkrTestAllocator_New&) { return *this; }
-    inline SkrTestAllocator_New& operator=(SkrTestAllocator_New&&) noexcept { return *this; }
+    inline SkrTestAllocator(DummyParam) noexcept {}
+    inline SkrTestAllocator() noexcept {}
+    inline ~SkrTestAllocator() noexcept {}
+    inline SkrTestAllocator(const SkrTestAllocator&) {}
+    inline SkrTestAllocator(SkrTestAllocator&&) noexcept {}
+    inline SkrTestAllocator& operator=(const SkrTestAllocator&) { return *this; }
+    inline SkrTestAllocator& operator=(SkrTestAllocator&&) noexcept { return *this; }
 
     template <typename T>
     inline static T* alloc(size_t size)

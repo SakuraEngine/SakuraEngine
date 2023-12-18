@@ -22,6 +22,7 @@ struct ArrayMemory : public Allocator {
     }
     inline ~ArrayMemory() noexcept
     {
+        clear();
         free();
     }
 
@@ -29,7 +30,7 @@ struct ArrayMemory : public Allocator {
     inline ArrayMemory(const ArrayMemory& other, AllocatorCtorParam param) noexcept
         : Allocator(std::move(param))
     {
-        if (other._size > 0)
+        if (other._size)
         {
             realloc(other._size);
             memory::copy(_data, other._data, other._size);
@@ -215,13 +216,14 @@ struct FixedArrayMemory {
     }
     inline ~FixedArrayMemory() noexcept
     {
+        clear();
         free();
     }
 
     // copy & move
     inline FixedArrayMemory(const FixedArrayMemory& other, AllocatorCtorParam) noexcept
     {
-        if (other._size > 0)
+        if (other._size)
         {
             memory::copy(data(), other.data(), other._size);
             _size = other._size;
@@ -229,7 +231,7 @@ struct FixedArrayMemory {
     }
     inline FixedArrayMemory(FixedArrayMemory&& other) noexcept
     {
-        if (other._size > 0)
+        if (other._size)
         {
             memory::move(data(), other.data(), other._size);
             _size = other._size;
@@ -279,11 +281,6 @@ struct FixedArrayMemory {
     }
     inline void free() noexcept
     {
-        if (_size)
-        {
-            memory::destruct(data(), _size);
-            _size = 0;
-        }
     }
     inline SizeType grow(SizeType grow_size) noexcept
     {
@@ -318,5 +315,284 @@ struct FixedArrayMemory {
 private:
     Placeholder<T, kCount> _placeholder;
     SizeType               _size = 0;
+};
+} // namespace skr::container
+
+// inline array memory
+namespace skr::container
+{
+template <typename T, typename TS, uint64_t kInlineCount, typename Allocator>
+struct InlineArrayMemory : public Allocator {
+    using DataType           = T;
+    using SizeType           = TS;
+    using AllocatorCtorParam = typename Allocator::CtorParam;
+
+    // ctor & dtor
+    inline InlineArrayMemory(AllocatorCtorParam param) noexcept
+        : Allocator(std::move(param))
+    {
+    }
+    inline ~InlineArrayMemory() noexcept
+    {
+        clear();
+        free();
+    }
+
+    // copy & move
+    inline InlineArrayMemory(const InlineArrayMemory& other, AllocatorCtorParam param) noexcept
+        : Allocator(std::move(param))
+    {
+        if (other._size)
+        {
+            realloc(other._size);
+            memory::copy(data(), other.data(), other._size);
+            _size = other._size;
+        }
+    }
+    inline InlineArrayMemory(InlineArrayMemory&& other) noexcept
+        : Allocator(std::move(other))
+    {
+        if (other._is_using_inline_memory())
+        {
+            // move inline data
+            memory::move(_placeholder.data_typed(), other._placeholder.data_typed(), other._size);
+            _size = other._size;
+
+            // invalidate other
+            other._size = 0;
+        }
+        else
+        {
+            // move heap data
+            _heap_data = other._heap_data;
+            _size      = other._size;
+            _capacity  = other._capacity;
+
+            // invalidate other
+            other._heap_data = nullptr;
+            other._size      = 0;
+            other._capacity  = kInlineCount;
+        }
+    }
+
+    // assign & move assign
+    inline void operator=(const InlineArrayMemory& rhs) noexcept
+    {
+        if (this != &rhs)
+        {
+            // clean up self
+            clear();
+
+            // copy allocator
+            Allocator::operator=(rhs);
+
+            // copy data
+            if (rhs._size > 0)
+            {
+                // reserve memory
+                if (_capacity < rhs._size)
+                {
+                    realloc(rhs._size);
+                }
+
+                // copy data
+                memory::copy(data(), rhs.data(), rhs._size);
+                _size = rhs._size;
+            }
+        }
+    }
+    inline void operator=(InlineArrayMemory&& rhs) noexcept
+    {
+        if (this != &rhs)
+        {
+            // move data
+            if (rhs._is_using_inline_memory())
+            {
+                // clean up self
+                clear();
+
+                // move allocator
+                Allocator::operator=(std::move(rhs));
+
+                // move inline data
+                memory::move(data(), rhs.data(), rhs._size);
+                _size = rhs._size;
+
+                // invalidate rhs
+                rhs._size = 0;
+            }
+            else
+            {
+                // clean up self
+                clear();
+
+                // free
+                free();
+
+                // move allocator
+                Allocator::operator=(std::move(rhs));
+
+                // move data
+                _heap_data = rhs._heap_data;
+                _size      = rhs._size;
+                _capacity  = rhs._capacity;
+
+                // invalidate rhs
+                rhs._heap_data = rhs._heap_data;
+                rhs._size      = 0;
+                rhs._capacity  = kInlineCount;
+            }
+        }
+    }
+
+    // memory operations
+    inline void realloc(SizeType new_capacity) noexcept
+    {
+        SKR_ASSERT(new_capacity != _capacity);
+        SKR_ASSERT(new_capacity > 0);
+        SKR_ASSERT(_size <= new_capacity);
+
+        if (new_capacity > kInlineCount)
+        {
+            if (_is_using_inline_memory()) // inline -> heap
+            {
+                // alloc new memory
+                T* new_memory = Allocator::template alloc<T>(new_capacity);
+
+                // move items
+                if (_size)
+                {
+                    memory::move(new_memory, _placeholder.data_typed(), _size);
+                }
+
+                // update data
+                _heap_data = new_memory;
+                _capacity  = new_capacity;
+            }
+            else // heap -> heap
+            {
+                if constexpr (memory::MemoryTraits<T>::use_realloc && Allocator::support_realloc)
+                {
+                    _heap_data = Allocator::template realloc<T>(_heap_data, new_capacity);
+                    _capacity  = new_capacity;
+                }
+                else
+                {
+                    // alloc new memory
+                    T* new_memory = Allocator::template alloc<T>(new_capacity);
+
+                    // move items
+                    if (_size)
+                    {
+                        memory::move(new_memory, _heap_data, _size);
+                    }
+
+                    // release old memory
+                    Allocator::template free<T>(_heap_data);
+
+                    // update data
+                    _heap_data = new_memory;
+                    _capacity  = new_capacity;
+                }
+            }
+        }
+        else
+        {
+            if (_is_using_inline_memory()) // inline -> inline
+            {
+                // do noting
+            }
+            else // heap -> inline
+            {
+                T* cached_heap_data = _heap_data;
+
+                // move items
+                if (_size)
+                {
+                    memory::move(_placeholder.data_typed(), cached_heap_data, _size);
+                }
+
+                // release old memory
+                Allocator::template free<T>(cached_heap_data);
+
+                // update data
+                _capacity = kInlineCount;
+            }
+        }
+    }
+    inline void free() noexcept
+    {
+        if (!_is_using_inline_memory())
+        {
+            Allocator::template free<T>(_heap_data);
+            _heap_data = nullptr;
+            _size      = 0;
+            _capacity  = kInlineCount;
+        }
+    }
+    inline SizeType grow(SizeType grow_size) noexcept
+    {
+        SizeType old_size = _size;
+        SizeType new_size = old_size + grow_size;
+
+        if (new_size > _capacity)
+        {
+            SizeType new_capacity = default_get_grow<T>(new_size, _capacity);
+            SKR_ASSERT(new_capacity >= _capacity);
+            if (new_capacity >= _capacity)
+            {
+                realloc(new_capacity);
+            }
+        }
+
+        _size = new_size;
+        return old_size;
+    }
+    inline void shrink() noexcept
+    {
+        SizeType new_capacity = default_get_shrink<T>(_size, _capacity);
+        SKR_ASSERT(new_capacity >= _size);
+        if (new_capacity < _capacity)
+        {
+            if (new_capacity)
+            {
+                realloc(new_capacity);
+            }
+            else
+            {
+                free();
+            }
+        }
+    }
+    inline void clear() noexcept
+    {
+        if (_size)
+        {
+            memory::destruct(data(), _size);
+            _size = 0;
+        }
+    }
+
+    // getter
+    inline T*       data() noexcept { return _is_using_inline_memory() ? _placeholder.data_typed() : _heap_data; }
+    inline const T* data() const noexcept { return _is_using_inline_memory() ? _placeholder.data_typed() : _heap_data; }
+    inline SizeType size() const noexcept { return _size; }
+    inline SizeType capacity() const noexcept { return _capacity; }
+
+    // setter
+    inline void set_size(SizeType value) noexcept { _size = value; }
+
+private:
+    // helper
+    inline bool _is_using_inline_memory() const noexcept { return _capacity == kInlineCount; }
+
+private:
+    union
+    {
+        Placeholder<T, kInlineCount> _placeholder;
+        T*                           _heap_data;
+    };
+    SizeType _size     = 0;
+    SizeType _capacity = kInlineCount;
 };
 } // namespace skr::container

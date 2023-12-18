@@ -18,7 +18,7 @@ namespace skr
 using TestSizeType      = uint64_t;
 using TestHashType      = uint64_t;
 using TestBitBlockType  = uint64_t;
-using TestAllocatorType = SkrTestAllocator_New;
+using TestAllocatorType = SkrTestAllocator;
 
 //===========Array===================================================================
 template <typename T>
@@ -32,6 +32,13 @@ using FixedArray = container::Array<container::FixedArrayMemory<
 T,
 TestSizeType,
 kCount>>;
+
+template <typename T, uint64_t kInlineCount>
+using InlineArray = container::Array<container::InlineArrayMemory<
+T,
+TestSizeType,
+kInlineCount,
+TestAllocatorType>>;
 
 //===========Sparse Array===================================================================
 template <typename T>

@@ -118,6 +118,7 @@ struct SparseArrayMemory : public Allocator {
     }
     inline ~SparseArrayMemory() noexcept
     {
+        clear();
         free();
     }
 
@@ -293,9 +294,6 @@ struct SparseArrayMemory : public Allocator {
     {
         if (_data)
         {
-            // destruct items
-            destruct_sparse_array_data(_data, _bit_array, _sparse_size);
-
             // release memory
             Allocator::template free<StorageType>(_data);
             Allocator::template free<BitBlockType>(_bit_array);
@@ -411,6 +409,7 @@ struct FixedSparseArrayMemory {
     }
     inline ~FixedSparseArrayMemory() noexcept
     {
+        clear();
         free();
     }
 
@@ -494,16 +493,7 @@ struct FixedSparseArrayMemory {
     }
     inline void free() noexcept
     {
-        if (_sparse_size - _hole_size)
-        {
-            // destruct items
-            destruct_sparse_array_data(data(), bit_array(), sparse_size());
-
-            // reset data
-            _sparse_size   = 0;
-            _freelist_head = npos;
-            _hole_size     = 0;
-        }
+        // do noting
     }
     inline SizeType grow(SizeType grow_size) noexcept
     {
