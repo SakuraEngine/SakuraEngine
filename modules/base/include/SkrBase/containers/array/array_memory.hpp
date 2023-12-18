@@ -307,8 +307,8 @@ struct FixedArrayMemory {
     }
 
     // getter
-    inline T*       data() noexcept { return reinterpret_cast<T*>(_placeholder.storage); }
-    inline const T* data() const noexcept { return reinterpret_cast<const T*>(_placeholder.storage); }
+    inline T*       data() noexcept { return _placeholder.data_typed(); }
+    inline const T* data() const noexcept { return _placeholder.data_typed(); }
     inline SizeType size() const noexcept { return _size; }
     inline SizeType capacity() const noexcept { return kCount; }
 

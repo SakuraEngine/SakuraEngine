@@ -1,5 +1,4 @@
 #include "SkrTestFramework/framework.hpp"
-
 #include "SkrBase/containers/bit_array/bit_set.hpp"
 
 template <size_t N>

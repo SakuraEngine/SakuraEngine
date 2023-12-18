@@ -20,6 +20,7 @@ using TestHashType      = uint64_t;
 using TestBitBlockType  = uint64_t;
 using TestAllocatorType = SkrTestAllocator_New;
 
+//===========Array===================================================================
 template <typename T>
 using Array = container::Array<container::ArrayMemory<
 T,
@@ -32,6 +33,7 @@ T,
 TestSizeType,
 kCount>>;
 
+//===========Sparse Array===================================================================
 template <typename T>
 using SparseArray = container::SparseArray<container::SparseArrayMemory<
 T,
@@ -39,6 +41,14 @@ TestBitBlockType,
 TestSizeType,
 TestAllocatorType>>;
 
+template <typename T, uint64_t kCount>
+using FixedSparseArray = container::SparseArray<container::FixedSparseArrayMemory<
+T,
+TestBitBlockType,
+TestSizeType,
+kCount>>;
+
+//===========Sparse Hash Set===================================================================
 template <typename T>
 using SparseHashSet = container::SparseHashSet<container::SparseHashSetMemory<
 T,
@@ -50,6 +60,7 @@ false,
 TestSizeType,
 TestAllocatorType>>;
 
+//===========Sparse Hash Map===================================================================
 template <typename K, typename V>
 using SparseHashMap = container::SparseHashMap<container::SparseHashMapMemory<
 K,
@@ -62,6 +73,7 @@ false,
 TestSizeType,
 TestAllocatorType>>;
 
+//===========Bit Array===================================================================
 template <typename TBitBlock>
 using BitArray = container::BitArray<container::BitArrayMemory<
 TBitBlock,
