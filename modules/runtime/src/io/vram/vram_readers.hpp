@@ -3,7 +3,6 @@
 #include "SkrRT/containers/umap.hpp"
 #include "vram_service.hpp"
 
-#include "SkrRT/containers/deprecated.hpp"
 
 namespace skr { template <typename Artifact> struct IFuture; struct JobQueue; }
 

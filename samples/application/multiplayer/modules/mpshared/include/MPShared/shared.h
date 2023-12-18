@@ -7,7 +7,6 @@
 #include "SkrRT/containers/vector.hpp"
 #include "SkrScene/scene.h"
 #include "MPShared/components.h"
-#include "SkrRT/containers/deprecated.hpp"
 #ifndef __meta__
     #include "MPShared/shared.generated.h" // IWYU pragma: export
 #endif

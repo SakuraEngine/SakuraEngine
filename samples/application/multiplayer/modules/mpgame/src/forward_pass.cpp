@@ -13,9 +13,6 @@
 #include "SkrImGui/skr_imgui_rg.h"
 #include "forward_pass.hpp"
 
-#include "SkrRT/containers/deprecated.hpp"
-
-
 void RenderPassForward::on_update(const skr_primitive_pass_context_t* context) 
 {
     namespace rg = skr::render_graph;

@@ -7,15 +7,28 @@
 
 namespace skr
 {
-template <typename K, typename V, typename Hasher = Hash<K>>
+template <typename K, typename V, typename Hasher = Hash<K>, typename Allocator = SkrAllocator_New>
 using UMap = container::SparseHashMap<container::SparseHashMapMemory<
-K,                  /*Key Type*/
-V,                  /*Value Type*/
-uint64_t,           /*BitBlock Type*/
-uint64_t,           /*Hash Type*/
-Hasher,             /*Hasher Type*/
-Equal<K>,           /*Comparer Type*/
-false,              /*Allow MultiKey*/
-uint64_t,           /*Size Type*/
-SkrAllocator_New>>; /*Allocator Type*/
-}
+K,           /*Key Type*/
+V,           /*Value Type*/
+uint64_t,    /*BitBlock Type*/
+uint64_t,    /*Hash Type*/
+Hasher,      /*Hasher Type*/
+Equal<K>,    /*Comparer Type*/
+false,       /*Allow MultiKey*/
+uint64_t,    /*Size Type*/
+Allocator>>; /*Allocator Type*/
+
+template <typename K, typename V, uint64_t kCount, typename Hasher = Hash<K>>
+using FixedUMap = container::SparseHashMap<container::FixedSparseHashMapMemory<
+K,        /*Key Type*/
+V,        /*Value Type*/
+uint64_t, /*BitBlock Type*/
+uint64_t, /*Hash Type*/
+Hasher,   /*Hasher Type*/
+Equal<K>, /*Comparer Type*/
+false,    /*Allow MultiKey*/
+uint64_t, /*Size Type*/
+kCount    /*Count*/
+>>;
+} // namespace skr

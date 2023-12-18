@@ -17,8 +17,6 @@
 #include "live2d_mask_pass.hpp"
 #include "live2d_clipping.hpp"
 
-#include "SkrRT/containers/deprecated.hpp"
-
 static struct RegisterComponentskr_live2d_render_model_comp_tHelper
 {
     RegisterComponentskr_live2d_render_model_comp_tHelper()
@@ -333,7 +331,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                     }
                                     if (!sorted_mask_drawable_lists.contains(render_model))
                                         sorted_mask_drawable_lists.add(render_model, {});
-                                    sorted_mask_drawable_lists.find(render_model)->value.emplace_back(clipDrawIndex);
+                                    sorted_mask_drawable_lists.find(render_model)->value.emplace(clipDrawIndex);
                                     auto&& push_const = mask_push_constants.find(render_model)->value.emplace_back();
                                     const auto proj_mat = rtm::matrix_set(
                                         rtm::vector_load( &clipping_context->_matrixForMask.GetArray()[4 * 0] ),

@@ -108,7 +108,7 @@ protected:
         header.type = record->type;
         header.version = cooker->Version();
         auto runtime_deps = GetRuntimeDependencies();
-        header.dependencies.insert(header.dependencies.end(), runtime_deps.begin(), runtime_deps.end());
+        header.dependencies.append(runtime_deps.data(), runtime_deps.size());
         skr::binary::Archive(&s, header);
     }
 

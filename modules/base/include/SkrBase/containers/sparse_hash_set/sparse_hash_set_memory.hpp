@@ -255,12 +255,12 @@ struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetDat
     inline FixedSparseHashSetMemory(const FixedSparseHashSetMemory& other, AllocatorCtorParam param) noexcept
         : Super(other, std::move(param))
     {
-        memory::copy<SizeType>(bucket(), other.bucket(), kBucketSize);
+        memory::copy(bucket(), other.bucket(), kBucketSize);
     }
     inline FixedSparseHashSetMemory(FixedSparseHashSetMemory&& other) noexcept
         : Super(std::move(other))
     {
-        memory::copy<SizeType>(bucket(), other.bucket(), kBucketSize);
+        memory::copy(bucket(), other.bucket(), kBucketSize);
         other.clean_bucket();
     }
 
@@ -273,7 +273,7 @@ struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetDat
             Super::operator=(rhs);
 
             // copy bucket
-            memory::copy<SizeType>(bucket(), rhs.bucket(), kBucketSize);
+            memory::copy(bucket(), rhs.bucket(), kBucketSize);
         }
     }
     inline void operator=(FixedSparseHashSetMemory&& rhs) noexcept
@@ -283,7 +283,7 @@ struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetDat
             Super::operator=(std::move(rhs));
 
             // copy bucket
-            memory::copy<SizeType>(bucket(), rhs.bucket(), kBucketSize);
+            memory::copy(bucket(), rhs.bucket(), kBucketSize);
             rhs.clean_bucket();
         }
     }

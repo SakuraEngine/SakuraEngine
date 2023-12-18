@@ -2,7 +2,6 @@
 #include "../common/io_request.hpp"
 #include "SkrRT/platform/dstorage.h"
 
-#include "SkrRT/containers/deprecated.hpp"
 
 namespace skr {
 namespace io {

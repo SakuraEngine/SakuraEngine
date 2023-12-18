@@ -26,8 +26,6 @@ namespace skr::task
 #include "ftl/task_scheduler.h"
 #include "ftl/task_counter.h"
 
-#include "SkrRT/containers/deprecated.hpp"
-
 namespace skr::task
 {
     struct SKR_RUNTIME_API counter_t

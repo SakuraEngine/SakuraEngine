@@ -356,3 +356,14 @@ struct SKR_RENDER_GRAPH_API CopyPassContext : public PassContext {
 };
 } // namespace render_graph
 } // namespace skr
+
+namespace skr
+{
+template<render_graph::EObjectType type>
+struct Hash<render_graph::ObjectHandle<type>>{
+    inline size_t operator()(const render_graph::ObjectHandle<type>& handle) const SKR_NOEXCEPT
+    {
+        return Hash<render_graph::handle_t>()(handle);
+    }
+};
+}

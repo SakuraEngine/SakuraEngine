@@ -2,9 +2,8 @@
 #include "MPShared/module.configure.h"
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/bitset.hpp"
 #include "SkrRT/resource/resource_handle.h"
-
-#include "SkrRT/containers/deprecated.hpp"
 
 #ifndef __meta__
 #include "MPShared/components.generated.h" // IWYU pragma: export
@@ -107,8 +106,8 @@ sreflect_struct(
 )
 CAuth
 {
-    skr::bitset<128> mappedConnection;
-    skr::bitset<128> initializedConnection;
+    skr::Bitset<128> mappedConnection;
+    skr::Bitset<128> initializedConnection;
     dual_type_set_t mappedType; //data store in CAuthType buffer component
 };
 
@@ -131,7 +130,7 @@ sreflect_struct(
 )
 CRelevance
 {
-    skr::bitset<128> mask;
+    skr::Bitset<128> mask;
 };
 
 sreflect_struct(

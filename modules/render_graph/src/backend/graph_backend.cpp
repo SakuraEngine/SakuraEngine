@@ -303,8 +303,8 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
         auto tex_resolved = resolve(executor, *texture);
         if (tex_resolve_set.find(texture->get_handle()) == tex_resolve_set.end())
         {
-            resolved_textures.emplace_back(texture->get_handle(), tex_resolved);
-            tex_resolve_set.insert(texture->get_handle());
+            resolved_textures.emplace(texture->get_handle(), tex_resolved);
+            tex_resolve_set.add(texture->get_handle());
 
             const auto current_state = get_lastest_state(texture, pass);
             const auto dst_state     = edge->requested_state;
@@ -315,7 +315,7 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
             barrier.dst_state          = dst_state;
             barrier.texture            = tex_resolved;
 
-            tex_barriers.emplace_back(barrier);
+            tex_barriers.emplace(barrier);
         }
     });
     pass->foreach_buffers(
@@ -323,8 +323,8 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
         auto buf_resolved = resolve(executor, *buffer);
         if (buf_resolve_set.find(buffer->get_handle()) == buf_resolve_set.end())
         {
-            resolved_buffers.emplace_back(buffer->get_handle(), buf_resolved);
-            buf_resolve_set.insert(buffer->get_handle());
+            resolved_buffers.emplace(buffer->get_handle(), buf_resolved);
+            buf_resolve_set.add(buffer->get_handle());
 
             const auto current_state = get_lastest_state(buffer, pass);
             const auto dst_state     = edge->requested_state;
@@ -334,7 +334,7 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
             barrier.src_state         = current_state;
             barrier.dst_state         = dst_state;
             barrier.buffer            = buf_resolved;
-            buf_barriers.emplace_back(barrier);
+            buf_barriers.emplace(barrier);
         }
     });
 }
@@ -393,7 +393,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             {
                 bind_table_keys += read_edge->name.is_empty() ? resource.name : (const char8_t*)read_edge->name.c_str();
                 bind_table_keys += u8";";
-                bindTableValueNames.emplace_back(resource.name);
+                bindTableValueNames.emplace(resource.name);
 
                 auto               buffer_readed = read_edge->get_buffer_node();
                 CGPUDescriptorData update        = {};
@@ -403,7 +403,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 update.binding                   = resource.binding;
                 cbvs[e_idx]                      = resolve(executor, *buffer_readed);
                 update.buffers                   = &cbvs[e_idx];
-                desc_set_updates.emplace_back(update);
+                desc_set_updates.emplace(update);
             }
         }
         // SRVs
@@ -416,7 +416,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             {
                 bind_table_keys += read_edge->name.is_empty() ? resource.name : (const char8_t*)read_edge->name.c_str();
                 bind_table_keys += u8";";
-                bindTableValueNames.emplace_back(resource.name);
+                bindTableValueNames.emplace(resource.name);
 
                 auto               texture_readed   = read_edge->get_texture_node();
                 CGPUDescriptorData update           = {};
@@ -441,7 +441,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 view_desc.dims   = read_edge->get_dimension();
                 srvs[e_idx]      = texture_view_pool.allocate(view_desc, frame_index);
                 update.textures  = &srvs[e_idx];
-                desc_set_updates.emplace_back(update);
+                desc_set_updates.emplace(update);
             }
         }
         // UAVs
@@ -454,7 +454,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             {
                 bind_table_keys += rw_edge->name.is_empty() ? resource.name : (const char8_t*)rw_edge->name.c_str();
                 bind_table_keys += u8";";
-                bindTableValueNames.emplace_back(resource.name);
+                bindTableValueNames.emplace(resource.name);
 
                 auto               texture_readwrite = rw_edge->get_texture_node();
                 CGPUDescriptorData update            = {};
@@ -474,7 +474,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 view_desc.dims                       = CGPU_TEX_DIMENSION_2D;
                 uavs[e_idx]                          = texture_view_pool.allocate(view_desc, frame_index);
                 update.textures                      = &uavs[e_idx];
-                desc_set_updates.emplace_back(update);
+                desc_set_updates.emplace(update);
             }
         }
     }
@@ -730,7 +730,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             attachment.load_action  = pass->load_actions[write_edge->mrt_index];
             attachment.store_action = pass->store_actions[write_edge->mrt_index];
             attachment.clear_color  = write_edge->clear_value;
-            color_attachments.emplace_back(attachment);
+            color_attachments.emplace(attachment);
         }
     }
     CGPURenderPassDescriptor pass_desc = {};
@@ -815,7 +815,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         for (auto [buffer_handle, state] : pass->bbarriers)
         {
             auto  buffer      = stack.resolve(buffer_handle);
-            auto& barrier     = late_buf_barriers.emplace_back();
+            auto& barrier     = *late_buf_barriers.emplace();
             barrier.buffer    = buffer;
             barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
             barrier.dst_state = state;
@@ -823,7 +823,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         for (auto [texture_handle, state] : pass->tbarriers)
         {
             auto  texture     = stack.resolve(texture_handle);
-            auto& barrier     = late_tex_barriers.emplace_back();
+            auto& barrier     = *late_tex_barriers.emplace();
             barrier.texture   = texture;
             barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
             barrier.dst_state = state;
