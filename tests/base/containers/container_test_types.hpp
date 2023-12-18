@@ -84,6 +84,18 @@ false,
 TestSizeType,
 TestAllocatorType>>;
 
+template <typename K, typename V, uint64_t kCount>
+using FixedSparseHashMap = container::SparseHashMap<container::FixedSparseHashMapMemory<
+K,
+V,
+TestBitBlockType,
+TestHashType,
+Hash<K>,
+Equal<K>,
+false,
+TestSizeType,
+kCount>>;
+
 //===========Bit Array===================================================================
 template <typename TBitBlock>
 using BitArray = container::BitArray<container::BitArrayMemory<
