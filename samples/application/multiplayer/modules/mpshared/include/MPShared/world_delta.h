@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrRT/containers/ring_buffer.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/platform/time.h"
 #include "SkrRT/async/fib_task.hpp"
@@ -12,9 +13,6 @@
 #include "SkrRT/serde/binary/reader_fwd.h"
 #include "SkrRT/serde/binary/writer_fwd.h"
 #include "MPShared/module.configure.h"
-
-// TODO: REMOVE EASTL
-#include <EASTL/bonus/fixed_ring_buffer.h>
 
 // override the default serialization of dual_entity_t to use a packed version
 struct packed_entity_t {
@@ -161,8 +159,8 @@ void                              RegisterComponentDeltaApplier(dual_type_index_
 
 struct BandwidthCounter {
     BandwidthCounter();
-    eastl::fixed_ring_buffer<std::pair<double, double>, 30> dataRecord;
-    SHiresTimer                                             timer;
-    void                                                    AddRecord(double bytes);
-    double                                                  GetBytePerSecond();
+    skr::InlineRingBuffer<std::pair<double, double>, 30> dataRecord;
+    SHiresTimer                                          timer;
+    void                                                 AddRecord(double bytes);
+    double                                               GetBytePerSecond();
 };
