@@ -161,7 +161,7 @@ struct RingBufferMemory : public Allocator {
             Allocator::operator=(rhs);
 
             // copy data
-            if (rhs.data() > 0)
+            if (rhs.data())
             {
                 // reserve memory
                 if (capacity() < rhs.size())

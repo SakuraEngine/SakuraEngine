@@ -9,6 +9,8 @@
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_memory.hpp"
 #include "SkrBase/containers/bit_array/bit_array.hpp"
 #include "SkrBase/containers/bit_array/bit_array_memory.hpp"
+#include "SkrBase/containers/ring_buffer/ring_buffer.hpp"
+#include "SkrBase/containers/ring_buffer/ring_buffer_memory.hpp"
 
 #include "SkrBase/misc/hash.hpp"
 #include "skr_test_allocator.hpp"
@@ -107,6 +109,13 @@ kCount>>;
 template <typename TBitBlock>
 using BitArray = container::BitArray<container::BitArrayMemory<
 TBitBlock,
+TestSizeType,
+TestAllocatorType>>;
+
+//===========Ring Buffer===================================================================
+template <typename T>
+using RingBuffer = container::RingBuffer<container::RingBufferMemory<
+T,
 TestSizeType,
 TestAllocatorType>>;
 
