@@ -100,7 +100,7 @@ TEST_CASE("test ring buffer")
 
         TestRingBuffer b = a;
         REQUIRE_EQ(b.size(), a.size());
-        REQUIRE_GE(b.capacity(), a.size());
+        REQUIRE_GE(b.capacity(), a.capacity());
 
         auto           old_size     = a.size();
         auto           old_capacity = a.capacity();
@@ -474,6 +474,435 @@ TEST_CASE("test ring buffer")
         {
             a.pop_front();
         }
+        a.append_front({ 1, 1, 4, 5, 1, 4 });
+
+        REQUIRE_EQ(a[0], 1);
+        REQUIRE_EQ(a[1], 1);
+        REQUIRE_EQ(a[2], 4);
+        REQUIRE_EQ(a[3], 5);
+        REQUIRE_EQ(a[4], 1);
+        REQUIRE_EQ(a[5], 4);
+
+        REQUIRE_EQ(a.last(0), 4);
+        REQUIRE_EQ(a.last(1), 1);
+        REQUIRE_EQ(a.last(2), 5);
+        REQUIRE_EQ(a.last(3), 4);
+        REQUIRE_EQ(a.last(4), 1);
+        REQUIRE_EQ(a.last(5), 1);
+    }
+
+    // [needn't test] front & back
+}
+
+TEST_CASE("test fixed ring buffer")
+{
+    using namespace skr;
+    constexpr uint64_t kFixedCapacity = 200;
+
+    using TestRingBuffer = FixedRingBuffer<uint32_t, kFixedCapacity>;
+
+    SUBCASE("ctor")
+    {
+        TestRingBuffer a;
+        REQUIRE_EQ(a.size(), 0);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+
+        TestRingBuffer b(20);
+        REQUIRE_EQ(b.size(), 0);
+        REQUIRE_EQ(b.capacity(), kFixedCapacity);
+
+        // TestRingBuffer c(20, 114514);
+        // REQUIRE_EQ(c.size(), 20);
+        // REQUIRE_GE(c.capacity(), 20);
+        // for (uint32_t i = 0; i < 20; ++i)
+        // {
+        //     REQUIRE_EQ(c[i], 114514);
+        // }
+
+        uint32_t buffer[20];
+        for (uint32_t i = 0; i < 20; ++i)
+        {
+            buffer[i] = 114514;
+        }
+
+        TestRingBuffer d(buffer, 15);
+        REQUIRE_EQ(d.size(), 15);
+        REQUIRE_EQ(d.capacity(), kFixedCapacity);
+        for (uint32_t i = 0; i < 15; ++i)
+        {
+            REQUIRE_EQ(d[i], 114514);
+        }
+
+        TestRingBuffer e({ 1, 1, 4, 5, 1, 4 });
+        REQUIRE_EQ(e.size(), 6);
+        REQUIRE_EQ(e.capacity(), kFixedCapacity);
+        REQUIRE_EQ(e[0], 1);
+        REQUIRE_EQ(e[1], 1);
+        REQUIRE_EQ(e[2], 4);
+        REQUIRE_EQ(e[3], 5);
+        REQUIRE_EQ(e[4], 1);
+        REQUIRE_EQ(e[5], 4);
+    }
+
+    SUBCASE("copy & move")
+    {
+        TestRingBuffer a;
+        a.resize(100, 114514);
+
+        TestRingBuffer b = a;
+        REQUIRE_EQ(b.size(), a.size());
+        REQUIRE_EQ(b.capacity(), a.capacity());
+
+        auto           old_size = a.size();
+        TestRingBuffer c        = std::move(a);
+        REQUIRE_EQ(a.size(), 0);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        REQUIRE_EQ(c.size(), old_size);
+        REQUIRE_EQ(c.capacity(), kFixedCapacity);
+    }
+
+    SUBCASE("assign & move assign")
+    {
+        TestRingBuffer a, b, c;
+        a.resize(100, 114514);
+
+        b = a;
+        REQUIRE_EQ(b.size(), a.size());
+        REQUIRE_EQ(b.capacity(), a.capacity());
+
+        auto old_size = a.size();
+        c             = std::move(a);
+        REQUIRE_EQ(a.size(), 0);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        REQUIRE_EQ(c.size(), old_size);
+        REQUIRE_EQ(c.capacity(), kFixedCapacity);
+    }
+
+    SUBCASE("spacial assign")
+    {
+        TestRingBuffer a(100);
+        uint32_t       buffer[200];
+        for (uint32_t i = 0; i < 100; ++i)
+        {
+            a.push_back(114514);
+        }
+        for (uint32_t i = 0; i < 200; ++i)
+        {
+            buffer[i] = 114;
+        }
+
+        a.assign({ 1, 1, 4, 5, 1, 4 });
+        REQUIRE_EQ(a.size(), 6);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        REQUIRE_EQ(a[0], 1);
+        REQUIRE_EQ(a[1], 1);
+        REQUIRE_EQ(a[2], 4);
+        REQUIRE_EQ(a[3], 5);
+        REQUIRE_EQ(a[4], 1);
+        REQUIRE_EQ(a[5], 4);
+
+        a.assign(buffer, 200);
+        REQUIRE_EQ(a.size(), 200);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        for (uint32_t i = 0; i < 200; ++i)
+        {
+            REQUIRE_EQ(a[i], 114);
+        }
+    }
+
+    // [needn't test] getter
+
+    SUBCASE("validate")
+    {
+        TestRingBuffer a(10), b;
+        a.resize(10, 114514);
+
+        REQUIRE_FALSE(a.is_valid_index(-1));
+        REQUIRE_FALSE(a.is_valid_index(11));
+        REQUIRE(a.is_valid_index(5));
+        REQUIRE(a.is_valid_index(0));
+        REQUIRE(a.is_valid_index(9));
+
+        REQUIRE_FALSE(b.is_valid_index(-1));
+        REQUIRE_FALSE(b.is_valid_index(0));
+        REQUIRE_FALSE(b.is_valid_index(1));
+
+        // REQUIRE(a.is_valid_pointer(a.begin()));
+        // REQUIRE(a.is_valid_pointer(a.begin() + 5));
+        // REQUIRE(a.is_valid_pointer(a.end() - 1));
+        // REQUIRE_FALSE(a.is_valid_pointer(a.begin() - 1));
+        // REQUIRE_FALSE(a.is_valid_pointer(a.end()));
+    }
+
+    SUBCASE("memory op")
+    {
+        TestRingBuffer a;
+        a.resize(10, 114514);
+
+        a.clear();
+        REQUIRE_EQ(a.size(), 0);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+
+        a = { 1, 1, 4, 5, 1, 4 };
+        a.release(20);
+        REQUIRE_EQ(a.size(), 0);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+
+        a.release();
+        REQUIRE_EQ(a.size(), 0);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+
+        a.reserve(60);
+        REQUIRE_EQ(a.size(), 0);
+        REQUIRE_GE(a.capacity(), kFixedCapacity);
+
+        a.shrink();
+        REQUIRE_EQ(a.size(), 0);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+
+        a.resize(10, 114514);
+        a.resize(40, 1145140);
+        REQUIRE_EQ(a.size(), 40);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        for (uint32_t i = 0; i < 10; ++i)
+        {
+            REQUIRE_EQ(a[i], 114514);
+        }
+        for (uint32_t i = 10; i < 40; ++i)
+        {
+            REQUIRE_EQ(a[i], 1145140);
+        }
+
+        a.clear();
+        a.resize_unsafe(36);
+        REQUIRE_EQ(a.size(), 36);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+
+        a.clear();
+        a.resize_default(38);
+        REQUIRE_EQ(a.size(), 38);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+
+        a.clear();
+        a.resize_zeroed(21);
+        REQUIRE_EQ(a.size(), 21);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        for (uint32_t i = 0; i < 21; ++i)
+        {
+            REQUIRE_EQ(a[i], 0);
+        }
+    }
+
+    SUBCASE("add")
+    {
+        TestRingBuffer a;
+
+        a.resize(10, 114514);
+        a.push_back(1145140, 5);
+        a.push_back(114514, 20);
+        REQUIRE_EQ(a.size(), 35);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        for (uint32_t i = 0; i < 10; ++i)
+        {
+            REQUIRE_EQ(a[i], 114514);
+        }
+        for (uint32_t i = 10; i < 15; ++i)
+        {
+            REQUIRE_EQ(a[i], 1145140);
+        }
+        for (uint32_t i = 15; i < 35; ++i)
+        {
+            REQUIRE_EQ(a[i], 114514);
+        }
+
+        a.clear();
+        a.push_front(114514, 3);
+
+        a.push_back_zeroed();
+        REQUIRE_EQ(a.size(), 4);
+        REQUIRE_EQ(a[3], 0);
+
+        a.push_back_unsafe();
+        REQUIRE_EQ(a.size(), 5);
+
+        a.push_back_default();
+        REQUIRE_EQ(a.size(), 6);
+
+        a.push_back_unsafe(10);
+        REQUIRE_EQ(a.size(), 16);
+
+        a.push_back_default(10);
+        REQUIRE_EQ(a.size(), 26);
+
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+
+        a.release();
+        a.resize(10, 114514);
+        a.push_front(1145140, 5);
+        a.push_front(114514, 20);
+        REQUIRE_EQ(a.size(), 35);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        for (uint32_t i = 0; i < 20; ++i)
+        {
+            REQUIRE_EQ(a[i], 114514);
+        }
+        for (uint32_t i = 20; i < 25; ++i)
+        {
+            REQUIRE_EQ(a[i], 1145140);
+        }
+        for (uint32_t i = 25; i < 35; ++i)
+        {
+            REQUIRE_EQ(a[i], 114514);
+        }
+
+        a.clear();
+        a.push_back(114514, 3);
+
+        a.push_front_zeroed();
+        REQUIRE_EQ(a.size(), 4);
+        REQUIRE_EQ(a[0], 0);
+
+        a.push_front_unsafe();
+        REQUIRE_EQ(a.size(), 5);
+
+        a.push_front_default();
+        REQUIRE_EQ(a.size(), 6);
+
+        a.push_front_unsafe(10);
+        REQUIRE_EQ(a.size(), 16);
+
+        a.push_front_default(10);
+        REQUIRE_EQ(a.size(), 26);
+
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+    }
+
+    SUBCASE("emplace")
+    {
+        TestRingBuffer a;
+        a.resize(10, 114514);
+        a.emplace_back(10);
+        REQUIRE_EQ(a.size(), 11);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        REQUIRE_EQ(a[10], 10);
+
+        a.emplace_front(25);
+        REQUIRE_EQ(a.size(), 12);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        REQUIRE_EQ(a[0], 25);
+        for (uint32_t i = 0; i < 10; ++i)
+        {
+            REQUIRE_EQ(a[i + 1], 114514);
+        }
+        REQUIRE_EQ(a[11], 10);
+    }
+
+    SUBCASE("append")
+    {
+        TestRingBuffer a;
+        a.resize(20, 114514);
+        uint32_t buffer[10];
+        for (uint32_t i = 0; i < 10; ++i)
+        {
+            buffer[i] = 114;
+        }
+
+        a.append_back({ 1, 1, 4, 5, 1, 4 });
+        REQUIRE_EQ(a.size(), 26);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        for (uint32_t i = 0; i < 20; ++i)
+        {
+            REQUIRE_EQ(a[i], 114514);
+        }
+        REQUIRE_EQ(a[20], 1);
+        REQUIRE_EQ(a[21], 1);
+        REQUIRE_EQ(a[22], 4);
+        REQUIRE_EQ(a[23], 5);
+        REQUIRE_EQ(a[24], 1);
+        REQUIRE_EQ(a[25], 4);
+
+        a.append_back(buffer, 5);
+        REQUIRE_EQ(a.size(), 31);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        for (uint32_t i = 0; i < 20; ++i)
+        {
+            REQUIRE_EQ(a[i], 114514);
+        }
+        REQUIRE_EQ(a[20], 1);
+        REQUIRE_EQ(a[21], 1);
+        REQUIRE_EQ(a[22], 4);
+        REQUIRE_EQ(a[23], 5);
+        REQUIRE_EQ(a[24], 1);
+        REQUIRE_EQ(a[25], 4);
+        for (uint32_t i = 26; i < 31; ++i)
+        {
+            REQUIRE_EQ(a[i], 114);
+        }
+
+        a.clear();
+        a.resize(20, 114514);
+
+        a.append_front({ 1, 1, 4, 5, 1, 4 });
+        REQUIRE_EQ(a.size(), 26);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        REQUIRE_EQ(a[0], 1);
+        REQUIRE_EQ(a[1], 1);
+        REQUIRE_EQ(a[2], 4);
+        REQUIRE_EQ(a[3], 5);
+        REQUIRE_EQ(a[4], 1);
+        REQUIRE_EQ(a[5], 4);
+        for (uint32_t i = 0; i < 20; ++i)
+        {
+            REQUIRE_EQ(a[i + 6], 114514);
+        }
+
+        a.append_front(buffer, 8);
+        REQUIRE_EQ(a.size(), 34);
+        REQUIRE_EQ(a.capacity(), kFixedCapacity);
+        for (uint32_t i = 0; i < 8; ++i)
+        {
+            REQUIRE_EQ(a[i], 114);
+        }
+        REQUIRE_EQ(a[8 + 0], 1);
+        REQUIRE_EQ(a[8 + 1], 1);
+        REQUIRE_EQ(a[8 + 2], 4);
+        REQUIRE_EQ(a[8 + 3], 5);
+        REQUIRE_EQ(a[8 + 4], 1);
+        REQUIRE_EQ(a[8 + 5], 4);
+        for (uint32_t i = 0; i < 20; ++i)
+        {
+            REQUIRE_EQ(a[i + 14], 114514);
+        }
+    }
+
+    SUBCASE("pop")
+    {
+        TestRingBuffer a;
+
+        a.append_back({ 1, 1, 4, 5, 1, 4 });
+        a.pop_front(2);
+        REQUIRE_EQ(a.pop_front_get(), 4);
+        a.push_front(114514, 3);
+        a.pop_back(2);
+        REQUIRE_EQ(a.pop_back_get(), 5);
+        REQUIRE_EQ(a.pop_back_get(), 114514);
+        REQUIRE_EQ(a.pop_back_get(), 114514);
+        REQUIRE_EQ(a.pop_back_get(), 114514);
+
+        a.append_front({ 1, 1, 4, 5, 1, 4 });
+        a.pop_front_unsafe(2);
+        REQUIRE_EQ(a.pop_front_get(), 4);
+        a.push_front(114514, 3);
+        a.pop_back_unsafe(2);
+        REQUIRE_EQ(a.pop_back_get(), 5);
+        REQUIRE_EQ(a.pop_back_get(), 114514);
+        REQUIRE_EQ(a.pop_back_get(), 114514);
+        REQUIRE_EQ(a.pop_back_get(), 114514);
+    }
+
+    SUBCASE("modify")
+    {
+        TestRingBuffer a;
         a.append_front({ 1, 1, 4, 5, 1, 4 });
 
         REQUIRE_EQ(a[0], 1);

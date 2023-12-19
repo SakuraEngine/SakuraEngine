@@ -119,4 +119,10 @@ T,
 TestSizeType,
 TestAllocatorType>>;
 
+template <typename T, uint64_t kCount>
+using FixedRingBuffer = container::RingBuffer<container::FixedRingBufferMemory<
+T,
+TestSizeType,
+kCount>>;
+
 } // namespace skr

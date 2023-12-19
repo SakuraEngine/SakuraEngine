@@ -54,7 +54,7 @@ TEST_CASE("test array")
 
         TestArray b = a;
         REQUIRE_EQ(b.size(), a.size());
-        REQUIRE_GE(b.capacity(), a.size());
+        REQUIRE_GE(b.capacity(), a.capacity());
         REQUIRE_NE(b.data(), nullptr);
 
         auto      old_size     = a.size();
@@ -1618,7 +1618,7 @@ TEST_CASE("test inline array")
 
         b = a;
         REQUIRE_EQ(b.size(), a.size());
-        REQUIRE_GE(b.capacity(), a.size());
+        REQUIRE_GE(b.capacity(), a.capacity());
         REQUIRE_NE(b.data(), nullptr);
 
         auto old_size     = a.size();
