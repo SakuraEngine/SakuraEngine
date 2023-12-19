@@ -20,14 +20,14 @@ struct RingBuffer : protected Memory {
     using CIt      = RingBufferIt<const DataType, SizeType, true>;
 
     // ctor & dtor
-    RingBuffer(AllocatorCtorParam param);
-    RingBuffer(SizeType expect_capacity, AllocatorCtorParam param);
-    RingBuffer(const DataType* p, SizeType n, AllocatorCtorParam param);
-    RingBuffer(std::initializer_list<DataType> init_list, AllocatorCtorParam param);
+    RingBuffer(AllocatorCtorParam param = {});
+    RingBuffer(SizeType expect_capacity, AllocatorCtorParam param = {});
+    RingBuffer(const DataType* p, SizeType n, AllocatorCtorParam param = {});
+    RingBuffer(std::initializer_list<DataType> init_list, AllocatorCtorParam param = {});
     ~RingBuffer();
 
     // copy & move
-    RingBuffer(const RingBuffer& other, AllocatorCtorParam param);
+    RingBuffer(const RingBuffer& other, AllocatorCtorParam param = {});
     RingBuffer(RingBuffer&& other) noexcept;
 
     // assign & move assign
@@ -101,10 +101,10 @@ struct RingBuffer : protected Memory {
     const DataType& last(SizeType index) const;
 
     // front/back
-    // DataType&       front();
-    // const DataType& front() const;
-    // DataType&       back();
-    // const DataType& back() const;
+    DataType&       front();
+    const DataType& front() const;
+    DataType&       back();
+    const DataType& back() const;
 
 private:
     // helper
@@ -116,8 +116,8 @@ private:
     SizeType        _grow_front(SizeType n);
     void            _set_front(SizeType value);
     void            _set_back(SizeType value);
-    SizeType        _front();
-    SizeType        _back();
+    SizeType        _front() const;
+    SizeType        _back() const;
     void            _rearrange_for_push_front(SizeType n);
     void            _rearrange_for_push_back(SizeType n);
     void            _construct_default(SizeType front, SizeType back);
@@ -173,27 +173,26 @@ inline typename RingBuffer<Memory>::SizeType RingBuffer<Memory>::_grow_front(Siz
 template <typename Memory>
 inline void RingBuffer<Memory>::_set_front(SizeType value)
 {
-    Memory::_set_front(value);
+    Memory::set_front(value);
 }
 template <typename Memory>
 inline void RingBuffer<Memory>::_set_back(SizeType value)
 {
-    Memory::_set_back(value);
+    Memory::set_back(value);
 }
 template <typename Memory>
-inline typename RingBuffer<Memory>::SizeType RingBuffer<Memory>::_front()
+inline typename RingBuffer<Memory>::SizeType RingBuffer<Memory>::_front() const
 {
-    Memory::_front();
+    return Memory::front();
 }
 template <typename Memory>
-inline typename RingBuffer<Memory>::SizeType RingBuffer<Memory>::_back()
+inline typename RingBuffer<Memory>::SizeType RingBuffer<Memory>::_back() const
 {
-    Memory::_back();
+    return Memory::back();
 }
 template <typename Memory>
 inline void RingBuffer<Memory>::_rearrange_for_push_front(SizeType n)
 {
-    SKR_ASSERT(n < capacity() && "n must less than capacity()");
     SKR_ASSERT(size() + n <= capacity() && "size() + n must less than capacity()");
 
     if (_front() < n)
@@ -205,7 +204,6 @@ inline void RingBuffer<Memory>::_rearrange_for_push_front(SizeType n)
 template <typename Memory>
 inline void RingBuffer<Memory>::_rearrange_for_push_back(SizeType n)
 {
-    SKR_ASSERT(n < capacity() && "n must less than capacity()");
     SKR_ASSERT(size() + n <= capacity() && "size() + n must less than capacity()");
 
     if (std::numeric_limits<SizeType>::max() - _back() <= n)
@@ -236,7 +234,7 @@ inline void RingBuffer<Memory>::_construct_value(SizeType front, SizeType back, 
     [this, &v](SizeType dst_idx, SizeType src_idx, SizeType size) {
         for (SizeType i = 0; i < size; ++i)
         {
-            new (data() + src_idx + i) DataType(v);
+            new (_data() + src_idx + i) DataType(v);
         }
     });
 }
@@ -277,6 +275,7 @@ inline RingBuffer<Memory>::RingBuffer(SizeType expect_capacity, AllocatorCtorPar
 }
 template <typename Memory>
 inline RingBuffer<Memory>::RingBuffer(const DataType* p, SizeType n, AllocatorCtorParam param)
+    : Memory(param)
 {
     _realloc(n);
     _set_back(n);
@@ -284,6 +283,7 @@ inline RingBuffer<Memory>::RingBuffer(const DataType* p, SizeType n, AllocatorCt
 }
 template <typename Memory>
 inline RingBuffer<Memory>::RingBuffer(std::initializer_list<DataType> init_list, AllocatorCtorParam param)
+    : Memory(param)
 {
     _realloc(init_list.size());
     _set_back(init_list.size());
@@ -395,7 +395,7 @@ inline bool RingBuffer<Memory>::is_valid_pointer(const DataType* ptr) const
     }
     else
     {
-        return (ptr >= data() && ptr < _data() + resolved_back) ||
+        return (ptr >= _data() && ptr < _data() + resolved_back) ||
                (ptr >= _data() + resolved_front && ptr < _data() + capacity());
     }
 }
@@ -551,70 +551,70 @@ inline void RingBuffer<Memory>::resize_zeroed(SizeType expect_size)
 template <typename Memory>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::push_back(const DataType& v, SizeType n)
 {
-    SizeType old_back = _grow_back(n);
+    [[maybe_unused]] SizeType old_back = _grow_back(n);
     _construct_value(old_back, _back(), v);
-    return { _data() + (old_back % capacity()), old_back - front() };
+    return { _data() + (old_back % capacity()), old_back - _front() };
 }
 template <typename Memory>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::push_back(DataType&& v)
 {
-    SizeType  old_back = _grow_back(1);
-    DataType* ptr      = _data() + (old_back % capacity());
+    [[maybe_unused]] SizeType old_back = _grow_back(1);
+    DataType*                 ptr      = _data() + (old_back % capacity());
     new (ptr) DataType(std::move(v));
-    return { ptr, old_back - front() };
+    return { ptr, old_back - _front() };
 }
 template <typename Memory>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::push_back_unsafe(SizeType n)
 {
-    SizeType old_back = _grow_back(n);
-    return { _data() + (old_back % capacity()), old_back - front() };
+    [[maybe_unused]] SizeType old_back = _grow_back(n);
+    return { _data() + (old_back % capacity()), old_back - _front() };
 }
 template <typename Memory>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::push_back_default(SizeType n)
 {
-    SizeType old_back = _grow_back(n);
+    [[maybe_unused]] SizeType old_back = _grow_back(n);
     _construct_default(old_back, _back());
-    return { _data() + (old_back % capacity()), old_back - front() };
+    return { _data() + (old_back % capacity()), old_back - _front() };
 }
 template <typename Memory>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::push_back_zeroed(SizeType n)
 {
-    SizeType old_back = _grow_back(n);
+    [[maybe_unused]] SizeType old_back = _grow_back(n);
     _construct_zeroed(old_back, _back());
-    return { _data() + (old_back % capacity()), old_back - front() };
+    return { _data() + (old_back % capacity()), old_back - _front() };
 }
 template <typename Memory>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::push_front(const DataType& v, SizeType n)
 {
-    SizeType old_front = _grow_front(n);
+    [[maybe_unused]] SizeType old_front = _grow_front(n);
     _construct_value(_front(), old_front, v);
     return { _data() + (_front() % capacity()), 0 };
 }
 template <typename Memory>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::push_front(DataType&& v)
 {
-    SizeType  old_front = _grow_front(1);
-    DataType* ptr       = data() + (_front() % capacity());
+    [[maybe_unused]] SizeType old_front = _grow_front(1);
+    DataType*                 ptr       = _data() + (_front() % capacity());
     new (ptr) DataType(std::move(v));
     return { ptr, 0 };
 }
 template <typename Memory>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::push_front_unsafe(SizeType n)
 {
-    SizeType old_front = _grow_front(n);
+    [[maybe_unused]] SizeType old_front = _grow_front(n);
     return { _data() + (_front() % capacity()), 0 };
 }
 template <typename Memory>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::push_front_default(SizeType n)
 {
-    SizeType old_front = _grow_front(n);
+    [[maybe_unused]] SizeType old_front = _grow_front(n);
     _construct_default(_front(), old_front);
     return { _data() + (_front() % capacity()), 0 };
 }
 template <typename Memory>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::push_front_zeroed(SizeType n)
 {
-    SizeType old_front = _grow_front(n);
+    [[maybe_unused]] SizeType old_front = _grow_front(n);
     _construct_zeroed(_front(), old_front);
     return { _data() + (_front() % capacity()), 0 };
 }
@@ -645,11 +645,11 @@ inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::append_back(cons
     process_ring_buffer_data(
     capacity(),
     old_back,
-    back(),
+    _back(),
     [this, &p](SizeType dst_idx, SizeType src_idx, SizeType size) {
         memory::copy(_data() + src_idx, p + dst_idx, size);
     });
-    return { _data() + (old_back % capacity()), old_back - front() };
+    return { _data() + (old_back % capacity()), old_back - _front() };
 }
 template <typename Memory>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::append_back(std::initializer_list<DataType> init_list)
@@ -658,11 +658,11 @@ inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::append_back(std:
     process_ring_buffer_data(
     capacity(),
     old_back,
-    back(),
+    _back(),
     [this, &init_list](SizeType dst_idx, SizeType src_idx, SizeType size) {
         memory::copy(_data() + src_idx, init_list.begin() + dst_idx, size);
     });
-    return { _data() + (old_back % capacity()), old_back - front() };
+    return { _data() + (old_back % capacity()), old_back - _front() };
 }
 template <typename Memory>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::append_front(const DataType* p, SizeType n)
@@ -670,7 +670,7 @@ inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::append_front(con
     SizeType old_front = _grow_front(n);
     process_ring_buffer_data(
     capacity(),
-    front(),
+    _front(),
     old_front,
     [this, &p](SizeType dst_idx, SizeType src_idx, SizeType size) {
         memory::copy(_data() + src_idx, p + dst_idx, size);
@@ -683,7 +683,7 @@ inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::append_front(std
     SizeType old_front = _grow_front(init_list.size());
     process_ring_buffer_data(
     capacity(),
-    front(),
+    _front(),
     old_front,
     [this, &init_list](SizeType dst_idx, SizeType src_idx, SizeType size) {
         memory::copy(_data() + src_idx, init_list.begin() + dst_idx, size);
@@ -767,6 +767,32 @@ inline const typename RingBuffer<Memory>::DataType& RingBuffer<Memory>::last(Siz
 {
     SKR_ASSERT(is_valid_index(index));
     return *(_data() + ((_back() - index - 1) % capacity()));
+}
+
+// front/back
+template <typename Memory>
+inline typename RingBuffer<Memory>::DataType& RingBuffer<Memory>::front()
+{
+    SKR_ASSERT(size() > 0 && "visit an empty buffer");
+    return *(_data() + (_front() % capacity()));
+}
+template <typename Memory>
+inline const typename RingBuffer<Memory>::DataType& RingBuffer<Memory>::front() const
+{
+    SKR_ASSERT(size() > 0 && "visit an empty buffer");
+    return *(_data() + (_front() % capacity()));
+}
+template <typename Memory>
+inline typename RingBuffer<Memory>::DataType& RingBuffer<Memory>::back()
+{
+    SKR_ASSERT(size() > 0 && "visit an empty buffer");
+    return *(_data() + ((_back() - 1) % capacity()));
+}
+template <typename Memory>
+inline const typename RingBuffer<Memory>::DataType& RingBuffer<Memory>::back() const
+{
+    SKR_ASSERT(size() > 0 && "visit an empty buffer");
+    return *(_data() + ((_back() - 1) % capacity()));
 }
 
 } // namespace skr::container
