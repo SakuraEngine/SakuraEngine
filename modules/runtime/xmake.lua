@@ -1,8 +1,8 @@
-if(has_config("shipping_one_archive")) then
-    add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = false } })
-else
-    add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = true } })
-end
+-- if(has_config("shipping_one_archive")) then
+    -- add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = false } })
+-- else
+    -- add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = true } })
+-- end
 
 add_requires("lemon 1.3.1")
 add_requires("parallel-hashmap >=1.3.11-skr")
@@ -16,7 +16,8 @@ target("SkrRTStatic")
     set_exceptions("no-cxx")
     add_deps("SkrRoot", "SkrBase", "SkrMemory", {public = true})
     add_defines("SKR_RUNTIME_API=SKR_IMPORT", "SKR_RUNTIME_LOCAL=error")
-    add_packages("eastl", "parallel-hashmap", "simdjson", {public = true, inherit = true})
+    -- add_packages("eastl")
+    add_packages("parallel-hashmap", "simdjson", {public = true, inherit = true})
     add_packages("lemon", {public = false, inherit = false})
     add_rules("skr.static_module", {api = "SKR_RUNTIME_STATIC"})
     add_includedirs("include", {public = true})
