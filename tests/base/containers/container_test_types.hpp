@@ -125,4 +125,11 @@ T,
 TestSizeType,
 kCount>>;
 
+template <typename T, uint64_t kInlineCount>
+using InlineRingBuffer = container::RingBuffer<container::InlineRingBufferMemory<
+T,
+TestSizeType,
+kInlineCount,
+TestAllocatorType>>;
+
 } // namespace skr
