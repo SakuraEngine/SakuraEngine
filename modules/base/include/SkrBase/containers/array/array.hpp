@@ -747,7 +747,7 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::operator+=(const Array
 template <typename Memory>
 SKR_INLINE void Array<Memory>::remove_at(SizeType index, SizeType n)
 {
-    SKR_ASSERT(index >= 0 && index + n <= size());
+    SKR_ASSERT(is_valid_index(index) && size() - index >= n);
 
     if (n)
     {
@@ -770,7 +770,7 @@ SKR_INLINE void Array<Memory>::remove_at(SizeType index, SizeType n)
 template <typename Memory>
 SKR_INLINE void Array<Memory>::remove_at_swap(SizeType index, SizeType n)
 {
-    SKR_ASSERT(index >= 0 && index + n <= size());
+    SKR_ASSERT(is_valid_index(index) && size() - index >= n);
     if (n)
     {
         // calc move size
@@ -1173,24 +1173,23 @@ SKR_INLINE void Array<Memory>::heap_sort(TP&& p)
 template <typename Memory>
 SKR_INLINE void Array<Memory>::stack_pop(SizeType n)
 {
-    SKR_ASSERT(n > 0);
-    SKR_ASSERT(n <= size());
+    SKR_ASSERT(n > 0 && n <= size() && "pop size must be in [1, size()]");
     memory::destruct(data() + size() - n, n);
     _set_size(size() - n);
 }
 template <typename Memory>
 SKR_INLINE void Array<Memory>::stack_pop_unsafe(SizeType n)
 {
-    SKR_ASSERT(n > 0);
-    SKR_ASSERT(n <= size());
+    SKR_ASSERT(n > 0 && n <= size() && "pop size must be in [1, size()]");
     _set_size(size() - n);
 }
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::DataType Array<Memory>::stack_pop_get()
 {
+    SKR_ASSERT(size() > 0 && "pop an empty stack");
     DataType result = std::move(*(data() + size() - 1));
     stack_pop();
-    return result;
+    return std::move(result);
 }
 template <typename Memory>
 SKR_INLINE void Array<Memory>::stack_push(const DataType& v) { add(v); }
