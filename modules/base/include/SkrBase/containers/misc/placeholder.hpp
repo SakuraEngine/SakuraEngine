@@ -20,11 +20,11 @@ struct Placeholder : AlignedStorage<sizeof(T) * N, alignof(T)> {
 
     inline T* data_typed() noexcept
     {
-        return reinterpret_cast<T*>(data());
+        return reinterpret_cast<T*>(Super::data());
     }
     inline const T* data_typed() const noexcept
     {
-        return reinterpret_cast<const T*>(data());
+        return reinterpret_cast<const T*>(Super::data());
     }
 };
 
