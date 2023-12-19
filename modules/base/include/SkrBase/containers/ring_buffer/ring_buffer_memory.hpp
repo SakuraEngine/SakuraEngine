@@ -44,7 +44,7 @@ inline void copy_ring_buffer(T* dst, const T* src, TS src_capacity, TS src_front
     });
 }
 template <typename T, typename TS>
-inline void move_ring_buffer(T* dst, const T* src, TS src_capacity, TS src_front, TS src_back) noexcept
+inline void move_ring_buffer(T* dst, T* src, TS src_capacity, TS src_front, TS src_back) noexcept
 {
     SKR_ASSERT(src_back != src_front && src_back - src_front <= src_capacity && "src buffer data is invalid");
 
@@ -307,5 +307,132 @@ private:
     SizeType _capacity = 0;
     SizeType _front    = 0;
     SizeType _back     = 0;
+};
+} // namespace skr::container
+
+// fixed ring buffer memory
+namespace skr::container
+{
+template <typename T, typename TS, uint64_t kCount>
+struct FixedRingBufferMemory {
+    static_assert(kCount > 0, "FixedArrayMemory must have a capacity larger than 0");
+    struct DummyParam {
+    };
+    using DataType           = T;
+    using SizeType           = TS;
+    using AllocatorCtorParam = DummyParam;
+
+    // ctor & dtor
+    inline FixedRingBufferMemory(AllocatorCtorParam param)
+    {
+    }
+    inline ~FixedRingBufferMemory()
+    {
+        clear();
+        free();
+    }
+
+    // copy & move
+    inline FixedRingBufferMemory(const FixedRingBufferMemory& other, AllocatorCtorParam param)
+    {
+        if (other.size())
+        {
+            copy_ring_buffer(data(), other.data(), other.capacity(), other._front, other._back);
+            _front = 0;
+            _back  = other.size();
+        }
+    }
+    inline FixedRingBufferMemory(FixedRingBufferMemory&& other) noexcept
+    {
+        if (other.size())
+        {
+            move_ring_buffer(data(), other.data(), other.capacity(), other._front, other._back);
+            _front = 0;
+            _back  = other.size();
+
+            other._front = 0;
+            other._back  = 0;
+        }
+    }
+
+    // assign & move assign
+    inline void operator=(const FixedRingBufferMemory& rhs) noexcept
+    {
+        if (this != &rhs)
+        {
+            // clean up self
+            clear();
+
+            // copy data
+            if (rhs.size())
+            {
+                copy_ring_buffer(data(), rhs.data(), rhs.capacity(), rhs._front, rhs._back);
+                _front = 0;
+                _back  = rhs.size();
+            }
+        }
+    }
+    inline void operator=(FixedRingBufferMemory&& rhs) noexcept
+    {
+        if (this != &rhs)
+        {
+            // clean up self
+            clear();
+
+            // move data
+            if (rhs.size())
+            {
+                move_ring_buffer(data(), rhs.data(), rhs.capacity(), rhs._front, rhs._back);
+                _front = 0;
+                _back  = rhs.size();
+
+                rhs._front = 0;
+                rhs._back  = 0;
+            }
+        }
+    }
+
+    // memory operations
+    inline void realloc(SizeType new_capacity) noexcept
+    {
+        SKR_ASSERT(new_capacity <= kCount && "FixedRingBufferMemory can't alloc memory that larger than kCount");
+    }
+    inline void free() noexcept
+    {
+    }
+    inline void grow_memory(SizeType grow_size) noexcept
+    {
+        SKR_ASSERT((size() + grow_size) <= kCount && "FixedRingBufferMemory can't alloc memory that larger than kCount");
+    }
+    inline void shrink() noexcept
+    {
+        // do noting
+    }
+    inline void clear() noexcept
+    {
+        if (size())
+        {
+            destruct_ring_buffer(data(), capacity(), _front, _back);
+            _front = 0;
+            _back  = 0;
+        }
+    }
+
+    // getter
+    inline T*       data() noexcept { return _placeholder.data_typed(); }
+    inline const T* data() const noexcept { return _placeholder.data_typed(); }
+    inline SizeType capacity() const noexcept { return kCount; }
+    inline SizeType front() const noexcept { return _front; }
+    inline SizeType back() const noexcept { return _back; }
+    inline SizeType size() const noexcept { return _back - _front; }
+
+    // setter
+    inline void set_front(SizeType value) noexcept { _front = value; }
+    inline void set_back(SizeType value) noexcept { _back = value; }
+
+private:
+    Placeholder<T, kCount> _placeholder;
+    SizeType               _front = 0;
+    SizeType               _back  = 0;
 };
 } // namespace skr::container
