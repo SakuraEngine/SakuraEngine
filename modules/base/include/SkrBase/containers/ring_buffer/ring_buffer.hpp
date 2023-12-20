@@ -3,6 +3,7 @@
 #include "SkrBase/config.h"
 #include "SkrBase/containers/ring_buffer/ring_buffer_def.hpp"
 #include "SkrBase/containers/ring_buffer/ring_buffer_iterator.hpp"
+#include "SkrBase/containers/ring_buffer/ring_buffer_heler.hpp"
 
 namespace skr::container
 {
