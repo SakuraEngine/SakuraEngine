@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/config.h"
 #include "SkrBase/containers/ring_buffer/ring_buffer_def.hpp"
 #include "SkrBase/containers/ring_buffer/ring_buffer_iterator.hpp"

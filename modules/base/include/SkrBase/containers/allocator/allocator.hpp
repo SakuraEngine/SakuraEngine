@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/misc/debug.h"
 
 // TODO. allocator 行为规范
