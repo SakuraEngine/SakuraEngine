@@ -3,70 +3,66 @@
 #include "../common/reading_ring.hpp"
 #include "SkrMemory/memory.h"
 #include "SkrRT/platform/atomic.h"
-#include "SkrBase/misc/debug.h" 
+#include "SkrBase/misc/debug.h"
 #include "SkrRT/misc/log.h"
-#include "SkrRT/containers/resizable_ring_buffer.hpp"
 #include "SDL2/SDL_timer.h"
 
-namespace skr {
-namespace input {
+namespace skr
+{
+namespace input
+{
 
 extern CommonInputDevice* CreateInputDevice_SDL2Keyboard(CommonInputLayer* pLayer) SKR_NOEXCEPT;
 extern CommonInputDevice* CreateInputDevice_SDL2Mouse(CommonInputLayer* pLayer) SKR_NOEXCEPT;
 
 CommonInputReading::CommonInputReading(CommonInputReadingProxy* pPool, struct CommonInputDevice* pDevice) SKR_NOEXCEPT
-    : ref_count(0), pool(pPool), device(pDevice)
+    : ref_count(0),
+      pool(pPool),
+      device(pDevice)
 {
-
 }
 
 CommonInputReading::~CommonInputReading() SKR_NOEXCEPT
 {
-
 }
 
 CommonInputReadingPoolBase::~CommonInputReadingPoolBase() SKR_NOEXCEPT
 {
-    uint64_t dcount = 0;
-    CommonInputReading* ptr = nullptr;
+    uint64_t            dcount = 0;
+    CommonInputReading* ptr    = nullptr;
     while (m_all.try_dequeue(ptr))
     {
         SkrDeleteN(kInputReadingMemoryPoolName)(ptr);
         ++dcount;
     }
     SKR_LOG_INFO(u8"CommonInputReadingPoolBase::~CommonInputReadingPoolBase()"
-        " - %llu objects deleted, %llu objects leaked", dcount, (count > dcount) ? (count - dcount) : 0);
+                 " - %llu objects deleted, %llu objects leaked",
+                 dcount, (count > dcount) ? (count - dcount) : 0);
     ReportLeaking();
 }
 
 CommonInputDevice::CommonInputDevice(struct CommonInputLayer* pLayer) SKR_NOEXCEPT
     : layer(pLayer)
 {
-
 }
 
 CommonInputDevice::~CommonInputDevice() SKR_NOEXCEPT
 {
-
 }
 
 CommonInputLayer::~CommonInputLayer() SKR_NOEXCEPT
 {
-
 }
 
 // GameInput implementation
-struct Input_Common : public CommonInputLayer
-{
+struct Input_Common : public CommonInputLayer {
     Input_Common() SKR_NOEXCEPT
         : CommonInputLayer()
     {
-
     }
 
     ~Input_Common() SKR_NOEXCEPT
     {
-
     }
 
     void GetLayerId(LayerId* out_id) const SKR_NOEXCEPT final
@@ -82,7 +78,7 @@ struct Input_Common : public CommonInputLayer
 
         return true;
     }
-    
+
     bool Finalize() SKR_NOEXCEPT final
     {
         for (auto& device : devices)
@@ -97,7 +93,7 @@ struct Input_Common : public CommonInputLayer
         skr_atomicu32_store_release(&enabled, _enabled ? 1 : 0);
         return true;
     }
-    
+
     bool IsEnabled() const SKR_NOEXCEPT final
     {
         auto enabled_val = skr_atomicu32_load_acquire(&enabled);
@@ -106,8 +102,8 @@ struct Input_Common : public CommonInputLayer
 
     uint64_t GetCurrentTimestampUSec() SKR_NOEXCEPT final
     {
-        double now = (double)SDL_GetPerformanceCounter();
-        double freq = (double)SDL_GetPerformanceFrequency();
+        double now   = (double)SDL_GetPerformanceCounter();
+        double freq  = (double)SDL_GetPerformanceFrequency();
         double value = now / freq * 1000.0 * 1000.0;
         return (uint64_t)value;
     }
@@ -136,8 +132,8 @@ struct Input_Common : public CommonInputLayer
         }
         else
         {
-            CommonInputReading* reference = (CommonInputReading*)in_reference;
-            uint64_t InTimestamp = reference->GetTimestamp();
+            CommonInputReading* reference   = (CommonInputReading*)in_reference;
+            uint64_t            InTimestamp = reference->GetTimestamp();
             if (uint64_t count = GlobalReadingQueue.get_size())
             {
                 for (size_t i = 0; i < count; i++)
@@ -163,8 +159,8 @@ struct Input_Common : public CommonInputLayer
         }
         else
         {
-            CommonInputReading* ref = (CommonInputReading*)reference;
-            uint64_t InTimestamp = ref->GetTimestamp();
+            CommonInputReading* ref         = (CommonInputReading*)reference;
+            uint64_t            InTimestamp = ref->GetTimestamp();
             if (auto count = GlobalReadingQueue.get_size())
             {
                 for (size_t i = count - 1; i > 0; i--)
@@ -184,7 +180,7 @@ struct Input_Common : public CommonInputLayer
     void GetDevice(InputReading* in_reading, InputDevice** out_device) SKR_NOEXCEPT final
     {
         CommonInputReading* reading = (CommonInputReading*)in_reading;
-        if (out_device) *out_device = (InputDevice*)reading->device;      
+        if (out_device) *out_device = (InputDevice*)reading->device;
     }
 
     uint32_t GetKeyState(InputReading* in_reading, uint32_t stateArrayCount, InputKeyState* stateArray) SKR_NOEXCEPT final
@@ -213,7 +209,6 @@ struct Input_Common : public CommonInputLayer
 
     void Release(InputDevice* in_device) SKR_NOEXCEPT final
     {
-        
     }
 
     void Tick() SKR_NOEXCEPT final
@@ -235,8 +230,7 @@ struct Input_Common : public CommonInputLayer
                     if (reading->GetTimestamp() >= TimeStamp) // Generated at this Tick
                     {
                         if (
-                            auto old = GlobalReadingQueue.add((CommonInputReading*)reading)
-                        )
+                        auto old = GlobalReadingQueue.add((CommonInputReading*)reading))
                         {
                             old->release();
                         }
@@ -256,8 +250,8 @@ struct Input_Common : public CommonInputLayer
     }
 
     ReadingRing<CommonInputReading*> GlobalReadingQueue;
-    skr::Vector<CommonInputDevice*> devices;
-    SAtomicU32 enabled = true;
+    skr::Vector<CommonInputDevice*>  devices;
+    SAtomicU32                       enabled = true;
 };
 
 InputLayer* Input_Common_Create() SKR_NOEXCEPT
@@ -265,4 +259,5 @@ InputLayer* Input_Common_Create() SKR_NOEXCEPT
     return SkrNew<Input_Common>();
 }
 
-} }
+} // namespace input
+} // namespace skr
