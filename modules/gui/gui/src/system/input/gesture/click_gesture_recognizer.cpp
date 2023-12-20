@@ -56,7 +56,7 @@ void ClickGestureRecognizer::_check_down()
 {
     if (on_click_down)
     {
-        on_click_down(&_down_event.get());
+        on_click_down(&_down_event.value());
     }
 }
 void ClickGestureRecognizer::_check_up()
@@ -65,7 +65,7 @@ void ClickGestureRecognizer::_check_up()
     {
         if (on_click_up)
         {
-            on_click_up(&_up_event.get());
+            on_click_up(&_up_event.value());
         }
         if (on_click)
         {

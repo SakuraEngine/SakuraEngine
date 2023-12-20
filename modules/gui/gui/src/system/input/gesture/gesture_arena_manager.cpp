@@ -33,7 +33,7 @@ GestureArena* GestureArenaManager::find_arena(CombinePointerId pointer)
 }
 GestureArena* GestureArenaManager::find_arena_or_add(CombinePointerId pointer)
 {
-    auto result = _arenas.add_unsafe(pointer);
+    auto result = _arenas.find_or_add_unsafe(pointer);
     if (!result.already_exist)
     {
         result->value = SkrNew<GestureArena>(pointer);
