@@ -97,6 +97,7 @@ typedef const void* TracyCZoneCtx;
 #define TracyCMessageLCS(x,y,z)
 
 #define TracyCIsConnected 0
+#define TracyCIsStarted 0
 
 #ifdef TRACY_FIBERS
 #  define TracyCFiberEnter(fiber)
@@ -172,6 +173,11 @@ struct ___tracy_gpu_calibration_data {
     uint8_t context;
 };
 
+struct ___tracy_gpu_time_sync_data {
+    int64_t gpuTime;
+    uint8_t context;
+};
+
 // Some containers don't support storing const types.
 // This struct, as visible to user, is immutable, so treat it as if const was declared here.
 typedef /*const*/ struct ___tracy_c_zone_context TracyCZoneCtx;
@@ -180,6 +186,11 @@ typedef /*const*/ struct ___tracy_c_zone_context TracyCZoneCtx;
 #ifdef TRACY_MANUAL_LIFETIME
 TRACY_API void ___tracy_startup_profiler(void);
 TRACY_API void ___tracy_shutdown_profiler(void);
+TRACY_API int ___tracy_profiler_started(void);
+
+#  define TracyCIsStarted ___tracy_profiler_started()
+#else
+#  define TracyCIsStarted 1
 #endif
 
 TRACY_API uint64_t ___tracy_alloc_srcloc( uint32_t line, const char* source, size_t sourceSz, const char* function, size_t functionSz );
@@ -204,6 +215,7 @@ TRACY_API void ___tracy_emit_gpu_time( const struct ___tracy_gpu_time_data );
 TRACY_API void ___tracy_emit_gpu_new_context( const struct ___tracy_gpu_new_context_data );
 TRACY_API void ___tracy_emit_gpu_context_name( const struct ___tracy_gpu_context_name_data );
 TRACY_API void ___tracy_emit_gpu_calibration( const struct ___tracy_gpu_calibration_data );
+TRACY_API void ___tracy_emit_gpu_time_sync( const struct ___tracy_gpu_time_sync_data );
 
 TRACY_API void ___tracy_emit_gpu_zone_begin_serial( const struct ___tracy_gpu_zone_begin_data );
 TRACY_API void ___tracy_emit_gpu_zone_begin_callstack_serial( const struct ___tracy_gpu_zone_begin_callstack_data );
@@ -214,6 +226,7 @@ TRACY_API void ___tracy_emit_gpu_time_serial( const struct ___tracy_gpu_time_dat
 TRACY_API void ___tracy_emit_gpu_new_context_serial( const struct ___tracy_gpu_new_context_data );
 TRACY_API void ___tracy_emit_gpu_context_name_serial( const struct ___tracy_gpu_context_name_data );
 TRACY_API void ___tracy_emit_gpu_calibration_serial( const struct ___tracy_gpu_calibration_data );
+TRACY_API void ___tracy_emit_gpu_time_sync_serial( const struct ___tracy_gpu_time_sync_data );
 
 TRACY_API int ___tracy_connected(void);
 

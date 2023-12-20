@@ -43,8 +43,8 @@ TEST_CASE_METHOD(MDBTests, "TXN")
     
     if (auto txn = skr_lightning_transaction_open(env, nullptr, 0))
     {
-        skr::string key_string = u8"hello";
-        skr::string value_string = u8"world";
+        skr::String key_string = u8"hello";
+        skr::String value_string = u8"world";
 
         SLightningStorageValue key = { key_string.size() + 1, key_string.c_str() };
         SLightningStorageValue value = { value_string.size() + 1, value_string.c_str() };
@@ -54,7 +54,7 @@ TEST_CASE_METHOD(MDBTests, "TXN")
         SLightningStorageValue readed_value;
         EXPECT_TRUE(skr_lightning_storage_read(txn, storage, &key, &readed_value));
 
-        skr::string readed_string = (const char8_t*)readed_value.data;
+        skr::String readed_string = (const char8_t*)readed_value.data;
         EXPECT_EQ(readed_string, value_string);
 
         EXPECT_TRUE(skr_lightning_storage_del(txn, storage, &key));
@@ -80,8 +80,8 @@ TEST_CASE_METHOD(MDBTests, "TXN2")
     
     if (auto txn = env->open_transaction(nullptr, 0))
     {
-        skr::string key_string = u8"hello";
-        skr::string value_string = u8"world";
+        skr::String key_string = u8"hello";
+        skr::String value_string = u8"world";
 
         SLightningStorageValue key = { key_string.size() + 1, key_string.c_str() };
         SLightningStorageValue value = { value_string.size() + 1, value_string.c_str() };
@@ -89,7 +89,7 @@ TEST_CASE_METHOD(MDBTests, "TXN2")
         EXPECT_TRUE(storage->write(txn, key, value));
 
         SLightningStorageValue readed_value = storage->read(txn, key);
-        skr::string readed_string = (const char8_t*)readed_value.data;
+        skr::String readed_string = (const char8_t*)readed_value.data;
         EXPECT_EQ(readed_string, value_string);
 
         EXPECT_TRUE(storage->del(txn, key));

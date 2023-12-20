@@ -35,7 +35,7 @@ struct SKR_RUNTIME_API Logger
     static Logger* GetDefault() SKR_NOEXCEPT;
 
     template <typename...Args>
-    void log(LogEvent ev, skr::string_view format, Args&&... args) SKR_NOEXCEPT
+    void log(LogEvent ev, skr::StringView format, Args&&... args) SKR_NOEXCEPT
     {
         bool sucess = false;
         if (canPushToQueue())
@@ -49,47 +49,47 @@ struct SKR_RUNTIME_API Logger
             }
             else // foramt inplace, expensive
             {
-                skr::string s = skr::format(format, skr::forward<Args>(args)...);
+                skr::String s = skr::format(format, skr::forward<Args>(args)...);
                 sucess = tryPushToQueue(ev, skr::move(s));
             }
         }
         if (!sucess && !(ev.get_level() == LogLevel::kBackTrace)) // sink immediate
         {
-            skr::string s = skr::format(format, skr::forward<Args>(args)...);
+            skr::String s = skr::format(format, skr::forward<Args>(args)...);
             sinkDefaultImmediate(ev, s.view());
         }
         onLog(ev);
     }
 
-    void log(LogEvent ev, skr::string_view format, va_list va_args) SKR_NOEXCEPT
+    void log(LogEvent ev, skr::StringView format, va_list va_args) SKR_NOEXCEPT
     {
         bool sucess = false;
         // va_list can only be formatted inplace
-        skr::string fmt(format);
+        skr::String fmt(format);
         char8_t buffer[1024];
         vsnprintf((char* const)buffer, sizeof(buffer), fmt.c_str(), va_args);
 
         if (canPushToQueue())
         {
-            sucess = tryPushToQueue(ev, skr::string(buffer));
+            sucess = tryPushToQueue(ev, skr::String(buffer));
         }
         if (!sucess && !(ev.get_level() == LogLevel::kBackTrace)) // sink immediate
         {
-            sinkDefaultImmediate(ev, skr::string_view(buffer));
+            sinkDefaultImmediate(ev, skr::StringView(buffer));
         }
         onLog(ev);
     }
 
-    skr::string_view get_name() const SKR_NOEXCEPT { return name.view(); }
+    skr::StringView get_name() const SKR_NOEXCEPT { return name.view(); }
 
 private:
     void onLog(const LogEvent& ev) SKR_NOEXCEPT;
-    void sinkDefaultImmediate(const LogEvent& event, skr::string_view formatted_message) const SKR_NOEXCEPT;
+    void sinkDefaultImmediate(const LogEvent& event, skr::StringView formatted_message) const SKR_NOEXCEPT;
     bool canPushToQueue() const SKR_NOEXCEPT;
-    bool tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList&& args) SKR_NOEXCEPT;
-    bool tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT;
+    bool tryPushToQueue(LogEvent ev, skr::StringView format, ArgsList&& args) SKR_NOEXCEPT;
+    bool tryPushToQueue(LogEvent ev, skr::String&& what) SKR_NOEXCEPT;
     void notifyWorker() SKR_NOEXCEPT;
-    skr::string name;
+    skr::String name;
 };
 
 } } // namespace skr::log

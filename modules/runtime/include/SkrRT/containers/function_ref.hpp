@@ -9,33 +9,33 @@ namespace skr
 /// Example usage:
 ///
 /// ```cpp
-/// void foo (function_ref<int(int)> func) {
+/// void foo (FunctionRef<int(int)> func) {
 ///     std::cout << "Result is " << func(21); //42
 /// }
 ///
 /// foo([](int i) { return i*2; });
 template <class F>
-class function_ref;
+class FunctionRef;
 
 /// Specialization for function types.
 template <class R, class... Args>
-class function_ref<R(Args...)>
+class FunctionRef<R(Args...)>
 {
 public:
-    constexpr function_ref() noexcept = delete;
-    constexpr function_ref(std::nullptr_t) noexcept {}
+    constexpr FunctionRef() noexcept = delete;
+    constexpr FunctionRef(std::nullptr_t) noexcept {}
 
-    /// Creates a `function_ref` which refers to the same callable as `rhs`.
-    constexpr function_ref(const function_ref<R(Args...)>& rhs) noexcept = default;
+    /// Creates a `FunctionRef` which refers to the same callable as `rhs`.
+    constexpr FunctionRef(const FunctionRef<R(Args...)>& rhs) noexcept = default;
 
-    /// Constructs a `function_ref` referring to `f`.
+    /// Constructs a `FunctionRef` referring to `f`.
     ///
-    /// \synopsis template <typename F> constexpr function_ref(F &&f) noexcept
+    /// \synopsis template <typename F> constexpr FunctionRef(F &&f) noexcept
     template <typename F,
     std::enable_if_t<
-    !std::is_same<std::decay_t<F>, function_ref>::value &&
+    !std::is_same<std::decay_t<F>, FunctionRef>::value &&
     std::is_invocable_r<R, F&&, Args...>::value>* = nullptr>
-    constexpr function_ref(F&& f) noexcept
+    constexpr FunctionRef(F&& f) noexcept
         : obj_(const_cast<void*>(reinterpret_cast<const void*>(std::addressof(f))))
     {
         callback_ = [](void* obj, Args... args) -> R {
@@ -46,17 +46,17 @@ public:
     }
 
     /// Makes `*this` refer to the same callable as `rhs`.
-    constexpr function_ref<R(Args...)>&
-    operator=(const function_ref<R(Args...)>& rhs) noexcept = default;
+    constexpr FunctionRef<R(Args...)>&
+    operator=(const FunctionRef<R(Args...)>& rhs) noexcept = default;
 
     explicit operator bool() const noexcept { return callback_ != nullptr; }
 
     /// Makes `*this` refer to `f`.
     ///
-    /// \synopsis template <typename F> constexpr function_ref &operator=(F &&f) noexcept;
+    /// \synopsis template <typename F> constexpr FunctionRef &operator=(F &&f) noexcept;
     template <typename F,
     std::enable_if_t<std::is_invocable_r<R, F&&, Args...>::value>* = nullptr>
-    constexpr function_ref<R(Args...)>& operator=(F&& f) noexcept
+    constexpr FunctionRef<R(Args...)>& operator=(F&& f) noexcept
     {
         obj_ = reinterpret_cast<void*>(std::addressof(f));
         callback_ = [](void* obj, Args... args) {
@@ -69,7 +69,7 @@ public:
     }
 
     /// Swaps the referred callables of `*this` and `rhs`.
-    constexpr void swap(function_ref<R(Args...)>& rhs) noexcept
+    constexpr void swap(FunctionRef<R(Args...)>& rhs) noexcept
     {
         std::swap(obj_, rhs.obj_);
         std::swap(callback_, rhs.callback_);
@@ -88,45 +88,46 @@ private:
 
 /// Swaps the referred callables of `lhs` and `rhs`.
 template <typename R, typename... Args>
-constexpr void swap(function_ref<R(Args...)>& lhs,
-function_ref<R(Args...)>& rhs) noexcept
+constexpr void swap(FunctionRef<R(Args...)>& lhs,
+FunctionRef<R(Args...)>& rhs) noexcept
 {
     lhs.swap(rhs);
 }
 
 template <class F, class = void>
-struct function_trait : public function_trait<decltype(&F::operator())> {};
+struct FunctionTrait : public FunctionTrait<decltype(&F::operator())> {};
 
 template <class R, class... Args>
-struct function_trait<R(Args...)> {
+struct FunctionTrait<R(Args...)> {
     using raw = R(Args...);
 };
 
 template <class T, class R, class... Args>
-struct function_trait<R (T::*)(Args...)> {
+struct FunctionTrait<R (T::*)(Args...)> {
     using raw = R(Args...);
 };
 
 template <class T, class R, class... Args>
-struct function_trait<R (T::*)(Args...) noexcept(true)> {
+struct FunctionTrait<R (T::*)(Args...) noexcept(true)> {
     using raw = R(Args...);
 };
 
 template <class T, class R, class... Args>
-struct function_trait<R (T::*)(Args...) const> {
+struct FunctionTrait<R (T::*)(Args...) const> {
     using raw = R(Args...);
 };
 
 template <class T, class R, class... Args>
-struct function_trait<R (T::*)(Args...) const noexcept(true)> {
+struct FunctionTrait<R (T::*)(Args...) const noexcept(true)> {
     using raw = R(Args...);
 };
 
 template <class R, class... Args>
-struct function_trait<R (*)(Args...)> {
+struct FunctionTrait<R (*)(Args...)> {
     using raw = R(Args...);
 };
 
+/* ?
 template <template <class... T> class Tmp, class F>
 struct map;
 
@@ -137,7 +138,8 @@ struct map<Tmp, void(Args...)> {
 
 template <template <class... T> class Tmp, class F>
 using map_t = typename map<Tmp, F>::type;
+*/
 
 template <typename F>
-function_ref(F&&) -> function_ref<typename function_trait<std::remove_reference_t<F>>::raw>;
+FunctionRef(F&&) -> FunctionRef<typename FunctionTrait<std::remove_reference_t<F>>::raw>;
 } // namespace skr

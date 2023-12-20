@@ -12,8 +12,10 @@
 #include "CubismDefaultParameterId.hpp" // IWYU pragma: export
 #include "Utils/CubismString.hpp" // IWYU pragma: export
 
-#include <EASTL/vector_map.h>
 #include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
+#include "SkrRT/containers/umap.hpp"
+#include <float.h>
 
 namespace L2DF = Live2D::Cubism::Framework;
 
@@ -27,7 +29,7 @@ struct L2DRequestCallbackData
     IAsyncL2DResourceInterface* model_resource;
     IAsyncL2DResourceInterface* motions_resource;
     skr_live2d_ram_io_future_t* live2dRequest;   
-    skr::string u8HomePath;
+    skr::String u8HomePath;
 
     skr::BlobId settingBlob;
 
@@ -70,14 +72,14 @@ namespace Live2D { namespace Cubism { namespace Framework {
         void update(csmMotionMap* motion_map, float delta_time) SKR_NOEXCEPT;
         const uint32_t* get_sorted_drawlist() const SKR_NOEXCEPT;
 
-        skr::string homePath;
+        skr::String homePath;
 
     protected:
         Csm::CubismMotionQueueEntryHandle startMotion(csmMotionMap* motion_map, const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL) SKR_NOEXCEPT;
         Csm::CubismMotionQueueEntryHandle startRandomMotion(csmMotionMap* motion_map, const Csm::csmChar* group, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL) SKR_NOEXCEPT;
     
         // Model States
-        eastl::vector<uint32_t> _sorted_drawable_list;
+        skr::stl_vector<uint32_t> _sorted_drawable_list;
         Csm::ICubismModelSetting* _modelSetting;
         Csm::csmVector<Csm::CubismIdHandle> _eyeBlinkIds;
         Csm::csmVector<Csm::CubismIdHandle> _lipSyncIds; ///< モデルに設定されたリップシンク機能用パラメータID
@@ -89,10 +91,10 @@ namespace Live2D { namespace Cubism { namespace Framework {
         const Csm::CubismId* _idParamEyeBallY; ///< パラメータID: ParamEyeBallXY
 
         // Async Requests
-        skr::string posePath;
-        skr::string modelPath;
-        skr::string pyhsicsPath;
-        skr::string usrDataPath;
+        skr::String posePath;
+        skr::String modelPath;
+        skr::String pyhsicsPath;
+        skr::String usrDataPath;
         skr_io_future_t poseFuture;
         skr::BlobId poseBlob;
         skr_io_future_t modelFuture;
@@ -109,10 +111,10 @@ namespace Live2D { namespace Cubism { namespace Framework {
         ~csmExpressionMap() SKR_NOEXCEPT;
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
 
-        eastl::vector<skr_io_future_t> expressionFutures;
-        eastl::vector<skr::BlobId> expressionBlobs;
-        eastl::vector_map<skr_io_future_t*, skr::string> expressionNames;
-        eastl::vector_map<skr_io_future_t*, skr::string> expressionPaths;
+        skr::stl_vector<skr_io_future_t> expressionFutures;
+        skr::stl_vector<skr::BlobId> expressionBlobs;
+        skr::UMap<skr_io_future_t*, skr::String> expressionNames;
+        skr::UMap<skr_io_future_t*, skr::String> expressionPaths;
         L2DRequestCallbackData* cbData;
     };
     class csmMotionMap : public csmMap<csmString, csmVector<ACubismMotion*>>, public IAsyncL2DResourceInterface
@@ -122,10 +124,10 @@ namespace Live2D { namespace Cubism { namespace Framework {
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
         void on_finished() SKR_NOEXCEPT final;
 
-        eastl::vector<skr_io_future_t> motionFutures;
-        eastl::vector<skr::BlobId> motionBlobs;
-        eastl::vector_map<skr_io_future_t*, eastl::pair<skr::string, uint32_t>> motionEntries;
-        eastl::vector_map<skr_io_future_t*, skr::string> motionPaths;
+        skr::stl_vector<skr_io_future_t> motionFutures;
+        skr::stl_vector<skr::BlobId> motionBlobs;
+        skr::UMap<skr_io_future_t*, std::pair<skr::String, uint32_t>> motionEntries;
+        skr::UMap<skr_io_future_t*, skr::String> motionPaths;
         L2DRequestCallbackData* cbData;
     };
 }}}

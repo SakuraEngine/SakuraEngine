@@ -36,7 +36,7 @@ constexpr const size_t long_guid_form_length  = 38; // {XXXXXXXX-XXXX-XXXX-XXXX-
 //
 constexpr int parse_hex_digit(const char8_t c)
 {
-    using namespace skr::string_literals;
+    using namespace skr::StringLiterals;
     if ('0' <= c && c <= '9')
         return c - '0';
     else if ('a' <= c && c <= 'f')
@@ -90,9 +90,9 @@ constexpr skr_guid_t make_guid_unsafe(const char8_t (&str)[N])
     return make_guid_helper(str + (N == (long_guid_form_length + 1) ? 1 : 0));
 }
 
-constexpr skr_guid_t make_guid_unsafe(const skr::string_view& str)
+constexpr skr_guid_t make_guid_unsafe(const skr::StringView& str)
 {
-    using namespace skr::string_literals;
+    using namespace skr::StringLiterals;
     if (str.size() != long_guid_form_length && str.size() != short_guid_form_length)
         SKR_ASSERT(0 && "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
 
@@ -112,7 +112,7 @@ namespace literals
 {
 constexpr skr_guid_t operator""_guid(const char8_t* str, size_t N)
 {
-    using namespace skr::string_literals;
+    using namespace skr::StringLiterals;
     using namespace details;
 
     if (!(N == long_guid_form_length || N == short_guid_form_length))
@@ -123,7 +123,7 @@ constexpr skr_guid_t operator""_guid(const char8_t* str, size_t N)
     return make_guid_helper(str + (N == long_guid_form_length ? 1 : 0));
 }
 } // namespace literals
-SKR_RUNTIME_API bool make_guid(const skr::string_view& str, skr_guid_t& value);
+SKR_RUNTIME_API bool make_guid(const skr::StringView& str, skr_guid_t& value);
 } // namespace skr::guid
 
 #define SKR_CONSTEXPR_GUID(__GUID) []() constexpr {  \

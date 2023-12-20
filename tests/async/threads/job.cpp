@@ -55,8 +55,8 @@ TEST_CASE("JobQueue")
 using Progress = int;
 using InputParam1 = int;
 using InputParam2 = int;
-using Result = skr::string;
-using Exception = skr::string;
+using Result = skr::String;
+using Exception = skr::String;
 
 struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
 {
@@ -72,7 +72,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
                 skr_atomic32_store_relaxed(&finished, true);
             }
         }
-        skr::string result = u8"";
+        skr::String result = u8"";
         SAtomic32 finished = false;
     };
     JBase* jobItem = nullptr;
@@ -85,7 +85,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
         {
             ~JI() override { SKR_TEST_INFO(u8"Job Instance dtor"); }
             skr::JobResult run() SKR_NOEXCEPT override { return runner(); }
-            eastl::function<skr::JobResult()> runner;
+            skr::stl_function<skr::JobResult()> runner;
         };
         JI* ji = SkrNew<JI>();
         ji->runner = [=](){ ji->result = _f(args...); return skr::ASYNC_RESULT_OK; };

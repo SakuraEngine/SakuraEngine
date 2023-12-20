@@ -26,7 +26,7 @@ struct SparseArrayIt {
     }
     SKR_INLINE bool operator==(const SparseArrayIt& rhs) const { return _bit_it == rhs._bit_it && _array == rhs._array; }
     SKR_INLINE bool operator!=(const SparseArrayIt& rhs) const { return !(*this == rhs); }
-    SKR_INLINE operator bool() const { return (bool)_bit_it; }
+    SKR_INLINE explicit operator bool() const { return (bool)_bit_it; }
     SKR_INLINE bool       operator!() const { return !(bool)*this; }
     SKR_INLINE ValueType& operator*() const { return _array[index()]._sparse_array_data; }
     SKR_INLINE ValueType* operator->() const { return &_array[index()]._sparse_array_data; }

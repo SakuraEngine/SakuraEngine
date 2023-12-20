@@ -7,8 +7,7 @@
 #endif
 #ifdef SKR_APPLE_DEBUG_H
 
-    SKR_EXTERN_C SKR_RUNTIME_API 
-    void apple_assert_handler(int sig);
+    SKR_EXTERN_C SKR_STATIC_API void apple_assert_handler(int sig);
 
     #if !SKR_SHIPPING
         #include <assert.h>

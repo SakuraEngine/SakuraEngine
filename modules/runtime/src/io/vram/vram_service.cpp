@@ -34,7 +34,7 @@ inline static IOReaderId<IIOBatchProcessor> CreateDSReader(VRAMService* service,
 
 uint32_t VRAMService::global_idx = 0;
 VRAMService::VRAMService(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
-    : name(desc->name ? skr::string(desc->name) : skr::format(u8"VRAMService-{}", global_idx++)), 
+    : name(desc->name ? skr::String(desc->name) : skr::format(u8"VRAMService-{}", global_idx++)), 
       awake_at_request(desc->awake_at_request),
       runner(this, desc->callback_job_queue),
       ram_service(desc->ram_service)

@@ -1,4 +1,3 @@
-#include "SkrRT/containers/variant.hpp"
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/_deprecated/type/type.hpp"
 #include "SkrRT/containers/hashmap.hpp"
@@ -8,7 +7,7 @@ namespace skr {
 namespace type {
 const skr_type_t* make_pointer_type(const skr_type_t* type)
 {
-    static skr::flat_hash_map<const skr_type_t*, const skr_type_t*> cache;
+    static skr::FlatHashMap<const skr_type_t*, const skr_type_t*> cache;
     auto it = cache.find(type);
     if (it != cache.end()) {
         return it->second;
@@ -24,7 +23,7 @@ const skr_type_t* make_pointer_type(const skr_type_t* type)
 }
 const skr_type_t* make_reference_type(const skr_type_t* type)
 {
-    static skr::flat_hash_map<const skr_type_t*, const skr_type_t*> cache;
+    static skr::FlatHashMap<const skr_type_t*, const skr_type_t*> cache;
     auto it = cache.find(type);
     if (it != cache.end()) {
         return it->second;
@@ -40,7 +39,7 @@ const skr_type_t* make_reference_type(const skr_type_t* type)
 }
 const skr_type_t* make_sptr_type(const skr_type_t* type)
 {
-    static skr::flat_hash_map<const skr_type_t*, const skr_type_t*> cache;
+    static skr::FlatHashMap<const skr_type_t*, const skr_type_t*> cache;
     auto it = cache.find(type);
     if (it != cache.end()) {
         return it->second;
@@ -56,7 +55,7 @@ const skr_type_t* make_sptr_type(const skr_type_t* type)
 }
 const skr_type_t* make_sobject_ptr_type(const skr_type_t* type)
 {
-    static skr::flat_hash_map<const skr_type_t*, const skr_type_t*> cache;
+    static skr::FlatHashMap<const skr_type_t*, const skr_type_t*> cache;
     auto it = cache.find(type);
     if (it != cache.end()) {
         return it->second;
@@ -72,7 +71,7 @@ const skr_type_t* make_sobject_ptr_type(const skr_type_t* type)
 }
 const skr_type_t* make_array_type(const skr_type_t* type, uint64_t num, uint64_t size)
 {
-    static skr::flat_hash_map<std::pair<const skr_type_t*, size_t>, const skr_type_t*> cache;
+    static skr::FlatHashMap<std::pair<const skr_type_t*, size_t>, const skr_type_t*> cache;
     auto it = cache.find({ type, size });
     if (it != cache.end()) {
         return it->second;
@@ -87,7 +86,7 @@ const skr_type_t* make_array_type(const skr_type_t* type, uint64_t num, uint64_t
 }
 const skr_type_t* make_array_view_type(const skr_type_t* type)
 {
-    static skr::flat_hash_map<const skr_type_t*, const skr_type_t*> cache;
+    static skr::FlatHashMap<const skr_type_t*, const skr_type_t*> cache;
     auto it = cache.find(type);
     if (it != cache.end()) {
         return it->second;
@@ -100,7 +99,7 @@ const skr_type_t* make_array_view_type(const skr_type_t* type)
 }
 const skr_type_t* make_dynarray_type(const skr_type_t* type)
 {
-    static skr::flat_hash_map<const skr_type_t*, const skr_type_t*> cache;
+    static skr::FlatHashMap<const skr_type_t*, const skr_type_t*> cache;
     auto it = cache.find(type);
     if (it != cache.end()) {
         return it->second;
@@ -233,8 +232,8 @@ void DynArrayType::Erase(void* addr, uint64_t index, bool bKeepOrder) const
 
 const skr_type_t* make_variant_type(const skr::span<const skr_type_t*> types)
 {
-    static skr::flat_hash_map<skr::string, const skr_type_t*, skr::hash<skr::string>> cache;
-    skr::string name;
+    static skr::FlatHashMap<skr::String, const skr_type_t*, skr::Hash<skr::String>> cache;
+    skr::String name;
     for (auto type : types) {
         name += type->Name();
     }

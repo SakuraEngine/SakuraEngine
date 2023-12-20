@@ -1,9 +1,8 @@
+#include "SkrBase/misc/defer.hpp"
 #include "SkrRT/async/thread_job.hpp"
 #include "SkrRT/async/wait_timeout.hpp"
-#include "job_thread.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrBase/misc/defer.hpp"
 #include "SkrRT/misc/log.h"
+#include "job_thread.hpp"
 
 namespace skr
 {
@@ -138,11 +137,11 @@ public:
     }
 
     SAtomic32 waiting_workers_count = 0;
-    skr::string name = u8"JobItemQueue";
+    skr::String name = u8"JobItemQueue";
     SAtomic32 is_end_job_queued = false;
 
-    skr::vector<JobItem*> list_runnable;
-    skr::vector<JobItem*> list_consumed;
+    skr::stl_vector<JobItem*> list_runnable;
+    skr::stl_vector<JobItem*> list_consumed;
     JobQueueCond* cond = nullptr;
 
 };
@@ -244,7 +243,7 @@ JobResult JobQueue::initialize() SKR_NOEXCEPT
         {
             return ASYNC_RESULT_ERROR_OUT_OF_MEMORY;
         }
-        skr::string tname = n ? n : u8"UnknownJobQueue";
+        skr::String tname = n ? n : u8"UnknownJobQueue";
         auto taftfix = skr::format(u8"_{}"_cuqv, (int32_t)i);
         tname.append(taftfix);
         NamedThreadDesc tdesc = {};
@@ -279,7 +278,7 @@ int JobQueue::finalize() SKR_NOEXCEPT
     // Queue as many JobFinalizeItems as the number of worker threads to finish the worker threads.
     // Since the worker thread that received JobFinalizeItem will always end without taking the next Job,
     // This will terminate all worker threads.
-    skr::vector<JobFinalizeItem> finalJobs;
+    skr::stl_vector<JobFinalizeItem> finalJobs;
     finalJobs.reserve(thread_list.size());
     for (int i = 0; i < thread_list.size(); ++i)
     {
@@ -332,7 +331,7 @@ JobResult JobQueue::check() SKR_NOEXCEPT
     need_cancel = skr_atomic32_load_acquire(&cancel_requested);
     if (need_cancel)
     {
-        eastl::for_each(pending_queue.begin(), pending_queue.end(), 
+        std::for_each(pending_queue.begin(), pending_queue.end(), 
         [](auto ptr) {
             if (ptr->is_none() == false) 
             {
@@ -354,7 +353,7 @@ JobResult JobQueue::check() SKR_NOEXCEPT
 
             // Since enqueue may be done while unlocking, it cannot be used
             // so re-search the list
-            it = eastl::find(pending_queue.begin(), pending_queue.end(), jobItemPtr);
+            it = std::find(pending_queue.begin(), pending_queue.end(), jobItemPtr);
             it = pending_queue.erase(it);
         }
         else {

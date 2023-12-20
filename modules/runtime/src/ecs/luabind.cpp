@@ -226,7 +226,7 @@ namespace skr::lua
                 luaL_argexpected(L, lua_istable(L, 2), 2, "table");
                 //iterate array
                 auto count = lua_objlen(L, 2);
-                eastl::vector<dual_entity_t> entities;
+                skr::stl_vector<dual_entity_t> entities;
                 entities.reserve(count);
                 for(auto i = 1; i <= count; ++i)
                 {
@@ -255,7 +255,7 @@ namespace skr::lua
                 luaL_argexpected(L, lua_isfunction(L, 4 + withRemove), 4 + withRemove, "table");
                 //iterate array
                 auto count = lua_objlen(L, 2);
-                eastl::vector<dual_entity_t> entities;
+                skr::stl_vector<dual_entity_t> entities;
                 dual::type_builder_t addBuilder;
                 dual::type_builder_t removeBuilder;
                 entities.reserve(count);
@@ -495,7 +495,7 @@ namespace skr::lua
                             luaL_argexpected(L, lua_isfunction(L, 3), 3, "function");
                             //iterate array
                             auto count = lua_objlen(L, 2);
-                            eastl::vector<dual_entity_t> entities;
+                            skr::stl_vector<dual_entity_t> entities;
                             entities.reserve(count);
                             for(auto i = 1; i <= count; ++i)
                             {

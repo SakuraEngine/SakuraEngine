@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/misc/assert.h"
-#include "SkrBase/containers/fwd_container.hpp"
+#include "SkrBase/misc/debug.h"
 #include "SkrBase/misc/integer_tools.hpp"
 
 namespace skr::container
@@ -12,6 +11,28 @@ namespace __helper
 {
 template <size_t Extent, size_t Offset, size_t Count>
 inline static constexpr size_t subspan_extent = (Count != kDynamicExtent ? Count : (Extent != kDynamicExtent ? (Extent - Offset) : kDynamicExtent));
+
+template <class Container>
+constexpr auto data(Container& c) -> decltype(c.data()) { return c.data(); }
+
+template <class Container>
+constexpr auto data(const Container& c) -> decltype(c.data()) { return c.data(); }
+
+template <class C>
+constexpr auto size(const C& c) -> decltype(c.size()) { return c.size(); }
+
+// HasSizeAndData
+//
+// custom type trait to determine if ::data(Container) and ::size(Container) are well-formed.
+//
+template <typename, typename = void>
+struct HasSizeAndData : std::false_type {
+};
+
+template <typename T>
+struct HasSizeAndData<T, std::void_t<decltype(__helper::size(std::declval<T>())), decltype(__helper::data(std::declval<T>()))>> : std::true_type {
+};
+
 } // namespace __helper
 
 template <typename T, typename TSize, size_t Extent = kDynamicExtent>
@@ -23,6 +44,19 @@ struct Span {
     template <size_t N, typename = std::enable_if_t<(Extent == kDynamicExtent || N == Extent)>>
     constexpr Span(T (&arr)[N]);
     ~Span();
+
+    // generic container conversion constructors
+    template <typename Container>
+    using SfinaeForGenericContainers =
+    std::enable_if_t<!std::is_same_v<Container, Span> &&
+                     !std::is_array_v<Container> &&
+                     __helper::HasSizeAndData<Container>::value &&
+                     std::is_convertible_v<std::remove_pointer_t<decltype(__helper::data(std::declval<Container&>()))> (*)[], T (*)[]>>;
+    template <typename Container, typename = SfinaeForGenericContainers<Container>>
+    constexpr Span(Container& cont);
+
+    template <typename Container, typename = SfinaeForGenericContainers<const Container>>
+    constexpr Span(const Container& cont);
 
     // copy & move
     constexpr Span(const Span& other);
@@ -90,12 +124,28 @@ SKR_INLINE constexpr Span<T, TSize, Extent>::Span(T* begin, T* end)
 template <typename T, typename TSize, size_t Extent>
 template <size_t N, typename>
 SKR_INLINE constexpr Span<T, TSize, Extent>::Span(T (&arr)[N])
-    : Span(arr, static_cast<TSize>(N))
+    : _data(arr)
+    , _size(static_cast<TSize>(N))
 {
-    static_assert(Extent == kDynamicExtent || Extent == 0, "impossible to default construct a span with a fixed Extent different than 0");
+    static_assert(Extent == kDynamicExtent || Extent == 0 || Extent <= N, "impossible to default construct a span with a fixed Extent different than 0");
 }
 template <typename T, typename TSize, size_t Extent>
 SKR_INLINE Span<T, TSize, Extent>::~Span() = default;
+
+// generic container conversion constructors
+template <typename T, typename TSize, size_t Extent>
+template <typename Container, typename>
+constexpr Span<T, TSize, Extent>::Span(Container& cont)
+    : Span(static_cast<T*>(__helper::data(cont)), static_cast<TSize>(__helper::size(cont)))
+{
+}
+
+template <typename T, typename TSize, size_t Extent>
+template <typename Container, typename>
+constexpr Span<T, TSize, Extent>::Span(const Container& cont)
+    : Span(static_cast<T*>(__helper::data(cont)), static_cast<TSize>(__helper::size(cont)))
+{
+}
 
 // copy & move
 template <typename T, typename TSize, size_t Extent>

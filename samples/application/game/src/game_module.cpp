@@ -1,11 +1,10 @@
 #include "common/utils.h"
-#include <EASTL/shared_ptr.h>
 #include "GameRuntime/gamert.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/platform/system.h"
 #include "SkrRT/config.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/platform/window.h"
@@ -315,7 +314,7 @@ void SGameModule::on_load(int argc, char8_t** argv)
 
     if (!job_queue)
     {
-        skr::string qn             = u8"GameJobQueue";
+        skr::String qn             = u8"GameJobQueue";
         auto        job_queueDesc  = make_zeroed<skr::JobQueueDesc>();
         job_queueDesc.thread_count = 2;
         job_queueDesc.priority     = SKR_THREAD_NORMAL;
@@ -604,15 +603,15 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
     dual_query_t*      cameraQuery;
     dual_query_t*      animQuery;
     moveQuery         = dualQ_from_literal(game_world,
-                                           "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t, !skr_camera_comp_t");
+                                           "[has]skr_movement_comp_t,[inout]skr_translation_comp_t,[in]skr_scale_comp_t,[in]skr_index_comp_t,!skr_camera_comp_t");
     cameraQuery       = dualQ_from_literal(game_world,
-                                           "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
+                                           "[has]skr_movement_comp_t,[inout]skr_translation_comp_t,[inout]skr_camera_comp_t");
     animQuery         = dualQ_from_literal(game_world,
-                                           "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<unseq>skr::anim::AnimComponent, [in]<unseq>skr::anim::SkeletonComponent");
+                                           "[in]skr_render_effect_t,[in]game::anim_state_t,[out]<unseq>skr::anim::AnimComponent,[in]<unseq>skr::anim::SkeletonComponent");
     initAnimSkinQuery = dualQ_from_literal(game_world,
-                                           "[inout]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
+                                           "[inout]skr::anim::AnimComponent,[inout]skr::anim::SkinComponent,[in]skr::renderer::MeshComponent,[in]skr::anim::SkeletonComponent");
     skinQuery         = dualQ_from_literal(game_world,
-                                           "[in]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
+                                           "[in]skr::anim::AnimComponent,[inout]skr::anim::SkinComponent,[in]skr::renderer::MeshComponent,[in]skr::anim::SkeletonComponent");
 
     auto handler = skr_system_get_default_handler();
     handler->add_window_close_handler(
@@ -668,7 +667,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
         resource_system->Update();
 
         // Update camera
-        auto cameraUpdate = [=](dual_chunk_view_t* view) {
+        auto cameraUpdate = [this](dual_chunk_view_t* view) {
             auto cameras = dual::get_owned_rw<skr_camera_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {

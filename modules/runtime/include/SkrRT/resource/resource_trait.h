@@ -7,7 +7,7 @@ namespace skr::resource
     template<>
     struct ResourceTrait<T>
     {
-        static void EnumerateDependecies(const T& resource, skr::function_ref<void(const Resource&)> callback);
+        static void EnumerateDependecies(const T& resource, skr::FunctionRef<void(const Resource&)> callback);
     }
     */
     template<class T>

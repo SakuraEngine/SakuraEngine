@@ -3,7 +3,7 @@
 #include <SkrRT/containers/vector.hpp>
 #include <SkrRT/containers/sptr.hpp>
 #include <SkrRT/containers/span.hpp>
-#include <SkrRT/containers/variant.hpp>
+#include <SkrRT/containers/deprecated.hpp>
 #include "SkrRT/resource/resource_handle.h"
 
 #if defined(__cplusplus)
@@ -12,16 +12,16 @@ namespace skr
 namespace type
 {
 struct ValueSerializePolicy {
-    skr::string (*format)(void* self, const void* data, const struct skr_type_t* type);
-    void (*parse)(void* self, skr::string_view str, void* data, const struct skr_type_t* type);
+    skr::String (*format)(void* self, const void* data, const struct skr_type_t* type);
+    void (*parse)(void* self, skr::StringView str, void* data, const struct skr_type_t* type);
 };
 
 /*
 struct Serializer
 {
     void BeginSerialize();
-    skr::string EndSerialize();
-    void BeginDeserialize(skr::string_view str);
+    skr::String EndSerialize();
+    void BeginDeserialize(skr::StringView str);
     void EndDeserialize();
     void Value(bool&);
     void Value(int32_t&);
@@ -48,7 +48,7 @@ struct TValueSerializePolicy : ValueSerializePolicy {
             serializeImpl(&s, data, type);
             return s.EndSerialize();
         };
-        parse = +[](void* self, skr::string_view str, void* data, const struct skr_type_t* type) {
+        parse = +[](void* self, skr::StringView str, void* data, const struct skr_type_t* type) {
             auto& s = ((TValueSerializePolicy*)self)->s;
             s.BeginDeserialize(str);
             serializeImpl(&s, data, type);
@@ -83,10 +83,10 @@ struct TValueSerializePolicy : ValueSerializePolicy {
                 ctx.Value(*(double*)data);
                 break;
             case SKR_TYPE_CATEGORY_STR:
-                ctx.Value(*(skr::string*)data);
+                ctx.Value(*(skr::String*)data);
                 break;
             case SKR_TYPE_CATEGORY_STRV:
-                ctx.Value(*(skr::string_view*)data);
+                ctx.Value(*(skr::StringView*)data);
                 break;
             case SKR_TYPE_CATEGORY_GUID:
                 ctx.Value(*(skr_guid_t*)data);

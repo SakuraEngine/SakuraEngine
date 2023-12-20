@@ -33,7 +33,7 @@ struct StyleText {
 struct SKR_GUI_API BindText {
     String text = {};
 };
-struct InlineType : public std::variant<skr::string, RenderObject*, RenderText*, skr::SPtr<BindText>> {
+struct InlineType : public std::variant<skr::String, RenderObject*, RenderText*, skr::SPtr<BindText>> {
 };
 
 sreflect_struct(
@@ -51,8 +51,8 @@ public:
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override {}
 
-    void          set_text(const string& text);
-    const string& text() const { return _text; }
+    void          set_text(const String& text);
+    const String& text() const { return _text; }
 
 private:
     IParagraph* _paragraph = nullptr;

@@ -5,8 +5,8 @@
 #include "./../common/common_utils.h"
 #ifdef __cplusplus
     #include "D3D12MemAlloc.h"
-    #include <EASTL/vector.h>
     #include <SkrRT/containers/hashmap.hpp>
+    #include <SkrRT/containers/vector.hpp>
 #endif
 #ifdef CGPU_THREAD_SAFETY
     #include "SkrRT/platform/thread.h"
@@ -85,7 +85,7 @@ typedef struct D3D12Util_DescriptorHeap {
     /// Start position in the heap
     D3D12Util_DescriptorHandle mStartHandle;
     /// Free List used for CPU only descriptor heaps
-    eastl::vector<D3D12Util_DescriptorHandle> mFreeList;
+    skr::Vector<D3D12Util_DescriptorHandle> mFreeList;
     /// Description
     D3D12_DESCRIPTOR_HEAP_DESC mDesc;
     /// DescriptorInfo Increment Size

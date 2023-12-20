@@ -1,12 +1,14 @@
 #pragma once
-#include <EASTL/span.h>
+#include "SkrBase/containers/misc/span.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 namespace skr
 {
-using eastl::span;
+template <typename T, size_t Extent = container::kDynamicExtent>
+using span = container::Span<T, size_t, Extent>;
 }
 
-#include "EASTL/vector.h"
+#include "SkrRT/containers/vector.hpp"
 #include "SkrRT/serde/binary/blob_fwd.h"
 #include "SkrRT/serde/binary/serde.h"
 
@@ -14,7 +16,7 @@ namespace skr::binary
 {
 template <class T>
 struct BlobBuilderType<skr::span<T>> {
-    using type = eastl::vector<typename BlobBuilderType<T>::type>;
+    using type = skr::Vector<typename BlobBuilderType<T>::type>;
 };
 struct SpanSerdeConfig {
     uint32_t maxSize;

@@ -17,7 +17,7 @@ void skr_vfs_append_path_component(const char8_t* path, const char8_t* component
 
 void skr_vfs_append_path_extension(const char8_t* path, const char8_t* extension, char8_t* output)
 {
-    skr::string p(path);
+    skr::String p(path);
     if (extension[0] != u8'.')
     {
         p.append(u8".");

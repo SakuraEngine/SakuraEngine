@@ -1,8 +1,8 @@
-#include "SkrRT/ecs/dual_config.h"
-#include "pool.hpp"
-#include <EASTL/vector.h>
-#include <EASTL/numeric.h>
 #include "SkrProfile/profile.h"
+#include "SkrRT/ecs/dual_config.h"
+#include "SkrRT/containers/vector.hpp"
+#include "pool.hpp"
+#include <numeric>
 
 const char* kDualMemoryName = "dual";
 namespace dual
@@ -44,9 +44,9 @@ fixed_pool_t::fixed_pool_t(size_t blockSize, size_t blockCount)
     , blocks(blockCount)
 {
     buffer = new char[blockSize * blockCount];
-    eastl::vector<size_t> indicies;
-    indicies.resize(blockCount);
-    eastl::iota(indicies.begin(), indicies.end(), 0);
+    skr::Vector<size_t> indicies;
+    indicies.resize_default(blockCount);
+    std::iota(indicies.begin(), indicies.end(), 0);
     for (size_t i = 0; i < blockCount; ++i)
         blocks.try_enqueue_bulk(indicies.data(), blockCount);
 }
@@ -76,9 +76,9 @@ void fixed_pool_t::reset()
 {
     skr::ConcurrentQueue<size_t, ECSPoolConcurrentQueueTraits> temp(blockCount);
     blocks.swap(temp);
-    eastl::vector<size_t> indicies;
-    indicies.resize(blockCount);
-    eastl::iota(indicies.begin(), indicies.end(), 0);
+    skr::Vector<size_t> indicies;
+    indicies.resize_default(blockCount);
+    std::iota(indicies.begin(), indicies.end(), 0);
     for (size_t i = 0; i < blockCount; ++i)
         blocks.try_enqueue_bulk(indicies.data(), blockCount);
 }

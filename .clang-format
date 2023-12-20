@@ -52,6 +52,8 @@ BraceWrapping:
   AfterControlStatement: true
 Cpp11BracedListStyle: false
 
+RequiresClausePosition: SingleLine
+
 AttributeMacros: ["DUAL_UNLIKELY", "DUAL_FORCEINLINE", "FORCEINLINE"]
 WhitespaceSensitiveMacros:
   - "sattr"

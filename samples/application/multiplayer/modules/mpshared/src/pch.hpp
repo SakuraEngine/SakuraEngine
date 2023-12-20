@@ -2,7 +2,7 @@
 #include <chrono> // IWYU pragma: export
 #include "steam/steamnetworkingtypes.h" // IWYU pragma: export
 
-#include "SkrRT/platform/memory.h" // IWYU pragma: export
+#include "SkrMemory/memory.h" // IWYU pragma: export
 #include "SkrBase/misc/debug.h"  // IWYU pragma: export
 #include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
 #include "SkrRT/misc/make_zeroed.hpp" // IWYU pragma: export
@@ -19,11 +19,12 @@
 #include "SkrBase/math/rtm/quatf.h" // IWYU pragma: export
 #include "SkrBase/math/rtm/rtmx.h" // IWYU pragma: export
 
-#include "SkrRT/containers/bitset.h" // IWYU pragma: export
 #include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
 #include <SkrRT/containers/vector.hpp> // IWYU pragma: export
 #include <SkrRT/containers/string.hpp> // IWYU pragma: export
 #include <SkrRT/containers/hashmap.hpp> // IWYU pragma: export
+#include <SkrRT/containers/stl_vector.hpp> // IWYU pragma: export
+#include <SkrRT/containers/stl_string.hpp> // IWYU pragma: export
 
 #include "SkrRT/ecs/dual.h" // IWYU pragma: export
 #include "SkrRT/ecs/set.hpp" // IWYU pragma: export
@@ -31,8 +32,6 @@
 
 #include "SkrRT/serde/json/reader.h" // IWYU pragma: export
 #include "SkrRT/serde/json/writer.h" // IWYU pragma: export
-
-#include <EASTL/string.h> // IWYU pragma: export
 
 #include "SkrProfile/profile.h" // IWYU pragma: export
 

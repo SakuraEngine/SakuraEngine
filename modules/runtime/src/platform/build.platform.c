@@ -1,11 +1,9 @@
-#include "memory.c"
 #include "timer.c"
 #if defined(_WIN32)
     #include "windows/time.c"
     #include "windows/thread.c"
     #include "windows/misc.c"
 #elif defined(__APPLE__)
-    #include "apple/debug.c"
     #include "apple/time.c"
     #include "apple/thread.c"
 #elif defined(__EMSCRIPTEN__) || defined(__wasi__)

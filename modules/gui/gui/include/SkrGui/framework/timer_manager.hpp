@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
-#include "SkrRT/containers_new/sparse_array.hpp"
+#include "SkrRT/containers/sparse_vector.hpp"
 #ifndef __meta__
     #include "SkrGui/framework/timer_manager.generated.h"
 #endif
@@ -88,7 +88,7 @@ private:
         uint64_t signal_count;
     };
     float                  _cur_time_stamp = 0;
-    SparseArray<TimerData> _timers;
+    SparseVector<TimerData> _timers;
 };
 } // namespace gui sreflect
 } // namespace skr sreflect

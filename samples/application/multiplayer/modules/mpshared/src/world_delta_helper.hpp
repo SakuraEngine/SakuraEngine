@@ -72,7 +72,7 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
             return false;
         };
         if constexpr(withHistory)
-            comps.entities.erase(std::remove_if(comps.entities.begin(), comps.entities.end(), serde), comps.entities.end());
+            comps.entities.remove_all_if(serde);
         else
         {
             for(auto ent : comps.entities)
@@ -128,8 +128,8 @@ dual_type_index_t RegisterHistoryComponent()
 {
     dual_type_description_t desc;
     auto originDesc = dualT_get_desc(dual_id_of<T>::get());
-    skr::string name = skr::format(u8"{}_History", originDesc->name);
-    skr::string* persistentName = new skr::string(name);
+    skr::String name = skr::format(u8"{}_History", originDesc->name);
+    skr::String* persistentName = new skr::String(name);
     desc.name = persistentName->u8_str();
     using array_t = dual::array_comp_T<T, 4>;
     desc.size = sizeof(array_t);

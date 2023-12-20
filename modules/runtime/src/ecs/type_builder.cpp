@@ -1,5 +1,5 @@
 #include "SkrRT/ecs/type_builder.hpp"
-#include <EASTL/algorithm.h>
+#include <algorithm>
 
 namespace dual
 {
@@ -41,7 +41,7 @@ dual_type_set_t type_builder_t::build()
     if(indices.empty())
         return {nullptr, 0};
     std::sort(indices.begin(), indices.end());
-    auto end = eastl::unique(indices.begin(), indices.end());
+    auto end = std::unique(indices.begin(), indices.end());
     return { indices.data(), (SIndex)(end - indices.begin()) };
 }
 } // namespace dual

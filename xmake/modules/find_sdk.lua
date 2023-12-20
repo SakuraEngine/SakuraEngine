@@ -127,7 +127,8 @@ function find_program(name, sdkdir, use_which, force_in_sdkdir)
     local sdkdir = sdkdir or path.join(os.projectdir(), tooldir())
 
     -- find in project embed tool dir
-    local prog = detect.find_program(name, {paths = {sdkdir}}) 
+    local prog = detect.find_program(name, {paths = {sdkdir}})
+    local wdir = nil
     local vexec = nil
 
     if (not force_in_sdkdir) then
@@ -166,13 +167,14 @@ function find_program(name, sdkdir, use_which, force_in_sdkdir)
             return
         else
             prog = progf
-            vexec = "cd "..sdkdir.." && "..prog
+            wdir = sdkdir
+            vexec = prog
         end
     else
         vexec = prog
     end
 
-    return {program = prog, vexec = vexec}
+    return {program = prog, vexec = vexec, wdir = wdir}
 end
 
 function find_embed_python()

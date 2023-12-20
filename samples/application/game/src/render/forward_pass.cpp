@@ -1,14 +1,13 @@
-#include "forward_pass.hpp"
+#include "SkrProfile/profile.h"
+#include "SkrRT/containers/umap.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_viewport.h"
 #include "SkrAnim/components/skin_component.hpp"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
-
-#include <EASTL/vector_map.h>
-
-#include "SkrProfile/profile.h"
+#include "forward_pass.hpp"
 
 using namespace game;
 
@@ -83,7 +82,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
                 {
                     SkrZoneScopedN("Barriers");
                     CGPUResourceBarrierDescriptor barrier_desc = {};
-                    eastl::vector<CGPUBufferBarrier> barriers;
+                    skr::stl_vector<CGPUBufferBarrier> barriers;
                     for (uint32_t i = 0; i < r_cv->count; i++)
                     {
                         auto* anim = anims + i;
@@ -196,7 +195,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context){
             SkrZoneScopedN("BarrierSkinMeshes");
             CGPUResourceBarrierDescriptor barrier_desc = {};
-            eastl::vector<CGPUBufferBarrier> barriers;
+            skr::stl_vector<CGPUBufferBarrier> barriers;
             auto barrierVertices = [&](dual_chunk_view_t* r_cv) {
                 const skr::anim::AnimComponent* anims = nullptr;
                 {
@@ -267,7 +266,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
             {
             SkrZoneScopedN("DrawCalls");
             CGPURenderPipelineId old_pipeline = nullptr;
-            eastl::vector_map<CGPURootSignatureId, CGPUXBindTableId> bind_tables;
+            skr::UMap<CGPURootSignatureId, CGPUXBindTableId> bind_tables;
             for (uint32_t i = 0; i < drawcalls.size(); i++)
             for (uint32_t j = 0; j < drawcalls[i].count; j++)
             for (uint32_t k = 0; k < drawcalls[i].lists[j].count; k++)
@@ -282,11 +281,11 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                 }
 
                 CGPURootSignatureId dcRS = dc.pipeline->root_signature;
-                if (bind_tables.find(dcRS) == bind_tables.end())
+                if (!bind_tables.contains(dcRS))
                 {
-                    bind_tables[dcRS] = pass_context.create_and_update_bind_table(dc.pipeline->root_signature);
+                    bind_tables.find_or_add(dcRS, pass_context.create_and_update_bind_table(dc.pipeline->root_signature));
                 }
-                CGPUXBindTableId pass_table = bind_tables[dcRS];
+                CGPUXBindTableId pass_table = bind_tables.find(dcRS)->value;
                 if (dc.bind_table)
                 {
                     CGPUXBindTableId tables[2] = { dc.bind_table, pass_table };

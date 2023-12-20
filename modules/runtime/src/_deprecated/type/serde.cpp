@@ -3,7 +3,7 @@
 #include "SkrRT/misc/fast_float.h"
 #include <charconv>
 
-void skr_type_t::FromString(void* dst, skr::string_view str, skr::type::ValueSerializePolicy* policy) const
+void skr_type_t::FromString(void* dst, skr::StringView str, skr::type::ValueSerializePolicy* policy) const
 {
     using namespace skr::type;
     if (policy)

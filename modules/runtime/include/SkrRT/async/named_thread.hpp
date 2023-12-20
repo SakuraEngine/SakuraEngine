@@ -59,7 +59,7 @@ public:
     AsyncResult finalize() SKR_NOEXCEPT;
 
 private:
-    skr::string tname;
+    skr::String tname;
     NamedThreadDesc desc = {};
 
     static void threadFunc(void* args);

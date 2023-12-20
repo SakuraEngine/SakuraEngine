@@ -1,7 +1,6 @@
 #pragma once
-#include <type_traits>
-#include <EASTL/tuple.h>
-#include <EASTL/vector.h>
+#include <tuple>
+#include "SkrRT/containers/vector.hpp"
 
 namespace skr
 {
@@ -17,17 +16,17 @@ public:
         append(args...);
     }
 
-    cartesian_product(eastl::vector<eastl::vector<T>> const& sequences) 
+    cartesian_product(skr::Vector<skr::Vector<T>> const& sequences) 
         : count(1)
     {
         tuples.reserve(sequences.size());
         for(auto&& s : sequences) {
-            tuples.emplace_back(s.cbegin(), 0ul, s.size());
+            tuples.add(E{s.begin(), 0ul, s.size()});
             count *= (int64_t)s.size();
         }
     }
 
-    cartesian_product(eastl::vector<eastl::vector<T>>&& sequences)
+    cartesian_product(skr::Vector<skr::Vector<T>>&& sequences)
         : cartesian_product(sequences)
     {
 
@@ -37,26 +36,26 @@ public:
     bool has_next() { return count > 0; }
 
     // next combination
-    eastl::vector<T> next()
+    skr::Vector<T> next()
     {
-        eastl::vector<T> res(tuples.size());
-        auto s = res.rbegin();
+        skr::Vector<T> res(tuples.size());
+        auto s = res.end() - 1;
 
-        for (auto p = tuples.rbegin(); p < tuples.rend(); ++p, ++s) {
-            *s = *eastl::get<0>(*p);
+        for (auto p = tuples.end() - 1; p >= tuples.begin(); --p, --s) {
+            *s = *std::get<0>(*p);
 
-            if (p > tuples.rbegin()) {
+            if (p > (tuples.end() - 1)) {
                 auto q = p - 1;
-                if (eastl::get<1>(*q) == eastl::get<2>(*q)) {
-                    eastl::get<0>(*q) -= eastl::get<2>(*q);
-                    eastl::get<1>(*q) = 0;
+                if (std::get<1>(*q) == std::get<2>(*q)) {
+                    std::get<0>(*q) -= std::get<2>(*q);
+                    std::get<1>(*q) = 0;
 
-                    ++eastl::get<0>(*p);
-                    ++eastl::get<1>(*p);
+                    ++std::get<0>(*p);
+                    ++std::get<1>(*p);
                 }
             } else {
-                ++eastl::get<0>(*p);
-                ++eastl::get<1>(*p);
+                ++std::get<0>(*p);
+                ++std::get<1>(*p);
             }
         }
 
@@ -65,22 +64,22 @@ public:
     }
 
 private:
-    using I = typename eastl::vector<T>::const_iterator;
-    using E = eastl::tuple<I, std::size_t, std::size_t>;
-    eastl::vector<E> tuples;
+    using I = const T*;
+    using E = std::tuple<I, std::size_t, std::size_t>;
+    skr::Vector<E> tuples;
     int64_t count;
 
     template <typename... Args>
-    void append(eastl::vector<T> const& vec, Args&&... args)
+    void append(skr::Vector<T> const& vec, Args&&... args)
     {
         append(vec);
         append(args...);
     }
 
-    void append(eastl::vector<T> const& vec)
+    void append(skr::Vector<T> const& vec)
     {
         count *= vec.size();
-        tuples.emplace_back(eastl::cbegin(vec), 0ul, vec.size());
+        tuples.emplace_back(std::cbegin(vec), 0ul, vec.size());
     }
 };
 } // namespace skr

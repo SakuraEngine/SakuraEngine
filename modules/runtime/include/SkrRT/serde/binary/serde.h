@@ -37,7 +37,7 @@ struct ContainerConfig {
     using element = E;
 };
 
-struct ArrayCheckConfig {
+struct VectorCheckConfig {
     uint64_t max = std::numeric_limits<uint64_t>::max();
     uint64_t min = std::numeric_limits<uint64_t>::min();
 };

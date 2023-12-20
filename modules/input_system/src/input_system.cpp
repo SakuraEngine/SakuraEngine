@@ -1,11 +1,9 @@
+#include "SkrBase/misc/debug.h" 
+#include "SkrRT/misc/log.h"
+#include "SkrRT/containers/umap.hpp"
 #include "SkrInputSystem/input_system.hpp"
 #include "SkrInputSystem/input_modifier.hpp"
 #include "./input_action_impl.hpp"
-#include "SkrBase/misc/debug.h" 
-#include "SkrRT/misc/log.h"
-
-#include <EASTL/map.h>
-#include <EASTL/vector_map.h>
 
 namespace skr {
 namespace input {
@@ -31,7 +29,7 @@ struct InputSystemImpl : public InputSystem
     // create
     [[nodiscard]] SObjectPtr<InputAction> create_input_action(EValueType type) SKR_NOEXCEPT final;
 
-    eastl::map<int32_t, SObjectPtr<InputMappingContext>> contexts;
+    skr::UMap<int32_t, SObjectPtr<InputMappingContext>> contexts;
     struct RawInput
     {
         RawInput() SKR_NOEXCEPT = default;
@@ -44,8 +42,8 @@ struct InputSystemImpl : public InputSystem
         InputLayer* layer = nullptr;
         InputReading* reading = nullptr;
     };
-    eastl::vector_map<EInputKind, eastl::vector<RawInput>> inputs;
-    skr::vector<SObjectPtr<InputAction>> actions;
+    skr::UMap<EInputKind, skr::Vector<RawInput>> inputs;
+    skr::Vector<SObjectPtr<InputAction>> actions;
 };
 
 InputSystem::~InputSystem() SKR_NOEXCEPT
@@ -65,23 +63,23 @@ void InputSystem::Destroy(InputSystem* system) SKR_NOEXCEPT
 
 InputSystemImpl::InputSystemImpl() SKR_NOEXCEPT
 {
-    inputs[InputKindControllerAxis] = {};
-    inputs[InputKindControllerButton] = {};
-    inputs[InputKindControllerSwitch] = {};
-    inputs[InputKindController] = {};
+    inputs.find_or_add(InputKindControllerAxis);
+    inputs.find_or_add(InputKindControllerButton);
+    inputs.find_or_add(InputKindControllerSwitch);
+    inputs.find_or_add(InputKindController);
 
-    inputs[InputKindKeyboard] = {};
-    inputs[InputKindMouse] = {};
-    inputs[InputKindGamepad] = {};
+    inputs.find_or_add(InputKindKeyboard);
+    inputs.find_or_add(InputKindMouse); 
+    inputs.find_or_add(InputKindGamepad);
 
-    inputs[InputKindTouch] = {};
-    inputs[InputKindMotion] = {};
+    inputs.find_or_add(InputKindTouch);
+    inputs.find_or_add(InputKindMotion);
 
-    inputs[InputKindArcadeStick] = {};
-    inputs[InputKindFlightStick] = {};
+    inputs.find_or_add(InputKindArcadeStick);
+    inputs.find_or_add(InputKindFlightStick);
 
-    inputs[InputKindRacingWheel] = {};
-    inputs[InputKindUiNavigation] = {};
+    inputs.find_or_add(InputKindRacingWheel);
+    inputs.find_or_add(InputKindUiNavigation);
 }
 
 void InputSystemImpl::update(float delta) SKR_NOEXCEPT
@@ -99,7 +97,7 @@ void InputSystemImpl::update(float delta) SKR_NOEXCEPT
         auto r = inputInst->GetCurrentReading(kind, nullptr, &layer, &reading);
         if (r == EInputResult::INPUT_RESULT_OK)
         {
-            raw_inputs.emplace_back(layer, reading, kind);
+            raw_inputs.add({layer, reading, kind});
         }
     }
 
@@ -158,9 +156,9 @@ void InputSystemImpl::remove_mapping_context(SObjectPtr<InputMappingContext> ctx
 {
     for (auto it = contexts.begin(); it != contexts.end(); ++it)
     {
-        if (it->second == ctx)
+        if (it->value == ctx)
         {
-            contexts.erase(it);
+            contexts.remove(it->key);
             break;
         }
     }
@@ -168,13 +166,13 @@ void InputSystemImpl::remove_mapping_context(SObjectPtr<InputMappingContext> ctx
 
 SObjectPtr<InputMappingContext> InputSystemImpl::add_mapping_context(SObjectPtr<InputMappingContext> ctx, int32_t priority, const InputContextOptions& opts) SKR_NOEXCEPT
 {
-    auto it = contexts.emplace(priority, ctx);
-    if (!it.second)
+    auto it = contexts.find_or_add(priority, ctx);
+    if (it.already_exist)
     {
         SKR_LOG_ERROR(u8"InputSystemImpl::add_mapping_context: priority already exists");
-        SKR_ASSERT(it.second);
+        SKR_ASSERT(!it.already_exist);
     }
-    return it.first->second;
+    return it->value;
 }
 
 void InputSystemImpl::remove_all_contexts() SKR_NOEXCEPT
@@ -187,7 +185,7 @@ void InputSystemImpl::remove_all_contexts() SKR_NOEXCEPT
 SObjectPtr<InputAction> InputSystemImpl::create_input_action(EValueType type) SKR_NOEXCEPT 
 {
     auto result = SObjectPtr<InputActionImpl>::Create(type);
-    actions.push_back(result);
+    actions.add(result);
     return result;
 }
 #pragma endregion

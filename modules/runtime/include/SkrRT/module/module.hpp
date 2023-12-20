@@ -30,8 +30,8 @@
 #ifdef __cplusplus
 #include "SkrRT/platform/shared_library.hpp"
 #include <SkrRT/containers/string.hpp>
-#include <EASTL/vector.h>
-#include <EASTL/unique_ptr.h>
+#include <SkrRT/containers/sptr.hpp>
+#include <SkrRT/containers/vector.hpp>
 
 namespace skr
 {
@@ -47,8 +47,8 @@ namespace skr
  * @author: SaeruHikari
  */
 struct ModuleDependency {
-    skr::string name;    //!< The name of the dependency
-    skr::string version; //!< The version of the dependency
+    skr::String name;    //!< The name of the dependency
+    skr::String version; //!< The version of the dependency
 };
 
 /**
@@ -56,16 +56,16 @@ struct ModuleDependency {
  * @author: SaeruHikari
  */
 struct ModuleInfo {
-    skr::string name;         //!< name of the plugin
-    skr::string prettyname;   //!< formatted name of the plugin
-    skr::string core_version; //!< version of the engine
-    skr::string version;      // !< version of the plugin
-    skr::string linking;      // !< linking of the plugin
-    skr::string license;      //!< license of the plugin
-    skr::string url;          //!< url of the plugin
-    skr::string copyright;    //!< copyright of the plugin
+    skr::String name;         //!< name of the plugin
+    skr::String prettyname;   //!< formatted name of the plugin
+    skr::String core_version; //!< version of the engine
+    skr::String version;      // !< version of the plugin
+    skr::String linking;      // !< linking of the plugin
+    skr::String license;      //!< license of the plugin
+    skr::String url;          //!< url of the plugin
+    skr::String copyright;    //!< copyright of the plugin
     // Dependencies array
-    eastl::vector<ModuleDependency> dependencies;
+    skr::Vector<ModuleDependency> dependencies;
 };
 
 struct SKR_RUNTIME_API ModuleSubsystemBase
@@ -102,18 +102,25 @@ public:
 
 protected:
     ModuleInfo information;
-    eastl::vector<ModuleSubsystemBase*> subsystems;
+    skr::Vector<ModuleSubsystemBase*> subsystems;
 };
 
 struct SKR_RUNTIME_API IDynamicModule : public IModule {
-    eastl::unique_ptr<SharedLibrary> sharedLib;
+    virtual ~IDynamicModule() override
+    {
+        if (sharedLib)
+        {
+            delete sharedLib;
+        }
+    }
     virtual const char8_t* get_meta_data(void) override
     {
-        skr::string symbolname = u8"__skr_module_meta__";
+        skr::String symbolname = u8"__skr_module_meta__";
         symbolname.append(information.name);
         const char8_t* symbol_str = symbolname.u8_str();
         return sharedLib->get<const char8_t*>(symbol_str);
     }
+    SharedLibrary* sharedLib = nullptr;
 };
 struct IStaticModule : public IModule {
 };

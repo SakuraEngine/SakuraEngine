@@ -1,5 +1,13 @@
 #pragma once
+#include "SkrBase/misc/hash.h"
 #include "SkrRT/config.h"
+
+#include <SkrRT/containers/span.hpp>
+#include <SkrRT/containers/vector.hpp>
+#include <SkrRT/containers/uset.hpp>
+#include <SkrRT/containers/hashmap.hpp>
+#include "SkrRT/containers/sptr.hpp"
+
 #include <limits>
 #include <type_traits>
 #include <cmath>
@@ -213,6 +221,7 @@ inline unsigned int next_power_of_2(unsigned int x)
     return ++x;
 }
 
+class TextServer;
 class TextServer* get_text_server();
 
 #define TS ::godot::get_text_server()
