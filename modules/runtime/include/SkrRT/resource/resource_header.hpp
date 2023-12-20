@@ -13,7 +13,7 @@ typedef struct skr_resource_header_t {
     skr_guid_t                                    guid;
     skr_guid_t                                    type;
     SKR_RUNTIME_API int                           ReadWithoutDeps(skr_binary_reader_t* archive);
-    skr::FixedVector<skr_resource_handle_t, 4> dependencies;
+    skr::InlineVector<skr_resource_handle_t, 4> dependencies;
 } skr_resource_header_t;
 
 namespace skr::binary

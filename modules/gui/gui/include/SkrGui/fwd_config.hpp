@@ -23,8 +23,7 @@
 #include "SkrRT/containers/vector.hpp"
 #include "SkrRT/containers/umap.hpp"
 #include "SkrRT/containers/uset.hpp"
-
-#include "SkrRT/containers/lite.hpp"
+#include "SkrRT/containers/optional.hpp"
 #include "SkrRT/containers/span.hpp"
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/sptr.hpp"
@@ -70,9 +69,9 @@ using NotNull = ::skr::not_null<T>;
 
 // Lite container
 template <typename T>
-using Optional = skr::lite::LiteOptional<T>;
+using Optional = skr::Optional<T>;
 template <typename T>
-using Span = skr::lite::LiteSpan<T>;
+using Span = skr::span<T>;
 
 // containers
 using String     = skr::String;

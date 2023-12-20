@@ -43,9 +43,11 @@ struct SparseHashSetDataRef {
         , already_exist(already_exist)
     {
     }
-    SKR_INLINE operator bool() { return data != nullptr || index != npos_of<TS>; }
+    SKR_INLINE    operator bool() { return data != nullptr || index != npos_of<TS>; }
     SKR_INLINE T& operator*() const { return *data; }
     SKR_INLINE T* operator->() const { return data; }
+
+    SKR_INLINE T& ref() const { return *data; }
 };
 } // namespace skr::container
 

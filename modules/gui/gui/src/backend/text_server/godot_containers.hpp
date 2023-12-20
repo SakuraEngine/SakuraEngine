@@ -149,7 +149,7 @@ class Set : public skr::USet<T>
 public:
     bool has(const T& key) const
     {
-        return this->contain(key);
+        return this->contains(key);
     }
 };
 

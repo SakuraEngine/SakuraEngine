@@ -22,7 +22,7 @@ void InputMapping::remove_modifier(InputModifier& modifier) SKR_NOEXCEPT
     modifiers_.remove_all_if([&modifier](InputModifier* m) { return m == &modifier; });
 }
 
-lite::LiteSpan<InputModifierId> InputMapping::get_modifiers() SKR_NOEXCEPT
+span<InputModifierId> InputMapping::get_modifiers() SKR_NOEXCEPT
 {
     return { modifiers.data(), modifiers.size() };
 }
@@ -47,7 +47,7 @@ InputMappingContext::~InputMappingContext() SKR_NOEXCEPT
 {
 }
 
-lite::LiteSpan<SObjectPtr<InputMapping> const> InputMappingContext::get_mappings() const SKR_NOEXCEPT
+span<SObjectPtr<InputMapping> const> InputMappingContext::get_mappings() const SKR_NOEXCEPT
 {
     return { mappings_.data(), mappings_.size() };
 }
@@ -83,8 +83,8 @@ bool InputMapping_Keyboard::process_input_reading(InputLayer* layer, InputReadin
     InputMapping::process_input_reading(layer, reading, kind);
 
     InputKeyState key_states[16];
-    bool dirty = false;
-    const auto count = layer->GetKeyState(reading, 16, key_states);
+    bool          dirty = false;
+    const auto    count = layer->GetKeyState(reading, 16, key_states);
     for (uint32_t i = 0; i < count; i++)
     {
         const auto& state = key_states[i];
@@ -94,19 +94,19 @@ bool InputMapping_Keyboard::process_input_reading(InputLayer* layer, InputReadin
             {
                 case EValueType::kBool:
                     raw_value = InputValueStorage(true);
-                    dirty = true;
+                    dirty     = true;
                     break;
                 case EValueType::kFloat:
                     raw_value = InputValueStorage(1.f);
-                    dirty = true;
+                    dirty     = true;
                     break;
                 case EValueType::kFloat2:
                     raw_value = InputValueStorage(skr_float2_t{ 1.f, 0.f });
-                    dirty = true;
+                    dirty     = true;
                     break;
                 case EValueType::kFloat3:
                     raw_value = InputValueStorage(skr_float3_t{ 1.f, 0.f, 0.f });
-                    dirty = true;
+                    dirty     = true;
                     break;
             }
         }
@@ -162,12 +162,12 @@ bool InputMapping_MouseAxis::process_input_reading(InputLayer* layer, InputReadi
     if (auto okay = layer->GetMouseState(reading, &state))
     {
         skr_float2_t pos_raw = { 0.f, 0.f };
-        pos_raw.x = (float)state.positionX;
-        pos_raw.y = (float)state.positionY;
+        pos_raw.x            = (float)state.positionX;
+        pos_raw.y            = (float)state.positionY;
 
         skr_float2_t wheel_raw = { 0.f, 0.f };
-        wheel_raw.x = (float)state.wheelX;
-        wheel_raw.y = (float)state.wheelY;
+        wheel_raw.x            = (float)state.wheelX;
+        wheel_raw.y            = (float)state.wheelY;
 
         skr_float2_t processed = { 0.f, 0.f };
         if (axis & MOUSE_AXIS_X) processed.x = pos_raw.x - old_pos.x;
@@ -191,7 +191,7 @@ bool InputMapping_MouseAxis::process_input_reading(InputLayer* layer, InputReadi
                 break;
         }
 
-        old_pos = pos_raw;
+        old_pos   = pos_raw;
         old_wheel = wheel_raw;
 
         return true;

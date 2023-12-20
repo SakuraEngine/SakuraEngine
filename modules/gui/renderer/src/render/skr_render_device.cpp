@@ -169,10 +169,9 @@ void SkrRenderDevice::destroy_window(SkrRenderWindow* view)
 CGPURenderPipelineId SkrRenderDevice::get_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count)
 {
     SkrPipelineKey key = { flags, sample_count };
-    auto           it  = _pipelines.find(key);
-    if (it != _pipelines.end()) return it->value;
+    if (auto _  = _pipelines.find(key)) return _->value;
     auto pipeline   = create_pipeline(flags, sample_count);
-    _pipelines.add(key, pipeline);
+    _pipelines.add_or_assign(key, pipeline);
     return pipeline;
 }
 CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count)

@@ -4,14 +4,12 @@
 #include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/resource_edge.hpp"
 
-#include "SkrRT/containers/deprecated.hpp"
-
 namespace skr {
 namespace render_graph
 {
 #ifdef RG_USE_FIXED_VECTOR
     template<typename T, uint32_t N = 4>
-    using graph_edges_vector = skr::FixedVector<T, N>;  
+    using graph_edges_vector = skr::InlineVector<T, N>;  
 #else
     template<typename T, uint32_t N = 4>
     using graph_edges_vector = skr::stl_vector<T>;

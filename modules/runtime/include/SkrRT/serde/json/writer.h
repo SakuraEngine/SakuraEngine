@@ -18,8 +18,6 @@ typedef enum ESkrJsonType
     #include "SkrRT/rttr/rttr_traits.hpp"
 
 
-    #include "SkrRT/containers/deprecated.hpp"
-
 
 // forward declaration for resources
 struct skr_resource_handle_t;
