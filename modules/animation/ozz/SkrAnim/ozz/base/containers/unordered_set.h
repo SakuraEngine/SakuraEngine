@@ -38,13 +38,13 @@ namespace ozz {
 template <class _Key, class _Hash = std::hash<_Key>,
           class _KeyEqual = std::equal_to<_Key>>
 using unordered_set =
-    skr::flat_hash_set<_Key, _Hash, _KeyEqual>;
+    skr::FlatHashSet<_Key, _Hash, _KeyEqual>;
 
 // Redirects std::unordered_multiset to ozz::UnorderedMultiSet in order to
 // replace std default allocator by ozz::StdAllocator.
 template <class _Key, class _Hash = std::hash<_Key>,
           class _KeyEqual = std::equal_to<_Key>>
 using unordered_multiset =
-    skr::flat_hash_set<_Key, _Hash, _KeyEqual>;
+    skr::FlatHashSet<_Key, _Hash, _KeyEqual>;
 }  // namespace ozz
 #endif  // OZZ_OZZ_BASE_CONTAINERS_UNORDERED_SET_H_

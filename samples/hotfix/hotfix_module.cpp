@@ -1,5 +1,5 @@
 #include "hotfix_module.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/misc/log.h"
 
 namespace hotfix

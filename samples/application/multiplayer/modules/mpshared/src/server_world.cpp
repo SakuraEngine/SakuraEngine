@@ -1,16 +1,11 @@
 #include "MPShared/server_world.h"
 #include "MPShared/components.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "EASTL/fixed_vector.h"
-#include "SkrRT/misc/parallel_for.hpp"
 #include "SkrRT/misc/log.h"
 
 #include "SkrRT/ecs/type_builder.hpp"
-#include "SkrRT/ecs/set.hpp"
 #include "SkrRT/ecs/array.hpp"
-#include "SkrRT/serde/json/writer.h"
 #include "steam/isteamnetworkingsockets.h"
-#include "steam/steamnetworkingsockets.h"
 #include "lz4.h"
 
 //TODO: move this to a config file
@@ -55,9 +50,9 @@ int MPServerWorld::GetPlayerConnection(int player, int* localId)
 
 void MPServerWorld::AddConnection(HSteamNetConnection connection)
 {
-    connections.push_back(connection);
-    worldDelta.emplace_back();
-    playerMap.emplace_back().emplace_back(playerId);
+    connections.add(connection);
+    worldDelta.add_default();
+    playerMap.add_default().data->emplace_back(playerId);
     SpawnPlayerEntity(playerId, connections.size() - 1, 0);
     playerId++;
 }
@@ -148,12 +143,12 @@ void MPServerWorld::GenerateWorldDelta()
 }
 
 
-skr::vector<uint8_t> MPServerWorld::SerializeWorldDelta(const MPWorldDeltaViewBuilder& deltaBuilder)
+skr::Vector<uint8_t> MPServerWorld::SerializeWorldDelta(const MPWorldDeltaViewBuilder& deltaBuilder)
 {
     MPWorldDelta delta;
     delta.arena = skr::binary::make_arena<MPWorldDeltaView>(delta.blob, deltaBuilder);
     delta.frame = gameFrame;
-    skr::vector<uint8_t> buffer;
+    skr::Vector<uint8_t> buffer;
     skr::binary::VectorWriterBitpacked writer{&buffer};
     skr_binary_writer_t archive(writer);
     skr::binary::Write(&archive, delta);
@@ -166,12 +161,12 @@ void MPServerWorld::SendWorldDelta()
     for(int i=0; i<count; ++i)
     {
         auto result = SerializeWorldDelta(worldDelta[i]);
-        skr::vector<uint8_t> compressed;
-        compressed.resize(LZ4_COMPRESSBOUND(result.size()));
+        skr::Vector<uint8_t> compressed;
+        compressed.resize_default(LZ4_COMPRESSBOUND(result.size()));
         int compressedSize = LZ4_compress_default((const char*)result.data(), (char*)compressed.data(), result.size(), compressed.size());
         SKR_ASSERT(compressedSize > 0);
-        skr::vector<uint8_t> data;
-        data.resize(sizeof(uint32_t) + sizeof(uint64_t) + compressedSize);
+        skr::Vector<uint8_t> data;
+        data.resize_default(sizeof(uint32_t) + sizeof(uint64_t) + compressedSize);
         auto current = &data[0];
         *(uint32_t*)current = (uint32_t)MPEventType::SyncWorld;
         current += sizeof(uint32_t);
@@ -180,8 +175,8 @@ void MPServerWorld::SendWorldDelta()
         memcpy(current, compressed.data(), compressedSize);
 
         {
-            skr::vector<uint8_t> decompressedData;
-            decompressedData.resize(result.size());
+            skr::Vector<uint8_t> decompressedData;
+            decompressedData.resize_default(result.size());
             int decompressedSize = LZ4_decompress_safe((const char*)current, (char*)decompressedData.data(), compressedSize, decompressedData.size());
             SKR_ASSERT(decompressedSize == decompressedData.size());
         }
@@ -210,7 +205,7 @@ void MPServerWorld::AccumulateInput(uint32_t connectionId, const MPInputFrame &i
     }
     uint64_t effectiveFrame = frame > gameFrame ? frame : gameFrame;
     auto& target = queuedInputs[effectiveFrame - gameFrame];
-    target.inputs.resize(playerId);
+    target.inputs.resize_default(playerId);
     int i = 0;
     for(auto& playerInput : input.inputs)
     {
@@ -268,7 +263,7 @@ void MPServerWorld::Update()
     while(currentGameTime - lastGameTime > serverTickInterval)
     {
         lastGameTime += serverTickInterval;
-        queuedInputs[0].inputs.resize(playerId);
+        queuedInputs[0].inputs.resize_default(playerId);
         Tick(queuedInputs[0]);
         gameFrame++;
         if(gameFrame % syncRate == 0)

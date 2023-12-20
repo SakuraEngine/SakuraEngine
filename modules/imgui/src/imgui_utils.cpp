@@ -3,7 +3,7 @@
 
 struct InputTextCallback_UserData
 {
-    skr::string*            Str;
+    skr::String*            Str;
     ImGuiInputTextCallback  ChainCallback;
     void*                   ChainCallbackUserData;
 };
@@ -15,7 +15,7 @@ static int InputTextCallback(ImGuiInputTextCallbackData* data)
     {
         // Resize string callback
         // If for some reason we refuse the new length (BufTextLen) and/or capacity (BufSize) we need to set them back to what we want.
-        skr::string* str = user_data->Str;
+        skr::String* str = user_data->Str;
         IM_ASSERT(data->Buf == str->c_str());
         str->raw().reserve(data->BufTextLen);
         
@@ -30,7 +30,7 @@ static int InputTextCallback(ImGuiInputTextCallbackData* data)
     return 0;
 }
 
-bool ImGui::InputText(const char* label, skr::string* str, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
+bool ImGui::InputText(const char* label, skr::String* str, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
 {
     IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
     flags |= ImGuiInputTextFlags_CallbackResize;
@@ -42,7 +42,7 @@ bool ImGui::InputText(const char* label, skr::string* str, ImGuiInputTextFlags f
     return InputText(label, (char*)str->c_str(), str->raw().get_capacity() + 1, flags, InputTextCallback, &cb_user_data);
 }
 
-bool ImGui::InputTextMultiline(const char* label, skr::string* str, const ImVec2& size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
+bool ImGui::InputTextMultiline(const char* label, skr::String* str, const ImVec2& size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
 {
     IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
     flags |= ImGuiInputTextFlags_CallbackResize;
@@ -54,7 +54,7 @@ bool ImGui::InputTextMultiline(const char* label, skr::string* str, const ImVec2
     return InputTextMultiline(label, (char*)str->c_str(), str->raw().get_capacity() + 1, size, flags, InputTextCallback, &cb_user_data);
 }
 
-bool ImGui::InputTextWithHint(const char* label, const char* hint, skr::string* str, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
+bool ImGui::InputTextWithHint(const char* label, const char* hint, skr::String* str, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
 {
     IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
     flags |= ImGuiInputTextFlags_CallbackResize;

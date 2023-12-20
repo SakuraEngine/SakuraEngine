@@ -37,7 +37,8 @@ struct MemoryTraits<T, T> {
     static constexpr bool need_dtor_after_move = use_dtor;
 
     // use realloc for fast alloc
-    static constexpr bool use_realloc = std::is_trivial_v<T> && std::is_trivially_destructible_v<T>;
+    // static constexpr bool use_realloc = std::is_trivial_v<T> && std::is_trivially_destructible_v<T>;
+    static constexpr bool use_realloc = false; // TODO. enable it
 
     // need call compare operator (otherwise call memcmp)
     static constexpr bool use_compare = !std::is_trivial_v<T>;
@@ -56,7 +57,7 @@ struct MemoryTraits<T*, T*> {
     static constexpr bool need_dtor_after_move = false;
 
     // use realloc for fast alloc
-    static constexpr bool use_realloc = true;
+    static constexpr bool use_realloc = false; // TODO. enable it
 
     // need call compare operator (otherwise call memcmp)
     static constexpr bool use_compare = false;
@@ -69,19 +70,19 @@ struct MemoryTraits<const A, B> : public MemoryTraits<A, B> {
 // impl for basic type
 namespace skr::memory
 {
-#define SKR_IMPL_BASIC_MEM_POLICY(__DST, __SRC)         \
-    template <>                                         \
-    struct MemoryTraits<__DST, __SRC> {                 \
-        static constexpr bool call_ctor        = false; \
-        static constexpr bool call_dtor        = false; \
-        static constexpr bool call_copy        = false; \
-        static constexpr bool call_move        = false; \
-        static constexpr bool call_assign      = false; \
-        static constexpr bool call_move_assign = false; \
-                                                        \
-        static constexpr bool use_realloc = true;       \
-                                                        \
-        static constexpr bool call_compare = true;      \
+#define SKR_IMPL_BASIC_MEM_POLICY(__DST, __SRC)                        \
+    template <>                                                        \
+    struct MemoryTraits<__DST, __SRC> {                                \
+        static constexpr bool call_ctor        = false;                \
+        static constexpr bool call_dtor        = false;                \
+        static constexpr bool call_copy        = false;                \
+        static constexpr bool call_move        = false;                \
+        static constexpr bool call_assign      = false;                \
+        static constexpr bool call_move_assign = false;                \
+                                                                       \
+        static constexpr bool use_realloc = false; /*TODO. enable it*/ \
+                                                                       \
+        static constexpr bool call_compare = true;                     \
     };
 
 SKR_IMPL_BASIC_MEM_POLICY(uint8_t, int8_t)

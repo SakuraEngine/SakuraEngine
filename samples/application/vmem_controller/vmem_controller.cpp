@@ -45,7 +45,7 @@ class SVMemCCModule : public skr::IDynamicModule
 
     float vbuffer_size = 0.001f;
     float sbuffer_size = 0.001f;
-    eastl::vector<CGPUBufferId> buffers;
+    skr::Vector<CGPUBufferId> buffers;
 
     skr::render_graph::RenderGraph* graph = nullptr;
 };
@@ -110,7 +110,7 @@ void SVMemCCModule::imgui_ui()
         buf_desc.size = (uint64_t)(vbuffer_size * 1024 * 1024);
         buf_desc.name = SKR_UTF8("VideoMemory");
         auto new_buf = cgpu_create_buffer(device, &buf_desc);
-        buffers.emplace_back(new_buf);
+        buffers.add(new_buf);
     }
 
     ImGui::SliderFloat("##sbuffer", &sbuffer_size, 0.001f, total_shared_mb - used_shared_mb, "%.3f MB"); // in MB
@@ -124,7 +124,7 @@ void SVMemCCModule::imgui_ui()
         buf_desc.size = (uint64_t)(sbuffer_size * 1024 * 1024);
         buf_desc.name = SKR_UTF8("SharedMemory");
         auto new_buf = cgpu_create_buffer(device, &buf_desc);
-        buffers.emplace_back(new_buf);
+        buffers.add(new_buf);
     }
 
     // table
@@ -223,7 +223,7 @@ int SVMemCCModule::main_module_exec(int argc, char8_t** argv)
         io.DisplaySize = ImVec2((float)texInfo->width, (float)texInfo->height);
         skr_imgui_new_frame(window, 1.f / 60.f);
         imgui_ui();
-        buffers.erase(eastl::remove(buffers.begin(), buffers.end(), nullptr), buffers.end());
+        buffers.remove_all(nullptr);
         {
             // acquire frame
             cgpu_wait_fences(&present_fence, 1);

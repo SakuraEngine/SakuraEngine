@@ -13,7 +13,7 @@ namespace asset sreflect
 {
 sreflect_struct("guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6")
 TOOL_CORE_API SJsonConfigImporter final : public SImporter {
-    skr::string assetPath;
+    skr::String assetPath;
     skr_guid_t  configType;
     void*       Import(skr_io_ram_service_t*, SCookContext* context) override;
     void        Destroy(void* resource) override;

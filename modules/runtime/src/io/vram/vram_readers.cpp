@@ -2,8 +2,8 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include "vram_readers.hpp"
-#include <EASTL/fixed_map.h>
 #include <tuple>
+
 
 // VFS READER IMPLEMENTATION
 
@@ -208,7 +208,7 @@ void CommonVRAMReader::addRAMRequests(SkrAsyncServicePriority priority) SKR_NOEX
         }
     }
     if(vram_batch != nullptr) 
-        ramloading_batches[priority].emplace_back(vram_batch); 
+        ramloading_batches[priority].add(vram_batch); 
     }
     if (ram_batch != nullptr)
         ram_service->request(ram_batch);        
@@ -218,16 +218,14 @@ void CommonVRAMReader::ensureRAMRequests(SkrAsyncServicePriority priority) SKR_N
 {
     auto&& batches = ramloading_batches[priority];
     // erase null batches
-    batches.erase(
-    eastl::remove_if(batches.begin(), batches.end(), [](auto& batch) {
+    batches.remove_all_if([](auto&& batch) {
         return (batch == nullptr);
-    }), batches.end());
+    });
 
     // erase empty batches
-    batches.erase(
-    eastl::remove_if(batches.begin(), batches.end(), [](auto& batch) {
+    batches.remove_all_if([](auto&& batch) {
         return batch->get_requests().empty();
-    }), batches.end());
+    });
 
     for (auto&& batch : batches)
     {
@@ -261,7 +259,7 @@ void CommonVRAMReader::ensureRAMRequests(SkrAsyncServicePriority priority) SKR_N
         }
         else if (finished_cnt == requests.size()) // batch is all finished
         {
-            to_upload_batches[priority].emplace_back(batch);
+            to_upload_batches[priority].add(batch);
             batch.reset();
         }
     }
@@ -275,27 +273,35 @@ struct StackCmdMapKey
     {
         return std::tie(queue, batch) < std::tie(rhs.queue, batch);
     }
+    inline bool operator==(const StackCmdMapKey& rhs) const
+    {
+        return queue == rhs.queue && batch == rhs.batch;
+    }
+    inline size_t _skr_hash() const SKR_NOEXCEPT
+    {
+        return skr::hash_combine(Hash<CGPUQueueId>()(queue), Hash<IIOBatch*>()(batch));
+    }
 };
 template <size_t N = 1>
-struct StackCmdAllocator : public eastl::fixed_map<StackCmdMapKey, GPUUploadCmd, N>
+struct StackCmdAllocator : public skr::FixedUMap<StackCmdMapKey, GPUUploadCmd, N>
 {
     auto& allocate(IOBatchId& batch, SwapableCmdPoolMap& cmdpools, VRAMUploadComponent* pUpload)
     {
         auto& cmds = *this;
         auto transfer_queue = pUpload->get_transfer_queue();
         auto key = StackCmdMapKey{ transfer_queue, batch.get() };
-        if (cmds.find(key) == cmds.end())
+        if (!cmds.contains(key))
         {
             cmds.emplace(key, GPUUploadCmd(transfer_queue, batch));
         }
-        auto& cmd = cmds[key];
+        auto& cmd = cmds.find_or_add(key)->value;
         auto cmdqueue = cmd.get_queue();
-        if (cmdpools.find(cmdqueue) == cmdpools.end())
+        if (!cmdpools.contains(cmdqueue))
         {
-            auto&& [iter, sucess] = cmdpools.emplace(cmdqueue, SwapableCmdPool());
-            iter->second.initialize(cmdqueue);
+            auto pool = cmdpools.find_or_add(cmdqueue).data;
+            pool->value.initialize(cmdqueue);
         }
-        auto&& cmdpool = cmdpools[cmdqueue];
+        auto&& cmdpool = cmdpools.find(cmdqueue).data->value;
         if (cmd.get_cmdbuf() == nullptr)
         {
             SkrZoneScopedN("PrepareCmd");
@@ -330,14 +336,14 @@ void CommonVRAMReader::addUploadRequests(SkrAsyncServicePriority priority) SKR_N
                     // prepare upload buffer
                     SkrZoneScopedN("PrepareUploadBuffer");
 #ifdef SKR_PROFILE_ENABLE
-                    skr::string Name = u8"BufferUpload-";
+                    skr::String Name = u8"BufferUpload-";
                     Name += pPath->get_path();
                     SkrMessage(Name.c_str(), Name.size());
 #endif
-                    skr::string name = /*pBuffer->name ? buffer_io.vbuffer.buffer_name :*/ u8"";
+                    skr::String name = /*pBuffer->name ? buffer_io.vbuffer.buffer_name :*/ u8"";
                     name += u8"-upload";
                     upload_buffer = cgpux_create_mapped_upload_buffer(cmdqueue->device, pUpload->src_size, name.u8_str());
-                    cmd.upload_buffers.emplace_back(upload_buffer);
+                    cmd.upload_buffers.emplace(upload_buffer);
 
                     memcpy(upload_buffer->info->cpu_mapped_address, pUpload->src_data, pUpload->src_size);
                 }
@@ -377,14 +383,14 @@ void CommonVRAMReader::addUploadRequests(SkrAsyncServicePriority priority) SKR_N
                     // prepare upload buffer
                     SkrZoneScopedN("PrepareUploadBuffer");
 #ifdef SKR_PROFILE_ENABLE
-                    skr::string Name = u8"TextureUpload-";
+                    skr::String Name = u8"TextureUpload-";
                     Name += pPath->get_path();
                     SkrMessage(Name.c_str(), Name.size());
 #endif
-                    skr::string name = /*pBuffer->name ? buffer_io.vbuffer.buffer_name :*/ u8"";
+                    skr::String name = /*pBuffer->name ? buffer_io.vbuffer.buffer_name :*/ u8"";
                     name += u8"-upload";
                     upload_buffer = cgpux_create_mapped_upload_buffer(cmdqueue->device, pUpload->src_size, name.u8_str());
-                    cmd.upload_buffers.emplace_back(upload_buffer);
+                    cmd.upload_buffers.emplace(upload_buffer);
 
                     memcpy(upload_buffer->info->cpu_mapped_address, pUpload->src_data, pUpload->src_size);
                 }
@@ -425,7 +431,7 @@ void CommonVRAMReader::addUploadRequests(SkrAsyncServicePriority priority) SKR_N
             SkrZoneScopedN("SubmitCmds");
             for (auto&& [key, cmd] : cmds)
             {
-                gpu_uploads[priority].emplace_back(cmd);
+                gpu_uploads[priority].add(cmd);
 
                 auto cmdbuf = cmd.get_cmdbuf();
                 auto fence = cmd.get_fence();
@@ -476,10 +482,9 @@ void CommonVRAMReader::ensureUploadRequests(SkrAsyncServicePriority priority) SK
         }
     }
     // erase all finished uploads
-    gpu_uploads[priority].erase(std::remove_if(
-        gpu_uploads[priority].begin(), gpu_uploads[priority].end(), [](auto&& upload) {
+    gpu_uploads[priority].remove_all_if([](auto&& upload) {
             return upload.is_finished();
-        }), gpu_uploads[priority].end());
+        });
 }
 
 } // namespace io
@@ -563,7 +568,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
 {
     auto instance = skr_get_dstorage_instnace();
     IOBatchId batch;
-    eastl::fixed_map<SkrDStorageQueueId, skr::SObjectPtr<DStorageEvent>, 2> _events;
+    skr::FixedUMap<SkrDStorageQueueId, skr::SObjectPtr<DStorageEvent>, 2> _events;
 #ifdef SKR_PROFILE_ENABLE
     SkrCZoneCtx Zone;
     bool bZoneSet = false;
@@ -572,12 +577,11 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
     while (fetched_batches[priority].try_dequeue(batch))
     {
         auto addOrGetEvent = [&](SkrDStorageQueueId queue) {
-            auto&& iter = _events.find(queue);
-            if (iter == _events.end())
+            if (!_events.contains(queue))
             {
                 _events.emplace(queue, events[priority]->allocate(queue));
             }
-            return _events[queue];
+            return _events.find_or_add(queue)->value;
         };
         SkrDStorageQueueId queue = nullptr;
         for (auto&& vram_request : batch->get_requests())
@@ -682,7 +686,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
         // TODO: hybrid m2v/f2v batches support
         if (queue)
         {
-            addOrGetEvent(queue)->batches.emplace_back(batch);
+            addOrGetEvent(queue)->batches.emplace(batch);
         }
         else
         {
@@ -696,7 +700,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
         if (const auto enqueued = event->batches.size())
         {
             skr_dstorage_queue_submit(event->queue, event->event);
-            submitted[priority].emplace_back(event);
+            submitted[priority].add(event);
         }
     }
 }
@@ -734,8 +738,7 @@ void DStorageVRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOE
     }
 
     // remove empty events
-    auto cleaner = eastl::remove_if(submitted[priority].begin(), submitted[priority].end(), [](const auto& e) { return !e; });
-    submitted[priority].erase(cleaner, submitted[priority].end());
+    submitted[priority].remove_all_if([](const auto& e) { return !e; });
 }
 
 void DStorageVRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT

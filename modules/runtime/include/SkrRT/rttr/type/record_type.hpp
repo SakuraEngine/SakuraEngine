@@ -1,10 +1,10 @@
 #pragma once
 #include "SkrRT/rttr/type/type.hpp"
-#include "SkrRT/containers_new/multi_umap.hpp"
-#include "SkrRT/containers_new/umap.hpp"
-#include "SkrRT/containers_new/string.hpp"
-#include "SkrRT/containers_new/span.hpp"
-#include "SkrRT/containers_new/array.hpp"
+#include "SkrRT/containers/multi_umap.hpp"
+#include "SkrRT/containers/umap.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 namespace skr::rttr
 {
@@ -36,20 +36,20 @@ struct BaseInfo {
     void* (*cast_func)(void* self) = nullptr;
 };
 struct Field {
-    string name   = {};
+    skr::String name   = {};
     Type*  type   = nullptr;
     size_t offset = 0;
 };
 struct ParameterInfo {
-    string name = {};
+    skr::String name = {};
     Type*  type = nullptr;
 };
 struct Method {
     using ExecutableType = void (*)(void* self, void* parameters, void* return_value);
 
-    string               name            = {};
+    skr::String               name            = {};
     Type*                return_info     = nullptr;
-    Array<ParameterInfo> parameters_info = {};
+    Vector<ParameterInfo> parameters_info = {};
     ExecutableType       executable      = {};
 };
 
@@ -143,7 +143,7 @@ SKR_INLINE RecordBasicMethodTable make_record_basic_method_table()
 }
 
 struct SKR_RUNTIME_API RecordType : public Type {
-    RecordType(string name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods);
+    RecordType(skr::String name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods);
 
     bool query_feature(ETypeFeature feature) const override;
 
@@ -162,13 +162,13 @@ struct SKR_RUNTIME_API RecordType : public Type {
 
     // setup
     void set_base_types(UMap<GUID, BaseInfo> base_types);
-    void set_fields(MultiUMap<string, Field> fields);
-    void set_methods(MultiUMap<string, Method> methods);
+    void set_fields(MultiUMap<skr::String, Field> fields);
+    void set_methods(MultiUMap<skr::String, Method> methods);
 
     // getter
     SKR_INLINE const UMap<GUID, BaseInfo>& base_types() const { return _base_types_map; }
-    SKR_INLINE const MultiUMap<string, Field>& fields() const { return _fields_map; }
-    SKR_INLINE const MultiUMap<string, Method>& methods() const { return _methods_map; }
+    SKR_INLINE const MultiUMap<skr::String, Field>& fields() const { return _fields_map; }
+    SKR_INLINE const MultiUMap<skr::String, Method>& methods() const { return _methods_map; }
 
     // find base
     void* cast_to(const Type* target_type, void* p_self) const;
@@ -178,8 +178,8 @@ struct SKR_RUNTIME_API RecordType : public Type {
 
 private:
     UMap<GUID, BaseInfo>      _base_types_map = {};
-    MultiUMap<string, Field>  _fields_map     = {};
-    MultiUMap<string, Method> _methods_map    = {};
+    MultiUMap<skr::String, Field>  _fields_map     = {};
+    MultiUMap<skr::String, Method> _methods_map    = {};
     RecordBasicMethodTable    _basic_methods  = {};
 };
 } // namespace skr::rttr

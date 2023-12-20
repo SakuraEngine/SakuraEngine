@@ -1,7 +1,6 @@
 #include "SkrBase/misc/debug.h" 
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include <EASTL/set.h>
 
 #include "SkrRenderGraph/backend/bind_table_pool.hpp"
 #include "SkrRenderGraph/backend/buffer_pool.hpp"
@@ -100,7 +99,7 @@ void BindTablePool::expand(const char8_t* keys, const CGPUXName* names, uint32_t
     auto existed_block = pool.find(keys);
     if (existed_block == pool.end())
     {
-        pool.emplace(skr::string(keys), BindTablesBlock{});
+        pool.emplace(skr::String(keys), BindTablesBlock{});
     }
     auto& block = pool[keys];
     block.bind_tables.reserve(block.bind_tables.size() + set_count);
@@ -111,7 +110,7 @@ void BindTablePool::expand(const char8_t* keys, const CGPUXName* names, uint32_t
         table_desc.names = names;
         table_desc.names_count = names_count;
         auto new_table = cgpux_create_bind_table(root_sig->device, &table_desc);
-        block.bind_tables.emplace_back(new_table);
+        block.bind_tables.add(new_table);
     }
 }
 
@@ -120,7 +119,7 @@ CGPUXBindTableId BindTablePool::pop(const char8_t* keys, const CGPUXName* names,
     auto existed_block = pool.find(keys);
     if (existed_block == pool.end())
     {
-        pool.insert(std::make_pair( skr::string(keys), BindTablesBlock{} ));
+        pool.insert(std::make_pair( skr::String(keys), BindTablesBlock{} ));
     }
     auto& block = pool[keys];
     if (block.cursor >= block.bind_tables.size())
@@ -191,9 +190,9 @@ void TexturePool::finalize()
     }
 }
 
-eastl::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(const CGPUTextureDescriptor& desc, AllocationMark mark)
+std::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(const CGPUTextureDescriptor& desc, AllocationMark mark)
 {
-    eastl::pair<CGPUTextureId, ECGPUResourceState> allocated = {
+    std::pair<CGPUTextureId, ECGPUResourceState> allocated = {
         nullptr, CGPU_RESOURCE_STATE_UNDEFINED
     };
     auto key = make_zeroed<TexturePool::Key>(device, desc);
@@ -242,15 +241,13 @@ TextureViewPool::Key::Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& 
 uint32_t TextureViewPool::erase(CGPUTextureId texture)
 {
     auto prev_size = (uint32_t)views.size();
-    for (auto it = views.begin(); it != views.end();)
+    for (auto it = views.begin(); it != views.end(); ++it)
     {
-        if (it->first.texture == texture)
+        if (it->key.texture == texture)
         {
-            cgpu_free_texture_view(it->second.texture_view);
-            it = views.erase(it);
+            cgpu_free_texture_view(it->value.texture_view);
+            views.remove(it->key);
         }
-        else
-            ++it;
     }
     return prev_size - (uint32_t)views.size();
 }
@@ -269,7 +266,7 @@ void TextureViewPool::finalize()
 {
     for (auto&& view : views)
     {
-        cgpu_free_texture_view(view.second.texture_view);
+        cgpu_free_texture_view(view.value.texture_view);
     }
     views.clear();
 }
@@ -277,21 +274,20 @@ void TextureViewPool::finalize()
 CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& desc, uint64_t frame_index)
 {
     const auto key = make_zeroed<TextureViewPool::Key>(device, desc);
-    auto found = views.find(key);
-    if (found != views.end())
+    if (auto found = views.find(key))
     {
         // SKR_LOG_TRACE(u8"Reallocating texture view for texture %p (id %lld, old %lld)", desc.texture,
         //    key.texture->unique_id, found->second.texture_view->info.texture->unique_id);
-        found->second.mark.frame_index = frame_index;
-        SKR_ASSERT(found->first.texture);
-        return found->second.texture_view;
+        found->value.mark.frame_index = frame_index;
+        SKR_ASSERT(found->key.texture);
+        return found->value.texture_view;
     }
     else
     {
         // SKR_LOG_TRACE(u8"Creating texture view for texture %p (tex %p)", desc.texture, key.texture);
         CGPUTextureViewId new_view = cgpu_create_texture_view(device, &desc);
         AllocationMark mark = {frame_index, 0};
-        views[key] = PooledTextureView(new_view, mark);
+        views.add_or_assign(key, PooledTextureView(new_view, mark));
         return new_view;
     }
 }
@@ -332,9 +328,9 @@ void BufferPool::finalize()
     }
 }
 
-eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBufferDescriptor& desc, AllocationMark mark, uint64_t min_frame_index)
+std::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBufferDescriptor& desc, AllocationMark mark, uint64_t min_frame_index)
 {
-    eastl::pair<CGPUBufferId, ECGPUResourceState> allocated = {
+    std::pair<CGPUBufferId, ECGPUResourceState> allocated = {
         nullptr, CGPU_RESOURCE_STATE_UNDEFINED
     };
     auto key = make_zeroed<BufferPool::Key>(device, desc);

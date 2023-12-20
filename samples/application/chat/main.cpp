@@ -12,11 +12,11 @@
 #include <steam/isteamnetworkingutils.h>
 #include "signal_client.h"
 #include "SkrRT/misc/log.h"
-#include <EASTL/vector.h>
 #include <imgui/imgui.h>
-#include <EASTL/string_hash_map.h>
+#include "SkrRT/containers/stl_string.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
 #include "SkrRT/module/module_manager.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/window.h"
 #include <SDL2/SDL.h>
@@ -210,8 +210,8 @@ int InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
         ImGui::GetIO().Fonts->Build();
         sakura_free(font_bytes);
     }
-    skr::string vsname = u8"shaders/imgui_vertex";
-    skr::string fsname = u8"shaders/imgui_fragment";
+    skr::String vsname = u8"shaders/imgui_vertex";
+    skr::String fsname = u8"shaders/imgui_fragment";
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
 
@@ -442,9 +442,9 @@ struct ChatClient {
     struct Connection {
         HSteamNetConnection handle;
         SteamNetworkingIdentity id;
-        eastl::vector<eastl::string> messages;
+        skr::stl_vector<skr::stl_string> messages;
     };
-    eastl::vector<Connection> connections;
+    skr::stl_vector<Connection> connections;
 
     ~ChatClient()
     {

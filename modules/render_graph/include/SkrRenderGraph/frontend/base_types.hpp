@@ -2,10 +2,11 @@
 #include "SkrRenderGraph/rg_config.h"
 #include "SkrRT/misc/dependency_graph.hpp"
 #include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/stl_function.hpp"
 #include "SkrRT/containers/string.hpp"
 
-using graph_object_string = skr::string;
-using graph_big_object_string = skr::string;
+using graph_object_string = skr::String;
+using graph_big_object_string = skr::String;
 
 enum
 {
@@ -38,9 +39,9 @@ class ComputePassNode;
 class CopyPassNode;
 class PresentPassNode;
 
-using CopyPassExecuteFunction = eastl::function<void(class RenderGraph&, CopyPassContext&)>;
-using ComputePassExecuteFunction = eastl::function<void(class RenderGraph&, ComputePassContext&)>;
-using RenderPassExecuteFunction = eastl::function<void(class RenderGraph&, RenderPassContext&)>;
+using CopyPassExecuteFunction = skr::stl_function<void(class RenderGraph&, CopyPassContext&)>;
+using ComputePassExecuteFunction = skr::stl_function<void(class RenderGraph&, ComputePassContext&)>;
+using RenderPassExecuteFunction = skr::stl_function<void(class RenderGraph&, RenderPassContext&)>;
 
 typedef uint64_t handle_t;
 enum class EObjectType : uint8_t
@@ -299,7 +300,7 @@ struct RenderGraphNode : public DependencyGraphNode {
     RenderGraphNode(EObjectType type);
     SKR_RENDER_GRAPH_API void set_name(const char8_t* n);
     SKR_RENDER_GRAPH_API const char8_t* get_name() const;
-    SKR_RENDER_GRAPH_API const skr::string_view get_name_view() const;
+    SKR_RENDER_GRAPH_API const skr::StringView get_name_view() const;
     const EObjectType type;
     const uint32_t pooled_size = 0;
 protected:
@@ -316,8 +317,8 @@ struct SKR_RENDER_GRAPH_API PassContext {
     PassNode* pass = nullptr;
     skr::render_graph::RenderGraphBackend* graph = nullptr;
     CGPUCommandBufferId cmd;
-    skr::span<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
-    skr::span<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures;
+    skr::span<std::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
+    skr::span<std::pair<TextureHandle, CGPUTextureId>> resolved_textures;
 
     CGPUBufferId resolve(BufferHandle buffer_handle) const;
     CGPUTextureId resolve(TextureHandle tex_handle) const;
@@ -355,3 +356,14 @@ struct SKR_RENDER_GRAPH_API CopyPassContext : public PassContext {
 };
 } // namespace render_graph
 } // namespace skr
+
+namespace skr
+{
+template<render_graph::EObjectType type>
+struct Hash<render_graph::ObjectHandle<type>>{
+    inline size_t operator()(const render_graph::ObjectHandle<type>& handle) const SKR_NOEXCEPT
+    {
+        return Hash<render_graph::handle_t>()(handle);
+    }
+};
+}

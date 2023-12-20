@@ -62,13 +62,13 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
     for (auto& pass : matType->passes)
     for (auto& shader_resource : pass.shader_resources)
     {
-        auto& variant = blob.switch_variants.emplace_back(); 
+        auto& variant = *blob.switch_variants.add_default(); 
 
         shader_resource.resolve(false, nullptr);
         // initiate static switches to a permutation in shader collection 
         const auto shader_collection = shader_resource.get_ptr();
-        variant.switch_indices.resize(shader_collection->switch_sequence.keys.size());
-        variant.option_indices.resize(shader_collection->option_sequence.keys.size());
+        variant.switch_indices.resize_default(shader_collection->switch_sequence.keys.size());
+        variant.option_indices.resize_default(shader_collection->option_sequence.keys.size());
         // calculate final values for static switches
         for (uint32_t switch_i = 0; switch_i < variant.switch_indices.size(); switch_i++)
         {
@@ -90,8 +90,10 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
             // TODO: override
         }
         // calculate hashes and record
-        const auto switch_hash = skr_shader_option_sequence_t::calculate_stable_hash(shader_collection->switch_sequence, variant.switch_indices);
-        const auto option_hash = skr_shader_option_sequence_t::calculate_stable_hash(shader_collection->option_sequence, variant.option_indices);
+        auto switch_indices_span = skr::span<uint32_t>(variant.switch_indices.data(), variant.switch_indices.size());
+        auto option_indices_span = skr::span<uint32_t>(variant.option_indices.data(), variant.option_indices.size());
+        const auto switch_hash = skr_shader_option_sequence_t::calculate_stable_hash(shader_collection->switch_sequence, switch_indices_span);
+        const auto option_hash = skr_shader_option_sequence_t::calculate_stable_hash(shader_collection->option_sequence, option_indices_span);
     
         variant.shader_collection = shader_resource.get_record()->header.guid;
         variant.switch_hash = switch_hash;
@@ -112,7 +114,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
         }
         if (!overrided)
         {
-            material->override_values.emplace_back(default_value);
+            material->override_values.add(default_value);
         }
     }
 
@@ -131,7 +133,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 auto vblob = skr::make_blob_builder<skr_material_value_bool_t>();
                 vblob.slot_name = prop.slot_name;
                 vblob.value = (bool)prop.value;
-                blob.bools.emplace_back(vblob);
+                blob.bools.add(vblob);
             }
             break;
             case EMaterialPropertyType::FLOAT:
@@ -139,7 +141,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 auto vblob = skr::make_blob_builder<skr_material_value_float_t>();
                 vblob.slot_name = prop.slot_name;
                 vblob.value = (float)prop.value;
-                blob.floats.emplace_back(vblob);
+                blob.floats.add(vblob);
             }
             break;
             case EMaterialPropertyType::FLOAT2:
@@ -147,7 +149,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 auto vblob = skr::make_blob_builder<skr_material_value_float2_t>();
                 vblob.slot_name = prop.slot_name;
                 vblob.value = { (float)prop.vec.x, (float)prop.vec.y };
-                blob.float2s.emplace_back(vblob);
+                blob.float2s.add(vblob);
             }
             break;
             case EMaterialPropertyType::FLOAT3:
@@ -155,7 +157,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 auto vblob = skr::make_blob_builder<skr_material_value_float3_t>();
                 vblob.slot_name = prop.slot_name;
                 vblob.value = { (float)prop.vec.x, (float)prop.vec.y, (float)prop.vec.z };
-                blob.float3s.emplace_back(vblob);
+                blob.float3s.add(vblob);
             }
             break;
             case EMaterialPropertyType::FLOAT4:
@@ -163,7 +165,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 auto vblob = skr::make_blob_builder<skr_material_value_float4_t>();
                 vblob.slot_name = prop.slot_name;
                 vblob.value = { (float)prop.vec.x, (float)prop.vec.y, (float)prop.vec.z, (float)prop.vec.w };
-                blob.float4s.emplace_back(vblob);
+                blob.float4s.add(vblob);
             }
             break;
             case EMaterialPropertyType::DOUBLE:
@@ -171,7 +173,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 auto vblob = skr::make_blob_builder<skr_material_value_double_t>();
                 vblob.slot_name = prop.slot_name;
                 vblob.value = prop.value;
-                blob.doubles.emplace_back(vblob);
+                blob.doubles.add(vblob);
             }
             break;
             case EMaterialPropertyType::TEXTURE:
@@ -179,7 +181,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 auto vblob = skr::make_blob_builder<skr_material_value_texture_t>();
                 vblob.slot_name = prop.slot_name;
                 vblob.value = prop.resource.get_guid();
-                blob.textures.emplace_back(vblob);
+                blob.textures.add(vblob);
 
                 // Add runtime resource dependency
                 ctx->AddRuntimeDependency(prop.resource.get_guid());
@@ -190,7 +192,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 auto vblob = skr::make_blob_builder<skr_material_value_sampler_t>();
                 vblob.slot_name = prop.slot_name;
                 vblob.value = prop.resource.get_guid();
-                blob.samplers.emplace_back(vblob);
+                blob.samplers.add(vblob);
 
                 // Add runtime resource dependency
                 ctx->AddRuntimeDependency(prop.resource.get_guid());

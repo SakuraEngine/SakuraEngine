@@ -52,7 +52,7 @@ ERawVertexStreamType : uint32_t {
 sreflect_struct("guid" : "d0513fc5-e768-4bb6-a5e2-560175a1340d")
 MESH_CORE_API SRawDataStream
 {
-    eastl::span<const uint8_t> buffer_view;
+    skr::span<const uint8_t> buffer_view;
     uint64_t count;
     uint64_t stride;
     uint64_t offset;
@@ -70,13 +70,13 @@ MESH_CORE_API SRawPrimitive
 {
     ERawPrimitiveType type;
     SRawDataStream index_stream;
-    skr::vector<SRawVertexStream> vertex_streams;
+    skr::Vector<SRawVertexStream> vertex_streams;
 };
 
 sreflect_struct("guid" : "f0955907-fa19-4ae2-9361-db6c72eedcb7")
 MESH_CORE_API SRawMesh
 {
-    skr::vector<SRawPrimitive> primitives;
+    skr::Vector<SRawPrimitive> primitives;
 };
 
 MESH_CORE_API
@@ -89,29 +89,29 @@ MESH_CORE_API
 skr::span<const uint8_t> GetRawPrimitiveAttributeView(const SRawPrimitive* primitve, const char* semantics, uint32_t idx, uint32_t& stride, ERawVertexStreamType& out_type);
 
 MESH_CORE_API
-void EmplaceRawPrimitiveIndexBuffer(const SRawPrimitive* primitve, skr::vector<uint8_t>& buffer, skr_index_buffer_entry_t& out_ibv);
+void EmplaceRawPrimitiveIndexBuffer(const SRawPrimitive* primitve, skr::Vector<uint8_t>& buffer, skr_index_buffer_entry_t& out_ibv);
 
 MESH_CORE_API
-void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, ERawVertexStreamType type, uint32_t idx, skr::vector<uint8_t>& buffer, skr_vertex_buffer_entry_t& out_vbv);
+void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, ERawVertexStreamType type, uint32_t idx, skr::Vector<uint8_t>& buffer, skr_vertex_buffer_entry_t& out_vbv);
 
 MESH_CORE_API
-void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, const char* semantics, uint32_t idx, skr::vector<uint8_t>& buffer, skr_vertex_buffer_entry_t& out_vbv);
+void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, const char* semantics, uint32_t idx, skr::Vector<uint8_t>& buffer, skr_vertex_buffer_entry_t& out_vbv);
 
 // | prim0-indices | prim1-indices | prim2-indices | prim3-indices | ...
 MESH_CORE_API
-void EmplaceAllRawMeshIndices(const SRawMesh* mesh, skr::vector<uint8_t>& buffer, skr::vector<skr_mesh_primitive_t>& out_primitives);
+void EmplaceAllRawMeshIndices(const SRawMesh* mesh, skr::Vector<uint8_t>& buffer, skr::Vector<skr_mesh_primitive_t>& out_primitives);
 
 // | prim0-pos | prim1-pos | prim0-tangent | prim1-tangent | ...
 MESH_CORE_API
-void EmplaceAllRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::vector<uint8_t>& buffer, skr::vector<skr_mesh_primitive_t>& out_primitives);
+void EmplaceAllRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::Vector<uint8_t>& buffer, skr::Vector<skr_mesh_primitive_t>& out_primitives);
 
 MESH_CORE_API
-void EmplaceSkinRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::vector<uint8_t>& buffer, 
-    uint32_t buffer_idx, skr::vector<skr_mesh_primitive_t>& out_primitives);
+void EmplaceSkinRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::Vector<uint8_t>& buffer, 
+    uint32_t buffer_idx, skr::Vector<skr_mesh_primitive_t>& out_primitives);
 
 MESH_CORE_API
-void EmplaceStaticRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::vector<uint8_t>& buffer, 
-    uint32_t buffer_idx, skr::vector<skr_mesh_primitive_t>& out_primitives);
+void EmplaceStaticRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::Vector<uint8_t>& buffer, 
+    uint32_t buffer_idx, skr::Vector<skr_mesh_primitive_t>& out_primitives);
 
 // LUT for raw attributes to semantic names
 static const char* kRawAttributeTypeNameLUT[9] = {

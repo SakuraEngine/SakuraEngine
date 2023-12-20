@@ -1,15 +1,13 @@
 #include "cgpu/extensions/cgpu_nsight.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/umap.hpp"
+#include "SkrRT/io/vram_io.hpp"
 #ifdef _WIN32
 #include "SkrRT/platform/win/dstorage_windows.h"
 #endif
-#include "SkrRT/io/vram_io.hpp"
 #include "SkrRenderer/render_device.h"
-
-#include <EASTL/vector_map.h>
-#include <EASTL/string.h>
-#include <EASTL/fixed_vector.h>
 
 namespace skr
 {
@@ -66,7 +64,7 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
     {
         if (swapchains.size())
         {
-            const auto pInfo = swapchains.at(0).second->back_buffers[0]->info;
+            const auto pInfo = swapchains.begin()->value->back_buffers[0]->info;
             return pInfo->format;
         }
         return CGPU_FORMAT_B8G8R8A8_UNORM;
@@ -85,14 +83,14 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
 protected:
     // Device objects
     uint32_t backbuffer_index = 0;
-    eastl::vector_map<SWindowHandle, CGPUSurfaceId> surfaces;
-    eastl::vector_map<SWindowHandle, CGPUSwapChainId> swapchains;
+    skr::UMap<SWindowHandle, CGPUSurfaceId> surfaces;
+    skr::UMap<SWindowHandle, CGPUSwapChainId> swapchains;
     CGPUInstanceId instance = nullptr;
     CGPUAdapterId adapter = nullptr;
     CGPUDeviceId device = nullptr;
     CGPUQueueId gfx_queue = nullptr;
-    eastl::vector<CGPUQueueId> cpy_queues;
-    eastl::vector<CGPUQueueId> cmpt_queues;
+    skr::Vector<CGPUQueueId> cpy_queues;
+    skr::Vector<CGPUQueueId> cmpt_queues;
     CGPUSamplerId linear_sampler = nullptr;
     CGPUDStorageQueueId file_dstorage_queue = nullptr;
     CGPUDStorageQueueId memory_dstorage_queue = nullptr;
@@ -125,14 +123,14 @@ void RendererDeviceImpl::finalize()
 
     for (auto& swapchain : swapchains)
     {
-        if (swapchain.second) 
-            cgpu_free_swapchain(swapchain.second);
+        if (swapchain.value) 
+            cgpu_free_swapchain(swapchain.value);
     }
     swapchains.clear();
     for (auto& surface : surfaces)
     {
-        if (surface.second) 
-            cgpu_free_surface(device, surface.second);
+        if (surface.value) 
+            cgpu_free_surface(device, surface.value);
     }
     surfaces.clear();
     cgpu_free_sampler(linear_sampler);
@@ -186,19 +184,19 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     // create device
     const auto cpy_queue_count_ =  cgpu_min(cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER), MAX_CPY_QUEUE_COUNT);
     const auto cmpt_queue_count_ = cgpu_min(cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_COMPUTE), MAX_CMPT_QUEUE_COUNT);
-    eastl::fixed_vector<CGPUQueueGroupDescriptor, 3> Gs;
-    auto& GfxDesc = Gs.emplace_back();
+    skr::Vector<CGPUQueueGroupDescriptor> Gs;
+    auto& GfxDesc = *Gs.add_default();
     GfxDesc.queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
     GfxDesc.queue_count = 1;
     if (cpy_queue_count_)
     {
-        auto& CpyDesc = Gs.emplace_back();
+        auto& CpyDesc = *Gs.add_default();
         CpyDesc.queue_type = CGPU_QUEUE_TYPE_TRANSFER;
         CpyDesc.queue_count = cpy_queue_count_;
     }
     if (cmpt_queue_count_)
     {
-        auto& CmptDesc = Gs.emplace_back();
+        auto& CmptDesc = *Gs.add_default();
         CmptDesc.queue_type = CGPU_QUEUE_TYPE_COMPUTE;
         CmptDesc.queue_count = cmpt_queue_count_;
     }
@@ -211,7 +209,7 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
 
     if (cpy_queue_count_) // request at least one copy queue by default
     {
-        cpy_queues.resize(cpy_queue_count_);
+        cpy_queues.resize_zeroed(cpy_queue_count_);
         for (uint32_t i = 0; i < cpy_queues.size(); i++)
         {
             cpy_queues[i] = cgpu_get_queue(device, CGPU_QUEUE_TYPE_TRANSFER, i);
@@ -219,12 +217,12 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     }
     else // fallback: request only one graphics queue
     {
-        cpy_queues.emplace_back(gfx_queue);
+        cpy_queues.add(gfx_queue);
     }
 
     if (cmpt_queue_count_) // request at least one copy queue by default
     {
-        cmpt_queues.resize(cmpt_queue_count_);
+        cmpt_queues.resize_zeroed(cmpt_queue_count_);
         for (uint32_t i = 0; i < cmpt_queues.size(); i++)
         {
             cmpt_queues[i] = cgpu_get_queue(device, CGPU_QUEUE_TYPE_COMPUTE, i);
@@ -232,7 +230,7 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     }
     else // fallback: request only one graphics queue
     {
-        cmpt_queues.emplace_back(gfx_queue);
+        cmpt_queues.add(gfx_queue);
     }
 
     // dstorage queue
@@ -277,19 +275,17 @@ CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
 {
     // find registered swapchain
     {
-        auto _ = swapchains.find(window);
-        if (_ != swapchains.end()) return _->second;
+        if (auto _ = swapchains.find(window)) return _->value;
     }
     // find registered surface
     CGPUSurfaceId surface = nullptr;
     {
-        auto _ = surfaces.find(window);
-        if (_ != surfaces.end())
-            surface = _->second;
+        if (auto _ = surfaces.find(window))
+            surface = _->value;
         else
         {
             surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
-            surfaces[window] = surface;
+            surfaces.add_or_assign(window, surface);
         }
     }
     int32_t width, height;
@@ -305,7 +301,7 @@ CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
     auto swapchain = cgpu_create_swapchain(device, &chain_desc);
-    swapchains[window] = swapchain;
+    swapchains.add_or_assign(window, swapchain);
     return swapchain;
 }
 
@@ -314,22 +310,26 @@ CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle wind
     // find registered
     CGPUSwapChainId old = nullptr;
     {
-        auto _ = swapchains.find(window);
-        if (_ == swapchains.end()) return nullptr;
-        else old = _->second;
+        if (auto _ = swapchains.find(window))
+        {
+            old = _->value;
+        }
+        else 
+        {
+            return nullptr;
+        }
     }
     CGPUSurfaceId surface = nullptr;
     // free existed
     {
-        auto _ = surfaces.find(window);
         cgpu_free_swapchain(old);
-        if (_ != surfaces.end())
+        if (auto _ = surfaces.find(window))
         {
-            cgpu_free_surface(device, _->second);
+            cgpu_free_surface(device, _->value);
         }
         {
             surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
-            surfaces[window] = surface;
+            surfaces.add_or_assign(window, surface);
         }
     }
     int32_t width, height;
@@ -345,7 +345,7 @@ CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle wind
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
     auto swapchain = cgpu_create_swapchain(gfx_queue->device, &chain_desc);
-    swapchains[window] = swapchain;
+    swapchains.add_or_assign(window, swapchain);
     return swapchain;
 }
 }

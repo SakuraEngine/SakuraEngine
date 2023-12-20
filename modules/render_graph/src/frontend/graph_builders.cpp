@@ -50,7 +50,7 @@ PassHandle RenderGraph::add_render_pass(const RenderPassSetupFunction& setup, co
 
     const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = node_factory->Allocate<RenderPassNode>(passes_size);
-    passes.emplace_back(newPass);
+    passes.add(newPass);
     graph->insert(newPass);
     // build up
     RenderPassBuilder builder(*this, *newPass);
@@ -73,7 +73,7 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_name(const c
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8_t* name, TextureSRVHandle handle) SKR_NOEXCEPT
 {
     auto allocated = graph.node_factory->Allocate<TextureReadEdge>(name, handle);
-    auto&& edge = node.in_texture_edges.emplace_back(allocated);
+    auto&& edge = *node.in_texture_edges.emplace(allocated);
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
@@ -83,7 +83,7 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(
     ECGPUStoreAction store_action) SKR_NOEXCEPT
 {
     auto allocated = graph.node_factory->Allocate<TextureRenderEdge>(mrt_index, handle._this, clear_color);
-    auto&& edge = node.out_texture_edges.emplace_back(allocated);
+    auto&& edge = *node.out_texture_edges.emplace(allocated);
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     node.load_actions[mrt_index] = load_action;
     node.store_actions[mrt_index] = store_action;
@@ -97,7 +97,7 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::resolve_msaa(uin
 {
     auto allocated = graph.node_factory->Allocate<TextureRenderEdge>(
         CGPU_MAX_MRT_COUNT + 1 + mrt_index, handle._this, fastclear_0000, CGPU_RESOURCE_STATE_RESOLVE_DEST);
-    auto&& edge = node.out_texture_edges.emplace_back(allocated);
+    auto&& edge = *node.out_texture_edges.emplace(allocated);
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     return *this;
 }
@@ -108,7 +108,7 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_depth_stenci
 {
     auto allocated = graph.node_factory->Allocate<TextureRenderEdge>(
         CGPU_MAX_MRT_COUNT, handle._this, fastclear_0000, CGPU_RESOURCE_STATE_DEPTH_WRITE);
-    auto&& edge = node.out_texture_edges.emplace_back(allocated);
+    auto&& edge = *node.out_texture_edges.emplace(allocated);
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     node.depth_load_action = dload_action;
     node.depth_store_action = dstore_action;
@@ -121,7 +121,7 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_depth_stenci
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT
 {
     auto allocated = graph.node_factory->Allocate<BufferReadEdge>(name, handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-    auto&& edge = node.in_buffer_edges.emplace_back(allocated);
+    auto&& edge = *node.in_buffer_edges.emplace(allocated);
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
@@ -135,7 +135,7 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(const char
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::use_buffer(PipelineBufferHandle buffer, ECGPUResourceState requested_state) SKR_NOEXCEPT
 {
     auto allocated = graph.node_factory->Allocate<PipelineBufferEdge>(buffer, requested_state);
-    auto&& edge = node.ppl_buffer_edges.emplace_back(allocated);
+    auto&& edge = *node.ppl_buffer_edges.emplace(allocated);
     graph.graph->link(graph.graph->access_node(buffer._this), &node, edge);
     return *this;
 }
@@ -172,7 +172,7 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_name(const
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(const char8_t* name, TextureSRVHandle handle) SKR_NOEXCEPT
 {
     auto allocated = graph.node_factory->Allocate<TextureReadEdge>(name, handle);
-    auto&& edge = node.in_texture_edges.emplace_back(allocated);
+    auto&& edge = *node.in_texture_edges.emplace(allocated);
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
 }
@@ -180,7 +180,7 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(const cha
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(const char8_t* name, TextureUAVHandle handle) SKR_NOEXCEPT
 {
     auto allocated = graph.node_factory->Allocate<TextureReadWriteEdge>(name, handle);
-    auto&& edge = node.inout_texture_edges.emplace_back(allocated);
+    auto&& edge = *node.inout_texture_edges.emplace(allocated);
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     return *this;
 }
@@ -214,7 +214,7 @@ PassHandle RenderGraph::add_compute_pass(const ComputePassSetupFunction& setup, 
 {
     const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = node_factory->Allocate<ComputePassNode>(passes_size);
-    passes.emplace_back(newPass);
+    passes.add(newPass);
     graph->insert(newPass);
     // build up
     ComputePassBuilder builder(*this, *newPass);
@@ -252,14 +252,14 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(Buf
 
     auto allocated_in = graph.node_factory->Allocate<BufferReadEdge>(u8"CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
     auto allocated_out = graph.node_factory->Allocate<BufferReadWriteEdge>(dst, CGPU_RESOURCE_STATE_COPY_DEST);
-    auto&& in_edge = node.in_buffer_edges.emplace_back(allocated_in);
-    auto&& out_edge = node.out_buffer_edges.emplace_back(allocated_out);
+    auto&& in_edge = *node.in_buffer_edges.emplace(allocated_in);
+    auto&& out_edge = *node.out_buffer_edges.emplace(allocated_out);
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
-    node.b2bs.emplace_back(src, dst);
+    *node.b2bs.emplace(src, dst);
     if (out_state != CGPU_RESOURCE_STATE_COPY_DEST)
     {
-        node.bbarriers.emplace_back(dst, out_state);
+        node.bbarriers.emplace(dst, out_state);
     }
     return *this;
 }
@@ -270,14 +270,14 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_texture(Bu
 
     auto allocated_in = graph.node_factory->Allocate<BufferReadEdge>(u8"CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
     auto allocated_out = graph.node_factory->Allocate<TextureRenderEdge>(0u, dst._this, fastclear_0000, CGPU_RESOURCE_STATE_COPY_DEST);
-    auto&& in_edge = node.in_buffer_edges.emplace_back(allocated_in);
-    auto&& out_edge = node.out_texture_edges.emplace_back(allocated_out);
+    auto&& in_edge = *node.in_buffer_edges.emplace(allocated_in);
+    auto&& out_edge = *node.out_texture_edges.emplace(allocated_out);
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
-    node.b2ts.emplace_back(src, dst);
+    node.b2ts.emplace(src, dst);
     if (out_state != CGPU_RESOURCE_STATE_COPY_DEST)
     {
-        node.tbarriers.emplace_back(dst, out_state);
+        node.tbarriers.emplace(dst, out_state);
     }
     return *this;
 }
@@ -288,14 +288,14 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(T
 
     auto allocated_in = graph.node_factory->Allocate<TextureReadEdge>(u8"CopySrc", src._this, CGPU_RESOURCE_STATE_COPY_SOURCE);
     auto allocated_out = graph.node_factory->Allocate<TextureRenderEdge>(0u, dst._this, fastclear_0000, CGPU_RESOURCE_STATE_COPY_DEST);
-    auto&& in_edge = node.in_texture_edges.emplace_back(allocated_in);
-    auto&& out_edge = node.out_texture_edges.emplace_back(allocated_out);
+    auto&& in_edge = *node.in_texture_edges.emplace(allocated_in);
+    auto&& out_edge = *node.out_texture_edges.emplace(allocated_out);
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
-    node.t2ts.emplace_back(src, dst);
+    node.t2ts.emplace(src, dst);
     if (out_state != CGPU_RESOURCE_STATE_COPY_DEST)
     {
-        node.tbarriers.emplace_back(dst, out_state);
+        node.tbarriers.emplace(dst, out_state);
     }
     return *this;
 }
@@ -305,7 +305,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::from_buffer(BufferRa
     SkrZoneScopedN("CopyPassBuilder::from_buffer");
 
     auto allocated_in = graph.node_factory->Allocate<BufferReadEdge>(u8"CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
-    auto&& in_edge = node.in_buffer_edges.emplace_back(allocated_in);
+    auto&& in_edge = *node.in_buffer_edges.emplace(allocated_in);
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     return *this;
 }
@@ -314,7 +314,7 @@ PassHandle RenderGraph::add_copy_pass(const CopyPassSetupFunction& setup, const 
 {
     const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = node_factory->Allocate<CopyPassNode>(passes_size);
-    passes.emplace_back(newPass);
+    passes.add(newPass);
     graph->insert(newPass);
     // build up
     CopyPassBuilder builder(*this, *newPass);
@@ -351,7 +351,7 @@ RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::texture(Textur
 {
     assert(is_backbuffer && "blit to screen mode not supported!");
     auto allocated = graph.node_factory->Allocate<TextureReadEdge>(u8"PresentSrc", handle, CGPU_RESOURCE_STATE_PRESENT);
-    auto&& edge = node.in_texture_edges.emplace_back(allocated);
+    auto&& edge = *node.in_texture_edges.emplace(allocated);
     graph.graph->link(graph.graph->access_node(handle), &node, edge);
     return *this;
 }
@@ -360,7 +360,7 @@ PassHandle RenderGraph::add_present_pass(const PresentPassSetupFunction& setup) 
 {
     const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = node_factory->Allocate<PresentPassNode>(passes_size);
-    passes.emplace_back(newPass);
+    passes.add(newPass);
     graph->insert(newPass);
     // build up
     PresentPassBuilder builder(*this, *newPass);
@@ -496,7 +496,7 @@ BufferHandle RenderGraph::create_buffer(const BufferSetupFunction& setup) SKR_NO
     SkrZoneScopedN("RenderGraph::create_buffer(handle)");
 
     auto newBuf = node_factory->Allocate<BufferNode>();
-    resources.emplace_back(newBuf);
+    resources.add(newBuf);
     graph->insert(newBuf);
     BufferBuilder builder(*this, *newBuf);
     setup(*this, builder);
@@ -624,7 +624,7 @@ TextureHandle RenderGraph::create_texture(const TextureSetupFunction& setup) SKR
     SkrZoneScopedN("RenderGraph::create_texture(handle)");
 
     auto newTex = node_factory->Allocate<TextureNode>();
-    resources.emplace_back(newTex);
+    resources.add(newTex);
     graph->insert(newTex);
     TextureBuilder builder(*this, *newTex);
     setup(*this, builder);

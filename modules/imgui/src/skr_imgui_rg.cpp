@@ -1,8 +1,5 @@
-#include <EASTL/string.h>
-#include <EASTL/fixed_string.h>
-#include "SkrRT/config.h"
-#include "SkrRT/platform/memory.h"
-#include "SkrRT/misc/log.h"
+#include "SkrRT/containers/string.hpp"
+#include "SkrMemory/memory.h"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
@@ -61,7 +58,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
     skr::render_graph::RenderGraph* render_graph, skr::render_graph::TextureRTVHandle target, ECGPULoadAction load_action)
 {
     SkrZoneScopedN("RenderIMGUI");
-    using graph_name_string = skr::string;
+    using graph_name_string = skr::String;
 
     bool useCVV = true;
 #if SKR_PLAT_MACOSX
@@ -475,7 +472,7 @@ void imguir_render_window(ImGuiViewport* viewport, void* usrdata)
 
     auto back_buffer = graph->create_texture(
         [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-            skr::string buf_name = skr::format(u8"imgui-window-{}", viewport->ID);
+            skr::String buf_name = skr::format(u8"imgui-window-{}", viewport->ID);
             builder.set_name((const char8_t*)buf_name.c_str())
                 .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
                 .allow_render_target();
@@ -485,7 +482,7 @@ void imguir_render_window(ImGuiViewport* viewport, void* usrdata)
 
     graph->add_present_pass(
         [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-            skr::string pass_name = skr::format(u8"imgui-present-{}", viewport->ID);
+            skr::String pass_name = skr::format(u8"imgui-present-{}", viewport->ID);
             builder.set_name((const char8_t*)pass_name.c_str())
                 .swapchain(rdata->swapchain, backbuffer_index)
                 .texture(back_buffer, true);

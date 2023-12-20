@@ -1,5 +1,5 @@
 #include "SkrRT/platform/process.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/atomic.h"
 
 typedef struct SProcess
@@ -10,11 +10,11 @@ typedef struct SProcess
 
 SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments, uint32_t arg_count, const char8_t* stdout_file)
 {
-    skr::string commandLine = skr::format(u8"\"{}\"", command); 
+    skr::String commandLine = skr::format(u8"\"{}\"", command); 
 	for (size_t i = 0; i < arg_count; ++i)
 	{
 		commandLine += u8" ";
-		commandLine += skr::string(arguments[i]);
+		commandLine += skr::String(arguments[i]);
 	}	
 
 	HANDLE stdOut = NULL;

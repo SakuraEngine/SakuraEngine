@@ -23,13 +23,13 @@ bool SSkinCooker::Cook(SCookContext* ctx)
     blob.name = rawSkin->name ? (const char8_t*)rawSkin->name : u8"UnnamedSkin";
     blob.joint_remaps.reserve(rawSkin->joints_count);
     for (auto i = 0; i < rawSkin->joints_count; ++i)
-        blob.joint_remaps.push_back((const char8_t*)rawSkin->joints[i]->name);
+        blob.joint_remaps.add((const char8_t*)rawSkin->joints[i]->name);
     auto buffer_view = rawSkin->inverse_bind_matrices->buffer_view;
     const auto buffer_data = static_cast<const uint8_t*>(buffer_view->data ? buffer_view->data : buffer_view->buffer->data);
     auto matrix = (cgltf_float*)(buffer_data + buffer_view->offset);
     auto components = cgltf_num_components(cgltf_type_mat4);
     SKR_ASSERT(components == 16);
-    blob.inverse_bind_poses.resize(rawSkin->joints_count);
+    blob.inverse_bind_poses.resize_default(rawSkin->joints_count);
     std::memcpy(blob.inverse_bind_poses.data(), matrix, sizeof(cgltf_float) * components * rawSkin->joints_count);
     resource.arena = skr::binary::make_arena<SkinBlobView>(resource.blob, blob);
     return ctx->Save(resource);

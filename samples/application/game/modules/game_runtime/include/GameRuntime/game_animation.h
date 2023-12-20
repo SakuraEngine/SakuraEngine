@@ -22,7 +22,7 @@ namespace game sreflect
     {
         SKR_RESOURCE_FIELD(skr::anim::AnimResource, animation_resource);
         sattr("native" : true)
-        eastl::vector<ozz::math::SoaTransform> local_transforms;
+        skr::Vector<ozz::math::SoaTransform> local_transforms;
         sattr("native" : true)
         ozz::animation::SamplingJob::Context sampling_context;
         float currtime = 0.f;

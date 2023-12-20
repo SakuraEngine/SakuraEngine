@@ -1,5 +1,5 @@
 #include "./robjects_application.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 
 // bool initialize_robjects_application(robjects_application_t* app)
 // {

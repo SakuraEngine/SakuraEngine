@@ -26,7 +26,7 @@ typedef skr_guid_t dual_guid_t;
 #endif
 
 #if defined(__cplusplus)
-#include <EASTL/numeric_limits.h>
+#include <limits>
 
 namespace dual
 {
@@ -38,8 +38,8 @@ namespace dual
 [[maybe_unused]] static constexpr size_t kFastBinCapacity = 800;
 [[maybe_unused]] static constexpr size_t kSmallBinCapacity = 200;
 [[maybe_unused]] static constexpr size_t kLargeBinCapacity = 80;
-[[maybe_unused]] static constexpr SIndex kInvalidSIndex = eastl::numeric_limits<SIndex>::max();
-[[maybe_unused]] static constexpr TIndex kInvalidTypeIndex = eastl::numeric_limits<TIndex>::max();
+[[maybe_unused]] static constexpr SIndex kInvalidSIndex = std::numeric_limits<SIndex>::max();
+[[maybe_unused]] static constexpr TIndex kInvalidTypeIndex = std::numeric_limits<TIndex>::max();
 
 [[maybe_unused]] static constexpr size_t kGroupBlockSize = 128 * 4;
 [[maybe_unused]] static constexpr size_t kGroupBlockCount = 256;

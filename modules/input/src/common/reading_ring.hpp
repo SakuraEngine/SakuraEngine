@@ -1,17 +1,11 @@
 #pragma once
-#include "SkrRT/containers/resizable_ring_buffer.hpp"
+#include "SkrRT/containers/ring_buffer.hpp"
 
-namespace skr {
-namespace input {
-
-template<typename T>
-struct ReadingRing : public resizable_ring_buffer<T>
+namespace skr
 {
-    ReadingRing() SKR_NOEXCEPT
-        : resizable_ring_buffer<T>(256)
-    {
-
-    }
-};
-
-} }
+namespace input
+{
+template <typename T>
+using ReadingRing = SimpleThreadSafeRingBuffer<T>;
+} // namespace input
+} // namespace skr

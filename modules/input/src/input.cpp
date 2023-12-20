@@ -1,17 +1,19 @@
 #include "SkrInput/input.h"
 #include "common/reading_pool.hpp"
-#include "SkrRT/platform/memory.h"
-#include "SkrBase/misc/debug.h" 
+#include "SkrMemory/memory.h"
+#include "SkrBase/misc/debug.h"
 #include "SkrRT/platform/shared_library.hpp"
 #include <SkrRT/containers/vector.hpp>
+#include "SkrRT/containers/span.hpp"
 
-namespace skr {
-namespace input {
+namespace skr
+{
+namespace input
+{
 
 const char* CommonInputReadingPoolBase::kInputReadingMemoryPoolName = "input::reading_pool";
 
-struct InputImplementation : public Input
-{
+struct InputImplementation : public Input {
     friend struct Input;
 
     ~InputImplementation() SKR_NOEXCEPT
@@ -23,7 +25,7 @@ struct InputImplementation : public Input
     void finalize() SKR_NOEXCEPT;
 
 protected:
-    skr::vector<InputLayer*> layers_;
+    skr::Vector<InputLayer*> layers_;
 };
 
 #ifdef SKR_INPUT_USE_GAME_INPUT
@@ -39,9 +41,9 @@ void InputImplementation::initialize() SKR_NOEXCEPT
     if (bUseGDK)
     {
         auto game_input = Input_GameInput_Create();
-        if (game_input->Initialize()) 
+        if (game_input->Initialize())
         {
-            layers_.emplace_back(game_input);
+            layers_.add(game_input);
         }
         else
         {
@@ -51,9 +53,9 @@ void InputImplementation::initialize() SKR_NOEXCEPT
     else
     {
         auto common_input = Input_Common_Create();
-        if (common_input->Initialize()) 
+        if (common_input->Initialize())
         {
-            layers_.emplace_back(common_input);
+            layers_.add(common_input);
         }
         else
         {
@@ -72,26 +74,22 @@ void InputImplementation::finalize() SKR_NOEXCEPT
     layers_.clear();
 }
 
-
 // InputLayer symbols
 InputLayer::~InputLayer() SKR_NOEXCEPT
 {
-
 }
 
 // Input symbols
 Input* Input::instance_ = nullptr;
 Input::Input() SKR_NOEXCEPT
 {
-
 }
 
 Input::~Input() SKR_NOEXCEPT
 {
-
 }
 
-lite::LiteSpan<InputLayer*> Input::GetLayers() SKR_NOEXCEPT
+skr::span<InputLayer*> Input::GetLayers() SKR_NOEXCEPT
 {
     auto instance = static_cast<InputImplementation*>(Input::GetInstance());
     return { instance->layers_.data(), instance->layers_.size() };
@@ -158,4 +156,5 @@ EInputResult Input::GetPreviousReading(InputReading* reference, EInputKind kind,
     return INPUT_RESULT_NOT_FOUND;
 }
 
-} }
+} // namespace input
+} // namespace skr

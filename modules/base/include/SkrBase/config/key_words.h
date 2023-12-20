@@ -235,11 +235,6 @@
 
 
 #ifdef __cplusplus
-namespace skr
-{
-    template <typename T> struct hash;
-}
-
 typedef struct Dummy {
     int dummy;
     int dummy2();

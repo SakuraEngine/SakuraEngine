@@ -143,16 +143,16 @@ public:
     {
         if (resolver)
         {
-            chain.emplace_back(resolver);
+            chain.add(resolver);
         }
     }
     SObjectPtr<IIORequestResolverChain> then(IORequestResolverId resolver) SKR_NOEXCEPT
     {
-        chain.emplace_back(resolver);
+        chain.add(resolver);
         return this;
     }
 private:
-    skr::vector<IORequestResolverId> chain;
+    skr::Vector<IORequestResolverId> chain;
 };
 
 } // namespace io

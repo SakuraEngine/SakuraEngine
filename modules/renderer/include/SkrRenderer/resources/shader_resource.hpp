@@ -23,37 +23,37 @@ MultiShaderResource {
 
     stable_hash_t                       stable_hash;
     skr::StronglyEnum<ECGPUShaderStage> shader_stage;
-    skr::string                         entry;
+    skr::String                         entry;
 
-    inline skr::vector<skr_platform_shader_identifier_t>& GetRootDynamicVariants() SKR_NOEXCEPT
+    inline skr::Vector<skr_platform_shader_identifier_t>& GetRootDynamicVariants() SKR_NOEXCEPT
     {
         return GetDynamicVariants(kZeroStableShaderHash);
     }
-    inline skr::vector<skr_platform_shader_identifier_t>& GetDynamicVariants(stable_hash_t hash) SKR_NOEXCEPT
+    inline skr::Vector<skr_platform_shader_identifier_t>& GetDynamicVariants(stable_hash_t hash) SKR_NOEXCEPT
     {
         auto found = option_variants.find(hash);
         SKR_ASSERT(found != option_variants.end());
         return found->second;
     }
 
-    skr::flat_hash_map<stable_hash_t, skr::vector<skr_platform_shader_identifier_t>, stable_hasher_t> option_variants;
+    skr::FlatHashMap<stable_hash_t, skr::Vector<skr_platform_shader_identifier_t>, stable_hasher_t> option_variants;
 };
 
 sreflect_struct("guid": "8372f075-b4ce-400d-929f-fb0e57c1c887")
 sattr("blob" : true)
 ShaderOptionSequence {
     skr::span<EShaderOptionType>           types;
-    skr::span<skr::string_view>            keys;
-    skr::span<skr::span<skr::string_view>> values;
+    skr::span<skr::StringView>            keys;
+    skr::span<skr::span<skr::StringView>> values;
 
     SKR_RENDERER_API
-    uint32_t find_key_index(skr::string_view key) const SKR_NOEXCEPT;
+    uint32_t find_key_index(skr::StringView key) const SKR_NOEXCEPT;
 
     SKR_RENDERER_API
-    uint32_t find_value_index(skr::string_view key, skr::string_view value) const SKR_NOEXCEPT;
+    uint32_t find_value_index(skr::StringView key, skr::StringView value) const SKR_NOEXCEPT;
 
     SKR_RENDERER_API
-    uint32_t find_value_index(uint32_t key_index, skr::string_view value) const SKR_NOEXCEPT;
+    uint32_t find_value_index(uint32_t key_index, skr::StringView value) const SKR_NOEXCEPT;
 
     SKR_RENDERER_API
     static skr_stable_shader_hash_t calculate_stable_hash(const ShaderOptionSequence& seq, skr::span<uint32_t> indices);
@@ -81,7 +81,7 @@ ShaderCollectionResource {
 
     skr_guid_t root_guid;
     // hash=0 -> root_variant;
-    skr::flat_hash_map<stable_hash_t, MultiShaderResource, stable_hasher_t> switch_variants;
+    skr::FlatHashMap<stable_hash_t, MultiShaderResource, stable_hasher_t> switch_variants;
 
     skr_blob_arena_t             switch_arena;
     skr_blob_arena_t             option_arena;
@@ -112,14 +112,14 @@ ShaderCollectionJSON {
 
     skr_guid_t root_guid;
     // hash=0 -> root_variant;
-    skr::flat_hash_map<stable_hash_t, MultiShaderResource, stable_hasher_t> switch_variants;
+    skr::FlatHashMap<stable_hash_t, MultiShaderResource, stable_hasher_t> switch_variants;
 
-    skr::vector<skr::string>              switch_key_sequence;
-    skr::vector<EShaderOptionType>        switch_type_sequence;
-    skr::vector<skr::vector<skr::string>> switch_values_sequence;
-    skr::vector<skr::string>              option_key_sequence;
-    skr::vector<EShaderOptionType>        option_type_sequence;
-    skr::vector<skr::vector<skr::string>> option_values_sequence;
+    skr::Vector<skr::String>              switch_key_sequence;
+    skr::Vector<EShaderOptionType>        switch_type_sequence;
+    skr::Vector<skr::Vector<skr::String>> switch_values_sequence;
+    skr::Vector<skr::String>              option_key_sequence;
+    skr::Vector<EShaderOptionType>        option_type_sequence;
+    skr::Vector<skr::Vector<skr::String>> option_values_sequence;
 };
 
 struct SKR_RENDERER_API SShaderResourceFactory : public resource::SResourceFactory {

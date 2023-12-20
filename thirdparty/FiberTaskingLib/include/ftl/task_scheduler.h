@@ -23,14 +23,13 @@
  */
 
 #pragma once
-
+#include "SkrRT/containers/stl_vector.hpp"
+#include "SkrRT/containers/stl_function.hpp"
 #include "ftl/callbacks.h"
 #include "ftl/fiber.h"
 #include "ftl/task.h"
 #include "ftl/thread_abstraction.h"
 #include "ftl/wait_free_queue.h"
-#include "EASTL/shared_ptr.h"
-#include "EASTL/vector.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -38,6 +37,8 @@
 #include <shared_mutex>
 #include <vector>
 #include <memory>
+
+#include "SkrRT/containers/deprecated.hpp"
 
 namespace ftl
 {
@@ -101,7 +102,7 @@ private:
      */
     struct TaskBundle {
         Task TaskToExecute;
-        eastl::shared_ptr<TaskCounter> Counter;
+        skr::shared_ptr<TaskCounter> Counter;
         const char* name;
     };
 
@@ -133,7 +134,7 @@ private:
         std::atomic<bool>* OldFiberStoredFlag{ nullptr };
 
         /* The queue of ready waiting Fibers that were pinned to this thread */
-        eastl::vector<ReadyFiberBundle*> PinnedReadyFibers;
+        skr::stl_vector<ReadyFiberBundle*> PinnedReadyFibers;
 
         /**
          * The current fiber implementation requires that fibers created from threads finish on the same thread where
@@ -232,7 +233,7 @@ public:
      * @param counter     An atomic counter corresponding to this task. Initially it will be incremented by 1. When the task
      *                    completes, it will be decremented.
      */
-    void AddTask(Task task, TaskPriority priority, const eastl::shared_ptr<TaskCounter>& counter = nullptr FTL_TASK_NAME(, const char* name = nullptr));
+    void AddTask(Task task, TaskPriority priority, const skr::shared_ptr<TaskCounter>& counter = nullptr FTL_TASK_NAME(, const char* name = nullptr));
     /**
      * Adds a group of tasks to the internal queue
      *
@@ -244,7 +245,7 @@ public:
      * @param counter     An atomic counter corresponding to the task group as a whole. Initially it will be incremented by
      *                    numTasks. When each task completes, it will be decremented.
      */
-    void AddTasks(unsigned numTasks, Task const* tasks, TaskPriority priority, eastl::shared_ptr<TaskCounter> const &counter = nullptr);
+    void AddTasks(unsigned numTasks, Task const* tasks, TaskPriority priority, skr::shared_ptr<TaskCounter> const &counter = nullptr);
 
     /**
      * Yields execution to another task until counter == 0
@@ -278,7 +279,7 @@ public:
      * @param value               The value to wait for
      * @param pinToCurrentThread  If true, the task invoking this call will not resume on a different thread
      */
-    void WaitForPredicate(const eastl::function<bool()>& pred, bool pinToCurrentThread = false);
+    void WaitForPredicate(const skr::stl_function<bool()>& pred, bool pinToCurrentThread = false);
 
     /**
      * Gets the 0-based index of the current thread

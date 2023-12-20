@@ -1,17 +1,17 @@
 #pragma once
 #include "blob_fwd.h"
 #include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/span.hpp"
 #include "SkrRT/containers/string.hpp"
-#include "EASTL/vector.h"
 
 namespace skr
 {
 namespace binary
 {
 template <>
-struct SKR_STATIC_API BlobTrait<skr::string_view> {
-    static void BuildArena(skr_blob_arena_builder_t& arena, skr::string_view& dst, const skr::string& src);
-    static void Remap(skr_blob_arena_t& arena, skr::string_view& dst);
+struct SKR_STATIC_API BlobTrait<skr::StringView> {
+    static void BuildArena(skr_blob_arena_builder_t& arena, skr::StringView& dst, const skr::String& src);
+    static void Remap(skr_blob_arena_t& arena, skr::StringView& dst);
 };
 
 template <class T>
@@ -26,8 +26,8 @@ struct BlobTrait<skr::span<T>> {
             {
                 T dstV{};
                 BlobTrait<T>::BuildArena(arena, dstV, src[i]);
-                skr::span<T> span = { (T*)((char*)arena.get_buffer() + offset), src.size() };
-                span[i]           = dstV;
+                skr::span<T> _span = { (T*)((char*)arena.get_buffer() + offset), src.size() };
+                _span[i]           = dstV;
             }
         }
         else

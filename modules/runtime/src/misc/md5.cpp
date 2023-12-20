@@ -4,7 +4,7 @@
 
 constexpr int parse_hex_digit(const char8_t c)
 {
-    using namespace skr::string_literals;
+    using namespace skr::StringLiterals;
     if (u8'0' <= c && c <= u8'9')
         return c - u8'0';
     else if (u8'a' <= c && c <= u8'f')
@@ -31,14 +31,14 @@ bool parse_hex(const char8_t* ptr, T& value)
     return true;
 }
 
-bool make_md5(const skr::string_view& str, skr_md5_t& value)
+bool make_md5(const skr::StringView& str, skr_md5_t& value)
 {
-    using namespace skr::string_literals;
+    using namespace skr::StringLiterals;
     constexpr size_t md5_form_length = 32;
 
     if (str.size() != md5_form_length)
     {
-        skr::string str2(str);
+        skr::String str2(str);
         SKR_LOG_ERROR(u8"String MD5 of the form XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX is expected, got %s", str2.c_str());
         return false;
     }
@@ -67,7 +67,7 @@ bool make_md5(const skr::string_view& str, skr_md5_t& value)
 
 bool skr_parse_md5(const char8_t* str32, skr_md5_t* out_md5)
 {
-    skr::string_view sv(str32, 32);
+    skr::StringView sv(str32, 32);
     if (!out_md5) return false;
     return make_md5(sv, *out_md5);
 }

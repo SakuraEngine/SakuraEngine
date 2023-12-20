@@ -40,7 +40,7 @@ struct RAMService final : public IRAMService
         IOReaderId<IIOBatchProcessor> ds_reader = nullptr;
         RAMService* service = nullptr;
     };
-    const skr::string name;
+    const skr::String name;
     const bool awake_at_request = false;
     Runner runner;
     

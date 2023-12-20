@@ -4,10 +4,11 @@
 #include "SkrRT/ecs/entities.hpp"
 #include "SkrBase/misc/debug.h" 
 #include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
-#include "SkrRT/containers/concurrent_queue.h"
+#include "SkrRT/containers/concurrent_queue.hpp"
 
 namespace skr::resource
 {
@@ -61,16 +62,16 @@ protected:
 
     // these requests are only handled inside this system and is thread-unsafe
 
-    eastl::vector<SResourceRequest*> failedRequests;
-    eastl::vector<SResourceRequest*> toUpdateRequests;
-    eastl::vector<SResourceRequest*> serdeBatch;
+    skr::stl_vector<SResourceRequest*> failedRequests;
+    skr::stl_vector<SResourceRequest*> toUpdateRequests;
+    skr::stl_vector<SResourceRequest*> serdeBatch;
 
     dual::entity_registry_t resourceIds;
     task::counter_t counter;
     bool quit = false;
-    skr::parallel_flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
-    skr::parallel_flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
-    skr::parallel_flat_hash_map<skr_guid_t, SResourceFactory*, skr::guid::hash> resourceFactories;
+    skr::ParallelFlatHashMap<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
+    skr::ParallelFlatHashMap<void*, skr_resource_record_t*> resourceToRecord;
+    skr::ParallelFlatHashMap<skr_guid_t, SResourceFactory*, skr::guid::hash> resourceFactories;
 };
 
 SResourceSystemImpl::SResourceSystemImpl()

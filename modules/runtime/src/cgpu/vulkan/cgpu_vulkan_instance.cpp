@@ -1,9 +1,8 @@
 #include "vulkan_utils.h"
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
-#include <EASTL/vector.h>
-#include <EASTL/sort.h>
-#include <EASTL/string.h>
 
+#include <SkrRT/containers/stl_vector.hpp>
+#include <SkrRT/containers/stl_string.hpp>
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/hashmap.hpp>
 
@@ -15,9 +14,9 @@ public:
         const CGPUVulkanInstanceDescriptor* exts_desc = (const CGPUVulkanInstanceDescriptor*)desc->chained;
         // default
         device_extensions.insert(device_extensions.end(),
-        eastl::begin(cgpu_wanted_device_exts), eastl::end(cgpu_wanted_device_exts));
+        std::begin(cgpu_wanted_device_exts), std::end(cgpu_wanted_device_exts));
         instance_extensions.insert(instance_extensions.end(),
-        eastl::begin(cgpu_wanted_instance_exts), eastl::end(cgpu_wanted_instance_exts));
+        std::begin(cgpu_wanted_instance_exts), std::end(cgpu_wanted_instance_exts));
         // from desc
         if (desc->enable_debug_layer)
         {
@@ -64,10 +63,10 @@ public:
     }
     const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr = CGPU_NULLPTR;
     const VkDebugReportCallbackCreateInfoEXT* report_info_ptr = CGPU_NULLPTR;
-    eastl::vector<const char*> instance_extensions;
-    eastl::vector<const char*> instance_layers;
-    eastl::vector<const char*> device_extensions;
-    eastl::vector<const char*> device_layers;
+    skr::stl_vector<const char*> instance_extensions;
+    skr::stl_vector<const char*> instance_layers;
+    skr::stl_vector<const char*> device_extensions;
+    skr::stl_vector<const char*> device_layers;
 };
 
 struct CGPUCachedRenderPass {
@@ -113,8 +112,8 @@ struct CGPUVkPassTable //
         }
     };
 
-    skr::flat_hash_map<VkUtil_RenderPassDesc, CGPUCachedRenderPass, rpdesc_hash, rpdesc_eq> cached_renderpasses;
-    skr::flat_hash_map<VkUtil_FramebufferDesc, CGPUCachedFramebuffer, fbdesc_hash, fbdesc_eq> cached_framebuffers;
+    skr::FlatHashMap<VkUtil_RenderPassDesc, CGPUCachedRenderPass, rpdesc_hash, rpdesc_eq> cached_renderpasses;
+    skr::FlatHashMap<VkUtil_FramebufferDesc, CGPUCachedFramebuffer, fbdesc_hash, fbdesc_eq> cached_framebuffers;
 };
 
 VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGPUVkPassTable* table, const VkUtil_FramebufferDesc* desc)
@@ -161,7 +160,7 @@ void VkUtil_RenderPassTableAdd(struct CGPUVkPassTable* table, const struct VkUti
     table->cached_renderpasses[*desc] = new_pass;
 }
 
-struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<eastl::string, bool, eastl::hash<eastl::string>> //
+struct CGPUVkExtensionsTable : public skr::ParallelFlatHashMap<skr::stl_string, bool> //
 {
     static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
@@ -236,7 +235,7 @@ struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<eastl::string,
     }
 };
 
-struct CGPUVkLayersTable : public skr::parallel_flat_hash_map<eastl::string, bool, eastl::hash<eastl::string>> //
+struct CGPUVkLayersTable : public skr::ParallelFlatHashMap<skr::stl_string, bool> //
 {
     static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
@@ -369,7 +368,7 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
         wanted_device_layers, wanted_device_layers_count,
         wanted_device_extensions, wanted_device_extensions_count);
     // sort by GPU type
-    eastl::stable_sort(I->pVulkanAdapters, I->pVulkanAdapters + I->mPhysicalDeviceCount, 
+    std::stable_sort(I->pVulkanAdapters, I->pVulkanAdapters + I->mPhysicalDeviceCount, 
     [](const CGPUAdapter_Vulkan& a, const CGPUAdapter_Vulkan& b) {
         const uint32_t orders[] = {
             4, 1, 0, 2, 3
@@ -442,7 +441,7 @@ CGPUDeviceId cgpu_create_device_vulkan(CGPUAdapterId adapter, const CGPUDeviceDe
     *const_cast<CGPUAdapterId*>(&D->super.adapter) = adapter;
 
     // Prepare Create Queues
-    eastl::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    skr::stl_vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     queueCreateInfos.resize(desc->queue_group_count);
     for (uint32_t i = 0; i < desc->queue_group_count; i++)
     {

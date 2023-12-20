@@ -8,13 +8,13 @@
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/log.h"
 #include <SkrRT/containers/hashmap.hpp>
-#include <EASTL/vector.h>
-#include <SkrRT/containers/variant.hpp>
+#include "SkrRT/containers/variant.hpp"
 #include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/stl_vector.hpp>
 
 struct skr_tweak_value_t
 {
-    skr::variant<float, int, bool, skr::string> value;
+    skr::variant<float, int, bool, skr::String> value;
 };
 
 class SkrTweakModule : public skr::IDynamicModule, public efsw::FileWatchListener
@@ -33,7 +33,7 @@ public:
     struct TweakLine
     {
         int line_number;
-        eastl::vector<skr_tweak_value_t*> tweaks;
+        skr::stl_vector<skr_tweak_value_t*> tweaks;
     };
 
     void handleFileAction(efsw::WatchID watchid, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename = "" ) override
@@ -85,7 +85,7 @@ public:
                     auto end = sv.find(')', pos);
                     SKR_ASSERT(end != std::string_view::npos);
                     auto stdValueStr = sv.substr(pos + 6, end - pos - 6);
-                    auto valueStr = skr::string_view((const char8_t*)stdValueStr.data(), stdValueStr.size());
+                    auto valueStr = skr::StringView((const char8_t*)stdValueStr.data(), stdValueStr.size());
                     auto tweak = tweak_file[tweak_line_index].tweaks[tweak_index];
                     
                     skr::visit([&](auto& value)
@@ -134,30 +134,30 @@ public:
         return tweak;
     }
 
-    void ParseTweak(int& value, skr::string_view str)
+    void ParseTweak(int& value, skr::StringView str)
     {
         value = std::stoi({(const char*)str.raw().data(), (size_t)str.size()});
     }
 
-    void ParseTweak(float& value, skr::string_view str)
+    void ParseTweak(float& value, skr::StringView str)
     {
         value = std::stof({(const char*)str.raw().data(), (size_t)str.size()});
     }
 
-    void ParseTweak(bool& value, skr::string_view str)
+    void ParseTweak(bool& value, skr::StringView str)
     {
-        value = str == skr::string_view(u8"true");
+        value = str == skr::StringView(u8"true");
     }
 
-    void ParseTweak(skr::string& value, skr::string_view str)
+    void ParseTweak(skr::String& value, skr::StringView str)
     {
         value = str;
     }
 
     SMutexObject _mutex;
     efsw::FileWatcher _watcher;
-    skr::flat_hash_set<skr::string, skr::hash<skr::string>> _watched_directories;
-    skr::flat_hash_map<skr::string, eastl::vector<TweakLine>, skr::hash<skr::string>> _tweak_files;
+    skr::FlatHashSet<skr::String, skr::Hash<skr::String>> _watched_directories;
+    skr::FlatHashMap<skr::String, skr::stl_vector<TweakLine>, skr::Hash<skr::String>> _tweak_files;
 };
 SkrTweakModule* SkrTweakModule::instance = nullptr;
 
@@ -189,11 +189,11 @@ bool skr_get_tweak(skr_tweak_bool_t* tweak)
 }
 skr_tweak_string_t* skr_tweak_value(const char8_t* value, const char* str, const char* fileName, int lineNumber)
 {
-    return (skr_tweak_string_t*)SkrTweakModule::instance->TweakValue(skr::string(value), str, fileName, lineNumber);
+    return (skr_tweak_string_t*)SkrTweakModule::instance->TweakValue(skr::String(value), str, fileName, lineNumber);
 }
 const char* skr_get_tweak(skr_tweak_string_t* tweak)
 {
-    return skr::get<skr::string>(((skr_tweak_value_t*)tweak)->value).c_str();
+    return skr::get<skr::String>(((skr_tweak_value_t*)tweak)->value).c_str();
 }
 #else
 SKR_TWEAK_API skr_tweak_int_t* skr_tweak_value(int value, const char* str, const char* fileName, int lineNumber)

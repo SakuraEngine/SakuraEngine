@@ -25,11 +25,11 @@ EShaderOptionType : uint32_t
 sreflect_struct("guid" : "00d4c2b3-50e7-499b-9cf3-fb6b2ba70e79")
 sattr("serialize" : ["json", "bin"])
 ShaderOptionInstance {
-    skr::string key;
+    skr::String key;
     // if value.empty() then it's automatically set to option.value_selections[0] as the default value
     // if value == "on" then it will behave like "-D${key}", ["SOME_MACRO", ""] -> -DSOME_MACRO
     // if value == "off" then it will keep undefined during compile time
-    skr::string value;
+    skr::String value;
 
     SKR_RENDERER_API
     static skr_stable_shader_hash_t calculate_stable_hash(skr::span<skr_shader_option_instance_t> ordered_options);
@@ -39,8 +39,8 @@ sreflect_struct("guid" : "f497b62d-e63e-4ec3-b923-2a01a90f9966")
 sattr("serialize" : ["json", "bin"])
 ShaderOptionTemplate {
     EShaderOptionType        type;
-    skr::string              key;
-    skr::vector<skr::string> value_selections; // { "on", "off" } or { "1", "2", "3" }
+    skr::String              key;
+    skr::Vector<skr::String> value_selections; // { "on", "off" } or { "1", "2", "3" }
     // TODO: target platforms filter
 };
 
@@ -50,9 +50,9 @@ ShaderOptionsResource {
     using shader_options_handle_t = skr::resource::TResourceHandle<ShaderOptionsResource>;
 
     SKR_RENDERER_API
-    static bool flatten_options(skr::vector<ShaderOptionTemplate>& dst, skr::span<ShaderOptionsResource*> srcs) SKR_NOEXCEPT;
+    static bool flatten_options(skr::Vector<ShaderOptionTemplate>& dst, skr::span<ShaderOptionsResource*> srcs) SKR_NOEXCEPT;
 
-    skr::vector<ShaderOptionTemplate> options;
+    skr::Vector<ShaderOptionTemplate> options;
 };
 
 struct SKR_RENDERER_API SShaderOptionsFactory : public resource::SResourceFactory {

@@ -49,7 +49,7 @@ SKR_RTTR_EXEC_STATIC
     register_generic_type_loader(kReferenceGenericGUID, &reference_loader);
 
     // array
-    static ArrayTypeLoader array_loader;
+    static VectorTypeLoader array_loader;
     register_generic_type_loader(kArrayGenericGUID, &array_loader);
 
     // IObject

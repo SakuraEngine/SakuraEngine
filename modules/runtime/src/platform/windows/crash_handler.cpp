@@ -39,7 +39,7 @@ struct WinCrashHandler : public SCrashHandler
     int internalHandler(struct SCrashContext* context) SKR_NOEXCEPT;
 
 private:
-    skr::string app_name;
+    skr::String app_name;
     HANDLE dbghelp_dll = nullptr;
     bool initialized = false;
 
@@ -144,7 +144,7 @@ int WinCrashHandler::internalHandler(struct SCrashContext* context) SKR_NOEXCEPT
 
     const auto type = MB_ABORTRETRYIGNORE | MB_ICONERROR;
     const auto reason = context->reason;
-    skr::string why = skr::format(
+    skr::String why = skr::format(
         u8"Crashed! Reason: {}",
         skr_crash_code_string(reason)
     );
@@ -158,11 +158,11 @@ int WinCrashHandler::internalHandler(struct SCrashContext* context) SKR_NOEXCEPT
         ::GetCurrentDirectoryA(MAX_PATH, (char*)currentPath);
         ::GetLocalTime(&localTime);
 
-        skr::string dateTime = skr::format(u8"{}-{}-{}-{}-{}-{}-{}", 
+        skr::String dateTime = skr::format(u8"{}-{}-{}-{}-{}-{}-{}", 
             localTime.wYear, localTime.wMonth, localTime.wDay, localTime.wHour, 
             localTime.wMinute, localTime.wSecond, localTime.wMilliseconds);
 
-        skr::string dumpPath = skr::format(u8"{}\\{}-minidump-{}.dmp", 
+        skr::String dumpPath = skr::format(u8"{}\\{}-minidump-{}.dmp", 
             currentPath, skr_get_current_process_name(), dateTime);
         const char* pDumpPath = dumpPath.c_str();
 

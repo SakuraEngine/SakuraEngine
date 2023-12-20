@@ -14,7 +14,7 @@ namespace skr sreflect
 {
 namespace renderer sreflect
 {
-using MaterialPropertyNameView = skr::string_view;
+using MaterialPropertyNameView = skr::StringView;
 
 sreflect_struct("guid": "e2c14489-3223-489a-8e30-95d2014e99f2")
 sattr("blob" : true)
@@ -128,13 +128,13 @@ MaterialResource {
 
     typedef struct installed_shader {
         skr_platform_shader_identifier_t identifier;
-        skr::string_view                 entry;
+        skr::StringView                 entry;
         ECGPUShaderStage                 stage;
     } installed_shader;
 
     typedef struct installed_pass {
-        skr::string                   name;
-        skr::vector<installed_shader> shaders;
+        skr::String                   name;
+        skr::Vector<installed_shader> shaders;
         ESkrInstallStatus             status;
         CGPURootSignatureId           root_signature;
         skr_pso_map_key_id            key;
@@ -143,7 +143,7 @@ MaterialResource {
     } installed_pass;
 
     spush_attr("transient": true)
-    skr::vector<installed_pass> installed_passes;
+    skr::Vector<installed_pass> installed_passes;
 };
 
 struct SKR_RENDERER_API SMaterialFactory : public resource::SResourceFactory {

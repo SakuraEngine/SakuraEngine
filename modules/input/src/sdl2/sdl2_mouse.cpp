@@ -1,34 +1,35 @@
 #include "../common/common_device_base.hpp"
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_events.h>
-#include <EASTL/fixed_vector.h>
 #include <algorithm>
+#include "SkrRT/containers/span.hpp"
 
-namespace skr {
-namespace input {
-
-struct MouseState
+namespace skr
 {
+namespace input
+{
+
+struct MouseState {
     uint32_t ButtonFlags;
-    int x = 0;
-    int y = 0;
-    int64_t wheelX = 0;
-    int64_t wheelY = 0;
+    int      x      = 0;
+    int      y      = 0;
+    int64_t  wheelX = 0;
+    int64_t  wheelY = 0;
 };
 
-struct InputReading_SDL2Mouse : public CommonInputReading
-{
+struct InputReading_SDL2Mouse : public CommonInputReading {
     InputReading_SDL2Mouse(CommonInputReadingProxy* pPool, struct CommonInputDevice* pDevice, const MouseState& State, uint64_t Timestamp) SKR_NOEXCEPT
-        : CommonInputReading(pPool, pDevice), State(State), Timestamp(Timestamp)
+        : CommonInputReading(pPool, pDevice),
+          State(State),
+          Timestamp(Timestamp)
     {
-
     }
 
     uint64_t GetTimestamp() const SKR_NOEXCEPT final
     {
         return Timestamp;
     }
-    
+
     EInputKind GetInputKind() const SKR_NOEXCEPT
     {
         return EInputKind::InputKindMouse;
@@ -50,8 +51,8 @@ struct InputReading_SDL2Mouse : public CommonInputReading
 
         state->positionX = State.x;
         state->positionY = State.y;
-        state->wheelX = State.wheelX;
-        state->wheelY = State.wheelY;
+        state->wheelX    = State.wheelX;
+        state->wheelY    = State.wheelY;
 
         return true;
     }
@@ -62,15 +63,13 @@ struct InputReading_SDL2Mouse : public CommonInputReading
     }
 
     MouseState State;
-    uint64_t Timestamp;
+    uint64_t   Timestamp;
 };
 
-struct InputDevice_SDL2Mouse : public CommonInputDeviceBase<InputReading_SDL2Mouse>
-{
+struct InputDevice_SDL2Mouse : public CommonInputDeviceBase<InputReading_SDL2Mouse> {
     InputDevice_SDL2Mouse(CommonInputLayer* Layer) SKR_NOEXCEPT
         : CommonInputDeviceBase<InputReading_SDL2Mouse>(Layer)
     {
-
     }
 
     void Tick() SKR_NOEXCEPT final
@@ -81,16 +80,15 @@ struct InputDevice_SDL2Mouse : public CommonInputDeviceBase<InputReading_SDL2Mou
         if (!LastReading || !LastReading->Equal(mouseState))
         {
             if (auto old = ReadingQueue.add(
-                ReadingPool.acquire(&ReadingPool, this, mouseState, layer->GetCurrentTimestampUSec())
-            ))
+                ReadingPool.acquire(&ReadingPool, this, mouseState, layer->GetCurrentTimestampUSec())))
             {
                 old->release();
             }
         }
-    } 
+    }
 
-    const EInputKind kinds[1] = { EInputKind::InputKindMouse };
-    lite::LiteSpan<const EInputKind> ReportKinds() const SKR_NOEXCEPT final
+    const EInputKind       kinds[1] = { EInputKind::InputKindMouse };
+    span<const EInputKind> ReportKinds() const SKR_NOEXCEPT final
     {
         return { kinds, 1 };
     }
@@ -104,7 +102,7 @@ struct InputDevice_SDL2Mouse : public CommonInputDeviceBase<InputReading_SDL2Mou
     {
         outState.ButtonFlags = SDL_GetMouseState(&outState.x, &outState.y);
         SDL_PumpEvents();
-        SDL_Event events[8];		
+        SDL_Event events[8];
         if (auto count = SDL_PeepEvents(events, 8, SDL_GETEVENT, SDL_MOUSEWHEEL, SDL_MOUSEWHEEL))
         {
             for (int i = 0; i < count; i++)
@@ -128,4 +126,5 @@ CommonInputDevice* CreateInputDevice_SDL2Mouse(CommonInputLayer* pLayer) SKR_NOE
     return pDevice;
 }
 
-} }
+} // namespace input
+} // namespace skr

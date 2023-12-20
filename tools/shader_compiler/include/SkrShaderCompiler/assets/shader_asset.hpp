@@ -15,7 +15,7 @@ namespace asset sreflect
 sreflect_struct("guid" : "067d4b86-f888-4bd7-841c-bc831043e50c")
 sattr("serialize" : "json")
 SKR_SHADER_COMPILER_API SShaderOptionsImporter final : public SImporter {
-    skr::string jsonPath;
+    skr::String jsonPath;
 
     void* Import(skr_io_ram_service_t*, SCookContext* context) override;
     void  Destroy(void* resource) override;
@@ -32,12 +32,12 @@ sattr("serialize" : "json")
 SKR_SHADER_COMPILER_API SShaderImporter final : public SImporter {
     using shader_options_handle_t = skr::resource::TResourceHandle<skr_shader_options_resource_t>;
 
-    skr::string sourcePath;
-    skr::string entry = u8"main";
-    skr::string target;
+    skr::String sourcePath;
+    skr::String entry = u8"main";
+    skr::String target;
 
-    eastl::vector<shader_options_handle_t> switch_assets;
-    eastl::vector<shader_options_handle_t> option_assets;
+    skr::Vector<shader_options_handle_t> switch_assets;
+    skr::Vector<shader_options_handle_t> option_assets;
 
     void* Import(skr_io_ram_service_t*, SCookContext* context) override;
     void  Destroy(void* resource) override;

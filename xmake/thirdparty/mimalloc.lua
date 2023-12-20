@@ -1,7 +1,6 @@
 mimalloc_includes_dir = "$(projectdir)/thirdparty/mimalloc"
 
 target("mimalloc")
-    -- version("0.9.2alpha")
     set_group("00.thirdparty")
     set_optimize("fastest")
     add_files("$(projectdir)/thirdparty/mimalloc/build.mimalloc.c")

@@ -1,6 +1,7 @@
-#include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/module/module.hpp"
-
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/stl_function.hpp"
 #include "SkrShaderCompiler/module.configure.h"
 #include "SkrShaderCompiler/shader_compiler.hpp"
 
@@ -28,17 +29,17 @@ struct SKR_SHADER_COMPILER_API SShaderCompilerModule : public skr::IDynamicModul
         }
     }
     
-    static skr::flat_hash_map<skd::asset::EShaderSourceType, eastl::function<IShaderCompiler*()>> ctors;
-    static skr::flat_hash_map<skd::asset::EShaderSourceType, eastl::function<void(IShaderCompiler*)>> dtors;
-    static eastl::vector<eastl::pair<skr::string, eastl::function<void()>>> on_load_events;
-    static eastl::vector<eastl::pair<skr::string, eastl::function<void()>>> on_unload_events;
+    static skr::FlatHashMap<skd::asset::EShaderSourceType, skr::stl_function<IShaderCompiler*()>> ctors;
+    static skr::FlatHashMap<skd::asset::EShaderSourceType, skr::stl_function<void(IShaderCompiler*)>> dtors;
+    static skr::Vector<std::pair<skr::String, skr::stl_function<void()>>> on_load_events;
+    static skr::Vector<std::pair<skr::String, skr::stl_function<void()>>> on_unload_events;
 };
 
 IMPLEMENT_DYNAMIC_MODULE(SShaderCompilerModule, SkrShaderCompiler);
-skr::flat_hash_map<skd::asset::EShaderSourceType, eastl::function<IShaderCompiler*()>> SShaderCompilerModule::ctors = {};
-skr::flat_hash_map<skd::asset::EShaderSourceType, eastl::function<void(IShaderCompiler*)>> SShaderCompilerModule::dtors = {};
-eastl::vector<eastl::pair<skr::string, eastl::function<void()>>> SShaderCompilerModule::on_load_events = {};
-eastl::vector<eastl::pair<skr::string, eastl::function<void()>>> SShaderCompilerModule::on_unload_events = {};
+skr::FlatHashMap<skd::asset::EShaderSourceType, skr::stl_function<IShaderCompiler*()>> SShaderCompilerModule::ctors = {};
+skr::FlatHashMap<skd::asset::EShaderSourceType, skr::stl_function<void(IShaderCompiler*)>> SShaderCompilerModule::dtors = {};
+skr::Vector<std::pair<skr::String, skr::stl_function<void()>>> SShaderCompilerModule::on_load_events = {};
+skr::Vector<std::pair<skr::String, skr::stl_function<void()>>> SShaderCompilerModule::on_unload_events = {};
 
 IShaderCompiler* SkrShaderCompiler_CreateByType(asset::EShaderSourceType type) SKR_NOEXCEPT
 {

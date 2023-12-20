@@ -76,7 +76,7 @@ Sizef RenderPositioned::compute_dry_layout(BoxConstraints constraints) const SKR
         }
         else
         {
-            parent_size.width = shrink_wrap_width() ? child_size.width * (_width_factor ? _width_factor.get() : 1) : std::numeric_limits<float>::infinity();
+            parent_size.width = shrink_wrap_width() ? child_size.width * _width_factor.value_or(1) : std::numeric_limits<float>::infinity();
         }
 
         // calc vertical
@@ -86,7 +86,7 @@ Sizef RenderPositioned::compute_dry_layout(BoxConstraints constraints) const SKR
         }
         else
         {
-            parent_size.height = shrink_wrap_height() ? child_size.height * (_height_factor ? _height_factor.get() : 1) : std::numeric_limits<float>::infinity();
+            parent_size.height = shrink_wrap_height() ? child_size.height * _height_factor.value_or(1) : std::numeric_limits<float>::infinity();
         }
 
         return constraints.constrain(parent_size);
@@ -144,7 +144,7 @@ void RenderPositioned::perform_layout() SKR_NOEXCEPT
         }
         else
         {
-            parent_size.width = shrink_wrap_width() ? child_size.width * (_width_factor ? _width_factor.get() : 1) : std::numeric_limits<float>::infinity();
+            parent_size.width = shrink_wrap_width() ? child_size.width * _width_factor.value_or(1) : std::numeric_limits<float>::infinity();
         }
 
         // calc vertical
@@ -154,7 +154,7 @@ void RenderPositioned::perform_layout() SKR_NOEXCEPT
         }
         else
         {
-            parent_size.height = shrink_wrap_height() ? child_size.height * (_height_factor ? _height_factor.get() : 1) : std::numeric_limits<float>::infinity();
+            parent_size.height = shrink_wrap_height() ? child_size.height * _height_factor.value_or(1) : std::numeric_limits<float>::infinity();
         }
 
         parent_size = constraints().constrain(parent_size);

@@ -2,12 +2,12 @@
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "SkrBase/misc/debug.h" 
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/btree.hpp"
 #include "cgpu/cgpux.hpp"
-#include <EASTL/set.h>
 
 #include "SkrRenderGraph/phases/cull_phase.hpp"
 
@@ -92,7 +92,7 @@ void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
 void RenderGraphFrameExecutor::write_marker(const char8_t* message)
 {
     cgpu_marker_buffer_write(gfx_cmd_buf, marker_buffer, marker_idx++, valid_marker_val);
-    marker_messages.push_back(message);
+    marker_messages.add(message);
 }
 
 void RenderGraphFrameExecutor::print_error_trace(uint64_t frame_index)
@@ -156,8 +156,7 @@ RenderGraphBackend::RenderGraphBackend(const RenderGraphBuilder& builder)
     , device(builder.device)
     , gfx_queue(builder.gfx_queue)
 {
-    phases.emplace_back(
-    skr::SPtr<CullPhase>::Create());
+    phases.add(skr::SPtr<CullPhase>::Create());
 }
 
 RenderGraph* RenderGraph::create(const RenderGraphSetupFunction& setup) SKR_NOEXCEPT
@@ -236,7 +235,7 @@ CGPUTextureId RenderGraphBackend::try_aliasing_allocate(RenderGraphFrameExecutor
             ((TextureNode&)node).descriptor.flags &= ~CGPU_TCF_ALIASING_RESOURCE;
             return nullptr;
         }
-        executor.aliasing_textures.emplace_back(aliasing_texture);
+        executor.aliasing_textures.add(aliasing_texture);
         return aliasing_texture;
     }
     return nullptr;
@@ -292,8 +291,8 @@ CGPUBufferId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, con
 }
 
 void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
-                                            stack_vector<CGPUTextureBarrier>& tex_barriers, stack_vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
-                                            stack_vector<CGPUBufferBarrier>& buf_barriers, stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT
+                                            stack_vector<CGPUTextureBarrier>& tex_barriers, stack_vector<std::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
+                                            stack_vector<CGPUBufferBarrier>& buf_barriers, stack_vector<std::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT
 {
     stack_set<TextureHandle> tex_resolve_set;
     stack_set<BufferHandle>  buf_resolve_set;
@@ -302,10 +301,10 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
     pass->foreach_textures(
     [&](TextureNode* texture, TextureEdge* edge) {
         auto tex_resolved = resolve(executor, *texture);
-        if (tex_resolve_set.find(texture->get_handle()) == tex_resolve_set.end())
+        if (!tex_resolve_set.contains(texture->get_handle()) )
         {
-            resolved_textures.emplace_back(texture->get_handle(), tex_resolved);
-            tex_resolve_set.insert(texture->get_handle());
+            resolved_textures.emplace(texture->get_handle(), tex_resolved);
+            tex_resolve_set.add_or_assign(texture->get_handle());
 
             const auto current_state = get_lastest_state(texture, pass);
             const auto dst_state     = edge->requested_state;
@@ -316,16 +315,16 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
             barrier.dst_state          = dst_state;
             barrier.texture            = tex_resolved;
 
-            tex_barriers.emplace_back(barrier);
+            tex_barriers.emplace(barrier);
         }
     });
     pass->foreach_buffers(
     [&](BufferNode* buffer, BufferEdge* edge) {
         auto buf_resolved = resolve(executor, *buffer);
-        if (buf_resolve_set.find(buffer->get_handle()) == buf_resolve_set.end())
+        if (!buf_resolve_set.find(buffer->get_handle()) )
         {
-            resolved_buffers.emplace_back(buffer->get_handle(), buf_resolved);
-            buf_resolve_set.insert(buffer->get_handle());
+            resolved_buffers.emplace(buffer->get_handle(), buf_resolved);
+            buf_resolve_set.add_or_assign(buffer->get_handle());
 
             const auto current_state = get_lastest_state(buffer, pass);
             const auto dst_state     = edge->requested_state;
@@ -335,7 +334,7 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
             barrier.src_state         = current_state;
             barrier.dst_state         = dst_state;
             barrier.buffer            = buf_resolved;
-            buf_barriers.emplace_back(barrier);
+            buf_barriers.emplace(barrier);
         }
     });
 }
@@ -374,7 +373,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
     {
         executor.bind_table_pools.emplace(root_sig, SkrNew<BindTablePool>(root_sig));
     }
-    skr::string bind_table_keys = u8"";
+    skr::String bind_table_keys = u8"";
     // Bind resources
     stack_vector<CGPUDescriptorData> desc_set_updates;
     stack_vector<const char8_t*>     bindTableValueNames = {};
@@ -394,7 +393,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             {
                 bind_table_keys += read_edge->name.is_empty() ? resource.name : (const char8_t*)read_edge->name.c_str();
                 bind_table_keys += u8";";
-                bindTableValueNames.emplace_back(resource.name);
+                bindTableValueNames.emplace(resource.name);
 
                 auto               buffer_readed = read_edge->get_buffer_node();
                 CGPUDescriptorData update        = {};
@@ -404,7 +403,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 update.binding                   = resource.binding;
                 cbvs[e_idx]                      = resolve(executor, *buffer_readed);
                 update.buffers                   = &cbvs[e_idx];
-                desc_set_updates.emplace_back(update);
+                desc_set_updates.emplace(update);
             }
         }
         // SRVs
@@ -417,7 +416,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             {
                 bind_table_keys += read_edge->name.is_empty() ? resource.name : (const char8_t*)read_edge->name.c_str();
                 bind_table_keys += u8";";
-                bindTableValueNames.emplace_back(resource.name);
+                bindTableValueNames.emplace(resource.name);
 
                 auto               texture_readed   = read_edge->get_texture_node();
                 CGPUDescriptorData update           = {};
@@ -442,7 +441,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 view_desc.dims   = read_edge->get_dimension();
                 srvs[e_idx]      = texture_view_pool.allocate(view_desc, frame_index);
                 update.textures  = &srvs[e_idx];
-                desc_set_updates.emplace_back(update);
+                desc_set_updates.emplace(update);
             }
         }
         // UAVs
@@ -455,7 +454,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             {
                 bind_table_keys += rw_edge->name.is_empty() ? resource.name : (const char8_t*)rw_edge->name.c_str();
                 bind_table_keys += u8";";
-                bindTableValueNames.emplace_back(resource.name);
+                bindTableValueNames.emplace(resource.name);
 
                 auto               texture_readwrite = rw_edge->get_texture_node();
                 CGPUDescriptorData update            = {};
@@ -475,7 +474,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 view_desc.dims                       = CGPU_TEX_DIMENSION_2D;
                 uavs[e_idx]                          = texture_view_pool.allocate(view_desc, frame_index);
                 update.textures                      = &uavs[e_idx];
-                desc_set_updates.emplace_back(update);
+                desc_set_updates.emplace(update);
             }
         }
     }
@@ -538,9 +537,9 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     ComputePassContext pass_context = {};
     // resource de-virtualize
     stack_vector<CGPUTextureBarrier>                        tex_barriers      = {};
-    stack_vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
+    stack_vector<std::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
     stack_vector<CGPUBufferBarrier>                         buffer_barriers   = {};
-    stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>   resolved_buffers  = {};
+    stack_vector<std::pair<BufferHandle, CGPUBufferId>>   resolved_buffers  = {};
     calculate_barriers(executor, pass,
                        tex_barriers, resolved_textures,
                        buffer_barriers, resolved_buffers);
@@ -594,9 +593,9 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     RenderPassContext pass_context = {};
     // resource de-virtualize
     stack_vector<CGPUTextureBarrier>                        tex_barriers      = {};
-    stack_vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
+    stack_vector<std::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
     stack_vector<CGPUBufferBarrier>                         buffer_barriers   = {};
-    stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>   resolved_buffers  = {};
+    stack_vector<std::pair<BufferHandle, CGPUBufferId>>   resolved_buffers  = {};
     calculate_barriers(executor, pass,
                        tex_barriers, resolved_textures,
                        buffer_barriers, resolved_buffers);
@@ -604,8 +603,8 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_context.graph             = this;
     pass_context.pass              = pass;
     pass_context.bind_table        = alloc_update_pass_bind_table(executor, pass, pass->root_signature);
-    pass_context.resolved_buffers  = resolved_buffers;
-    pass_context.resolved_textures = resolved_textures;
+    pass_context.resolved_buffers  = { resolved_buffers.data(), resolved_buffers.size() };
+    pass_context.resolved_textures = { resolved_textures.data(), resolved_textures.size() };
     pass_context.executor          = &executor;
     // call cgpu apis
     CGPUResourceBarrierDescriptor barriers = {};
@@ -731,7 +730,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             attachment.load_action  = pass->load_actions[write_edge->mrt_index];
             attachment.store_action = pass->store_actions[write_edge->mrt_index];
             attachment.clear_color  = write_edge->clear_value;
-            color_attachments.emplace_back(attachment);
+            color_attachments.emplace(attachment);
         }
     }
     CGPURenderPassDescriptor pass_desc = {};
@@ -783,9 +782,9 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
     ZoneName(pass->name.c_str(), pass->name.size());
     // resource de-virtualize
     stack_vector<CGPUTextureBarrier>                        tex_barriers      = {};
-    stack_vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
+    stack_vector<std::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
     stack_vector<CGPUBufferBarrier>                         buffer_barriers   = {};
-    stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>   resolved_buffers  = {};
+    stack_vector<std::pair<BufferHandle, CGPUBufferId>>   resolved_buffers  = {};
     calculate_barriers(executor, pass,
                        tex_barriers, resolved_textures,
                        buffer_barriers, resolved_buffers);
@@ -810,13 +809,13 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
     {
         CopyPassContext stack   = {};
         stack.cmd               = executor.gfx_cmd_buf;
-        stack.resolved_buffers  = resolved_buffers;
-        stack.resolved_textures = resolved_textures;
+        stack.resolved_buffers  = { resolved_buffers.data(), resolved_buffers.size() };
+        stack.resolved_textures = { resolved_textures.data(), resolved_textures.size() };
         pass->executor(*this, stack);
         for (auto [buffer_handle, state] : pass->bbarriers)
         {
             auto  buffer      = stack.resolve(buffer_handle);
-            auto& barrier     = late_buf_barriers.emplace_back();
+            auto& barrier     = *late_buf_barriers.emplace();
             barrier.buffer    = buffer;
             barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
             barrier.dst_state = state;
@@ -824,7 +823,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         for (auto [texture_handle, state] : pass->tbarriers)
         {
             auto  texture     = stack.resolve(texture_handle);
-            auto& barrier     = late_tex_barriers.emplace_back();
+            auto& barrier     = *late_tex_barriers.emplace();
             barrier.texture   = texture;
             barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
             barrier.dst_state = state;
@@ -935,7 +934,7 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
         {
             SkrZoneScopedN("GraphExecutorBeginEvent");
 
-            skr::string   frameLabel = skr::format(u8"Frame-{}", frame_index);
+            skr::String   frameLabel = skr::format(u8"Frame-{}", frame_index);
             CGPUEventInfo event      = { (const char8_t*)frameLabel.c_str(), { 0.8f, 0.8f, 0.8f, 1.f } };
             cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
         }
@@ -1034,7 +1033,7 @@ bool RenderGraphBackend::compile() SKR_NOEXCEPT
         // 2.calc aliasing
         // - 先在aliasing chain里找一圈，如果有不重合的，直接把它加入到aliasing chain里
         // - 如果没找到，在所有resource中找一个合适的加入到aliasing chain
-        skr::btree_map<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
+        skr::BTreeMap<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
         foreach_textures([&](TextureNode* texture) SKR_NOEXCEPT {
             if (texture->imported) return;
             for (auto&& [aliased, aliaed_span] : alliasing_lifespans)
@@ -1110,7 +1109,7 @@ uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame, ui
         }
         uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
-        eastl::remove_if(queue.begin(), queue.end(),
+        std::remove_if(queue.begin(), queue.end(),
                          [&](auto& element) {
                              return element.texture == nullptr;
                          }),
@@ -1144,7 +1143,7 @@ uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame, uin
         }
         uint32_t prev_count = (uint32_t)queue.size();
         queue.erase(
-        eastl::remove_if(queue.begin(), queue.end(),
+        std::remove_if(queue.begin(), queue.end(),
                          [&](auto& element) {
                              return element.buffer == nullptr;
                          }),

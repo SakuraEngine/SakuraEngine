@@ -1,9 +1,8 @@
 #pragma once
 #include "SkrRT/platform/atomic.h"
+#include "SkrRT/containers/umap.hpp"
 #include "vram_service.hpp"
 
-#include <EASTL/fixed_vector.h>
-#include <EASTL/vector_map.h>
 
 namespace skr { template <typename Artifact> struct IFuture; struct JobQueue; }
 
@@ -60,7 +59,7 @@ private:
     SAtomic32 rcs[2] = { 0, 0 };
     uint32_t index = 0;
 };
-using SwapableCmdPoolMap = eastl::vector_map<CGPUQueueId, SwapableCmdPool>;
+using SwapableCmdPoolMap = skr::UMap<CGPUQueueId, SwapableCmdPool>;
 
 struct GPUUploadCmd
 {
@@ -76,7 +75,7 @@ struct GPUUploadCmd
     SKR_FORCEINLINE CGPUFenceId get_fence() const SKR_NOEXCEPT { return fence; }
     SKR_FORCEINLINE IOBatchId get_batch() const SKR_NOEXCEPT { return batch; }
 
-    eastl::fixed_vector<CGPUBufferId, 4> upload_buffers;
+    skr::InlineVector<CGPUBufferId, 4> upload_buffers;
 protected:
     IOBatchId batch = nullptr;        
     CGPUQueueId queue = nullptr;
@@ -111,10 +110,10 @@ protected:
     IRAMService* ram_service = nullptr;
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue processed_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    skr::vector<IOBatchId> ramloading_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    skr::vector<IOBatchId> to_upload_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::Vector<IOBatchId> ramloading_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::Vector<IOBatchId> to_upload_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SwapableCmdPoolMap cmdpools;
-    skr::vector<GPUUploadCmd> gpu_uploads[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::Vector<GPUUploadCmd> gpu_uploads[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
 
 } // namespace io
@@ -146,7 +145,7 @@ struct SKR_RUNTIME_API DStorageVRAMReader final
     
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue processed_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    eastl::vector<skr::SObjectPtr<DStorageEvent>> submitted[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::Vector<skr::SObjectPtr<DStorageEvent>> submitted[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     SmartPoolPtr<DStorageEvent> events[SKR_ASYNC_SERVICE_PRIORITY_COUNT] = { nullptr, nullptr, nullptr };
 };

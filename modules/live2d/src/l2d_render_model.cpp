@@ -3,7 +3,7 @@
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
 
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrBase/misc/debug.h" 
 #include "SkrRT/platform/vfs.h"
 
@@ -42,12 +42,12 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
     CGPUBufferId pos_buffer;
     CGPUBufferId uv_buffer;
 
-    eastl::vector<skr_io_future_t> png_futures;
-    eastl::vector<skr_io_future_t> texture_futures;
-    eastl::vector<skr::io::VRAMIOTextureId> io_textures;
+    skr::Vector<skr_io_future_t> png_futures;
+    skr::Vector<skr_io_future_t> texture_futures;
+    skr::Vector<skr::io::VRAMIOTextureId> io_textures;
 
-    eastl::vector<skr_io_future_t> buffer_futures;
-    eastl::vector<skr::io::VRAMIOBufferId> io_buffers;
+    skr::Vector<skr_io_future_t> buffer_futures;
+    skr::Vector<skr::io::VRAMIOBufferId> io_buffers;
 };
 
 struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
@@ -120,8 +120,8 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     skr::io::IRAMService* ram_service = nullptr;
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
-    eastl::vector<skr::ImageDecoderId> decoders;
-    eastl::vector<skr::BlobId> png_blobs;
+    skr::Vector<skr::ImageDecoderId> decoders;
+    skr::Vector<skr::BlobId> png_blobs;
 };
 
 bool skr_live2d_render_model_future_t::is_ready() const SKR_NOEXCEPT
@@ -149,16 +149,16 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     render_model->vram_service = vram_service;
     render_model->ram_service = ram_service;
     // request load textures
-    render_model->decoders.resize(texture_count);
-    render_model->textures.resize(texture_count);
-    render_model->texture_views.resize(texture_count);
-    render_model->io_textures.resize(texture_count);
-    render_model->texture_futures.resize(texture_count);
+    render_model->decoders.resize_default(texture_count);
+    render_model->textures.resize_default(texture_count);
+    render_model->texture_views.resize_default(texture_count);
+    render_model->io_textures.resize_default(texture_count);
+    render_model->texture_futures.resize_default(texture_count);
     [[maybe_unused]] const bool dstorage_available = vram_service->get_dstoage_available();
     if (!dstorage_available)
     {
-        render_model->png_blobs.resize(texture_count);
-        render_model->png_futures.resize(texture_count);
+        render_model->png_blobs.resize_default(texture_count);
+        render_model->png_futures.resize_default(texture_count);
     }
     // request load buffers
     const auto use_dynamic_buffer = render_model->use_dynamic_buffer;
@@ -177,7 +177,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         SkrZoneScopedN("CreateLive2DIndexBuffer");
 
         auto ib_desc = make_zeroed<CGPUBufferDescriptor>();
-        skr::string name = (const char8_t*)resource->model_setting->GetModelFileName();
+        skr::String name = (const char8_t*)resource->model_setting->GetModelFileName();
         auto ind_name = name;
         ind_name += u8"-i";
         ib_desc.name = ind_name.u8_str();
@@ -289,8 +289,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     }
     // request indices I/O
     {
-        render_model->buffer_futures.resize(drawable_count);
-        render_model->io_buffers.resize(drawable_count);
+        render_model->buffer_futures.resize_zeroed(drawable_count);
+        render_model->io_buffers.resize_zeroed(drawable_count);
         uint32_t index_buffer_cursor = 0;
         auto batch = vram_service->open_batch(drawable_count);
         for(uint32_t i = 0; i < (uint32_t)drawable_count; i++)
@@ -333,7 +333,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         SkrZoneScopedN("CreateLive2DVertexBuffer");
 
         auto vb_desc = make_zeroed<CGPUBufferDescriptor>();
-        skr::string name = (const char8_t*)resource->model_setting->GetModelFileName();
+        skr::String name = (const char8_t*)resource->model_setting->GetModelFileName();
         auto pos_name = name;
         pos_name += u8"-pos";
         vb_desc.name = pos_name.u8_str();
@@ -352,7 +352,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     }
     // record vertex buffer view
     {
-        render_model->vertex_buffer_views.resize(2 * drawable_count);
+        render_model->vertex_buffer_views.resize_zeroed(2 * drawable_count);
         uint32_t pos_buffer_cursor = 0;
         uint32_t uv_buffer_cursor = 0;
         for(uint32_t i = 0; i < (uint32_t)drawable_count; i++)
@@ -377,8 +377,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     }
     // record index buffer view
     {
-        render_model->primitive_commands.resize(drawable_count);
-        render_model->index_buffer_views.resize(drawable_count);
+        render_model->primitive_commands.resize_zeroed(drawable_count);
+        render_model->index_buffer_views.resize_zeroed(drawable_count);
         uint32_t index_buffer_cursor = 0;
         for(uint32_t i = 0; i < (uint32_t)drawable_count; i++)
         {
@@ -394,7 +394,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             }
             // Record static primitive commands
             render_model->primitive_commands[i].ibv = &render_model->index_buffer_views[i];
-            render_model->primitive_commands[i].vbvs = skr::span(&render_model->vertex_buffer_views[2 * i], 2);
+            render_model->primitive_commands[i].vbvs = {&render_model->vertex_buffer_views[2 * i], 2};
         }
     }
 }

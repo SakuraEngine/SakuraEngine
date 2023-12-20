@@ -10,11 +10,8 @@
 #include "storage.hpp"
 #include "type.hpp"
 
-#include <EASTL/string.h>
-#include <EASTL/sort.h>
-#include <EASTL/algorithm.h>
-#include <EASTL/numeric.h>
 #include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/stl_string.hpp>
 #include "SkrRT/misc/bits.hpp"
 #include "scheduler.hpp"
 #include "SkrRT/containers/span.hpp"
@@ -26,11 +23,11 @@
 
 namespace skr
 {
-inline void split(const eastl::string_view& s, eastl::vector<eastl::string_view>& tokens, const eastl::string_view& delimiters = " ")
+inline void split(const skr::stl_string_view& s, skr::stl_vector<skr::stl_string_view>& tokens, const skr::stl_string_view& delimiters = " ")
 {
-    eastl::string::size_type lastPos = s.find_first_not_of(delimiters, 0);
-    eastl::string::size_type pos = s.find_first_of(delimiters, lastPos);
-    while (eastl::string::npos != pos || eastl::string::npos != lastPos)
+    skr::stl_string::size_type lastPos = s.find_first_not_of(delimiters, 0);
+    skr::stl_string::size_type pos = s.find_first_of(delimiters, lastPos);
+    while (skr::stl_string::npos != pos || skr::stl_string::npos != lastPos)
     {
         auto substr = s.substr(lastPos, pos - lastPos);
         tokens.push_back(substr); // use emplace_back after C++11
@@ -39,18 +36,18 @@ inline void split(const eastl::string_view& s, eastl::vector<eastl::string_view>
     }
 }
 
-inline bool ends_with(eastl::string_view const& value, eastl::string_view const& ending)
+inline bool ends_with(skr::stl_string_view const& value, skr::stl_string_view const& ending)
 {
     if (ending.size() > value.size()) return false;
-    return eastl::equal(ending.rbegin(), ending.rend(), value.rbegin());
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
-inline bool starts_with(eastl::string_view const& value, eastl::string_view const& starting)
+inline bool starts_with(skr::stl_string_view const& value, skr::stl_string_view const& starting)
 {
     if (starting.size() > value.size()) return false;
-    return eastl::equal(starting.begin(), starting.end(), value.begin());
+    return std::equal(starting.begin(), starting.end(), value.begin());
 }
-} // namespace eastl
+} 
 
 namespace dual
 {
@@ -185,11 +182,11 @@ dual_query_t* dual_storage_t::make_query(const dual_filter_t& filter, const dual
 dual_query_t* dual_storage_t::make_query(const char* inDesc)
 {
     using namespace dual;
-    skr::string desc = skr::string::from_utf8((ochar8_t*)inDesc);
+    skr::String desc = skr::String::from_utf8((ochar8_t*)inDesc);
     using namespace skr;
     desc.replace(u8""_txtv, u8" "_txtv);
     desc.replace(u8""_txtv, u8"\r"_txtv);
-    ostr::sequence<skr::string_view> parts;
+    ostr::sequence<skr::StringView> parts;
     auto spliter = u8","_txtv;
     desc.split(spliter, parts, true);
     // todo: errorMsg? global error code?
@@ -426,7 +423,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
     // parse finished, save result into query
     auto result = arena.allocate<dual_query_t>();
 #define FILTER_PART(NAME)                \
-    eastl::sort(NAME.begin(), NAME.end()); \
+    std::sort(NAME.begin(), NAME.end()); \
     result->filter.NAME = dual_type_set_t{ NAME.data(), (SIndex)NAME.size() };
     FILTER_PART(all);
     FILTER_PART(none);
@@ -450,7 +447,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
 
 void dual_storage_t::destroy_query(dual_query_t* query)
 {
-    auto iter = eastl::find(queries.begin(), queries.end(), query);
+    auto iter = std::find(queries.begin(), queries.end(), query);
     SKR_ASSERT(iter != queries.end());
     query->~dual_query_t();
     dual_free(query);
@@ -477,7 +474,7 @@ void dual_storage_t::build_queries()
     }
     phaseCount = 0;
     queryBuildArena.reset();
-    eastl::vector<phase_entry_builder> entries;
+    skr::stl_vector<phase_entry_builder> entries;
     for (auto query : queries)
     {
         auto parameters = query->parameters;

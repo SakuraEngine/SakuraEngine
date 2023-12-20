@@ -35,7 +35,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory {
     STextureFactoryImpl(const STextureFactory::Root& root)
         : root(root)
     {
-        dstorage_root            = skr::string::from_utf8(root.dstorage_root);
+        dstorage_root            = skr::String::from_utf8(root.dstorage_root);
         this->root.dstorage_root = dstorage_root.u8_str();
     }
     ~STextureFactoryImpl() noexcept = default;
@@ -104,10 +104,10 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory {
         return ".raw";
     }
 
-    skr::string                                                       dstorage_root;
+    skr::String                                                       dstorage_root;
     Root                                                              root;
-    skr::flat_hash_map<skr_texture_resource_id, InstallType>          mInstallTypes;
-    skr::flat_hash_map<skr_texture_resource_id, SPtr<TextureRequest>> mTextureRequests;
+    skr::FlatHashMap<skr_texture_resource_id, InstallType>          mInstallTypes;
+    skr::FlatHashMap<skr_texture_resource_id, SPtr<TextureRequest>> mTextureRequests;
 };
 
 STextureFactory* STextureFactory::Create(const Root& root)

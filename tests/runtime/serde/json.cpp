@@ -7,7 +7,7 @@
 struct JSONSerdeTests
 {
 protected:
-    eastl::vector<uint8_t> buffer;
+    skr::Vector<uint8_t> buffer;
     skr_json_writer_t writer{3};
     simdjson::ondemand::parser parser;
     JSONSerdeTests()
@@ -46,12 +46,12 @@ TEST_CASE_METHOD(JSONSerdeTests, "structure")
 {
     struct Test
     {
-        skr::vector<uint64_t> arr;
-        skr::string str;
+        skr::Vector<uint64_t> arr;
+        skr::String str;
     };
     Test value;
-    value.arr.push_back(0x12345678);
-    value.arr.push_back(0x87654321);
+    value.arr.add(0x12345678);
+    value.arr.add(0x87654321);
     value.str = u8"test";
     writer.StartObject();
     writer.Key(u8"arr");
@@ -64,12 +64,12 @@ TEST_CASE_METHOD(JSONSerdeTests, "structure")
     simdjson::ondemand::document doc = parser.iterate(str);
     simdjson::ondemand::object obj = doc.get_object();
     simdjson::ondemand::value field = obj["arr"].value_unsafe();
-    skr::vector<uint64_t> readArr;
+    skr::Vector<uint64_t> readArr;
     skr::json::Read(std::move(field), readArr);
     EXPECT_EQ(value.arr[0], readArr[0]);
     EXPECT_EQ(value.arr[1], readArr[1]);
     field = obj["str"].value_unsafe();
-    skr::string readStr;
+    skr::String readStr;
     skr::json::Read(std::move(field), readStr);
     EXPECT_EQ(value.str, readStr);
 }

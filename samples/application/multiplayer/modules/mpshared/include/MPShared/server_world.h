@@ -11,11 +11,11 @@ struct MP_SHARED_API MPServerWorld : MPGameWorld
 {
     MPServerWorld();
     ~MPServerWorld();
-    skr::vector<HSteamNetConnection> connections;
-    skr::vector<MPWorldDeltaViewBuilder> worldDelta;
+    skr::Vector<HSteamNetConnection> connections;
+    skr::Vector<MPWorldDeltaViewBuilder> worldDelta;
     uint64_t gameFrame;
     MPInputFrame queuedInputs[128];
-    skr::vector<std::vector<uint32_t>> playerMap;
+    skr::Vector<std::vector<uint32_t>> playerMap;
     SHiresTimer timer;
     double lastGameTime;
     int playerId = 0;
@@ -34,7 +34,7 @@ struct MP_SHARED_API MPServerWorld : MPGameWorld
     void GenerateWorldDelta();
     void SendWorldDelta();
     void LogNetworkStatics();
-    skr::vector<uint8_t> SerializeWorldDelta(const MPWorldDeltaViewBuilder& deltaBuilder);
+    skr::Vector<uint8_t> SerializeWorldDelta(const MPWorldDeltaViewBuilder& deltaBuilder);
     void AccumulateInput(uint32_t connectionId, const MPInputFrame& inputs);
 
     template<class T, class F>

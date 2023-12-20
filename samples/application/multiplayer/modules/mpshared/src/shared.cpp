@@ -94,7 +94,7 @@ void MPGameWorld::ClearDeadBall()
 {
     if(authoritative)
     {
-        skr::vector<dual_entity_t> ballsToKill;
+        skr::Vector<dual_entity_t> ballsToKill;
         ballsToKill.reserve(16);
         auto collectBallsToKill = [&](dual_chunk_view_t* view)
         {
@@ -107,7 +107,7 @@ void MPGameWorld::ClearDeadBall()
                 balls[i].lifeTime -= deltaTime;
                 if(balls[i].lifeTime <= 0)
                 {
-                    ballsToKill.push_back(entities[i]);
+                    ballsToKill.add(entities[i]);
                 }
             }
         };
@@ -124,7 +124,7 @@ void MPGameWorld::ClearDeadZombie()
 {
     if(authoritative)
     {
-        skr::vector<dual_entity_t> zombiesToKill;
+        skr::Vector<dual_entity_t> zombiesToKill;
         zombiesToKill.reserve(16);
         auto collectBallsToKill = [&](dual_chunk_view_t* view)
         {
@@ -137,7 +137,7 @@ void MPGameWorld::ClearDeadZombie()
                 SKR_ASSERT(v.chunk == view->chunk && v.start == i + view->start);
                 if(health[i].health <= 0)
                 {
-                    zombiesToKill.push_back(entities[i]);
+                    zombiesToKill.add(entities[i]);
                 }
             }
         };
