@@ -2,7 +2,7 @@
 #include <chrono> // IWYU pragma: export
 #include "cgpu/api.h" // IWYU pragma: export
 
-#include "SkrRT/platform/memory.h" // IWYU pragma: export
+#include "SkrMemory/memory.h" // IWYU pragma: export
 #include "SkrBase/misc/debug.h"  // IWYU pragma: export
 #include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
 #include "SkrRT/misc/make_zeroed.hpp" // IWYU pragma: export
@@ -20,7 +20,8 @@
 #include "SkrRT/serde/json/reader.h" // IWYU pragma: export
 #include "SkrRT/serde/json/writer.h" // IWYU pragma: export
 
-#include <EASTL/string.h> // IWYU pragma: export
+#include <SkrRT/containers/stl_vector.hpp> // IWYU pragma: export
+#include <SkrRT/containers/stl_string.hpp> // IWYU pragma: export
 
 #ifdef _WIN32
     #ifndef WIN32_LEAN_AND_MEAN

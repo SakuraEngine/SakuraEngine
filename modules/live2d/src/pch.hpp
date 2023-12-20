@@ -5,13 +5,10 @@
 #include <new.h> // IWYU pragma: export
 #endif
 
-#include <EASTL/fixed_vector.h> // IWYU pragma: export
-#include <EASTL/fixed_string.h> // IWYU pragma: export
-
 #include "SkrBase/misc/debug.h"  // IWYU pragma: export
 #include "SkrRT/platform/guid.hpp" // IWYU pragma: export
 #include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
-#include "SkrRT/platform/memory.h" // IWYU pragma: export
+#include "SkrMemory/memory.h" // IWYU pragma: export
 #include "SkrRT/platform/vfs.h" // IWYU pragma: export
 #include "SkrRT/platform/time.h" // IWYU pragma: export
 #include "SkrRT/platform/guid.hpp" // IWYU pragma: export
@@ -26,11 +23,15 @@
 #include "SkrRT/misc/log.h" // IWYU pragma: export
 #include "SkrRT/misc/log.hpp" // IWYU pragma: export
 
-#include <SkrRT/containers/concurrent_queue.h> // IWYU pragma: export
+#include <SkrRT/containers/concurrent_queue.hpp> // IWYU pragma: export
 #include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
 #include <SkrRT/containers/string.hpp> // IWYU pragma: export
 #include <SkrRT/containers/vector.hpp> // IWYU pragma: export
 #include <SkrRT/containers/hashmap.hpp> // IWYU pragma: export
+
+#include <SkrRT/containers/stl_vector.hpp> // IWYU pragma: export
+#include <SkrRT/containers/stl_deque.hpp> // IWYU pragma: export
+#include <SkrRT/containers/stl_string.hpp> // IWYU pragma: export
 
 #include "SkrRenderGraph/frontend/render_graph.hpp" // IWYU pragma: export
 

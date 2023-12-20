@@ -1,6 +1,6 @@
 #pragma once
 #include "cgpu/api.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,20 +84,20 @@ SKR_FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t
 template <typename T, typename... Args>
 T* cgpu_new_placed(void* memory, Args&&... args)
 {
-    return new (memory) T(eastl::forward<Args>(args)...);
+    return new (memory) T(std::forward<Args>(args)...);
 }
 
 template <typename T, typename... Args>
 T* cgpu_new(Args&&... args)
 {
-    return SkrNewZeroed<T>(eastl::forward<Args>(args)...);
+    return SkrNewZeroed<T>(std::forward<Args>(args)...);
 }
 
 template <typename T, typename... Args>
 T* cgpu_new_sized(uint64_t size, Args&&... args)
 {
     void* ptr = cgpu_calloc_aligned(1, size, alignof(T));
-    return cgpu_new_placed<T>(ptr, eastl::forward<Args>(args)...);
+    return cgpu_new_placed<T>(ptr, std::forward<Args>(args)...);
 }
 
 template <typename T>

@@ -59,13 +59,7 @@ void RenderGridPaper::paint(NotNull<PaintingContext*> context, Offsetf offset) S
 // hit test
 bool RenderGridPaper::hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
 {
-    return _default_hit_test(
-    result,
-    local_position,
-    [](HitTestResult* result, Offsetf local_position) {
-        return true; // always accept self
-    },
-    nullptr);
+    return size().contains(local_position);
 }
 
 } // namespace skr::gui

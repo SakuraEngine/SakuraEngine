@@ -4,7 +4,6 @@
 #include "SkrRT/platform/thread.h"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/containers/vector.hpp"
-#include <EASTL/fixed_vector.h>
 
 namespace skr {
 namespace io {
@@ -22,7 +21,7 @@ public:
     {
         skr_rw_mutex_acquire_r(&rw_lock);
         SKR_DEFER( { skr_rw_mutex_release_r(&rw_lock); });
-        return requests;
+        return {requests.data(), requests.size()};
     }
 
     void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT { priority = pri; }
@@ -36,22 +35,20 @@ protected:
     {
         skr_rw_mutex_acquire_w(&rw_lock);
         SKR_DEFER( { skr_rw_mutex_release_w(&rw_lock); });
-        requests.push_back(rq);
+        requests.add(rq);
     }
 
     void removeCancelledRequest(IORequestId rq) SKR_NOEXCEPT
     {
         skr_rw_mutex_acquire_w(&rw_lock);
         SKR_DEFER( { skr_rw_mutex_release_w(&rw_lock); });
-        auto fnd = eastl::remove_if(
-            requests.begin(), requests.end(), [rq](IORequestId r) { return r == rq; });
-        requests.erase(fnd, requests.end());
+        requests.remove_all_if([rq](IORequestId r) { return r == rq; });
     }
 
 private:
     SkrAsyncServicePriority priority;
     SRWMutex rw_lock;
-    eastl::fixed_vector<IORequestId, 4> requests;
+    skr::Vector<IORequestId> requests;
 
 public:
     SInterfaceDeleter custom_deleter() const 
@@ -83,7 +80,7 @@ protected:
 
 using BatchPtr = skr::SObjectPtr<IIOBatch>;
 using IOBatchQueue = IOConcurrentQueue<BatchPtr>;  
-using IOBatchArray = skr::vector<BatchPtr>;
+using IOBatchArray = skr::Vector<BatchPtr>;
 
 } // namespace io
 } // namespace skr

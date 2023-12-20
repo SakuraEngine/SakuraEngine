@@ -8,9 +8,6 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
-#include <EASTL/vector.h>
-#include <EASTL/fixed_vector.h>
-
 #include "SkrProfile/profile.h"
 
 struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectProcessor {
@@ -122,7 +119,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
                         draw_context.storage = storage;
 
                         auto packet = processor->produce_draw_packets(&draw_context);
-                        draw_packets[pass->identity()].emplace_back(packet);
+                        draw_packets[pass->identity()].add(packet);
                     }
                 }
             }
@@ -156,7 +153,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
                     {
                         SkrZoneScopedN("PassExecute");
 
-                        pass->execute(&pass_context, pass_draw_packets);
+                        pass->execute(&pass_context, {pass_draw_packets.data(), (uint32_t)pass_draw_packets.size()});
                     }
 
                     pass->post_update(&pass_context);
@@ -176,17 +173,17 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
     SViewportManager* viewport_manager = nullptr;
 
     template<typename T>
-    using FlatStringMap = skr::flat_hash_map<skr::string, T, skr::hash<skr::string>>;
+    using FlatStringMap = skr::FlatHashMap<skr::String, T, skr::Hash<skr::String>>;
 
-    eastl::vector<IPrimitiveRenderPass*> passes;
+    skr::Vector<IPrimitiveRenderPass*> passes;
     FlatStringMap<IPrimitiveRenderPass*> passes_map;
 
-    eastl::vector<IRenderEffectProcessor*> processors;
+    skr::Vector<IRenderEffectProcessor*> processors;
     FlatStringMap<IRenderEffectProcessor*> processors_map;
 
-    eastl::vector<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
+    skr::Vector<RenderEffectProcessorVtblProxy*> processor_vtbl_proxies;
 protected:
-    FlatStringMap<eastl::vector<skr_primitive_draw_packet_t>> draw_packets;
+    FlatStringMap<skr::Vector<skr_primitive_draw_packet_t>> draw_packets;
 
     SRenderDevice* render_device = nullptr;
     dual_storage_t* storage = nullptr;
@@ -216,7 +213,7 @@ void skr_renderer_register_render_pass(SRendererId r, skr_render_effect_name_t n
         return;
     }
     renderer->passes_map.emplace(name, pass);
-    renderer->passes.emplace_back(pass);
+    renderer->passes.add(pass);
 }
 
 void skr_renderer_remove_render_pass(SRendererId r, skr_render_pass_name_t name)
@@ -225,7 +222,9 @@ void skr_renderer_remove_render_pass(SRendererId r, skr_render_pass_name_t name)
     if (auto&& pass = renderer->passes_map.find(name); pass != renderer->passes_map.end())
     {
         renderer->passes_map.erase(pass);
-        eastl::remove_if(renderer->passes.begin(), renderer->passes.end(), [pass](auto&& p) { return p == pass->second; });
+        renderer->passes.remove_all_if(
+            [pass](auto&& p) { return p == pass->second; }
+        );
     }
 }
 
@@ -239,7 +238,7 @@ void skr_renderer_register_render_effect(SRendererId r, skr_render_effect_name_t
         return;
     }
     renderer->processors_map.emplace(name, processor);
-    renderer->processors.emplace_back(processor);
+    renderer->processors.add(processor);
 
     processor->on_register(r, storage);
 }
@@ -255,8 +254,8 @@ void skr_renderer_register_render_effect_vtbl(SRendererId r, skr_render_effect_n
     }
     auto proxy = SkrNew<RenderEffectProcessorVtblProxy>(*processor);
     renderer->processors_map.emplace(name, proxy);
-    renderer->processor_vtbl_proxies.emplace_back(proxy);
-    renderer->processors.emplace_back(static_cast<IRenderEffectProcessor*>(proxy));
+    renderer->processor_vtbl_proxies.add(proxy);
+    renderer->processors.add(static_cast<IRenderEffectProcessor*>(proxy));
 
     processor->on_register(r, storage);
 }
@@ -269,7 +268,9 @@ void skr_renderer_remove_render_effect(SRendererId r, skr_render_effect_name_t n
     {
         _->second->on_unregister(r, storage);
         renderer->processors_map.erase(_);
-        eastl::remove_if(renderer->processors.begin(), renderer->processors.end(), [_](auto&& p) { return p == _->second; });
+        renderer->processors.remove_all_if(
+            [_](auto&& p) { return p == _->second; }
+        );
     }
 }
 
@@ -335,7 +336,8 @@ void skr_render_effect_detach(SRendererId r, dual_chunk_view_t* cv, skr_render_e
 {
     if (cv && cv->count)
     {
-        eastl::fixed_vector<dual_entity_t, 16> render_effects;
+        static thread_local skr::Vector<dual_entity_t> render_effects;
+        render_effects.clear();
         //render_effects.reserve(cv->count);
         auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
         auto entities = dualV_get_entities(cv);
@@ -349,7 +351,7 @@ void skr_render_effect_detach(SRendererId r, dual_chunk_view_t* cv, skr_render_e
                 {
                     if (strcmp((const char*)iter->name, (const char*)effect_name) == 0)
                     {
-                        render_effects.emplace_back(iter->effect_entity);
+                        render_effects.add(iter->effect_entity);
                         features.erase(iter);
                         found = true;
                         break;
@@ -377,7 +379,7 @@ void skr_render_effect_add_delta(SRendererId r, dual_chunk_view_t* cv,
     {
         auto storage = dualC_get_storage(cv->chunk);
         SKR_ASSERT(storage && "No dual storage");
-        eastl::vector<dual_entity_t> render_effects;
+        skr::Vector<dual_entity_t> render_effects;
         render_effects.reserve(cv->count);
         // batch game ents to collect render effects
         auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
@@ -390,7 +392,7 @@ void skr_render_effect_add_delta(SRendererId r, dual_chunk_view_t* cv,
                 {
                     if (strcmp((const char*)_.name, (const char*)effect_name) == 0)
                     {
-                        render_effects.emplace_back(_.effect_entity);
+                        render_effects.add(_.effect_entity);
                     }
                 }
             }
@@ -409,7 +411,7 @@ void skr_render_effect_access(SRendererId r, dual_chunk_view_t* cv, skr_render_e
     {
         auto storage = dualC_get_storage(cv->chunk);
         SKR_ASSERT(storage && "No dual storage");
-        eastl::vector<dual_entity_t> batch_render_effects;
+        skr::Vector<dual_entity_t> batch_render_effects;
         batch_render_effects.reserve(cv->count);
         // batch game ents to collect render effects
         auto effects_chunk = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
@@ -422,7 +424,7 @@ void skr_render_effect_access(SRendererId r, dual_chunk_view_t* cv, skr_render_e
                 {
                     if (strcmp((const char*)effect.name, (const char*)effect_name) == 0)
                     {
-                        batch_render_effects.emplace_back(effect.effect_entity);
+                        batch_render_effects.add(effect.effect_entity);
                     }
                 }
             }

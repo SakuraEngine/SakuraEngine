@@ -1,7 +1,9 @@
-#include "SkrRT/platform/guid.hpp"
+#include "cgltf/cgltf.h"
 #include "SkrBase/misc/defer.hpp"
+#include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/parallel_for.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/json_utils.hpp"
@@ -27,7 +29,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr_io_ram_service_t* ioService, SCo
 
 void skd::asset::SGltfMeshImporter::Destroy(void* resource)
 {
-    cgltf_free((cgltf_data*)resource);
+    ::cgltf_free((cgltf_data*)resource);
 }
 
 bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
@@ -47,7 +49,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     }
     SKR_DEFER({ ctx->Destroy(gltf_data); });
     skr_mesh_resource_t mesh;
-    eastl::vector<eastl::vector<uint8_t>> blobs;
+    skr::Vector<skr::Vector<uint8_t>> blobs;
     auto importer = static_cast<SGltfMeshImporter*>(ctx->GetImporter());
     mesh.install_to_ram = importer->install_to_ram;
     mesh.install_to_vram = importer->install_to_vram;
@@ -85,7 +87,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
         const auto index_offset = prim.index_buffer.index_offset;
         const auto index_count = prim.index_buffer.index_count;
         const auto vertex_count = prim.vertex_count;
-        eastl::vector<uint64_t> optimized_indices;
+        skr::stl_vector<uint64_t> optimized_indices;
         optimized_indices.resize(index_count);
         uint64_t* indices_ptr = optimized_indices.data();
         for (size_t i = 0; i < index_count; i++)
@@ -114,7 +116,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
             {
                 auto& vertices_blob = blobs[vb.buffer_index];
                 const auto vertex_stride = vb.stride;(void)vertex_stride;
-                eastl::vector<skr_float3_t> vertices;
+                skr::stl_vector<skr_float3_t> vertices;
                 vertices.resize(vertex_count);
                 for (size_t i = 0; i < vertex_count; i++)
                 {
@@ -149,7 +151,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     for (const auto material : importer->materials)
     {
         ctx->AddRuntimeDependency(material);
-        mesh.materials.emplace_back(material);
+        mesh.materials.add(material);
     }
 
     //----- write resource object

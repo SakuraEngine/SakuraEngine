@@ -54,7 +54,7 @@ bool skr::SharedLibrary::unload()
 
 bool skr::SharedLibrary::hasSymbol(const char8_t* symbolName)
 {
-    skr::string error = _lastError;
+    skr::String error = _lastError;
     getImpl(symbolName);
     bool has = _lastError.is_empty();
     _lastError = error;
@@ -71,7 +71,7 @@ bool skr::SharedLibrary::hasError() const
     return !_lastError.is_empty();
 }
 
-skr::string skr::SharedLibrary::errorString() const
+skr::String skr::SharedLibrary::errorString() const
 {
     return _lastError;
 }
@@ -124,7 +124,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
     }
 #elif SKR_PLAT_WINDOWS // Windows implementation
     // Return a string explaining the last error
-    skr::string skr::SharedLibrary::getWindowsError()
+    skr::String skr::SharedLibrary::getWindowsError()
     {
         auto tchar_to_utf8 = +[](const TCHAR* str, char8_t* str8)
         {
@@ -149,9 +149,9 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
             256 - 1,
             nullptr);
             tchar_to_utf8(buffer, u8str);
-            return skr::string(u8str);
+            return skr::String(u8str);
         }
-        return skr::string();
+        return skr::String();
     }
 
     bool skr::SharedLibrary::loadImpl(const char8_t* path)

@@ -1,45 +1,42 @@
 #include <SkrRT/containers/hashmap.hpp>
+#include <SkrRT/containers/uset.hpp>
+#include <SkrRT/containers/string.hpp>
 #include "option_utils.hpp"
 
-#include <EASTL/set.h>
-#include <EASTL/sort.h>
-#include <EASTL/string.h>
-
-bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
+bool skr_shader_options_resource_t::flatten_options(skr::Vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
 {
-    eastl::set<eastl::u8string>                                                           keys;
-    skr::flat_hash_map<skr::string, skr_shader_option_template_t, skr::hash<skr::string>> kvs;
+    skr::USet<skr::String>                                                           keys;
+    skr::FlatHashMap<skr::String, skr_shader_option_template_t, skr::Hash<skr::String>> kvs;
     // collect all keys & ensure unique
     for (auto& src : srcs)
     {
         for (auto& opt : src->options)
         {
-            auto&& found = keys.find(opt.key.u8_str());
-            if (found != keys.end())
+            if (auto found = keys.find(opt.key))
             {
                 dst.empty();
                 return false;
             }
-            keys.insert(opt.key.u8_str());
+            keys.find_or_add(opt.key);
             kvs.insert({ opt.key, opt });
         }
     }
     dst.reserve(keys.size());
     for (auto& key : keys)
     {
-        dst.push_back(kvs[key.c_str()]);
+        dst.add(kvs[key]);
     }
     // sort result by key
-    eastl::stable_sort(dst.begin(), dst.end(),
-                       [](const skr_shader_option_template_t& a, const skr_shader_option_template_t& b) {
-                           return eastl::u8string(a.key.c_str()) < eastl::u8string(b.key.c_str());
-                       });
+    std::stable_sort(dst.begin(), dst.end(),
+        [](const skr_shader_option_template_t& a, const skr_shader_option_template_t& b) {
+            return skr::Hash<skr::String>()(a.key) < skr::Hash<skr::String>()(b.key);
+        });
     return true;
 }
 
 skr_stable_shader_hash_t skr_shader_option_instance_t::calculate_stable_hash(skr::span<skr_shader_option_instance_t> ordered_options)
 {
-    skr::string signatureString;
+    skr::String signatureString;
     option_utils::stringfy(signatureString, ordered_options);
     return skr_stable_shader_hash_t::hash_string(signatureString.c_str(), (uint32_t)signatureString.size());
 }

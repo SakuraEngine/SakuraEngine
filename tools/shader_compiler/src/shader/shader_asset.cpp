@@ -1,12 +1,12 @@
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/parallel_for.hpp"
 #include "SkrRT/misc/cartesian_product.hpp"
+#include "SkrRT/serde/json/writer.h"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #include "SkrShaderCompiler/shader_compiler.hpp"
-
-#include <EASTL/array.h>
 
 #include <errno.h>
 #include <stdio.h>
@@ -42,11 +42,11 @@ void SShaderImporter::Destroy(void* resource)
 }
 
 // [x: "on", y: "a", z: "1"]
-using unique_option_variant_t = eastl::vector<skr_shader_option_instance_t>;
+using unique_option_variant_t = skr::Vector<skr_shader_option_instance_t>;
 // [ [z: "on", y: "a", z: "1"], [x: "on", y: "a", z: "2"] ...]
-using option_variant_seq_t = eastl::vector<unique_option_variant_t>;
-using variant_seq_hashe_seq_t = eastl::vector<skr_stable_shader_hash_t>;
-void cartesian_variants(skr::span<skr_shader_options_resource_t*> options, eastl::vector<skr_shader_option_template_t>& out_flatten_options,
+using option_variant_seq_t = skr::Vector<unique_option_variant_t>;
+using variant_seq_hashe_seq_t = skr::Vector<skr_stable_shader_hash_t>;
+void cartesian_variants(skr::span<skr_shader_options_resource_t*> options, skr::Vector<skr_shader_option_template_t>& out_flatten_options,
 option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
 {
     // flat and well sorted
@@ -54,8 +54,8 @@ option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
     skr_shader_options_resource_t::flatten_options(out_flatten_options, options);
 
     // [ ["on", "off"], ["a", "b", "c"], ["1", "2"] ]
-    eastl::vector<eastl::vector<skr::string>> selection_seqs = {};
-    selection_seqs.resize(out_flatten_options.size());
+    skr::Vector<skr::Vector<skr::String>> selection_seqs = {};
+    selection_seqs.resize_default(out_flatten_options.size());
     for (size_t i = 0u; i < out_flatten_options.size(); ++i)
     {
         selection_seqs[i] = out_flatten_options[i].value_selections;
@@ -67,28 +67,28 @@ option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
     if (!selection_seqs.empty())
     {
         // [ ["on", "a", "1"], ["on", "a", "2"] ...]
-        skr::cartesian_product<skr::string> cartesian(selection_seqs);
+        skr::cartesian_product<skr::String> cartesian(selection_seqs);
         while (cartesian.has_next())
         {
-            eastl::vector<skr_shader_option_instance_t> option_seq = {};
+            skr::Vector<skr_shader_option_instance_t> option_seq = {};
             const auto sequence = cartesian.next();
-            option_seq.resize(sequence.size());
+            option_seq.resize_default(sequence.size());
             SKR_ASSERT(sequence.size() == out_flatten_options.size());
             for (size_t idx = 0u; idx < option_seq.size(); ++idx)
             {
                 option_seq[idx].key = out_flatten_options[idx].key;
                 option_seq[idx].value = sequence[idx];
             }
-            out_variants.emplace_back(option_seq);
+            out_variants.add(option_seq);
             const auto stable_hash =
             skr_shader_option_instance_t::calculate_stable_hash({ option_seq.data(), option_seq.size() });
-            out_stable_hahses.emplace_back(stable_hash);
+            out_stable_hahses.add(stable_hash);
         }
     }
     else
     {
-        out_stable_hahses.emplace_back(0u, 0u, 0u, 0u); // emplace an zero hash
-        out_variants.emplace_back();                    // emplace an empty option sequence
+        out_stable_hahses.add({0u, 0u, 0u, 0u}); // emplace an zero hash
+        out_variants.add_default();                    // emplace an empty option sequence
     }
 }
 
@@ -108,43 +108,43 @@ bool SShaderCooker::Cook(SCookContext* ctx)
     auto source_code = ctx->Import<ShaderSourceCode>();
     SKR_DEFER({ ctx->Destroy(source_code); });
     // Calculate all macro combines (shader variants)
-    eastl::vector<skr_shader_options_resource_t*> switch_assets = {};
-    eastl::vector<skr_shader_options_resource_t*> option_assets = {};
+    skr::Vector<skr_shader_options_resource_t*> switch_assets = {};
+    skr::Vector<skr_shader_options_resource_t*> option_assets = {};
     auto importer = static_cast<SShaderImporter*>(ctx->GetImporter());
     for (auto switch_asset : importer->switch_assets)
     {
         const auto guid = switch_asset.get_guid();
         auto idx = ctx->AddStaticDependency(guid, true);
         auto opts_resource = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
-        switch_assets.emplace_back(opts_resource);
+        switch_assets.add(opts_resource);
     }
     for (auto option_asset : importer->option_assets)
     {
         const auto guid = option_asset.get_guid();
         auto idx = ctx->AddStaticDependency(guid, true);
         auto opts_resource = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
-        option_assets.emplace_back(opts_resource);
+        option_assets.add(opts_resource);
     }
 
-    eastl::vector<skr_shader_option_template_t> flat_static_options = {};
+    skr::Vector<skr_shader_option_template_t> flat_static_options = {};
     option_variant_seq_t static_variants = {};
     variant_seq_hashe_seq_t static_stable_hashes = {};
     cartesian_variants(switch_assets, flat_static_options, static_variants, static_stable_hashes);
 
-    eastl::vector<skr_shader_option_template_t> flat_dynamic_options = {};
+    skr::Vector<skr_shader_option_template_t> flat_dynamic_options = {};
     option_variant_seq_t dynamic_variants = {};
     variant_seq_hashe_seq_t dynamic_stable_hashes = {};
     cartesian_variants(option_assets, flat_dynamic_options, dynamic_variants, dynamic_stable_hashes);
 
     // Enumerate destination bytecode format
     // TODO: REFACTOR THIS
-    eastl::vector<ECGPUShaderBytecodeType> byteCodeFormats = {
+    skr::Vector<ECGPUShaderBytecodeType> byteCodeFormats = {
         ECGPUShaderBytecodeType::CGPU_SHADER_BYTECODE_TYPE_DXIL,
         ECGPUShaderBytecodeType::CGPU_SHADER_BYTECODE_TYPE_SPIRV
     };
     // begin compile
     // auto system = skd::asset::GetCookSystem();
-    eastl::vector<skr_multi_shader_resource_t> allOutResources(static_variants.size());
+    skr::Vector<skr_multi_shader_resource_t> allOutResources(static_variants.size());
     // foreach variants
     {
     SkrZoneScopedN("Permutations::Compile");
@@ -158,7 +158,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         for (const auto dyn_hash : dynamic_stable_hashes)
         {
             outResource.option_variants[dyn_hash] = {};
-            outResource.option_variants[dyn_hash].resize(byteCodeFormats.size());
+            outResource.option_variants[dyn_hash].resize_default(byteCodeFormats.size());
         }
         SkrZoneScopedN("StaticPermutations::Compile");
 
@@ -288,22 +288,22 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         // add static seq
         for (auto&& static_switch : flat_static_options)
         {
-            switches_blob.types.emplace_back(static_switch.type);
-            switches_blob.keys.emplace_back(static_switch.key);
-            auto& values = switches_blob.values.emplace_back();
+            switches_blob.types.add(static_switch.type);
+            switches_blob.keys.add(static_switch.key);
+            auto& values = *switches_blob.values.add_default();
             for (const auto& value : static_switch.value_selections)
             {
-                values.emplace_back(value);
+                values.add(value);
             }
         }
         for (auto&& option_switch : flat_dynamic_options)
         {
-            options_blob.types.emplace_back(option_switch.type);
-            options_blob.keys.emplace_back(option_switch.key);
-            auto& values = options_blob.values.emplace_back();
+            options_blob.types.add(option_switch.type);
+            options_blob.keys.add(option_switch.key);
+            auto& values = *options_blob.values.add_default();
             for (const auto& value : option_switch.value_selections)
             {
-                values.emplace_back(value);
+                values.add(value);
             }
         }
         resource.switch_arena = skr::binary::make_arena<skr_shader_option_sequence_t>(resource.switch_sequence, switches_blob);

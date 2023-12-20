@@ -2,7 +2,7 @@
 #include "backend/text_server/vector2.h"
 #include "backend/text_server/rid.h"
 #include "backend/text_server/rid_owner.h"
-#include "backend/text_server/containers.h"
+#include "backend/text_server/godot_containers.hpp"
 #include "SkrGui/backend/resource/resource.hpp" // TODO. move to cpp
 #include "SkrGui/backend/embed_services.hpp"    // TODO. move to cpp
 
@@ -49,7 +49,7 @@ struct FontAtlasImage {
     inline uint8_t* resize_for_write(size_t size) SKR_NOEXCEPT
     {
         mark_dirty();
-        _data.resize(size);
+        _data.resize_default(size);
         return _data.data();
     }
     inline PackedByteArray& data_for_write() SKR_NOEXCEPT
@@ -60,7 +60,7 @@ struct FontAtlasImage {
     inline void set_data(Span<const uint8_t> data)
     {
         mark_dirty();
-        _data.assign(data.begin(), data.end());
+        _data.assign(data.data(), data.size());
     }
     inline void   mark_dirty() SKR_NOEXCEPT { _dirty = true; }
     void          flush_update() SKR_NOEXCEPT;

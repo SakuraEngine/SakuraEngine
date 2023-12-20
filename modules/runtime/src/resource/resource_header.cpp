@@ -76,7 +76,7 @@ uint32_t skr_resource_record_t::AddReference(uint64_t requester, ESkrRequesterTy
     if (requesterType == SKR_REQUESTER_ENTITY)
     {
         entityRefCount++;
-        auto iter = eastl::find_if(entityReferences.begin(), entityReferences.end(), [&](const entity_requester& id) { return id.storage == (void*)requester; });
+        auto iter = std::find_if(entityReferences.begin(), entityReferences.end(), [&](const entity_requester& id) { return id.storage == (void*)requester; });
         if (iter == entityReferences.end())
         {
             auto id = requesterCounter++;
@@ -92,7 +92,7 @@ uint32_t skr_resource_record_t::AddReference(uint64_t requester, ESkrRequesterTy
     else if (requesterType == SKR_REQUESTER_SCRIPT)
     {
         scriptRefCount++;
-        auto iter = eastl::find_if(scriptReferences.begin(), scriptReferences.end(), [&](const script_requester& id) { return id.state == (void*)requester; });
+        auto iter = std::find_if(scriptReferences.begin(), scriptReferences.end(), [&](const script_requester& id) { return id.state == (void*)requester; });
         if (iter == scriptReferences.end())
         {
             auto id = requesterCounter++;
@@ -122,24 +122,24 @@ void skr_resource_record_t::RemoveReference(uint32_t id, ESkrRequesterType reque
     if (requesterType == SKR_REQUESTER_ENTITY)
     {
         entityRefCount--;
-        auto iter = eastl::find_if(entityReferences.begin(), entityReferences.end(), [&](const entity_requester& re) { return re.id == id; });
+        auto iter = std::find_if(entityReferences.begin(), entityReferences.end(), [&](const entity_requester& re) { return re.id == id; });
         SKR_ASSERT(iter != entityReferences.end());
         if (--iter->entityRefCount == 0)
-            entityReferences.erase_unsorted(iter);
+            entityReferences.erase(iter);
     }
     else if (requesterType == SKR_REQUESTER_SCRIPT)
     {
         scriptRefCount--;
-        auto iter = eastl::find_if(scriptReferences.begin(), scriptReferences.end(), [&](const script_requester& re) { return re.id == id; });
+        auto iter = std::find_if(scriptReferences.begin(), scriptReferences.end(), [&](const script_requester& re) { return re.id == id; });
         SKR_ASSERT(iter != scriptReferences.end());
         if (--iter->scriptRefCount == 0)
-            scriptReferences.erase_unsorted(iter);
+            scriptReferences.erase(iter);
     }
     else
     {
-        auto iter = eastl::find_if(objectReferences.begin(), objectReferences.end(), [&](const object_requester& re) { return re.id == id; });
+        auto iter = std::find_if(objectReferences.begin(), objectReferences.end(), [&](const object_requester& re) { return re.id == id; });
         SKR_ASSERT(iter != objectReferences.end());
-        objectReferences.erase_unsorted(iter);
+        objectReferences.erase(iter);
     }
 #else
     --referenceCount;

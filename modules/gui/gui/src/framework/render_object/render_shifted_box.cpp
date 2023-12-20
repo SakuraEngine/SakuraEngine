@@ -33,11 +33,8 @@ void RenderShiftedBox::paint(NotNull<PaintingContext*> context, Offsetf offset) 
 // hit test
 bool RenderShiftedBox::hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT
 {
-    return _default_hit_test(
-    result,
-    local_position,
-    nullptr, // shifted box 通常不会自主响应 hit test
-    [this](HitTestResult* result, Offsetf local_position) {
+    if (size().contains(local_position))
+    {
         return child() &&
                result->add_with_paint_offset(
                _offset,
@@ -45,7 +42,8 @@ bool RenderShiftedBox::hit_test(HitTestResult* result, Offsetf local_position) c
                [this](HitTestResult* result, Offsetf transformed_position) {
                    return child()->hit_test(result, transformed_position);
                });
-    });
+    }
+    return false;
 }
 
 // transform

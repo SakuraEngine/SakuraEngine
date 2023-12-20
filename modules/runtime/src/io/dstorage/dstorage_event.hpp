@@ -1,7 +1,7 @@
 #pragma once
-#include "SkrRT/platform/dstorage.h"
 #include "../common/io_request.hpp"
-#include <EASTL/fixed_vector.h>
+#include "SkrRT/platform/dstorage.h"
+
 
 namespace skr {
 namespace io {
@@ -39,7 +39,7 @@ protected:
     }
     friend struct DStorageRAMReader;
     friend struct DStorageVRAMReader;
-    eastl::fixed_vector<IOBatchId, 32> batches;
+    skr::InlineVector<IOBatchId, 32> batches;
     SkrDStorageQueueId queue = nullptr;
     ISmartPoolPtr<DStorageEvent> pool = nullptr;
     SkrDStorageEventId event = nullptr;

@@ -1,6 +1,6 @@
 
 #include "../../../../samples/common/common/utils.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/window.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
@@ -63,8 +63,8 @@ void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::Re
         ImGui::GetIO().Fonts->Build();
         free(font_bytes);
     }
-    skr::string vsname = u8"shaders/imgui_vertex";
-    skr::string fsname = u8"shaders/imgui_fragment";
+    skr::String vsname = u8"shaders/imgui_vertex";
+    skr::String fsname = u8"shaders/imgui_fragment";
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
     auto vsfile = skr_vfs_fopen(vfs, vsname.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);

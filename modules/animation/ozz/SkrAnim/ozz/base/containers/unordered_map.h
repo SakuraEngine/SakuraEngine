@@ -48,13 +48,13 @@ namespace ozz {
 template <class _Key, class _Ty, class _Hash = std::hash<_Key>,
           class _KeyEqual = std::equal_to<_Key>>
 using unordered_map =
-    skr::flat_hash_map<_Key, _Ty, _Hash, _KeyEqual>;
+    skr::FlatHashMap<_Key, _Ty, _Hash, _KeyEqual>;
 
 // Redirects std::unordered_multimap to ozz::UnorderedMultiMap in order to
 // replace std default allocator by ozz::StdAllocator.
 template <class _Key, class _Ty, class _Hash = std::hash<_Key>,
           class _KeyEqual = std::equal_to<_Key>>
 using unordered_multimap =
-    skr::flat_hash_map<_Key, _Ty, _Hash, _KeyEqual>;
+    skr::FlatHashMap<_Key, _Ty, _Hash, _KeyEqual>;
 }  // namespace ozz
 #endif  // OZZ_OZZ_BASE_CONTAINERS_UNORDERED_MAP_H_

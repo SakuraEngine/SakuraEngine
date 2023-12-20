@@ -2,7 +2,6 @@
 #include "SkrRT/io/io.h"
 #include "SkrRT/platform/guid.hpp"
 #include "../components/component.hpp"
-#include <EASTL/fixed_vector.h>
 
 namespace skr {
 namespace io {
@@ -18,17 +17,17 @@ struct BlocksComponent : public IORequestComponent
     
     skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT 
     { 
-        return blocks;
+        return {blocks.data(), blocks.size()};
     }
 
     void add_block(const skr_io_block_t& block) SKR_NOEXCEPT 
     {
-        blocks.emplace_back(block);
+        blocks.add(block);
     }
     
     void reset_blocks() SKR_NOEXCEPT { blocks.clear(); }
     
-    eastl::fixed_vector<skr_io_block_t, 1> blocks;
+    skr::Vector<skr_io_block_t> blocks;
 };
 
 template <>

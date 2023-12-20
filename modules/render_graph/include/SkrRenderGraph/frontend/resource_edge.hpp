@@ -34,7 +34,7 @@ public:
     inline uint32_t get_mip_count() const { return handle.mip_count; }
     inline ECGPUTextureDimension get_dimension() const { return handle.dim; }
 
-    TextureReadEdge(const skr::string_view name, TextureSRVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_SHADER_RESOURCE);
+    TextureReadEdge(const skr::StringView name, TextureSRVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_SHADER_RESOURCE);
 protected:
     const graph_object_string name = u8"";
     const TextureSRVHandle handle;
@@ -53,7 +53,7 @@ public:
     TextureNode* get_texture_node() final;
     PassNode* get_pass_node() final;
 
-    TextureReadWriteEdge(const skr::string_view name, TextureUAVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
+    TextureReadWriteEdge(const skr::StringView name, TextureUAVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
 protected:
     const graph_object_string name = u8"";
     const TextureUAVHandle handle;
@@ -108,7 +108,7 @@ public:
     BufferNode* get_buffer_node() final;
     PassNode* get_pass_node() final;
 
-    BufferReadEdge(const skr::string_view name, BufferRangeHandle handle, ECGPUResourceState state);
+    BufferReadEdge(const skr::StringView name, BufferRangeHandle handle, ECGPUResourceState state);
 protected:
     const graph_object_string name = u8"";
     BufferRangeHandle handle;

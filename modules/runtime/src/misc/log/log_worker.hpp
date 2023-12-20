@@ -37,7 +37,7 @@ protected:
 
     friend struct Logger;
     skr::SPtr<LogQueue> queue_;
-    skr::vector<Logger*> loggers_;
+    skr::Vector<Logger*> loggers_;
     LogFormatter formatter_;
 };
 

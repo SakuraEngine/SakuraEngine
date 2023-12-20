@@ -1,13 +1,12 @@
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/win/dstorage_windows.h"
-#include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
+#include "SkrRT/containers/umap.hpp"
 
 #include "platform/windows/windows_dstorage.hpp"
-#include <EASTL/string.h>
-#include <EASTL/vector_map.h>
 
 static void CALLBACK __decompressThreadPoolTask_DirectStorage(
     TP_CALLBACK_INSTANCE*,
@@ -61,7 +60,7 @@ struct skr_win_dstorage_decompress_service_t
     };
     IDStorageCustomDecompressionQueue* decompress_queue = nullptr;
     HANDLE event_handle = nullptr;
-    eastl::vector_map<SkrDStorageCompression, DecompressionResolver> resolvers;
+    skr::UMap<SkrDStorageCompression, DecompressionResolver> resolvers;
     // threadpool items
     TP_WAIT* thread_pool_wait = nullptr;
     // thread items
@@ -70,7 +69,7 @@ struct skr_win_dstorage_decompress_service_t
     SAtomicU32 thread_running;
 
     skr::JobQueue* job_queue = nullptr;
-    skr::vector<skr::IFuture<bool>*> decompress_futures;
+    skr::stl_vector<skr::IFuture<bool>*> decompress_futures;
 };
 
 using DSDecompressFutureLauncher = skr::FutureLauncher<bool>;
@@ -96,8 +95,7 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
                 auto& future = service->decompress_futures.emplace_back();
                 future = DSDecompressFutureLauncher(service->job_queue).async(
                 [service, request = requests[i]](){
-                    auto resolver = service->resolvers.find(request.CompressionFormat);
-                    if (resolver != service->resolvers.end())
+                    if (auto resolver = service->resolvers.find(request.CompressionFormat))
                     {
                         auto skrRequest = make_zeroed<skr_win_dstorage_decompress_request_t>();
                         skrRequest.id = request.Id;
@@ -107,7 +105,7 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
                         skrRequest.src_buffer = request.SrcBuffer;
                         skrRequest.dst_size = request.DstSize;
                         skrRequest.dst_buffer = request.DstBuffer;
-                        auto result = resolver->second.callback(&skrRequest, resolver->second.user_data);
+                        auto result = resolver->value.callback(&skrRequest, resolver->value.user_data);
                         DSTORAGE_CUSTOM_DECOMPRESSION_RESULT failResult = {};
                         failResult.Result = result;
                         failResult.Id = request.Id;
@@ -137,7 +135,7 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
                     future = nullptr;
                 }
             }
-            auto it = eastl::remove_if(arr.begin(), arr.end(), 
+            auto it = std::remove_if(arr.begin(), arr.end(), 
                 [](skr::IFuture<bool>* future) {
                     return (future == nullptr);
                 });
@@ -221,11 +219,11 @@ skr_win_dstorage_decompress_service_id skr_win_dstorage_create_decompress_servic
 bool skr_win_dstorage_decompress_service_register_callback(skr_win_dstorage_decompress_service_id service, 
     SkrDStorageCompression compression, skr_win_dstorage_decompress_callback_t callback, void* user_data)
 {
-    const auto registered = (service->resolvers.find(compression) != service->resolvers.end());
+    const auto registered = (service->resolvers.contains(compression));
     SKR_ASSERT(!registered && "Callback already registered for this compression");
     if (registered) return false;
     SKR_ASSERT(callback && "Callback must be valid");
-    service->resolvers[compression] = { callback, user_data };
+    service->resolvers.add_or_assign(compression, { callback, user_data });
     return true;
 }
 

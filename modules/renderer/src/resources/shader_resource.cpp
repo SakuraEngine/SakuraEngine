@@ -3,7 +3,7 @@
 #include "SkrRenderer/render_device.h"
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/sptr.hpp"
@@ -44,7 +44,7 @@ skr_stable_shader_hash_t skr_stable_shader_hash_t::from_string(const char* str) 
     return result;
 }
 
-skr_stable_shader_hash_t::operator skr::string() const SKR_NOEXCEPT
+skr_stable_shader_hash_t::operator skr::String() const SKR_NOEXCEPT
 {
     return skr::format(u8"{}{}{}{}", valuea, valueb, valuec, valued);
 }
@@ -59,7 +59,7 @@ size_t skr_platform_shader_identifier_t::hasher::operator()(const skr_platform_s
     return skr_hash(&hash, sizeof(hash), 114514u);
 }
 
-uint32_t skr_shader_option_sequence_t::find_key_index(skr::string_view in_key) const SKR_NOEXCEPT
+uint32_t skr_shader_option_sequence_t::find_key_index(skr::StringView in_key) const SKR_NOEXCEPT
 {
     for (uint32_t at = 0; at < keys.size(); at++)
     {
@@ -69,7 +69,7 @@ uint32_t skr_shader_option_sequence_t::find_key_index(skr::string_view in_key) c
     return UINT32_MAX;
 }
 
-uint32_t skr_shader_option_sequence_t::find_value_index(uint32_t key_index, skr::string_view in_value) const SKR_NOEXCEPT
+uint32_t skr_shader_option_sequence_t::find_value_index(uint32_t key_index, skr::StringView in_value) const SKR_NOEXCEPT
 {
     for (uint32_t v_idx = 0; v_idx < values[key_index].size(); v_idx++)
     {
@@ -82,7 +82,7 @@ uint32_t skr_shader_option_sequence_t::find_value_index(uint32_t key_index, skr:
     return UINT32_MAX;
 }
 
-uint32_t skr_shader_option_sequence_t::find_value_index(skr::string_view in_key, skr::string_view in_value) const SKR_NOEXCEPT
+uint32_t skr_shader_option_sequence_t::find_value_index(skr::StringView in_key, skr::StringView in_value) const SKR_NOEXCEPT
 {
     uint32_t key_index = find_key_index(in_key);
     return find_value_index(key_index, in_value);
@@ -90,7 +90,7 @@ uint32_t skr_shader_option_sequence_t::find_value_index(skr::string_view in_key,
 
 skr_stable_shader_hash_t skr_shader_option_sequence_t::calculate_stable_hash(const skr_shader_option_sequence_t& seq, skr::span<uint32_t> indices)
 {
-    skr::string signatureString;
+    skr::String signatureString;
     option_utils::stringfy(signatureString, seq, indices);
     return skr_stable_shader_hash_t::hash_string(signatureString.c_str(), (uint32_t)signatureString.size());
 }

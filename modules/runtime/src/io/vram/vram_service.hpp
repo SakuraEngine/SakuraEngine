@@ -48,7 +48,7 @@ struct VRAMService final : public IVRAMService
         VRAMService* service = nullptr;
     };
 
-    const skr::string name;    
+    const skr::String name;    
     const bool awake_at_request = false;
     Runner runner;
     

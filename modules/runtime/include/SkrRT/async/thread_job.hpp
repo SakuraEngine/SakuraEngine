@@ -2,9 +2,10 @@
 #include "SkrRT/async/result.hpp"
 #include "SkrRT/async/async_progress.hpp"
 
+#include "SkrRT/containers/stl_function.hpp"
 #include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include <EASTL/list.h>
+#include "SkrRT/containers/stl_vector.hpp"
+#include "SkrRT/containers/stl_list.hpp"
 
 enum ESkrJobItemStatus
 {
@@ -24,7 +25,7 @@ struct JobItemQueue;
 
 using JobQueuePriority = SThreadPriority;
 using JobResult = AsyncResult;
-using JobName = skr::string;
+using JobName = skr::String;
 
 struct JobQueueDesc
 {
@@ -90,7 +91,7 @@ private:
     JobItemDesc desc;
 };
 
-using JobQueueThreadList = eastl::list<JobQueueThread*>;
+using JobQueueThreadList = skr::stl_list<JobQueueThread*>;
 
 struct SKR_STATIC_API JobQueue
 {
@@ -140,12 +141,12 @@ private:
     // @retval ASYNC_RESULT_OK if success
 	JobResult finalize() SKR_NOEXCEPT;
 
-    skr::string queue_name;
+    skr::String queue_name;
     JobQueueThreadList thread_list;
     JobItemQueue* itemList;
     JobQueueDesc desc;
 
-    skr::vector<JobItem*> pending_queue;
+    skr::stl_vector<JobItem*> pending_queue;
     SRWMutex pending_queue_mutex;
     SAtomic32 cancel_requested = 0;
 };
@@ -198,7 +199,7 @@ struct SKR_STATIC_API ThreadedJobQueueFuture : public skr::IFuture<Artifact>
             auto ret = runner();
             return ret; 
         }
-        eastl::function<skr::JobResult()> runner;
+        skr::stl_function<skr::JobResult()> runner;
     };
 
 protected:

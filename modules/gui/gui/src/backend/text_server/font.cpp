@@ -250,8 +250,8 @@ TextServerFeatures Font::get_opentype_features() const
 // Drawing string.
 void Font::set_cache_capacity(int p_single_line, int p_multi_line)
 {
-    cache.resize(p_single_line);
-    cache_wrap.resize(p_multi_line);
+    cache.capacity(p_single_line);
+    cache_wrap.capacity(p_multi_line);
 }
 
 Size2 Font::get_string_size(const String& p_text, HorizontalAlignment p_alignment, float p_width, int p_font_size, BitField<TextServer::JustificationFlag> p_jst_flags, TextServer::Direction p_direction, TextServer::Orientation p_orientation) const
@@ -260,9 +260,10 @@ Size2 Font::get_string_size(const String& p_text, HorizontalAlignment p_alignmen
     ShapedTextKey key = ShapedTextKey(p_text, p_font_size, fill ? p_width : 0.0f, fill ? p_jst_flags : TextServer::JUSTIFICATION_NONE, TextServer::BREAK_NONE, p_direction, p_orientation);
 
     Ref<TextLine> buffer;
+    auto&& iter = cache.find(key);
     if (cache.contains(key))
     {
-        buffer = cache.get(key);
+        buffer = cache.lookup(key);
     }
     else
     {
@@ -290,7 +291,7 @@ Size2 Font::get_multiline_string_size(const String& p_text, HorizontalAlignment 
     Ref<TextParagraph> lines_buffer;
     if (cache_wrap.contains(key))
     {
-        lines_buffer = cache_wrap.get(key);
+        lines_buffer = cache_wrap.lookup(key);
     }
     else
     {
@@ -318,7 +319,7 @@ void Font::draw_string(RID p_canvas_item, const Point2& p_pos, const String& p_t
     Ref<TextLine> buffer;
     if (cache.contains(key))
     {
-        buffer = cache.get(key);
+        buffer = cache.lookup(key);
     }
     else
     {
@@ -356,7 +357,7 @@ void Font::draw_multiline_string(RID p_canvas_item, const Point2& p_pos, const S
     Ref<TextParagraph> lines_buffer;
     if (cache_wrap.contains(key))
     {
-        lines_buffer = cache_wrap.get(key);
+        lines_buffer = cache_wrap.lookup(key);
     }
     else
     {
@@ -394,7 +395,7 @@ void Font::draw_string_outline(RID p_canvas_item, const Point2& p_pos, const Str
     Ref<TextLine> buffer;
     if (cache.contains(key))
     {
-        buffer = cache.get(key);
+        buffer = cache.lookup(key);
     }
     else
     {
@@ -432,7 +433,7 @@ void Font::draw_multiline_string_outline(RID p_canvas_item, const Point2& p_pos,
     Ref<TextParagraph> lines_buffer;
     if (cache_wrap.contains(key))
     {
-        lines_buffer = cache_wrap.get(key);
+        lines_buffer = cache_wrap.lookup(key);
     }
     else
     {
@@ -581,8 +582,8 @@ int64_t Font::get_face_count() const
 
 Font::Font()
 {
-    cache.resize(64);
-    cache_wrap.resize(16);
+    cache.capacity(64);
+    cache_wrap.capacity(16);
 }
 
 Font::~Font()

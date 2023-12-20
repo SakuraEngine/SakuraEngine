@@ -11,7 +11,7 @@ namespace skr sreflect
 {
 namespace renderer sreflect
 {
-using MaterialPropertyName = skr::string;
+using MaterialPropertyName = skr::String;
 
 sreflect_enum_class("guid" : "4003703a-dde4-4f11-93a6-6c460bac6357")
 sattr("serialize": ["json", "bin"])
@@ -46,9 +46,9 @@ MaterialProperty {
     using resource_handle = skr_resource_handle_t;
 
     MaterialPropertyName  name;
-    skr::string           display_name;
+    skr::String           display_name;
     EMaterialPropertyType prop_type;
-    skr::string           description;
+    skr::String           description;
 
     double default_value = 0.0;
     double min_value     = 0.0;
@@ -79,9 +79,9 @@ MaterialValue {
 sreflect_struct("guid" : "ed2e3476-90a3-4f2f-ac97-808f63d1eb11")
 sattr("serialize" : ["json", "bin"])
 MaterialPass {
-    skr::string                                 pass;
-    skr::vector<skr_shader_collection_handle_t> shader_resources;
-    skr::vector<EMaterialBlendMode>             blend_modes;
+    skr::String                                 pass;
+    skr::Vector<skr_shader_collection_handle_t> shader_resources;
+    skr::Vector<EMaterialBlendMode>             blend_modes;
     bool                                        two_sided = false;
 };
 
@@ -90,10 +90,10 @@ sattr("serialize" : ["json", "bin"])
 MaterialTypeResource {
     uint32_t version;
 
-    skr::vector<MaterialPass>                 passes;
-    skr::vector<MaterialValue>                default_values;
-    skr::vector<skr_shader_option_instance_t> switch_defaults;
-    skr::vector<skr_shader_option_instance_t> option_defaults;
+    skr::Vector<MaterialPass>                 passes;
+    skr::Vector<MaterialValue>                default_values;
+    skr::Vector<skr_shader_option_instance_t> switch_defaults;
+    skr::Vector<skr_shader_option_instance_t> option_defaults;
     skr_vertex_layout_id                      vertex_type;
 };
 

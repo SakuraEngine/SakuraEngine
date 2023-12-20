@@ -37,7 +37,7 @@ SKR_INLINE T remove_all(T begin, T end, TP&& p = TP())
             else
             {
                 // move item
-                if (write != begin)
+                if (write != run_start)
                 {
                     ::skr::memory::move(write, run_start, run_len);
                 }

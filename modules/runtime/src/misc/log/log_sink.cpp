@@ -252,7 +252,7 @@ void LogConsoleSink::set_style(LogLevel level, EConsoleStyle style) SKR_NOEXCEPT
     color_sets_[static_cast<uint32_t>(level)].s = style;
 }
 
-void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
+void LogConsoleSink::sink(const LogEvent& event, skr::StringView content) SKR_NOEXCEPT
 {
     SkrZoneScopedN("ANSI::Print");
 
@@ -272,7 +272,7 @@ void LogConsoleSink::flush() SKR_NOEXCEPT
     ::fflush(stdout);
 }
 
-void LogConsoleWindowSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
+void LogConsoleWindowSink::sink(const LogEvent& event, skr::StringView content) SKR_NOEXCEPT
 {
     SkrZoneScopedN("Console::Write");
 
@@ -312,7 +312,7 @@ void LogConsoleWindowSink::flush() SKR_NOEXCEPT
 #endif
 }
 
-void LogDebugOutputSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
+void LogDebugOutputSink::sink(const LogEvent& event, skr::StringView content) SKR_NOEXCEPT
 {
     SkrZoneScopedN("DebugOutput::Print");
 
@@ -322,7 +322,7 @@ void LogDebugOutputSink::sink(const LogEvent& event, skr::string_view content) S
     [[maybe_unused]] const auto escape = GetAnsiEscapeCode(buf_cache_->buf, ColorSet.f, ColorSet.b, ColorSet.s);
 
 #ifdef USE_WIN32_CONSOLE
-    skr::string output((const char8_t*)buf_cache_->buf.c_str());
+    skr::String output((const char8_t*)buf_cache_->buf.c_str());
     output.append(content);
     ::OutputDebugStringA(output.c_str());
 #else
@@ -347,7 +347,7 @@ struct CFILE
     CFILE(FILE* fp) SKR_NOEXCEPT : fp(fp) {}
     ~CFILE() SKR_NOEXCEPT { flush(); fclose(fp); }
 
-    void write(const skr::string_view content)
+    void write(const skr::StringView content)
     {
         SkrZoneScopedN("CFILE::write");
         fwrite(content.raw().data(), sizeof(char8_t), content.size(), fp);
@@ -376,7 +376,7 @@ LogFileSink::LogFileSink() SKR_NOEXCEPT
         skr::filesystem::rename(txt_path, new_path);
     }
     */
-    auto pname = skr::string(skr_get_current_process_name());
+    auto pname = skr::String(skr_get_current_process_name());
     pname.replace(u8".exe", u8"");
     auto fname = skr::format(u8"{}.log", pname);
     file_ = SkrNew<CFILE>(fopen(fname.c_str(), "w"));
@@ -387,7 +387,7 @@ LogFileSink::~LogFileSink() SKR_NOEXCEPT
     SkrDelete(file_);
 }
 
-void LogFileSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
+void LogFileSink::sink(const LogEvent& event, skr::StringView content) SKR_NOEXCEPT
 {
     SkrZoneScopedN("FileSink::Print");
 

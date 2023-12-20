@@ -1,15 +1,6 @@
 module_root = path.absolute("xmake/modules")
 import("find_sdk", {rootdir = module_root})
 
-if (os.host() =="macosx") then 
-    import("lib.detect.find_tool")
-    local brew = find_tool("brew")
-    if(brew == nil) then
-        os.runv("/bin/bash", {"-c", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""})
-    end
-    os.exec("brew install ispc")
-end
-
 -- python
 find_sdk.file_from_github("SourceSansPro-Regular.ttf")
 if (os.host() == "windows") then
@@ -33,7 +24,7 @@ if (os.host() == "windows") then
     find_sdk.tool_from_github("wasm-clang", "wasm-clang-windows-x64.zip")
     find_sdk.tool_from_github("ispc", "ispc-windows-x64.zip")
     find_sdk.tool_from_github("meta-v1.0.0-llvm_17.0.1", "meta-v1.0.0-llvm_17.0.1-windows-x64.zip")
-    find_sdk.tool_from_github("tracy-gui-0.9.2a", "tracy-gui-0.9.2a-windows-x64.zip")
+    find_sdk.tool_from_github("tracy-gui-0.10.1a", "tracy-gui-0.10.1a-windows-x64.zip")
     -- network
     find_sdk.lib_from_github("gns", "gns-windows-x64.zip")
     find_sdk.lib_from_github("gns_d", "gns_d-windows-x64.zip")
@@ -44,7 +35,9 @@ if (os.host() == "macosx") then
         --
         find_sdk.tool_from_github("dxc", "dxc-macosx-x86_64.zip")
         find_sdk.tool_from_github("meta-v1.0.0-llvm_17.0.1", "meta-v1.0.0-llvm_17.0.1-macosx-x86_64.zip")
-        find_sdk.tool_from_github("tracy-gui-0.9.2a", "tracy-gui-0.9.2a-macosx-x86_64.zip")
+        find_sdk.tool_from_github("tracy-gui-0.10.1a", "tracy-gui-0.10.1a-macosx-x86_64.zip")
+        --
+        find_sdk.tool_from_github("ispc-1.22.0", "ispc-1.22.0-macosx-x86_64.zip")
         -- network
         find_sdk.lib_from_github("gns", "gns-macosx-x86_64.zip")
         find_sdk.lib_from_github("gns_d", "gns_d-macosx-x86_64.zip")

@@ -1,9 +1,8 @@
 ﻿#include "cgpu/api.h"
 #include "common_utils.h"
 
-#include <EASTL/sort.h>
-#include <EASTL/vector.h>
 #include <SkrRT/containers/btree.hpp>
+#include <SkrRT/containers/stl_vector.hpp>
 
 extern "C" {
 bool CGPUUtil_ShaderResourceIsStaticSampler(CGPUShaderResource* resource, const struct CGPURootSignatureDescriptor* desc)
@@ -80,9 +79,9 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
     }
     // Collect all resources
     RS->pipeline_type = CGPU_PIPELINE_TYPE_NONE;
-    eastl::vector<CGPUShaderResource> all_resources;
-    eastl::vector<CGPUShaderResource> all_push_constants;
-    eastl::vector<CGPUShaderResource> all_static_samplers;
+    skr::stl_vector<CGPUShaderResource> all_resources;
+    skr::stl_vector<CGPUShaderResource> all_push_constants;
+    skr::stl_vector<CGPUShaderResource> all_static_samplers;
     for (uint32_t i = 0; i < desc->shader_count; i++)
     {
         CGPUShaderReflection* reflection = entry_reflections[i];
@@ -136,8 +135,8 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
             RS->pipeline_type = CGPU_PIPELINE_TYPE_GRAPHICS;
     }
     // Merge
-    skr::btree_set<uint32_t> valid_sets;
-    eastl::vector<CGPUShaderResource> RST_resources;
+    skr::BTreeSet<uint32_t> valid_sets;
+    skr::stl_vector<CGPUShaderResource> RST_resources;
     RST_resources.reserve(all_resources.size());
     for (auto&& shader_resource : all_resources)
     {
@@ -158,7 +157,7 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
             RST_resources.emplace_back(shader_resource);
         }
     }
-    eastl::stable_sort(RST_resources.begin(), RST_resources.end(),
+    std::stable_sort(RST_resources.begin(), RST_resources.end(),
     [](const CGPUShaderResource& lhs, const CGPUShaderResource& rhs){
         if(lhs.set != rhs.set) return lhs.set < rhs.set;
         else
@@ -200,7 +199,7 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
         RS->push_constants[i] = all_push_constants[i];
     }
     // static samplers
-    eastl::stable_sort(all_static_samplers.begin(), all_static_samplers.end(),
+    std::stable_sort(all_static_samplers.begin(), all_static_samplers.end(),
     [](const CGPUShaderResource& lhs, const CGPUShaderResource& rhs){
         if(lhs.set != rhs.set) return lhs.set < rhs.set;
         else

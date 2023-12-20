@@ -32,7 +32,7 @@
 #include "SkrRT/containers/string.hpp"
 #include <memory>
 #include <mutex>
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrProfile/profile.h"
 #include "SkrRT/misc/log.h"
 
@@ -95,7 +95,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void* const arg)
     // Switch
 #ifdef SKR_PROFILE_ENABLE
     {
-        ::skr::string threadId = ::skr::format(u8"worker-{}", index);
+        ::skr::String threadId = ::skr::format(u8"worker-{}", index);
         SkrFiberEnter(threadId.c_str());
         taskScheduler->m_tls[index].ThreadFiber.SwitchToFiber(freeFiber);
         SkrFiberLeave;
@@ -525,7 +525,7 @@ TaskScheduler::~TaskScheduler()
     delete[] m_quitFibers;
 }
 
-void TaskScheduler::AddTask(Task const task, TaskPriority priority, eastl::shared_ptr<TaskCounter> const& counter FTL_TASK_NAME(, const char* name))
+void TaskScheduler::AddTask(Task const task, TaskPriority priority, skr::shared_ptr<TaskCounter> const& counter FTL_TASK_NAME(, const char* name))
 {
     FTL_ASSERT("Task given to TaskScheduler:AddTask has a nullptr Function", task.Function != nullptr);
 
@@ -559,7 +559,7 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, eastl::share
     }
 }
 
-void TaskScheduler::AddTasks(unsigned const numTasks, Task const* const tasks, TaskPriority priority, eastl::shared_ptr<TaskCounter> const& counter)
+void TaskScheduler::AddTasks(unsigned const numTasks, Task const* const tasks, TaskPriority priority, skr::shared_ptr<TaskCounter> const& counter)
 {
     if (counter != nullptr)
     {
@@ -993,7 +993,7 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
     CleanUpOldFiber();
 }
 
-void TaskScheduler::WaitForPredicate(const eastl::function<bool()>& pred, bool pinToCurrentThread)
+void TaskScheduler::WaitForPredicate(const skr::stl_function<bool()>& pred, bool pinToCurrentThread)
 {
     ThreadLocalStorage* tls = &m_tls[GetCurrentThreadIndex()];
     while (!pred())

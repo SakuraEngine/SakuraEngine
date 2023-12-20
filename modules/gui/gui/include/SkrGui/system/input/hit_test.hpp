@@ -3,6 +3,9 @@
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/math/matrix.hpp"
 #include "SkrGui/math/geometry.hpp"
+#ifndef __meta__
+    #include "SkrGui/system/input/hit_test.generated.h"
+#endif
 
 namespace skr sreflect
 {
@@ -10,6 +13,14 @@ namespace gui sreflect
 {
 struct PointerEvent;
 struct HitTestEntry;
+
+sreflect_enum_class("guid": "e59baca9-43d6-4368-869b-e122ee58d53d")
+EHitTestBehavior : uint32_t
+{
+    defer_to_child, // 如果 child hit 成功则将自身加入 hit result
+    opaque,         // 即便 child hit 不成功，也将自身加入 hit result 并返回 true
+    transparent,    // 即便 child hit 不成功，也将自身加入 hit result 并返回 false
+};
 
 struct HitTestEntry {
     // 通常我们会让 hit_test 为 const，但是 event dispatch 为非 const，这里是为了方便代码书写
@@ -28,6 +39,9 @@ struct HitTestEntry {
 };
 
 struct HitTestResult {
+    // info
+    inline bool empty() const SKR_NOEXCEPT { return _path.empty(); }
+
     // add
     inline void add(HitTestEntry entry)
     {
@@ -43,8 +57,8 @@ struct HitTestResult {
         bool is_hit;
         if (matrix)
         {
-            push_transform(matrix.get());
-            is_hit = hit_test(this, matrix.get().transform(position));
+            push_transform(matrix.value());
+            is_hit = hit_test(this, matrix.value().transform(position));
             pop_transform();
         }
         else
@@ -60,7 +74,7 @@ struct HitTestResult {
         if (matrix)
         {
             Matrix4 inv_matrix;
-            if (matrix.get().try_inverse(inv_matrix))
+            if (matrix.value().try_inverse(inv_matrix))
             {
                 return add_with_raw_transform(inv_matrix, position, hit_test);
             }
@@ -82,8 +96,8 @@ struct HitTestResult {
         bool is_hit;
         if (paint_offset)
         {
-            push_offset(-paint_offset.get());
-            is_hit = hit_test(this, position - (paint_offset.get()));
+            push_offset(-paint_offset.value());
+            is_hit = hit_test(this, position - (paint_offset.value()));
             pop_transform();
         }
         else

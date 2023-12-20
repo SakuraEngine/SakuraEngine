@@ -86,12 +86,12 @@ void type_register<skr_resource_handle_t>::instantiate_type(RecordType* type)
     type->type = SKR_TYPE_CATEGORY_HANDLE;
 }
 
-void type_register<skr::string>::instantiate_type(RecordType* type)
+void type_register<skr::String>::instantiate_type(RecordType* type)
 {
     type->type = SKR_TYPE_CATEGORY_STR;
 }
 
-void type_register<skr::string_view>::instantiate_type(RecordType* type)
+void type_register<skr::StringView>::instantiate_type(RecordType* type)
 {
     type->type = SKR_TYPE_CATEGORY_STRV;
 }
@@ -175,11 +175,11 @@ uint64_t Hash(void* value, uint64_t base)
 {
     return skr_hash((void*)&value, sizeof(value), base);
 }
-uint64_t Hash(const skr::string& value, uint64_t base)
+uint64_t Hash(const skr::String& value, uint64_t base)
 {
     return skr_hash(value.c_str(), value.size(), base);
 }
-uint64_t Hash(const skr::string_view& value, uint64_t base)
+uint64_t Hash(const skr::StringView& value, uint64_t base)
 {
     return skr_hash(value.raw().data(), value.size(), base);
 }

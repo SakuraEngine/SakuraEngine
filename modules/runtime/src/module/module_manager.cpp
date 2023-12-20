@@ -1,6 +1,6 @@
 #include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/module/subsystem.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/shared_library.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/containers/hashmap.hpp"
@@ -62,15 +62,15 @@ public:
         }
         skr::DependencyGraph::Destroy(dependency_graph);
     }
-    virtual IModule* get_module(const skr::string& name) final;
-    virtual const struct ModuleGraph* make_module_graph(const skr::string& entry, bool shared = true) final;
-    virtual bool patch_module_graph(const skr::string& name, bool shared = true, int argc = 0, char8_t** argv = nullptr) final;
+    virtual IModule* get_module(const skr::String& name) final;
+    virtual const struct ModuleGraph* make_module_graph(const skr::String& entry, bool shared = true) final;
+    virtual bool patch_module_graph(const skr::String& name, bool shared = true, int argc = 0, char8_t** argv = nullptr) final;
     virtual int init_module_graph(int argc, char8_t** argv) final;
     virtual bool destroy_module_graph(void) final;
     virtual void mount(const char8_t* path) final;
-    virtual skr::string_view get_root(void) final;
-    virtual ModuleProperty& get_module_property(const skr::string& name) final;
-    virtual void enable_hotfix_for_module(skr::string_view name) override final;
+    virtual skr::StringView get_root(void) final;
+    virtual ModuleProperty& get_module_property(const skr::String& name) final;
+    virtual void enable_hotfix_for_module(skr::StringView name) override final;
     virtual bool update(void) override final;
 
     virtual void register_subsystem(const char8_t* moduleName, const char8_t* id, ModuleSubsystemBase::CreatePFN pCreate) final;
@@ -78,30 +78,30 @@ public:
     virtual void registerStaticallyLinkedModule(const char8_t* moduleName, module_registerer _register) final;
 
 protected:
-    virtual IModule* spawnStaticModule(const skr::string& moduleName) final;
-    virtual IModule* spawnDynamicModule(const skr::string& moduleName, bool hotfix) final;
-    virtual bool loadHotfixModule(SharedLibrary& lib, const skr::string& moduleName) final;
+    virtual IModule* spawnStaticModule(const skr::String& moduleName) final;
+    virtual IModule* spawnDynamicModule(const skr::String& moduleName, bool hotfix) final;
+    virtual bool loadHotfixModule(SharedLibrary& lib, const skr::String& moduleName) final;
 
 private:
-    bool __internal_DestroyModuleGraph(const skr::string& nodename);
-    bool __internal_UpdateModuleGraph(const skr::string& nodename);
-    void __internal_MakeModuleGraph(const skr::string& entry, bool shared = false);
-    bool __internal_InitModuleGraph(const skr::string& nodename, int argc, char8_t** argv);
+    bool __internal_DestroyModuleGraph(const skr::String& nodename);
+    bool __internal_UpdateModuleGraph(const skr::String& nodename);
+    void __internal_MakeModuleGraph(const skr::String& entry, bool shared = false);
+    bool __internal_InitModuleGraph(const skr::String& nodename, int argc, char8_t** argv);
     ModuleInfo parseMetaData(const char8_t* metadata);
 
 private:
-    skr::string moduleDir;
-    eastl::vector<skr::string> roots;
-    skr::string mainModuleName;
+    skr::String moduleDir;
+    skr::Vector<skr::String> roots;
+    skr::String mainModuleName;
     // ModuleGraphImpl moduleDependecyGraph;
     skr::DependencyGraph* dependency_graph = nullptr;
-    skr::flat_hash_set<skr::string, skr::hash<skr::string>> hotfixTraversalSet;
-    skr::flat_hash_map<skr::string, ModuleContext, skr::hash<skr::string>> hotfixModules;
-    skr::flat_hash_map<skr::string, ModuleProperty*, skr::hash<skr::string>> nodeMap;
-    skr::flat_hash_map<skr::string, module_registerer, skr::hash<skr::string>> initializeMap;
-    skr::flat_hash_map<skr::string, eastl::unique_ptr<IModule>, skr::hash<skr::string>> modulesMap;
-    skr::flat_hash_map<skr::string, eastl::vector<skr::string>, skr::hash<skr::string>> subsystemIdMap;
-    skr::flat_hash_map<skr::string, eastl::vector<ModuleSubsystemBase::CreatePFN>, skr::hash<skr::string>> subsystemCreateMap;
+    skr::FlatHashSet<skr::String, skr::Hash<skr::String>> hotfixTraversalSet;
+    skr::FlatHashMap<skr::String, ModuleContext, skr::Hash<skr::String>> hotfixModules;
+    skr::FlatHashMap<skr::String, ModuleProperty*, skr::Hash<skr::String>> nodeMap;
+    skr::FlatHashMap<skr::String, module_registerer, skr::Hash<skr::String>> initializeMap;
+    skr::FlatHashMap<skr::String, IModule*, skr::Hash<skr::String>> modulesMap;
+    skr::FlatHashMap<skr::String, skr::Vector<skr::String>, skr::Hash<skr::String>> subsystemIdMap;
+    skr::FlatHashMap<skr::String, skr::Vector<ModuleSubsystemBase::CreatePFN>, skr::Hash<skr::String>> subsystemCreateMap;
 
     SharedLibrary processSymbolTable;
 };
@@ -116,8 +116,8 @@ void ModuleManagerImpl::register_subsystem(const char8_t* moduleName, const char
     {
         if (ID == id) return;
     }
-    subsystemCreateMap[moduleName].emplace_back(pCreate);
-    subsystemIdMap[moduleName].emplace_back(id);
+    subsystemCreateMap[moduleName].add(pCreate);
+    subsystemIdMap[moduleName].add(id);
 }
 
 void ModuleManagerImpl::registerStaticallyLinkedModule(const char8_t* moduleName, module_registerer _register)
@@ -129,10 +129,10 @@ void ModuleManagerImpl::registerStaticallyLinkedModule(const char8_t* moduleName
     initializeMap[moduleName] = _register;
 }
 
-IModule* ModuleManagerImpl::spawnStaticModule(const skr::string& name)
+IModule* ModuleManagerImpl::spawnStaticModule(const skr::String& name)
 {
     if (modulesMap.find(name) != modulesMap.end())
-        return modulesMap[name].get();
+        return modulesMap[name];
     if (initializeMap.find(name) == initializeMap.end())
         return nullptr;
     auto func = initializeMap[name];
@@ -140,7 +140,7 @@ IModule* ModuleManagerImpl::spawnStaticModule(const skr::string& name)
     modulesMap[name]->information = parseMetaData(modulesMap[name]->get_meta_data());
     // Delay onload call to initialize time(with dependency graph)
     // modulesMap[name]->OnLoad();
-    return modulesMap[name].get();
+    return modulesMap[name];
 }
 
 class SDefaultDynamicModule : public skr::IDynamicModule
@@ -161,7 +161,7 @@ public:
         SKR_LOG_TRACE(u8"[default implementation] dynamic module %s unloaded!", name.c_str());
     }
 
-    skr::string name = u8"";
+    skr::String name = u8"";
 };
 
 static skr::filesystem::path GetVersionPath(const skr::filesystem::path &basepath,
@@ -180,10 +180,10 @@ static skr::filesystem::path GetVersionPath(const skr::filesystem::path &basepat
     return folder / (fname.string() + ver + ext.string());
 }
 
-bool ModuleManagerImpl::loadHotfixModule(SharedLibrary& lib, const skr::string& moduleName)
+bool ModuleManagerImpl::loadHotfixModule(SharedLibrary& lib, const skr::String& moduleName)
 {
     auto& ctx = hotfixModules[moduleName];
-    skr::string filename;
+    skr::String filename;
     filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
             .append(moduleName)
             .append(skr::SharedLibrary::GetPlatformFileExtensionName());
@@ -225,18 +225,18 @@ bool ModuleManagerImpl::loadHotfixModule(SharedLibrary& lib, const skr::string& 
     return true;
 }
 
-IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name, bool hotfix)
+IModule* ModuleManagerImpl::spawnDynamicModule(const skr::String& name, bool hotfix)
 {
     if (modulesMap.find(name) != modulesMap.end())
-        return modulesMap[name].get();
-    eastl::unique_ptr<SharedLibrary> sharedLib = eastl::make_unique<SharedLibrary>();
-    skr::string initName(u8"__initializeModule");
-    skr::string mName(name);
+        return modulesMap[name];
+    auto sharedLib = new SharedLibrary();
+    skr::String initName(u8"__initializeModule");
+    skr::String mName(name);
     initName.append(mName);
     // try load in program
     IModule* (*func)() = nullptr;
 
-    skr::string metaymbolname = u8"__skr_module_meta__";
+    skr::String metaymbolname = u8"__skr_module_meta__";
     metaymbolname.append(name);
     const bool is_proc_mod = processSymbolTable.hasSymbol(metaymbolname.u8_str());
     
@@ -252,7 +252,7 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name, bool hot
     if (!is_proc_mod && func == nullptr)
     {
         // try load dll
-        skr::string filename;
+        skr::String filename;
         filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
                 .append(name)
                 .append(skr::SharedLibrary::GetPlatformFileExtensionName());
@@ -291,15 +291,15 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name, bool hot
 #endif
     if (func)
     {
-        modulesMap[name] = eastl::unique_ptr<IModule>(func());
+        modulesMap[name] = func();
     }
     else
     {
         SKR_LOG_TRACE(u8"no user defined symbol: %s", initName.c_str());
-        modulesMap[name] = eastl::make_unique<SDefaultDynamicModule>(name.u8_str());
+        modulesMap[name] = new SDefaultDynamicModule(name.u8_str());
     }
-    IDynamicModule* module = (IDynamicModule*)modulesMap[name].get();
-    module->sharedLib = eastl::move(sharedLib);
+    IDynamicModule* module = (IDynamicModule*)modulesMap[name];
+    module->sharedLib = sharedLib;
     // pre-init name for meta reading
     module->information.name = name;
     module->information = parseMetaData(module->get_meta_data());
@@ -328,7 +328,7 @@ ModuleInfo ModuleManagerImpl::parseMetaData(const char8_t* metadata)
             ModuleDependency dep;
             skr::json::Read(jdep.find_field("name").value_unsafe(), dep.name);
             skr::json::Read(jdep.find_field("version").value_unsafe(), dep.version);
-            info.dependencies.emplace_back(dep);
+            info.dependencies.add(dep);
         }
     }
     else
@@ -339,19 +339,19 @@ ModuleInfo ModuleManagerImpl::parseMetaData(const char8_t* metadata)
     return info;
 }
 
-IModule* ModuleManagerImpl::get_module(const skr::string& name)
+IModule* ModuleManagerImpl::get_module(const skr::String& name)
 {
     if (modulesMap.find(name) == modulesMap.end())
         return nullptr;
-    return modulesMap.find(name)->second.get();
+    return modulesMap.find(name)->second;
 }
 
-ModuleProperty& ModuleManagerImpl::get_module_property(const skr::string& entry)
+ModuleProperty& ModuleManagerImpl::get_module_property(const skr::String& entry)
 {
     return *nodeMap.find(entry)->second;
 }
 
-bool ModuleManagerImpl::__internal_InitModuleGraph(const skr::string& nodename, int argc, char8_t** argv)
+bool ModuleManagerImpl::__internal_InitModuleGraph(const skr::String& nodename, int argc, char8_t** argv)
 {
     if (get_module_property(nodename).bActive)
         return true;
@@ -369,7 +369,7 @@ bool ModuleManagerImpl::__internal_InitModuleGraph(const skr::string& nodename, 
     for (auto&& func : create_funcs)
     {
         auto subsystem = func();
-        this_module->subsystems.emplace_back(subsystem);
+        this_module->subsystems.add(subsystem);
     }
     for (auto&& subsystem : this_module->subsystems)
     {
@@ -380,7 +380,7 @@ bool ModuleManagerImpl::__internal_InitModuleGraph(const skr::string& nodename, 
     return true;
 }
 
-bool ModuleManagerImpl::__internal_DestroyModuleGraph(const skr::string& nodename)
+bool ModuleManagerImpl::__internal_DestroyModuleGraph(const skr::String& nodename)
 {
     if (!get_module_property(nodename).bActive)
         return true;
@@ -400,7 +400,11 @@ bool ModuleManagerImpl::__internal_DestroyModuleGraph(const skr::string& nodenam
         SkrDelete(subsystem);
     }
     this_module->on_unload();
-    modulesMap[nodename].reset();
+    if (modulesMap[nodename] != nullptr)
+    {
+        delete modulesMap[nodename];
+        modulesMap[nodename] = nullptr;
+    }
     nodeMap[nodename]->bActive = false;
     nodeMap[nodename]->name = nodename;
     return true;
@@ -423,7 +427,7 @@ bool ModuleManagerImpl::destroy_module_graph(void)
     return true;
 }
 
-void ModuleManagerImpl::__internal_MakeModuleGraph(const skr::string& entry, bool shared)
+void ModuleManagerImpl::__internal_MakeModuleGraph(const skr::String& entry, bool shared)
 {
     if (nodeMap.find(entry) != nodeMap.end())
         return;
@@ -439,7 +443,7 @@ void ModuleManagerImpl::__internal_MakeModuleGraph(const skr::string& entry, boo
     dependency_graph->insert(prop);
     auto moduleInfo = _module->get_module_info();
     if (moduleInfo->dependencies.size() == 0)
-        roots.push_back(entry);
+        roots.add(entry);
     for (auto i = 0u; i < moduleInfo->dependencies.size(); i++)
     {
         auto iterName = moduleInfo->dependencies[i].name.u8_str();
@@ -453,27 +457,27 @@ void ModuleManagerImpl::__internal_MakeModuleGraph(const skr::string& entry, boo
     }
 }
 
-const ModuleGraph* ModuleManagerImpl::make_module_graph(const skr::string& entry, bool shared /*=false*/)
+const ModuleGraph* ModuleManagerImpl::make_module_graph(const skr::String& entry, bool shared /*=false*/)
 {
     mainModuleName = entry;
     __internal_MakeModuleGraph(entry, shared);
     return (struct ModuleGraph*)dependency_graph;
 }
 
-bool ModuleManagerImpl::patch_module_graph(const skr::string& entry, bool shared, int argc, char8_t** argv)
+bool ModuleManagerImpl::patch_module_graph(const skr::String& entry, bool shared, int argc, char8_t** argv)
 {
     __internal_MakeModuleGraph(entry, shared);
     if (!__internal_InitModuleGraph(entry, argc, argv))
         return false;
     return true;
 }
-void ModuleManagerImpl::enable_hotfix_for_module(skr::string_view name)
+void ModuleManagerImpl::enable_hotfix_for_module(skr::StringView name)
 {
-    std::pair<skr::string, ModuleContext> pair(name, ModuleContext{});
+    std::pair<skr::String, ModuleContext> pair(name, ModuleContext{});
     hotfixModules.insert(std::move(pair));
 }
 
-bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::string& entry)
+bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::String& entry)
 {
     if (hotfixTraversalSet.find(entry) != hotfixTraversalSet.end())
         return true;
@@ -493,7 +497,7 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::string& entry)
     //reload module
     SKR_LOG_DEBUG(u8"Hotfix module: %s", entry.c_str());
     
-    eastl::unique_ptr<SharedLibrary> sharedLib = eastl::make_unique<SharedLibrary>();
+    auto sharedLib = new SharedLibrary();
     //unload old module
     auto this_module = (IHotfixModule*)get_module(entry);
     // subsystems
@@ -508,7 +512,11 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::string& entry)
     this_module->on_reload_begin();
     auto this_state = std::move(this_module->state);
     auto old_lib = std::move(this_module->sharedLib);
-    modulesMap[entry].reset();
+    if (modulesMap[entry] != nullptr)
+    {
+        delete modulesMap[entry];
+        modulesMap[entry] = nullptr;
+    }
     subsystemCreateMap[entry].clear();
     //old_lib->unload();
     IModule* (*func)() = nullptr;
@@ -519,8 +527,8 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::string& entry)
     }
     else 
     {
-        skr::string initName(u8"__initializeModule");
-        skr::string mName(entry);
+        skr::String initName(u8"__initializeModule");
+        skr::String mName(entry);
         initName.append(mName);
         if (sharedLib->hasSymbol(initName.u8_str()))
         {
@@ -537,14 +545,14 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::string& entry)
     // pre-init name for meta reading
     new_module->information.name = entry;
     new_module->information = parseMetaData(new_module->get_meta_data());
-    modulesMap[entry].reset(new_module);
+    modulesMap[entry] = new_module;
     new_module->state = std::move(this_state);
     new_module->on_reload_finish();
     auto&& create_funcs = subsystemCreateMap[entry];
     for (auto&& func : create_funcs)
     {
         auto subsystem = func();
-        new_module->subsystems.emplace_back(subsystem);
+        new_module->subsystems.add(subsystem);
     }
     for (auto&& subsystem : new_module->subsystems)
     {
@@ -563,9 +571,9 @@ void ModuleManagerImpl::mount(const char8_t* rootdir)
     moduleDir = rootdir;
 }
 
-skr::string_view ModuleManagerImpl::get_root(void)
+skr::StringView ModuleManagerImpl::get_root(void)
 {
-    return skr::string_view(skr::string_view(moduleDir.u8_str(), (size_t)moduleDir.size()));
+    return skr::StringView(skr::StringView(moduleDir.u8_str(), (size_t)moduleDir.size()));
 }
 
 } // namespace skr

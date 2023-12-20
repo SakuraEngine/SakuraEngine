@@ -1,8 +1,8 @@
-if(has_config("shipping_one_archive")) then
-    add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = false } })
-else
-    add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = true } })
-end
+-- if(has_config("shipping_one_archive")) then
+    -- add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = false } })
+-- else
+    -- add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = true } })
+-- end
 
 add_requires("lemon 1.3.1")
 add_requires("parallel-hashmap >=1.3.11-skr")
@@ -14,9 +14,10 @@ target("SkrRTStatic")
     set_group("01.modules")
     set_optimize("fastest")
     set_exceptions("no-cxx")
-    add_deps("SkrRoot", "SkrBase", {public = true})
+    add_deps("SkrRoot", "SkrBase", "SkrMemory", {public = true})
     add_defines("SKR_RUNTIME_API=SKR_IMPORT", "SKR_RUNTIME_LOCAL=error")
-    add_packages("eastl", "parallel-hashmap", "simdjson", {public = true, inherit = true})
+    -- add_packages("eastl")
+    add_packages("parallel-hashmap", "simdjson", {public = true, inherit = true})
     add_packages("lemon", {public = false, inherit = false})
     add_rules("skr.static_module", {api = "SKR_RUNTIME_STATIC"})
     add_includedirs("include", {public = true})
@@ -26,7 +27,7 @@ target("SkrRTStatic")
 
 shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     set_group("01.modules")
-    add_deps("SkrRTStatic", {public = true, inherit = true})
+    add_deps("SkrRTStatic", "SkrMemory", {public = true, inherit = true})
     add_defines("SKR_RUNTIME_API=SKR_EXPORT", "SKR_RUNTIME_LOCAL=error")
 
     -- internal packages
@@ -74,7 +75,7 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/build.*.cpp")
     
     -- add marl source
-    add_defines("MARL_USE_EASTL", {public = true})
+    -- add_defines("MARL_USE_EASTL", {public = true})
     local marl_source_dir = "$(projectdir)/thirdparty/marl"
     add_files(marl_source_dir.."/src/build.*.cpp")
     if not is_os("windows") then 

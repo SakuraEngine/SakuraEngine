@@ -23,8 +23,8 @@ namespace skd::asset
 {
 struct SCookSystemImpl : public skd::asset::SCookSystem {
     friend struct ::SkrToolCoreModule;
-    using AssetMap   = skr::flat_hash_map<skr_guid_t, SAssetRecord*, skr::guid::hash>;
-    using CookingMap = skr::parallel_flat_hash_map<skr_guid_t, SCookContext*, skr::guid::hash>;
+    using AssetMap   = skr::FlatHashMap<skr_guid_t, SAssetRecord*, skr::guid::hash>;
+    using CookingMap = skr::ParallelFlatHashMap<skr_guid_t, SCookContext*, skr::guid::hash>;
 
     skr::task::event_t AddCookTask(skr_guid_t resource) override;
     skr::task::event_t EnsureCooked(skr_guid_t resource) override;
@@ -61,15 +61,15 @@ struct SCookSystemImpl : public skd::asset::SCookSystem {
     {
         skr::parallel_for(std::move(begin), std::move(end), batch, std::move(f));
     }
-    void ParallelForEachAsset(uint32_t batch, skr::function_ref<void(skr::span<SAssetRecord*>)> f) override
+    void ParallelForEachAsset(uint32_t batch, skr::FunctionRef<void(skr::span<SAssetRecord*>)> f) override
     {
         ParallelFor(assets.begin(), assets.end(), batch,
                     [f, batch](auto begin, auto end) {
-                        skr::vector<SAssetRecord*> records;
+                        skr::Vector<SAssetRecord*> records;
                         records.reserve(batch);
                         for (auto it = begin; it != end; ++it)
                         {
-                            records.emplace_back(it->second);
+                            records.add(it->second);
                         }
                         f(records);
                     });
@@ -82,8 +82,8 @@ protected:
 
     skr::task::counter_t mainCounter;
 
-    skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> defaultCookers;
-    skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
+    skr::FlatHashMap<skr_guid_t, SCooker*, skr::guid::hash> defaultCookers;
+    skr::FlatHashMap<skr_guid_t, SCooker*, skr::guid::hash> cookers;
     SMutex                                                    assetMutex;
     skr_io_ram_service_t*                                     ioServices[ioServicesMaxCount];
 };
@@ -241,7 +241,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 SKR_LOG_INFO(u8"[CookTask] resource %s cook finished! updating resource metas.", metaAsset->path.u8string().c_str());
                 auto headerPath = jobContext->GetOutputPath();
                 headerPath.replace_extension("rh");
-                eastl::vector<uint8_t>    buffer;
+                skr::Vector<uint8_t>    buffer;
                 skr::binary::VectorWriter writer{ &buffer };
                 skr_binary_writer_t       archive(writer);
                 jobContext->WriteHeader(archive, cooker);
@@ -271,7 +271,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 for (auto& dep : jobContext->GetFileDependencies())
                 {
                     auto str = dep.string();
-                    skr::json::Write<skr::string_view>(&writer, { (const char8_t*)str.data(), str.size() });
+                    skr::json::Write<skr::StringView>(&writer, { (const char8_t*)str.data(), str.size() });
                 }
                 writer.EndArray();
                 writer.Key(u8"dependencies");
@@ -431,7 +431,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
         }
         for (auto file : files.value_unsafe())
         {
-            skr::string pathStr;
+            skr::String pathStr;
             skr::json::Read(std::move(file).value_unsafe(), pathStr);
             skr::filesystem::path path(pathStr.c_str());
             path               = metaAsset->path.parent_path() / (path);

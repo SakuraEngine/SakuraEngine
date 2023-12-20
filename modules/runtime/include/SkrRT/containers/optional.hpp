@@ -1,8 +1,8 @@
-#include "EASTL/optional.h"
+#pragma once
+#include "SkrBase/containers/misc/optional.hpp"
 
 namespace skr
 {
-    template<class T>
-    using optional = eastl::optional<T>;
-    constexpr auto nullopt = eastl::nullopt;
-}
+using ::skr::container::Nullopt;
+using ::skr::container::Optional;
+}; // namespace skr

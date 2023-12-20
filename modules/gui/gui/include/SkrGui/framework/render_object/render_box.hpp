@@ -16,7 +16,6 @@ sreflect_struct(
 SKR_GUI_API RenderBox : public RenderObject {
     SKR_RTTR_GENERATE_BODY()
 
-public:
     RenderBox();
     ~RenderBox();
 
@@ -62,10 +61,6 @@ protected:
 
     // dry layout
     virtual Sizef compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT;
-
-    // helper function
-    using HitTestFuncRef = FunctionRef<bool(HitTestResult* result, Offsetf local_position)>;
-    bool _default_hit_test(HitTestResult* result, Offsetf local_position, HitTestFuncRef hit_test_self, HitTestFuncRef hit_test_children) const;
 
 private:
     void perform_resize() SKR_NOEXCEPT override; // override compute_dry_layout instead

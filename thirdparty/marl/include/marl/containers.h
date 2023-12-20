@@ -17,6 +17,7 @@
 
 #include "debug.h"
 #include "memory.h"
+#include "marl/memory.h"
 #include <cstddef>    // size_t
 #include <thread>
 
@@ -48,6 +49,7 @@ namespace marl { using std::map; using std::deque; using std::set; using std::un
 
 namespace marl {
 namespace containers {
+
 template <typename T>
 using deque = marl::deque<T, EASTLAllocator>;
 
@@ -69,6 +71,9 @@ using unordered_set = marl::unordered_set<K, H, E, EASTLAllocator>;
 
 #else
 
+namespace marl {
+namespace containers {
+
 ////////////////////////////////////////////////////////////////////////////////
 // STL wrappers
 // STL containers that use a marl::StlAllocator backed by a marl::Allocator.
@@ -76,23 +81,23 @@ using unordered_set = marl::unordered_set<K, H, E, EASTLAllocator>;
 // See: https://github.com/google/marl/issues/129
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T>
-using deque = marl::deque<T, StlAllocator<T>>;
+using deque = marl::deque<T, marl::StlAllocator<T>>;
 
 template <typename K, typename V, typename C = std::less<K>>
-using map = marl::map<K, V, C, StlAllocator<std::pair<const K, V>>>;
+using map = marl::map<K, V, C, marl::StlAllocator<std::pair<const K, V>>>;
 
 template <typename K, typename C = std::less<K>>
-using set = marl::set<K, C, StlAllocator<K>>;
+using set = marl::set<K, C, marl::StlAllocator<K>>;
 
 template <typename K,
           typename V,
           typename H = std::hash<K>,
           typename E = std::equal_to<K>>
 using unordered_map =
-    marl::unordered_map<K, V, H, E, StlAllocator<std::pair<const K, V>>>;
+    marl::unordered_map<K, V, H, E, marl::StlAllocator<std::pair<const K, V>>>;
 
 template <typename K, typename H = std::hash<K>, typename E = std::equal_to<K>>
-using unordered_set = marl::unordered_set<K, H, E, StlAllocator<K>>;
+using unordered_set = marl::unordered_set<K, H, E, marl::StlAllocator<K>>;
 
 #endif
 
@@ -129,11 +134,11 @@ class vector {
 
   template <int BASE_CAPACITY_2>
   MARL_NO_EXPORT inline vector(const vector<T, BASE_CAPACITY_2>& other,
-                               Allocator* allocator = Allocator::Default);
+                               marl::Allocator* allocator = Allocator::Default);
 
   template <int BASE_CAPACITY_2>
   MARL_NO_EXPORT inline vector(vector<T, BASE_CAPACITY_2>&& other,
-                               Allocator* allocator = Allocator::Default);
+                               marl::Allocator* allocator = Allocator::Default);
 
   MARL_NO_EXPORT inline ~vector();
 
@@ -167,7 +172,7 @@ class vector {
   MARL_NO_EXPORT inline T* data();
   MARL_NO_EXPORT inline const T* data() const;
 
-  Allocator* const allocator;
+  marl::Allocator* const allocator;
 
  private:
   using TStorage = typename marl::aligned_storage<sizeof(T), alignof(T)>::type;
@@ -180,19 +185,19 @@ class vector {
   size_t capacity = BASE_CAPACITY;
   TStorage buffer[BASE_CAPACITY];
   TStorage* elements = buffer;
-  Allocation allocation;
+  marl::Allocation allocation;
 };
 
 template <typename T, int BASE_CAPACITY>
 vector<T, BASE_CAPACITY>::vector(
-    Allocator* allocator /* = Allocator::Default */)
+    marl::Allocator* allocator /* = Allocator::Default */)
     : allocator(allocator) {}
 
 template <typename T, int BASE_CAPACITY>
 template <int BASE_CAPACITY_2>
 vector<T, BASE_CAPACITY>::vector(
     const vector<T, BASE_CAPACITY_2>& other,
-    Allocator* allocator /* = Allocator::Default */)
+    marl::Allocator* allocator /* = Allocator::Default */)
     : allocator(allocator) {
   *this = other;
 }
@@ -201,7 +206,7 @@ template <typename T, int BASE_CAPACITY>
 template <int BASE_CAPACITY_2>
 vector<T, BASE_CAPACITY>::vector(
     vector<T, BASE_CAPACITY_2>&& other,
-    Allocator* allocator /* = Allocator::Default */)
+    marl::Allocator* allocator /* = Allocator::Default */)
     : allocator(allocator) {
   *this = std::move(other);
 }
@@ -420,7 +425,7 @@ class list {
     Entry* entry;
   };
 
-  MARL_NO_EXPORT inline list(Allocator* allocator = Allocator::Default);
+  MARL_NO_EXPORT inline list(marl::Allocator* allocator = marl::Allocator::Default);
   MARL_NO_EXPORT inline ~list();
 
   MARL_NO_EXPORT inline iterator begin();
@@ -448,7 +453,7 @@ class list {
   MARL_NO_EXPORT static inline void unlink(Entry* entry, Entry*& list);
   MARL_NO_EXPORT static inline void link(Entry* entry, Entry*& list);
 
-  Allocator* const allocator;
+  marl::Allocator* const allocator;
   size_t size_ = 0;
   size_t capacity = 0;
   AllocationChain* allocations = nullptr;
@@ -486,7 +491,7 @@ bool list<T>::iterator::operator!=(const iterator& rhs) const {
 }
 
 template <typename T>
-list<T>::list(Allocator* allocator /* = Allocator::Default */)
+list<T>::list(marl::Allocator* allocator /* = Allocator::Default */)
     : allocator(allocator) {}
 
 template <typename T>

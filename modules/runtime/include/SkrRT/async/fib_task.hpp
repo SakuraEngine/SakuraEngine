@@ -25,14 +25,13 @@ namespace skr::task
 #if !defined(SKR_TASK_MARL)
 #include "ftl/task_scheduler.h"
 #include "ftl/task_counter.h"
-#include "EASTL/shared_ptr.h"
 
 namespace skr::task
 {
     struct SKR_RUNTIME_API counter_t
     {
     public:
-        using internal_t = eastl::shared_ptr<ftl::TaskCounter>;
+        using internal_t = skr::shared_ptr<ftl::TaskCounter>;
         counter_t(bool inverse = false);
         counter_t(std::nullptr_t) {}
 
@@ -53,7 +52,7 @@ namespace skr::task
     struct SKR_RUNTIME_API weak_counter_t
     {
     public:
-        using internal_t = eastl::weak_ptr<ftl::TaskCounter>;
+        using internal_t = skr::weak_ptr<ftl::TaskCounter>;
         weak_counter_t() = default;
         weak_counter_t(const counter_t& counter) { internal = counter.internal; }
         weak_counter_t(const weak_counter_t& other) { internal = other.internal; }
@@ -71,7 +70,7 @@ namespace skr::task
     struct SKR_RUNTIME_API event_t
     {
     public:
-        using internal_t = eastl::shared_ptr<ftl::TaskCounter>;
+        using internal_t = skr::shared_ptr<ftl::TaskCounter>;
         event_t();
         event_t(std::nullptr_t) {}
         bool operator==(const event_t& other) const { return internal == other.internal; }
@@ -92,7 +91,7 @@ namespace skr::task
     struct SKR_RUNTIME_API weak_event_t
     {
     public:
-        using internal_t = eastl::weak_ptr<ftl::TaskCounter>;
+        using internal_t = skr::weak_ptr<ftl::TaskCounter>;
         weak_event_t() = default;
         weak_event_t(const event_t& event) { internal = event.internal; }
         weak_event_t(const weak_event_t& other) { internal = other.internal; }
@@ -114,7 +113,7 @@ namespace skr::task
         void initialize(const scheudler_config_t&);
         void bind();
         void unbind();
-        template<struct F>
+        template<typename F>
         void schedule(F&& lambda, event_t* event, const char* name = nullptr)
         {
             auto f = SkrNewLambda(std::forward<F>(lambda));
@@ -130,7 +129,7 @@ namespace skr::task
             if(event) event->internal->Decrement();
         }
         
-        template<struct F>
+        template<typename F>
         void wait(bool pin, F&& lambda)
         {
             internal->WaitForPredicate(std::forward<F>(lambda), pin);
@@ -144,7 +143,7 @@ namespace skr::task
         friend struct event_t;
     };
 
-    template<struct F>
+    template<typename F>
     void schedule(F&& lambda, event_t* event, const char* name = nullptr);
 
     void* current_fiber();
@@ -155,14 +154,14 @@ namespace skr::task
         static scheduler_t* get_scheduler();
         friend struct counter_t;
         friend struct event_t;
-        template<struct F>
+        template<typename F>
         friend void schedule(F&& lambda, event_t* event, const char* name);
-        template<struct F>
+        template<typename F>
         friend void wait(bool pin, F&& lambda);
         friend void* current_fiber();
     };
 
-    template<struct F>
+    template<typename F>
     void schedule(F&& lambda, event_t* event, const char* name)
     {
         scheduler_t* scheduler = details::get_scheduler();
@@ -170,7 +169,7 @@ namespace skr::task
         scheduler->schedule(std::forward<F>(lambda), event, name);
     }
 
-    template<struct F>
+    template<typename F>
     void wait(bool pin, F&& lambda)
     {
         scheduler_t* scheduler = details::get_scheduler();

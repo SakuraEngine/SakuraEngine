@@ -1,8 +1,9 @@
 #pragma once
-#include "SkrRT/resource/resource_handle.h"
-#include <EASTL/fixed_vector.h>
-#include <SkrRT/containers/vector.hpp>
 #include "SkrRT/platform/thread.h"
+#include "SkrRT/resource/resource_handle.h"
+#include <SkrRT/containers/vector.hpp>
+#include <SkrRT/containers/deprecated.hpp>
+#include <SkrRT/containers/stl_vector.hpp>
 
 #include "SkrRT/serde/binary/reader_fwd.h"
 #include "SkrRT/serde/binary/writer_fwd.h"
@@ -12,7 +13,7 @@ typedef struct skr_resource_header_t {
     skr_guid_t                                    guid;
     skr_guid_t                                    type;
     SKR_RUNTIME_API int                           ReadWithoutDeps(skr_binary_reader_t* archive);
-    eastl::fixed_vector<skr_resource_handle_t, 4> dependencies;
+    skr::InlineVector<skr_resource_handle_t, 4> dependencies;
 } skr_resource_header_t;
 
 namespace skr::binary
@@ -60,7 +61,7 @@ struct SKR_RUNTIME_API skr_resource_record_t {
         void  (*callback)(void*);
         void  operator()(void) const { callback(data); }
     };
-    eastl::vector<callback_t> callbacks[SKR_LOADING_STATUS_COUNT];
+    skr::stl_vector<callback_t> callbacks[SKR_LOADING_STATUS_COUNT];
     SMutexObject              mutex;
     ESkrLoadingStatus         loadingStatus = SKR_LOADING_STATUS_UNLOADED;
 #ifdef TRACK_RESOURCE_REQUESTS
@@ -84,9 +85,9 @@ struct SKR_RUNTIME_API skr_resource_record_t {
     };
     uint32_t                        id               = 0;
     uint32_t                        requesterCounter = 0;
-    eastl::vector<object_requester> objectReferences;
-    eastl::vector<entity_requester> entityReferences;
-    eastl::vector<script_requester> scriptReferences;
+    skr::stl_vector<object_requester> objectReferences;
+    skr::stl_vector<entity_requester> entityReferences;
+    skr::stl_vector<script_requester> scriptReferences;
     uint32_t                        entityRefCount = 0;
     uint32_t                        scriptRefCount = 0;
 #else

@@ -1,13 +1,13 @@
 #pragma once
 #include <type_traits>
-#include <EASTL/atomic.h>
+#include <atomic>
 
 namespace dual
 {
     struct fixed_arena_t
     {
         void* buffer;
-        eastl::atomic<size_t> size;
+        std::atomic<size_t> size;
         size_t capacity;
         fixed_arena_t(size_t capacity);
         ~fixed_arena_t();

@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
-#include <EASTL/set.h>
-#include <SkrRT/containers/string.hpp>
 #include "../common/common_utils.h"
+#include <SkrRT/containers/uset.hpp>
+#include <SkrRT/containers/string.hpp>
 #include "SkrRT/platform/shared_library.hpp"
 #include "cgpu/extensions/cgpu_nsight.h"
 #include "cgpu_nsight_tracker.hpp"
@@ -10,7 +10,7 @@
 #include "cgpu/drivers/nsight/GFSDK_Aftermath_GpuCrashDump.h"
 #include "cgpu/drivers/nsight/GFSDK_Aftermath_GpuCrashDumpDecoding.h"
 
-inline skr::string AftermathErrorMessage(GFSDK_Aftermath_Result result)
+inline skr::String AftermathErrorMessage(GFSDK_Aftermath_Result result)
 {
     switch (result)
     {
@@ -36,7 +36,7 @@ inline static void AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_Result _result)
 void CGPUNSightSingleton::register_tracker(CGPUNSightTrackerId tracker) SKR_NOEXCEPT
 {
     trackers_mutex.lock();
-    all_trackers.emplace_back(tracker);
+    all_trackers.add(tracker);
     trackers_mutex.unlock();
     CGPUNSightSingleton::rc = (uint32_t)all_trackers.size();
 }
@@ -44,7 +44,7 @@ void CGPUNSightSingleton::register_tracker(CGPUNSightTrackerId tracker) SKR_NOEX
 void CGPUNSightSingleton::remove_tracker(CGPUNSightTrackerId tracker) SKR_NOEXCEPT
 {
     trackers_mutex.lock();
-    all_trackers.erase(eastl::remove(all_trackers.begin(), all_trackers.end(), tracker));
+    all_trackers.remove(tracker);
     trackers_mutex.unlock();
     CGPUNSightSingleton::rc = (uint32_t)all_trackers.size();
     if (!CGPUNSightSingleton::rc)
@@ -83,7 +83,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
             GFSDK_Aftermath_GpuCrashDumpDescriptionKey_ApplicationName,
             &applicationNameLength));
 
-        eastl::vector<char8_t> applicationName(applicationNameLength, '\0');
+        skr::Vector<char8_t> applicationName(applicationNameLength, '\0');
         if (applicationNameLength)
         {
             AFTERMATH_CHECK_ERROR(aftermath_GpuCrashDump_GetDescription(
@@ -98,12 +98,12 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         // driver release) we may see redundant crash dumps. As a workaround,
         // attach a unique count to each generated file name.
         static int count = 0;
-        const skr::string baseFileNameFmt = applicationNameLength ? skr::string(applicationName.data()) : skr::string(u8"CGPUApplication-{}-{}");
+        const skr::String baseFileNameFmt = applicationNameLength ? skr::String(applicationName.data()) : skr::String(u8"CGPUApplication-{}-{}");
         const auto baseFileName = skr::format(baseFileNameFmt, baseInfo.pid, ++count);
 
         // Write the crash dump data to a file using the .nv-gpudmp extension
         // registered with Nsight Graphics.
-        skr::string crashDumpFileName = baseFileName;
+        skr::String crashDumpFileName = baseFileName;
         crashDumpFileName += u8".nv-gpudmp";
         std::ofstream dumpFile(crashDumpFileName.c_str(), std::ios::out | std::ios::binary);
         if (dumpFile)
@@ -124,7 +124,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
     {
         auto _this = (CGPUNSightSingleton*)pUserData;
         SKR_LOG_TRACE(u8"NSIGHT GPU Crash Dump Callback");
-        eastl::set<struct ID3D12Device*> devices; 
+        skr::USet<struct ID3D12Device*> devices; 
         for (auto tracker : _this->all_trackers)
         {
             auto tracker_impl = static_cast<CGPUNSightTrackerBase*>(tracker);

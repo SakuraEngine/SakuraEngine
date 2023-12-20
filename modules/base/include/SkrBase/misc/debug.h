@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrBase/config/platform.h"
 #include "SkrBase/misc/internal/debugbreak.h"
 
 SKR_EXTERN_C SKR_STATIC_API void skr_debug_output(const char* msg);

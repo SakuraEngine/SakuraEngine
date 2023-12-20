@@ -16,13 +16,13 @@ void SProject::SetWorkspace(const skr::filesystem::path& path) noexcept
 SProject* SProject::OpenProject(const skr::filesystem::path& projectFile) noexcept
 {
     std::error_code ec = {};
-    auto resolvePath = [&](skr::string& path)
+    auto resolvePath = [&](skr::String& path)
     {
         auto view = path.view();
         auto i = view.index_of(u8"${");
         if(i == ostr::global_constant::INDEX_INVALID)
             return path;
-        skr::string resolved;
+        skr::String resolved;
         resolved.raw().reserve(path.raw().size());
         //resolved.append(view);
         while(true)
@@ -53,7 +53,7 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFile) noexce
         }
         return resolved;
     };
-    auto toAbsolutePath = [&](skr::string& path)
+    auto toAbsolutePath = [&](skr::String& path)
     {
         auto resolved = resolvePath(path);
         skr::filesystem::path result{resolved.c_str()};

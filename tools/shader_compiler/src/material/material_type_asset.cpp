@@ -60,7 +60,7 @@ bool SMaterialTypeCooker::Cook(SCookContext *ctx)
         ctx->AddStaticDependency(shader_asset.get_guid(), true);
         ctx->AddRuntimeDependency(shader_asset.get_guid());
         // simly write guids to runtime resource handle sequence
-        runtime_material_type.passes.emplace_back(pass);
+        runtime_material_type.passes.add(pass);
     }
     runtime_material_type.default_values.reserve(material_type->properties.size());
     for (const auto& property : material_type->properties)
@@ -70,7 +70,7 @@ bool SMaterialTypeCooker::Cook(SCookContext *ctx)
         runtime_value.prop_type = property.prop_type;
         runtime_value.value = property.default_value;
         runtime_value.resource = property.default_resource.get_guid();
-        runtime_material_type.default_values.emplace_back(runtime_value);
+        runtime_material_type.default_values.add(runtime_value);
     }
     runtime_material_type.switch_defaults = material_type->switch_defaults;
     runtime_material_type.option_defaults = material_type->option_defaults;

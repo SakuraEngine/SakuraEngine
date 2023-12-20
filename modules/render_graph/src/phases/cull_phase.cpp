@@ -14,8 +14,7 @@ void CullPhase::on_compile(RenderGraph* graph) SKR_NOEXCEPT
     auto& resources = get_resources(graph);
     auto& passes = get_passes(graph);
 
-    resources.erase(
-    eastl::remove_if(resources.begin(), resources.end(),
+    resources.remove_all_if(
     [this](ResourceNode* resource) {
         SKR_UNUSED const auto name = resource->get_name_view();
         SkrZoneScopedC(tracy::Color::SteelBlue);
@@ -24,14 +23,12 @@ void CullPhase::on_compile(RenderGraph* graph) SKR_NOEXCEPT
         const bool lone = !(resource->incoming_edges() + resource->outgoing_edges());
         {
             SkrZoneScopedN("RecordDealloc");
-            if (lone) culled_resources.emplace_back(resource);
+            if (lone) culled_resources.add(resource);
         }
         return lone;
-    }),
-    resources.end());
+    });
 
-    passes.erase(
-    eastl::remove_if(passes.begin(), passes.end(),
+    passes.remove_all_if(
     [this](PassNode* pass) {
         SKR_UNUSED const auto name = pass->get_name_view();
         SkrZoneScopedC(tracy::Color::SteelBlue);
@@ -42,11 +39,10 @@ void CullPhase::on_compile(RenderGraph* graph) SKR_NOEXCEPT
         const bool culled = lone && !can_be_lone;
         {
             SkrZoneScopedN("RecordDealloc");
-            if (culled) culled_passes.emplace_back(pass);
+            if (culled) culled_passes.add(pass);
         }
         return culled;
-    }),
-    passes.end());
+    });
 }
 
 void CullPhase::on_execute(RenderGraph* graph, RenderGraphProfiler* profiler) SKR_NOEXCEPT

@@ -1,11 +1,11 @@
 #pragma once
 #include "SkrRT/ecs/dual_config.h"
-#include <EASTL/numeric_limits.h>
+#include <limits>
 
 namespace dual
 {
     
-constexpr static dual_entity_t kEntityNull = eastl::numeric_limits<dual_entity_t>::max();
+constexpr static dual_entity_t kEntityNull = std::numeric_limits<dual_entity_t>::max();
 constexpr static dual_entity_t kEntityTransientVersion = ((1 << (sizeof(dual_entity_t) * 8 - DUAL_ENTITY_VERSION_OFFSET)) - 1);
 
 DUAL_FORCEINLINE dual_entity_t e_id(dual_entity_t e)

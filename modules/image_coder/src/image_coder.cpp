@@ -1,6 +1,6 @@
 #include "SkrRT/misc/log.h"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrBase/misc/debug.h" 
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrImageCoder/skr_image_coder.h"

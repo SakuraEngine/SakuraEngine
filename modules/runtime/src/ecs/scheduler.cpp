@@ -1,3 +1,4 @@
+#include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/ecs/SmallVector.h"
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/ecs/entity.hpp"
@@ -5,7 +6,7 @@
 #include "query.hpp"
 #include "storage.hpp"
 #include "scheduler.hpp"
-#include <EASTL/bitset.h>
+#include <bitset>
 
 #include "SkrProfile/profile.h"
 
@@ -64,7 +65,7 @@ bool dual::scheduler_t::sync_archetype(dual::archetype_t* type)
 {
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
-    eastl::vector<skr::task::event_t> deps;
+    skr::stl_vector<skr::task::event_t> deps;
     {
         SMutexLock entryLock(entryMutex.mMutex);
         auto pair = dependencyEntries.find(type);
@@ -98,7 +99,7 @@ bool dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i,
 {
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
-    eastl::vector<skr::task::event_t> deps;
+    skr::stl_vector<skr::task::event_t> deps;
     
     {
         SMutexLock entryLock(entryMutex.mMutex);
@@ -135,7 +136,7 @@ bool dual::scheduler_t::sync_query(dual_query_t* query)
         groups.push_back(group);
     };
     query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
-    skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
+    skr::FlatHashSet<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
 
     auto sync_entry_once = [&](dual::archetype_t* type, dual_type_index_t i, bool readonly, bool atomic) -> bool
     {
@@ -253,7 +254,7 @@ struct hash_shared_ptr {
         return value.hash();
     }
 };
-using DependencySet = skr::flat_hash_set<skr::task::event_t, hash_shared_ptr>;
+using DependencySet = skr::FlatHashSet<skr::task::event_t, hash_shared_ptr>;
 void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool readonly, bool atomic, DependencySet& dependencies)
 {
     SKR_ASSERT(job);
@@ -311,19 +312,19 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         dual_query_t* query;
         dual_group_t** groups;
         uint32_t groupCount;
-        eastl::bitset<32>* readonly;
+        std::bitset<32>* readonly;
         dual_type_index_t* localTypes;
-        eastl::bitset<32>* atomic;
-        eastl::bitset<32>* randomAccess;
+        std::bitset<32>* atomic;
+        std::bitset<32>* randomAccess;
         bool hasRandomWrite;
         bool hasWriteChunkComponent;
         EIndex entityCount;
         dual_system_callback_t callback;
         void* userdata;
-        eastl::vector<task_t> tasks;
+        skr::stl_vector<task_t> tasks;
     };
     SharedData* job = nullptr;
-    eastl::shared_ptr<SharedData> sharedData;
+    skr::SPtr<SharedData> sharedData;
 
     auto groupCount = (uint32_t)groups.size();
     {
@@ -435,8 +436,8 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 intptr_t startTask;
                 intptr_t endTask;
             };
-            eastl::vector<batch_t> batches;
-            eastl::vector<task_t>& tasks = sharedData->tasks;
+            skr::stl_vector<batch_t> batches;
+            skr::stl_vector<task_t>& tasks = sharedData->tasks;
             {
                 SkrZoneScopedN("JobBatching");
                 batches.reserve(sharedData->entityCount / batchSize);
@@ -557,7 +558,7 @@ skr::task::event_t dual::scheduler_t::schedule_job(dual_query_t* query, dual_sch
     return result;
 }
 
-eastl::vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources)
+skr::stl_vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources)
 {
     SkrZoneScopedN("SchedualCustomJob");
 
@@ -582,7 +583,7 @@ eastl::vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(du
         }
     }
 
-    skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
+    skr::FlatHashSet<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
     auto sync_entry = [&](const dual_group_t* group, dual_type_index_t localType, bool readonly, bool atomic) {
         if (localType == kInvalidTypeIndex)
             return;
@@ -596,7 +597,7 @@ eastl::vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(du
             auto iter = dependencyEntries.find(at);
             if (iter == dependencyEntries.end())
             {
-                eastl::vector<job_dependency_entry_t> entries(at->type.length);
+                skr::stl_vector<job_dependency_entry_t> entries(at->type.length);
                 iter = dependencyEntries.insert(std::make_pair(at, std::move(entries))).first;
             }
 
@@ -687,13 +688,13 @@ eastl::vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(du
         }
     }
 
-    eastl::vector<skr::task::weak_event_t> result;
+    skr::stl_vector<skr::task::weak_event_t> result;
     for(auto& counter : dependencies)
         result.push_back(counter);
     return result;
 }
 
-eastl::vector<skr::task::event_t> dual::scheduler_t::sync_resources(const skr::task::event_t& counter, dual_resource_operation_t* resources)
+skr::stl_vector<skr::task::event_t> dual::scheduler_t::sync_resources(const skr::task::event_t& counter, dual_resource_operation_t* resources)
 {
     DependencySet dependencies;
     {
@@ -706,7 +707,7 @@ eastl::vector<skr::task::event_t> dual::scheduler_t::sync_resources(const skr::t
             update_entry(entry, counter, readonly, atomic, dependencies);
         }
     }
-    eastl::vector<skr::task::event_t> result;
+    skr::stl_vector<skr::task::event_t> result;
 
     result.resize(dependencies.size());
     uint32_t dependencyIndex = 0;

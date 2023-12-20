@@ -8,13 +8,13 @@ namespace skr::type
     struct EnumToStringTrait;
 
     template<class T>
-    skr::string_view enum_to_string(const T& value)
+    skr::StringView enum_to_string(const T& value)
     {
         return EnumToStringTrait<T>::ToString(value);
     }
 
     template<class T>
-    bool enum_from_string(skr::string_view str, T& value)
+    bool enum_from_string(skr::StringView str, T& value)
     {
         return EnumToStringTrait<T>::FromString(str, value);
     }

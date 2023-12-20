@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrBase/misc/assert.h"
 #include "SkrBase/misc/debug.h"
 
 #ifdef __cplusplus

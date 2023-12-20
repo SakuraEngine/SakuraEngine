@@ -26,8 +26,10 @@ struct ArrayDataRef {
         , index(index)
     {
     }
-    SKR_INLINE operator bool() const { return data != nullptr || index != npos_of<TS>; }
+    SKR_INLINE    operator bool() const { return data != nullptr || index != npos_of<TS>; }
     SKR_INLINE T& operator*() const { return *data; }
     SKR_INLINE T* operator->() const { return data; }
+
+    SKR_INLINE T& ref() const { return *data; }
 };
 } // namespace skr::container

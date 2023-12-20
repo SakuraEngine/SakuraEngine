@@ -1,9 +1,10 @@
+#include "SkrRT/misc/log.h"
 #include "SkrRT/rttr/type/reference_type.hpp"
 #include "SkrRT/rttr/rttr_traits.hpp"
 
 namespace skr::rttr
 {
-ReferenceType::ReferenceType(Type* target_type, string name)
+ReferenceType::ReferenceType(Type* target_type, skr::String name)
     : GenericType(kReferenceGenericGUID, std::move(name), GUID::Create(), sizeof(size_t&), alignof(size_t&))
 {
 }

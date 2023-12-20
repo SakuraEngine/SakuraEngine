@@ -12,7 +12,7 @@ namespace game
 void InitializeAnimState(anim_state_t* state, skr::anim::SkeletonResource* skeleton)
 {
     state->sampling_context.Resize(skeleton->skeleton.num_joints());
-    state->local_transforms.resize(skeleton->skeleton.num_soa_joints());
+    state->local_transforms.resize_zeroed(skeleton->skeleton.num_soa_joints());
 }
 
 void UpdateAnimState(anim_state_t* state, skr::anim::SkeletonResource* skeleton, float dt, skr::anim::AnimComponent* output)
@@ -42,7 +42,7 @@ void UpdateAnimState(anim_state_t* state, skr::anim::SkeletonResource* skeleton,
     ozz::animation::LocalToModelJob ltm_job;
     ltm_job.skeleton = &skeleton->skeleton;
     ltm_job.input    = ozz::span{ state->local_transforms.data(), state->local_transforms.size() };
-    output->joint_matrices.resize(skeleton->skeleton.num_joints());
+    output->joint_matrices.resize_zeroed(skeleton->skeleton.num_joints());
     ltm_job.output = ozz::span{ output->joint_matrices.data(), output->joint_matrices.size() };
     {
         SkrZoneScopedN("RunLocalToModelJob");

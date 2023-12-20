@@ -1,7 +1,6 @@
 #include "common_utils.h"
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/hashmap.hpp>
-#include <EASTL/vector.h>
 
 struct RSCharacteristic
 {
@@ -179,11 +178,11 @@ public:
         }
     }
 protected:
-    const skr::string name;
+    const skr::String name;
     // TODO: replace with skr::hash_map
-    skr::parallel_flat_hash_map<RSCharacteristic, CGPURootSignatureId, RSCharacteristic::hasher> characterMap;
-    skr::parallel_flat_hash_map<CGPURootSignatureId, RSCharacteristic> biCharacterMap;
-    skr::parallel_flat_hash_map<CGPURootSignatureId, uint32_t> counterMap;
+    skr::ParallelFlatHashMap<RSCharacteristic, CGPURootSignatureId, RSCharacteristic::hasher> characterMap;
+    skr::ParallelFlatHashMap<CGPURootSignatureId, RSCharacteristic> biCharacterMap;
+    skr::ParallelFlatHashMap<CGPURootSignatureId, uint32_t> counterMap;
 };
 
 CGPURootSignaturePoolId CGPUUtil_CreateRootSignaturePool(const CGPURootSignaturePoolDescriptor* desc)

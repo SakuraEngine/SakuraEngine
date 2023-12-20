@@ -10,10 +10,10 @@ skr_json_writer_t::skr_json_writer_t(size_t levelDepth, skr_json_format_t format
 {
     _levelStack.reserve(levelDepth);
 }
-skr::string skr_json_writer_t::Str() const
+skr::String skr_json_writer_t::Str() const
 {
     SKR_ASSERT(_levelStack.size() == 0);
-    return skr::string(skr::string_view(buffer.u8_str(), buffer.size()));
+    return skr::String(skr::StringView(buffer.u8_str(), buffer.size()));
 }
 bool skr_json_writer_t::Bool(bool b)
 {
@@ -55,7 +55,7 @@ bool skr_json_writer_t::RawNumber(const TChar* str, TSize length)
     _Prefix(SKR_JSONTYPE_NUMBER);
     return _WriteRawValue(str, length);
 }
-bool skr_json_writer_t::RawNumber(skr::string_view view)
+bool skr_json_writer_t::RawNumber(skr::StringView view)
 {
     return RawNumber(view.raw().data(), view.size());
 }
@@ -64,7 +64,7 @@ bool skr_json_writer_t::String(const TChar* str, TSize length)
     _Prefix(SKR_JSONTYPE_STRING);
     return _WriteString(str, length);
 }
-bool skr_json_writer_t::String(skr::string_view view)
+bool skr_json_writer_t::String(skr::StringView view)
 {
     return String(view.raw().data(), view.size());
 }
@@ -72,7 +72,7 @@ bool skr_json_writer_t::Key(const TChar* str, TSize length)
 {
     return String(str, length);
 }
-bool skr_json_writer_t::Key(skr::string_view view)
+bool skr_json_writer_t::Key(skr::StringView view)
 {
     return String(view.raw().data(), view.size());
 }
@@ -108,7 +108,7 @@ bool skr_json_writer_t::RawValue(const TChar* str, TSize length, ESkrJsonType ty
     _Prefix(type);
     return _WriteRawValue(str, length);
 }
-bool skr_json_writer_t::RawValue(skr::string_view view, ESkrJsonType type)
+bool skr_json_writer_t::RawValue(skr::StringView view, ESkrJsonType type)
 {
     return RawValue(view.raw().data(), view.size(), type);
 }
@@ -215,7 +215,7 @@ bool skr_json_writer_t::_WriteEndArray()
 }
 bool skr_json_writer_t::_WriteRawValue(const TChar* str, TSize length)
 {
-    buffer.append(skr::string_view(str, (int32_t)length));
+    buffer.append(skr::StringView(str, (int32_t)length));
     return true;
 }
 bool skr_json_writer_t::_Prefix(ESkrJsonType type)
@@ -256,7 +256,7 @@ bool skr_json_writer_t::_NewLine()
     while (ident > 0)
     {
         auto n = std::min(ident, sizeof(indentLiteral) - 1);
-        buffer.append(skr::string_view(indentLiteral, (int32_t)n));
+        buffer.append(skr::StringView(indentLiteral, (int32_t)n));
         ident -= n;
     }
     return true;
@@ -389,11 +389,11 @@ void WriteTrait<skr_resource_handle_t>::Write(skr_json_writer_t* writer, const s
 }
 
 // string types
-void WriteTrait<skr::string_view>::Write(skr_json_writer_t* writer, const skr::string_view& str)
+void WriteTrait<skr::StringView>::Write(skr_json_writer_t* writer, const skr::StringView& str)
 {
     writer->String(str.raw().begin().data(), str.size());
 }
-void WriteTrait<skr::string>::Write(skr_json_writer_t* writer, const skr::string& str)
+void WriteTrait<skr::String>::Write(skr_json_writer_t* writer, const skr::String& str)
 {
     writer->String(str.u8_str(), str.size());
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/rttr/rttr_traits.hpp"
 #include "SkrRT/rttr/type/record_type.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrBase/misc/demangle.hpp"
 
 namespace skr::rttr

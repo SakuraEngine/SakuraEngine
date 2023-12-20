@@ -1,5 +1,5 @@
 #include "SkrRenderer/resources/mesh_resource.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/guid.hpp"
 #include "cgpu/cgpux.hpp"
@@ -15,6 +15,7 @@
 
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include "SkrRT/containers/hashmap.hpp"
 
 #include "SkrProfile/profile.h"
@@ -29,12 +30,12 @@ static struct SkrMeshResourceUtil {
             hash = cgpux::hash<CGPUVertexLayout>()(layout);
         }
         skr_vertex_layout_id id;
-        skr::string          name;
+        skr::String          name;
         uint64_t             hash;
     };
 
-    using VertexLayoutIdMap   = skr::flat_hash_map<skr_vertex_layout_id, skr::SPtr<RegisteredVertexLayout>, skr::guid::hash>;
-    using VertexLayoutHashMap = skr::flat_hash_map<uint64_t, RegisteredVertexLayout*>;
+    using VertexLayoutIdMap   = skr::FlatHashMap<skr_vertex_layout_id, skr::SPtr<RegisteredVertexLayout>, skr::guid::hash>;
+    using VertexLayoutHashMap = skr::FlatHashMap<uint64_t, RegisteredVertexLayout*>;
 
     SkrMeshResourceUtil()
     {
@@ -173,7 +174,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
     SMeshFactoryImpl(const SMeshFactory::Root& root)
         : root(root)
     {
-        dstorage_root            = skr::string::from_utf8(root.dstorage_root);
+        dstorage_root            = skr::String::from_utf8(root.dstorage_root);
         this->root.dstorage_root = dstorage_root.u8_str();
     }
 
@@ -200,9 +201,9 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
         BufferRequest() SKR_NOEXCEPT  = default;
         ~BufferRequest() SKR_NOEXCEPT = default;
 
-        eastl::vector<std::string>             absPaths;
-        eastl::vector<skr_io_future_t>         dFutures;
-        eastl::vector<skr::io::VRAMIOBufferId> dBuffers;
+        skr::Vector<std::string>             absPaths;
+        skr::Vector<skr_io_future_t>         dFutures;
+        skr::Vector<skr::io::VRAMIOBufferId> dBuffers;
     };
 
     struct UploadRequest {
@@ -216,19 +217,19 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
 
         SMeshFactoryImpl*                      factory       = nullptr;
         skr_mesh_resource_id                   mesh_resource = nullptr;
-        eastl::vector<std::string>             resource_uris;
-        eastl::vector<skr_io_future_t>         ram_futures;
-        eastl::vector<skr::BlobId>             blobs;
-        eastl::vector<skr_io_future_t>         vram_futures;
-        eastl::vector<skr::io::VRAMIOBufferId> uBuffers;
+        skr::Vector<std::string>             resource_uris;
+        skr::Vector<skr_io_future_t>         ram_futures;
+        skr::Vector<skr::BlobId>             blobs;
+        skr::Vector<skr_io_future_t>         vram_futures;
+        skr::Vector<skr::io::VRAMIOBufferId> uBuffers;
     };
 
     ESkrInstallStatus InstallImpl(skr_resource_record_t* record);
 
-    skr::string                                                   dstorage_root;
+    skr::String                                                   dstorage_root;
     Root                                                          root;
-    skr::flat_hash_map<skr_mesh_resource_id, InstallType>         mInstallTypes;
-    skr::flat_hash_map<skr_mesh_resource_id, SPtr<BufferRequest>> mRequests;
+    skr::FlatHashMap<skr_mesh_resource_id, InstallType>         mInstallTypes;
+    skr::FlatHashMap<skr_mesh_resource_id, SPtr<BufferRequest>> mRequests;
 };
 
 SMeshFactory* SMeshFactory::Create(const Root& root)
@@ -283,9 +284,9 @@ ESkrInstallStatus SMeshFactoryImpl::InstallImpl(skr_resource_record_t* record)
         if (noCompression)
         {
             auto dRequest = SPtr<BufferRequest>::Create();
-            dRequest->absPaths.resize(mesh_resource->bins.size());
-            dRequest->dFutures.resize(mesh_resource->bins.size());
-            dRequest->dBuffers.resize(mesh_resource->bins.size());
+            dRequest->absPaths.resize_default(mesh_resource->bins.size());
+            dRequest->dFutures.resize_default(mesh_resource->bins.size());
+            dRequest->dBuffers.resize_zeroed(mesh_resource->bins.size());
             InstallType installType = { ECompressMethod::NONE };
             for (auto i = 0u; i < mesh_resource->bins.size(); i++)
             {
@@ -355,7 +356,7 @@ ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
             auto render_mesh = mesh_resource->render_mesh = SkrNew<skr_render_mesh_t>();
             // TODO: remove these requests
             const auto N = dRequest->second->dBuffers.size();
-            render_mesh->buffers.resize(N);
+            render_mesh->buffers.resize_default(N);
             for (auto i = 0u; i < N; i++)
             {
                 auto pBuffer            = dRequest->second->dBuffers[i]->get_buffer();

@@ -30,7 +30,7 @@ config_backend_t {
     }
     void  CopyBackend(const config_backend_t& other) { backend = other.backend; }
     void  SetBackendCallback(void (*callback)(sattr("userdata" : true) void* userdata, sattr("out" : true) ECGPUBackEnd&), void* userdata) { callback(userdata, backend); }
-    void  GetBackendCallback(skr::function_ref<void(ECGPUBackEnd)> callback) const { callback(backend); }
+    void  GetBackendCallback(skr::FunctionRef<void(ECGPUBackEnd)> callback) const { callback(backend); }
 
     sattr("native" : true)
     void* dirtyStuff() { return this; }

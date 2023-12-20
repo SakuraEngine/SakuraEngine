@@ -1,4 +1,3 @@
-#include <EASTL/fixed_vector.h>
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
@@ -107,7 +106,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
         // install shaders
         for (auto& pass_template : matType->passes)
         {
-            auto& installed_pass = material->installed_passes.emplace_back();
+            auto& installed_pass = *material->installed_passes.add_default();
             installed_pass.name  = pass_template.pass;
             for (auto& shader : pass_template.shader_resources)
             {
@@ -133,7 +132,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
                                 const auto status = shader_map->install_shader(platform_id);
                                 if (status != SKR_SHADER_MAP_SHADER_STATUS_FAILED)
                                 {
-                                    auto& installed_shader      = installed_pass.shaders.emplace_back();
+                                    auto& installed_shader      = *installed_pass.shaders.add_default();
                                     installed_shader.identifier = platform_id;
                                     installed_shader.entry      = multiShader.entry.u8_str();
                                     installed_shader.stage      = multiShader.shader_stage;
@@ -192,7 +191,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
         // TODO: multi bind table
         CGPUXBindTableDescriptor table_desc = {};
         table_desc.root_signature           = root_signature;
-        eastl::fixed_vector<const char8_t*, 16> slot_names;
+        skr::InlineVector<const char8_t*, 16> slot_names;
         for (uint32_t i = 0; i < root_signature->table_count; i++)
         {
             const auto& table = root_signature->tables[i];
@@ -205,7 +204,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
                     {
                         if (override.slot_name.starts_with(resource.name) && strlen((const char*)resource.name) == override.slot_name.size()) // slot name matches
                         {
-                            slot_names.emplace_back(resource.name);
+                            slot_names.emplace(resource.name);
                         }
                     }
                 }
@@ -215,7 +214,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
                     {
                         if (override.slot_name.starts_with(resource.name) && strlen((const char*)resource.name) == override.slot_name.size()) // slot name matches
                         {
-                            slot_names.emplace_back(resource.name);
+                            slot_names.emplace(resource.name);
                         }
                     }
                 }
@@ -230,13 +229,13 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
         const auto bind_table  = cgpux_create_bind_table(root.device, &table_desc);
 
         // 2.update values
-        eastl::fixed_vector<CGPUDescriptorData, 16> updates;
+        skr::InlineVector<CGPUDescriptorData, 16> updates;
         for (const auto& override : material->overrides.samplers)
         {
             skr::resource::TResourceHandle<skr_texture_sampler_resource_t> hdl = override.value;
             hdl.resolve(true, nullptr);
 
-            auto& update        = updates.emplace_back();
+            auto& update        = *updates.emplace();
             update.name         = override.slot_name.raw().data();
             update.count        = 1;
             update.samplers     = &hdl.get_resolved()->sampler;
@@ -247,7 +246,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
             skr::resource::TResourceHandle<skr_texture_resource_t> hdl = override.value;
             hdl.resolve(true, nullptr);
 
-            auto& update        = updates.emplace_back();
+            auto& update        = *updates.emplace();
             update.name         = override.slot_name.raw().data();
             update.count        = 1; // TODO: Tex array parameter
             update.textures     = &hdl.get_resolved()->texture_view;
@@ -348,7 +347,8 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
             blend_state.blend_alpha_modes[i] = CGPU_BLEND_MODE_ADD;
             blend_state.masks[i]             = CGPU_COLOR_MASK_ALL;
             const auto blend_mode            = (blend_modes.size() > i) ? blend_modes[i] :
-                                                                          (blend_modes.size() ? blend_modes.back() : EMaterialBlendMode::Opaque);
+                                                                          (blend_modes.size() ? blend_modes[blend_modes.size() - 1] :
+                                                                                                EMaterialBlendMode::Opaque);
             switch (blend_mode)
             {
                 case EMaterialBlendMode::Opaque: {
@@ -420,12 +420,12 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
     ESkrInstallStatus UpdateInstall_Pass(skr_resource_record_t* record, skr_material_resource_t::installed_pass& installed_pass)
     {
         // 1.all shaders are installed ?
-        eastl::fixed_vector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
+        skr::InlineVector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
         for (const auto& identifier : installed_pass.shaders)
         {
             if (auto library = shader_map->find_shader(identifier.identifier))
             {
-                shaders.emplace_back(library);
+                shaders.emplace(library);
             }
             else
             {
@@ -464,7 +464,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
             : material(material)
             , installed_pass(installed_pass)
             , factory(factory)
-            , shaders(shaders.data(), shaders.data() + shaders.size())
+            , shaders(shaders.data(), shaders.size())
         {
         }
 
@@ -480,10 +480,10 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
         SMaterialFactoryImpl*                                             factory        = nullptr;
         CGPURootSignatureId                                               root_signature = nullptr;
         CGPUXBindTableId                                                  bind_table     = nullptr;
-        eastl::fixed_vector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
+        skr::InlineVector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
     };
 
-    skr::flat_hash_map<skr_guid_t, SPtr<RootSignatureRequest>, skr::guid::hash> mRootSignatureRequests;
+    skr::FlatHashMap<skr_guid_t, SPtr<RootSignatureRequest>, skr::guid::hash> mRootSignatureRequests;
     skr::SPtr<MaterialFutureLancher>                                            launcher = nullptr;
 
     skr_shader_map_id       shader_map = nullptr;
