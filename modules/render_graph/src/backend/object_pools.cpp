@@ -274,8 +274,7 @@ void TextureViewPool::finalize()
 CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& desc, uint64_t frame_index)
 {
     const auto key = make_zeroed<TextureViewPool::Key>(device, desc);
-    auto found = views.find(key);
-    if (found != views.end())
+    if (auto found = views.find(key))
     {
         // SKR_LOG_TRACE(u8"Reallocating texture view for texture %p (id %lld, old %lld)", desc.texture,
         //    key.texture->unique_id, found->second.texture_view->info.texture->unique_id);
@@ -288,7 +287,7 @@ CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& des
         // SKR_LOG_TRACE(u8"Creating texture view for texture %p (tex %p)", desc.texture, key.texture);
         CGPUTextureViewId new_view = cgpu_create_texture_view(device, &desc);
         AllocationMark mark = {frame_index, 0};
-        views.add(key, PooledTextureView(new_view, mark));
+        views.add_or_assign(key, PooledTextureView(new_view, mark));
         return new_view;
     }
 }

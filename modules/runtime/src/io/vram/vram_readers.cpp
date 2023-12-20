@@ -4,7 +4,6 @@
 #include "vram_readers.hpp"
 #include <tuple>
 
-#include "SkrRT/containers/deprecated.hpp"
 
 // VFS READER IMPLEMENTATION
 
@@ -274,24 +273,32 @@ struct StackCmdMapKey
     {
         return std::tie(queue, batch) < std::tie(rhs.queue, batch);
     }
+    inline bool operator==(const StackCmdMapKey& rhs) const
+    {
+        return queue == rhs.queue && batch == rhs.batch;
+    }
+    inline size_t _skr_hash() const SKR_NOEXCEPT
+    {
+        return skr::hash_combine(Hash<CGPUQueueId>()(queue), Hash<IIOBatch*>()(batch));
+    }
 };
 template <size_t N = 1>
-struct StackCmdAllocator : public skr::FixedMap<StackCmdMapKey, GPUUploadCmd, N>
+struct StackCmdAllocator : public skr::FixedUMap<StackCmdMapKey, GPUUploadCmd, N>
 {
     auto& allocate(IOBatchId& batch, SwapableCmdPoolMap& cmdpools, VRAMUploadComponent* pUpload)
     {
         auto& cmds = *this;
         auto transfer_queue = pUpload->get_transfer_queue();
         auto key = StackCmdMapKey{ transfer_queue, batch.get() };
-        if (cmds.find(key) == cmds.end())
+        if (!cmds.contains(key))
         {
             cmds.emplace(key, GPUUploadCmd(transfer_queue, batch));
         }
-        auto& cmd = cmds[key];
+        auto& cmd = cmds.find_or_add(key)->value;
         auto cmdqueue = cmd.get_queue();
-        if (!cmdpools.contain(cmdqueue))
+        if (!cmdpools.contains(cmdqueue))
         {
-            auto pool = cmdpools.add(cmdqueue, SwapableCmdPool()).data;
+            auto pool = cmdpools.find_or_add(cmdqueue).data;
             pool->value.initialize(cmdqueue);
         }
         auto&& cmdpool = cmdpools.find(cmdqueue).data->value;
@@ -336,7 +343,7 @@ void CommonVRAMReader::addUploadRequests(SkrAsyncServicePriority priority) SKR_N
                     skr::String name = /*pBuffer->name ? buffer_io.vbuffer.buffer_name :*/ u8"";
                     name += u8"-upload";
                     upload_buffer = cgpux_create_mapped_upload_buffer(cmdqueue->device, pUpload->src_size, name.u8_str());
-                    cmd.upload_buffers.emplace_back(upload_buffer);
+                    cmd.upload_buffers.emplace(upload_buffer);
 
                     memcpy(upload_buffer->info->cpu_mapped_address, pUpload->src_data, pUpload->src_size);
                 }
@@ -383,7 +390,7 @@ void CommonVRAMReader::addUploadRequests(SkrAsyncServicePriority priority) SKR_N
                     skr::String name = /*pBuffer->name ? buffer_io.vbuffer.buffer_name :*/ u8"";
                     name += u8"-upload";
                     upload_buffer = cgpux_create_mapped_upload_buffer(cmdqueue->device, pUpload->src_size, name.u8_str());
-                    cmd.upload_buffers.emplace_back(upload_buffer);
+                    cmd.upload_buffers.emplace(upload_buffer);
 
                     memcpy(upload_buffer->info->cpu_mapped_address, pUpload->src_data, pUpload->src_size);
                 }
@@ -561,7 +568,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
 {
     auto instance = skr_get_dstorage_instnace();
     IOBatchId batch;
-    skr::FixedMap<SkrDStorageQueueId, skr::SObjectPtr<DStorageEvent>, 2> _events;
+    skr::FixedUMap<SkrDStorageQueueId, skr::SObjectPtr<DStorageEvent>, 2> _events;
 #ifdef SKR_PROFILE_ENABLE
     SkrCZoneCtx Zone;
     bool bZoneSet = false;
@@ -570,12 +577,11 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
     while (fetched_batches[priority].try_dequeue(batch))
     {
         auto addOrGetEvent = [&](SkrDStorageQueueId queue) {
-            auto&& iter = _events.find(queue);
-            if (iter == _events.end())
+            if (!_events.contains(queue))
             {
                 _events.emplace(queue, events[priority]->allocate(queue));
             }
-            return _events[queue];
+            return _events.find_or_add(queue)->value;
         };
         SkrDStorageQueueId queue = nullptr;
         for (auto&& vram_request : batch->get_requests())
@@ -680,7 +686,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
         // TODO: hybrid m2v/f2v batches support
         if (queue)
         {
-            addOrGetEvent(queue)->batches.emplace_back(batch);
+            addOrGetEvent(queue)->batches.emplace(batch);
         }
         else
         {

@@ -413,8 +413,8 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
         auto path = data->u8HomePath;
         path += u8"/";
         path += (const char8_t*)file;
-        expressionPaths.add(&future, path);
-        expressionNames.add(&future, name);
+        expressionPaths.add_or_assign(&future, path);
+        expressionNames.add_or_assign(&future, name);
 
         SKR_LOG_TRACE(u8"Request Live2D Expression %s at %s", name, file);
 
@@ -484,8 +484,8 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             auto file = settings->GetMotionFileName(group, j);
             auto path = skr::format(u8"{}/{}", data->u8HomePath, (const char8_t*)file);
 
-            motionPaths.add(&request, path);
-            motionEntries.add(&request, entry);
+            motionPaths.add_or_assign(&request, path);
+            motionEntries.add_or_assign(&request, entry);
             slot++;
         }
     }

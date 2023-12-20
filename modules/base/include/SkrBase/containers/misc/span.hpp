@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/misc/debug.h"
-#include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/misc/integer_tools.hpp"
 
 namespace skr::container
@@ -125,7 +124,8 @@ SKR_INLINE constexpr Span<T, TSize, Extent>::Span(T* begin, T* end)
 template <typename T, typename TSize, size_t Extent>
 template <size_t N, typename>
 SKR_INLINE constexpr Span<T, TSize, Extent>::Span(T (&arr)[N])
-    : _data(arr), _size(static_cast<TSize>(N))
+    : _data(arr)
+    , _size(static_cast<TSize>(N))
 {
     static_assert(Extent == kDynamicExtent || Extent == 0 || Extent <= N, "impossible to default construct a span with a fixed Extent different than 0");
 }

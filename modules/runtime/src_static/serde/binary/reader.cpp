@@ -8,7 +8,6 @@
 #include "SkrRT/containers/string.hpp"
 #include <cmath>
 
-#include "SkrRT/containers/deprecated.hpp"
 
 // blob arena
 skr_blob_arena_t::skr_blob_arena_t()
@@ -472,15 +471,15 @@ int ReadTrait<skr::String>::Read(skr_binary_reader_t* reader, skr::String& str)
         SKR_LOG_FATAL(u8"failed to read string buffer size! ret code: %d", ret);
         return ret;
     }
-    skr::FixedString<char8_t, 64> temp;
+    skr::InlineVector<char8_t, 64> temp;
     temp.resize(size);
-    ret = ReadBytes(reader, (void*)temp.c_str(), temp.size());
+    ret = ReadBytes(reader, (void*)temp.data(), temp.size());
     if (ret != 0)
     {
         SKR_LOG_FATAL(u8"failed to read string buffer size! ret code: %d", ret);
         return ret;
     }
-    str = skr::String(skr::StringView((const char8_t*)temp.c_str(), (int32_t)temp.size()));
+    str = skr::String(skr::StringView((const char8_t*)temp.data(), (int32_t)temp.size()));
     return ret;
 }
 

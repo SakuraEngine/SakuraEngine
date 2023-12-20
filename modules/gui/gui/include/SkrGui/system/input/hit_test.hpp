@@ -57,8 +57,8 @@ struct HitTestResult {
         bool is_hit;
         if (matrix)
         {
-            push_transform(matrix.get());
-            is_hit = hit_test(this, matrix.get().transform(position));
+            push_transform(matrix.value());
+            is_hit = hit_test(this, matrix.value().transform(position));
             pop_transform();
         }
         else
@@ -74,7 +74,7 @@ struct HitTestResult {
         if (matrix)
         {
             Matrix4 inv_matrix;
-            if (matrix.get().try_inverse(inv_matrix))
+            if (matrix.value().try_inverse(inv_matrix))
             {
                 return add_with_raw_transform(inv_matrix, position, hit_test);
             }
@@ -96,8 +96,8 @@ struct HitTestResult {
         bool is_hit;
         if (paint_offset)
         {
-            push_offset(-paint_offset.get());
-            is_hit = hit_test(this, position - (paint_offset.get()));
+            push_offset(-paint_offset.value());
+            is_hit = hit_test(this, position - (paint_offset.value()));
             pop_transform();
         }
         else

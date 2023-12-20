@@ -15,6 +15,7 @@
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/stl_vector.hpp"
 #include "SkrRT/containers/umap.hpp"
+#include <float.h>
 
 namespace L2DF = Live2D::Cubism::Framework;
 

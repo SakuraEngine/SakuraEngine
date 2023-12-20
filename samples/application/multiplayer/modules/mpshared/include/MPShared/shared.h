@@ -7,7 +7,6 @@
 #include "SkrRT/containers/vector.hpp"
 #include "SkrScene/scene.h"
 #include "MPShared/components.h"
-#include "SkrRT/containers/deprecated.hpp"
 #ifndef __meta__
     #include "MPShared/shared.generated.h" // IWYU pragma: export
 #endif
@@ -160,7 +159,7 @@ CCollisionScene
         dual_entity_t entity;
         CSphereCollider2D collider;
     };
-    skr::ParallelFlatHashMap<int, skr::FixedVector<CollisionEntity, 4>> cells;
+    skr::ParallelFlatHashMap<int, skr::InlineVector<CollisionEntity, 4>> cells;
 };
 
 struct MP_SHARED_API MPGameWorld

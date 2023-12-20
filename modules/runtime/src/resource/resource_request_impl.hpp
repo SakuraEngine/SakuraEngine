@@ -4,7 +4,6 @@
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/async/fib_task.hpp"
 
-#include "SkrRT/containers/deprecated.hpp"
 
 namespace skr
 {
@@ -51,7 +50,7 @@ protected:
     SResourceFactory* factory;
     skr_vfs_t* vfs;
 
-    skr::FixedVector<skr_guid_t, 4> dependencies;
+    skr::InlineVector<skr_guid_t, 4> dependencies;
     skr_resource_record_t* resourceRecord;
     skr_io_future_t dataFuture;
     skr::BlobId dataBlob;

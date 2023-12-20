@@ -1,5 +1,4 @@
 #include "SkrImGui/skr_imgui.config.h"
-#include <SkrRT/containers/lite.hpp>
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/vector.hpp>
 #include "SkrRT/misc/log.h"
@@ -13,7 +12,7 @@
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
     #endif
-#include <windows.h>
+    #include <windows.h>
 #endif
 
 #include "SkrProfile/profile.h"
@@ -22,20 +21,20 @@ namespace skr::imgui
 {
 SKR_EXPORT ImGuiContext* GImGuiContext = nullptr;
 
-void imgui_create_window(ImGuiViewport* viewport);
-void imgui_destroy_window(ImGuiViewport* viewport);
-void imgui_show_window(ImGuiViewport* viewport);
+void   imgui_create_window(ImGuiViewport* viewport);
+void   imgui_destroy_window(ImGuiViewport* viewport);
+void   imgui_show_window(ImGuiViewport* viewport);
 ImVec2 imgui_get_window_pos(ImGuiViewport* viewport);
-void imgui_set_window_pos(ImGuiViewport* viewport, ImVec2 pos);
+void   imgui_set_window_pos(ImGuiViewport* viewport, ImVec2 pos);
 ImVec2 imgui_get_window_size(ImGuiViewport* viewport);
-void imgui_set_window_size(ImGuiViewport* viewport, ImVec2 size);
-void imgui_set_window_title(ImGuiViewport* viewport, const char* title);
-void imgui_set_window_alpha(ImGuiViewport* viewport, float alpha);
-void imgui_set_window_focus(ImGuiViewport* viewport);
-bool imgui_get_window_focus(ImGuiViewport* viewport);
-bool imgui_get_window_minimized(ImGuiViewport* viewport);
-void imgui_render_window(ImGuiViewport* viewport, void*);
-void imgui_swap_buffers(ImGuiViewport* viewport, void*);
+void   imgui_set_window_size(ImGuiViewport* viewport, ImVec2 size);
+void   imgui_set_window_title(ImGuiViewport* viewport, const char* title);
+void   imgui_set_window_alpha(ImGuiViewport* viewport, float alpha);
+void   imgui_set_window_focus(ImGuiViewport* viewport);
+bool   imgui_get_window_focus(ImGuiViewport* viewport);
+bool   imgui_get_window_minimized(ImGuiViewport* viewport);
+void   imgui_render_window(ImGuiViewport* viewport, void*);
+void   imgui_swap_buffers(ImGuiViewport* viewport, void*);
 
 static int32_t KeyCodeTranslator(EKeyCode keycode);
 } // namespace skr::imgui
@@ -53,10 +52,10 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
     // Update mouse button states
     if (auto inputInst = skr::input::Input::GetInstance())
     {
-        skr::input::InputLayer* input_layer = nullptr;
+        skr::input::InputLayer*   input_layer   = nullptr;
         skr::input::InputReading* input_reading = nullptr;
-        auto res = inputInst->GetCurrentReading(
-            skr::input::InputKindMouse, nullptr, &input_layer, &input_reading);
+        auto                      res           = inputInst->GetCurrentReading(
+        skr::input::InputKindMouse, nullptr, &input_layer, &input_reading);
         skr::input::InputMouseState mouse_state = {};
         if (res == skr::input::INPUT_RESULT_OK && input_reading &&
             input_layer->GetMouseState(input_reading, &mouse_state))
@@ -109,14 +108,14 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
             io.AddMousePosEvent((float)pos_x, (float)pos_y);
         }
     }
-    
+
 #ifdef _WIN32
     if (io.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)
     {
         SkrZoneScopedN("UpdateViewportEvents");
 
         ImGuiID mouse_viewport_id = 0;
-        POINT mouse_screen_pos;
+        POINT   mouse_screen_pos;
         ::GetCursorPos(&mouse_screen_pos);
         if (HWND hovered_hwnd = ::WindowFromPoint(mouse_screen_pos))
         {
@@ -148,74 +147,83 @@ static void ImGui_UpdateKeyModifiers()
 void skr_imgui_initialize(skr_system_handler_id handler)
 {
     auto rid = handler->add_window_close_handler(
-        +[](SWindowHandle window, void*) {
-            if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)window))
-            {
-                viewport->PlatformRequestClose = true;
-            }
-        }, nullptr);
+    +[](SWindowHandle window, void*) {
+        if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)window))
+        {
+            viewport->PlatformRequestClose = true;
+        }
+    },
+    nullptr);
     rid = handler->add_window_move_handler(
-        +[](SWindowHandle window, void*) {
-            if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)window))
-            {
-                viewport->PlatformRequestMove = true;
-            }
-        }, nullptr);
+    +[](SWindowHandle window, void*) {
+        if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)window))
+        {
+            viewport->PlatformRequestMove = true;
+        }
+    },
+    nullptr);
     rid = handler->add_window_resize_handler(
-        +[](SWindowHandle window, int32_t w, int32_t h, void*) {
-            if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)window))
-            {
-                viewport->PlatformRequestResize = true;
-            }
-        }, nullptr);
+    +[](SWindowHandle window, int32_t w, int32_t h, void*) {
+        if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)window))
+        {
+            viewport->PlatformRequestResize = true;
+        }
+    },
+    nullptr);
     rid = handler->add_mouse_wheel_handler(
-        +[](int32_t X, int32_t Y, void* usr_data) {
-            ImGuiIO& io = ImGui::GetIO();
-            io.AddMouseWheelEvent((float)X, (float)Y);
-        }, nullptr);
+    +[](int32_t X, int32_t Y, void* usr_data) {
+        ImGuiIO& io = ImGui::GetIO();
+        io.AddMouseWheelEvent((float)X, (float)Y);
+    },
+    nullptr);
     rid = handler->add_mouse_button_down_handler(
-        +[](EMouseKey key, int32_t X, int32_t Y, void* usr_data) {
-            int mouse_button = -1;
-            if (key == EMouseKey::MOUSE_KEY_LB) { mouse_button = 0; }
-            if (key == EMouseKey::MOUSE_KEY_RB) { mouse_button = 1; }
-            if (key == EMouseKey::MOUSE_KEY_MB) { mouse_button = 2; }
-            if (key == EMouseKey::MOUSE_KEY_X1B) { mouse_button = 3; }
-            if (key == EMouseKey::MOUSE_KEY_X2B) { mouse_button = 4; }
+    +[](EMouseKey key, int32_t X, int32_t Y, void* usr_data) {
+        int mouse_button = -1;
+        if (key == EMouseKey::MOUSE_KEY_LB) { mouse_button = 0; }
+        if (key == EMouseKey::MOUSE_KEY_RB) { mouse_button = 1; }
+        if (key == EMouseKey::MOUSE_KEY_MB) { mouse_button = 2; }
+        if (key == EMouseKey::MOUSE_KEY_X1B) { mouse_button = 3; }
+        if (key == EMouseKey::MOUSE_KEY_X2B) { mouse_button = 4; }
 
-            ImGuiIO& io = ImGui::GetIO();
-            io.AddMouseButtonEvent(mouse_button, true);
-        }, nullptr);
+        ImGuiIO& io = ImGui::GetIO();
+        io.AddMouseButtonEvent(mouse_button, true);
+    },
+    nullptr);
     rid = handler->add_mouse_button_up_handler(
-        +[](EMouseKey key, int32_t X, int32_t Y, void* usr_data) {
-            int mouse_button = -1;
-            if (key == EMouseKey::MOUSE_KEY_LB) { mouse_button = 0; }
-            if (key == EMouseKey::MOUSE_KEY_RB) { mouse_button = 1; }
-            if (key == EMouseKey::MOUSE_KEY_MB) { mouse_button = 2; }
-            if (key == EMouseKey::MOUSE_KEY_X1B) { mouse_button = 3; }
-            if (key == EMouseKey::MOUSE_KEY_X2B) { mouse_button = 4; }
+    +[](EMouseKey key, int32_t X, int32_t Y, void* usr_data) {
+        int mouse_button = -1;
+        if (key == EMouseKey::MOUSE_KEY_LB) { mouse_button = 0; }
+        if (key == EMouseKey::MOUSE_KEY_RB) { mouse_button = 1; }
+        if (key == EMouseKey::MOUSE_KEY_MB) { mouse_button = 2; }
+        if (key == EMouseKey::MOUSE_KEY_X1B) { mouse_button = 3; }
+        if (key == EMouseKey::MOUSE_KEY_X2B) { mouse_button = 4; }
 
-            ImGuiIO& io = ImGui::GetIO();
-            io.AddMouseButtonEvent(mouse_button, false);
-        }, nullptr);
+        ImGuiIO& io = ImGui::GetIO();
+        io.AddMouseButtonEvent(mouse_button, false);
+    },
+    nullptr);
     rid = handler->add_key_down_handler(
-        +[](EKeyCode key, void* usr_data) {
-            ImGuiIO& io = ImGui::GetIO();
-            ImGui_UpdateKeyModifiers();
-            const auto k = skr::imgui::KeyCodeTranslator(key);
-            io.AddKeyEvent(k, true);
-        }, nullptr);
+    +[](EKeyCode key, void* usr_data) {
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui_UpdateKeyModifiers();
+        const auto k = skr::imgui::KeyCodeTranslator(key);
+        io.AddKeyEvent(k, true);
+    },
+    nullptr);
     rid = handler->add_key_up_handler(
-        +[](EKeyCode key, void* usr_data) {
-            ImGuiIO& io = ImGui::GetIO();
-            ImGui_UpdateKeyModifiers();
-            const auto k = skr::imgui::KeyCodeTranslator(key);
-            io.AddKeyEvent(k, false);
-        }, nullptr);
+    +[](EKeyCode key, void* usr_data) {
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui_UpdateKeyModifiers();
+        const auto k = skr::imgui::KeyCodeTranslator(key);
+        io.AddKeyEvent(k, false);
+    },
+    nullptr);
     rid = handler->add_text_input_handler(
-        +[](const char8_t* text, void* usr_data) {
-            ImGuiIO& io = ImGui::GetIO();
-            io.AddInputCharactersUTF8((const char*)text);
-        }, nullptr);
+    +[](const char8_t* text, void* usr_data) {
+        ImGuiIO& io = ImGui::GetIO();
+        io.AddInputCharactersUTF8((const char*)text);
+    },
+    nullptr);
     (void)rid;
 }
 
@@ -247,28 +255,28 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
         SkrZoneScopedN("UpdateMonitors");
 
         // Register platform interface (will be coupled with a renderer interface)
-        ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-        platform_io.Platform_CreateWindow = &skr::imgui::imgui_create_window;
-        platform_io.Platform_DestroyWindow = &skr::imgui::imgui_destroy_window;
-        platform_io.Platform_ShowWindow = &skr::imgui::imgui_show_window;
-        platform_io.Platform_SetWindowPos = &skr::imgui::imgui_set_window_pos;
-        platform_io.Platform_GetWindowPos = &skr::imgui::imgui_get_window_pos;
-        platform_io.Platform_SetWindowSize = &skr::imgui::imgui_set_window_size;
-        platform_io.Platform_GetWindowSize = &skr::imgui::imgui_get_window_size;
-        platform_io.Platform_SetWindowFocus = &skr::imgui::imgui_set_window_focus;
-        platform_io.Platform_GetWindowFocus = &skr::imgui::imgui_get_window_focus;
+        ImGuiPlatformIO& platform_io            = ImGui::GetPlatformIO();
+        platform_io.Platform_CreateWindow       = &skr::imgui::imgui_create_window;
+        platform_io.Platform_DestroyWindow      = &skr::imgui::imgui_destroy_window;
+        platform_io.Platform_ShowWindow         = &skr::imgui::imgui_show_window;
+        platform_io.Platform_SetWindowPos       = &skr::imgui::imgui_set_window_pos;
+        platform_io.Platform_GetWindowPos       = &skr::imgui::imgui_get_window_pos;
+        platform_io.Platform_SetWindowSize      = &skr::imgui::imgui_set_window_size;
+        platform_io.Platform_GetWindowSize      = &skr::imgui::imgui_get_window_size;
+        platform_io.Platform_SetWindowFocus     = &skr::imgui::imgui_set_window_focus;
+        platform_io.Platform_GetWindowFocus     = &skr::imgui::imgui_get_window_focus;
         platform_io.Platform_GetWindowMinimized = &skr::imgui::imgui_get_window_minimized;
-        platform_io.Platform_SetWindowTitle = &skr::imgui::imgui_set_window_title;
-        platform_io.Platform_RenderWindow = &skr::imgui::imgui_render_window;
-        platform_io.Platform_SwapBuffers = &skr::imgui::imgui_swap_buffers;
+        platform_io.Platform_SetWindowTitle     = &skr::imgui::imgui_set_window_title;
+        platform_io.Platform_RenderWindow       = &skr::imgui::imgui_render_window;
+        platform_io.Platform_SwapBuffers        = &skr::imgui::imgui_swap_buffers;
 
-        ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-        main_viewport->PlatformUserData = main_viewport; // hold this place
-        main_viewport->PlatformHandle = window;
+        ImGuiViewport* main_viewport     = ImGui::GetMainViewport();
+        main_viewport->PlatformUserData  = main_viewport; // hold this place
+        main_viewport->PlatformHandle    = window;
         main_viewport->PlatformHandleRaw = skr_window_get_native_handle(window);
 
         // update monitors
-        static thread_local skr::Vector<SMonitorHandle> skr_monitors; 
+        static thread_local skr::Vector<SMonitorHandle> skr_monitors;
         skr_monitors.clear();
         platform_io.Monitors.resize(0);
         uint32_t monitor_count = 0;
@@ -279,15 +287,15 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
         for (uint32_t i = 0; i < monitor_count; i++)
         {
             ImGuiPlatformMonitor& monitor = platform_io.Monitors[i];
-            int32_t x, y, w, h;
+            int32_t               x, y, w, h;
             skr_monitor_get_position(skr_monitors[i], &x, &y);
             skr_monitor_get_extent(skr_monitors[i], &w, &h);
             monitor.MainPos = monitor.WorkPos = ImVec2((float)x, (float)y);
             monitor.MainSize = monitor.WorkSize = ImVec2((float)w, (float)h);
 
-            float ddpi = 0.f;
+            float      ddpi    = 0.f;
             const bool success = skr_monitor_get_ddpi(skr_monitors[i], &ddpi, nullptr, nullptr);
-            monitor.DpiScale = success ? (ddpi / 96.0f) : 1.f;
+            monitor.DpiScale   = success ? (ddpi / 96.0f) : 1.f;
         }
     }
     // update inputs
@@ -305,19 +313,19 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
 void skr::imgui::imgui_create_window(ImGuiViewport* viewport)
 {
     SWindowDescroptor desc = {};
-    desc.flags = SKR_WINDOW_HIDDEN;
+    desc.flags             = SKR_WINDOW_HIDDEN;
     desc.flags |= (viewport->Flags & ImGuiViewportFlags_NoDecoration) ? SKR_WINDOW_BOARDLESS : 0;
     desc.flags |= !(viewport->Flags & ImGuiViewportFlags_NoDecoration) ? 0 : SKR_WINDOW_RESIZABLE;
     desc.flags |= (viewport->Flags & ImGuiViewportFlags_TopMost) ? SKR_WINDOW_TOPMOST : 0;
-    desc.width = (uint32_t)viewport->Size.x;
-    desc.height = (uint32_t)viewport->Size.y;
-    desc.posx = (uint32_t)viewport->Pos.x;
-    desc.posy = (uint32_t)viewport->Pos.y;
-    skr::String title = skr::format(u8"imgui-{}", viewport->ID);
-    auto new_window = skr_create_window((const char8_t*)title.c_str(), &desc);
+    desc.width             = (uint32_t)viewport->Size.x;
+    desc.height            = (uint32_t)viewport->Size.y;
+    desc.posx              = (uint32_t)viewport->Pos.x;
+    desc.posy              = (uint32_t)viewport->Pos.y;
+    skr::String title      = skr::format(u8"imgui-{}", viewport->ID);
+    auto        new_window = skr_create_window((const char8_t*)title.c_str(), &desc);
 
-    viewport->PlatformUserData = viewport;
-    viewport->PlatformHandle = new_window;
+    viewport->PlatformUserData  = viewport;
+    viewport->PlatformHandle    = new_window;
     viewport->PlatformHandleRaw = skr_window_get_native_handle(new_window);
 }
 
@@ -355,7 +363,7 @@ void skr::imgui::imgui_show_window(ImGuiViewport* viewport)
 ImVec2 skr::imgui::imgui_get_window_pos(ImGuiViewport* viewport)
 {
     SWindowHandle window = (SWindowHandle)viewport->PlatformHandle;
-    int32_t x, y;
+    int32_t       x, y;
     skr_window_get_position(window, &x, &y);
     return ImVec2((float)x, (float)y);
 }
@@ -368,7 +376,7 @@ void skr::imgui::imgui_set_window_pos(ImGuiViewport* viewport, ImVec2 pos)
 ImVec2 skr::imgui::imgui_get_window_size(ImGuiViewport* viewport)
 {
     SWindowHandle window = (SWindowHandle)viewport->PlatformHandle;
-    int32_t x, y;
+    int32_t       x, y;
     skr_window_get_extent(window, &x, &y);
     return ImVec2((float)x, (float)y);
 }
@@ -386,13 +394,11 @@ void skr::imgui::imgui_set_window_title(ImGuiViewport* viewport, const char* tit
 void skr::imgui::imgui_set_window_alpha(ImGuiViewport* viewport, float alpha)
 {
     SKR_LOG_WARN(u8"imgui_set_window_alpha not implemented");
-
 }
 
 void skr::imgui::imgui_set_window_focus(ImGuiViewport* viewport)
 {
     SKR_LOG_TRACE(u8"imgui_set_window_focus not implemented");
-    
 }
 
 bool skr::imgui::imgui_get_window_focus(ImGuiViewport* viewport)
@@ -415,7 +421,9 @@ void skr::imgui::imgui_swap_buffers(ImGuiViewport* viewport, void*)
     // nothing need to be done here...
 }
 
-#define KEY_CODE_TRANS(k, imguik) case (k): return (imguik);
+#define KEY_CODE_TRANS(k, imguik) \
+    case (k):                     \
+        return (imguik);
 
 inline static int32_t skr::imgui::KeyCodeTranslator(EKeyCode keycode)
 {

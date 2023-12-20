@@ -1,9 +1,9 @@
 #include "SkrProfile/profile.h"
+#include "SkrRT/containers/uset.hpp"
 #include "SkrRT/containers/vector.hpp"
 #include "common_utils.h"
 #include "cgpu/cgpux.hpp"
 
-#include "SkrRT/containers/deprecated.hpp"
 
 // CGPUX bind table apis
 
@@ -130,18 +130,18 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
 
 void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
 {
-    skr::FixedSet<uint32_t, 4> needsUpdateIndices;
+    skr::FixedUSet<uint32_t, 4> needsUpdateIndices;
     for (uint32_t i = 0; i < names_count; i++)
     {
         const auto& location = name_locations[i];
         if (!location.value.binded)
         {
-            needsUpdateIndices.insert(location.tbl_idx);
+            needsUpdateIndices.add_or_assign(location.tbl_idx);
         }
     }
     for (auto setIdx : needsUpdateIndices)
     {
-        skr::FixedVector<CGPUDescriptorData, 4> datas;
+        skr::InlineVector<CGPUDescriptorData, 4> datas;
         for (uint32_t i = 0; i < names_count; i++)
         {
             const auto& location = name_locations[i];
@@ -151,7 +151,7 @@ void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
                 // TODO: batch update for better performance
                 // this update is kinda dangerous during draw-call because update-after-bind may happen
                 // TODO: fix this
-                datas.emplace_back(location.value.data);
+                datas.emplace(location.value.data);
                 const_cast<bool&>(location.value.binded) = true;
             }
         }

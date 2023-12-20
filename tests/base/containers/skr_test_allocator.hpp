@@ -2,26 +2,33 @@
 #include "SkrBase/containers/allocator/allocator.hpp"
 #include <new>
 
-namespace skr::container
+namespace skr
 {
-struct SkrTestAllocator : AllocTemplate<SkrTestAllocator, size_t> {
-    static void* alloc_raw(size_t size, size_t align)
+struct SkrTestAllocator {
+    struct DummyParam {
+    };
+    using CtorParam                       = DummyParam; // dummy ctor param
+    static constexpr bool support_realloc = false;      // realloc not supported
+
+    inline SkrTestAllocator(DummyParam) noexcept {}
+    inline SkrTestAllocator() noexcept {}
+    inline ~SkrTestAllocator() noexcept {}
+    inline SkrTestAllocator(const SkrTestAllocator&) {}
+    inline SkrTestAllocator(SkrTestAllocator&&) noexcept {}
+    inline SkrTestAllocator& operator=(const SkrTestAllocator&) { return *this; }
+    inline SkrTestAllocator& operator=(SkrTestAllocator&&) noexcept { return *this; }
+
+    template <typename T>
+    inline static T* alloc(size_t size)
     {
-        return ::operator new(size, std::align_val_t(align));
+        void* mem = ::operator new(size * sizeof(T), std::align_val_t(alignof(T)));
+        return reinterpret_cast<T*>(mem);
     }
-    static void free_raw(void* p, size_t align)
+
+    template <typename T>
+    inline static void free(T* p)
     {
-        ::operator delete(p, std::align_val_t(align));
-    }
-    static void* realloc_raw(void* p, size_t size, size_t align)
-    {
-        void* new_mem = ::operator new(size, std::align_val_t(align));
-        if (p)
-        {
-            memcpy(new_mem, p, size);
-            ::operator delete(p, std::align_val_t(align));
-        }
-        return new_mem;
+        ::operator delete(reinterpret_cast<void*>(p), std::align_val_t(alignof(T)));
     }
 };
-} // namespace skr::container
+} // namespace skr

@@ -3,7 +3,6 @@
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/deprecated.hpp"
 #include "cgpu/cgpux.h"
 
 namespace skr
@@ -62,10 +61,10 @@ class MergedBindTablePool
         };
         inline Key() = default;
         inline Key(const CGPUXBindTableId* tables, uint32_t count)
-            : tables(tables, tables + count)
+            : tables(tables, count)
         {
         }
-        skr::FixedVector<CGPUXBindTableId, 3> tables;
+        skr::InlineVector<CGPUXBindTableId, 3> tables;
     };
     static_assert(sizeof(Key) <= 8 * sizeof(size_t), "Key should be under single cacheline!");
     struct GuradedMergedBindTable

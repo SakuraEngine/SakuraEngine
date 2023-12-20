@@ -39,16 +39,15 @@ ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId de
     auto _this = CGPUDStorageSingleton::Get(instance);
     if (!_this) return SKR_DSTORAGE_AVAILABILITY_NONE;
     
-    auto res = _this->availability_map.find(device);
-    if (res == _this->availability_map.end())
+    if (!_this->availability_map.find(device))
     {
         if (!GetDStorageFactory(instance))
         {
-            _this->availability_map.add(device, SKR_DSTORAGE_AVAILABILITY_NONE);
+            _this->availability_map.add_or_assign(device, SKR_DSTORAGE_AVAILABILITY_NONE);
         }
         else
         {
-            _this->availability_map.add(device, SKR_DSTORAGE_AVAILABILITY_HARDWARE);
+            _this->availability_map.add_or_assign(device, SKR_DSTORAGE_AVAILABILITY_HARDWARE);
         }
     }
     return _this->availability_map.find(device)->value;

@@ -2,7 +2,6 @@
 #include "../common/io_request.hpp"
 #include "SkrRT/platform/dstorage.h"
 
-#include "SkrRT/containers/deprecated.hpp"
 
 namespace skr {
 namespace io {
@@ -40,7 +39,7 @@ protected:
     }
     friend struct DStorageRAMReader;
     friend struct DStorageVRAMReader;
-    skr::FixedVector<IOBatchId, 32> batches;
+    skr::InlineVector<IOBatchId, 32> batches;
     SkrDStorageQueueId queue = nullptr;
     ISmartPoolPtr<DStorageEvent> pool = nullptr;
     SkrDStorageEventId event = nullptr;

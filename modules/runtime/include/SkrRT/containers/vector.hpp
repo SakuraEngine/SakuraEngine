@@ -1,12 +1,32 @@
 #pragma once
+#include "SkrBase/containers/array/array_memory.hpp"
 #include "SkrRT/containers/skr_allocator.hpp"
 #include "SkrBase/containers/array/array.hpp"
 
 namespace skr
 {
-template <typename T, typename Alloc = SkrAllocator>
-using Vector = container::Array<T, Alloc>;
-}
+template <typename T, typename Allocator = SkrAllocator_New>
+using Vector = container::Array<container::ArrayMemory<
+T,        /*type*/
+uint64_t, /*size type*/
+Allocator /*allocator*/
+>>;
+
+template <typename T, uint64_t kCount>
+using FixedVector = container::Array<container::FixedArrayMemory<
+T,        /*type*/
+uint64_t, /*size type*/
+kCount    /*allocator*/
+>>;
+
+template <typename T, uint64_t kCount, typename Allocator = SkrAllocator_New>
+using InlineVector = container::Array<container::InlineArrayMemory<
+T,        /*type*/
+uint64_t, /*size type*/
+kCount,   /*allocator*/
+Allocator /*allocator*/
+>>;
+} // namespace skr
 
 // serde
 #include "SkrRT/serde/binary/serde.h"
@@ -24,7 +44,7 @@ struct ReadTrait<Vector<V>> {
     static int Read(skr_binary_reader_t* archive, Vector<V>& vec, Args&&... args)
     {
         Vector<V> temp;
-        uint32_t size;
+        uint32_t  size;
         SKR_ARCHIVE(size);
 
         temp.reserve(size);
@@ -42,7 +62,7 @@ struct ReadTrait<Vector<V>> {
     static int Read(skr_binary_reader_t* archive, Vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
     {
         Vector<V> temp;
-        uint32_t size;
+        uint32_t  size;
         SKR_ARCHIVE(size);
         if (size > cfg.max || size < cfg.min)
         {
@@ -102,8 +122,8 @@ struct VectorWriter {
 
 struct VectorWriterBitpacked {
     Vector<uint8_t>* buffer;
-    uint8_t         bitOffset = 0;
-    int             write(const void* data, size_t size)
+    uint8_t          bitOffset = 0;
+    int              write(const void* data, size_t size)
     {
         return write_bits(data, size * 8);
     }
