@@ -101,7 +101,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     if (fetched_requests[priority].try_dequeue(rq))
     {
         auto launcher = VFSReaderFutureLauncher(job_queue);
-        loaded_futures[priority].emplace_back(
+        loaded_futures[priority].add(
             launcher.async([this, rq, priority](){
                 SkrZoneScopedN("VFSReadTask");
                 dispatchFunction(priority, rq);
@@ -135,11 +135,7 @@ void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
             future = nullptr;
         }
     }
-    auto it = eastl::remove_if(arr.begin(), arr.end(), 
-        [](skr::IFuture<bool>* future) {
-            return (future == nullptr);
-        });
-    arr.erase(it, arr.end());
+    arr.remove_all_if([](skr::IFuture<bool>* future) { return (future == nullptr); });
 }
 
 } // namespace io
@@ -281,7 +277,7 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
             }
 
         }
-        event->batches.emplace_back(batch);
+        event->batches.emplace(batch);
     }
     if (event)
     {
@@ -325,7 +321,7 @@ void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEX
     }
 
     // remove empty events
-    auto cleaner = eastl::remove_if(submitted[priority].begin(), submitted[priority].end(), [](const auto& e) { return !e; });
+    auto cleaner = std::remove_if(submitted[priority].begin(), submitted[priority].end(), [](const auto& e) { return !e; });
     submitted[priority].erase(cleaner, submitted[priority].end());
 }
 

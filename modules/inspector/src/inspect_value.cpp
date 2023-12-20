@@ -6,7 +6,7 @@
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/containers/btree.hpp"
 #include "SkrRT/containers/optional.hpp"
-#include <SkrRT/containers/variant.hpp>
+#include <SkrRT/containers/deprecated.hpp>
 #include <SkrRT/containers/string.hpp>
 #include <chrono>
 #include "SkrImGui/skr_imgui.h"
@@ -29,8 +29,8 @@ struct tweak_value_t
 static struct inspect_system* _system = nullptr;
 struct inspect_system : public skr::ModuleSubsystem
 {
-    using tweak_value_map_t = skr::btree_multimap<uint32_t, tweak_value_t>;
-    skr::flat_hash_map<skr::string, tweak_value_map_t, skr::hash<skr::string>> _tweak_files;
+    using tweak_value_map_t = skr::BTreeMultiMap<uint32_t, tweak_value_t>;
+    skr::FlatHashMap<skr::String, tweak_value_map_t, skr::Hash<skr::String>> _tweak_files;
     uint32_t counter = 0;
 
     void Initialize() override
@@ -159,14 +159,14 @@ struct inspect_system : public skr::ModuleSubsystem
         ImGui::End();
     }
 
-    void DrawObject(const skr_value_ref_t& object, const skr::string& name);
-    void DrawLeaf(const skr_value_ref_t& value, const skr::string& name);
+    void DrawObject(const skr_value_ref_t& object, const skr::String& name);
+    void DrawLeaf(const skr_value_ref_t& value, const skr::String& name);
     void DrawPropertyPannel(const skr_value_ref_t& object);
     
     SMutexObject _mutex;
 };
 
-void inspect_system::DrawObject(const skr_value_ref_t &object, const skr::string &name)
+void inspect_system::DrawObject(const skr_value_ref_t &object, const skr::String &name)
 {
     SKR_ASSERT(object.type->type == SKR_TYPE_CATEGORY_OBJ);
     ImGui::PushID(object.ptr);
@@ -193,7 +193,7 @@ void inspect_system::DrawObject(const skr_value_ref_t &object, const skr::string
     }
 }
 
-void inspect_system::DrawLeaf(const skr_value_ref_t &value, const skr::string &name)
+void inspect_system::DrawLeaf(const skr_value_ref_t &value, const skr::String &name)
 {
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
@@ -241,7 +241,7 @@ void inspect_system::DrawLeaf(const skr_value_ref_t &value, const skr::string &n
         }
         case SKR_TYPE_CATEGORY_STR:
         {
-            skr::string* v = (skr::string*)value.ptr;
+            skr::String* v = (skr::String*)value.ptr;
             ImGui::InputText("##value", v);
             break;
         }

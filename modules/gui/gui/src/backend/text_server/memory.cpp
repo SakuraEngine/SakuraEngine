@@ -1,6 +1,6 @@
 #include "backend/text_server/memory.h"
 #include "backend/text_server/rid_owner.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 
 #ifndef PAD_ALIGN
     #define PAD_ALIGN 16 // must always be greater than this at much

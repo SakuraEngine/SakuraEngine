@@ -7,7 +7,7 @@
 class BinaryBitpackTests
 {
 protected:
-    eastl::vector<uint8_t> buffer;
+    skr::Vector<uint8_t> buffer;
     skr::binary::VectorWriterBitpacked writer;
     skr::binary::SpanReaderBitpacked reader;
     BinaryBitpackTests()
@@ -26,7 +26,7 @@ TEST_CASE_METHOD(BinaryBitpackTests, "Aligned")
     writer.write(&value, sizeof(value));
     writer.write(&value2, sizeof(value2));
 
-    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+    reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
 
     uint64_t readValue = 0;
     uint64_t readValue2 = 0;
@@ -43,7 +43,7 @@ TEST_CASE_METHOD(BinaryBitpackTests, "WithinByte")
     writer.write_bits(&value, 2);
     writer.write_bits(&value2, 4);
 
-    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+    reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
 
     uint64_t readValue = 0;
     uint64_t readValue2 = 0;
@@ -60,7 +60,7 @@ TEST_CASE_METHOD(BinaryBitpackTests, "MultipleBytes")
     writer.write_bits(&value, 14*4 + 2);
     writer.write_bits(&value2, 2*4 + 2);
 
-    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+    reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
 
     uint64_t readValue = 0;
     uint64_t readValue2 = 0;
@@ -83,7 +83,7 @@ TEST_CASE_METHOD(BinaryBitpackTests, "ArchiveAPI")
     archiveWrite.write(&value4, sizeof(uint32_t));
     //archiveWrite.write_bits(&value3, 14*4 + 2);
 
-    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+    reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
     
     uint64_t readValue = 0;
     uint64_t readValue2 = 0;
@@ -110,7 +110,7 @@ TEST_CASE_METHOD(BinaryBitpackTests, "VectorPack")
     skr::binary::Archive(&archiveWrite, value, skr::binary::VectorPackConfig<float>{});
     skr::binary::Archive(&archiveWrite, value2, skr::binary::VectorPackConfig<float>{100000});
 
-    reader.data = skr::span<uint8_t>(buffer.data(), buffer.size());
+    reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
 
     skr_float3_t readValue = { 0.0f, 0.0f, 0.0f };
     skr_float3_t readValue2 = { 0.0f, 0.0f, 0.0f };

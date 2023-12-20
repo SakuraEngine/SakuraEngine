@@ -1,24 +1,24 @@
 #pragma once
-#include "SkrRT/config.h"
-#include "EASTL/variant.h"
+#include "SkrBase/containers/variant/variant.hpp"
+#include "SkrRT/serde/binary/writer_fwd.h"
+#include "SkrRT/serde/binary/reader_fwd.h"
 
 namespace skr
 {
 template <class... Ts>
-using variant = eastl::variant<Ts...>;
+using variant = skr::container::variant<Ts...>;
 template <class... Ts>
 struct overload : Ts... {
     using Ts::operator()...;
 };
 template <class... Ts>
 overload(Ts...) -> overload<Ts...>;
-using eastl::get_if;
-using eastl::get;
-using eastl::visit;
+using skr::container::get_if;
+using skr::container::get;
+using skr::container::visit;
+using skr::container::variant_size_v;
+using skr::container::variant_npos;
 } // namespace skr
-
-// binary reader
-#include "SkrRT/serde/binary/reader_fwd.h"
 
 namespace skr
 {
@@ -65,9 +65,6 @@ struct SerdeCompleteChecker<binary::ReadTrait<skr::variant<Ts...>>>
 };
 } // namespace skr
 
-// binary writer
-#include "SkrRT/serde/binary/writer_fwd.h"
-
 namespace skr
 {
 namespace binary
@@ -78,7 +75,7 @@ struct WriteTrait<skr::variant<Ts...>> {
     {
         SKR_ARCHIVE((uint32_t)variant.index());
         int ret;
-        eastl::visit([&](auto&& value) {
+        skr::visit([&](auto&& value) {
             ret = skr::binary::Archive(archive, value);
         },
                      variant);

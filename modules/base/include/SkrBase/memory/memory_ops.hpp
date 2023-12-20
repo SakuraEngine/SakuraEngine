@@ -16,6 +16,18 @@ SKR_INLINE void construct(T* p)
     }
 }
 template <typename T>
+SKR_INLINE void construct_stl_ub(T* p)
+{
+    if constexpr (MemoryTraits<T>::use_ctor)
+    {
+        new (p) T();
+    }
+    else
+    {
+        std::memset(p, 0, sizeof(T));
+    }
+}
+template <typename T>
 SKR_INLINE void destruct(T* p)
 {
     if constexpr (MemoryTraits<T>::use_dtor)
@@ -29,7 +41,7 @@ SKR_INLINE void destruct(T* p)
 template <typename Dst, typename Src>
 SKR_INLINE void copy(Dst* dst, Src* src)
 {
-    if (dst != src)
+    if ((void*)dst != (void*)src)
     {
         if constexpr (MemoryTraits<Dst, Src>::use_copy)
         {
@@ -37,6 +49,7 @@ SKR_INLINE void copy(Dst* dst, Src* src)
         }
         else
         {
+            static_assert(sizeof(Dst) == sizeof(Src));
             std::memcpy(dst, src, sizeof(Src));
         }
     }
@@ -44,7 +57,7 @@ SKR_INLINE void copy(Dst* dst, Src* src)
 template <typename Dst, typename Src>
 SKR_INLINE void assign(Dst* dst, Src* src)
 {
-    if (dst != src)
+    if ((void*)dst != (void*)src)
     {
         if constexpr (MemoryTraits<Dst, Src>::use_assign)
         {
@@ -52,6 +65,7 @@ SKR_INLINE void assign(Dst* dst, Src* src)
         }
         else
         {
+            static_assert(sizeof(Dst) == sizeof(Src));
             std::memcpy(dst, src, sizeof(Src));
         }
     }
@@ -61,7 +75,7 @@ SKR_INLINE void assign(Dst* dst, Src* src)
 template <typename Dst, typename Src>
 SKR_INLINE void move(Dst* dst, Src* src)
 {
-    if (dst != src)
+    if ((void*)dst != (void*)src)
     {
         if constexpr (MemoryTraits<Dst, Src>::use_move)
         {
@@ -69,19 +83,20 @@ SKR_INLINE void move(Dst* dst, Src* src)
         }
         else
         {
-            std::memcpy(dst, src, sizeof(Src));
+            static_assert(sizeof(Dst) == sizeof(Src));
+            std::memmove(dst, src, sizeof(Src));
         }
 
         if constexpr (MemoryTraits<Dst, Src>::need_dtor_after_move)
         {
-            destruct(src);
+            ::skr::memory::destruct(src);
         }
     }
 }
 template <typename Dst, typename Src>
 SKR_INLINE void move_assign(Dst* dst, Src* src)
 {
-    if (dst != src)
+    if ((void*)dst != (void*)src)
     {
         if constexpr (MemoryTraits<Dst, Src>::use_move_assign)
         {
@@ -89,12 +104,13 @@ SKR_INLINE void move_assign(Dst* dst, Src* src)
         }
         else
         {
-            std::memcpy(dst, src);
+            static_assert(sizeof(Dst) == sizeof(Src));
+            std::memcpy(dst, src, sizeof(Src));
         }
 
         if constexpr (MemoryTraits<Dst, Src>::need_dtor_after_move)
         {
-            destruct(src);
+            ::skr::memory::destruct(src);
         }
     }
 }
@@ -133,6 +149,23 @@ SKR_INLINE void construct(T* p, size_t count)
     }
 }
 template <typename T>
+SKR_INLINE void construct_stl_ub(T* p, size_t count)
+{
+    if constexpr (MemoryTraits<T>::use_ctor)
+    {
+        while (count)
+        {
+            new (p) T();
+            ++p;
+            --count;
+        }
+    }
+    else
+    {
+        std::memset(p, 0, sizeof(T) * count);
+    }
+}
+template <typename T>
 SKR_INLINE void destruct(T* p, size_t count)
 {
     if constexpr (MemoryTraits<T>::use_dtor)
@@ -152,7 +185,7 @@ SKR_INLINE void destruct(T* p, size_t count)
 template <typename Dst, typename Src>
 SKR_INLINE void copy(Dst* dst, Src* src, size_t count)
 {
-    if (dst != src)
+    if ((void*)dst != (void*)src)
     {
         if constexpr (MemoryTraits<Dst, Src>::use_copy)
         {
@@ -173,7 +206,7 @@ SKR_INLINE void copy(Dst* dst, Src* src, size_t count)
 template <typename Dst, typename Src>
 SKR_INLINE void assign(Dst* dst, Src* src, size_t count)
 {
-    if (dst != src)
+    if ((void*)dst != (void*)src)
     {
         if constexpr (MemoryTraits<Dst, Src>::use_assign)
         {
@@ -196,7 +229,7 @@ SKR_INLINE void assign(Dst* dst, Src* src, size_t count)
 template <typename Dst, typename Src>
 SKR_INLINE void move(Dst* dst, Src* src, size_t count)
 {
-    if (dst != src)
+    if ((void*)dst != (void*)src)
     {
         if constexpr (MemoryTraits<Dst, Src>::use_move)
         {
@@ -243,7 +276,7 @@ SKR_INLINE void move(Dst* dst, Src* src, size_t count)
 template <typename Dst, typename Src>
 SKR_INLINE void move_assign(Dst* dst, Src* src, size_t count)
 {
-    if (dst != src)
+    if ((void*)dst != (void*)src)
     {
         if constexpr (MemoryTraits<Dst, Src>::use_move_assign)
         {

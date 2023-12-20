@@ -12,7 +12,7 @@ struct SImporterRegistryImpl : public SImporterRegistry
     uint32_t GetImporterVersion(skr_guid_t type) override;
     void RegisterImporter(skr_guid_t type, SImporterTypeInfo info) override;
 
-    skr::flat_hash_map<skr_guid_t, SImporterTypeInfo, skr::guid::hash> loaders;
+    skr::FlatHashMap<skr_guid_t, SImporterTypeInfo, skr::guid::hash> loaders;
 };
 
 SImporterRegistry* GetImporterRegistry()

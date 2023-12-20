@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "sptr_base.hpp"
 
 namespace skr

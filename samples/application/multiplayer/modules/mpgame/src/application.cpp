@@ -3,7 +3,7 @@
 #include "SkrRT/runtime_module.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/module/module_manager.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/window.h"
 #include "SkrRT/platform/filesystem.hpp"
@@ -165,8 +165,8 @@ int MPApplication::InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
         ImGui::GetIO().Fonts->Build();
         sakura_free(font_bytes);
     }
-    skr::string vsname = u8"shaders/imgui_vertex";
-    skr::string fsname = u8"shaders/imgui_fragment";
+    skr::String vsname = u8"shaders/imgui_vertex";
+    skr::String fsname = u8"shaders/imgui_fragment";
     vsname += backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv";
     fsname += backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv";
 
@@ -347,7 +347,7 @@ void MPApplication::Render()
     });
     renderer.renderGraph->add_render_pass(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
-            skr::string name = u8"clear";
+            skr::String name = u8"clear";
             builder.set_name(name.u8_str())
                 .write(0, back_buffer, CGPU_LOAD_ACTION_CLEAR);
         },

@@ -4,6 +4,11 @@ rule("utils.dxc")
         import("find_sdk")
         dxc = find_sdk.find_program("dxc")
 
+        -- permission
+        if (os.host() == "macosx") then
+            os.exec("chmod -R 777 "..dxc.program)
+        end
+
         -- get target profile
         target_profile = sourcefile_hlsl:match("^.+%.(.+)%.")
         hlsl_basename = path.filename(sourcefile_hlsl):match("(.+)%..+%..+")
@@ -19,8 +24,12 @@ rule("utils.dxc")
                 target:name(), sourcefile_hlsl, hlsl_basename .. ".spv")
         end
 
+        local dxc_exec = dxc.vexec
         batchcmds:mkdir(spv_outputdir)
-        batchcmds:vrunv(dxc.vexec, 
+        if dxc.wdir ~= nil then
+            dxc_exec = "cd "..dxc.wdir.." && "..dxc_exec
+        end
+        batchcmds:vrunv(dxc_exec, 
             {"-Wno-ignored-attributes",
             "-all_resources_bound",
             "-spirv",
@@ -43,7 +52,7 @@ rule("utils.dxc")
         end
 
         batchcmds:mkdir(dxil_outputdir)
-        batchcmds:vrunv(dxc.vexec, 
+        batchcmds:vrunv(dxc_exec, 
             {"-Wno-ignored-attributes", 
             "-all_resources_bound", 
             "-Fo ", dxilfilepath, 

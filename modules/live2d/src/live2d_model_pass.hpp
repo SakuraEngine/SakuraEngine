@@ -105,7 +105,8 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
                 SkrZoneScopedN("DrawCall");
 
                 auto&& dc = drawcalls[i].lists[j].drawcalls[k];
-                if (dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
+                if (dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) 
+                    continue;
 
                 if (old_pipeline != dc.pipeline)
                 {

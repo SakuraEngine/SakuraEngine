@@ -1,8 +1,6 @@
-#include "misc/log/log_manager.hpp"
-
-#include <EASTL/fixed_hash_set.h>
-
 #include "SkrProfile/profile.h"
+#include "SkrRT/containers/hashmap.hpp"
+#include "misc/log/log_manager.hpp"
 
 namespace skr {
 namespace log {
@@ -18,39 +16,39 @@ void LogManager::Initialize() SKR_NOEXCEPT
 {
     tscns_.init();
     datetime_.reset_date();
-    logger_ = eastl::make_unique<skr::log::Logger>(u8"Log");
+    logger_ = skr::make_unique<skr::log::Logger>(u8"Log");
 
     // register default pattern
     auto ret = RegisterPattern(LogConstants::kDefaultPatternId, 
-        eastl::make_unique<LogPattern>(
+        skr::make_unique<LogPattern>(
             u8"[%(timestamp)][%(thread_name)(tid:%(thread_id))] %(logger_name).%(level_name): %(message)"
         ));
     SKR_ASSERT(ret && "Default log pattern register failed!");
     
     // register default console pattern & sink
     ret = RegisterPattern(LogConstants::kDefaultConsolePatternId, 
-        eastl::make_unique<LogPattern>(
+        skr::make_unique<LogPattern>(
             u8"[%(timestamp)][%(thread_name)(tid:%(thread_id))] %(logger_name).%(level_name): %(message) "
             u8"\n    \x1b[90mIn %(function_name) At %(file_name):%(file_line)\x1b[0m"
         ));
     SKR_ASSERT(ret && "Default log console pattern register failed!");
-    ret = RegisterSink(LogConstants::kDefaultConsoleSinkId, eastl::make_unique<LogANSIOutputSink>());
+    ret = RegisterSink(LogConstants::kDefaultConsoleSinkId, skr::make_unique<LogANSIOutputSink>());
     SKR_ASSERT(ret && "Default log console sink register failed!");
     
     // register default file pattern & sink
     ret = RegisterPattern(LogConstants::kDefaultFilePatternId, 
-        eastl::make_unique<LogPattern>(
+        skr::make_unique<LogPattern>(
             u8"[%(timestamp)][%(thread_name)(tid:%(thread_id))] %(logger_name).%(level_name): %(message) "
             u8"\n    In %(function_name) At %(file_name):%(file_line)"
         ));
     SKR_ASSERT(ret && "Default log file pattern register failed!");
-    ret = RegisterSink(LogConstants::kDefaultFileSinkId, eastl::make_unique<LogFileSink>());
+    ret = RegisterSink(LogConstants::kDefaultFileSinkId, skr::make_unique<LogFileSink>());
     SKR_ASSERT(ret && "Default log file sink register failed!");
 }
 
 LogManager* LogManager::Get() SKR_NOEXCEPT
 {
-    static eastl::unique_ptr<LogManager> manager = eastl::make_unique<LogManager>();
+    static skr::unique_ptr<LogManager> manager = skr::make_unique<LogManager>();
     static bool initialize_once = false;
     if (!initialize_once)
     {
@@ -68,7 +66,7 @@ void LogManager::InitializeAsyncWorker() SKR_NOEXCEPT
     // start worker
     if (!worker_)
     {
-        worker_ = eastl::make_unique<LogWorker>(kLoggerWorkerThreadDesc);
+        worker_ = skr::make_unique<LogWorker>(kLoggerWorkerThreadDesc);
         worker_->run();
     }
     skr_atomic64_cas_relaxed(&available_, 0, 1);
@@ -97,7 +95,7 @@ Logger* LogManager::GetDefaultLogger() SKR_NOEXCEPT
     return Manager->logger_.get();
 }
 
-skr_guid_t LogManager::RegisterPattern(eastl::unique_ptr<LogPattern> pattern)
+skr_guid_t LogManager::RegisterPattern(skr::unique_ptr<LogPattern> pattern)
 {
     auto guid = skr_guid_t();
     skr_make_guid(&guid);
@@ -105,7 +103,7 @@ skr_guid_t LogManager::RegisterPattern(eastl::unique_ptr<LogPattern> pattern)
     return guid;
 }
 
-bool LogManager::RegisterPattern(skr_guid_t guid, eastl::unique_ptr<LogPattern> pattern)
+bool LogManager::RegisterPattern(skr_guid_t guid, skr::unique_ptr<LogPattern> pattern)
 {
     if (patterns_.find(guid) != patterns_.end())
         return false;
@@ -121,7 +119,7 @@ LogPattern* LogManager::QueryPattern(skr_guid_t guid)
     return nullptr;
 }
 
-skr_guid_t LogManager::RegisterSink(eastl::unique_ptr<LogSink> sink)
+skr_guid_t LogManager::RegisterSink(skr::unique_ptr<LogSink> sink)
 {
     auto guid = skr_guid_t();
     skr_make_guid(&guid);
@@ -129,7 +127,7 @@ skr_guid_t LogManager::RegisterSink(eastl::unique_ptr<LogSink> sink)
     return guid;
 }
 
-bool LogManager::RegisterSink(skr_guid_t guid, eastl::unique_ptr<LogSink> sink)
+bool LogManager::RegisterSink(skr_guid_t guid, skr::unique_ptr<LogSink> sink)
 {
     if (sinks_.find(guid) != sinks_.end())
         return false;
@@ -145,16 +143,17 @@ LogSink* LogManager::QuerySink(skr_guid_t guid)
     return nullptr;
 }
 
-void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatted_message) SKR_NOEXCEPT
+void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
 {
-    eastl::fixed_hash_set<skr_guid_t, 4, 5, true, skr::guid::hash> patterns_;
+    static thread_local skr::FlatHashSet<skr_guid_t, skr::guid::hash> patterns_set_;
+    patterns_set_.clear();
     {
         SkrZoneScopedN("PatternAll");
         for (auto&& [id, sink] : sinks_)
         {
             auto pattern_id = sink->get_pattern();
-            auto&& iter = patterns_.find(pattern_id);
-            if (iter != patterns_.end())
+            auto&& iter = patterns_set_.find(pattern_id);
+            if (iter != patterns_set_.end())
                 continue;
             
             if (auto p = LogManager::QueryPattern(pattern_id))
@@ -163,7 +162,7 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatte
 
                 [[maybe_unused]] 
                 auto& _ = p->pattern(event, formatted_message);
-                patterns_.insert(pattern_id);
+                patterns_set_.insert(pattern_id);
             }
             else
             {

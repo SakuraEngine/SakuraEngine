@@ -3,7 +3,7 @@
 
 namespace skr::rttr
 {
-RecordType::RecordType(string name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods)
+RecordType::RecordType(skr::String name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods)
     : Type(ETypeCategory::SKR_TYPE_CATEGORY_RECORD, std::move(name), type_id, size, alignment)
     , _basic_methods(basic_methods)
 {
@@ -217,28 +217,28 @@ void RecordType::set_base_types(UMap<GUID, BaseInfo> base_types)
     {
         if (data.value.type == nullptr)
         {
-            string guid_str = skr::format(u8"{}", data.key);
+            skr::String guid_str = skr::format(u8"{}", data.key);
             SKR_LOG_ERROR(u8"[RTTR] type %s has a null base type.\n GUID: {%s}", name().c_str(), guid_str.c_str());
         }
     }
 
     _base_types_map = std::move(base_types);
 }
-void RecordType::set_fields(MultiUMap<string, Field> fields)
+void RecordType::set_fields(MultiUMap<skr::String, Field> fields)
 {
     // validate
     for (const auto& data : fields)
     {
         if (data.value.type == nullptr)
         {
-            string guid_str = skr::format(u8"{}", data.key);
+            skr::String guid_str = skr::format(u8"{}", data.key);
             SKR_LOG_ERROR(u8"[RTTR] type %s has a null field type.\n GUID: {%s}", name().c_str(), guid_str.c_str());
         }
     }
 
     _fields_map = std::move(fields);
 }
-void RecordType::set_methods(MultiUMap<string, Method> methods)
+void RecordType::set_methods(MultiUMap<skr::String, Method> methods)
 {
     _methods_map = std::move(methods);
 }

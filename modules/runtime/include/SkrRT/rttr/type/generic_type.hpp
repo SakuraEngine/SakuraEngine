@@ -4,7 +4,7 @@
 namespace skr::rttr
 {
 struct SKR_RUNTIME_API GenericType : public Type {
-    GenericType(GUID generic_id, string name, GUID type_id, size_t size, size_t alignment);
+    GenericType(GUID generic_id, skr::String name, GUID type_id, size_t size, size_t alignment);
 
     SKR_INLINE GUID generic_guid()
     {

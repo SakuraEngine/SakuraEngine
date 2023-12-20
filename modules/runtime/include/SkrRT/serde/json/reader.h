@@ -5,8 +5,8 @@
     #define SIMDJSON_AVX512_ALLOWED 0
     #include "simdjson.h"
     #include "SkrRT/containers/hashmap.hpp"
-    #include "SkrRT/containers/variant.hpp"
     #include "SkrRT/containers/string.hpp"
+    #include "SkrRT/containers/vector.hpp"
     #include "SkrRT/containers/vector.hpp"
     #include "SkrRT/platform/guid.hpp"
     #include "SkrRT/rttr/rttr_traits.hpp"
@@ -125,8 +125,8 @@ struct SKR_STATIC_API ReadTrait<skr_resource_handle_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_resource_handle_t& value);
 };
 template <>
-struct SKR_STATIC_API ReadTrait<skr::string> {
-    static error_code Read(simdjson::ondemand::value&& json, skr::string& value);
+struct SKR_STATIC_API ReadTrait<skr::String> {
+    static error_code Read(simdjson::ondemand::value&& json, skr::String& value);
 };
 } // namespace skr::json
 
@@ -134,8 +134,8 @@ struct SKR_STATIC_API ReadTrait<skr::string> {
 namespace skr::json
 {
 template <class K, class V, class Hash, class Eq>
-struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
-    static error_code Read(simdjson::ondemand::value&& json, skr::flat_hash_map<K, V, Hash, Eq>& map)
+struct ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
+    static error_code Read(simdjson::ondemand::value&& json, skr::FlatHashMap<K, V, Hash, Eq>& map)
     {
         auto object = json.get_object();
         if (object.error() != simdjson::SUCCESS)
@@ -154,7 +154,7 @@ struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
                 return error;
 
             const char* key_str = key.value_unsafe().raw();
-            if constexpr (std::is_same_v<std::decay_t<K>, skr::string>)
+            if constexpr (std::is_same_v<std::decay_t<K>, skr::String>)
             {
                 map.insert(std::make_pair(K{ key_str }, std::move(v)));
             }
@@ -167,9 +167,9 @@ struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
     }
 };
 
-template <class V, class Allocator>
-struct ReadTrait<skr::vector<V, Allocator>> {
-    static error_code Read(simdjson::ondemand::value&& json, skr::vector<V, Allocator>& vec)
+template <class V>
+struct ReadTrait<skr::Vector<V>> {
+    static error_code Read(simdjson::ondemand::value&& json, skr::Vector<V>& vec)
     {
         auto array = json.get_array();
         if (array.error() != simdjson::SUCCESS)
@@ -183,7 +183,7 @@ struct ReadTrait<skr::vector<V, Allocator>> {
             error_code error = skr::json::Read<V>(std::move(value).value_unsafe(), v);
             if (error != SUCCESS)
                 return error;
-            vec.push_back(std::move(v));
+            vec.add(std::move(v));
         }
         return SUCCESS;
     }
@@ -249,12 +249,12 @@ error_code Read(simdjson::ondemand::value&& json, T& value)
 namespace skr
 {
 template <class K, class V, class Hash, class Eq>
-struct SerdeCompleteChecker<json::ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>>>
+struct SerdeCompleteChecker<json::ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>>>
     : std::bool_constant<is_complete_serde_v<json::ReadTrait<K>> && is_complete_serde_v<json::ReadTrait<V>>> {
 };
 
-template <class V, class Allocator>
-struct SerdeCompleteChecker<json::ReadTrait<eastl::vector<V, Allocator>>>
+template <class V>
+struct SerdeCompleteChecker<json::ReadTrait<skr::Vector<V>>>
     : std::bool_constant<is_complete_serde_v<json::ReadTrait<V>>> {
 };
 

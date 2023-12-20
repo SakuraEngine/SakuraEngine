@@ -28,29 +28,28 @@
 #ifndef OZZ_OZZ_BASE_CONTAINERS_ARRAY_H_
 #define OZZ_OZZ_BASE_CONTAINERS_ARRAY_H_
 
-#include <array>
-
+#include "SkrRT/containers/array.hpp"
 #include "SkrAnim/ozz/base/platform.h"
 
 namespace ozz {
-// Redirects std::array to ozz::array .
+// Redirects skr::Array to ozz::array .
 template <class _Ty, size_t _N>
-using array = std::array<_Ty, _N>;
+using array = skr::Array<_Ty, _N>;
 
-// Extends std::array with two functions that gives access to the begin and the
+// Extends skr::Array with two functions that gives access to the begin and the
 // end of its array of elements.
 
 // Returns the mutable begin of the array of elements, or nullptr if
 // array's empty.
 template <class _Ty, size_t _N>
-inline _Ty* array_begin(std::array<_Ty, _N>& _array) {
+inline _Ty* array_begin(skr::Array<_Ty, _N>& _array) {
   return _array.data();
 }
 
 // Returns the non-mutable begin of the array of elements, or nullptr if
 // array's empty.
 template <class _Ty, size_t _N>
-inline const _Ty* array_begin(const std::array<_Ty, _N>& _array) {
+inline const _Ty* array_begin(const skr::Array<_Ty, _N>& _array) {
   return _array.data();
 }
 
@@ -58,7 +57,7 @@ inline const _Ty* array_begin(const std::array<_Ty, _N>& _array) {
 // array's empty. Array end is one element past the last element of the
 // array, it cannot be dereferenced.
 template <class _Ty, size_t _N>
-inline _Ty* array_end(std::array<_Ty, _N>& _array) {
+inline _Ty* array_end(skr::Array<_Ty, _N>& _array) {
   return _array.data() + _N;
 }
 
@@ -66,7 +65,7 @@ inline _Ty* array_end(std::array<_Ty, _N>& _array) {
 // array's empty. Array end is one element past the last element of the
 // array, it cannot be dereferenced.
 template <class _Ty, size_t _N>
-inline const _Ty* array_end(const std::array<_Ty, _N>& _array) {
+inline const _Ty* array_end(const skr::Array<_Ty, _N>& _array) {
   return _array.data() + _N;
 }
 }  // namespace ozz

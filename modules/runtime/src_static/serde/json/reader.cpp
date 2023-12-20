@@ -1,6 +1,5 @@
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/serde/json/reader.h"
-#include "EASTL/string.h"
 #include "SkrProfile/profile.h"
 
 // help functions
@@ -354,14 +353,14 @@ error_code ReadTrait<skr_resource_handle_t>::Read(simdjson::ondemand::value&& js
     }
     return (error_code)result.error();
 }
-error_code ReadTrait<skr::string>::Read(simdjson::ondemand::value&& json, skr::string& value)
+error_code ReadTrait<skr::String>::Read(simdjson::ondemand::value&& json, skr::String& value)
 {
-    SkrZoneScopedN("json::ReadTrait<skr::string>::Read");
+    SkrZoneScopedN("json::ReadTrait<skr::String>::Read");
     auto result = json.get_string();
     if (result.error() == simdjson::SUCCESS)
     {
         std::string_view view = result.value_unsafe();
-        value                 = skr::string(skr::string_view((const char8_t*)view.data(), (int32_t)view.length()));
+        value                 = skr::String(skr::StringView((const char8_t*)view.data(), (int32_t)view.length()));
     }
     return (error_code)result.error();
 }

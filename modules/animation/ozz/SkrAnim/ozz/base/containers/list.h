@@ -34,7 +34,8 @@
 #pragma warning(disable : 4127)
 #endif  // _MSC_VER
 
-#include "EASTL/list.h"
+#include "SkrMemory/memory.h"
+#include <list>
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -46,6 +47,6 @@ namespace ozz {
 // Redirects std::list to ozz::list in order to replace std default allocator by
 // ozz::StdAllocator.
 template <class _Ty>
-using list = eastl::list<_Ty>;
+using list = std::list<_Ty, skr_stl_allocator<_Ty>>;
 }  // namespace ozz
 #endif  // OZZ_OZZ_BASE_CONTAINERS_LIST_H_

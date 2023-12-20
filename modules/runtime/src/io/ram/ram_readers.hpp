@@ -48,12 +48,13 @@ struct VFSRAMReader final : public RAMReaderBase<IIORequestProcessor>
     skr::JobQueue* job_queue = nullptr;
     IORequestQueue fetched_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IORequestQueue loaded_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    skr::vector<skr::IFuture<bool>*> loaded_futures[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::Vector<skr::IFuture<bool>*> loaded_futures[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
 
 } // namespace io
 } // namespace skr
 
+#include "SkrRT/containers/stl_vector.hpp"
 #include "../dstorage/dstorage_event.hpp"
 
 namespace skr {
@@ -79,7 +80,7 @@ struct SKR_RUNTIME_API DStorageRAMReader final
     
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue processed_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    eastl::vector<skr::SObjectPtr<DStorageEvent>> submitted[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::stl_vector<skr::SObjectPtr<DStorageEvent>> submitted[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     SmartPoolPtr<DStorageEvent> events[SKR_ASYNC_SERVICE_PRIORITY_COUNT] = { nullptr, nullptr, nullptr };
 };

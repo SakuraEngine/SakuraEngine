@@ -32,7 +32,7 @@
 #include "backend/text_server/error_macros.h"
 #include "backend/text_server/config.h"
 #include "backend/text_server/rid.h"
-#include "backend/text_server/containers.h"
+#include "backend/text_server/godot_containers.hpp"
 #include "backend/text_server/memory.h"
 
 #include <stdio.h>

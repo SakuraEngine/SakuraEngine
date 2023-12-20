@@ -1,5 +1,5 @@
 #pragma once
-#include <EASTL/tuple.h>
+#include "SkrRT/containers/tuple.hpp"
 
 /* clang-format off */
 // utilx
@@ -58,8 +58,8 @@ namespace detail
         };
     };
     template <typename ...Args>
-    static void get_args_from_stack(stack_type &sp, mem_type mem, eastl::tuple<Args...> &tuple) {
-        eastl::apply([&](auto &... item) {
+    static void get_args_from_stack(stack_type &sp, mem_type mem, skr::tuple<Args...> &tuple) {
+        std::apply([&](auto &... item) {
             (arg_from_stack(item, sp, mem), ...);
         }, tuple);
     }
@@ -70,13 +70,13 @@ namespace detail
     struct wrap_helper<Ret(Args...)> {
         using Func = Ret(Args...);
         static const void *wrap_fn(IM3Runtime rt, IM3ImportContext _ctx, stack_type _sp, mem_type mem) {
-            eastl::tuple<Args...> args;
+            skr::tuple<Args...> args;
             // The order here matters: m3ApiReturnType should go before calling get_args_from_stack,
             // since both modify `_sp`, and the return value on the stack is reserved before the arguments.
             m3ApiReturnType(Ret);
             get_args_from_stack(_sp, mem, args);
             Func* function = reinterpret_cast<Func*>(_ctx->userdata);
-            Ret r = eastl::apply(function, args);
+            Ret r = std::apply(function, args);
             m3ApiReturn(r);
         }
     };
@@ -85,10 +85,10 @@ namespace detail
     struct wrap_helper<void(Args...)> {
         using Func = void(Args...);
         static const void *wrap_fn(IM3Runtime rt, IM3ImportContext _ctx, stack_type sp, mem_type mem) {
-            eastl::tuple<Args...> args;
+            skr::tuple<Args...> args;
             get_args_from_stack(sp, mem, args);
             Func* function = reinterpret_cast<Func*>(_ctx->userdata);
-            eastl::apply(function, args);
+            std::apply(function, args);
             m3ApiSuccess();
         }
     };

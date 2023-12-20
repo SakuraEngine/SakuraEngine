@@ -1,13 +1,13 @@
 #if __cpp_impl_coroutine
 
 #include "SkrRT/async/co_task.hpp"
-#include "EASTL/deque.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/containers/function_ref.hpp"
+#include "SkrRT/containers/stl_deque.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/containers/atomic_queue/atomic_queue.h"
-#include "SkrRT/containers/concurrent_queue.h"
+#include "SkrRT/containers/concurrent_queue.hpp"
 
 inline void nop() {
 #if defined(_WIN32)
@@ -65,13 +65,13 @@ namespace task2
 
     struct Task
     {
-        eastl::function<void()> func;
+        skr::stl_function<void()> func;
         std::coroutine_handle<skr_task_t::promise_type> coro;
 
         Task() {}
         Task(nullptr_t) {}
 
-        Task(eastl::function<void()>&& func)
+        Task(skr::stl_function<void()>&& func)
             : func(std::move(func))
         {
         }
@@ -372,7 +372,7 @@ namespace task2
         struct Work 
         {
             std::atomic<uint64_t> num = 0;
-            eastl::deque<Task, eastl::allocator_sakura, 128> pinnedTask;
+            skr::stl_deque<Task> pinnedTask;
             WorkQueue tasks;
             bool notifyAdded = true;
             SConditionVariable added;
@@ -444,7 +444,7 @@ namespace task2
         }
     }
 
-    void scheduler_t::schedule(eastl::function<void ()>&& function)
+    void scheduler_t::schedule(skr::stl_function<void ()>&& function)
     {
         enqueue(Task(std::move(function)), -1);
     }
@@ -577,8 +577,8 @@ namespace task2
     void condvar_t::add_waiter(std::coroutine_handle<skr_task_t::promise_type> handle, int workerIdx)
     {
         ++numWaiting;
-        waiters.push_back(handle);
-        workerIndices.push_back(workerIdx);
+        waiters.add(handle);
+        workerIndices.add(workerIdx);
     }
 
     void condvar_t::wait(SMutex& mutex)

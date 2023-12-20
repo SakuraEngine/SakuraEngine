@@ -300,10 +300,10 @@ void dual_storage_t::deserialize(skr_binary_reader_t* s)
     SKR_ASSERT(entities.entries.size() == 0);
     uint32_t size = 0;
     bin::Archive(s, size);
-    entities.entries.resize(size);
+    entities.entries.resize_default(size);
     uint32_t freeSize = 0;
     bin::Archive(s, freeSize);
-    entities.freeEntries.resize(freeSize);
+    entities.freeEntries.resize_default(freeSize);
     ArchiveBuffer(s, entities.freeEntries.data(), freeSize);
     uint32_t groupSize = 0;
     bin::Archive(s, groupSize);

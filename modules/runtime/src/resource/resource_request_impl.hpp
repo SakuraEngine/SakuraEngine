@@ -1,9 +1,9 @@
 #pragma once
+#include <atomic>
 #include "SkrRT/io/ram_io.hpp"
-#include <EASTL/fixed_vector.h>
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/async/fib_task.hpp"
-#include <atomic>
+
 
 namespace skr
 {
@@ -50,15 +50,15 @@ protected:
     SResourceFactory* factory;
     skr_vfs_t* vfs;
 
-    eastl::fixed_vector<skr_guid_t, 4> dependencies;
+    skr::InlineVector<skr_guid_t, 4> dependencies;
     skr_resource_record_t* resourceRecord;
     skr_io_future_t dataFuture;
     skr::BlobId dataBlob;
-    skr::string resourceUrl;
+    skr::String resourceUrl;
 #ifdef SKR_RESOURCE_DEV_MODE
     skr_io_future_t artifactsFuture;
     skr::BlobId artifactsBlob;
-    skr::string artifactsUrl;
+    skr::String artifactsUrl;
 #endif
 
     skr::task::event_t serdeEvent;

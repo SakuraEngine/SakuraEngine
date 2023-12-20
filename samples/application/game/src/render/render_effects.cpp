@@ -1,7 +1,7 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 
 #include "cgpu/api.h"
 #include "cgpu/cgpux.h"
@@ -166,7 +166,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
     model_matrices.clear();
     push_constants.clear();
     mesh_drawcalls.clear();
-    model_matrices.resize(primitiveCount);
+    model_matrices.resize_zeroed(primitiveCount);
     push_constants.reserve(primitiveCount);
     mesh_drawcalls.reserve(primitiveCount);
 
@@ -283,9 +283,9 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                                 proper_pipeline = pass.pso;
                                 proper_bind_table = pass.bind_table;
                             }
-                            auto& push_const = push_constants.emplace_back();
+                            auto& push_const = *push_constants.add_default();
                             push_const.model = model_matrix;
-                            auto& drawcall = mesh_drawcalls.emplace_back();
+                            auto& drawcall = *mesh_drawcalls.add_default();
                             drawcall.pipeline = proper_pipeline;
                             drawcall.bind_table = proper_bind_table;
                             drawcall.push_const_name = push_constants_name;
@@ -311,9 +311,9 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                                 proper_pipeline = pass.pso;
                                 proper_bind_table = pass.bind_table;
                             }
-                            auto& push_const = push_constants.emplace_back();
+                            auto& push_const = *push_constants.add_default();
                             push_const.model = model_matrix;
-                            auto& drawcall = mesh_drawcalls.emplace_back();
+                            auto& drawcall = *mesh_drawcalls.add_default();
                             drawcall.pipeline = proper_pipeline;
                             drawcall.bind_table = proper_bind_table;
                             drawcall.push_const_name = push_constants_name;
@@ -327,9 +327,9 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                 }
                 else
                 {
-                    auto& push_const = push_constants.emplace_back();
+                    auto& push_const = *push_constants.add_default();
                     push_const.model = model_matrix;
-                    auto& drawcall = mesh_drawcalls.emplace_back();
+                    auto& drawcall = *mesh_drawcalls.add_default();
                     drawcall.pipeline = pipeline;
                     drawcall.push_const_name = push_constants_name;
                     drawcall.push_const = (const uint8_t*)(&push_const);
@@ -466,7 +466,7 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     const auto backend = device->adapter->instance->backend;
 
     // read shaders
-    skr::string vsname = u8"shaders/Game/gbuffer_vs";
+    skr::String vsname = u8"shaders/Game/gbuffer_vs";
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
     auto vsfile = skr_vfs_fopen(resource_vfs, vsname.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t _vs_length = (uint32_t)skr_vfs_fsize(vsfile);
@@ -474,7 +474,7 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     skr_vfs_fread(vsfile, _vs_bytes, 0, _vs_length);
     skr_vfs_fclose(vsfile);
 
-    skr::string fsname = u8"shaders/Game/gbuffer_fs";
+    skr::String fsname = u8"shaders/Game/gbuffer_fs";
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
     auto fsfile = skr_vfs_fopen(resource_vfs, fsname.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t _fs_length = (uint32_t)skr_vfs_fsize(fsfile);
@@ -595,7 +595,7 @@ void RenderEffectForwardSkin::initialize_queries(dual_storage_t* storage)
     mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent");
     mesh_write_query = dualQ_from_literal(storage, "[inout]forward_skin_render_identity, [inout]skr::renderer::MeshComponent");
     draw_mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
-    install_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::anim::AnimComponent, [in]skr::anim::SkeletonComponent, [in]skr::anim::SkinComponent");
+    install_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity,[in]skr::anim::AnimComponent,[in]skr::anim::SkeletonComponent,[in]skr::anim::SkinComponent");
 }
 
 void RenderEffectForwardSkin::release_queries()

@@ -112,7 +112,7 @@ void skr_runtime_free_dstorage_instance()
 
 SKR_EXTERN_C SKR_RUNTIME_API skr::ModuleManager* skr_get_module_manager()
 {
-    static auto sModuleManager = eastl::make_unique<skr::ModuleManagerImpl>();
+    static auto sModuleManager = skr::SPtr<skr::ModuleManagerImpl>::Create();
     return sModuleManager.get();
 }
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/ecs/dual.h"
-#include "EASTL/vector.h"
+#include "SkrRT/containers/stl_vector.hpp"
 
 namespace dual
 {
@@ -42,7 +42,7 @@ struct archetype_t {
 
 // group chunks by archetype and meta
 struct dual_group_t {
-    eastl::vector<dual_chunk_t*> chunks;
+    skr::stl_vector<dual_chunk_t*> chunks;
     uint32_t firstFree;
     uint32_t timestamp;
     uint32_t size;

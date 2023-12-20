@@ -1,5 +1,4 @@
 #pragma once
-#include <EASTL/functional.h>
 #include "SkrRT/containers/span.hpp"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/platform/filesystem.hpp"
@@ -37,7 +36,7 @@ public:
     virtual uint32_t GetImporterVersion() const = 0;
     virtual uint32_t GetCookerVersion() const = 0;
     virtual const SAssetRecord* GetAssetRecord() const = 0;
-    virtual skr::string GetAssetPath() const = 0;
+    virtual skr::String GetAssetPath() const = 0;
 
     virtual skr::filesystem::path AddFileDependency(const skr::filesystem::path& path) = 0;
     virtual skr::filesystem::path AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr::BlobId& destination) = 0;
@@ -72,7 +71,7 @@ public:
         }
         SKR_DEFER({ fclose(file); });
         //------write resource object
-        skr::vector<uint8_t> buffer;
+        skr::Vector<uint8_t> buffer;
         skr::binary::VectorWriter writer{&buffer};
         skr_binary_writer_t archive(writer);
         if(int result = skr::binary::Archive(&archive, resource); result != 0)
@@ -109,7 +108,7 @@ protected:
         header.type = record->type;
         header.version = cooker->Version();
         auto runtime_deps = GetRuntimeDependencies();
-        header.dependencies.insert(header.dependencies.end(), runtime_deps.begin(), runtime_deps.end());
+        header.dependencies.append(runtime_deps.data(), runtime_deps.size());
         skr::binary::Archive(&s, header);
     }
 
@@ -143,7 +142,7 @@ public:
     virtual SAssetRecord* GetAssetRecord(const skr_guid_t& guid) = 0;
     virtual SAssetRecord* ImportAsset(SProject* project, skr::filesystem::path path) = 0;
 
-    virtual void ParallelForEachAsset(uint32_t batch, skr::function_ref<void(skr::span<SAssetRecord*>)> f) = 0;
+    virtual void ParallelForEachAsset(uint32_t batch, skr::FunctionRef<void(skr::span<SAssetRecord*>)> f) = 0;
 
     virtual skr_io_ram_service_t* getIOService() = 0;
 

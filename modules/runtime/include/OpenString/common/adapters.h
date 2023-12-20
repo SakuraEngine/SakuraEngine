@@ -1,7 +1,7 @@
 #pragma once
 #include <cstddef>
 #include "OpenString/common/definitions.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 
 namespace ostr {
 

@@ -1,7 +1,7 @@
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
 #include "SkrGuiRenderer/render/skr_render_window.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrGui/backend/canvas/canvas_types.hpp"
 
 // constants
@@ -169,10 +169,9 @@ void SkrRenderDevice::destroy_window(SkrRenderWindow* view)
 CGPURenderPipelineId SkrRenderDevice::get_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count)
 {
     SkrPipelineKey key = { flags, sample_count };
-    auto           it  = _pipelines.find(key);
-    if (it != _pipelines.end()) return it->second;
+    if (auto _  = _pipelines.find(key)) return _->value;
     auto pipeline   = create_pipeline(flags, sample_count);
-    _pipelines[key] = pipeline;
+    _pipelines.add_or_assign(key, pipeline);
     return pipeline;
 }
 CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count)
@@ -287,7 +286,7 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
 //     const auto                    frame_index = graph->get_frame_index();
 //     GDITextureUpdate_RenderGraph* update = nullptr;
 //     // 1. filter request_updates to pending_updates
-//     eastl::vector_map<IGDITexture*, GDITextureUpdate_RenderGraph*> filter_map;
+//     skr::Vector_map<IGDITexture*, GDITextureUpdate_RenderGraph*> filter_map;
 //     while (request_updates.try_dequeue(update))
 //     {
 //         auto iter = filter_map.find(update->texture);
@@ -302,8 +301,8 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
 //         pending_updates.enqueue(update);
 //     }
 //     // 2. filter pending_updates to copies
-//     eastl::fixed_vector<GDITextureUpdate_RenderGraph*, 8> copies;
-//     eastl::fixed_vector<GDITextureUpdate_RenderGraph*, 8> pending;
+//     skr::FixedVector<GDITextureUpdate_RenderGraph*, 8> copies;
+//     skr::FixedVector<GDITextureUpdate_RenderGraph*, 8> pending;
 //     while (pending_updates.try_dequeue(update))
 //     {
 //         if (update->texture->get_state() == EGDIResourceState::Okay)

@@ -15,9 +15,9 @@ sreflect_struct("guid" : "D72E2056-3C12-402A-A8B8-148CB8EAB922")
 sattr("serialize" : "json")
 GLTFTOOL_API SGltfMeshImporter final : public SImporter {
     sattr("no-default" : true)
-    skr::string assetPath;
+    skr::String assetPath;
 
-    skr::vector<skr_guid_t> materials;
+    skr::Vector<skr_guid_t> materials;
 
     bool invariant_vertices = false;
     bool install_to_ram     = false;

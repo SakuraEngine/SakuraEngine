@@ -1,9 +1,10 @@
 #pragma once
 #include "MPShared/module.configure.h"
 #include "SkrRT/ecs/dual.h"
-#include "SkrRT/containers/bitset.h"
 #include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/bitset.hpp"
 #include "SkrRT/resource/resource_handle.h"
+
 #ifndef __meta__
 #include "MPShared/components.generated.h" // IWYU pragma: export
 #endif
@@ -20,7 +21,7 @@ MPWeaponConfig
     float projectileDamage;
     float projectileRadius;
     int burstCount;
-    skr::vector<float> spreadAngles;
+    skr::Vector<float> spreadAngles;
     float randomSpreadAngle;
     //skr_resource_handle_t projectilePrefab;
 };
@@ -41,7 +42,7 @@ MPGameModeConfig
     int ZombieCountPerWave;
     float ZombieWaveInterval;
     int AdditionalZombieCountPerWave;
-    skr::vector<MPWeaponConfig> Weapons;
+    skr::Vector<MPWeaponConfig> Weapons;
 };
 
 sreflect_struct(
@@ -105,8 +106,8 @@ sreflect_struct(
 )
 CAuth
 {
-    skr::bitset<128> mappedConnection;
-    skr::bitset<128> initializedConnection;
+    skr::Bitset<128> mappedConnection;
+    skr::Bitset<128> initializedConnection;
     dual_type_set_t mappedType; //data store in CAuthType buffer component
 };
 
@@ -129,7 +130,7 @@ sreflect_struct(
 )
 CRelevance
 {
-    skr::bitset<128> mask;
+    skr::Bitset<128> mask;
 };
 
 sreflect_struct(

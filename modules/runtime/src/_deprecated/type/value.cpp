@@ -83,7 +83,7 @@ uint64_t skr_value_t::Hash() const
     return type->Hash(Ptr(), 0);
 }
 
-skr::string skr_value_t::ToString() const
+skr::String skr_value_t::ToString() const
 {
     if (!type)
         return {};
@@ -189,7 +189,7 @@ uint64_t skr_value_ref_t::Hash() const
     return type->Hash(ptr, 0);
 }
 
-skr::string skr_value_ref_t::ToString() const
+skr::String skr_value_ref_t::ToString() const
 {
     CHECK_OUTDATED();
     if (!type)

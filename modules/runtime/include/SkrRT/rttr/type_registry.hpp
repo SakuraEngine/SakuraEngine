@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers_new/span.hpp"
+#include "SkrRT/containers/span.hpp"
 #include "SkrRT/rttr/type_desc.hpp"
 #include "SkrRT/rttr/guid.hpp"
 
@@ -19,6 +19,6 @@ SKR_RUNTIME_API void unregister_generic_type_loader(const GUID& generic_guid);
 
 // get type (after register)
 SKR_RUNTIME_API Type* get_type_from_guid(const GUID& guid);
-SKR_RUNTIME_API Type* get_type_from_type_desc(Span<TypeDesc> type_desc);
+SKR_RUNTIME_API Type* get_type_from_type_desc(span<TypeDesc> type_desc);
 
 } // namespace skr::rttr

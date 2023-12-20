@@ -255,7 +255,7 @@ private:
 };
 
 struct SKR_RUNTIME_API EnumType : public Type {
-    EnumType(Type* underlying_type, GUID type_id, string name);
+    EnumType(Type* underlying_type, GUID type_id, String name);
 
     SKR_INLINE Type* underlying_type() const { return _underlying_type; }
 
@@ -267,8 +267,8 @@ struct SKR_RUNTIME_API EnumType : public Type {
     void   call_move_assign(void* dst, void* src) const override;
     size_t call_hash(const void* ptr) const override;
 
-    virtual EnumValue value_from_string(string_view str) const      = 0;
-    virtual string    value_to_string(const EnumValue& value) const = 0;
+    virtual EnumValue value_from_string(StringView str) const      = 0;
+    virtual String    value_to_string(const EnumValue& value) const = 0;
 
 private:
     Type* _underlying_type;

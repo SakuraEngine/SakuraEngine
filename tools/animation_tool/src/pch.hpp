@@ -12,7 +12,7 @@
 #include <windows.h>  // include API for expanding a gltf file path
 #endif
 
-#include "SkrRT/platform/memory.h" // IWYU pragma: export
+#include "SkrMemory/memory.h" // IWYU pragma: export
 #include "SkrBase/misc/debug.h"  // IWYU pragma: export
 #include "SkrRT/platform/thread.h" // IWYU pragma: export
 #include "SkrRT/platform/filesystem.hpp" // IWYU pragma: export
@@ -28,7 +28,7 @@
 #include <SkrRT/containers/string.hpp> // IWYU pragma: export
 #include <SkrRT/containers/hashmap.hpp> // IWYU pragma: export
 #include <SkrRT/containers/btree.hpp> // IWYU pragma: export
-#include <SkrRT/containers/concurrent_queue.h> // IWYU pragma: export
+#include <SkrRT/containers/concurrent_queue.hpp> // IWYU pragma: export
 #include "SkrRT/containers/span.hpp" // IWYU pragma: export
 #include "SkrRT/containers/function_ref.hpp" // IWYU pragma: export
 

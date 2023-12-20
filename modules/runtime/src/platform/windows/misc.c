@@ -9,7 +9,7 @@
 #include "stdbool.h"
 #include "SkrRT/platform/win/misc.h"
 #include "SkrBase/misc/debug.h" 
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 
 HANDLE __GetVolumeHandleForFile(const wchar_t* filePath)
 {

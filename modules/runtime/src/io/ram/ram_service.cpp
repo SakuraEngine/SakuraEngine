@@ -32,7 +32,7 @@ inline static IOReaderId<IIOBatchProcessor> CreateBatchReader(RAMService* servic
 
 uint32_t RAMService::global_idx = 0;
 RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
-    : name(desc->name ? skr::string(desc->name) : skr::format(u8"RAMService-{}", global_idx++)), 
+    : name(desc->name ? skr::String(desc->name) : skr::format(u8"RAMService-{}", global_idx++)), 
       awake_at_request(desc->awake_at_request),
       runner(this, desc->callback_job_queue)
 {

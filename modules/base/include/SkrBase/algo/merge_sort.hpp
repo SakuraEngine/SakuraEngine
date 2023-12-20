@@ -2,7 +2,7 @@
 #include "SkrBase/config.h"
 #include "binary_search.hpp"
 #include "rotate.hpp"
-#include <utility>
+#include <algorithm>
 
 // merge sort help
 namespace skr::algo::__help

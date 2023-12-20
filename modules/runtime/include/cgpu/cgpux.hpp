@@ -1,7 +1,7 @@
 #pragma once
 #include "cgpu/cgpux.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include <EASTL/fixed_vector.h>
+#include "SkrRT/containers/vector.hpp"
 
 struct CGPUXBindTableLocation;
 struct CGPUXBindTable;
@@ -22,9 +22,9 @@ protected:
     bool binded = false;
     CGPUDescriptorData data = {};
     // arena
-    eastl::fixed_vector<const void*, 1> resources;
-    eastl::fixed_vector<uint64_t, 1> offsets;
-    eastl::fixed_vector<uint64_t, 1> sizes;
+    skr::InlineVector<const void*, 1> resources;
+    skr::InlineVector<uint64_t, 1> offsets;
+    skr::InlineVector<uint64_t, 1> sizes;
 };
 
 struct CGPUXBindTableLocation

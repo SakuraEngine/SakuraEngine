@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/memory.h"
+#include "SkrMemory/memory.h"
 #include "SkrRenderGraph/rg_config.h"
 
 #include "SkrProfile/profile.h"

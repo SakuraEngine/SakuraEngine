@@ -1,14 +1,13 @@
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/resource/resource_handle.h"
-#include "SkrRT/serde/binary/reader.h"
-#include "SkrRT/platform/memory.h"
+#include "SkrBase/misc/demangle.hpp"
+#include "SkrMemory/memory.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/bits.hpp"
-#include "SkrBase/misc/demangle.hpp"
-#include <cmath>
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/serde/binary/reader.h"
+#include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/containers/string.hpp"
+#include <cmath>
 
-#include <EASTL/fixed_string.h>
 
 // blob arena
 skr_blob_arena_t::skr_blob_arena_t()
@@ -463,7 +462,7 @@ int ReadTrait<skr_blob_arena_t>::Read(skr_binary_reader_t* reader, skr_blob_aren
     }
 }
 
-int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
+int ReadTrait<skr::String>::Read(skr_binary_reader_t* reader, skr::String& str)
 {
     uint32_t size;
     int      ret = ReadTrait<uint32_t>::Read(reader, size);
@@ -472,20 +471,19 @@ int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
         SKR_LOG_FATAL(u8"failed to read string buffer size! ret code: %d", ret);
         return ret;
     }
-    eastl::fixed_string<char8_t, 64> temp;
+    skr::InlineVector<char8_t, 64> temp;
     temp.resize(size);
-    ret = ReadBytes(reader, (void*)temp.c_str(), temp.size());
+    ret = ReadBytes(reader, (void*)temp.data(), temp.size());
     if (ret != 0)
     {
         SKR_LOG_FATAL(u8"failed to read string buffer size! ret code: %d", ret);
         return ret;
     }
-
-    str = skr::string(skr::string_view((const char8_t*)temp.c_str(), (int32_t)temp.size()));
+    str = skr::String(skr::StringView((const char8_t*)temp.data(), (int32_t)temp.size()));
     return ret;
 }
 
-int ReadTrait<skr::string_view>::Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena, skr::string_view& str)
+int ReadTrait<skr::StringView>::Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena, skr::StringView& str)
 {
     uint32_t size;
     uint32_t offset;
@@ -494,7 +492,7 @@ int ReadTrait<skr::string_view>::Read(skr_binary_reader_t* reader, skr_blob_aren
         return ret;
     if (size == 0)
     {
-        str = skr::string_view();
+        str = skr::StringView();
         return 0;
     }
     ret = ReadTrait<uint32_t>::Read(reader, offset);
@@ -514,7 +512,7 @@ int ReadTrait<skr::string_view>::Read(skr_binary_reader_t* reader, skr_blob_aren
 
     auto ptr = const_cast<char8_t*>(strbuf_start + size);
     *ptr     = u8'\0';
-    str      = skr::string_view(strbuf_start, (int32_t)size);
+    str      = skr::StringView(strbuf_start, (int32_t)size);
     return ret;
 }
 } // namespace skr::binary

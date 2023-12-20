@@ -30,7 +30,7 @@
 #pragma once
 #include "backend/text_server/rect2.h"
 #include "backend/text_server/vector2.h"
-#include "backend/text_server/containers.h"
+#include "backend/text_server/godot_containers.hpp"
 #include <cmath>
 
 namespace godot
@@ -231,7 +231,7 @@ Rect2 Transform2D::xform_inv(const Rect2& p_rect) const
 Vector<Vector2> Transform2D::xform(const Vector<Vector2>& p_array) const
 {
     Vector<Vector2> array;
-    array.resize(p_array.size());
+    array.resize_default(p_array.size());
 
     const Vector2* r = p_array.ptr();
     Vector2*       w = array.ptrw();
@@ -246,7 +246,7 @@ Vector<Vector2> Transform2D::xform(const Vector<Vector2>& p_array) const
 Vector<Vector2> Transform2D::xform_inv(const Vector<Vector2>& p_array) const
 {
     Vector<Vector2> array;
-    array.resize(p_array.size());
+    array.resize_default(p_array.size());
 
     const Vector2* r = p_array.ptr();
     Vector2*       w = array.ptrw();
