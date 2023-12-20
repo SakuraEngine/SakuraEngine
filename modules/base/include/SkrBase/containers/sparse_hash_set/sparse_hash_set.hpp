@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_def.hpp"
 #include "sparse_hash_set_iterator.hpp"
 #include "SkrBase/containers/key_traits.hpp"

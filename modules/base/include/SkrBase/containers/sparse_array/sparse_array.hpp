@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/memory/memory_ops.hpp"
 #include "sparse_array_def.hpp"
 #include "sparse_array_iterator.hpp"

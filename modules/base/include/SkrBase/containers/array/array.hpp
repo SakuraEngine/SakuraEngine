@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/config.h"
 #include "SkrBase/algo/intro_sort.hpp"
 #include "SkrBase/algo/merge_sort.hpp"

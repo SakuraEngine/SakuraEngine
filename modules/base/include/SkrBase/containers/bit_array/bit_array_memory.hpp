@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/misc/debug.h"
 #include "SkrBase/containers/misc/placeholder.hpp"
 #include "SkrBase/containers/allocator/allocator.hpp"
