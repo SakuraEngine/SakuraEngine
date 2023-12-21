@@ -14,6 +14,12 @@ sreflect_struct(
 )
 SKR_GUI_API StatelessElement : public ComponentElement {
     SKR_RTTR_GENERATE_BODY()
+    using Super = ComponentElement;
+    using Super::Super;
+
+    // build & update
+    Widget* build() SKR_NOEXCEPT override;
+    void    update(NotNull<Widget*> new_widget) SKR_NOEXCEPT override;
 };
 } // namespace gui sreflect
 } // namespace skr sreflect

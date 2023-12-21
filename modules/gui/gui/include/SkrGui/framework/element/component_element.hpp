@@ -24,7 +24,7 @@ SKR_GUI_API ComponentElement : public Element {
     // build & update
     void perform_rebuild() SKR_NOEXCEPT override;
 
-    virtual Widget* build() SKR_NOEXCEPT = 0;
+    virtual Widget* build() SKR_NOEXCEPT = 0; // TODO. NotNull
 
 private:
     Element* _child = nullptr;

@@ -5,6 +5,7 @@
 #include "SkrGui/system/input/hit_test.hpp"
 #include "SkrGui/system/input/event.hpp"
 #include "SkrGui/system/input/gesture/gesture_recognizer.hpp"
+#include "SkrGui/system/input/gesture/gesture_arena_manager.hpp"
 #ifndef __meta__
     #include "SkrGui/system/input/input_manager.generated.h"
 #endif
@@ -16,6 +17,7 @@ namespace gui sreflect
 struct RenderInputContext;
 struct PointerMoveEvent;
 struct GestureRecognizer;
+struct GestureArenaManager;
 
 // TODO. roadmap
 // //  1. hit test
@@ -41,24 +43,21 @@ SKR_GUI_API InputManager {
     bool route_event(HitTestResult* result, PointerEvent* event, EEventRoutePhase phase = EEventRoutePhase::NoBroadcast);
 
     // register context
-    void register_context(NotNull<RenderInputContext*> context);
-    void unregister_context(NotNull<RenderInputContext*> context);
+    void register_context(NotNull<RenderNativeWindow*> context);
+    void unregister_context(NotNull<RenderNativeWindow*> context);
 
     // gesture
-    // TODO. add-remove => track-stop_track 并且 dispatch 形式也需要与 PointerId 和 ButtonId 有关
-    void add_gesture(NotNull<GestureRecognizer*> gesture);
-    void remove_gesture(NotNull<GestureRecognizer*> gesture);
-    bool route_event_for_gesture(PointerEvent* event);
+    inline GestureArenaManager* gesture_arena_manager() { return &_gesture_arena_manager; }
 
 private:
     // complex dispatch functional
     void _dispatch_enter_exit(HitTestResult* result, PointerMoveEvent* event);
 
 private:
-    Array<RenderInputContext*> _contexts;
-    Array<GestureRecognizer*>  _gestures;
+    Array<RenderNativeWindow*> _contexts              = {};
+    GestureArenaManager        _gesture_arena_manager = {};
 
-    HitTestResult _last_hover_path;
+    HitTestResult _last_hover_path = {};
 };
 } // namespace gui sreflect
 } // namespace skr sreflect
