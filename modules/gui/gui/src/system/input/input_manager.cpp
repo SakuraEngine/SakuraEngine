@@ -1,8 +1,8 @@
 #include "SkrGui/system/input/input_manager.hpp"
 #include "SkrGui/system/input/event.hpp"
-#include "SkrGui/system/input/render_input_context.hpp"
 #include "SkrGui/system/input/pointer_event.hpp"
 #include "SkrGui/system/input/gesture/gesture_recognizer.hpp"
+#include "SkrGui/framework/render_object/render_native_window.hpp"
 
 namespace skr::gui
 {
@@ -11,12 +11,28 @@ bool InputManager::dispatch_event(Event* event)
 {
     if (auto pointer_down_event = event->type_cast<PointerDownEvent>())
     {
+        // reopen gesture arena
+        CombinePointerId pointer_id = { pointer_down_event->pointer_id, static_cast<uint32_t>(pointer_down_event->button) };
+        auto             arena      = _gesture_arena_manager.find_arena_or_add(pointer_id);
+        if (arena && !arena->is_held())
+        {
+            arena->open();
+        }
+
         // do hit test
         HitTestResult result;
         hit_test(&result, pointer_down_event->global_position);
 
-        // route
-        return route_event(&result, pointer_down_event);
+        // route event
+        bool handled = route_event(&result, pointer_down_event);
+
+        // close arena
+        if (arena)
+        {
+            arena->close();
+        }
+
+        return handled;
     }
     else if (auto pointer_move_event = event->type_cast<PointerMoveEvent>())
     {
@@ -27,33 +43,35 @@ bool InputManager::dispatch_event(Event* event)
         // handle enter & exit
         _dispatch_enter_exit(&result, pointer_move_event->type_cast_fast<PointerMoveEvent>());
 
-        // dispatch to gesture or route to widget
-        if (route_event_for_gesture(pointer_move_event))
-        {
-            return true;
-        }
-        else
-        {
-            // route
-            return route_event(&result, pointer_move_event);
-        }
+        // dispatch to widget
+        bool handled = route_event(&result, pointer_move_event);
+
+        // dispatch to gesture
+        handled |= _gesture_arena_manager.route_event(pointer_move_event);
+
+        return handled;
     }
     else if (auto pointer_up_event = event->type_cast<PointerUpEvent>())
     {
-        // dispatch to gesture or route to widget
-        if (route_event_for_gesture(pointer_up_event))
-        {
-            return true;
-        }
-        else
-        {
-            // do hit test
-            HitTestResult result;
-            hit_test(&result, pointer_down_event->global_position);
+        // do hit test
+        HitTestResult result;
+        hit_test(&result, pointer_up_event->global_position);
 
-            // route
-            return route_event(&result, pointer_up_event);
+        // dispatch to widget
+        bool handled = route_event(&result, pointer_up_event);
+
+        // dispatch to gesture
+        handled |= _gesture_arena_manager.route_event(pointer_up_event);
+
+        // sweep gesture arena
+        CombinePointerId pointer_id = { pointer_up_event->pointer_id, static_cast<uint32_t>(pointer_up_event->button) };
+        auto             arena      = _gesture_arena_manager.find_arena(pointer_id);
+        if (arena)
+        {
+            arena->sweep();
         }
+
+        return handled;
     }
 
     else // pan/zoom & scroll/scale
@@ -87,6 +105,7 @@ bool InputManager::route_event(HitTestResult* result, PointerEvent* event, EEven
 
     if (flag_any(phase, EEventRoutePhase::TrickleDown))
     {
+        event->phase = EEventRoutePhase::TrickleDown;
         for (uint64_t i = 0; i < result->path().size(); ++i)
         {
             auto& entry = result->path()[result->path().size() - i - 1];
@@ -96,16 +115,18 @@ bool InputManager::route_event(HitTestResult* result, PointerEvent* event, EEven
             }
         }
     }
-    else if (flag_any(phase, EEventRoutePhase::Reach))
+    if (flag_any(phase, EEventRoutePhase::Reach))
     {
-        auto& entry = result->path()[0];
+        event->phase = EEventRoutePhase::Reach;
+        auto& entry  = result->path()[0];
         if (entry.target->handle_event(event, const_cast<HitTestEntry*>(&entry)))
         {
             return true;
         }
     }
-    else if (flag_any(phase, EEventRoutePhase::Broadcast))
+    if (flag_any(phase, EEventRoutePhase::Broadcast))
     {
+        event->phase = EEventRoutePhase::Broadcast;
         bool handled = false;
         for (const auto& entry : result->path())
         {
@@ -116,8 +137,9 @@ bool InputManager::route_event(HitTestResult* result, PointerEvent* event, EEven
             return true;
         }
     }
-    else if (flag_any(phase, EEventRoutePhase::BubbleUp))
+    if (flag_any(phase, EEventRoutePhase::BubbleUp))
     {
+        event->phase = EEventRoutePhase::BubbleUp;
         for (const auto& entry : result->path())
         {
             if (entry.target->handle_event(event, const_cast<HitTestEntry*>(&entry)))
@@ -131,32 +153,13 @@ bool InputManager::route_event(HitTestResult* result, PointerEvent* event, EEven
 }
 
 // register
-void InputManager::register_context(NotNull<RenderInputContext*> context)
+void InputManager::register_context(NotNull<RenderNativeWindow*> context)
 {
     _contexts.add_unique(context.get());
 }
-void InputManager::unregister_context(NotNull<RenderInputContext*> context)
+void InputManager::unregister_context(NotNull<RenderNativeWindow*> context)
 {
     _contexts.remove(context.get());
-}
-
-// gesture
-void InputManager::add_gesture(NotNull<GestureRecognizer*> gesture)
-{
-    _gestures.add_unique(gesture.get());
-}
-void InputManager::remove_gesture(NotNull<GestureRecognizer*> gesture)
-{
-    _gestures.remove(gesture.get());
-}
-bool InputManager::route_event_for_gesture(PointerEvent* event)
-{
-    bool handled = false;
-    for (auto gesture : _gestures)
-    {
-        handled |= gesture->handle_event(event);
-    }
-    return handled;
 }
 
 // complex dispatch functional

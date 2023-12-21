@@ -113,7 +113,7 @@ int main(void)
         }
         {
             SkrZoneScopedN("Sandbox");
-            sandbox->update();
+            sandbox->update(time_stamp_sec);
             sandbox->layout();
             sandbox->paint();
             sandbox->compose();

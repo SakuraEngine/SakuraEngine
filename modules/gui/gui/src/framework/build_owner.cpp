@@ -2,6 +2,8 @@
 #include "SkrGui/framework/element/element.hpp"
 #include "SkrGui/framework/render_object/render_object.hpp"
 #include "SkrGui/framework/painting_context.hpp"
+#include "SkrGui/system/input/input_manager.hpp"
+#include "SkrGui/framework/element/render_native_window_element.hpp"
 
 namespace skr::gui
 {
@@ -88,5 +90,25 @@ void BuildOwner::flush_paint()
     }
 
     _nodes_needing_paint.clear();
+}
+
+// register
+void BuildOwner::register_native_window(NotNull<RenderNativeWindowElement*> native_window)
+{
+    _native_windows.add_unique(native_window);
+    if (_input_manager)
+    {
+        auto render_object = native_window->render_object()->type_cast_fast<RenderNativeWindow>();
+        _input_manager->register_context(render_object);
+    }
+}
+void BuildOwner::unregister_native_window(NotNull<RenderNativeWindowElement*> native_window)
+{
+    _native_windows.remove(native_window);
+    if (_input_manager)
+    {
+        auto render_object = native_window->render_object()->type_cast_fast<RenderNativeWindow>();
+        _input_manager->unregister_context(render_object);
+    }
 }
 } // namespace skr::gui

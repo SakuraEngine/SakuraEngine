@@ -8,6 +8,7 @@ namespace skr::gui
 struct INativeDevice;
 struct WindowDesc;
 struct InputManager;
+struct TimerManager;
 
 // sandbox 是外部使用 GUI 系统的入口
 // 其思想是：输入事件、Backend 等信息，输出每帧的渲染三角与命令
@@ -20,7 +21,7 @@ struct SKR_GUI_API Sandbox {
     void set_content(NotNull<Widget*> content);
     void show(const WindowDesc& desc);
 
-    void update();
+    void update(uint32_t time_stamp);
     void layout();
     void paint();
     void compose();
@@ -44,6 +45,7 @@ private:
 
     // manager
     InputManager* _input_manager = nullptr;
+    TimerManager* _timer_manager = nullptr;
 
     // content
     Widget* _content = nullptr;
