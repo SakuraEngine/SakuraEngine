@@ -7,7 +7,7 @@
 
 namespace skr
 {
-template <typename T, typename Hasher = Hash<typename container::KeyTraits<T>::KeyType>, typename Allocator = SkrAllocator_New>
+template <typename T, typename Hasher = Hash<typename container::KeyTraits<T>::KeyType>, typename Allocator = SkrAllocator>
 using USet = container::SparseHashSet<container::SparseHashSetMemory<
 T,                                                /*element Type*/
 uint64_t,                                         /*BitBlock Type*/
@@ -29,7 +29,7 @@ false,                                            /*Allow MultiKey*/
 uint64_t,                                         /*Size Type*/
 kCount>>;                                         /*Allocator Type*/
 
-template <typename T, uint64_t kInlineCount, typename Hasher = Hash<typename container::KeyTraits<T>::KeyType>, typename Allocator = SkrAllocator_New>
+template <typename T, uint64_t kInlineCount, typename Hasher = Hash<typename container::KeyTraits<T>::KeyType>, typename Allocator = SkrAllocator>
 using InlineUSet = container::SparseHashSet<container::InlineSparseHashSetMemory<
 T,                                                /*element Type*/
 uint64_t,                                         /*BitBlock Type*/
