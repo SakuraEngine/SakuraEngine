@@ -125,6 +125,19 @@ false,
 TestSizeType,
 kCount>>;
 
+template <typename K, typename V, uint64_t kInlineCount>
+using InlineSparseHashMap = container::SparseHashMap<container::InlineSparseHashMapMemory<
+K,
+V,
+TestBitBlockType,
+TestHashType,
+Hash<K>,
+Equal<K>,
+false,
+TestSizeType,
+kInlineCount,
+TestAllocatorType>>;
+
 //===========Bit Array===================================================================
 template <typename TBitBlock>
 using BitArray = container::BitArray<container::BitArrayMemory<

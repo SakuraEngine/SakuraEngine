@@ -31,4 +31,17 @@ false,    /*Allow MultiKey*/
 uint64_t, /*Size Type*/
 kCount    /*Count*/
 >>;
+
+template <typename K, typename V, uint64_t kInlineCount, typename Hasher = Hash<K>, typename Allocator = SkrAllocator_New>
+using InlineUMap = container::SparseHashMap<container::InlineSparseHashMapMemory<
+K,            /*Key Type*/
+V,            /*Value Type*/
+uint64_t,     /*BitBlock Type*/
+uint64_t,     /*Hash Type*/
+Hasher,       /*Hasher Type*/
+Equal<K>,     /*Comparer Type*/
+false,        /*Allow MultiKey*/
+uint64_t,     /*Size Type*/
+kInlineCount, /*Inline Count*/
+Allocator>>;  /*Allocator Type*/
 } // namespace skr
