@@ -52,11 +52,11 @@ struct ArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
             // copy allocator
             Allocator::operator=(rhs);
+
+            // clean up self
+            clear();
 
             // copy data
             if (rhs._size > 0)
@@ -77,14 +77,14 @@ struct ArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
+            // move allocator
+            Allocator::operator=(std::move(rhs));
+
             // clean up self
             clear();
 
             // free
             free();
-
-            // move allocator
-            Allocator::operator=(std::move(rhs));
 
             // move data
             _data         = rhs._data;
@@ -378,11 +378,11 @@ struct InlineArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
             // copy allocator
             Allocator::operator=(rhs);
+
+            // clean up self
+            clear();
 
             // copy data
             if (rhs._size > 0)
@@ -403,14 +403,14 @@ struct InlineArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
+            // move allocator
+            Allocator::operator=(std::move(rhs));
+
             // move data
             if (rhs._is_using_inline_memory())
             {
                 // clean up self
                 clear();
-
-                // move allocator
-                Allocator::operator=(std::move(rhs));
 
                 // move inline data
                 memory::move(data(), rhs.data(), rhs._size);
@@ -426,9 +426,6 @@ struct InlineArrayMemory : public Allocator {
 
                 // free
                 free();
-
-                // move allocator
-                Allocator::operator=(std::move(rhs));
 
                 // move data
                 _heap_data = rhs._heap_data;

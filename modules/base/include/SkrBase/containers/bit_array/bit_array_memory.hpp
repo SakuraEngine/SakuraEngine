@@ -55,11 +55,11 @@ struct BitArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
             // copy allocator
             Allocator::operator=(rhs);
+
+            // clean up self
+            clear();
 
             // copy data
             if (rhs._size)
@@ -80,12 +80,12 @@ struct BitArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
+            // move allocator
+            Allocator::operator=(std::move(rhs));
+
             // clean up self
             clear();
             free();
-
-            // move allocator
-            Allocator::operator=(std::move(rhs));
 
             // move data
             _data         = rhs._data;

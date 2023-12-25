@@ -55,11 +55,11 @@ struct RingBufferMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
             // copy allocator
             Allocator::operator=(rhs);
+
+            // clean up self
+            clear();
 
             // copy data
             if (rhs.data())
@@ -81,14 +81,14 @@ struct RingBufferMemory : public Allocator {
     {
         if (this != &rhs)
         {
+            // move allocator
+            Allocator::operator=(std::move(rhs));
+
             // clean up self
             clear();
 
             // free self
             free();
-
-            // move allocator
-            Allocator::operator=(std::move(rhs));
 
             // move data
             _data         = rhs._data;
@@ -405,11 +405,11 @@ struct InlineRingBufferMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
             // copy allocator
             Allocator::operator=(rhs);
+
+            // clean up self
+            clear();
 
             // copy data
             if (rhs.data())
@@ -431,13 +431,13 @@ struct InlineRingBufferMemory : public Allocator {
     {
         if (this != &rhs)
         {
+            // move allocator
+            Allocator::operator=(std::move(rhs));
+
             if (rhs._is_using_inline_memory())
             {
                 // clean up self
                 clear();
-
-                // move allocator
-                Allocator::operator=(std::move(rhs));
 
                 // move inline data
                 move_ring_buffer(data(), rhs.data(), rhs._capacity, rhs._front, rhs._back);
@@ -455,9 +455,6 @@ struct InlineRingBufferMemory : public Allocator {
 
                 // free self
                 free();
-
-                // move allocator
-                Allocator::operator=(std::move(rhs));
 
                 // move data
                 _heap_data = rhs._heap_data;
