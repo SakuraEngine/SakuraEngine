@@ -26,8 +26,8 @@ struct RingBufferMemory : public Allocator {
     }
 
     // copy & move
-    inline RingBufferMemory(const RingBufferMemory& other, AllocatorCtorParam param)
-        : Allocator(std::move(param))
+    inline RingBufferMemory(const RingBufferMemory& other)
+        : Allocator(other)
     {
         if (other.size())
         {
@@ -234,7 +234,7 @@ struct FixedRingBufferMemory {
     }
 
     // copy & move
-    inline FixedRingBufferMemory(const FixedRingBufferMemory& other, AllocatorCtorParam param)
+    inline FixedRingBufferMemory(const FixedRingBufferMemory& other)
     {
         if (other.size())
         {
@@ -359,8 +359,8 @@ struct InlineRingBufferMemory : public Allocator {
     }
 
     // copy & move
-    inline InlineRingBufferMemory(const InlineRingBufferMemory& other, AllocatorCtorParam param)
-        : Allocator(std::move(param))
+    inline InlineRingBufferMemory(const InlineRingBufferMemory& other)
+        : Allocator(other)
     {
         if (other.size())
         {

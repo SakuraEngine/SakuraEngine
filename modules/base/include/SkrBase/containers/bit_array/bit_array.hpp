@@ -30,7 +30,7 @@ struct BitArray final : protected Memory {
     ~BitArray();
 
     // copy & move ctor
-    BitArray(const BitArray& other, AllocatorCtorParam param = {});
+    BitArray(const BitArray& other);
     BitArray(BitArray&& other) noexcept;
 
     // copy & move assign
@@ -157,8 +157,8 @@ SKR_INLINE BitArray<Memory>::~BitArray()
 
 // copy & move ctor
 template <typename Memory>
-SKR_INLINE BitArray<Memory>::BitArray(const BitArray& other, AllocatorCtorParam param)
-    : Memory(other, std::move(param))
+SKR_INLINE BitArray<Memory>::BitArray(const BitArray& other)
+    : Memory(other)
 {
     // handled in memory
 }

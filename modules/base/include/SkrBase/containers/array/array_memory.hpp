@@ -26,8 +26,8 @@ struct ArrayMemory : public Allocator {
     }
 
     // copy & move
-    inline ArrayMemory(const ArrayMemory& other, AllocatorCtorParam param) noexcept
-        : Allocator(std::move(param))
+    inline ArrayMemory(const ArrayMemory& other) noexcept
+        : Allocator(other)
     {
         if (other._size)
         {
@@ -219,7 +219,7 @@ struct FixedArrayMemory {
     }
 
     // copy & move
-    inline FixedArrayMemory(const FixedArrayMemory& other, AllocatorCtorParam) noexcept
+    inline FixedArrayMemory(const FixedArrayMemory& other) noexcept
     {
         if (other._size)
         {
@@ -337,8 +337,8 @@ struct InlineArrayMemory : public Allocator {
     }
 
     // copy & move
-    inline InlineArrayMemory(const InlineArrayMemory& other, AllocatorCtorParam param) noexcept
-        : Allocator(std::move(param))
+    inline InlineArrayMemory(const InlineArrayMemory& other) noexcept
+        : Allocator(other)
     {
         if (other._size)
         {

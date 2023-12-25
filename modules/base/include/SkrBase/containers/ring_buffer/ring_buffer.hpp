@@ -27,7 +27,7 @@ struct RingBuffer : protected Memory {
     ~RingBuffer();
 
     // copy & move
-    RingBuffer(const RingBuffer& other, AllocatorCtorParam param = {});
+    RingBuffer(const RingBuffer& other);
     RingBuffer(RingBuffer&& other) noexcept;
 
     // assign & move assign
@@ -297,8 +297,8 @@ inline RingBuffer<Memory>::~RingBuffer()
 
 // copy & move
 template <typename Memory>
-inline RingBuffer<Memory>::RingBuffer(const RingBuffer& other, AllocatorCtorParam param)
-    : Memory(other, std::move(param))
+inline RingBuffer<Memory>::RingBuffer(const RingBuffer& other)
+    : Memory(other)
 {
     // handled in memory
 }

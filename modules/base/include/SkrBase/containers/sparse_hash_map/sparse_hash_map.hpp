@@ -50,7 +50,7 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
     ~SparseHashMap();
 
     // copy & move
-    SparseHashMap(const SparseHashMap& other, AllocatorCtorParam param = {});
+    SparseHashMap(const SparseHashMap& other);
     SparseHashMap(SparseHashMap&& other);
 
     // assign & move assign
@@ -214,8 +214,8 @@ SKR_INLINE SparseHashMap<Memory>::~SparseHashMap()
 
 // copy & move
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory>::SparseHashMap(const SparseHashMap& other, AllocatorCtorParam param)
-    : Super(other, std::move(param))
+SKR_INLINE SparseHashMap<Memory>::SparseHashMap(const SparseHashMap& other)
+    : Super(other)
 {
 }
 template <typename Memory>

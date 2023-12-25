@@ -38,7 +38,7 @@ struct SparseArray : protected Memory {
     ~SparseArray();
 
     // copy & move
-    SparseArray(const SparseArray& other, AllocatorCtorParam param = {});
+    SparseArray(const SparseArray& other);
     SparseArray(SparseArray&& other) noexcept;
 
     // assign & move assign
@@ -351,8 +351,8 @@ SKR_INLINE SparseArray<Memory>::~SparseArray()
 
 // copy & move
 template <typename Memory>
-SKR_INLINE SparseArray<Memory>::SparseArray(const SparseArray& other, AllocatorCtorParam param)
-    : Memory(other, std::move(param))
+SKR_INLINE SparseArray<Memory>::SparseArray(const SparseArray& other)
+    : Memory(other)
 {
     // handled in memory
 }
