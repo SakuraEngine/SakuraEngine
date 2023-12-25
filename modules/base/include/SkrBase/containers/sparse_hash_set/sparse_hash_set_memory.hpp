@@ -327,3 +327,8 @@ private:
     Placeholder<SizeType, kBucketSize> _bucket_placeholder;
 };
 } // namespace skr::container
+
+// inline sparse hash set memory
+namespace skr::container
+{
+}
