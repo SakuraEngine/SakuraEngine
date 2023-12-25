@@ -134,7 +134,6 @@ struct ArrayMemory : public Allocator {
         {
             Allocator::template free<T>(_data);
             _data     = nullptr;
-            _size     = 0;
             _capacity = 0;
         }
     }
@@ -525,7 +524,6 @@ struct InlineArrayMemory : public Allocator {
         {
             Allocator::template free<T>(_heap_data);
             _heap_data = nullptr;
-            _size      = 0;
             _capacity  = kInlineCount;
         }
     }
