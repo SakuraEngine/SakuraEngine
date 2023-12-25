@@ -88,6 +88,18 @@ false,
 TestSizeType,
 kCount>>;
 
+template <typename T, uint64_t kInlineCount>
+using InlineSparseHashSet = container::SparseHashSet<container::InlineSparseHashSetMemory<
+T,
+TestBitBlockType,
+TestHashType,
+Hash<T>,
+Equal<T>,
+false,
+TestSizeType,
+kInlineCount,
+TestAllocatorType>>;
+
 //===========Sparse Hash Map===================================================================
 template <typename K, typename V>
 using SparseHashMap = container::SparseHashMap<container::SparseHashMapMemory<
