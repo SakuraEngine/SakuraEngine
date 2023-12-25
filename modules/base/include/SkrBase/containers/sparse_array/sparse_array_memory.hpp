@@ -159,11 +159,11 @@ struct SparseArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
             // copy allocator
             Allocator::operator=(rhs);
+
+            // clean up self
+            clear();
 
             // copy data
             if ((rhs._sparse_size - rhs._hole_size) > 0)
@@ -188,14 +188,14 @@ struct SparseArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
+            // move allocator
+            Allocator::operator=(std::move(rhs));
+
             // clean up self
             clear();
 
             // free
             free();
-
-            // move allocator
-            Allocator::operator=(std::move(rhs));
 
             // move data
             _data          = rhs._data;
@@ -623,11 +623,11 @@ struct InlineSparseArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
             // copy allocator
             Allocator::operator=(rhs);
+
+            // clean up self
+            clear();
 
             // copy data
             if ((rhs._sparse_size - rhs._hole_size) > 0)
@@ -652,13 +652,13 @@ struct InlineSparseArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
+            // move allocator
+            Allocator::operator=(std::move(rhs));
+
             if (rhs._is_using_inline_memory())
             {
                 // clean up self
                 clear();
-
-                // move allocator
-                Allocator::operator=(std::move(rhs));
 
                 // move data
                 move_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
@@ -679,9 +679,6 @@ struct InlineSparseArrayMemory : public Allocator {
 
                 // free memory
                 free();
-
-                // move allocator
-                Allocator::operator=(std::move(rhs));
 
                 // move data
                 _heap_data      = rhs._heap_data;
