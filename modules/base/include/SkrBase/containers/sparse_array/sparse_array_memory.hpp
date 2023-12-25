@@ -300,11 +300,8 @@ struct SparseArrayMemory : public Allocator {
             // reset data
             _data           = nullptr;
             _bit_array      = nullptr;
-            _sparse_size    = 0;
             _capacity       = 0;
             _bit_array_size = 0;
-            _freelist_head  = npos;
-            _hole_size      = 0;
         }
     }
     inline SizeType grow(SizeType grow_size) noexcept
