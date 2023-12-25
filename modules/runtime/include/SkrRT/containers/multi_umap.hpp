@@ -7,7 +7,7 @@
 
 namespace skr
 {
-template <typename K, typename V, typename Hasher = Hash<K>, typename Allocator = SkrAllocator_New>
+template <typename K, typename V, typename Hasher = Hash<K>, typename Allocator = SkrAllocator>
 using MultiUMap = container::SparseHashMap<container::SparseHashMapMemory<
 K,           /*Key Type*/
 V,           /*Value Type*/
@@ -32,7 +32,7 @@ uint64_t, /*Size Type*/
 kCount    /*Count*/
 >>;
 
-template <typename K, typename V, uint64_t kInlineCount, typename Hasher = Hash<K>, typename Allocator = SkrAllocator_New>
+template <typename K, typename V, uint64_t kInlineCount, typename Hasher = Hash<K>, typename Allocator = SkrAllocator>
 using InlineMultiUMap = container::SparseHashMap<container::InlineSparseHashMapMemory<
 K,            /*Key Type*/
 V,            /*Value Type*/
