@@ -584,37 +584,42 @@ struct InlineSparseArrayMemory : public Allocator {
     inline InlineSparseArrayMemory(InlineSparseArrayMemory&& other) noexcept
         : Allocator(std::move(other))
     {
-        if (other._is_using_inline_memory())
+        if (other._is_using_inline_data())
         {
             // move data
             move_sparse_array_data(data(), other.data(), other.bit_array(), other.sparse_size());
             move_sparse_array_bit_array(bit_array(), other.bit_array(), other.sparse_size());
-            _sparse_size   = other._sparse_size;
-            _freelist_head = other._freelist_head;
-            _hole_size     = other._hole_size;
-
-            // invalidate other
+            _sparse_size         = other._sparse_size;
+            _freelist_head       = other._freelist_head;
+            _hole_size           = other._hole_size;
             other._sparse_size   = 0;
             other._freelist_head = npos;
             other._hole_size     = 0;
         }
         else
         {
-            // move heap data
-            _heap_data      = other._heap_data;
-            _heap_bit_array = other._heap_bit_array;
-            _sparse_size    = other._sparse_size;
-            _capacity       = other._capacity;
-            _freelist_head  = other._freelist_head;
-            _hole_size      = other._hole_size;
+            // move bit array
+            if (other._is_using_inline_bit_array())
+            {
+                move_sparse_array_bit_array(bit_array(), other.bit_array(), other.sparse_size());
+            }
+            else
+            {
+                _heap_bit_array       = other._heap_bit_array;
+                other._heap_bit_array = nullptr;
+            }
 
-            // invalidate other
-            other._heap_data      = nullptr;
-            other._heap_bit_array = nullptr;
-            other._sparse_size    = 0;
-            other._capacity       = kInlineCount;
-            other._freelist_head  = npos;
-            other._hole_size      = 0;
+            // move data
+            _heap_data           = other._heap_data;
+            _sparse_size         = other._sparse_size;
+            _capacity            = other._capacity;
+            _freelist_head       = other._freelist_head;
+            _hole_size           = other._hole_size;
+            other._heap_data     = nullptr;
+            other._sparse_size   = 0;
+            other._capacity      = kInlineCount;
+            other._freelist_head = npos;
+            other._hole_size     = 0;
         }
     }
 
@@ -655,7 +660,7 @@ struct InlineSparseArrayMemory : public Allocator {
             // move allocator
             Allocator::operator=(std::move(rhs));
 
-            if (rhs._is_using_inline_memory())
+            if (rhs._is_using_inline_data())
             {
                 // clean up self
                 clear();
@@ -680,21 +685,28 @@ struct InlineSparseArrayMemory : public Allocator {
                 // free memory
                 free();
 
-                // move data
-                _heap_data      = rhs._heap_data;
-                _heap_bit_array = rhs._heap_bit_array;
-                _sparse_size    = rhs._sparse_size;
-                _capacity       = rhs._capacity;
-                _freelist_head  = rhs._freelist_head;
-                _hole_size      = rhs._hole_size;
+                // move bit array
+                if (rhs._is_using_inline_bit_array())
+                {
+                    move_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
+                }
+                else
+                {
+                    _heap_bit_array     = rhs._heap_bit_array;
+                    rhs._heap_bit_array = nullptr;
+                }
 
-                // invalidate other
-                rhs._heap_data      = nullptr;
-                rhs._heap_bit_array = nullptr;
-                rhs._sparse_size    = 0;
-                rhs._capacity       = kInlineCount;
-                rhs._freelist_head  = npos;
-                rhs._hole_size      = 0;
+                // move data
+                _heap_data         = rhs._heap_data;
+                _sparse_size       = rhs._sparse_size;
+                _capacity          = rhs._capacity;
+                _freelist_head     = rhs._freelist_head;
+                _hole_size         = rhs._hole_size;
+                rhs._heap_data     = nullptr;
+                rhs._sparse_size   = 0;
+                rhs._capacity      = kInlineCount;
+                rhs._freelist_head = npos;
+                rhs._hole_size     = 0;
             }
         }
     }
@@ -706,30 +718,16 @@ struct InlineSparseArrayMemory : public Allocator {
         SKR_ASSERT(new_capacity > 0);
         SKR_ASSERT(_sparse_size <= new_capacity);
 
-        if (new_capacity > kInlineCount)
+        // realloc bit array
+        BitBlockType* moved_bit_array = nullptr;
         {
-            if (_is_using_inline_memory()) // inline -> heap
+            SizeType new_block_size = BitAlgo::num_blocks(new_capacity);
+            SizeType old_block_size = BitAlgo::num_blocks(_capacity);
+
+            if (new_block_size > kInlineBlockCount)
             {
-                // alloc data array
+                if (_is_using_inline_bit_array()) // inline -> heap
                 {
-                    // alloc new memory
-                    StorageType* new_memory = Allocator::template alloc<StorageType>(new_capacity);
-
-                    // move items
-                    if (_sparse_size - _hole_size)
-                    {
-                        move_sparse_array_data(new_memory, _data_placeholder.data_typed(), _bit_array_placeholder.data_typed(), _sparse_size);
-                    }
-
-                    // update data
-                    _heap_data = new_memory;
-                }
-
-                // alloc bit array
-                {
-                    SizeType new_block_size = BitAlgo::num_blocks(new_capacity);
-                    SizeType old_block_size = BitAlgo::num_blocks(_capacity);
-
                     // alloc new bit array
                     BitBlockType* new_memory = Allocator::template alloc<BitBlockType>(new_block_size);
 
@@ -741,6 +739,79 @@ struct InlineSparseArrayMemory : public Allocator {
 
                     // update data
                     _heap_bit_array = new_memory;
+                }
+                else // heap -> heap
+                {
+                    if (new_block_size != old_block_size)
+                    {
+                        if constexpr (memory::MemoryTraits<BitBlockType>::use_realloc && Allocator::support_realloc)
+                        {
+                            _heap_bit_array = Allocator::template realloc<BitBlockType>(_heap_bit_array, new_block_size);
+                        }
+                        else
+                        {
+                            // alloc new memory
+                            BitBlockType* new_memory = Allocator::template alloc<BitBlockType>(new_block_size);
+
+                            // move data
+                            if (old_block_size)
+                            {
+                                memory::move(new_memory, _heap_bit_array, std::min(new_block_size, old_block_size));
+                            }
+
+                            // release old memory
+                            Allocator::template free<BitBlockType>(_heap_bit_array);
+
+                            // update data
+                            _heap_bit_array = new_memory;
+                        }
+                    }
+                }
+
+                moved_bit_array = _heap_bit_array;
+            }
+            else
+            {
+                if (_is_using_inline_bit_array()) // inline -> inline
+                {
+                    // do noting
+                }
+                else // heap -> inline
+                {
+                    BitBlockType* cached_heap_bit_array = _heap_bit_array;
+
+                    // move items
+                    if (_sparse_size - _hole_size)
+                    {
+                        move_sparse_array_bit_array(_bit_array_placeholder.data_typed(), _heap_bit_array, _sparse_size);
+                    }
+
+                    // release old memory
+                    Allocator::template free<BitBlockType>(cached_heap_bit_array);
+                }
+
+                moved_bit_array = _bit_array_placeholder.data_typed();
+            }
+        }
+
+        // realloc element array
+        if (new_capacity > kInlineCount)
+        {
+            if (_is_using_inline_data()) // inline -> heap
+            {
+                // alloc data array
+                {
+                    // alloc new memory
+                    StorageType* new_memory = Allocator::template alloc<StorageType>(new_capacity);
+
+                    // move items
+                    if (_sparse_size - _hole_size)
+                    {
+                        move_sparse_array_data(new_memory, _data_placeholder.data_typed(), moved_bit_array, _sparse_size);
+                    }
+
+                    // update data
+                    _heap_data = new_memory;
                 }
 
                 // update capacity
@@ -761,7 +832,7 @@ struct InlineSparseArrayMemory : public Allocator {
                     // move items
                     if (_sparse_size)
                     {
-                        move_sparse_array_data(new_memory, _heap_data, _heap_bit_array, _sparse_size);
+                        move_sparse_array_data(new_memory, _heap_data, moved_bit_array, _sparse_size);
                     }
 
                     // release old memory
@@ -771,55 +842,24 @@ struct InlineSparseArrayMemory : public Allocator {
                     _heap_data = new_memory;
                 }
 
-                // realloc bit array
-                SizeType new_block_size = BitAlgo::num_blocks(new_capacity);
-                SizeType old_block_size = BitAlgo::num_blocks(_capacity);
-
-                if (new_block_size != old_block_size)
-                {
-                    if constexpr (memory::MemoryTraits<BitBlockType>::use_realloc && Allocator::support_realloc)
-                    {
-                        _heap_bit_array = Allocator::template realloc<BitBlockType>(_heap_bit_array, new_block_size);
-                    }
-                    else
-                    {
-                        // alloc new memory
-                        BitBlockType* new_memory = Allocator::template alloc<BitBlockType>(new_block_size);
-
-                        // move data
-                        if (old_block_size)
-                        {
-                            memory::move(new_memory, _heap_bit_array, std::min(new_block_size, old_block_size));
-                        }
-
-                        // release old memory
-                        Allocator::template free<BitBlockType>(_heap_bit_array);
-
-                        // update data
-                        _heap_bit_array = new_memory;
-                    }
-                }
-
                 // update capacity
                 _capacity = new_capacity;
             }
         }
         else
         {
-            if (_is_using_inline_memory()) // inline -> inline
+            if (_is_using_inline_data()) // inline -> inline
             {
                 // do noting
             }
             else // heap -> inline
             {
-                StorageType*  cached_heap_data      = _heap_data;
-                BitBlockType* cached_heap_bit_array = _heap_bit_array;
+                StorageType* cached_heap_data = _heap_data;
 
                 // move items
                 if (_sparse_size - _hole_size)
                 {
-                    move_sparse_array_data(_data_placeholder.data_typed(), _heap_data, _heap_bit_array, _sparse_size);
-                    move_sparse_array_bit_array(_bit_array_placeholder.data_typed(), _heap_bit_array, _sparse_size);
+                    move_sparse_array_data(_data_placeholder.data_typed(), _heap_data, moved_bit_array, _sparse_size);
                 }
 
                 // release old memory
@@ -832,11 +872,16 @@ struct InlineSparseArrayMemory : public Allocator {
     }
     inline void free() noexcept
     {
-        if (!_is_using_inline_memory())
+        if (!_is_using_inline_data())
         {
             // release memory
             Allocator::template free<StorageType>(_heap_data);
-            Allocator::template free<BitBlockType>(_heap_bit_array);
+
+            // release bit array
+            if (!_is_using_inline_bit_array())
+            {
+                Allocator::template free<BitBlockType>(_heap_bit_array);
+            }
 
             // reset data
             _capacity = kInlineCount;
@@ -890,10 +935,10 @@ struct InlineSparseArrayMemory : public Allocator {
     }
 
     // getter
-    inline StorageType*        data() noexcept { return _is_using_inline_memory() ? _data_placeholder.data_typed() : _heap_data; }
-    inline const StorageType*  data() const noexcept { return _is_using_inline_memory() ? _data_placeholder.data_typed() : _heap_data; }
-    inline BitBlockType*       bit_array() noexcept { return _is_using_inline_memory() ? _bit_array_placeholder.data_typed() : _heap_bit_array; }
-    inline const BitBlockType* bit_array() const noexcept { return _is_using_inline_memory() ? _bit_array_placeholder.data_typed() : _heap_bit_array; }
+    inline StorageType*        data() noexcept { return _is_using_inline_data() ? _data_placeholder.data_typed() : _heap_data; }
+    inline const StorageType*  data() const noexcept { return _is_using_inline_data() ? _data_placeholder.data_typed() : _heap_data; }
+    inline BitBlockType*       bit_array() noexcept { return _is_using_inline_bit_array() ? _bit_array_placeholder.data_typed() : _heap_bit_array; }
+    inline const BitBlockType* bit_array() const noexcept { return _is_using_inline_bit_array() ? _bit_array_placeholder.data_typed() : _heap_bit_array; }
     inline SizeType            sparse_size() const noexcept { return _sparse_size; }
     inline SizeType            capacity() const noexcept { return _capacity; }
     inline SizeType            bit_array_size() const noexcept { return BitAlgo::num_blocks(_capacity) * BitAlgo::PerBlockSize; }
@@ -911,8 +956,10 @@ private:
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // helper functions
-    static constexpr SizeType inline_block_count = int_div_ceil(kInlineCount, BitAlgo::PerBlockSize);
-    inline bool               _is_using_inline_memory() const noexcept { return _capacity == kInlineCount; }
+    static constexpr SizeType kInlineBlockCount = int_div_ceil(kInlineCount, BitAlgo::PerBlockSize);
+
+    inline bool _is_using_inline_data() const noexcept { return _capacity == kInlineCount; }
+    inline bool _is_using_inline_bit_array() const noexcept { return BitAlgo::num_blocks(_capacity) == kInlineBlockCount; }
 
 private:
     union
@@ -922,8 +969,8 @@ private:
     };
     union
     {
-        Placeholder<BitBlockType, inline_block_count> _bit_array_placeholder;
-        BitBlockType*                                 _heap_bit_array;
+        Placeholder<BitBlockType, kInlineBlockCount> _bit_array_placeholder;
+        BitBlockType*                                _heap_bit_array;
     };
     SizeType _sparse_size   = 0;
     SizeType _capacity      = kInlineCount;
