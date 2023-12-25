@@ -265,8 +265,7 @@ struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetDat
     }
 
     // assign & move assign
-    inline void
-    operator=(const FixedSparseHashSetMemory& rhs) noexcept
+    inline void operator=(const FixedSparseHashSetMemory& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -331,4 +330,243 @@ private:
 // inline sparse hash set memory
 namespace skr::container
 {
-}
+template <typename T, typename TBitBlock, typename THash, typename THasher, typename TComparer, bool AllowMultiKey, typename TS, uint64_t kInlineCount, typename Allocator>
+struct InlineSparseHashSetMemory : public InlineSparseArrayMemory<SparseHashSetData<T, TS, THash>, TBitBlock, TS, kInlineCount, Allocator> {
+    using Super = InlineSparseArrayMemory<SparseHashSetData<T, TS, THash>, TBitBlock, TS, kInlineCount, Allocator>;
+
+    // sparse array configure
+    using typename Super::SizeType;
+    using typename Super::DataType;
+    using typename Super::StorageType;
+    using typename Super::BitBlockType;
+    using typename Super::AllocatorCtorParam;
+
+    // sparse hash set configure
+    using HashType                        = THash;
+    using HasherType                      = THasher;
+    using KeyType                         = typename KeyTraits<T>::KeyType;
+    using KeyMapperType                   = typename KeyTraits<T>::KeyMapperType;
+    using ComparerType                    = TComparer;
+    using SetDataType                     = T;
+    using SetStorageType                  = SparseHashSetData<T, TS, THash>;
+    static constexpr bool allow_multi_key = AllowMultiKey;
+
+    // ctor & dtor
+    inline InlineSparseHashSetMemory(AllocatorCtorParam param) noexcept
+        : Super(std::move(param))
+    {
+        clean_bucket();
+    }
+    inline ~InlineSparseHashSetMemory() noexcept
+    {
+        free_bucket();
+    }
+
+    // copy & move
+    inline InlineSparseHashSetMemory(const InlineSparseHashSetMemory& other, AllocatorCtorParam param) noexcept
+        : Super(other, std::move(param))
+    {
+        if (other._bucket_size)
+        {
+            _realloc_bucket(other._bucket_size);
+            memory::copy(bucket(), other.bucket(), other._bucket_size);
+            _bucket_size = other._bucket_size;
+            _bucket_mask = other._bucket_mask;
+        }
+    }
+    inline InlineSparseHashSetMemory(InlineSparseHashSetMemory&& other) noexcept
+        : Super(std::move(other))
+    {
+        if (other._is_using_inline_bucket())
+        {
+            // move bucket
+            memory::copy(bucket(), other._bucket_placeholder.data_typed(), other._bucket_size);
+        }
+        else
+        {
+            _heap_bucket = other._heap_bucket;
+
+            // clean up other
+            other._heap_bucket = nullptr;
+            other._bucket_size = kInlineBucketSize;
+            other._bucket_mask = kInlineBucketMask;
+
+            other.clean_bucket();
+        }
+    }
+
+    // assign & move assign
+    inline void operator=(const InlineSparseHashSetMemory& rhs) noexcept
+    {
+        if (this != &rhs)
+        {
+            Super::operator=(rhs);
+
+            // copy bucket
+            if (rhs._bucket_size)
+            {
+                if (_bucket_size != rhs._bucket_size)
+                {
+                    _realloc_bucket(rhs._bucket_size);
+                }
+                memory::copy(bucket(), rhs.bucket(), _bucket_size);
+                _bucket_size = rhs._bucket_size;
+                _bucket_mask = rhs._bucket_mask;
+            }
+        }
+    }
+    inline void operator=(InlineSparseHashSetMemory&& rhs) noexcept
+    {
+        if (this != &rhs)
+        {
+            if (rhs._is_using_inline_bucket())
+            {
+                Super::operator=(std::move(rhs));
+
+                // move bucket
+                memory::copy(bucket(), rhs.bucket(), rhs._bucket_size);
+
+                // clean up other
+                rhs.clean_bucket();
+            }
+            else
+            {
+                // clean up bucket
+                free_bucket();
+
+                Super::operator=(std::move(rhs));
+
+                // move data
+                _heap_bucket     = rhs._heap_bucket;
+                _bucket_size     = rhs._bucket_size;
+                _bucket_mask     = rhs._bucket_mask;
+                rhs._heap_bucket = nullptr;
+                rhs._bucket_size = 0;
+                rhs._bucket_mask = 0;
+            }
+        }
+    }
+
+    // memory operations
+    inline bool resize_bucket() noexcept
+    {
+        SizeType new_bucket_size = sparse_hash_set_calc_bucket_size(Super::capacity());
+        SKR_ASSERT(new_bucket_size > 0);
+        if (new_bucket_size != _bucket_size)
+        {
+            _realloc_bucket(new_bucket_size);
+            return true;
+        }
+        return false;
+    }
+    inline void free_bucket() noexcept
+    {
+        if (!_is_using_inline_bucket())
+        {
+            Allocator::template free<SizeType>(_heap_bucket);
+            _bucket_size = kInlineBucketSize;
+            _bucket_mask = kInlineBucketMask;
+        }
+    }
+    inline void clean_bucket() noexcept
+    {
+        for (SizeType i = 0; i < _bucket_size; ++i)
+        {
+            bucket()[i] = npos;
+        }
+    }
+    inline SizeType bucket_index(SizeType hash) const noexcept
+    {
+        return hash & _bucket_mask;
+    }
+    inline bool need_rehash() const noexcept
+    {
+        return (Super::sparse_size() - Super::hole_size()) && sparse_hash_set_calc_bucket_size(Super::capacity()) != _bucket_size;
+    }
+
+    // getter
+    inline const SizeType* bucket() const noexcept { return _is_using_inline_bucket() ? _bucket_placeholder.data_typed() : _heap_bucket; }
+    inline SizeType*       bucket() noexcept { return _is_using_inline_bucket() ? _bucket_placeholder.data_typed() : _heap_bucket; }
+
+private:
+    static inline constexpr SizeType npos              = npos_of<SizeType>;
+    static inline constexpr SizeType kInlineBucketSize = sparse_hash_set_calc_bucket_size(kInlineCount);
+    static inline constexpr SizeType kInlineBucketMask = kInlineBucketSize - 1;
+
+    inline bool _is_using_inline_bucket() const noexcept { return _bucket_size == kInlineBucketSize; }
+    inline void _realloc_bucket(SizeType capacity)
+    {
+        SKR_ASSERT(pop_count(capacity) == 1 && "capacity must be power of 2");
+
+        if (capacity > kInlineBucketSize)
+        {
+            if (_is_using_inline_bucket()) // inline -> heap
+            {
+                // alloc heap memory
+                SizeType* new_memory = Allocator::template alloc<SizeType>(capacity);
+
+                // needn't copy items here, because we always rehash after resize bucket
+                // memory::copy(new_memory, _bucket_placeholder.data_typed(), _bucket_size);
+
+                // update
+                _heap_bucket = new_memory;
+                _bucket_size = capacity;
+                _bucket_mask = capacity - 1;
+            }
+            else // heap -> heap
+            {
+                if constexpr (memory::MemoryTraits<SizeType>::use_realloc && Allocator::support_realloc)
+                {
+                    _heap_bucket = Allocator::template realloc<SizeType>(_heap_bucket, capacity);
+                }
+                else
+                {
+                    // alloc new memory
+                    SizeType* new_memory = Allocator::template alloc<SizeType>(capacity);
+
+                    // needn't move items here, because we always rehash after resize bucket
+                    // if (_bucket_size)
+                    // {
+                    //     memory::move(new_memory, _bucket, std::min(new_bucket_size, _bucket_size));
+                    // }
+
+                    // release old memory
+                    Allocator::template free<SizeType>(_heap_bucket);
+
+                    _heap_bucket = new_memory;
+                }
+
+                _bucket_size = capacity;
+                _bucket_mask = capacity - 1;
+            }
+        }
+        else
+        {
+            if (_is_using_inline_bucket()) // inline -> inline
+            {
+                // do noting
+            }
+            else // heap -> inline
+            {
+                // needn't copy items here, because we always rehash after resize bucket
+
+                // just free memory
+                Allocator::template free<SizeType>(_heap_bucket);
+
+                // update
+                _bucket_size = kInlineBucketSize;
+                _bucket_mask = kInlineBucketMask;
+            }
+        }
+    }
+
+private:
+    union
+    {
+        Placeholder<SizeType, kInlineBucketSize> _bucket_placeholder;
+        SizeType*                                _heap_bucket;
+    };
+    SizeType _bucket_size = kInlineBucketSize;
+    SizeType _bucket_mask = kInlineBucketMask;
+};
+} // namespace skr::container
