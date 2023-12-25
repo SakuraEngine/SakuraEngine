@@ -9,6 +9,7 @@
 // SparseArray def
 // TODO. BitArray 养护规则，减少 BitArray set 的次数
 // TODO. remove 操作时的自动 compact top，memory 无需关心实际容量
+// TODO. 移除 bit_array_size，在需要时直接使用 capacity 计算
 namespace skr::container
 {
 template <typename Memory>
