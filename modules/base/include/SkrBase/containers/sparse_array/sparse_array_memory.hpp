@@ -143,17 +143,15 @@ struct SparseArrayMemory : public Allocator {
         , _bit_array(other._bit_array)
         , _sparse_size(other._sparse_size)
         , _capacity(other._capacity)
-        , _bit_array_size(other._bit_array_size)
         , _freelist_head(other._freelist_head)
         , _hole_size(other._hole_size)
     {
-        other._data           = nullptr;
-        other._bit_array      = nullptr;
-        other._sparse_size    = 0;
-        other._capacity       = 0;
-        other._bit_array_size = 0;
-        other._freelist_head  = npos;
-        other._hole_size      = 0;
+        other._data          = nullptr;
+        other._bit_array     = nullptr;
+        other._sparse_size   = 0;
+        other._capacity      = 0;
+        other._freelist_head = npos;
+        other._hole_size     = 0;
     }
 
     // assign & move assign
@@ -179,11 +177,10 @@ struct SparseArrayMemory : public Allocator {
                 // copy data
                 copy_sparse_array_data(_data, rhs._data, rhs._bit_array, rhs._sparse_size);
                 copy_sparse_array_bit_array(_bit_array, rhs._bit_array, rhs._sparse_size);
-                _sparse_size    = rhs._sparse_size;
-                _capacity       = rhs._capacity;
-                _bit_array_size = rhs._bit_array_size;
-                _freelist_head  = rhs._freelist_head;
-                _hole_size      = rhs._hole_size;
+                _sparse_size   = rhs._sparse_size;
+                _capacity      = rhs._capacity;
+                _freelist_head = rhs._freelist_head;
+                _hole_size     = rhs._hole_size;
             }
         }
     }
@@ -201,20 +198,20 @@ struct SparseArrayMemory : public Allocator {
             Allocator::operator=(std::move(rhs));
 
             // move data
-            _data               = rhs._data;
-            _bit_array          = rhs._bit_array;
-            _sparse_size        = rhs._sparse_size;
-            _capacity           = rhs._capacity;
-            _bit_array_size     = rhs._bit_array_size;
-            _freelist_head      = rhs._freelist_head;
-            _hole_size          = rhs._hole_size;
-            rhs._data           = nullptr;
-            rhs._bit_array      = nullptr;
-            rhs._sparse_size    = 0;
-            rhs._capacity       = 0;
-            rhs._bit_array_size = 0;
-            rhs._freelist_head  = npos;
-            rhs._hole_size      = 0;
+            _data          = rhs._data;
+            _bit_array     = rhs._bit_array;
+            _sparse_size   = rhs._sparse_size;
+            _capacity      = rhs._capacity;
+            _freelist_head = rhs._freelist_head;
+            _hole_size     = rhs._hole_size;
+
+            // invalidate rhs
+            rhs._data          = nullptr;
+            rhs._bit_array     = nullptr;
+            rhs._sparse_size   = 0;
+            rhs._capacity      = 0;
+            rhs._freelist_head = npos;
+            rhs._hole_size     = 0;
         }
     }
 
@@ -229,8 +226,7 @@ struct SparseArrayMemory : public Allocator {
         // realloc data array
         if constexpr (memory::MemoryTraits<DataType>::use_realloc && Allocator::support_realloc)
         {
-            _data     = Allocator::template realloc<StorageType>(_data, new_capacity);
-            _capacity = new_capacity;
+            _data = Allocator::template realloc<StorageType>(_data, new_capacity);
         }
         else
         {
@@ -247,20 +243,18 @@ struct SparseArrayMemory : public Allocator {
             Allocator::template free<StorageType>(_data);
 
             // update data
-            _data     = new_memory;
-            _capacity = new_capacity;
+            _data = new_memory;
         }
 
         // realloc bit array
-        SizeType new_block_size = BitAlgo::num_blocks(_capacity);
-        SizeType old_block_size = BitAlgo::num_blocks(_bit_array_size);
+        SizeType new_block_size = BitAlgo::num_blocks(new_capacity);
+        SizeType old_block_size = BitAlgo::num_blocks(_capacity);
 
         if (new_block_size != old_block_size)
         {
             if constexpr (memory::MemoryTraits<BitBlockType>::use_realloc && Allocator::support_realloc)
             {
-                _bit_array      = Allocator::template realloc<BitBlockType>(_bit_array, new_block_size);
-                _bit_array_size = new_block_size * BitAlgo::PerBlockSize;
+                _bit_array = Allocator::template realloc<BitBlockType>(_bit_array, new_block_size);
             }
             else
             {
@@ -277,10 +271,12 @@ struct SparseArrayMemory : public Allocator {
                 Allocator::template free<BitBlockType>(_bit_array);
 
                 // update data
-                _bit_array      = new_memory;
-                _bit_array_size = new_block_size * BitAlgo::PerBlockSize;
+                _bit_array = new_memory;
             }
         }
+
+        // update capacity
+        _capacity = new_capacity;
     }
     inline void free() noexcept
     {
@@ -291,10 +287,9 @@ struct SparseArrayMemory : public Allocator {
             Allocator::template free<BitBlockType>(_bit_array);
 
             // reset data
-            _data           = nullptr;
-            _bit_array      = nullptr;
-            _capacity       = 0;
-            _bit_array_size = 0;
+            _data      = nullptr;
+            _bit_array = nullptr;
+            _capacity  = 0;
         }
     }
     inline SizeType grow(SizeType grow_size) noexcept
@@ -351,7 +346,7 @@ struct SparseArrayMemory : public Allocator {
     inline const BitBlockType* bit_array() const noexcept { return _bit_array; }
     inline SizeType            sparse_size() const noexcept { return _sparse_size; }
     inline SizeType            capacity() const noexcept { return _capacity; }
-    inline SizeType            bit_array_size() const noexcept { return _bit_array_size; }
+    inline SizeType            bit_array_size() const noexcept { return BitAlgo::num_blocks(_capacity) * BitAlgo::PerBlockSize; }
     inline SizeType            freelist_head() const noexcept { return _freelist_head; }
     inline SizeType            hole_size() const noexcept { return _hole_size; }
 
@@ -366,13 +361,12 @@ private:
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
 private:
-    StorageType*  _data           = nullptr;
-    BitBlockType* _bit_array      = nullptr;
-    SizeType      _sparse_size    = 0;
-    SizeType      _capacity       = 0;
-    SizeType      _bit_array_size = 0;
-    SizeType      _freelist_head  = npos;
-    SizeType      _hole_size      = 0;
+    StorageType*  _data          = nullptr;
+    BitBlockType* _bit_array     = nullptr;
+    SizeType      _sparse_size   = 0;
+    SizeType      _capacity      = 0;
+    SizeType      _freelist_head = npos;
+    SizeType      _hole_size     = 0;
 };
 } // namespace skr::container
 
@@ -611,7 +605,6 @@ struct InlineSparseArrayMemory : public Allocator {
             _heap_bit_array = other._heap_bit_array;
             _sparse_size    = other._sparse_size;
             _capacity       = other._capacity;
-            _bit_array_size = other._bit_array_size;
             _freelist_head  = other._freelist_head;
             _hole_size      = other._hole_size;
 
@@ -620,7 +613,6 @@ struct InlineSparseArrayMemory : public Allocator {
             other._heap_bit_array = nullptr;
             other._sparse_size    = 0;
             other._capacity       = kInlineCount;
-            other._bit_array_size = inline_bit_count;
             other._freelist_head  = npos;
             other._hole_size      = 0;
         }
@@ -649,11 +641,10 @@ struct InlineSparseArrayMemory : public Allocator {
                 // copy data
                 copy_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs._sparse_size);
                 copy_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs._sparse_size);
-                _sparse_size    = rhs._sparse_size;
-                _capacity       = rhs._capacity;
-                _bit_array_size = rhs._bit_array_size;
-                _freelist_head  = rhs._freelist_head;
-                _hole_size      = rhs._hole_size;
+                _sparse_size   = rhs._sparse_size;
+                _capacity      = rhs._capacity;
+                _freelist_head = rhs._freelist_head;
+                _hole_size     = rhs._hole_size;
             }
         }
     }
@@ -697,7 +688,6 @@ struct InlineSparseArrayMemory : public Allocator {
                 _heap_bit_array = rhs._heap_bit_array;
                 _sparse_size    = rhs._sparse_size;
                 _capacity       = rhs._capacity;
-                _bit_array_size = rhs._bit_array_size;
                 _freelist_head  = rhs._freelist_head;
                 _hole_size      = rhs._hole_size;
 
@@ -706,7 +696,6 @@ struct InlineSparseArrayMemory : public Allocator {
                 rhs._heap_bit_array = nullptr;
                 rhs._sparse_size    = 0;
                 rhs._capacity       = kInlineCount;
-                rhs._bit_array_size = inline_bit_count;
                 rhs._freelist_head  = npos;
                 rhs._hole_size      = 0;
             }
@@ -737,13 +726,12 @@ struct InlineSparseArrayMemory : public Allocator {
 
                     // update data
                     _heap_data = new_memory;
-                    _capacity  = new_capacity;
                 }
 
                 // alloc bit array
                 {
-                    SizeType new_block_size = BitAlgo::num_blocks(_capacity);
-                    SizeType old_block_size = BitAlgo::num_blocks(_bit_array_size);
+                    SizeType new_block_size = BitAlgo::num_blocks(new_capacity);
+                    SizeType old_block_size = BitAlgo::num_blocks(_capacity);
 
                     // alloc new bit array
                     BitBlockType* new_memory = Allocator::template alloc<BitBlockType>(new_block_size);
@@ -756,8 +744,10 @@ struct InlineSparseArrayMemory : public Allocator {
 
                     // update data
                     _heap_bit_array = new_memory;
-                    _bit_array_size = new_block_size * BitAlgo::PerBlockSize;
                 }
+
+                // update capacity
+                _capacity = new_capacity;
             }
             else // heap -> heap
             {
@@ -765,7 +755,6 @@ struct InlineSparseArrayMemory : public Allocator {
                 if constexpr (memory::MemoryTraits<DataType>::use_realloc && Allocator::support_realloc)
                 {
                     _heap_data = Allocator::template realloc<StorageType>(_heap_data, new_capacity);
-                    _capacity  = new_capacity;
                 }
                 else
                 {
@@ -783,19 +772,17 @@ struct InlineSparseArrayMemory : public Allocator {
 
                     // update data
                     _heap_data = new_memory;
-                    _capacity  = new_capacity;
                 }
 
                 // realloc bit array
-                SizeType new_block_size = BitAlgo::num_blocks(_capacity);
-                SizeType old_block_size = BitAlgo::num_blocks(_bit_array_size);
+                SizeType new_block_size = BitAlgo::num_blocks(new_capacity);
+                SizeType old_block_size = BitAlgo::num_blocks(_capacity);
 
                 if (new_block_size != old_block_size)
                 {
                     if constexpr (memory::MemoryTraits<BitBlockType>::use_realloc && Allocator::support_realloc)
                     {
                         _heap_bit_array = Allocator::template realloc<BitBlockType>(_heap_bit_array, new_block_size);
-                        _bit_array_size = new_block_size * BitAlgo::PerBlockSize;
                     }
                     else
                     {
@@ -813,9 +800,11 @@ struct InlineSparseArrayMemory : public Allocator {
 
                         // update data
                         _heap_bit_array = new_memory;
-                        _bit_array_size = new_block_size * BitAlgo::PerBlockSize;
                     }
                 }
+
+                // update capacity
+                _capacity = new_capacity;
             }
         }
         else
@@ -840,8 +829,7 @@ struct InlineSparseArrayMemory : public Allocator {
                 Allocator::template free<StorageType>(cached_heap_data);
 
                 // update data
-                _capacity       = kInlineCount;
-                _bit_array_size = inline_bit_count;
+                _capacity = kInlineCount;
             }
         }
     }
@@ -854,8 +842,7 @@ struct InlineSparseArrayMemory : public Allocator {
             Allocator::template free<BitBlockType>(_heap_bit_array);
 
             // reset data
-            _capacity       = kInlineCount;
-            _bit_array_size = inline_bit_count;
+            _capacity = kInlineCount;
         }
     }
     inline SizeType grow(SizeType grow_size) noexcept
@@ -912,7 +899,7 @@ struct InlineSparseArrayMemory : public Allocator {
     inline const BitBlockType* bit_array() const noexcept { return _is_using_inline_memory() ? _bit_array_placeholder.data_typed() : _heap_bit_array; }
     inline SizeType            sparse_size() const noexcept { return _sparse_size; }
     inline SizeType            capacity() const noexcept { return _capacity; }
-    inline SizeType            bit_array_size() const noexcept { return _bit_array_size; }
+    inline SizeType            bit_array_size() const noexcept { return BitAlgo::num_blocks(_capacity) * BitAlgo::PerBlockSize; }
     inline SizeType            freelist_head() const noexcept { return _freelist_head; }
     inline SizeType            hole_size() const noexcept { return _hole_size; }
 
@@ -928,7 +915,6 @@ private:
 
     // helper functions
     static constexpr SizeType inline_block_count = int_div_ceil(kInlineCount, BitAlgo::PerBlockSize);
-    static constexpr SizeType inline_bit_count   = inline_block_count * BitAlgo::PerBlockSize;
     inline bool               _is_using_inline_memory() const noexcept { return _capacity == kInlineCount; }
 
 private:
@@ -942,10 +928,9 @@ private:
         Placeholder<BitBlockType, inline_block_count> _bit_array_placeholder;
         BitBlockType*                                 _heap_bit_array;
     };
-    SizeType _sparse_size    = 0;
-    SizeType _capacity       = kInlineCount;
-    SizeType _bit_array_size = inline_bit_count;
-    SizeType _freelist_head  = npos;
-    SizeType _hole_size      = 0;
+    SizeType _sparse_size   = 0;
+    SizeType _capacity      = kInlineCount;
+    SizeType _freelist_head = npos;
+    SizeType _hole_size     = 0;
 };
 } // namespace skr::container
