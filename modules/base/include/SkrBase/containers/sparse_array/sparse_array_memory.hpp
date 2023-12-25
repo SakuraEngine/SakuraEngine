@@ -657,7 +657,7 @@ struct InlineSparseArrayMemory : public Allocator {
                 }
 
                 // copy data
-                copy_sparse_array_data(data(), rhs.data(), rhs._bit_array, rhs._sparse_size);
+                copy_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs._sparse_size);
                 copy_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs._sparse_size);
                 _sparse_size    = rhs._sparse_size;
                 _capacity       = rhs._capacity;
@@ -737,7 +737,7 @@ struct InlineSparseArrayMemory : public Allocator {
                 // alloc data array
                 {
                     // alloc new memory
-                    T* new_memory = Allocator::template alloc<StorageType>(new_capacity);
+                    StorageType* new_memory = Allocator::template alloc<StorageType>(new_capacity);
 
                     // move items
                     if (_sparse_size - _hole_size)
@@ -756,7 +756,7 @@ struct InlineSparseArrayMemory : public Allocator {
                     SizeType old_block_size = BitAlgo::num_blocks(_bit_array_size);
 
                     // alloc new bit array
-                    BitBlockType* new_memory = Allocator::template alloc<StorageType>(new_block_size);
+                    BitBlockType* new_memory = Allocator::template alloc<BitBlockType>(new_block_size);
 
                     // move data
                     if (old_block_size)

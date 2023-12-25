@@ -21,4 +21,13 @@ uint64_t, /*size type*/
 kCount    /*count*/
 >>;
 
+template <typename T, uint64_t kInlineCount, typename Allocator = SkrAllocator_New>
+using InlineSparseVector = container::SparseArray<container::InlineSparseArrayMemory<
+T,            /*type*/
+uint64_t,     /*bit block type*/
+uint64_t,     /*size type*/
+kInlineCount, /*count*/
+Allocator     /*allocator type*/
+>>;
+
 } // namespace skr

@@ -57,6 +57,14 @@ TestBitBlockType,
 TestSizeType,
 kCount>>;
 
+template <typename T, uint64_t kInlineCount>
+using InlineSparseArray = container::SparseArray<container::InlineSparseArrayMemory<
+T,
+TestBitBlockType,
+TestSizeType,
+kInlineCount,
+TestAllocatorType>>;
+
 //===========Sparse Hash Set===================================================================
 template <typename T>
 using SparseHashSet = container::SparseHashSet<container::SparseHashSetMemory<
