@@ -82,7 +82,6 @@ inline void move_sparse_array_bit_array(TBitBlock* dst, TBitBlock* src, TS size)
     using BitAlgo       = algo::BitAlgo<TBitBlock>;
     const TS byte_count = sizeof(TBitBlock) * BitAlgo::num_blocks(size);
     std::memcpy(dst, src, byte_count);
-    std::memset(src, 0, byte_count);
 }
 template <typename T, typename TBitBlock, typename TS>
 inline void destruct_sparse_array_data(SparseArrayData<T, TS>* data, const TBitBlock* bit_array, TS size) noexcept
@@ -281,12 +280,6 @@ struct SparseArrayMemory : public Allocator {
                 _bit_array      = new_memory;
                 _bit_array_size = new_block_size * BitAlgo::PerBlockSize;
             }
-        }
-
-        // clean up new bit array memory
-        if (new_block_size > old_block_size)
-        {
-            memset(_bit_array + old_block_size, 0, (new_block_size - old_block_size) * sizeof(BitBlockType));
         }
     }
     inline void free() noexcept
@@ -764,12 +757,6 @@ struct InlineSparseArrayMemory : public Allocator {
                     // update data
                     _heap_bit_array = new_memory;
                     _bit_array_size = new_block_size * BitAlgo::PerBlockSize;
-
-                    // clean up new bit array memory
-                    if (new_block_size > old_block_size)
-                    {
-                        memset(_heap_bit_array + old_block_size, 0, (new_block_size - old_block_size) * sizeof(BitBlockType));
-                    }
                 }
             }
             else // heap -> heap
@@ -828,12 +815,6 @@ struct InlineSparseArrayMemory : public Allocator {
                         _heap_bit_array = new_memory;
                         _bit_array_size = new_block_size * BitAlgo::PerBlockSize;
                     }
-                }
-
-                // clean up new bit array memory
-                if (new_block_size > old_block_size)
-                {
-                    memset(_heap_bit_array + old_block_size, 0, (new_block_size - old_block_size) * sizeof(BitBlockType));
                 }
             }
         }
