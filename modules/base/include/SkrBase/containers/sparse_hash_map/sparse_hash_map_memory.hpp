@@ -40,8 +40,8 @@ struct SparseHashMapMemory : public SparseHashSetMemory<KVPair<K, V>, TBitBlock,
     inline ~SparseHashMapMemory() noexcept = default;
 
     // copy & move
-    inline SparseHashMapMemory(const SparseHashMapMemory& other, AllocatorCtorParam param) noexcept
-        : Super(other, std::move(param))
+    inline SparseHashMapMemory(const SparseHashMapMemory& other) noexcept
+        : Super(other)
     {
     }
     inline SparseHashMapMemory(SparseHashMapMemory&& other) noexcept
@@ -100,8 +100,8 @@ struct FixedSparseHashMapMemory : public FixedSparseHashSetMemory<KVPair<K, V>, 
     inline ~FixedSparseHashMapMemory() noexcept = default;
 
     // copy & move
-    inline FixedSparseHashMapMemory(const FixedSparseHashMapMemory& other, AllocatorCtorParam param) noexcept
-        : Super(other, std::move(param))
+    inline FixedSparseHashMapMemory(const FixedSparseHashMapMemory& other) noexcept
+        : Super(other)
     {
     }
     inline FixedSparseHashMapMemory(FixedSparseHashMapMemory&& other) noexcept
@@ -160,8 +160,8 @@ struct InlineSparseHashMapMemory : public InlineSparseHashSetMemory<KVPair<K, V>
     inline ~InlineSparseHashMapMemory() noexcept = default;
 
     // copy & move
-    inline InlineSparseHashMapMemory(const InlineSparseHashMapMemory& other, AllocatorCtorParam param) noexcept
-        : Super(other, std::move(param))
+    inline InlineSparseHashMapMemory(const InlineSparseHashMapMemory& other) noexcept
+        : Super(other)
     {
     }
     inline InlineSparseHashMapMemory(InlineSparseHashMapMemory&& other) noexcept

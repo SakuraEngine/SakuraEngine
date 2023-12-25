@@ -30,7 +30,7 @@ struct Array : protected Memory {
     ~Array();
 
     // copy & move
-    Array(const Array& other, AllocatorCtorParam param = {});
+    Array(const Array& other);
     Array(Array&& other) noexcept;
 
     // assign & move assign
@@ -297,8 +297,8 @@ SKR_INLINE Array<Memory>::~Array()
 
 // copy & move
 template <typename Memory>
-SKR_INLINE Array<Memory>::Array(const Array& other, AllocatorCtorParam param)
-    : Memory(other, std::move(param))
+SKR_INLINE Array<Memory>::Array(const Array& other)
+    : Memory(other)
 {
     // handled in memory
 }

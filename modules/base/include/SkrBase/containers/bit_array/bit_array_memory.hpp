@@ -26,8 +26,8 @@ struct BitArrayMemory : public Allocator {
     }
 
     // copy & move ctor
-    inline BitArrayMemory(const BitArrayMemory& other, AllocatorCtorParam param) noexcept
-        : Allocator(std::move(param))
+    inline BitArrayMemory(const BitArrayMemory& other) noexcept
+        : Allocator(other)
     {
         if (other._size)
         {

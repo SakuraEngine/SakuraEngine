@@ -64,8 +64,8 @@ struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, T
     }
 
     // copy & move
-    inline SparseHashSetMemory(const SparseHashSetMemory& other, AllocatorCtorParam param) noexcept
-        : Super(other, std::move(param))
+    inline SparseHashSetMemory(const SparseHashSetMemory& other) noexcept
+        : Super(other)
     {
         if (other._bucket_size)
         {
@@ -252,8 +252,8 @@ struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetDat
     }
 
     // copy & move
-    inline FixedSparseHashSetMemory(const FixedSparseHashSetMemory& other, AllocatorCtorParam param) noexcept
-        : Super(other, std::move(param))
+    inline FixedSparseHashSetMemory(const FixedSparseHashSetMemory& other) noexcept
+        : Super(other)
     {
         memory::copy(bucket(), other.bucket(), kBucketSize);
     }
@@ -363,8 +363,8 @@ struct InlineSparseHashSetMemory : public InlineSparseArrayMemory<SparseHashSetD
     }
 
     // copy & move
-    inline InlineSparseHashSetMemory(const InlineSparseHashSetMemory& other, AllocatorCtorParam param) noexcept
-        : Super(other, std::move(param))
+    inline InlineSparseHashSetMemory(const InlineSparseHashSetMemory& other) noexcept
+        : Super(other)
     {
         if (other._bucket_size)
         {

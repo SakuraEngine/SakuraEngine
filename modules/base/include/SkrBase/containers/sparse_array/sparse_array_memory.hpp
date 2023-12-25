@@ -122,8 +122,8 @@ struct SparseArrayMemory : public Allocator {
     }
 
     // copy & move
-    inline SparseArrayMemory(const SparseArrayMemory& other, AllocatorCtorParam param) noexcept
-        : Allocator(std::move(param))
+    inline SparseArrayMemory(const SparseArrayMemory& other) noexcept
+        : Allocator(other)
     {
         if (other._sparse_size)
         {
@@ -410,7 +410,7 @@ struct FixedSparseArrayMemory {
     }
 
     // copy & move
-    inline FixedSparseArrayMemory(const FixedSparseArrayMemory& other, AllocatorCtorParam) noexcept
+    inline FixedSparseArrayMemory(const FixedSparseArrayMemory& other) noexcept
     {
         if (other._sparse_size)
         {
@@ -578,8 +578,8 @@ struct InlineSparseArrayMemory : public Allocator {
     }
 
     // copy & move
-    inline InlineSparseArrayMemory(const InlineSparseArrayMemory& other, AllocatorCtorParam param) noexcept
-        : Allocator(std::move(param))
+    inline InlineSparseArrayMemory(const InlineSparseArrayMemory& other) noexcept
+        : Allocator(other)
     {
         if (other.sparse_size())
         {

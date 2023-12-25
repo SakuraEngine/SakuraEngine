@@ -52,7 +52,7 @@ struct SparseHashSet : protected SparseArray<Memory> {
     ~SparseHashSet();
 
     // copy & move
-    SparseHashSet(const SparseHashSet& other, AllocatorCtorParam param = {});
+    SparseHashSet(const SparseHashSet& other);
     SparseHashSet(SparseHashSet&& other);
 
     // assign & move assign
@@ -295,8 +295,8 @@ SKR_INLINE SparseHashSet<Memory>::~SparseHashSet()
 
 // copy & move
 template <typename Memory>
-SKR_INLINE SparseHashSet<Memory>::SparseHashSet(const SparseHashSet& other, AllocatorCtorParam param)
-    : Super(other, std::move(param))
+SKR_INLINE SparseHashSet<Memory>::SparseHashSet(const SparseHashSet& other)
+    : Super(other)
 {
     // handled in memory
 }
