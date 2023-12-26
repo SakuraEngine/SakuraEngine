@@ -96,7 +96,6 @@
     #if defined(_MSC_VER)
         // MSVC linker trims symbols, the 'dllexport' attribute prevents this.
         // But we are not archiving DLL files with SHIPPING_ONE_ARCHIVE mode.
-        // TODO: do something with this workaround
         #define SKR_EXPORT __declspec(dllexport)
     #else
         #define SKR_EXPORT __attribute__((visibility("default")))
@@ -147,7 +146,7 @@
 #endif
 
 #if defined(__cplusplus)
-    #define SKR_DECLARE_ZERO(type, var)                                                                    \
+    #define SKR_DECLARE_ZERO(type, var)                                                                \
         static_assert(std::is_trivially_constructible<type>::value, "not trival, 0 init is invalid!"); \
         type var = {};
 #else
@@ -157,12 +156,12 @@
 // VLA
 #ifndef __cplusplus
     #if defined(_MSC_VER) && !defined(__clang__)
-        #define SKR_DECLARE_ZERO_VLA(type, var, num)              \
+        #define SKR_DECLARE_ZERO_VLA(type, var, num)          \
             type* var = (type*)_alloca(sizeof(type) * (num)); \
             memset((void*)(var), 0, sizeof(type) * (num));
     #else
         #define SKR_DECLARE_ZERO_VLA(type, var, num) \
-            type var[(num)];                     \
+            type var[(num)];                         \
             memset((void*)(var), 0, sizeof(type) * (num));
     #endif
 #endif
@@ -176,15 +175,15 @@
 #pragma region stringizing
 
 #ifndef SKR_STRINGIZING
-#define SKR_STRINGIZING(...) #__VA_ARGS__
+    #define SKR_STRINGIZING(...) #__VA_ARGS__
 #endif
 
 #ifndef SKR_MAKE_STRING
-#define SKR_MAKE_STRING(...) SKR_STRINGIZING(__VA_ARGS__)
+    #define SKR_MAKE_STRING(...) SKR_STRINGIZING(__VA_ARGS__)
 #endif
 
 #ifndef SKR_FILE_LINE
-#define SKR_FILE_LINE __FILE__ ":" SKR_MAKE_STRING(__LINE__)
+    #define SKR_FILE_LINE __FILE__ ":" SKR_MAKE_STRING(__LINE__)
 #endif
 
 #pragma endregion
@@ -192,40 +191,51 @@
 #pragma region utf-8
 
 #if __cplusplus >= 201100L
-#define SKR_UTF8(str) u8##str
+    #define SKR_UTF8(str) u8##str
 #else
-#define SKR_UTF8(str) str
+    #define SKR_UTF8(str) str
 #endif
 
 #if __cpp_char8_t
-#define CHAR8_T_DEFINED
-#define OSTR_USE_CXX20_CHAR8_TYPE
+    #define CHAR8_T_DEFINED
+    #define OSTR_USE_CXX20_CHAR8_TYPE
 #endif
 
 #ifndef CHAR8_T_DEFINED // If the user hasn't already defined these...
     #if defined(EA_PLATFORM_APPLE)
         #define char8_t char // The Apple debugger is too stupid to realize char8_t is typedef'd to char, so we #define it.
     #else
-        typedef char char8_t;
+typedef char char8_t;
     #endif
     #define CHAR8_T_DEFINED
 #endif
 
 #pragma endregion
 
-
 #pragma region typedecl
 
 #ifdef __cplusplus
-#define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) namespace ns { struct type; }  using ctype##_t = ns::type; using ctype##_id = ns::type*;
+    #define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) \
+        namespace ns                                 \
+        {                                            \
+        struct type;                                 \
+        }                                            \
+        using ctype##_t  = ns::type;                 \
+        using ctype##_id = ns::type*;
 #else
-#define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) typedef struct ctype##_t ctype##_t; typedef struct ctype* ctype##_id;
+    #define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) \
+        typedef struct ctype##_t ctype##_t;          \
+        typedef struct ctype*    ctype##_id;
 #endif
 
 #ifdef __cplusplus
-#define SKR_DECLARE_TYPE_ID(type, ctype) typedef struct type ctype##_t; typedef type* ctype##_id;
+    #define SKR_DECLARE_TYPE_ID(type, ctype) \
+        typedef struct type ctype##_t;       \
+        typedef type*       ctype##_id;
 #else
-#define SKR_DECLARE_TYPE_ID(type, ctype) typedef struct ctype##_t ctype##_t; typedef ctype##_t* ctype##_id;
+    #define SKR_DECLARE_TYPE_ID(type, ctype) \
+        typedef struct ctype##_t ctype##_t;  \
+        typedef ctype##_t*       ctype##_id;
 #endif
 
 #pragma endregion
@@ -233,12 +243,11 @@
 #define SKR_IS_BIG_ENDIAN 0
 #define SKR_IS_LITTLE_ENDIAN 1
 
-
 #ifdef __cplusplus
 typedef struct Dummy {
     int dummy;
     int dummy2();
 } Dummy;
-extern const int Dummy::* $field_ptr;
-extern int(Dummy::* $method_ptr)();
+extern const int Dummy::*$field_ptr;
+extern int               (Dummy::*$method_ptr)();
 #endif

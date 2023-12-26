@@ -110,37 +110,26 @@ struct RingBufferMemory : public Allocator {
         SKR_ASSERT(size() <= new_capacity);
         SKR_ASSERT((_capacity > 0 && _data != nullptr) || (_capacity == 0 && _data == nullptr));
 
-        if constexpr (memory::MemoryTraits<T>::use_realloc && Allocator::support_realloc)
+        // NOTE. 鉴于 ring buffer 元素分布的特殊性，realloc 未必会有性能优势，此处暂不实现
+
+        // alloc new memory
+        T* new_memory = Allocator::template alloc<T>(new_capacity);
+
+        // copy data
+        SizeType cached_size = size();
+        if (cached_size)
         {
-            // trim data to fit realloc logic
-            if (size())
-            {
-                trim_ring_buffer_for_new_capacity(_data, _capacity, new_capacity, _front, _back);
-            }
-            _data     = Allocator::template realloc<T>(_data, new_capacity);
-            _capacity = new_capacity;
+            copy_ring_buffer(new_memory, _data, _capacity, _front, _back);
         }
-        else
-        {
-            // alloc new memory
-            T* new_memory = Allocator::template alloc<T>(new_capacity);
 
-            // copy data
-            SizeType cached_size = size();
-            if (cached_size)
-            {
-                copy_ring_buffer(new_memory, _data, _capacity, _front, _back);
-            }
+        // release old memory
+        Allocator::template free<T>(_data);
 
-            // release old memory
-            Allocator::template free<T>(_data);
-
-            // update data
-            _data     = new_memory;
-            _capacity = new_capacity;
-            _front    = 0;
-            _back     = cached_size;
-        }
+        // update data
+        _data     = new_memory;
+        _capacity = new_capacity;
+        _front    = 0;
+        _back     = cached_size;
     }
     inline void free() noexcept
     {
@@ -499,37 +488,27 @@ struct InlineRingBufferMemory : public Allocator {
             }
             else // heap -> heap
             {
-                if constexpr (memory::MemoryTraits<T>::use_realloc && Allocator::support_realloc)
+
+                // NOTE. 鉴于 ring buffer 元素分布的特殊性，realloc 未必会有性能优势，此处暂不实现
+
+                // alloc new memory
+                T* new_memory = Allocator::template alloc<T>(new_capacity);
+
+                // copy data
+                SizeType cached_size = size();
+                if (cached_size)
                 {
-                    // trim data to fit realloc logic
-                    if (size())
-                    {
-                        trim_ring_buffer_for_new_capacity(_heap_data, _capacity, new_capacity, _front, _back);
-                    }
-                    _heap_data = Allocator::template realloc<T>(_heap_data, new_capacity);
-                    _capacity  = new_capacity;
+                    copy_ring_buffer(new_memory, _heap_data, _capacity, _front, _back);
                 }
-                else
-                {
-                    // alloc new memory
-                    T* new_memory = Allocator::template alloc<T>(new_capacity);
 
-                    // copy data
-                    SizeType cached_size = size();
-                    if (cached_size)
-                    {
-                        copy_ring_buffer(new_memory, _heap_data, _capacity, _front, _back);
-                    }
+                // release old memory
+                Allocator::template free<T>(_heap_data);
 
-                    // release old memory
-                    Allocator::template free<T>(_heap_data);
-
-                    // update data
-                    _heap_data = new_memory;
-                    _capacity  = new_capacity;
-                    _front     = 0;
-                    _back      = cached_size;
-                }
+                // update data
+                _heap_data = new_memory;
+                _capacity  = new_capacity;
+                _front     = 0;
+                _back      = cached_size;
             }
         }
         else

@@ -7,7 +7,6 @@
 #include <algorithm>
 
 // BitArray def
-// TODO. 包装一个更安全的 SizeType 作为查找返回
 namespace skr::container
 {
 template <typename Memory>
