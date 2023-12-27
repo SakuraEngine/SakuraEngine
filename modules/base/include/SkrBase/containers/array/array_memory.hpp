@@ -406,12 +406,13 @@ struct InlineArrayMemory : public Allocator {
             // move allocator
             Allocator::operator=(std::move(rhs));
 
+            // clean up self
+            clear();
+            free();
+
             // move data
             if (rhs._is_using_inline_memory())
             {
-                // clean up self
-                clear();
-
                 // move inline data
                 memory::move(data(), rhs.data(), rhs._size);
                 _size = rhs._size;
@@ -421,12 +422,6 @@ struct InlineArrayMemory : public Allocator {
             }
             else
             {
-                // clean up self
-                clear();
-
-                // free
-                free();
-
                 // move data
                 _heap_data = rhs._heap_data;
                 _size      = rhs._size;

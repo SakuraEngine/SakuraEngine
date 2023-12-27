@@ -660,11 +660,14 @@ struct InlineSparseArrayMemory : public Allocator {
             // move allocator
             Allocator::operator=(std::move(rhs));
 
+            // clean up self
+            clear();
+
+            // free memory
+            free();
+
             if (rhs._is_using_inline_data())
             {
-                // clean up self
-                clear();
-
                 // move data
                 move_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
                 move_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
@@ -679,12 +682,6 @@ struct InlineSparseArrayMemory : public Allocator {
             }
             else
             {
-                // clean up self
-                clear();
-
-                // free memory
-                free();
-
                 // move bit array
                 if (rhs._is_using_inline_bit_array())
                 {

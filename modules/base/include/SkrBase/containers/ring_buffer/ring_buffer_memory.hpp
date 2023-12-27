@@ -423,11 +423,12 @@ struct InlineRingBufferMemory : public Allocator {
             // move allocator
             Allocator::operator=(std::move(rhs));
 
+            // clean up self
+            clear();
+            free();
+
             if (rhs._is_using_inline_memory())
             {
-                // clean up self
-                clear();
-
                 // move inline data
                 move_ring_buffer(data(), rhs.data(), rhs._capacity, rhs._front, rhs._back);
                 _front = 0;
@@ -439,12 +440,6 @@ struct InlineRingBufferMemory : public Allocator {
             }
             else
             {
-                // clean up self
-                clear();
-
-                // free self
-                free();
-
                 // move data
                 _heap_data = rhs._heap_data;
                 _capacity  = rhs._capacity;
