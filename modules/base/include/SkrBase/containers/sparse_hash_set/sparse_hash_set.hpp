@@ -10,7 +10,6 @@
 // 除了 add 需要完整的元素方便添加操作外，其余的操作（find/remove/contains/count）均使用 key 进行操作以便在不构造完整元素的前提下进行查询
 // xxx_as 是异构查询的便利函数，用于一些构造开销巨大的对象（比如使用字面量查询 string），更复杂的异构查找需要使用 xxx_ex，异构查找需要保证 hash 的求值方式一致
 // find_or_add_ex_unsafe 是一个非常底层的 add 操作，它不会做任何构造行为，如果没有既存的查询元素，它会在申请空间后直接返回，在这种情况下，需要用户自行进行初始化和 add to bucket
-// TODO. rehash when copy/move
 namespace skr::container
 {
 template <typename Memory>
@@ -102,7 +101,6 @@ struct SparseHashSet : protected SparseArray<Memory> {
     HashType       hash_of(const SetDataType& v) const;
 
     // rehash
-    bool need_rehash() const;
     void rehash();
     bool rehash_if_need();
 
@@ -181,6 +179,7 @@ private:
     SizeType _bucket_index(SizeType hash) const; // get bucket data index by hash
     void     _clean_bucket();                    // remove all elements from bucket
     bool     _resize_bucket();                   // resize hash bucket
+    void     _build_bucket();                    // build hash bucket
     bool     _is_in_bucket(SizeType index) const;
     void     _add_to_bucket(const SetStorageType& data, SizeType index);
     void     _remove_from_bucket(SizeType index);
@@ -205,6 +204,11 @@ template <typename Memory>
 SKR_INLINE bool SparseHashSet<Memory>::_resize_bucket() // resize bucket (nocopy)
 {
     return Memory::resize_bucket();
+}
+template <typename Memory>
+SKR_INLINE void SparseHashSet<Memory>::_build_bucket()
+{
+    Memory::build_bucket();
 }
 template <typename Memory>
 SKR_INLINE bool SparseHashSet<Memory>::_is_in_bucket(SizeType index) const
@@ -451,8 +455,8 @@ template <typename Memory>
 SKR_INLINE void SparseHashSet<Memory>::release(SizeType capacity)
 {
     data_arr().release(capacity);
-    _resize_bucket();
     _clean_bucket();
+    _resize_bucket();
 }
 template <typename Memory>
 SKR_INLINE void SparseHashSet<Memory>::reserve(SizeType capacity)
@@ -464,10 +468,7 @@ template <typename Memory>
 SKR_INLINE void SparseHashSet<Memory>::shrink()
 {
     data_arr().shrink();
-    if (_resize_bucket())
-    {
-        rehash();
-    }
+    rehash_if_need();
 }
 template <typename Memory>
 SKR_INLINE bool SparseHashSet<Memory>::compact()
@@ -525,41 +526,22 @@ SKR_INLINE typename SparseHashSet<Memory>::HashType SparseHashSet<Memory>::hash_
 
 // rehash
 template <typename Memory>
-SKR_INLINE bool SparseHashSet<Memory>::need_rehash() const
-{
-    return Memory::need_rehash();
-}
-template <typename Memory>
 SKR_INLINE void SparseHashSet<Memory>::rehash()
 {
-    // resize bucket
     _resize_bucket();
-
-    // rehash
-    if (bucket())
-    {
-        _clean_bucket();
-        for (auto it = data_arr().begin(); it; ++it)
-        {
-            // link to head
-            SizeType& index_ref       = bucket()[_bucket_index(it->_sparse_hash_set_hash)];
-            it->_sparse_hash_set_next = index_ref;
-            index_ref                 = it.index();
-        }
-    }
+    _clean_bucket();
+    _build_bucket();
 }
 template <typename Memory>
 SKR_INLINE bool SparseHashSet<Memory>::rehash_if_need()
 {
-    if (need_rehash())
+    if (_resize_bucket())
     {
-        rehash();
+        _clean_bucket();
+        _build_bucket();
         return true;
     }
-    else
-    {
-        return false;
-    }
+    return false;
 }
 
 // try to add (first check existence, then add, never assign)
