@@ -40,7 +40,7 @@ public:
         int64_t unique_id = 0;
         
         operator size_t() const;
-        struct hasher { inline size_t operator()(const Key& val) const { return (size_t)val; } };
+        inline size_t _skr_hash() const { return (size_t)*this; }
 
         friend class TextureViewPool;
 
@@ -53,7 +53,7 @@ public:
     CGPUTextureViewId allocate(const CGPUTextureViewDescriptor& desc, uint64_t frame_index);
 protected:
     CGPUDeviceId device;
-    skr::UMap<Key, PooledTextureView, Key::hasher> views;
+    skr::UMap<Key, PooledTextureView> views;
 };
 } // namespace render_graph
 } // namespace skr
