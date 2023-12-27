@@ -41,20 +41,20 @@ struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, T
     }
 
     // copy & move
-    inline SparseHashSetMemory(const SparseHashSetMemory& other) noexcept
-        : Super(other)
+    inline SparseHashSetMemory(const SparseHashSetMemory& rhs) noexcept
+        : Super(rhs)
     {
         resize_bucket();
         clean_bucket();
         build_bucket();
     }
-    inline SparseHashSetMemory(SparseHashSetMemory&& other) noexcept
-        : Super(std::move(other))
-        , _bucket(other._bucket)
-        , _bucket_size(other._bucket_size)
-        , _bucket_mask(other._bucket_mask)
+    inline SparseHashSetMemory(SparseHashSetMemory&& rhs) noexcept
+        : Super(std::move(rhs))
+        , _bucket(rhs._bucket)
+        , _bucket_size(rhs._bucket_size)
+        , _bucket_mask(rhs._bucket_mask)
     {
-        other._reset();
+        rhs._reset();
     }
 
     // assign & move assign
@@ -205,16 +205,16 @@ struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetDat
     }
 
     // copy & move
-    inline FixedSparseHashSetMemory(const FixedSparseHashSetMemory& other) noexcept
-        : Super(other)
+    inline FixedSparseHashSetMemory(const FixedSparseHashSetMemory& rhs) noexcept
+        : Super(rhs)
     {
-        memory::copy(bucket(), other.bucket(), kBucketSize);
+        memory::copy(bucket(), rhs.bucket(), kBucketSize);
     }
-    inline FixedSparseHashSetMemory(FixedSparseHashSetMemory&& other) noexcept
-        : Super(std::move(other))
+    inline FixedSparseHashSetMemory(FixedSparseHashSetMemory&& rhs) noexcept
+        : Super(std::move(rhs))
     {
-        memory::copy(bucket(), other.bucket(), kBucketSize);
-        other._reset();
+        memory::copy(bucket(), rhs.bucket(), kBucketSize);
+        rhs._reset();
     }
 
     // assign & move assign
@@ -318,26 +318,26 @@ struct InlineSparseHashSetMemory : public InlineSparseArrayMemory<SparseHashSetD
     }
 
     // copy & move
-    inline InlineSparseHashSetMemory(const InlineSparseHashSetMemory& other) noexcept
-        : Super(other)
+    inline InlineSparseHashSetMemory(const InlineSparseHashSetMemory& rhs) noexcept
+        : Super(rhs)
     {
         resize_bucket();
         clean_bucket();
         build_bucket();
     }
-    inline InlineSparseHashSetMemory(InlineSparseHashSetMemory&& other) noexcept
-        : Super(std::move(other))
+    inline InlineSparseHashSetMemory(InlineSparseHashSetMemory&& rhs) noexcept
+        : Super(std::move(rhs))
     {
-        if (other._is_using_inline_bucket())
+        if (rhs._is_using_inline_bucket())
         {
-            memory::copy(bucket(), other._bucket_placeholder.data_typed(), other._bucket_size);
+            memory::copy(bucket(), rhs._bucket_placeholder.data_typed(), rhs._bucket_size);
         }
         else
         {
-            _heap_bucket = other._heap_bucket;
+            _heap_bucket = rhs._heap_bucket;
         }
 
-        other._reset();
+        rhs._reset();
     }
 
     // assign & move assign
