@@ -4,7 +4,6 @@
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
 
 // SparseHashMap def
-// TODO. value 操作: remove/find/contains/count
 namespace skr::container
 {
 template <typename Memory>
@@ -90,7 +89,6 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
     bool compact_top();
 
     // rehash
-    bool need_rehash() const;
     void rehash() const;
     bool rehash_if_need() const;
 
@@ -375,11 +373,6 @@ SKR_INLINE bool SparseHashMap<Memory>::compact_top()
 }
 
 // rehash
-template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::need_rehash() const
-{
-    return Super::need_rehash();
-}
 template <typename Memory>
 SKR_INLINE void SparseHashMap<Memory>::rehash() const
 {
