@@ -1,7 +1,7 @@
 #pragma once
 #include <type_traits>
 #include "SkrBase/config.h"
-#include "SkrBase/containers/key_traits.hpp"
+#include "SkrBase/containers/sparse_hash_set/sparse_hash_set_traits.hpp"
 
 namespace skr::container
 {
@@ -52,8 +52,9 @@ struct MapKey {
 
 template <typename K, typename V>
 struct KeyTraits<KVPair<K, V>> {
-    using KeyType       = K;
-    using KeyMapperType = MapKey<K, V>;
+    using KeyType         = K;
+    using KeyMapperType   = MapKey<K, V>;
+    using KeyComparerType = Equal<>;
 };
 } // namespace skr::container
 

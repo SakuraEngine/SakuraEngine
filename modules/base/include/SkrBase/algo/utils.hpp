@@ -1,12 +1,14 @@
 #pragma once
 #include "SkrBase/config.h"
 #include <type_traits>
+#include <concepts>
 
 // map functor
 namespace skr
 {
 template <typename T>
 struct MapFwd {
+
     SKR_INLINE constexpr T&       operator()(T& v) const { return v; }
     SKR_INLINE constexpr const T& operator()(const T& v) const { return v; }
 };
@@ -68,6 +70,31 @@ SKR_DEF_ARITHMETIC_FUNCTOR(OpMul, *)
 SKR_DEF_ARITHMETIC_FUNCTOR(OpDov, /)
 
 #undef SKR_DEF_ARITHMETIC_FUNCTOR
+} // namespace skr
+
+// concept
+namespace skr
+{
+template <typename Functor, typename LHS, typename RHS>
+concept BinaryFunctorCallable = requires(Functor&& f, LHS&& lhs, RHS&& rhs) {
+    std::forward<Functor>(f)(std::forward<LHS>(lhs), std::forward<RHS>(rhs));
+};
+template <typename Functor, typename LHS, typename RHS, typename Ret>
+concept BinaryFunctorCallableWithRet = requires(Functor&& f, LHS&& lhs, RHS&& rhs, Ret&& ret) {
+    {
+        std::forward<Functor>(f)(std::forward<LHS>(lhs), std::forward<RHS>(rhs))
+    } -> std::convertible_to<Ret>;
+};
+template <typename Functor, typename T>
+concept UnaryFunctorCallable = requires(Functor&& f, T&& t) {
+    std::forward<Functor>(f)(std::forward<T>(t));
+};
+template <typename Functor, typename T, typename Ret>
+concept UnaryFunctorCallableWithRet = requires(Functor&& f, T&& t) {
+    {
+        std::forward<Functor>(f)(std::forward<T>(t))
+    } -> std::convertible_to<Ret>;
+};
 } // namespace skr
 
 // gcd & lcm

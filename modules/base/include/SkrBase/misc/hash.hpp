@@ -3,6 +3,7 @@
 #include "SkrBase/config.h"
 #include "SkrBase/misc/traits.hpp"
 #include "internal/constexpr-xxh3.hpp"
+#include <concepts>
 
 namespace skr
 {
@@ -14,9 +15,11 @@ consteval uint64_t consteval_hash(const Bytes& input)
 } // namespace skr
 
 #ifdef __cplusplus
-// used for switch Name
-#define switchname(n) switch(std::string_view __str = n; skr_hash64(__str.data(), __str.size(), 0))
-#define casestr(s) case skr::consteval_hash(std::string_view(s)): if(__str != std::string_view(s)) break;
+  // used for switch Name
+    #define switchname(n) switch (std::string_view __str = n; skr_hash64(__str.data(), __str.size(), 0))
+    #define casestr(s)                                 \
+        case skr::consteval_hash(std::string_view(s)): \
+            if (__str != std::string_view(s)) break;
 #endif
 
 namespace skr
@@ -34,6 +37,19 @@ template <typename T>
 inline constexpr bool has_skr_hash_v = is_detected_v<detail::has_skr_hash, T>;
 template <typename T>
 inline constexpr bool skr_hashable_v = is_detected_v<detail::skr_hashable, T>;
+
+template <typename T>
+concept EmbeddedHasher = requires(const T& t) {
+    {
+        t._skr_hash()
+    } -> std::same_as<size_t>;
+};
+template <typename T>
+concept Hashable = requires(const T& t) {
+    {
+        Hash<T>{}(t)
+    } -> std::same_as<size_t>;
+};
 
 namespace detail
 {
