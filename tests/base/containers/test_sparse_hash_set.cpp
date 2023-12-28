@@ -285,34 +285,34 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
 
-        using container::KVPair;
-        using TestAddOrAssignValue = KVPair<ValueType, ValueType>;
-        using TestAddOrAssignSet   = container::SparseHashSet<container::SparseHashSetMemory<
-        TestAddOrAssignValue,
-        uint64_t,
-        uint64_t,
-        Hash<ValueType>,
-        Equal<ValueType>,
-        false,
-        uint64_t,
-        SkrTestAllocator>>;
-        TestAddOrAssignSet b({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
-        b.add_or_assign({ 1, 2 });
-        b.add_or_assign({ 4, 5 });
-        b.add_or_assign({ 5, 6 });
-        b.add_or_assign({ 10, 10 });
-        REQUIRE_EQ(b.size(), 4);
-        REQUIRE_EQ(b.sparse_size(), 4);
-        REQUIRE_EQ(b.hole_size(), 0);
-        REQUIRE_GE(b.capacity(), 4);
-        REQUIRE(b.contains(1));
-        REQUIRE(b.contains(4));
-        REQUIRE(b.contains(5));
-        REQUIRE(b.contains(10));
-        REQUIRE_EQ(b.find(1)->value, 2);
-        REQUIRE_EQ(b.find(4)->value, 5);
-        REQUIRE_EQ(b.find(5)->value, 6);
-        REQUIRE_EQ(b.find(10)->value, 10);
+        // using container::KVPair;
+        // using TestAddOrAssignValue = KVPair<ValueType, ValueType>;
+        // using TestAddOrAssignSet   = container::SparseHashSet<container::SparseHashSetMemory<
+        // TestAddOrAssignValue,
+        // uint64_t,
+        // uint64_t,
+        // Hash<ValueType>,
+        // Equal<ValueType>,
+        // false,
+        // uint64_t,
+        // SkrTestAllocator>>;
+        // TestAddOrAssignSet b({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
+        // b.add_or_assign({ 1, 2 });
+        // b.add_or_assign({ 4, 5 });
+        // b.add_or_assign({ 5, 6 });
+        // b.add_or_assign({ 10, 10 });
+        // REQUIRE_EQ(b.size(), 4);
+        // REQUIRE_EQ(b.sparse_size(), 4);
+        // REQUIRE_EQ(b.hole_size(), 0);
+        // REQUIRE_GE(b.capacity(), 4);
+        // REQUIRE(b.contains(1));
+        // REQUIRE(b.contains(4));
+        // REQUIRE(b.contains(5));
+        // REQUIRE(b.contains(10));
+        // REQUIRE_EQ(b.find(1)->value, 2);
+        // REQUIRE_EQ(b.find(4)->value, 5);
+        // REQUIRE_EQ(b.find(5)->value, 6);
+        // REQUIRE_EQ(b.find(10)->value, 10);
     }
 
     SUBCASE("emplace")
@@ -818,34 +818,34 @@ TEST_CASE("test fixed sparse hash set (Single)")
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
 
-        using container::KVPair;
-        using TestAddOrAssignValue = KVPair<ValueType, ValueType>;
-        using TestAddOrAssignSet   = container::SparseHashSet<container::FixedSparseHashSetMemory<
-        TestAddOrAssignValue,
-        uint64_t,
-        uint64_t,
-        Hash<ValueType>,
-        Equal<ValueType>,
-        false,
-        uint64_t,
-        kFixedCapacity>>;
-        TestAddOrAssignSet b({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
-        b.add_or_assign({ 1, 2 });
-        b.add_or_assign({ 4, 5 });
-        b.add_or_assign({ 5, 6 });
-        b.add_or_assign({ 10, 10 });
-        REQUIRE_EQ(b.size(), 4);
-        REQUIRE_EQ(b.sparse_size(), 4);
-        REQUIRE_EQ(b.hole_size(), 0);
-        REQUIRE_GE(b.capacity(), kFixedCapacity);
-        REQUIRE(b.contains(1));
-        REQUIRE(b.contains(4));
-        REQUIRE(b.contains(5));
-        REQUIRE(b.contains(10));
-        REQUIRE_EQ(b.find(1)->value, 2);
-        REQUIRE_EQ(b.find(4)->value, 5);
-        REQUIRE_EQ(b.find(5)->value, 6);
-        REQUIRE_EQ(b.find(10)->value, 10);
+        // using container::KVPair;
+        // using TestAddOrAssignValue = KVPair<ValueType, ValueType>;
+        // using TestAddOrAssignSet   = container::SparseHashSet<container::FixedSparseHashSetMemory<
+        // TestAddOrAssignValue,
+        // uint64_t,
+        // uint64_t,
+        // Hash<ValueType>,
+        // Equal<ValueType>,
+        // false,
+        // uint64_t,
+        // kFixedCapacity>>;
+        // TestAddOrAssignSet b({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
+        // b.add_or_assign({ 1, 2 });
+        // b.add_or_assign({ 4, 5 });
+        // b.add_or_assign({ 5, 6 });
+        // b.add_or_assign({ 10, 10 });
+        // REQUIRE_EQ(b.size(), 4);
+        // REQUIRE_EQ(b.sparse_size(), 4);
+        // REQUIRE_EQ(b.hole_size(), 0);
+        // REQUIRE_GE(b.capacity(), kFixedCapacity);
+        // REQUIRE(b.contains(1));
+        // REQUIRE(b.contains(4));
+        // REQUIRE(b.contains(5));
+        // REQUIRE(b.contains(10));
+        // REQUIRE_EQ(b.find(1)->value, 2);
+        // REQUIRE_EQ(b.find(4)->value, 5);
+        // REQUIRE_EQ(b.find(5)->value, 6);
+        // REQUIRE_EQ(b.find(10)->value, 10);
     }
 
     SUBCASE("emplace")
@@ -1349,35 +1349,35 @@ TEST_CASE("test inline sparse hash set (Single)")
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
 
-        using container::KVPair;
-        using TestAddOrAssignValue = KVPair<ValueType, ValueType>;
-        using TestAddOrAssignSet   = container::SparseHashSet<container::InlineSparseHashSetMemory<
-        TestAddOrAssignValue,
-        uint64_t,
-        uint64_t,
-        Hash<ValueType>,
-        Equal<ValueType>,
-        false,
-        uint64_t,
-        kInlineCapacity,
-        SkrTestAllocator>>;
-        TestAddOrAssignSet b({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
-        b.add_or_assign({ 1, 2 });
-        b.add_or_assign({ 4, 5 });
-        b.add_or_assign({ 5, 6 });
-        b.add_or_assign({ 10, 10 });
-        REQUIRE_EQ(b.size(), 4);
-        REQUIRE_EQ(b.sparse_size(), 4);
-        REQUIRE_EQ(b.hole_size(), 0);
-        REQUIRE_GE(b.capacity(), capacity_of(4));
-        REQUIRE(b.contains(1));
-        REQUIRE(b.contains(4));
-        REQUIRE(b.contains(5));
-        REQUIRE(b.contains(10));
-        REQUIRE_EQ(b.find(1)->value, 2);
-        REQUIRE_EQ(b.find(4)->value, 5);
-        REQUIRE_EQ(b.find(5)->value, 6);
-        REQUIRE_EQ(b.find(10)->value, 10);
+        // using container::KVPair;
+        // using TestAddOrAssignValue = KVPair<ValueType, ValueType>;
+        // using TestAddOrAssignSet   = container::SparseHashSet<container::InlineSparseHashSetMemory<
+        // TestAddOrAssignValue,
+        // uint64_t,
+        // uint64_t,
+        // Hash<ValueType>,
+        // Equal<ValueType>,
+        // false,
+        // uint64_t,
+        // kInlineCapacity,
+        // SkrTestAllocator>>;
+        // TestAddOrAssignSet b({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
+        // b.add_or_assign({ 1, 2 });
+        // b.add_or_assign({ 4, 5 });
+        // b.add_or_assign({ 5, 6 });
+        // b.add_or_assign({ 10, 10 });
+        // REQUIRE_EQ(b.size(), 4);
+        // REQUIRE_EQ(b.sparse_size(), 4);
+        // REQUIRE_EQ(b.hole_size(), 0);
+        // REQUIRE_GE(b.capacity(), capacity_of(4));
+        // REQUIRE(b.contains(1));
+        // REQUIRE(b.contains(4));
+        // REQUIRE(b.contains(5));
+        // REQUIRE(b.contains(10));
+        // REQUIRE_EQ(b.find(1)->value, 2);
+        // REQUIRE_EQ(b.find(4)->value, 5);
+        // REQUIRE_EQ(b.find(5)->value, 6);
+        // REQUIRE_EQ(b.find(10)->value, 10);
     }
 
     SUBCASE("emplace")

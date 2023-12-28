@@ -7,37 +7,34 @@
 
 namespace skr
 {
-template <typename T, typename Hasher = Hash<typename container::KeyTraits<T>::KeyType>, typename Allocator = SkrAllocator>
+template <typename T, typename HashTraits = container::HashTraits<T>, typename Allocator = SkrAllocator>
 using USet = container::SparseHashSet<container::SparseHashSetMemory<
-T,                                                /*element Type*/
-uint64_t,                                         /*BitBlock Type*/
-uint64_t,                                         /*Hash Type*/
-Hasher,                                           /*Hasher Type*/
-Equal<typename container::KeyTraits<T>::KeyType>, /*Comparer Type*/
-false,                                            /*Allow MultiKey*/
-uint64_t,                                         /*Size Type*/
-Allocator>>;                                      /*Allocator Type*/
+T,                       /*element Type*/
+uint64_t,                /*BitBlock Type*/
+container::KeyTraits<T>, /*Key Traits*/
+HashTraits,              /*Hasher Traits*/
+false,                   /*Allow MultiKey*/
+uint64_t,                /*Size Type*/
+Allocator>>;             /*Allocator Type*/
 
-template <typename T, uint64_t kCount, typename Hasher = Hash<typename container::KeyTraits<T>::KeyType>>
+template <typename T, uint64_t kCount, typename HashTraits = container::HashTraits<T>>
 using FixedUSet = container::SparseHashSet<container::FixedSparseHashSetMemory<
-T,                                                /*element Type*/
-uint64_t,                                         /*BitBlock Type*/
-uint64_t,                                         /*Hash Type*/
-Hasher,                                           /*Hasher Type*/
-Equal<typename container::KeyTraits<T>::KeyType>, /*Comparer Type*/
-false,                                            /*Allow MultiKey*/
-uint64_t,                                         /*Size Type*/
-kCount>>;                                         /*Allocator Type*/
+T,                       /*element Type*/
+uint64_t,                /*BitBlock Type*/
+container::KeyTraits<T>, /*Key Traits*/
+HashTraits,              /*Hasher Traits*/
+false,                   /*Allow MultiKey*/
+uint64_t,                /*Size Type*/
+kCount>>;                /*Allocator Type*/
 
-template <typename T, uint64_t kInlineCount, typename Hasher = Hash<typename container::KeyTraits<T>::KeyType>, typename Allocator = SkrAllocator>
+template <typename T, uint64_t kInlineCount, typename HashTraits = container::HashTraits<T>, typename Allocator = SkrAllocator>
 using InlineUSet = container::SparseHashSet<container::InlineSparseHashSetMemory<
-T,                                                /*element Type*/
-uint64_t,                                         /*BitBlock Type*/
-uint64_t,                                         /*Hash Type*/
-Hasher,                                           /*Hasher Type*/
-Equal<typename container::KeyTraits<T>::KeyType>, /*Comparer Type*/
-false,                                            /*Allow MultiKey*/
-uint64_t,                                         /*Size Type*/
-kInlineCount,                                     /*Inline Count*/
-Allocator>>;                                      /*Allocator Type*/
+T,                       /*element Type*/
+uint64_t,                /*BitBlock Type*/
+container::KeyTraits<T>, /*Key Traits*/
+HashTraits,              /*Hasher Traits*/
+false,                   /*Allow MultiKey*/
+uint64_t,                /*Size Type*/
+kInlineCount,            /*Inline Count*/
+Allocator>>;             /*Allocator Type*/
 } // namespace skr
