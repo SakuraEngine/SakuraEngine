@@ -203,12 +203,12 @@ TEST_CASE("test sparse hash map")
     // [needn't test] data op
     // [needn't test] bucket op
 
-    SUBCASE("find_or_add")
+    SUBCASE("add")
     {
         TestHashMap a({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
-        a.find_or_add(1, 1);
-        a.find_or_add(4, 4);
-        a.find_or_add(10, 10);
+        a.add(1, 1);
+        a.add(4, 4);
+        a.add(10, 10);
         REQUIRE_EQ(a.size(), 4);
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -218,7 +218,7 @@ TEST_CASE("test sparse hash map")
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
 
-        a.find_or_add_ex(
+        a.add_ex(
         Hash<KeyType>()(100),
         [](const KeyType& v) { return v == 100; },
         [](void* p) { new (p) PairType(100, 100); });
@@ -232,7 +232,7 @@ TEST_CASE("test sparse hash map")
         REQUIRE(a.contains(10));
         REQUIRE(a.contains(100));
 
-        auto ref = a.find_or_add_ex_unsafe(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; });
+        auto ref = a.add_ex_unsafe(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; });
         new (ref.data) PairType(114514, 114514);
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
@@ -245,7 +245,7 @@ TEST_CASE("test sparse hash map")
         REQUIRE(a.contains(100));
     }
 
-    SUBCASE("find_or_add or assign")
+    SUBCASE("add or assign")
     {
         TestHashMap a({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
         a.add_or_assign(1, 2);
@@ -340,8 +340,8 @@ TEST_CASE("test sparse hash map")
         TestHashMap a(100), b(100);
         for (int32_t i = 0; i < 100; ++i)
         {
-            a.find_or_add(i, i + 1);
-            b.find_or_add(i, i + 1);
+            a.add(i, i + 1);
+            b.add(i, i + 1);
         }
 
         for (auto it = a.begin(); it != a.end();)
@@ -425,7 +425,7 @@ TEST_CASE("test sparse hash map")
             {
                 k = rand() % 100;
             }
-            a.find_or_add(k, k * 5);
+            a.add(k, k * 5);
         }
         a.sort();
         REQUIRE_EQ(a.size(), 100);
@@ -653,12 +653,12 @@ TEST_CASE("test fixed sparse hash map")
     // [needn't test] data op
     // [needn't test] bucket op
 
-    SUBCASE("find_or_add")
+    SUBCASE("add")
     {
         TestHashMap a({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
-        a.find_or_add(1, 1);
-        a.find_or_add(4, 4);
-        a.find_or_add(10, 10);
+        a.add(1, 1);
+        a.add(4, 4);
+        a.add(10, 10);
         REQUIRE_EQ(a.size(), 4);
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -668,7 +668,7 @@ TEST_CASE("test fixed sparse hash map")
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
 
-        a.find_or_add_ex(
+        a.add_ex(
         Hash<KeyType>()(100),
         [](const KeyType& v) { return v == 100; },
         [](void* p) { new (p) PairType(100, 100); });
@@ -682,7 +682,7 @@ TEST_CASE("test fixed sparse hash map")
         REQUIRE(a.contains(10));
         REQUIRE(a.contains(100));
 
-        auto ref = a.find_or_add_ex_unsafe(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; });
+        auto ref = a.add_ex_unsafe(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; });
         new (ref.data) PairType(114514, 114514);
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
@@ -695,7 +695,7 @@ TEST_CASE("test fixed sparse hash map")
         REQUIRE(a.contains(100));
     }
 
-    SUBCASE("find_or_add or assign")
+    SUBCASE("add or assign")
     {
         TestHashMap a({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
         a.add_or_assign(1, 2);
@@ -790,8 +790,8 @@ TEST_CASE("test fixed sparse hash map")
         TestHashMap a(kFixedCapacity), b(kFixedCapacity);
         for (int32_t i = 0; i < kFixedCapacity; ++i)
         {
-            a.find_or_add(i, i + 1);
-            b.find_or_add(i, i + 1);
+            a.add(i, i + 1);
+            b.add(i, i + 1);
         }
 
         for (auto it = a.begin(); it != a.end();)
@@ -875,7 +875,7 @@ TEST_CASE("test fixed sparse hash map")
             {
                 k = rand() % 100;
             }
-            a.find_or_add(k, k * 5);
+            a.add(k, k * 5);
         }
         a.sort();
         REQUIRE_EQ(a.size(), 100);
@@ -1100,12 +1100,12 @@ TEST_CASE("test inline sparse hash map")
     // [needn't test] data op
     // [needn't test] bucket op
 
-    SUBCASE("find_or_add")
+    SUBCASE("add")
     {
         TestHashMap a({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
-        a.find_or_add(1, 1);
-        a.find_or_add(4, 4);
-        a.find_or_add(10, 10);
+        a.add(1, 1);
+        a.add(4, 4);
+        a.add(10, 10);
         REQUIRE_EQ(a.size(), 4);
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -1115,7 +1115,7 @@ TEST_CASE("test inline sparse hash map")
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
 
-        a.find_or_add_ex(
+        a.add_ex(
         Hash<KeyType>()(100),
         [](const KeyType& v) { return v == 100; },
         [](void* p) { new (p) PairType(100, 100); });
@@ -1129,7 +1129,7 @@ TEST_CASE("test inline sparse hash map")
         REQUIRE(a.contains(10));
         REQUIRE(a.contains(100));
 
-        auto ref = a.find_or_add_ex_unsafe(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; });
+        auto ref = a.add_ex_unsafe(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; });
         new (ref.data) PairType(114514, 114514);
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
@@ -1142,7 +1142,7 @@ TEST_CASE("test inline sparse hash map")
         REQUIRE(a.contains(100));
     }
 
-    SUBCASE("find_or_add or assign")
+    SUBCASE("add or assign")
     {
         TestHashMap a({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
         a.add_or_assign(1, 2);
@@ -1237,8 +1237,8 @@ TEST_CASE("test inline sparse hash map")
         TestHashMap a(100), b(100);
         for (int32_t i = 0; i < 100; ++i)
         {
-            a.find_or_add(i, i + 1);
-            b.find_or_add(i, i + 1);
+            a.add(i, i + 1);
+            b.add(i, i + 1);
         }
 
         for (auto it = a.begin(); it != a.end();)
@@ -1322,7 +1322,7 @@ TEST_CASE("test inline sparse hash map")
             {
                 k = rand() % 100;
             }
-            a.find_or_add(k, k * 5);
+            a.add(k, k * 5);
         }
         a.sort();
         REQUIRE_EQ(a.size(), 100);
