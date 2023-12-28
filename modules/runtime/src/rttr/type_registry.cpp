@@ -32,7 +32,7 @@ static auto& load_type_mutex()
 // type register (loader)
 void register_type_loader(const GUID& guid, TypeLoader* loader)
 {
-    auto result = type_loaders().find_or_add(guid, loader);
+    auto result = type_loaders().add(guid, loader);
     if (result.already_exist)
     {
         // TODO. log
@@ -52,7 +52,7 @@ void unregister_type_loader(const GUID& guid)
 // generic type loader
 void register_generic_type_loader(const GUID& generic_guid, GenericTypeLoader* loader)
 {
-    auto result = generic_type_loader().find_or_add(generic_guid, loader);
+    auto result = generic_type_loader().add(generic_guid, loader);
     if (result.already_exist)
     {
         // TODO. log
@@ -85,7 +85,7 @@ Type* get_type_from_guid(const GUID& guid)
         if (loader_result)
         {
             auto type = loader_result->value->create();
-            loaded_types().find_or_add(guid, type);
+            loaded_types().add(guid, type);
             loader_result->value->load(type);
             return type;
         }
@@ -111,7 +111,7 @@ Type* get_type_from_type_desc(span<TypeDesc> type_desc)
             if (result)
             {
                 auto type = result->value->load(type_desc);
-                loaded_types().find_or_add(type->type_id(), type);
+                loaded_types().add(type->type_id(), type);
                 return type;
             }
         }

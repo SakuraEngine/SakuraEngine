@@ -76,23 +76,23 @@ SKR_DEF_ARITHMETIC_FUNCTOR(OpDov, /)
 namespace skr
 {
 template <typename Functor, typename LHS, typename RHS>
-concept BinaryFunctorCallable = requires(Functor&& f, LHS&& lhs, RHS&& rhs) {
-    std::forward<Functor>(f)(std::forward<LHS>(lhs), std::forward<RHS>(rhs));
+concept BinaryFunctorCallable = requires(Functor f, LHS lhs, RHS rhs) {
+    f(lhs, rhs);
 };
 template <typename Functor, typename LHS, typename RHS, typename Ret>
-concept BinaryFunctorCallableWithRet = requires(Functor&& f, LHS&& lhs, RHS&& rhs, Ret&& ret) {
+concept BinaryFunctorCallableWithRet = requires(Functor f, LHS lhs, RHS rhs) {
     {
-        std::forward<Functor>(f)(std::forward<LHS>(lhs), std::forward<RHS>(rhs))
+        f(lhs, rhs)
     } -> std::convertible_to<Ret>;
 };
 template <typename Functor, typename T>
-concept UnaryFunctorCallable = requires(Functor&& f, T&& t) {
-    std::forward<Functor>(f)(std::forward<T>(t));
+concept UnaryFunctorCallable = requires(Functor f, T t) {
+    f(t);
 };
 template <typename Functor, typename T, typename Ret>
-concept UnaryFunctorCallableWithRet = requires(Functor&& f, T&& t) {
+concept UnaryFunctorCallableWithRet = requires(Functor f, T t) {
     {
-        std::forward<Functor>(f)(std::forward<T>(t))
+        f(t)
     } -> std::convertible_to<Ret>;
 };
 } // namespace skr

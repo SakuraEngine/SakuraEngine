@@ -17,7 +17,7 @@ bool skr_shader_options_resource_t::flatten_options(skr::Vector<skr_shader_optio
                 dst.empty();
                 return false;
             }
-            keys.find_or_add(opt.key);
+            keys.add(opt.key);
             kvs.insert({ opt.key, opt });
         }
     }
