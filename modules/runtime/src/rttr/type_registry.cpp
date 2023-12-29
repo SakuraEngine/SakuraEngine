@@ -33,7 +33,7 @@ static auto& load_type_mutex()
 void register_type_loader(const GUID& guid, TypeLoader* loader)
 {
     auto result = type_loaders().add(guid, loader);
-    if (result.already_exist)
+    if (result.already_exist())
     {
         // TODO. log
         SKR_LOG_WARN(u8"type loader already exist.");
@@ -53,7 +53,7 @@ void unregister_type_loader(const GUID& guid)
 void register_generic_type_loader(const GUID& generic_guid, GenericTypeLoader* loader)
 {
     auto result = generic_type_loader().add(generic_guid, loader);
-    if (result.already_exist)
+    if (result.already_exist())
     {
         // TODO. log
         SKR_LOG_WARN(u8"generic type loader already exist.");
@@ -77,16 +77,16 @@ Type* get_type_from_guid(const GUID& guid)
     auto loaded_result = loaded_types().find(guid);
     if (loaded_result)
     {
-        return loaded_result->value;
+        return loaded_result.value();
     }
     else
     {
         auto loader_result = type_loaders().find(guid);
         if (loader_result)
         {
-            auto type = loader_result->value->create();
+            auto type = loader_result.value()->create();
             loaded_types().add(guid, type);
-            loader_result->value->load(type);
+            loader_result.value()->load(type);
             return type;
         }
     }
@@ -110,7 +110,7 @@ Type* get_type_from_type_desc(span<TypeDesc> type_desc)
             // TODO. 类型查重
             if (result)
             {
-                auto type = result->value->load(type_desc);
+                auto type = result.value()->load(type_desc);
                 loaded_types().add(type->type_id(), type);
                 return type;
             }

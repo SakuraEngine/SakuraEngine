@@ -285,7 +285,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                 {
                     bind_tables.add(dcRS, pass_context.create_and_update_bind_table(dc.pipeline->root_signature));
                 }
-                CGPUXBindTableId pass_table = bind_tables.find(dcRS)->value;
+                CGPUXBindTableId pass_table = bind_tables.find(dcRS).value();
                 if (dc.bind_table)
                 {
                     CGPUXBindTableId tables[2] = { dc.bind_table, pass_table };

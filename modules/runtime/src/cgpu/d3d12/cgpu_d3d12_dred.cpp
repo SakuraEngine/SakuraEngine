@@ -212,7 +212,7 @@ void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
                     if (OpContextStr)
                     {
                         ContextStr = TEXT(" [");
-                        ContextStr += OpContextStr->value;
+                        ContextStr += OpContextStr.value();
                         ContextStr += TEXT("]");
                     }
                     else

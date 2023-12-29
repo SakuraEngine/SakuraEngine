@@ -6,43 +6,44 @@ namespace skr::container
 {
 // Array 的数据引用，代替单纯的指针/Index返回
 // 提供足够的信息，并将 npos 封装起来简化调用防止出错
-template <typename T, typename TS>
+template <typename T, typename TS, bool kConst>
 struct ArrayDataRef {
+    using DataType = std::conditional_t<kConst, const T, T>;
+    using SizeType = TS;
+
     // ctor
-    SKR_INLINE ArrayDataRef()
-    {
-    }
-    SKR_INLINE ArrayDataRef(T* data, TS index)
-        : _data(data)
+    SKR_INLINE
+    ArrayDataRef() = default;
+    SKR_INLINE ArrayDataRef(DataType* ptr, SizeType index)
+        : _ptr(ptr)
         , _index(index)
     {
     }
-    template <typename U>
-    requires(std::is_same_v<std::remove_cv_t<T>, std::remove_cv_t<U>>)
-    SKR_INLINE ArrayDataRef(const ArrayDataRef<U, TS>& rhs)
-        : _data(const_cast<T*>(rhs.ptr()))
+    template <bool kConstRHS>
+    SKR_INLINE ArrayDataRef(const ArrayDataRef<T, SizeType, kConstRHS>& rhs)
+        : _ptr(const_cast<DataType*>(rhs.ptr()))
         , _index(rhs.index())
     {
     }
 
     // getter & validator
-    SKR_INLINE T*   ptr() const { return _data; }
-    SKR_INLINE TS   index() const { return _index; }
-    SKR_INLINE T&   ref() const { return *_data; }
-    SKR_INLINE bool is_valid() const { return _data != nullptr && _index != npos_of<TS>; }
+    SKR_INLINE DataType* ptr() const { return _ptr; }
+    SKR_INLINE DataType& ref() const { return *_ptr; }
+    SKR_INLINE SizeType  index() const { return _index; }
+    SKR_INLINE bool      is_valid() const { return _ptr != nullptr && _index != npos_of<SizeType>; }
 
     // operators
-    SKR_INLINE operator bool() const { return is_valid(); }
-    // SKR_INLINE T& operator*() const { return ref(); }
-    // SKR_INLINE T* operator->() const { return ptr(); }
+    SKR_INLINE explicit operator bool() const { return is_valid(); }
+    // SKR_INLINE DataType& operator*() const { return ref(); }
+    // SKR_INLINE DataType* operator->() const { return ptr(); }
 
 private:
     // add/append/emplace: 指向（第一个）添加的元素
     // find: 指向找到的元素
-    T* _data = nullptr;
+    DataType* _ptr = nullptr;
 
     // add/append/emplace: （第一个）添加的元素下标
     // find: 找到的元素下标
-    TS _index = npos_of<TS>;
+    SizeType _index = npos_of<SizeType>;
 };
 } // namespace skr::container

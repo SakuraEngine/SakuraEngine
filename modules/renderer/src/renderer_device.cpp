@@ -275,13 +275,13 @@ CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
 {
     // find registered swapchain
     {
-        if (auto _ = swapchains.find(window)) return _->value;
+        if (auto _ = swapchains.find(window)) return _.value();
     }
     // find registered surface
     CGPUSurfaceId surface = nullptr;
     {
         if (auto _ = surfaces.find(window))
-            surface = _->value;
+            surface = _.value();
         else
         {
             surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
@@ -312,7 +312,7 @@ CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle wind
     {
         if (auto _ = swapchains.find(window))
         {
-            old = _->value;
+            old = _.value();
         }
         else 
         {
@@ -325,7 +325,7 @@ CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle wind
         cgpu_free_swapchain(old);
         if (auto _ = surfaces.find(window))
         {
-            cgpu_free_surface(device, _->value);
+            cgpu_free_surface(device, _.value());
         }
         {
             surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));

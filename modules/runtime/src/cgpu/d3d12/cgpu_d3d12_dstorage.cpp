@@ -50,7 +50,7 @@ ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId de
             _this->availability_map.add_or_assign(device, SKR_DSTORAGE_AVAILABILITY_HARDWARE);
         }
     }
-    return _this->availability_map.find(device)->value;
+    return _this->availability_map.find(device).value();
 }
 
 using CGPUDStorageQueueD3D12 = DStorageQueueWindows;

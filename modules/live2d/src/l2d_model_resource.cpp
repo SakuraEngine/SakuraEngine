@@ -427,7 +427,7 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
             SkrZoneScopedN("Create Live2D Expression");
 
             auto _this = (csmExpressionMap*)data;
-            const auto& name = _this->expressionNames.find(future)->value;
+            const auto& name = _this->expressionNames.find(future).value();
             auto index = future - _this->expressionFutures.data();
             auto& blob = _this->expressionBlobs[index];
             
@@ -508,7 +508,7 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             SkrZoneScopedN("Create Live2D Motion");
 
             auto _this = (csmMotionMap*)data;
-            const auto& entry = _this->motionEntries.find(future)->value;
+            const auto& entry = _this->motionEntries.find(future).value();
             auto index = future - _this->motionFutures.data();
             auto& blob = _this->motionBlobs[index];
             

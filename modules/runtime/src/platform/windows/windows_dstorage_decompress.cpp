@@ -105,7 +105,7 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
                         skrRequest.src_buffer = request.SrcBuffer;
                         skrRequest.dst_size = request.DstSize;
                         skrRequest.dst_buffer = request.DstBuffer;
-                        auto result = resolver->value.callback(&skrRequest, resolver->value.user_data);
+                        auto result = resolver.value().callback(&skrRequest, resolver.value().user_data);
                         DSTORAGE_CUSTOM_DECOMPRESSION_RESULT failResult = {};
                         failResult.Result = result;
                         failResult.Id = request.Id;

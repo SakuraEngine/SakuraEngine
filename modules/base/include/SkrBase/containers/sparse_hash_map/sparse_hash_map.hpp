@@ -2,6 +2,7 @@
 #include "SkrBase/config.h"
 #include "SkrBase/containers/sparse_hash_map/kvpair.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
+#include "SkrBase/containers/sparse_hash_map/sparse_hash_map_def.hpp"
 
 // SparseHashMap def
 namespace skr::container
@@ -35,8 +36,8 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
     using DataArr = typename Super::DataArr;
 
     // data ref & iterator
-    using DataRef  = typename Super::DataRef;
-    using CDataRef = typename Super::CDataRef;
+    using DataRef  = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, false>;
+    using CDataRef = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, true>;
     using It       = typename Super::It;
     using CIt      = typename Super::CIt;
 
@@ -392,10 +393,10 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(co
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::copy(&ref->key, &key);
-        memory::copy(&ref->value, &value);
+        memory::copy(&ref.ref().key, &key);
+        memory::copy(&ref.ref().value, &value);
     }
 
     return ref;
@@ -408,10 +409,10 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(co
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::copy(&ref->key, &key);
-        memory::move(&ref->value, &value);
+        memory::copy(&ref.ref().key, &key);
+        memory::move(&ref.ref().value, &value);
     }
 
     return ref;
@@ -424,10 +425,10 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(Ma
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::move(&ref->key, &key);
-        memory::copy(&ref->value, &value);
+        memory::move(&ref.ref().key, &key);
+        memory::copy(&ref.ref().value, &value);
     }
 
     return ref;
@@ -440,10 +441,10 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(Ma
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::move(&ref->key, &key);
-        memory::move(&ref->value, &value);
+        memory::move(&ref.ref().key, &key);
+        memory::move(&ref.ref().value, &value);
     }
 
     return ref;
@@ -456,10 +457,10 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(co
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::copy(&ref->key, &key);
-        memory::construct_stl_ub(&ref->value);
+        memory::copy(&ref.ref().key, &key);
+        memory::construct_stl_ub(&ref.ref().value);
     }
 
     return ref;
@@ -472,10 +473,10 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(Ma
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::move(&ref->key, &key);
-        memory::construct_stl_ub(&ref->value);
+        memory::move(&ref.ref().key, &key);
+        memory::construct_stl_ub(&ref.ref().value);
     }
 
     return ref;
@@ -488,9 +489,9 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_un
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::copy(&ref->key, &key);
+        memory::copy(&ref.ref().key, &key);
     }
 
     return ref;
@@ -503,9 +504,9 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_un
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::move(&ref->key, &key);
+        memory::move(&ref.ref().key, &key);
     }
 
     return ref;
@@ -518,10 +519,10 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_de
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::copy(&ref->key, &key);
-        memory::construct(&ref->value);
+        memory::copy(&ref.ref().key, &key);
+        memory::construct(&ref.ref().value);
     }
 
     return ref;
@@ -534,10 +535,10 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_de
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::move(&ref->key, &key);
-        memory::construct(&ref->value);
+        memory::move(&ref.ref().key, &key);
+        memory::construct(&ref.ref().value);
     }
 
     return ref;
@@ -550,10 +551,10 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ze
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::copy(&ref->key, &key);
-        memset(&ref->value, 0, sizeof(MapValueType));
+        memory::copy(&ref.ref().key, &key);
+        memset(&ref.ref().value, 0, sizeof(MapValueType));
     }
 
     return ref;
@@ -566,10 +567,10 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ze
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::move(&ref->key, &key);
-        memset(&ref->value, 0, sizeof(MapValueType));
+        memory::move(&ref.ref().key, &key);
+        memset(&ref.ref().value, 0, sizeof(MapValueType));
     }
 
     return ref;
@@ -580,9 +581,9 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ex
 {
     auto ref = Super::add_ex_unsafe(hash, std::forward<Comparer>(comparer));
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        constructor(ref.data);
+        constructor(ref.ptr());
     }
 
     return ref;
@@ -604,14 +605,14 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::copy(&ref->key, &key);
-        memory::copy(&ref->value, &value);
+        memory::copy(&ref.ref().key, &key);
+        memory::copy(&ref.ref().value, &value);
     }
     else
     {
-        memory::assign(&ref->value, &value);
+        memory::assign(&ref.ref().value, &value);
     }
 
     return ref;
@@ -624,14 +625,14 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::copy(&ref->key, &key);
-        memory::move(&ref->value, &value);
+        memory::copy(&ref.ref().key, &key);
+        memory::move(&ref.ref().value, &value);
     }
     else
     {
-        memory::move_assign(&ref->value, &value);
+        memory::move_assign(&ref.ref().value, &value);
     }
 
     return ref;
@@ -644,14 +645,14 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::move(&ref->key, &key);
-        memory::copy(&ref->value, &value);
+        memory::move(&ref.ref().key, &key);
+        memory::copy(&ref.ref().value, &value);
     }
     else
     {
-        memory::assign(&ref->value, &value);
+        memory::assign(&ref.ref().value, &value);
     }
 
     return ref;
@@ -664,14 +665,14 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::move(&ref->key, &key);
-        memory::move(&ref->value, &value);
+        memory::move(&ref.ref().key, &key);
+        memory::move(&ref.ref().value, &value);
     }
     else
     {
-        memory::move_assign(&ref->value, &value);
+        memory::move_assign(&ref.ref().value, &value);
     }
 
     return ref;
@@ -688,10 +689,10 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_o
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::copy(&ref->key, &key);
-        new (&ref->value) MapValueType(std::forward<Args>(args)...);
+        memory::copy(&ref.ref().key, &key);
+        new (&ref.ref().value) MapValueType(std::forward<Args>(args)...);
     }
 
     return ref;
@@ -705,10 +706,10 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_o
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::move(&ref->key, &key);
-        new (&ref->value) MapValueType(std::forward<Args>(args)...);
+        memory::move(&ref.ref().key, &key);
+        new (&ref.ref().value) MapValueType(std::forward<Args>(args)...);
     }
 
     return ref;
@@ -722,16 +723,16 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplac
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::copy(&ref->key, &key);
-        new (&ref->value) MapValueType(std::forward<Args>(args)...);
+        memory::copy(&ref.ref().key, &key);
+        new (&ref.ref().value) MapValueType(std::forward<Args>(args)...);
     }
     else
     {
-        memory::assign(&ref->key, &key);
+        memory::assign(&ref.ref().key, &key);
         MapValueType v(std::forward<Args>(args)...);
-        memory::move_assign(&ref->value, &v);
+        memory::move_assign(&ref.ref().value, &v);
     }
 
     return ref;
@@ -745,16 +746,16 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplac
     hash,
     [&key](const MapKeyType& k) { return k == key; });
 
-    if (!ref.already_exist)
+    if (!ref.already_exist())
     {
-        memory::move(&ref->key, &key);
-        new (&ref->value) MapValueType(std::forward<Args>(args)...);
+        memory::move(&ref.ref().key, &key);
+        new (&ref.ref().value) MapValueType(std::forward<Args>(args)...);
     }
     else
     {
-        memory::move_assign(&ref->key, &key);
+        memory::move_assign(&ref.ref().key, &key);
         MapValueType v(std::forward<Args>(args)...);
-        memory::move_assign(&ref->value, &v);
+        memory::move_assign(&ref.ref().value, &v);
     }
 
     return ref;

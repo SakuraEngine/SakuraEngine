@@ -233,7 +233,7 @@ TEST_CASE("test sparse hash map")
         REQUIRE(a.contains(100));
 
         auto ref = a.add_ex_unsafe(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; });
-        new (ref.data) PairType(114514, 114514);
+        new (ref.ptr()) PairType(114514, 114514);
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -260,10 +260,10 @@ TEST_CASE("test sparse hash map")
         REQUIRE(a.contains(4));
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
-        REQUIRE_EQ(a.find(1)->value, 2);
-        REQUIRE_EQ(a.find(4)->value, 5);
-        REQUIRE_EQ(a.find(5)->value, 6);
-        REQUIRE_EQ(a.find(10)->value, 10);
+        REQUIRE_EQ(a.find(1).value(), 2);
+        REQUIRE_EQ(a.find(4).value(), 5);
+        REQUIRE_EQ(a.find(5).value(), 6);
+        REQUIRE_EQ(a.find(10).value(), 10);
     }
 
     SUBCASE("emplace")
@@ -390,14 +390,14 @@ TEST_CASE("test sparse hash map")
         {
             auto ref = a.find(1);
             REQUIRE(ref);
-            REQUIRE_EQ(ref->key, 1);
-            REQUIRE_EQ(ref->value, 1);
+            REQUIRE_EQ(ref.key(), 1);
+            REQUIRE_EQ(ref.value(), 1);
         }
         {
             auto ref = a.find_ex(Hash<KeyType>()(5), [](const KeyType& key) { return key == 5; });
             REQUIRE(ref);
-            REQUIRE_EQ(ref->key, 5);
-            REQUIRE_EQ(ref->value, 114514);
+            REQUIRE_EQ(ref.key(), 5);
+            REQUIRE_EQ(ref.value(), 114514);
         }
     }
 
@@ -435,7 +435,7 @@ TEST_CASE("test sparse hash map")
         for (auto i = 0; i < 100; ++i)
         {
             REQUIRE(a.contains(i));
-            REQUIRE(a.find(i)->value == i * 5);
+            REQUIRE(a.find(i).value() == i * 5);
             REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data.key, i);
             REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data.value, i * 5);
         }
@@ -683,7 +683,7 @@ TEST_CASE("test fixed sparse hash map")
         REQUIRE(a.contains(100));
 
         auto ref = a.add_ex_unsafe(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; });
-        new (ref.data) PairType(114514, 114514);
+        new (ref.ptr()) PairType(114514, 114514);
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -710,10 +710,10 @@ TEST_CASE("test fixed sparse hash map")
         REQUIRE(a.contains(4));
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
-        REQUIRE_EQ(a.find(1)->value, 2);
-        REQUIRE_EQ(a.find(4)->value, 5);
-        REQUIRE_EQ(a.find(5)->value, 6);
-        REQUIRE_EQ(a.find(10)->value, 10);
+        REQUIRE_EQ(a.find(1).value(), 2);
+        REQUIRE_EQ(a.find(4).value(), 5);
+        REQUIRE_EQ(a.find(5).value(), 6);
+        REQUIRE_EQ(a.find(10).value(), 10);
     }
 
     SUBCASE("emplace")
@@ -840,14 +840,14 @@ TEST_CASE("test fixed sparse hash map")
         {
             auto ref = a.find(1);
             REQUIRE(ref);
-            REQUIRE_EQ(ref->key, 1);
-            REQUIRE_EQ(ref->value, 1);
+            REQUIRE_EQ(ref.key(), 1);
+            REQUIRE_EQ(ref.value(), 1);
         }
         {
             auto ref = a.find_ex(Hash<KeyType>()(5), [](const KeyType& key) { return key == 5; });
             REQUIRE(ref);
-            REQUIRE_EQ(ref->key, 5);
-            REQUIRE_EQ(ref->value, 114514);
+            REQUIRE_EQ(ref.key(), 5);
+            REQUIRE_EQ(ref.value(), 114514);
         }
     }
 
@@ -885,7 +885,7 @@ TEST_CASE("test fixed sparse hash map")
         for (auto i = 0; i < 100; ++i)
         {
             REQUIRE(a.contains(i));
-            REQUIRE(a.find(i)->value == i * 5);
+            REQUIRE(a.find(i).value() == i * 5);
             REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data.key, i);
             REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data.value, i * 5);
         }
@@ -1130,7 +1130,7 @@ TEST_CASE("test inline sparse hash map")
         REQUIRE(a.contains(100));
 
         auto ref = a.add_ex_unsafe(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; });
-        new (ref.data) PairType(114514, 114514);
+        new (ref.ptr()) PairType(114514, 114514);
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -1157,10 +1157,10 @@ TEST_CASE("test inline sparse hash map")
         REQUIRE(a.contains(4));
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
-        REQUIRE_EQ(a.find(1)->value, 2);
-        REQUIRE_EQ(a.find(4)->value, 5);
-        REQUIRE_EQ(a.find(5)->value, 6);
-        REQUIRE_EQ(a.find(10)->value, 10);
+        REQUIRE_EQ(a.find(1).value(), 2);
+        REQUIRE_EQ(a.find(4).value(), 5);
+        REQUIRE_EQ(a.find(5).value(), 6);
+        REQUIRE_EQ(a.find(10).value(), 10);
     }
 
     SUBCASE("emplace")
@@ -1287,14 +1287,14 @@ TEST_CASE("test inline sparse hash map")
         {
             auto ref = a.find(1);
             REQUIRE(ref);
-            REQUIRE_EQ(ref->key, 1);
-            REQUIRE_EQ(ref->value, 1);
+            REQUIRE_EQ(ref.key(), 1);
+            REQUIRE_EQ(ref.value(), 1);
         }
         {
             auto ref = a.find_ex(Hash<KeyType>()(5), [](const KeyType& key) { return key == 5; });
             REQUIRE(ref);
-            REQUIRE_EQ(ref->key, 5);
-            REQUIRE_EQ(ref->value, 114514);
+            REQUIRE_EQ(ref.key(), 5);
+            REQUIRE_EQ(ref.value(), 114514);
         }
     }
 
@@ -1332,7 +1332,7 @@ TEST_CASE("test inline sparse hash map")
         for (auto i = 0; i < 100; ++i)
         {
             REQUIRE(a.contains(i));
-            REQUIRE(a.find(i)->value == i * 5);
+            REQUIRE(a.find(i).value() == i * 5);
             REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data.key, i);
             REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data.value, i * 5);
         }
