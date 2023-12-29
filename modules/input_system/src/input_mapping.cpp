@@ -54,7 +54,7 @@ span<SObjectPtr<InputMapping> const> InputMappingContext::get_mappings() const S
 
 SObjectPtr<InputMapping> InputMappingContext::add_mapping(SObjectPtr<InputMapping> mapping) SKR_NOEXCEPT
 {
-    return *mappings_.add(mapping).data;
+    return mappings_.add(mapping).ref();
 }
 
 void InputMappingContext::remove_mapping(SObjectPtr<InputMapping> mapping) SKR_NOEXCEPT

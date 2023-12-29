@@ -111,9 +111,9 @@ struct SparseArray : protected Memory {
     void remove_at(SizeType index, SizeType n = 1);
     void remove_at_unsafe(SizeType index, SizeType n = 1);
     template <typename U = DataType>
-    DataRef remove(const U& v);
+    bool remove(const U& v);
     template <typename U = DataType>
-    DataRef remove_last(const U& v);
+    bool remove_last(const U& v);
     template <typename U = DataType>
     SizeType remove_all(const U& v);
 
@@ -123,9 +123,9 @@ struct SparseArray : protected Memory {
 
     // remove if
     template <typename TP>
-    DataRef remove_if(TP&& p);
+    bool remove_if(TP&& p);
     template <typename TP>
-    DataRef remove_last_if(TP&& p);
+    bool remove_last_if(TP&& p);
     template <typename TP>
     SizeType remove_all_if(TP&& p);
 
@@ -703,14 +703,14 @@ template <typename Memory>
 SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add(const DataType& v)
 {
     DataRef info = add_unsafe();
-    new (info.data) DataType(v);
+    new (info.ptr()) DataType(v);
     return info;
 }
 template <typename Memory>
 SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add(DataType&& v)
 {
     DataRef info = add_unsafe();
-    new (info.data) DataType(std::move(v));
+    new (info.ptr()) DataType(std::move(v));
     return info;
 }
 template <typename Memory>
@@ -752,7 +752,7 @@ template <typename Memory>
 SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add_zeroed()
 {
     DataRef info = add_unsafe();
-    std::memset(info.data, 0, sizeof(DataType));
+    std::memset(info.ptr(), 0, sizeof(DataType));
     return info;
 }
 
@@ -801,7 +801,7 @@ template <typename... Args>
 SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::emplace(Args&&... args)
 {
     DataRef info = add_unsafe();
-    new (info.data) DataType(std::forward<Args>(args)...);
+    new (info.ptr()) DataType(std::forward<Args>(args)...);
     return info;
 }
 template <typename Memory>
@@ -936,13 +936,13 @@ SKR_INLINE void SparseArray<Memory>::remove_at_unsafe(SizeType index, SizeType n
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::remove(const U& v)
+SKR_INLINE bool SparseArray<Memory>::remove(const U& v)
 {
     return remove_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::remove_last(const U& v)
+SKR_INLINE bool SparseArray<Memory>::remove_last(const U& v)
 {
     return remove_last_if([&v](const DataType& a) { return a == v; });
 }
@@ -974,25 +974,25 @@ SKR_INLINE typename SparseArray<Memory>::CIt SparseArray<Memory>::erase(const CI
 // remove if
 template <typename Memory>
 template <typename TP>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::remove_if(TP&& p)
+SKR_INLINE bool SparseArray<Memory>::remove_if(TP&& p)
 {
     if (DataRef ref = find_if(std::forward<TP>(p)))
     {
-        remove_at(ref.index);
-        return ref;
+        remove_at(ref.index());
+        return true;
     }
-    return DataRef();
+    return false;
 }
 template <typename Memory>
 template <typename TP>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::remove_last_if(TP&& p)
+SKR_INLINE bool SparseArray<Memory>::remove_last_if(TP&& p)
 {
     if (DataRef ref = find_last_if(std::forward<TP>(p)))
     {
-        remove_at(ref.index);
-        return ref;
+        remove_at(ref.index());
+        return true;
     }
-    return DataRef();
+    return false;
 }
 template <typename Memory>
 template <typename TP>
@@ -1092,15 +1092,13 @@ template <typename Memory>
 template <typename TP>
 SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_if(TP&& p) const
 {
-    auto ref = const_cast<SparseArray*>(this)->find_if(std::forward<TP>(p));
-    return { ref.data, ref.index };
+    return const_cast<SparseArray*>(this)->find_if(std::forward<TP>(p));
 }
 template <typename Memory>
 template <typename TP>
 SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last_if(TP&& p) const
 {
-    auto ref = const_cast<SparseArray*>(this)->find_last_if(std::forward<TP>(p));
-    return { ref.data, ref.index };
+    return const_cast<SparseArray*>(this)->find_last_if(std::forward<TP>(p));
 }
 
 // contains

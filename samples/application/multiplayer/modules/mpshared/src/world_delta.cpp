@@ -167,7 +167,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
             auto cmps = GetNetworkComponents();
             for (int i = 0; i < cmps.length; ++i)
             {
-                delta.components.add_default()->type = GetNetworkComponentIndex(cmps.data[i]);
+                delta.components.add_default().ref().type = GetNetworkComponentIndex(cmps.data[i]);
             }
         }
         skr::Vector<skr::FlatHashMap<dual_entity_t, NetEntityId>> localMaps;
@@ -233,7 +233,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                     {
                         auths[i].mappedConnection[j]      = true;
                         auths[i].initializedConnection[j] = false;
-                        auto& data                        = *delta.created.add_default();
+                        auto& data                        = delta.created.add_default().ref();
                         auto  netEntity                   = GetNetworkEntityIndex(entities[i], j);
                         data.entity                       = netEntity;
                         data.prefab                       = prefabs[i].prefab.get_serialized();
@@ -277,7 +277,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                             continue;
                         if (deleted.length != 0 || added.length != 0)
                         {
-                            MPEntityDeltaViewBuilder& changed   = *delta.changed.add_default();
+                            MPEntityDeltaViewBuilder& changed   = delta.changed.add_default().ref();
                             auto                      netEntity = GetNetworkEntityIndex(entities[i], j);
                             changed.entity                      = netEntity;
                             changed.components.reserve(added.length);

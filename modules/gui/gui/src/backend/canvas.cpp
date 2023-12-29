@@ -284,7 +284,7 @@ struct _NVGHelper {
             // init data
             auto  canvas       = (ICanvas*)uptr;
             auto  invTransform = nvg__getMatrix(paint);
-            auto& command      = *canvas->_commands.add_default();
+            auto& command      = canvas->_commands.add_default().ref();
             auto  begin        = canvas->_indices.size();
 
             // combine vertices
@@ -335,7 +335,7 @@ struct _NVGHelper {
         // init data
         auto  canvas       = (ICanvas*)uptr;
         auto  invTransform = nvg__getMatrix(paint);
-        auto& command      = *canvas->_commands.add_default();
+        auto& command      = canvas->_commands.add_default().ref();
         auto  begin        = canvas->_indices.size();
         float aa           = (fringe * 0.5f + strokeWidth * 0.5f) / fringe;
 

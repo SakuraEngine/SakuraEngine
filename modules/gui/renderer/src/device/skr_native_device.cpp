@@ -30,7 +30,7 @@ void SkrNativeDevice::init()
         skr_monitor_get_extent(monitor, &width, &height);
         skr_monitor_get_position(monitor, &x, &y);
 
-        auto out = *_display_metrics.monitors.add_default();
+        auto out = _display_metrics.monitors.add_default().ref();
 
         // name
         // device_id
