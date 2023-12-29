@@ -7,9 +7,8 @@ namespace skr::container
 {
 template <typename T>
 struct KeyTraits {
-    using KeyType         = T;
-    using KeyMapperType   = MapFwd<T>;
-    using KeyComparerType = Equal<T>;
+    using KeyType       = T;
+    using KeyMapperType = MapFwd<T>;
 };
 } // namespace skr::container
 
