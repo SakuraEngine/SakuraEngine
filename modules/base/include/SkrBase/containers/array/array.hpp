@@ -94,13 +94,13 @@ struct Array : protected Memory {
     // append
     DataRef append(const Array& arr);
     DataRef append(std::initializer_list<DataType> init_list);
-    template <typename U>
+    template <typename U = DataType>
     DataRef append(const U* p, SizeType n);
 
     // append at
     void append_at(SizeType idx, const Array& arr);
     void append_at(SizeType idx, std::initializer_list<DataType> init_list);
-    template <typename U>
+    template <typename U = DataType>
     void append_at(SizeType idx, const U* p, SizeType n);
 
     // operator append
@@ -112,18 +112,18 @@ struct Array : protected Memory {
     // remove
     void remove_at(SizeType index, SizeType n = 1);
     void remove_at_swap(SizeType index, SizeType n = 1);
-    template <typename TK>
-    DataRef remove(const TK& v);
-    template <typename TK>
-    DataRef remove_swap(const TK& v);
-    template <typename TK>
-    DataRef remove_last(const TK& v);
-    template <typename TK>
-    DataRef remove_last_swap(const TK& v);
-    template <typename TK>
-    SizeType remove_all(const TK& v);
-    template <typename TK>
-    SizeType remove_all_swap(const TK& v);
+    template <typename U = DataType>
+    DataRef remove(const U& v);
+    template <typename U = DataType>
+    DataRef remove_swap(const U& v);
+    template <typename U = DataType>
+    DataRef remove_last(const U& v);
+    template <typename U = DataType>
+    DataRef remove_last_swap(const U& v);
+    template <typename U = DataType>
+    SizeType remove_all(const U& v);
+    template <typename U = DataType>
+    SizeType remove_all_swap(const U& v);
 
     // remove if
     template <typename TP>
@@ -162,14 +162,14 @@ struct Array : protected Memory {
     DataType&       pop_back_get();
 
     // find
-    template <typename TK>
-    DataRef find(const TK& v);
-    template <typename TK>
-    DataRef find_last(const TK& v);
-    template <typename TK>
-    CDataRef find(const TK& v) const;
-    template <typename TK>
-    CDataRef find_last(const TK& v) const;
+    template <typename U = DataType>
+    DataRef find(const U& v);
+    template <typename U = DataType>
+    DataRef find_last(const U& v);
+    template <typename U = DataType>
+    CDataRef find(const U& v) const;
+    template <typename U = DataType>
+    CDataRef find_last(const U& v) const;
 
     // find if
     template <typename TP>
@@ -182,8 +182,8 @@ struct Array : protected Memory {
     CDataRef find_last_if(TP&& p) const;
 
     // contains
-    template <typename TK>
-    bool contains(const TK& v) const;
+    template <typename U = DataType>
+    bool contains(const U& v) const;
     template <typename TP>
     bool contains_if(TP&& p) const;
 
@@ -789,8 +789,8 @@ SKR_INLINE void Array<Memory>::remove_at_swap(SizeType index, SizeType n)
     }
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove(const TK& v)
+template <typename U>
+SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove(const U& v)
 {
     if (DataRef ref = find(v))
     {
@@ -800,8 +800,8 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove(const TK& v)
     return DataRef();
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_swap(const TK& v)
+template <typename U>
+SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_swap(const U& v)
 {
     if (DataRef ref = find(v))
     {
@@ -811,8 +811,8 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_swap(const TK& 
     return DataRef();
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_last(const TK& v)
+template <typename U>
+SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_last(const U& v)
 {
     if (DataRef ref = find_last(v))
     {
@@ -822,8 +822,8 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_last(const TK& 
     return DataRef();
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_last_swap(const TK& v)
+template <typename U>
+SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_last_swap(const U& v)
 {
     if (DataRef ref = find_last(v))
     {
@@ -833,14 +833,14 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_last_swap(const
     return DataRef();
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all(const TK& v)
+template <typename U>
+SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all(const U& v)
 {
     return remove_all_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_swap(const TK& v)
+template <typename U>
+SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_swap(const U& v)
 {
     return remove_all_if_swap([&v](const DataType& a) { return a == v; });
 }
@@ -1011,26 +1011,26 @@ SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::pop_back_get()
 
 // find
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find(const TK& v)
+template <typename U>
+SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find(const U& v)
 {
     return find_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_last(const TK& v)
+template <typename U>
+SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_last(const U& v)
 {
     return find_last_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find(const TK& v) const
+template <typename U>
+SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find(const U& v) const
 {
     return find_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last(const TK& v) const
+template <typename U>
+SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last(const U& v) const
 {
     return find_last_if([&v](const DataType& a) { return a == v; });
 }
@@ -1085,8 +1085,8 @@ SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last_if(TP&& p) 
 
 // contains
 template <typename Memory>
-template <typename TK>
-SKR_INLINE bool Array<Memory>::contains(const TK& v) const { return (bool)find(v); }
+template <typename U>
+SKR_INLINE bool Array<Memory>::contains(const U& v) const { return (bool)find(v); }
 template <typename Memory>
 template <typename TP>
 SKR_INLINE bool Array<Memory>::contains_if(TP&& p) const

@@ -110,12 +110,12 @@ struct SparseArray : protected Memory {
     // remove
     void remove_at(SizeType index, SizeType n = 1);
     void remove_at_unsafe(SizeType index, SizeType n = 1);
-    template <typename TK>
-    DataRef remove(const TK& v);
-    template <typename TK>
-    DataRef remove_last(const TK& v);
-    template <typename TK>
-    SizeType remove_all(const TK& v);
+    template <typename U = DataType>
+    DataRef remove(const U& v);
+    template <typename U = DataType>
+    DataRef remove_last(const U& v);
+    template <typename U = DataType>
+    SizeType remove_all(const U& v);
 
     // erase, needn't update iterator, erase directly is safe
     It  erase(const It& it);
@@ -134,14 +134,14 @@ struct SparseArray : protected Memory {
     const DataType& operator[](SizeType index) const;
 
     // find
-    template <typename TK>
-    DataRef find(const TK& v);
-    template <typename TK>
-    DataRef find_last(const TK& v);
-    template <typename TK>
-    CDataRef find(const TK& v) const;
-    template <typename TK>
-    CDataRef find_last(const TK& v) const;
+    template <typename U = DataType>
+    DataRef find(const U& v);
+    template <typename U = DataType>
+    DataRef find_last(const U& v);
+    template <typename U = DataType>
+    CDataRef find(const U& v) const;
+    template <typename U = DataType>
+    CDataRef find_last(const U& v) const;
 
     // find if
     template <typename TP>
@@ -154,8 +154,8 @@ struct SparseArray : protected Memory {
     CDataRef find_last_if(TP&& p) const;
 
     // contains
-    template <typename TK>
-    bool contains(const TK& v) const;
+    template <typename U = DataType>
+    bool contains(const U& v) const;
     template <typename TP>
     bool contains_if(TP&& p) const;
 
@@ -935,20 +935,20 @@ SKR_INLINE void SparseArray<Memory>::remove_at_unsafe(SizeType index, SizeType n
     }
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::remove(const TK& v)
+template <typename U>
+SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::remove(const U& v)
 {
     return remove_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::remove_last(const TK& v)
+template <typename U>
+SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::remove_last(const U& v)
 {
     return remove_last_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_all(const TK& v)
+template <typename U>
+SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_all(const U& v)
 {
     return remove_all_if([&v](const DataType& a) { return a == v; });
 }
@@ -1026,26 +1026,26 @@ SKR_INLINE const typename SparseArray<Memory>::DataType& SparseArray<Memory>::op
 
 // find
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find(const TK& v)
+template <typename U>
+SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find(const U& v)
 {
     return find_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last(const TK& v)
+template <typename U>
+SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last(const U& v)
 {
     return find_last_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find(const TK& v) const
+template <typename U>
+SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find(const U& v) const
 {
     return find_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
-template <typename TK>
-SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last(const TK& v) const
+template <typename U>
+SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last(const U& v) const
 {
     return find_last_if([&v](const DataType& a) { return a == v; });
 }
@@ -1105,8 +1105,8 @@ SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last
 
 // contains
 template <typename Memory>
-template <typename TK>
-SKR_INLINE bool SparseArray<Memory>::contains(const TK& v) const
+template <typename U>
+SKR_INLINE bool SparseArray<Memory>::contains(const U& v) const
 {
     return (bool)find(v);
 }
