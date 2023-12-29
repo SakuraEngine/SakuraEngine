@@ -3,6 +3,7 @@
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_def.hpp"
 #include "sparse_hash_set_iterator.hpp"
 #include "SkrBase/containers/sparse_array/sparse_array.hpp"
+#include "SkrBase/containers/concepts.h"
 
 // SparseHashSet def
 // set 在 add/emplace 时候从不覆盖既存元素，主要是 key 是元素的某个 Field 的情况比较少见，出现这种情况时，覆盖行为也需要用户自己关注，不应该 by default
@@ -27,7 +28,6 @@ struct SparseHashSet : protected SparseArray<Memory> {
     using typename Memory::KeyType;
     using typename Memory::KeyMapperType;
     using typename Memory::HasherType;
-    using typename Memory::ComparerType;
     using typename Memory::SetDataType;
     using typename Memory::SetStorageType;
     using Memory::allow_multi_key;
@@ -515,7 +515,7 @@ SKR_INLINE const typename SparseHashSet<Memory>::KeyType& SparseHashSet<Memory>:
 template <typename Memory>
 SKR_INLINE bool SparseHashSet<Memory>::key_equal(const SetDataType& a, const SetDataType& b) const
 {
-    return ComparerType()(key_of(a), key_of(b));
+    return key_of(a) == key_of(b);
 }
 template <typename Memory>
 SKR_INLINE typename SparseHashSet<Memory>::HashType SparseHashSet<Memory>::hash_of(const SetDataType& v) const
@@ -550,7 +550,7 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(co
     HashType hash = hash_of(v);
     return add_ex(
     hash,
-    [&v, this](const KeyType& k) { return ComparerType()(k, key_of(v)); },
+    [&v, this](const KeyType& k) { return k == key_of(v); },
     [&v](void* p) { new (p) SetDataType(v); });
 }
 template <typename Memory>
@@ -559,7 +559,7 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(Se
     HashType hash = hash_of(v);
     return add_ex(
     hash,
-    [&v, this](const KeyType& k) { return ComparerType()(k, key_of(v)); },
+    [&v, this](const KeyType& k) { return k == key_of(v); },
     [&v](void* p) { new (p) SetDataType(std::move(v)); });
 }
 template <typename Memory>
@@ -611,7 +611,7 @@ template <typename Memory>
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_or_assign(const SetDataType& v)
 {
     HashType hash       = hash_of(v);
-    DataRef  add_result = add_ex_unsafe(hash, [this, &v](const KeyType& k) { return ComparerType()(k, key_of(v)); });
+    DataRef  add_result = add_ex_unsafe(hash, [this, &v](const KeyType& k) { return k == key_of(v); });
 
     // if not exist, construct it
     if (!add_result.already_exist)
@@ -630,7 +630,7 @@ template <typename Memory>
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_or_assign(SetDataType&& v)
 {
     HashType hash       = hash_of(v);
-    DataRef  add_result = add_ex_unsafe(hash, [this, &v](const KeyType& k) { return ComparerType()(k, key_of(v)); });
+    DataRef  add_result = add_ex_unsafe(hash, [this, &v](const KeyType& k) { return k == key_of(v); });
 
     // if not exist, construct it
     if (!add_result.already_exist)
@@ -659,7 +659,7 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplac
     if constexpr (!allow_multi_key)
     {
         // check if data has been added to set
-        if (DataRef found_info = find_ex(data_arr_ref->_sparse_hash_set_hash, [&data_arr_ref, this](const KeyType& k) { return ComparerType()(k, key_of(data_arr_ref->_sparse_hash_set_data)); }))
+        if (DataRef found_info = find_ex(data_arr_ref->_sparse_hash_set_hash, [&data_arr_ref, this](const KeyType& k) { return k == key_of(data_arr_ref->_sparse_hash_set_data); }))
         {
             // remove new data
             data_arr().remove_at(data_arr_ref.index);
@@ -780,13 +780,13 @@ template <typename Memory>
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::remove(const KeyType& key)
 {
     HashType hash = HasherType()(key);
-    return remove_ex(hash, [&key](const KeyType& k) { return ComparerType()(key, k); });
+    return remove_ex(hash, [&key](const KeyType& k) { return key == k; });
 }
 template <typename Memory>
 SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::remove_all(const KeyType& key)
 {
     HashType hash = HasherType()(key);
-    remove_all_ex(hash, [&key](const KeyType& k) { return ComparerType()(key, k); });
+    remove_all_ex(hash, [&key](const KeyType& k) { return key == k; });
 }
 template <typename Memory>
 template <typename Comparer>
@@ -846,13 +846,13 @@ template <typename Memory>
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find(const KeyType& key)
 {
     HashType hash = HasherType()(key);
-    return find_ex(hash, [&key](const KeyType& k) { return ComparerType()(key, k); });
+    return find_ex(hash, [&key](const KeyType& k) { return key == k; });
 }
 template <typename Memory>
 SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find(const KeyType& key) const
 {
     HashType hash = HasherType()(key);
-    return find_ex(hash, [&key](const KeyType& k) { return ComparerType()(key, k); });
+    return find_ex(hash, [&key](const KeyType& k) { return key == k; });
 }
 template <typename Memory>
 template <typename Comparer>
@@ -890,7 +890,7 @@ template <typename Memory>
 SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::count(const KeyType& key) const
 {
     HashType hash = HasherType()(key);
-    return count_ex(hash, [&key](const KeyType& k) { return ComparerType()(key, k); });
+    return count_ex(hash, [&key](const KeyType& k) { return key == k; });
 }
 template <typename Memory>
 template <typename Comparer>

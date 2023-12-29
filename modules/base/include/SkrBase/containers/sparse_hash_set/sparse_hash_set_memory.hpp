@@ -25,7 +25,6 @@ struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, t
     using HasherType                      = typename HashTraits::HasherType;
     using KeyType                         = typename KeyTraits::KeyType;
     using KeyMapperType                   = typename KeyTraits::KeyMapperType;
-    using ComparerType                    = typename KeyTraits::KeyComparerType;
     using SetDataType                     = T;
     using SetStorageType                  = SparseHashSetData<T, TS, HashType>;
     static constexpr bool allow_multi_key = AllowMultiKey;
@@ -188,7 +187,6 @@ struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetDat
     using HasherType                      = typename HashTraits::HasherType;
     using KeyType                         = typename KeyTraits::KeyType;
     using KeyMapperType                   = typename KeyTraits::KeyMapperType;
-    using ComparerType                    = typename KeyTraits::KeyComparerType;
     using SetDataType                     = T;
     using SetStorageType                  = SparseHashSetData<T, TS, HashType>;
     static constexpr bool allow_multi_key = AllowMultiKey;
@@ -301,7 +299,6 @@ struct InlineSparseHashSetMemory : public InlineSparseArrayMemory<SparseHashSetD
     using HasherType                      = typename HashTraits::HasherType;
     using KeyType                         = typename KeyTraits::KeyType;
     using KeyMapperType                   = typename KeyTraits::KeyMapperType;
-    using ComparerType                    = typename KeyTraits::KeyComparerType;
     using SetDataType                     = T;
     using SetStorageType                  = SparseHashSetData<T, TS, HashType>;
     static constexpr bool allow_multi_key = AllowMultiKey;

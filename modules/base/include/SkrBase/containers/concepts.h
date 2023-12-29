@@ -1,5 +1,7 @@
 #pragma once
 #include <type_traits>
+#include <concepts>
+
 namespace skr::container::concepts
 {
 namespace detail
@@ -51,6 +53,18 @@ concept LinearIterable = requires(T v) {
 template <typename T>
 concept Function = std::is_function_v<T>;
 } // namespace skr::container::concepts
+
+// transparent concept
+namespace skr
+{
+template <typename U, typename T, typename Hasher>
+concept TransparentTo = requires(U uv, T tv, Hasher hasher) {
+    hasher(uv);
+    {
+        uv == tv
+    } -> std::convertible_to<bool>;
+};
+}
 
 // TODO. linear memory traits，从某个对象中提取如下信息：
 //  1. 是否是连续内存

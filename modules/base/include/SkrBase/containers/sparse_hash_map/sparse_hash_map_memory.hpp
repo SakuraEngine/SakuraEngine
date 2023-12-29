@@ -22,7 +22,6 @@ struct SparseHashMapMemory : public SparseHashSetMemory<KVPair<K, V>, TBitBlock,
     using typename Super::HasherType;
     using typename Super::KeyType;
     using typename Super::KeyMapperType;
-    using typename Super::ComparerType;
     using typename Super::SetDataType;
     using typename Super::SetStorageType;
     using Super::allow_multi_key;
@@ -82,7 +81,6 @@ struct FixedSparseHashMapMemory : public FixedSparseHashSetMemory<KVPair<K, V>, 
     using typename Super::HasherType;
     using typename Super::KeyType;
     using typename Super::KeyMapperType;
-    using typename Super::ComparerType;
     using typename Super::SetDataType;
     using typename Super::SetStorageType;
     using Super::allow_multi_key;
@@ -142,7 +140,6 @@ struct InlineSparseHashMapMemory : public InlineSparseHashSetMemory<KVPair<K, V>
     using typename Super::HasherType;
     using typename Super::KeyType;
     using typename Super::KeyMapperType;
-    using typename Super::ComparerType;
     using typename Super::SetDataType;
     using typename Super::SetStorageType;
     using Super::allow_multi_key;
