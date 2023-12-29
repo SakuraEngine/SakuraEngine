@@ -27,14 +27,14 @@ void PointerGestureRecognizer::request_accept(CombinePointerId pointer)
 {
     if (auto found = _tracing_pointers.find(pointer))
     {
-        found->value->accept_gesture(this);
+        found.value()->accept_gesture(this);
     }
 }
 void PointerGestureRecognizer::request_reject(CombinePointerId pointer)
 {
     if (auto found = _tracing_pointers.find(pointer))
     {
-        found->value->reject_gesture(this);
+        found.value()->reject_gesture(this);
     }
 }
 void PointerGestureRecognizer::request_accept_all()

@@ -21,8 +21,8 @@ struct SparseArray : protected Memory {
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // data ref & iterator
-    using DataRef  = SparseArrayDataRef<DataType, SizeType>;
-    using CDataRef = SparseArrayDataRef<const DataType, SizeType>;
+    using DataRef  = SparseArrayDataRef<DataType, SizeType, false>;
+    using CDataRef = SparseArrayDataRef<DataType, SizeType, true>;
     using It       = SparseArrayIt<DataType, BitBlockType, SizeType, false>;
     using CIt      = SparseArrayIt<DataType, BitBlockType, SizeType, true>;
 
@@ -132,6 +132,10 @@ struct SparseArray : protected Memory {
     // modify
     DataType&       operator[](SizeType index);
     const DataType& operator[](SizeType index) const;
+    DataType&       at(SizeType index);
+    const DataType& at(SizeType index) const;
+    DataType&       last(SizeType index = 0);
+    const DataType& last(SizeType index = 0) const;
 
     // find
     template <typename U = DataType>
@@ -1014,14 +1018,40 @@ SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_al
 template <typename Memory>
 SKR_INLINE typename SparseArray<Memory>::DataType& SparseArray<Memory>::operator[](SizeType index)
 {
-    SKR_ASSERT(is_valid_index(index));
+    SKR_ASSERT(!empty() && is_valid_index(index));
     return data()[index]._sparse_array_data;
 }
 template <typename Memory>
 SKR_INLINE const typename SparseArray<Memory>::DataType& SparseArray<Memory>::operator[](SizeType index) const
 {
-    SKR_ASSERT(is_valid_index(index));
+    SKR_ASSERT(!empty() && is_valid_index(index));
     return data()[index]._sparse_array_data;
+}
+template <typename Memory>
+SKR_INLINE typename SparseArray<Memory>::DataType& SparseArray<Memory>::at(SizeType index)
+{
+    SKR_ASSERT(!empty() && is_valid_index(index));
+    return data()[index]._sparse_array_data;
+}
+template <typename Memory>
+SKR_INLINE const typename SparseArray<Memory>::DataType& SparseArray<Memory>::at(SizeType index) const
+{
+    SKR_ASSERT(!empty() && is_valid_index(index));
+    return data()[index]._sparse_array_data;
+}
+template <typename Memory>
+SKR_INLINE typename SparseArray<Memory>::DataType& SparseArray<Memory>::last(SizeType index)
+{
+    index = size() - index - 1;
+    SKR_ASSERT(!empty() && is_valid_index(index));
+    return *(data() + index);
+}
+template <typename Memory>
+SKR_INLINE const typename SparseArray<Memory>::DataType& SparseArray<Memory>::last(SizeType index) const
+{
+    index = size() - index - 1;
+    SKR_ASSERT(!empty() && is_valid_index(index));
+    return *(data() + index);
 }
 
 // find

@@ -278,9 +278,9 @@ CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& des
     {
         // SKR_LOG_TRACE(u8"Reallocating texture view for texture %p (id %lld, old %lld)", desc.texture,
         //    key.texture->unique_id, found->second.texture_view->info.texture->unique_id);
-        found->value.mark.frame_index = frame_index;
-        SKR_ASSERT(found->key.texture);
-        return found->value.texture_view;
+        found.value().mark.frame_index = frame_index;
+        SKR_ASSERT(found.key().texture);
+        return found.value().texture_view;
     }
     else
     {

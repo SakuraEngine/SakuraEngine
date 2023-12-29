@@ -294,14 +294,14 @@ struct StackCmdAllocator : public skr::FixedUMap<StackCmdMapKey, GPUUploadCmd, N
         {
             cmds.emplace(key, GPUUploadCmd(transfer_queue, batch));
         }
-        auto& cmd = cmds.add(key)->value;
+        auto& cmd = cmds.add(key).value();
         auto cmdqueue = cmd.get_queue();
         if (!cmdpools.contains(cmdqueue))
         {
-            auto pool = cmdpools.add(cmdqueue).data;
+            auto pool = cmdpools.add(cmdqueue).ptr();
             pool->value.initialize(cmdqueue);
         }
-        auto&& cmdpool = cmdpools.find(cmdqueue).data->value;
+        auto&& cmdpool = cmdpools.find(cmdqueue).value();
         if (cmd.get_cmdbuf() == nullptr)
         {
             SkrZoneScopedN("PrepareCmd");
@@ -581,7 +581,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
             {
                 _events.emplace(queue, events[priority]->allocate(queue));
             }
-            return _events.add(queue)->value;
+            return _events.add(queue).value();
         };
         SkrDStorageQueueId queue = nullptr;
         for (auto&& vram_request : batch->get_requests())

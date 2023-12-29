@@ -16,8 +16,8 @@ struct Array : protected Memory {
     using typename Memory::AllocatorCtorParam;
 
     // data ref and iterator
-    using DataRef  = ArrayDataRef<DataType, SizeType>;
-    using CDataRef = ArrayDataRef<const DataType, SizeType>;
+    using DataRef  = ArrayDataRef<DataType, SizeType, false>;
+    using CDataRef = ArrayDataRef<DataType, SizeType, true>;
     using It       = DataType*;
     using CIt      = const DataType*;
 
@@ -148,6 +148,8 @@ struct Array : protected Memory {
     // modify
     DataType&       operator[](SizeType index);
     const DataType& operator[](SizeType index) const;
+    DataType&       at(SizeType index);
+    const DataType& at(SizeType index) const;
     DataType&       last(SizeType index = 0);
     const DataType& last(SizeType index = 0) const;
 
@@ -939,27 +941,39 @@ typename Array<Memory>::CIt Array<Memory>::erase_swap(const CIt& it)
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::operator[](SizeType index)
 {
-    SKR_ASSERT(is_valid_index(index));
+    SKR_ASSERT(!empty() && is_valid_index(index));
     return *(data() + index);
 }
 template <typename Memory>
 SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::operator[](SizeType index) const
 {
-    SKR_ASSERT(is_valid_index(index));
+    SKR_ASSERT(!empty() && is_valid_index(index));
+    return *(data() + index);
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::at(SizeType index)
+{
+    SKR_ASSERT(!empty() && is_valid_index(index));
+    return *(data() + index);
+}
+template <typename Memory>
+SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::at(SizeType index) const
+{
+    SKR_ASSERT(!empty() && is_valid_index(index));
     return *(data() + index);
 }
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::last(SizeType index)
 {
     index = size() - index - 1;
-    SKR_ASSERT(is_valid_index(index));
+    SKR_ASSERT(!empty() && is_valid_index(index));
     return *(data() + index);
 }
 template <typename Memory>
 SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::last(SizeType index) const
 {
     index = size() - index - 1;
-    SKR_ASSERT(is_valid_index(index));
+    SKR_ASSERT(!empty() && is_valid_index(index));
     return *(data() + index);
 }
 

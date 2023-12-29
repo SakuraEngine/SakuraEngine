@@ -258,7 +258,7 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE(a.contains(100));
 
         auto ref = a.add_ex_unsafe(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; });
-        new (ref.data) ValueType(114514);
+        new (ref.ptr()) ValueType(114514);
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -453,12 +453,12 @@ TEST_CASE("test sparse hash set (Single)")
         {
             auto ref = a.find(1);
             REQUIRE(ref);
-            REQUIRE_EQ(*ref, 1);
+            REQUIRE_EQ(ref.ref(), 1);
         }
         {
             auto ref = a.find_ex(Hash<ValueType>()(5), [](const ValueType& key) { return key == 5; });
             REQUIRE(ref);
-            REQUIRE_EQ(*ref, 5);
+            REQUIRE_EQ(ref.ref(), 5);
         }
     }
 
@@ -791,7 +791,7 @@ TEST_CASE("test fixed sparse hash set (Single)")
         REQUIRE(a.contains(100));
 
         auto ref = a.add_ex_unsafe(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; });
-        new (ref.data) ValueType(114514);
+        new (ref.ptr()) ValueType(114514);
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -986,12 +986,12 @@ TEST_CASE("test fixed sparse hash set (Single)")
         {
             auto ref = a.find(1);
             REQUIRE(ref);
-            REQUIRE_EQ(*ref, 1);
+            REQUIRE_EQ(ref.ref(), 1);
         }
         {
             auto ref = a.find_ex(Hash<ValueType>()(5), [](const ValueType& key) { return key == 5; });
             REQUIRE(ref);
-            REQUIRE_EQ(*ref, 5);
+            REQUIRE_EQ(ref.ref(), 5);
         }
     }
 
@@ -1322,7 +1322,7 @@ TEST_CASE("test inline sparse hash set (Single)")
         REQUIRE(a.contains(100));
 
         auto ref = a.add_ex_unsafe(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; });
-        new (ref.data) ValueType(114514);
+        new (ref.ptr()) ValueType(114514);
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -1518,12 +1518,12 @@ TEST_CASE("test inline sparse hash set (Single)")
         {
             auto ref = a.find(1);
             REQUIRE(ref);
-            REQUIRE_EQ(*ref, 1);
+            REQUIRE_EQ(ref.ref(), 1);
         }
         {
             auto ref = a.find_ex(Hash<ValueType>()(5), [](const ValueType& key) { return key == 5; });
             REQUIRE(ref);
-            REQUIRE_EQ(*ref, 5);
+            REQUIRE_EQ(ref.ref(), 5);
         }
     }
 

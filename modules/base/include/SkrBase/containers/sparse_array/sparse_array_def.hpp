@@ -25,8 +25,8 @@ union SparseArrayData
 // SparseArray 的数据引用，代替单纯的指针/Index返回
 // 提供足够的信息，并将 npos 封装起来简化调用防止出错
 // 规则见 ArrayDataRef
-template <typename T, typename TS>
-using SparseArrayDataRef = ArrayDataRef<T, TS>;
+template <typename T, typename TS, bool kConst>
+using SparseArrayDataRef = ArrayDataRef<T, TS, kConst>;
 } // namespace skr::container
 
 // TODO. skr swap

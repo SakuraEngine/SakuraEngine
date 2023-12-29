@@ -8,6 +8,42 @@
 
 namespace skr::container
 {
-template <typename K, typename V, typename TS>
-using SparseHashMapDataRef = SparseHashSetDataRef<KVPair<K, V>, TS>;
+template <typename K, typename V, typename TS, bool kConst>
+struct SparseHashMapDataRef : private SparseHashSetDataRef<KVPair<K, V>, TS, kConst> {
+    using Super     = SparseHashSetDataRef<KVPair<K, V>, TS, kConst>;
+    using PairType  = std::conditional_t<kConst, const KVPair<K, V>, KVPair<K, V>>;
+    using KeyType   = std::conditional_t<kConst, const K, K>;
+    using ValueType = std::conditional_t<kConst, const V, V>;
+    using SizeType  = TS;
+
+    // ctor
+    SKR_INLINE SparseHashMapDataRef() = default;
+    SKR_INLINE SparseHashMapDataRef(PairType* ptr, SizeType index, bool already_exist = false)
+        : Super(ptr, index, already_exist)
+    {
+    }
+    SKR_INLINE SparseHashMapDataRef(const SparseHashSetDataRef<KVPair<K, V>, SizeType, kConst>& rhs)
+        : Super(rhs)
+    {
+    }
+    template <bool kConstRHS>
+    SKR_INLINE SparseHashMapDataRef(const SparseHashMapDataRef<K, V, SizeType, kConstRHS>& rhs)
+        : Super(rhs)
+    {
+    }
+
+    // getter & validator
+    SKR_INLINE PairType*  ptr() const { return Super::ptr(); }
+    SKR_INLINE PairType&  ref() const { return Super::ref(); }
+    SKR_INLINE KeyType&   key() const { return Super::ref().key; }
+    SKR_INLINE ValueType& value() const { return Super::ref().value; }
+    SKR_INLINE SizeType   index() const { return Super::index(); }
+    SKR_INLINE bool       already_exist() const { return Super::already_exist(); }
+    SKR_INLINE bool       is_valid() const { return Super::is_valid(); }
+
+    // operators
+    SKR_INLINE explicit operator bool() { return is_valid(); }
+    // SKR_INLINE T&       operator*() const { return ref(); }
+    // SKR_INLINE T*       operator->() const { return ptr(); }
+};
 } // namespace skr::container
