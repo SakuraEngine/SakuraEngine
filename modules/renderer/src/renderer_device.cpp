@@ -185,18 +185,18 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     const auto cpy_queue_count_ =  cgpu_min(cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER), MAX_CPY_QUEUE_COUNT);
     const auto cmpt_queue_count_ = cgpu_min(cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_COMPUTE), MAX_CMPT_QUEUE_COUNT);
     skr::Vector<CGPUQueueGroupDescriptor> Gs;
-    auto& GfxDesc = *Gs.add_default();
+    auto& GfxDesc = Gs.add_default().ref();
     GfxDesc.queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
     GfxDesc.queue_count = 1;
     if (cpy_queue_count_)
     {
-        auto& CpyDesc = *Gs.add_default();
+        auto& CpyDesc = Gs.add_default().ref();
         CpyDesc.queue_type = CGPU_QUEUE_TYPE_TRANSFER;
         CpyDesc.queue_count = cpy_queue_count_;
     }
     if (cmpt_queue_count_)
     {
-        auto& CmptDesc = *Gs.add_default();
+        auto& CmptDesc = Gs.add_default().ref();
         CmptDesc.queue_type = CGPU_QUEUE_TYPE_COMPUTE;
         CmptDesc.queue_count = cmpt_queue_count_;
     }

@@ -815,7 +815,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         for (auto [buffer_handle, state] : pass->bbarriers)
         {
             auto  buffer      = stack.resolve(buffer_handle);
-            auto& barrier     = *late_buf_barriers.emplace();
+            auto& barrier     = late_buf_barriers.emplace().ref();
             barrier.buffer    = buffer;
             barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
             barrier.dst_state = state;
@@ -823,7 +823,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         for (auto [texture_handle, state] : pass->tbarriers)
         {
             auto  texture     = stack.resolve(texture_handle);
-            auto& barrier     = *late_tex_barriers.emplace();
+            auto& barrier     = late_tex_barriers.emplace().ref();
             barrier.texture   = texture;
             barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
             barrier.dst_state = state;

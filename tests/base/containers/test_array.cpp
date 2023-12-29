@@ -685,14 +685,14 @@ TEST_CASE("test array")
     {
         TestArray a({ 1, 1, 4, 5, 1, 4 });
 
-        REQUIRE_EQ(a.find(1).index, 0);
-        REQUIRE_EQ(a.find(4).index, 2);
-        REQUIRE_EQ(a.find(5).index, 3);
-        REQUIRE_EQ(a.find(114514).data, nullptr);
-        REQUIRE_EQ(a.find_last(1).index, 4);
-        REQUIRE_EQ(a.find_last(4).index, 5);
-        REQUIRE_EQ(a.find_last(5).index, 3);
-        REQUIRE_EQ(a.find_last(114514).data, nullptr);
+        REQUIRE_EQ(a.find(1).index(), 0);
+        REQUIRE_EQ(a.find(4).index(), 2);
+        REQUIRE_EQ(a.find(5).index(), 3);
+        REQUIRE_EQ(a.find(114514).ptr(), nullptr);
+        REQUIRE_EQ(a.find_last(1).index(), 4);
+        REQUIRE_EQ(a.find_last(4).index(), 5);
+        REQUIRE_EQ(a.find_last(5).index(), 3);
+        REQUIRE_EQ(a.find_last(114514).ptr(), nullptr);
     }
 
     // [test in find] find if
@@ -746,7 +746,7 @@ TEST_CASE("test array")
         REQUIRE_EQ(a.size(), 6);
 
         auto ref = a.find(1);
-        a.heap_remove_at(ref.index);
+        a.heap_remove_at(ref.index());
         REQUIRE(a.is_heap());
         REQUIRE_EQ(a.heap_top(), 1);
         REQUIRE_EQ(a.size(), 5);
@@ -1452,14 +1452,14 @@ TEST_CASE("test fixed array")
     {
         TestArray a({ 1, 1, 4, 5, 1, 4 });
 
-        REQUIRE_EQ(a.find(1).index, 0);
-        REQUIRE_EQ(a.find(4).index, 2);
-        REQUIRE_EQ(a.find(5).index, 3);
-        REQUIRE_EQ(a.find(114514).data, nullptr);
-        REQUIRE_EQ(a.find_last(1).index, 4);
-        REQUIRE_EQ(a.find_last(4).index, 5);
-        REQUIRE_EQ(a.find_last(5).index, 3);
-        REQUIRE_EQ(a.find_last(114514).data, nullptr);
+        REQUIRE_EQ(a.find(1).index(), 0);
+        REQUIRE_EQ(a.find(4).index(), 2);
+        REQUIRE_EQ(a.find(5).index(), 3);
+        REQUIRE_EQ(a.find(114514).ptr(), nullptr);
+        REQUIRE_EQ(a.find_last(1).index(), 4);
+        REQUIRE_EQ(a.find_last(4).index(), 5);
+        REQUIRE_EQ(a.find_last(5).index(), 3);
+        REQUIRE_EQ(a.find_last(114514).ptr(), nullptr);
     }
 
     // [test in find] find if
@@ -1513,7 +1513,7 @@ TEST_CASE("test fixed array")
         REQUIRE_EQ(a.size(), 6);
 
         auto ref = a.find(1);
-        a.heap_remove_at(ref.index);
+        a.heap_remove_at(ref.index());
         REQUIRE(a.is_heap());
         REQUIRE_EQ(a.heap_top(), 1);
         REQUIRE_EQ(a.size(), 5);
@@ -2228,14 +2228,14 @@ TEST_CASE("test inline array")
     {
         TestArray a({ 1, 1, 4, 5, 1, 4 });
 
-        REQUIRE_EQ(a.find(1).index, 0);
-        REQUIRE_EQ(a.find(4).index, 2);
-        REQUIRE_EQ(a.find(5).index, 3);
-        REQUIRE_EQ(a.find(114514).data, nullptr);
-        REQUIRE_EQ(a.find_last(1).index, 4);
-        REQUIRE_EQ(a.find_last(4).index, 5);
-        REQUIRE_EQ(a.find_last(5).index, 3);
-        REQUIRE_EQ(a.find_last(114514).data, nullptr);
+        REQUIRE_EQ(a.find(1).index(), 0);
+        REQUIRE_EQ(a.find(4).index(), 2);
+        REQUIRE_EQ(a.find(5).index(), 3);
+        REQUIRE_EQ(a.find(114514).ptr(), nullptr);
+        REQUIRE_EQ(a.find_last(1).index(), 4);
+        REQUIRE_EQ(a.find_last(4).index(), 5);
+        REQUIRE_EQ(a.find_last(5).index(), 3);
+        REQUIRE_EQ(a.find_last(114514).ptr(), nullptr);
     }
 
     // [test in find] find if
@@ -2289,7 +2289,7 @@ TEST_CASE("test inline array")
         REQUIRE_EQ(a.size(), 6);
 
         auto ref = a.find(1);
-        a.heap_remove_at(ref.index);
+        a.heap_remove_at(ref.index());
         REQUIRE(a.is_heap());
         REQUIRE_EQ(a.heap_top(), 1);
         REQUIRE_EQ(a.size(), 5);

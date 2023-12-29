@@ -483,7 +483,7 @@ TEST_CASE("test sparse array")
     {
         TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
         auto            info = a.add(10);
-        *info.data           = 100;
+        info.ref()           = 100;
         REQUIRE_EQ(a.size(), 7);
         REQUIRE_EQ(a.sparse_size(), 7);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -518,7 +518,7 @@ TEST_CASE("test sparse array")
         a.remove_at(1);
         a.remove_at(4);
         info       = a.add_unsafe();
-        *info.data = 114514;
+        info.ref() = 114514;
         REQUIRE_EQ(a[0], 1);
         // REQUIRE_EQ(a[1], 0);
         REQUIRE_EQ(a[2], 4);
@@ -1421,7 +1421,7 @@ TEST_CASE("test fixed sparse array")
     {
         TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
         auto            info = a.add(10);
-        *info.data           = 100;
+        info.ref()           = 100;
         REQUIRE_EQ(a.size(), 7);
         REQUIRE_EQ(a.sparse_size(), 7);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -1456,7 +1456,7 @@ TEST_CASE("test fixed sparse array")
         a.remove_at(1);
         a.remove_at(4);
         info       = a.add_unsafe();
-        *info.data = 114514;
+        info.ref() = 114514;
         REQUIRE_EQ(a[0], 1);
         // REQUIRE_EQ(a[1], 0);
         REQUIRE_EQ(a[2], 4);
@@ -2312,7 +2312,7 @@ TEST_CASE("test inline sparse array")
     {
         TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
         auto            info = a.add(10);
-        *info.data           = 100;
+        info.ref()           = 100;
         REQUIRE_EQ(a.size(), 7);
         REQUIRE_EQ(a.sparse_size(), 7);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -2347,7 +2347,7 @@ TEST_CASE("test inline sparse array")
         a.remove_at(1);
         a.remove_at(4);
         info       = a.add_unsafe();
-        *info.data = 114514;
+        info.ref() = 114514;
         REQUIRE_EQ(a[0], 1);
         // REQUIRE_EQ(a[1], 0);
         REQUIRE_EQ(a[2], 4);

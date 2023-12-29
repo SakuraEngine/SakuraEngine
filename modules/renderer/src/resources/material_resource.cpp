@@ -106,7 +106,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
         // install shaders
         for (auto& pass_template : matType->passes)
         {
-            auto& installed_pass = *material->installed_passes.add_default();
+            auto& installed_pass = material->installed_passes.add_default().ref();
             installed_pass.name  = pass_template.pass;
             for (auto& shader : pass_template.shader_resources)
             {
@@ -132,7 +132,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
                                 const auto status = shader_map->install_shader(platform_id);
                                 if (status != SKR_SHADER_MAP_SHADER_STATUS_FAILED)
                                 {
-                                    auto& installed_shader      = *installed_pass.shaders.add_default();
+                                    auto& installed_shader      = installed_pass.shaders.add_default().ref();
                                     installed_shader.identifier = platform_id;
                                     installed_shader.entry      = multiShader.entry.u8_str();
                                     installed_shader.stage      = multiShader.shader_stage;
@@ -235,7 +235,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
             skr::resource::TResourceHandle<skr_texture_sampler_resource_t> hdl = override.value;
             hdl.resolve(true, nullptr);
 
-            auto& update        = *updates.emplace();
+            auto& update        = updates.emplace().ref();
             update.name         = override.slot_name.raw().data();
             update.count        = 1;
             update.samplers     = &hdl.get_resolved()->sampler;
@@ -246,7 +246,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
             skr::resource::TResourceHandle<skr_texture_resource_t> hdl = override.value;
             hdl.resolve(true, nullptr);
 
-            auto& update        = *updates.emplace();
+            auto& update        = updates.emplace().ref();
             update.name         = override.slot_name.raw().data();
             update.count        = 1; // TODO: Tex array parameter
             update.textures     = &hdl.get_resolved()->texture_view;

@@ -591,10 +591,10 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex
         }
         else
         {
-            auto data_arr_ref                   = data_arr().add_unsafe();
-            data_arr_ref->_sparse_hash_set_hash = hash;
-            _add_to_bucket(*data_arr_ref, data_arr_ref.index);
-            return { &data_arr_ref->_sparse_hash_set_data, data_arr_ref.index, false };
+            auto data_arr_ref                        = data_arr().add_unsafe();
+            data_arr_ref.ref()._sparse_hash_set_hash = hash;
+            _add_to_bucket(data_arr_ref.ref(), data_arr_ref.index());
+            return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), false };
         }
     }
     else
@@ -602,7 +602,7 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex
         auto data_arr_ref                   = data_arr().add_unsafe();
         data_arr_ref->_sparse_hash_set_hash = hash;
         _add_to_bucket(*data_arr_ref, data_arr_ref.index);
-        return { &data_arr_ref->_sparse_hash_set_data, data_arr_ref.index, false };
+        return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), false };
     }
 }
 
@@ -653,16 +653,16 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplac
 {
     // emplace to data array
     auto data_arr_ref = data_arr().add_unsafe();
-    new (&data_arr_ref->_sparse_hash_set_data) SetDataType(std::forward<Args>(args)...);
-    data_arr_ref->_sparse_hash_set_hash = hash_of(data_arr_ref->_sparse_hash_set_data);
+    new (&data_arr_ref.ref()._sparse_hash_set_data) SetDataType(std::forward<Args>(args)...);
+    data_arr_ref.ref()._sparse_hash_set_hash = hash_of(data_arr_ref.ref()._sparse_hash_set_data);
 
     if constexpr (!allow_multi_key)
     {
         // check if data has been added to set
-        if (DataRef found_info = find_ex(data_arr_ref->_sparse_hash_set_hash, [&data_arr_ref, this](const KeyType& k) { return k == key_of(data_arr_ref->_sparse_hash_set_data); }))
+        if (DataRef found_info = find_ex(data_arr_ref.ref()._sparse_hash_set_hash, [&data_arr_ref, this](const KeyType& k) { return k == key_of(data_arr_ref.ref()._sparse_hash_set_data); }))
         {
             // remove new data
-            data_arr().remove_at(data_arr_ref.index);
+            data_arr().remove_at(data_arr_ref.index());
 
             // return old data
             found_info.already_exist = true;
@@ -670,9 +670,9 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplac
         }
     }
 
-    _add_to_bucket(*data_arr_ref, data_arr_ref.index);
+    _add_to_bucket(data_arr_ref.ref(), data_arr_ref.index());
 
-    return { &data_arr_ref->_sparse_hash_set_data, data_arr_ref.index, false };
+    return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), false };
 }
 template <typename Memory>
 template <typename Comparer, typename... Args>

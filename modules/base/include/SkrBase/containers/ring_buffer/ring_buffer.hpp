@@ -625,7 +625,7 @@ template <typename... Args>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::emplace_back(Args&&... args)
 {
     DataRef ref = push_back_unsafe(1);
-    new (ref.data) DataType(std::forward<Args>(args)...);
+    new (ref.ptr()) DataType(std::forward<Args>(args)...);
     return ref;
 }
 template <typename Memory>
@@ -633,7 +633,7 @@ template <typename... Args>
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::emplace_front(Args&&... args)
 {
     DataRef ref = push_front_unsafe(1);
-    new (ref.data) DataType(std::forward<Args>(args)...);
+    new (ref.ptr()) DataType(std::forward<Args>(args)...);
     return ref;
 }
 

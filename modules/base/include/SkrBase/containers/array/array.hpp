@@ -113,13 +113,13 @@ struct Array : protected Memory {
     void remove_at(SizeType index, SizeType n = 1);
     void remove_at_swap(SizeType index, SizeType n = 1);
     template <typename U = DataType>
-    DataRef remove(const U& v);
+    bool remove(const U& v);
     template <typename U = DataType>
-    DataRef remove_swap(const U& v);
+    bool remove_swap(const U& v);
     template <typename U = DataType>
-    DataRef remove_last(const U& v);
+    bool remove_last(const U& v);
     template <typename U = DataType>
-    DataRef remove_last_swap(const U& v);
+    bool remove_last_swap(const U& v);
     template <typename U = DataType>
     SizeType remove_all(const U& v);
     template <typename U = DataType>
@@ -127,13 +127,13 @@ struct Array : protected Memory {
 
     // remove if
     template <typename TP>
-    DataRef remove_if(TP&& p);
+    bool remove_if(TP&& p);
     template <typename TP>
-    DataRef remove_if_swap(TP&& p);
+    bool remove_if_swap(TP&& p);
     template <typename TP>
-    DataRef remove_last_if(TP&& p);
+    bool remove_last_if(TP&& p);
     template <typename TP>
-    DataRef remove_last_if_swap(TP&& p);
+    bool remove_last_if_swap(TP&& p);
     template <typename TP>
     SizeType remove_all_if(TP&& p);
     template <typename TP>
@@ -553,7 +553,7 @@ template <typename Memory>
 SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add(const DataType& v, SizeType n)
 {
     DataRef ref = add_unsafe(n);
-    for (SizeType i = ref.index; i < size(); ++i)
+    for (SizeType i = ref.index(); i < size(); ++i)
     {
         new (data() + i) DataType(v);
     }
@@ -563,7 +563,7 @@ template <typename Memory>
 SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add(DataType&& v)
 {
     DataRef ref = add_unsafe();
-    new (ref.data) DataType(std::move(v));
+    new (ref.ptr()) DataType(std::move(v));
     return ref;
 }
 template <typename Memory>
@@ -588,7 +588,7 @@ template <typename Memory>
 SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add_default(SizeType n)
 {
     DataRef ref = add_unsafe(n);
-    for (SizeType i = ref.index; i < size(); ++i)
+    for (SizeType i = ref.index(); i < size(); ++i)
     {
         new (data() + i) DataType();
     }
@@ -598,7 +598,7 @@ template <typename Memory>
 SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add_zeroed(SizeType n)
 {
     DataRef ref = add_unsafe(n);
-    std::memset(ref.data, 0, n * sizeof(DataType));
+    std::memset(ref.ptr(), 0, n * sizeof(DataType));
     return ref;
 }
 
@@ -652,7 +652,7 @@ template <typename... Args>
 SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::emplace(Args&&... args)
 {
     DataRef ref = add_unsafe();
-    new (ref.data) DataType(std::forward<Args>(args)...);
+    new (ref.ptr()) DataType(std::forward<Args>(args)...);
     return ref;
 }
 template <typename Memory>
@@ -670,7 +670,7 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(const Array& ar
     if (arr.size())
     {
         DataRef ref = add_unsafe(arr.size());
-        memory::copy(ref.data, arr.data(), arr.size());
+        memory::copy(ref.ptr(), arr.data(), arr.size());
         return ref;
     }
     return data() ? DataRef(data() + size(), size()) : DataRef();
@@ -681,7 +681,7 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(std::initialize
     if (init_list.size())
     {
         DataRef ref = add_unsafe(init_list.size());
-        memory::copy(ref.data, init_list.begin(), init_list.size());
+        memory::copy(ref.ptr(), init_list.begin(), init_list.size());
         return ref;
     }
     return data() ? DataRef(data() + size(), size()) : DataRef();
@@ -693,7 +693,7 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(const U* p, Siz
     if (n)
     {
         DataRef ref = add_unsafe(n);
-        memory::copy(ref.data, p, n);
+        memory::copy(ref.ptr(), p, n);
         return ref;
     }
     return data() ? DataRef(data() + size(), size()) : DataRef();
@@ -790,47 +790,47 @@ SKR_INLINE void Array<Memory>::remove_at_swap(SizeType index, SizeType n)
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove(const U& v)
+SKR_INLINE bool Array<Memory>::remove(const U& v)
 {
     if (DataRef ref = find(v))
     {
-        remove_at(ref.index);
-        return ref;
+        remove_at(ref.index());
+        return true;
     }
-    return DataRef();
+    return false;
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_swap(const U& v)
+SKR_INLINE bool Array<Memory>::remove_swap(const U& v)
 {
     if (DataRef ref = find(v))
     {
-        remove_at_swap(ref.index);
-        return ref;
+        remove_at_swap(ref.index());
+        return true;
     }
-    return DataRef();
+    return false;
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_last(const U& v)
+SKR_INLINE bool Array<Memory>::remove_last(const U& v)
 {
     if (DataRef ref = find_last(v))
     {
-        remove_at(ref.index);
-        return ref;
+        remove_at(ref.index());
+        return true;
     }
-    return DataRef();
+    return false;
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_last_swap(const U& v)
+SKR_INLINE bool Array<Memory>::remove_last_swap(const U& v)
 {
     if (DataRef ref = find_last(v))
     {
-        remove_at_swap(ref.index);
-        return ref;
+        remove_at_swap(ref.index());
+        return true;
     }
-    return DataRef();
+    return false;
 }
 template <typename Memory>
 template <typename U>
@@ -848,47 +848,47 @@ SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_swap(const
 // remove by
 template <typename Memory>
 template <typename TP>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_if(TP&& p)
+SKR_INLINE bool Array<Memory>::remove_if(TP&& p)
 {
     if (DataRef ref = find_if(std::forward<TP>(p)))
     {
         remove_at(ref.index);
-        return ref;
+        return true;
     }
-    return DataRef();
+    return false;
 }
 template <typename Memory>
 template <typename TP>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_if_swap(TP&& p)
+SKR_INLINE bool Array<Memory>::remove_if_swap(TP&& p)
 {
     if (DataRef ref = find_if(std::forward<TP>(p)))
     {
         remove_at_swap(ref.index);
-        return ref;
+        return true;
     }
-    return DataRef();
+    return false;
 }
 template <typename Memory>
 template <typename TP>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_last_if(TP&& p)
+SKR_INLINE bool Array<Memory>::remove_last_if(TP&& p)
 {
     if (DataRef ref = find_last_if(std::forward<TP>(p)))
     {
         remove_at(ref.index);
-        return ref;
+        return true;
     }
-    return DataRef();
+    return false;
 }
 template <typename Memory>
 template <typename TP>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::remove_last_if_swap(TP&& p)
+SKR_INLINE bool Array<Memory>::remove_last_if_swap(TP&& p)
 {
     if (DataRef ref = find_last_if(std::forward<TP>(p)))
     {
         remove_at_swap(ref.index);
-        return ref;
+        return true;
     }
-    return DataRef();
+    return false;
 }
 template <typename Memory>
 template <typename TP>
@@ -1072,15 +1072,13 @@ template <typename Memory>
 template <typename TP>
 SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_if(TP&& p) const
 {
-    auto ref = const_cast<Array<Memory>*>(this)->find_if(std::forward<TP>(p));
-    return { ref.data, ref.index };
+    return const_cast<Array<Memory>*>(this)->find_if(std::forward<TP>(p));
 }
 template <typename Memory>
 template <typename TP>
 SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last_if(TP&& p) const
 {
-    auto ref = const_cast<Array<Memory>*>(this)->find_last_if(std::forward<TP>(p));
-    return { ref.data, ref.index };
+    return const_cast<Array<Memory>*>(this)->find_last_if(std::forward<TP>(p));
 }
 
 // contains
@@ -1128,14 +1126,14 @@ template <typename TP>
 SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::heap_push(DataType&& v, TP&& p)
 {
     DataRef ref = emplace(std::move(v));
-    return algo::heap_sift_up(data(), (SizeType)0, ref.index, std::forward<TP>(p));
+    return algo::heap_sift_up(data(), (SizeType)0, ref.index(), std::forward<TP>(p));
 }
 template <typename Memory>
 template <typename TP>
 SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::heap_push(const DataType& v, TP&& p)
 {
     DataRef ref = add(v);
-    return algo::heap_sift_up(data(), SizeType(0), ref.index, std::forward<TP>(p));
+    return algo::heap_sift_up(data(), SizeType(0), ref.index(), std::forward<TP>(p));
 }
 template <typename Memory>
 template <typename TP>
