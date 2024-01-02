@@ -83,9 +83,7 @@ struct SparseHashBase : protected SparseArray<Memory> {
     bool rehash_if_need();
 
     // visitor
-    SetDataType&       at_unsafe(SizeType index);
     const SetDataType& at(SizeType index) const;
-    SetDataType&       last_unsafe(SizeType index = 0);
     const SetDataType& last(SizeType index = 0) const;
 
 protected:
@@ -414,19 +412,9 @@ SKR_INLINE bool SparseHashBase<Memory>::rehash_if_need()
 
 // visitor
 template <typename Memory>
-SKR_INLINE typename SparseHashBase<Memory>::SetDataType& SparseHashBase<Memory>::at_unsafe(SizeType index)
-{
-    return Super::at(index)._sparse_hash_set_data;
-}
-template <typename Memory>
 SKR_INLINE const typename SparseHashBase<Memory>::SetDataType& SparseHashBase<Memory>::at(SizeType index) const
 {
     return Super::at(index)._sparse_hash_set_data;
-}
-template <typename Memory>
-SKR_INLINE typename SparseHashBase<Memory>::SetDataType& SparseHashBase<Memory>::last_unsafe(SizeType index)
-{
-    return Super::last(index)._sparse_hash_set_data;
 }
 template <typename Memory>
 SKR_INLINE const typename SparseHashBase<Memory>::SetDataType& SparseHashBase<Memory>::last(SizeType index) const
