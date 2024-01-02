@@ -136,7 +136,7 @@ void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
         const auto& location = name_locations[i];
         if (!location.value.binded)
         {
-            needsUpdateIndices.add_or_assign(location.tbl_idx);
+            needsUpdateIndices.add(location.tbl_idx);
         }
     }
     for (auto setIdx : needsUpdateIndices)

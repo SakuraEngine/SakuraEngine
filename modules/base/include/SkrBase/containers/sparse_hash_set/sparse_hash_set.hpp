@@ -37,8 +37,8 @@ struct SparseHashSet : protected SparseArray<Memory> {
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // data ref & iterator
-    using DataRef  = SparseHashSetDataRef<SetDataType, SizeType, false>;
-    using CDataRef = SparseHashSetDataRef<SetDataType, SizeType, true>;
+    using DataRef  = SparseHashSetDataRef<SetDataType, SizeType, HashType, false>;
+    using CDataRef = SparseHashSetDataRef<SetDataType, SizeType, HashType, true>;
     using It       = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, false>;
     using CIt      = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, true>;
 
@@ -103,23 +103,23 @@ struct SparseHashSet : protected SparseArray<Memory> {
     void rehash();
     bool rehash_if_need();
 
+    // add with hint
+    DataRef add(const SetDataType& v, DataRef hint);
+    DataRef add(SetDataType&& v, DataRef hint);
+
     //  try to add (first check existence, then add, never assign)
     DataRef add(const SetDataType& v);
     DataRef add(SetDataType&& v); // move behavior may not happened here, just for easy to use
-    template <typename Comparer, typename Constructor>
-    DataRef add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor);
-    template <typename Comparer>
-    DataRef add_ex_unsafe(HashType hash, Comparer&& comparer);
-
-    // add or assign (first check existence, then add or assign)
-    DataRef add_or_assign(const SetDataType& v);
-    DataRef add_or_assign(SetDataType&& v);
+    template <typename Pred, typename ConstructFunc, typename AssignFunc>
+    DataRef add_ex(HashType hash, Pred&& comparer, ConstructFunc&& construct, AssignFunc&& assign);
+    template <typename Pred>
+    DataRef add_ex_unsafe(HashType hash, Pred&& comparer);
 
     // emplace
     template <typename... Args>
     DataRef emplace(Args&&... args); // first construct, then add or destroy
-    template <typename Comparer, typename... Args>
-    DataRef emplace_ex(HashType hash, Comparer&& comparer, Args&&... args); // first check existence, if not exist, then add
+    template <typename Pred, typename... Args>
+    DataRef emplace_ex(HashType hash, Pred&& comparer, Args&&... args); // first check existence, if not exist, then add
 
     // append
     void append(const SparseHashSet& set);
@@ -129,30 +129,36 @@ struct SparseHashSet : protected SparseArray<Memory> {
     // remove
     DataRef  remove(const KeyType& key);
     SizeType remove_all(const KeyType& key); // [multi set extend]
-    template <typename Comparer>
-    DataRef remove_ex(HashType hash, Comparer&& comparer);
-    template <typename Comparer>
-    SizeType remove_all_ex(HashType hash, Comparer&& comparer); // [multi set extend]
+    template <typename Pred>
+    DataRef remove_ex(HashType hash, Pred&& comparer);
+    template <typename Pred>
+    SizeType remove_all_ex(HashType hash, Pred&& comparer); // [multi set extend]
 
     // erase, needn't update iterator, erase directly is safe
     It  erase(const It& it);
     CIt erase(const CIt& it);
 
+    // transparent find
+    template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U>
+    DataRef find(const U& key);
+    template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U>
+    CDataRef find(const U& key) const;
+
     // find
-    DataRef  find(const KeyType& key);
-    CDataRef find(const KeyType& key) const;
-    template <typename Comparer>
-    DataRef find_ex(HashType hash, Comparer&& comparer);
-    template <typename Comparer>
-    CDataRef find_ex(HashType hash, Comparer&& comparer) const;
+    // DataRef  find(const KeyType& key);
+    // CDataRef find(const KeyType& key) const;
+    template <typename Pred>
+    DataRef find_ex(HashType hash, Pred&& comparer);
+    template <typename Pred>
+    CDataRef find_ex(HashType hash, Pred&& comparer) const;
 
     // contains
     bool     contains(const KeyType& key) const;
     SizeType count(const KeyType& key) const; // [multi set extend]
-    template <typename Comparer>
-    bool contains_ex(HashType hash, Comparer&& comparer) const;
-    template <typename Comparer>
-    SizeType count_ex(HashType hash, Comparer&& comparer) const; // [multi set extend]
+    template <typename Pred>
+    bool contains_ex(HashType hash, Pred&& comparer) const;
+    template <typename Pred>
+    SizeType count_ex(HashType hash, Pred&& comparer) const; // [multi set extend]
 
     // sort
     template <typename TP = Less<KeyType>>
@@ -543,6 +549,46 @@ SKR_INLINE bool SparseHashSet<Memory>::rehash_if_need()
     return false;
 }
 
+// add with hint
+template <typename Memory>
+SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(const SetDataType& v, DataRef hint)
+{
+    if (hint.is_valid())
+    { // assign case
+        hint.ref() = v;
+        return hint;
+    }
+    else
+    { // add case
+        SKR_ASSERT(hash_of(v) == hint.hash());
+        SKR_ASSERT(!contains(v));
+        auto data_arr_ref                   = data_arr().add_unsafe();
+        data_arr_ref->_sparse_hash_set_hash = hint.hash();
+        new (&data_arr_ref->_sparse_hash_set_data) SetDataType(v);
+        _add_to_bucket(*data_arr_ref, data_arr_ref.index);
+        return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), data_arr_ref._sparse_hash_set_hash, false };
+    }
+}
+template <typename Memory>
+SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(SetDataType&& v, DataRef hint)
+{
+    if (hint.is_valid())
+    { // assign case
+        hint.ref() = v;
+        return hint;
+    }
+    else
+    { // add case
+        SKR_ASSERT(hash_of(v) == hint.hash());
+        SKR_ASSERT(!contains(v));
+        auto data_arr_ref                   = data_arr().add_unsafe();
+        data_arr_ref->_sparse_hash_set_hash = hint.hash();
+        new (&data_arr_ref->_sparse_hash_set_data) SetDataType(v);
+        _add_to_bucket(*data_arr_ref, data_arr_ref.index);
+        return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), data_arr_ref._sparse_hash_set_hash, false };
+    }
+}
+
 // try to add (first check existence, then add, never assign)
 template <typename Memory>
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(const SetDataType& v)
@@ -551,7 +597,8 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(co
     return add_ex(
     hash,
     [&v, this](const KeyType& k) { return k == key_of(v); },
-    [&v](void* p) { new (p) SetDataType(v); });
+    [&v](SetDataType* p) { new (p) SetDataType(v); },
+    [&v](SetDataType* p) { *p = v; });
 }
 template <typename Memory>
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(SetDataType&& v)
@@ -560,40 +607,46 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(Se
     return add_ex(
     hash,
     [&v, this](const KeyType& k) { return k == key_of(v); },
-    [&v](void* p) { new (p) SetDataType(std::move(v)); });
+    [&v](SetDataType* p) { new (p) SetDataType(std::move(v)); },
+    [&v](SetDataType* p) { *p = v; });
 }
 template <typename Memory>
-template <typename Comparer, typename Constructor>
-SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor)
+template <typename Pred, typename ConstructFunc, typename AssignFunc>
+SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex(HashType hash, Pred&& comparer, ConstructFunc&& construct, AssignFunc&& assign)
 {
-    DataRef add_result = add_ex_unsafe(hash, std::forward<Comparer>(comparer));
+    DataRef add_result = add_ex_unsafe(hash, std::forward<Pred>(comparer));
 
-    // if not exist, construct it
-    if (!add_result.already_exist())
-    {
-        constructor(add_result.ptr());
-        SKR_ASSERT(data_arr()[add_result.index()]._sparse_hash_set_hash == hash_of(add_result.ref()));
+    if (add_result.already_exist())
+    { // assign case
+        assign(add_result.ptr());
     }
+    else
+    { // construct case
+        construct(add_result.ptr());
+    }
+
+    // validate hash
+    SKR_ASSERT(data_arr()[add_result.index()]._sparse_hash_set_hash == hash_of(add_result.ref()));
 
     return add_result;
 }
 template <typename Memory>
-template <typename Comparer>
-SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex_unsafe(HashType hash, Comparer&& comparer)
+template <typename Pred>
+SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex_unsafe(HashType hash, Pred&& comparer)
 {
     if constexpr (!allow_multi_key)
     {
-        DataRef ref = find_ex(hash, std::forward<Comparer>(comparer));
+        DataRef ref = find_ex(hash, std::forward<Pred>(comparer));
         if (ref)
         {
-            return { ref.ptr(), ref.index(), true };
+            return { ref.ptr(), ref.index(), hash, true };
         }
         else
         {
             auto data_arr_ref                        = data_arr().add_unsafe();
             data_arr_ref.ref()._sparse_hash_set_hash = hash;
             _add_to_bucket(data_arr_ref.ref(), data_arr_ref.index());
-            return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), false };
+            return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), hash, false };
         }
     }
     else
@@ -601,48 +654,8 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex
         auto data_arr_ref                   = data_arr().add_unsafe();
         data_arr_ref->_sparse_hash_set_hash = hash;
         _add_to_bucket(*data_arr_ref, data_arr_ref.index);
-        return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), false };
+        return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), hash, false };
     }
-}
-
-// add or assign (first check existence, then add or assign)
-template <typename Memory>
-SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_or_assign(const SetDataType& v)
-{
-    HashType hash       = hash_of(v);
-    DataRef  add_result = add_ex_unsafe(hash, [this, &v](const KeyType& k) { return k == key_of(v); });
-
-    // if not exist, construct it
-    if (!add_result.already_exist())
-    {
-        new (add_result.ptr()) SetDataType(v);
-        SKR_ASSERT(data_arr()[add_result.index()]._sparse_hash_set_hash == hash_of(add_result.ref()));
-    }
-    else // else assign it
-    {
-        add_result.ref() = v;
-    }
-
-    return add_result;
-}
-template <typename Memory>
-SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_or_assign(SetDataType&& v)
-{
-    HashType hash       = hash_of(v);
-    DataRef  add_result = add_ex_unsafe(hash, [this, &v](const KeyType& k) { return k == key_of(v); });
-
-    // if not exist, construct it
-    if (!add_result.already_exist())
-    {
-        new (add_result.ptr()) SetDataType(std::move(v));
-        SKR_ASSERT(data_arr()[add_result.index()]._sparse_hash_set_hash == hash_of(add_result.ref()));
-    }
-    else // else assign it
-    {
-        add_result.ref() = std::move(v);
-    }
-
-    return add_result;
 }
 
 // emplace
@@ -664,17 +677,17 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplac
             data_arr().remove_at(data_arr_ref.index());
 
             // return old data
-            return { found_info.ptr(), found_info.index(), true };
+            return { found_info.ptr(), found_info.index(), data_arr_ref.ref()._sparse_hash_set_hash, true };
         }
     }
 
     _add_to_bucket(data_arr_ref.ref(), data_arr_ref.index());
 
-    return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), false };
+    return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), data_arr_ref.ref()._sparse_hash_set_hash, false };
 }
 template <typename Memory>
-template <typename Comparer, typename... Args>
-SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplace_ex(HashType hash, Comparer&& comparer, Args&&... args)
+template <typename Pred, typename... Args>
+SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplace_ex(HashType hash, Pred&& comparer, Args&&... args)
 {
     DataRef add_result = add_ex_unsafe(hash, comparer);
 
@@ -787,10 +800,10 @@ SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::remov
     remove_all_ex(hash, [&key](const KeyType& k) { return key == k; });
 }
 template <typename Memory>
-template <typename Comparer>
-SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::remove_ex(HashType hash, Comparer&& comparer)
+template <typename Pred>
+SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::remove_ex(HashType hash, Pred&& comparer)
 {
-    if (DataRef ref = find_ex(hash, std::forward<Comparer>(comparer)))
+    if (DataRef ref = find_ex(hash, std::forward<Pred>(comparer)))
     {
         _remove_from_bucket(ref.index());
         data_arr().remove_at(ref.index());
@@ -799,8 +812,8 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::remove
     return {};
 }
 template <typename Memory>
-template <typename Comparer>
-SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::remove_all_ex(HashType hash, Comparer&& comparer)
+template <typename Pred>
+SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::remove_all_ex(HashType hash, Pred&& comparer)
 {
     SizeType search_index = _bucket_data(hash);
     SizeType count        = 0;
@@ -839,22 +852,38 @@ SKR_INLINE typename SparseHashSet<Memory>::CIt SparseHashSet<Memory>::erase(cons
     return new_it;
 }
 
+// transparent find
+template <typename Memory>
+template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U>
+SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find(const U& key)
+{
+    HashType hash = HasherType()(key);
+    return find_ex(hash, [&key](const KeyType& k) { return key == k; });
+}
+template <typename Memory>
+template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U>
+SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find(const U& key) const
+{
+    HashType hash = HasherType()(key);
+    return find_ex(hash, [&key](const KeyType& k) { return key == k; });
+}
+
 // find
+// template <typename Memory>
+// SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find(const KeyType& key)
+// {
+//     HashType hash = HasherType()(key);
+//     return find_ex(hash, [&key](const KeyType& k) { return key == k; });
+// }
+// template <typename Memory>
+// SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find(const KeyType& key) const
+// {
+//     HashType hash = HasherType()(key);
+//     return find_ex(hash, [&key](const KeyType& k) { return key == k; });
+// }
 template <typename Memory>
-SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find(const KeyType& key)
-{
-    HashType hash = HasherType()(key);
-    return find_ex(hash, [&key](const KeyType& k) { return key == k; });
-}
-template <typename Memory>
-SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find(const KeyType& key) const
-{
-    HashType hash = HasherType()(key);
-    return find_ex(hash, [&key](const KeyType& k) { return key == k; });
-}
-template <typename Memory>
-template <typename Comparer>
-SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find_ex(HashType hash, Comparer&& comparer)
+template <typename Pred>
+SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find_ex(HashType hash, Pred&& comparer)
 {
     if (!bucket()) return {};
 
@@ -864,17 +893,17 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find_e
         auto& node = data_arr()[search_index];
         if (node._sparse_hash_set_hash == hash && comparer(key_of(node._sparse_hash_set_data)))
         {
-            return { &node._sparse_hash_set_data, search_index };
+            return { &node._sparse_hash_set_data, search_index, hash, false };
         }
         search_index = node._sparse_hash_set_next;
     }
     return {};
 }
 template <typename Memory>
-template <typename Comparer>
-SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find_ex(HashType hash, Comparer&& comparer) const
+template <typename Pred>
+SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find_ex(HashType hash, Pred&& comparer) const
 {
-    return const_cast<SparseHashSet*>(this)->find_ex(hash, std::forward<Comparer>(comparer));
+    return const_cast<SparseHashSet*>(this)->find_ex(hash, std::forward<Pred>(comparer));
 }
 
 // contains
@@ -890,14 +919,14 @@ SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::count
     return count_ex(hash, [&key](const KeyType& k) { return key == k; });
 }
 template <typename Memory>
-template <typename Comparer>
-SKR_INLINE bool SparseHashSet<Memory>::contains_ex(HashType hash, Comparer&& comparer) const
+template <typename Pred>
+SKR_INLINE bool SparseHashSet<Memory>::contains_ex(HashType hash, Pred&& comparer) const
 {
-    return (bool)find_ex(hash, std::forward<Comparer>(comparer));
+    return (bool)find_ex(hash, std::forward<Pred>(comparer));
 }
 template <typename Memory>
-template <typename Comparer>
-SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::count_ex(HashType hash, Comparer&& comparer) const
+template <typename Pred>
+SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::count_ex(HashType hash, Pred&& comparer) const
 {
     SizeType& search_index = bucket()[_bucket_index(hash)];
     SizeType  count        = 0;

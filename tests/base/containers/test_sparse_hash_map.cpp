@@ -221,7 +221,8 @@ TEST_CASE("test sparse hash map")
         a.add_ex(
         Hash<KeyType>()(100),
         [](const KeyType& v) { return v == 100; },
-        [](void* p) { new (p) PairType(100, 100); });
+        [](auto* p) { new (p) PairType(100, 100); },
+        [](auto* p) { *p = PairType{ 100, 100 }; });
         REQUIRE_EQ(a.size(), 5);
         REQUIRE_EQ(a.sparse_size(), 5);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -671,7 +672,8 @@ TEST_CASE("test fixed sparse hash map")
         a.add_ex(
         Hash<KeyType>()(100),
         [](const KeyType& v) { return v == 100; },
-        [](void* p) { new (p) PairType(100, 100); });
+        [](auto* p) { new (p) PairType(100, 100); },
+        [](auto* p) { *p = PairType{ 100, 100 }; });
         REQUIRE_EQ(a.size(), 5);
         REQUIRE_EQ(a.sparse_size(), 5);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -1118,7 +1120,8 @@ TEST_CASE("test inline sparse hash map")
         a.add_ex(
         Hash<KeyType>()(100),
         [](const KeyType& v) { return v == 100; },
-        [](void* p) { new (p) PairType(100, 100); });
+        [](auto* p) { new (p) PairType(100, 100); },
+        [](auto* p) { *p = PairType{ 100, 100 }; });
         REQUIRE_EQ(a.size(), 5);
         REQUIRE_EQ(a.sparse_size(), 5);
         REQUIRE_EQ(a.hole_size(), 0);
