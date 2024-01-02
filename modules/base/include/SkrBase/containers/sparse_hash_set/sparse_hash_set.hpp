@@ -103,13 +103,11 @@ struct SparseHashSet : protected SparseArray<Memory> {
     void rehash();
     bool rehash_if_need();
 
-    // add with hint
+    // add
+    DataRef add(const SetDataType& v);
+    DataRef add(SetDataType&& v);
     DataRef add(const SetDataType& v, DataRef hint);
     DataRef add(SetDataType&& v, DataRef hint);
-
-    //  try to add (first check existence, then add, never assign)
-    DataRef add(const SetDataType& v);
-    DataRef add(SetDataType&& v); // move behavior may not happened here, just for easy to use
     template <typename Pred, typename ConstructFunc, typename AssignFunc>
     DataRef add_ex(HashType hash, Pred&& comparer, ConstructFunc&& construct, AssignFunc&& assign);
     template <typename Pred>
@@ -127,8 +125,10 @@ struct SparseHashSet : protected SparseArray<Memory> {
     void append(const SetDataType* p, SizeType n);
 
     // remove
-    DataRef  remove(const KeyType& key);
-    SizeType remove_all(const KeyType& key); // [multi set extend]
+    template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U = KeyType>
+    DataRef remove(const U& key);
+    template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U = KeyType>
+    SizeType remove_all(const U& key); // [multi set extend]
     template <typename Pred>
     DataRef remove_ex(HashType hash, Pred&& comparer);
     template <typename Pred>
@@ -138,23 +138,21 @@ struct SparseHashSet : protected SparseArray<Memory> {
     It  erase(const It& it);
     CIt erase(const CIt& it);
 
-    // transparent find
-    template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U>
-    DataRef find(const U& key);
-    template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U>
-    CDataRef find(const U& key) const;
-
     // find
-    // DataRef  find(const KeyType& key);
-    // CDataRef find(const KeyType& key) const;
+    template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U = KeyType>
+    DataRef find(const U& key);
+    template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U = KeyType>
+    CDataRef find(const U& key) const;
     template <typename Pred>
     DataRef find_ex(HashType hash, Pred&& comparer);
     template <typename Pred>
     CDataRef find_ex(HashType hash, Pred&& comparer) const;
 
     // contains
-    bool     contains(const KeyType& key) const;
-    SizeType count(const KeyType& key) const; // [multi set extend]
+    template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U = KeyType>
+    bool contains(const U& key) const;
+    template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U = KeyType>
+    SizeType count(const U& key) const;
     template <typename Pred>
     bool contains_ex(HashType hash, Pred&& comparer) const;
     template <typename Pred>
@@ -549,7 +547,27 @@ SKR_INLINE bool SparseHashSet<Memory>::rehash_if_need()
     return false;
 }
 
-// add with hint
+// try to add (first check existence, then add, never assign)
+template <typename Memory>
+SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(const SetDataType& v)
+{
+    HashType hash = hash_of(v);
+    return add_ex(
+    hash,
+    [&v, this](const KeyType& k) { return k == key_of(v); },
+    [&v](SetDataType* p) { new (p) SetDataType(v); },
+    [&v](SetDataType* p) { *p = v; });
+}
+template <typename Memory>
+SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(SetDataType&& v)
+{
+    HashType hash = hash_of(v);
+    return add_ex(
+    hash,
+    [&v, this](const KeyType& k) { return k == key_of(v); },
+    [&v](SetDataType* p) { new (p) SetDataType(std::move(v)); },
+    [&v](SetDataType* p) { *p = v; });
+}
 template <typename Memory>
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(const SetDataType& v, DataRef hint)
 {
@@ -587,28 +605,6 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(Se
         _add_to_bucket(*data_arr_ref, data_arr_ref.index);
         return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), data_arr_ref._sparse_hash_set_hash, false };
     }
-}
-
-// try to add (first check existence, then add, never assign)
-template <typename Memory>
-SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(const SetDataType& v)
-{
-    HashType hash = hash_of(v);
-    return add_ex(
-    hash,
-    [&v, this](const KeyType& k) { return k == key_of(v); },
-    [&v](SetDataType* p) { new (p) SetDataType(v); },
-    [&v](SetDataType* p) { *p = v; });
-}
-template <typename Memory>
-SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(SetDataType&& v)
-{
-    HashType hash = hash_of(v);
-    return add_ex(
-    hash,
-    [&v, this](const KeyType& k) { return k == key_of(v); },
-    [&v](SetDataType* p) { new (p) SetDataType(std::move(v)); },
-    [&v](SetDataType* p) { *p = v; });
 }
 template <typename Memory>
 template <typename Pred, typename ConstructFunc, typename AssignFunc>
@@ -788,13 +784,15 @@ SKR_INLINE void SparseHashSet<Memory>::append(const SetDataType* p, SizeType n)
 
 // remove
 template <typename Memory>
-SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::remove(const KeyType& key)
+template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U>
+SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::remove(const U& key)
 {
     HashType hash = HasherType()(key);
     return remove_ex(hash, [&key](const KeyType& k) { return key == k; });
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::remove_all(const KeyType& key)
+template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U>
+SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::remove_all(const U& key)
 {
     HashType hash = HasherType()(key);
     remove_all_ex(hash, [&key](const KeyType& k) { return key == k; });
@@ -852,7 +850,7 @@ SKR_INLINE typename SparseHashSet<Memory>::CIt SparseHashSet<Memory>::erase(cons
     return new_it;
 }
 
-// transparent find
+// find
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U>
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find(const U& key)
@@ -867,20 +865,6 @@ SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find(
     HashType hash = HasherType()(key);
     return find_ex(hash, [&key](const KeyType& k) { return key == k; });
 }
-
-// find
-// template <typename Memory>
-// SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find(const KeyType& key)
-// {
-//     HashType hash = HasherType()(key);
-//     return find_ex(hash, [&key](const KeyType& k) { return key == k; });
-// }
-// template <typename Memory>
-// SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find(const KeyType& key) const
-// {
-//     HashType hash = HasherType()(key);
-//     return find_ex(hash, [&key](const KeyType& k) { return key == k; });
-// }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find_ex(HashType hash, Pred&& comparer)
@@ -908,12 +892,14 @@ SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find_
 
 // contains
 template <typename Memory>
-SKR_INLINE bool SparseHashSet<Memory>::contains(const KeyType& key) const
+template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U>
+SKR_INLINE bool SparseHashSet<Memory>::contains(const U& key) const
 {
     return (bool)find(key);
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::count(const KeyType& key) const
+template <TransparentToOrSameAs<typename Memory::KeyType, typename Memory::HasherType> U>
+SKR_INLINE typename SparseHashSet<Memory>::SizeType SparseHashSet<Memory>::count(const U& key) const
 {
     HashType hash = HasherType()(key);
     return count_ex(hash, [&key](const KeyType& k) { return key == k; });
