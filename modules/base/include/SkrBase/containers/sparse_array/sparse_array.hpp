@@ -122,12 +122,12 @@ struct SparseArray : protected Memory {
     CIt erase(const CIt& it);
 
     // remove if
-    template <typename TP>
-    bool remove_if(TP&& p);
-    template <typename TP>
-    bool remove_last_if(TP&& p);
-    template <typename TP>
-    SizeType remove_all_if(TP&& p);
+    template <typename Pred>
+    bool remove_if(Pred&& p);
+    template <typename Pred>
+    bool remove_last_if(Pred&& p);
+    template <typename Pred>
+    SizeType remove_all_if(Pred&& p);
 
     // modify
     DataType&       operator[](SizeType index);
@@ -148,26 +148,26 @@ struct SparseArray : protected Memory {
     CDataRef find_last(const U& v) const;
 
     // find if
-    template <typename TP>
-    DataRef find_if(TP&& p);
-    template <typename TP>
-    DataRef find_last_if(TP&& p);
-    template <typename TP>
-    CDataRef find_if(TP&& p) const;
-    template <typename TP>
-    CDataRef find_last_if(TP&& p) const;
+    template <typename Pred>
+    DataRef find_if(Pred&& p);
+    template <typename Pred>
+    DataRef find_last_if(Pred&& p);
+    template <typename Pred>
+    CDataRef find_if(Pred&& p) const;
+    template <typename Pred>
+    CDataRef find_last_if(Pred&& p) const;
 
     // contains
     template <typename U = DataType>
     bool contains(const U& v) const;
-    template <typename TP>
-    bool contains_if(TP&& p) const;
+    template <typename Pred>
+    bool contains_if(Pred&& p) const;
 
     // sort
-    template <typename TP = Less<DataType>>
-    void sort(TP&& p = TP());
-    template <typename TP = Less<DataType>>
-    void sort_stable(TP&& p = TP());
+    template <typename Functor = Less<DataType>>
+    void sort(Functor&& f = Functor());
+    template <typename Functor = Less<DataType>>
+    void sort_stable(Functor&& f = Functor());
 
     // support foreach
     It  begin();
@@ -977,10 +977,10 @@ SKR_INLINE typename SparseArray<Memory>::CIt SparseArray<Memory>::erase(const CI
 
 // remove if
 template <typename Memory>
-template <typename TP>
-SKR_INLINE bool SparseArray<Memory>::remove_if(TP&& p)
+template <typename Pred>
+SKR_INLINE bool SparseArray<Memory>::remove_if(Pred&& p)
 {
-    if (DataRef ref = find_if(std::forward<TP>(p)))
+    if (DataRef ref = find_if(std::forward<Pred>(p)))
     {
         remove_at(ref.index());
         return true;
@@ -988,10 +988,10 @@ SKR_INLINE bool SparseArray<Memory>::remove_if(TP&& p)
     return false;
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE bool SparseArray<Memory>::remove_last_if(TP&& p)
+template <typename Pred>
+SKR_INLINE bool SparseArray<Memory>::remove_last_if(Pred&& p)
 {
-    if (DataRef ref = find_last_if(std::forward<TP>(p)))
+    if (DataRef ref = find_last_if(std::forward<Pred>(p)))
     {
         remove_at(ref.index());
         return true;
@@ -999,8 +999,8 @@ SKR_INLINE bool SparseArray<Memory>::remove_last_if(TP&& p)
     return false;
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_all_if(TP&& p)
+template <typename Pred>
+SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_all_if(Pred&& p)
 {
     SizeType count = 0;
     for (auto it = begin(); it != end(); ++it)
@@ -1082,8 +1082,8 @@ SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last
 
 // find if
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_if(TP&& p)
+template <typename Pred>
+SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_if(Pred&& p)
 {
     for (auto it = begin(); it != end(); ++it)
     {
@@ -1095,8 +1095,8 @@ SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_if(TP
     return {};
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last_if(TP&& p)
+template <typename Pred>
+SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last_if(Pred&& p)
 {
     // TODO. reverse iterator
     // for (auto it = begin(); it != end(); ++it)
@@ -1119,16 +1119,16 @@ SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last_
     return {};
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_if(TP&& p) const
+template <typename Pred>
+SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_if(Pred&& p) const
 {
-    return const_cast<SparseArray*>(this)->find_if(std::forward<TP>(p));
+    return const_cast<SparseArray*>(this)->find_if(std::forward<Pred>(p));
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last_if(TP&& p) const
+template <typename Pred>
+SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last_if(Pred&& p) const
 {
-    return const_cast<SparseArray*>(this)->find_last_if(std::forward<TP>(p));
+    return const_cast<SparseArray*>(this)->find_last_if(std::forward<Pred>(p));
 }
 
 // contains
@@ -1139,16 +1139,16 @@ SKR_INLINE bool SparseArray<Memory>::contains(const U& v) const
     return (bool)find(v);
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE bool SparseArray<Memory>::contains_if(TP&& p) const
+template <typename Pred>
+SKR_INLINE bool SparseArray<Memory>::contains_if(Pred&& p) const
 {
-    return (bool)find_if(std::forward<TP>(p));
+    return (bool)find_if(std::forward<Pred>(p));
 }
 
 // sort
 template <typename Memory>
-template <typename TP>
-SKR_INLINE void SparseArray<Memory>::sort(TP&& p)
+template <typename Functor>
+SKR_INLINE void SparseArray<Memory>::sort(Functor&& f)
 {
     if (sparse_size())
     {
@@ -1156,14 +1156,14 @@ SKR_INLINE void SparseArray<Memory>::sort(TP&& p)
         algo::intro_sort(
         data(),
         data() + sparse_size(),
-        [&p](const StorageType& a, const StorageType& b) {
-            return p(a._sparse_array_data, b._sparse_array_data);
+        [&f](const StorageType& a, const StorageType& b) {
+            return f(a._sparse_array_data, b._sparse_array_data);
         });
     }
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE void SparseArray<Memory>::sort_stable(TP&& p)
+template <typename Functor>
+SKR_INLINE void SparseArray<Memory>::sort_stable(Functor&& f)
 {
     if (sparse_size())
     {
@@ -1171,8 +1171,8 @@ SKR_INLINE void SparseArray<Memory>::sort_stable(TP&& p)
         algo::merge_sort(
         data(),
         data() + sparse_size(),
-        [&p](const StorageType& a, const StorageType& b) {
-            return p(a._sparse_array_data, b._sparse_array_data);
+        [&f](const StorageType& a, const StorageType& b) {
+            return f(a._sparse_array_data, b._sparse_array_data);
         });
     }
 }

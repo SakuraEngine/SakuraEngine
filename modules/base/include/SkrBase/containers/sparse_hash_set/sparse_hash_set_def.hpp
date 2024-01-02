@@ -17,22 +17,25 @@ struct SparseHashSetData {
 
 // SparseHashSet 的数据引用，代替单纯的指针/Index返回
 // 提供足够的信息，并将 npos 封装起来简化调用防止出错
-template <typename T, typename TS, bool kConst>
+template <typename T, typename TS, typename THash, bool kConst>
 struct SparseHashSetDataRef {
     using DataType = std::conditional_t<kConst, const T, T>;
     using SizeType = TS;
+    using HashType = THash;
 
     SKR_INLINE SparseHashSetDataRef() = default;
-    SKR_INLINE SparseHashSetDataRef(DataType* ptr, TS index, bool already_exist = false)
+    SKR_INLINE SparseHashSetDataRef(DataType* ptr, SizeType index, HashType hash, bool already_exist)
         : _ptr(ptr)
         , _index(index)
+        , _hash(hash)
         , _already_exist(already_exist)
     {
     }
     template <bool kConstRHS>
-    SKR_INLINE SparseHashSetDataRef(const SparseHashSetDataRef<T, SizeType, kConstRHS>& rhs)
+    SKR_INLINE SparseHashSetDataRef(const SparseHashSetDataRef<T, SizeType, HashType, kConstRHS>& rhs)
         : _ptr(const_cast<DataType*>(rhs.ptr()))
         , _index(rhs.index())
+        , _hash(rhs.hash())
         , _already_exist(rhs.already_exist())
     {
     }
@@ -41,6 +44,7 @@ struct SparseHashSetDataRef {
     SKR_INLINE DataType* ptr() const { return _ptr; }
     SKR_INLINE DataType& ref() const { return *_ptr; }
     SKR_INLINE SizeType  index() const { return _index; }
+    SKR_INLINE HashType  hash() const { return _hash; }
     SKR_INLINE bool      already_exist() const { return _already_exist; }
     SKR_INLINE bool      is_valid() const { return _ptr != nullptr && _index != npos_of<SizeType>; }
 
@@ -57,6 +61,10 @@ private:
     // add/emplace: 添加的元素下标
     // find: 找到的元素下标
     SizeType _index = npos_of<SizeType>;
+
+    // add/emplace: 元素 hash
+    // find: 元素 hash
+    HashType _hash = 0;
 
     // add/emplace: 元素是否已经存在
     // find: false

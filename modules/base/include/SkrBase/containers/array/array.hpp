@@ -126,18 +126,18 @@ struct Array : protected Memory {
     SizeType remove_all_swap(const U& v);
 
     // remove if
-    template <typename TP>
-    bool remove_if(TP&& p);
-    template <typename TP>
-    bool remove_if_swap(TP&& p);
-    template <typename TP>
-    bool remove_last_if(TP&& p);
-    template <typename TP>
-    bool remove_last_if_swap(TP&& p);
-    template <typename TP>
-    SizeType remove_all_if(TP&& p);
-    template <typename TP>
-    SizeType remove_all_if_swap(TP&& p);
+    template <typename Pred>
+    bool remove_if(Pred&& p);
+    template <typename Pred>
+    bool remove_if_swap(Pred&& p);
+    template <typename Pred>
+    bool remove_last_if(Pred&& p);
+    template <typename Pred>
+    bool remove_last_if_swap(Pred&& p);
+    template <typename Pred>
+    SizeType remove_all_if(Pred&& p);
+    template <typename Pred>
+    SizeType remove_all_if_swap(Pred&& p);
 
     // erase
     It  erase(const It& it);
@@ -174,45 +174,45 @@ struct Array : protected Memory {
     CDataRef find_last(const U& v) const;
 
     // find if
-    template <typename TP>
-    DataRef find_if(TP&& p);
-    template <typename TP>
-    DataRef find_last_if(TP&& p);
-    template <typename TP>
-    CDataRef find_if(TP&& p) const;
-    template <typename TP>
-    CDataRef find_last_if(TP&& p) const;
+    template <typename Pred>
+    DataRef find_if(Pred&& p);
+    template <typename Pred>
+    DataRef find_last_if(Pred&& p);
+    template <typename Pred>
+    CDataRef find_if(Pred&& p) const;
+    template <typename Pred>
+    CDataRef find_last_if(Pred&& p) const;
 
     // contains
     template <typename U = DataType>
     bool contains(const U& v) const;
-    template <typename TP>
-    bool contains_if(TP&& p) const;
+    template <typename Pred>
+    bool contains_if(Pred&& p) const;
 
     // sort
-    template <typename TP = Less<DataType>>
-    void sort(TP&& p = {});
-    template <typename TP = Less<DataType>>
-    void sort_stable(TP&& p = {});
+    template <typename Functor = Less<DataType>>
+    void sort(Functor&& f = {});
+    template <typename Functor = Less<DataType>>
+    void sort_stable(Functor&& f = {});
 
     // support heap
     DataType& heap_top();
-    template <typename TP = Less<DataType>>
-    void heapify(TP&& p = {});
-    template <typename TP = Less<DataType>>
-    bool is_heap(TP&& p = {});
-    template <typename TP = Less<DataType>>
-    SizeType heap_push(DataType&& v, TP&& p = {});
-    template <typename TP = Less<DataType>>
-    SizeType heap_push(const DataType& v, TP&& p = {});
-    template <typename TP = Less<DataType>>
-    void heap_pop(TP&& p = {});
-    template <typename TP = Less<DataType>>
-    DataType heap_pop_get(TP&& p = {});
-    template <typename TP = Less<DataType>>
-    void heap_remove_at(SizeType index, TP&& p = {});
-    template <typename TP = Less<DataType>>
-    void heap_sort(TP&& p = {});
+    template <typename Functor = Less<DataType>>
+    void heapify(Functor&& f = {});
+    template <typename Functor = Less<DataType>>
+    bool is_heap(Functor&& f = {});
+    template <typename Functor = Less<DataType>>
+    SizeType heap_push(DataType&& v, Functor&& f = {});
+    template <typename Functor = Less<DataType>>
+    SizeType heap_push(const DataType& v, Functor&& f = {});
+    template <typename Functor = Less<DataType>>
+    void heap_pop(Functor&& f = {});
+    template <typename Functor = Less<DataType>>
+    DataType heap_pop_get(Functor&& f = {});
+    template <typename Functor = Less<DataType>>
+    void heap_remove_at(SizeType index, Functor&& f = {});
+    template <typename Functor = Less<DataType>>
+    void heap_sort(Functor&& f = {});
 
     // support stack
     void            stack_pop(SizeType n = 1);
@@ -849,10 +849,10 @@ SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_swap(const
 
 // remove by
 template <typename Memory>
-template <typename TP>
-SKR_INLINE bool Array<Memory>::remove_if(TP&& p)
+template <typename Pred>
+SKR_INLINE bool Array<Memory>::remove_if(Pred&& p)
 {
-    if (DataRef ref = find_if(std::forward<TP>(p)))
+    if (DataRef ref = find_if(std::forward<Pred>(p)))
     {
         remove_at(ref.index);
         return true;
@@ -860,10 +860,10 @@ SKR_INLINE bool Array<Memory>::remove_if(TP&& p)
     return false;
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE bool Array<Memory>::remove_if_swap(TP&& p)
+template <typename Pred>
+SKR_INLINE bool Array<Memory>::remove_if_swap(Pred&& p)
 {
-    if (DataRef ref = find_if(std::forward<TP>(p)))
+    if (DataRef ref = find_if(std::forward<Pred>(p)))
     {
         remove_at_swap(ref.index);
         return true;
@@ -871,10 +871,10 @@ SKR_INLINE bool Array<Memory>::remove_if_swap(TP&& p)
     return false;
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE bool Array<Memory>::remove_last_if(TP&& p)
+template <typename Pred>
+SKR_INLINE bool Array<Memory>::remove_last_if(Pred&& p)
 {
-    if (DataRef ref = find_last_if(std::forward<TP>(p)))
+    if (DataRef ref = find_last_if(std::forward<Pred>(p)))
     {
         remove_at(ref.index);
         return true;
@@ -882,10 +882,10 @@ SKR_INLINE bool Array<Memory>::remove_last_if(TP&& p)
     return false;
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE bool Array<Memory>::remove_last_if_swap(TP&& p)
+template <typename Pred>
+SKR_INLINE bool Array<Memory>::remove_last_if_swap(Pred&& p)
 {
-    if (DataRef ref = find_last_if(std::forward<TP>(p)))
+    if (DataRef ref = find_last_if(std::forward<Pred>(p)))
     {
         remove_at_swap(ref.index);
         return true;
@@ -893,17 +893,17 @@ SKR_INLINE bool Array<Memory>::remove_last_if_swap(TP&& p)
     return false;
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if(TP&& p)
+template <typename Pred>
+SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if(Pred&& p)
 {
-    DataType* pos = algo::remove_all(begin(), end(), std::forward<TP>(p));
+    DataType* pos = algo::remove_all(begin(), end(), std::forward<Pred>(p));
     SizeType  n   = end() - pos;
     _set_size(size() - n);
     return n;
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if_swap(TP&& p)
+template <typename Pred>
+SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if_swap(Pred&& p)
 {
     DataType* pos = algo::remove_all_swap(begin(), end(), p);
     SizeType  n   = end() - pos;
@@ -1051,8 +1051,8 @@ SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last(const U& v)
 
 // find by
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_if(TP&& p)
+template <typename Pred>
+SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_if(Pred&& p)
 {
     auto p_begin = data();
     auto p_end   = data() + size();
@@ -1067,8 +1067,8 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_if(TP&& p)
     return {};
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_last_if(TP&& p)
+template <typename Pred>
+SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_last_if(Pred&& p)
 {
     auto p_begin = data();
     auto p_end   = data() + size() - 1;
@@ -1083,16 +1083,16 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_last_if(TP&& p)
     return {};
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_if(TP&& p) const
+template <typename Pred>
+SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_if(Pred&& p) const
 {
-    return const_cast<Array<Memory>*>(this)->find_if(std::forward<TP>(p));
+    return const_cast<Array<Memory>*>(this)->find_if(std::forward<Pred>(p));
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last_if(TP&& p) const
+template <typename Pred>
+SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last_if(Pred&& p) const
 {
-    return const_cast<Array<Memory>*>(this)->find_last_if(std::forward<TP>(p));
+    return const_cast<Array<Memory>*>(this)->find_last_if(std::forward<Pred>(p));
 }
 
 // contains
@@ -1100,84 +1100,84 @@ template <typename Memory>
 template <typename U>
 SKR_INLINE bool Array<Memory>::contains(const U& v) const { return (bool)find(v); }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE bool Array<Memory>::contains_if(TP&& p) const
+template <typename Pred>
+SKR_INLINE bool Array<Memory>::contains_if(Pred&& p) const
 {
-    return (bool)find_if(std::forward<TP>(p));
+    return (bool)find_if(std::forward<Pred>(p));
 }
 
 // sort
 template <typename Memory>
-template <typename TP>
-SKR_INLINE void Array<Memory>::sort(TP&& p)
+template <typename Functor>
+SKR_INLINE void Array<Memory>::sort(Functor&& f)
 {
-    algo::intro_sort(begin(), end(), std::forward<TP>(p));
+    algo::intro_sort(begin(), end(), std::forward<Functor>(f));
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE void Array<Memory>::sort_stable(TP&& p)
+template <typename Functor>
+SKR_INLINE void Array<Memory>::sort_stable(Functor&& f)
 {
-    algo::merge_sort(begin(), end(), std::forward<TP>(p));
+    algo::merge_sort(begin(), end(), std::forward<Functor>(f));
 }
 
 // support heap
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::heap_top() { return *data(); }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE void Array<Memory>::heapify(TP&& p)
+template <typename Functor>
+SKR_INLINE void Array<Memory>::heapify(Functor&& f)
 {
-    algo::heapify(data(), size(), std::forward<TP>(p));
+    algo::heapify(data(), size(), std::forward<Functor>(f));
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE bool Array<Memory>::is_heap(TP&& p)
+template <typename Functor>
+SKR_INLINE bool Array<Memory>::is_heap(Functor&& f)
 {
-    return algo::is_heap(data(), size(), std::forward<TP>(p));
+    return algo::is_heap(data(), size(), std::forward<Functor>(f));
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::heap_push(DataType&& v, TP&& p)
+template <typename Functor>
+SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::heap_push(DataType&& v, Functor&& f)
 {
     DataRef ref = emplace(std::move(v));
-    return algo::heap_sift_up(data(), (SizeType)0, ref.index(), std::forward<TP>(p));
+    return algo::heap_sift_up(data(), (SizeType)0, ref.index(), std::forward<Functor>(f));
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::heap_push(const DataType& v, TP&& p)
+template <typename Functor>
+SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::heap_push(const DataType& v, Functor&& f)
 {
     DataRef ref = add(v);
-    return algo::heap_sift_up(data(), SizeType(0), ref.index(), std::forward<TP>(p));
+    return algo::heap_sift_up(data(), SizeType(0), ref.index(), std::forward<Functor>(f));
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE void Array<Memory>::heap_pop(TP&& p)
+template <typename Functor>
+SKR_INLINE void Array<Memory>::heap_pop(Functor&& f)
 {
     remove_at_swap(0);
-    algo::heap_sift_down(data(), (SizeType)0, size(), std::forward<TP>(p));
+    algo::heap_sift_down(data(), (SizeType)0, size(), std::forward<Functor>(f));
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE typename Array<Memory>::DataType Array<Memory>::heap_pop_get(TP&& p)
+template <typename Functor>
+SKR_INLINE typename Array<Memory>::DataType Array<Memory>::heap_pop_get(Functor&& f)
 {
     DataType result = std::move(*data());
-    heap_pop(std::forward<TP>(p));
+    heap_pop(std::forward<Functor>(f));
     return result;
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE void Array<Memory>::heap_remove_at(SizeType index, TP&& p)
+template <typename Functor>
+SKR_INLINE void Array<Memory>::heap_remove_at(SizeType index, Functor&& f)
 {
     remove_at_swap(index);
 
-    algo::heap_sift_down(data(), index, size(), std::forward<TP>(p));
-    algo::heap_sift_up(data(), (SizeType)0, std::min(index, size() - 1), std::forward<TP>(p));
+    algo::heap_sift_down(data(), index, size(), std::forward<Functor>(f));
+    algo::heap_sift_up(data(), (SizeType)0, std::min(index, size() - 1), std::forward<Functor>(f));
 }
 template <typename Memory>
-template <typename TP>
-SKR_INLINE void Array<Memory>::heap_sort(TP&& p)
+template <typename Functor>
+SKR_INLINE void Array<Memory>::heap_sort(Functor&& f)
 {
-    algo::heap_sort(data(), size(), std::forward<TP>(p));
+    algo::heap_sort(data(), size(), std::forward<Functor>(f));
 }
 
 // support stack

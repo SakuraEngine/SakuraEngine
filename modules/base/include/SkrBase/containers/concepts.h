@@ -64,7 +64,11 @@ concept TransparentTo = requires(U uv, T tv, Hasher hasher) {
         uv == tv
     } -> std::convertible_to<bool>;
 };
-}
+template <typename U, typename T>
+concept DecaySameAs = std::same_as<std::decay_t<U>, std::decay_t<T>>;
+template <typename U, typename T, typename Hasher>
+concept TransparentToOrSameAs = TransparentTo<U, T, Hasher> || DecaySameAs<U, T>;
+} // namespace skr
 
 // TODO. linear memory traits，从某个对象中提取如下信息：
 //  1. 是否是连续内存
