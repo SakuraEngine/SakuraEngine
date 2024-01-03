@@ -26,7 +26,7 @@
 #include <SkrRT/containers/stl_vector.hpp> // IWYU pragma: export
 #include <SkrRT/containers/stl_string.hpp> // IWYU pragma: export
 
-#include "SkrRT/ecs/dual.h" // IWYU pragma: export
+#include "SkrRT/ecs/sugoi.h" // IWYU pragma: export
 #include "SkrRT/ecs/set.hpp" // IWYU pragma: export
 #include "SkrRT/ecs/type_builder.hpp" // IWYU pragma: export
 

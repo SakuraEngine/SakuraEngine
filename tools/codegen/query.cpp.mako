@@ -2,9 +2,9 @@
 // BEGIN QUERY GENERATED
 %for record in generator.filter_records(db.records):
 <% query = generator.parse(record) %>
-void ${record.name}::Initialize(dual_storage_t* storage)
+void ${record.name}::Initialize(sugoi_storage_t* storage)
 {
-    query = dualQ_from_literal(storage, "${record.attrs.query}");
+    query = sugoiQ_from_literal(storage, "${record.attrs.query}");
 }
 
 ${record.name}::TaskContext::View ${record.name}::TaskContext::unpack()

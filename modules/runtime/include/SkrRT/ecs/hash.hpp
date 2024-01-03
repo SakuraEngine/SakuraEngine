@@ -1,7 +1,7 @@
 #pragma once
 #include <inttypes.h>
 
-namespace dual
+namespace sugoi
 {
 #ifdef __EMSCRIPTEN__
 	constexpr size_t _FNV_offset_basis = 2166136261U;

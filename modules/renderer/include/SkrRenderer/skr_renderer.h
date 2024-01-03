@@ -3,7 +3,7 @@
 #include "SkrRenderer/primitive_pass.h"
 #include "SkrRenderer/fwd_types.h"
 
-struct dual_storage_t;
+struct sugoi_storage_t;
 struct SViewportManager;
 
 struct SKR_RENDERER_API SRenderer {
@@ -12,7 +12,7 @@ struct SKR_RENDERER_API SRenderer {
     virtual void render(skr::render_graph::RenderGraph* render_graph) = 0;
 
     virtual SRenderDeviceId get_render_device() const = 0;
-    virtual dual_storage_t* get_dual_storage() const = 0;
+    virtual sugoi_storage_t* get_sugoi_storage() const = 0;
     virtual SViewportManager* get_viewport_manager() const = 0;
 #endif
 };
@@ -36,7 +36,7 @@ protected:
 #endif
 
 SKR_EXTERN_C SKR_RENDERER_API 
-SRendererId skr_create_renderer(SRenderDeviceId render_device, dual_storage_t* storage);
+SRendererId skr_create_renderer(SRenderDeviceId render_device, sugoi_storage_t* storage);
 
 SKR_EXTERN_C SKR_RENDERER_API 
 void skr_free_renderer(SRendererId renderer);

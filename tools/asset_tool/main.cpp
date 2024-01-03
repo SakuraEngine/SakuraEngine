@@ -33,7 +33,7 @@ public:
     SWindowHandle window;
     uint32_t backbuffer_index;
 
-    struct dual_storage_t* l2d_world = nullptr;
+    struct sugoi_storage_t* l2d_world = nullptr;
     skr_vfs_t* resource_vfs = nullptr;
 
 };

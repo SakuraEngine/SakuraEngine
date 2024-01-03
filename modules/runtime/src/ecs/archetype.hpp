@@ -1,8 +1,8 @@
 #pragma once
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/containers/stl_vector.hpp"
 
-namespace dual
+namespace sugoi
 {
 struct resource_fields_t
 {
@@ -12,8 +12,8 @@ struct resource_fields_t
 
 // chunk data layout descriptor
 struct archetype_t {
-    struct dual_storage_t* storage;
-    dual_type_set_t type;
+    struct sugoi_storage_t* storage;
+    sugoi_type_set_t type;
     uint32_t* sizes;
     uint32_t* offsets[3];
     uint32_t* elemSizes;
@@ -22,7 +22,7 @@ struct archetype_t {
     uint32_t versionOffset[3];
     uint32_t* callbackFlags;
     uint32_t* stableOrder;
-    dual_callback_v* callbacks;
+    sugoi_callback_v* callbacks;
     resource_fields_t* resourceFields;
     uint32_t chunkCapacity[3];
     uint32_t entitySize;
@@ -33,23 +33,23 @@ struct archetype_t {
     /*
         uint32_t offsets[3][firstTag];
         uint32_t sizes[firstTag];
-        dual_callback_v callbacks[firstTag - firstManaged];
+        sugoi_callback_v callbacks[firstTag - firstManaged];
     */
     bool with_chunk_component() const noexcept;
-    SIndex index(dual_type_index_t type) const noexcept;
+    SIndex index(sugoi_type_index_t type) const noexcept;
 };
-} // namespace dual
+} // namespace sugoi
 
 // group chunks by archetype and meta
-struct dual_group_t {
-    skr::stl_vector<dual_chunk_t*> chunks;
+struct sugoi_group_t {
+    skr::stl_vector<sugoi_chunk_t*> chunks;
     uint32_t firstFree;
     uint32_t timestamp;
     uint32_t size;
-    dual_entity_type_t type;
-    dual::archetype_t* archetype;
-    dual_group_t* dead;
-    dual_group_t* cloned;
+    sugoi_entity_type_t type;
+    sugoi::archetype_t* archetype;
+    sugoi_group_t* dead;
+    sugoi_group_t* cloned;
 
     bool isDead;
     bool disabled;
@@ -58,25 +58,25 @@ struct dual_group_t {
         entity metas[metaCount];
     */
 
-    TIndex index(dual_type_index_t type) const noexcept;
-    bool share(dual_type_index_t type) const noexcept;
-    bool own(const dual_type_set_t& subtype) const noexcept;
-    bool share(const dual_type_set_t& subtype) const noexcept;
-    dual_mask_comp_t get_shared_mask(const dual_type_set_t& subtype) const noexcept;
-    void get_shared_type(dual_type_set_t& result, void* buffer) const noexcept;
-    const dual_group_t* get_owner(dual_type_index_t type) const noexcept;
-    dual_mask_comp_t get_mask(const dual_type_set_t& subtype) const noexcept;
-    const void* get_shared_ro(dual_type_index_t type) const noexcept;
+    TIndex index(sugoi_type_index_t type) const noexcept;
+    bool share(sugoi_type_index_t type) const noexcept;
+    bool own(const sugoi_type_set_t& subtype) const noexcept;
+    bool share(const sugoi_type_set_t& subtype) const noexcept;
+    sugoi_mask_comp_t get_shared_mask(const sugoi_type_set_t& subtype) const noexcept;
+    void get_shared_type(sugoi_type_set_t& result, void* buffer) const noexcept;
+    const sugoi_group_t* get_owner(sugoi_type_index_t type) const noexcept;
+    sugoi_mask_comp_t get_mask(const sugoi_type_set_t& subtype) const noexcept;
+    const void* get_shared_ro(sugoi_type_index_t type) const noexcept;
     size_t data_size();
 
     void clear();
 
-    dual_chunk_t* get_first_free_chunk() const noexcept;
-    dual_chunk_t* new_chunk(uint32_t hint);
-    void add_chunk(dual_chunk_t* chunk);
-    void remove_chunk(dual_chunk_t* chunk);
+    sugoi_chunk_t* get_first_free_chunk() const noexcept;
+    sugoi_chunk_t* new_chunk(uint32_t hint);
+    void add_chunk(sugoi_chunk_t* chunk);
+    void remove_chunk(sugoi_chunk_t* chunk);
 
-    void resize_chunk(dual_chunk_t* chunk, EIndex newSize);
-    void mark_free(dual_chunk_t* chunk);
-    void mark_full(dual_chunk_t* chunk);
+    void resize_chunk(sugoi_chunk_t* chunk, EIndex newSize);
+    void mark_free(sugoi_chunk_t* chunk);
+    void mark_full(sugoi_chunk_t* chunk);
 };

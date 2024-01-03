@@ -7,10 +7,10 @@
 #include "type_registry.hpp"
 #include <type_traits>
 
-namespace dual
+namespace sugoi
 {
 template <class F>
-static void iter_ref_impl(dual_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, F&& iter)
+static void iter_ref_impl(sugoi_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, F&& iter)
 {
     char* src = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
     auto& reg = type_registry_t::get();
@@ -18,10 +18,10 @@ static void iter_ref_impl(dual_chunk_view_t view, type_index_t type, EIndex offs
     auto map = desc.callback.map;
     if (desc.entityFieldsCount == 0 && !map)
         return;
-    auto iter_element = [&](dual_chunk_t* chunk, EIndex index, char* curr) {
-        dual_mapper_t mapper;
-        mapper.map = +[](void* user, dual_entity_t* ent) {
-            ((std::remove_reference_t<F>*)user)->map(*(dual_entity_t*)ent);
+    auto iter_element = [&](sugoi_chunk_t* chunk, EIndex index, char* curr) {
+        sugoi_mapper_t mapper;
+        mapper.map = +[](void* user, sugoi_entity_t* ent) {
+            ((std::remove_reference_t<F>*)user)->map(*(sugoi_entity_t*)ent);
         };
         mapper.user = &iter;
         if (map)
@@ -31,7 +31,7 @@ static void iter_ref_impl(dual_chunk_view_t view, type_index_t type, EIndex offs
             forloop (i, 0, desc.entityFieldsCount)
             {
                 auto field = reg.entityFields[desc.entityFields + i];
-                iter.map(*(dual_entity_t*)(curr + field));
+                iter.map(*(sugoi_entity_t*)(curr + field));
             }
         }
     };
@@ -51,7 +51,7 @@ static void iter_ref_impl(dual_chunk_view_t view, type_index_t type, EIndex offs
         {
             forloop (j, 0, view.count)
             {
-                auto array = (dual_array_comp_t*)((size_t)j * size + src);
+                auto array = (sugoi_array_comp_t*)((size_t)j * size + src);
                 for (char* curr = (char*)array->BeginX; curr < array->EndX; curr += elemSize)
                     iter_element(view.chunk, view.start + j, curr);
                 iter.move();
@@ -68,7 +68,7 @@ static void iter_ref_impl(dual_chunk_view_t view, type_index_t type, EIndex offs
 }
 
 template <class F>
-void iterator_ref_view(const dual_chunk_view_t& view, F&& iter) noexcept
+void iterator_ref_view(const sugoi_chunk_view_t& view, F&& iter) noexcept
 {
     archetype_t* type = view.chunk->type;
     EIndex* offsets = type->offsets[(int)view.chunk->pt];
@@ -78,7 +78,7 @@ void iterator_ref_view(const dual_chunk_view_t& view, F&& iter) noexcept
         iter_ref_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], std::forward<F>(iter));
 }
 template<class F>
-void iterator_ref_chunk(dual_chunk_t* chunk, F&& iter) noexcept
+void iterator_ref_chunk(sugoi_chunk_t* chunk, F&& iter) noexcept
 {
     archetype_t* type = chunk->type;
     EIndex* offsets = type->offsets[(int)chunk->pt];
@@ -87,4 +87,4 @@ void iterator_ref_chunk(dual_chunk_t* chunk, F&& iter) noexcept
     forloop (i, type->firstChunkComponent, type->type.length)
         iter_ref_impl({ chunk, 0, 1 }, type->type.data[i], offsets[i], sizes[i], elemSizes[i], std::forward<F>(iter));
 }
-} // namespace dual
+} // namespace sugoi

@@ -188,7 +188,7 @@ int main(int argc, char** argv)
             signaling->Poll();
         SteamNetworkingSockets()->RunCallbacks();
         world.Update();
-        dualJ_wait_all();
+        sugoiJ_wait_all();
         //std::this_thread::sleep_for(std::chrono::seconds::zero());
     }
     scheduler.unbind();

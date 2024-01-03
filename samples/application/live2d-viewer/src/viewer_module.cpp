@@ -46,7 +46,7 @@ public:
     SWindowHandle main_window = nullptr;
     uint32_t backbuffer_index;
 
-    struct dual_storage_t* l2d_world = nullptr;
+    struct sugoi_storage_t* l2d_world = nullptr;
     SRendererId l2d_renderer = nullptr;
     skr_vfs_t* resource_vfs = nullptr;
     skr_io_ram_service_t* ram_service = nullptr;
@@ -74,7 +74,7 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
     vfs_desc.override_mount_dir = resourceRoot.c_str();
     resource_vfs = skr_create_vfs(&vfs_desc);
 
-    l2d_world = dualS_create();
+    l2d_world = sugoiS_create();
 
     auto render_device = skr_get_default_render_device();
     l2d_renderer = skr_create_renderer(render_device, l2d_world);
@@ -124,36 +124,36 @@ void SLive2DViewerModule::on_unload()
     skr_io_ram_service_t::destroy(ram_service);
     skr_free_vfs(resource_vfs);
 
-    dualS_release(l2d_world);
+    sugoiS_release(l2d_world);
 
     SkrDelete(io_job_queue);
 }
 
 extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
 
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 
 #include "SkrRT/ecs/type_builder.hpp"
 
 void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_service, 
     bool bUseCVV)
 {
-    auto storage = renderer->get_dual_storage();
-    auto renderableT_builder = make_zeroed<dual::type_builder_t>();
+    auto storage = renderer->get_sugoi_storage();
+    auto renderableT_builder = make_zeroed<sugoi::type_builder_t>();
     renderableT_builder
         .with<skr_render_effect_t>();
     // allocate renderable
-    auto renderableT = make_zeroed<dual_entity_type_t>();
+    auto renderableT = make_zeroed<sugoi_entity_type_t>();
     renderableT.type = renderableT_builder.build();
 
     // deallocate existed
     {
-        auto filter = make_zeroed<dual_filter_t>();
+        auto filter = make_zeroed<sugoi_filter_t>();
         filter.all = renderableT.type;
-        auto meta = make_zeroed<dual_meta_filter_t>();
-        auto freeFunc = [&](dual_chunk_view_t* view) {
-            auto modelFree = [=](dual_chunk_view_t* view) {
-                auto mesh_comps = dual::get_owned_rw<skr_live2d_render_model_comp_t>(view);
+        auto meta = make_zeroed<sugoi_meta_filter_t>();
+        auto freeFunc = [&](sugoi_chunk_view_t* view) {
+            auto modelFree = [=](sugoi_chunk_view_t* view) {
+                auto mesh_comps = sugoi::get_owned_rw<skr_live2d_render_model_comp_t>(view);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
                     while (!mesh_comps[i].vram_future.is_ready()) {}
@@ -162,20 +162,20 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
                     skr_live2d_model_free(mesh_comps[i].ram_future.model_resource);
                 }
             };
-            skr_render_effect_access(renderer, view, u8"Live2DEffect", DUAL_LAMBDA(modelFree));
+            skr_render_effect_access(renderer, view, u8"Live2DEffect", SUGOI_LAMBDA(modelFree));
             skr_render_effect_detach(renderer, view, u8"Live2DEffect");
-            dualS_destroy(storage, view);
+            sugoiS_destroy(storage, view);
         };
-        dualS_query(storage, &filter, &meta, DUAL_LAMBDA(freeFunc));
+        sugoiS_query(storage, &filter, &meta, SUGOI_LAMBDA(freeFunc));
     }
 
     // allocate new
-    auto live2dEntSetup = [&](dual_chunk_view_t* view) {
+    auto live2dEntSetup = [&](sugoi_chunk_view_t* view) {
         skr_render_effect_attach(renderer, view, u8"Live2DEffect");
         
-        auto modelSetup = [=](dual_chunk_view_t* view) {
+        auto modelSetup = [=](sugoi_chunk_view_t* view) {
             auto render_device = renderer->get_render_device();
-            auto mesh_comps = dual::get_owned_rw<skr_live2d_render_model_comp_t>(view);
+            auto mesh_comps = sugoi::get_owned_rw<skr_live2d_render_model_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
                 auto& vram_request = mesh_comps[i].vram_future;
@@ -199,9 +199,9 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
                 skr_live2d_model_create_from_json(ram_service, u8"Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);
             }
         };
-        skr_render_effect_access(renderer, view, u8"Live2DEffect", DUAL_LAMBDA(modelSetup));
+        skr_render_effect_access(renderer, view, u8"Live2DEffect", SUGOI_LAMBDA(modelSetup));
     };
-    dualS_allocate_type(storage, &renderableT, 1, DUAL_LAMBDA(live2dEntSetup));
+    sugoiS_allocate_type(storage, &renderableT, 1, SUGOI_LAMBDA(live2dEntSetup));
 }
 
 int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)

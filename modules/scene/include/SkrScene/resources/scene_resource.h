@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrScene/module.configure.h"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/serde/binary/reader_fwd.h"
 #include "SkrRT/serde/binary/writer_fwd.h"
@@ -11,7 +11,7 @@
 
 sreflect_struct("guid": "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A")
 skr_scene_resource_t {
-    dual_storage_t* storage;
+    sugoi_storage_t* storage;
 };
 
 namespace skr::resource

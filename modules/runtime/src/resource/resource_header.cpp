@@ -80,7 +80,7 @@ uint32_t skr_resource_record_t::AddReference(uint64_t requester, ESkrRequesterTy
         if (iter == entityReferences.end())
         {
             auto id = requesterCounter++;
-            entityReferences.push_back(entity_requester{ id, (dual_storage_t*)requester, 1 });
+            entityReferences.push_back(entity_requester{ id, (sugoi_storage_t*)requester, 1 });
             return id;
         }
         else
