@@ -48,20 +48,22 @@ typedef struct sugoi_callback_v {
     void (*lua_check)(sugoi_chunk_t* chunk, EIndex index, char* data, struct lua_State* L, int idx) SKR_IF_CPP(=nullptr);
 } sugoi_callback_v;
 
-enum sugoi_type_flags SKR_IF_CPP(: uint32_t)
+enum ESugoiTypeFlag SKR_IF_CPP(: uint32_t)
 {
-    DTF_PIN = 0x1,
-    DTF_CHUNK = 0x2,
+    SUGOI_TYPE_FLAG_PIN = 0x1,
+    SUGOI_TYPE_FLAG_CHUNK = 0x2,
 };
+typedef uint32_t SugoiTypeFlags;
 
-enum sugoi_callback_flags SKR_IF_CPP(: uint32_t)
+enum ESugoiCallbackFlag SKR_IF_CPP(: uint32_t)
 {
-    DCF_CTOR = 0x1,
-    DCF_DTOR = 0x2,
-    DCF_COPY = 0x4,
-    DCF_MOVE = 0x8,
-    DCF_ALL = DCF_CTOR | DCF_DTOR | DCF_COPY | DCF_MOVE,
+    SUGOI_CALLBACK_FLAG_CTOR = 0x1,
+    SUGOI_CALLBACK_FLAG_DTOR = 0x2,
+    SUGOI_CALLBACK_FLAG_COPY = 0x4,
+    SUGOI_CALLBACK_FLAG_MOVE = 0x8,
+    SUGOI_CALLBACK_FLAG_ALL = SUGOI_CALLBACK_FLAG_CTOR | SUGOI_CALLBACK_FLAG_DTOR | SUGOI_CALLBACK_FLAG_COPY | SUGOI_CALLBACK_FLAG_MOVE,
 };
+typedef uint32_t SugoiCallbackFlags;
 
 /**
  * @brief describe basic infomation of a component type
@@ -75,7 +77,7 @@ typedef struct sugoi_type_description_t {
      * a pinned component will not removed when destroying or copy when instantiating, and user should remove them manually
      * destroyed entity with pinned component will be marked by a dead component and will be erased when all pinned component is removed
      */
-    uint32_t flags;
+    SugoiTypeFlags flags;
     /**
      * the storage size in chunk of this component, generally it is sizeof(T)
      * when this is a array component, it could be sizeof(T) * I + sizeof(sugoi_array_comp_t) where I means the inline element count of the array
@@ -870,28 +872,28 @@ namespace sugoi
         sugoi_dirty_comp_t value;
     };
     
-    template<uint32_t flags = DCF_ALL, class C>
+    template<SugoiCallbackFlags flags = SUGOI_CALLBACK_FLAG_ALL, class C>
     void managed_component(sugoi_type_description_t& desc, skr::type_t<C>)
     {
-        if constexpr ((flags & DCF_CTOR) != 0) {
+        if constexpr ((flags & SUGOI_CALLBACK_FLAG_CTOR) != 0) {
             if constexpr (std::is_default_constructible_v<C>)
                 desc.callback.constructor = +[](sugoi_chunk_t* chunk, EIndex index, char* data) {
                     new (data) C();
                 };
         }
-        if constexpr ((flags & DCF_DTOR) != 0) {
+        if constexpr ((flags & SUGOI_CALLBACK_FLAG_DTOR) != 0) {
             if constexpr (std::is_destructible_v<C>)
                 desc.callback.destructor = +[](sugoi_chunk_t* chunk, EIndex index, char* data) {
                     ((C*)data)->~C();
                 };
         }
-        if constexpr ((flags & DCF_COPY) != 0) {
+        if constexpr ((flags & SUGOI_CALLBACK_FLAG_COPY) != 0) {
             if constexpr (std::is_copy_constructible_v<C>)
                 desc.callback.copy = +[](sugoi_chunk_t* chunk, EIndex index, char* dst, sugoi_chunk_t* schunk, EIndex sindex, const char* src) {
                     new (dst) C(*(const C*)src);
                 };
         }
-        if constexpr ((flags & DCF_MOVE) != 0) {
+        if constexpr ((flags & SUGOI_CALLBACK_FLAG_MOVE) != 0) {
             if constexpr (std::is_move_constructible_v<C>)
                 desc.callback.move = +[](sugoi_chunk_t* chunk, EIndex index, char* dst, sugoi_chunk_t* schunk, EIndex sindex, char* src) {
                     new (dst) C(std::move(*(C*)src));

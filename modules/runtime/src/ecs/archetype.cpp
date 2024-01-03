@@ -68,13 +68,13 @@ sugoi::archetype_t* sugoi_storage_t::construct_archetype(const sugoi_type_set_t&
         const auto& desc = registry.descriptions[type_index_t(proto.type.data[i]).index()];
         uint32_t callbackFlag = 0;
         if (desc.callback.constructor)
-            callbackFlag |= DCF_CTOR;
+            callbackFlag |= SUGOI_CALLBACK_FLAG_CTOR;
         if (desc.callback.destructor)
-            callbackFlag |= DCF_DTOR;
+            callbackFlag |= SUGOI_CALLBACK_FLAG_DTOR;
         if (desc.callback.copy)
-            callbackFlag |= DCF_COPY;
+            callbackFlag |= SUGOI_CALLBACK_FLAG_COPY;
         if (desc.callback.move)
-            callbackFlag |= DCF_MOVE;
+            callbackFlag |= SUGOI_CALLBACK_FLAG_MOVE;
         proto.callbackFlags[i] = callbackFlag;
         proto.callbacks[i] = desc.callback;
         proto.resourceFields[i] = { desc.resourceFields, desc.resourceFieldsCount };
