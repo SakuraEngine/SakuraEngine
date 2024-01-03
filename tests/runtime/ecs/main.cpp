@@ -552,7 +552,7 @@ void register_pinned_component()
     desc.entityFields = 0;
     desc.guid = u8"{E6127548-981D-46F5-BF33-8EC31CACACFD}"_guid;
     desc.callback = {};
-    desc.flags = DTF_PIN;
+    desc.flags = SUGOI_TYPE_FLAG_PIN;
     desc.elementSize = 0;
     desc.alignment = alignof(pinned);
     type_pinned = sugoiT_register_type(&desc);

@@ -54,10 +54,10 @@ static struct RegisterComponent${type.id}Helper
         desc.guidStr = u8"${type.attrs.guid}";
         desc.flags = 0;
     %if hasattr(type.attrs.component, "pin"):
-        desc.flags |= DTF_PIN;
+        desc.flags |= SUGOI_TYPE_FLAG_PIN;
     %endif 
     %if hasattr(type.attrs.component, "chunk"):
-        desc.flags |= DTF_CHUNK;
+        desc.flags |= SUGOI_TYPE_FLAG_CHUNK;
     %endif
     %if hasattr(type.attrs.component, "buffer"):
         desc.elementSize = sizeof(${type.name});

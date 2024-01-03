@@ -143,8 +143,8 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
         tag = true;
     if (desc.elementSize != 0)
         buffer = true;
-    pin = (desc.flags & DTF_PIN) != 0;
-    chunk = (desc.flags & DTF_CHUNK) != 0;
+    pin = (desc.flags & SUGOI_TYPE_FLAG_PIN) != 0;
+    chunk = (desc.flags & SUGOI_TYPE_FLAG_CHUNK) != 0;
     SKR_ASSERT(!(chunk && pin));
     SKR_ASSERT(!(chunk && tag));
     type_index_t index{ (TIndex)descriptions.size(), pin, buffer, tag, chunk };
