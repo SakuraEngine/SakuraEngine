@@ -1,8 +1,8 @@
 #include "SkrTestFramework/framework.hpp"
 #include "container_test_types.hpp"
 
-template <typename TestArray, typename ModifyCapacity, typename CheckData, typename CheckNoData>
-void template_test_array(ModifyCapacity&& capacity_of, CheckData&& check_data, CheckNoData&& check_no_data)
+template <typename TestArray, typename ModifyCapacity, typename ClampCapacity, typename CheckData, typename CheckNoData, typename CheckDataEQ>
+void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_capacity, CheckData&& check_data, CheckNoData&& check_no_data, CheckDataEQ&& check_data_eq)
 {
     using namespace skr;
 
@@ -66,7 +66,7 @@ void template_test_array(ModifyCapacity&& capacity_of, CheckData&& check_data, C
         check_no_data(a);
         REQUIRE_EQ(c.size(), old_size);
         REQUIRE_EQ(c.capacity(), capacity_of(old_capacity));
-        REQUIRE_EQ(c.data(), old_data);
+        check_data_eq(c, old_data);
     }
 
     SUBCASE("assign & move assign")
@@ -87,7 +87,7 @@ void template_test_array(ModifyCapacity&& capacity_of, CheckData&& check_data, C
         check_no_data(a);
         REQUIRE_EQ(c.size(), old_size);
         REQUIRE_EQ(c.capacity(), capacity_of(old_capacity));
-        REQUIRE_EQ(c.data(), old_data);
+        check_data_eq(c, old_data);
     }
 
     SUBCASE("spacial assign")
@@ -165,7 +165,7 @@ void template_test_array(ModifyCapacity&& capacity_of, CheckData&& check_data, C
         a.clear();
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.capacity(), capacity_of(old_capacity));
-        REQUIRE_EQ(a.data(), old_data);
+        check_data_eq(a, old_data);
 
         a = { 1, 1, 4, 5, 1, 4 };
         a.release(20);
@@ -607,11 +607,12 @@ void template_test_array(ModifyCapacity&& capacity_of, CheckData&& check_data, C
 
     SUBCASE("erase")
     {
-        uint32_t raw_data_group[]     = { 1, 1, 4, 5, 1, 4 };
-        uint32_t removed_data_group[] = { 4, 5, 4 };
+        uint32_t       raw_data_group[]     = { 1, 1, 4, 5, 1, 4 };
+        uint32_t       removed_data_group[] = { 4, 5, 4 };
+        const uint64_t kArraySize           = clamp_capacity(114514);
 
-        TestArray a(114514), b(114514);
-        for (uint32_t i = 0; i < 114514; ++i)
+        TestArray a(kArraySize), b(kArraySize);
+        for (uint32_t i = 0; i < kArraySize; ++i)
         {
             a[i] = raw_data_group[i % 6];
             b[i] = raw_data_group[i % 6];
@@ -699,22 +700,24 @@ void template_test_array(ModifyCapacity&& capacity_of, CheckData&& check_data, C
 
     SUBCASE("sort")
     {
-        TestArray a(100);
-        for (int i = 0; i < 100; ++i)
+        const uint64_t kArraySize = clamp_capacity(114514);
+
+        TestArray a(kArraySize);
+        for (int i = 0; i < kArraySize; ++i)
         {
-            a[i] = 99 - i;
+            a[i] = kArraySize - 1 - i;
         }
 
         a.sort();
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < kArraySize; ++i)
         {
             REQUIRE_EQ(a[i], i);
         }
 
         a.sort_stable(Greater<uint32_t>());
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < kArraySize; ++i)
         {
-            REQUIRE_EQ(a[i], 99 - i);
+            REQUIRE_EQ(a[i], kArraySize - 1 - i);
         }
     }
 
@@ -775,11 +778,14 @@ void template_test_array(ModifyCapacity&& capacity_of, CheckData&& check_data, C
 TEST_CASE("test array")
 {
     using namespace skr;
+    using TestArray = Array<uint32_t>;
 
-    template_test_array<Array<uint32_t>>(
+    template_test_array<TestArray>(
     [](auto capacity) { return capacity; },
-    [](auto& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto& vec) { REQUIRE_EQ(vec.data(), nullptr); });
+    [](auto capacity) { return capacity; },
+    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
+    [](auto&& vec) { REQUIRE_EQ(vec.data(), nullptr); },
+    [](auto&& vec, auto&& v) { REQUIRE_EQ(vec.data(), v); });
 }
 
 TEST_CASE("test fixed array")
@@ -788,10 +794,14 @@ TEST_CASE("test fixed array")
     using namespace skr::container;
     static constexpr uint64_t kFixedCapacity = 200;
 
-    template_test_array<FixedArray<uint32_t, kFixedCapacity>>(
+    using TestArray = FixedArray<uint32_t, kFixedCapacity>;
+
+    template_test_array<TestArray>(
     [](auto capacity) { return kFixedCapacity; },
-    [](auto& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto& vec) { REQUIRE_NE(vec.data(), nullptr); });
+    [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; },
+    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
+    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
+    [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); });
 }
 
 TEST_CASE("test inline array")
@@ -799,8 +809,12 @@ TEST_CASE("test inline array")
     using namespace skr;
     static constexpr uint64_t kInlineCapacity = 10;
 
-    template_test_array<InlineArray<uint32_t, kInlineCapacity>>(
+    using TestArray = InlineArray<uint32_t, kInlineCapacity>;
+
+    template_test_array<TestArray>(
     [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
-    [](auto& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto& vec) { REQUIRE_NE(vec.data(), nullptr); });
+    [](auto capacity) { return capacity; },
+    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
+    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
+    [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); });
 }
