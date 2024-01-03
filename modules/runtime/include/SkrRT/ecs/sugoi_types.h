@@ -1,5 +1,5 @@
 #pragma once
-#include "dual_config.h"
+#include "sugoi_config.h"
 #include "SkrRT/misc/types.h"
 
 #if defined(__cplusplus)
@@ -9,17 +9,17 @@ extern "C" {
 [[maybe_unused]] constexpr uint32_t dead = 2 + (1 << 29);
 
 // objects
-#define DUAL_DECLARE(name) typedef struct dual_##name dual_##name
-DUAL_DECLARE(context_t);
-DUAL_DECLARE(storage_t);
-DUAL_DECLARE(group_t);
-DUAL_DECLARE(chunk_t);
-DUAL_DECLARE(query_t);
-DUAL_DECLARE(storage_delta_t);
-#undef DUAL_DECLARE
+#define SUGOI_DECLARE(name) typedef struct sugoi_##name sugoi_##name
+SUGOI_DECLARE(context_t);
+SUGOI_DECLARE(storage_t);
+SUGOI_DECLARE(group_t);
+SUGOI_DECLARE(chunk_t);
+SUGOI_DECLARE(query_t);
+SUGOI_DECLARE(storage_delta_t);
+#undef SUGOI_DECLARE
 
-typedef TIndex dual_type_index_t;
-typedef skr_guid_t dual_guid_t;
+typedef TIndex sugoi_type_index_t;
+typedef skr_guid_t sugoi_guid_t;
 
 #if defined(__cplusplus)
 }
@@ -28,7 +28,7 @@ typedef skr_guid_t dual_guid_t;
 #if defined(__cplusplus)
 #include <limits>
 
-namespace dual
+namespace sugoi
 {
 [[maybe_unused]] static constexpr size_t kFastBinSize = 64 * 1024;
 [[maybe_unused]] static constexpr size_t kSmallBinThreshold = 8;
@@ -55,6 +55,6 @@ enum pool_type_t
 
 template <class T, size_t N>
 struct array_comp_T;
-using link_array_t = array_comp_T<dual_entity_t, kLinkComponentSize>;
+using link_array_t = array_comp_T<sugoi_entity_t, kLinkComponentSize>;
 }
 #endif

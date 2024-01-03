@@ -59,7 +59,7 @@ void MPServerWorld::AddConnection(HSteamNetConnection connection)
 
 void MPServerWorld::SpawnGameModeEntity()
 {
-    using spawner_t = dual::entity_spawner_T<CMPGameModeState, CAuth, CAuthTypeData, dual::dirty_comp_t>;
+    using spawner_t = sugoi::entity_spawner_T<CMPGameModeState, CAuth, CAuthTypeData, sugoi::dirty_comp_t>;
     spawner_t spawner;
     spawner(storage, 1, [&](spawner_t::View view)
     {
@@ -73,9 +73,9 @@ void MPServerWorld::SpawnGameModeEntity()
 void MPServerWorld::SpawnPlayerEntity(int player, int connectionId, int localPlayerId)
 {
     // allocate 1 movable cubes
-    using spawner_t = dual::entity_spawner_T<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t, 
+    using spawner_t = sugoi::entity_spawner_T<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t, 
         CMovement, CSphereCollider2D, CWeapon, CHealth, CSkill, CPlayer,
-        CController, CPrefab, CAuth, CAuthTypeData, CRelevance, dual::dirty_comp_t>;
+        CController, CPrefab, CAuth, CAuthTypeData, CRelevance, sugoi::dirty_comp_t>;
     spawner_t spawner;
     // allocate renderable
     auto view =  spawner(storage);
@@ -120,19 +120,19 @@ void MPServerWorld::Initialize()
     InitializeNetworkComponents();
     worldDeltaBuilder = CreateWorldDeltaBuilder();
     worldDeltaBuilder->Initialize(storage);
-    deadQuery = dualQ_from_literal(storage, "[inout]CAuth, [has]dead");
+    deadQuery = sugoiQ_from_literal(storage, "[inout]CAuth, [has]dead");
     skr_init_hires_timer(&timer);
     lastGameTime = skr_hires_timer_get_seconds(&timer, false);
     gameFrame = 0;
-    dualJ_bind_storage(storage);
+    sugoiJ_bind_storage(storage);
     authoritative = true;
     SpawnGameModeEntity();
 }
 
 void MPServerWorld::Shutdown()
 {
-    dualQ_release(deadQuery);
-    dualJ_unbind_storage(storage);
+    sugoiQ_release(deadQuery);
+    sugoiJ_unbind_storage(storage);
     SkrDelete(worldDeltaBuilder);
     MPGameWorld::Shutdown();
 }
@@ -271,20 +271,20 @@ void MPServerWorld::Update()
             GenerateWorldDelta();
             SendWorldDelta();
             // remove dead entities after generate the delta
-            dual::array_comp_T<dual_group_t*, 16> deadGroups;
-            auto getDeadGroups = [&](dual_group_t* group)
+            sugoi::array_comp_T<sugoi_group_t*, 16> deadGroups;
+            auto getDeadGroups = [&](sugoi_group_t* group)
             {
                 deadGroups.emplace_back(group);
             };
-            dualQ_get_groups(deadQuery, DUAL_LAMBDA(getDeadGroups));
-            dual_delta_type_t delta = make_zeroed<dual_delta_type_t>();
-            dual_type_index_t types[] = { dual_id_of<CAuth>::get() };
+            sugoiQ_get_groups(deadQuery, SUGOI_LAMBDA(getDeadGroups));
+            sugoi_delta_type_t delta = make_zeroed<sugoi_delta_type_t>();
+            sugoi_type_index_t types[] = { sugoi_id_of<CAuth>::get() };
             delta.removed.type = { types, 1 };
             for(auto& group : deadGroups)
-                dualS_cast_group_delta(storage, group, &delta, nullptr, nullptr);
+                sugoiS_cast_group_delta(storage, group, &delta, nullptr, nullptr);
         }
         
-        dualJ_wait_all();
+        sugoiJ_wait_all();
         std::move(queuedInputs+1, queuedInputs + 128, queuedInputs); // shift
     }
     LogNetworkStatics();

@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRT/ecs/type_builder.hpp"
@@ -8,7 +8,7 @@
 namespace game {
 
 typedef struct ForwardEffectToken {
-    dual_entity_t game_entity;
+    sugoi_entity_t game_entity;
 } ForwardEffectToken;
 
 static const skr_render_effect_name_t forward_effect_name = u8"ForwardEffect";
@@ -19,15 +19,15 @@ struct RenderEffectForward : public IRenderEffectProcessor
         :resource_vfs(resource_vfs) {}
     ~RenderEffectForward() = default;
 
-    void on_register(SRendererId renderer, dual_storage_t* storage) override;
-    void on_unregister(SRendererId renderer, dual_storage_t* storage) override;
-    void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) override;
-    dual_type_index_t get_identity_type() override;
-    void initialize_data(SRendererId renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv) override;
+    void on_register(SRendererId renderer, sugoi_storage_t* storage) override;
+    void on_unregister(SRendererId renderer, sugoi_storage_t* storage) override;
+    void get_type_set(const sugoi_chunk_view_t* cv, sugoi_type_set_t* set) override;
+    sugoi_type_index_t get_identity_type() override;
+    void initialize_data(SRendererId renderer, sugoi_storage_t* storage, sugoi_chunk_view_t* game_cv, sugoi_chunk_view_t* render_cv) override;
     skr_primitive_draw_packet_t produce_draw_packets(const skr_primitive_draw_context_t* context) override;
 
 protected:
-    void initialize_queries(dual_storage_t* storage);
+    void initialize_queries(sugoi_storage_t* storage);
     void release_queries();
 
     // TODO: move these anywhere else
@@ -37,8 +37,8 @@ protected:
     void free_pipeline(SRendererId renderer);
     //
 
-    dual::type_builder_t type_builder;
-    dual_type_set_t typeset;
+    sugoi::type_builder_t type_builder;
+    sugoi_type_set_t typeset;
     skr_vfs_t* resource_vfs;
 
     skr::Vector<skr_primitive_draw_t> mesh_drawcalls;
@@ -54,11 +54,11 @@ protected:
     CGPURenderPipelineId skin_pipeline;
     // effect processor data
     const char8_t* push_constants_name = u8"push_constants";
-    dual_query_t* mesh_query = nullptr;
-    dual_query_t* mesh_write_query = nullptr;
-    dual_query_t* draw_mesh_query = nullptr;
-    dual_query_t* draw_skin_query = nullptr;
-    dual_type_index_t identity_type = {};
+    sugoi_query_t* mesh_query = nullptr;
+    sugoi_query_t* mesh_write_query = nullptr;
+    sugoi_query_t* draw_mesh_query = nullptr;
+    sugoi_query_t* draw_skin_query = nullptr;
+    sugoi_type_index_t identity_type = {};
     struct PushConstants {
         skr_float4x4_t model;
     };

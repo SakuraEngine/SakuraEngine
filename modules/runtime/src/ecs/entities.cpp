@@ -2,8 +2,8 @@
 #include "SkrRT/ecs/entities.hpp"
 #include "chunk.hpp"
 
-dual_entity_debug_proxy_t dummy;
-namespace dual
+sugoi_entity_debug_proxy_t dummy;
+namespace sugoi
 {
 void entity_registry_t::reset()
 {
@@ -32,7 +32,7 @@ void entity_registry_t::shrink()
     });
 }
 
-void entity_registry_t::new_entities(dual_entity_t* dst, EIndex count)
+void entity_registry_t::new_entities(sugoi_entity_t* dst, EIndex count)
 {
     SMutexLock lock(mutex.mMutex);
     EIndex i = 0;
@@ -60,7 +60,7 @@ void entity_registry_t::new_entities(dual_entity_t* dst, EIndex count)
     }
 }
 
-void entity_registry_t::free_entities(const dual_entity_t* dst, EIndex count)
+void entity_registry_t::free_entities(const sugoi_entity_t* dst, EIndex count)
 {
     SMutexLock lock(mutex.mMutex);
     // build freelist in input order
@@ -75,9 +75,9 @@ void entity_registry_t::free_entities(const dual_entity_t* dst, EIndex count)
     }
 }
 
-void entity_registry_t::fill_entities(const dual_chunk_view_t& view)
+void entity_registry_t::fill_entities(const sugoi_chunk_view_t& view)
 {
-    auto ents = (dual_entity_t*)view.chunk->get_entities() + view.start;
+    auto ents = (sugoi_entity_t*)view.chunk->get_entities() + view.start;
     new_entities(ents, view.count);
     forloop (i, 0, view.count)
     {
@@ -87,10 +87,10 @@ void entity_registry_t::fill_entities(const dual_chunk_view_t& view)
     }
 }
 
-void entity_registry_t::fill_entities(const dual_chunk_view_t& view, const dual_entity_t* src)
+void entity_registry_t::fill_entities(const sugoi_chunk_view_t& view, const sugoi_entity_t* src)
 {
-    auto ents = (dual_entity_t*)view.chunk->get_entities() + view.start;
-    memcpy(ents, src, view.count * sizeof(dual_entity_t));
+    auto ents = (sugoi_entity_t*)view.chunk->get_entities() + view.start;
+    memcpy(ents, src, view.count * sizeof(sugoi_entity_t));
     forloop (i, 0, view.count)
     {
         entry_t& e = entries[e_id(src[i])];
@@ -99,31 +99,31 @@ void entity_registry_t::fill_entities(const dual_chunk_view_t& view, const dual_
     }
 }
 
-void entity_registry_t::free_entities(const dual_chunk_view_t& view)
+void entity_registry_t::free_entities(const sugoi_chunk_view_t& view)
 {
     free_entities(view.chunk->get_entities() + view.start, view.count);
 }
 
-void entity_registry_t::move_entities(const dual_chunk_view_t& view, const dual_chunk_t* src, EIndex srcIndex)
+void entity_registry_t::move_entities(const sugoi_chunk_view_t& view, const sugoi_chunk_t* src, EIndex srcIndex)
 {
     SKR_ASSERT(src != view.chunk || (srcIndex >= view.start + view.count));
-    const dual_entity_t* toMove = src->get_entities() + srcIndex;
+    const sugoi_entity_t* toMove = src->get_entities() + srcIndex;
     forloop (i, 0, view.count)
     {
         entry_t& e = entries[e_id(toMove[i])];
         e.indexInChunk = view.start + i;
         e.chunk = view.chunk;
     }
-    std::memcpy((dual_entity_t*)view.chunk->get_entities() + view.start, toMove, view.count * sizeof(dual_entity_t));
+    std::memcpy((sugoi_entity_t*)view.chunk->get_entities() + view.start, toMove, view.count * sizeof(sugoi_entity_t));
 }
 
-void entity_registry_t::move_entities(const dual_chunk_view_t& view, EIndex srcIndex)
+void entity_registry_t::move_entities(const sugoi_chunk_view_t& view, EIndex srcIndex)
 {
     SKR_ASSERT(srcIndex >= view.start + view.count);
-    const dual_entity_t* toMove = view.chunk->get_entities() + srcIndex;
+    const sugoi_entity_t* toMove = view.chunk->get_entities() + srcIndex;
     forloop (i, 0, view.count)
         entries[e_id(toMove[i])]
         .indexInChunk = view.start + i;
-    std::memcpy((dual_entity_t*)view.chunk->get_entities() + view.start, toMove, view.count * sizeof(dual_entity_t));
+    std::memcpy((sugoi_entity_t*)view.chunk->get_entities() + view.start, toMove, view.count * sizeof(sugoi_entity_t));
 }
-} // namespace dual
+} // namespace sugoi

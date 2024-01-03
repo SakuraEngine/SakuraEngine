@@ -26,7 +26,7 @@
         #define sstatic_ctor(expr)
     #endif
 #endif
-#define sreflect_managed_component(...) struct sreflect sattr("component" : {"custom" : "::dual::managed_component"}) sattr(__VA_ARGS__)
+#define sreflect_managed_component(...) struct sreflect sattr("component" : {"custom" : "::sugoi::managed_component"}) sattr(__VA_ARGS__)
 #define sreflect_struct(...) struct sreflect sattr(__VA_ARGS__)
 #define sreflect_enum(...) enum sreflect sattr(__VA_ARGS__)
 #define sreflect_enum_class(...) enum class sreflect sattr(__VA_ARGS__)

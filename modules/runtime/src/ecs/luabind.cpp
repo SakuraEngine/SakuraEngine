@@ -11,19 +11,19 @@ extern "C" {
 
 #include "SkrRT/ecs/array.hpp"
 
-namespace dual
+namespace sugoi
 {
 extern thread_local fixed_stack_t localStack;
 }
 namespace skr::lua
 {
-    using lua_push_t = int (*)(dual_chunk_t* chunk, EIndex index, char* data, struct lua_State* L);
-    using lua_check_t = void (*)(dual_chunk_t* chunk, EIndex index, char* data, struct lua_State* L, int idx);
+    using lua_push_t = int (*)(sugoi_chunk_t* chunk, EIndex index, char* data, struct lua_State* L);
+    using lua_check_t = void (*)(sugoi_chunk_t* chunk, EIndex index, char* data, struct lua_State* L, int idx);
 
     struct lua_array_view_t {
-        dual_chunk_view_t view;
+        sugoi_chunk_view_t view;
         uint32_t index;
-        dual_array_comp_t arr;
+        sugoi_array_comp_t arr;
         uint32_t stride;
         const char8_t* guidStr;
         lua_push_t lua_push;
@@ -31,19 +31,19 @@ namespace skr::lua
     };
 
     struct lua_chunk_view_t {
-        dual_storage_t* storage;
-        dual_chunk_view_t view;
+        sugoi_storage_t* storage;
+        sugoi_chunk_view_t view;
         uint32_t count;
         bool readonly;
-        const dual_entity_t* entities;
-        const dual_type_index_t* types;
+        const sugoi_entity_t* entities;
+        const sugoi_type_index_t* types;
         void** datas;
         uint32_t* strides;
         const char8_t** guidStrs;
         uint32_t* elementSizes;
         lua_push_t* lua_pushs;
         lua_check_t* lua_checks;
-        const dual_operation_t* operations;
+        const sugoi_operation_t* operations;
         int pushComponent(lua_State* L, int comp, int index)
         {
             auto data = datas[comp];
@@ -55,7 +55,7 @@ namespace skr::lua
             else if(elementSizes[comp] != 0)
             {
                 auto arr = (lua_array_view_t*)lua_newuserdata(L, sizeof(lua_array_view_t));
-                arr->arr = *(dual_array_comp_t*)((uint8_t*)data + index * strides[comp]);
+                arr->arr = *(sugoi_array_comp_t*)((uint8_t*)data + index * strides[comp]);
                 arr->view = view;
                 arr->index = index;
                 arr->stride = elementSizes[comp];
@@ -83,49 +83,49 @@ namespace skr::lua
         };
     };
 
-    static lua_chunk_view_t inherit_chunk_view(dual_chunk_view_t* view, lua_chunk_view_t* parent)
+    static lua_chunk_view_t inherit_chunk_view(sugoi_chunk_view_t* view, lua_chunk_view_t* parent)
     {
         lua_chunk_view_t luaView { parent->storage, *view, parent->count, parent->readonly, parent->entities, parent->types, parent->datas, parent->strides, parent->guidStrs, parent->elementSizes, parent->lua_pushs, parent->lua_checks };
-        luaView.datas = dual::localStack.allocate<void*>(parent->count);
-        luaView.entities = dualV_get_entities(view);
+        luaView.datas = sugoi::localStack.allocate<void*>(parent->count);
+        luaView.entities = sugoiV_get_entities(view);
         forloop(i, 0, parent->count)
         {
             if((luaView.operations && !luaView.operations[i].readonly) || luaView.readonly)
-                luaView.datas[i] = dualV_get_owned_rw(view, luaView.types[i]);
+                luaView.datas[i] = sugoiV_get_owned_rw(view, luaView.types[i]);
             else
-                luaView.datas[i] = (void*)dualV_get_owned_ro(view, luaView.types[i]);
+                luaView.datas[i] = (void*)sugoiV_get_owned_ro(view, luaView.types[i]);
         }
         return luaView;
     }
 
-    static lua_chunk_view_t fill_chunk_view(dual_storage_t* storage, dual_chunk_view_t* view, const dual_type_index_t* indices, uint32_t count, const dual_operation_t* operations, bool readonly)
+    static lua_chunk_view_t fill_chunk_view(sugoi_storage_t* storage, sugoi_chunk_view_t* view, const sugoi_type_index_t* indices, uint32_t count, const sugoi_operation_t* operations, bool readonly)
     {
         lua_chunk_view_t luaView { storage, *view, count };
 
         luaView.types = indices;
-        luaView.datas = dual::localStack.allocate<void*>(count);
-        luaView.strides = dual::localStack.allocate<uint32_t>(count);
-        luaView.guidStrs = dual::localStack.allocate<const char8_t*>(count);
-        luaView.elementSizes = dual::localStack.allocate<uint32_t>(count);
-        luaView.lua_pushs = dual::localStack.allocate<lua_push_t>(count);
-        luaView.lua_checks = dual::localStack.allocate<lua_check_t>(count);
+        luaView.datas = sugoi::localStack.allocate<void*>(count);
+        luaView.strides = sugoi::localStack.allocate<uint32_t>(count);
+        luaView.guidStrs = sugoi::localStack.allocate<const char8_t*>(count);
+        luaView.elementSizes = sugoi::localStack.allocate<uint32_t>(count);
+        luaView.lua_pushs = sugoi::localStack.allocate<lua_push_t>(count);
+        luaView.lua_checks = sugoi::localStack.allocate<lua_check_t>(count);
         luaView.operations = operations;
         luaView.readonly = readonly;
 
-        luaView.entities = dualV_get_entities(view);
-        auto& typeReg = dual::type_registry_t::get();
+        luaView.entities = sugoiV_get_entities(view);
+        auto& typeReg = sugoi::type_registry_t::get();
         forloop(i, 0, count)
         {
-            auto& desc = typeReg.descriptions[dual::type_index_t(indices[i]).index()];
+            auto& desc = typeReg.descriptions[sugoi::type_index_t(indices[i]).index()];
             if((operations && !operations[i].readonly) || !readonly)
             {
                 luaView.lua_checks[i] = desc.callback.lua_check;
-                luaView.datas[i] = (void*)dualV_get_owned_rw(view, indices[i]);
+                luaView.datas[i] = (void*)sugoiV_get_owned_rw(view, indices[i]);
             }
             else
             {
                 luaView.lua_checks[i] = nullptr;
-                luaView.datas[i] = (void*)dualV_get_owned_ro(view, indices[i]);
+                luaView.datas[i] = (void*)sugoiV_get_owned_ro(view, indices[i]);
             }
             luaView.strides[i] = desc.size;
             luaView.guidStrs[i] = desc.guidStr;
@@ -135,20 +135,20 @@ namespace skr::lua
         return luaView;
     }
 
-    static lua_chunk_view_t init_chunk_view(dual_storage_t* storage, dual_chunk_view_t* view, const dual_type_set_t& type, bool readonly = true)
+    static lua_chunk_view_t init_chunk_view(sugoi_storage_t* storage, sugoi_chunk_view_t* view, const sugoi_type_set_t& type, bool readonly = true)
     {
         return fill_chunk_view(storage, view, type.data, type.length, nullptr, readonly);
     }
 
-    static lua_chunk_view_t query_chunk_view(dual_chunk_view_t* view, dual_query_t* query)
+    static lua_chunk_view_t query_chunk_view(sugoi_chunk_view_t* view, sugoi_query_t* query)
     {
         return fill_chunk_view(query->storage, view, query->parameters.types, query->parameters.length, query->parameters.accesses, true);
     }
 
     void dtor_query(void* p)
     {
-        auto query = (dual_query_t*)p;
-        dualQ_release(query);
+        auto query = (sugoi_query_t*)p;
+        sugoiQ_release(query);
     }
 
     void bind_ecs(lua_State* L)
@@ -159,8 +159,8 @@ namespace skr::lua
         {
             auto trampoline = +[](lua_State* L) -> int {
                 auto name = (const char8_t*)luaL_checkstring(L, 1);
-                auto type = dual::type_registry_t::get().get_type(name);
-                if(type == dual::kInvalidSIndex)
+                auto type = sugoi::type_registry_t::get().get_type(name);
+                if(type == sugoi::kInvalidSIndex)
                 {
                     lua_pushnil(L);
                     return 1;
@@ -179,25 +179,25 @@ namespace skr::lua
         //bind allocate entities
         {
             auto trampoline = +[](lua_State* L) -> int {
-                dual_storage_t* storage = (dual_storage_t*)lua_touserdata(L, 1);
+                sugoi_storage_t* storage = (sugoi_storage_t*)lua_touserdata(L, 1);
                 luaL_argexpected(L, lua_istable(L, 2), 2, "table");
                 auto size = luaL_checkinteger(L, 3);
                 luaL_argexpected(L, lua_isfunction(L, 4), 4, "function");
                 //iterate array
                 auto count = lua_objlen(L, 2);
-                dual::type_builder_t builder;
+                sugoi::type_builder_t builder;
                 builder.reserve((uint32_t)count);
                 for(auto i = 1; i <= count; ++i)
                 {
                     lua_rawgeti(L, 2, i);
                     auto type = luaL_checkinteger(L, -1);
-                    builder.with((dual_type_index_t)type);
+                    builder.with((sugoi_type_index_t)type);
                     lua_pop(L, 1);
                 }
-                dual_entity_type_t type;
+                sugoi_entity_type_t type;
                 type.type = builder.build();
-                auto callback = [&](dual_chunk_view_t* view) -> void {
-                    dual::fixed_stack_scope_t scope(dual::localStack);
+                auto callback = [&](sugoi_chunk_view_t* view) -> void {
+                    sugoi::fixed_stack_scope_t scope(sugoi::localStack);
                     auto luaView = init_chunk_view(storage, view, type.type);
                     lua_pushvalue(L, 3);
                     *(lua_chunk_view_t**)lua_newuserdata(L, sizeof(void*)) = &luaView;
@@ -212,7 +212,7 @@ namespace skr::lua
                         lua_pop(L, 2);
                     }
                 };
-                dualS_allocate_type(storage, &type, (EIndex)size, DUAL_LAMBDA(callback));
+                sugoiS_allocate_type(storage, &type, (EIndex)size, SUGOI_LAMBDA(callback));
                 return 0;
             };
             lua_pushcfunction(L, trampoline, "allocate_entities");
@@ -222,23 +222,23 @@ namespace skr::lua
         // bind destroy entities
         {
             auto trampoline = +[](lua_State* L) -> int {
-                dual_storage_t* storage = (dual_storage_t*)lua_touserdata(L, 1);
+                sugoi_storage_t* storage = (sugoi_storage_t*)lua_touserdata(L, 1);
                 luaL_argexpected(L, lua_istable(L, 2), 2, "table");
                 //iterate array
                 auto count = lua_objlen(L, 2);
-                skr::stl_vector<dual_entity_t> entities;
+                skr::stl_vector<sugoi_entity_t> entities;
                 entities.reserve(count);
                 for(auto i = 1; i <= count; ++i)
                 {
                     lua_rawgeti(L, 2, i);
                     auto ent = luaL_checkinteger(L, -1);
-                    entities.push_back(dual_entity_t(ent));
+                    entities.push_back(sugoi_entity_t(ent));
                     lua_pop(L, 1);
                 }
-                dual_view_callback_t callback = +[](void* userdata, dual_chunk_view_t* view) -> void {
-                    dualS_destroy((dual_storage_t*)userdata, view);
+                sugoi_view_callback_t callback = +[](void* userdata, sugoi_chunk_view_t* view) -> void {
+                    sugoiS_destroy((sugoi_storage_t*)userdata, view);
                 };
-                dualS_batch(storage, entities.data(), (uint32_t)entities.size(), callback, storage);
+                sugoiS_batch(storage, entities.data(), (uint32_t)entities.size(), callback, storage);
                 return 0;
             };
             lua_pushcfunction(L, trampoline, "destroy_entities");
@@ -248,22 +248,22 @@ namespace skr::lua
         // bind cast entities
         {
             auto trampoline = +[](lua_State* L) -> int {
-                dual_storage_t* storage = (dual_storage_t*)lua_touserdata(L, 1);
+                sugoi_storage_t* storage = (sugoi_storage_t*)lua_touserdata(L, 1);
                 luaL_argexpected(L, lua_istable(L, 2), 2, "table");
                 luaL_argexpected(L, lua_istable(L, 3), 3, "table");
                 bool withRemove = lua_toboolean(L, 4);
                 luaL_argexpected(L, lua_isfunction(L, 4 + withRemove), 4 + withRemove, "table");
                 //iterate array
                 auto count = lua_objlen(L, 2);
-                skr::stl_vector<dual_entity_t> entities;
-                dual::type_builder_t addBuilder;
-                dual::type_builder_t removeBuilder;
+                skr::stl_vector<sugoi_entity_t> entities;
+                sugoi::type_builder_t addBuilder;
+                sugoi::type_builder_t removeBuilder;
                 entities.reserve(count);
                 for(auto i = 1; i <= count; ++i)
                 {
                     lua_rawgeti(L, 2, i);
                     auto ent = luaL_checkinteger(L, -1);
-                    entities.push_back(dual_entity_t(ent));
+                    entities.push_back(sugoi_entity_t(ent));
                     lua_pop(L, 1);
                 }
                     auto addCount = lua_objlen(L, 3);
@@ -272,7 +272,7 @@ namespace skr::lua
                     {
                         lua_rawgeti(L, 3, i);
                         auto type = luaL_checkinteger(L, -1);
-                        addBuilder.with((dual_type_index_t)type);
+                        addBuilder.with((sugoi_type_index_t)type);
                         lua_pop(L, 1);
                     }
                 uint32_t param = 4;
@@ -284,18 +284,18 @@ namespace skr::lua
                     {
                         lua_rawgeti(L, 4, i);
                         auto type = luaL_checkinteger(L, -1);
-                        removeBuilder.with((dual_type_index_t)type);
+                        removeBuilder.with((sugoi_type_index_t)type);
                         lua_pop(L, 1);
                     }
                     param = 5;
                 }
-                dual_delta_type_t delta;
+                sugoi_delta_type_t delta;
                 delta.added.type = addBuilder.build();
                 delta.removed.type = removeBuilder.build();
-                auto callback = [&](dual_chunk_view_t* view) -> void {
-                    auto castCallback = [&](dual_chunk_view_t* new_view, dual_chunk_view_t* old_view)
+                auto callback = [&](sugoi_chunk_view_t* view) -> void {
+                    auto castCallback = [&](sugoi_chunk_view_t* new_view, sugoi_chunk_view_t* old_view)
                     {
-                        dual::fixed_stack_scope_t scope(dual::localStack);
+                        sugoi::fixed_stack_scope_t scope(sugoi::localStack);
                         auto luaView = init_chunk_view(storage, view, delta.added.type);
                         lua_pushvalue(L, param);
                         *(lua_chunk_view_t**)lua_newuserdata(L, sizeof(void*)) = &luaView;
@@ -310,9 +310,9 @@ namespace skr::lua
                             lua_pop(L, 2);
                         }
                     };
-                    dualS_cast_view_delta(storage, view, &delta, DUAL_LAMBDA(castCallback));
+                    sugoiS_cast_view_delta(storage, view, &delta, SUGOI_LAMBDA(castCallback));
                 };
-                dualS_batch(storage, entities.data(), (uint32_t)entities.size(), DUAL_LAMBDA(callback));
+                sugoiS_batch(storage, entities.data(), (uint32_t)entities.size(), SUGOI_LAMBDA(callback));
                 return 0;
             };
             lua_pushcfunction(L, trampoline, "cast_entities");
@@ -321,18 +321,18 @@ namespace skr::lua
 
         // bind query
         {
-            luaL_newmetatable(L, "dual_query_t");
+            luaL_newmetatable(L, "sugoi_query_t");
             lua_pop(L, 1);
         }
 
         // bind create query
         {
             auto trampoline = +[](lua_State* L) -> int {
-                dual_storage_t* storage = (dual_storage_t*)lua_touserdata(L, 1);
+                sugoi_storage_t* storage = (sugoi_storage_t*)lua_touserdata(L, 1);
                 const char* literal = luaL_checkstring(L, 2);
-                auto query = dualQ_from_literal(storage, literal);
-                *(dual_query_t**)lua_newuserdatadtor(L, sizeof(void*), dtor_query) = query;
-                luaL_getmetatable(L, "dual_query_t");
+                auto query = sugoiQ_from_literal(storage, literal);
+                *(sugoi_query_t**)lua_newuserdatadtor(L, sizeof(void*), dtor_query) = query;
+                luaL_getmetatable(L, "sugoi_query_t");
                 lua_setmetatable(L, -2);
                 return 1;
             };
@@ -343,13 +343,13 @@ namespace skr::lua
         // bind iterate query
         {
             auto trampoline = +[](lua_State* L) -> int {
-                auto query = *(dual_query_t**)luaL_checkudata(L, 1, "dual_query_t");
+                auto query = *(sugoi_query_t**)luaL_checkudata(L, 1, "sugoi_query_t");
                 if(!query) return 0;
                 luaL_argexpected(L, lua_isfunction(L, 2), 2, "function");
-                dual_view_callback_t callback = +[](void* userdata, dual_chunk_view_t* view) -> void {
+                sugoi_view_callback_t callback = +[](void* userdata, sugoi_chunk_view_t* view) -> void {
                     lua_State* L = (lua_State*)userdata;
-                    dual_query_t* query = *(dual_query_t**)lua_touserdata(L, 1);
-                    dual::fixed_stack_scope_t scope(dual::localStack);
+                    sugoi_query_t* query = *(sugoi_query_t**)lua_touserdata(L, 1);
+                    sugoi::fixed_stack_scope_t scope(sugoi::localStack);
                     auto luaView = query_chunk_view(view, query);
                     lua_pushvalue(L, 2);
 
@@ -368,7 +368,7 @@ namespace skr::lua
                     *ptr = nullptr;
                 };
                 void* u = (void*)L;
-                dualQ_get_views(query, callback, u);
+                sugoiQ_get_views(query, callback, u);
                 return 0;
             };
             lua_pushcfunction(L, trampoline, "iterate_query");
@@ -404,7 +404,7 @@ namespace skr::lua
                             if(lua_isstring(L, 3))
                             {
                                 auto str = (const char8_t*)lua_tostring(L, 3);
-                                auto id = dualT_get_type_by_name(str);
+                                auto id = sugoiT_get_type_by_name(str);
                                 compId = view->view.chunk->type->index(id);
                             }
                             else if(lua_isnumber(L, 3))
@@ -456,7 +456,7 @@ namespace skr::lua
                             if(lua_isstring(L, 3))
                             {
                                 auto str = (const char8_t*)lua_tostring(L, 3);
-                                auto id = dualT_get_type_by_name(str);
+                                auto id = sugoiT_get_type_by_name(str);
                                 compId = view->view.chunk->type->index(id);
                             }
                             else if(lua_isnumber(L, 3))
@@ -495,17 +495,17 @@ namespace skr::lua
                             luaL_argexpected(L, lua_isfunction(L, 3), 3, "function");
                             //iterate array
                             auto count = lua_objlen(L, 2);
-                            skr::stl_vector<dual_entity_t> entities;
+                            skr::stl_vector<sugoi_entity_t> entities;
                             entities.reserve(count);
                             for(auto i = 1; i <= count; ++i)
                             {
                                 lua_rawgeti(L, 2, i);
                                 auto ent = luaL_checkinteger(L, -1);
-                                entities.push_back(dual_entity_t(ent));
+                                entities.push_back(sugoi_entity_t(ent));
                                 lua_pop(L, 1);
                             }
-                            auto callback = [&](dual_chunk_view_t* view) -> void {
-                                dual::fixed_stack_scope_t scope(dual::localStack);
+                            auto callback = [&](sugoi_chunk_view_t* view) -> void {
+                                sugoi::fixed_stack_scope_t scope(sugoi::localStack);
                                 auto luaView = inherit_chunk_view(view, parent);
                                 lua_pushvalue(L, 3);
                                 auto ptr = (lua_chunk_view_t**)lua_newuserdata(L, sizeof(void*));
@@ -522,7 +522,7 @@ namespace skr::lua
                                 }
                                 *ptr = nullptr;
                             };
-                            dualS_batch(parent->storage, entities.data(), (uint32_t)entities.size(), DUAL_LAMBDA(callback));
+                            sugoiS_batch(parent->storage, entities.data(), (uint32_t)entities.size(), SUGOI_LAMBDA(callback));
                             return 0;
                         };
                         lua_pushcfunction(L, trampoline, "with");

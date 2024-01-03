@@ -5,12 +5,12 @@
 
 #include "SkrRT/containers/string.hpp"
 
-struct dual_context_t {
-    dual_context_t();
-    dual::pool_t normalPool;
-    dual::pool_t largePool;
-    dual::pool_t smallPool;
-    dual::type_registry_t typeRegistry;
-    dual::scheduler_t scheduler;
+struct sugoi_context_t {
+    sugoi_context_t();
+    sugoi::pool_t normalPool;
+    sugoi::pool_t largePool;
+    sugoi::pool_t smallPool;
+    sugoi::type_registry_t typeRegistry;
+    sugoi::scheduler_t scheduler;
     skr::String error;
 };

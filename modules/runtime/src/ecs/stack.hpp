@@ -1,6 +1,6 @@
 #pragma once
 
-namespace dual
+namespace sugoi
 {
     struct fixed_stack_t
     {

@@ -54,7 +54,7 @@ Cpp11BracedListStyle: false
 
 RequiresClausePosition: SingleLine
 
-AttributeMacros: ["DUAL_UNLIKELY", "DUAL_FORCEINLINE", "FORCEINLINE"]
+AttributeMacros: ["SUGOI_UNLIKELY", "SUGOI_FORCEINLINE", "FORCEINLINE"]
 WhitespaceSensitiveMacros:
   - "sattr"
   - "spush_attr"

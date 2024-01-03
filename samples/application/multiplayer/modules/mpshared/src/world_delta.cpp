@@ -41,7 +41,7 @@ struct ComponentDeltaBuilder;
 struct ComponentDeltaApplier;
 
 struct ComponentDeltaBuilderRegistry {
-    skr::FlatHashMap<dual_type_index_t, ComponentDeltaBuilder> builders;
+    skr::FlatHashMap<sugoi_type_index_t, ComponentDeltaBuilder> builders;
 
     static ComponentDeltaBuilderRegistry& Get()
     {
@@ -51,7 +51,7 @@ struct ComponentDeltaBuilderRegistry {
 };
 
 struct ComponentDeltaApplierRegistry {
-    skr::FlatHashMap<dual_type_index_t, ComponentDeltaApplier> appliers;
+    skr::FlatHashMap<sugoi_type_index_t, ComponentDeltaApplier> appliers;
 
     static ComponentDeltaApplierRegistry& Get()
     {
@@ -61,54 +61,54 @@ struct ComponentDeltaApplierRegistry {
 };
 
 struct ComponentDeltaBuilder {
-    dual_type_index_t                component;
+    sugoi_type_index_t                component;
     component_delta_build_callback_t callback;
-    dual_type_index_t                historyComponent = dual::kInvalidTypeIndex;
-    dual_query_t*                    deltaQuery;
+    sugoi_type_index_t                historyComponent = sugoi::kInvalidTypeIndex;
+    sugoi_query_t*                    deltaQuery;
 
-    void Initialize(dual_storage_t* storage)
+    void Initialize(sugoi_storage_t* storage)
     {
-        if (historyComponent != dual::kInvalidTypeIndex)
+        if (historyComponent != sugoi::kInvalidTypeIndex)
         {
-            SKR_ASSERT(DUAL_IS_BUFFER(historyComponent));
-            auto                 filter  = make_zeroed<dual_filter_t>();
-            dual_type_index_t    types[] = { component, historyComponent, dual_id_of<CAuth>::get() };
-            dual::type_builder_t all;
+            SKR_ASSERT(SUGOI_IS_BUFFER(historyComponent));
+            auto                 filter  = make_zeroed<sugoi_filter_t>();
+            sugoi_type_index_t    types[] = { component, historyComponent, sugoi_id_of<CAuth>::get() };
+            sugoi::type_builder_t all;
             all.with(types, 3);
             filter.all                   = all.build();
-            dual_parameters_t params     = {};
-            dual_operation_t  accesses[] = {
-                dual_operation_t{ -1, 1, 0, 1 },
-                dual_operation_t{ -1, 0, 0, 1 },
-                dual_operation_t{ -1, 1, 0, 1 },
+            sugoi_parameters_t params     = {};
+            sugoi_operation_t  accesses[] = {
+                sugoi_operation_t{ -1, 1, 0, 1 },
+                sugoi_operation_t{ -1, 0, 0, 1 },
+                sugoi_operation_t{ -1, 1, 0, 1 },
             };
             params.types    = types;
             params.accesses = accesses;
             params.length   = 3;
-            deltaQuery      = dualQ_create(storage, &filter, &params);
+            deltaQuery      = sugoiQ_create(storage, &filter, &params);
         }
         else
         {
-            auto                 filter = make_zeroed<dual_filter_t>();
-            dual::type_builder_t all;
-            dual_type_index_t    types[] = { component, dual_id_of<CAuth>::get() };
+            auto                 filter = make_zeroed<sugoi_filter_t>();
+            sugoi::type_builder_t all;
+            sugoi_type_index_t    types[] = { component, sugoi_id_of<CAuth>::get() };
             all.with(types, 2);
             filter.all                   = all.build();
-            dual_parameters_t params     = {};
-            dual_operation_t  accesses[] = {
-                dual_operation_t{ -1, 1, 0, 1 },
-                dual_operation_t{ -1, 1, 0, 1 }
+            sugoi_parameters_t params     = {};
+            sugoi_operation_t  accesses[] = {
+                sugoi_operation_t{ -1, 1, 0, 1 },
+                sugoi_operation_t{ -1, 1, 0, 1 }
             };
             params.types    = types;
             params.accesses = accesses;
             params.length   = 2;
-            deltaQuery      = dualQ_create(storage, &filter, &params);
+            deltaQuery      = sugoiQ_create(storage, &filter, &params);
         }
     }
 
     void Release()
     {
-        dualQ_release(deltaQuery);
+        sugoiQ_release(deltaQuery);
     }
 
     skr::task::event_t GenerateDelta(uint32_t connectionId, uint32_t totalConnection, MPWorldDeltaViewBuilder& builder)
@@ -120,20 +120,20 @@ struct ComponentDeltaBuilder {
 struct WorldDeltaBuilder : IWorldDeltaBuilder {
     skr::Vector<ComponentDeltaBuilder> components;
     skr::Vector<skr::task::event_t>    dependencies;
-    dual_query_t*                      worldDeltaQuery;
-    dual_query_t*                      clearDirtyQuery;
-    dual_query_t*                      deadQuery;
-    dual_storage_t*                    storage;
+    sugoi_query_t*                      worldDeltaQuery;
+    sugoi_query_t*                      clearDirtyQuery;
+    sugoi_query_t*                      deadQuery;
+    sugoi_storage_t*                    storage;
     bool                               initialized = false;
 
-    void Initialize(dual_storage_t* inStorage) override
+    void Initialize(sugoi_storage_t* inStorage) override
     {
         if (initialized)
             return;
         storage                                 = inStorage;
-        worldDeltaQuery                         = dualQ_from_literal(storage, "[in]CPrefab,[inout]CAuth,[inout]dual::dirty_comp_t,[inout]CAuthTypeData");
-        clearDirtyQuery                         = dualQ_from_literal(storage, "[inout]dual::dirty_comp_t,[has]CPrefab,[has]CAuth,[has]CAuthTypeData");
-        deadQuery                               = dualQ_from_literal(storage, "[in]CAuth, [has]dead");
+        worldDeltaQuery                         = sugoiQ_from_literal(storage, "[in]CPrefab,[inout]CAuth,[inout]sugoi::dirty_comp_t,[inout]CAuthTypeData");
+        clearDirtyQuery                         = sugoiQ_from_literal(storage, "[inout]sugoi::dirty_comp_t,[has]CPrefab,[has]CAuth,[has]CAuthTypeData");
+        deadQuery                               = sugoiQ_from_literal(storage, "[in]CAuth, [has]dead");
         ComponentDeltaBuilderRegistry& registry = ComponentDeltaBuilderRegistry::Get();
         for (auto& pair : registry.builders)
         {
@@ -145,9 +145,9 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
 
     ~WorldDeltaBuilder()
     {
-        dualQ_release(worldDeltaQuery);
-        dualQ_release(clearDirtyQuery);
-        dualQ_release(deadQuery);
+        sugoiQ_release(worldDeltaQuery);
+        sugoiQ_release(clearDirtyQuery);
+        sugoiQ_release(deadQuery);
         for (auto& component : components)
         {
             component.Release();
@@ -170,9 +170,9 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                 delta.components.add_default()->type = GetNetworkComponentIndex(cmps.data[i]);
             }
         }
-        skr::Vector<skr::FlatHashMap<dual_entity_t, NetEntityId>> localMaps;
+        skr::Vector<skr::FlatHashMap<sugoi_entity_t, NetEntityId>> localMaps;
         localMaps.resize_default(builder.size());
-        auto GetNetworkEntityIndex = [&](dual_entity_t ent, uint32_t c) -> NetEntityId {
+        auto GetNetworkEntityIndex = [&](sugoi_entity_t ent, uint32_t c) -> NetEntityId {
             auto it = localMaps[c].find(ent);
             if (it != localMaps[c].end())
                 return it->second;
@@ -182,46 +182,46 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
             return index;
         };
 
-        dual::type_builder_t history;
+        sugoi::type_builder_t history;
         for (auto& component : components)
         {
-            if (component.historyComponent != dual::kInvalidTypeIndex)
+            if (component.historyComponent != sugoi::kInvalidTypeIndex)
                 history.with(component.historyComponent);
         }
         if (history.empty())
             return;
-        dual_type_set_t historySet = history.build();
-        auto            deltaType  = make_zeroed<dual_delta_type_t>();
+        sugoi_type_set_t historySet = history.build();
+        auto            deltaType  = make_zeroed<sugoi_delta_type_t>();
         deltaType.added.type       = historySet;
-        dual::array_comp_T<dual_group_t*, 16> groupToCast;
-        auto                                  checkHistoryComponents = [&](dual_group_t* group) {
-            dual_entity_type_t type;
-            dualG_get_type(group, &type);
+        sugoi::array_comp_T<sugoi_group_t*, 16> groupToCast;
+        auto                                  checkHistoryComponents = [&](sugoi_group_t* group) {
+            sugoi_entity_type_t type;
+            sugoiG_get_type(group, &type);
 
-            if (!dual::set_utils<dual_type_index_t>::all(type.type, historySet))
+            if (!sugoi::set_utils<sugoi_type_index_t>::all(type.type, historySet))
                 groupToCast.emplace_back(group);
         };
-        dualQ_get_groups(worldDeltaQuery, DUAL_LAMBDA(checkHistoryComponents));
+        sugoiQ_get_groups(worldDeltaQuery, SUGOI_LAMBDA(checkHistoryComponents));
         for (auto group : groupToCast)
         {
-            dualS_cast_group_delta(storage, group, &deltaType, nullptr, nullptr);
+            sugoiS_cast_group_delta(storage, group, &deltaType, nullptr, nullptr);
         }
         // find changed component and deleted component
         // prepare changed component storage, record deleted component
-        auto prepare = [&builder, &GetNetworkEntityIndex](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
-            auto               prefabs      = (CPrefab*)dualV_get_owned_rw_local(view, localTypes[0]);
-            auto               auths        = (CAuth*)dualV_get_owned_rw_local(view, localTypes[1]);
-            auto               relevances   = (CRelevance*)dualV_get_owned_ro(view, dual_id_of<CRelevance>::get());
-            auto               dirtyMasks   = (uint32_t*)dualV_get_owned_ro_local(view, localTypes[2]);
-            auto               authTypes    = (dual::array_comp_T<dual_type_index_t, 8>*)dualV_get_owned_ro_local(view, localTypes[3]);
-            auto               ControllerId = dual_id_of<CController>::get();
-            auto               controller   = (CController*)dualV_get_owned_ro(view, ControllerId);
-            auto               entities     = dualV_get_entities(view);
-            dual_entity_type_t type;
-            dualG_get_type(dualC_get_group(view->chunk), &type);
-            dual_type_index_t buffer[128];
+        auto prepare = [&builder, &GetNetworkEntityIndex](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
+            auto               prefabs      = (CPrefab*)sugoiV_get_owned_rw_local(view, localTypes[0]);
+            auto               auths        = (CAuth*)sugoiV_get_owned_rw_local(view, localTypes[1]);
+            auto               relevances   = (CRelevance*)sugoiV_get_owned_ro(view, sugoi_id_of<CRelevance>::get());
+            auto               dirtyMasks   = (uint32_t*)sugoiV_get_owned_ro_local(view, localTypes[2]);
+            auto               authTypes    = (sugoi::array_comp_T<sugoi_type_index_t, 8>*)sugoiV_get_owned_ro_local(view, localTypes[3]);
+            auto               ControllerId = sugoi_id_of<CController>::get();
+            auto               controller   = (CController*)sugoiV_get_owned_ro(view, ControllerId);
+            auto               entities     = sugoiV_get_entities(view);
+            sugoi_entity_type_t type;
+            sugoiG_get_type(sugoiC_get_group(view->chunk), &type);
+            sugoi_type_index_t buffer[128];
             auto              cmps        = GetNetworkComponents();
-            dual_type_set_t   networkType = dual::set_utils<dual_type_index_t>::intersect(cmps, type.type, buffer);
+            sugoi_type_set_t   networkType = sugoi::set_utils<sugoi_type_index_t>::intersect(cmps, type.type, buffer);
             for (int j = 0; j < builder.size(); ++j)
             {
                 auto& delta = builder[j];
@@ -244,7 +244,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                                 if (j != controller[i].connectionId)
                                     continue;
                             data.components.add(GetNetworkComponentIndex(networkType.data[k]));
-                            if (!DUAL_IS_TAG(networkType.data[k]))
+                            if (!SUGOI_IS_TAG(networkType.data[k]))
                             {
                                 for (auto z = 0; z < delta.components.size(); ++z)
                                 {
@@ -268,10 +268,10 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                     else if (auths[i].mappedConnection[j] && relevant)
                     {
                         auths[i].initializedConnection[j] = true;
-                        dual_type_index_t buffer2[128];
-                        dual_type_index_t buffer3[128];
-                        auto              deleted = dual::set_utils<dual_type_index_t>::substract(auths[i].mappedType, networkType, buffer2);
-                        auto              added   = dual::set_utils<dual_type_index_t>::substract(networkType, auths[i].mappedType, buffer3);
+                        sugoi_type_index_t buffer2[128];
+                        sugoi_type_index_t buffer3[128];
+                        auto              deleted = sugoi::set_utils<sugoi_type_index_t>::substract(auths[i].mappedType, networkType, buffer2);
+                        auto              added   = sugoi::set_utils<sugoi_type_index_t>::substract(networkType, auths[i].mappedType, buffer3);
 
                         if (deleted.length == 0 && dirtyMasks[i] == 0 && added.length == 0)
                             continue;
@@ -288,7 +288,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                                     if (j != controller[i].connectionId)
                                         continue;
                                 changed.components.add(GetNetworkComponentIndex(added.data[k]));
-                                if (!DUAL_IS_TAG(added.data[k]))
+                                if (!SUGOI_IS_TAG(added.data[k]))
                                 {
                                     for (auto z = 0; z < delta.components.size(); ++z)
                                     {
@@ -310,7 +310,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                                 if (type.type.data[k] == ControllerId)
                                     if (j != controller[i].connectionId)
                                         continue;
-                                if (!DUAL_IS_TAG(type.type.data[k]))
+                                if (!SUGOI_IS_TAG(type.type.data[k]))
                                 {
                                     for (auto z = 0; z < delta.components.size(); ++z)
                                     {
@@ -327,14 +327,14 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                     }
                     authTypes[i].resize(networkType.length);
                     char* temp          = (char*)authTypes[i].data();
-                    auths[i].mappedType = dual::clone(networkType, temp);
+                    auths[i].mappedType = sugoi::clone(networkType, temp);
                 }
             }
         };
-        dualJ_schedule_ecs(worldDeltaQuery, 0, DUAL_LAMBDA(prepare), nullptr, nullptr, nullptr, nullptr);
+        sugoiJ_schedule_ecs(worldDeltaQuery, 0, SUGOI_LAMBDA(prepare), nullptr, nullptr, nullptr, nullptr);
         skr::task::event_t completed(nullptr);
-        dual::schedule_task(
-        deadQuery, 0, [&](dual::task_context_t ctx) {
+        sugoi::schedule_task(
+        deadQuery, 0, [&](sugoi::task_context_t ctx) {
             auto auths    = ctx.get_owned_ro<CAuth>(0);
             auto entities = ctx.get_entities();
             for (int j = 0; j < builder.size(); ++j)
@@ -366,10 +366,10 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
             dependency.wait(true);
         }
         dependencies.clear();
-        dualJ_schedule_ecs(
+        sugoiJ_schedule_ecs(
         clearDirtyQuery, 0,
-        +[](void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
-            auto dirties = (uint32_t*)dualV_get_owned_rw_local(view, localTypes[0]);
+        +[](void* u, sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
+            auto dirties = (uint32_t*)sugoiV_get_owned_rw_local(view, localTypes[0]);
             for (int i = 0; i < view->count; ++i)
             {
                 dirties[i] = 0;
@@ -384,10 +384,10 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
                 delta.maxEntity = 0;
                 for (auto& entity : delta.entities)
                 {
-                    EIndex maxId      = std::max(DUAL_ENTITY_ID(delta.maxEntity), DUAL_ENTITY_ID(entity.entity));
-                    EIndex maxVersion = std::max(DUAL_ENTITY_VERSION(delta.maxEntity), DUAL_ENTITY_VERSION(entity.entity));
+                    EIndex maxId      = std::max(SUGOI_ENTITY_ID(delta.maxEntity), SUGOI_ENTITY_ID(entity.entity));
+                    EIndex maxVersion = std::max(SUGOI_ENTITY_VERSION(delta.maxEntity), SUGOI_ENTITY_VERSION(entity.entity));
 
-                    delta.maxEntity = DUAL_ENTITY(maxId, maxVersion);
+                    delta.maxEntity = SUGOI_ENTITY(maxId, maxVersion);
                 }
             }
         }
@@ -401,32 +401,32 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
 };
 
 struct ComponentDeltaApplier {
-    dual_type_index_t                component;
+    sugoi_type_index_t                component;
     component_delta_apply_callback_t callback;
-    dual_query_t*                    deltaQuery;
+    sugoi_query_t*                    deltaQuery;
     BandwidthCounter                 bandwidthCounter;
 
-    void Initialize(dual_storage_t* storage)
+    void Initialize(sugoi_storage_t* storage)
     {
-        auto                 filter = make_zeroed<dual_filter_t>();
-        dual::type_builder_t all;
+        auto                 filter = make_zeroed<sugoi_filter_t>();
+        sugoi::type_builder_t all;
         all.with(component).with<CNetwork>();
         filter.all                   = all.build();
-        dual_parameters_t params     = {};
-        dual_type_index_t types[]    = { component, dual_id_of<CNetwork>::get() };
-        dual_operation_t  accesses[] = {
-            dual_operation_t{ 0, 0, 0, 1 },
-            dual_operation_t{ -1, 1, 0, 1 },
+        sugoi_parameters_t params     = {};
+        sugoi_type_index_t types[]    = { component, sugoi_id_of<CNetwork>::get() };
+        sugoi_operation_t  accesses[] = {
+            sugoi_operation_t{ 0, 0, 0, 1 },
+            sugoi_operation_t{ -1, 1, 0, 1 },
         };
         params.types    = types;
         params.accesses = accesses;
         params.length   = 2;
-        deltaQuery      = dualQ_create(storage, &filter, &params);
+        deltaQuery      = sugoiQ_create(storage, &filter, &params);
     }
 
     void Release()
     {
-        dualQ_release(deltaQuery);
+        sugoiQ_release(deltaQuery);
     }
 
     skr::task::event_t ApplyDelta(const MPWorldDeltaView& delta, const entity_map_t& entityMap)
@@ -447,13 +447,13 @@ struct ComponentDeltaApplier {
 struct WorldDeltaApplier : IWorldDeltaApplier {
     skr::Vector<ComponentDeltaApplier> components;
     skr::Vector<skr::task::event_t>    dependencies;
-    dual_storage_t*                    storage;
+    sugoi_storage_t*                    storage;
     SpawnPrefab_t                      spawnPrefab;
     DestroyEntity_t                    destroyEntity;
-    dual_query_t*                      worldDeltaQuery;
+    sugoi_query_t*                      worldDeltaQuery;
     bool                               initialized = false;
 
-    void Initialize(dual_storage_t* inStorage, SpawnPrefab_t inSpawnPrefab, DestroyEntity_t inDestroyPrefab) override
+    void Initialize(sugoi_storage_t* inStorage, SpawnPrefab_t inSpawnPrefab, DestroyEntity_t inDestroyPrefab) override
     {
         if (initialized)
             return;
@@ -466,7 +466,7 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
             components.add(pair.second);
             components[components.size() - 1].Initialize(storage);
         }
-        worldDeltaQuery = dualQ_from_literal(storage, "[in]CNetwork");
+        worldDeltaQuery = sugoiQ_from_literal(storage, "[in]CNetwork");
         initialized     = true;
     }
 
@@ -474,7 +474,7 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
     {
         if (!initialized)
             return;
-        dualQ_release(worldDeltaQuery);
+        sugoiQ_release(worldDeltaQuery);
         for (auto& component : components)
         {
             component.Release();
@@ -488,13 +488,13 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
         map.clear();
         {
             SkrZoneScopedN("Build Entity Map");
-            auto callback = [&](dual_chunk_view_t* view) {
-                auto networks = (CNetwork*)dualV_get_owned_ro(view, dual_id_of<CNetwork>::get());
-                auto ents     = dualV_get_entities(view);
+            auto callback = [&](sugoi_chunk_view_t* view) {
+                auto networks = (CNetwork*)sugoiV_get_owned_ro(view, sugoi_id_of<CNetwork>::get());
+                auto ents     = sugoiV_get_entities(view);
                 for (int i = 0; i < view->count; ++i)
                     map.emplace(networks[i].serverEntity, ents[i]);
             };
-            dualQ_get_views(worldDeltaQuery, DUAL_LAMBDA(callback));
+            sugoiQ_get_views(worldDeltaQuery, SUGOI_LAMBDA(callback));
         }
         {
             SkrZoneScopedN("Apply Structural Changes");
@@ -502,29 +502,29 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
             {
                 auto iter = map.find(delta.entities[pair.entity]);
                 SKR_ASSERT(iter != map.end());
-                skr::Vector<dual_type_index_t> added;
-                skr::Vector<dual_type_index_t> removed;
+                skr::Vector<sugoi_type_index_t> added;
+                skr::Vector<sugoi_type_index_t> removed;
                 added.reserve(pair.components.size());
                 removed.reserve(pair.deleted.size());
                 for (auto& comp : pair.components)
                     added.add(GetNetworkComponent(comp));
                 for (auto& comp : pair.deleted)
                     removed.add(GetNetworkComponent(comp));
-                dual_delta_type_t delta   = make_zeroed<dual_delta_type_t>();
+                sugoi_delta_type_t delta   = make_zeroed<sugoi_delta_type_t>();
                 delta.added.type.data     = added.data();
                 delta.added.type.length   = added.size();
                 delta.removed.type.data   = removed.data();
                 delta.removed.type.length = removed.size();
                 {
-                    dual_chunk_view_t view;
-                    dualS_access(storage, iter->second, &view);
-                    dualS_cast_view_delta(storage, &view, &delta, nullptr, nullptr);
+                    sugoi_chunk_view_t view;
+                    sugoiS_access(storage, iter->second, &view);
+                    sugoiS_cast_view_delta(storage, &view, &delta, nullptr, nullptr);
                 }
             }
             for (auto& eid : delta.dead)
             {
                 auto entity = delta.entities[eid];
-                SKR_LOG_FMT_DEBUG(u8"Entity dead recived {}:{}", dual::e_id(entity), dual::e_version(entity));
+                SKR_LOG_FMT_DEBUG(u8"Entity dead recived {}:{}", sugoi::e_id(entity), sugoi::e_version(entity));
 
                 auto iter = map.find(entity);
                 SKR_ASSERT(iter != map.end());
@@ -534,13 +534,13 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
             for (auto& pair : delta.created)
             {
                 auto entity = delta.entities[pair.entity];
-                SKR_LOG_FMT_DEBUG(u8"New entity recived {}:{}", dual::e_id(entity), dual::e_version(entity));
-                skr::Vector<dual_type_index_t> added;
+                SKR_LOG_FMT_DEBUG(u8"New entity recived {}:{}", sugoi::e_id(entity), sugoi::e_version(entity));
+                skr::Vector<sugoi_type_index_t> added;
                 added.reserve(pair.components.size());
                 for (auto& comp : pair.components)
                     added.add(GetNetworkComponent(comp));
 
-                dual_entity_type_t type;
+                sugoi_entity_type_t type;
                 type.type.data   = added.data();
                 type.type.length = added.size();
                 map.emplace(entity, spawnPrefab(storage, entity, pair.prefab, &type));
@@ -565,7 +565,7 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
         }
     }
 
-    double GetBandwidthOf(dual_type_index_t component) override
+    double GetBandwidthOf(sugoi_type_index_t component) override
     {
         for (auto& comp : components)
         {
@@ -586,21 +586,21 @@ IWorldDeltaApplier* CreateWorldDeltaApplier()
     return SkrNew<WorldDeltaApplier>();
 }
 
-void RegisterComponentDeltaBuilder(dual_type_index_t component, component_delta_build_callback_t inCallback, dual_type_index_t historyComponent)
+void RegisterComponentDeltaBuilder(sugoi_type_index_t component, component_delta_build_callback_t inCallback, sugoi_type_index_t historyComponent)
 {
     ComponentDeltaBuilderRegistry::Get().builders[component] = ComponentDeltaBuilder{ component, inCallback, historyComponent };
 }
 
-void RegisterComponentDeltaApplier(dual_type_index_t component, component_delta_apply_callback_t inCallback)
+void RegisterComponentDeltaApplier(sugoi_type_index_t component, component_delta_apply_callback_t inCallback)
 {
     ComponentDeltaApplierRegistry::Get().appliers[component] = ComponentDeltaApplier{ component, inCallback };
 }
-int skr::binary::WriteTrait<packed_entity_t>::Write(skr_binary_writer_t* writer, const packed_entity_t& value, dual_entity_t maxEntity)
+int skr::binary::WriteTrait<packed_entity_t>::Write(skr_binary_writer_t* writer, const packed_entity_t& value, sugoi_entity_t maxEntity)
 {
-    uint32_t id         = DUAL_ENTITY_ID(value.entity);
-    uint32_t version    = DUAL_ENTITY_VERSION(value.entity);
-    uint32_t idMax      = DUAL_ENTITY_ID(maxEntity);
-    uint32_t versionMax = DUAL_ENTITY_VERSION(maxEntity);
+    uint32_t id         = SUGOI_ENTITY_ID(value.entity);
+    uint32_t version    = SUGOI_ENTITY_VERSION(value.entity);
+    uint32_t idMax      = SUGOI_ENTITY_ID(maxEntity);
+    uint32_t versionMax = SUGOI_ENTITY_VERSION(maxEntity);
 
     auto ret = Archive(writer, id, IntegerPackConfig<uint32_t>{ 0, idMax });
     if (ret != 0)
@@ -608,19 +608,19 @@ int skr::binary::WriteTrait<packed_entity_t>::Write(skr_binary_writer_t* writer,
     ret = Archive(writer, version, IntegerPackConfig<uint32_t>{ 0, versionMax });
     return ret;
 }
-int skr::binary::ReadTrait<packed_entity_t>::Read(skr_binary_reader_t* reader, packed_entity_t& value, dual_entity_t maxEntity)
+int skr::binary::ReadTrait<packed_entity_t>::Read(skr_binary_reader_t* reader, packed_entity_t& value, sugoi_entity_t maxEntity)
 {
     uint32_t id         = 0;
     uint32_t version    = 0;
-    uint32_t idMax      = DUAL_ENTITY_ID(maxEntity);
-    uint32_t versionMax = DUAL_ENTITY_VERSION(maxEntity);
+    uint32_t idMax      = SUGOI_ENTITY_ID(maxEntity);
+    uint32_t versionMax = SUGOI_ENTITY_VERSION(maxEntity);
     auto     ret        = Archive(reader, id, IntegerPackConfig<uint32_t>{ 0, idMax });
     if (ret != 0)
         return ret;
     ret = Archive(reader, version, IntegerPackConfig<uint32_t>{ 0, versionMax });
     if (ret != 0)
         return ret;
-    value.entity = DUAL_ENTITY(id, version);
+    value.entity = SUGOI_ENTITY(id, version);
     return 0;
 }
 
@@ -629,8 +629,8 @@ void skr::json::WriteTrait<packed_entity_t>::Write(skr_json_writer_t* writer, co
 {
     writer->StartObject();
     writer->Key(u8"id");
-    writer->UInt(DUAL_ENTITY_ID(value.entity));
+    writer->UInt(SUGOI_ENTITY_ID(value.entity));
     writer->Key(u8"version");
-    writer->UInt(DUAL_ENTITY_VERSION(value.entity));
+    writer->UInt(SUGOI_ENTITY_VERSION(value.entity));
     writer->EndObject();
 }
