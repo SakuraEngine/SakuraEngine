@@ -1,15 +1,15 @@
 //BEGIN QUERY GENERATED
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 %for record in generator.filter_records(db.records):
 <% query = generator.parse(record) %>
 #define GENERATED_QUERY_BODY_${db.file_id}_${record.short_name} ${"\\"}
-dual_query_t* query; ${"\\"}
-void Initialize(dual_storage_t* storage); ${"\\"}
-void Release() { if(query) dualQ_release(query); } ${"\\"}
-struct TaskContext : private dual::task_context_t ${"\\"}
+sugoi_query_t* query; ${"\\"}
+void Initialize(sugoi_storage_t* storage); ${"\\"}
+void Release() { if(query) sugoiQ_release(query); } ${"\\"}
+struct TaskContext : private sugoi::task_context_t ${"\\"}
 { ${"\\"}
-    using dual::task_context_t::task_context_t; ${"\\"}
-    using dual::task_context_t::count; ${"\\"}
+    using sugoi::task_context_t::task_context_t; ${"\\"}
+    using sugoi::task_context_t::count; ${"\\"}
     struct View ${"\\"}
     { ${"\\"}
     %for i, component in query.sequence():
@@ -33,14 +33,14 @@ struct TaskContext : private dual::task_context_t ${"\\"}
     %for i, component in query.sequence():
     auto get(skr::type_t<${component}>) { return (${"const" if query.accesses[i].readonly else ""} ${component}*)paramPtrs[${i}]; } ${"\\"}
     %endfor
-    template<class T> void set_dirty(dual::dirty_comp_t& dirty) { set_dirty(dirty, skr::type_t<T>{}); } ${"\\"}
+    template<class T> void set_dirty(sugoi::dirty_comp_t& dirty) { set_dirty(dirty, skr::type_t<T>{}); } ${"\\"}
     %for i, component in query.sequence():
-    void set_dirty(dual::dirty_comp_t& dirty, skr::type_t<${component}>) { dual::task_context_t::set_dirty(dirty, ${i}); } ${"\\"}
+    void set_dirty(sugoi::dirty_comp_t& dirty, skr::type_t<${component}>) { sugoi::task_context_t::set_dirty(dirty, ${i}); } ${"\\"}
     %endfor
     template<class T> ${"\\"}
-    auto get(dual_chunk_view_t* view) { return get(view, skr::type_t<T>{}); } ${"\\"}
+    auto get(sugoi_chunk_view_t* view) { return get(view, skr::type_t<T>{}); } ${"\\"}
     %for i, component in query.unsequence():
-    auto get(dual_chunk_view_t* view, skr::type_t<${component}>) { return dual::task_context_t::get_owned_${"ro" if query.accesses[i].readonly else "rw"}<${component}, true>(view, dual_id_of<${component}>::get()); } ${"\\"}
+    auto get(sugoi_chunk_view_t* view, skr::type_t<${component}>) { return sugoi::task_context_t::get_owned_${"ro" if query.accesses[i].readonly else "rw"}<${component}, true>(view, sugoi_id_of<${component}>::get()); } ${"\\"}
     %endfor
 };
 %endfor

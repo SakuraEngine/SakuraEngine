@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRenderer/primitive_pass.h"
 #ifndef __meta__
     #include "SkrRenderer/render_effect.generated.h" // IWYU pragma: export
@@ -14,7 +14,7 @@ sreflect_struct(
 skr_render_effect_t
 {
     skr_render_effect_name_t name;
-    dual_entity_t effect_entity;
+    sugoi_entity_t effect_entity;
 };
 
 #ifdef __cplusplus
@@ -25,51 +25,51 @@ typedef struct skr_render_effect_t skr_render_effect_t;
 struct IRenderEffectProcessor;
 struct VtblRenderEffectProcessor;
 
-typedef dual_entity_t SGameEntity;
-typedef dual_entity_t SRenderEffectEntity;
+typedef sugoi_entity_t SGameEntity;
+typedef sugoi_entity_t SRenderEffectEntity;
 
 // Data operations for render effect
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_renderer_register_render_effect(SRendererId renderer, skr_render_effect_name_t name, IRenderEffectProcessor* processor);
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_renderer_register_render_effect_vtbl(SRendererId renderer, skr_render_effect_name_t name, VtblRenderEffectProcessor* processor);
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_renderer_remove_render_effect(SRendererId renderer, skr_render_effect_name_t name);
 
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_attach(SRendererId, dual_chunk_view_t* cv, skr_render_effect_name_t effect_name);
-typedef void (*SProcRenderEffectAttach)(SRendererId, dual_chunk_view_t* cv, skr_render_effect_name_t effect_name);
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_attach(SRendererId, sugoi_chunk_view_t* cv, skr_render_effect_name_t effect_name);
+typedef void (*SProcRenderEffectAttach)(SRendererId, sugoi_chunk_view_t* cv, skr_render_effect_name_t effect_name);
 
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_detach(SRendererId, dual_chunk_view_t* cv, skr_render_effect_name_t effect_name);
-typedef void (*SProcRenderEffectDetach)(SRendererId, dual_chunk_view_t* cv, skr_render_effect_name_t effect_name);
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_detach(SRendererId, sugoi_chunk_view_t* cv, skr_render_effect_name_t effect_name);
+typedef void (*SProcRenderEffectDetach)(SRendererId, sugoi_chunk_view_t* cv, skr_render_effect_name_t effect_name);
 
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_add_delta(SRendererId, dual_chunk_view_t* cv,
-    skr_render_effect_name_t effect_name, dual_delta_type_t delta, dual_cast_callback_t callback, void* user_data);
-typedef void (*SProcRenderEffectAddDelta)(SRendererId, dual_chunk_view_t* cv,
-    skr_render_effect_name_t effect_name, dual_delta_type_t delta, dual_cast_callback_t callback, void* user_data);
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_add_delta(SRendererId, sugoi_chunk_view_t* cv,
+    skr_render_effect_name_t effect_name, sugoi_delta_type_t delta, sugoi_cast_callback_t callback, void* user_data);
+typedef void (*SProcRenderEffectAddDelta)(SRendererId, sugoi_chunk_view_t* cv,
+    skr_render_effect_name_t effect_name, sugoi_delta_type_t delta, sugoi_cast_callback_t callback, void* user_data);
 
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_access(SRendererId, dual_chunk_view_t* cv,
-    skr_render_effect_name_t effect_name, dual_view_callback_t view, void* u);
-typedef void (*SProcRenderEffectAccess)(SRendererId, dual_chunk_view_t* cv,
-    skr_render_effect_name_t effect_name, dual_view_callback_t view, void* u);
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_access(SRendererId, sugoi_chunk_view_t* cv,
+    skr_render_effect_name_t effect_name, sugoi_view_callback_t view, void* u);
+typedef void (*SProcRenderEffectAccess)(SRendererId, sugoi_chunk_view_t* cv,
+    skr_render_effect_name_t effect_name, sugoi_view_callback_t view, void* u);
 
 typedef struct skr_primitive_draw_context_t 
 {
     SRendererId renderer;
     skr::render_graph::RenderGraph* render_graph;
     IPrimitiveRenderPass* pass;
-    dual_storage_t* storage;
+    sugoi_storage_t* storage;
 } skr_primitive_draw_context_t;
 
 typedef struct skr_primitive_update_context_t 
 {
     SRendererId renderer;
     skr::render_graph::RenderGraph* render_graph;
-    dual_storage_t* storage;
+    sugoi_storage_t* storage;
 } skr_primitive_update_context_t;
 
 // Effect interfaces
-typedef void (*SProcRenderEffectOnRegister)(SRendererId, dual_storage_t*);
-typedef void (*SProcRenderEffectOnUnregister)(SRendererId, dual_storage_t*);
-typedef void (*SProcRenderEffectGetTypeSet)(const dual_chunk_view_t* cv, dual_type_set_t* set);
-typedef dual_type_index_t (*SProcRenderEffectGetIdentityType)();
-typedef void (*SProcRenderEffectInitializeData)(SRendererId, dual_storage_t*, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv);
+typedef void (*SProcRenderEffectOnRegister)(SRendererId, sugoi_storage_t*);
+typedef void (*SProcRenderEffectOnUnregister)(SRendererId, sugoi_storage_t*);
+typedef void (*SProcRenderEffectGetTypeSet)(const sugoi_chunk_view_t* cv, sugoi_type_set_t* set);
+typedef sugoi_type_index_t (*SProcRenderEffectGetIdentityType)();
+typedef void (*SProcRenderEffectInitializeData)(SRendererId, sugoi_storage_t*, sugoi_chunk_view_t* game_cv, sugoi_chunk_view_t* render_cv);
 // Drawcall interfaces for effect processor
 typedef void (*SProcRenderEffectProduceDrawPackets)(const skr_primitive_draw_context_t* constext, skr_primitive_draw_packet_t* result);
 
@@ -89,12 +89,12 @@ typedef struct SKR_RENDERER_API IRenderEffectProcessor {
 #ifdef __cplusplus
     virtual ~IRenderEffectProcessor() = default;
 
-    virtual void on_register(SRendererId, dual_storage_t*) = 0;
-    virtual void on_unregister(SRendererId, dual_storage_t*) = 0;
+    virtual void on_register(SRendererId, sugoi_storage_t*) = 0;
+    virtual void on_unregister(SRendererId, sugoi_storage_t*) = 0;
 
-    virtual void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) = 0;
-    virtual dual_type_index_t get_identity_type() = 0;
-    virtual void initialize_data(SRendererId renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv) = 0;
+    virtual void get_type_set(const sugoi_chunk_view_t* cv, sugoi_type_set_t* set) = 0;
+    virtual sugoi_type_index_t get_identity_type() = 0;
+    virtual void initialize_data(SRendererId renderer, sugoi_storage_t* storage, sugoi_chunk_view_t* game_cv, sugoi_chunk_view_t* render_cv) = 0;
 
     virtual skr_primitive_draw_packet_t produce_draw_packets(const skr_primitive_draw_context_t* context) = 0;
 

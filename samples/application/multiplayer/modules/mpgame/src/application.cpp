@@ -298,7 +298,7 @@ int MPApplication::Initialize()
 
 void MPApplication::Shutdown()
 {
-    dualJ_wait_all();
+    sugoiJ_wait_all();
     taskScheduler.unbind();
     auto render_device = skr_get_default_render_device();
     auto gfx_queue = render_device->get_gfx_queue();
@@ -357,8 +357,8 @@ void MPApplication::Render()
     if(stage == MP_STAGE_GAME)
     {
         // Update camera
-        auto cameraUpdate = [=](dual_chunk_view_t* view) {
-            auto cameras = dual::get_owned_rw<skr_camera_comp_t>(view);
+        auto cameraUpdate = [=](sugoi_chunk_view_t* view) {
+            auto cameras = sugoi::get_owned_rw<skr_camera_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
                 const auto info = renderer.swapChain->back_buffers[0]->info;
@@ -368,7 +368,7 @@ void MPApplication::Render()
                 cameras[i].viewport_height = info->height;
             }
         };
-        dualQ_get_views(renderWorld.cameraQuery, DUAL_LAMBDA(cameraUpdate));
+        sugoiQ_get_views(renderWorld.cameraQuery, SUGOI_LAMBDA(cameraUpdate));
         // resolve camera to viewports
         auto viewport_manager = renderer.renderer->get_viewport_manager();
         skr_resolve_cameras_to_viewport(viewport_manager, world.storage);
@@ -631,19 +631,19 @@ void MPApplication::EnterGameState()
     stage = MP_STAGE_ENTERING_GAME;
 
     // // allocate 1 movable cubes
-    // auto renderableT_builder = make_zeroed<dual::type_builder_t>();
+    // auto renderableT_builder = make_zeroed<sugoi::type_builder_t>();
     // renderableT_builder
     //     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t, CController, CMovement>()
     //     .with<skr_render_effect_t>();
     // // allocate renderable
-    // auto renderableT = make_zeroed<dual_entity_type_t>();
+    // auto renderableT = make_zeroed<sugoi_entity_type_t>();
     // renderableT.type = renderableT_builder.build();
-    // auto primSetup = [&](dual_chunk_view_t* view) {
-    //     auto translations = (skr_translation_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_comp_t>::get());
-    //     auto rotations = (skr_rotation_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_rotation_comp_t>::get());
-    //     auto scales = (skr_scale_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_scale_comp_t>::get());
-    //     auto movements = (CMovement*)dualV_get_owned_ro(view, dual_id_of<CMovement>::get());
-    //     auto controllers = (CController*)dualV_get_owned_ro(view, dual_id_of<CController>::get());
+    // auto primSetup = [&](sugoi_chunk_view_t* view) {
+    //     auto translations = (skr_translation_comp_t*)sugoiV_get_owned_ro(view, sugoi_id_of<skr_translation_comp_t>::get());
+    //     auto rotations = (skr_rotation_comp_t*)sugoiV_get_owned_ro(view, sugoi_id_of<skr_rotation_comp_t>::get());
+    //     auto scales = (skr_scale_comp_t*)sugoiV_get_owned_ro(view, sugoi_id_of<skr_scale_comp_t>::get());
+    //     auto movements = (CMovement*)sugoiV_get_owned_ro(view, sugoi_id_of<CMovement>::get());
+    //     auto controllers = (CController*)sugoiV_get_owned_ro(view, sugoi_id_of<CController>::get());
     //     for (uint32_t i = 0; i < view->count; i++)
     //     {
     //         translations[i].value = { 0, 0, 0 };
@@ -655,7 +655,7 @@ void MPApplication::EnterGameState()
     //     auto renderer = skr_renderer_get_renderer();
     //     skr_render_effect_attach(renderer, view, "ForwardEffect");
     // };
-    // dualS_allocate_type(world.storage, &renderableT, 1, DUAL_LAMBDA(primSetup));
+    // sugoiS_allocate_type(world.storage, &renderableT, 1, SUGOI_LAMBDA(primSetup));
 
 }
 
@@ -831,7 +831,7 @@ void MPApplication::UpdateGame()
         ImGui::LabelText("out bytes per sec", "%f", status.m_flOutBytesPerSec);
         ImGui::LabelText("in bytes per sec", "%f", status.m_flInBytesPerSec);
         ImGui::LabelText("out bandwidth", "%d", status.m_nSendRateBytesPerSecond);
-        ImGui::LabelText("network entity count", "%d", dualQ_get_count(world.snapshotQuery));
+        ImGui::LabelText("network entity count", "%d", sugoiQ_get_count(world.snapshotQuery));
         ImGui::LabelText("actual in bytes per sec", "%lf", world.GetBytePerSecond());
         ImGui::LabelText("actual in bytes per sec uncompressed", "%lf", world.GetBytePerSecondBeforeCompress());
         ImGui::LabelText("compress ratio", "%lf", world.GetCompressRatio());
@@ -848,7 +848,7 @@ void MPApplication::UpdateGame()
             double totalComponentBandwidth = 0;
             for(int i = 0; i < type.length; ++i)
             {
-                auto name = dualT_get_desc(type.data[i])->name;
+                auto name = sugoiT_get_desc(type.data[i])->name;
                 auto bandwidth = world.worldDeltaApplier->GetBandwidthOf(type.data[i]);
                 totalComponentBandwidth += bandwidth;
                 ImGui::LabelText((const char*)name, "%f", bandwidth);

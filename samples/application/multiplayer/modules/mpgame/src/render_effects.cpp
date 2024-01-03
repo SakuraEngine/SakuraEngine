@@ -7,7 +7,7 @@
 #include "cgpu/cgpux.h"
 
 
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrScene/scene.h"
@@ -42,18 +42,18 @@
 #include "SkrBase/math/rtm/rtmx.h"
 #include "SkrBase/math/transform.h"
 
-void RenderEffectForward::on_register(SRendererId renderer, dual_storage_t* storage)
+void RenderEffectForward::on_register(SRendererId renderer, sugoi_storage_t* storage)
 {
     // make identity component type
     {
         auto guid = make_zeroed<skr_guid_t>();
-        dual_make_guid(&guid);
-        auto desc = make_zeroed<dual_type_description_t>();
+        sugoi_make_guid(&guid);
+        auto desc = make_zeroed<sugoi_type_description_t>();
         desc.name = u8"ForwardEffectToken";
         desc.size = sizeof(ForwardEffectToken);
         desc.guid = guid;
         desc.alignment = alignof(ForwardEffectToken);
-        identity_type = dualT_register_type(&desc);
+        identity_type = sugoiT_register_type(&desc);
         type_builder.with(identity_type);
         type_builder.with<skr::renderer::MeshComponent>();
         type_builder.with<skr_render_group_t>();
@@ -65,24 +65,24 @@ void RenderEffectForward::on_register(SRendererId renderer, dual_storage_t* stor
     prepare_geometry_resources(renderer);
 }
 
-void RenderEffectForward::initialize_queries(dual_storage_t* storage)
+void RenderEffectForward::initialize_queries(sugoi_storage_t* storage)
 {
     // initialize queries
-    mesh_query = dualQ_from_literal(storage, "[in]ForwardEffectToken, [in]skr::renderer::MeshComponent");
-    draw_mesh_query = dualQ_from_literal(storage, "[in]ForwardEffectToken, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
+    mesh_query = sugoiQ_from_literal(storage, "[in]ForwardEffectToken, [in]skr::renderer::MeshComponent");
+    draw_mesh_query = sugoiQ_from_literal(storage, "[in]ForwardEffectToken, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
 }
 
 void RenderEffectForward::release_queries()
 {
-    dualQ_release(mesh_query);
-    dualQ_release(draw_mesh_query);
+    sugoiQ_release(mesh_query);
+    sugoiQ_release(draw_mesh_query);
 }
 
-void RenderEffectForward::on_unregister(SRendererId renderer, dual_storage_t* storage)
+void RenderEffectForward::on_unregister(SRendererId renderer, sugoi_storage_t* storage)
 {
-    auto sweepFunction = [&](dual_chunk_view_t* r_cv) {
+    auto sweepFunction = [&](sugoi_chunk_view_t* r_cv) {
         auto resource_system = skr::resource::GetResourceSystem();
-        auto meshes = dual::get_owned_rw<skr::renderer::MeshComponent>(r_cv);
+        auto meshes = sugoi::get_owned_rw<skr::renderer::MeshComponent>(r_cv);
         for (uint32_t i = 0; i < r_cv->count; i++)
         {
             auto status = meshes[i].mesh_resource.get_status();
@@ -99,26 +99,26 @@ void RenderEffectForward::on_unregister(SRendererId renderer, dual_storage_t* st
             }
         }
     };
-    dualQ_get_views(mesh_query, DUAL_LAMBDA(sweepFunction));
+    sugoiQ_get_views(mesh_query, SUGOI_LAMBDA(sweepFunction));
     release_queries();
     free_pipeline(renderer);
     free_geometry_resources(renderer);
 }
 
-void RenderEffectForward::get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set)
+void RenderEffectForward::get_type_set(const sugoi_chunk_view_t* cv, sugoi_type_set_t* set)
 {
     *set = typeset;
 }
 
-dual_type_index_t RenderEffectForward::get_identity_type()
+sugoi_type_index_t RenderEffectForward::get_identity_type()
 {
     return identity_type;
 }
 
-void RenderEffectForward::initialize_data(SRendererId renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv)
+void RenderEffectForward::initialize_data(SRendererId renderer, sugoi_storage_t* storage, sugoi_chunk_view_t* game_cv, sugoi_chunk_view_t* render_cv)
 {
-    auto game_ents = dualV_get_entities(game_cv);
-    auto identities = (ForwardEffectToken*)dualV_get_owned_ro(render_cv, identity_type);
+    auto game_ents = sugoiV_get_entities(game_cv);
+    auto identities = (ForwardEffectToken*)sugoiV_get_owned_ro(render_cv, identity_type);
     for (uint32_t i = 0u; i < game_cv->count; ++i)
     {
         identities[i].game_entity = game_ents[i];
@@ -136,12 +136,12 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
     
     // 1. calculate primitive count
     uint32_t primitiveCount = 0;
-    auto counterF = [&](dual_chunk_view_t* r_cv) {
+    auto counterF = [&](sugoi_chunk_view_t* r_cv) {
         SkrZoneScopedN("PreCalculateDrawCallCount");
         const skr::renderer::MeshComponent* meshes = nullptr;
         {
             SkrZoneScopedN("FetchRenderMeshes");
-            meshes = dual::get_component_ro<skr::renderer::MeshComponent>(r_cv);
+            meshes = sugoi::get_component_ro<skr::renderer::MeshComponent>(r_cv);
         }
         for (uint32_t i = 0; i < r_cv->count; i++)
         {
@@ -158,7 +158,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
             }
         }
     };
-    dualQ_get_views(mesh_query, DUAL_LAMBDA(counterF));
+    sugoiQ_get_views(mesh_query, SUGOI_LAMBDA(counterF));
 
     // 2. resize data buffers
     model_matrices.clear();
@@ -169,32 +169,32 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
     mesh_drawcalls.reserve(primitiveCount);
 
     // 3. fill draw packets
-    auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
+    auto r_effect_callback = [&](sugoi_chunk_view_t* r_cv) {
         uint32_t r_idx = 0;
         uint32_t dc_idx = 0;
 
-        auto identities = (ForwardEffectToken*)dualV_get_owned_ro(r_cv, identity_type);
-        auto unbatched_g_ents = (dual_entity_t*)identities;
+        auto identities = (ForwardEffectToken*)sugoiV_get_owned_ro(r_cv, identity_type);
+        auto unbatched_g_ents = (sugoi_entity_t*)identities;
         const skr::renderer::MeshComponent* meshes = nullptr;
         const skr::anim::AnimComponent* anims = nullptr;
         {
             SkrZoneScopedN("FetchRenderMeshes");
-            meshes = dual::get_component_ro<skr::renderer::MeshComponent>(r_cv);
+            meshes = sugoi::get_component_ro<skr::renderer::MeshComponent>(r_cv);
         }
         {
             SkrZoneScopedN("FetchAnimComps");
-            anims = dual::get_component_ro<skr::anim::AnimComponent>(r_cv);
+            anims = sugoi::get_component_ro<skr::anim::AnimComponent>(r_cv);
         }
         if (!unbatched_g_ents) return;
 
-        auto gBatchCallback = [&](dual_chunk_view_t* g_cv) {
+        auto gBatchCallback = [&](sugoi_chunk_view_t* g_cv) {
             SkrZoneScopedN("BatchedEnts");
 
             //SKR_LOG_DEBUG(u8"batch: %d -> %d", g_cv->start, g_cv->count);
-            const auto l2ws = dual::get_component_ro<skr_transform_comp_t>(g_cv);
-            const auto translations = dual::get_component_ro<skr_translation_comp_t>(g_cv);
-            const auto rotations = dual::get_component_ro<skr_rotation_comp_t>(g_cv);(void)rotations;
-            const auto scales = dual::get_component_ro<skr_scale_comp_t>(g_cv);
+            const auto l2ws = sugoi::get_component_ro<skr_transform_comp_t>(g_cv);
+            const auto translations = sugoi::get_component_ro<skr_translation_comp_t>(g_cv);
+            const auto rotations = sugoi::get_component_ro<skr_rotation_comp_t>(g_cv);(void)rotations;
+            const auto scales = sugoi::get_component_ro<skr_scale_comp_t>(g_cv);
             // 3.1 calculate model matrices
             {
                 SkrZoneScopedN("ComputeModelMatrices");
@@ -339,9 +339,9 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
             }
             }
         };
-        dualS_batch(storage, unbatched_g_ents, r_cv->count, DUAL_LAMBDA(gBatchCallback));
+        sugoiS_batch(storage, unbatched_g_ents, r_cv->count, SUGOI_LAMBDA(gBatchCallback));
     };
-    dualQ_get_views(draw_mesh_query, DUAL_LAMBDA(r_effect_callback));
+    sugoiQ_get_views(draw_mesh_query, SUGOI_LAMBDA(r_effect_callback));
 
     // 4. return packet info
     mesh_draw_list.drawcalls = mesh_drawcalls.data();
@@ -562,18 +562,18 @@ void RenderEffectForward::free_pipeline(SRendererId renderer)
 
 // skin effect impl
 
-void RenderEffectForwardSkin::on_register(SRendererId renderer, dual_storage_t* storage)
+void RenderEffectForwardSkin::on_register(SRendererId renderer, sugoi_storage_t* storage)
 {
     // make identity component type
     {
         auto guid = make_zeroed<skr_guid_t>();
-        dual_make_guid(&guid);
-        auto desc = make_zeroed<dual_type_description_t>();
+        sugoi_make_guid(&guid);
+        auto desc = make_zeroed<sugoi_type_description_t>();
         desc.name = u8"forward_skin_render_identity";
         desc.size = sizeof(ForwardEffectToken);
         desc.guid = guid;
         desc.alignment = alignof(ForwardEffectToken);
-        identity_type = dualT_register_type(&desc);
+        identity_type = sugoiT_register_type(&desc);
         type_builder.with(identity_type)
             .with<skr::renderer::MeshComponent>()
             .with<skr_render_group_t>()
@@ -588,21 +588,21 @@ void RenderEffectForwardSkin::on_register(SRendererId renderer, dual_storage_t* 
     prepare_geometry_resources(renderer);
 }
 
-void RenderEffectForwardSkin::initialize_queries(dual_storage_t* storage)
+void RenderEffectForwardSkin::initialize_queries(sugoi_storage_t* storage)
 {
-    mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent");
-    draw_mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
-    install_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::anim::AnimComponent, [in]skr::anim::SkeletonComponent, [in]skr::anim::SkinComponent");
+    mesh_query = sugoiQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent");
+    draw_mesh_query = sugoiQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
+    install_query = sugoiQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::anim::AnimComponent, [in]skr::anim::SkeletonComponent, [in]skr::anim::SkinComponent");
 }
 
 void RenderEffectForwardSkin::release_queries()
 {
-    dualQ_release(mesh_query);
-    dualQ_release(draw_mesh_query);
-    dualQ_release(install_query);
+    sugoiQ_release(mesh_query);
+    sugoiQ_release(draw_mesh_query);
+    sugoiQ_release(install_query);
 }
 
-void RenderEffectForwardSkin::on_unregister(SRendererId renderer, dual_storage_t* storage)
+void RenderEffectForwardSkin::on_unregister(SRendererId renderer, sugoi_storage_t* storage)
 {
     free_pipeline(renderer);
     free_geometry_resources(renderer);

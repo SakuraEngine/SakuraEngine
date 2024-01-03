@@ -7,9 +7,9 @@
 #include <SkrRT/containers/vector.hpp>
 #include <SkrRT/containers/array.hpp>
 
-namespace dual
+namespace sugoi
 {
-using guid_t = dual_guid_t;
+using guid_t = sugoi_guid_t;
 
 struct guid_compare_t {
     bool operator()(const guid_t& a, const guid_t& b) const
@@ -19,7 +19,7 @@ struct guid_compare_t {
     }
 };
 
-using type_description_t = dual_type_description_t;
+using type_description_t = sugoi_type_description_t;
 
 static constexpr type_index_t kDisableComponent = type_index_t(0, false, false, true, false);
 static constexpr type_index_t kDeadComponent = type_index_t(1, false, false, true, false);
@@ -43,4 +43,4 @@ struct type_registry_t {
     guid_t make_guid();
     static type_registry_t& get();
 };
-} // namespace dual
+} // namespace sugoi

@@ -12,24 +12,24 @@
 
 void MPGameWorld::Initialize()
 {
-    storage = dualS_create();
-    dualQ_make_alias(storage, "skr_translation_comp_t", "skr_translation_comp_t:move");
+    storage = sugoiS_create();
+    sugoiQ_make_alias(storage, "skr_translation_comp_t", "skr_translation_comp_t:move");
     controlQuery.Initialize(storage);
     healthCheckQuery.Initialize(storage);
     fireQuery.Initialize(storage);
     movementQuery.Initialize(storage);
     ballQuery.Initialize(storage);
-    ballChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t@move, [inout]CHealth, [in]CSphereCollider2D");
-    dualQ_add_child(ballQuery.query, ballChildQuery);
+    ballChildQuery = sugoiQ_from_literal(storage, "[in]skr_translation_comp_t@move, [inout]CHealth, [in]CSphereCollider2D");
+    sugoiQ_add_child(ballQuery.query, ballChildQuery);
     killBallQuery.Initialize(storage);
     killZombieQuery.Initialize(storage);
     relevanceQuery.Initialize(storage);
-    relevanceChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t, [in]CController");
-    dualQ_add_child(relevanceQuery.query, relevanceChildQuery);
+    relevanceChildQuery = sugoiQ_from_literal(storage, "[in]skr_translation_comp_t, [in]CController");
+    sugoiQ_add_child(relevanceQuery.query, relevanceChildQuery);
     zombieAIQuery.Initialize(storage);
-    zombieAIChildQuery = dualQ_from_literal(storage, "[has]CPlayer, [in]skr_translation_comp_t");
-    dualQ_add_child(zombieAIQuery.query, zombieAIChildQuery);
-    gameStateQuery = dualQ_from_literal(storage, "[inout]CMPGameModeState");
+    zombieAIChildQuery = sugoiQ_from_literal(storage, "[has]CPlayer, [in]skr_translation_comp_t");
+    sugoiQ_add_child(zombieAIQuery.query, zombieAIChildQuery);
+    gameStateQuery = sugoiQ_from_literal(storage, "[inout]CMPGameModeState");
     skr_transform_setup(storage, &transformSystem);
     config = 
     {
@@ -45,7 +45,7 @@ void MPGameWorld::Initialize()
         30,
         10
     };
-    dual::entity_spawner_T<CCollisionScene> sceneSpawner;
+    sugoi::entity_spawner_T<CCollisionScene> sceneSpawner;
     sceneSpawner(storage, 1, [](auto){});
 }
 
@@ -60,9 +60,9 @@ void MPGameWorld::Shutdown()
     killZombieQuery.Release();
     relevanceQuery.Release();
     zombieAIQuery.Release();
-    dualQ_release(ballChildQuery);
-    dualQ_release(relevanceChildQuery);
-    dualS_release(storage);
+    sugoiQ_release(ballChildQuery);
+    sugoiQ_release(relevanceChildQuery);
+    sugoiS_release(storage);
 }
 
 bool collide(const skr_float3_t& a, const CSphereCollider2D& aBox, const skr_float3_t& b, const CSphereCollider2D& bBox, skr_float2_t& outNormal)
@@ -94,16 +94,16 @@ void MPGameWorld::ClearDeadBall()
 {
     if(authoritative)
     {
-        skr::Vector<dual_entity_t> ballsToKill;
+        skr::Vector<sugoi_entity_t> ballsToKill;
         ballsToKill.reserve(16);
-        auto collectBallsToKill = [&](dual_chunk_view_t* view)
+        auto collectBallsToKill = [&](sugoi_chunk_view_t* view)
         {
-            auto balls = dual::get_owned_rw<CBall>(view);
-            auto entities = (dual_entity_t*)dualV_get_entities(view);
+            auto balls = sugoi::get_owned_rw<CBall>(view);
+            auto entities = (sugoi_entity_t*)sugoiV_get_entities(view);
             for(int i=0; i<view->count; ++i)
             {
-                dual_chunk_view_t v;
-                dualS_access(storage, entities[i], &v);
+                sugoi_chunk_view_t v;
+                sugoiS_access(storage, entities[i], &v);
                 balls[i].lifeTime -= deltaTime;
                 if(balls[i].lifeTime <= 0)
                 {
@@ -111,12 +111,12 @@ void MPGameWorld::ClearDeadBall()
                 }
             }
         };
-        dualQ_get_views(killBallQuery.query, DUAL_LAMBDA(collectBallsToKill));
-        auto killBalls = [&](dual_chunk_view_t* view)
+        sugoiQ_get_views(killBallQuery.query, SUGOI_LAMBDA(collectBallsToKill));
+        auto killBalls = [&](sugoi_chunk_view_t* view)
         {
-            dualS_destroy(storage, view);
+            sugoiS_destroy(storage, view);
         };
-        dualS_batch(storage, ballsToKill.data(), ballsToKill.size(), DUAL_LAMBDA(killBalls));
+        sugoiS_batch(storage, ballsToKill.data(), ballsToKill.size(), SUGOI_LAMBDA(killBalls));
     }
 }
 
@@ -124,16 +124,16 @@ void MPGameWorld::ClearDeadZombie()
 {
     if(authoritative)
     {
-        skr::Vector<dual_entity_t> zombiesToKill;
+        skr::Vector<sugoi_entity_t> zombiesToKill;
         zombiesToKill.reserve(16);
-        auto collectBallsToKill = [&](dual_chunk_view_t* view)
+        auto collectBallsToKill = [&](sugoi_chunk_view_t* view)
         {
-            auto health = dual::get_owned_rw<CHealth>(view);
-            auto entities = (dual_entity_t*)dualV_get_entities(view);
+            auto health = sugoi::get_owned_rw<CHealth>(view);
+            auto entities = (sugoi_entity_t*)sugoiV_get_entities(view);
             for(int i=0; i<view->count; ++i)
             {
-                dual_chunk_view_t v;
-                dualS_access(storage, entities[i], &v);
+                sugoi_chunk_view_t v;
+                sugoiS_access(storage, entities[i], &v);
                 SKR_ASSERT(v.chunk == view->chunk && v.start == i + view->start);
                 if(health[i].health <= 0)
                 {
@@ -141,12 +141,12 @@ void MPGameWorld::ClearDeadZombie()
                 }
             }
         };
-        dualQ_get_views(killZombieQuery.query, DUAL_LAMBDA(collectBallsToKill));
-        auto killBalls = [&](dual_chunk_view_t* view)
+        sugoiQ_get_views(killZombieQuery.query, SUGOI_LAMBDA(collectBallsToKill));
+        auto killBalls = [&](sugoi_chunk_view_t* view)
         {
-            dualS_destroy(storage, view);
+            sugoiS_destroy(storage, view);
         };
-        dualS_batch(storage, zombiesToKill.data(), zombiesToKill.size(), DUAL_LAMBDA(killBalls));
+        sugoiS_batch(storage, zombiesToKill.data(), zombiesToKill.size(), SUGOI_LAMBDA(killBalls));
     }
 }
 
@@ -154,10 +154,10 @@ void MPGameWorld::SpawnZombie()
 {
     if(authoritative)
     {
-        using spawner_t = dual::entity_spawner_T<CZombie, CMovement, CHealth, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
-        CPrefab, CAuth, CAuthTypeData, CRelevance, dual::dirty_comp_t>;
+        using spawner_t = sugoi::entity_spawner_T<CZombie, CMovement, CHealth, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
+        CPrefab, CAuth, CAuthTypeData, CRelevance, sugoi::dirty_comp_t>;
         static spawner_t spawner;
-        auto state= dual::get_singleton<CMPGameModeState>(gameStateQuery);
+        auto state= sugoi::get_singleton<CMPGameModeState>(gameStateQuery);
         state->zombieSpawnTimer += deltaTime;
         
         while(state->zombieSpawnTimer > config.ZombieWaveInterval)
@@ -202,7 +202,7 @@ void MPGameWorld::SpawnZombie()
 
 void MPGameWorld::ZombieAI()
 {
-    dual::schedule_task(zombieAIQuery, 32, [this](QZombieAI::TaskContext ctx)
+    sugoi::schedule_task(zombieAIQuery, 32, [this](QZombieAI::TaskContext ctx)
     {
         auto [translations, movements, dirtyMasks, zombies] = ctx.unpack();
         for(int i=0; i<ctx.count(); ++i)
@@ -220,13 +220,13 @@ void MPGameWorld::ZombieAI()
             auto translation = skr::math::load(skr_float2_t{translations[i].value.x, translations[i].value.z});
             float minDistance = 1000000;
             rtm::vector4f minDistancePlayerPos;
-            auto findNearestPlayer = [&](dual_chunk_view_t* view)
+            auto findNearestPlayer = [&](sugoi_chunk_view_t* view)
             {
-                auto ptranslations = dual::get_owned_ro<skr_translation_comp_t>(view);
-                auto phealths = dual::get_owned_rw<CHealth>(view);
-                auto healthId = dualV_get_local_type(view, dual_id_of<CHealth>::get());
-                auto pdirties = dual::get_owned_rw<dual::dirty_comp_t>(view);
-                // auto entities = (dual_entity_t*)dualV_get_entities(view);
+                auto ptranslations = sugoi::get_owned_ro<skr_translation_comp_t>(view);
+                auto phealths = sugoi::get_owned_rw<CHealth>(view);
+                auto healthId = sugoiV_get_local_type(view, sugoi_id_of<CHealth>::get());
+                auto pdirties = sugoi::get_owned_rw<sugoi::dirty_comp_t>(view);
+                // auto entities = (sugoi_entity_t*)sugoiV_get_entities(view);
                 for(int j=0; j<view->count; ++j)
                 {
                     auto ptranslation = skr::math::load(skr_float2_t{ptranslations[j].value.x, ptranslations[j].value.z});
@@ -240,11 +240,11 @@ void MPGameWorld::ZombieAI()
                     {
                         phealths[j].health -= config.ZombieDamage * deltaTime;
                         if(pdirties)
-                            dual_set_bit(&pdirties[j].value, healthId);
+                            sugoi_set_bit(&pdirties[j].value, healthId);
                     }
                 }
             };
-            dualQ_get_views(zombieAIChildQuery, DUAL_LAMBDA(findNearestPlayer));
+            sugoiQ_get_views(zombieAIChildQuery, SUGOI_LAMBDA(findNearestPlayer));
             
             if(minDistance < 1000 && minDistance > 0.001)
             {
@@ -266,7 +266,7 @@ void MPGameWorld::ZombieAI()
 
 void MPGameWorld::PlayerControl()
 {
-    dual::schedule_task(controlQuery, 512, [this](QControl::TaskContext ctx)
+    sugoi::schedule_task(controlQuery, 512, [this](QControl::TaskContext ctx)
     {
         for(int i=0; i<ctx.count(); ++i)
         {
@@ -315,15 +315,15 @@ void MPGameWorld::PlayerShoot()
     //TODO: predict spawn
     if(authoritative)
     {
-        using spawner_t = dual::entity_spawner_T<CBall, CMovement, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
-        CPrefab, CAuth, CAuthTypeData, CRelevance, dual::dirty_comp_t>;
+        using spawner_t = sugoi::entity_spawner_T<CBall, CMovement, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
+        CPrefab, CAuth, CAuthTypeData, CRelevance, sugoi::dirty_comp_t>;
         static spawner_t spawner;
-        auto fire = [&](dual_chunk_view_t* view)
+        auto fire = [&](sugoi_chunk_view_t* view)
         {
-            auto weapons = (CWeapon*)dual::get_owned_rw<CWeapon>(view);
-            auto otranslations = (skr_translation_comp_t*)dual::get_owned_ro<skr_translation_comp_t>(view);
-            auto orotations = (skr_rotation_comp_t*)dual::get_owned_ro<skr_rotation_comp_t>(view);
-            auto controllers = (CController*)dual::get_owned_ro<CController>(view);
+            auto weapons = (CWeapon*)sugoi::get_owned_rw<CWeapon>(view);
+            auto otranslations = (skr_translation_comp_t*)sugoi::get_owned_ro<skr_translation_comp_t>(view);
+            auto orotations = (skr_rotation_comp_t*)sugoi::get_owned_ro<skr_rotation_comp_t>(view);
+            auto controllers = (CController*)sugoi::get_owned_ro<CController>(view);
             for(int i=0; i<view->count; ++i)
             {
                 auto& input = this->input.inputs[controllers[i].playerId];
@@ -360,14 +360,14 @@ void MPGameWorld::PlayerShoot()
                 weapons[i].fireTimer -= deltaTime;
             }
         };
-        dualQ_get_views(fireQuery.query, DUAL_LAMBDA(fire));
+        sugoiQ_get_views(fireQuery.query, SUGOI_LAMBDA(fire));
     }
 }
 void MPGameWorld::PlayerHealthCheck()
 {
     if(authoritative)
     {
-        dual::schedule_task(healthCheckQuery, 512,
+        sugoi::schedule_task(healthCheckQuery, 512,
         [](QHeathCheck::TaskContext ctx)
         {
             auto [healths, translations, rotations, weapons, dirtyMasks] = ctx.unpack();
@@ -392,7 +392,7 @@ void MPGameWorld::PlayerHealthCheck()
 }
 void MPGameWorld::PlayerMovement()
 {
-    dual::schedule_task(movementQuery, 512, [](QMovement::TaskContext ctx)
+    sugoi::schedule_task(movementQuery, 512, [](QMovement::TaskContext ctx)
     {
         auto [movements, translations, rotations, dirtyMasks] = ctx.unpack();
         for(int i=0; i<ctx.count(); ++i)
@@ -427,7 +427,7 @@ void MPGameWorld::PlayerMovement()
 }
 void MPGameWorld::BulletMovement()
 {
-        dual::schedule_task(ballQuery, 512, 
+        sugoi::schedule_task(ballQuery, 512, 
         [this](QBallMovement::TaskContext ctx)
         {
             auto [translations, colliders, movements, dirtyMasks, balls] = ctx.unpack();
@@ -442,14 +442,14 @@ void MPGameWorld::BulletMovement()
                     auto& translation = translations[i];
                     auto& collider = colliders[i];
                     auto& ball = balls[i];
-                    auto checkAndSet = [&](dual_chunk_view_t* view)
+                    auto checkAndSet = [&](sugoi_chunk_view_t* view)
                     {
-                        auto otherTranslations = dual::get_owned_ro<skr_translation_comp_t>(view);
-                        auto otherColliders = dual::get_owned_ro<CSphereCollider2D>(view);
-                        auto otherHealths = dual::get_owned_rw<CHealth>(view);
-                        auto otherControllers = dual::get_owned_ro<CController>(view);
-                        auto otherDirtyMasks = dual::get_owned_rw<dual::dirty_comp_t>(view);
-                        auto healthId = dualV_get_local_type(view, dual_id_of<CHealth>::get());
+                        auto otherTranslations = sugoi::get_owned_ro<skr_translation_comp_t>(view);
+                        auto otherColliders = sugoi::get_owned_ro<CSphereCollider2D>(view);
+                        auto otherHealths = sugoi::get_owned_rw<CHealth>(view);
+                        auto otherControllers = sugoi::get_owned_ro<CController>(view);
+                        auto otherDirtyMasks = sugoi::get_owned_rw<sugoi::dirty_comp_t>(view);
+                        auto healthId = sugoiV_get_local_type(view, sugoi_id_of<CHealth>::get());
                         for(int j=0; j<view->count; ++j)
                         {
                             auto& otherTranslation = otherTranslations[j];
@@ -465,20 +465,20 @@ void MPGameWorld::BulletMovement()
                                     health.health -= 1;
                                     if(otherDirtyMasks)
                                     {
-                                        dual_set_bit(&otherDirtyMasks[j].value, healthId);
+                                        sugoi_set_bit(&otherDirtyMasks[j].value, healthId);
                                     }
                                 }
                             }
                         }
                     };
-                    dualQ_get_views(ballChildQuery, DUAL_LAMBDA(checkAndSet));
+                    sugoiQ_get_views(ballChildQuery, SUGOI_LAMBDA(checkAndSet));
                 }
             }
         }, nullptr);
 }
 void MPGameWorld::RelevenceUpdate()
 {
-    dual::schedule_task(relevanceQuery, 512,
+    sugoi::schedule_task(relevanceQuery, 512,
     [this](QUpdateRelevance::TaskContext ctx)
     {
         auto [relevances, translations] = ctx.unpack();
@@ -486,10 +486,10 @@ void MPGameWorld::RelevenceUpdate()
         {
             auto& relevance = relevances[i];
             auto& translation = translations[i];
-            auto checkAndSet = [&](dual_chunk_view_t* view)
+            auto checkAndSet = [&](sugoi_chunk_view_t* view)
             {
-                auto otherTranslations = dual::get_owned_ro<skr_translation_comp_t>(view);
-                auto otherControllers = dual::get_owned_ro<CController>(view);
+                auto otherTranslations = sugoi::get_owned_ro<skr_translation_comp_t>(view);
+                auto otherControllers = sugoi::get_owned_ro<CController>(view);
                 for(int j=0; j<view->count; ++j)
                 {
                     float distance = rtm::vector_distance3(skr::math::load(translation.value), skr::math::load(otherTranslations[j].value));
@@ -499,7 +499,7 @@ void MPGameWorld::RelevenceUpdate()
                         relevance.mask[otherControllers[j].connectionId] = false;
                 }
             };
-            dualQ_get_views(relevanceChildQuery, DUAL_LAMBDA(checkAndSet));
+            sugoiQ_get_views(relevanceChildQuery, SUGOI_LAMBDA(checkAndSet));
         }
     }, nullptr);
 }
@@ -519,5 +519,5 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
     BulletMovement();
     RelevenceUpdate();
     skr_transform_update(&transformSystem);
-    dualJ_wait_all();
+    sugoiJ_wait_all();
 }

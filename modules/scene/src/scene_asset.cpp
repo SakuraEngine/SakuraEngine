@@ -12,17 +12,17 @@
 #include <numeric> // std::iota
 #include <execution>
 
-void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
+void skr_save_scene(sugoi_storage_t* world, skr_json_writer_t* writer)
 {
-    skr::Vector<dual_entity_t> entities;
+    skr::Vector<sugoi_entity_t> entities;
     skr::Vector<skr_guid_t> guids;
-    auto entityCount = dualS_count(world, true, false);
+    auto entityCount = sugoiS_count(world, true, false);
     entities.reserve(entityCount);
     guids.reserve(entityCount);
-    auto accumulate = [&](dual_chunk_view_t* view)
+    auto accumulate = [&](sugoi_chunk_view_t* view)
     {
-        auto centities = dualV_get_entities(view);
-        auto cguids = (skr_guid_t*)dualV_get_owned_ro(view, DUAL_COMPONENT_GUID);
+        auto centities = sugoiV_get_entities(view);
+        auto cguids = (skr_guid_t*)sugoiV_get_owned_ro(view, SUGOI_COMPONENT_GUID);
         if(!cguids)
             return;
         //append to vector
@@ -30,8 +30,8 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
         guids.append({cguids, view->count});
         
     };
-    dualS_all(world, true, false, DUAL_LAMBDA(accumulate));
-    skr::Vector<dual_entity_t> indices;
+    sugoiS_all(world, true, false, SUGOI_LAMBDA(accumulate));
+    skr::Vector<sugoi_entity_t> indices;
     indices.resize_default(guids.size());
     skr::parallel_for(indices.begin(), indices.end(), 2048, [&](auto&& begin, auto&& end)
     {
@@ -42,11 +42,11 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
 #if __cpp_lib_execution >= 201603L
     std::execution::par_unseq, 
 #endif
-    indices.begin(), indices.end(), [&](dual_entity_t a, dual_entity_t b)
+    indices.begin(), indices.end(), [&](sugoi_entity_t a, sugoi_entity_t b)
     {
         return std::lexicographical_compare(&guids[a].Storage0, &guids[a].Storage3, &guids[b].Storage0, &guids[b].Storage3);
     });
-    skr::Vector<dual_entity_t> sortedEntities;
+    skr::Vector<sugoi_entity_t> sortedEntities;
     sortedEntities.resize_default(guids.size());
     skr::parallel_for(indices.begin(), indices.end(), 2048, [&](auto&& begin, auto&& end)
     {
@@ -56,12 +56,12 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
         }
     });
     writer->StartObject();
-    auto saveEntity = [&](dual_chunk_view_t* view)
+    auto saveEntity = [&](sugoi_chunk_view_t* view)
     {
-        auto cguids = (skr_guid_t*)dualV_get_owned_ro(view, DUAL_COMPONENT_GUID);
-        auto group = dualC_get_group(view->chunk);
-        dual_entity_type_t type;
-        dualG_get_type(group, &type);
+        auto cguids = (skr_guid_t*)sugoiV_get_owned_ro(view, SUGOI_COMPONENT_GUID);
+        auto group = sugoiC_get_group(view->chunk);
+        sugoi_entity_type_t type;
+        sugoiG_get_type(group, &type);
         for (EIndex i = 0; i < view->count; ++i)
         {
             auto guidStr = skr::format(u8"{}", cguids[i]);
@@ -69,10 +69,10 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
             writer->StartObject();
             for (EIndex j = 0; j < type.type.length; ++j)
             {
-                auto index = dualG_get_stable_order(group, j);
+                auto index = sugoiG_get_stable_order(group, j);
                 auto component = type.type.data[index];
-                auto desc = dualT_get_desc(component);
-                auto data = dualV_get_owned_ro_local(view, index);
+                auto desc = sugoiT_get_desc(component);
+                auto data = sugoiV_get_owned_ro_local(view, index);
                 auto serde = desc->callback.serialize_text;
                 if(!serde)
                     continue;
@@ -82,11 +82,11 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
             writer->EndObject();
         }
     };
-    dualS_batch(world, sortedEntities.data(), (EIndex)sortedEntities.size(), DUAL_LAMBDA(saveEntity));
+    sugoiS_batch(world, sortedEntities.data(), (EIndex)sortedEntities.size(), SUGOI_LAMBDA(saveEntity));
     writer->EndObject();
 }
 
-void skr_load_scene(dual_storage_t* world, skr_json_reader_t* reader)
+void skr_load_scene(sugoi_storage_t* world, skr_json_reader_t* reader)
 {
     skr::json::value_t value = std::move(*(skr::json::value_t*)reader);
     auto root = value.get_object();
@@ -105,42 +105,42 @@ void skr_load_scene(dual_storage_t* world, skr_json_reader_t* reader)
         auto entity = field.value().get_object();
         if(entity.error() != simdjson::error_code::SUCCESS)
             continue;
-        dual::type_builder_t entityType;
-        entityType.with(DUAL_COMPONENT_GUID);
+        sugoi::type_builder_t entityType;
+        entityType.with(SUGOI_COMPONENT_GUID);
         for (auto component : entity.value_unsafe())
         {
             auto key = component.unescaped_key();
             if(ERR(key))
                 continue;
             auto keyStr = key.value_unsafe();
-            auto typeId = dualT_get_type_by_name((const char8_t*)keyStr.data());
-            if(typeId == dual::kInvalidTypeIndex)
+            auto typeId = sugoiT_get_type_by_name((const char8_t*)keyStr.data());
+            if(typeId == sugoi::kInvalidTypeIndex)
                 continue;
-            auto desc = dualT_get_desc(typeId);
+            auto desc = sugoiT_get_desc(typeId);
             if(!desc->callback.deserialize_text || !desc->callback.serialize_text)
                 continue;
             entityType.with(typeId);
         }
-        dual_entity_type_t type = make_zeroed<dual_entity_type_t>();
+        sugoi_entity_type_t type = make_zeroed<sugoi_entity_type_t>();
         type.type = entityType.build();
-        auto setup = [&, entity](dual_chunk_view_t* view) mutable
+        auto setup = [&, entity](sugoi_chunk_view_t* view) mutable
         {
-            auto cguids = (skr_guid_t*)dualV_get_owned_rw(view, DUAL_COMPONENT_GUID);
+            auto cguids = (skr_guid_t*)sugoiV_get_owned_rw(view, SUGOI_COMPONENT_GUID);
             cguids[0] = guid;
             for(auto component : entity.value_unsafe())
             {
                 auto componentValue = component.value();
                 if(ERR(componentValue))
                     continue;
-                auto type = dualT_get_type_by_name((const char8_t*)component.unescaped_key().value_unsafe().data());
-                auto desc = dualT_get_desc(type);
+                auto type = sugoiT_get_type_by_name((const char8_t*)component.unescaped_key().value_unsafe().data());
+                auto desc = sugoiT_get_desc(type);
                 auto serde = desc->callback.deserialize_text;
                 if(!serde)
                     continue;
-                auto data = dualV_get_owned_ro(view, type);
+                auto data = sugoiV_get_owned_ro(view, type);
                 serde(view->chunk, view->start, (char*)data, 1, &componentValue);
             }
         };
-        dualS_allocate_type(world, &type, 1, DUAL_LAMBDA(setup));
+        sugoiS_allocate_type(world, &type, 1, SUGOI_LAMBDA(setup));
     }
 }

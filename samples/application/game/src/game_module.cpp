@@ -92,7 +92,7 @@ class SGameModule : public skr::IDynamicModule
 
     skr::resource::SLocalResourceRegistry* registry;
 
-    struct dual_storage_t* game_world         = nullptr;
+    struct sugoi_storage_t* game_world         = nullptr;
     SRenderDeviceId        game_render_device = nullptr;
     SRendererId            game_renderer      = nullptr;
     CGPUSwapChainId        swapchain          = nullptr;
@@ -250,20 +250,20 @@ void SGameModule::installResourceFactories()
     struct GameSceneFactory : public skr::resource::SSceneFactory {
         virtual ESkrInstallStatus Install(skr_resource_record_t* record) override
         {
-            auto renderableT_builder = make_zeroed<dual::type_builder_t>();
+            auto renderableT_builder = make_zeroed<sugoi::type_builder_t>();
             renderableT_builder.with<skr_render_effect_t>();
-            auto renderableT               = make_zeroed<dual_entity_type_t>();
+            auto renderableT               = make_zeroed<sugoi_entity_type_t>();
             renderableT.type               = renderableT_builder.build();
-            auto detlaT                    = make_zeroed<dual_delta_type_t>();
+            auto detlaT                    = make_zeroed<sugoi_delta_type_t>();
             detlaT.added                   = renderableT;
             skr_scene_resource_t* scene    = (skr_scene_resource_t*)record->resource;
-            auto                  callback = [&](dual_chunk_view_t* view) {
-                auto callback2 = [&](dual_chunk_view_t* view, dual_chunk_view_t* oldView) {
+            auto                  callback = [&](sugoi_chunk_view_t* view) {
+                auto callback2 = [&](sugoi_chunk_view_t* view, sugoi_chunk_view_t* oldView) {
                     skr_render_effect_attach(renderer, view, u8"ForwardEffect");
                 };
-                dualS_cast_view_delta(scene->storage, view, &detlaT, DUAL_LAMBDA(callback2));
+                sugoiS_cast_view_delta(scene->storage, view, &detlaT, SUGOI_LAMBDA(callback2));
             };
-            dualS_all(scene->storage, false, false, DUAL_LAMBDA(callback));
+            sugoiS_all(scene->storage, false, false, SUGOI_LAMBDA(callback));
             return SKR_INSTALL_STATUS_SUCCEED;
         }
         SRendererId renderer;
@@ -277,7 +277,7 @@ void SGameModule::installResourceFactories()
 
 void SGameModule::uninstallResourceFactories()
 {
-    dualS_release(game_world);
+    sugoiS_release(game_world);
     auto resource_system = skr::resource::GetResourceSystem();
     resource_system->Shutdown();
 
@@ -323,14 +323,14 @@ void SGameModule::on_load(int argc, char8_t** argv)
     }
     SKR_ASSERT(job_queue);
 
-    game_world         = dualS_create();
+    game_world         = sugoiS_create();
     game_render_device = skr_get_default_render_device();
     game_renderer      = skr_create_renderer(game_render_device, game_world);
     if (bUseJob)
     {
         scheduler.initialize(skr::task::scheudler_config_t{});
         scheduler.bind();
-        dualJ_bind_storage(game_world);
+        sugoiJ_bind_storage(game_world);
     }
     installResourceFactories();
     g_game_module = this;
@@ -339,28 +339,28 @@ void SGameModule::on_load(int argc, char8_t** argv)
 void create_test_scene(SRendererId renderer)
 {
     // allocate 100 movable cubes
-    auto renderableT_builder = make_zeroed<dual::type_builder_t>();
+    auto renderableT_builder = make_zeroed<sugoi::type_builder_t>();
     renderableT_builder
     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
     .with<skr_index_comp_t, skr_movement_comp_t>()
     .with<skr_render_effect_t>()
-    .with(DUAL_COMPONENT_GUID);
+    .with(SUGOI_COMPONENT_GUID);
     // allocate renderable
-    auto renderableT   = make_zeroed<dual_entity_type_t>();
+    auto renderableT   = make_zeroed<sugoi_entity_type_t>();
     renderableT.type   = renderableT_builder.build();
     uint32_t init_idx  = 0;
-    auto     primSetup = [&](dual_chunk_view_t* view) {
-        auto translations = dual::get_owned_rw<skr_translation_comp_t>(view);
-        auto rotations    = dual::get_owned_rw<skr_rotation_comp_t>(view);
-        auto scales       = dual::get_owned_rw<skr_scale_comp_t>(view);
-        auto indices      = dual::get_owned_rw<skr_index_comp_t>(view);
-        auto movements    = dual::get_owned_rw<skr_movement_comp_t>(view);
-        auto states       = dual::get_owned_rw<game::anim_state_t>(view);
-        auto guids        = (skr_guid_t*)dualV_get_owned_ro(view, DUAL_COMPONENT_GUID);
+    auto     primSetup = [&](sugoi_chunk_view_t* view) {
+        auto translations = sugoi::get_owned_rw<skr_translation_comp_t>(view);
+        auto rotations    = sugoi::get_owned_rw<skr_rotation_comp_t>(view);
+        auto scales       = sugoi::get_owned_rw<skr_scale_comp_t>(view);
+        auto indices      = sugoi::get_owned_rw<skr_index_comp_t>(view);
+        auto movements    = sugoi::get_owned_rw<skr_movement_comp_t>(view);
+        auto states       = sugoi::get_owned_rw<game::anim_state_t>(view);
+        auto guids        = (skr_guid_t*)sugoiV_get_owned_ro(view, SUGOI_COMPONENT_GUID);
         for (uint32_t i = 0; i < view->count; i++)
         {
             if (guids)
-                dual_make_guid(&guids[i]);
+                sugoi_make_guid(&guids[i]);
             if (movements)
             {
                 translations[i].value = { 0.f, 0.f, 0.f };
@@ -378,10 +378,10 @@ void create_test_scene(SRendererId renderer)
             {
                 using namespace skr::guid::literals;
                 states[i].animation_resource = u8"83c0db0b-08cd-4951-b1c3-65c2008d0113"_guid;
-                states[i].animation_resource.resolve(true, renderer->get_dual_storage());
+                states[i].animation_resource.resolve(true, renderer->get_sugoi_storage());
             }
         }
-        if (auto feature_arrs = dualV_get_owned_rw(view, dual_id_of<skr_render_effect_t>::get()))
+        if (auto feature_arrs = sugoiV_get_owned_rw(view, sugoi_id_of<skr_render_effect_t>::get()))
         {
             if (movements)
                 skr_render_effect_attach(renderer, view, u8"ForwardEffect");
@@ -389,30 +389,30 @@ void create_test_scene(SRendererId renderer)
                 skr_render_effect_attach(renderer, view, u8"ForwardEffectSkin");
         }
     };
-    dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 512, DUAL_LAMBDA(primSetup));
+    sugoiS_allocate_type(renderer->get_sugoi_storage(), &renderableT, 512, SUGOI_LAMBDA(primSetup));
 
     SKR_LOG_DEBUG(u8"Create Scene 0!");
 
     // allocate 1 player entity
-    auto playerT_builder = make_zeroed<dual::type_builder_t>();
+    auto playerT_builder = make_zeroed<sugoi::type_builder_t>();
     playerT_builder
     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
     .with<skr_movement_comp_t>()
     .with<skr_camera_comp_t>();
-    auto playerT = make_zeroed<dual_entity_type_t>();
+    auto playerT = make_zeroed<sugoi_entity_type_t>();
     playerT.type = playerT_builder.build();
-    dualS_allocate_type(renderer->get_dual_storage(), &playerT, 1, DUAL_LAMBDA(primSetup));
+    sugoiS_allocate_type(renderer->get_sugoi_storage(), &playerT, 1, SUGOI_LAMBDA(primSetup));
 
     SKR_LOG_DEBUG(u8"Create Scene 1!");
 
     // allocate 1 static(unmovable) gltf mesh
-    auto static_renderableT_builderT = make_zeroed<dual::type_builder_t>();
+    auto static_renderableT_builderT = make_zeroed<sugoi::type_builder_t>();
     static_renderableT_builderT
     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
     .with<skr_render_effect_t, game::anim_state_t>();
-    auto static_renderableT = make_zeroed<dual_entity_type_t>();
+    auto static_renderableT = make_zeroed<sugoi_entity_type_t>();
     static_renderableT.type = static_renderableT_builderT.build();
-    dualS_allocate_type(renderer->get_dual_storage(), &static_renderableT, 1, DUAL_LAMBDA(primSetup));
+    sugoiS_allocate_type(renderer->get_sugoi_storage(), &static_renderableT, 1, SUGOI_LAMBDA(primSetup));
 
     SKR_LOG_DEBUG(u8"Create Scene 2!");
 }
@@ -421,25 +421,25 @@ void async_attach_skin_mesh(SRendererId renderer)
 {
     using namespace skr;
 
-    auto filter          = make_zeroed<dual_filter_t>();
-    auto meta            = make_zeroed<dual_meta_filter_t>();
-    auto renderable_type = make_zeroed<dual::type_builder_t>();
+    auto filter          = make_zeroed<sugoi_filter_t>();
+    auto meta            = make_zeroed<sugoi_meta_filter_t>();
+    auto renderable_type = make_zeroed<sugoi::type_builder_t>();
     renderable_type.with<skr_render_effect_t, skr_translation_comp_t>();
-    auto static_type = make_zeroed<dual::type_builder_t>();
+    auto static_type = make_zeroed<sugoi::type_builder_t>();
     static_type.with<skr_movement_comp_t>();
     filter.all     = renderable_type.build();
     filter.none    = static_type.build();
-    auto skin_type = make_zeroed<dual::type_builder_t>();
-    auto filter2   = make_zeroed<dual_filter_t>();
+    auto skin_type = make_zeroed<sugoi::type_builder_t>();
+    auto filter2   = make_zeroed<sugoi_filter_t>();
     filter2.all    = skin_type.with<renderer::MeshComponent, anim::SkinComponent, anim::SkeletonComponent>().build();
-    auto attchFunc = [=](dual_chunk_view_t* view) {
-        auto requestSetup = [=](dual_chunk_view_t* view) {
+    auto attchFunc = [=](sugoi_chunk_view_t* view) {
+        auto requestSetup = [=](sugoi_chunk_view_t* view) {
             using namespace skr::guid::literals;
 
-            auto mesh_comps = dual::get_owned_rw<renderer::MeshComponent>(view);
-            auto skin_comps = dual::get_owned_rw<anim::SkinComponent>(view);
-            auto skel_comps = dual::get_owned_rw<anim::SkeletonComponent>(view);
-            // auto anim_comps = dual::get_owned_rw<anim::AnimComponent>(view);
+            auto mesh_comps = sugoi::get_owned_rw<renderer::MeshComponent>(view);
+            auto skin_comps = sugoi::get_owned_rw<anim::SkinComponent>(view);
+            auto skel_comps = sugoi::get_owned_rw<anim::SkeletonComponent>(view);
+            // auto anim_comps = sugoi::get_owned_rw<anim::AnimComponent>(view);
 
             for (uint32_t i = 0; i < view->count; i++)
             {
@@ -448,50 +448,50 @@ void async_attach_skin_mesh(SRendererId renderer)
                 auto& skel_comp = skel_comps[i];
                 // auto& anim_comp = anim_comps[i];
                 mesh_comp.mesh_resource = u8"18db1369-ba32-4e91-aa52-b2ed1556f576"_guid;
-                mesh_comp.mesh_resource.resolve(true, renderer->get_dual_storage());
+                mesh_comp.mesh_resource.resolve(true, renderer->get_sugoi_storage());
                 skin_comp.skin_resource = u8"40ce668a-d6bb-4134-b244-b0a7ac552245"_guid;
-                skin_comp.skin_resource.resolve(true, renderer->get_dual_storage());
+                skin_comp.skin_resource.resolve(true, renderer->get_sugoi_storage());
                 skel_comp.skeleton = u8"d1acf969-91d6-4233-8d2b-33fca7c98a1c"_guid;
-                skel_comp.skeleton.resolve(true, renderer->get_dual_storage());
+                skel_comp.skeleton.resolve(true, renderer->get_sugoi_storage());
             }
         };
-        skr_render_effect_access(renderer, view, u8"ForwardEffectSkin", DUAL_LAMBDA(requestSetup));
+        skr_render_effect_access(renderer, view, u8"ForwardEffectSkin", SUGOI_LAMBDA(requestSetup));
     };
     // 手动 sync skin mesh
-    dualS_query(renderer->get_dual_storage(), &filter2, &meta, nullptr, nullptr);
-    dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
+    sugoiS_query(renderer->get_sugoi_storage(), &filter2, &meta, nullptr, nullptr);
+    sugoiS_query(renderer->get_sugoi_storage(), &filter, &meta, SUGOI_LAMBDA(attchFunc));
 }
 
 void async_attach_render_mesh(SRendererId renderer)
 {
-    auto filter          = make_zeroed<dual_filter_t>();
-    auto meta            = make_zeroed<dual_meta_filter_t>();
-    auto renderable_type = make_zeroed<dual::type_builder_t>();
+    auto filter          = make_zeroed<sugoi_filter_t>();
+    auto meta            = make_zeroed<sugoi_meta_filter_t>();
+    auto renderable_type = make_zeroed<sugoi::type_builder_t>();
     renderable_type.with<skr_render_effect_t, skr_translation_comp_t>();
-    auto static_type = make_zeroed<dual::type_builder_t>();
+    auto static_type = make_zeroed<sugoi::type_builder_t>();
     static_type.with<skr_movement_comp_t>();
     filter.all     = renderable_type.build();
     filter.none    = static_type.build();
-    auto skin_type = make_zeroed<dual::type_builder_t>();
-    auto filter2   = make_zeroed<dual_filter_t>();
+    auto skin_type = make_zeroed<sugoi::type_builder_t>();
+    auto filter2   = make_zeroed<sugoi_filter_t>();
     filter2.all    = skin_type.with<skr::renderer::MeshComponent>().build();
-    auto attchFunc = [=](dual_chunk_view_t* view) {
-        auto requestSetup = [=](dual_chunk_view_t* view) {
+    auto attchFunc = [=](sugoi_chunk_view_t* view) {
+        auto requestSetup = [=](sugoi_chunk_view_t* view) {
             using namespace skr::guid::literals;
-            auto mesh_comps = dual::get_owned_rw<skr::renderer::MeshComponent>(view);
+            auto mesh_comps = sugoi::get_owned_rw<skr::renderer::MeshComponent>(view);
 
             for (uint32_t i = 0; i < view->count; i++)
             {
                 auto& mesh_comp         = mesh_comps[i];
                 mesh_comp.mesh_resource = u8"79bb81eb-4e9f-4301-bf0c-a15b10a1cc3b"_guid;
-                mesh_comp.mesh_resource.resolve(true, renderer->get_dual_storage());
+                mesh_comp.mesh_resource.resolve(true, renderer->get_sugoi_storage());
             }
         };
-        skr_render_effect_access(renderer, view, u8"ForwardEffectSkin", DUAL_LAMBDA(requestSetup));
+        skr_render_effect_access(renderer, view, u8"ForwardEffectSkin", SUGOI_LAMBDA(requestSetup));
     };
     // 手动 sync mesh
-    dualS_query(renderer->get_dual_storage(), &filter2, &meta, nullptr, nullptr);
-    dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
+    sugoiS_query(renderer->get_sugoi_storage(), &filter2, &meta, nullptr, nullptr);
+    sugoiS_query(renderer->get_sugoi_storage(), &filter, &meta, SUGOI_LAMBDA(attchFunc));
 }
 
 void imgui_button_spawn_girl(SRendererId renderer)
@@ -597,20 +597,20 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
     // loop
     bool               quit = false;
     skr::task::event_t pSkinCounter(nullptr);
-    dual_query_t*      initAnimSkinQuery;
-    dual_query_t*      skinQuery;
-    dual_query_t*      moveQuery;
-    dual_query_t*      cameraQuery;
-    dual_query_t*      animQuery;
-    moveQuery         = dualQ_from_literal(game_world,
+    sugoi_query_t*      initAnimSkinQuery;
+    sugoi_query_t*      skinQuery;
+    sugoi_query_t*      moveQuery;
+    sugoi_query_t*      cameraQuery;
+    sugoi_query_t*      animQuery;
+    moveQuery         = sugoiQ_from_literal(game_world,
                                            "[has]skr_movement_comp_t,[inout]skr_translation_comp_t,[in]skr_scale_comp_t,[in]skr_index_comp_t,!skr_camera_comp_t");
-    cameraQuery       = dualQ_from_literal(game_world,
+    cameraQuery       = sugoiQ_from_literal(game_world,
                                            "[has]skr_movement_comp_t,[inout]skr_translation_comp_t,[inout]skr_camera_comp_t");
-    animQuery         = dualQ_from_literal(game_world,
+    animQuery         = sugoiQ_from_literal(game_world,
                                            "[in]skr_render_effect_t,[in]game::anim_state_t,[out]<unseq>skr::anim::AnimComponent,[in]<unseq>skr::anim::SkeletonComponent");
-    initAnimSkinQuery = dualQ_from_literal(game_world,
+    initAnimSkinQuery = sugoiQ_from_literal(game_world,
                                            "[inout]skr::anim::AnimComponent,[inout]skr::anim::SkinComponent,[in]skr::renderer::MeshComponent,[in]skr::anim::SkeletonComponent");
-    skinQuery         = dualQ_from_literal(game_world,
+    skinQuery         = sugoiQ_from_literal(game_world,
                                            "[in]skr::anim::AnimComponent,[inout]skr::anim::SkinComponent,[in]skr::renderer::MeshComponent,[in]skr::anim::SkeletonComponent");
 
     auto handler = skr_system_get_default_handler();
@@ -648,8 +648,8 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
         }
 
         {
-            SkrZoneScopedN("dualJ GC");
-            dualJ_gc();
+            SkrZoneScopedN("sugoiJ GC");
+            sugoiJ_gc();
         }
         int64_t us        = skr_hires_timer_get_usec(&tick_timer, true);
         double  deltaTime = (double)us / 1000 / 1000;
@@ -667,8 +667,8 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
         resource_system->Update();
 
         // Update camera
-        auto cameraUpdate = [this](dual_chunk_view_t* view) {
-            auto cameras = dual::get_owned_rw<skr_camera_comp_t>(view);
+        auto cameraUpdate = [this](sugoi_chunk_view_t* view) {
+            auto cameras = sugoi::get_owned_rw<skr_camera_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
                 const auto pInfo           = swapchain->back_buffers[0]->info;
@@ -678,13 +678,13 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                 cameras[i].viewport_height = (uint32_t)pInfo->height;
             }
         };
-        dualQ_get_views(cameraQuery, DUAL_LAMBDA(cameraUpdate));
+        sugoiQ_get_views(cameraQuery, SUGOI_LAMBDA(cameraUpdate));
 
         // Input
         if (auto scene = scene_handle.get_resolved())
         {
             SkrZoneScopedN("MergeScene");
-            dualS_merge(game_renderer->get_dual_storage(), scene->storage);
+            sugoiS_merge(game_renderer->get_sugoi_storage(), scene->storage);
             scene_handle.reset();
         }
         {
@@ -713,7 +713,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                 if (ImGui::Button("Save"))
                 {
                     skr_json_writer_t writer(5);
-                    skr_save_scene(game_renderer->get_dual_storage(), &writer);
+                    skr_save_scene(game_renderer->get_sugoi_storage(), &writer);
                     auto file = skr_vfs_fopen(resource_vfs, u8"scene.json", SKR_FM_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
                     if (file)
                     {
@@ -747,14 +747,14 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
 
             auto moveJob = SkrNewLambda(
-            [=](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+            [=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
                 SkrZoneScopedN("MoveJob");
 
                 float lerps[]      = { 12.5, 20 };
-                auto  translations = (skr_translation_comp_t*)dualV_get_owned_rw_local(view, localTypes[0]);
-                auto  scales       = (skr_scale_comp_t*)dualV_get_owned_ro_local(view, localTypes[1]);
+                auto  translations = (skr_translation_comp_t*)sugoiV_get_owned_rw_local(view, localTypes[0]);
+                auto  scales       = (skr_scale_comp_t*)sugoiV_get_owned_ro_local(view, localTypes[1]);
                 (void)scales;
-                auto indices = (skr_index_comp_t*)dualV_get_owned_ro_local(view, localTypes[2]);
+                auto indices = (skr_index_comp_t*)sugoiV_get_owned_ro_local(view, localTypes[2]);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
                     const auto actual_idx = indices[i].value;
@@ -770,25 +770,25 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                     };
                 }
             });
-            dualJ_schedule_ecs(moveQuery, 1024, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
+            sugoiJ_schedule_ecs(moveQuery, 1024, SUGOI_LAMBDA_POINTER(moveJob), nullptr, nullptr);
         }
 
         // sync all jobs here ?
         {
-            // SkrZoneScopedN("DualJSync");
-            // dualJ_wait_all();
+            // SkrZoneScopedN("sugoiJSync");
+            // sugoiJ_wait_all();
         }
 
         // [inout]skr::anim::AnimComponent, [in]game::anim_state_t, [in]skr::anim::SkeletonComponent
         {
             SkrZoneScopedN("AnimSystem");
-            auto animJob = SkrNewLambda([=](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+            auto animJob = SkrNewLambda([=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
                 SkrZoneScopedN("AnimJob");
-                auto     states     = (game::anim_state_t*)dualV_get_owned_ro_local(view, localTypes[1]);
+                auto     states     = (game::anim_state_t*)sugoiV_get_owned_ro_local(view, localTypes[1]);
                 uint32_t g_id       = 0;
-                auto     syncEffect = [&](dual_chunk_view_t* view) {
-                    auto anims = dual::get_owned_rw<skr::anim::AnimComponent>(view);
-                    auto skels = dual::get_component_ro<skr::anim::SkeletonComponent>(view);
+                auto     syncEffect = [&](sugoi_chunk_view_t* view) {
+                    auto anims = sugoi::get_owned_rw<skr::anim::AnimComponent>(view);
+                    auto skels = sugoi::get_component_ro<skr::anim::SkeletonComponent>(view);
                     for (uint32_t i = 0; i < view->count; ++i, ++g_id)
                     {
                         auto& anim              = anims[i];
@@ -810,18 +810,18 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                         }
                     }
                 };
-                skr_render_effect_access(game_renderer, view, u8"ForwardEffectSkin", DUAL_LAMBDA(syncEffect));
+                skr_render_effect_access(game_renderer, view, u8"ForwardEffectSkin", SUGOI_LAMBDA(syncEffect));
             });
-            dualJ_schedule_ecs(animQuery, 128, DUAL_LAMBDA_POINTER(animJob), nullptr, nullptr);
+            sugoiJ_schedule_ecs(animQuery, 128, SUGOI_LAMBDA_POINTER(animJob), nullptr, nullptr);
         }
         {
             SkrZoneScopedN("SkinSystem");
 
-            auto initAnimSkinComps = [&](dual_chunk_view_t* r_cv) {
-                const auto meshes = dual::get_component_ro<skr::renderer::MeshComponent>(r_cv);
-                const auto skels  = dual::get_component_ro<skr::anim::SkeletonComponent>(r_cv);
-                const auto anims  = dual::get_owned_rw<skr::anim::AnimComponent>(r_cv);
-                const auto skins  = dual::get_owned_rw<skr::anim::SkinComponent>(r_cv);
+            auto initAnimSkinComps = [&](sugoi_chunk_view_t* r_cv) {
+                const auto meshes = sugoi::get_component_ro<skr::renderer::MeshComponent>(r_cv);
+                const auto skels  = sugoi::get_component_ro<skr::anim::SkeletonComponent>(r_cv);
+                const auto anims  = sugoi::get_owned_rw<skr::anim::AnimComponent>(r_cv);
+                const auto skins  = sugoi::get_owned_rw<skr::anim::SkinComponent>(r_cv);
 
                 SkrZoneScopedN("InitializeAnimSkinComponents");
                 for (uint32_t i = 0; i < r_cv->count; i++)
@@ -844,8 +844,8 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
             };
             {
                 // prepare skin mesh resources for rendering
-                dualQ_sync(initAnimSkinQuery);
-                dualQ_get_views(initAnimSkinQuery, DUAL_LAMBDA(initAnimSkinComps));
+                sugoiQ_sync(initAnimSkinQuery);
+                sugoiQ_get_views(initAnimSkinQuery, SUGOI_LAMBDA(initAnimSkinComps));
             }
 
             // wait last skin dispatch
@@ -854,10 +854,10 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
 
             // skin dispatch for the frame
             auto cpuSkinJob = SkrNewLambda(
-            [&](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
-                const auto meshes = dual::get_component_ro<skr::renderer::MeshComponent>(view);
-                const auto anims  = dual::get_component_ro<skr::anim::AnimComponent>(view);
-                auto       skins  = dual::get_owned_rw<skr::anim::SkinComponent>(view);
+            [&](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
+                const auto meshes = sugoi::get_component_ro<skr::renderer::MeshComponent>(view);
+                const auto anims  = sugoi::get_component_ro<skr::anim::AnimComponent>(view);
+                auto       skins  = sugoi::get_owned_rw<skr::anim::SkinComponent>(view);
 
                 for (uint32_t i = 0; i < view->count; i++)
                 {
@@ -872,17 +872,17 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                     }
                 }
             });
-            dualJ_schedule_ecs(skinQuery, 4, DUAL_LAMBDA_POINTER(cpuSkinJob), nullptr, &pSkinCounter);
+            sugoiJ_schedule_ecs(skinQuery, 4, SUGOI_LAMBDA_POINTER(cpuSkinJob), nullptr, &pSkinCounter);
         }
         // [has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_camera_comp_t
         if (bUseJob)
         {
             SkrZoneScopedN("PlayerSystem");
 
-            auto playerJob = SkrNewLambda([=](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+            auto playerJob = SkrNewLambda([=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
                 SkrZoneScopedN("PlayerJob");
 
-                auto translations = (skr_translation_comp_t*)dualV_get_owned_rw_local(view, localTypes[0]);
+                auto translations = (skr_translation_comp_t*)sugoiV_get_owned_rw_local(view, localTypes[0]);
                 auto forward      = skr_float3_t{ 0.f, 1.f, 0.f };
                 auto right        = skr_float3_t{ 1.f, 0.f, 0.f };
                 for (uint32_t i = 0; i < view->count; i++)
@@ -905,7 +905,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                     if (ddown) translations[i].value = 1.f * right * (float)deltaTime * kSpeed + translations[i].value;
                 }
             });
-            dualJ_schedule_ecs(cameraQuery, 128, DUAL_LAMBDA_POINTER(playerJob), nullptr, nullptr);
+            sugoiJ_schedule_ecs(cameraQuery, 128, SUGOI_LAMBDA_POINTER(playerJob), nullptr, nullptr);
         }
 
         // resolve camera to viewports
@@ -1018,7 +1018,7 @@ void SGameModule::on_unload()
     SKR_LOG_INFO(u8"game unloaded!");
     if (bUseJob)
     {
-        dualJ_unbind_storage(game_world);
+        sugoiJ_unbind_storage(game_world);
         scheduler.unbind();
     }
     uninstallResourceFactories();

@@ -1,11 +1,11 @@
 #pragma once
 #include "SkrBase/misc/debug.h" 
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include <string>
 
 namespace guid_parse
 {
-    using guid_t = dual_guid_t;
+    using guid_t = sugoi_guid_t;
     namespace details
     {
         constexpr const size_t short_guid_form_length = 36;	// XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX

@@ -1,10 +1,10 @@
 #include "arena.hpp"
 #include "pool.hpp"
-#include "SkrRT/ecs/dual_config.h"
+#include "SkrRT/ecs/sugoi_config.h"
 
 #include "SkrProfile/profile.h"
 
-namespace dual
+namespace sugoi
 {
 fixed_arena_t::fixed_arena_t(size_t capacity)
     : size()
@@ -12,13 +12,13 @@ fixed_arena_t::fixed_arena_t(size_t capacity)
 {
     SkrZoneScopedN("DualFixedArenaAllocation");
     
-    buffer = dual_calloc(1, capacity);
+    buffer = sugoi_calloc(1, capacity);
 }
 
 fixed_arena_t::~fixed_arena_t()
 {
     if (buffer)
-        dual_free(buffer);
+        sugoi_free(buffer);
 }
 
 void fixed_arena_t::forget()
@@ -46,7 +46,7 @@ void struct_arena_base_t::initialize(size_t a)
 {
     SkrZoneScopedN("DualArenaAllocation");
 
-    buffer = dual_calloc_aligned(1, capacity, a);
+    buffer = sugoi_calloc_aligned(1, capacity, a);
 }
 void struct_arena_base_t::record(size_t s, size_t a)
 {
@@ -98,4 +98,4 @@ void* block_arena_t::allocate(size_t s, size_t a)
     curr += s;
     return result;
 }
-} // namespace dual
+} // namespace sugoi

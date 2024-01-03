@@ -1,5 +1,5 @@
 #include "type_registry.hpp"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/SmallVector.h"
 #include "SkrRT/ecs/set.hpp"
 #include "archetype.hpp"
@@ -49,7 +49,7 @@ inline bool starts_with(skr::stl_string_view const& value, skr::stl_string_view 
 }
 } 
 
-namespace dual
+namespace sugoi
 {
 template <class U, class T>
 bool match_filter_set(const T& set, const T& all, const T& none, bool skipNone)
@@ -61,17 +61,17 @@ bool match_filter_set(const T& set, const T& all, const T& none, bool skipNone)
     return true;
 }
 
-bool match_group_type(const dual_entity_type_t& type, const dual_filter_t& filter, bool skipNone)
+bool match_group_type(const sugoi_entity_type_t& type, const sugoi_filter_t& filter, bool skipNone)
 {
-    return match_filter_set<dual_type_index_t>(type.type, filter.all, filter.none, skipNone);
+    return match_filter_set<sugoi_type_index_t>(type.type, filter.all, filter.none, skipNone);
 }
 
-bool match_group_shared(const dual_type_set_t& shared, const dual_filter_t& filter)
+bool match_group_shared(const sugoi_type_set_t& shared, const sugoi_filter_t& filter)
 {
-    return match_filter_set<dual_type_index_t>(shared, filter.all_shared, filter.none_shared, false);
+    return match_filter_set<sugoi_type_index_t>(shared, filter.all_shared, filter.none_shared, false);
 }
 
-bool match_chunk_changed(const dual_type_set_t& type, uint32_t* timestamp, const dual_meta_filter_t& filter)
+bool match_chunk_changed(const sugoi_type_set_t& type, uint32_t* timestamp, const sugoi_meta_filter_t& filter)
 {
     uint16_t i = 0, j = 0;
     auto& changed = filter.changed;
@@ -91,12 +91,12 @@ bool match_chunk_changed(const dual_type_set_t& type, uint32_t* timestamp, const
     return false;
 }
 
-bool match_group_meta(const dual_entity_type_t& type, const dual_meta_filter_t& filter)
+bool match_group_meta(const sugoi_entity_type_t& type, const sugoi_meta_filter_t& filter)
 {
-    return match_filter_set<dual_entity_t>(type.meta, filter.all_meta, filter.none_meta, false);
+    return match_filter_set<sugoi_entity_t>(type.meta, filter.all_meta, filter.none_meta, false);
 }
 
-bool match_group(dual_query_t* q, dual_group_t* g)
+bool match_group(sugoi_query_t* q, sugoi_group_t* g)
 {
     bool match = true;
     match = match && q->includeDead >= g->isDead;
@@ -106,7 +106,7 @@ bool match_group(dual_query_t* q, dual_group_t* g)
         for(int i = 0; i < q->excludes.size(); ++i)
         {
             auto exclude = q->excludes[i];
-            if(set_utils<dual_type_index_t>::all(g->type.type, exclude))
+            if(set_utils<sugoi_type_index_t>::all(g->type.type, exclude))
                 return false;
         }
     }
@@ -115,11 +115,11 @@ bool match_group(dual_query_t* q, dual_group_t* g)
         return false;
     return true;
 }
-} // namespace dual
+} // namespace sugoi
 
-void dual_storage_t::build_query_cache(dual_query_t* query)
+void sugoi_storage_t::build_query_cache(sugoi_query_t* query)
 {
-    using namespace dual;
+    using namespace sugoi;
     query->groups.clear();
     query->includeDead = false;
     query->includeDisabled = false;
@@ -136,16 +136,16 @@ void dual_storage_t::build_query_cache(dual_query_t* query)
     for (auto i : groups)
     {
         auto g = i.second;
-        bool match = dual::match_group(query, g);
+        bool match = sugoi::match_group(query, g);
         if(!match)
             continue;
         query->groups.push_back(g);
     }
 }
 
-void dual_storage_t::update_query_cache(dual_group_t* group, bool isAdd)
+void sugoi_storage_t::update_query_cache(sugoi_group_t* group, bool isAdd)
 {
-    using namespace dual;
+    using namespace sugoi;
     
     if (!isAdd)
     {
@@ -156,21 +156,21 @@ void dual_storage_t::update_query_cache(dual_group_t* group, bool isAdd)
     {
         for (auto& query : queries)
         {
-            if (dual::match_group(query, group))
+            if (sugoi::match_group(query, group))
                 query->groups.push_back(group);
         }
     }
 }
 
-dual_query_t* dual_storage_t::make_query(const dual_filter_t& filter, const dual_parameters_t& params)
+sugoi_query_t* sugoi_storage_t::make_query(const sugoi_filter_t& filter, const sugoi_parameters_t& params)
 {
-    using namespace dual;
+    using namespace sugoi;
     
-    dual::fixed_arena_t arena(4096);
-    auto result = arena.allocate<dual_query_t>();
-    auto buffer = (char*)arena.allocate(data_size(filter) + data_size(params), alignof(dual_type_index_t));
-    result->filter = dual::clone(filter, buffer);
-    result->parameters = dual::clone(params, buffer);
+    sugoi::fixed_arena_t arena(4096);
+    auto result = arena.allocate<sugoi_query_t>();
+    auto buffer = (char*)arena.allocate(data_size(filter) + data_size(params), alignof(sugoi_type_index_t));
+    result->filter = sugoi::clone(filter, buffer);
+    result->parameters = sugoi::clone(params, buffer);
     queriesBuilt = false;
     result->storage = this;
     arena.forget();
@@ -179,9 +179,9 @@ dual_query_t* dual_storage_t::make_query(const dual_filter_t& filter, const dual
 }
 
 //[in][rand]$|comp''
-dual_query_t* dual_storage_t::make_query(const char* inDesc)
+sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
 {
-    using namespace dual;
+    using namespace sugoi;
     skr::String desc = skr::String::from_utf8((ochar8_t*)inDesc);
     using namespace skr;
     desc.replace(u8""_txtv, u8" "_txtv);
@@ -194,17 +194,17 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
     int errorPos = 0;
     int partBegin = 0;
     auto& reg = type_registry_t::get();
-    llvm_vecsmall::SmallVector<dual_type_index_t, 20> all;
-    llvm_vecsmall::SmallVector<dual_type_index_t, 20> none;
-    llvm_vecsmall::SmallVector<dual_type_index_t, 20> all_shared;
-    llvm_vecsmall::SmallVector<dual_type_index_t, 20> none_shared;
-    llvm_vecsmall::SmallVector<dual_type_index_t, 20> entry;
-    llvm_vecsmall::SmallVector<dual_operation_t, 20> operations;
+    llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> all;
+    llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> none;
+    llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> all_shared;
+    llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> none_shared;
+    llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> entry;
+    llvm_vecsmall::SmallVector<sugoi_operation_t, 20> operations;
     for (auto part : parts)
     {
         int i = 0;
-        dual_type_index_t type;
-        dual_operation_t operation;
+        sugoi_type_index_t type;
+        sugoi_operation_t operation;
         bool shared = false;
         bool filterOnly = false;
         operation.randomAccess = DOS_PAR;
@@ -419,53 +419,53 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         partBegin += (int)part.size() + 1;
     }
 
-    dual::fixed_arena_t arena(4096);
+    sugoi::fixed_arena_t arena(4096);
     // parse finished, save result into query
-    auto result = arena.allocate<dual_query_t>();
+    auto result = arena.allocate<sugoi_query_t>();
 #define FILTER_PART(NAME)                \
     std::sort(NAME.begin(), NAME.end()); \
-    result->filter.NAME = dual_type_set_t{ NAME.data(), (SIndex)NAME.size() };
+    result->filter.NAME = sugoi_type_set_t{ NAME.data(), (SIndex)NAME.size() };
     FILTER_PART(all);
     FILTER_PART(none);
     FILTER_PART(all_shared);
     FILTER_PART(none_shared);
 #undef FILTER_PART
-    auto buffer = (char*)arena.allocate(data_size(result->filter), alignof(dual_type_index_t));
-    result->filter = dual::clone(result->filter, buffer);
+    auto buffer = (char*)arena.allocate(data_size(result->filter), alignof(sugoi_type_index_t));
+    result->filter = sugoi::clone(result->filter, buffer);
     result->parameters.types = entry.data();
     result->parameters.accesses = operations.data();
     result->parameters.length = (SIndex)entry.size();
-    buffer = (char*)arena.allocate(data_size(result->parameters), alignof(dual_type_index_t));
-    result->parameters = dual::clone(result->parameters, buffer);
+    buffer = (char*)arena.allocate(data_size(result->parameters), alignof(sugoi_type_index_t));
+    result->parameters = sugoi::clone(result->parameters, buffer);
     result->storage = this;
     queriesBuilt = false;
-    ::memset(&result->meta, 0, sizeof(dual_meta_filter_t));
+    ::memset(&result->meta, 0, sizeof(sugoi_meta_filter_t));
     queries.push_back(result);
     arena.forget();
     return result;
 }
 
-void dual_storage_t::destroy_query(dual_query_t* query)
+void sugoi_storage_t::destroy_query(sugoi_query_t* query)
 {
     auto iter = std::find(queries.begin(), queries.end(), query);
     SKR_ASSERT(iter != queries.end());
-    query->~dual_query_t();
-    dual_free(query);
+    query->~sugoi_query_t();
+    sugoi_free(query);
     queries.erase(iter);
     queriesBuilt = false;
 }
 
-void dual_storage_t::build_queries()
+void sugoi_storage_t::build_queries()
 {
-    using namespace dual;
+    using namespace sugoi;
     if (queriesBuilt)
         return;
     
-    SkrZoneScopedN("dual_storage_t::build_queries");
+    SkrZoneScopedN("sugoi_storage_t::build_queries");
     struct phase_entry_builder {
-        dual_type_index_t type;
+        sugoi_type_index_t type;
         uint32_t phase;
-        llvm_vecsmall::SmallVector<dual_query_t*, 8> queries;
+        llvm_vecsmall::SmallVector<sugoi_query_t*, 8> queries;
     };
     if(phases != nullptr)
     {
@@ -531,8 +531,8 @@ void dual_storage_t::build_queries()
         (*phaseEntries++) = entry;
         entry->type = builder.type;
         entry->phase = builder.phase;
-        entry->queries = {queryBuildArena.allocate<dual_query_t*>(builder.queries.size()), builder.queries.size()};
-        memcpy(entry->queries.data(), builder.queries.data(), sizeof(dual_query_t*) * builder.queries.size());
+        entry->queries = {queryBuildArena.allocate<sugoi_query_t*>(builder.queries.size()), builder.queries.size()};
+        memcpy(entry->queries.data(), builder.queries.data(), sizeof(sugoi_query_t*) * builder.queries.size());
 
         // solve overloading
         for(int i = 0; i < builder.queries.size(); ++i)
@@ -543,20 +543,20 @@ void dual_storage_t::build_queries()
                 auto a = builder.queries[i];
                 auto b = builder.queries[j];
                 // todo: is 256 enough?
-                const dual_type_index_t* buffer = localStack.allocate<dual_type_index_t>(256);
-                auto merged = set_utils<dual_type_index_t>::merge(a->filter.all, b->filter.all, (void*)buffer);
+                const sugoi_type_index_t* buffer = localStack.allocate<sugoi_type_index_t>(256);
+                auto merged = set_utils<sugoi_type_index_t>::merge(a->filter.all, b->filter.all, (void*)buffer);
                 SKR_ASSERT(merged.length < 256);
-                auto excludeA = set_utils<dual_type_index_t>::substract(merged, a->filter.all, localStack.allocate<dual_type_index_t>(merged.length));
-                auto excludeB = set_utils<dual_type_index_t>::substract(merged, b->filter.all, localStack.allocate<dual_type_index_t>(merged.length));
+                auto excludeA = set_utils<sugoi_type_index_t>::substract(merged, a->filter.all, localStack.allocate<sugoi_type_index_t>(merged.length));
+                auto excludeB = set_utils<sugoi_type_index_t>::substract(merged, b->filter.all, localStack.allocate<sugoi_type_index_t>(merged.length));
                 if(excludeA.length != 0)
                 {
-                    char* data = (char*)queryBuildArena.allocate(data_size(excludeA), alignof(dual_type_index_t));
-                    a->excludes.push_back(dual::clone(excludeA, data));
+                    char* data = (char*)queryBuildArena.allocate(data_size(excludeA), alignof(sugoi_type_index_t));
+                    a->excludes.push_back(sugoi::clone(excludeA, data));
                 }
                 if(excludeB.length != 0)
                 {
-                    char* data = (char*)queryBuildArena.allocate(data_size(excludeB), alignof(dual_type_index_t));
-                    b->excludes.push_back(dual::clone(excludeB, data));
+                    char* data = (char*)queryBuildArena.allocate(data_size(excludeB), alignof(sugoi_type_index_t));
+                    b->excludes.push_back(sugoi::clone(excludeB, data));
                 }
             }
         }
@@ -574,7 +574,7 @@ void dual_storage_t::build_queries()
     queriesBuilt = true;
 }
 
-void dual_storage_t::query(const dual_query_t* q, dual_view_callback_t callback, void* u)
+void sugoi_storage_t::query(const sugoi_query_t* q, sugoi_view_callback_t callback, void* u)
 {
     bool mainThread = true;
     if(scheduler)
@@ -588,16 +588,16 @@ void dual_storage_t::query(const dual_query_t* q, dual_view_callback_t callback,
     else
         SKR_ASSERT(queriesBuilt);
     
-    auto filterChunk = [&](dual_group_t* group) {
+    auto filterChunk = [&](sugoi_group_t* group) {
         query(group, q->filter, q->meta, callback, u);
     };
-    query_groups(q, DUAL_LAMBDA(filterChunk));
+    query_groups(q, SUGOI_LAMBDA(filterChunk));
 }
 
 
-void dual_storage_t::query_groups(const dual_query_t* q, dual_group_callback_t callback, void* u)
+void sugoi_storage_t::query_groups(const sugoi_query_t* q, sugoi_group_callback_t callback, void* u)
 {
-    using namespace dual;
+    using namespace sugoi;
     bool mainThread = true;
     if(scheduler)
     {
@@ -612,19 +612,19 @@ void dual_storage_t::query_groups(const dual_query_t* q, dual_group_callback_t c
     
     fixed_stack_scope_t _(localStack);
     bool filterShared = (q->filter.all_shared.length + q->filter.none_shared.length) != 0;
-    dual_meta_filter_t* validatedMeta = nullptr;
+    sugoi_meta_filter_t* validatedMeta = nullptr;
     if (q->meta.all_meta.length > 0 || q->meta.any_meta.length > 0 || q->meta.none_meta.length > 0)
     {
-        validatedMeta = localStack.allocate<dual_meta_filter_t>();
+        validatedMeta = localStack.allocate<sugoi_meta_filter_t>();
         auto data = (char*)localStack.allocate(data_size(q->meta));
-        *validatedMeta = dual::clone(q->meta, data);
+        *validatedMeta = sugoi::clone(q->meta, data);
         validate(validatedMeta->all_meta);
         validate(validatedMeta->any_meta);
         validate(validatedMeta->none_meta);
     }
     else
     {
-        validatedMeta = (dual_meta_filter_t*)&q->meta;
+        validatedMeta = (sugoi_meta_filter_t*)&q->meta;
     }
     bool filterMeta = (validatedMeta->all_meta.length + validatedMeta->any_meta.length + validatedMeta->none_meta.length) != 0;
     for (auto& group : q->groups)
@@ -632,11 +632,11 @@ void dual_storage_t::query_groups(const dual_query_t* q, dual_group_callback_t c
         if (filterShared)
         {
             fixed_stack_scope_t _(localStack);
-            dual_type_set_t shared;
+            sugoi_type_set_t shared;
             shared.length = 0;
             // todo: is 256 enough?
-            shared.data = localStack.allocate<dual_type_index_t>(256);
-            group->get_shared_type(shared, localStack.allocate<dual_type_index_t>(256));
+            shared.data = localStack.allocate<sugoi_type_index_t>(256);
+            group->get_shared_type(shared, localStack.allocate<sugoi_type_index_t>(256));
             // check(shared.length < 256);
             if (!match_group_shared(shared, q->filter))
                 continue;
@@ -650,24 +650,24 @@ void dual_storage_t::query_groups(const dual_query_t* q, dual_group_callback_t c
     }
 }
 
-void dual_storage_t::query_groups(const dual_filter_t& filter, const dual_meta_filter_t& meta, dual_group_callback_t callback, void* u)
+void sugoi_storage_t::query_groups(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_group_callback_t callback, void* u)
 {
-    using namespace dual;
+    using namespace sugoi;
     fixed_stack_scope_t _(localStack);
     bool filterShared = (filter.all_shared.length + filter.none_shared.length) != 0;
-    dual_meta_filter_t* validatedMeta = nullptr;
+    sugoi_meta_filter_t* validatedMeta = nullptr;
     if (meta.all_meta.length > 0 || meta.any_meta.length > 0 || meta.none_meta.length > 0)
     {
-        validatedMeta = localStack.allocate<dual_meta_filter_t>();
+        validatedMeta = localStack.allocate<sugoi_meta_filter_t>();
         auto data = (char*)localStack.allocate(data_size(meta));
-        *validatedMeta = dual::clone(meta, data);
+        *validatedMeta = sugoi::clone(meta, data);
         validate(validatedMeta->all_meta);
         validate(validatedMeta->any_meta);
         validate(validatedMeta->none_meta);
     }
     else
     {
-        validatedMeta = (dual_meta_filter_t*)&meta;
+        validatedMeta = (sugoi_meta_filter_t*)&meta;
     }
     bool filterMeta = (validatedMeta->all_meta.length + validatedMeta->any_meta.length + validatedMeta->none_meta.length) != 0;
     bool includeDead = false;
@@ -682,7 +682,7 @@ void dual_storage_t::query_groups(const dual_filter_t& filter, const dual_meta_f
                 includeDisabled = true;
         }
     }
-    auto matchGroup = [&](dual_group_t* g) {
+    auto matchGroup = [&](sugoi_group_t* g) {
         if (includeDead < g->isDead)
             return false;
         if (includeDisabled < g->disabled)
@@ -697,11 +697,11 @@ void dual_storage_t::query_groups(const dual_filter_t& filter, const dual_meta_f
         if (filterShared)
         {
             fixed_stack_scope_t _(localStack);
-            dual_type_set_t shared;
+            sugoi_type_set_t shared;
             shared.length = 0;
             // todo: is 256 enough?
-            shared.data = localStack.allocate<dual_type_index_t>(256);
-            group->get_shared_type(shared, localStack.allocate<dual_type_index_t>(256));
+            shared.data = localStack.allocate<sugoi_type_index_t>(256);
+            group->get_shared_type(shared, localStack.allocate<sugoi_type_index_t>(256));
             // check(shared.length < 256);
             if (!match_group_shared(shared, filter))
                 continue;
@@ -715,34 +715,34 @@ void dual_storage_t::query_groups(const dual_filter_t& filter, const dual_meta_f
     }
 }
 
-bool dual_storage_t::match_group(const dual_filter_t& filter, const dual_meta_filter_t& meta, const dual_group_t* group)
+bool sugoi_storage_t::match_group(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, const sugoi_group_t* group)
 {
-    using namespace dual;
+    using namespace sugoi;
     fixed_stack_scope_t _(localStack);
     bool filterShared = (filter.all_shared.length + filter.none_shared.length) != 0;
-    dual_meta_filter_t* validatedMeta = nullptr;
+    sugoi_meta_filter_t* validatedMeta = nullptr;
     if (meta.all_meta.length > 0 || meta.any_meta.length > 0 || meta.none_meta.length > 0)
     {
-        validatedMeta = localStack.allocate<dual_meta_filter_t>();
+        validatedMeta = localStack.allocate<sugoi_meta_filter_t>();
         auto data = (char*)localStack.allocate(data_size(meta));
-        *validatedMeta = dual::clone(meta, data);
+        *validatedMeta = sugoi::clone(meta, data);
         validate(validatedMeta->all_meta);
         validate(validatedMeta->any_meta);
         validate(validatedMeta->none_meta);
     }
     else
     {
-        validatedMeta = (dual_meta_filter_t*)&meta;
+        validatedMeta = (sugoi_meta_filter_t*)&meta;
     }
     bool filterMeta = (validatedMeta->all_meta.length + validatedMeta->any_meta.length + validatedMeta->none_meta.length) != 0;
     if (filterShared)
     {
         fixed_stack_scope_t _(localStack);
-        dual_type_set_t shared;
+        sugoi_type_set_t shared;
         shared.length = 0;
         // todo: is 256 enough?
-        shared.data = localStack.allocate<dual_type_index_t>(256);
-        group->get_shared_type(shared, localStack.allocate<dual_type_index_t>(256));
+        shared.data = localStack.allocate<sugoi_type_index_t>(256);
+        group->get_shared_type(shared, localStack.allocate<sugoi_type_index_t>(256));
         // check(shared.length < 256);
         if (!match_group_shared(shared, filter))
             return false;
@@ -755,16 +755,16 @@ bool dual_storage_t::match_group(const dual_filter_t& filter, const dual_meta_fi
     return match_group_type(group->type, filter, group->archetype->withMask);
 }
 
-void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filter, const dual_meta_filter_t& meta, dual_view_callback_t callback, void* u)
+void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_view_callback_t callback, void* u)
 {
-    using namespace dual;
+    using namespace sugoi;
     if (!group->archetype->withMask)
     {
         for(auto c : group->chunks)
         {
             if (match_chunk_changed(c->type->type, c->timestamps(), meta))
             {
-                dual_chunk_view_t view{ c, (EIndex)0, c->count };
+                sugoi_chunk_view_t view{ c, (EIndex)0, c->count };
                 callback(u, &view);
             }
         }
@@ -786,8 +786,8 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
                     continue;
                 }
                 auto count = c->count;
-                dual_chunk_view_t view = { c, 0, c->count };
-                auto masks = (dual_mask_comp_t*)dualV_get_owned_ro(&view, kMaskComponent);
+                sugoi_chunk_view_t view = { c, 0, c->count };
+                auto masks = (sugoi_mask_comp_t*)sugoiV_get_owned_ro(&view, kMaskComponent);
                 EIndex i = 0;
                 while (i < count)
                 {
@@ -852,7 +852,7 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
         else
 #endif
         { // todo: should we simd this snipest too
-            auto match = [&](dual_mask_comp_t mask) {
+            auto match = [&](sugoi_mask_comp_t mask) {
                 return (mask & allmask) == allmask && (mask & nonemask) == 0;
             };
             for(auto c : group->chunks)
@@ -862,8 +862,8 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
                     continue;
                 }
                 auto count = c->count;
-                dual_chunk_view_t view = { c, 0, c->count };
-                auto masks = (dual_mask_comp_t*)dualV_get_owned_ro(&view, kMaskComponent);
+                sugoi_chunk_view_t view = { c, 0, c->count };
+                auto masks = (sugoi_mask_comp_t*)sugoiV_get_owned_ro(&view, kMaskComponent);
                 EIndex i = 0;
                 while (i < count)
                 {
@@ -881,18 +881,18 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
     }
 }
 
-void dual_storage_t::query(const dual_filter_t& filter, const dual_meta_filter_t& meta, dual_view_callback_t callback, void* u)
+void sugoi_storage_t::query(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_view_callback_t callback, void* u)
 {
-    using namespace dual;
-    auto filterChunk = [&](dual_group_t* group) {
+    using namespace sugoi;
+    auto filterChunk = [&](sugoi_group_t* group) {
         query(group, filter, meta, callback, u);
     };
-    query_groups(filter, meta, DUAL_LAMBDA(filterChunk));
+    query_groups(filter, meta, SUGOI_LAMBDA(filterChunk));
 }
 
-void dual_storage_t::destroy(const dual_meta_filter_t& meta)
+void sugoi_storage_t::destroy(const sugoi_meta_filter_t& meta)
 {
-    using namespace dual;
+    using namespace sugoi;
     for (auto& pair : groups)
     {
         auto group = pair.second;

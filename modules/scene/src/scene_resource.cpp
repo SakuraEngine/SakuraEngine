@@ -13,13 +13,13 @@ namespace skr::binary
 int ReadTrait<skr_scene_resource_t>::Read(skr_binary_reader_t* reader, skr_scene_resource_t& value)
 {
     // TODO: error code?
-    value.storage = dualS_create();
-    dualS_deserialize(value.storage, reader);
+    value.storage = sugoiS_create();
+    sugoiS_deserialize(value.storage, reader);
     return 0;
 }
 int WriteTrait<skr_scene_resource_t>::Write(skr_binary_writer_t* writer, const skr_scene_resource_t& value)
 {
-    dualS_serialize(value.storage, writer);
+    sugoiS_serialize(value.storage, writer);
     return 0;
 }
 } // namespace skr::binary
