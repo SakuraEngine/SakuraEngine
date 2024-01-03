@@ -42,7 +42,7 @@ namespace lemon {
 
   void ClpLp::_init_temporals() {
     _primal_ray = 0;
-    _dual_ray = 0;
+    _sugoi_ray = 0;
   }
 
   void ClpLp::_clear_temporals() {
@@ -50,9 +50,9 @@ namespace lemon {
       delete[] _primal_ray;
       _primal_ray = 0;
     }
-    if (_dual_ray) {
-      delete[] _dual_ray;
-      _dual_ray = 0;
+    if (_sugoi_ray) {
+      delete[] _sugoi_ray;
+      _sugoi_ray = 0;
     }
   }
 
@@ -315,7 +315,7 @@ namespace lemon {
   }
 
   ClpLp::SolveExitStatus ClpLp::solveDual() {
-    return _prob->dual() >= 0 ? SOLVED : UNSOLVED;
+    return _prob->sugoi() >= 0 ? SOLVED : UNSOLVED;
   }
 
   ClpLp::SolveExitStatus ClpLp::solveBarrier() {
@@ -342,11 +342,11 @@ namespace lemon {
   }
 
   ClpLp::Value ClpLp::_getDualRay(int i) const {
-    if (!_dual_ray) {
-      _dual_ray = _prob->infeasibilityRay();
-      LEMON_ASSERT(_dual_ray != 0, "Dual ray is not provided");
+    if (!_sugoi_ray) {
+      _sugoi_ray = _prob->infeasibilityRay();
+      LEMON_ASSERT(_sugoi_ray != 0, "Dual ray is not provided");
     }
-    return _dual_ray[i];
+    return _sugoi_ray[i];
   }
 
   ClpLp::VarStatus ClpLp::_getColStatus(int i) const {
@@ -402,7 +402,7 @@ namespace lemon {
     }
   }
 
-  ClpLp::ProblemType ClpLp::_getDualType() const {
+  ClpLp::ProblemType ClpLp::_getsugoiType() const {
     if (_prob->isProvenOptimal()) {
       return OPTIMAL;
     } else if (_prob->isProvenDualInfeasible()) {

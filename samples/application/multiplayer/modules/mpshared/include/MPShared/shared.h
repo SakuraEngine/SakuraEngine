@@ -2,7 +2,7 @@
 #include "MPShared/module.configure.h"
 #include "SkrBase/misc/traits.hpp"
 #include "SkrRT/platform/guid.hpp"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/vector.hpp"
 #include "SkrScene/scene.h"
@@ -43,7 +43,7 @@ MPInputFrame
 
 sreflect_struct(
     "guid" : "407B6F08-E76C-40E5-8EDC-A5AA808A0D0F",
-    "query" : "[in]CMovement, [inout]skr_translation_comp_t@move, [inout]skr_rotation_comp_t, [atomic]?dual::dirty_comp_t"
+    "query" : "[in]CMovement, [inout]skr_translation_comp_t@move, [inout]skr_rotation_comp_t, [atomic]?sugoi::dirty_comp_t"
 )
 QMovement
 {
@@ -52,7 +52,7 @@ QMovement
 
 sreflect_struct(
     "guid" : "305FB0DC-85F6-4B70-952F-BE662150E506",
-    "query" : "[in]CController, [inout]CMovement, [inout]CSkill, [inout]CPlayer, [atomic]?dual::dirty_comp_t"
+    "query" : "[in]CController, [inout]CMovement, [inout]CSkill, [inout]CPlayer, [atomic]?sugoi::dirty_comp_t"
 )
 QControl
 {
@@ -61,7 +61,7 @@ QControl
 
 sreflect_struct(
     "guid" : "E4D46AA5-7D4D-4864-8241-7260F7D4837F",
-    "query" : "[inout]CHealth, [inout]skr_translation_comp_t, [inout]skr_rotation_comp_t, [inout]CWeapon, [atomic]?dual::dirty_comp_t"
+    "query" : "[inout]CHealth, [inout]skr_translation_comp_t, [inout]skr_rotation_comp_t, [inout]CWeapon, [atomic]?sugoi::dirty_comp_t"
 )
 QHeathCheck
 {
@@ -70,7 +70,7 @@ QHeathCheck
 
 sreflect_struct(
     "guid" : "ED18D917-71A4-4D51-B805-84BA73F67AD2",
-    "query" : "[in]CController, [in]skr_translation_comp_t, [in]skr_rotation_comp_t, [inout]CWeapon, [atomic]?dual::dirty_comp_t"
+    "query" : "[in]CController, [in]skr_translation_comp_t, [in]skr_rotation_comp_t, [inout]CWeapon, [atomic]?sugoi::dirty_comp_t"
 )
 QFireBullet
 {
@@ -79,7 +79,7 @@ QFireBullet
 
 sreflect_struct(
     "guid" : "CB8DA6C6-4D7E-4066-A867-A37418EAEC1E",
-    "query" : "[inout]skr_translation_comp_t@move, [in]CSphereCollider2D, [inout]CMovement, [atomic]?dual::dirty_comp_t, [inout]CBall, [has]skr_rotation_comp_t"
+    "query" : "[inout]skr_translation_comp_t@move, [in]CSphereCollider2D, [inout]CMovement, [atomic]?sugoi::dirty_comp_t, [inout]CBall, [has]skr_rotation_comp_t"
 )
 QBallMovement
 {
@@ -115,7 +115,7 @@ QKillZombie
 
 sreflect_struct(
     "guid" : "A4A25B43-7C4C-4A60-9BA6-0E6E5C8793A0",
-    "query" : "[in]skr_translation_comp_t, [inout]CMovement, [atomic]?dual::dirty_comp_t, [inout]CZombie, [has]skr_rotation_comp_t"
+    "query" : "[in]skr_translation_comp_t, [inout]CMovement, [atomic]?sugoi::dirty_comp_t, [inout]CZombie, [has]skr_rotation_comp_t"
 )
 QZombieAI
 {
@@ -149,14 +149,14 @@ sreflect_struct(
     "guid" : "E8B8B447-4BBE-4A1E-A29E-FD28F046864E",
     "component" :
     {
-        "custom" : "::dual::managed_component"
+        "custom" : "::sugoi::managed_component"
     }
 )
 CCollisionScene
 {
     struct CollisionEntity
     {  
-        dual_entity_t entity;
+        sugoi_entity_t entity;
         CSphereCollider2D collider;
     };
     skr::ParallelFlatHashMap<int, skr::InlineVector<CollisionEntity, 4>> cells;
@@ -168,7 +168,7 @@ struct MP_SHARED_API MPGameWorld
     MPGameWorld(const MPGameWorld&) = delete;
     MPGameWorld& operator=(const MPGameWorld&) = delete;
     virtual ~MPGameWorld() = default;
-    dual_storage_t* storage;
+    sugoi_storage_t* storage;
     QControl controlQuery;
     QHeathCheck healthCheckQuery;
     QMovement movementQuery;
@@ -178,10 +178,10 @@ struct MP_SHARED_API MPGameWorld
     QKillBall killBallQuery;
     QKillZombie killZombieQuery;
     QZombieAI zombieAIQuery;
-    dual_query_t* relevanceChildQuery;
-    dual_query_t* ballChildQuery;
-    dual_query_t* zombieAIChildQuery;
-    dual_query_t* gameStateQuery;
+    sugoi_query_t* relevanceChildQuery;
+    sugoi_query_t* ballChildQuery;
+    sugoi_query_t* zombieAIChildQuery;
+    sugoi_query_t* gameStateQuery;
     skr_transform_system_t transformSystem;
     MPInputFrame input;
     MPGameModeConfig config;

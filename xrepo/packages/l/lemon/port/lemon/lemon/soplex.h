@@ -40,7 +40,7 @@ namespace lemon {
   ///
   /// This class implements an interface for the SoPlex LP solver.
   /// The SoPlex library is an object oriented lp solver library
-  /// developed at the Konrad-Zuse-Zentrum für Informationstechnik
+  /// developed at the Konrad-Zuse-Zentrum fï¿½r Informationstechnik
   /// Berlin (ZIB). You can find detailed information about it at the
   /// <tt>http://soplex.zib.de</tt> address.
   class SoplexLp : public LpSolver {
@@ -58,10 +58,10 @@ namespace lemon {
 
     // these values cannot be retrieved element by element
     mutable std::vector<Value> _primal_values;
-    mutable std::vector<Value> _dual_values;
+    mutable std::vector<Value> _sugoi_values;
 
     mutable std::vector<Value> _primal_ray;
-    mutable std::vector<Value> _dual_ray;
+    mutable std::vector<Value> _sugoi_ray;
 
     void _clear_temporals();
 
@@ -141,7 +141,7 @@ namespace lemon {
     virtual VarStatus _getRowStatus(int i) const;
 
     virtual ProblemType _getPrimalType() const;
-    virtual ProblemType _getDualType() const;
+    virtual ProblemType _getsugoiType() const;
 
     virtual void _clear();
 

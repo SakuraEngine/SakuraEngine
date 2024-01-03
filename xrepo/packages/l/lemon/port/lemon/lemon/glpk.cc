@@ -612,7 +612,7 @@ namespace lemon {
 
   void GlpkLp::_clear_temporals() {
     _primal_ray.clear();
-    _dual_ray.clear();
+    _sugoi_ray.clear();
   }
 
   GlpkLp::SolveExitStatus GlpkLp::_solve() {
@@ -778,18 +778,18 @@ namespace lemon {
   }
 
   GlpkLp::Value GlpkLp::_getDualRay(int i) const {
-    if (_dual_ray.empty()) {
+    if (_sugoi_ray.empty()) {
       int row_num = glp_get_num_rows(lp);
 
-      _dual_ray.resize(row_num + 1, 0.0);
+      _sugoi_ray.resize(row_num + 1, 0.0);
 
       int index = glp_get_unbnd_ray(lp);
       if (index != 0) {
-        // The dual ray is found in dual simplex second phase
+        // The sugoi ray is found in sugoi simplex second phase
         LEMON_ASSERT((index <= row_num ? glp_get_row_stat(lp, index) :
                       glp_get_col_stat(lp, index - row_num)) == GLP_BS,
 
-                     "Wrong dual ray");
+                     "Wrong sugoi ray");
 
         int idx;
         bool negate = false;
@@ -807,46 +807,46 @@ namespace lemon {
           }
         }
 
-        _dual_ray[idx] = negate ?  - 1.0 : 1.0;
+        _sugoi_ray[idx] = negate ?  - 1.0 : 1.0;
 
-        glp_btran(lp, &_dual_ray.front());
+        glp_btran(lp, &_sugoi_ray.front());
       } else {
         double eps = 1e-7;
-        // The dual ray is found in primal simplex first phase
+        // The sugoi ray is found in primal simplex first phase
         // We assume that the glpk minimizes the slack to get feasible solution
         for (int i = 1; i <= row_num; ++i) {
           int index = glp_get_bhead(lp, i);
           if (index <= row_num) {
             double res = glp_get_row_prim(lp, index);
             if (res > glp_get_row_ub(lp, index) + eps) {
-              _dual_ray[i] = -1;
+              _sugoi_ray[i] = -1;
             } else if (res < glp_get_row_lb(lp, index) - eps) {
-              _dual_ray[i] = 1;
+              _sugoi_ray[i] = 1;
             } else {
-              _dual_ray[i] = 0;
+              _sugoi_ray[i] = 0;
             }
-            _dual_ray[i] *= glp_get_rii(lp, index);
+            _sugoi_ray[i] *= glp_get_rii(lp, index);
           } else {
             double res = glp_get_col_prim(lp, index - row_num);
             if (res > glp_get_col_ub(lp, index - row_num) + eps) {
-              _dual_ray[i] = -1;
+              _sugoi_ray[i] = -1;
             } else if (res < glp_get_col_lb(lp, index - row_num) - eps) {
-              _dual_ray[i] = 1;
+              _sugoi_ray[i] = 1;
             } else {
-              _dual_ray[i] = 0;
+              _sugoi_ray[i] = 0;
             }
-            _dual_ray[i] /= glp_get_sjj(lp, index - row_num);
+            _sugoi_ray[i] /= glp_get_sjj(lp, index - row_num);
           }
         }
 
-        glp_btran(lp, &_dual_ray.front());
+        glp_btran(lp, &_sugoi_ray.front());
 
         for (int i = 1; i <= row_num; ++i) {
-          _dual_ray[i] /= glp_get_rii(lp, i);
+          _sugoi_ray[i] /= glp_get_rii(lp, i);
         }
       }
     }
-    return _dual_ray[i];
+    return _sugoi_ray[i];
   }
 
   GlpkLp::ProblemType GlpkLp::_getPrimalType() const {
@@ -857,7 +857,7 @@ namespace lemon {
       return UNDEFINED;
     case GLP_FEAS:
     case GLP_INFEAS:
-      if (glp_get_dual_stat(lp) == GLP_NOFEAS) {
+      if (glp_get_sugoi_stat(lp) == GLP_NOFEAS) {
         return UNBOUNDED;
       } else {
         return UNDEFINED;
@@ -870,10 +870,10 @@ namespace lemon {
     }
   }
 
-  GlpkLp::ProblemType GlpkLp::_getDualType() const {
+  GlpkLp::ProblemType GlpkLp::_getsugoiType() const {
     if (glp_get_status(lp) == GLP_OPT)
       return OPTIMAL;
-    switch (glp_get_dual_stat(lp)) {
+    switch (glp_get_sugoi_stat(lp)) {
     case GLP_UNDEF:
       return UNDEFINED;
     case GLP_FEAS:
@@ -983,7 +983,7 @@ namespace lemon {
       return INFEASIBLE;
     case GLP_INFEAS:
     case GLP_FEAS:
-      if (glp_get_dual_stat(lp) == GLP_NOFEAS) {
+      if (glp_get_sugoi_stat(lp) == GLP_NOFEAS) {
         return UNBOUNDED;
       } else {
         return UNDEFINED;

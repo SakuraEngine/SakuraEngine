@@ -2007,7 +2007,7 @@ _   (SetStackPolymorphic (o));
 
 
 // OPTZ: currently all stack slot indices take up a full word, but
-// dual stack source operands could be packed together
+// sugoi stack source operands could be packed together
 M3Result  Compile_Operator  (IM3Compilation o, m3opcode_t i_opcode)
 {
     M3Result result;

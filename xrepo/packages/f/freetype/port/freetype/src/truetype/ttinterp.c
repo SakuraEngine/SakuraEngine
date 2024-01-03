@@ -511,7 +511,7 @@
     exec->GS.projVector.y = 0x0000;
 
     exec->GS.freeVector = exec->GS.projVector;
-    exec->GS.dualVector = exec->GS.projVector;
+    exec->GS.sugoiVector = exec->GS.projVector;
 
     exec->GS.round_state = 1;
     exec->GS.loop        = 1;
@@ -2470,7 +2470,7 @@
    *
    * @Description:
    *   Computes the projection of the vector given by (v2-v1) along the
-   *   current dual vector.
+   *   current sugoi vector.
    *
    * @Input:
    *   v1 ::
@@ -2487,8 +2487,8 @@
                 FT_Pos          dy )
   {
     return TT_DotFix14( dx, dy,
-                        exc->GS.dualVector.x,
-                        exc->GS.dualVector.y );
+                        exc->GS.sugoiVector.x,
+                        exc->GS.sugoiVector.y );
   }
 
 
@@ -2580,9 +2580,9 @@
     else
       exc->func_project = (TT_Project_Func)Project;
 
-    if ( exc->GS.dualVector.x == 0x4000 )
+    if ( exc->GS.sugoiVector.x == 0x4000 )
       exc->func_dualproj = (TT_Project_Func)Project_x;
-    else if ( exc->GS.dualVector.y == 0x4000 )
+    else if ( exc->GS.sugoiVector.y == 0x4000 )
       exc->func_dualproj = (TT_Project_Func)Project_y;
     else
       exc->func_dualproj = (TT_Project_Func)Dual_Project;
@@ -4412,8 +4412,8 @@
       exc->GS.projVector.x = AA;
       exc->GS.projVector.y = BB;
 
-      exc->GS.dualVector.x = AA;
-      exc->GS.dualVector.y = BB;
+      exc->GS.sugoiVector.x = AA;
+      exc->GS.sugoiVector.y = BB;
     }
 
     if ( ( opcode & 2 ) == 0 )
@@ -4441,7 +4441,7 @@
                     (FT_UShort)args[0],
                     &exc->GS.projVector ) == SUCCESS )
     {
-      exc->GS.dualVector = exc->GS.projVector;
+      exc->GS.sugoiVector = exc->GS.projVector;
       Compute_Funcs( exc );
     }
   }
@@ -4503,7 +4503,7 @@
 
     Normalize( X, Y, &exc->GS.projVector );
 
-    exc->GS.dualVector = exc->GS.projVector;
+    exc->GS.sugoiVector = exc->GS.projVector;
     Compute_Funcs( exc );
   }
 
@@ -4855,7 +4855,7 @@
    * Stack:        uint32 --> f26.6
    *
    * XXX: UNDOCUMENTED: Measures from the original glyph must be taken
-   *      along the dual projection vector!
+   *      along the sugoi projection vector!
    */
   static void
   Ins_GC( TT_ExecContext  exc,
@@ -4930,7 +4930,7 @@
    * Stack:        uint32 uint32 --> f26.6
    *
    * XXX: UNDOCUMENTED: Measure taken in the original glyph must be along
-   *                    the dual projection vector.
+   *                    the sugoi projection vector.
    *
    * XXX: UNDOCUMENTED: Flag attributes are inverted!
    *                      0 => measure distance in original outline
@@ -5064,7 +5064,7 @@
       A = NEG_LONG( C );
     }
 
-    Normalize( A, B, &exc->GS.dualVector );
+    Normalize( A, B, &exc->GS.sugoiVector );
 
     {
       FT_Vector*  v1 = exc->zp1.cur + p2;

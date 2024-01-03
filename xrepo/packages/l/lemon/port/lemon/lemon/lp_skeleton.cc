@@ -105,7 +105,7 @@ namespace lemon {
   LpSkeleton::ProblemType LpSkeleton::_getPrimalType() const
   { return UNDEFINED; }
 
-  LpSkeleton::ProblemType LpSkeleton::_getDualType() const
+  LpSkeleton::ProblemType LpSkeleton::_getsugoiType() const
   { return UNDEFINED; }
 
   LpSkeleton::VarStatus LpSkeleton::_getColStatus(int) const

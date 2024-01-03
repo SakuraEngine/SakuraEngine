@@ -2912,7 +2912,7 @@ typedef struct VkPhysicalDeviceFeatures {
     VkBool32    geometryShader;
     VkBool32    tessellationShader;
     VkBool32    sampleRateShading;
-    VkBool32    dualSrcBlend;
+    VkBool32    sugoiSrcBlend;
     VkBool32    logicOp;
     VkBool32    multiDrawIndirect;
     VkBool32    drawIndirectFirstInstance;

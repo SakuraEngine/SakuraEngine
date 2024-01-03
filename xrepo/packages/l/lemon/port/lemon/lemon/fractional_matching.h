@@ -107,7 +107,7 @@ namespace lemon {
   /// maximizes this difference.
   ///
   /// The algorithm can be executed with the run() function.  After it
-  /// the matching (the primal solution) and the barrier (the dual
+  /// the matching (the primal solution) and the barrier (the sugoi
   /// solution) can be obtained using the query functions.
   ///
   /// The primal solution is multiplied by
@@ -647,22 +647,22 @@ namespace lemon {
   /// value edges and a set of odd length cycles with half value edges.
   ///
   /// The algorithm calculates an optimal fractional matching and a
-  /// proof of the optimality. The solution of the dual problem can be
-  /// used to check the result of the algorithm. The dual linear
+  /// proof of the optimality. The solution of the sugoi problem can be
+  /// used to check the result of the algorithm. The sugoi linear
   /// problem is the following.
   /// \f[ y_u + y_v \ge w_{uv} \quad \forall uv\in E\f]
   /// \f[y_u \ge 0 \quad \forall u \in V\f]
   /// \f[\min \sum_{u \in V}y_u \f]
   ///
   /// The algorithm can be executed with the run() function.
-  /// After it the matching (the primal solution) and the dual solution
+  /// After it the matching (the primal solution) and the sugoi solution
   /// can be obtained using the query functions.
   ///
   /// The primal solution is multiplied by
   /// \ref MaxWeightedFractionalMatching::primalScale "2".
-  /// If the value type is integer, then the dual
+  /// If the value type is integer, then the sugoi
   /// solution is scaled by
-  /// \ref MaxWeightedFractionalMatching::dualScale "4".
+  /// \ref MaxWeightedFractionalMatching::sugoiScale "4".
   ///
   /// \tparam GR The undirected graph type the algorithm runs on.
   /// \tparam WM The type edge weight map. The default type is
@@ -692,11 +692,11 @@ namespace lemon {
     /// Scaling factor for primal solution.
     static const int primalScale = 2;
 
-    /// \brief Scaling factor for dual solution
+    /// \brief Scaling factor for sugoi solution
     ///
-    /// Scaling factor for dual solution. It is equal to 4 or 1
+    /// Scaling factor for sugoi solution. It is equal to 4 or 1
     /// according to the value type.
-    static const int dualScale =
+    static const int sugoiScale =
       std::numeric_limits<Value>::is_integer ? 4 : 1;
 
   private:
@@ -816,7 +816,7 @@ namespace lemon {
       for (InArcIt a(_graph, node); a != INVALID; ++a) {
         Node v = _graph.source(a);
         Value rw = (*_node_potential)[node] + (*_node_potential)[v] -
-          dualScale * _weight[a];
+          sugoiScale * _weight[a];
         if (node == v) {
           if (_allow_loops && _graph.direction(a)) {
             _delta3->push(a, rw / 2);
@@ -852,7 +852,7 @@ namespace lemon {
       for (InArcIt a(_graph, node); a != INVALID; ++a) {
         Node v = _graph.source(a);
         Value rw = (*_node_potential)[node] + (*_node_potential)[v] -
-          dualScale * _weight[a];
+          sugoiScale * _weight[a];
 
         if (node == v) {
           if (_allow_loops && _graph.direction(a)) {
@@ -873,7 +873,7 @@ namespace lemon {
               if ((*_status)[va] != EVEN ||
                   _tree_set->find(va) == tree) continue;
               Value rwa = (*_node_potential)[v] + (*_node_potential)[va] -
-                dualScale * _weight[aa];
+                sugoiScale * _weight[aa];
               if (minrwa > rwa) {
                 minrwa = rwa;
                 mina = aa;
@@ -905,7 +905,7 @@ namespace lemon {
         Node v = _graph.source(a);
         if ((*_status)[v] != EVEN) continue;
         Value rw = (*_node_potential)[node] + (*_node_potential)[v] -
-          dualScale * _weight[a];
+          sugoiScale * _weight[a];
 
         if (minrw > rw) {
           min = _graph.oppositeArc(a);
@@ -1175,8 +1175,8 @@ namespace lemon {
         Value max = 0;
         for (OutArcIt e(_graph, n); e != INVALID; ++e) {
           if (_graph.target(e) == n && !_allow_loops) continue;
-          if ((dualScale * _weight[e]) / 2 > max) {
-            max = (dualScale * _weight[e]) / 2;
+          if ((sugoiScale * _weight[e]) / 2 > max) {
+            max = (sugoiScale * _weight[e]) / 2;
           }
         }
         _node_potential->set(n, max);
@@ -1194,7 +1194,7 @@ namespace lemon {
         if (left == right && !_allow_loops) continue;
         _delta3->push(e, ((*_node_potential)[left] +
                           (*_node_potential)[right] -
-                          dualScale * _weight[e]) / 2);
+                          sugoiScale * _weight[e]) / 2);
       }
     }
 
@@ -1363,20 +1363,20 @@ namespace lemon {
     /// @}
 
     /// \name Dual Solution
-    /// Functions to get the dual solution.\n
+    /// Functions to get the sugoi solution.\n
     /// Either \ref run() or \ref start() function should be called before
     /// using them.
 
     /// @{
 
-    /// \brief Return the value of the dual solution.
+    /// \brief Return the value of the sugoi solution.
     ///
-    /// This function returns the value of the dual solution.
-    /// It should be equal to the primal value scaled by \ref dualScale
-    /// "dual scale".
+    /// This function returns the value of the sugoi solution.
+    /// It should be equal to the primal value scaled by \ref sugoiScale
+    /// "sugoi scale".
     ///
     /// \pre Either run() or start() must be called before using this function.
-    Value dualValue() const {
+    Value sugoiValue() const {
       Value sum = 0;
       for (NodeIt n(_graph); n != INVALID; ++n) {
         sum += nodeValue(n);
@@ -1384,9 +1384,9 @@ namespace lemon {
       return sum;
     }
 
-    /// \brief Return the dual value (potential) of the given node.
+    /// \brief Return the sugoi value (potential) of the given node.
     ///
-    /// This function returns the dual value (potential) of the given node.
+    /// This function returns the sugoi value (potential) of the given node.
     ///
     /// \pre Either run() or start() must be called before using this function.
     Value nodeValue(const Node& n) const {
@@ -1417,21 +1417,21 @@ namespace lemon {
   /// value edges and a set of odd length cycles with half value edges.
   ///
   /// The algorithm calculates an optimal fractional matching and a
-  /// proof of the optimality. The solution of the dual problem can be
-  /// used to check the result of the algorithm. The dual linear
+  /// proof of the optimality. The solution of the sugoi problem can be
+  /// used to check the result of the algorithm. The sugoi linear
   /// problem is the following.
   /// \f[ y_u + y_v \ge w_{uv} \quad \forall uv\in E\f]
   /// \f[\min \sum_{u \in V}y_u \f]
   ///
   /// The algorithm can be executed with the run() function.
-  /// After it the matching (the primal solution) and the dual solution
+  /// After it the matching (the primal solution) and the sugoi solution
   /// can be obtained using the query functions.
   ///
   /// The primal solution is multiplied by
   /// \ref MaxWeightedPerfectFractionalMatching::primalScale "2".
-  /// If the value type is integer, then the dual
+  /// If the value type is integer, then the sugoi
   /// solution is scaled by
-  /// \ref MaxWeightedPerfectFractionalMatching::dualScale "4".
+  /// \ref MaxWeightedPerfectFractionalMatching::sugoiScale "4".
   ///
   /// \tparam GR The undirected graph type the algorithm runs on.
   /// \tparam WM The type edge weight map. The default type is
@@ -1461,11 +1461,11 @@ namespace lemon {
     /// Scaling factor for primal solution.
     static const int primalScale = 2;
 
-    /// \brief Scaling factor for dual solution
+    /// \brief Scaling factor for sugoi solution
     ///
-    /// Scaling factor for dual solution. It is equal to 4 or 1
+    /// Scaling factor for sugoi solution. It is equal to 4 or 1
     /// according to the value type.
-    static const int dualScale =
+    static const int sugoiScale =
       std::numeric_limits<Value>::is_integer ? 4 : 1;
 
   private:
@@ -1573,7 +1573,7 @@ namespace lemon {
       for (InArcIt a(_graph, node); a != INVALID; ++a) {
         Node v = _graph.source(a);
         Value rw = (*_node_potential)[node] + (*_node_potential)[v] -
-          dualScale * _weight[a];
+          sugoiScale * _weight[a];
         if (node == v) {
           if (_allow_loops && _graph.direction(a)) {
             _delta3->push(a, rw / 2);
@@ -1608,7 +1608,7 @@ namespace lemon {
       for (InArcIt a(_graph, node); a != INVALID; ++a) {
         Node v = _graph.source(a);
         Value rw = (*_node_potential)[node] + (*_node_potential)[v] -
-          dualScale * _weight[a];
+          sugoiScale * _weight[a];
 
         if (node == v) {
           if (_allow_loops && _graph.direction(a)) {
@@ -1629,7 +1629,7 @@ namespace lemon {
               if ((*_status)[va] != EVEN ||
                   _tree_set->find(va) == tree) continue;
               Value rwa = (*_node_potential)[v] + (*_node_potential)[va] -
-                dualScale * _weight[aa];
+                sugoiScale * _weight[aa];
               if (minrwa > rwa) {
                 minrwa = rwa;
                 mina = aa;
@@ -1661,7 +1661,7 @@ namespace lemon {
         Node v = _graph.source(a);
         if ((*_status)[v] != EVEN) continue;
         Value rw = (*_node_potential)[node] + (*_node_potential)[v] -
-          dualScale * _weight[a];
+          sugoiScale * _weight[a];
 
         if (minrw > rw) {
           min = _graph.oppositeArc(a);
@@ -1918,8 +1918,8 @@ namespace lemon {
         Value max = - std::numeric_limits<Value>::max();
         for (OutArcIt e(_graph, n); e != INVALID; ++e) {
           if (_graph.target(e) == n && !_allow_loops) continue;
-          if ((dualScale * _weight[e]) / 2 > max) {
-            max = (dualScale * _weight[e]) / 2;
+          if ((sugoiScale * _weight[e]) / 2 > max) {
+            max = (sugoiScale * _weight[e]) / 2;
           }
         }
         _node_potential->set(n, max);
@@ -1936,7 +1936,7 @@ namespace lemon {
         if (left == right && !_allow_loops) continue;
         _delta3->push(e, ((*_node_potential)[left] +
                           (*_node_potential)[right] -
-                          dualScale * _weight[e]) / 2);
+                          sugoiScale * _weight[e]) / 2);
       }
     }
 
@@ -2100,20 +2100,20 @@ namespace lemon {
     /// @}
 
     /// \name Dual Solution
-    /// Functions to get the dual solution.\n
+    /// Functions to get the sugoi solution.\n
     /// Either \ref run() or \ref start() function should be called before
     /// using them.
 
     /// @{
 
-    /// \brief Return the value of the dual solution.
+    /// \brief Return the value of the sugoi solution.
     ///
-    /// This function returns the value of the dual solution.
-    /// It should be equal to the primal value scaled by \ref dualScale
-    /// "dual scale".
+    /// This function returns the value of the sugoi solution.
+    /// It should be equal to the primal value scaled by \ref sugoiScale
+    /// "sugoi scale".
     ///
     /// \pre Either run() or start() must be called before using this function.
-    Value dualValue() const {
+    Value sugoiValue() const {
       Value sum = 0;
       for (NodeIt n(_graph); n != INVALID; ++n) {
         sum += nodeValue(n);
@@ -2121,9 +2121,9 @@ namespace lemon {
       return sum;
     }
 
-    /// \brief Return the dual value (potential) of the given node.
+    /// \brief Return the sugoi value (potential) of the given node.
     ///
-    /// This function returns the dual value (potential) of the given node.
+    /// This function returns the sugoi value (potential) of the given node.
     ///
     /// \pre Either run() or start() must be called before using this function.
     Value nodeValue(const Node& n) const {

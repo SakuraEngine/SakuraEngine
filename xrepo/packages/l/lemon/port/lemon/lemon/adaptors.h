@@ -2799,7 +2799,7 @@ namespace lemon {
     /// \brief Returns the residual capacity of the given arc.
     ///
     /// Returns the residual capacity of the given arc.
-    Value residualCapacity(const Arc& a) const {
+    Value resisugoiCapacity(const Arc& a) const {
       if (Undirected::direction(a)) {
         return (*_capacity)[a] - (*_flow)[a];
       } else {
@@ -2857,7 +2857,7 @@ namespace lemon {
     /// This map adaptor class can be used for obtaining the residual
     /// capacities as an arc map of the residual digraph.
     /// Its value type is inherited from the capacity map.
-    class ResidualCapacity {
+    class ResisugoiCapacity {
     protected:
       const Adaptor* _adaptor;
     public:
@@ -2867,12 +2867,12 @@ namespace lemon {
       typedef typename CapacityMap::Value Value;
 
       /// Constructor
-      ResidualCapacity(const ResidualDigraph<DGR, CM, FM, TL>& adaptor)
+      ResisugoiCapacity(const ResidualDigraph<DGR, CM, FM, TL>& adaptor)
         : _adaptor(&adaptor) {}
 
       /// Returns the value associated with the given residual arc
       Value operator[](const Arc& a) const {
-        return _adaptor->residualCapacity(a);
+        return _adaptor->resisugoiCapacity(a);
       }
 
     };
@@ -2880,8 +2880,8 @@ namespace lemon {
     /// \brief Returns a residual capacity map
     ///
     /// This function just returns a residual capacity map.
-    ResidualCapacity residualCapacity() const {
-      return ResidualCapacity(*this);
+    ResisugoiCapacity resisugoiCapacity() const {
+      return ResisugoiCapacity(*this);
     }
 
   };

@@ -37,7 +37,7 @@
  * @short_description: Input and output buffers
  * @include: hb.h
  *
- * Buffers serve a dual role in HarfBuzz; before shaping, they hold
+ * Buffers serve a sugoi role in HarfBuzz; before shaping, they hold
  * the input characters that are passed to hb_shape(), and after
  * shaping they hold the output glyphs.
  **/

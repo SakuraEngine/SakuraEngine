@@ -17830,7 +17830,7 @@ intel_sub_group_avc_mce_payload_t __ovld
 intel_sub_group_avc_mce_set_single_reference_interlaced_field_polarity(
     uchar ref_field_polarity, intel_sub_group_avc_mce_payload_t payload);
 intel_sub_group_avc_mce_payload_t __ovld
-intel_sub_group_avc_mce_set_dual_reference_interlaced_field_polarities(
+intel_sub_group_avc_mce_set_sugoi_reference_interlaced_field_polarities(
     uchar fwd_ref_field_polarity, uchar bwd_ref_field_polarity,
     intel_sub_group_avc_mce_payload_t payload);
 
@@ -17864,7 +17864,7 @@ intel_sub_group_avc_ime_set_single_reference(
     short2 ref_offset, uchar search_window_config,
     intel_sub_group_avc_ime_payload_t payload);
 intel_sub_group_avc_ime_payload_t __ovld
-intel_sub_group_avc_ime_set_dual_reference(
+intel_sub_group_avc_ime_set_sugoi_reference(
     short2 fwd_ref_offset, short2 bwd_ref_offset, uchar search_window_config,
     intel_sub_group_avc_ime_payload_t payload);
 intel_sub_group_avc_ime_payload_t __ovld
@@ -17884,9 +17884,9 @@ __attribute__((deprecated("If you use the latest Intel driver, please use "
                           "intel_sub_group_avc_ime_ref_window_size instead",
                           "intel_sub_group_avc_ime_ref_window_size")))
 ushort2 __ovld
-intel_sub_group_ime_ref_window_size(uchar search_window_config, char dual_ref);
+intel_sub_group_ime_ref_window_size(uchar search_window_config, char sugoi_ref);
 ushort2 __ovld intel_sub_group_avc_ime_ref_window_size(
-    uchar search_window_config, char dual_ref);
+    uchar search_window_config, char sugoi_ref);
 short2 __ovld intel_sub_group_avc_ime_adjust_ref_offset(
     short2 ref_offset, ushort2 src_coord, ushort2 ref_window_size,
     ushort2 image_size);
@@ -17896,7 +17896,7 @@ intel_sub_group_avc_ime_evaluate_with_single_reference(
     read_only image2d_t src_image, read_only image2d_t ref_image,
     sampler_t vme_media_sampler, intel_sub_group_avc_ime_payload_t payload);
 intel_sub_group_avc_ime_result_t __ovld
-intel_sub_group_avc_ime_evaluate_with_dual_reference(
+intel_sub_group_avc_ime_evaluate_with_sugoi_reference(
     read_only image2d_t src_image, read_only image2d_t fwd_ref_image,
     read_only image2d_t bwd_ref_image, sampler_t vme_media_sampler,
     intel_sub_group_avc_ime_payload_t payload);
@@ -17904,8 +17904,8 @@ intel_sub_group_avc_ime_result_single_reference_streamout_t __ovld
 intel_sub_group_avc_ime_evaluate_with_single_reference_streamout(
     read_only image2d_t src_image, read_only image2d_t ref_image,
     sampler_t vme_media_sampler, intel_sub_group_avc_ime_payload_t payload);
-intel_sub_group_avc_ime_result_dual_reference_streamout_t __ovld
-intel_sub_group_avc_ime_evaluate_with_dual_reference_streamout(
+intel_sub_group_avc_ime_result_sugoi_reference_streamout_t __ovld
+intel_sub_group_avc_ime_evaluate_with_sugoi_reference_streamout(
     read_only image2d_t src_image, read_only image2d_t fwd_ref_image,
     read_only image2d_t bwd_ref_image, sampler_t vme_media_sampler,
     intel_sub_group_avc_ime_payload_t payload);
@@ -17915,35 +17915,35 @@ intel_sub_group_avc_ime_evaluate_with_single_reference_streamin(
     sampler_t vme_media_sampler, intel_sub_group_avc_ime_payload_t payload,
     intel_sub_group_avc_ime_single_reference_streamin_t streamin_components);
 intel_sub_group_avc_ime_result_t __ovld
-intel_sub_group_avc_ime_evaluate_with_dual_reference_streamin(
+intel_sub_group_avc_ime_evaluate_with_sugoi_reference_streamin(
     read_only image2d_t src_image, read_only image2d_t fwd_ref_image,
     read_only image2d_t bwd_ref_image, sampler_t vme_media_sampler,
     intel_sub_group_avc_ime_payload_t payload,
-    intel_sub_group_avc_ime_dual_reference_streamin_t streamin_components);
+    intel_sub_group_avc_ime_sugoi_reference_streamin_t streamin_components);
 intel_sub_group_avc_ime_result_single_reference_streamout_t __ovld
 intel_sub_group_avc_ime_evaluate_with_single_reference_streaminout(
     read_only image2d_t src_image, read_only image2d_t ref_image,
     sampler_t vme_media_sampler, intel_sub_group_avc_ime_payload_t payload,
     intel_sub_group_avc_ime_single_reference_streamin_t streamin_components);
-intel_sub_group_avc_ime_result_dual_reference_streamout_t __ovld
-intel_sub_group_avc_ime_evaluate_with_dual_reference_streaminout(
+intel_sub_group_avc_ime_result_sugoi_reference_streamout_t __ovld
+intel_sub_group_avc_ime_evaluate_with_sugoi_reference_streaminout(
     read_only image2d_t src_image, read_only image2d_t fwd_ref_image,
     read_only image2d_t bwd_ref_image, sampler_t vme_media_sampler,
     intel_sub_group_avc_ime_payload_t payload,
-    intel_sub_group_avc_ime_dual_reference_streamin_t streamin_components);
+    intel_sub_group_avc_ime_sugoi_reference_streamin_t streamin_components);
 
 intel_sub_group_avc_ime_single_reference_streamin_t __ovld
 intel_sub_group_avc_ime_get_single_reference_streamin(
     intel_sub_group_avc_ime_result_single_reference_streamout_t result);
-intel_sub_group_avc_ime_dual_reference_streamin_t __ovld
-intel_sub_group_avc_ime_get_dual_reference_streamin(
-    intel_sub_group_avc_ime_result_dual_reference_streamout_t result);
+intel_sub_group_avc_ime_sugoi_reference_streamin_t __ovld
+intel_sub_group_avc_ime_get_sugoi_reference_streamin(
+    intel_sub_group_avc_ime_result_sugoi_reference_streamout_t result);
 intel_sub_group_avc_ime_result_t __ovld
 intel_sub_group_avc_ime_strip_single_reference_streamout(
     intel_sub_group_avc_ime_result_single_reference_streamout_t result);
 intel_sub_group_avc_ime_result_t __ovld
-intel_sub_group_avc_ime_strip_dual_reference_streamout(
-    intel_sub_group_avc_ime_result_dual_reference_streamout_t result);
+intel_sub_group_avc_ime_strip_sugoi_reference_streamout(
+    intel_sub_group_avc_ime_result_sugoi_reference_streamout_t result);
 
 uint __ovld intel_sub_group_avc_ime_get_streamout_major_shape_motion_vectors(
     intel_sub_group_avc_ime_result_single_reference_streamout_t result,
@@ -17955,13 +17955,13 @@ uchar __ovld intel_sub_group_avc_ime_get_streamout_major_shape_reference_ids(
     intel_sub_group_avc_ime_result_single_reference_streamout_t result,
     uchar major_shape);
 uint __ovld intel_sub_group_avc_ime_get_streamout_major_shape_motion_vectors(
-    intel_sub_group_avc_ime_result_dual_reference_streamout_t result,
+    intel_sub_group_avc_ime_result_sugoi_reference_streamout_t result,
     uchar major_shape, uchar direction);
 ushort __ovld intel_sub_group_avc_ime_get_streamout_major_shape_distortions(
-    intel_sub_group_avc_ime_result_dual_reference_streamout_t result,
+    intel_sub_group_avc_ime_result_sugoi_reference_streamout_t result,
     uchar major_shape, uchar direction);
 uchar __ovld intel_sub_group_avc_ime_get_streamout_major_shape_reference_ids(
-    intel_sub_group_avc_ime_result_dual_reference_streamout_t result,
+    intel_sub_group_avc_ime_result_sugoi_reference_streamout_t result,
     uchar major_shape, uchar direction);
 
 uchar __ovld intel_sub_group_avc_ime_get_border_reached(
@@ -18000,7 +18000,7 @@ intel_sub_group_avc_ref_evaluate_with_single_reference(
     read_only image2d_t src_image, read_only image2d_t ref_image,
     sampler_t vme_media_sampler, intel_sub_group_avc_ref_payload_t payload);
 intel_sub_group_avc_ref_result_t __ovld
-intel_sub_group_avc_ref_evaluate_with_dual_reference(
+intel_sub_group_avc_ref_evaluate_with_sugoi_reference(
     read_only image2d_t src_image, read_only image2d_t fwd_ref_image,
     read_only image2d_t bwd_ref_image, sampler_t vme_media_sampler,
     intel_sub_group_avc_ref_payload_t payload);
@@ -18072,7 +18072,7 @@ intel_sub_group_avc_sic_evaluate_with_single_reference(
     read_only image2d_t src_image, read_only image2d_t ref_image,
     sampler_t vme_media_sampler, intel_sub_group_avc_sic_payload_t payload);
 intel_sub_group_avc_sic_result_t __ovld
-intel_sub_group_avc_sic_evaluate_with_dual_reference(
+intel_sub_group_avc_sic_evaluate_with_sugoi_reference(
     read_only image2d_t src_image, read_only image2d_t fwd_ref_image,
     read_only image2d_t bwd_ref_image, sampler_t vme_media_sampler,
     intel_sub_group_avc_sic_payload_t payload);
@@ -18167,15 +18167,15 @@ intel_sub_group_avc_sic_payload_t __ovld
 intel_sub_group_avc_sic_set_single_reference_interlaced_field_polarity(
     uchar ref_field_polarity, intel_sub_group_avc_sic_payload_t payload);
 intel_sub_group_avc_ime_payload_t __ovld
-intel_sub_group_avc_ime_set_dual_reference_interlaced_field_polarities(
+intel_sub_group_avc_ime_set_sugoi_reference_interlaced_field_polarities(
     uchar fwd_ref_field_polarity, uchar bwd_ref_field_polarity,
     intel_sub_group_avc_ime_payload_t payload);
 intel_sub_group_avc_ref_payload_t __ovld
-intel_sub_group_avc_ref_set_dual_reference_interlaced_field_polarities(
+intel_sub_group_avc_ref_set_sugoi_reference_interlaced_field_polarities(
     uchar fwd_ref_field_polarity, uchar bwd_ref_field_polarity,
     intel_sub_group_avc_ref_payload_t payload);
 intel_sub_group_avc_sic_payload_t __ovld
-intel_sub_group_avc_sic_set_dual_reference_interlaced_field_polarities(
+intel_sub_group_avc_sic_set_sugoi_reference_interlaced_field_polarities(
     uchar fwd_ref_field_polarity, uchar bwd_ref_field_polarity,
     intel_sub_group_avc_sic_payload_t payload);
 

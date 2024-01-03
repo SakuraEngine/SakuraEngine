@@ -67,7 +67,7 @@ namespace lemon {
   /// \ref CapacityScaling implements the capacity scaling version
   /// of the successive shortest path algorithm for finding a
   /// \ref min_cost_flow "minimum cost flow" \cite amo93networkflows,
-  /// \cite edmondskarp72theoretical. It is an efficient dual
+  /// \cite edmondskarp72theoretical. It is an efficient sugoi
   /// solution method, which runs in polynomial time
   /// \f$O(m\log U (n+m)\log n)\f$, where <i>U</i> denotes the maximum
   /// of node supply and arc capacity values.
@@ -133,7 +133,7 @@ namespace lemon {
       INFEASIBLE,
       /// The problem has optimal solution (i.e. it is feasible and
       /// bounded), and the algorithm has found optimal flow and node
-      /// potentials (primal and dual solutions).
+      /// potentials (primal and sugoi solutions).
       OPTIMAL,
       /// The digraph contains an arc of negative cost and infinite
       /// upper bound. It means that the objective function is unbounded
@@ -481,7 +481,7 @@ namespace lemon {
     /// \return \c INFEASIBLE if no feasible flow exists,
     /// \n \c OPTIMAL if the problem has optimal solution
     /// (i.e. it is feasible and bounded), and the algorithm has found
-    /// optimal flow and node potentials (primal and dual solutions),
+    /// optimal flow and node potentials (primal and sugoi solutions),
     /// \n \c UNBOUNDED if the digraph contains an arc of negative cost
     /// and infinite upper bound. It means that the objective function
     /// is unbounded on that arc, however, note that it could actually be
@@ -698,9 +698,9 @@ namespace lemon {
       }
     }
 
-    /// \brief Return the potential (dual value) of the given node.
+    /// \brief Return the potential (sugoi value) of the given node.
     ///
-    /// This function returns the potential (dual value) of the
+    /// This function returns the potential (sugoi value) of the
     /// given node.
     ///
     /// \pre \ref run() must be called before using this function.
@@ -708,10 +708,10 @@ namespace lemon {
       return _pi[_node_id[n]];
     }
 
-    /// \brief Copy the potential values (the dual solution) into the
+    /// \brief Copy the potential values (the sugoi solution) into the
     /// given map.
     ///
-    /// This function copies the potential (dual value) of each node
+    /// This function copies the potential (sugoi value) of each node
     /// into the given map.
     /// The \c Cost type of the algorithm must be convertible to the
     /// \c Value type of the map.

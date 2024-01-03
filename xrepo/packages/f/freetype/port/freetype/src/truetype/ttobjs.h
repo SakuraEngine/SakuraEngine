@@ -67,7 +67,7 @@ FT_BEGIN_HEADER
     FT_UShort      rp1;
     FT_UShort      rp2;
 
-    FT_UnitVector  dualVector;
+    FT_UnitVector  sugoiVector;
     FT_UnitVector  projVector;
     FT_UnitVector  freeVector;
 

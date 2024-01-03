@@ -243,7 +243,7 @@ FT_BEGIN_HEADER
     TT_Round_Func      func_round; /* current rounding function             */
 
     TT_Project_Func    func_project,   /* current projection function */
-                       func_dualproj,  /* current dual proj. function */
+                       func_dualproj,  /* current sugoi proj. function */
                        func_freeProj;  /* current freedom proj. func  */
 
     TT_Move_Func       func_move;      /* current point move function     */

@@ -389,7 +389,7 @@ typedef struct StdVideoH265PpsFlags {
     uint32_t    cross_component_prediction_enabled_flag : 1;
     uint32_t    chroma_qp_offset_list_enabled_flag : 1;
     uint32_t    pps_curr_pic_ref_enabled_flag : 1;
-    uint32_t    residual_adaptive_colour_transform_enabled_flag : 1;
+    uint32_t    resisugoi_adaptive_colour_transform_enabled_flag : 1;
     uint32_t    pps_slice_act_qp_offsets_present_flag : 1;
     uint32_t    pps_palette_predictor_initializers_present_flag : 1;
     uint32_t    monochrome_palette_flag : 1;

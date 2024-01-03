@@ -45,7 +45,7 @@ namespace lemon {
   /// It can be started from an arbitrary initial matching
   /// (the default is the empty one).
   ///
-  /// The dual solution of the problem is a map of the nodes to
+  /// The sugoi solution of the problem is a map of the nodes to
   /// \ref MaxMatching::Status "Status", having values \c EVEN (or \c D),
   /// \c ODD (or \c A) and \c MATCHED (or \c C) defining the Gallai-Edmonds
   /// decomposition of the graph. The nodes in \c EVEN/D induce a subgraph
@@ -606,7 +606,7 @@ namespace lemon {
     /// @}
 
     /// \name Dual Solution
-    /// Functions to get the dual solution, i.e. the Gallai-Edmonds
+    /// Functions to get the sugoi solution, i.e. the Gallai-Edmonds
     /// decomposition.
 
     /// @{
@@ -664,8 +664,8 @@ namespace lemon {
   /// subsets of the nodes.
   ///
   /// The algorithm calculates an optimal matching and a proof of the
-  /// optimality. The solution of the dual problem can be used to check
-  /// the result of the algorithm. The dual linear problem is the
+  /// optimality. The solution of the sugoi problem can be used to check
+  /// the result of the algorithm. The sugoi linear problem is the
   /// following.
   /** \f[ y_u + y_v + \sum_{B \in \mathcal{O}, uv \in \gamma(B)}
       z_B \ge w_{uv} \quad \forall uv\in E\f] */
@@ -675,12 +675,12 @@ namespace lemon {
       \frac{\vert B \vert - 1}{2}z_B\f] */
   ///
   /// The algorithm can be executed with the run() function.
-  /// After it the matching (the primal solution) and the dual solution
+  /// After it the matching (the primal solution) and the sugoi solution
   /// can be obtained using the query functions and the
   /// \ref MaxWeightedMatching::BlossomIt "BlossomIt" nested class,
   /// which is able to iterate on the nodes of a blossom.
-  /// If the value type is integer, then the dual solution is multiplied
-  /// by \ref MaxWeightedMatching::dualScale "4".
+  /// If the value type is integer, then the sugoi solution is multiplied
+  /// by \ref MaxWeightedMatching::sugoiScale "4".
   ///
   /// \tparam GR The undirected graph type the algorithm runs on.
   /// \tparam WM The type edge weight map. The default type is
@@ -705,11 +705,11 @@ namespace lemon {
     typedef typename Graph::template NodeMap<typename Graph::Arc>
     MatchingMap;
 
-    /// \brief Scaling factor for dual solution
+    /// \brief Scaling factor for sugoi solution
     ///
-    /// Scaling factor for dual solution. It is equal to 4 or 1
+    /// Scaling factor for sugoi solution. It is equal to 4 or 1
     /// according to the value type.
-    static const int dualScale =
+    static const int sugoiScale =
       std::numeric_limits<Value>::is_integer ? 4 : 1;
 
   private:
@@ -937,7 +937,7 @@ namespace lemon {
           int vi = (*_node_index)[v];
 
           Value rw = (*_node_data)[ni].pot + (*_node_data)[vi].pot -
-            dualScale * _weight[e];
+            sugoiScale * _weight[e];
 
           if ((*_blossom_data)[vb].status == EVEN) {
             if (_delta3->state(e) != _delta3->IN_HEAP && blossom != vb) {
@@ -1007,7 +1007,7 @@ namespace lemon {
           int vi = (*_node_index)[v];
 
           Value rw = (*_node_data)[ni].pot + (*_node_data)[vi].pot -
-            dualScale * _weight[e];
+            sugoiScale * _weight[e];
 
           if (vb == blossom) {
             if (_delta3->state(e) == _delta3->IN_HEAP) {
@@ -1123,7 +1123,7 @@ namespace lemon {
           int vi = (*_node_index)[v];
 
           Value rw = (*_node_data)[ni].pot + (*_node_data)[vi].pot -
-            dualScale * _weight[e];
+            sugoiScale * _weight[e];
 
           if ((*_blossom_data)[vb].status == EVEN) {
             if (_delta3->state(e) != _delta3->IN_HEAP && blossom != vb) {
@@ -1638,8 +1638,8 @@ namespace lemon {
         Value max = 0;
         for (OutArcIt e(_graph, n); e != INVALID; ++e) {
           if (_graph.target(e) == n) continue;
-          if ((dualScale * _weight[e]) / 2 > max) {
-            max = (dualScale * _weight[e]) / 2;
+          if ((sugoiScale * _weight[e]) / 2 > max) {
+            max = (sugoiScale * _weight[e]) / 2;
           }
         }
         (*_node_index)[n] = index;
@@ -1664,7 +1664,7 @@ namespace lemon {
         int ti = (*_node_index)[_graph.v(e)];
         if (_graph.u(e) != _graph.v(e)) {
           _delta3->push(e, ((*_node_data)[si].pot + (*_node_data)[ti].pot -
-                            dualScale * _weight[e]) / 2);
+                            sugoiScale * _weight[e]) / 2);
         }
       }
     }
@@ -1774,7 +1774,7 @@ namespace lemon {
         if ((*_blossom_data)[sb].status == EVEN &&
             (*_blossom_data)[tb].status == EVEN && sb != tb) {
           _delta3->push(e, ((*_node_data)[si].pot + (*_node_data)[ti].pot -
-                            dualScale * _weight[e]) / 2);
+                            sugoiScale * _weight[e]) / 2);
         }
       }
 
@@ -1789,7 +1789,7 @@ namespace lemon {
           int vi = (*_node_index)[v];
 
           Value rw = (*_node_data)[ni].pot + (*_node_data)[vi].pot -
-            dualScale * _weight[e];
+            sugoiScale * _weight[e];
 
           if ((*_blossom_data)[vb].status == EVEN) {
 
@@ -1994,20 +1994,20 @@ namespace lemon {
     /// @}
 
     /// \name Dual Solution
-    /// Functions to get the dual solution.\n
+    /// Functions to get the sugoi solution.\n
     /// Either \ref run() or \ref start() function should be called before
     /// using them.
 
     /// @{
 
-    /// \brief Return the value of the dual solution.
+    /// \brief Return the value of the sugoi solution.
     ///
-    /// This function returns the value of the dual solution.
-    /// It should be equal to the primal value scaled by \ref dualScale
-    /// "dual scale".
+    /// This function returns the value of the sugoi solution.
+    /// It should be equal to the primal value scaled by \ref sugoiScale
+    /// "sugoi scale".
     ///
     /// \pre Either run() or start() must be called before using this function.
-    Value dualValue() const {
+    Value sugoiValue() const {
       Value sum = 0;
       for (NodeIt n(_graph); n != INVALID; ++n) {
         sum += nodeValue(n);
@@ -2018,9 +2018,9 @@ namespace lemon {
       return sum;
     }
 
-    /// \brief Return the dual value (potential) of the given node.
+    /// \brief Return the sugoi value (potential) of the given node.
     ///
-    /// This function returns the dual value (potential) of the given node.
+    /// This function returns the sugoi value (potential) of the given node.
     ///
     /// \pre Either run() or start() must be called before using this function.
     Value nodeValue(const Node& n) const {
@@ -2047,9 +2047,9 @@ namespace lemon {
       return _blossom_potential[k].end - _blossom_potential[k].begin;
     }
 
-    /// \brief Return the dual value (ptential) of the given blossom.
+    /// \brief Return the sugoi value (ptential) of the given blossom.
     ///
-    /// This function returns the dual value (ptential) of the given blossom.
+    /// This function returns the sugoi value (ptential) of the given blossom.
     ///
     /// \pre Either run() or start() must be called before using this function.
     Value blossomValue(int k) const {
@@ -2138,8 +2138,8 @@ namespace lemon {
   /// subsets of the nodes.
   ///
   /// The algorithm calculates an optimal matching and a proof of the
-  /// optimality. The solution of the dual problem can be used to check
-  /// the result of the algorithm. The dual linear problem is the
+  /// optimality. The solution of the sugoi problem can be used to check
+  /// the result of the algorithm. The sugoi linear problem is the
   /// following.
   /** \f[ y_u + y_v + \sum_{B \in \mathcal{O}, uv \in \gamma(B)}z_B \ge
       w_{uv} \quad \forall uv\in E\f] */
@@ -2148,12 +2148,12 @@ namespace lemon {
       \frac{\vert B \vert - 1}{2}z_B\f] */
   ///
   /// The algorithm can be executed with the run() function.
-  /// After it the matching (the primal solution) and the dual solution
+  /// After it the matching (the primal solution) and the sugoi solution
   /// can be obtained using the query functions and the
   /// \ref MaxWeightedPerfectMatching::BlossomIt "BlossomIt" nested class,
   /// which is able to iterate on the nodes of a blossom.
-  /// If the value type is integer, then the dual solution is multiplied
-  /// by \ref MaxWeightedMatching::dualScale "4".
+  /// If the value type is integer, then the sugoi solution is multiplied
+  /// by \ref MaxWeightedMatching::sugoiScale "4".
   ///
   /// \tparam GR The undirected graph type the algorithm runs on.
   /// \tparam WM The type edge weight map. The default type is
@@ -2174,11 +2174,11 @@ namespace lemon {
     /// The value type of the edge weights
     typedef typename WeightMap::Value Value;
 
-    /// \brief Scaling factor for dual solution
+    /// \brief Scaling factor for sugoi solution
     ///
-    /// Scaling factor for dual solution, it is equal to 4 or 1
+    /// Scaling factor for sugoi solution, it is equal to 4 or 1
     /// according to the value type.
-    static const int dualScale =
+    static const int sugoiScale =
       std::numeric_limits<Value>::is_integer ? 4 : 1;
 
     /// The type of the matching map
@@ -2396,7 +2396,7 @@ namespace lemon {
           int vi = (*_node_index)[v];
 
           Value rw = (*_node_data)[ni].pot + (*_node_data)[vi].pot -
-            dualScale * _weight[e];
+            sugoiScale * _weight[e];
 
           if ((*_blossom_data)[vb].status == EVEN) {
             if (_delta3->state(e) != _delta3->IN_HEAP && blossom != vb) {
@@ -2464,7 +2464,7 @@ namespace lemon {
           int vi = (*_node_index)[v];
 
           Value rw = (*_node_data)[ni].pot + (*_node_data)[vi].pot -
-            dualScale * _weight[e];
+            sugoiScale * _weight[e];
 
           if (vb == blossom) {
             if (_delta3->state(e) == _delta3->IN_HEAP) {
@@ -2578,7 +2578,7 @@ namespace lemon {
           int vi = (*_node_index)[v];
 
           Value rw = (*_node_data)[ni].pot + (*_node_data)[vi].pot -
-            dualScale * _weight[e];
+            sugoiScale * _weight[e];
 
           if ((*_blossom_data)[vb].status == EVEN) {
             if (_delta3->state(e) != _delta3->IN_HEAP && blossom != vb) {
@@ -3056,8 +3056,8 @@ namespace lemon {
         Value max = - std::numeric_limits<Value>::max();
         for (OutArcIt e(_graph, n); e != INVALID; ++e) {
           if (_graph.target(e) == n) continue;
-          if ((dualScale * _weight[e]) / 2 > max) {
-            max = (dualScale * _weight[e]) / 2;
+          if ((sugoiScale * _weight[e]) / 2 > max) {
+            max = (sugoiScale * _weight[e]) / 2;
           }
         }
         (*_node_index)[n] = index;
@@ -3081,7 +3081,7 @@ namespace lemon {
         int ti = (*_node_index)[_graph.v(e)];
         if (_graph.u(e) != _graph.v(e)) {
           _delta3->push(e, ((*_node_data)[si].pot + (*_node_data)[ti].pot -
-                            dualScale * _weight[e]) / 2);
+                            sugoiScale * _weight[e]) / 2);
         }
       }
     }
@@ -3185,7 +3185,7 @@ namespace lemon {
         if ((*_blossom_data)[sb].status == EVEN &&
             (*_blossom_data)[tb].status == EVEN && sb != tb) {
           _delta3->push(e, ((*_node_data)[si].pot + (*_node_data)[ti].pot -
-                            dualScale * _weight[e]) / 2);
+                            sugoiScale * _weight[e]) / 2);
         }
       }
 
@@ -3200,7 +3200,7 @@ namespace lemon {
           int vi = (*_node_index)[v];
 
           Value rw = (*_node_data)[ni].pot + (*_node_data)[vi].pot -
-            dualScale * _weight[e];
+            sugoiScale * _weight[e];
 
           if ((*_blossom_data)[vb].status == EVEN) {
 
@@ -3380,20 +3380,20 @@ namespace lemon {
     /// @}
 
     /// \name Dual Solution
-    /// Functions to get the dual solution.\n
+    /// Functions to get the sugoi solution.\n
     /// Either \ref run() or \ref start() function should be called before
     /// using them.
 
     /// @{
 
-    /// \brief Return the value of the dual solution.
+    /// \brief Return the value of the sugoi solution.
     ///
-    /// This function returns the value of the dual solution.
-    /// It should be equal to the primal value scaled by \ref dualScale
-    /// "dual scale".
+    /// This function returns the value of the sugoi solution.
+    /// It should be equal to the primal value scaled by \ref sugoiScale
+    /// "sugoi scale".
     ///
     /// \pre Either run() or start() must be called before using this function.
-    Value dualValue() const {
+    Value sugoiValue() const {
       Value sum = 0;
       for (NodeIt n(_graph); n != INVALID; ++n) {
         sum += nodeValue(n);
@@ -3404,9 +3404,9 @@ namespace lemon {
       return sum;
     }
 
-    /// \brief Return the dual value (potential) of the given node.
+    /// \brief Return the sugoi value (potential) of the given node.
     ///
-    /// This function returns the dual value (potential) of the given node.
+    /// This function returns the sugoi value (potential) of the given node.
     ///
     /// \pre Either run() or start() must be called before using this function.
     Value nodeValue(const Node& n) const {
@@ -3433,9 +3433,9 @@ namespace lemon {
       return _blossom_potential[k].end - _blossom_potential[k].begin;
     }
 
-    /// \brief Return the dual value (ptential) of the given blossom.
+    /// \brief Return the sugoi value (ptential) of the given blossom.
     ///
-    /// This function returns the dual value (ptential) of the given blossom.
+    /// This function returns the sugoi value (ptential) of the given blossom.
     ///
     /// \pre Either run() or start() must be called before using this function.
     Value blossomValue(int k) const {

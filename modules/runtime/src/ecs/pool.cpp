@@ -1,11 +1,11 @@
 #include "SkrProfile/profile.h"
-#include "SkrRT/ecs/dual_config.h"
+#include "SkrRT/ecs/sugoi_config.h"
 #include "SkrRT/containers/vector.hpp"
 #include "pool.hpp"
 #include <numeric>
 
-const char* kDualMemoryName = "dual";
-namespace dual
+const char* kDualMemoryName = "sugoi";
+namespace sugoi
 {
 pool_t::pool_t(size_t blockSize, size_t blockCount)
     : blockSize(blockSize)
@@ -17,7 +17,7 @@ pool_t::~pool_t()
 {
     void* block;
     while (blocks.try_dequeue(block))
-        dual_free(block);
+        sugoi_free(block);
 }
 
 void* pool_t::allocate()
@@ -27,7 +27,7 @@ void* pool_t::allocate()
         return block;
     {
         SkrZoneScopedN("DualPoolAllocation");
-        return dual_calloc(1, blockSize);
+        return sugoi_calloc(1, blockSize);
     }
 }
 
@@ -35,7 +35,7 @@ void pool_t::free(void* block)
 {
     if (blocks.try_enqueue(block))
         return;
-    dual_free(block);
+    sugoi_free(block);
 }
 
 fixed_pool_t::fixed_pool_t(size_t blockSize, size_t blockCount)
@@ -82,4 +82,4 @@ void fixed_pool_t::reset()
     for (size_t i = 0; i < blockCount; ++i)
         blocks.try_enqueue_bulk(indicies.data(), blockCount);
 }
-} // namespace dual
+} // namespace sugoi

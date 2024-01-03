@@ -103,7 +103,7 @@ namespace lemon {
   /// given sources and spans all the nodes which are reachable from the
   /// sources. The time complexity of the algorithm is O(n<sup>2</sup>+m).
   ///
-  /// The algorithm also provides an optimal dual solution, therefore
+  /// The algorithm also provides an optimal sugoi solution, therefore
   /// the optimality of the solution can be checked.
   ///
   /// \param GR The digraph type the algorithm runs on.
@@ -188,7 +188,7 @@ namespace lemon {
 
     typedef std::vector<typename Digraph::Node> DualNodeList;
 
-    DualNodeList _dual_node_list;
+    DualNodeList _sugoi_node_list;
 
     struct DualVariable {
       int begin, end;
@@ -201,7 +201,7 @@ namespace lemon {
 
     typedef std::vector<DualVariable> DualVariables;
 
-    DualVariables _dual_variables;
+    DualVariables _sugoi_variables;
 
     typedef typename Digraph::template NodeMap<int> HeapCrossRef;
 
@@ -269,10 +269,10 @@ namespace lemon {
 
     Arc prepare(Node node) {
       std::vector<Node> nodes;
-      (*_node_order)[node] = _dual_node_list.size();
+      (*_node_order)[node] = _sugoi_node_list.size();
       StackLevel level;
-      level.node_level = _dual_node_list.size();
-      _dual_node_list.push_back(node);
+      level.node_level = _sugoi_node_list.size();
+      _sugoi_node_list.push_back(node);
       for (InArcIt it(*_digraph, node); it != INVALID; ++it) {
         Arc arc = it;
         Node source = _digraph->source(arc);
@@ -295,10 +295,10 @@ namespace lemon {
           minimum = (*_cost_arcs)[nodes[i]];
         }
       }
-      (*_arc_order)[minimum.arc] = _dual_variables.size();
-      DualVariable var(_dual_node_list.size() - 1,
-                       _dual_node_list.size(), minimum.value);
-      _dual_variables.push_back(var);
+      (*_arc_order)[minimum.arc] = _sugoi_variables.size();
+      DualVariable var(_sugoi_node_list.size() - 1,
+                       _sugoi_node_list.size(), minimum.value);
+      _sugoi_variables.push_back(var);
       for (int i = 0; i < int(nodes.size()); ++i) {
         (*_cost_arcs)[nodes[i]].value -= minimum.value;
         level.arcs.push_back((*_cost_arcs)[nodes[i]]);
@@ -337,9 +337,9 @@ namespace lemon {
           minimum = (*_cost_arcs)[nodes[i]];
         }
       }
-      (*_arc_order)[minimum.arc] = _dual_variables.size();
-      DualVariable var(node_bottom, _dual_node_list.size(), minimum.value);
-      _dual_variables.push_back(var);
+      (*_arc_order)[minimum.arc] = _sugoi_variables.size();
+      DualVariable var(node_bottom, _sugoi_node_list.size(), minimum.value);
+      _sugoi_variables.push_back(var);
       StackLevel level;
       level.node_level = node_bottom;
       for (int i = 0; i < int(nodes.size()); ++i) {
@@ -514,8 +514,8 @@ namespace lemon {
         _arborescence->set(it, false);
         (*_arc_order)[it] = -1;
       }
-      _dual_node_list.clear();
-      _dual_variables.clear();
+      _sugoi_node_list.clear();
+      _sugoi_variables.clear();
     }
 
     /// \brief Adds a new source node.
@@ -687,63 +687,63 @@ namespace lemon {
       return (*_node_order)[node] == -1;
     }
 
-    /// \brief Returns the number of the dual variables in basis.
+    /// \brief Returns the number of the sugoi variables in basis.
     ///
-    /// Returns the number of the dual variables in basis.
+    /// Returns the number of the sugoi variables in basis.
     int dualNum() const {
-      return _dual_variables.size();
+      return _sugoi_variables.size();
     }
 
-    /// \brief Returns the value of the dual solution.
+    /// \brief Returns the value of the sugoi solution.
     ///
-    /// Returns the value of the dual solution. It should be
+    /// Returns the value of the sugoi solution. It should be
     /// equal to the arborescence value.
-    Value dualValue() const {
+    Value sugoiValue() const {
       Value sum = 0;
-      for (int i = 0; i < int(_dual_variables.size()); ++i) {
-        sum += _dual_variables[i].value;
+      for (int i = 0; i < int(_sugoi_variables.size()); ++i) {
+        sum += _sugoi_variables[i].value;
       }
       return sum;
     }
 
-    /// \brief Returns the number of the nodes in the dual variable.
+    /// \brief Returns the number of the nodes in the sugoi variable.
     ///
-    /// Returns the number of the nodes in the dual variable.
-    int dualSize(int k) const {
-      return _dual_variables[k].end - _dual_variables[k].begin;
+    /// Returns the number of the nodes in the sugoi variable.
+    int sugoiSize(int k) const {
+      return _sugoi_variables[k].end - _sugoi_variables[k].begin;
     }
 
-    /// \brief Returns the value of the dual variable.
+    /// \brief Returns the value of the sugoi variable.
     ///
-    /// Returns the the value of the dual variable.
-    Value dualValue(int k) const {
-      return _dual_variables[k].value;
+    /// Returns the the value of the sugoi variable.
+    Value sugoiValue(int k) const {
+      return _sugoi_variables[k].value;
     }
 
-    /// \brief LEMON iterator for getting a dual variable.
+    /// \brief LEMON iterator for getting a sugoi variable.
     ///
     /// This class provides a common style LEMON iterator for getting a
-    /// dual variable of \ref MinCostArborescence algorithm.
+    /// sugoi variable of \ref MinCostArborescence algorithm.
     /// It iterates over a subset of the nodes.
     class DualIt {
     public:
 
       /// \brief Constructor.
       ///
-      /// Constructor for getting the nodeset of the dual variable
+      /// Constructor for getting the nodeset of the sugoi variable
       /// of \ref MinCostArborescence algorithm.
       DualIt(const MinCostArborescence& algorithm, int variable)
         : _algorithm(&algorithm)
       {
-        _index = _algorithm->_dual_variables[variable].begin;
-        _last = _algorithm->_dual_variables[variable].end;
+        _index = _algorithm->_sugoi_variables[variable].begin;
+        _last = _algorithm->_sugoi_variables[variable].end;
       }
 
       /// \brief Conversion to \c Node.
       ///
       /// Conversion to \c Node.
       operator Node() const {
-        return _algorithm->_dual_node_list[_index];
+        return _algorithm->_sugoi_node_list[_index];
       }
 
       /// \brief Increment operator.

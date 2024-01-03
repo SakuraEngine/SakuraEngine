@@ -180,7 +180,7 @@
 
     OTV_NAME_ENTER( "ValueRecord" );
 
-    /* display `format' in dual representation */
+    /* display `format' in sugoi representation */
     for ( loop = 7; loop >= 0; loop-- )
     {
       res <<= 4;

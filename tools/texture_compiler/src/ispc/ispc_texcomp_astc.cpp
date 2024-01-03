@@ -55,7 +55,7 @@ struct astc_block
 {
     int width;
     int height;
-    uint8_t dual_plane;
+    uint8_t sugoi_plane;
     int weight_range;
     uint8_t weights[64];
     int color_component_selector;
@@ -80,7 +80,7 @@ int pack_block_mode(astc_block* block)
 {
     int block_mode = 0;
 
-    int D = block->dual_plane;
+    int D = block->sugoi_plane;
     int H = block->weight_range >= 6;
     int DH = D * 2 + H;
     int R = block->weight_range + 2 - ((H > 0) ? 6 : 0);
@@ -378,7 +378,7 @@ void pack_block(uint32_t data[4], astc_block* block)
     int pos = 0;
     set_bits(data, &pos, 11, pack_block_mode(block));
 
-    int num_weights = block->width * block->height * (block->dual_plane ? 2 : 1);
+    int num_weights = block->width * block->height * (block->sugoi_plane ? 2 : 1);
     int weight_bits = sequence_bits(num_weights, block->weight_range);
     int extra_bits = 0;
 
@@ -423,7 +423,7 @@ void pack_block(uint32_t data[4], astc_block* block)
         set_bits(data, &pos, 4, block->color_endpoint_modes[0]);
     }
     
-    if (block->dual_plane)
+    if (block->sugoi_plane)
     {
         assert(block->partitions < 4);
         extra_bits += 2;
@@ -476,7 +476,7 @@ void setup_list_context(ispc::astc_enc_context* ctx, uint32_t packed_mode)
 {
     ctx->width = 2 + get_field(packed_mode, 15, 13); // 2..8 <= 2^3
     ctx->height = 2 + get_field(packed_mode, 18, 16); // 2..8 <= 2^3
-    ctx->dual_plane = get_field(packed_mode, 19, 19); // 0 or 1
+    ctx->sugoi_plane = get_field(packed_mode, 19, 19); // 0 or 1
     ctx->partitions = 1;
     
     int color_endpoint_modes0 = get_field(packed_mode, 7, 6) * 2 + 6; // 6, 8, 10 or 12

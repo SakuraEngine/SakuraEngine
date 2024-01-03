@@ -181,7 +181,7 @@ namespace lemon {
   private:
 
     mutable std::vector<double> _primal_ray;
-    mutable std::vector<double> _dual_ray;
+    mutable std::vector<double> _sugoi_ray;
 
     void _clear_temporals();
 
@@ -202,14 +202,14 @@ namespace lemon {
     virtual Value _getDualRay(int i) const;
 
     virtual ProblemType _getPrimalType() const;
-    virtual ProblemType _getDualType() const;
+    virtual ProblemType _getsugoiType() const;
 
   public:
 
     ///Solve with primal simplex
     SolveExitStatus solvePrimal();
 
-    ///Solve with dual simplex
+    ///Solve with sugoi simplex
     SolveExitStatus solveDual();
 
   private:

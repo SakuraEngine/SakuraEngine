@@ -377,7 +377,7 @@ typedef enum
 
     SDL_SCANCODE_BRIGHTNESSDOWN = 275,
     SDL_SCANCODE_BRIGHTNESSUP = 276,
-    SDL_SCANCODE_DISPLAYSWITCH = 277, /**< display mirroring/dual display
+    SDL_SCANCODE_DISPLAYSWITCH = 277, /**< display mirroring/sugoi display
                                            switch, video mode switch */
     SDL_SCANCODE_KBDILLUMTOGGLE = 278,
     SDL_SCANCODE_KBDILLUMDOWN = 279,

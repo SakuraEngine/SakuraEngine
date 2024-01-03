@@ -525,7 +525,7 @@ namespace lemon {
     _col_status.clear();
     _row_status.clear();
     _primal_ray.clear();
-    _dual_ray.clear();
+    _sugoi_ray.clear();
   }
 
   // The routine returns zero unless an error occurred during the
@@ -663,10 +663,10 @@ namespace lemon {
   }
 
   CplexLp::Value CplexLp::_getDualRay(int i) const {
-    if (_dual_ray.empty()) {
+    if (_sugoi_ray.empty()) {
 
     }
-    return _dual_ray[i];
+    return _sugoi_ray[i];
   }
 
   // Cplex 7.0 status values
@@ -701,14 +701,14 @@ namespace lemon {
   //          Aborted in Phase II
   // 13         CPX_ABORT_INFEAS
   //          Aborted in Phase I
-  // 14          CPX_ABORT_DUAL_INFEAS
-  //          Aborted in barrier, dual infeasible
+  // 14          CPX_ABORT_SUGOI_INFEAS
+  //          Aborted in barrier, sugoi infeasible
   // 15          CPX_ABORT_PRIM_INFEAS
   //          Aborted in barrier, primal infeasible
-  // 16          CPX_ABORT_PRIM_DUAL_INFEAS
-  //          Aborted in barrier, primal and dual infeasible
-  // 17          CPX_ABORT_PRIM_DUAL_FEAS
-  //          Aborted in barrier, primal and dual feasible
+  // 16          CPX_ABORT_PRIM_SUGOI_INFEAS
+  //          Aborted in barrier, primal and sugoi infeasible
+  // 17          CPX_ABORT_PRIM_SUGOI_FEAS
+  //          Aborted in barrier, primal and sugoi feasible
   // 18          CPX_ABORT_CROSSOVER
   //          Aborted in crossover
   // 19          CPX_INForUNBD
@@ -717,7 +717,7 @@ namespace lemon {
   //       User pivot used
   //
   // Pending return values
-  // ??case CPX_ABORT_DUAL_INFEAS
+  // ??case CPX_ABORT_SUGOI_INFEAS
   // ??case CPX_ABORT_CROSSOVER
   // ??case CPX_INForUNBD
   // ??case CPX_PIVOT
@@ -734,7 +734,7 @@ namespace lemon {
   // Description: Method for linear optimization.
   // Determines which algorithm is used when CPXlpopt() (or "optimize"
   // in the Interactive Optimizer) is called. Currently the behavior of
-  // the "Automatic" setting is that CPLEX simply invokes the dual
+  // the "Automatic" setting is that CPLEX simply invokes the sugoi
   // simplex method, but this capability may be expanded in the future
   // so that CPLEX chooses the method based on problem characteristics
 #if CPX_VERSION < 900
@@ -793,7 +793,7 @@ namespace lemon {
     case CPX_OPTIMAL://Optimal
       return OPTIMAL;
     case CPX_UNBOUNDED://Unbounded
-      return INFEASIBLE;//In case of dual simplex
+      return INFEASIBLE;//In case of sugoi simplex
       //return UNBOUNDED;
     case CPX_INFEASIBLE://Infeasible
       //    case CPX_IT_LIM_INFEAS:
@@ -802,15 +802,15 @@ namespace lemon {
       //     case CPX_OPTIMAL_INFEAS:
       //     case CPX_ABORT_INFEAS:
       //     case CPX_ABORT_PRIM_INFEAS:
-      //     case CPX_ABORT_PRIM_DUAL_INFEAS:
-      return UNBOUNDED;//In case of dual simplex
+      //     case CPX_ABORT_PRIM_SUGOI_INFEAS:
+      return UNBOUNDED;//In case of sugoi simplex
       //return INFEASIBLE;
       //     case CPX_OBJ_LIM:
       //     case CPX_IT_LIM_FEAS:
       //     case CPX_TIME_LIM_FEAS:
       //     case CPX_NUM_BEST_FEAS:
       //     case CPX_ABORT_FEAS:
-      //     case CPX_ABORT_PRIM_DUAL_FEAS:
+      //     case CPX_ABORT_PRIM_SUGOI_FEAS:
       //       return FEASIBLE;
     default:
       return UNDEFINED; //Everything else comes here
@@ -820,7 +820,7 @@ namespace lemon {
   }
 
   // Cplex 9.0 status values
-  // CPX_STAT_ABORT_DUAL_OBJ_LIM
+  // CPX_STAT_ABORT_SUGOI_OBJ_LIM
   // CPX_STAT_ABORT_IT_LIM
   // CPX_STAT_ABORT_OBJ_LIM
   // CPX_STAT_ABORT_PRIM_OBJ_LIM
@@ -836,7 +836,7 @@ namespace lemon {
   // CPX_STAT_OPTIMAL_RELAXED
   // CPX_STAT_UNBOUNDED
 
-  CplexLp::ProblemType CplexLp::_getDualType() const {
+  CplexLp::ProblemType CplexLp::_getsugoiType() const {
     int stat = CPXgetstat(cplexEnv(), _prob);
 #if CPX_VERSION >= 800
     switch (stat) {

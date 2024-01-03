@@ -498,7 +498,7 @@ namespace rtm
 		// Use shuffles and negation instead of loading constants and doing mul/xor.
 		// On ARM64, this is the fastest version.
 
-		// Dispatch rev first, if we can't dual dispatch with neg below, we won't stall it
+		// Dispatch rev first, if we can't sugoi dispatch with neg below, we won't stall it
 		// [l.y, l.x, l.w, l.z]
 		const float32x4_t y_x_w_z = vrev64q_f32(lhs);
 

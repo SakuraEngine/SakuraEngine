@@ -105,4 +105,4 @@ inline int CountTrailingZeros64(uint64_t n)
     return CountTrailingZeros64Slow(n);
 #endif
 }
-} // namespace dual
+} // namespace sugoi

@@ -185,7 +185,7 @@ namespace lemon {
     ///\e
     virtual ProblemType _getPrimalType() const;
     ///\e
-    virtual ProblemType _getDualType() const;
+    virtual ProblemType _getsugoiType() const;
 
     ///\e
     virtual VarStatus _getColStatus(int i) const;

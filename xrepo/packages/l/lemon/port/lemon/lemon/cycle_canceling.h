@@ -102,7 +102,7 @@ namespace lemon {
       INFEASIBLE,
       /// The problem has optimal solution (i.e. it is feasible and
       /// bounded), and the algorithm has found optimal flow and node
-      /// potentials (primal and dual solutions).
+      /// potentials (primal and sugoi solutions).
       OPTIMAL,
       /// The digraph contains an arc of negative cost and infinite
       /// upper bound. It means that the objective function is unbounded
@@ -402,7 +402,7 @@ namespace lemon {
     /// \return \c INFEASIBLE if no feasible flow exists,
     /// \n \c OPTIMAL if the problem has optimal solution
     /// (i.e. it is feasible and bounded), and the algorithm has found
-    /// optimal flow and node potentials (primal and dual solutions),
+    /// optimal flow and node potentials (primal and sugoi solutions),
     /// \n \c UNBOUNDED if the digraph contains an arc of negative cost
     /// and infinite upper bound. It means that the objective function
     /// is unbounded on that arc, however, note that it could actually be
@@ -628,9 +628,9 @@ namespace lemon {
       }
     }
 
-    /// \brief Return the potential (dual value) of the given node.
+    /// \brief Return the potential (sugoi value) of the given node.
     ///
-    /// This function returns the potential (dual value) of the
+    /// This function returns the potential (sugoi value) of the
     /// given node.
     ///
     /// \pre \ref run() must be called before using this function.
@@ -638,10 +638,10 @@ namespace lemon {
       return static_cast<Cost>(_pi[_node_id[n]]);
     }
 
-    /// \brief Copy the potential values (the dual solution) into the
+    /// \brief Copy the potential values (the sugoi solution) into the
     /// given map.
     ///
-    /// This function copies the potential (dual value) of each node
+    /// This function copies the potential (sugoi value) of each node
     /// into the given map.
     /// The \c Cost type of the algorithm must be convertible to the
     /// \c Value type of the map.

@@ -486,7 +486,7 @@ struct astc_mode
 {
     int width;
     int height;
-    bool dual_plane;
+    bool sugoi_plane;
     int weight_range;
     int color_component_selector;
     int partitions;
@@ -747,7 +747,7 @@ void compute_metrics(astc_rank_state state[])
 float estimate_error(astc_rank_state state[], uniform astc_mode mode[])
 {
     uniform int c = 0;
-    if (mode->dual_plane) c = 1 + mode->color_component_selector;
+    if (mode->sugoi_plane) c = 1 + mode->color_component_selector;
 
     float scale_error = state->scale_error[mode->height - 2][mode->width - 2];
     
@@ -1221,7 +1221,7 @@ void load_mode_parameters(uniform astc_mode* uniform mode, uniform uint32_t pack
 {    
     mode->width = 2 + get_bits(packed_mode, 13, 15); // 2..8 <= 2^3
     mode->height = 2 + get_bits(packed_mode, 16, 18); // 2..8 <= 2^3
-    mode->dual_plane = get_bits(packed_mode, 19, 19); // 0 or 1
+    mode->sugoi_plane = get_bits(packed_mode, 19, 19); // 0 or 1
     mode->partitions = 1;
 
     mode->weight_range = get_bits(packed_mode, 0, 3);  // 0..11 <= 2^4
@@ -1298,7 +1298,7 @@ struct astc_block
 {
     uniform int width;
     uniform int height;
-    uniform uint8_t dual_plane;
+    uniform uint8_t sugoi_plane;
     int weight_range;
     uint8_t weights[64];
     int color_component_selector;
@@ -1332,7 +1332,7 @@ struct astc_enc_context
     int width;
     int height;
     int channels;
-    bool dual_plane;
+    bool sugoi_plane;
     int partitions;
     int color_endpoint_pairs;
 };
@@ -1668,7 +1668,7 @@ void quantize_endpoints(astc_block block[], float endpoints[])
 void opt_weights(float scaled_pixels[], astc_block block[])
 {
     uniform int channels = 4;
-    if (block->dual_plane) channels = 3;
+    if (block->sugoi_plane) channels = 3;
 
     float rec_endpoints[8];
     dequant_decode_endpoints(rec_endpoints, block->endpoints, block->color_endpoint_modes[0], block->endpoint_range);
@@ -1963,7 +1963,7 @@ void optimize_block(float scaled_pixels[], astc_block block[], astc_enc_state st
         opt_weights(scaled_pixels, block);
     }
     
-    if (block->dual_plane)
+    if (block->sugoi_plane)
     {
         uint8_t alt_weights[64];
         optimize_alt_plane(alt_weights, scaled_pixels, block);
@@ -1988,7 +1988,7 @@ float measure_error(astc_block block[], astc_enc_state state[])
     assert(pitch <= 64);
 
     // dequant values    
-    uniform int num_weights = block->width * block->height * (block->dual_plane ? 2 : 1);
+    uniform int num_weights = block->width * block->height * (block->sugoi_plane ? 2 : 1);
 
     range_values weight_range_values = get_range_values(block->weight_range);
 
@@ -2010,7 +2010,7 @@ float measure_error(astc_block block[], astc_enc_state state[])
 
     for (uniform int i = 0; i < num_weights; i++) main_weights[i] = block_weights[i];
 
-    if (block->dual_plane)
+    if (block->sugoi_plane)
     for (uniform int i = 0; i < num_weights/2; i++)
     {
         main_weights[i] = block_weights[i * 2 + 0];
@@ -2044,7 +2044,7 @@ float measure_error(astc_block block[], astc_enc_state state[])
             filled_weight = (acc + 8) >> 4;
         }
         
-        if (block->dual_plane)
+        if (block->sugoi_plane)
         {
             int acc = 0;
             acc += alt_weights[stride * (jt + 0) + js + 0] * (16 - ft - fs + w11);
@@ -2060,7 +2060,7 @@ float measure_error(astc_block block[], astc_enc_state state[])
             int C1 = rgba_endpoints[4 + p] * 256 + 128;
             int w = filled_weight;
 
-            if (block->dual_plane && block->color_component_selector == p)
+            if (block->sugoi_plane && block->color_component_selector == p)
             {
                 w = alt_filled_weight;
             }
@@ -2094,7 +2094,7 @@ int code_value(int value, range_values range)
 
 void code_block(astc_block block[])
 {
-    uniform int num_weights = block->width * block->height * (block->dual_plane ? 2 : 1);
+    uniform int num_weights = block->width * block->height * (block->sugoi_plane ? 2 : 1);
 
     range_values weight_range_values = get_range_values(block->weight_range);
     for (uniform int i = 0; i < num_weights; i++)
@@ -2121,7 +2121,7 @@ void pack_block(astc_block block[], astc_enc_state state[])
 
         ublock.width = block->width;
         ublock.height = block->height;
-        ublock.dual_plane = block->dual_plane;
+        ublock.sugoi_plane = block->sugoi_plane;
         ublock.partitions = block->partitions;
         ublock.color_endpoint_pairs = block->color_endpoint_pairs;
 
@@ -2131,7 +2131,7 @@ void pack_block(astc_block block[], astc_enc_state state[])
         ublock.endpoint_range = extract(block->endpoint_range, instance);
         ublock.color_endpoint_modes[0] = extract(block->color_endpoint_modes[0], instance);
 
-        uniform int num_weights = block->width * block->height * (block->dual_plane ? 2 : 1);
+        uniform int num_weights = block->width * block->height * (block->sugoi_plane ? 2 : 1);
         for (uniform int i = 0; i < num_weights; i++)
             ublock.weights[i] = extract(block->weights[i], instance);
 
@@ -2155,7 +2155,7 @@ void load_block_parameters(astc_block block[], uint32_t mode, uniform astc_enc_c
     // uniform parameters
     block->width = ctx->width;
     block->height = ctx->height;
-    block->dual_plane = ctx->dual_plane;
+    block->sugoi_plane = ctx->sugoi_plane;
     block->partitions = ctx->partitions;
     block->color_endpoint_pairs = ctx->color_endpoint_pairs;
     block->channels = ctx->channels;
@@ -2196,7 +2196,7 @@ export void astc_encode_ispc(uniform rgba_surface src[], uniform float block_sco
     scale_pixels(state, list_context);
     if (block->channels == 3) clear_alpha(state->scaled_pixels, block->width, block->height);
 
-    if (block->dual_plane)
+    if (block->sugoi_plane)
     {
         pixel_set pset;
         pset.pixels = state->scaled_pixels;

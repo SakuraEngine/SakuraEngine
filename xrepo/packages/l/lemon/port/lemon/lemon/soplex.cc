@@ -54,7 +54,7 @@ namespace lemon {
 
   void SoplexLp::_clear_temporals() {
     _primal_values.clear();
-    _dual_values.clear();
+    _sugoi_values.clear();
   }
 
   SoplexLp* SoplexLp::newSolver() const {
@@ -312,12 +312,12 @@ namespace lemon {
   }
 
   SoplexLp::Value SoplexLp::_getDual(int i) const {
-    if (_dual_values.empty()) {
-      _dual_values.resize(soplex->nRows());
-      soplex::Vector dv(_dual_values.size(), &_dual_values.front());
+    if (_sugoi_values.empty()) {
+      _sugoi_values.resize(soplex->nRows());
+      soplex::Vector dv(_sugoi_values.size(), &_sugoi_values.front());
       soplex->getDual(dv);
     }
-    return _dual_values[i];
+    return _sugoi_values[i];
   }
 
   SoplexLp::Value SoplexLp::_getPrimalValue() const {
@@ -370,12 +370,12 @@ namespace lemon {
   }
 
   SoplexLp::Value SoplexLp::_getDualRay(int i) const {
-    if (_dual_ray.empty()) {
-      _dual_ray.resize(soplex->nRows());
-      soplex::Vector dv(_dual_ray.size(), &_dual_ray.front());
+    if (_sugoi_ray.empty()) {
+      _sugoi_ray.resize(soplex->nRows());
+      soplex::Vector dv(_sugoi_ray.size(), &_sugoi_ray.front());
       soplex->getDualfarkas(dv);
     }
-    return _dual_ray[i];
+    return _sugoi_ray[i];
   }
 
   SoplexLp::ProblemType SoplexLp::_getPrimalType() const {
@@ -391,7 +391,7 @@ namespace lemon {
     }
   }
 
-  SoplexLp::ProblemType SoplexLp::_getDualType() const {
+  SoplexLp::ProblemType SoplexLp::_getsugoiType() const {
     switch (soplex->status()) {
     case soplex::SPxSolver::OPTIMAL:
       return OPTIMAL;

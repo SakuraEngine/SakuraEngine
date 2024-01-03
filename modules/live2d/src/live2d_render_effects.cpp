@@ -23,7 +23,7 @@ static struct RegisterComponentskr_live2d_render_model_comp_tHelper
     {
         using namespace skr::guid::literals;
 
-        dual_type_description_t desc = make_zeroed<dual_type_description_t>();
+        sugoi_type_description_t desc = make_zeroed<sugoi_type_description_t>();
         desc.name = u8"skr_live2d_render_model_comp_t";
         
         desc.size = sizeof(skr_live2d_render_model_comp_t);
@@ -35,18 +35,18 @@ static struct RegisterComponentskr_live2d_render_model_comp_tHelper
         desc.flags = 0;
         desc.elementSize = 0;
         desc.alignment = alignof(skr_live2d_render_model_comp_t);
-        type = dualT_register_type(&desc);
+        type = sugoiT_register_type(&desc);
     }
-    dual_type_index_t type = DUAL_NULL_TYPE;
+    sugoi_type_index_t type = SUGOI_NULL_TYPE;
 } _RegisterComponentskr_live2d_render_model_comp_tHelper;
 
-SKR_LIVE2D_API dual_type_index_t dual_id_of<skr_live2d_render_model_comp_t>::get()
+SKR_LIVE2D_API sugoi_type_index_t sugoi_id_of<skr_live2d_render_model_comp_t>::get()
 {
     return _RegisterComponentskr_live2d_render_model_comp_tHelper.type;
 }
 
 typedef struct live2d_effect_identity_t {
-    dual_entity_t game_entity;
+    sugoi_entity_t game_entity;
 } live2d_effect_identity_t;
 skr_render_effect_name_t live2d_effect_name = u8"Live2DEffect";
 struct RenderEffectLive2D : public IRenderEffectProcessor {
@@ -55,27 +55,27 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     // this is a view object, later we will expose it to the world
     live2d_render_view_t view_;
 
-    dual_query_t* effect_query = nullptr;
-    dual::type_builder_t type_builder;
-    dual_type_index_t identity_type = {};
+    sugoi_query_t* effect_query = nullptr;
+    sugoi::type_builder_t type_builder;
+    sugoi_type_index_t identity_type = {};
 
-    void initialize(SRendererId renderer, dual_storage_t* storage)
+    void initialize(SRendererId renderer, sugoi_storage_t* storage)
     {
         // make identity component type
         {
             auto guid = make_zeroed<skr_guid_t>();
-            dual_make_guid(&guid);
-            auto desc = make_zeroed<dual_type_description_t>();
+            sugoi_make_guid(&guid);
+            auto desc = make_zeroed<sugoi_type_description_t>();
             desc.name = u8"live2d_identity";
             desc.size = sizeof(live2d_effect_identity_t);
             desc.guid = guid;
             desc.alignment = alignof(live2d_effect_identity_t);
-            identity_type = dualT_register_type(&desc);
+            identity_type = sugoiT_register_type(&desc);
         }
         type_builder
             .with(identity_type)
             .with<skr_live2d_render_model_comp_t>();
-        effect_query = dualQ_from_literal(storage, "[in]live2d_identity");
+        effect_query = sugoiQ_from_literal(storage, "[in]live2d_identity");
         // prepare render resources
         prepare_pipeline_settings();
         prepare_pipeline(renderer);
@@ -86,8 +86,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
 
     void finalize(SRendererId renderer)
     {
-        auto sweepFunction = [&](dual_chunk_view_t* r_cv) {
-        auto meshes = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
+        auto sweepFunction = [&](sugoi_chunk_view_t* r_cv) {
+        auto meshes = sugoi::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
                 while (!meshes[i].vram_future.is_ready()) {}
@@ -102,32 +102,32 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                 }
             }
         };
-        dualQ_get_views(effect_query, DUAL_LAMBDA(sweepFunction));
+        sugoiQ_get_views(effect_query, SUGOI_LAMBDA(sweepFunction));
         free_pipeline(renderer);
         free_mask_pipeline(renderer);
     }
 
-    void on_register(SRendererId, dual_storage_t*) override
+    void on_register(SRendererId, sugoi_storage_t*) override
     {
 
     }
 
-    void on_unregister(SRendererId, dual_storage_t*) override
+    void on_unregister(SRendererId, sugoi_storage_t*) override
     {
 
     }
 
-    void get_type_set(const dual_chunk_view_t* cv, dual_type_set_t* set) override
+    void get_type_set(const sugoi_chunk_view_t* cv, sugoi_type_set_t* set) override
     {
         *set = type_builder.build();
     }
 
-    dual_type_index_t get_identity_type() override
+    sugoi_type_index_t get_identity_type() override
     {
         return identity_type;
     }
 
-    void initialize_data(SRendererId renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv) override
+    void initialize_data(SRendererId renderer, sugoi_storage_t* storage, sugoi_chunk_view_t* game_cv, sugoi_chunk_view_t* render_cv) override
     {
 
     }
@@ -166,15 +166,15 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         return mask_pipeline;
     }
 
-    void produce_model_drawcall(const skr_primitive_draw_context_t* context, dual_storage_t* storage) 
+    void produce_model_drawcall(const skr_primitive_draw_context_t* context, sugoi_storage_t* storage) 
     {
         CubismMatrix44 projection;
         // TODO: Correct Projection
         projection.Scale(static_cast<float>(100.f) / static_cast<float>(100.f), 1.0f);
         // TODO: View Matrix
         model_drawcalls.resize(0);
-        auto counterF = [&](dual_chunk_view_t* r_cv) {
-            auto models = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
+        auto counterF = [&](sugoi_chunk_view_t* r_cv) {
+            auto models = sugoi::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
             const auto proper_pipeline = get_pipeline();
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
@@ -250,12 +250,12 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                 }
             }
         };
-        dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
+        sugoiQ_get_views(effect_query, SUGOI_LAMBDA(counterF));
     }
 
     skr::stl_vector<skr_primitive_draw_t> mask_drawcalls;
     skr_primitive_draw_list_view_t mask_draw_list;
-    void produce_mask_drawcall(const skr_primitive_draw_context_t* context, dual_storage_t* storage) 
+    void produce_mask_drawcall(const skr_primitive_draw_context_t* context, sugoi_storage_t* storage) 
     {
         {
             SkrZoneScopedN("FrameCleanUp");
@@ -263,11 +263,11 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
             mask_drawcalls.resize(0);
             sorted_mask_drawable_lists.clear();
         }
-        auto updateMaskF = [&](dual_chunk_view_t* r_cv) {
+        auto updateMaskF = [&](sugoi_chunk_view_t* r_cv) {
             SkrZoneScopedN("UpdateMaskF");
 
             const auto proper_pipeline = get_mask_pipeline();
-            auto models = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
+            auto models = sugoi::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
                 if (models[i].vram_future.is_ready())
@@ -374,7 +374,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                 }
             }
         };
-        dualQ_get_views(effect_query, DUAL_LAMBDA(updateMaskF));
+        sugoiQ_get_views(effect_query, SUGOI_LAMBDA(updateMaskF));
     }
 
     double sample_count = 1.0;
@@ -856,7 +856,7 @@ void RenderEffectLive2D::free_mask_pipeline(SRendererId renderer)
 void skr_live2d_initialize_render_effects(live2d_renderer_t* renderer, live2d_render_graph_t* render_graph, struct skr_vfs_t* resource_vfs)
 {
     live2d_effect->resource_vfs = resource_vfs;
-    auto storage = renderer->get_dual_storage();
+    auto storage = renderer->get_sugoi_storage();
     live2d_effect->initialize(renderer, storage);
     skr_renderer_register_render_effect(renderer, live2d_effect_name, live2d_effect);
 }

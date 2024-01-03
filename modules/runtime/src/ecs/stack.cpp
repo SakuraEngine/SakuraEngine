@@ -1,18 +1,18 @@
-#include "SkrRT/ecs/dual_config.h"
+#include "SkrRT/ecs/sugoi_config.h"
 #include "stack.hpp"
 
-namespace dual
+namespace sugoi
 {
 fixed_stack_t::fixed_stack_t(size_t cap)
     : size(0)
     , capacity(cap)
 {
-    buffer = ::dual_malloc(cap);
+    buffer = ::sugoi_malloc(cap);
 }
 
 fixed_stack_t::~fixed_stack_t()
 {
-    ::dual_free(buffer);
+    ::sugoi_free(buffer);
 }
 
 void* fixed_stack_t::allocate(size_t inSize)
@@ -26,4 +26,4 @@ void fixed_stack_t::free(size_t inSize)
 {
     size -= inSize;
 }
-} // namespace dual
+} // namespace sugoi

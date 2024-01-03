@@ -52,7 +52,7 @@ public:
 	/// Usually you will set the IP portion of the address to zero (SteamNetworkingIPAddr::Clear()).
 	/// This means that you will not bind to any particular local interface (i.e. the same
 	/// as INADDR_ANY in plain socket code).  Furthermore, if possible the socket will be bound
-	/// in "dual stack" mode, which means that it can accept both IPv4 and IPv6 client connections.
+	/// in "sugoi stack" mode, which means that it can accept both IPv4 and IPv6 client connections.
 	/// If you really do wish to bind a particular interface, then set the local address to the
 	/// appropriate IPv4 or IPv6 IP.
 	///

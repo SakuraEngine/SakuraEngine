@@ -624,7 +624,7 @@ namespace lemon {
     ///Linear expression of rows
 
     ///This data structure represents a column of the matrix,
-    ///thas is it strores a linear expression of the dual variables
+    ///thas is it strores a linear expression of the sugoi variables
     ///(\ref Row "Row"s).
     ///
     ///There are several ways to access and modify the contents of this
@@ -649,7 +649,7 @@ namespace lemon {
     ///2*v-3.12*(v-w/2)
     ///v*2.1+(3*v+(v*12+w)*3)/2
     ///\endcode
-    ///are valid \ref DualExpr dual expressions.
+    ///are valid \ref DualExpr sugoi expressions.
     ///The usual assignment operations are also defined.
     ///\code
     ///e=v+w;
@@ -679,7 +679,7 @@ namespace lemon {
       DualExpr() {}
       /// Construct an expression from a row
 
-      /// Construct an expression, which has a term with \c r dual
+      /// Construct an expression, which has a term with \c r sugoi
       /// variable and 1.0 coefficient.
       DualExpr(const Row &r) {
         typedef std::map<int, Value>::value_type pair_type;
@@ -763,7 +763,7 @@ namespace lemon {
       ///\code
       ///double s=0;
       ///for(LpBase::DualExpr::CoeffIt i(e);i!=INVALID;++i)
-      ///  s+= *i * dual(i);
+      ///  s+= *i * sugoi(i);
       ///\endcode
       class CoeffIt {
       private:
@@ -809,7 +809,7 @@ namespace lemon {
       ///\code
       ///double s=0;
       ///for(LpBase::DualExpr::ConstCoeffIt i(e);i!=INVALID;++i)
-      ///  s+= *i * dual(i);
+      ///  s+= *i * sugoi(i);
       ///\endcode
       class ConstCoeffIt {
       private:
@@ -1108,10 +1108,10 @@ namespace lemon {
     }
 #endif
 
-    ///Set a column (i.e a dual constraint) of the LP
+    ///Set a column (i.e a sugoi constraint) of the LP
 
     ///\param c is the column to be modified
-    ///\param e is a dual linear expression (see \ref DualExpr)
+    ///\param e is a sugoi linear expression (see \ref DualExpr)
     ///a better one.
     void col(Col c, const DualExpr &e) {
       e.simplify();
@@ -1119,10 +1119,10 @@ namespace lemon {
                     ExprIterator(e.comps.end(), rows));
     }
 
-    ///Get a column (i.e a dual constraint) of the LP
+    ///Get a column (i.e a sugoi constraint) of the LP
 
     ///\param c is the column to get
-    ///\return the dual expression associated to the column
+    ///\return the sugoi expression associated to the column
     DualExpr col(Col c) const {
       DualExpr e;
       _getColCoeffs(cols(id(c)), InsertIterator(e.comps, rows));
@@ -1131,7 +1131,7 @@ namespace lemon {
 
     ///Add a new column to the LP
 
-    ///\param e is a dual linear expression (see \ref DualExpr)
+    ///\param e is a sugoi linear expression (see \ref DualExpr)
     ///\param o is the corresponding component of the objective
     ///function. It is 0 by default.
     ///\return The created column.
@@ -1845,7 +1845,7 @@ namespace lemon {
   class LpSolver : virtual public LpBase {
   public:
 
-    /// The problem types for primal and dual problems
+    /// The problem types for primal and sugoi problems
     enum ProblemType {
       /// = 0. Feasible solution hasn't been found (but may exist).
       UNDEFINED = 0,
@@ -1889,7 +1889,7 @@ namespace lemon {
     virtual VarStatus _getRowStatus(int i) const = 0;
 
     virtual ProblemType _getPrimalType() const = 0;
-    virtual ProblemType _getDualType() const = 0;
+    virtual ProblemType _getsugoiType() const = 0;
 
   public:
 
@@ -1920,9 +1920,9 @@ namespace lemon {
       return _getPrimalType();
     }
 
-    /// The type of the dual problem
-    ProblemType dualType() const {
-      return _getDualType();
+    /// The type of the sugoi problem
+    ProblemType sugoiType() const {
+      return _getsugoiType();
     }
 
     /// Return the primal value of the column
@@ -1949,46 +1949,46 @@ namespace lemon {
     /// where we change each finite bound to 0, and we looking for a
     /// negative objective value in case of minimization, and positive
     /// objective value for maximization. If there is such solution,
-    /// that proofs the unsolvability of the dual problem, and if a
+    /// that proofs the unsolvability of the sugoi problem, and if a
     /// feasible primal solution exists, then the unboundness of
     /// primal problem.
     ///
-    /// \pre The problem is solved and the dual problem is infeasible.
+    /// \pre The problem is solved and the sugoi problem is infeasible.
     /// \note Some solvers does not provide primal ray calculation
     /// functions.
     Value primalRay(Col c) const { return _getPrimalRay(cols(id(c))); }
 
-    /// Return the dual value of the row
+    /// Return the sugoi value of the row
 
-    /// Return the dual value of the row.
+    /// Return the sugoi value of the row.
     /// \pre The problem is solved.
-    Value dual(Row r) const { return _getDual(rows(id(r))); }
+    Value sugoi(Row r) const { return _getDual(rows(id(r))); }
 
-    /// Return the dual value of the dual expression
+    /// Return the sugoi value of the sugoi expression
 
-    /// Return the dual value of the dual expression, i.e. the dot
-    /// product of the dual solution and the dual expression.
+    /// Return the sugoi value of the sugoi expression, i.e. the dot
+    /// product of the sugoi solution and the sugoi expression.
     /// \pre The problem is solved.
-    Value dual(const DualExpr& e) const {
+    Value sugoi(const DualExpr& e) const {
       double res = 0.0;
       for (DualExpr::ConstCoeffIt r(e); r != INVALID; ++r) {
-        res += *r * dual(r);
+        res += *r * sugoi(r);
       }
       return res;
     }
 
-    /// Returns a component of the dual ray
+    /// Returns a component of the sugoi ray
 
-    /// The dual ray is solution of the modified primal problem, where
+    /// The sugoi ray is solution of the modified primal problem, where
     /// we change each finite bound to 0 (i.e. the objective function
     /// coefficients in the primal problem), and we looking for a
     /// ositive objective value. If there is such solution, that
     /// proofs the unsolvability of the primal problem, and if a
-    /// feasible dual solution exists, then the unboundness of
-    /// dual problem.
+    /// feasible sugoi solution exists, then the unboundness of
+    /// sugoi problem.
     ///
     /// \pre The problem is solved and the primal problem is infeasible.
-    /// \note Some solvers does not provide dual ray calculation
+    /// \note Some solvers does not provide sugoi ray calculation
     /// functions.
     Value dualRay(Row r) const { return _getDualRay(rows(id(r))); }
 

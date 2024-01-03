@@ -27,7 +27,7 @@
 // TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Also dual-licensed under the Boost Software License (see LICENSE.md)
+// Also sugoi-licensed under the Boost Software License (see LICENSE.md)
 
 #pragma once
 

@@ -6206,7 +6206,7 @@ static const VpFeatureDesc featureDesc = {
                     s->features.depthBiasClamp = VK_TRUE;
                     s->features.depthClamp = VK_TRUE;
                     s->features.drawIndirectFirstInstance = VK_TRUE;
-                    s->features.dualSrcBlend = VK_TRUE;
+                    s->features.sugoiSrcBlend = VK_TRUE;
                     s->features.fillModeNonSolid = VK_TRUE;
                     s->features.fragmentStoresAndAtomics = VK_TRUE;
                     s->features.fullDrawIndexUint32 = VK_TRUE;
@@ -6317,7 +6317,7 @@ static const VpFeatureDesc featureDesc = {
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.depthBiasClamp == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.depthBiasClamp == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.depthBiasClamp == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.depthClamp == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.depthClamp == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.depthClamp == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.drawIndirectFirstInstance == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.drawIndirectFirstInstance == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.drawIndirectFirstInstance == VK_TRUE");
-                    ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.dualSrcBlend == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.dualSrcBlend == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.dualSrcBlend == VK_TRUE");
+                    ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.sugoiSrcBlend == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.sugoiSrcBlend == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.sugoiSrcBlend == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.fillModeNonSolid == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.fillModeNonSolid == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.fillModeNonSolid == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.fragmentStoresAndAtomics == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.fragmentStoresAndAtomics == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.fragmentStoresAndAtomics == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.fullDrawIndexUint32 == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.fullDrawIndexUint32 == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.fullDrawIndexUint32 == VK_TRUE");
@@ -9092,7 +9092,7 @@ static const VpFeatureDesc featureDesc = {
                     s->features.depthBiasClamp = VK_TRUE;
                     s->features.depthClamp = VK_TRUE;
                     s->features.drawIndirectFirstInstance = VK_TRUE;
-                    s->features.dualSrcBlend = VK_TRUE;
+                    s->features.sugoiSrcBlend = VK_TRUE;
                     s->features.fillModeNonSolid = VK_TRUE;
                     s->features.fragmentStoresAndAtomics = VK_TRUE;
                     s->features.fullDrawIndexUint32 = VK_TRUE;
@@ -9188,7 +9188,7 @@ static const VpFeatureDesc featureDesc = {
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.depthBiasClamp == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.depthBiasClamp == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.depthBiasClamp == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.depthClamp == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.depthClamp == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.depthClamp == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.drawIndirectFirstInstance == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.drawIndirectFirstInstance == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.drawIndirectFirstInstance == VK_TRUE");
-                    ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.dualSrcBlend == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.dualSrcBlend == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.dualSrcBlend == VK_TRUE");
+                    ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.sugoiSrcBlend == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.sugoiSrcBlend == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.sugoiSrcBlend == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.fillModeNonSolid == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.fillModeNonSolid == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.fillModeNonSolid == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.fragmentStoresAndAtomics == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.fragmentStoresAndAtomics == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.fragmentStoresAndAtomics == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.fullDrawIndexUint32 == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.fullDrawIndexUint32 == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.fullDrawIndexUint32 == VK_TRUE");
@@ -11926,7 +11926,7 @@ static const VpFeatureDesc featureDesc = {
                     s->features.depthBiasClamp = VK_TRUE;
                     s->features.depthClamp = VK_TRUE;
                     s->features.drawIndirectFirstInstance = VK_TRUE;
-                    s->features.dualSrcBlend = VK_TRUE;
+                    s->features.sugoiSrcBlend = VK_TRUE;
                     s->features.fillModeNonSolid = VK_TRUE;
                     s->features.fragmentStoresAndAtomics = VK_TRUE;
                     s->features.fullDrawIndexUint32 = VK_TRUE;
@@ -12048,7 +12048,7 @@ static const VpFeatureDesc featureDesc = {
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.depthBiasClamp == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.depthBiasClamp == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.depthBiasClamp == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.depthClamp == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.depthClamp == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.depthClamp == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.drawIndirectFirstInstance == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.drawIndirectFirstInstance == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.drawIndirectFirstInstance == VK_TRUE");
-                    ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.dualSrcBlend == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.dualSrcBlend == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.dualSrcBlend == VK_TRUE");
+                    ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.sugoiSrcBlend == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.sugoiSrcBlend == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.sugoiSrcBlend == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.fillModeNonSolid == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.fillModeNonSolid == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.fillModeNonSolid == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.fragmentStoresAndAtomics == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.fragmentStoresAndAtomics == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.fragmentStoresAndAtomics == VK_TRUE");
                     ret = ret && (prettify_VkPhysicalDeviceFeatures2KHR->features.fullDrawIndexUint32 == VK_TRUE); VP_DEBUG_COND_MSG(!(prettify_VkPhysicalDeviceFeatures2KHR->features.fullDrawIndexUint32 == VK_TRUE), "Unsupported feature condition: VkPhysicalDeviceFeatures2KHR::features.fullDrawIndexUint32 == VK_TRUE");

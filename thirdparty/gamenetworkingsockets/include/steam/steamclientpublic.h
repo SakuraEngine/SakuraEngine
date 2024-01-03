@@ -713,7 +713,7 @@ public:
 	//-----------------------------------------------------------------------------
 	// Purpose: Is this an individual user account id?
 	//-----------------------------------------------------------------------------
-	bool BIndividualAccount() const
+	bool BIndivisugoiAccount() const
 	{
 		return m_steamid.m_comp.m_EAccountType == k_EAccountTypeIndividual || m_steamid.m_comp.m_EAccountType == k_EAccountTypeConsoleUser;
 	}

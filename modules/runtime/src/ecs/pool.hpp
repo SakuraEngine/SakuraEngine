@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/containers/concurrent_queue.hpp"
 
-namespace dual
+namespace sugoi
 {
     
 struct ECSPoolConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
@@ -35,4 +35,4 @@ struct fixed_pool_t {
     void free(void* block);
     void reset();
 };
-} // namespace dual
+} // namespace sugoi

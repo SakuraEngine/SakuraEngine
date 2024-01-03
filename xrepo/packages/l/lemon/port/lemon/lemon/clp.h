@@ -64,7 +64,7 @@ namespace lemon {
   protected:
 
     mutable double* _primal_ray;
-    mutable double* _dual_ray;
+    mutable double* _sugoi_ray;
 
     void _init_temporals();
     void _clear_temporals();
@@ -133,7 +133,7 @@ namespace lemon {
     virtual VarStatus _getRowStatus(int i) const;
 
     virtual ProblemType _getPrimalType() const;
-    virtual ProblemType _getDualType() const;
+    virtual ProblemType _getsugoiType() const;
 
     virtual void _clear();
 
@@ -144,7 +144,7 @@ namespace lemon {
     ///Solves LP with primal simplex method.
     SolveExitStatus solvePrimal();
 
-    ///Solves LP with dual simplex method.
+    ///Solves LP with sugoi simplex method.
     SolveExitStatus solveDual();
 
     ///Solves LP with barrier method.

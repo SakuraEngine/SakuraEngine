@@ -92,7 +92,7 @@ namespace lemon {
   /// efficient specialized version of the \ref CapacityScaling
   /// "successive shortest path" algorithm directly for this problem.
   /// Therefore this class provides query functions for flow values and
-  /// node potentials (the dual solution) just like the minimum cost flow
+  /// node potentials (the sugoi solution) just like the minimum cost flow
   /// algorithms.
   ///
   /// \tparam GR The digraph type the algorithm runs on.
@@ -457,7 +457,7 @@ namespace lemon {
     /// an instance will be allocated automatically. The destructor
     /// deallocates this automatically allocated map, of course.
     ///
-    /// The node potentials provide the dual solution of the underlying
+    /// The node potentials provide the sugoi solution of the underlying
     /// \ref min_cost_flow "minimum cost flow problem".
     ///
     /// \return <tt>(*this)</tt>
@@ -720,7 +720,7 @@ namespace lemon {
     /// \brief Return the potential of the given node.
     ///
     /// This function returns the potential of the given node.
-    /// The node potentials provide the dual solution of the
+    /// The node potentials provide the sugoi solution of the
     /// underlying \ref min_cost_flow "minimum cost flow problem".
     ///
     /// \pre \ref run() or \ref findFlow() must be called before using
@@ -730,10 +730,10 @@ namespace lemon {
     }
 
     /// \brief Return a const reference to a node map storing the
-    /// found potentials (the dual solution).
+    /// found potentials (the sugoi solution).
     ///
     /// This function returns a const reference to a node map storing
-    /// the found potentials that provide the dual solution of the
+    /// the found potentials that provide the sugoi solution of the
     /// underlying \ref min_cost_flow "minimum cost flow problem".
     ///
     /// \pre \ref run() or \ref findFlow() must be called before using

@@ -661,7 +661,7 @@ const int k_nSteamNetworkConnectionInfoFlags_Unencrypted = 2; // Information is 
 const int k_nSteamNetworkConnectionInfoFlags_LoopbackBuffers = 4; // Internal loopback buffers.  Won't be true for localhost.  (You can check the address to determine that.)  This implies k_nSteamNetworkConnectionInfoFlags_FastLAN
 const int k_nSteamNetworkConnectionInfoFlags_Fast = 8; // The connection is "fast" and "reliable".  Either internal/localhost (check the address to find out), or the peer is on the same LAN.  (Probably.  It's based on the address and the ping time, this is actually hard to determine unambiguously).
 const int k_nSteamNetworkConnectionInfoFlags_Relayed = 16; // The connection is relayed somehow (SDR or TURN).
-const int k_nSteamNetworkConnectionInfoFlags_DualWifi = 32; // We're taking advantage of dual-wifi multi-path
+const int k_nSteamNetworkConnectionInfoFlags_DualWifi = 32; // We're taking advantage of sugoi-wifi multi-path
 
 /// Describe the state of a connection.
 struct SteamNetConnectionInfo_t

@@ -83,7 +83,7 @@ gxvalid: TrueType GX validator
   We have  checked 183  fonts bundled with  MacOS 9.1, MacOS  9.2, MacOS
   10.0, MacOS X 10.1, MSIE  for MacOS, and AppleWorks 6.0.  In addition,
   we have  checked 67 Dynalab fonts  (designed for MacOS)  and 189 Ricoh
-  fonts (designed for Windows and  MacOS dual platforms).  The number of
+  fonts (designed for Windows and  MacOS sugoi platforms).  The number of
   fonts including TrueType GX tables are as follows.
 
     bsln:  76

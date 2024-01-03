@@ -1,28 +1,28 @@
 #pragma once
-#include "SkrRT/ecs/dual_types.h" // IWYU pragma: keep
+#include "SkrRT/ecs/sugoi_types.h" // IWYU pragma: keep
 
-namespace dual
+namespace sugoi
 {
 struct archetype_t;
 }
-struct dual_group_t;
-struct dual_chunk_t {
-    dual_chunk_t(dual::pool_type_t pt)
+struct sugoi_group_t;
+struct sugoi_chunk_t {
+    sugoi_chunk_t(sugoi::pool_type_t pt)
         : pt(pt)
     {
     }
     uint32_t index;
-    dual::archetype_t* type = nullptr;
-    dual_group_t* group = nullptr;
+    sugoi::archetype_t* type = nullptr;
+    sugoi_group_t* group = nullptr;
     EIndex count = 0;
-    dual::pool_type_t pt;
+    sugoi::pool_type_t pt;
 
     char* data() { return (char*)(this + 1); }
     char* data() const { return (char*)(this + 1); }
     uint32_t* timestamps() noexcept;
-    const dual_entity_t* get_entities() const;
+    const sugoi_entity_t* get_entities() const;
     EIndex get_capacity();
 
-    static dual_chunk_t* create(dual::pool_type_t poolType);
-    static void destroy(dual_chunk_t* chunk);
+    static sugoi_chunk_t* create(sugoi::pool_type_t poolType);
+    static void destroy(sugoi_chunk_t* chunk);
 };

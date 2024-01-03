@@ -2065,7 +2065,7 @@ typedef enum UJoiningType {
 
     U_JT_NON_JOINING,       /*[U]*/
     U_JT_JOIN_CAUSING,      /*[C]*/
-    U_JT_DUAL_JOINING,      /*[D]*/
+    U_JT_SUGOI_JOINING,      /*[D]*/
     U_JT_LEFT_JOINING,      /*[L]*/
     U_JT_RIGHT_JOINING,     /*[R]*/
     U_JT_TRANSPARENT,       /*[T]*/

@@ -27,7 +27,7 @@ struct SKR_RENDERER_API SViewportManager {
     virtual void remove_viewport(const char8_t* viewport_name) SKR_NOEXCEPT = 0;
     virtual void remove_viewport(uint32_t idx) SKR_NOEXCEPT = 0;
 
-    static SViewportManager* Create(dual_storage_t* storage);
+    static SViewportManager* Create(sugoi_storage_t* storage);
     static void Free(SViewportManager* viewport_manager);
     virtual ~SViewportManager() SKR_NOEXCEPT;
 #endif
@@ -37,5 +37,5 @@ SKR_RENDERER_EXTERN_C SKR_RENDERER_API
 void skr_resolve_camera_to_viewport(const skr_camera_comp_t* camera, const skr_translation_comp_t* translation, skr_render_viewport_t* viewport);
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API
-void skr_resolve_cameras_to_viewport(struct SViewportManager* viewport_manager, dual_storage_t* storage);
+void skr_resolve_cameras_to_viewport(struct SViewportManager* viewport_manager, sugoi_storage_t* storage);
 

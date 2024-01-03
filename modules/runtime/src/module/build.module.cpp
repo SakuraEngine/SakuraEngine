@@ -2,7 +2,7 @@
 #include "SkrRT/config.h"
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/runtime_module.h"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 
 #include "SkrProfile/profile.h"
 
@@ -46,7 +46,7 @@ void SkrRuntimeModule::on_load(int argc, char8_t** argv)
 
 void SkrRuntimeModule::on_unload()
 {
-    dual_shutdown();
+    sugoi_shutdown();
 
     skr_runtime_free_dstorage_instance();
 

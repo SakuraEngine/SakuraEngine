@@ -1,6 +1,6 @@
 #include <string.h>
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "pool.hpp"
 #include "type.hpp"
 #include "type_registry.hpp"
@@ -14,12 +14,12 @@
 
 #if __SSE2__
     #include <emmintrin.h>
-    #define DUAL_MASK_ALIGN alignof(__m128i)
+    #define SUGOI_MASK_ALIGN alignof(__m128i)
 #else
-    #define DUAL_MASK_ALIGN alignof(uint32_t)
+    #define SUGOI_MASK_ALIGN alignof(uint32_t)
 #endif
 
-namespace dual
+namespace sugoi
 {
 type_registry_t::type_registry_t(pool_t& pool)
     : nameArena(pool)
@@ -56,10 +56,10 @@ type_registry_t::type_registry_t(pool_t& pool)
         SKR_ASSERT(descriptions.size() == kLinkComponent.index());
         auto desc = make_zeroed<type_description_t>();
         desc.guid = skr::guid::make_guid_unsafe(u8"{54BD68D5-FD66-4DBE-85CF-70F535C27389}");
-        desc.name = u8"dual::link_comp_t";
-        desc.size = sizeof(dual_entity_t) * kLinkComponentSize;
-        desc.elementSize = sizeof(dual_entity_t);
-        desc.alignment = alignof(dual_entity_t);
+        desc.name = u8"sugoi::link_comp_t";
+        desc.size = sizeof(sugoi_entity_t) * kLinkComponentSize;
+        desc.elementSize = sizeof(sugoi_entity_t);
+        desc.alignment = alignof(sugoi_entity_t);
         desc.entityFieldsCount = 1;
         entityFields.add(0);
         desc.entityFields = 0;
@@ -72,10 +72,10 @@ type_registry_t::type_registry_t(pool_t& pool)
         SKR_ASSERT(descriptions.size() == kMaskComponent.index());
         auto desc = make_zeroed<type_description_t>();
         desc.guid = skr::guid::make_guid_unsafe(u8"{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
-        desc.name = u8"dual::mask_comp_t";
-        desc.size = sizeof(dual_mask_comp_t);
+        desc.name = u8"sugoi::mask_comp_t";
+        desc.size = sizeof(sugoi_mask_comp_t);
         desc.elementSize = 0;
-        desc.alignment = DUAL_MASK_ALIGN;
+        desc.alignment = SUGOI_MASK_ALIGN;
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.add(desc);
@@ -86,10 +86,10 @@ type_registry_t::type_registry_t(pool_t& pool)
         SKR_ASSERT(descriptions.size() == kGuidComponent.index());
         auto desc = make_zeroed<type_description_t>();
         desc.guid = skr::guid::make_guid_unsafe(u8"{565FBE87-6309-4DF7-9B3F-C61B67B38BB3}");
-        desc.name = u8"dual::guid_comp_t";
-        desc.size = sizeof(dual_guid_t);
+        desc.name = u8"sugoi::guid_comp_t";
+        desc.size = sizeof(sugoi_guid_t);
         desc.elementSize = 0;
-        desc.alignment = alignof(dual_guid_t);
+        desc.alignment = alignof(sugoi_guid_t);
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.add(desc);
@@ -100,10 +100,10 @@ type_registry_t::type_registry_t(pool_t& pool)
         SKR_ASSERT(descriptions.size() == kDirtyComponent.index());
         auto desc = make_zeroed<type_description_t>();
         desc.guid = skr::guid::make_guid_unsafe(u8"{A55D73D3-D41C-4683-89E1-8B211C115303}");
-        desc.name = u8"dual::dirty_comp_t";
-        desc.size = sizeof(dual_dirty_comp_t);
+        desc.name = u8"sugoi::dirty_comp_t";
+        desc.size = sizeof(sugoi_dirty_comp_t);
         desc.elementSize = 0;
-        desc.alignment = DUAL_MASK_ALIGN;
+        desc.alignment = SUGOI_MASK_ALIGN;
         desc.entityFieldsCount = 0;
         desc.flags = 0;
         descriptions.add(desc);
@@ -202,7 +202,7 @@ guid_t type_registry_t::make_guid()
 {
     if (guid_func)
     {
-        dual_guid_t guid;
+        sugoi_guid_t guid;
         guid_func(&guid);
         return guid;
     }
@@ -213,43 +213,43 @@ guid_t type_registry_t::make_guid()
         return guid;
     }
 }
-} // namespace dual
+} // namespace sugoi
 
 extern "C" {
 
-void dual_make_guid(skr_guid_t* guid)
+void sugoi_make_guid(skr_guid_t* guid)
 {
-    *guid = dual::type_registry_t::get().make_guid();
+    *guid = sugoi::type_registry_t::get().make_guid();
 }
 
-dual_type_index_t dualT_register_type(dual_type_description_t* description)
+sugoi_type_index_t sugoiT_register_type(sugoi_type_description_t* description)
 {
-    return dual::type_registry_t::get().register_type(*description);
+    return sugoi::type_registry_t::get().register_type(*description);
 }
 
-dual_type_index_t dualT_get_type(const dual_guid_t* guid)
+sugoi_type_index_t sugoiT_get_type(const sugoi_guid_t* guid)
 {
-    return dual::type_registry_t::get().get_type(*guid);
+    return sugoi::type_registry_t::get().get_type(*guid);
 }
 
-dual_type_index_t dualT_get_type_by_name(const char8_t* name)
+sugoi_type_index_t sugoiT_get_type_by_name(const char8_t* name)
 {
-    return dual::type_registry_t::get().get_type(name);
+    return sugoi::type_registry_t::get().get_type(name);
 }
 
-const dual_type_description_t* dualT_get_desc(dual_type_index_t idx)
+const sugoi_type_description_t* sugoiT_get_desc(sugoi_type_index_t idx)
 {
-    return &dual::type_registry_t::get().descriptions[dual::type_index_t(idx).index()];
+    return &sugoi::type_registry_t::get().descriptions[sugoi::type_index_t(idx).index()];
 }
 
-void dualT_set_guid_func(guid_func_t func)
+void sugoiT_set_guid_func(guid_func_t func)
 {
-    dual::type_registry_t::get().guid_func = func;
+    sugoi::type_registry_t::get().guid_func = func;
 }
 
-void dualT_get_types(dual_type_callback_t callback, void* u)
+void sugoiT_get_types(sugoi_type_callback_t callback, void* u)
 {
-    for(auto& pair : dual::type_registry_t::get().name2type)
+    for(auto& pair : sugoi::type_registry_t::get().name2type)
         callback(u, pair.second);
 }
 }

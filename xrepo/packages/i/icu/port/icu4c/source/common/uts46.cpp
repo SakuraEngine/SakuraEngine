@@ -1174,7 +1174,7 @@ UTS46::isLabelOkContextJ(const UChar *label, int32_t labelLength) const {
                         return false;
                     }
                     U16_PREV_UNSAFE(label, j, c);
-                } else if(type==U_JT_LEFT_JOINING || type==U_JT_DUAL_JOINING) {
+                } else if(type==U_JT_LEFT_JOINING || type==U_JT_SUGOI_JOINING) {
                     break;  // precontext fulfilled
                 } else {
                     return false;
@@ -1189,7 +1189,7 @@ UTS46::isLabelOkContextJ(const UChar *label, int32_t labelLength) const {
                 UJoiningType type=ubidi_getJoiningType(c);
                 if(type==U_JT_TRANSPARENT) {
                     // just skip this character
-                } else if(type==U_JT_RIGHT_JOINING || type==U_JT_DUAL_JOINING) {
+                } else if(type==U_JT_RIGHT_JOINING || type==U_JT_SUGOI_JOINING) {
                     break;  // postcontext fulfilled
                 } else {
                     return false;

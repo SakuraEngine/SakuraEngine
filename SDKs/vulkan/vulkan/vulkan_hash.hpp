@@ -3206,7 +3206,7 @@ namespace std
       VULKAN_HPP_HASH_COMBINE( seed, physicalDeviceFeatures.geometryShader );
       VULKAN_HPP_HASH_COMBINE( seed, physicalDeviceFeatures.tessellationShader );
       VULKAN_HPP_HASH_COMBINE( seed, physicalDeviceFeatures.sampleRateShading );
-      VULKAN_HPP_HASH_COMBINE( seed, physicalDeviceFeatures.dualSrcBlend );
+      VULKAN_HPP_HASH_COMBINE( seed, physicalDeviceFeatures.sugoiSrcBlend );
       VULKAN_HPP_HASH_COMBINE( seed, physicalDeviceFeatures.logicOp );
       VULKAN_HPP_HASH_COMBINE( seed, physicalDeviceFeatures.multiDrawIndirect );
       VULKAN_HPP_HASH_COMBINE( seed, physicalDeviceFeatures.drawIndirectFirstInstance );

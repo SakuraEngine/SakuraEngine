@@ -37,8 +37,8 @@ struct index_map_subset_plan_t
 {
   enum index_map_index_t {
     ADV_INDEX,
-    LSB_INDEX,	/* dual as TSB */
-    RSB_INDEX,	/* dual as BSB */
+    LSB_INDEX,	/* sugoi as TSB */
+    RSB_INDEX,	/* sugoi as BSB */
     VORG_INDEX
   };
 

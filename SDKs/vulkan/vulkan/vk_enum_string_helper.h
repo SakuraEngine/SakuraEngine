@@ -10661,7 +10661,7 @@ static inline const char * GetPhysDevFeatureString(uint32_t index) {
         "geometryShader",
         "tessellationShader",
         "sampleRateShading",
-        "dualSrcBlend",
+        "sugoiSrcBlend",
         "logicOp",
         "multiDrawIndirect",
         "drawIndirectFirstInstance",

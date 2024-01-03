@@ -334,7 +334,7 @@ data_create_indic (const hb_ot_shape_plan_t *plan)
 
   /* Use zero-context would_substitute() matching for new-spec of the main
    * Indic scripts, and scripts with one spec only, but not for old-specs.
-   * The new-spec for all dual-spec scripts says zero-context matching happens.
+   * The new-spec for all sugoi-spec scripts says zero-context matching happens.
    *
    * However, testing with Malayalam shows that old and new spec both allow
    * context.  Testing with Bengali new-spec however shows that it doesn't.

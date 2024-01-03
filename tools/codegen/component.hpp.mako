@@ -1,15 +1,15 @@
 // BEGIN DUAL GENERATED
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 
 #ifdef __cplusplus
 %for type in generator.filter_records(db.records):
 template<>
-struct dual_id_of<::${type.name}>
+struct sugoi_id_of<::${type.name}>
 {
-    ${api} static dual_type_index_t get();
+    ${api} static sugoi_type_index_t get();
 };
 %endfor
-//${api} skr::span<dual_type_index_t> dual_get_all_component_types_${module}();
+//${api} skr::span<sugoi_type_index_t> sugoi_get_all_component_types_${module}();
 #endif
 
 //END DUAL GENERATED
