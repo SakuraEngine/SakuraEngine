@@ -7,25 +7,25 @@
 #include "SkrProfile/profile.h"
 
 template<class T, auto F, class H = void, bool bitpacking = false>
-skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWorldDeltaBuildContext ctx, MPWorldDeltaViewBuilder& builder)
+skr::task::event_t BuildDelta(sugoi_type_index_t type, sugoi_query_t* query, MPWorldDeltaBuildContext ctx, MPWorldDeltaViewBuilder& builder)
 {
     static constexpr bool withHistory = !std::is_same_v<H, void>;
-    using history_t = std::conditional_t<withHistory, dual::array_comp_T<H, 4>, void>;
+    using history_t = std::conditional_t<withHistory, sugoi::array_comp_T<H, 4>, void>;
     using writer_t = std::conditional_t<bitpacking, skr::binary::VectorWriterBitpacked, skr::binary::VectorWriter>;
     MPComponentDeltaViewBuilder& comps = *std::find_if(builder.components.begin(),builder.components.end(), [&](const MPComponentDeltaViewBuilder& comp)
     {
         return GetNetworkComponent(comp.type) == type;
     });
     skr::task::event_t counter;
-    static dual_type_index_t historyComponent = ctx.historyComponent;
-    static uint32_t historyComponentSize = withHistory ? dualT_get_desc(historyComponent)->size : 0;skr::task::event_t result{nullptr};
-    dual::schedual_custom(query, [=, &comps, &builder](dual::task_context_t tctx)
+    static sugoi_type_index_t historyComponent = ctx.historyComponent;
+    static uint32_t historyComponentSize = withHistory ? sugoiT_get_desc(historyComponent)->size : 0;skr::task::event_t result{nullptr};
+    sugoi::schesugoi_custom(query, [=, &comps, &builder](sugoi::task_context_t tctx)
     {
         SkrZoneScopedN("BuildDelta");
         if(comps.entities.empty())
             return;
         
-        dual_chunk_view_t lastView {nullptr, 0, 0};
+        sugoi_chunk_view_t lastView {nullptr, 0, 0};
         const T* lastComp = nullptr;
         history_t* lastHistory = nullptr;
         const CAuth* lastAuth = nullptr;
@@ -34,8 +34,8 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
 
         auto serde = [&](NetEntityId ent) -> bool
         {
-            dual_chunk_view_t view = {nullptr, 0, 0};
-            dualS_access(tctx.storage, builder.entities[ent], &view);
+            sugoi_chunk_view_t view = {nullptr, 0, 0};
+            sugoiS_access(tctx.storage, builder.entities[ent], &view);
             const T* comp = nullptr;
             history_t* history = nullptr;
             const CAuth* auth = nullptr;
@@ -83,7 +83,7 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
 }
 
 template<class T, auto F, bool bitpacking = false>
-skr::task::event_t ApplyDelta(dual_type_index_t type, dual_query_t* query, const MPWorldDeltaView& delta, const entity_map_t& map)
+skr::task::event_t ApplyDelta(sugoi_type_index_t type, sugoi_query_t* query, const MPWorldDeltaView& delta, const entity_map_t& map)
 {
     auto iter = std::find_if(delta.components.begin(), delta.components.end(), [&](const MPComponentDeltaView & comp) {
             return GetNetworkComponent(comp.type) == type;
@@ -92,20 +92,20 @@ skr::task::event_t ApplyDelta(dual_type_index_t type, dual_query_t* query, const
         return skr::task::event_t(nullptr);
     auto& comps = *iter;
     skr::task::event_t result{nullptr};
-    dual::schedual_custom(query, [/*type, */&delta, &map, &comps](dual::task_context_t ctx)
+    sugoi::schesugoi_custom(query, [/*type, */&delta, &map, &comps](sugoi::task_context_t ctx)
     {
-        dual_chunk_view_t lastView {nullptr, 0, 0};
+        sugoi_chunk_view_t lastView {nullptr, 0, 0};
         const T* lastComp = nullptr;
         using reader_t = std::conditional_t<bitpacking, skr::binary::SpanReaderBitpacked, skr::binary::SpanReader>;
         reader_t reader{comps.data};
         skr_binary_reader_t archive(reader);
         for(int i = 0; i < comps.entities.size(); ++i)
         {
-            dual_chunk_view_t view;
+            sugoi_chunk_view_t view;
             auto ei = map.find(delta.entities[comps.entities[i]]);
             SKR_ASSERT(ei != map.end());
-            dual_entity_t ent = ei->second;
-            dualS_access(ctx.storage, ent, &view);
+            sugoi_entity_t ent = ei->second;
+            sugoiS_access(ctx.storage, ent, &view);
             T* comp = nullptr;
             if(view.chunk != lastView.chunk)
             {
@@ -124,26 +124,26 @@ skr::task::event_t ApplyDelta(dual_type_index_t type, dual_query_t* query, const
 }
 
 template<class T>
-dual_type_index_t RegisterHistoryComponent()
+sugoi_type_index_t RegisterHistoryComponent()
 {
-    dual_type_description_t desc;
-    auto originDesc = dualT_get_desc(dual_id_of<T>::get());
+    sugoi_type_description_t desc;
+    auto originDesc = sugoiT_get_desc(sugoi_id_of<T>::get());
     skr::String name = skr::format(u8"{}_History", originDesc->name);
     skr::String* persistentName = new skr::String(name);
     desc.name = persistentName->u8_str();
-    using array_t = dual::array_comp_T<T, 4>;
+    using array_t = sugoi::array_comp_T<T, 4>;
     desc.size = sizeof(array_t);
     desc.entityFieldsCount = originDesc->entityFieldsCount;
     desc.entityFields = originDesc->entityFields;
     desc.resourceFieldsCount = originDesc->resourceFieldsCount;
     desc.resourceFields = originDesc->resourceFields;
     skr_guid_t guid;
-    dual_make_guid(&guid);
+    sugoi_make_guid(&guid);
     desc.guid = guid;
     desc.flags = 0;
     desc.elementSize = sizeof(T);
     desc.alignment = alignof(array_t);
     desc.callback = originDesc->callback;
 
-    return dualT_register_type(&desc);
+    return sugoiT_register_type(&desc);
 }

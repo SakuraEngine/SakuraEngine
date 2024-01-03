@@ -4,7 +4,7 @@
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrMemory/memory.h"
 #include "SkrRT/resource/resource_system.h"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/runtime_module.h"
 #include "SkrRT/platform/guid.hpp"
 

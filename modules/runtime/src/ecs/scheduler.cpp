@@ -1,6 +1,6 @@
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/ecs/SmallVector.h"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/entity.hpp"
 #include "type.hpp"
 #include "query.hpp"
@@ -10,49 +10,49 @@
 
 #include "SkrProfile/profile.h"
 
-dual::scheduler_t::scheduler_t()
+sugoi::scheduler_t::scheduler_t()
 {
 
 }
 
-dual::scheduler_t::~scheduler_t()
+sugoi::scheduler_t::~scheduler_t()
 {
 
 }
 
-dual_entity_t dual::scheduler_t::add_resource()
+sugoi_entity_t sugoi::scheduler_t::add_resource()
 {
-    dual_entity_t result;
+    sugoi_entity_t result;
     registry.new_entities(&result, 1);
     return result;
 }
 
-void dual::scheduler_t::remove_resource(dual_entity_t id)
+void sugoi::scheduler_t::remove_resource(sugoi_entity_t id)
 {
     registry.free_entities(&id, 1);
 }
 
-bool dual::scheduler_t::is_main_thread(const dual_storage_t* storage)
+bool sugoi::scheduler_t::is_main_thread(const sugoi_storage_t* storage)
 {
     SKR_ASSERT(storage->scheduler == this);
     return storage->currentFiber == skr::task::current_fiber();
 }
 
-void dual::scheduler_t::set_main_thread(const dual_storage_t* storage)
+void sugoi::scheduler_t::set_main_thread(const sugoi_storage_t* storage)
 {
     SKR_ASSERT(storage->scheduler == this);
     storage->counter.wait(true);
     storage->currentFiber = skr::task::current_fiber();
 }
 
-void dual::scheduler_t::add_storage(dual_storage_t* storage)
+void sugoi::scheduler_t::add_storage(sugoi_storage_t* storage)
 {
     SMutexLock lock(storageMutex.mMutex);
     storage->scheduler = this;
     storage->currentFiber = skr::task::current_fiber();
     storages.push_back(storage);
 }
-void dual::scheduler_t::remove_storage(const dual_storage_t* storage)
+void sugoi::scheduler_t::remove_storage(const sugoi_storage_t* storage)
 {
     sync_storage(storage);
     SMutexLock lock(storageMutex.mMutex);
@@ -61,7 +61,7 @@ void dual::scheduler_t::remove_storage(const dual_storage_t* storage)
     storages.erase(std::remove(storages.begin(), storages.end(), storage), storages.end());
 }
 
-bool dual::scheduler_t::sync_archetype(dual::archetype_t* type)
+bool sugoi::scheduler_t::sync_archetype(sugoi::archetype_t* type)
 {
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
@@ -95,7 +95,7 @@ bool dual::scheduler_t::sync_archetype(dual::archetype_t* type)
     return !deps.empty();
 }
 
-bool dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i, bool readonly)
+bool sugoi::scheduler_t::sync_entry(sugoi::archetype_t* type, sugoi_type_index_t i, bool readonly)
 {
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
@@ -125,20 +125,20 @@ bool dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i,
     return !deps.empty();
 }
 
-bool dual::scheduler_t::sync_query(dual_query_t* query)
+bool sugoi::scheduler_t::sync_query(sugoi_query_t* query)
 {
     SKR_ASSERT(is_main_thread(query->storage));
     
     SkrZoneScopedN("SyncQuery");
     
-    llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
-    auto add_group = [&](dual_group_t* group) {
+    llvm_vecsmall::SmallVector<sugoi_group_t*, 64> groups;
+    auto add_group = [&](sugoi_group_t* group) {
         groups.push_back(group);
     };
-    query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
-    skr::FlatHashSet<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
+    query->storage->query_groups(query->filter, query->meta, SUGOI_LAMBDA(add_group));
+    skr::FlatHashSet<std::pair<sugoi::archetype_t*, sugoi_type_index_t>> syncedEntry;
 
-    auto sync_entry_once = [&](dual::archetype_t* type, dual_type_index_t i, bool readonly, bool atomic) -> bool
+    auto sync_entry_once = [&](sugoi::archetype_t* type, sugoi_type_index_t i, bool readonly, bool atomic) -> bool
     {
         if(i == kInvalidTypeIndex)
             return false;
@@ -150,7 +150,7 @@ bool dual::scheduler_t::sync_query(dual_query_t* query)
         return result;
     };
 
-    auto sync_type = [&](dual_type_index_t type, bool readonly, bool atomic) {
+    auto sync_type = [&](sugoi_type_index_t type, bool readonly, bool atomic) {
         bool result = false;
         for (auto& pair : query->storage->groups)
         {
@@ -203,7 +203,7 @@ bool dual::scheduler_t::sync_query(dual_query_t* query)
     return result;
 }
 
-void dual::scheduler_t::sync_all()
+void sugoi::scheduler_t::sync_all()
 {
     allCounter.wait(true);
     for(auto& pair : dependencyEntries)
@@ -216,7 +216,7 @@ void dual::scheduler_t::sync_all()
     }
 }
 
-void dual::scheduler_t::gc_entries()
+void sugoi::scheduler_t::gc_entries()
 {
     for(auto& pair : dependencyEntries)
     {
@@ -228,7 +228,7 @@ void dual::scheduler_t::gc_entries()
     }
 }
 
-void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
+void sugoi::scheduler_t::sync_storage(const sugoi_storage_t* storage)
 {
     if (!storage->scheduler)
         return;
@@ -246,7 +246,7 @@ void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
     }
 }
 
-namespace dual
+namespace sugoi
 {
 struct hash_shared_ptr {
     size_t operator()(const skr::task::event_t& value) const
@@ -285,10 +285,10 @@ void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool re
         }
     }
 }
-} // namespace dual
+} // namespace sugoi
 
-skr::task::event_t dual::scheduler_t::schedule_ecs_job(dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
-dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources)
+skr::task::event_t sugoi::scheduler_t::schedule_ecs_job(sugoi_query_t* query, EIndex batchSize, sugoi_system_callback_t callback, void* u,
+sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources)
 {
     query->storage->build_queries();
     skr::task::event_t result;
@@ -296,30 +296,30 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
 
     SKR_ASSERT(is_main_thread(query->storage));
     SKR_ASSERT(query->parameters.length < 32);
-    llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
-    auto add_group = [&](dual_group_t* group) {
+    llvm_vecsmall::SmallVector<sugoi_group_t*, 64> groups;
+    auto add_group = [&](sugoi_group_t* group) {
         groups.push_back(group);
     };
     auto& params = query->parameters;
-    query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
+    query->storage->query_groups(query->filter, query->meta, SUGOI_LAMBDA(add_group));
     struct task_t {
         uint32_t groupIndex;
         uint32_t startIndex;
-        dual_chunk_view_t view;
+        sugoi_chunk_view_t view;
     };
     struct SharedData
     {
-        dual_query_t* query;
-        dual_group_t** groups;
+        sugoi_query_t* query;
+        sugoi_group_t** groups;
         uint32_t groupCount;
         std::bitset<32>* readonly;
-        dual_type_index_t* localTypes;
+        sugoi_type_index_t* localTypes;
         std::bitset<32>* atomic;
         std::bitset<32>* randomAccess;
         bool hasRandomWrite;
         bool hasWriteChunkComponent;
         EIndex entityCount;
-        dual_system_callback_t callback;
+        sugoi_system_callback_t callback;
         void* userdata;
         skr::stl_vector<task_t> tasks;
     };
@@ -353,7 +353,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     {
         SkrDelete(p);
     });
-    std::memcpy(job->groups, groups.data(), groupCount * sizeof(dual_group_t*));
+    std::memcpy(job->groups, groups.data(), groupCount * sizeof(sugoi_group_t*));
     int groupIndex = 0;
     for (auto group : groups)
     {
@@ -403,7 +403,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             query->storage->counter.decrement();
         });
         fixed_stack_scope_t _(localStack);
-        dual_meta_filter_t validatedMeta;
+        sugoi_meta_filter_t validatedMeta;
         {
             SkrZoneScopedN("JobValidateMeta");
 
@@ -422,12 +422,12 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             uint32_t startIndex = 0;
             forloop (i, 0, sharedData->groupCount)
             {
-                auto processView = [&](dual_chunk_view_t* view) {
+                auto processView = [&](sugoi_chunk_view_t* view) {
                     sharedData->callback(sharedData->userdata, query, view, sharedData->localTypes + i * query->parameters.length, startIndex);
                     startIndex += view->count;
                 };
                 auto group = sharedData->groups[i];
-                query->storage->query(group, query->filter, validatedMeta, DUAL_LAMBDA(processView));
+                query->storage->query(group, query->filter, validatedMeta, SUGOI_LAMBDA(processView));
             }
         }
         else
@@ -446,10 +446,10 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                 batch_t currBatch;
                 currBatch.startTask = currBatch.endTask = 0;
                 EIndex startIndex = 0;
-                dual_chunk_t* currentChunk = nullptr;
+                sugoi_chunk_t* currentChunk = nullptr;
                 forloop (i, 0, sharedData->groupCount)
                 {
-                    auto scheduleView = [&](dual_chunk_view_t* view) {
+                    auto scheduleView = [&](sugoi_chunk_view_t* view) {
                         if(!scheduleSubchunkJobs || sharedData->hasWriteChunkComponent)
                         {
                             if (batchRemain == 0 && currentChunk != view->chunk) // batch filled
@@ -477,7 +477,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                                 task_t newTask;
                                 newTask.groupIndex = i;
                                 newTask.startIndex = startIndex;
-                                newTask.view = dual_chunk_view_t{ view->chunk, view->start + allocated, subViewCount };
+                                newTask.view = sugoi_chunk_view_t{ view->chunk, view->start + allocated, subViewCount };
                                 allocated += subViewCount;
                                 startIndex += subViewCount;
                                 batchRemain -= subViewCount;
@@ -493,7 +493,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                         }
                     };
                     auto group = sharedData->groups[i];
-                    query->storage->query(group, query->filter, validatedMeta, DUAL_LAMBDA(scheduleView));
+                    query->storage->query(group, query->filter, validatedMeta, SUGOI_LAMBDA(scheduleView));
                 };
                 if (currBatch.endTask != tasks.size())
                 {
@@ -531,7 +531,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     return result;
 }
 
-skr::task::event_t dual::scheduler_t::schedule_job(dual_query_t* query, dual_schedule_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources)
+skr::task::event_t sugoi::scheduler_t::schedule_job(sugoi_query_t* query, sugoi_schedule_callback_t callback, void* u, sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources)
 {
     skr::task::event_t result;
     auto deps = update_dependencies(query, result, resources);
@@ -558,15 +558,15 @@ skr::task::event_t dual::scheduler_t::schedule_job(dual_query_t* query, dual_sch
     return result;
 }
 
-skr::stl_vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources)
+skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies(sugoi_query_t* query, const skr::task::event_t& counter, sugoi_resource_operation_t* resources)
 {
-    SkrZoneScopedN("SchedualCustomJob");
+    SkrZoneScopedN("SchesugoiCustomJob");
 
-    llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
-    auto add_group = [&](dual_group_t* group) {
+    llvm_vecsmall::SmallVector<sugoi_group_t*, 64> groups;
+    auto add_group = [&](sugoi_group_t* group) {
         groups.push_back(group);
     };
-    query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
+    query->storage->query_groups(query->filter, query->meta, SUGOI_LAMBDA(add_group));
     auto& params = query->parameters;
     DependencySet dependencies;
 
@@ -583,8 +583,8 @@ skr::stl_vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(
         }
     }
 
-    skr::FlatHashSet<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
-    auto sync_entry = [&](const dual_group_t* group, dual_type_index_t localType, bool readonly, bool atomic) {
+    skr::FlatHashSet<std::pair<sugoi::archetype_t*, sugoi_type_index_t>> syncedEntry;
+    auto sync_entry = [&](const sugoi_group_t* group, sugoi_type_index_t localType, bool readonly, bool atomic) {
         if (localType == kInvalidTypeIndex)
             return;
         auto at = group->archetype;
@@ -607,7 +607,7 @@ skr::stl_vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(
         }
     };
 
-    auto sync_type = [&](dual_type_index_t type, bool readonly, bool atomic) {
+    auto sync_type = [&](sugoi_type_index_t type, bool readonly, bool atomic) {
         for (auto& pair : query->storage->groups)
         {
             auto group = pair.second;
@@ -650,11 +650,11 @@ skr::stl_vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(
         }
         for(auto subquery : query->subqueries)
         {
-            llvm_vecsmall::SmallVector<dual_group_t*, 64> subgroups;
-            auto add_subgroup = [&](dual_group_t* group) {
+            llvm_vecsmall::SmallVector<sugoi_group_t*, 64> subgroups;
+            auto add_subgroup = [&](sugoi_group_t* group) {
                 subgroups.push_back(group);
             };
-            query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_subgroup));
+            query->storage->query_groups(query->filter, query->meta, SUGOI_LAMBDA(add_subgroup));
             forloop (i, 0, subquery->parameters.length)
             {
                 if (type_index_t(subquery->parameters.types[i]).is_tag())
@@ -694,7 +694,7 @@ skr::stl_vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(
     return result;
 }
 
-skr::stl_vector<skr::task::event_t> dual::scheduler_t::sync_resources(const skr::task::event_t& counter, dual_resource_operation_t* resources)
+skr::stl_vector<skr::task::event_t> sugoi::scheduler_t::sync_resources(const skr::task::event_t& counter, sugoi_resource_operation_t* resources)
 {
     DependencySet dependencies;
     {
@@ -718,22 +718,22 @@ skr::stl_vector<skr::task::event_t> dual::scheduler_t::sync_resources(const skr:
     return result;
 }
 
-dual_entity_t dualJ_add_resource()
+sugoi_entity_t sugoiJ_add_resource()
 {
-    return dual::scheduler_t::get().add_resource();
+    return sugoi::scheduler_t::get().add_resource();
 }
 
-void dualJ_remove_resource(dual_entity_t id)
+void sugoiJ_remove_resource(sugoi_entity_t id)
 {
-    dual::scheduler_t::get().remove_resource(id);
+    sugoi::scheduler_t::get().remove_resource(id);
 }
 
-bool dualJ_schedule_ecs(dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
-dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, skr::task::event_t* counter)
+bool sugoiJ_schedule_ecs(sugoi_query_t* query, EIndex batchSize, sugoi_system_callback_t callback, void* u,
+sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources, skr::task::event_t* counter)
 {
-    SkrZoneScopedN("dualJ::schedule_ecs");
+    SkrZoneScopedN("sugoiJ::schedule_ecs");
     
-    auto c = dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources);
+    auto c = sugoi::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources);
     if (counter)
     {
         *counter = c;
@@ -741,38 +741,38 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     return !!c;
 }
 
-void dualJ_schedule_custom(dual_query_t* query, dual_schedule_callback_t callback, void* u,
-dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, skr::task::event_t* counter)
+void sugoiJ_schedule_custom(sugoi_query_t* query, sugoi_schedule_callback_t callback, void* u,
+sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources, skr::task::event_t* counter)
 {
-    SkrZoneScopedN("dualJ::schedule_custom");
-    auto c = dual::scheduler_t::get().schedule_job(query, callback, u, init, teardown, resources);
+    SkrZoneScopedN("sugoiJ::schedule_custom");
+    auto c = sugoi::scheduler_t::get().schedule_job(query, callback, u, init, teardown, resources);
     if (counter)
     {
         *counter = c;
     }
 }
 
-void dualJ_wait_all()
+void sugoiJ_wait_all()
 {
-    dual::scheduler_t::get().sync_all();
+    sugoi::scheduler_t::get().sync_all();
 }
 
-void dualJ_gc()
+void sugoiJ_gc()
 {
-    dual::scheduler_t::get().gc_entries();
+    sugoi::scheduler_t::get().gc_entries();
 }
 
-void dualJ_wait_storage(dual_storage_t* storage)
+void sugoiJ_wait_storage(sugoi_storage_t* storage)
 {
-    dual::scheduler_t::get().sync_storage(storage);
+    sugoi::scheduler_t::get().sync_storage(storage);
 }
 
-void dualJ_bind_storage(dual_storage_t* storage)
+void sugoiJ_bind_storage(sugoi_storage_t* storage)
 {
-    dual::scheduler_t::get().add_storage(storage);
+    sugoi::scheduler_t::get().add_storage(storage);
 }
 
-void dualJ_unbind_storage(dual_storage_t* storage)
+void sugoiJ_unbind_storage(sugoi_storage_t* storage)
 {
-    dual::scheduler_t::get().remove_storage(storage);
+    sugoi::scheduler_t::get().remove_storage(storage);
 }

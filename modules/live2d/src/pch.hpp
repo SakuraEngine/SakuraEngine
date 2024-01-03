@@ -17,7 +17,7 @@
 #include "SkrRT/misc/make_zeroed.hpp" // IWYU pragma: export
 
 #include "SkrRT/ecs/entity.hpp" // IWYU pragma: export
-#include "SkrRT/ecs/dual.h" // IWYU pragma: export
+#include "SkrRT/ecs/sugoi.h" // IWYU pragma: export
 #include "SkrRT/ecs/type_builder.hpp" // IWYU pragma: export
 
 #include "SkrRT/misc/log.h" // IWYU pragma: export

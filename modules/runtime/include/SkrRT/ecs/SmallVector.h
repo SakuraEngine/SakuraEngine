@@ -22,7 +22,7 @@
 #include <cstring>
 #include <initializer_list>
 #include <iterator>
-#include "SkrRT/ecs/dual_config.h"
+#include "SkrRT/ecs/sugoi_config.h"
 
 // LLVM Macros
 #define LLVM_VECSMALL_NODISCARD
@@ -89,8 +89,8 @@ public:
     }
 
     // todo: inline short arrays, pool normal arrays, heap huge arrays
-    static void* allocate(size_t size) { return dual_malloc(size); }
-    static void free(void* ptr) { return dual_free(ptr); }
+    static void* allocate(size_t size) { return sugoi_malloc(size); }
+    static void free(void* ptr) { return sugoi_free(ptr); }
 
     LLVM_VECSMALL_NODISCARD bool empty() const { return BeginX == EndX; }
 };
@@ -1108,7 +1108,7 @@ size_t TSize)
     else
     {
         // If this wasn't grown from the inline copy, grow the allocated space.
-        NewElts = dual_realloc(this->BeginX, NewCapacityInBytes);
+        NewElts = sugoi_realloc(this->BeginX, NewCapacityInBytes);
     }
     SKR_ASSERT(NewElts && "Out of memory");
 
