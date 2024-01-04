@@ -4,12 +4,12 @@
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map_def.hpp"
 
-// SparseHashMap def
+// SparseHashMapOld def
 namespace skr::container
 {
 template <typename Memory>
-struct SparseHashMap : protected SparseHashSet<Memory> {
-    using Super = SparseHashSet<Memory>;
+struct SparseHashMapOld : protected SparseHashSetOld<Memory> {
+    using Super = SparseHashSetOld<Memory>;
 
     // sparse array configure
     using typename Memory::SizeType;
@@ -42,19 +42,19 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
     using CIt      = typename Super::CIt;
 
     // ctor & dtor
-    SparseHashMap(AllocatorCtorParam param = {});
-    SparseHashMap(SizeType reserve_size, AllocatorCtorParam param = {});
-    SparseHashMap(const MapDataType* p, SizeType n, AllocatorCtorParam param = {});
-    SparseHashMap(std::initializer_list<MapDataType> init_list, AllocatorCtorParam param = {});
-    ~SparseHashMap();
+    SparseHashMapOld(AllocatorCtorParam param = {});
+    SparseHashMapOld(SizeType reserve_size, AllocatorCtorParam param = {});
+    SparseHashMapOld(const MapDataType* p, SizeType n, AllocatorCtorParam param = {});
+    SparseHashMapOld(std::initializer_list<MapDataType> init_list, AllocatorCtorParam param = {});
+    ~SparseHashMapOld();
 
     // copy & move
-    SparseHashMap(const SparseHashMap& other);
-    SparseHashMap(SparseHashMap&& other);
+    SparseHashMapOld(const SparseHashMapOld& other);
+    SparseHashMapOld(SparseHashMapOld&& other);
 
     // assign & move assign
-    SparseHashMap& operator=(const SparseHashMap& rhs);
-    SparseHashMap& operator=(SparseHashMap&& rhs);
+    SparseHashMapOld& operator=(const SparseHashMapOld& rhs);
+    SparseHashMapOld& operator=(SparseHashMapOld&& rhs);
 
     // getter
     SizeType       size() const;
@@ -128,7 +128,7 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
     DataRef emplace(MapKeyType&& key, Args&&... args);
 
     // append
-    void append(const SparseHashMap& set);
+    void append(const SparseHashMapOld& set);
     void append(std::initializer_list<MapDataType> init_list);
     void append(const MapDataType* p, SizeType n);
 
@@ -167,11 +167,11 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
     void sort_stable(TP&& p = {});
 
     // set ops
-    SparseHashMap operator&(const SparseHashMap& rhs) const;     // intersect
-    SparseHashMap operator|(const SparseHashMap& rhs) const;     // union
-    SparseHashMap operator^(const SparseHashMap& rhs) const;     // difference
-    SparseHashMap operator-(const SparseHashMap& rhs) const;     // sub
-    bool          is_sub_set_of(const SparseHashMap& rhs) const; // sub set
+    SparseHashMapOld operator&(const SparseHashMapOld& rhs) const;     // intersect
+    SparseHashMapOld operator|(const SparseHashMapOld& rhs) const;     // union
+    SparseHashMapOld operator^(const SparseHashMapOld& rhs) const;     // difference
+    SparseHashMapOld operator-(const SparseHashMapOld& rhs) const;     // sub
+    bool             is_sub_set_of(const SparseHashMapOld& rhs) const; // sub set
 
     // support foreach
     It  begin();
@@ -181,56 +181,56 @@ struct SparseHashMap : protected SparseHashSet<Memory> {
 };
 } // namespace skr::container
 
-// SparseHashMap impl
+// SparseHashMapOld impl
 namespace skr::container
 {
 // ctor & dtor
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory>::SparseHashMap(AllocatorCtorParam param)
+SKR_INLINE SparseHashMapOld<Memory>::SparseHashMapOld(AllocatorCtorParam param)
     : Super(std::move(param))
 {
 }
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory>::SparseHashMap(SizeType reserve_size, AllocatorCtorParam param)
+SKR_INLINE SparseHashMapOld<Memory>::SparseHashMapOld(SizeType reserve_size, AllocatorCtorParam param)
     : Super(reserve_size, std::move(param))
 {
 }
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory>::SparseHashMap(const MapDataType* p, SizeType n, AllocatorCtorParam param)
+SKR_INLINE SparseHashMapOld<Memory>::SparseHashMapOld(const MapDataType* p, SizeType n, AllocatorCtorParam param)
     : Super(p, n, std::move(param))
 {
 }
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory>::SparseHashMap(std::initializer_list<MapDataType> init_list, AllocatorCtorParam param)
+SKR_INLINE SparseHashMapOld<Memory>::SparseHashMapOld(std::initializer_list<MapDataType> init_list, AllocatorCtorParam param)
     : Super(init_list, std::move(param))
 {
 }
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory>::~SparseHashMap()
+SKR_INLINE SparseHashMapOld<Memory>::~SparseHashMapOld()
 {
 }
 
 // copy & move
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory>::SparseHashMap(const SparseHashMap& other)
+SKR_INLINE SparseHashMapOld<Memory>::SparseHashMapOld(const SparseHashMapOld& other)
     : Super(other)
 {
 }
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory>::SparseHashMap(SparseHashMap&& other)
+SKR_INLINE SparseHashMapOld<Memory>::SparseHashMapOld(SparseHashMapOld&& other)
     : Super(std::move(other))
 {
 }
 
 // assign & move assign
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory>& SparseHashMap<Memory>::operator=(const SparseHashMap& rhs)
+SKR_INLINE SparseHashMapOld<Memory>& SparseHashMapOld<Memory>::operator=(const SparseHashMapOld& rhs)
 {
     Super::operator=(rhs);
     return *this;
 }
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory>& SparseHashMap<Memory>::operator=(SparseHashMap&& rhs)
+SKR_INLINE SparseHashMapOld<Memory>& SparseHashMapOld<Memory>::operator=(SparseHashMapOld&& rhs)
 {
     Super::operator=(std::move(rhs));
     return *this;
@@ -238,155 +238,155 @@ SKR_INLINE SparseHashMap<Memory>& SparseHashMap<Memory>::operator=(SparseHashMap
 
 // getter
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::size() const
+SKR_INLINE typename SparseHashMapOld<Memory>::SizeType SparseHashMapOld<Memory>::size() const
 {
     return Super::size();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::capacity() const
+SKR_INLINE typename SparseHashMapOld<Memory>::SizeType SparseHashMapOld<Memory>::capacity() const
 {
     return Super::capacity();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::slack() const
+SKR_INLINE typename SparseHashMapOld<Memory>::SizeType SparseHashMapOld<Memory>::slack() const
 {
     return Super::slack();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::sparse_size() const
+SKR_INLINE typename SparseHashMapOld<Memory>::SizeType SparseHashMapOld<Memory>::sparse_size() const
 {
     return Super::sparse_size();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::hole_size() const
+SKR_INLINE typename SparseHashMapOld<Memory>::SizeType SparseHashMapOld<Memory>::hole_size() const
 {
     return Super::hole_size();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::bit_array_size() const
+SKR_INLINE typename SparseHashMapOld<Memory>::SizeType SparseHashMapOld<Memory>::bit_array_size() const
 {
     return Super::bit_array_size();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::free_list_head() const
+SKR_INLINE typename SparseHashMapOld<Memory>::SizeType SparseHashMapOld<Memory>::free_list_head() const
 {
     return Super::free_list_head();
 }
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::is_compact() const
+SKR_INLINE bool SparseHashMapOld<Memory>::is_compact() const
 {
     return Super::is_compact();
 }
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::empty() const
+SKR_INLINE bool SparseHashMapOld<Memory>::empty() const
 {
     return Super::empty();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataArr& SparseHashMap<Memory>::data_arr()
+SKR_INLINE typename SparseHashMapOld<Memory>::DataArr& SparseHashMapOld<Memory>::data_arr()
 {
     return Super::data_arr();
 }
 template <typename Memory>
-SKR_INLINE const typename SparseHashMap<Memory>::DataArr& SparseHashMap<Memory>::data_arr() const
+SKR_INLINE const typename SparseHashMapOld<Memory>::DataArr& SparseHashMapOld<Memory>::data_arr() const
 {
     return Super::data_arr();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::Super& SparseHashMap<Memory>::data_set()
+SKR_INLINE typename SparseHashMapOld<Memory>::Super& SparseHashMapOld<Memory>::data_set()
 {
     return (*this);
 }
 template <typename Memory>
-SKR_INLINE const typename SparseHashMap<Memory>::Super& SparseHashMap<Memory>::data_set() const
+SKR_INLINE const typename SparseHashMapOld<Memory>::Super& SparseHashMapOld<Memory>::data_set() const
 {
     return (*this);
 }
 template <typename Memory>
-SKR_INLINE Memory& SparseHashMap<Memory>::memory()
+SKR_INLINE Memory& SparseHashMapOld<Memory>::memory()
 {
     return *this;
 }
 template <typename Memory>
-SKR_INLINE const Memory& SparseHashMap<Memory>::memory() const
+SKR_INLINE const Memory& SparseHashMapOld<Memory>::memory() const
 {
     return *this;
 }
 
 // validate
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::has_data(SizeType idx) const
+SKR_INLINE bool SparseHashMapOld<Memory>::has_data(SizeType idx) const
 {
     return Super::has_data(idx);
 }
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::is_hole(SizeType idx) const
+SKR_INLINE bool SparseHashMapOld<Memory>::is_hole(SizeType idx) const
 {
     return Super::is_hole(idx);
 }
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::is_valid_index(SizeType idx) const
+SKR_INLINE bool SparseHashMapOld<Memory>::is_valid_index(SizeType idx) const
 {
     return Super::is_valid_index(idx);
 }
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::is_valid_pointer(const void* p) const
+SKR_INLINE bool SparseHashMapOld<Memory>::is_valid_pointer(const void* p) const
 {
     return Super::is_valid_pointer(p);
 }
 
 // memory op
 template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::clear()
+SKR_INLINE void SparseHashMapOld<Memory>::clear()
 {
     Super::clear();
 }
 template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::release(SizeType capacity)
+SKR_INLINE void SparseHashMapOld<Memory>::release(SizeType capacity)
 {
     Super::release(capacity);
 }
 template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::reserve(SizeType capacity)
+SKR_INLINE void SparseHashMapOld<Memory>::reserve(SizeType capacity)
 {
     Super::reserve(capacity);
 }
 template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::shrink()
+SKR_INLINE void SparseHashMapOld<Memory>::shrink()
 {
     Super::shrink();
 }
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::compact()
+SKR_INLINE bool SparseHashMapOld<Memory>::compact()
 {
     return Super::compact();
 }
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::compact_stable()
+SKR_INLINE bool SparseHashMapOld<Memory>::compact_stable()
 {
     return Super::compact_stable();
 }
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::compact_top()
+SKR_INLINE bool SparseHashMapOld<Memory>::compact_top()
 {
     return Super::compact_top();
 }
 
 // rehash
 template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::rehash() const
+SKR_INLINE void SparseHashMapOld<Memory>::rehash() const
 {
     Super::rehash();
 }
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::rehash_if_need() const
+SKR_INLINE bool SparseHashMapOld<Memory>::rehash_if_need() const
 {
     return Super::rehash_if_need();
 }
 
 // add
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(const MapKeyType& key, const MapValueType& value)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add(const MapKeyType& key, const MapValueType& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -402,7 +402,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(co
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(const MapKeyType& key, MapValueType&& value)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add(const MapKeyType& key, MapValueType&& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -418,7 +418,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(co
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(MapKeyType&& key, const MapValueType& value)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add(MapKeyType&& key, const MapValueType& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -434,7 +434,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(Ma
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(MapKeyType&& key, MapValueType&& value)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add(MapKeyType&& key, MapValueType&& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -450,7 +450,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(Ma
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(const MapKeyType& key)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add(const MapKeyType& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -466,7 +466,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(co
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(MapKeyType&& key)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add(MapKeyType&& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -482,7 +482,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(Ma
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_unsafe(const MapKeyType& key)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add_unsafe(const MapKeyType& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -497,7 +497,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_un
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_unsafe(MapKeyType&& key)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add_unsafe(MapKeyType&& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -512,7 +512,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_un
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_default(const MapKeyType& key)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add_default(const MapKeyType& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -528,7 +528,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_de
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_default(MapKeyType&& key)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add_default(MapKeyType&& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -544,7 +544,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_de
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_zeroed(const MapKeyType& key)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add_zeroed(const MapKeyType& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -560,7 +560,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ze
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_zeroed(MapKeyType&& key)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add_zeroed(MapKeyType&& key)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -577,7 +577,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ze
 }
 template <typename Memory>
 template <typename Pred, typename ConstructFunc, typename AssignFunc>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ex(HashType hash, Pred&& comparer, ConstructFunc&& construct, AssignFunc&& assign)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add_ex(HashType hash, Pred&& comparer, ConstructFunc&& construct, AssignFunc&& assign)
 {
     auto ref = Super::add_ex_unsafe(hash, std::forward<Pred>(comparer));
 
@@ -594,7 +594,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ex
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ex_unsafe(HashType hash, Pred&& comparer)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add_ex_unsafe(HashType hash, Pred&& comparer)
 {
     auto ref = Super::add_ex_unsafe(hash, std::forward<Pred>(comparer));
     return ref;
@@ -602,7 +602,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ex
 
 // add or assign, instead of operator[]
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(const MapKeyType& key, const MapValueType& value)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add_or_assign(const MapKeyType& key, const MapValueType& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -622,7 +622,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(const MapKeyType& key, MapValueType&& value)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add_or_assign(const MapKeyType& key, MapValueType&& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -642,7 +642,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(MapKeyType&& key, const MapValueType& value)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add_or_assign(MapKeyType&& key, const MapValueType& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -662,7 +662,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or_assign(MapKeyType&& key, MapValueType&& value)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::add_or_assign(MapKeyType&& key, MapValueType&& value)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -686,7 +686,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_or
 
 template <typename Memory>
 template <typename... Args>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_emplace(const MapKeyType& key, Args&&... args)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::try_emplace(const MapKeyType& key, Args&&... args)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -703,7 +703,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_em
 }
 template <typename Memory>
 template <typename... Args>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_emplace(MapKeyType&& key, Args&&... args)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::try_emplace(MapKeyType&& key, Args&&... args)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -720,7 +720,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_em
 }
 template <typename Memory>
 template <typename... Args>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplace(const MapKeyType& key, Args&&... args)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::emplace(const MapKeyType& key, Args&&... args)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -743,7 +743,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplac
 }
 template <typename Memory>
 template <typename... Args>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplace(MapKeyType&& key, Args&&... args)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::emplace(MapKeyType&& key, Args&&... args)
 {
     HashType hash = HasherType()(key);
     auto     ref  = Super::add_ex_unsafe(
@@ -767,101 +767,101 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplac
 
 // append
 template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::append(const SparseHashMap& set)
+SKR_INLINE void SparseHashMapOld<Memory>::append(const SparseHashMapOld& set)
 {
     Super::append(set);
 }
 template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::append(std::initializer_list<MapDataType> init_list)
+SKR_INLINE void SparseHashMapOld<Memory>::append(std::initializer_list<MapDataType> init_list)
 {
     Super::append(init_list);
 }
 template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::append(const MapDataType* p, SizeType n)
+SKR_INLINE void SparseHashMapOld<Memory>::append(const MapDataType* p, SizeType n)
 {
     Super::append(p, n);
 }
 
 // remove
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::remove(const MapKeyType& key)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::remove(const MapKeyType& key)
 {
     return Super::remove(key);
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::remove_all(const MapKeyType& key)
+SKR_INLINE typename SparseHashMapOld<Memory>::SizeType SparseHashMapOld<Memory>::remove_all(const MapKeyType& key)
 {
     return Super::remove_all(key);
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::remove_ex(HashType hash, Pred&& comparer)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::remove_ex(HashType hash, Pred&& comparer)
 {
     return Super::remove_ex(hash, std::forward<Pred>(comparer));
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::remove_all_ex(HashType hash, Pred&& comparer)
+SKR_INLINE typename SparseHashMapOld<Memory>::SizeType SparseHashMapOld<Memory>::remove_all_ex(HashType hash, Pred&& comparer)
 {
     return Super::remove_all_ex(hash, std::forward<Pred>(comparer));
 }
 
 // erase, needn't update iterator, erase directly is safe
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::It SparseHashMap<Memory>::erase(const It& it)
+SKR_INLINE typename SparseHashMapOld<Memory>::It SparseHashMapOld<Memory>::erase(const It& it)
 {
     return Super::erase(it);
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::CIt SparseHashMap<Memory>::erase(const CIt& it)
+SKR_INLINE typename SparseHashMapOld<Memory>::CIt SparseHashMapOld<Memory>::erase(const CIt& it)
 {
     return Super::erase(it);
 }
 
 // find
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find(const MapKeyType& key)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::find(const MapKeyType& key)
 {
     return Super::find(key);
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find(const MapKeyType& key) const
+SKR_INLINE typename SparseHashMapOld<Memory>::CDataRef SparseHashMapOld<Memory>::find(const MapKeyType& key) const
 {
     return Super::find(key);
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_ex(HashType hash, Pred&& comparer)
+SKR_INLINE typename SparseHashMapOld<Memory>::DataRef SparseHashMapOld<Memory>::find_ex(HashType hash, Pred&& comparer)
 {
     return Super::find_ex(hash, std::forward<Pred>(comparer));
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_ex(HashType hash, Pred&& comparer) const
+SKR_INLINE typename SparseHashMapOld<Memory>::CDataRef SparseHashMapOld<Memory>::find_ex(HashType hash, Pred&& comparer) const
 {
     return Super::find_ex(hash, std::forward<Pred>(comparer));
 }
 
 // contains
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::contains(const MapKeyType& key) const
+SKR_INLINE bool SparseHashMapOld<Memory>::contains(const MapKeyType& key) const
 {
     return Super::contains(key);
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::count(const MapKeyType& key) const
+SKR_INLINE typename SparseHashMapOld<Memory>::SizeType SparseHashMapOld<Memory>::count(const MapKeyType& key) const
 {
     return Super::count(key);
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool SparseHashMap<Memory>::contains_ex(HashType hash, Pred&& comparer) const
+SKR_INLINE bool SparseHashMapOld<Memory>::contains_ex(HashType hash, Pred&& comparer) const
 {
     return Super::contains_ex(hash, std::forward<Pred>(comparer));
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::count_ex(HashType hash, Pred&& comparer) const
+SKR_INLINE typename SparseHashMapOld<Memory>::SizeType SparseHashMapOld<Memory>::count_ex(HashType hash, Pred&& comparer) const
 {
     return Super::count_ex(hash, std::forward<Pred>(comparer));
 }
@@ -869,62 +869,62 @@ SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::count
 // sort
 template <typename Memory>
 template <typename TP>
-SKR_INLINE void SparseHashMap<Memory>::sort(TP&& p)
+SKR_INLINE void SparseHashMapOld<Memory>::sort(TP&& p)
 {
     Super::sort(std::forward<TP>(p));
 }
 template <typename Memory>
 template <typename TP>
-SKR_INLINE void SparseHashMap<Memory>::sort_stable(TP&& p)
+SKR_INLINE void SparseHashMapOld<Memory>::sort_stable(TP&& p)
 {
     Super::sort_stable(std::forward<TP>(p));
 }
 
 // set ops
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory> SparseHashMap<Memory>::operator&(const SparseHashMap& rhs) const
+SKR_INLINE SparseHashMapOld<Memory> SparseHashMapOld<Memory>::operator&(const SparseHashMapOld& rhs) const
 {
     return Super::operator&(rhs);
 }
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory> SparseHashMap<Memory>::operator|(const SparseHashMap& rhs) const
+SKR_INLINE SparseHashMapOld<Memory> SparseHashMapOld<Memory>::operator|(const SparseHashMapOld& rhs) const
 {
     return Super::operator|(rhs);
 }
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory> SparseHashMap<Memory>::operator^(const SparseHashMap& rhs) const
+SKR_INLINE SparseHashMapOld<Memory> SparseHashMapOld<Memory>::operator^(const SparseHashMapOld& rhs) const
 {
     return Super::operator^(rhs);
 }
 template <typename Memory>
-SKR_INLINE SparseHashMap<Memory> SparseHashMap<Memory>::operator-(const SparseHashMap& rhs) const
+SKR_INLINE SparseHashMapOld<Memory> SparseHashMapOld<Memory>::operator-(const SparseHashMapOld& rhs) const
 {
     return Super::operator-(rhs);
 }
 template <typename Memory>
-SKR_INLINE bool SparseHashMap<Memory>::is_sub_set_of(const SparseHashMap& rhs) const
+SKR_INLINE bool SparseHashMapOld<Memory>::is_sub_set_of(const SparseHashMapOld& rhs) const
 {
     return Super::is_sub_set_of(rhs);
 }
 
 // support foreach
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::It SparseHashMap<Memory>::begin()
+SKR_INLINE typename SparseHashMapOld<Memory>::It SparseHashMapOld<Memory>::begin()
 {
     return Super::begin();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::It SparseHashMap<Memory>::end()
+SKR_INLINE typename SparseHashMapOld<Memory>::It SparseHashMapOld<Memory>::end()
 {
     return Super::end();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::CIt SparseHashMap<Memory>::begin() const
+SKR_INLINE typename SparseHashMapOld<Memory>::CIt SparseHashMapOld<Memory>::begin() const
 {
     return Super::begin();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::CIt SparseHashMap<Memory>::end() const
+SKR_INLINE typename SparseHashMapOld<Memory>::CIt SparseHashMapOld<Memory>::end() const
 {
     return Super::end();
 }
