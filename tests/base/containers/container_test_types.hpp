@@ -6,6 +6,7 @@
 #include "SkrBase/containers/sparse_array/sparse_array.hpp"
 #include "SkrBase/containers/sparse_array/sparse_array_memory.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
+#include "SkrBase/containers/sparse_hash_set/sparse_hash_set_new.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_memory.hpp"
 #include "SkrBase/containers/bit_array/bit_array.hpp"
 #include "SkrBase/containers/bit_array/bit_array_memory.hpp"
@@ -67,7 +68,7 @@ TestAllocatorType>>;
 
 //===========Sparse Hash Set===================================================================
 template <typename T>
-using SparseHashSet = container::SparseHashSetOld<container::SparseHashSetMemory<
+using SparseHashSet = container::SparseHashSet<container::SparseHashSetMemory<
 T,
 TestBitBlockType,
 container::KeyTraits<T>,
@@ -77,7 +78,7 @@ TestSizeType,
 TestAllocatorType>>;
 
 template <typename T, uint64_t kCount>
-using FixedSparseHashSet = container::SparseHashSetOld<container::FixedSparseHashSetMemory<
+using FixedSparseHashSet = container::SparseHashSet<container::FixedSparseHashSetMemory<
 T,
 TestBitBlockType,
 container::KeyTraits<T>,
@@ -87,7 +88,7 @@ TestSizeType,
 kCount>>;
 
 template <typename T, uint64_t kInlineCount>
-using InlineSparseHashSet = container::SparseHashSetOld<container::InlineSparseHashSetMemory<
+using InlineSparseHashSet = container::SparseHashSet<container::InlineSparseHashSetMemory<
 T,
 TestBitBlockType,
 container::KeyTraits<T>,

@@ -328,20 +328,6 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE(a.contains(4));
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
-
-        a.emplace_ex(
-        Hash<ValueType>()(100),
-        [](const ValueType& v) { return v == 100; },
-        100);
-        REQUIRE_EQ(a.size(), 5);
-        REQUIRE_EQ(a.sparse_size(), 5);
-        REQUIRE_EQ(a.hole_size(), 0);
-        REQUIRE_GE(a.capacity(), capacity_of(5));
-        REQUIRE(a.contains(1));
-        REQUIRE(a.contains(4));
-        REQUIRE(a.contains(5));
-        REQUIRE(a.contains(10));
-        REQUIRE(a.contains(100));
     }
 
     SUBCASE("append")

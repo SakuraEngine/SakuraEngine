@@ -1018,39 +1018,39 @@ SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_al
 template <typename Memory>
 SKR_INLINE typename SparseArray<Memory>::DataType& SparseArray<Memory>::operator[](SizeType index)
 {
-    SKR_ASSERT(!empty() && is_valid_index(index));
+    SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
     return data()[index]._sparse_array_data;
 }
 template <typename Memory>
 SKR_INLINE const typename SparseArray<Memory>::DataType& SparseArray<Memory>::operator[](SizeType index) const
 {
-    SKR_ASSERT(!empty() && is_valid_index(index));
+    SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
     return data()[index]._sparse_array_data;
 }
 template <typename Memory>
 SKR_INLINE typename SparseArray<Memory>::DataType& SparseArray<Memory>::at(SizeType index)
 {
-    SKR_ASSERT(!empty() && is_valid_index(index));
+    SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
     return data()[index]._sparse_array_data;
 }
 template <typename Memory>
 SKR_INLINE const typename SparseArray<Memory>::DataType& SparseArray<Memory>::at(SizeType index) const
 {
-    SKR_ASSERT(!empty() && is_valid_index(index));
+    SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
     return data()[index]._sparse_array_data;
 }
 template <typename Memory>
 SKR_INLINE typename SparseArray<Memory>::DataType& SparseArray<Memory>::last(SizeType index)
 {
-    index = size() - index - 1;
-    SKR_ASSERT(!empty() && is_valid_index(index));
+    index = sparse_size() - index - 1;
+    SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
     return *(data() + index);
 }
 template <typename Memory>
 SKR_INLINE const typename SparseArray<Memory>::DataType& SparseArray<Memory>::last(SizeType index) const
 {
-    index = size() - index - 1;
-    SKR_ASSERT(!empty() && is_valid_index(index));
+    index = sparse_size() - index - 1;
+    SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
     return *(data() + index);
 }
 
