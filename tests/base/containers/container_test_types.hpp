@@ -67,7 +67,7 @@ TestAllocatorType>>;
 
 //===========Sparse Hash Set===================================================================
 template <typename T>
-using SparseHashSet = container::SparseHashSet<container::SparseHashSetMemory<
+using SparseHashSet = container::SparseHashSetOld<container::SparseHashSetMemory<
 T,
 TestBitBlockType,
 container::KeyTraits<T>,
@@ -77,7 +77,7 @@ TestSizeType,
 TestAllocatorType>>;
 
 template <typename T, uint64_t kCount>
-using FixedSparseHashSet = container::SparseHashSet<container::FixedSparseHashSetMemory<
+using FixedSparseHashSet = container::SparseHashSetOld<container::FixedSparseHashSetMemory<
 T,
 TestBitBlockType,
 container::KeyTraits<T>,
@@ -87,7 +87,7 @@ TestSizeType,
 kCount>>;
 
 template <typename T, uint64_t kInlineCount>
-using InlineSparseHashSet = container::SparseHashSet<container::InlineSparseHashSetMemory<
+using InlineSparseHashSet = container::SparseHashSetOld<container::InlineSparseHashSetMemory<
 T,
 TestBitBlockType,
 container::KeyTraits<T>,
@@ -99,7 +99,7 @@ TestAllocatorType>>;
 
 //===========Sparse Hash Map===================================================================
 template <typename K, typename V>
-using SparseHashMap = container::SparseHashMap<container::SparseHashMapMemory<
+using SparseHashMap = container::SparseHashMapOld<container::SparseHashMapMemory<
 K,
 V,
 TestBitBlockType,
@@ -110,7 +110,7 @@ TestSizeType,
 TestAllocatorType>>;
 
 template <typename K, typename V, uint64_t kCount>
-using FixedSparseHashMap = container::SparseHashMap<container::FixedSparseHashMapMemory<
+using FixedSparseHashMap = container::SparseHashMapOld<container::FixedSparseHashMapMemory<
 K,
 V,
 TestBitBlockType,
@@ -121,7 +121,7 @@ TestSizeType,
 kCount>>;
 
 template <typename K, typename V, uint64_t kInlineCount>
-using InlineSparseHashMap = container::SparseHashMap<container::InlineSparseHashMapMemory<
+using InlineSparseHashMap = container::SparseHashMapOld<container::InlineSparseHashMapMemory<
 K,
 V,
 TestBitBlockType,
