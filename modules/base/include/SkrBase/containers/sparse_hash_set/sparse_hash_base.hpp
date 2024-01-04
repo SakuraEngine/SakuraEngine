@@ -79,6 +79,8 @@ struct SparseHashBase : protected SparseArray<Memory> {
     bool compact_top();
 
     // rehash
+    bool sync_hash();
+    bool sync_hash_at(SizeType index);
     void rehash();
     bool rehash_if_need();
 
@@ -90,9 +92,9 @@ protected:
     // basic add/find/remove
     DataRef _add_unsafe(HashType hash);
     template <typename Pred>
-    DataRef _find(HashType hash, Pred&& pred);
+    CDataRef _find(HashType hash, Pred&& pred) const;
     template <typename Pred>
-    DataRef _find_next(DataRef ref, Pred&& pred);
+    CDataRef _find_next(DataRef ref, Pred&& pred) const;
     template <typename Pred>
     bool _remove(HashType hash, Pred&& pred);
     template <typename Pred>
@@ -392,6 +394,42 @@ SKR_INLINE bool SparseHashBase<Memory>::compact_top()
 
 // rehash
 template <typename Memory>
+SKR_INLINE bool SparseHashBase<Memory>::sync_hash()
+{
+    bool hash_changed = false;
+    for (auto it = Super::begin(); it != Super::end(); ++it)
+    {
+        HashType new_hash = HasherType()(it->_sparse_hash_set_data);
+        if (new_hash != it->_sparse_hash_set_hash)
+        {
+            it->_sparse_hash_set_hash = new_hash;
+            hash_changed              = true;
+        }
+    }
+
+    if (hash_changed)
+    {
+        _clean_bucket();
+        _build_bucket();
+    }
+
+    return hash_changed;
+}
+template <typename Memory>
+SKR_INLINE bool SparseHashBase<Memory>::sync_hash_at(SizeType index)
+{
+    auto&    data     = Super::at(index);
+    HashType new_hash = HasherType()(data._sparse_hash_set_data);
+    if (new_hash != data._sparse_hash_set_hash)
+    {
+        data._sparse_hash_set_hash = new_hash;
+        _remove_from_bucket(index);
+        _add_to_bucket(data, index);
+        return true;
+    }
+    return false;
+}
+template <typename Memory>
 SKR_INLINE void SparseHashBase<Memory>::rehash()
 {
     _resize_bucket();
@@ -433,7 +471,7 @@ SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::_add
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::_find(HashType hash, Pred&& pred)
+SKR_INLINE typename SparseHashBase<Memory>::CDataRef SparseHashBase<Memory>::_find(HashType hash, Pred&& pred) const
 {
     if (!bucket()) return {};
 
@@ -441,7 +479,7 @@ SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::_fin
     while (search_index != npos)
     {
         auto& node = Super::at(search_index);
-        if (node._sparse_hash_set_hash == hash && pred(key_of(node._sparse_hash_set_data)))
+        if (node._sparse_hash_set_hash == hash && pred(node._sparse_hash_set_data))
         {
             return { &node._sparse_hash_set_data, search_index, hash, false };
         }
@@ -451,7 +489,7 @@ SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::_fin
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::_find_next(DataRef ref, Pred&& pred)
+SKR_INLINE typename SparseHashBase<Memory>::CDataRef SparseHashBase<Memory>::_find_next(DataRef ref, Pred&& pred) const
 {
     if (!bucket() || !ref.is_valid()) return {};
 

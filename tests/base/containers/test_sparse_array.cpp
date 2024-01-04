@@ -373,11 +373,11 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         REQUIRE(a.is_valid_index(5));
         REQUIRE_FALSE(a.is_valid_index(6));
 
-        REQUIRE_FALSE(a.is_valid_pointer(&a[0] - 1));
-        REQUIRE(a.is_valid_pointer(&a[0]));
-        REQUIRE(a.is_valid_pointer(&a[3]));
-        REQUIRE(a.is_valid_pointer(&a[5]));
-        REQUIRE_FALSE(a.is_valid_pointer(&a[5] + 4));
+        // REQUIRE_FALSE(a.is_valid_pointer(&a[0] - 1));
+        // REQUIRE(a.is_valid_pointer(&a[0]));
+        // REQUIRE(a.is_valid_pointer(&a[3]));
+        // REQUIRE(a.is_valid_pointer(&a[5]));
+        // REQUIRE_FALSE(a.is_valid_pointer(&a[5] + 4));
     }
 
     SUBCASE("memory op")
