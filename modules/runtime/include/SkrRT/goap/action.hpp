@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrRT/goap/state.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 namespace skr::goap
 {
@@ -8,6 +9,7 @@ template <concepts::WorldState StateType>
 struct Action {
     using IdentifierType = typename StateType::IdentifierType;
     using VariableType   = typename StateType::VariableType;
+    using Predicates     = bool (*)(const skr::UMap<IdentifierType, VariableType>&);
 
     Action(const char8_t* name, CostType cost = 0) SKR_NOEXCEPT
         : cost_(cost)
@@ -22,6 +24,11 @@ struct Action {
         conditions_.add_or_assign(id, value);
     }
 
+    void add_condition(Predicates cmp) SKR_NOEXCEPT
+    {
+        predicates.add(cmp);
+    }
+
     void add_effect(const IdentifierType& id, const VariableType& value) SKR_NOEXCEPT
     {
         effects_.add_or_assign(id, value);
@@ -32,9 +39,14 @@ struct Action {
         for (const auto& [k, v] : conditions_)
         {
             auto found = ws.variables_.find(k);
-            if (!found) 
+            if (!found)
                 return false;
-            if (Compare<VariableType>::NotEqual(v, found->value)) 
+            if (Compare<VariableType>::NotEqual(v, found->value))
+                return false;
+        }
+        for (const auto& predicate : predicates)
+        {
+            if (!predicate(ws.variables_))
                 return false;
         }
         return true;
@@ -62,6 +74,7 @@ protected:
     skr::String name_;
 #endif
     CostType                                cost_ = 0;
+    skr::Vector<Predicates>                 predicates;
     skr::UMap<IdentifierType, VariableType> conditions_;
     skr::UMap<IdentifierType, VariableType> effects_;
 };
