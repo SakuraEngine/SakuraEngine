@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/stl_vector.hpp"
 #include "SkrRT/goap/state.hpp"
 #include "SkrRT/goap/action.hpp"
 
@@ -7,15 +8,14 @@ namespace skr::goap
 {
 
 template <concepts::WorldState StateType>
-struct SKR_RUNTIME_API Planner {
+struct Planner {
     using IdentifierType = typename StateType::IdentifierType;
     using VariableType   = typename StateType::VariableType;
     using ActionType     = Action<StateType>;
 
-    Planner();
-    void dumpOpenList() const SKR_NOEXCEPT;
-    void dumpCloseList() const SKR_NOEXCEPT;
-    skr::Vector<ActionType> plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT;
+    // void dumpOpenList() const SKR_NOEXCEPT;
+    // void dumpCloseList() const SKR_NOEXCEPT;
+    SKR_NOINLINE skr::Vector<ActionType> plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT;
 
 protected:
     struct Node {
@@ -29,9 +29,9 @@ protected:
         Node() { id_ = ++Global::last_id_; }
         Node(const StateType state, CostType g, CostType h, NodeId parent_id, const ActionType* action)
             : ws_(state)
+            , parent_id_(parent_id)
             , g_(g)
             , h_(h)
-            , parent_id_(parent_id)
             , action_(action)
         {
             id_ = ++Global::last_id_;
@@ -42,13 +42,135 @@ protected:
 
         bool operator<(const Node& rhs) const { return f() < rhs.f(); }
     };
-    skr::Vector<Node> open_;
-    skr::Vector<Node> close_;
+    skr::stl_vector<Node> open_;
+    skr::stl_vector<Node> closed_;
 
-    bool memberOfClosed(const StateType& ws) const SKR_NOEXCEPT;
-    Node* memberOfOpen(const StateType& ws);
-    Node& popAndClose();
-    void addToOpenList(Node&&);
-    CostType heuristic(const StateType& from, const StateType& to) const SKR_NOEXCEPT;
+    CostType heuristic(const StateType& now, const StateType& goal) const SKR_NOEXCEPT
+    {
+        return now.distance_to(goal);
+    }
+
+    void addToOpenList(Node&& node)
+    {
+        // insert maintaining sort order
+        auto it = std::lower_bound(begin(open_), end(open_), node);
+        open_.emplace(it, std::move(node));
+    }
+
+    Node& popAndClose()
+    {
+        SKR_ASSERT(!open_.empty());
+        closed_.emplace_back(std::move(open_.front()));
+        open_.erase(open_.begin());
+        return closed_.back();
+    }
+
+    bool memberOfClosed(const StateType& ws) const SKR_NOEXCEPT
+    {
+        auto&& found = std::find_if(begin(closed_), end(closed_), [&](const Node& n) { return n.ws_ == ws; });
+        return found != end(closed_);
+    }
+
+    auto memberOfOpen(const StateType& ws) SKR_NOEXCEPT
+    {
+        return std::find_if(begin(open_), end(open_), [&](const Node& n) { return n.ws_ == ws; });
+    }
 };
+
+template <concepts::WorldState StateType>
+SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT->skr::Vector<ActionType>
+{
+    if (start.meets_goal(goal))
+        return skr::Vector<ActionType>();
+
+    // Feasible we'd re-use a planner, so clear out the prior results
+    open_.clear();
+    closed_.clear();
+
+    Node starting_node(start, 0, heuristic(start, goal), 0, nullptr);
+
+    open_.emplace_back(std::move(starting_node));
+
+    // int iters = 0;
+    while (open_.size() > 0)
+    {
+        //++iters;
+        // std::cout << "\n-----------------------\n";
+        // std::cout << "Iteration " << iters << std::endl;
+
+        // Look for Node with the lowest-F-score on the open list. Switch it to closed,
+        // and hang onto it -- this is our latest node.
+        Node& current(popAndClose());
+
+        // std::cout << "Open list\n";
+        // printOpenList();
+        // std::cout << "Closed list\n";
+        // printClosedList();
+        // std::cout << "\nCurrent is " << current << " : " << (current.action_ == nullptr ? "" : current.action_->name()) << std::endl;
+
+        // Is our current state the goal state? If so, we've found a path, yay.
+        if (current.ws_.meets_goal(goal))
+        {
+            skr::Vector<ActionType> the_plan;
+            do
+            {
+                the_plan.add(*current.action_);
+                auto itr = std::find_if(begin(open_), end(open_), [&](const Node& n) { return n.id_ == current.parent_id_; });
+                if (itr == end(open_))
+                {
+                    itr = std::find_if(begin(closed_), end(closed_), [&](const Node& n) { return n.id_ == current.parent_id_; });
+                }
+                current = *itr;
+            } while (current.parent_id_ != 0);
+            return the_plan;
+        }
+
+        // Check each node REACHABLE from current -- in other words, where can we go from here?
+        for (const auto& potential_action : actions)
+        {
+            if (potential_action.operable_on(current.ws_))
+            {
+                WorldState outcome = potential_action.act_on(current.ws_);
+
+                // Skip if already closed
+                if (memberOfClosed(outcome))
+                {
+                    continue;
+                }
+
+                // std::cout << potential_action.name() << " will get us to " << outcome << std::endl;
+
+                // Look for a Node with this WorldState on the open list.
+                auto p_outcome_node = memberOfOpen(outcome);
+                if (p_outcome_node == end(open_))
+                { // not a member of open list
+                    // Make a new node, with current as its parent, recording G & H
+                    Node found(outcome, current.g_ + potential_action.cost(), heuristic(outcome, goal), current.id_, &potential_action);
+                    // Add it to the open list (maintaining sort-order therein)
+                    addToOpenList(std::move(found));
+                }
+                else
+                { // already a member of the open list
+                    // check if the current G is better than the recorded G
+                    if (current.g_ + potential_action.cost() < p_outcome_node->g_)
+                    {
+                        // std::cout << "My path to " << p_outcome_node->ws_ << " using " << potential_action.name() << " (combined cost " << current.g_ + potential_action.cost() << ") is better than existing (cost " <<  p_outcome_node->g_ << "\n";
+                        p_outcome_node->parent_id_ = current.id_;                          // make current its parent
+                        p_outcome_node->g_         = current.g_ + potential_action.cost(); // recalc G & H
+                        p_outcome_node->h_         = heuristic(outcome, goal);
+                        p_outcome_node->action_    = &potential_action;
+
+                        // resort open list to account for the new F
+                        // sorting likely invalidates the p_outcome_node iterator, but we don't need it anymore
+                        std::sort(begin(open_), end(open_));
+                    }
+                }
+            }
+        }
+    }
+
+    SKR_ASSERT(0 && "A* planner could not find a path from start to goal");
+    return {};
+}
+
 } // namespace skr::goap

@@ -5,6 +5,13 @@ target("MathTest")
     add_deps("SkrTestFramework", {public = false})
     add_files("math/math.cpp")
 
+target("GoapTest")
+    set_kind("binary")
+    set_group("05.tests/base")
+    public_dependency("SkrRT", engine_version)
+    add_deps("SkrTestFramework", {public = false})
+    add_files("goap/goap.cpp")
+
 target("GraphTest")
     set_group("05.tests/base")
     set_kind("binary")

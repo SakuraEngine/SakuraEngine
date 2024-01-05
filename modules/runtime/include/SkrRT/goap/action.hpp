@@ -5,11 +5,11 @@ namespace skr::goap
 {
 
 template <concepts::WorldState StateType>
-struct SKR_RUNTIME_API Action {
+struct Action {
     using IdentifierType = typename StateType::IdentifierType;
     using VariableType   = typename StateType::VariableType;
 
-    Action(const char8_t* name, CostType cost) SKR_NOEXCEPT
+    Action(const char8_t* name, CostType cost = 0) SKR_NOEXCEPT
         : cost_(cost)
     {
 #ifdef SKR_GOAP_SET_NAME
@@ -27,26 +27,25 @@ struct SKR_RUNTIME_API Action {
         effects_.add_or_assign(id, value);
     }
 
-    bool operate_on(const StateType& ws) const SKR_NOEXCEPT
+    bool operable_on(const StateType& ws) const SKR_NOEXCEPT
     {
-        for (const auto& precond : conditions_)
+        for (const auto& [k, v] : conditions_)
         {
-            auto found = ws.variables_.find(precond.first);
-            if (found->data)
-            if (ws.variables_.at(precond.first) != precond.second)
-            {
+            auto found = ws.variables_.find(k);
+            if (!found) 
                 return false;
-            }
+            if (Compare<VariableType>::NotEqual(v, found->value)) 
+                return false;
         }
         return true;
     }
 
-    bool act_on(StateType& ws) const SKR_NOEXCEPT
+    StateType act_on(StateType& ws) const SKR_NOEXCEPT
     {
         StateType tmp(ws);
-        for (const auto& effect : effects_)
+        for (const auto& [k, v] : effects_)
         {
-            tmp.set_variable(effect.first, effect.second);
+            tmp.set_variable(k, v);
         }
         return tmp;
     }

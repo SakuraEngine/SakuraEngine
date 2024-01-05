@@ -22,10 +22,10 @@ using MapType = skr::UMap<Identifier, Variable>;
 template <typename T>
 struct Compare;
 
-template <typename T> requires(concepts::IsComparable<T>)
+template <typename T> requires(skr::concepts::IsComparable<T>)
 struct Compare<T> {
     static bool Equal(const T& a, const T& b) SKR_NOEXCEPT { return a == b; }
-    static bool NotEqual(const T& a, const T& b) SKR_NOEXCEPT { return a == b; }
+    static bool NotEqual(const T& a, const T& b) SKR_NOEXCEPT { return a != b; }
 };
 
 namespace concepts
@@ -41,7 +41,7 @@ inline constexpr bool IsComparable = requires(const T& a, const T& b) {
 };
 
 template <typename T>
-concept IdentifierType = goap::concepts::IsComparable<T>;
+concept IdentifierType = true;
 template <typename T>
 concept VariableType = goap::concepts::IsComparable<T>;
 
@@ -54,7 +54,7 @@ namespace concepts
 {
 template <typename T>
 inline constexpr bool IsWorldState = skr::is_convertible_to_specialization_v<
-T, WorldState, typename T::IdentifierType, typename T::VariableType>;
+    T, WorldState, typename T::IdentifierType, typename T::VariableType>;
 
 template <typename T>
 concept WorldState = IsWorldState<T>;
