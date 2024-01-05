@@ -283,7 +283,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                 CGPURootSignatureId dcRS = dc.pipeline->root_signature;
                 if (!bind_tables.contains(dcRS))
                 {
-                    bind_tables.add(dcRS, pass_context.create_and_update_bind_table(dc.pipeline->root_signature));
+                    bind_tables.add_or_assign(dcRS, pass_context.create_and_update_bind_table(dc.pipeline->root_signature));
                 }
                 CGPUXBindTableId pass_table = bind_tables.find(dcRS).value();
                 if (dc.bind_table)
