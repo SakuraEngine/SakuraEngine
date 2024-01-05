@@ -38,10 +38,10 @@ TEST_CASE_METHOD(GoapTests, "I/O")
 
     skr::Vector<Action> actions;
     // states
-    static const int file_opened   = 15;
-    static const int raw_allocated = 10;
-    static const int block_readed  = 20;
-    static const int decompressd   = 30;
+    static const int file_opened   = 10;
+    static const int ram_allocated = 20;
+    static const int block_readed  = 30;
+    static const int decompressd   = 40;
 
     static const int cancelling = 100;
 
@@ -53,13 +53,13 @@ TEST_CASE_METHOD(GoapTests, "I/O")
     Action allocateMemory(u8"allocateMemory");
     allocateMemory.none_or_equal(cancelling, false);
     allocateMemory.exist_and_equal(file_opened, true);
-    allocateMemory.add_effect(raw_allocated, true);
+    allocateMemory.add_effect(ram_allocated, true);
     actions.push_back(allocateMemory);
 
     Action readBytes(u8"readBytes");
     readBytes.none_or_equal(cancelling, false);
     readBytes.exist_and_equal(file_opened, true);
-    readBytes.exist_and_equal(raw_allocated, true);
+    readBytes.exist_and_equal(ram_allocated, true);
     readBytes.add_effect(block_readed, true);
     actions.push_back(readBytes);
 
@@ -71,9 +71,9 @@ TEST_CASE_METHOD(GoapTests, "I/O")
 
     Action freeRaw(u8"freeRaw");
     freeRaw.none_or_equal(cancelling, false);
-    freeRaw.exist_and_equal(raw_allocated, true);
+    freeRaw.exist_and_equal(ram_allocated, true);
     freeRaw.exist_and_equal(decompressd, true);
-    freeRaw.add_effect(raw_allocated, false);
+    freeRaw.add_effect(ram_allocated, false);
     actions.push_back(freeRaw);
 
     Action closeFile(u8"closeFile");
@@ -85,8 +85,8 @@ TEST_CASE_METHOD(GoapTests, "I/O")
 
     Action freeRaw_Cancel(u8"freeRaw(Cancel)");
     freeRaw_Cancel.exist_and_equal(cancelling, true);
-    freeRaw_Cancel.exist_and_equal(raw_allocated, true);
-    freeRaw_Cancel.add_effect(raw_allocated, false);
+    freeRaw_Cancel.exist_and_equal(ram_allocated, true);
+    freeRaw_Cancel.add_effect(ram_allocated, false);
     actions.push_back(freeRaw_Cancel);
 
     Action closeFile_Cancel(u8"closeFile(Cancel)");
@@ -96,13 +96,12 @@ TEST_CASE_METHOD(GoapTests, "I/O")
     actions.push_back(closeFile_Cancel);
 
     WorldState initial_state;
-    initial_state.set_variable(cancelling, false);
     // NO DECOMPRESS
     {
         WorldState goal;
         goal.set_variable(block_readed, true);
         goal.set_variable(file_opened, false);
-        goal.set_variable(raw_allocated, false);
+        goal.set_variable(ram_allocated, false);
         Planner planner;
         auto    the_plan = planner.plan<true>(initial_state, goal, actions);
         for (int64_t fail_index = the_plan.size() - 1; fail_index >= 0; --fail_index)
@@ -121,7 +120,7 @@ TEST_CASE_METHOD(GoapTests, "I/O")
 
                     WorldState cancelled = current;
                     cancelled.assign_variable(file_opened, false);
-                    cancelled.assign_variable(raw_allocated, false);
+                    cancelled.assign_variable(ram_allocated, false);
                     Planner cancel_planner;
                     auto    cancel_plan = cancel_planner.plan(current, cancelled, actions);
                     std::cout << "    REQUEST CANCEL:\n";
@@ -141,7 +140,7 @@ TEST_CASE_METHOD(GoapTests, "I/O")
     {
         WorldState goal;
         goal.set_variable(decompressd, true);
-        goal.set_variable(raw_allocated, false);
+        goal.set_variable(ram_allocated, false);
         goal.set_variable(file_opened, false);
         Planner planner;
         auto    the_plan = planner.plan(initial_state, goal, actions);
@@ -156,13 +155,12 @@ TEST_CASE_METHOD(GoapTests, "I/O")
     {
         WorldState current;
         current.set_variable(file_opened, true);
-        current.set_variable(raw_allocated, true);
+        current.set_variable(ram_allocated, true);
         current.set_variable(block_readed, true);
         current.set_variable(cancelling, true);
         WorldState cancelled;
         cancelled.set_variable(file_opened, false);
-        cancelled.set_variable(raw_allocated, false);
-        cancelled.set_variable(cancelling, true);
+        cancelled.set_variable(ram_allocated, false);
         Planner planner;
         auto    the_plan = planner.plan(current, cancelled, actions);
         std::cout << "REQUEST CANCEL: Found a path!\n";

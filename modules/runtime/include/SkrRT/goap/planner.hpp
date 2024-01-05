@@ -14,18 +14,16 @@ struct Planner {
     using ActionType     = Action<StateType>;
     using ActionAndState = std::pair<ActionType, StateType>;
 
-    template <bool> struct PlanResult;
-    template <> struct PlanResult<true> {
-        using Type = skr::Vector<ActionAndState>;
-    };
-    template <> struct PlanResult<false> {
-        using Type = skr::Vector<ActionType>;
-    };
+    template <bool> struct PlanTypeSelector;
+    template <> struct PlanTypeSelector<true> { using Type = skr::Vector<ActionAndState>; };
+    template <> struct PlanTypeSelector<false> { using Type = skr::Vector<ActionType>; };
+    template <bool WithState> using PlanType = typename PlanTypeSelector<WithState>::Type;
+
+    template <bool WithState = false>
+    SKR_NOINLINE PlanType<WithState> plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT;
 
     // void dumpOpenList() const SKR_NOEXCEPT;
     // void dumpCloseList() const SKR_NOEXCEPT;
-    template <bool WithState = false>
-    SKR_NOINLINE PlanResult<WithState>::Type plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT;
 
 protected:
     struct Node {
@@ -89,9 +87,9 @@ protected:
 
 template <concepts::WorldState StateType>
 template <bool WithState>
-SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT -> PlanResult<WithState>::Type
+SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT -> PlanType<WithState>
 {
-    using RetType = typename PlanResult<WithState>::Type;
+    using RetType = PlanType<WithState>;
     if (start.meets_goal(goal))
         return RetType();
 
