@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrRT/goap/config.hpp"
+#include "SkrRT/misc/log.hpp"
 
 namespace skr::goap
 {
@@ -14,6 +15,15 @@ struct WorldState {
     bool set_variable(const Identifier& id, const VariableType& value) SKR_NOEXCEPT
     {
         variables_.add_or_assign(id, value);
+        return true;
+    }
+
+    bool assign_variable(const Identifier& id, const VariableType& value) SKR_NOEXCEPT
+    {
+        auto found = variables_.find(id);
+        if (!found) 
+            return false;
+        found->value = value;
         return true;
     }
 
@@ -59,6 +69,15 @@ struct WorldState {
                 return false;
         }
         return true;
+    }
+
+    void dump(const char8_t* what, int level = SKR_LOG_LEVEL_INFO) const
+    {
+        SKR_LOG_FMT_WITH_LEVEL(level, u8"{} WorldState: {}", what, name_);
+        for (const auto& [k, v] : variables_)
+        {
+            SKR_LOG_FMT_WITH_LEVEL(level, u8"    {} = {}", k, v);
+        }
     }
 
     PriorityType                        priority_ = 0.f;

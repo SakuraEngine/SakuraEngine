@@ -12,10 +12,20 @@ struct Planner {
     using IdentifierType = typename StateType::IdentifierType;
     using VariableType   = typename StateType::VariableType;
     using ActionType     = Action<StateType>;
+    using ActionAndState = std::pair<ActionType, StateType>;
+
+    template <bool> struct PlanResult;
+    template <> struct PlanResult<true> {
+        using Type = skr::Vector<ActionAndState>;
+    };
+    template <> struct PlanResult<false> {
+        using Type = skr::Vector<ActionType>;
+    };
 
     // void dumpOpenList() const SKR_NOEXCEPT;
     // void dumpCloseList() const SKR_NOEXCEPT;
-    SKR_NOINLINE skr::Vector<ActionType> plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT;
+    template <bool WithState = false>
+    SKR_NOINLINE PlanResult<WithState>::Type plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT;
 
 protected:
     struct Node {
@@ -78,10 +88,12 @@ protected:
 };
 
 template <concepts::WorldState StateType>
-SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT->skr::Vector<ActionType>
+template <bool WithState>
+SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT -> PlanResult<WithState>::Type
 {
+    using RetType = typename PlanResult<WithState>::Type;
     if (start.meets_goal(goal))
-        return skr::Vector<ActionType>();
+        return RetType();
 
     // Feasible we'd re-use a planner, so clear out the prior results
     open_.clear();
@@ -91,30 +103,23 @@ SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateTy
 
     open_.emplace_back(std::move(starting_node));
 
-    // int iters = 0;
     while (open_.size() > 0)
     {
-        //++iters;
-        // std::cout << "\n-----------------------\n";
-        // std::cout << "Iteration " << iters << std::endl;
-
         // Look for Node with the lowest-F-score on the open list. Switch it to closed,
         // and hang onto it -- this is our latest node.
         Node& current(popAndClose());
 
-        // std::cout << "Open list\n";
-        // printOpenList();
-        // std::cout << "Closed list\n";
-        // printClosedList();
-        // std::cout << "\nCurrent is " << current << " : " << (current.action_ == nullptr ? "" : current.action_->name()) << std::endl;
-
         // Is our current state the goal state? If so, we've found a path, yay.
         if (current.ws_.meets_goal(goal))
         {
-            skr::Vector<ActionType> the_plan;
+            auto the_plan = RetType();
             do
             {
-                the_plan.add(*current.action_);
+                if constexpr (WithState)
+                    the_plan.emplace(*current.action_, current.ws_);
+                else
+                    the_plan.emplace(*current.action_);
+                
                 auto itr = std::find_if(begin(open_), end(open_), [&](const Node& n) { return n.id_ == current.parent_id_; });
                 if (itr == end(open_))
                 {
@@ -134,9 +139,7 @@ SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateTy
 
                 // Skip if already closed
                 if (memberOfClosed(outcome))
-                {
                     continue;
-                }
 
                 // std::cout << potential_action.name() << " will get us to " << outcome << std::endl;
 
@@ -169,8 +172,10 @@ SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateTy
         }
     }
 
-    SKR_ASSERT(0 && "A* planner could not find a path from start to goal");
-    return {};
+    start.dump(u8"START");
+    goal.dump(u8"GOAL");
+    SKR_LOG_FATAL(u8"A* planner could not find a path from start to goal");
+    return RetType();
 }
 
 } // namespace skr::goap

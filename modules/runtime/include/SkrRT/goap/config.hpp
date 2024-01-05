@@ -26,18 +26,19 @@ template <typename T> requires(skr::concepts::IsComparable<T>)
 struct Compare<T> {
     static bool Equal(const T& a, const T& b) SKR_NOEXCEPT { return a == b; }
     static bool NotEqual(const T& a, const T& b) SKR_NOEXCEPT { return a != b; }
+
+    static bool Greater(const T& a, const T& b) SKR_NOEXCEPT { return a > b; }
+    static bool GreaterEqual(const T& a, const T& b) SKR_NOEXCEPT { return a >= b; }
+    static bool Less(const T& a, const T& b) SKR_NOEXCEPT { return a < b; }
+    static bool LessEqual(const T& a, const T& b) SKR_NOEXCEPT { return a <= b; }
 };
 
 namespace concepts
 {
 template <typename T>
 inline constexpr bool IsComparable = requires(const T& a, const T& b) {
-    {
-        Compare<T>::Equal(a, b)
-    } -> std::convertible_to<bool>;
-    {
-        Compare<T>::NotEqual(a, b)
-    } -> std::convertible_to<bool>;
+    { Compare<T>::Equal(a, b) } -> std::convertible_to<bool>;
+    { Compare<T>::NotEqual(a, b) } -> std::convertible_to<bool>;
 };
 
 template <typename T>
@@ -46,6 +47,9 @@ template <typename T>
 concept VariableType = goap::concepts::IsComparable<T>;
 
 } // namespace concepts
+
+template <concepts::IdentifierType Identifier, concepts::VariableType Variable>
+using StateMap = skr::UMap<Identifier, Variable>;
 
 template <concepts::IdentifierType Identifier, concepts::VariableType Variable>
 struct WorldState;
@@ -59,6 +63,23 @@ inline constexpr bool IsWorldState = skr::is_convertible_to_specialization_v<
 template <typename T>
 concept WorldState = IsWorldState<T>;
 } // namespace concepts
+
+enum class EConditionType : uint8_t
+{
+    Equal        = 0x1,
+    NotEqual     = 0x2,
+    Greater      = 0x3,
+    GreaterEqual = 0x4,
+    Less         = 0x5,
+    LessEqual    = 0x6
+};
+
+enum class EVariableFlag : uint8_t
+{
+    Explicit = 0x1,
+    Any      = 0x2,
+    None     = 0x3
+};
 
 struct SKR_RUNTIME_API Global {
     static NodeId last_id_;

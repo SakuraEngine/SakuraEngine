@@ -37,6 +37,7 @@ enum
 
 #define __LOG_FUNC__ __FUNCTION__ 
 
+#define SKR_LOG_WITH_LEVEL(level, ...) skr_log_log((level), __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
 #define SKR_LOG_BACKTRACE(...) skr_log_log(SKR_LOG_LEVEL_BACKTRACE, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
 #define SKR_LOG_TRACE(...) skr_log_log(SKR_LOG_LEVEL_TRACE, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
 #define SKR_LOG_DEBUG(...) skr_log_log(SKR_LOG_LEVEL_DEBUG, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
