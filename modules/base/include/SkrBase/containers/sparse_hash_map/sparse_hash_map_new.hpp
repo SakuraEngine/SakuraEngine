@@ -508,4 +508,37 @@ SKR_INLINE void SparseHashMap<Memory>::append(const MapDataType* p, SizeType n)
     }
 }
 
+// remove
+template <typename Memory>
+SKR_INLINE void SparseHashMap<Memory>::remove_at(SizeType index)
+{
+}
+template <typename Memory>
+SKR_INLINE void SparseHashMap<Memory>::remove_at_unsafe(SizeType index)
+{
+}
+template <typename Memory>
+template <typename UK>
+requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
+SKR_INLINE bool SparseHashMap<Memory>::remove(const UK& key)
+{
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE bool SparseHashMap<Memory>::remove_ex(HashType hash, Pred&& pred)
+{
+}
+
+// remove value
+template <typename Memory>
+template <typename UV>
+SKR_INLINE void SparseHashMap<Memory>::remove_value(const UV& value)
+{
+}
+template <typename Memory>
+template <typename UV>
+SKR_INLINE void SparseHashMap<Memory>::remove_all_value(const UV& value)
+{
+}
+
 } // namespace skr::container
