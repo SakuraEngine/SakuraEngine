@@ -182,7 +182,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                 {
                     auto&& render_model = models[i].vram_future.render_model;
                     const auto& cmds = render_model->primitive_commands;
-                    push_constants.add(render_model).value().resize(0);
+                    push_constants.find_or_add(render_model).value().resize(0);
 
                     auto&& model_resource = models[i].ram_future.model_resource;
                     const auto list = skr_live2d_model_get_sorted_drawable_list(model_resource);
@@ -275,7 +275,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                     auto&& render_model = models[i].vram_future.render_model;
                     auto&& model_resource = models[i].ram_future.model_resource;
                     if (!mask_push_constants.contains(render_model))
-                        mask_push_constants.add(render_model);
+                        mask_push_constants.find_or_add(render_model);
                     mask_push_constants.find(render_model).value().resize(0);
 
                     // TODO: move this to (some manager?) other than update morph/phys in a render pass
@@ -326,7 +326,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                         continue;
                                     }
 
-                                    sorted_mask_drawable_lists.add(render_model).value().emplace(clipDrawIndex);
+                                    sorted_mask_drawable_lists.find_or_add(render_model).value().emplace(clipDrawIndex);
                                     auto&& push_const = mask_push_constants.find(render_model).value().emplace_back();
                                     const auto proj_mat = rtm::matrix_set(
                                         rtm::vector_load( &clipping_context->_matrixForMask.GetArray()[4 * 0] ),
@@ -492,7 +492,7 @@ protected:
 
         const auto model_resource = render_model->model_resource_id;
         if (!motion_timers.contains(render_model))
-            motion_timers.add(render_model);
+            motion_timers.find_or_add(render_model);
         last_ms = skr_timer_get_msec(&motion_timers.find(render_model).value(), true);
         static float delta_sum = 0.f;
         delta_sum += ((float)last_ms / 1000.f);

@@ -294,7 +294,7 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex_unsafe(HashType hash, Pred&& pred)
 {
-    if (DataRef ref = find_ex(hash, std::forward<Pred>(pred)))
+    if (DataRef ref = Super::_find(hash, std::forward<Pred>(pred)))
     {
         return { ref.ptr(), ref.index(), hash, true };
     }
