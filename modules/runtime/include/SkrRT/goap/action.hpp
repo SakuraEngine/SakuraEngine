@@ -87,22 +87,22 @@ struct Action {
 #endif
 
 public:
-    void explicit_equal(const IdentifierType& id, const VariableType& value)
+    void exist_and_equal(const IdentifierType& id, const VariableType& value)
     {
         add_condition(id, EVariableFlag::Explicit, value, EConditionType::Equal);
     }
 
-    void explicit_nequal(const IdentifierType& id, const VariableType& value)
+    void exist_and_nequal(const IdentifierType& id, const VariableType& value)
     {
         add_condition(id, EVariableFlag::Explicit, value, EConditionType::NotEqual);
     }
 
-    void opt_equal(const IdentifierType& id, const VariableType& value)
+    void none_or_equal(const IdentifierType& id, const VariableType& value)
     {
         add_condition(id, EVariableFlag::Any, value, EConditionType::Equal);
     }
 
-    void opt_nequal(const IdentifierType& id, const VariableType& value)
+    void none_or_nequal(const IdentifierType& id, const VariableType& value)
     {
         add_condition(id, EVariableFlag::Any, value, EConditionType::NotEqual);
     }
