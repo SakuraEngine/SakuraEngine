@@ -87,6 +87,18 @@ struct SparseHashBase : protected SparseArray<Memory> {
     // visitor
     const SetDataType& at(SizeType index) const;
     const SetDataType& last(SizeType index = 0) const;
+    template <typename Modifier>
+    bool modify_at(SizeType index, Modifier&& modifier, bool update_hash = true);
+    template <typename Modifier>
+    bool modify_last(SizeType index, Modifier&& modifier, bool update_hash = true);
+    template <typename Modifier>
+    bool modify(DataRef ref, Modifier&& modifier, bool update_hash = true);
+
+    // sort
+    template <typename Functor = Less<SetDataType>>
+    void sort(Functor&& p = {});
+    template <typename Functor = Less<SetDataType>>
+    void sort_stable(Functor&& p = {});
 
 protected:
     // basic add/find/remove
@@ -97,8 +109,6 @@ protected:
     CDataRef _find_next(DataRef ref, Pred&& pred) const;
     template <typename Pred>
     bool _remove(HashType hash, Pred&& pred);
-    template <typename Pred>
-    bool _remove_next(DataRef ref, Pred&& pred);
     template <typename Pred>
     SizeType _remove_all(HashType hash, Pred&& pred);
     void     _remove_at(SizeType index);
@@ -459,6 +469,60 @@ SKR_INLINE const typename SparseHashBase<Memory>::SetDataType& SparseHashBase<Me
 {
     return Super::last(index)._sparse_hash_set_data;
 }
+template <typename Memory>
+template <typename Modifier>
+SKR_INLINE bool SparseHashBase<Memory>::modify_at(SizeType index, Modifier&& modifier, bool update_hash)
+{
+    modifier(at(index));
+    if (update_hash)
+    {
+        return sync_hash_at(index);
+    }
+    return false;
+}
+template <typename Memory>
+template <typename Modifier>
+SKR_INLINE bool SparseHashBase<Memory>::modify_last(SizeType index, Modifier&& modifier, bool update_hash)
+{
+    modifier(last(index));
+    if (update_hash)
+    {
+        return sync_hash_at(sparse_size() - 1 - index);
+    }
+    return false;
+}
+template <typename Memory>
+template <typename Modifier>
+SKR_INLINE bool SparseHashBase<Memory>::modify(DataRef ref, Modifier&& modifier, bool update_hash)
+{
+    SKR_ASSERT(ref.is_valid());
+    modifier(ref.ref());
+    if (update_hash)
+    {
+        return sync_hash_at(ref.index());
+    }
+    return false;
+}
+
+// sort
+template <typename Memory>
+template <typename Functor>
+SKR_INLINE void SparseHashBase<Memory>::sort(Functor&& p)
+{
+    data_arr().sort([&](const SetStorageType& a, const SetStorageType& b) {
+        return p(a._sparse_hash_set_data, b._sparse_hash_set_data);
+    });
+    rehash();
+}
+template <typename Memory>
+template <typename Functor>
+SKR_INLINE void SparseHashBase<Memory>::sort_stable(Functor&& p)
+{
+    data_arr().sort_stable([&](const SetStorageType& a, const SetStorageType& b) {
+        return p(a._sparse_hash_set_data, b._sparse_hash_set_data);
+    });
+    rehash();
+}
 
 // basic add/find/remove
 template <typename Memory>
@@ -509,20 +573,9 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE bool SparseHashBase<Memory>::_remove(HashType hash, Pred&& pred)
 {
-    if (DataRef ref = _find(hash, std::forward(pred)))
+    if (DataRef ref = _find(hash, std::forward<Pred>(pred)))
     {
         _remove_at(ref.index());
-        return true;
-    }
-    return false;
-}
-template <typename Memory>
-template <typename Pred>
-SKR_INLINE bool SparseHashBase<Memory>::_remove_next(DataRef ref, Pred&& pred)
-{
-    if (DataRef next_ref = _find_next(ref, std::forward(pred)))
-    {
-        _remove_at(next_ref.index());
         return true;
     }
     return false;

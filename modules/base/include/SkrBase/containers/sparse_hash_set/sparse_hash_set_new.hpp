@@ -38,8 +38,8 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     ~SparseHashSet();
 
     // copy & move
-    SparseHashSet(const SparseHashSet& other);
-    SparseHashSet(SparseHashSet&& other);
+    SparseHashSet(const SparseHashSet& rhs);
+    SparseHashSet(SparseHashSet&& rhs);
 
     // assign & move assign
     SparseHashSet& operator=(const SparseHashSet& rhs);
@@ -106,8 +106,8 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     void append(const SetDataType* p, SizeType n);
 
     // remove
-    void remove_at(SizeType index, SizeType n = 1);
-    void remove_at_unsafe(SizeType index, SizeType n = 1);
+    void remove_at(SizeType index);
+    void remove_at_unsafe(SizeType index);
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     bool remove(const U& v);
     template <typename Pred>
@@ -134,20 +134,15 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     bool contains_ex(HashType hash, Pred&& pred) const;
 
     // visitor & modifier
-    const SetDataType& at(SizeType index) const;
-    const SetDataType& last(SizeType index = 0) const;
-    template <typename Modifier>
-    bool modify_at(SizeType index, Modifier&& modifier, bool update_hash = true);
-    template <typename Modifier>
-    bool modify_last(SizeType index, Modifier&& modifier, bool update_hash = true);
-    template <typename Modifier>
-    bool modify(DataRef ref, Modifier&& modifier, bool update_hash = true);
+    using Super::at;
+    using Super::last;
+    using Super::modify_at;
+    using Super::modify_last;
+    using Super::modify;
 
     // sort
-    template <typename Functor = Less<SetDataType>>
-    void sort(Functor&& p = {});
-    template <typename Functor = Less<SetDataType>>
-    void sort_stable(Functor&& p = {});
+    using Super::sort;
+    using Super::sort_stable;
 
     // set ops
     SparseHashSet operator&(const SparseHashSet& rhs) const;     // intersect
@@ -198,14 +193,14 @@ SKR_INLINE SparseHashSet<Memory>::~SparseHashSet()
 
 // copy & move
 template <typename Memory>
-SKR_INLINE SparseHashSet<Memory>::SparseHashSet(const SparseHashSet& other)
-    : Super(other)
+SKR_INLINE SparseHashSet<Memory>::SparseHashSet(const SparseHashSet& rhs)
+    : Super(rhs)
 {
     // handled by SparseHashBase
 }
 template <typename Memory>
-SKR_INLINE SparseHashSet<Memory>::SparseHashSet(SparseHashSet&& other)
-    : Super(std::move(other))
+SKR_INLINE SparseHashSet<Memory>::SparseHashSet(SparseHashSet&& rhs)
+    : Super(std::move(rhs))
 {
     // handled by SparseHashBase
 }
@@ -456,13 +451,13 @@ SKR_INLINE void SparseHashSet<Memory>::append(const SetDataType* p, SizeType n)
 
 // remove
 template <typename Memory>
-SKR_INLINE void SparseHashSet<Memory>::remove_at(SizeType index, SizeType n)
+SKR_INLINE void SparseHashSet<Memory>::remove_at(SizeType index)
 {
     Super::_remove_from_bucket(index);
     data_arr().remove_at(index);
 }
 template <typename Memory>
-SKR_INLINE void SparseHashSet<Memory>::remove_at_unsafe(SizeType index, SizeType n)
+SKR_INLINE void SparseHashSet<Memory>::remove_at_unsafe(SizeType index)
 {
     Super::_remove_from_bucket(index);
     data_arr().remove_at_unsafe(index);
@@ -472,29 +467,13 @@ template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::H
 SKR_INLINE bool SparseHashSet<Memory>::remove(const U& v)
 {
     HashType hash = HasherType()(v);
-    if (DataRef ref = find_ex(hash, [&v](const SetDataType& k) { return k == v; }))
-    {
-        remove_at(ref.index());
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return Super::_remove(hash, [&v](const SetDataType& k) { return k == v; });
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE bool SparseHashSet<Memory>::remove_ex(HashType hash, Pred&& pred)
 {
-    if (DataRef ref = find_ex(hash, std::forward<Pred>(pred)))
-    {
-        remove_at(ref.index());
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return Super::_remove(hash, std::forward<Pred>(pred));
 }
 
 // erase
@@ -555,72 +534,6 @@ template <typename Pred>
 SKR_INLINE bool SparseHashSet<Memory>::contains_ex(HashType hash, Pred&& pred) const
 {
     return (bool)find_ex(hash, std::forward<Pred>(pred));
-}
-
-// visitor & modifier
-template <typename Memory>
-SKR_INLINE const typename SparseHashSet<Memory>::SetDataType& SparseHashSet<Memory>::at(SizeType index) const
-{
-    return Super::at(index);
-}
-template <typename Memory>
-SKR_INLINE const typename SparseHashSet<Memory>::SetDataType& SparseHashSet<Memory>::last(SizeType index) const
-{
-    return Super::last(index);
-}
-template <typename Memory>
-template <typename Modifier>
-SKR_INLINE bool SparseHashSet<Memory>::modify_at(SizeType index, Modifier&& modifier, bool update_hash)
-{
-    modifier(at(index));
-    if (update_hash)
-    {
-        return sync_hash_at(index);
-    }
-    return false;
-}
-template <typename Memory>
-template <typename Modifier>
-SKR_INLINE bool SparseHashSet<Memory>::modify_last(SizeType index, Modifier&& modifier, bool update_hash)
-{
-    modifier(last(index));
-    if (update_hash)
-    {
-        return sync_hash_at(sparse_size() - 1 - index);
-    }
-    return false;
-}
-template <typename Memory>
-template <typename Modifier>
-SKR_INLINE bool SparseHashSet<Memory>::modify(DataRef ref, Modifier&& modifier, bool update_hash)
-{
-    SKR_ASSERT(ref.is_valid());
-    modifier(ref.ref());
-    if (update_hash)
-    {
-        return sync_hash_at(ref.index());
-    }
-    return false;
-}
-
-// sort
-template <typename Memory>
-template <typename Functor>
-SKR_INLINE void SparseHashSet<Memory>::sort(Functor&& p)
-{
-    data_arr().sort([&](const SetStorageType& a, const SetStorageType& b) {
-        return p(a._sparse_hash_set_data, b._sparse_hash_set_data);
-    });
-    rehash();
-}
-template <typename Memory>
-template <typename Functor>
-SKR_INLINE void SparseHashSet<Memory>::sort_stable(Functor&& p)
-{
-    data_arr().sort_stable([&](const SetStorageType& a, const SetStorageType& b) {
-        return p(a._sparse_hash_set_data, b._sparse_hash_set_data);
-    });
-    rehash();
 }
 
 // set ops
