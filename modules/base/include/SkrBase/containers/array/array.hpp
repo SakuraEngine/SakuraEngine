@@ -608,7 +608,6 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add_zeroed(SizeType n)
 template <typename Memory>
 SKR_INLINE void Array<Memory>::add_at(SizeType idx, const DataType& v, SizeType n)
 {
-    SKR_ASSERT(is_valid_index(idx));
     add_at_unsafe(idx, n);
     for (SizeType i = 0; i < n; ++i)
     {
@@ -618,14 +617,13 @@ SKR_INLINE void Array<Memory>::add_at(SizeType idx, const DataType& v, SizeType 
 template <typename Memory>
 SKR_INLINE void Array<Memory>::add_at(SizeType idx, DataType&& v)
 {
-    SKR_ASSERT(is_valid_index(idx));
     add_at_unsafe(idx);
     new (data() + idx) DataType(std::move(v));
 }
 template <typename Memory>
 SKR_INLINE void Array<Memory>::add_at_unsafe(SizeType idx, SizeType n)
 {
-    SKR_ASSERT(is_valid_index(idx));
+    SKR_ASSERT((empty() && idx == 0) || is_valid_index(idx));
     auto move_n = size() - idx;
     add_unsafe(n);
     memory::move(data() + idx + n, data() + idx, move_n);
@@ -633,7 +631,6 @@ SKR_INLINE void Array<Memory>::add_at_unsafe(SizeType idx, SizeType n)
 template <typename Memory>
 SKR_INLINE void Array<Memory>::add_at_default(SizeType idx, SizeType n)
 {
-    SKR_ASSERT(is_valid_index(idx));
     add_at_unsafe(idx, n);
     for (SizeType i = 0; i < n; ++i)
     {
@@ -643,7 +640,6 @@ SKR_INLINE void Array<Memory>::add_at_default(SizeType idx, SizeType n)
 template <typename Memory>
 SKR_INLINE void Array<Memory>::add_at_zeroed(SizeType idx, SizeType n)
 {
-    SKR_ASSERT(is_valid_index(idx));
     add_at_unsafe(idx, n);
     std::memset(data() + idx, 0, n * sizeof(DataType));
 }
