@@ -46,7 +46,7 @@ struct Action {
     template <concepts::AtomValue ValueType>
     Action& add_effect(const IdentifierType& id, const ValueType& value) SKR_NOEXCEPT
     {
-        effects_.set(id, value);
+        effect_.set(id, value);
         return *this;
     }
 
@@ -83,7 +83,7 @@ struct Action {
     StateType act_on(StateType& ws) const SKR_NOEXCEPT
     {
         StateType tmp(ws);
-        effects_.foreach_variable([&](const auto& k, const auto& v) { tmp.set(k, v); });
+        effect_.foreach_variable([&](const auto& k, const auto& v) { tmp.set(k, v); });
         return tmp;
     }
 
@@ -165,7 +165,7 @@ protected:
 #endif
     CostType cost_ = 0;
     skr::UMap<IdentifierType, Condition>     conditions_;
-    StateType effects_;
+    StateType effect_;
 };
 
 template <concepts::VariableType T>

@@ -8,7 +8,7 @@ namespace skr::goap
 template <concepts::IdentifierType Identifier, concepts::VariableType Variable>
 struct DynamicWorldState {
     using IdentifierType = Identifier;
-    using ValueStoreType   = Variable;
+    using ValueStoreType = Variable;
 
     virtual ~DynamicWorldState() = default;
 
@@ -21,7 +21,7 @@ struct DynamicWorldState {
     DynamicWorldState& assign(const Identifier& id, const ValueStoreType& value) SKR_NOEXCEPT
     {
         auto found = variables_.find(id);
-        if (!found) 
+        if (!found)
             return *this;
         found->value = value;
         return *this;
@@ -51,7 +51,7 @@ struct DynamicWorldState {
             auto found = variables_.find(k);
             if (!found)
                 return false;
-            if (Compare<ValueStoreType>::NotEqual(v, found->value)) 
+            if (Compare<ValueStoreType>::NotEqual(v, found->value))
                 return false;
         }
         return true;
@@ -89,12 +89,8 @@ struct DynamicWorldState {
         }
     }
 
-    PriorityType                        priority_ = 0.f;
-    skr::String                         name_     = u8"";
+    skr::String                           name_ = u8"";
     skr::UMap<Identifier, ValueStoreType> variables_;
 };
-
-template <concepts::IdentifierType Identifier, concepts::VariableType Variable>
-using DynamicEffect = DynamicWorldState<Identifier, Variable>;
 
 } // namespace skr::goap

@@ -128,16 +128,18 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
                     .set<&IOStates::ram_status>(ERamStatus::Allocated);
         Planner planner;
         auto    the_plan = planner.plan<true>(initial_state, goal, actions);
-        for (int64_t fail_index = the_plan.size() - 1; fail_index >= 0; --fail_index)
+        for (int64_t cancel_index = the_plan.size() - 1; cancel_index >= 0; --cancel_index)
         {
             std::cout << "[STATIC] NO DECOMPRESS: Found a path!\n";
             for (int64_t i = the_plan.size() - 1; i >= 0; --i)
             {
-                const auto& [action, state] = the_plan[i];
-                const bool fail             = (i == (fail_index));
-                if (fail)
+                const bool  last        = (i == (the_plan.size() - 1));
+                const auto& action      = the_plan[i].first;
+                const auto& state       = !last ? the_plan[i + 1].second : initial_state;
+                const bool  mock_cancel = (i == (cancel_index));
+                if (mock_cancel)
                 {
-                    std::cout << "cancel triggered, because action failed: "
+                    std::cout << "cancel triggered, before action: "
                               << (const char*)action.name() << std::endl;
 
                     StaticWorldState current = state;

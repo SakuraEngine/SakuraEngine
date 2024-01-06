@@ -105,7 +105,6 @@ SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateTy
         // Look for Node with the lowest-F-score on the open list. Switch it to closed,
         // and hang onto it -- this is our latest node.
         Node& current(popAndClose());
-
         // Is our current state the goal state? If so, we've found a path, yay.
         if (current.ws_.meets_goal(goal))
         {

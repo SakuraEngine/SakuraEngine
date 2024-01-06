@@ -1,41 +1,8 @@
 #pragma once
-#include "SkrRT/goap/atom.hpp"
-#include "SkrRT/goap/traits.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/goap/static/proxy.hpp"
 
 namespace skr::goap
 {
-
-template <concepts::StaticState T>
-struct StaticWorldStateProxy {
-    using StateType      = T;
-    using IdentifierType = StaticAtomId;
-    using ValueStoreType = uint32_t;
-
-protected:
-    T _this;
-};
-
-template <concepts::StaticState T>
-struct StaticCond : public StaticWorldStateProxy<T> {
-    using Super          = StaticWorldStateProxy<T>;
-    using StateType      = typename Super::StateType;
-    using IdentifierType = StaticAtomId;
-    using ValueStoreType = uint32_t;
-
-protected:
-    const auto& getAtom(const uint32_t idx) const SKR_NOEXCEPT
-    {
-        const auto offset = idx * sizeof(AtomOpMemory);
-        return *reinterpret_cast<const AtomOpMemory*>(reinterpret_cast<const uint8_t*>(&Super::_this) + offset);
-    }
-    auto& getAtom(const uint32_t idx) SKR_NOEXCEPT
-    {
-        const auto offset = idx * sizeof(AtomOpMemory);
-        return *reinterpret_cast<AtomOpMemory*>(reinterpret_cast<uint8_t*>(&Super::_this) + offset);
-    }
-    skr::Vector<AtomOperand> operands;
-};
 
 template <concepts::StaticState T, StringLiteral Literal = u8"">
 struct StaticWorldState : public StaticWorldStateProxy<T> {
@@ -173,8 +140,5 @@ protected:
         return *reinterpret_cast<AtomMemory*>(reinterpret_cast<uint8_t*>(&this->_this) + offset);
     }
 };
-
-template <concepts::StaticState T>
-using StaticEffect = StaticWorldState<T, u8"Effect">;
 
 } // namespace skr::goap
