@@ -537,23 +537,13 @@ template <typename Memory>
 template <typename UV>
 SKR_INLINE bool SparseHashMap<Memory>::remove_value(const UV& value)
 {
-    if (auto ref = find_value(value))
-    {
-        remove_at(ref.index());
-        return true;
-    }
-    return false;
+    return remove_if([&value](const MapDataType& data) { return data.value == value; });
 }
 template <typename Memory>
 template <typename UV>
 SKR_INLINE bool SparseHashMap<Memory>::remove_all_value(const UV& value)
 {
-    if (auto ref = find_value(value))
-    {
-        remove_at(ref.index());
-        return true;
-    }
-    return false;
+    return remove_all_if([&value](const MapDataType& data) { return data.value == value; });
 }
 
 // erase
@@ -609,13 +599,13 @@ template <typename Memory>
 template <typename UV>
 SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_value(const UV& value)
 {
-    return data_arr().find_if([&value](const MapDataType& data) { return data.value == value; });
+    return find_if([&value](const MapDataType& data) { return data.value == value; });
 }
 template <typename Memory>
 template <typename UV>
 SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_value(const UV& value) const
 {
-    return data_arr().find_if([&value](const MapDataType& data) { return data.value == value; });
+    return find_if([&value](const MapDataType& data) { return data.value == value; });
 }
 
 // contains
