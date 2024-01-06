@@ -6,7 +6,10 @@ namespace skr::goap
 namespace concepts
 {
 template <typename T>
-concept StaticState = std::is_same_v<T, bool> || (std::is_enum_v<T> && (sizeof(std::underlying_type_t<T>) <= sizeof(uint32_t)));
+concept AtomicValue = std::is_same_v<T, bool> || (std::is_enum_v<T> && (sizeof(std::underlying_type_t<T>) <= sizeof(uint32_t)));
+
+template <typename T>
+concept StaticState = true;
 
 template <typename T>
 concept IdentifierType = true;
@@ -18,6 +21,7 @@ concept VariableType = goap::concepts::IsComparable<T>;
 template <concepts::IdentifierType Identifier, concepts::VariableType Variable>
 using StateMap = skr::UMap<Identifier, Variable>;
 
+template <concepts::StaticState T, StringLiteral Literal>
 struct StaticWorldState;
 
 template <concepts::IdentifierType Identifier, concepts::VariableType Variable>
@@ -25,8 +29,8 @@ struct DynamicWorldState;
 
 namespace concepts
 {
-template <typename T, typename U>
-inline constexpr bool IsStaticWorldState = !std::is_base_of_v<U, T>;
+template <typename T>
+inline constexpr bool IsStaticWorldState = false; /*TODO*/
 
 template <typename T>
 inline constexpr bool IsDynamicWorldState = skr::is_convertible_to_specialization_v<
@@ -35,8 +39,8 @@ inline constexpr bool IsDynamicWorldState = skr::is_convertible_to_specializatio
 template <typename T>
 concept DynamicWorldState = IsDynamicWorldState<T>;
 
-template <typename T, typename...Args>
-concept StaticWorldState = IsStaticWorldState<T, Args...>;
+template <typename T>
+concept StaticWorldState = IsStaticWorldState<T>;
 
 template <typename T>
 concept WorldState = IsDynamicWorldState<T>;

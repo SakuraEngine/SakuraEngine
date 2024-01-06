@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrRT/goap/config.hpp"
+#include "SkrRT/goap/traits/base.hpp"
 
 namespace skr::goap
 {

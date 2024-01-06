@@ -1,42 +1,10 @@
 #pragma once
-#include "SkrRT/goap/traits.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrRT/goap/atom.hpp"
 
 namespace skr::goap
 {
-struct StateBase {
-    uint32_t value;
-    bool     exist;
-};
 
-template <concepts::StaticState T, StringLiteral Literal>
-struct State : public StateBase {
-    static constexpr const char* Name = Literal.value;
-};
-
-static_assert(sizeof(StateBase) == sizeof(State<bool, "__Boolean_state">));
-static_assert(sizeof(StateBase) == sizeof(State<EConditionType, "__Enum_state">));
-
-struct StaticStateId {
-    template <auto Member> requires(concepts::IsMemberObject<Member>)
-    static constexpr StaticStateId Create()
-    {
-        using OwnerType = typename MemberInfo<Member>::OwnerType;
-        return StaticStateId(0/*TODO*/);
-    }
-    constexpr StaticStateId(uint32_t index) : index(index) {}
-    constexpr uint32_t get_offset() const { return index * sizeof(StateBase); }
-    const uint32_t index = 0;
-};
-
-template <auto Member> requires(concepts::IsMemberObject<Member>)
-inline constexpr StaticStateId id = StaticStateId::Create<Member>();
-
-constexpr auto sz = sizeof(State<bool, "!!!">);
-
-template <StringLiteral Literal>
-using BoolState = State<bool, Literal>;
-
+template <concepts::StaticState T, StringLiteral Literal = "">
 struct StaticWorldState {
     using IdentifierType = OffsetType;
 };
@@ -46,13 +14,18 @@ struct StaticWorldState {
 namespace skr::goap
 {
 struct TestStates {
-    State<bool, "a"> a;
-    State<bool, "a"> b;
-    int c;
+    Atom<bool, "a"> a;
+    Atom<bool, "b"> b;
 };
 
-constexpr auto fn = count_member<TestStates>();
+template <typename FieldType>
+concept StateField = concepts::IsAtom<FieldType>;
+struct FieldCheck {
+    template <class Type, StateField FieldType>
+    static constexpr bool Check() noexcept { return true; }
+};
 
-
+constexpr auto fn = count_member<TestStates, FieldCheck>();
+static_assert(fn == 2);
 
 } // namespace skr::goap
