@@ -23,7 +23,8 @@ struct SparseHashMapDataRef : private SparseHashSetDataRef<KVPair<K, V>, TS, THa
         : Super(ptr, index, hash, already_exist)
     {
     }
-    SKR_INLINE SparseHashMapDataRef(const SparseHashSetDataRef<KVPair<K, V>, SizeType, HashType, kConst>& rhs)
+    template <bool kConstRHS>
+    SKR_INLINE SparseHashMapDataRef(const SparseHashSetDataRef<KVPair<K, V>, SizeType, HashType, kConstRHS>& rhs)
         : Super(rhs)
     {
     }

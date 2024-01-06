@@ -196,12 +196,12 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
     // [needn't test] data op
     // [needn't test] bucket op
 
-    SUBCASE("find_or_add")
+    SUBCASE("add")
     {
         TestHashMap a({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
-        a.find_or_add(1, 1);
-        a.find_or_add(4, 4);
-        a.find_or_add(10, 10);
+        a.add(1, 1);
+        a.add(4, 4);
+        a.add(10, 10);
         REQUIRE_EQ(a.size(), 4);
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -239,13 +239,13 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE(a.contains(100));
     }
 
-    SUBCASE("find_or_add or assign")
+    SUBCASE("add or assign")
     {
         TestHashMap a({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
-        a.add_or_assign(1, 2);
-        a.add_or_assign(4, 5);
-        a.add_or_assign(5, 6);
-        a.add_or_assign(10, 10);
+        a.add(1, 2);
+        a.add(4, 5);
+        a.add(5, 6);
+        a.add(10, 10);
         REQUIRE_EQ(a.size(), 4);
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -334,8 +334,8 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
         TestHashMap a(100), b(100);
         for (int32_t i = 0; i < 100; ++i)
         {
-            a.find_or_add(i, i + 1);
-            b.find_or_add(i, i + 1);
+            a.add(i, i + 1);
+            b.add(i, i + 1);
         }
 
         for (auto it = a.begin(); it != a.end();)
@@ -419,7 +419,7 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
             {
                 k = rand() % 100;
             }
-            a.find_or_add(k, k * 5);
+            a.add(k, k * 5);
         }
         a.sort();
         REQUIRE_EQ(a.size(), 100);
