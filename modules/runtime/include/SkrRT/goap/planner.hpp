@@ -168,9 +168,8 @@ SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateTy
             }
         }
     }
-
-    start.dump(u8"START");
-    goal.dump(u8"GOAL");
+    start.dump(u8"START", SKR_LOG_LEVEL_ERROR);
+    goal.dump(u8"GOAL", SKR_LOG_LEVEL_ERROR);
     SKR_LOG_FATAL(u8"A* planner could not find a path from start to goal");
     return RetType();
 }

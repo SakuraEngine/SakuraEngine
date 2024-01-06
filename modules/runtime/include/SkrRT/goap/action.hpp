@@ -12,12 +12,12 @@ inline static bool DoValueCompare(EConditionType t, const T& lhs, const T& rhs);
 template <concepts::WorldState StateType>
 struct Action {
     using IdentifierType = typename StateType::IdentifierType;
-    using VariableType   = typename StateType::VariableType;
-    using Predicates     = bool (*)(const StateMap<IdentifierType, VariableType>&);
+    using ValueStoreType   = typename StateType::ValueStoreType;
+    using Predicates     = bool (*)(const StateMap<IdentifierType, ValueStoreType>&);
     struct Condition {
         EConditionType t;
         EVariableFlag f;
-        VariableType v;
+        ValueStoreType v;
     };
 
     Action(const char8_t* name, CostType cost = 0) SKR_NOEXCEPT
@@ -28,6 +28,7 @@ struct Action {
 #endif
     }
 
+    template <concepts::AtomValue VariableType>
     Action& add_condition(const IdentifierType& id, EVariableFlag flag,
                        const VariableType& value, EConditionType type = EConditionType::Equal) SKR_NOEXCEPT
     {
@@ -35,12 +36,15 @@ struct Action {
         return *this;
     }
 
+    /*
     Action& add_condition(Predicates cmp) SKR_NOEXCEPT
     {
         predicates_.add(cmp);
         return *this;
     }
+    */
 
+    template <concepts::AtomValue VariableType>
     Action& add_effect(const IdentifierType& id, const VariableType& value) SKR_NOEXCEPT
     {
         effects_.add_or_assign(id, value);
@@ -54,8 +58,9 @@ struct Action {
             const auto& v = cond.v;
             const auto type = cond.t;
             const auto flag = cond.f;
-
-            auto found = ws.variables_.find(k);
+            
+            ValueStoreType value;
+            auto found = ws.get_variable(k, value);
             if (!found && (flag == EVariableFlag::Any))
                 continue;
 
@@ -63,14 +68,16 @@ struct Action {
                 return false;
             if (!found && (flag == EVariableFlag::Explicit))
                 return false;
-            if (!DoValueCompare(type, v, found->value))
+            if (!DoValueCompare(type, v, value))
                 return false;
         }
+        /*
         for (const auto& predicate : predicates_)
         {
             if (!predicate(ws.variables_))
                 return false;
         }
+        */
         return true;
     }
 
@@ -92,26 +99,31 @@ struct Action {
 #endif
 
 public:
+    template <concepts::AtomValue VariableType>
     Action& exist_and_equal(const IdentifierType& id, const VariableType& value)
     {
         return add_condition(id, EVariableFlag::Explicit, value, EConditionType::Equal);
     }
 
+    template <concepts::AtomValue VariableType>
     Action& exist_and_nequal(const IdentifierType& id, const VariableType& value)
     {
         return add_condition(id, EVariableFlag::Explicit, value, EConditionType::NotEqual);
     }
 
+    template <concepts::AtomValue VariableType>
     Action& none_or_equal(const IdentifierType& id, const VariableType& value)
     {
         return add_condition(id, EVariableFlag::Any, value, EConditionType::Equal);
     }
 
+    template <concepts::AtomValue VariableType>
     Action& none_or_nequal(const IdentifierType& id, const VariableType& value)
     {
         return add_condition(id, EVariableFlag::Any, value, EConditionType::NotEqual);
     }
 
+    template <concepts::AtomValue VariableType>
     Action& none(const IdentifierType& id)
     {
         return add_condition(id, EVariableFlag::None, {}, EConditionType::Equal);
@@ -122,9 +134,9 @@ protected:
     skr::String name_;
 #endif
     CostType                               cost_ = 0;
-    skr::Vector<Predicates>                predicates_;
+    // skr::Vector<Predicates>                predicates_;
     skr::UMap<IdentifierType, Condition> conditions_;
-    StateMap<IdentifierType, VariableType> effects_;
+    StateMap<IdentifierType, ValueStoreType> effects_;
 };
 
 template <concepts::VariableType T>

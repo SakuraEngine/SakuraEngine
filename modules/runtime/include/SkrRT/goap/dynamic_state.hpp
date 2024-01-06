@@ -8,17 +8,17 @@ namespace skr::goap
 template <concepts::IdentifierType Identifier, concepts::VariableType Variable>
 struct DynamicWorldState {
     using IdentifierType = Identifier;
-    using VariableType   = Variable;
+    using ValueStoreType   = Variable;
 
     virtual ~DynamicWorldState() = default;
 
-    DynamicWorldState& set_variable(const Identifier& id, const VariableType& value) SKR_NOEXCEPT
+    DynamicWorldState& set_variable(const Identifier& id, const ValueStoreType& value) SKR_NOEXCEPT
     {
         variables_.add_or_assign(id, value);
         return *this;
     }
 
-    DynamicWorldState& assign_variable(const Identifier& id, const VariableType& value) SKR_NOEXCEPT
+    DynamicWorldState& assign_variable(const Identifier& id, const ValueStoreType& value) SKR_NOEXCEPT
     {
         auto found = variables_.find(id);
         if (!found) 
@@ -27,7 +27,7 @@ struct DynamicWorldState {
         return *this;
     }
 
-    bool get_variable(const Identifier& id, VariableType& value) SKR_NOEXCEPT
+    bool get_variable(const Identifier& id, ValueStoreType& value) const SKR_NOEXCEPT
     {
         auto found = variables_.find(id);
         if (!found) return false;
@@ -42,7 +42,7 @@ struct DynamicWorldState {
             auto found = variables_.find(k);
             if (!found)
                 return false;
-            if (Compare<VariableType>::NotEqual(v, found->value)) 
+            if (Compare<ValueStoreType>::NotEqual(v, found->value)) 
                 return false;
         }
         return true;
@@ -54,7 +54,7 @@ struct DynamicWorldState {
         for (const auto& [k, v] : goal.variables_)
         {
             auto found = variables_.find(k);
-            if (!found || Compare<VariableType>::NotEqual(v, found->value))
+            if (!found || Compare<ValueStoreType>::NotEqual(v, found->value))
                 distance += 1;
         }
         return distance;
@@ -65,7 +65,7 @@ struct DynamicWorldState {
         for (const auto& [k, v] : other.variables_)
         {
             auto found = variables_.find(k);
-            if (!found || Compare<VariableType>::NotEqual(v, found->value))
+            if (!found || Compare<ValueStoreType>::NotEqual(v, found->value))
                 return false;
         }
         return true;
@@ -82,7 +82,7 @@ struct DynamicWorldState {
 
     PriorityType                        priority_ = 0.f;
     skr::String                         name_     = u8"";
-    skr::UMap<Identifier, VariableType> variables_;
+    skr::UMap<Identifier, ValueStoreType> variables_;
 };
 
 } // namespace skr::goap

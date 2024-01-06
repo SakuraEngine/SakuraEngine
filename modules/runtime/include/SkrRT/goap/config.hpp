@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/template/concepts.hpp"
 #include "SkrBase/template/count_member.hpp"
+#include "SkrBase/template/foreach_field.hpp"
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/umap.hpp"
 

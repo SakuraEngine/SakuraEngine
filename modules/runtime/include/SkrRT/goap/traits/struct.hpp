@@ -22,16 +22,20 @@ struct MemberInfo<T(OT::*)> {
 };
 } // namespace detail
 
-template <concepts::StaticWorldState T>
+/*
+template <typename T>
 struct StructInfo {
-
+    inline static constexpr auto Value = std::decay_t<T>();
 };
+*/
 
 template <auto Member> requires(concepts::IsMemberObject<Member>)
 struct MemberInfo {
     using PtrType   = decltype(Member);
     using OwnerType = typename detail::MemberInfo<PtrType>::OwnerType;
     using Type      = typename detail::MemberInfo<PtrType>::Type;
+
+    inline static const auto Offset = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(&(static_cast<OwnerType*>(nullptr)->*Member)));
 };
 
 } // namespace skr::goap

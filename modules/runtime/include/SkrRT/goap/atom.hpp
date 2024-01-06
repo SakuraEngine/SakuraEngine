@@ -1,49 +1,75 @@
 #pragma once
+#include "SkrBase/misc/hash.hpp"
 #include "SkrRT/goap/traits.hpp"
 #include "SkrRT/misc/log.hpp"
 
 namespace skr::goap
 {
 struct AtomBase {
-    uint32_t value;
-    bool     exist;
+    uint32_t value = 0;
+    bool     exist = false;
 };
 
-template <concepts::AtomicValue T, StringLiteral Literal>
+template <concepts::AtomValue T, StringLiteral Literal>
 struct Atom : public AtomBase {
-    static constexpr const char* Name = Literal.value;
+    static constexpr skr::StringView name = Literal.view();
 };
 
 template <StringLiteral Literal>
-using BoolState = Atom<bool, Literal>;
+using BoolAtom = Atom<bool, Literal>;
 
 namespace concepts
 {
 template <typename T>
 inline constexpr bool IsAtom = false;
 
-template <concepts::AtomicValue T, StringLiteral Literal>
+template <concepts::AtomValue T, StringLiteral Literal>
 inline constexpr bool IsAtom<Atom<T, Literal>> = true;
-} // namespace concepts
 
-static_assert(sizeof(AtomBase) == sizeof(Atom<bool, "__Boolean_state">));
-static_assert(sizeof(AtomBase) == sizeof(Atom<EConditionType, "__Enum_state">));
+template <typename T>
+concept AtomType = IsAtom<T>;
 
-struct StaticAtomId {
-    template <auto Member> requires(concepts::IsMemberObject<Member>)
-    static constexpr StaticAtomId Create()
-    {
-        // using OwnerType = typename MemberInfo<Member>::OwnerType;
-        return StaticAtomId(0 /*TODO*/);
-    }
-    constexpr StaticAtomId(uint32_t index)
-        : index(index)
-    {
-    }
-    constexpr uint32_t get_offset() const { return index * sizeof(AtomBase); }
-    const uint32_t     index = 0;
+struct AtomCheck {
+    template <class Type, concepts::AtomType FieldType>
+    static constexpr bool Check() noexcept { return true; }
 };
 
-template <auto Member> requires(concepts::IsMemberObject<Member>)
-inline constexpr StaticAtomId atom_id = StaticAtomId::Create<Member>();
+template <auto Member>
+inline constexpr bool IsAtomMember = IsAtom<typename MemberInfo<Member>::Type> &&
+                                     IsStaticState<typename MemberInfo<Member>::OwnerType>;
+
+} // namespace concepts
+
+static_assert(sizeof(AtomBase) == sizeof(Atom<bool, u8"__Boolean_state">));
+static_assert(sizeof(AtomBase) == sizeof(Atom<EConditionType, u8"__Enum_state">));
+
+struct StaticAtomId {
+    constexpr StaticAtomId(uint32_t offset)
+        : offset(offset)
+    {
+    }
+    const uint32_t get_index() const { return offset / sizeof(AtomBase); }
+    const bool operator==(const StaticAtomId& other) const { return offset == other.offset; }
+    const uint32_t offset = 0;
+};
+
+template <auto Member> requires(concepts::IsAtomMember<Member>)
+inline static const StaticAtomId atom_id = StaticAtomId(MemberInfo<Member>::Offset);
+
+template <concepts::StaticState T>
+inline constexpr uint32_t atom_count = skr::count_member<T, concepts::AtomCheck>();
+
+template <concepts::StaticState T, StringLiteral Literal>
+inline constexpr uint32_t atom_count<StaticWorldState<T, Literal>> = skr::count_member<T, concepts::AtomCheck>();
+
 } // namespace skr::goap
+
+namespace skr {
+template <>
+struct Hash<goap::StaticAtomId> {
+    inline size_t operator()(const goap::StaticAtomId& id) const noexcept
+    {
+        return id.offset;
+    }
+};
+} // namespace skr
