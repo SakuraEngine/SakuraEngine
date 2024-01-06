@@ -1,11 +1,11 @@
 #pragma once
-#include "SkrBase/containers/sparse_hash_map/sparse_hash_map_new.hpp"
+#include "SkrBase/containers/sparse_hash_map/sparse_hash_map.hpp"
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map_memory.hpp"
 #include "SkrBase/containers/array/array.hpp"
 #include "SkrBase/containers/array/array_memory.hpp"
 #include "SkrBase/containers/sparse_array/sparse_array.hpp"
 #include "SkrBase/containers/sparse_array/sparse_array_memory.hpp"
-#include "SkrBase/containers/sparse_hash_set/sparse_hash_set_new.hpp"
+#include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_memory.hpp"
 #include "SkrBase/containers/bit_array/bit_array.hpp"
 #include "SkrBase/containers/bit_array/bit_array_memory.hpp"
@@ -70,9 +70,7 @@ template <typename T>
 using SparseHashSet = container::SparseHashSet<container::SparseHashSetMemory<
 T,
 TestBitBlockType,
-container::KeyTraits<T>,
 container::HashTraits<T>,
-false,
 TestSizeType,
 TestAllocatorType>>;
 
@@ -80,9 +78,7 @@ template <typename T, uint64_t kCount>
 using FixedSparseHashSet = container::SparseHashSet<container::FixedSparseHashSetMemory<
 T,
 TestBitBlockType,
-container::KeyTraits<T>,
 container::HashTraits<T>,
-false,
 TestSizeType,
 kCount>>;
 
@@ -90,9 +86,7 @@ template <typename T, uint64_t kInlineCount>
 using InlineSparseHashSet = container::SparseHashSet<container::InlineSparseHashSetMemory<
 T,
 TestBitBlockType,
-container::KeyTraits<T>,
 container::HashTraits<T>,
-false,
 TestSizeType,
 kInlineCount,
 TestAllocatorType>>;
@@ -103,9 +97,7 @@ using SparseHashMap = container::SparseHashMap<container::SparseHashMapMemory<
 K,
 V,
 TestBitBlockType,
-container::KeyTraits<container::KVPair<K, V>>,
 container::HashTraits<K>,
-false,
 TestSizeType,
 TestAllocatorType>>;
 
@@ -114,9 +106,7 @@ using FixedSparseHashMap = container::SparseHashMap<container::FixedSparseHashMa
 K,
 V,
 TestBitBlockType,
-container::KeyTraits<container::KVPair<K, V>>,
 container::HashTraits<K>,
-false,
 TestSizeType,
 kCount>>;
 
@@ -125,9 +115,7 @@ using InlineSparseHashMap = container::SparseHashMap<container::InlineSparseHash
 K,
 V,
 TestBitBlockType,
-container::KeyTraits<container::KVPair<K, V>>,
 container::HashTraits<K>,
-false,
 TestSizeType,
 kInlineCount,
 TestAllocatorType>>;

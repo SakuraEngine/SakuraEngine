@@ -22,7 +22,11 @@ struct Hash<String> {
     }
     inline size_t operator()(const char* x) const
     {
-        return ostr::hash_sequence_crc64(x, strlen(x));
+        return ostr::hash_sequence_crc64(x, std::strlen(x));
+    }
+    inline size_t operator()(const char8_t* x) const
+    {
+        return ostr::hash_sequence_crc64(x, std::strlen(reinterpret_cast<const char*>(x)));
     }
 };
 

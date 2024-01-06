@@ -285,7 +285,7 @@ CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
         else
         {
             surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
-            surfaces.add_or_assign(window, surface);
+            surfaces.add(window, surface);
         }
     }
     int32_t width, height;
@@ -301,7 +301,7 @@ CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
     auto swapchain = cgpu_create_swapchain(device, &chain_desc);
-    swapchains.add_or_assign(window, swapchain);
+    swapchains.add(window, swapchain);
     return swapchain;
 }
 
@@ -329,7 +329,7 @@ CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle wind
         }
         {
             surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
-            surfaces.add_or_assign(window, surface);
+            surfaces.add(window, surface);
         }
     }
     int32_t width, height;
@@ -345,7 +345,7 @@ CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle wind
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
     auto swapchain = cgpu_create_swapchain(gfx_queue->device, &chain_desc);
-    swapchains.add_or_assign(window, swapchain);
+    swapchains.add(window, swapchain);
     return swapchain;
 }
 }

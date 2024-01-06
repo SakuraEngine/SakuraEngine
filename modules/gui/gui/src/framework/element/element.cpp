@@ -341,7 +341,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
             }
             else
             {
-                old_keyed_children.add_or_assign(child->widget()->key, child);
+                old_keyed_children.add(child->widget()->key, child);
             }
         }
         ++children_match_front;

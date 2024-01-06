@@ -223,7 +223,7 @@ bool skr_win_dstorage_decompress_service_register_callback(skr_win_dstorage_deco
     SKR_ASSERT(!registered && "Callback already registered for this compression");
     if (registered) return false;
     SKR_ASSERT(callback && "Callback must be valid");
-    service->resolvers.add_or_assign(compression, { callback, user_data });
+    service->resolvers.add(compression, { callback, user_data });
     return true;
 }
 

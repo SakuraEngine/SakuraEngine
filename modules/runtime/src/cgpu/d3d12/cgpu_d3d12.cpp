@@ -995,7 +995,7 @@ CGPURenderPipelineId     cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, 
                 if (found)
                     found.value() += 1;
                 else
-                    semanticIndexMap.add_or_assign(attrib->semantic_name, 0);
+                    semanticIndexMap.add(attrib->semantic_name, 0);
                 found                                        = semanticIndexMap.find(attrib->semantic_name);
                 input_elements[fill_index].SemanticIndex     = found.value();
                 input_elements[fill_index].Format            = DXGIUtil_TranslatePixelFormat(attrib->format);
