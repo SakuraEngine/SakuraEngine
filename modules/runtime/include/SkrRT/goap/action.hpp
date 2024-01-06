@@ -27,20 +27,23 @@ struct Action {
 #endif
     }
 
-    void add_condition(const IdentifierType& id, EVariableFlag flag,
+    Action& add_condition(const IdentifierType& id, EVariableFlag flag,
                        const VariableType& value, EConditionType type = EConditionType::Equal) SKR_NOEXCEPT
     {
         conditions_.add_or_assign(id, {type, flag, value});
+        return *this;
     }
 
-    void add_condition(Predicates cmp) SKR_NOEXCEPT
+    Action& add_condition(Predicates cmp) SKR_NOEXCEPT
     {
         predicates_.add(cmp);
+        return *this;
     }
 
-    void add_effect(const IdentifierType& id, const VariableType& value) SKR_NOEXCEPT
+    Action& add_effect(const IdentifierType& id, const VariableType& value) SKR_NOEXCEPT
     {
         effects_.add_or_assign(id, value);
+        return *this;
     }
 
     bool operable_on(const StateType& ws) const SKR_NOEXCEPT
@@ -52,10 +55,11 @@ struct Action {
             const auto flag = cond.f;
 
             auto found = ws.variables_.find(k);
+            if (!found && (flag == EVariableFlag::Any))
+                continue;
+
             if (found && (flag == EVariableFlag::None))
                 return false;
-            if (!found && (flag == EVariableFlag::Any))
-                return true;
             if (!found && (flag == EVariableFlag::Explicit))
                 return false;
             if (!DoValueCompare(type, v, found->value))
@@ -87,29 +91,29 @@ struct Action {
 #endif
 
 public:
-    void exist_and_equal(const IdentifierType& id, const VariableType& value)
+    Action& exist_and_equal(const IdentifierType& id, const VariableType& value)
     {
-        add_condition(id, EVariableFlag::Explicit, value, EConditionType::Equal);
+        return add_condition(id, EVariableFlag::Explicit, value, EConditionType::Equal);
     }
 
-    void exist_and_nequal(const IdentifierType& id, const VariableType& value)
+    Action& exist_and_nequal(const IdentifierType& id, const VariableType& value)
     {
-        add_condition(id, EVariableFlag::Explicit, value, EConditionType::NotEqual);
+        return add_condition(id, EVariableFlag::Explicit, value, EConditionType::NotEqual);
     }
 
-    void none_or_equal(const IdentifierType& id, const VariableType& value)
+    Action& none_or_equal(const IdentifierType& id, const VariableType& value)
     {
-        add_condition(id, EVariableFlag::Any, value, EConditionType::Equal);
+        return add_condition(id, EVariableFlag::Any, value, EConditionType::Equal);
     }
 
-    void none_or_nequal(const IdentifierType& id, const VariableType& value)
+    Action& none_or_nequal(const IdentifierType& id, const VariableType& value)
     {
-        add_condition(id, EVariableFlag::Any, value, EConditionType::NotEqual);
+        return add_condition(id, EVariableFlag::Any, value, EConditionType::NotEqual);
     }
 
-    void none(const IdentifierType& id)
+    Action& none(const IdentifierType& id)
     {
-        add_condition(id, EVariableFlag::None, {}, EConditionType::Equal);
+        return add_condition(id, EVariableFlag::None, {}, EConditionType::Equal);
     }
 
 protected:

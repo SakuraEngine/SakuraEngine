@@ -12,19 +12,19 @@ struct WorldState {
 
     virtual ~WorldState() = default;
 
-    bool set_variable(const Identifier& id, const VariableType& value) SKR_NOEXCEPT
+    WorldState& set_variable(const Identifier& id, const VariableType& value) SKR_NOEXCEPT
     {
         variables_.add_or_assign(id, value);
-        return true;
+        return *this;
     }
 
-    bool assign_variable(const Identifier& id, const VariableType& value) SKR_NOEXCEPT
+    WorldState& assign_variable(const Identifier& id, const VariableType& value) SKR_NOEXCEPT
     {
         auto found = variables_.find(id);
         if (!found) 
-            return false;
+            return *this;
         found->value = value;
-        return true;
+        return *this;
     }
 
     bool get_variable(const Identifier& id, VariableType& value) SKR_NOEXCEPT

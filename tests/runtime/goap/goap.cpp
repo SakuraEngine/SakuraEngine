@@ -1,6 +1,6 @@
+#include "SkrRT/goap/planner.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/crash.h"
-#include "SkrRT/goap/planner.hpp"
 #include "SkrTestFramework/framework.hpp"
 
 #include <iostream>
@@ -48,12 +48,8 @@ static struct ProcInitializer {
 
 struct GoapTests {
 protected:
-    GoapTests()
-    {
-    }
-    ~GoapTests()
-    {
-    }
+    GoapTests() {}
+    ~GoapTests() {}
 };
 
 TEST_CASE_METHOD(GoapTests, "LiteralString")
@@ -76,63 +72,59 @@ TEST_CASE_METHOD(GoapTests, "I/O")
 
     static const int cancelling = 100;
 
+    // clang-format off
     // actions
-    Action openFile(u8"openFile");
-    openFile.add_effect(file_opened, true);
-    actions.push_back(openFile);
+    actions.emplace(u8"openFile").ref()
+        .none_or_equal(cancelling, false)
+        .add_effect(file_opened, true);
 
-    Action allocateMemory(u8"allocateMemory");
-    allocateMemory.none_or_equal(cancelling, false);
-    allocateMemory.exist_and_equal(file_opened, true);
-    allocateMemory.add_effect(ram_allocated, true);
-    actions.push_back(allocateMemory);
+    actions.emplace(u8"allocateMemory").ref()
+        .none_or_equal(cancelling, false)
+        .exist_and_equal(file_opened, true)
+        .add_effect(ram_allocated, true);
 
-    Action readBytes(u8"readBytes");
-    readBytes.none_or_equal(cancelling, false);
-    readBytes.exist_and_equal(file_opened, true);
-    readBytes.exist_and_equal(ram_allocated, true);
-    readBytes.add_effect(block_readed, true);
-    actions.push_back(readBytes);
+    actions.emplace(u8"readBytes").ref()
+        .none_or_equal(cancelling, false)
+        .exist_and_equal(file_opened, true)
+        .exist_and_equal(ram_allocated, true)
+        .add_effect(block_readed, true);
 
-    Action decompress(u8"decompress");
-    decompress.none_or_equal(cancelling, false);
-    decompress.exist_and_equal(block_readed, true);
-    decompress.add_effect(decompressd, true);
-    actions.push_back(decompress);
+    actions.emplace(u8"decompress").ref()
+        .none_or_equal(cancelling, false)
+        .exist_and_equal(block_readed, true)
+        .add_effect(decompressd, true);
 
-    Action freeRaw(u8"freeRaw");
-    freeRaw.none_or_equal(cancelling, false);
-    freeRaw.exist_and_equal(ram_allocated, true);
-    freeRaw.exist_and_equal(decompressd, true);
-    freeRaw.add_effect(ram_allocated, false);
-    actions.push_back(freeRaw);
+    actions.emplace(u8"freeRaw").ref()
+        .none_or_equal(cancelling, false)
+        .exist_and_equal(ram_allocated, true)
+        .exist_and_equal(decompressd, true)
+        .add_effect(ram_allocated, false);
 
-    Action closeFile(u8"closeFile");
-    closeFile.none_or_equal(cancelling, false);
-    closeFile.exist_and_equal(block_readed, true);
-    closeFile.exist_and_equal(file_opened, true);
-    closeFile.add_effect(file_opened, false);
-    actions.push_back(closeFile);
+    actions.emplace(u8"closeFile").ref()
+        .none_or_equal(cancelling, false)
+        .exist_and_equal(block_readed, true)
+        .exist_and_equal(file_opened, true)
+        .add_effect(file_opened, false);
 
-    Action freeRaw_Cancel(u8"freeRaw(Cancel)");
-    freeRaw_Cancel.exist_and_equal(cancelling, true);
-    freeRaw_Cancel.exist_and_equal(ram_allocated, true);
-    freeRaw_Cancel.add_effect(ram_allocated, false);
-    actions.push_back(freeRaw_Cancel);
+    actions.emplace(u8"freeRaw(Cancel)").ref()
+        .exist_and_equal(cancelling, true)
+        .exist_and_equal(ram_allocated, true)
+        .add_effect(ram_allocated, false);
 
-    Action closeFile_Cancel(u8"closeFile(Cancel)");
-    closeFile_Cancel.exist_and_equal(cancelling, true);
-    closeFile_Cancel.exist_and_equal(file_opened, true);
-    closeFile_Cancel.add_effect(file_opened, false);
-    actions.push_back(closeFile_Cancel);
+    actions.emplace(u8"closeFile(Cancel)").ref()
+        .exist_and_equal(cancelling, true)
+        .exist_and_equal(file_opened, true)
+        .add_effect(file_opened, false);
+    // clang-format on
 
     WorldState initial_state;
+    initial_state.set_variable(cancelling, false);
     // NO DECOMPRESS
     {
-        WorldState goal;
-        goal.set_variable(block_readed, true);
-        goal.set_variable(file_opened, false);
-        goal.set_variable(ram_allocated, false);
+        auto goal = WorldState()
+            .set_variable(block_readed, true)
+            .set_variable(file_opened, false)
+            .set_variable(ram_allocated, false);
         Planner planner;
         auto    the_plan = planner.plan<true>(initial_state, goal, actions);
         for (int64_t fail_index = the_plan.size() - 1; fail_index >= 0; --fail_index)
@@ -144,20 +136,22 @@ TEST_CASE_METHOD(GoapTests, "I/O")
                 const bool fail             = (i == (fail_index));
                 if (fail)
                 {
-                    std::cout << "cancel triggered, because action failed: " << (const char*)action.name() << std::endl;
+                    std::cout << "cancel triggered, because action failed: "
+                              << (const char*)action.name() << std::endl;
 
                     auto current = state;
                     current.set_variable(cancelling, true);
 
                     WorldState cancelled = current;
-                    cancelled.assign_variable(file_opened, false);
-                    cancelled.assign_variable(ram_allocated, false);
+                    cancelled.assign_variable(file_opened, false)
+                        .assign_variable(ram_allocated, false);
                     Planner cancel_planner;
                     auto    cancel_plan = cancel_planner.plan(current, cancelled, actions);
                     std::cout << "    REQUEST CANCEL:\n";
                     for (int64_t i = cancel_plan.size() - 1; i >= 0; --i)
                     {
-                        std::cout << "        " << (const char*)cancel_plan[i].name() << std::endl;
+                        std::cout << "        " << (const char*)cancel_plan[i].name()
+                                  << std::endl;
                     }
                     break;
                 }
@@ -169,10 +163,10 @@ TEST_CASE_METHOD(GoapTests, "I/O")
     }
     // WITH DECOMPRESS
     {
-        WorldState goal;
-        goal.set_variable(decompressd, true);
-        goal.set_variable(ram_allocated, false);
-        goal.set_variable(file_opened, false);
+        auto goal = WorldState()
+            .set_variable(decompressd, true)
+            .set_variable(ram_allocated, false)
+            .set_variable(file_opened, false);
         Planner planner;
         auto    the_plan = planner.plan(initial_state, goal, actions);
         std::cout << "WITH DECOMPRESS: Found a path!\n";
@@ -184,14 +178,14 @@ TEST_CASE_METHOD(GoapTests, "I/O")
     }
     // REQUEST CANCEL
     {
-        WorldState current;
-        current.set_variable(file_opened, true);
-        current.set_variable(ram_allocated, true);
-        current.set_variable(block_readed, true);
-        current.set_variable(cancelling, true);
-        WorldState cancelled;
-        cancelled.set_variable(file_opened, false);
-        cancelled.set_variable(ram_allocated, false);
+        auto current = WorldState()
+            .set_variable(file_opened, true)
+            .set_variable(ram_allocated, true)
+            .set_variable(block_readed, true)
+            .set_variable(cancelling, true);
+        auto cancelled = WorldState()
+            .set_variable(file_opened, false)
+            .set_variable(ram_allocated, false);
         Planner planner;
         auto    the_plan = planner.plan(current, cancelled, actions);
         std::cout << "REQUEST CANCEL: Found a path!\n";
