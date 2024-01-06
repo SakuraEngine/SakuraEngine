@@ -1,32 +1,57 @@
 #pragma once
 #include "SkrRT/goap/atom.hpp"
 #include "SkrRT/goap/traits.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 namespace skr::goap
 {
 
-template <concepts::StaticState T, StringLiteral Literal = u8"">
-struct StaticWorldState {
+template <concepts::StaticState T>
+struct StaticWorldStateProxy {
     using StateType      = T;
     using IdentifierType = StaticAtomId;
     using ValueStoreType = uint32_t;
-    
-    template <auto Member> requires(concepts::IsAtomMember<Member>) 
-    using ValueType = AtomValueType<typename MemberInfo<Member>::Type>;
+
+protected:
+    T _this;
+};
+
+template <concepts::StaticState T>
+struct StaticCond : public StaticWorldStateProxy<T> {
+    using Super          = StaticWorldStateProxy<T>;
+    using StateType      = typename Super::StateType;
+    using IdentifierType = StaticAtomId;
+    using ValueStoreType = uint32_t;
+
+protected:
+    const auto& getAtom(const uint32_t idx) const SKR_NOEXCEPT
+    {
+        const auto offset = idx * sizeof(AtomOpMemory);
+        return *reinterpret_cast<const AtomOpMemory*>(reinterpret_cast<const uint8_t*>(&Super::_this) + offset);
+    }
+    auto& getAtom(const uint32_t idx) SKR_NOEXCEPT
+    {
+        const auto offset = idx * sizeof(AtomOpMemory);
+        return *reinterpret_cast<AtomOpMemory*>(reinterpret_cast<uint8_t*>(&Super::_this) + offset);
+    }
+    skr::Vector<AtomOperand> operands;
+};
+
+template <concepts::StaticState T, StringLiteral Literal = u8"">
+struct StaticWorldState : public StaticWorldStateProxy<T> {
+    using Super          = StaticWorldStateProxy<T>;
+    using StateType      = typename Super::StateType;
+    using IdentifierType = typename Super::IdentifierType;
+    using ValueStoreType = typename Super::ValueStoreType;
 
     template <concepts::AtomValue ValueType>
     StaticWorldState& set(const IdentifierType& id, const ValueType& value) SKR_NOEXCEPT
     {
-        auto& atom = getAtom(id.get_index());
-        {
-            atom.exist = true;
-            atom.value = static_cast<uint32_t>(value);
-        }
-        return *this;
+        return set(id.get_index(), static_cast<ValueStoreType>(value));
     }
     template <auto Member>
     requires(concepts::IsAtomMember<Member>)
-    StaticWorldState& set(const ValueType<Member>& value) SKR_NOEXCEPT
+    StaticWorldState& set(const AtomMemberValueType<Member>& value) SKR_NOEXCEPT
     {
         return set(atom_id<Member>, static_cast<ValueStoreType>(value));
     }
@@ -36,12 +61,12 @@ struct StaticWorldState {
     {
         auto& atom = getAtom(id.get_index());
         if (atom.exist)
-            atom.value = static_cast<uint32_t>(value);
+            atom.value = static_cast<ValueStoreType>(value);
         return *this;
     }
     template <auto Member>
     requires(concepts::IsAtomMember<Member>)
-    StaticWorldState& assign(const ValueType<Member>& value) SKR_NOEXCEPT
+    StaticWorldState& assign(const AtomMemberValueType<Member>& value) SKR_NOEXCEPT
     {
         return assign(atom_id<Member>, value);
     }
@@ -60,6 +85,15 @@ struct StaticWorldState {
     {
         const auto index = id.get_index();
         return get_variable<ValueType>(index, value);
+    }
+
+    template <typename F>
+    void foreach_variable(F&& func) const
+    {
+        skr::foreach_field(this->_this, [&](const auto atom, const auto i) {
+            if (atom.exist)
+                func(i, atom.value);
+        });
     }
 
     SKR_NOINLINE bool meets_goal(const StaticWorldState& goal) const SKR_NOEXCEPT
@@ -110,38 +144,37 @@ struct StaticWorldState {
     void dump(const char8_t* what, int level = SKR_LOG_LEVEL_INFO) const
     {
         SKR_LOG_FMT_WITH_LEVEL(level, u8"{} StaticWorldState: {}", what, Literal.view());
-        skr::foreach_field(_this, [level](const auto f, const auto i) {
+        skr::foreach_field(this->_this, [level](const auto f, const auto i) {
             if (f.exist)
                 SKR_LOG_FMT_WITH_LEVEL(level, u8"    {} = {}", f.name, f.value);
         });
     }
 
-private:
+protected:
+    friend Action<StaticWorldState>;
+    
+    StaticWorldState& set(const uint32_t& index, const ValueStoreType& value) SKR_NOEXCEPT
+    {
+        auto& atom = getAtom(index);
+        {
+            atom.exist = true;
+            atom.value = static_cast<ValueStoreType>(value);
+        }
+        return *this;
+    }
     const auto& getAtom(const uint32_t idx) const SKR_NOEXCEPT
     {
-        const auto offset = idx * sizeof(AtomBase);
-        return *reinterpret_cast<const AtomBase*>(reinterpret_cast<const uint8_t*>(&_this) + offset);
+        const auto offset = idx * sizeof(AtomMemory);
+        return *reinterpret_cast<const AtomMemory*>(reinterpret_cast<const uint8_t*>(&this->_this) + offset);
     }
     auto& getAtom(const uint32_t idx) SKR_NOEXCEPT
     {
-        const auto offset = idx * sizeof(AtomBase);
-        return *reinterpret_cast<AtomBase*>(reinterpret_cast<uint8_t*>(&_this) + offset);
+        const auto offset = idx * sizeof(AtomMemory);
+        return *reinterpret_cast<AtomMemory*>(reinterpret_cast<uint8_t*>(&this->_this) + offset);
     }
-    T _this;
 };
+
+template <concepts::StaticState T>
+using StaticEffect = StaticWorldState<T, u8"Effect">;
 
 } // namespace skr::goap
-
-namespace skr::goap::test
-{
-struct TestStates {
-    Atom<bool, u8"b"> a;
-    Atom<bool, u8"b"> b;
-};
-
-constexpr auto fn  = atom_count<TestStates>;
-constexpr auto fn2 = atom_count<StaticWorldState<TestStates>>;
-static_assert(fn == 2);
-static_assert(fn2 == 2);
-
-} // namespace skr::goap::test

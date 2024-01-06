@@ -1,5 +1,5 @@
 #include "SkrRT/goap/config.hpp"
-#include "SkrRT/goap/dynamic_state.hpp"
+#include "SkrRT/goap/dynamic/state.hpp"
 #include "SkrRT/goap/action.hpp"
 #include "SkrRT/goap/planner.hpp"
 

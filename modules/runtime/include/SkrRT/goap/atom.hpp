@@ -5,13 +5,37 @@
 
 namespace skr::goap
 {
-struct AtomBase {
+template <bool WithCond>
+struct _AtomMemory;
+template <>
+struct _AtomMemory<false>
+{
     uint32_t value = 0;
     bool     exist = false;
 };
+template <>
+struct _AtomMemory<true>
+{
+    uint32_t value = 0;
+    bool     exist = false;
+    uint8_t cond = 0;
+    uint8_t flag = 0;
+};
+using AtomMemory = _AtomMemory<false>;
+using AtomOpMemory = _AtomMemory<true>;
+static_assert(sizeof(AtomMemory) == sizeof(AtomOpMemory));
+static_assert(alignof(AtomMemory) == alignof(AtomOpMemory));
+
+struct AtomOperand
+{
+    uint32_t idx = 0;
+    uint32_t value = 0;
+    EConditionType condition = EConditionType::Equal;
+    EVariableFlag flag = EVariableFlag::Explicit;
+};
 
 template <concepts::AtomValue T, StringLiteral Literal>
-struct Atom : public AtomBase {
+struct Atom : public AtomMemory {
     using ValueType = T;
 
     static constexpr skr::StringView name = Literal.view();
@@ -45,15 +69,18 @@ inline constexpr bool IsAtomMember = IsAtom<typename MemberInfo<Member>::Type> &
 template <concepts::AtomType T>
 using AtomValueType = typename T::ValueType;
 
-static_assert(sizeof(AtomBase) == sizeof(Atom<bool, u8"__Boolean_state">));
-static_assert(sizeof(AtomBase) == sizeof(Atom<EConditionType, u8"__Enum_state">));
+template <auto Member> requires(concepts::IsAtomMember<Member>) 
+using AtomMemberValueType = AtomValueType<typename MemberInfo<Member>::Type>;
+
+static_assert(sizeof(AtomMemory) == sizeof(Atom<bool, u8"__Boolean_state">));
+static_assert(sizeof(AtomMemory) == sizeof(Atom<EConditionType, u8"__Enum_state">));
 
 struct StaticAtomId {
     constexpr StaticAtomId(uint32_t offset)
         : offset(offset)
     {
     }
-    const uint32_t get_index() const { return offset / sizeof(AtomBase); }
+    const uint32_t get_index() const { return offset / sizeof(AtomMemory); }
     const bool operator==(const StaticAtomId& other) const { return offset == other.offset; }
     const uint32_t offset = 0;
 };

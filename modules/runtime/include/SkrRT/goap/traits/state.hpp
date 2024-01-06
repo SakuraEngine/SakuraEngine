@@ -53,4 +53,7 @@ concept StaticWorldState = IsStaticWorldState<T>;
 template <typename T>
 concept WorldState = IsStaticWorldState<T> || IsDynamicWorldState<T>;
 } // namespace concepts
+
+template <concepts::WorldState StateType>
+struct Action;
 } // namespace skr::goap

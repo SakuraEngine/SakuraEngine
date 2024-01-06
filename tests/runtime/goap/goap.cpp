@@ -40,16 +40,22 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
 
     enum class ERamStatus
     {
-        SizeAcquired,
         Allocated,
         Freed
     };
 
+    enum class EDecompressStatus
+    {
+        Allocated,
+        Decompressing,
+        Decompressed
+    };
+
     struct IOStates {
-        Atom<EFileStatus, u8"file_status">  file_status;
-        Atom<ERamStatus, u8"ram_status"> ram_status;
-        BoolAtom<u8"block_readed">          block_readed;
-        BoolAtom<u8"decompressd">           decompressd;
+        Atom<EFileStatus, u8"file_status">       file_status;
+        Atom<ERamStatus, u8"ram_status">         ram_status;
+        Atom<EDecompressStatus, u8"decompressd"> decompress_status;
+        BoolAtom<u8"block_readed">               block_readed;
 
         BoolAtom<u8"cancelling"> cancelling;
     };
@@ -62,14 +68,16 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
     actions.emplace(u8"openFile").ref()
         .none_or_equal<&IOStates::cancelling>(false)
         .none_or_equal<&IOStates::file_status>(EFileStatus::Closed)
-        // .add_effect<&IOStates::ram_status>(ERamStatus::SizeAcquired)
         .add_effect<&IOStates::file_status>(EFileStatus::Opened);
 
     actions.emplace(u8"allocateMemory").ref()
         .none_or_equal<&IOStates::cancelling>(false)
         .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
-        // .exist_and_equal<&IOStates::ram_status>(ERamStatus::SizeAcquired)
+        .add_effect<&IOStates::decompress_status>(EDecompressStatus::Allocated)
         .add_effect<&IOStates::ram_status>(ERamStatus::Allocated);
+
+    // actions.emplace(u8"allocateMemory2").ref()
+    //    .none_or_equal<&IOStates::cancelling>(false)
 
     actions.emplace(u8"readBytes").ref()
         .none_or_equal<&IOStates::cancelling>(false)
@@ -77,15 +85,21 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
         .exist_and_equal<&IOStates::ram_status>(ERamStatus::Allocated)
         .add_effect<&IOStates::block_readed>(true);
 
-    actions.emplace(u8"decompress").ref()
+    actions.emplace(u8"schedule_decompress").ref()
         .none_or_equal<&IOStates::cancelling>(false)
         .exist_and_equal<&IOStates::block_readed>(true)
-        .add_effect<&IOStates::decompressd>(true);
+        .exist_and_equal<&IOStates::decompress_status>(EDecompressStatus::Allocated)
+        .add_effect<&IOStates::decompress_status>(EDecompressStatus::Decompressing);
+
+    actions.emplace(u8"acquire_decompress").ref()
+        .none_or_equal<&IOStates::cancelling>(false)
+        .exist_and_equal<&IOStates::decompress_status>(EDecompressStatus::Decompressing)
+        .add_effect<&IOStates::decompress_status>(EDecompressStatus::Decompressed);
 
     actions.emplace(u8"freeRaw").ref()
         .none_or_equal<&IOStates::cancelling>(false)
         .exist_and_equal<&IOStates::ram_status>(ERamStatus::Allocated)
-        .exist_and_equal<&IOStates::decompressd>(true)
+        .exist_and_equal<&IOStates::decompress_status>(EDecompressStatus::Decompressed)
         .add_effect<&IOStates::ram_status>(ERamStatus::Freed);
 
     actions.emplace(u8"closeFile").ref()
@@ -131,7 +145,7 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
 
                     StaticWorldState cancelled = current;
                     cancelled.assign<&IOStates::file_status>(EFileStatus::Closed)
-                            .assign<&IOStates::ram_status>(ERamStatus::Freed);
+                    .assign<&IOStates::ram_status>(ERamStatus::Freed);
                     Planner cancel_planner;
                     auto    cancel_plan = cancel_planner.plan(current, cancelled, actions);
                     std::cout << "    REQUEST CANCEL:\n";
@@ -150,7 +164,7 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
     // WITH DECOMPRESS
     {
         auto goal = StaticWorldState()
-                    .set<&IOStates::decompressd>(true)
+                    .set<&IOStates::decompress_status>(EDecompressStatus::Decompressed)
                     .set<&IOStates::ram_status>(ERamStatus::Freed)
                     .set<&IOStates::file_status>(EFileStatus::Closed);
         Planner planner;

@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/goap/static_state.hpp"
-#include "SkrRT/goap/dynamic_state.hpp"
+#include "SkrRT/goap/static/state.hpp"
+#include "SkrRT/goap/dynamic/state.hpp"
 #include "SkrRT/containers/vector.hpp"
 
 namespace skr::goap
@@ -43,18 +43,10 @@ struct Action {
         return add_condition(atom_id<Member>, flag, value, type);
     }
 
-    /* TODO
-    Action& add_condition(Predicates cmp) SKR_NOEXCEPT
-    {
-        predicates_.add(cmp);
-        return *this;
-    }
-    */
-
     template <concepts::AtomValue ValueType>
     Action& add_effect(const IdentifierType& id, const ValueType& value) SKR_NOEXCEPT
     {
-        effects_.add_or_assign(id, static_cast<ValueStoreType>(value));
+        effects_.set(id, value);
         return *this;
     }
 
@@ -85,23 +77,13 @@ struct Action {
             if (!DoValueCompare(type, v, value))
                 return false;
         }
-        /*
-        for (const auto& predicate : predicates_)
-        {
-            if (!predicate(ws.variables_))
-                return false;
-        }
-        */
         return true;
     }
 
     StateType act_on(StateType& ws) const SKR_NOEXCEPT
     {
         StateType tmp(ws);
-        for (const auto& [k, v] : effects_)
-        {
-            tmp.set(k, v);
-        }
+        effects_.foreach_variable([&](const auto& k, const auto& v) { tmp.set(k, v); });
         return tmp;
     }
 
@@ -182,9 +164,8 @@ protected:
     skr::String name_;
 #endif
     CostType cost_ = 0;
-    // skr::Vector<Predicates>                predicates_;
     skr::UMap<IdentifierType, Condition>     conditions_;
-    StateMap<IdentifierType, ValueStoreType> effects_;
+    StateType effects_;
 };
 
 template <concepts::VariableType T>
