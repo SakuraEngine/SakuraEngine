@@ -35,7 +35,7 @@ enum class EConditionType : uint8_t
 enum class EVariableFlag : uint8_t
 {
     Explicit = 0x1,
-    Any      = 0x2,
+    Optional      = 0x2,
     None     = 0x3
 };
 

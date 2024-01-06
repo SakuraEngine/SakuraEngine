@@ -28,17 +28,17 @@ struct Action {
 #endif
     }
 
-    template <concepts::AtomValue VariableType>
+    template <concepts::AtomValue ValueType>
     Action& add_condition(const IdentifierType& id, EVariableFlag flag,
-                          const VariableType& value, EConditionType type = EConditionType::Equal) SKR_NOEXCEPT
+                          const ValueType& value, EConditionType type = EConditionType::Equal) SKR_NOEXCEPT
     {
-        conditions_.add_or_assign(id, { type, flag, value });
+        conditions_.add_or_assign(id, { type, flag, static_cast<ValueStoreType>(value) });
         return *this;
     }
 
-    template <auto Member, concepts::AtomValue VariableType> 
+    template <auto Member> 
     requires( concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member> )
-    Action& add_condition(EVariableFlag flag, const VariableType& value, EConditionType type = EConditionType::Equal) SKR_NOEXCEPT
+    Action& add_condition(EVariableFlag flag, const AtomValueType<typename MemberInfo<Member>::Type>& value, EConditionType type = EConditionType::Equal) SKR_NOEXCEPT
     {
         return add_condition(atom_id<Member>, flag, value, type);
     }
@@ -51,16 +51,16 @@ struct Action {
     }
     */
 
-    template <concepts::AtomValue VariableType>
-    Action& add_effect(const IdentifierType& id, const VariableType& value) SKR_NOEXCEPT
+    template <concepts::AtomValue ValueType>
+    Action& add_effect(const IdentifierType& id, const ValueType& value) SKR_NOEXCEPT
     {
-        effects_.add_or_assign(id, value);
+        effects_.add_or_assign(id, static_cast<ValueStoreType>(value));
         return *this;
     }
 
-    template <auto Member, concepts::AtomValue VariableType> 
+    template <auto Member> 
     requires( concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member> )
-    Action& add_effect(const VariableType& value) SKR_NOEXCEPT
+    Action& add_effect(const AtomValueType<typename MemberInfo<Member>::Type>& value) SKR_NOEXCEPT
     {
         return add_effect(atom_id<Member>, value);
     }
@@ -75,7 +75,7 @@ struct Action {
 
             ValueStoreType value;
             auto           found = ws.get_variable(k, value);
-            if (!found && (flag == EVariableFlag::Any))
+            if (!found && (flag == EVariableFlag::Optional))
                 continue;
 
             if (found && (flag == EVariableFlag::None))
@@ -100,7 +100,7 @@ struct Action {
         StateType tmp(ws);
         for (const auto& [k, v] : effects_)
         {
-            tmp.set_variable(k, v);
+            tmp.set(k, v);
         }
         return tmp;
     }
@@ -113,69 +113,68 @@ struct Action {
 #endif
 
 public:
-    template <concepts::AtomValue VariableType>
-    Action& exist_and_equal(const IdentifierType& id, const VariableType& value)
+    template <concepts::AtomValue ValueType>
+    Action& exist_and_equal(const IdentifierType& id, const ValueType& value)
     {
         return add_condition(id, EVariableFlag::Explicit, value, EConditionType::Equal);
     }
 
-    template <auto Member, concepts::AtomValue VariableType>
+    template <auto Member>
     requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
-    Action& exist_and_equal(const VariableType& value)
+    Action& exist_and_equal(const AtomValueType<typename MemberInfo<Member>::Type>& value)
     {
         return exist_and_equal(atom_id<Member>, value);
     }
 
-    template <concepts::AtomValue VariableType>
-    Action& exist_and_nequal(const IdentifierType& id, const VariableType& value)
+    template <concepts::AtomValue ValueType>
+    Action& exist_and_nequal(const IdentifierType& id, const ValueType& value)
     {
         return add_condition(id, EVariableFlag::Explicit, value, EConditionType::NotEqual);
     }
 
-    template <auto Member, concepts::AtomValue VariableType>
+    template <auto Member>
     requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
-    Action& exist_and_nequal(const VariableType& value)
+    Action& exist_and_nequal(const AtomValueType<typename MemberInfo<Member>::Type>& value)
     {
         return exist_and_nequal(atom_id<Member>, value);
     }
 
-    template <concepts::AtomValue VariableType>
-    Action& none_or_equal(const IdentifierType& id, const VariableType& value)
+    template <concepts::AtomValue ValueType>
+    Action& none_or_equal(const IdentifierType& id, const ValueType& value)
     {
-        return add_condition(id, EVariableFlag::Any, value, EConditionType::Equal);
+        return add_condition(id, EVariableFlag::Optional, value, EConditionType::Equal);
     }
 
-    template <auto Member, concepts::AtomValue VariableType>
+    template <auto Member>
     requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
-    Action& none_or_equal(const VariableType& value)
+    Action& none_or_equal(const AtomValueType<typename MemberInfo<Member>::Type>& value)
     {
         return none_or_equal(atom_id<Member>, value);
     }
 
-    template <concepts::AtomValue VariableType>
-    Action& none_or_nequal(const IdentifierType& id, const VariableType& value)
+    template <concepts::AtomValue ValueType>
+    Action& none_or_nequal(const IdentifierType& id, const ValueType& value)
     {
-        return add_condition(id, EVariableFlag::Any, value, EConditionType::NotEqual);
+        return add_condition(id, EVariableFlag::Optional, value, EConditionType::NotEqual);
     }
 
-    template <auto Member, concepts::AtomValue VariableType>
+    template <auto Member>
     requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
-    Action& none_or_nequal(const VariableType& value)
+    Action& none_or_nequal(const AtomValueType<typename MemberInfo<Member>::Type>& value)
     {
         return none_or_nequal(atom_id<Member>, value);
     }
 
-    template <concepts::AtomValue VariableType>
     Action& none(const IdentifierType& id)
     {
         return add_condition(id, EVariableFlag::None, {}, EConditionType::Equal);
     }
 
-    template <auto Member, concepts::AtomValue VariableType>
+    template <auto Member>
     requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
-    Action& none(const VariableType& value)
+    Action& none()
     {
-        return none(atom_id<Member>, value);
+        return none(atom_id<Member>);
     }
 
 protected:

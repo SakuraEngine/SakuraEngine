@@ -12,6 +12,8 @@ struct AtomBase {
 
 template <concepts::AtomValue T, StringLiteral Literal>
 struct Atom : public AtomBase {
+    using ValueType = T;
+
     static constexpr skr::StringView name = Literal.view();
 };
 
@@ -39,6 +41,9 @@ inline constexpr bool IsAtomMember = IsAtom<typename MemberInfo<Member>::Type> &
                                      IsStaticState<typename MemberInfo<Member>::OwnerType>;
 
 } // namespace concepts
+
+template <concepts::AtomType T>
+using AtomValueType = typename T::ValueType;
 
 static_assert(sizeof(AtomBase) == sizeof(Atom<bool, u8"__Boolean_state">));
 static_assert(sizeof(AtomBase) == sizeof(Atom<EConditionType, u8"__Enum_state">));

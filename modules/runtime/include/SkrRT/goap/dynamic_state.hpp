@@ -12,13 +12,13 @@ struct DynamicWorldState {
 
     virtual ~DynamicWorldState() = default;
 
-    DynamicWorldState& set_variable(const Identifier& id, const ValueStoreType& value) SKR_NOEXCEPT
+    DynamicWorldState& set(const Identifier& id, const ValueStoreType& value) SKR_NOEXCEPT
     {
         variables_.add_or_assign(id, value);
         return *this;
     }
 
-    DynamicWorldState& assign_variable(const Identifier& id, const ValueStoreType& value) SKR_NOEXCEPT
+    DynamicWorldState& assign(const Identifier& id, const ValueStoreType& value) SKR_NOEXCEPT
     {
         auto found = variables_.find(id);
         if (!found) 

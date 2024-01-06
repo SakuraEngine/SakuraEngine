@@ -32,11 +32,24 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
     using namespace skr;
     using namespace skr::goap;
 
+    enum class EFileStatus
+    {
+        Closed,
+        Opened
+    };
+
+    enum class ERamStatus
+    {
+        SizeAcquired,
+        Allocated,
+        Freed
+    };
+
     struct IOStates {
-        BoolAtom<u8"file_opened">   file_opened;
-        BoolAtom<u8"ram_allocated"> ram_allocated;
-        BoolAtom<u8"block_readed">  block_readed;
-        BoolAtom<u8"decompressd">   decompressd;
+        Atom<EFileStatus, u8"file_status">  file_status;
+        Atom<ERamStatus, u8"ram_status"> ram_status;
+        BoolAtom<u8"block_readed">          block_readed;
+        BoolAtom<u8"decompressd">           decompressd;
 
         BoolAtom<u8"cancelling"> cancelling;
     };
@@ -48,17 +61,20 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
     skr::Vector<Action> actions;
     actions.emplace(u8"openFile").ref()
         .none_or_equal<&IOStates::cancelling>(false)
-        .add_effect<&IOStates::file_opened>(true);
+        .none_or_equal<&IOStates::file_status>(EFileStatus::Closed)
+        .add_effect<&IOStates::ram_status>(ERamStatus::SizeAcquired)
+        .add_effect<&IOStates::file_status>(EFileStatus::Opened);
 
     actions.emplace(u8"allocateMemory").ref()
         .none_or_equal<&IOStates::cancelling>(false)
-        .exist_and_equal<&IOStates::file_opened>(true)
-        .add_effect<&IOStates::ram_allocated>(true);
+        .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
+        .exist_and_equal<&IOStates::ram_status>(ERamStatus::SizeAcquired)
+        .add_effect<&IOStates::ram_status>(ERamStatus::Allocated);
 
     actions.emplace(u8"readBytes").ref()
         .none_or_equal<&IOStates::cancelling>(false)
-        .exist_and_equal<&IOStates::file_opened>(true)
-        .exist_and_equal<&IOStates::ram_allocated>(true)
+        .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
+        .exist_and_equal<&IOStates::ram_status>(ERamStatus::Allocated)
         .add_effect<&IOStates::block_readed>(true);
 
     actions.emplace(u8"decompress").ref()
@@ -68,34 +84,34 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
 
     actions.emplace(u8"freeRaw").ref()
         .none_or_equal<&IOStates::cancelling>(false)
-        .exist_and_equal<&IOStates::ram_allocated>(true)
+        .exist_and_equal<&IOStates::ram_status>(ERamStatus::Allocated)
         .exist_and_equal<&IOStates::decompressd>(true)
-        .add_effect<&IOStates::ram_allocated>(false);
+        .add_effect<&IOStates::ram_status>(ERamStatus::Freed);
 
     actions.emplace(u8"closeFile").ref()
         .none_or_equal<&IOStates::cancelling>(false)
         .exist_and_equal<&IOStates::block_readed>(true)
-        .exist_and_equal<&IOStates::file_opened>(true)
-        .add_effect<&IOStates::file_opened>(false);
+        .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
+        .add_effect<&IOStates::file_status>(EFileStatus::Closed);
 
     actions.emplace(u8"freeRaw(Cancel)").ref()
         .exist_and_equal<&IOStates::cancelling>(true)
-        .exist_and_equal<&IOStates::ram_allocated>(true)
-        .add_effect<&IOStates::ram_allocated>(false);
+        .exist_and_equal<&IOStates::ram_status>(ERamStatus::Allocated)
+        .add_effect<&IOStates::ram_status>(ERamStatus::Freed);
 
     actions.emplace(u8"closeFile(Cancel)").ref()
         .exist_and_equal<&IOStates::cancelling>(true)
-        .exist_and_equal<&IOStates::file_opened>(true)
-        .add_effect<&IOStates::file_opened>(false);
+        .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
+        .add_effect<&IOStates::file_status>(EFileStatus::Closed);
     // clang-format on
 
     StaticWorldState initial_state;
     // NO DECOMPRESS
     {
         auto goal = StaticWorldState()
-                    .set_variable<&IOStates::block_readed>(true)
-                    .set_variable<&IOStates::file_opened>(false)
-                    .set_variable<&IOStates::ram_allocated>(false);
+                    .set<&IOStates::block_readed>(true)
+                    .set<&IOStates::file_status>(EFileStatus::Closed)
+                    .set<&IOStates::ram_status>(ERamStatus::Allocated);
         Planner planner;
         auto    the_plan = planner.plan<true>(initial_state, goal, actions);
         for (int64_t fail_index = the_plan.size() - 1; fail_index >= 0; --fail_index)
@@ -111,11 +127,11 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
                               << (const char*)action.name() << std::endl;
 
                     StaticWorldState current = state;
-                    current.set_variable<&IOStates::cancelling>(true);
+                    current.set<&IOStates::cancelling>(true);
 
                     StaticWorldState cancelled = current;
-                    cancelled.assign_variable<&IOStates::file_opened>(false)
-                    .assign_variable<&IOStates::ram_allocated>(false);
+                    cancelled.assign<&IOStates::file_status>(EFileStatus::Closed)
+                            .assign<&IOStates::ram_status>(ERamStatus::Freed);
                     Planner cancel_planner;
                     auto    cancel_plan = cancel_planner.plan(current, cancelled, actions);
                     std::cout << "    REQUEST CANCEL:\n";
@@ -134,9 +150,9 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
     // WITH DECOMPRESS
     {
         auto goal = StaticWorldState()
-                    .set_variable<&IOStates::decompressd>(true)
-                    .set_variable<&IOStates::ram_allocated>(false)
-                    .set_variable<&IOStates::file_opened>(false);
+                    .set<&IOStates::decompressd>(true)
+                    .set<&IOStates::ram_status>(ERamStatus::Freed)
+                    .set<&IOStates::file_status>(EFileStatus::Closed);
         Planner planner;
         auto    the_plan = planner.plan(initial_state, goal, actions);
         std::cout << "[STATIC] WITH DECOMPRESS: Found a path!\n";
@@ -149,13 +165,13 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
     // REQUEST CANCEL
     {
         auto current = StaticWorldState()
-                       .set_variable<&IOStates::file_opened>(true)
-                       .set_variable<&IOStates::ram_allocated>(true)
-                       .set_variable<&IOStates::block_readed>(true)
-                       .set_variable<&IOStates::cancelling>(true);
+                       .set<&IOStates::file_status>(EFileStatus::Opened)
+                       .set<&IOStates::ram_status>(ERamStatus::Allocated)
+                       .set<&IOStates::block_readed>(true)
+                       .set<&IOStates::cancelling>(true);
         auto cancelled = StaticWorldState()
-                         .set_variable<&IOStates::file_opened>(false)
-                         .set_variable<&IOStates::ram_allocated>(false);
+                         .set<&IOStates::file_status>(EFileStatus::Closed)
+                         .set<&IOStates::ram_status>(ERamStatus::Freed);
         Planner planner;
         auto    the_plan = planner.plan(current, cancelled, actions);
         std::cout << "[STATIC] REQUEST CANCEL: Found a path!\n";
@@ -231,9 +247,9 @@ TEST_CASE_METHOD(GoapTests, "I/O Dynamic")
     // NO DECOMPRESS
     {
         auto goal = DynamicWorldState()
-                    .set_variable(block_readed, true)
-                    .set_variable(file_opened, false)
-                    .set_variable(ram_allocated, false);
+                    .set(block_readed, true)
+                    .set(file_opened, false)
+                    .set(ram_allocated, false);
         Planner planner;
         auto    the_plan = planner.plan<true>(initial_state, goal, actions);
         for (int64_t fail_index = the_plan.size() - 1; fail_index >= 0; --fail_index)
@@ -249,11 +265,11 @@ TEST_CASE_METHOD(GoapTests, "I/O Dynamic")
                               << (const char*)action.name() << std::endl;
 
                     DynamicWorldState current = state;
-                    current.set_variable(cancelling, true);
+                    current.set(cancelling, true);
 
                     DynamicWorldState cancelled = current;
-                    cancelled.assign_variable(file_opened, false)
-                    .assign_variable(ram_allocated, false);
+                    cancelled.assign(file_opened, false)
+                    .assign(ram_allocated, false);
                     Planner cancel_planner;
                     auto    cancel_plan = cancel_planner.plan(current, cancelled, actions);
                     std::cout << "    REQUEST CANCEL:\n";
@@ -272,9 +288,9 @@ TEST_CASE_METHOD(GoapTests, "I/O Dynamic")
     // WITH DECOMPRESS
     {
         auto goal = DynamicWorldState()
-                    .set_variable(decompressd, true)
-                    .set_variable(ram_allocated, false)
-                    .set_variable(file_opened, false);
+                    .set(decompressd, true)
+                    .set(ram_allocated, false)
+                    .set(file_opened, false);
         Planner planner;
         auto    the_plan = planner.plan(initial_state, goal, actions);
         std::cout << "[DYNAMIC] WITH DECOMPRESS: Found a path!\n";
@@ -287,13 +303,13 @@ TEST_CASE_METHOD(GoapTests, "I/O Dynamic")
     // REQUEST CANCEL
     {
         auto current = DynamicWorldState()
-                       .set_variable(file_opened, true)
-                       .set_variable(ram_allocated, true)
-                       .set_variable(block_readed, true)
-                       .set_variable(cancelling, true);
+                       .set(file_opened, true)
+                       .set(ram_allocated, true)
+                       .set(block_readed, true)
+                       .set(cancelling, true);
         auto cancelled = DynamicWorldState()
-                         .set_variable(file_opened, false)
-                         .set_variable(ram_allocated, false);
+                         .set(file_opened, false)
+                         .set(ram_allocated, false);
         Planner planner;
         auto    the_plan = planner.plan(current, cancelled, actions);
         std::cout << "[DYNAMIC] REQUEST CANCEL: Found a path!\n";

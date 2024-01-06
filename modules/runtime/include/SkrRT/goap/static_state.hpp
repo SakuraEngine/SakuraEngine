@@ -10,9 +10,12 @@ struct StaticWorldState {
     using StateType      = T;
     using IdentifierType = StaticAtomId;
     using ValueStoreType = uint32_t;
+    
+    template <auto Member> requires(concepts::IsAtomMember<Member>) 
+    using ValueType = AtomValueType<typename MemberInfo<Member>::Type>;
 
     template <concepts::AtomValue ValueType>
-    StaticWorldState& set_variable(const IdentifierType& id, const ValueType& value) SKR_NOEXCEPT
+    StaticWorldState& set(const IdentifierType& id, const ValueType& value) SKR_NOEXCEPT
     {
         auto& atom = getAtom(id.get_index());
         {
@@ -21,24 +24,26 @@ struct StaticWorldState {
         }
         return *this;
     }
-    template <auto Member, concepts::AtomValue ValueType>
-    StaticWorldState& set_variable(const ValueType& value) SKR_NOEXCEPT
+    template <auto Member>
+    requires(concepts::IsAtomMember<Member>)
+    StaticWorldState& set(const ValueType<Member>& value) SKR_NOEXCEPT
     {
-        return set_variable<ValueType>(atom_id<Member>, value);
+        return set(atom_id<Member>, static_cast<ValueStoreType>(value));
     }
 
     template <concepts::AtomValue ValueType>
-    StaticWorldState& assign_variable(const IdentifierType& id, const ValueType& value) SKR_NOEXCEPT
+    StaticWorldState& assign(const IdentifierType& id, const ValueType& value) SKR_NOEXCEPT
     {
         auto& atom = getAtom(id.get_index());
         if (atom.exist)
             atom.value = static_cast<uint32_t>(value);
         return *this;
     }
-    template <auto Member, concepts::AtomValue ValueType>
-    StaticWorldState& assign_variable(const ValueType& value) SKR_NOEXCEPT
+    template <auto Member>
+    requires(concepts::IsAtomMember<Member>)
+    StaticWorldState& assign(const ValueType<Member>& value) SKR_NOEXCEPT
     {
-        return assign_variable<ValueType>(atom_id<Member>, value);
+        return assign(atom_id<Member>, value);
     }
 
     template <concepts::AtomValue ValueType>
