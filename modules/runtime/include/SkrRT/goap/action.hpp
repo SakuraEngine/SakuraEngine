@@ -12,11 +12,11 @@ inline static bool DoValueCompare(EConditionType t, const T& lhs, const T& rhs);
 template <concepts::WorldState StateType>
 struct Action {
     using IdentifierType = typename StateType::IdentifierType;
-    using ValueStoreType   = typename StateType::ValueStoreType;
+    using ValueStoreType = typename StateType::ValueStoreType;
     using Predicates     = bool (*)(const StateMap<IdentifierType, ValueStoreType>&);
     struct Condition {
         EConditionType t;
-        EVariableFlag f;
+        EVariableFlag  f;
         ValueStoreType v;
     };
 
@@ -30,13 +30,20 @@ struct Action {
 
     template <concepts::AtomValue VariableType>
     Action& add_condition(const IdentifierType& id, EVariableFlag flag,
-                       const VariableType& value, EConditionType type = EConditionType::Equal) SKR_NOEXCEPT
+                          const VariableType& value, EConditionType type = EConditionType::Equal) SKR_NOEXCEPT
     {
-        conditions_.add_or_assign(id, {type, flag, value});
+        conditions_.add_or_assign(id, { type, flag, value });
         return *this;
     }
 
-    /*
+    template <auto Member, concepts::AtomValue VariableType> 
+    requires( concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member> )
+    Action& add_condition(EVariableFlag flag, const VariableType& value, EConditionType type = EConditionType::Equal) SKR_NOEXCEPT
+    {
+        return add_condition(atom_id<Member>, flag, value, type);
+    }
+
+    /* TODO
     Action& add_condition(Predicates cmp) SKR_NOEXCEPT
     {
         predicates_.add(cmp);
@@ -51,16 +58,23 @@ struct Action {
         return *this;
     }
 
+    template <auto Member, concepts::AtomValue VariableType> 
+    requires( concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member> )
+    Action& add_effect(const VariableType& value) SKR_NOEXCEPT
+    {
+        return add_effect(atom_id<Member>, value);
+    }
+
     bool operable_on(const StateType& ws) const SKR_NOEXCEPT
     {
         for (const auto& [k, cond] : conditions_)
         {
-            const auto& v = cond.v;
-            const auto type = cond.t;
-            const auto flag = cond.f;
-            
+            const auto& v    = cond.v;
+            const auto  type = cond.t;
+            const auto  flag = cond.f;
+
             ValueStoreType value;
-            auto found = ws.get_variable(k, value);
+            auto           found = ws.get_variable(k, value);
             if (!found && (flag == EVariableFlag::Any))
                 continue;
 
@@ -105,10 +119,24 @@ public:
         return add_condition(id, EVariableFlag::Explicit, value, EConditionType::Equal);
     }
 
+    template <auto Member, concepts::AtomValue VariableType>
+    requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
+    Action& exist_and_equal(const VariableType& value)
+    {
+        return exist_and_equal(atom_id<Member>, value);
+    }
+
     template <concepts::AtomValue VariableType>
     Action& exist_and_nequal(const IdentifierType& id, const VariableType& value)
     {
         return add_condition(id, EVariableFlag::Explicit, value, EConditionType::NotEqual);
+    }
+
+    template <auto Member, concepts::AtomValue VariableType>
+    requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
+    Action& exist_and_nequal(const VariableType& value)
+    {
+        return exist_and_nequal(atom_id<Member>, value);
     }
 
     template <concepts::AtomValue VariableType>
@@ -117,10 +145,24 @@ public:
         return add_condition(id, EVariableFlag::Any, value, EConditionType::Equal);
     }
 
+    template <auto Member, concepts::AtomValue VariableType>
+    requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
+    Action& none_or_equal(const VariableType& value)
+    {
+        return none_or_equal(atom_id<Member>, value);
+    }
+
     template <concepts::AtomValue VariableType>
     Action& none_or_nequal(const IdentifierType& id, const VariableType& value)
     {
         return add_condition(id, EVariableFlag::Any, value, EConditionType::NotEqual);
+    }
+
+    template <auto Member, concepts::AtomValue VariableType>
+    requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
+    Action& none_or_nequal(const VariableType& value)
+    {
+        return none_or_nequal(atom_id<Member>, value);
     }
 
     template <concepts::AtomValue VariableType>
@@ -129,13 +171,20 @@ public:
         return add_condition(id, EVariableFlag::None, {}, EConditionType::Equal);
     }
 
+    template <auto Member, concepts::AtomValue VariableType>
+    requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
+    Action& none(const VariableType& value)
+    {
+        return none(atom_id<Member>, value);
+    }
+
 protected:
 #ifdef SKR_GOAP_SET_NAME
     skr::String name_;
 #endif
-    CostType                               cost_ = 0;
+    CostType cost_ = 0;
     // skr::Vector<Predicates>                predicates_;
-    skr::UMap<IdentifierType, Condition> conditions_;
+    skr::UMap<IdentifierType, Condition>     conditions_;
     StateMap<IdentifierType, ValueStoreType> effects_;
 };
 
@@ -144,20 +193,20 @@ inline static bool DoValueCompare(EConditionType t, const T& lhs, const T& rhs)
 {
     switch (t)
     {
-    case EConditionType::Equal:
-        return Compare<T>::Equal(lhs, rhs);
-    case EConditionType::NotEqual:
-        return Compare<T>::NotEqual(lhs, rhs);
-    case EConditionType::Greater:
-        return Compare<T>::Greater(lhs, rhs);
-    case EConditionType::GreaterEqual:
-        return Compare<T>::GreaterEqual(lhs, rhs);
-    case EConditionType::Less:
-        return Compare<T>::Less(lhs, rhs);
-    case EConditionType::LessEqual:
-        return Compare<T>::LessEqual(lhs, rhs);
-    default:
-        return false;
+        case EConditionType::Equal:
+            return Compare<T>::Equal(lhs, rhs);
+        case EConditionType::NotEqual:
+            return Compare<T>::NotEqual(lhs, rhs);
+        case EConditionType::Greater:
+            return Compare<T>::Greater(lhs, rhs);
+        case EConditionType::GreaterEqual:
+            return Compare<T>::GreaterEqual(lhs, rhs);
+        case EConditionType::Less:
+            return Compare<T>::Less(lhs, rhs);
+        case EConditionType::LessEqual:
+            return Compare<T>::LessEqual(lhs, rhs);
+        default:
+            return false;
     }
 }
 

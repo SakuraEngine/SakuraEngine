@@ -33,69 +33,69 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
     using namespace skr::goap;
 
     struct IOStates {
-        BoolAtom<u8"file_opened"> file_opened;
+        BoolAtom<u8"file_opened">   file_opened;
         BoolAtom<u8"ram_allocated"> ram_allocated;
-        BoolAtom<u8"block_readed"> block_readed;
-        BoolAtom<u8"decompressd"> decompressd;
+        BoolAtom<u8"block_readed">  block_readed;
+        BoolAtom<u8"decompressd">   decompressd;
 
         BoolAtom<u8"cancelling"> cancelling;
     };
     using StaticWorldState = skr::goap::StaticWorldState<IOStates, u8"IOStates">;
-    using Action            = skr::goap::Action<StaticWorldState>;
-    using Planner           = skr::goap::Planner<StaticWorldState>;
-        
+    using Action           = skr::goap::Action<StaticWorldState>;
+    using Planner          = skr::goap::Planner<StaticWorldState>;
+
     // clang-format off
     skr::Vector<Action> actions;
     actions.emplace(u8"openFile").ref()
-        .none_or_equal(atom_id<&IOStates::cancelling>, false)
-        .add_effect(atom_id<&IOStates::file_opened>, true);
+        .none_or_equal<&IOStates::cancelling>(false)
+        .add_effect<&IOStates::file_opened>(true);
 
     actions.emplace(u8"allocateMemory").ref()
-        .none_or_equal(atom_id<&IOStates::cancelling>, false)
-        .exist_and_equal(atom_id<&IOStates::file_opened>, true)
-        .add_effect(atom_id<&IOStates::ram_allocated>, true);
+        .none_or_equal<&IOStates::cancelling>(false)
+        .exist_and_equal<&IOStates::file_opened>(true)
+        .add_effect<&IOStates::ram_allocated>(true);
 
     actions.emplace(u8"readBytes").ref()
-        .none_or_equal(atom_id<&IOStates::cancelling>, false)
-        .exist_and_equal(atom_id<&IOStates::file_opened>, true)
-        .exist_and_equal(atom_id<&IOStates::ram_allocated>, true)
-        .add_effect(atom_id<&IOStates::block_readed>, true);
+        .none_or_equal<&IOStates::cancelling>(false)
+        .exist_and_equal<&IOStates::file_opened>(true)
+        .exist_and_equal<&IOStates::ram_allocated>(true)
+        .add_effect<&IOStates::block_readed>(true);
 
     actions.emplace(u8"decompress").ref()
-        .none_or_equal(atom_id<&IOStates::cancelling>, false)
-        .exist_and_equal(atom_id<&IOStates::block_readed>, true)
-        .add_effect(atom_id<&IOStates::decompressd>, true);
+        .none_or_equal<&IOStates::cancelling>(false)
+        .exist_and_equal<&IOStates::block_readed>(true)
+        .add_effect<&IOStates::decompressd>(true);
 
     actions.emplace(u8"freeRaw").ref()
-        .none_or_equal(atom_id<&IOStates::cancelling>, false)
-        .exist_and_equal(atom_id<&IOStates::ram_allocated>, true)
-        .exist_and_equal(atom_id<&IOStates::decompressd>, true)
-        .add_effect(atom_id<&IOStates::ram_allocated>, false);
+        .none_or_equal<&IOStates::cancelling>(false)
+        .exist_and_equal<&IOStates::ram_allocated>(true)
+        .exist_and_equal<&IOStates::decompressd>(true)
+        .add_effect<&IOStates::ram_allocated>(false);
 
     actions.emplace(u8"closeFile").ref()
-        .none_or_equal(atom_id<&IOStates::cancelling>, false)
-        .exist_and_equal(atom_id<&IOStates::block_readed>, true)
-        .exist_and_equal(atom_id<&IOStates::file_opened>, true)
-        .add_effect(atom_id<&IOStates::file_opened>, false);
+        .none_or_equal<&IOStates::cancelling>(false)
+        .exist_and_equal<&IOStates::block_readed>(true)
+        .exist_and_equal<&IOStates::file_opened>(true)
+        .add_effect<&IOStates::file_opened>(false);
 
     actions.emplace(u8"freeRaw(Cancel)").ref()
-        .exist_and_equal(atom_id<&IOStates::cancelling>, true)
-        .exist_and_equal(atom_id<&IOStates::ram_allocated>, true)
-        .add_effect(atom_id<&IOStates::ram_allocated>, false);
+        .exist_and_equal<&IOStates::cancelling>(true)
+        .exist_and_equal<&IOStates::ram_allocated>(true)
+        .add_effect<&IOStates::ram_allocated>(false);
 
     actions.emplace(u8"closeFile(Cancel)").ref()
-        .exist_and_equal(atom_id<&IOStates::cancelling>, true)
-        .exist_and_equal(atom_id<&IOStates::file_opened>, true)
-        .add_effect(atom_id<&IOStates::file_opened>, false);
+        .exist_and_equal<&IOStates::cancelling>(true)
+        .exist_and_equal<&IOStates::file_opened>(true)
+        .add_effect<&IOStates::file_opened>(false);
     // clang-format on
 
     StaticWorldState initial_state;
     // NO DECOMPRESS
     {
         auto goal = StaticWorldState()
-                    .set_variable(atom_id<&IOStates::block_readed>, true)
-                    .set_variable(atom_id<&IOStates::file_opened>, false)
-                    .set_variable(atom_id<&IOStates::ram_allocated>, false);
+                    .set_variable<&IOStates::block_readed>(true)
+                    .set_variable<&IOStates::file_opened>(false)
+                    .set_variable<&IOStates::ram_allocated>(false);
         Planner planner;
         auto    the_plan = planner.plan<true>(initial_state, goal, actions);
         for (int64_t fail_index = the_plan.size() - 1; fail_index >= 0; --fail_index)
@@ -111,11 +111,11 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
                               << (const char*)action.name() << std::endl;
 
                     StaticWorldState current = state;
-                    current.set_variable(atom_id<&IOStates::cancelling>, true);
+                    current.set_variable<&IOStates::cancelling>(true);
 
                     StaticWorldState cancelled = current;
-                    cancelled.assign_variable(atom_id<&IOStates::file_opened>, false)
-                    .assign_variable(atom_id<&IOStates::ram_allocated>, false);
+                    cancelled.assign_variable<&IOStates::file_opened>(false)
+                    .assign_variable<&IOStates::ram_allocated>(false);
                     Planner cancel_planner;
                     auto    cancel_plan = cancel_planner.plan(current, cancelled, actions);
                     std::cout << "    REQUEST CANCEL:\n";
@@ -134,9 +134,9 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
     // WITH DECOMPRESS
     {
         auto goal = StaticWorldState()
-                    .set_variable(atom_id<&IOStates::decompressd>, true)
-                    .set_variable(atom_id<&IOStates::ram_allocated>, false)
-                    .set_variable(atom_id<&IOStates::file_opened>, false);
+                    .set_variable<&IOStates::decompressd>(true)
+                    .set_variable<&IOStates::ram_allocated>(false)
+                    .set_variable<&IOStates::file_opened>(false);
         Planner planner;
         auto    the_plan = planner.plan(initial_state, goal, actions);
         std::cout << "[STATIC] WITH DECOMPRESS: Found a path!\n";
@@ -149,13 +149,13 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
     // REQUEST CANCEL
     {
         auto current = StaticWorldState()
-                       .set_variable(atom_id<&IOStates::file_opened>, true)
-                       .set_variable(atom_id<&IOStates::ram_allocated>, true)
-                       .set_variable(atom_id<&IOStates::block_readed>, true)
-                       .set_variable(atom_id<&IOStates::cancelling>, true);
+                       .set_variable<&IOStates::file_opened>(true)
+                       .set_variable<&IOStates::ram_allocated>(true)
+                       .set_variable<&IOStates::block_readed>(true)
+                       .set_variable<&IOStates::cancelling>(true);
         auto cancelled = StaticWorldState()
-                         .set_variable(atom_id<&IOStates::file_opened>, false)
-                         .set_variable(atom_id<&IOStates::ram_allocated>, false);
+                         .set_variable<&IOStates::file_opened>(false)
+                         .set_variable<&IOStates::ram_allocated>(false);
         Planner planner;
         auto    the_plan = planner.plan(current, cancelled, actions);
         std::cout << "[STATIC] REQUEST CANCEL: Found a path!\n";
