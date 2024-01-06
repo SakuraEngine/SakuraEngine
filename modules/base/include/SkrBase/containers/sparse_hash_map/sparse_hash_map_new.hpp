@@ -141,9 +141,9 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
 
     // remove value
     template <typename UV = MapValueType>
-    void remove_value(const UV& value);
+    bool remove_value(const UV& value);
     template <typename UV = MapValueType>
-    void remove_all_value(const UV& value);
+    bool remove_all_value(const UV& value);
 
     // remove if
 
@@ -213,7 +213,7 @@ template <typename Memory>
 SKR_INLINE SparseHashMap<Memory>::SparseHashMap(SizeType reserve_size, AllocatorCtorParam param)
     : Super(std::move(param))
 {
-    reserve_size(reserve_size);
+    reserve(reserve_size);
 }
 template <typename Memory>
 SKR_INLINE SparseHashMap<Memory>::SparseHashMap(const MapDataType* p, SizeType n, AllocatorCtorParam param)
@@ -319,6 +319,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ex
     { // construct case
         construct(ref.ptr());
     }
+    return ref;
 }
 template <typename Memory>
 template <typename Pred>
@@ -512,33 +513,147 @@ SKR_INLINE void SparseHashMap<Memory>::append(const MapDataType* p, SizeType n)
 template <typename Memory>
 SKR_INLINE void SparseHashMap<Memory>::remove_at(SizeType index)
 {
+    Super::_remove_from_bucket(index);
+    data_arr().remove_at(index);
 }
 template <typename Memory>
 SKR_INLINE void SparseHashMap<Memory>::remove_at_unsafe(SizeType index)
 {
+    Super::_remove_from_bucket(index);
+    data_arr().remove_at_unsafe(index);
 }
 template <typename Memory>
 template <typename UK>
 requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
 SKR_INLINE bool SparseHashMap<Memory>::remove(const UK& key)
 {
+    HashType hash = HasherType()(key);
+    return Super::_remove(hash, [&key](const MapDataType& data) { return data.key == key; });
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE bool SparseHashMap<Memory>::remove_ex(HashType hash, Pred&& pred)
 {
+    return Super::_remove(hash, [&pred](const MapDataType& data) { return pred(data.key); });
 }
 
 // remove value
 template <typename Memory>
 template <typename UV>
-SKR_INLINE void SparseHashMap<Memory>::remove_value(const UV& value)
+SKR_INLINE bool SparseHashMap<Memory>::remove_value(const UV& value)
 {
+    return data_arr().remove_if([&value](const MapDataType& data) { return data.value == value; });
 }
 template <typename Memory>
 template <typename UV>
-SKR_INLINE void SparseHashMap<Memory>::remove_all_value(const UV& value)
+SKR_INLINE bool SparseHashMap<Memory>::remove_all_value(const UV& value)
 {
+    return data_arr().remove_all_if([&value](const MapDataType& data) { return data.value == value; });
+}
+
+// erase
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::It SparseHashMap<Memory>::erase(const It& it)
+{
+    remove_at(it.index());
+    It new_it{ it };
+    ++new_it;
+    return new_it;
+}
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::CIt SparseHashMap<Memory>::erase(const CIt& it)
+{
+    remove_at(it.index());
+    CIt new_it{ it };
+    ++new_it;
+    return new_it;
+}
+
+// find
+template <typename Memory>
+template <typename UK>
+requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find(const UK& key)
+{
+    HashType hash = HasherType()(key);
+    return Super::_find(hash, [&key](const MapDataType& data) { return data.key == key; });
+}
+template <typename Memory>
+template <typename UK>
+requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
+SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find(const UK& key) const
+{
+    HashType hash = HasherType()(key);
+    return Super::_find(hash, [&key](const MapDataType& data) { return data.key == key; });
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_ex(HashType hash, Pred&& pred)
+{
+    return Super::_find(hash, [&pred](const MapDataType& data) { return pred(data.key); });
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_ex(HashType hash, Pred&& pred) const
+{
+    return Super::_find(hash, [&pred](const MapDataType& data) { return pred(data.key); });
+}
+
+// find value
+template <typename Memory>
+template <typename UV>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_value(const UV& value)
+{
+    return data_arr().find_if([&value](const MapDataType& data) { return data.value == value; });
+}
+template <typename Memory>
+template <typename UV>
+SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_value(const UV& value) const
+{
+    return data_arr().find_if([&value](const MapDataType& data) { return data.value == value; });
+}
+
+// contains
+template <typename Memory>
+template <typename UK>
+requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
+SKR_INLINE bool SparseHashMap<Memory>::contains(const UK& key) const
+{
+    return (bool)find(key);
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE bool SparseHashMap<Memory>::contains_ex(HashType hash, Pred&& pred) const
+{
+    return (bool)find_ex(hash, std::forward<Pred>(pred));
+}
+template <typename Memory>
+template <typename UV>
+SKR_INLINE bool SparseHashMap<Memory>::contains_value(const UV& value) const
+{
+    return (bool)find_value(value);
+}
+
+// support foreach
+template <typename Memory>
+typename SparseHashMap<Memory>::It SparseHashMap<Memory>::begin()
+{
+    return It(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
+}
+template <typename Memory>
+typename SparseHashMap<Memory>::It SparseHashMap<Memory>::end()
+{
+    return It(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+}
+template <typename Memory>
+typename SparseHashMap<Memory>::CIt SparseHashMap<Memory>::begin() const
+{
+    return CIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
+}
+template <typename Memory>
+typename SparseHashMap<Memory>::CIt SparseHashMap<Memory>::end() const
+{
+    return CIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
 }
 
 } // namespace skr::container

@@ -1,11 +1,10 @@
 #pragma once
-#include "SkrBase/containers/sparse_hash_map/sparse_hash_map.hpp"
+#include "SkrBase/containers/sparse_hash_map/sparse_hash_map_new.hpp"
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map_memory.hpp"
 #include "SkrBase/containers/array/array.hpp"
 #include "SkrBase/containers/array/array_memory.hpp"
 #include "SkrBase/containers/sparse_array/sparse_array.hpp"
 #include "SkrBase/containers/sparse_array/sparse_array_memory.hpp"
-#include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_new.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_memory.hpp"
 #include "SkrBase/containers/bit_array/bit_array.hpp"
@@ -100,7 +99,7 @@ TestAllocatorType>>;
 
 //===========Sparse Hash Map===================================================================
 template <typename K, typename V>
-using SparseHashMap = container::SparseHashMapOld<container::SparseHashMapMemory<
+using SparseHashMap = container::SparseHashMap<container::SparseHashMapMemory<
 K,
 V,
 TestBitBlockType,
@@ -111,7 +110,7 @@ TestSizeType,
 TestAllocatorType>>;
 
 template <typename K, typename V, uint64_t kCount>
-using FixedSparseHashMap = container::SparseHashMapOld<container::FixedSparseHashMapMemory<
+using FixedSparseHashMap = container::SparseHashMap<container::FixedSparseHashMapMemory<
 K,
 V,
 TestBitBlockType,
@@ -122,7 +121,7 @@ TestSizeType,
 kCount>>;
 
 template <typename K, typename V, uint64_t kInlineCount>
-using InlineSparseHashMap = container::SparseHashMapOld<container::InlineSparseHashMapMemory<
+using InlineSparseHashMap = container::SparseHashMap<container::InlineSparseHashMapMemory<
 K,
 V,
 TestBitBlockType,
