@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/containers/vector.hpp"
 #include "SkrRT/containers/stl_vector.hpp"
-#include "SkrRT/goap/state.hpp"
+#include "SkrRT/goap/dynamic_state.hpp"
 #include "SkrRT/goap/action.hpp"
 
 namespace skr::goap
@@ -10,7 +10,6 @@ namespace skr::goap
 template <concepts::WorldState StateType>
 struct Planner {
     using IdentifierType = typename StateType::IdentifierType;
-    using VariableType   = typename StateType::VariableType;
     using ActionType     = Action<StateType>;
     using ActionAndState = std::pair<ActionType, StateType>;
 
@@ -133,7 +132,7 @@ SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateTy
         {
             if (potential_action.operable_on(current.ws_))
             {
-                WorldState outcome = potential_action.act_on(current.ws_);
+                StateType outcome = potential_action.act_on(current.ws_);
 
                 // Skip if already closed
                 if (memberOfClosed(outcome))

@@ -17,7 +17,6 @@ struct StringLiteral {
     constexpr StringLiteral(const char (&str)[N]) {
         std::copy_n(str, N, value);
     }
-    
     char value[N];
 };
 
@@ -59,9 +58,9 @@ TEST_CASE_METHOD(GoapTests, "LiteralString")
 
 TEST_CASE_METHOD(GoapTests, "I/O")
 {
-    using WorldState = skr::goap::WorldState<int, bool>;
-    using Action     = skr::goap::Action<WorldState>;
-    using Planner    = skr::goap::Planner<WorldState>;
+    using DynamicWorldState = skr::goap::DynamicWorldState<int, bool>;
+    using Action     = skr::goap::Action<DynamicWorldState>;
+    using Planner    = skr::goap::Planner<DynamicWorldState>;
 
     skr::Vector<Action> actions;
     // states
@@ -82,6 +81,14 @@ TEST_CASE_METHOD(GoapTests, "I/O")
         .none_or_equal(cancelling, false)
         .exist_and_equal(file_opened, true)
         .add_effect(ram_allocated, true);
+
+    // static case
+    /*
+    actions.emplace(u8"allocateMemory").ref()
+        .none_or_equal(goap::id<&State::cancelling>, false)
+        .exist_and_equal(goap::id<&State::file_opened>, true)
+        .add_effect(goap::id<&State::ram_allocated>, true);
+    */
 
     actions.emplace(u8"readBytes").ref()
         .none_or_equal(cancelling, false)
@@ -117,11 +124,10 @@ TEST_CASE_METHOD(GoapTests, "I/O")
         .add_effect(file_opened, false);
     // clang-format on
 
-    WorldState initial_state;
-    initial_state.set_variable(cancelling, false);
+    DynamicWorldState initial_state;
     // NO DECOMPRESS
     {
-        auto goal = WorldState()
+        auto goal = DynamicWorldState()
             .set_variable(block_readed, true)
             .set_variable(file_opened, false)
             .set_variable(ram_allocated, false);
@@ -139,10 +145,10 @@ TEST_CASE_METHOD(GoapTests, "I/O")
                     std::cout << "cancel triggered, because action failed: "
                               << (const char*)action.name() << std::endl;
 
-                    auto current = state;
+                    DynamicWorldState current = state;
                     current.set_variable(cancelling, true);
 
-                    WorldState cancelled = current;
+                    DynamicWorldState cancelled = current;
                     cancelled.assign_variable(file_opened, false)
                         .assign_variable(ram_allocated, false);
                     Planner cancel_planner;
@@ -150,8 +156,7 @@ TEST_CASE_METHOD(GoapTests, "I/O")
                     std::cout << "    REQUEST CANCEL:\n";
                     for (int64_t i = cancel_plan.size() - 1; i >= 0; --i)
                     {
-                        std::cout << "        " << (const char*)cancel_plan[i].name()
-                                  << std::endl;
+                        std::cout << "        " << (const char*)cancel_plan[i].name() << std::endl;
                     }
                     break;
                 }
@@ -163,7 +168,7 @@ TEST_CASE_METHOD(GoapTests, "I/O")
     }
     // WITH DECOMPRESS
     {
-        auto goal = WorldState()
+        auto goal = DynamicWorldState()
             .set_variable(decompressd, true)
             .set_variable(ram_allocated, false)
             .set_variable(file_opened, false);
@@ -178,12 +183,12 @@ TEST_CASE_METHOD(GoapTests, "I/O")
     }
     // REQUEST CANCEL
     {
-        auto current = WorldState()
+        auto current = DynamicWorldState()
             .set_variable(file_opened, true)
             .set_variable(ram_allocated, true)
             .set_variable(block_readed, true)
             .set_variable(cancelling, true);
-        auto cancelled = WorldState()
+        auto cancelled = DynamicWorldState()
             .set_variable(file_opened, false)
             .set_variable(ram_allocated, false);
         Planner planner;

@@ -1,5 +1,6 @@
 #pragma once
-#include "SkrRT/goap/state.hpp"
+#include "SkrRT/goap/static_state.hpp"
+#include "SkrRT/goap/dynamic_state.hpp"
 #include "SkrRT/containers/vector.hpp"
 
 namespace skr::goap
