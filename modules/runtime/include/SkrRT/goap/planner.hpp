@@ -138,8 +138,6 @@ SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateTy
                 if (memberOfClosed(outcome))
                     continue;
 
-                // std::cout << potential_action.name() << " will get us to " << outcome << std::endl;
-
                 // Look for a Node with this WorldState on the open list.
                 auto p_outcome_node = memberOfOpen(outcome);
                 if (p_outcome_node == end(open_))

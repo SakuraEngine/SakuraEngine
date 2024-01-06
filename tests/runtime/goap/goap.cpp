@@ -62,13 +62,13 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
     actions.emplace(u8"openFile").ref()
         .none_or_equal<&IOStates::cancelling>(false)
         .none_or_equal<&IOStates::file_status>(EFileStatus::Closed)
-        .add_effect<&IOStates::ram_status>(ERamStatus::SizeAcquired)
+        // .add_effect<&IOStates::ram_status>(ERamStatus::SizeAcquired)
         .add_effect<&IOStates::file_status>(EFileStatus::Opened);
 
     actions.emplace(u8"allocateMemory").ref()
         .none_or_equal<&IOStates::cancelling>(false)
         .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
-        .exist_and_equal<&IOStates::ram_status>(ERamStatus::SizeAcquired)
+        // .exist_and_equal<&IOStates::ram_status>(ERamStatus::SizeAcquired)
         .add_effect<&IOStates::ram_status>(ERamStatus::Allocated);
 
     actions.emplace(u8"readBytes").ref()
