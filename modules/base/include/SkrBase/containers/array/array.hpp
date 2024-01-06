@@ -127,17 +127,17 @@ struct Array : protected Memory {
 
     // remove if
     template <typename Pred>
-    bool remove_if(Pred&& p);
+    bool remove_if(Pred&& pred);
     template <typename Pred>
-    bool remove_if_swap(Pred&& p);
+    bool remove_if_swap(Pred&& pred);
     template <typename Pred>
-    bool remove_last_if(Pred&& p);
+    bool remove_last_if(Pred&& pred);
     template <typename Pred>
-    bool remove_last_if_swap(Pred&& p);
+    bool remove_last_if_swap(Pred&& pred);
     template <typename Pred>
-    SizeType remove_all_if(Pred&& p);
+    SizeType remove_all_if(Pred&& pred);
     template <typename Pred>
-    SizeType remove_all_if_swap(Pred&& p);
+    SizeType remove_all_if_swap(Pred&& pred);
 
     // erase
     It  erase(const It& it);
@@ -175,19 +175,23 @@ struct Array : protected Memory {
 
     // find if
     template <typename Pred>
-    DataRef find_if(Pred&& p);
+    DataRef find_if(Pred&& pred);
     template <typename Pred>
-    DataRef find_last_if(Pred&& p);
+    DataRef find_last_if(Pred&& pred);
     template <typename Pred>
-    CDataRef find_if(Pred&& p) const;
+    CDataRef find_if(Pred&& pred) const;
     template <typename Pred>
-    CDataRef find_last_if(Pred&& p) const;
+    CDataRef find_last_if(Pred&& pred) const;
 
     // contains
     template <typename U = DataType>
     bool contains(const U& v) const;
     template <typename Pred>
-    bool contains_if(Pred&& p) const;
+    bool contains_if(Pred&& pred) const;
+    template <typename U = DataType>
+    SizeType count(const U& v) const;
+    template <typename Pred>
+    SizeType count_if(Pred&& pred) const;
 
     // sort
     template <typename Functor = Less<DataType>>
@@ -846,9 +850,9 @@ SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_swap(const
 // remove by
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool Array<Memory>::remove_if(Pred&& p)
+SKR_INLINE bool Array<Memory>::remove_if(Pred&& pred)
 {
-    if (DataRef ref = find_if(std::forward<Pred>(p)))
+    if (DataRef ref = find_if(std::forward<Pred>(pred)))
     {
         remove_at(ref.index);
         return true;
@@ -857,9 +861,9 @@ SKR_INLINE bool Array<Memory>::remove_if(Pred&& p)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool Array<Memory>::remove_if_swap(Pred&& p)
+SKR_INLINE bool Array<Memory>::remove_if_swap(Pred&& pred)
 {
-    if (DataRef ref = find_if(std::forward<Pred>(p)))
+    if (DataRef ref = find_if(std::forward<Pred>(pred)))
     {
         remove_at_swap(ref.index);
         return true;
@@ -868,9 +872,9 @@ SKR_INLINE bool Array<Memory>::remove_if_swap(Pred&& p)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool Array<Memory>::remove_last_if(Pred&& p)
+SKR_INLINE bool Array<Memory>::remove_last_if(Pred&& pred)
 {
-    if (DataRef ref = find_last_if(std::forward<Pred>(p)))
+    if (DataRef ref = find_last_if(std::forward<Pred>(pred)))
     {
         remove_at(ref.index);
         return true;
@@ -879,9 +883,9 @@ SKR_INLINE bool Array<Memory>::remove_last_if(Pred&& p)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool Array<Memory>::remove_last_if_swap(Pred&& p)
+SKR_INLINE bool Array<Memory>::remove_last_if_swap(Pred&& pred)
 {
-    if (DataRef ref = find_last_if(std::forward<Pred>(p)))
+    if (DataRef ref = find_last_if(std::forward<Pred>(pred)))
     {
         remove_at_swap(ref.index);
         return true;
@@ -890,18 +894,18 @@ SKR_INLINE bool Array<Memory>::remove_last_if_swap(Pred&& p)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if(Pred&& p)
+SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if(Pred&& pred)
 {
-    DataType* pos = algo::remove_all(begin(), end(), std::forward<Pred>(p));
+    DataType* pos = algo::remove_all(begin(), end(), std::forward<Pred>(pred));
     SizeType  n   = end() - pos;
     _set_size(size() - n);
     return n;
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if_swap(Pred&& p)
+SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if_swap(Pred&& pred)
 {
-    DataType* pos = algo::remove_all_swap(begin(), end(), p);
+    DataType* pos = algo::remove_all_swap(begin(), end(), pred);
     SizeType  n   = end() - pos;
     _set_size(size() - n);
     return n;
@@ -1048,14 +1052,14 @@ SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last(const U& v)
 // find by
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_if(Pred&& p)
+SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_if(Pred&& pred)
 {
     auto p_begin = data();
     auto p_end   = data() + size();
 
     for (; p_begin < p_end; ++p_begin)
     {
-        if (p(*p_begin))
+        if (pred(*p_begin))
         {
             return { p_begin, static_cast<SizeType>(p_begin - data()) };
         }
@@ -1064,14 +1068,14 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_if(Pred&& p)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_last_if(Pred&& p)
+SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_last_if(Pred&& pred)
 {
     auto p_begin = data();
     auto p_end   = data() + size() - 1;
 
     for (; p_end >= p_begin; --p_end)
     {
-        if (p(*p_end))
+        if (pred(*p_end))
         {
             return { p_end, static_cast<SizeType>(p_end - data()) };
         }
@@ -1080,15 +1084,15 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_last_if(Pred&& p)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_if(Pred&& p) const
+SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_if(Pred&& pred) const
 {
-    return const_cast<Array<Memory>*>(this)->find_if(std::forward<Pred>(p));
+    return const_cast<Array<Memory>*>(this)->find_if(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last_if(Pred&& p) const
+SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last_if(Pred&& pred) const
 {
-    return const_cast<Array<Memory>*>(this)->find_last_if(std::forward<Pred>(p));
+    return const_cast<Array<Memory>*>(this)->find_last_if(std::forward<Pred>(pred));
 }
 
 // contains
@@ -1097,9 +1101,37 @@ template <typename U>
 SKR_INLINE bool Array<Memory>::contains(const U& v) const { return (bool)find(v); }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool Array<Memory>::contains_if(Pred&& p) const
+SKR_INLINE bool Array<Memory>::contains_if(Pred&& pred) const
 {
-    return (bool)find_if(std::forward<Pred>(p));
+    return (bool)find_if(std::forward<Pred>(pred));
+}
+template <typename Memory>
+template <typename U>
+SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::count(const U& v) const
+{
+    SizeType count = 0;
+    for (const DataType& data : *this)
+    {
+        if (data == v)
+        {
+            ++count;
+        }
+    }
+    return count;
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::count_if(Pred&& pred) const
+{
+    SizeType count = 0;
+    for (const DataType& v : *this)
+    {
+        if (pred(v))
+        {
+            ++count;
+        }
+    }
+    return count;
 }
 
 // sort

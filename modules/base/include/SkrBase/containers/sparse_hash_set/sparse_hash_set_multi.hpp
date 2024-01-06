@@ -83,8 +83,8 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     // add
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     DataRef add(U&& v);
-    template <typename Pred, typename ConstructFunc>
-    DataRef add_ex(HashType hash, Pred&& pred, ConstructFunc&& construct);
+    template <typename ConstructFunc>
+    DataRef add_ex(HashType hash, ConstructFunc&& construct);
     DataRef add_ex_unsafe(HashType hash);
 
     // emplace
@@ -225,15 +225,15 @@ template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::H
 SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::add(U&& v)
 {
     HashType hash = HasherType()(v);
-    DataRef  ref  = add_ex_unsafe(hash, [&v](const SetDataType& k) { return k == v; });
+    DataRef  ref  = add_ex_unsafe(hash);
     new (ref.ptr()) SetDataType(std::forward<U>(v));
     return ref;
 }
 template <typename Memory>
-template <typename Pred, typename ConstructFunc>
-SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::add_ex(HashType hash, Pred&& pred, ConstructFunc&& construct)
+template <typename ConstructFunc>
+SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::add_ex(HashType hash, ConstructFunc&& construct)
 {
-    DataRef ref = add_ex_unsafe(hash, std::forward<Pred>(pred));
+    DataRef ref = add_ex_unsafe(hash);
     construct(ref.ptr());
     return ref;
 }
@@ -381,13 +381,13 @@ template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
 SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::find_next(DataRef ref, const U& v)
 {
-    return Super::_find(ref, [&v](const SetDataType& k) { return k == v; });
+    return Super::_find_next(ref, [&v](const SetDataType& k) { return k == v; });
 }
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
 SKR_INLINE typename MultSparseHashSet<Memory>::CDataRef MultSparseHashSet<Memory>::find_next(CDataRef ref, const U& v) const
 {
-    return Super::_find(ref, [&v](const SetDataType& k) { return k == v; });
+    return Super::_find_next(ref, [&v](const SetDataType& k) { return k == v; });
 }
 template <typename Memory>
 template <typename Pred>

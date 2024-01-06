@@ -123,11 +123,11 @@ struct SparseArray : protected Memory {
 
     // remove if
     template <typename Pred>
-    bool remove_if(Pred&& p);
+    bool remove_if(Pred&& pred);
     template <typename Pred>
-    bool remove_last_if(Pred&& p);
+    bool remove_last_if(Pred&& pred);
     template <typename Pred>
-    SizeType remove_all_if(Pred&& p);
+    SizeType remove_all_if(Pred&& pred);
 
     // modify
     DataType&       operator[](SizeType index);
@@ -149,19 +149,23 @@ struct SparseArray : protected Memory {
 
     // find if
     template <typename Pred>
-    DataRef find_if(Pred&& p);
+    DataRef find_if(Pred&& pred);
     template <typename Pred>
-    DataRef find_last_if(Pred&& p);
+    DataRef find_last_if(Pred&& pred);
     template <typename Pred>
-    CDataRef find_if(Pred&& p) const;
+    CDataRef find_if(Pred&& pred) const;
     template <typename Pred>
-    CDataRef find_last_if(Pred&& p) const;
+    CDataRef find_last_if(Pred&& pred) const;
 
     // contains
     template <typename U = DataType>
     bool contains(const U& v) const;
     template <typename Pred>
-    bool contains_if(Pred&& p) const;
+    bool contains_if(Pred&& pred) const;
+    template <typename U = DataType>
+    SizeType count(const U& v) const;
+    template <typename Pred>
+    SizeType count_if(Pred&& pred) const;
 
     // sort
     template <typename Functor = Less<DataType>>
@@ -978,9 +982,9 @@ SKR_INLINE typename SparseArray<Memory>::CIt SparseArray<Memory>::erase(const CI
 // remove if
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool SparseArray<Memory>::remove_if(Pred&& p)
+SKR_INLINE bool SparseArray<Memory>::remove_if(Pred&& pred)
 {
-    if (DataRef ref = find_if(std::forward<Pred>(p)))
+    if (DataRef ref = find_if(std::forward<Pred>(pred)))
     {
         remove_at(ref.index());
         return true;
@@ -989,9 +993,9 @@ SKR_INLINE bool SparseArray<Memory>::remove_if(Pred&& p)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool SparseArray<Memory>::remove_last_if(Pred&& p)
+SKR_INLINE bool SparseArray<Memory>::remove_last_if(Pred&& pred)
 {
-    if (DataRef ref = find_last_if(std::forward<Pred>(p)))
+    if (DataRef ref = find_last_if(std::forward<Pred>(pred)))
     {
         remove_at(ref.index());
         return true;
@@ -1000,12 +1004,12 @@ SKR_INLINE bool SparseArray<Memory>::remove_last_if(Pred&& p)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_all_if(Pred&& p)
+SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_all_if(Pred&& pred)
 {
     SizeType count = 0;
     for (auto it = begin(); it != end(); ++it)
     {
-        if (p(*it))
+        if (pred(*it))
         {
             remove_at(it.index());
             ++count;
@@ -1083,11 +1087,11 @@ SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last
 // find if
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_if(Pred&& p)
+SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_if(Pred&& pred)
 {
     for (auto it = begin(); it != end(); ++it)
     {
-        if (p(*it))
+        if (pred(*it))
         {
             return { it.data(), it.index() };
         }
@@ -1096,7 +1100,7 @@ SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_if(Pr
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last_if(Pred&& p)
+SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last_if(Pred&& pred)
 {
     // TODO. reverse iterator
     // for (auto it = begin(); it != end(); ++it)
@@ -1110,7 +1114,7 @@ SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last_
     {
         if (has_data(i))
         {
-            if (p(data()[i]._sparse_array_data))
+            if (pred(data()[i]._sparse_array_data))
             {
                 return { &data()[i]._sparse_array_data, i };
             }
@@ -1120,15 +1124,15 @@ SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last_
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_if(Pred&& p) const
+SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_if(Pred&& pred) const
 {
-    return const_cast<SparseArray*>(this)->find_if(std::forward<Pred>(p));
+    return const_cast<SparseArray*>(this)->find_if(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last_if(Pred&& p) const
+SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last_if(Pred&& pred) const
 {
-    return const_cast<SparseArray*>(this)->find_last_if(std::forward<Pred>(p));
+    return const_cast<SparseArray*>(this)->find_last_if(std::forward<Pred>(pred));
 }
 
 // contains
@@ -1140,9 +1144,37 @@ SKR_INLINE bool SparseArray<Memory>::contains(const U& v) const
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool SparseArray<Memory>::contains_if(Pred&& p) const
+SKR_INLINE bool SparseArray<Memory>::contains_if(Pred&& pred) const
 {
-    return (bool)find_if(std::forward<Pred>(p));
+    return (bool)find_if(std::forward<Pred>(pred));
+}
+template <typename Memory>
+template <typename U>
+SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::count(const U& v) const
+{
+    SizeType count = 0;
+    for (auto it = begin(); it != end(); ++it)
+    {
+        if (*it == v)
+        {
+            ++count;
+        }
+    }
+    return count;
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::count_if(Pred&& pred) const
+{
+    SizeType count = 0;
+    for (auto it = begin(); it != end(); ++it)
+    {
+        if (pred(*it))
+        {
+            ++count;
+        }
+    }
+    return count;
 }
 
 // sort
