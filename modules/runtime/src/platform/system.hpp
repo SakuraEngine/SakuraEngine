@@ -120,7 +120,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     inline int64_t add_window_resize_handler(SWindowResizeHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        window_resize_handlers.add_or_assign(rid, { proc, usr_data });
+        window_resize_handlers.add(rid, { proc, usr_data });
         return rid;
     }
 
@@ -132,7 +132,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_window_close_handler(SWindowCloseHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        window_close_handlers.add_or_assign(rid, {proc, usr_data});
+        window_close_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
@@ -144,7 +144,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_window_move_handler(SWindowMoveHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        window_move_handlers.add_or_assign(rid, {proc, usr_data});
+        window_move_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
@@ -156,7 +156,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_mouse_wheel_handler(SMouseWheelHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        mouse_wheel_handlers.add_or_assign(rid, {proc, usr_data});
+        mouse_wheel_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
@@ -168,7 +168,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_mouse_button_down_handler(SMouseButtonDownHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        mouse_button_down_handlers.add_or_assign(rid, {proc, usr_data});
+        mouse_button_down_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
@@ -180,7 +180,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_mouse_button_up_handler(SMouseButtonUpHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        mouse_button_up_handlers.add_or_assign(rid, {proc, usr_data});
+        mouse_button_up_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
@@ -192,7 +192,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_key_down_handler(SKeyDownHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        key_down_handlers.add_or_assign(rid, {proc, usr_data});
+        key_down_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
@@ -204,7 +204,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_key_up_handler(SKeyUpHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        key_up_handlers.add_or_assign(rid, {proc, usr_data});
+        key_up_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 
@@ -216,7 +216,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_text_input_handler(STextInputHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        text_input_handlers.add_or_assign(rid, {proc, usr_data});
+        text_input_handlers.add(rid, {proc, usr_data});
         return rid;
     }
 

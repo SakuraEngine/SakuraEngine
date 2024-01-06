@@ -6,9 +6,9 @@
 // sparse hash map memory
 namespace skr::container
 {
-template <typename K, typename V, typename TBitBlock, typename KeyTraits, typename HashTraits, bool AllowMultiKey, typename TS, typename Allocator>
-struct SparseHashMapMemory : public SparseHashSetMemory<KVPair<K, V>, TBitBlock, KeyTraits, HashTraits, AllowMultiKey, TS, Allocator> {
-    using Super = SparseHashSetMemory<KVPair<K, V>, TBitBlock, KeyTraits, HashTraits, AllowMultiKey, TS, Allocator>;
+template <typename K, typename V, typename TBitBlock, typename HashTraits, typename TS, typename Allocator>
+struct SparseHashMapMemory : public SparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, Allocator> {
+    using Super = SparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, Allocator>;
 
     // sparse array configure
     using typename Super::SizeType;
@@ -20,11 +20,8 @@ struct SparseHashMapMemory : public SparseHashSetMemory<KVPair<K, V>, TBitBlock,
     // sparse hash set configure
     using typename Super::HashType;
     using typename Super::HasherType;
-    using typename Super::KeyType;
-    using typename Super::KeyMapperType;
     using typename Super::SetDataType;
     using typename Super::SetStorageType;
-    using Super::allow_multi_key;
 
     // sparse hash map configure
     using MapKeyType   = K;
@@ -65,9 +62,9 @@ struct SparseHashMapMemory : public SparseHashSetMemory<KVPair<K, V>, TBitBlock,
 // fixed sparse hash map memory
 namespace skr::container
 {
-template <typename K, typename V, typename TBitBlock, typename KeyTraits, typename HashTraits, bool AllowMultiKey, typename TS, uint64_t kCount>
-struct FixedSparseHashMapMemory : public FixedSparseHashSetMemory<KVPair<K, V>, TBitBlock, KeyTraits, HashTraits, AllowMultiKey, TS, kCount> {
-    using Super = FixedSparseHashSetMemory<KVPair<K, V>, TBitBlock, KeyTraits, HashTraits, AllowMultiKey, TS, kCount>;
+template <typename K, typename V, typename TBitBlock, typename HashTraits, typename TS, uint64_t kCount>
+struct FixedSparseHashMapMemory : public FixedSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, kCount> {
+    using Super = FixedSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, kCount>;
 
     // sparse array configure
     using typename Super::SizeType;
@@ -79,11 +76,8 @@ struct FixedSparseHashMapMemory : public FixedSparseHashSetMemory<KVPair<K, V>, 
     // sparse hash set configure
     using typename Super::HashType;
     using typename Super::HasherType;
-    using typename Super::KeyType;
-    using typename Super::KeyMapperType;
     using typename Super::SetDataType;
     using typename Super::SetStorageType;
-    using Super::allow_multi_key;
 
     // sparse hash map configure
     using MapKeyType   = K;
@@ -124,9 +118,9 @@ struct FixedSparseHashMapMemory : public FixedSparseHashSetMemory<KVPair<K, V>, 
 // inline hash map memory
 namespace skr::container
 {
-template <typename K, typename V, typename TBitBlock, typename KeyTraits, typename HashTraits, bool AllowMultiKey, typename TS, uint64_t kCount, typename Allocator>
-struct InlineSparseHashMapMemory : public InlineSparseHashSetMemory<KVPair<K, V>, TBitBlock, KeyTraits, HashTraits, AllowMultiKey, TS, kCount, Allocator> {
-    using Super = InlineSparseHashSetMemory<KVPair<K, V>, TBitBlock, KeyTraits, HashTraits, AllowMultiKey, TS, kCount, Allocator>;
+template <typename K, typename V, typename TBitBlock, typename HashTraits, typename TS, uint64_t kCount, typename Allocator>
+struct InlineSparseHashMapMemory : public InlineSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, kCount, Allocator> {
+    using Super = InlineSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, kCount, Allocator>;
 
     // sparse array configure
     using typename Super::SizeType;
@@ -138,11 +132,8 @@ struct InlineSparseHashMapMemory : public InlineSparseHashSetMemory<KVPair<K, V>
     // sparse hash set configure
     using typename Super::HashType;
     using typename Super::HasherType;
-    using typename Super::KeyType;
-    using typename Super::KeyMapperType;
     using typename Super::SetDataType;
     using typename Super::SetStorageType;
-    using Super::allow_multi_key;
 
     // sparse hash map configure
     using MapKeyType   = K;

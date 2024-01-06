@@ -9,7 +9,7 @@
 // util sparse hash set memory
 namespace skr::container
 {
-template <typename T, typename TBitBlock, typename KeyTraits, typename HashTraits, bool AllowMultiKey, typename TS, typename Allocator>
+template <typename T, typename TBitBlock, typename HashTraits, typename TS, typename Allocator>
 struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator> {
     using Super = SparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator>;
 
@@ -21,13 +21,10 @@ struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, t
     using typename Super::AllocatorCtorParam;
 
     // sparse hash set configure
-    using HashType                        = typename HashTraits::HashType;
-    using HasherType                      = typename HashTraits::HasherType;
-    using KeyType                         = typename KeyTraits::KeyType;
-    using KeyMapperType                   = typename KeyTraits::KeyMapperType;
-    using SetDataType                     = T;
-    using SetStorageType                  = SparseHashSetData<T, TS, HashType>;
-    static constexpr bool allow_multi_key = AllowMultiKey;
+    using HashType       = typename HashTraits::HashType;
+    using HasherType     = typename HashTraits::HasherType;
+    using SetDataType    = T;
+    using SetStorageType = SparseHashSetData<T, TS, HashType>;
 
     // ctor & dtor
     inline SparseHashSetMemory(AllocatorCtorParam param) noexcept
@@ -171,7 +168,7 @@ private:
 // fixed sparse hash set memory
 namespace skr::container
 {
-template <typename T, typename TBitBlock, typename KeyTraits, typename HashTraits, bool AllowMultiKey, typename TS, uint64_t kCount>
+template <typename T, typename TBitBlock, typename HashTraits, typename TS, uint64_t kCount>
 struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount> {
     using Super = FixedSparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount>;
 
@@ -183,13 +180,10 @@ struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetDat
     using typename Super::AllocatorCtorParam;
 
     // sparse hash set configure
-    using HashType                        = typename HashTraits::HashType;
-    using HasherType                      = typename HashTraits::HasherType;
-    using KeyType                         = typename KeyTraits::KeyType;
-    using KeyMapperType                   = typename KeyTraits::KeyMapperType;
-    using SetDataType                     = T;
-    using SetStorageType                  = SparseHashSetData<T, TS, HashType>;
-    static constexpr bool allow_multi_key = AllowMultiKey;
+    using HashType       = typename HashTraits::HashType;
+    using HasherType     = typename HashTraits::HasherType;
+    using SetDataType    = T;
+    using SetStorageType = SparseHashSetData<T, TS, HashType>;
 
     // ctor & dtor
     inline FixedSparseHashSetMemory(AllocatorCtorParam param) noexcept
@@ -283,7 +277,7 @@ private:
 // inline sparse hash set memory
 namespace skr::container
 {
-template <typename T, typename TBitBlock, typename KeyTraits, typename HashTraits, bool AllowMultiKey, typename TS, uint64_t kInlineCount, typename Allocator>
+template <typename T, typename TBitBlock, typename HashTraits, typename TS, uint64_t kInlineCount, typename Allocator>
 struct InlineSparseHashSetMemory : public InlineSparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator> {
     using Super = InlineSparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator>;
 
@@ -295,13 +289,10 @@ struct InlineSparseHashSetMemory : public InlineSparseArrayMemory<SparseHashSetD
     using typename Super::AllocatorCtorParam;
 
     // sparse hash set configure
-    using HashType                        = typename HashTraits::HashType;
-    using HasherType                      = typename HashTraits::HasherType;
-    using KeyType                         = typename KeyTraits::KeyType;
-    using KeyMapperType                   = typename KeyTraits::KeyMapperType;
-    using SetDataType                     = T;
-    using SetStorageType                  = SparseHashSetData<T, TS, HashType>;
-    static constexpr bool allow_multi_key = AllowMultiKey;
+    using HashType       = typename HashTraits::HashType;
+    using HasherType     = typename HashTraits::HasherType;
+    using SetDataType    = T;
+    using SetStorageType = SparseHashSetData<T, TS, HashType>;
 
     // ctor & dtor
     inline InlineSparseHashSetMemory(AllocatorCtorParam param) noexcept
