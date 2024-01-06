@@ -21,7 +21,7 @@ struct StaticStateId {
     template <auto Member> requires(concepts::IsMemberObject<Member>)
     static constexpr StaticStateId Create()
     {
-        using OwnerType = MemberInfo<Member>::OwnerType;
+        using OwnerType = typename MemberInfo<Member>::OwnerType;
         return StaticStateId(0/*TODO*/);
     }
     constexpr StaticStateId(uint32_t index) : index(index) {}
