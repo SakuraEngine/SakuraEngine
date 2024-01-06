@@ -131,8 +131,8 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     void append(const MapDataType* p, SizeType n);
 
     // remove
-    void remove_at(SizeType index);
-    void remove_at_unsafe(SizeType index);
+    using Super::remove_at;
+    using Super::remove_at_unsafe;
     template <typename UK = MapKeyType>
     requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
     bool remove(const UK& key);
@@ -146,6 +146,9 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     bool remove_all_value(const UV& value);
 
     // remove if
+    using Super::remove_if;
+    using Super::remove_last_if;
+    using Super::remove_all_if;
 
     // erase
     It  erase(const It& it);
@@ -170,6 +173,8 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     CDataRef find_value(const UV& value) const;
 
     // find if
+    using Super::find_if;
+    using Super::find_last_if;
 
     // contains
     template <typename UK = MapKeyType>
@@ -181,6 +186,8 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     bool contains_value(const UV& value) const;
 
     // contains if
+    using Super::contains_if;
+    using Super::count_if;
 
     // visitor & modifier
     using Super::at;
@@ -510,18 +517,6 @@ SKR_INLINE void SparseHashMap<Memory>::append(const MapDataType* p, SizeType n)
 }
 
 // remove
-template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::remove_at(SizeType index)
-{
-    Super::_remove_from_bucket(index);
-    data_arr().remove_at(index);
-}
-template <typename Memory>
-SKR_INLINE void SparseHashMap<Memory>::remove_at_unsafe(SizeType index)
-{
-    Super::_remove_from_bucket(index);
-    data_arr().remove_at_unsafe(index);
-}
 template <typename Memory>
 template <typename UK>
 requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)

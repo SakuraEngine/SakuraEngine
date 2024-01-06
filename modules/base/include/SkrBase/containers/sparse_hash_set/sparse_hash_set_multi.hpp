@@ -97,8 +97,8 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     void append(const SetDataType* p, SizeType n);
 
     // remove
-    void remove_at(SizeType index);
-    void remove_at_unsafe(SizeType index);
+    using Super::remove_at;
+    using Super::remove_at_unsafe;
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     bool remove(const U& v);
     template <typename Pred>
@@ -107,6 +107,11 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     SizeType remove_all(const U& v);
     template <typename Pred>
     SizeType remove_all_ex(HashType hash, Pred&& pred);
+
+    // remove if
+    using Super::remove_if;
+    using Super::remove_last_if;
+    using Super::remove_all_if;
 
     // erase
     It  erase(const It& it);
@@ -130,6 +135,10 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     template <typename Pred>
     CDataRef find_next_ex(CDataRef ref, Pred&& pred) const;
 
+    // find if
+    using Super::find_if;
+    using Super::find_last_if;
+
     // contains
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     bool contains(const U& v) const;
@@ -139,6 +148,10 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     SizeType count(const U& v) const;
     template <typename Pred>
     SizeType count_ex(HashType hash, Pred&& pred) const;
+
+    // contains if
+    using Super::contains_if;
+    using Super::count_if;
 
     // visitor & modifier
     using Super::at;
@@ -293,18 +306,6 @@ SKR_INLINE void MultSparseHashSet<Memory>::append(const SetDataType* p, SizeType
 }
 
 // remove
-template <typename Memory>
-SKR_INLINE void MultSparseHashSet<Memory>::remove_at(SizeType index)
-{
-    Super::_remove_from_bucket(index);
-    data_arr().remove_at(index);
-}
-template <typename Memory>
-SKR_INLINE void MultSparseHashSet<Memory>::remove_at_unsafe(SizeType index)
-{
-    Super::_remove_from_bucket(index);
-    data_arr().remove_at_unsafe(index);
-}
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
 SKR_INLINE bool MultSparseHashSet<Memory>::remove(const U& v)

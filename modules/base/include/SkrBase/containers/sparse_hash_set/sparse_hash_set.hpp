@@ -106,12 +106,17 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     void append(const SetDataType* p, SizeType n);
 
     // remove
-    void remove_at(SizeType index);
-    void remove_at_unsafe(SizeType index);
+    using Super::remove_at;
+    using Super::remove_at_unsafe;
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     bool remove(const U& v);
     template <typename Pred>
     bool remove_ex(HashType hash, Pred&& pred);
+
+    // remove if
+    using Super::remove_if;
+    using Super::remove_last_if;
+    using Super::remove_all_if;
 
     // erase
     It  erase(const It& it);
@@ -127,11 +132,19 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     template <typename Pred>
     CDataRef find_ex(HashType hash, Pred&& pred) const;
 
+    // find if
+    using Super::find_if;
+    using Super::find_last_if;
+
     // contains
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     bool contains(const U& v) const;
     template <typename Pred>
     bool contains_ex(HashType hash, Pred&& pred) const;
+
+    // contains if
+    using Super::contains_if;
+    using Super::count_if;
 
     // visitor & modifier
     using Super::at;
@@ -450,18 +463,6 @@ SKR_INLINE void SparseHashSet<Memory>::append(const SetDataType* p, SizeType n)
 }
 
 // remove
-template <typename Memory>
-SKR_INLINE void SparseHashSet<Memory>::remove_at(SizeType index)
-{
-    Super::_remove_from_bucket(index);
-    data_arr().remove_at(index);
-}
-template <typename Memory>
-SKR_INLINE void SparseHashSet<Memory>::remove_at_unsafe(SizeType index)
-{
-    Super::_remove_from_bucket(index);
-    data_arr().remove_at_unsafe(index);
-}
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
 SKR_INLINE bool SparseHashSet<Memory>::remove(const U& v)

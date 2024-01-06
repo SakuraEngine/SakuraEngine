@@ -100,6 +100,32 @@ struct SparseHashBase : protected SparseArray<Memory> {
     template <typename Functor = Less<SetDataType>>
     void sort_stable(Functor&& p = {});
 
+    // remove
+    void remove_at(SizeType index);
+    void remove_at_unsafe(SizeType index);
+    template <typename Pred>
+    bool remove_if(Pred&& pred);
+    template <typename Pred>
+    bool remove_last_if(Pred&& pred);
+    template <typename Pred>
+    SizeType remove_all_if(Pred&& pred);
+
+    // find
+    template <typename Pred>
+    DataRef find_if(Pred&& pred);
+    template <typename Pred>
+    DataRef find_last_if(Pred&& pred);
+    template <typename Pred>
+    CDataRef find_if(Pred&& pred) const;
+    template <typename Pred>
+    CDataRef find_last_if(Pred&& pred) const;
+
+    // constains
+    template <typename Pred>
+    bool contains_if(Pred&& pred) const;
+    template <typename Pred>
+    SizeType count_if(Pred&& pred) const;
+
 protected:
     // basic add/find/remove
     DataRef _add_unsafe(HashType hash);
@@ -616,6 +642,121 @@ SKR_INLINE void SparseHashBase<Memory>::_remove_at(SizeType index)
 {
     _remove_from_bucket(index);
     data_arr().remove_at(index);
+}
+
+// remove
+template <typename Memory>
+SKR_INLINE void SparseHashBase<Memory>::remove_at(SizeType index)
+{
+    _remove_from_bucket(index);
+    Super::remove_at(index);
+}
+template <typename Memory>
+SKR_INLINE void SparseHashBase<Memory>::remove_at_unsafe(SizeType index)
+{
+    _remove_from_bucket(index);
+    Super::remove_at_unsafe(index);
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE bool SparseHashBase<Memory>::remove_if(Pred&& pred)
+{
+    if (DataRef ref = find_if(std::forward<Pred>(pred)))
+    {
+        remove_at(ref.index());
+        return true;
+    }
+    return false;
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE bool SparseHashBase<Memory>::remove_last_if(Pred&& pred)
+{
+    if (DataRef ref = find_last_if(std::forward<Pred>(pred)))
+    {
+        remove_at(ref.index());
+        return true;
+    }
+    return false;
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::remove_all_if(Pred&& pred)
+{
+    SizeType count = 0;
+    for (auto it = Super::begin(); it != Super::end(); ++it)
+    {
+        if (pred(*it))
+        {
+            remove_at(it.index());
+            ++count;
+        }
+    }
+    return count;
+}
+
+// find
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::find_if(Pred&& pred)
+{
+    if (DataRef ref = Super::find_if(std::forward<Pred>(pred)))
+    {
+        return {
+            &ref.ref()._sparse_hash_set_data,
+            ref.index(),
+            ref.hash(),
+            false,
+        };
+    }
+    else
+    {
+        return {};
+    }
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::find_last_if(Pred&& pred)
+{
+    if (DataRef ref = Super::find_last_if(std::forward<Pred>(pred)))
+    {
+        return {
+            &ref.ref()._sparse_hash_set_data,
+            ref.index(),
+            ref.hash(),
+            false,
+        };
+    }
+    else
+    {
+        return {};
+    }
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseHashBase<Memory>::CDataRef SparseHashBase<Memory>::find_if(Pred&& pred) const
+{
+    return const_cast<SparseHashBase*>(this)->find_if(std::forward<Pred>(pred));
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseHashBase<Memory>::CDataRef SparseHashBase<Memory>::find_last_if(Pred&& pred) const
+{
+    return const_cast<SparseHashBase*>(this)->find_last_if(std::forward<Pred>(pred));
+}
+
+// constains
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE bool SparseHashBase<Memory>::contains_if(Pred&& pred) const
+{
+    return Super::contains_if(std::forward<Pred>(pred));
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::count_if(Pred&& pred) const
+{
+    return Super::count_if(std::forward<Pred>(pred));
 }
 
 } // namespace skr::container

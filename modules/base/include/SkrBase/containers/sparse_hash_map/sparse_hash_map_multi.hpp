@@ -126,8 +126,8 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     void append(const MapDataType* p, SizeType n);
 
     // remove
-    void remove_at(SizeType index);
-    void remove_at_unsafe(SizeType index);
+    using Super::remove_at;
+    using Super::remove_at_unsafe;
     template <typename UK = MapKeyType>
     requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
     bool remove(const UK& key);
@@ -144,6 +144,11 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     bool remove_value(const UV& value);
     template <typename UV = MapValueType>
     bool remove_all_value(const UV& value);
+
+    // remove if
+    using Super::remove_if;
+    using Super::remove_last_if;
+    using Super::remove_all_if;
 
     // erase
     It  erase(const It& it);
@@ -177,6 +182,10 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     template <typename UV = MapValueType>
     CDataRef find_value(const UV& value) const;
 
+    // find if
+    using Super::find_if;
+    using Super::find_last_if;
+
     // contains
     template <typename UK = MapKeyType>
     requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
@@ -192,6 +201,10 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     SizeType count_ex(HashType hash, Pred&& pred) const;
     template <typename UV = MapValueType>
     SizeType count_value(const UV& value) const;
+
+    // contains if
+    using Super::contains_if;
+    using Super::count_if;
 
     // visitor & modifier
     using Super::at;
@@ -388,18 +401,6 @@ SKR_INLINE void MultiSparseHashMap<Memory>::append(const MapDataType* p, SizeTyp
 }
 
 // remove
-template <typename Memory>
-SKR_INLINE void MultiSparseHashMap<Memory>::remove_at(SizeType index)
-{
-    Super::_remove_from_bucket(index);
-    data_arr().remove_at(index);
-}
-template <typename Memory>
-SKR_INLINE void MultiSparseHashMap<Memory>::remove_at_unsafe(SizeType index)
-{
-    Super::_remove_from_bucket(index);
-    data_arr().remove_at_unsafe(index);
-}
 template <typename Memory>
 template <typename UK>
 requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
