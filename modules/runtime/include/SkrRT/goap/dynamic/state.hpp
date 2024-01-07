@@ -35,15 +35,6 @@ struct DynamicWorldState {
         return true;
     }
 
-    template <typename F>
-    void foreach_variable(F&& func) const
-    {
-        for (const auto& [k, v] : variables_)
-        {
-            func(k, v);
-        }
-    }
-
     bool meets_goal(const DynamicWorldState& goal) const SKR_NOEXCEPT
     {
         for (const auto& [k, v] : goal.variables_)
@@ -89,6 +80,17 @@ struct DynamicWorldState {
         }
     }
 
+protected:
+    friend Action<DynamicWorldState>;
+
+    template <typename F>
+    void foreachAtomValue(F&& func) const
+    {
+        for (const auto& [k, v] : variables_)
+        {
+            func(k, v);
+        }
+    }
     skr::String                           name_ = u8"";
     skr::UMap<Identifier, ValueStoreType> variables_;
 };

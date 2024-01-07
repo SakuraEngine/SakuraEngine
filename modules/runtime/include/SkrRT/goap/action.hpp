@@ -83,7 +83,7 @@ struct Action {
     StateType act_on(StateType& ws) const SKR_NOEXCEPT
     {
         StateType tmp(ws);
-        effect_.foreach_variable([&](const auto& k, const auto& v) { tmp.set(k, v); });
+        effect_.foreachAtomValue([&](const auto& k, const auto& v) { tmp.set(k, v); });
         return tmp;
     }
 

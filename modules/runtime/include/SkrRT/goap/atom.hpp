@@ -56,8 +56,23 @@ template <typename T>
 concept AtomType = IsAtom<T>;
 
 struct AtomCheck {
-    template <class Type, concepts::AtomType FieldType>
-    static constexpr bool Check() noexcept { return true; }
+    // when check failed, output both StateType and FieldType
+    template <typename StateType, typename FieldType>
+    inline static constexpr bool CheckAtom = IsAtom<FieldType>;
+
+    template <class Type, typename FieldType>
+    static constexpr bool Check() noexcept 
+    { 
+        static_assert(
+            CheckAtom<Type, FieldType>, 
+            "====================> AtomCheck: all WorldState field must be atom." 
+        );
+        static_assert(
+            sizeof(FieldType) == sizeof(AtomMemory), 
+            "====================> AtomCheck: field atom size mismatch." 
+        );
+        return true; 
+    }
 };
 
 template <auto Member>

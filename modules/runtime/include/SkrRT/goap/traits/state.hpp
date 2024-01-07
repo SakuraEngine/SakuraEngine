@@ -41,8 +41,10 @@ template <concepts::StaticState T, StringLiteral Literal>
 inline constexpr bool IsStaticWorldState<StaticWorldState<T, Literal>> = true;
 
 template <typename T>
-inline constexpr bool IsDynamicWorldState = skr::is_convertible_to_specialization_v<
-T, DynamicWorldState, typename T::IdentifierType, typename T::ValueStoreType>;
+inline constexpr bool IsDynamicWorldState = false;
+
+template <concepts::IdentifierType Identifier, concepts::VariableType Variable>
+inline constexpr bool IsDynamicWorldState<DynamicWorldState<Identifier, Variable>> = true;
 
 template <typename T>
 concept DynamicWorldState = IsDynamicWorldState<T>;

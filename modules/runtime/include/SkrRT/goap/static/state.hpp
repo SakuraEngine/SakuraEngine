@@ -54,24 +54,15 @@ struct StaticWorldState : public StaticWorldStateProxy<T> {
         return get_variable<ValueType>(index, value);
     }
 
-    template <typename F>
-    void foreach_variable(F&& func) const
-    {
-        skr::foreach_field(this->_this, [&](const auto atom, const auto i) {
-            if (atom.exist)
-                func(i, atom.value);
-        });
-    }
-
     SKR_NOINLINE bool meets_goal(const StaticWorldState& goal) const SKR_NOEXCEPT
     {
         bool fail = false;
-        skr::foreach_field(goal._this, [&](const auto f, const auto i) {
-            if (f.exist && !fail)
+        goal.foreachAtomMemory([&](const auto i, const auto& atom) {
+            if (atom.exist && !fail)
             {
-                decltype(f.value) value;
+                decltype(atom.value) value;
                 const bool        found = get_variable(i, value);
-                if (!found || Compare<decltype(f.value)>::NotEqual(f.value, value))
+                if (!found || Compare<decltype(atom.value)>::NotEqual(atom.value, value))
                     fail = true;
             }
         });
@@ -81,12 +72,12 @@ struct StaticWorldState : public StaticWorldStateProxy<T> {
     uint64_t distance_to(const StaticWorldState& goal) const SKR_NOEXCEPT
     {
         uint64_t distance = 0;
-        skr::foreach_field(goal._this, [&](const auto f, const auto i) {
-            if (f.exist)
+        goal.foreachAtomMemory([&](const auto i, const auto& atom) {
+            if (atom.exist)
             {
-                decltype(f.value) value;
+                decltype(atom.value) value;
                 const bool        found = get_variable(i, value);
-                if (!found || Compare<decltype(f.value)>::NotEqual(f.value, value))
+                if (!found || Compare<decltype(atom.value)>::NotEqual(atom.value, value))
                     distance += 1;
             }
         });
@@ -96,12 +87,12 @@ struct StaticWorldState : public StaticWorldStateProxy<T> {
     bool operator==(const StaticWorldState& other) const SKR_NOEXCEPT
     {
         bool fail = false;
-        skr::foreach_field(other._this, [&](const auto f, const auto i) {
-            if (f.exist && !fail)
+        other.foreachAtomMemory([&](const auto i, const auto& atom) {
+            if (atom.exist && !fail)
             {
-                decltype(f.value) value;
+                decltype(atom.value) value;
                 const bool        found = get_variable(i, value);
-                if (!found || Compare<decltype(f.value)>::NotEqual(f.value, value))
+                if (!found || Compare<decltype(atom.value)>::NotEqual(atom.value, value))
                     fail = true;
             }
         });
@@ -138,6 +129,42 @@ protected:
     {
         const auto offset = idx * sizeof(AtomMemory);
         return *reinterpret_cast<AtomMemory*>(reinterpret_cast<uint8_t*>(&this->_this) + offset);
+    }
+    template <typename F>
+    void foreachAtomValue(F&& func) const
+    {
+#ifndef SKR_GOAP_ERASE_MORE_TYPE
+        skr::foreach_field(this->_this, [&](const auto& atom, const auto i) {
+            if (atom.exist)
+                func(i, atom.value);
+        });
+#else
+        auto pStart = reinterpret_cast<const AtomMemory*>(&this->_this);
+        auto pEnd   = pStart + (sizeof(this->_this) / sizeof(AtomMemory));
+        for (auto p = pStart; p < pEnd; p += 1)
+        {
+            const auto& atom = *reinterpret_cast<const AtomMemory*>(p);
+            if (atom.exist)
+                func(p - pStart, atom.value);
+        }
+#endif
+    }
+    template <typename F>
+    void foreachAtomMemory(F&& func) const
+    {
+#ifndef SKR_GOAP_ERASE_MORE_TYPE
+        skr::foreach_field(this->_this, [&](const auto& atom, const auto i) {
+            func(i, atom);
+        });
+#else
+        auto pStart = reinterpret_cast<const AtomMemory*>(&this->_this);
+        auto pEnd   = pStart + (sizeof(this->_this) / sizeof(AtomMemory));
+        for (auto p = pStart; p < pEnd; p += 1)
+        {
+            const auto& atom = *reinterpret_cast<const AtomMemory*>(p);
+            func(p - pStart, atom);
+        }
+#endif
     }
 };
 

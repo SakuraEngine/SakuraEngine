@@ -11,6 +11,8 @@ struct StaticWorldStateProxy {
     using ValueStoreType = uint32_t;
 
 protected:
+    static constexpr uint32_t AtomCount = atom_count<T>;
+    static_assert(AtomCount || !AtomCount, "Invalid StaticWorldState! Failed to pass concepts::AtomCheck.");
     T _this;
 };
 

@@ -11,6 +11,10 @@
     #endif
 #endif
 
+#ifndef SKR_GOAP_ERASE_MORE_TYPE
+    #define SKR_GOAP_ERASE_MORE_TYPE
+#endif
+
 namespace skr::goap
 {
 using CostType     = int64_t;
