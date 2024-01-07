@@ -57,7 +57,7 @@ struct Action {
         return cond_.foreachOperand([&](const auto& k, const auto& flag, const auto& expect, const auto& cond) {
             ValueStoreType value;
             auto           found = ws.get_variable(k, value);
-            if (!found && (flag == EVariableFlag::Optional))
+            if (!found && (flag != EVariableFlag::Explicit))
                 return true;
 
             if (found && (flag == EVariableFlag::None))
@@ -137,7 +137,7 @@ public:
 
     Action& none(const IdentifierType& id)
     {
-        return add_condition(id, EVariableFlag::None, {}, EConditionType::Equal);
+        return add_condition(id, EVariableFlag::None, ValueStoreType{}, EConditionType::Equal);
     }
 
     template <auto Member>
@@ -145,6 +145,18 @@ public:
     Action& none()
     {
         return none(atom_id<Member>);
+    }
+
+    Action& exist(const IdentifierType& id)
+    {
+        return add_condition(id, EVariableFlag::Explicit, ValueStoreType{}, EConditionType::Exist);
+    }
+
+    template <auto Member>
+    requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
+    Action& exist()
+    {
+        return exist(atom_id<Member>);
     }
 
 protected:
@@ -161,6 +173,8 @@ inline static bool DoValueCompare(EConditionType cond, const T& lhs, const T& rh
 {
     switch (cond)
     {
+        case EConditionType::Exist:
+            return true;
         case EConditionType::Equal:
             return Compare<T>::Equal(lhs, rhs);
         case EConditionType::NotEqual:

@@ -40,24 +40,52 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
 
     enum class ERamStatus
     {
+        SizeAcquired,
         Allocated,
         Freed
     };
 
+    enum class EBlockStatus
+    {
+        Seeking,
+        Reading,
+        Readed
+    };
+
     enum class EDecompressStatus
     {
+        Hardware,
         Allocated,
         Decompressing,
-        Decompressed
+        Decompressed,
+    };
+
+    enum class ECancelStatus
+    {
+        Cancelling,
+        Cancelled
+    };
+
+    enum class EChunkStrategy
+    {
+        SMALL_LOW_LATENCY,
+        HUGE_HIGH_THROUGHPUT
+    };
+
+    enum class EBatchStrategy
+    {
+        NVMEBypass,
+        DirectMemoryMap
     };
 
     struct IOStates {
         Atom<EFileStatus, u8"file_status">       file_status;
         Atom<ERamStatus, u8"ram_status">         ram_status;
         Atom<EDecompressStatus, u8"decompressd"> decompress_status;
-        BoolAtom<u8"block_readed">               block_readed;
-
-        BoolAtom<u8"cancelling"> cancelling;
+        Atom<EBlockStatus, u8"block_readed">     block_status;
+        Atom<EChunkStrategy, u8"chunk_stragegy"> chunk_stragegy;
+        Atom<EBatchStrategy, u8"batch_stragegy"> batch_stragegy;
+        Atom<ECancelStatus, u8"cancelling">      cancel_status;
     };
     using StaticWorldState = skr::goap::StaticWorldState<IOStates, u8"IOStates">;
     using Action           = skr::goap::Action<StaticWorldState>;
@@ -66,68 +94,125 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
     // clang-format off
     skr::Vector<Action> actions;
     actions.emplace(u8"openFile").ref()
-        .none_or_equal<&IOStates::cancelling>(false)
+        .none<&IOStates::cancel_status>()
         .none_or_equal<&IOStates::file_status>(EFileStatus::Closed)
+        .add_effect<&IOStates::ram_status>(ERamStatus::SizeAcquired)
         .add_effect<&IOStates::file_status>(EFileStatus::Opened);
 
-    actions.emplace(u8"allocateMemory").ref()
-        .none_or_equal<&IOStates::cancelling>(false)
-        .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
-        .add_effect<&IOStates::decompress_status>(EDecompressStatus::Allocated)
-        .add_effect<&IOStates::ram_status>(ERamStatus::Allocated);
+    { // memory allocates
+        actions.emplace(u8"allocateMemory").ref()
+            .none<&IOStates::cancel_status>()
+            .none_or_nequal<&IOStates::batch_stragegy>(EBatchStrategy::DirectMemoryMap)
+            .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
+            .exist_and_equal<&IOStates::ram_status>(ERamStatus::SizeAcquired)
+            .add_effect<&IOStates::ram_status>(ERamStatus::Allocated);
 
-    // actions.emplace(u8"allocateMemory2").ref()
-    //    .none_or_equal<&IOStates::cancelling>(false)
+        actions.emplace(u8"allocateMemory(Chunk)").ref()
+            .none<&IOStates::cancel_status>()
+            .none_or_nequal<&IOStates::batch_stragegy>(EBatchStrategy::DirectMemoryMap)
+            .exist<&IOStates::chunk_stragegy>()
+            .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
+            .exist_and_equal<&IOStates::ram_status>(ERamStatus::SizeAcquired)
+            .add_effect<&IOStates::ram_status>(ERamStatus::Allocated);
 
-    actions.emplace(u8"readBytes").ref()
-        .none_or_equal<&IOStates::cancelling>(false)
-        .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
-        .exist_and_equal<&IOStates::ram_status>(ERamStatus::Allocated)
-        .add_effect<&IOStates::block_readed>(true);
+        actions.emplace(u8"checkMemoryMapping(Hardware)").ref()
+            .none<&IOStates::cancel_status>()
+            .none<&IOStates::chunk_stragegy>()
+            .exist_and_equal<&IOStates::batch_stragegy>(EBatchStrategy::DirectMemoryMap)
+            .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
+            .exist_and_equal<&IOStates::ram_status>(ERamStatus::SizeAcquired)
+            .add_effect<&IOStates::ram_status>(ERamStatus::Allocated);
+    }
+    {
+        actions.emplace(u8"prepare_softwareDecompress").ref()
+            .none<&IOStates::cancel_status>()
+            .exist_and_equal<&IOStates::ram_status>(ERamStatus::SizeAcquired)
+            .none_or_nequal<&IOStates::decompress_status>(EDecompressStatus::Hardware)
+            .add_effect<&IOStates::decompress_status>(EDecompressStatus::Allocated);
+    }
+    { // read plain blocks & chunks with OS-Sync file API
+        actions.emplace(u8"schedule_readBytes").ref()
+            .none<&IOStates::cancel_status>()
+            .none<&IOStates::batch_stragegy>()
+            .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
+            .exist_and_equal<&IOStates::ram_status>(ERamStatus::Allocated)
+            .add_effect<&IOStates::block_status>(EBlockStatus::Reading);
+        actions.emplace(u8"acquire_readBytes").ref()
+            .none<&IOStates::cancel_status>()
+            .none<&IOStates::batch_stragegy>()
+            .exist_and_equal<&IOStates::block_status>(EBlockStatus::Reading)
+            .add_effect<&IOStates::block_status>(EBlockStatus::Readed);
+    }
+    { // read batch blocks with NVME or Console bypass API
+        actions.emplace(u8"emit_readRequest").ref()
+            .none<&IOStates::cancel_status>()
+            .exist<&IOStates::batch_stragegy>()
+            .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
+            .exist_and_equal<&IOStates::ram_status>(ERamStatus::Allocated)
+            .add_effect<&IOStates::block_status>(EBlockStatus::Reading);
+        actions.emplace(u8"acq_readRequest").ref()
+            .none<&IOStates::cancel_status>()
+            .exist<&IOStates::batch_stragegy>()
+            .exist_and_equal<&IOStates::block_status>(EBlockStatus::Reading)
+            .add_effect<&IOStates::block_status>(EBlockStatus::Readed);
+    }
+    {
+        actions.emplace(u8"schedule_softwareDecompress").ref()
+            .none<&IOStates::cancel_status>()
+            .exist_and_equal<&IOStates::block_status>(EBlockStatus::Readed)
+            .exist_and_equal<&IOStates::decompress_status>(EDecompressStatus::Allocated)
+            .add_effect<&IOStates::decompress_status>(EDecompressStatus::Decompressing);
 
-    actions.emplace(u8"schedule_decompress").ref()
-        .none_or_equal<&IOStates::cancelling>(false)
-        .exist_and_equal<&IOStates::block_readed>(true)
-        .exist_and_equal<&IOStates::decompress_status>(EDecompressStatus::Allocated)
-        .add_effect<&IOStates::decompress_status>(EDecompressStatus::Decompressing);
+        actions.emplace(u8"acquire_softwareDecompress").ref()
+            .none<&IOStates::cancel_status>()
+            .exist_and_equal<&IOStates::decompress_status>(EDecompressStatus::Decompressing)
+            .add_effect<&IOStates::decompress_status>(EDecompressStatus::Decompressed);
 
-    actions.emplace(u8"acquire_decompress").ref()
-        .none_or_equal<&IOStates::cancelling>(false)
-        .exist_and_equal<&IOStates::decompress_status>(EDecompressStatus::Decompressing)
-        .add_effect<&IOStates::decompress_status>(EDecompressStatus::Decompressed);
+        actions.emplace(u8"acquire_hardwareDecompress").ref()
+            .none<&IOStates::cancel_status>()
+            .exist_and_equal<&IOStates::decompress_status>(EDecompressStatus::Hardware)
+            .exist_and_equal<&IOStates::block_status>(EBlockStatus::Readed)
+            .add_effect<&IOStates::decompress_status>(EDecompressStatus::Decompressed);
+    }
 
     actions.emplace(u8"freeRaw").ref()
-        .none_or_equal<&IOStates::cancelling>(false)
+        .none<&IOStates::cancel_status>()
         .exist_and_equal<&IOStates::ram_status>(ERamStatus::Allocated)
         .exist_and_equal<&IOStates::decompress_status>(EDecompressStatus::Decompressed)
         .add_effect<&IOStates::ram_status>(ERamStatus::Freed);
 
     actions.emplace(u8"closeFile").ref()
-        .none_or_equal<&IOStates::cancelling>(false)
-        .exist_and_equal<&IOStates::block_readed>(true)
+        .none<&IOStates::cancel_status>()
+        .exist_and_equal<&IOStates::block_status>(EBlockStatus::Readed)
         .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
         .add_effect<&IOStates::file_status>(EFileStatus::Closed);
 
     actions.emplace(u8"freeRaw(Cancel)").ref()
-        .exist_and_equal<&IOStates::cancelling>(true)
+        .exist_and_equal<&IOStates::cancel_status>(ECancelStatus::Cancelling)
         .exist_and_equal<&IOStates::ram_status>(ERamStatus::Allocated)
         .add_effect<&IOStates::ram_status>(ERamStatus::Freed);
 
     actions.emplace(u8"closeFile(Cancel)").ref()
-        .exist_and_equal<&IOStates::cancelling>(true)
+        .exist_and_equal<&IOStates::cancel_status>(ECancelStatus::Cancelling)
         .exist_and_equal<&IOStates::file_status>(EFileStatus::Opened)
         .add_effect<&IOStates::file_status>(EFileStatus::Closed);
+
+    actions.emplace(u8"acquireSuccess(Cancel)").ref()
+        .exist_and_equal<&IOStates::cancel_status>(ECancelStatus::Cancelling)
+        .none_or_nequal<&IOStates::ram_status>(ERamStatus::Allocated)
+        .none_or_nequal<&IOStates::file_status>(EFileStatus::Opened)
+        .add_effect<&IOStates::cancel_status>(ECancelStatus::Cancelled);
     // clang-format on
 
-    StaticWorldState initial_state;
     // NO DECOMPRESS
     {
+        auto init = StaticWorldState();
         auto goal = StaticWorldState()
-                    .set<&IOStates::block_readed>(true)
+                    .set<&IOStates::block_status>(EBlockStatus::Readed)
                     .set<&IOStates::file_status>(EFileStatus::Closed)
                     .set<&IOStates::ram_status>(ERamStatus::Allocated);
         Planner planner;
-        auto    the_plan = planner.plan<true>(initial_state, goal, actions);
+        auto    the_plan = planner.plan<true>(init, goal, actions);
         for (int64_t cancel_index = the_plan.size() - 1; cancel_index >= 0; --cancel_index)
         {
             std::cout << "[STATIC] NO DECOMPRESS: Found a path!\n";
@@ -135,7 +220,7 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
             {
                 const bool  last        = (i == (the_plan.size() - 1));
                 const auto& action      = the_plan[i].first;
-                const auto& state       = !last ? the_plan[i + 1].second : initial_state;
+                const auto& state       = !last ? the_plan[i + 1].second : init;
                 const bool  mock_cancel = (i == (cancel_index));
                 if (mock_cancel)
                 {
@@ -143,11 +228,10 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
                               << (const char*)action.name() << std::endl;
 
                     StaticWorldState current = state;
-                    current.set<&IOStates::cancelling>(true);
+                    current.set<&IOStates::cancel_status>(ECancelStatus::Cancelling);
 
-                    StaticWorldState cancelled = current;
-                    cancelled.assign<&IOStates::file_status>(EFileStatus::Closed)
-                    .assign<&IOStates::ram_status>(ERamStatus::Freed);
+                    auto cancelled = StaticWorldState()
+                                     .set<&IOStates::cancel_status>(ECancelStatus::Cancelled);
                     Planner cancel_planner;
                     auto    cancel_plan = cancel_planner.plan(current, cancelled, actions);
                     std::cout << "    REQUEST CANCEL:\n";
@@ -165,13 +249,31 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
     }
     // WITH DECOMPRESS
     {
+        auto init = StaticWorldState();
         auto goal = StaticWorldState()
                     .set<&IOStates::decompress_status>(EDecompressStatus::Decompressed)
                     .set<&IOStates::ram_status>(ERamStatus::Freed)
                     .set<&IOStates::file_status>(EFileStatus::Closed);
         Planner planner;
-        auto    the_plan = planner.plan(initial_state, goal, actions);
+        auto    the_plan = planner.plan(init, goal, actions);
         std::cout << "[STATIC] WITH DECOMPRESS: Found a path!\n";
+        for (int64_t i = the_plan.size() - 1; i >= 0; --i)
+        {
+            std::cout << "    " << (const char*)the_plan[i].name() << std::endl;
+        }
+        std::cout << "[STATIC] PLAN END\n\n";
+    }
+    // WITH HARDWARE DECOMPRESS
+    {
+        auto init = StaticWorldState()
+                    .set<&IOStates::decompress_status>(EDecompressStatus::Hardware);
+        auto goal = StaticWorldState()
+                    .set<&IOStates::decompress_status>(EDecompressStatus::Decompressed)
+                    .set<&IOStates::ram_status>(ERamStatus::Freed)
+                    .set<&IOStates::file_status>(EFileStatus::Closed);
+        Planner planner;
+        auto    the_plan = planner.plan(init, goal, actions);
+        std::cout << "[STATIC] WITH HARDWARE DECOMPRESS: Found a path!\n";
         for (int64_t i = the_plan.size() - 1; i >= 0; --i)
         {
             std::cout << "    " << (const char*)the_plan[i].name() << std::endl;
@@ -183,11 +285,10 @@ TEST_CASE_METHOD(GoapTests, "I/O Static")
         auto current = StaticWorldState()
                        .set<&IOStates::file_status>(EFileStatus::Opened)
                        .set<&IOStates::ram_status>(ERamStatus::Allocated)
-                       .set<&IOStates::block_readed>(true)
-                       .set<&IOStates::cancelling>(true);
+                       .set<&IOStates::block_status>(EBlockStatus::Readed)
+                       .set<&IOStates::cancel_status>(ECancelStatus::Cancelling);
         auto cancelled = StaticWorldState()
-                         .set<&IOStates::file_status>(EFileStatus::Closed)
-                         .set<&IOStates::ram_status>(ERamStatus::Freed);
+                         .assign<&IOStates::cancel_status>(ECancelStatus::Cancelled);
         Planner planner;
         auto    the_plan = planner.plan(current, cancelled, actions);
         std::cout << "[STATIC] REQUEST CANCEL: Found a path!\n";

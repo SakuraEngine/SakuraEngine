@@ -21,7 +21,7 @@ using CostType     = int64_t;
 using PriorityType = float;
 using NodeId       = uint64_t;
 using NameType     = skr::String;
-using OffsetType = decltype(offsetof(skr_guid_t, Storage0));
+using OffsetType   = decltype(offsetof(skr_guid_t, Storage0));
 
 template <typename Identifier, typename Variable>
 using MapType = skr::UMap<Identifier, Variable>;
@@ -33,7 +33,8 @@ enum class EConditionType : uint8_t
     Greater      = 0x3,
     GreaterEqual = 0x4,
     Less         = 0x5,
-    LessEqual    = 0x6
+    LessEqual    = 0x6,
+    Exist        = 0x7
 };
 
 enum class EVariableFlag : uint8_t
