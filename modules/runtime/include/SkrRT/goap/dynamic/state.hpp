@@ -1,14 +1,13 @@
 #pragma once
-#include "SkrRT/goap/traits.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrRT/goap/dynamic/cond.hpp"
 
 namespace skr::goap
 {
-
 template <concepts::IdentifierType Identifier, concepts::VariableType Variable>
 struct DynamicWorldState {
     using IdentifierType = Identifier;
     using ValueStoreType = Variable;
+    using CondType       = CondType<Identifier, Variable>;
 
     virtual ~DynamicWorldState() = default;
 

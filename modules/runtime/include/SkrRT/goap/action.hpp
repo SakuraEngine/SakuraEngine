@@ -7,18 +7,13 @@ namespace skr::goap
 {
 
 template <concepts::VariableType T>
-inline static bool DoValueCompare(EConditionType t, const T& lhs, const T& rhs);
+inline static bool DoValueCompare(EConditionType cond, const T& lhs, const T& rhs);
 
 template <concepts::WorldState StateType>
 struct Action {
     using IdentifierType = typename StateType::IdentifierType;
     using ValueStoreType = typename StateType::ValueStoreType;
-    using Predicates     = bool (*)(const StateMap<IdentifierType, ValueStoreType>&);
-    struct Condition {
-        EConditionType t;
-        EVariableFlag  f;
-        ValueStoreType v;
-    };
+    using CondType       = typename StateType::CondType;
 
     Action(const char8_t* name, CostType cost = 0) SKR_NOEXCEPT
         : cost_(cost)
@@ -30,17 +25,17 @@ struct Action {
 
     template <concepts::AtomValue ValueType>
     Action& add_condition(const IdentifierType& id, EVariableFlag flag,
-                          const ValueType& value, EConditionType type = EConditionType::Equal) SKR_NOEXCEPT
+                          const ValueType& value, EConditionType cond = EConditionType::Equal) SKR_NOEXCEPT
     {
-        conditions_.add_or_assign(id, { type, flag, static_cast<ValueStoreType>(value) });
+        cond_.add(id, flag, static_cast<ValueStoreType>(value), cond);
         return *this;
     }
 
-    template <auto Member> 
-    requires( concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member> )
-    Action& add_condition(EVariableFlag flag, const AtomValueType<typename MemberInfo<Member>::Type>& value, EConditionType type = EConditionType::Equal) SKR_NOEXCEPT
+    template <auto Member>
+    requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
+    Action& add_condition(EVariableFlag flag, const AtomValueType<typename MemberInfo<Member>::Type>& value, EConditionType cond = EConditionType::Equal) SKR_NOEXCEPT
     {
-        return add_condition(atom_id<Member>, flag, value, type);
+        return add_condition(atom_id<Member>, flag, value, cond);
     }
 
     template <concepts::AtomValue ValueType>
@@ -50,8 +45,8 @@ struct Action {
         return *this;
     }
 
-    template <auto Member> 
-    requires( concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member> )
+    template <auto Member>
+    requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
     Action& add_effect(const AtomValueType<typename MemberInfo<Member>::Type>& value) SKR_NOEXCEPT
     {
         return add_effect(atom_id<Member>, value);
@@ -59,31 +54,24 @@ struct Action {
 
     bool operable_on(const StateType& ws) const SKR_NOEXCEPT
     {
-        for (const auto& [k, cond] : conditions_)
-        {
-            const auto& v    = cond.v;
-            const auto  type = cond.t;
-            const auto  flag = cond.f;
-
+        return cond_.foreachOperand([&](const auto& k, const auto& flag, const auto& expect, const auto& cond) {
             ValueStoreType value;
             auto           found = ws.get_variable(k, value);
             if (!found && (flag == EVariableFlag::Optional))
-                continue;
+                return true;
 
             if (found && (flag == EVariableFlag::None))
                 return false;
             if (!found && (flag == EVariableFlag::Explicit))
                 return false;
-            if (!DoValueCompare(type, v, value))
-                return false;
-        }
-        return true;
+            return DoValueCompare(cond, expect, value);
+        });
     }
 
     StateType act_on(StateType& ws) const SKR_NOEXCEPT
     {
         StateType tmp(ws);
-        effect_.foreachAtomValue([&](const auto& k, const auto& v) { tmp.set(k, v); });
+        effect_.foreachAtomValue([&](const auto& k, const auto& v) { tmp.set(k, v); return true; });
         return tmp;
     }
 
@@ -163,15 +151,15 @@ protected:
 #ifdef SKR_GOAP_SET_NAME
     skr::String name_;
 #endif
-    CostType cost_ = 0;
-    skr::UMap<IdentifierType, Condition>     conditions_;
+    CostType  cost_ = 0;
+    CondType  cond_;
     StateType effect_;
 };
 
 template <concepts::VariableType T>
-inline static bool DoValueCompare(EConditionType t, const T& lhs, const T& rhs)
+inline static bool DoValueCompare(EConditionType cond, const T& lhs, const T& rhs)
 {
-    switch (t)
+    switch (cond)
     {
         case EConditionType::Equal:
             return Compare<T>::Equal(lhs, rhs);

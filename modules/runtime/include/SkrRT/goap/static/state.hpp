@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrRT/goap/static/proxy.hpp"
+#include "SkrRT/goap/static/cond.hpp"
 
 namespace skr::goap
 {
@@ -10,6 +11,7 @@ struct StaticWorldState : public StaticWorldStateProxy<T> {
     using StateType      = typename Super::StateType;
     using IdentifierType = typename Super::IdentifierType;
     using ValueStoreType = typename Super::ValueStoreType;
+    using CondType = StaticCond<T>;
 
     template <concepts::AtomValue ValueType>
     StaticWorldState& set(const IdentifierType& id, const ValueType& value) SKR_NOEXCEPT
@@ -65,6 +67,7 @@ struct StaticWorldState : public StaticWorldStateProxy<T> {
                 if (!found || Compare<decltype(atom.value)>::NotEqual(atom.value, value))
                     fail = true;
             }
+            return true;
         });
         return !fail;
     }
@@ -80,6 +83,7 @@ struct StaticWorldState : public StaticWorldStateProxy<T> {
                 if (!found || Compare<decltype(atom.value)>::NotEqual(atom.value, value))
                     distance += 1;
             }
+            return true;
         });
         return distance;
     }
@@ -95,6 +99,7 @@ struct StaticWorldState : public StaticWorldStateProxy<T> {
                 if (!found || Compare<decltype(atom.value)>::NotEqual(atom.value, value))
                     fail = true;
             }
+            return true;
         });
         return !fail;
     }
@@ -105,6 +110,7 @@ struct StaticWorldState : public StaticWorldStateProxy<T> {
         skr::foreach_field(this->_this, [level](const auto f, const auto i) {
             if (f.exist)
                 SKR_LOG_FMT_WITH_LEVEL(level, u8"    {} = {}", f.name, f.value);
+            return true;
         });
     }
 
@@ -131,39 +137,50 @@ protected:
         return *reinterpret_cast<AtomMemory*>(reinterpret_cast<uint8_t*>(&this->_this) + offset);
     }
     template <typename F>
-    void foreachAtomValue(F&& func) const
+    bool foreachAtomValue(F&& func) const
     {
 #ifndef SKR_GOAP_ERASE_MORE_TYPE
+        bool fail = false;
         skr::foreach_field(this->_this, [&](const auto& atom, const auto i) {
-            if (atom.exist)
-                func(i, atom.value);
+            if (atom.exist && !fail)
+                fail = !func(i, atom.value);
         });
+        return !fail;
 #else
         auto pStart = reinterpret_cast<const AtomMemory*>(&this->_this);
         auto pEnd   = pStart + (sizeof(this->_this) / sizeof(AtomMemory));
         for (auto p = pStart; p < pEnd; p += 1)
         {
             const auto& atom = *reinterpret_cast<const AtomMemory*>(p);
+            bool fail = false;
             if (atom.exist)
-                func(p - pStart, atom.value);
+                fail = !func(p - pStart, atom.value);
+            if (fail)
+                return false;
         }
+        return true;
 #endif
     }
     template <typename F>
-    void foreachAtomMemory(F&& func) const
+    bool foreachAtomMemory(F&& func) const
     {
 #ifndef SKR_GOAP_ERASE_MORE_TYPE
+        bool fail = false;
         skr::foreach_field(this->_this, [&](const auto& atom, const auto i) {
-            func(i, atom);
+            if (!fail)
+                fail = !func(i, atom);
         });
+        return !fail;
 #else
         auto pStart = reinterpret_cast<const AtomMemory*>(&this->_this);
         auto pEnd   = pStart + (sizeof(this->_this) / sizeof(AtomMemory));
         for (auto p = pStart; p < pEnd; p += 1)
         {
             const auto& atom = *reinterpret_cast<const AtomMemory*>(p);
-            func(p - pStart, atom);
+            if (bool fail = !func(p - pStart, atom))
+                return false;
         }
+        return true;
 #endif
     }
 };
