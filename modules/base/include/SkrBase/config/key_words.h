@@ -75,6 +75,12 @@
     #define SKR_FORCEINLINE inline __attribute__((always_inline))
 #endif
 
+#if defined(_MSC_VER)
+#define SKR_NOINLINE __declspec(noinline)
+#else
+#define SKR_NOINLINE __attribute__((noinline))
+#endif
+
 // EXTERN_C
 #ifdef __cplusplus
     #define SKR_EXTERN_C extern "C"
