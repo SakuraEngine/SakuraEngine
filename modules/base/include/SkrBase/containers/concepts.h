@@ -70,6 +70,34 @@ template <typename U, typename T, typename Hasher>
 concept TransparentToOrSameAs = TransparentTo<U, T, Hasher> || DecaySameAs<U, T>;
 } // namespace skr
 
+// iterator concept
+namespace skr
+{
+template <typename It>
+concept Iterator = requires(It t) {
+    t.ref();
+    t.reset();
+    t.move_next();
+    t.has_next();
+};
+
+template <typename It, typename T>
+concept IteratorOfType = requires(It t) {
+    {
+        t.ref()
+    } -> std::same_as<T>;
+    {
+        t.reset()
+    } -> std::same_as<void>;
+    {
+        t.move_next()
+    } -> std::same_as<void>;
+    {
+        t.has_next()
+    } -> std::convertible_to<bool>;
+};
+} // namespace skr
+
 // TODO. linear memory traits，从某个对象中提取如下信息：
 //  1. 是否是连续内存
 //  2. data()
