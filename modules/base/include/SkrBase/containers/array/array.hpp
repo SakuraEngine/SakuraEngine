@@ -4,6 +4,7 @@
 #include "SkrBase/algo/merge_sort.hpp"
 #include "SkrBase/algo/remove.hpp"
 #include "SkrBase/containers/array/array_def.hpp"
+#include "SkrBase/containers/array/array_iterator.hpp"
 
 // Array def
 namespace skr::container
@@ -15,11 +16,21 @@ struct Array : protected Memory {
     using typename Memory::SizeType;
     using typename Memory::AllocatorCtorParam;
 
-    // data ref and iterator
+    // data ref
     using DataRef  = ArrayDataRef<DataType, SizeType, false>;
     using CDataRef = ArrayDataRef<DataType, SizeType, true>;
-    using StlIt    = DataType*;
-    using CStlIt   = const DataType*;
+
+    // cursor & iterator
+    using Cursor   = ArrayCursor<DataType, SizeType, false>;
+    using CCursor  = ArrayCursor<DataType, SizeType, true>;
+    using Iter     = ArrayIter<DataType, SizeType, false>;
+    using CIter    = ArrayIter<DataType, SizeType, true>;
+    using IterInv  = ArrayIterInv<DataType, SizeType, false>;
+    using CIterInv = ArrayIterInv<DataType, SizeType, true>;
+
+    // stl iterator
+    using StlIt  = DataType*;
+    using CStlIt = const DataType*;
 
     // ctor & dtor
     Array(AllocatorCtorParam param = {}) noexcept;
@@ -229,11 +240,24 @@ struct Array : protected Memory {
     DataType&       stack_bottom();
     const DataType& stack_bottom() const;
 
+    // cursor & iter
+    Cursor   cursor_begin();
+    CCursor  cursor_begin() const;
+    Cursor   cursor_end();
+    CCursor  cursor_end() const;
+    Iter     iter();
+    CIter    iter() const;
+    IterInv  iter_inv();
+    CIterInv iter_inv() const;
+
     // support foreach
     StlIt  begin();
     StlIt  end();
     CStlIt begin() const;
     CStlIt end() const;
+
+    // syntax
+    const Array& readonly() const;
 
 private:
     // helper
@@ -1243,6 +1267,48 @@ SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::stack_bottom() { ret
 template <typename Memory>
 SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::stack_bottom() const { return *data(); }
 
+// cursor & iter
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::Cursor Array<Memory>::cursor_begin()
+{
+    return Cursor::Begin(data(), size());
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::CCursor Array<Memory>::cursor_begin() const
+{
+    return CCursor::Begin(data(), size());
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::Cursor Array<Memory>::cursor_end()
+{
+    return Cursor::End(data(), size());
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::CCursor Array<Memory>::cursor_end() const
+{
+    return CCursor::End(data(), size());
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::Iter Array<Memory>::iter()
+{
+    return { Cursor::Begin(data(), size()) };
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::CIter Array<Memory>::iter() const
+{
+    return { CCursor::Begin(data(), size()) };
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::IterInv Array<Memory>::iter_inv()
+{
+    return { Cursor::End(data(), size()) };
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::CIterInv Array<Memory>::iter_inv() const
+{
+    return { CCursor::End(data(), size()) };
+}
+
 // support foreach
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::StlIt Array<Memory>::begin() { return data(); }
@@ -1252,4 +1318,11 @@ template <typename Memory>
 SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::begin() const { return data(); }
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::end() const { return data() + size(); }
+
+// syntax
+template <typename Memory>
+SKR_INLINE const Array<Memory>& Array<Memory>::readonly() const
+{
+    return *this;
+}
 } // namespace skr::container

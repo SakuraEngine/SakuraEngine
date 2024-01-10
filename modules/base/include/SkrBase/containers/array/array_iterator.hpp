@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/misc/integer_tools.hpp"
+#include "SkrBase/containers/misc/cursor_as_iterator.hpp"
 
 namespace skr::container
 {
@@ -73,62 +74,8 @@ private:
 };
 
 template <typename T, typename TS, bool kConst>
-struct ArrayIter {
-    using CursorType = ArrayCursor<T, TS, kConst>;
-    using DataType   = std::conditional_t<kConst, const T, T>;
-    using SizeType   = TS;
-
-    // ctor & copy & move & assign & move assign
-    inline ArrayIter(DataType* data, SizeType size)
-        : _cursor(CursorType::Begin(data, size))
-    {
-    }
-    inline ArrayIter(const ArrayIter& rhs)            = default;
-    inline ArrayIter(ArrayIter&& rhs)                 = default;
-    inline ArrayIter& operator=(const ArrayIter& rhs) = default;
-    inline ArrayIter& operator=(ArrayIter&& rhs)      = default;
-
-    // getter
-    inline DataType& ref() const { return _cursor.ref(); }
-    inline DataType* ptr() const { return _cursor.ptr(); }
-    inline SizeType  index() const { return _cursor.index(); }
-
-    // move & validator
-    inline void reset() { _cursor.reset_to_begin(); }
-    inline void move_next() { _cursor.move_next(); }
-    inline bool has_next() const { return !_cursor.reach_end(); }
-
-private:
-    CursorType _cursor;
-};
+using ArrayIter = CursorAsIteratorForward<ArrayCursor<T, TS, kConst>>;
 
 template <typename T, typename TS, bool kConst>
-struct ArrayIterInv {
-    using CursorType = ArrayCursor<T, TS, kConst>;
-    using DataType   = std::conditional_t<kConst, const T, T>;
-    using SizeType   = TS;
-
-    // ctor & copy & move & assign & move assign
-    inline ArrayIterInv(DataType* data, SizeType size)
-        : _cursor(CursorType::End(data, size))
-    {
-    }
-    inline ArrayIterInv(const ArrayIterInv& rhs)            = default;
-    inline ArrayIterInv(ArrayIterInv&& rhs)                 = default;
-    inline ArrayIterInv& operator=(const ArrayIterInv& rhs) = default;
-    inline ArrayIterInv& operator=(ArrayIterInv&& rhs)      = default;
-
-    // getter
-    inline DataType& ref() const { return _cursor.ref(); }
-    inline DataType* ptr() const { return _cursor.ptr(); }
-    inline SizeType  index() const { return _cursor.index(); }
-
-    // move & validator
-    inline void reset() { _cursor.reset_to_end(); }
-    inline void move_next() { _cursor.move_prev(); }
-    inline bool has_next() const { return !_cursor.reach_begin(); }
-
-private:
-    CursorType _cursor;
-};
+using ArrayIterInv = CursorAsIteratorBackward<ArrayCursor<T, TS, kConst>>;
 } // namespace skr::container

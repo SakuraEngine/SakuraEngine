@@ -35,7 +35,7 @@ struct CursorAsIteratorForward : protected T {
     // move & validator
     inline void reset() { T::reset_to_begin(); }
     inline void move_next() { T::move_next(); }
-    inline bool is_valid() const { return !T::reach_end(); }
+    inline bool has_next() const { return !T::reach_end(); }
 
     // cursor
     inline const T& as_cursor() const { return *this; }
@@ -73,7 +73,7 @@ struct CursorAsIteratorBackward : protected T {
     // move & validator
     inline void reset() { T::reset_to_end(); }
     inline void move_next() { T::move_prev(); }
-    inline bool is_valid() const { return !T::reach_begin(); }
+    inline bool has_next() const { return !T::reach_begin(); }
 
     // cursor
     inline const T& as_cursor() const { return *this; }
