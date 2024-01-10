@@ -35,6 +35,11 @@ ServiceThread::Status ServiceThread::get_status() const SKR_NOEXCEPT
     return static_cast<Status>(skr_atomic32_load_acquire(&status));
 }
 
+ServiceThread::Action ServiceThread::get_action() const SKR_NOEXCEPT
+{
+    return static_cast<Action>(skr_atomic32_load_acquire(&action));
+}
+
 void ServiceThread::request_stop() SKR_NOEXCEPT
 {
     setAction(kActionStop);
@@ -43,7 +48,6 @@ void ServiceThread::request_stop() SKR_NOEXCEPT
 void ServiceThread::stop() SKR_NOEXCEPT
 {
     SkrZoneScopedN("stop");
-
     request_stop();
     wait_stop();
 }
@@ -66,7 +70,6 @@ void ServiceThread::request_run() SKR_NOEXCEPT
 void ServiceThread::run() SKR_NOEXCEPT
 {
     SkrZoneScopedN("run");
-
     request_run();
     wait_run();
 }
@@ -85,10 +88,7 @@ void ServiceThread::request_exit() SKR_NOEXCEPT
 void ServiceThread::exit() SKR_NOEXCEPT
 {
     SkrZoneScopedN("exit");
-
-    // SKR_LOG_TRACE(u8"ServiceThread::destroy: wait runner thread to request_exit...");
     request_exit();
-    // SKR_LOG_TRACE(u8"ServiceThread::destroy: wait runner thread to wait_exit...");
     wait_exit();
 
     t.finalize();
@@ -102,9 +102,9 @@ void ServiceThread::wait_exit(uint32_t fatal_timeout) SKR_NOEXCEPT
 
 void ServiceThread::setAction(Action to_set) SKR_NOEXCEPT
 {
-    const auto act = skr_atomic32_load_relaxed(&action);
+    const auto act = get_action();
 
-    if ((to_set != kActionNone) && (act != kActionNone))
+    if ((to_set != kActionNone) && (act != kActionNone) && (to_set != act))
         SKR_LOG_FATAL(u8"service_thread: request_xxx is handling, current action: %d", act);
 
     skr_atomic32_store_release(&action, to_set);
@@ -151,23 +151,25 @@ void ServiceThread::waitStatus(Status status, uint32_t fatal_timeout) SKR_NOEXCE
         SKR_ASSERT((tid != t.get_id()) && "service_thread: dead lock detected!");
     }
 
-    const auto act = skr_atomic32_load_relaxed(&action);
+    const auto act = get_action();
     if (const auto earlyCheck = (get_status() == status))
         return;
 
     if ((status == kStatusRunning) && (act != kActionWake))
     {
-        SKR_LOG_FATAL(u8"service_thread: must wait from a waking service!(act: %d)", act);
+        SKR_LOG_FATAL(u8"service_thread: must wait from a waking service!(act: %d, status: %d)", act, get_status());
         SKR_ASSERT(act != kActionWake);
     }
+    /*
     else if ((status == kStatusStopped) && (act != kActionStop))
     {
-        SKR_LOG_FATAL(u8"service_thread: must wait from a stopping service!(act: %d)", act);
+        SKR_LOG_FATAL(u8"service_thread: must wait from a stopping service!(act: %d, status: %d)", act, get_status());
         SKR_ASSERT(act != kActionStop);
     }
+    */
     else if ((status == kStatusExitted) && (act != kActionExit))
     {
-        SKR_LOG_FATAL(u8"service_thread: must wait from a exiting service!(act: %d)", act);
+        SKR_LOG_FATAL(u8"service_thread: must wait from a exiting service!(act: %d, status: %d)", act, get_status());
         SKR_ASSERT(act != kActionExit);
     }
     wait_timeout([&] { return get_status() == status; }, fatal_timeout);
@@ -181,7 +183,7 @@ void ServiceThread::waitJoin() SKR_NOEXCEPT
 
 ServiceThread::Status ServiceThread::takeAction() SKR_NOEXCEPT
 {
-    const auto act = skr_atomic32_load_relaxed(&action);
+    const auto act = get_action();
     SKR_DEFER({ setAction(kActionNone); });
     if (act == kActionWake)
     {

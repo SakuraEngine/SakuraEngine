@@ -40,13 +40,9 @@ TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint")
         skr::AsyncResult serve() SKR_NOEXCEPT
         {
             if (times <= 5)
-            {
                 SKR_LOG_DEBUG(u8"Hello World! %d", times++);
-            }
             else
-            {
                 this->request_stop();
-            }
             return skr::ASYNC_RESULT_OK;
         }
         int32_t times = 0;

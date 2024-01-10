@@ -51,6 +51,7 @@ public:
         kActionExit = 3
     };
     Status get_status() const SKR_NOEXCEPT;
+    Action get_action() const SKR_NOEXCEPT;
 
     virtual void request_stop() SKR_NOEXCEPT;
     void stop() SKR_NOEXCEPT;
