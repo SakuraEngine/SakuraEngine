@@ -34,8 +34,8 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     // data ref & iterator
     using DataRef  = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, false>;
     using CDataRef = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, true>;
-    using It       = typename Super::It;
-    using CIt      = typename Super::CIt;
+    using StlIt    = typename Super::StlIt;
+    using CStlIt   = typename Super::CStlIt;
 
     // ctor & dtor
     SparseHashMap(AllocatorCtorParam param = {});
@@ -151,8 +151,8 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     using Super::remove_all_if;
 
     // erase
-    It  erase(const It& it);
-    CIt erase(const CIt& it);
+    StlIt  erase(const StlIt& it);
+    CStlIt erase(const CStlIt& it);
 
     // find
     template <typename UK = MapKeyType>
@@ -201,10 +201,10 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     using Super::sort_stable;
 
     // support foreach
-    It  begin();
-    It  end();
-    CIt begin() const;
-    CIt end() const;
+    StlIt  begin();
+    StlIt  end();
+    CStlIt begin() const;
+    CStlIt end() const;
 };
 } // namespace skr::container
 
@@ -548,18 +548,18 @@ SKR_INLINE bool SparseHashMap<Memory>::remove_all_value(const UV& value)
 
 // erase
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::It SparseHashMap<Memory>::erase(const It& it)
+SKR_INLINE typename SparseHashMap<Memory>::StlIt SparseHashMap<Memory>::erase(const StlIt& it)
 {
     remove_at(it.index());
-    It new_it{ it };
+    StlIt new_it{ it };
     ++new_it;
     return new_it;
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::CIt SparseHashMap<Memory>::erase(const CIt& it)
+SKR_INLINE typename SparseHashMap<Memory>::CStlIt SparseHashMap<Memory>::erase(const CStlIt& it)
 {
     remove_at(it.index());
-    CIt new_it{ it };
+    CStlIt new_it{ it };
     ++new_it;
     return new_it;
 }
@@ -631,24 +631,24 @@ SKR_INLINE bool SparseHashMap<Memory>::contains_value(const UV& value) const
 
 // support foreach
 template <typename Memory>
-typename SparseHashMap<Memory>::It SparseHashMap<Memory>::begin()
+typename SparseHashMap<Memory>::StlIt SparseHashMap<Memory>::begin()
 {
-    return It(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
+    return StlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
 }
 template <typename Memory>
-typename SparseHashMap<Memory>::It SparseHashMap<Memory>::end()
+typename SparseHashMap<Memory>::StlIt SparseHashMap<Memory>::end()
 {
-    return It(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+    return StlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
 }
 template <typename Memory>
-typename SparseHashMap<Memory>::CIt SparseHashMap<Memory>::begin() const
+typename SparseHashMap<Memory>::CStlIt SparseHashMap<Memory>::begin() const
 {
-    return CIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
+    return CStlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
 }
 template <typename Memory>
-typename SparseHashMap<Memory>::CIt SparseHashMap<Memory>::end() const
+typename SparseHashMap<Memory>::CStlIt SparseHashMap<Memory>::end() const
 {
-    return CIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+    return CStlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
 }
 
 } // namespace skr::container

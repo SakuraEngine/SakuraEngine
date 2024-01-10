@@ -23,8 +23,8 @@ struct SparseArray : protected Memory {
     // data ref & iterator
     using DataRef  = SparseArrayDataRef<DataType, SizeType, false>;
     using CDataRef = SparseArrayDataRef<DataType, SizeType, true>;
-    using It       = SparseArrayIt<DataType, BitBlockType, SizeType, false>;
-    using CIt      = SparseArrayIt<DataType, BitBlockType, SizeType, true>;
+    using StlIt    = SparseArrayIt<DataType, BitBlockType, SizeType, false>;
+    using CStlIt   = SparseArrayIt<DataType, BitBlockType, SizeType, true>;
 
     // ctor & dtor
     SparseArray(AllocatorCtorParam param = {});
@@ -118,8 +118,8 @@ struct SparseArray : protected Memory {
     SizeType remove_all(const U& v);
 
     // erase, needn't update iterator, erase directly is safe
-    It  erase(const It& it);
-    CIt erase(const CIt& it);
+    StlIt  erase(const StlIt& it);
+    CStlIt erase(const CStlIt& it);
 
     // remove if
     template <typename Pred>
@@ -174,10 +174,10 @@ struct SparseArray : protected Memory {
     void sort_stable(Functor&& f = Functor());
 
     // support foreach
-    It  begin();
-    It  end();
-    CIt begin() const;
-    CIt end() const;
+    StlIt  begin();
+    StlIt  end();
+    CStlIt begin() const;
+    CStlIt end() const;
 
 private:
     // helper
@@ -963,18 +963,18 @@ SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_al
 
 // erase, needn't update iterator, erase directly is safe
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::It SparseArray<Memory>::erase(const It& it)
+SKR_INLINE typename SparseArray<Memory>::StlIt SparseArray<Memory>::erase(const StlIt& it)
 {
     remove_at(it.index());
-    It new_it(it);
+    StlIt new_it(it);
     ++new_it;
     return new_it;
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::CIt SparseArray<Memory>::erase(const CIt& it)
+SKR_INLINE typename SparseArray<Memory>::CStlIt SparseArray<Memory>::erase(const CStlIt& it)
 {
     remove_at(it.index());
-    CIt new_it(it);
+    CStlIt new_it(it);
     ++new_it;
     return new_it;
 }
@@ -1211,23 +1211,23 @@ SKR_INLINE void SparseArray<Memory>::sort_stable(Functor&& f)
 
 // support foreach
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::It SparseArray<Memory>::begin()
+SKR_INLINE typename SparseArray<Memory>::StlIt SparseArray<Memory>::begin()
 {
-    return It(data(), sparse_size(), bit_array());
+    return StlIt(data(), sparse_size(), bit_array());
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::It SparseArray<Memory>::end()
+SKR_INLINE typename SparseArray<Memory>::StlIt SparseArray<Memory>::end()
 {
-    return It(data(), sparse_size(), bit_array(), sparse_size());
+    return StlIt(data(), sparse_size(), bit_array(), sparse_size());
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::CIt SparseArray<Memory>::begin() const
+SKR_INLINE typename SparseArray<Memory>::CStlIt SparseArray<Memory>::begin() const
 {
-    return CIt(data(), sparse_size(), bit_array());
+    return CStlIt(data(), sparse_size(), bit_array());
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::CIt SparseArray<Memory>::end() const
+SKR_INLINE typename SparseArray<Memory>::CStlIt SparseArray<Memory>::end() const
 {
-    return CIt(data(), sparse_size(), bit_array(), sparse_size());
+    return CStlIt(data(), sparse_size(), bit_array(), sparse_size());
 }
 } // namespace skr::container

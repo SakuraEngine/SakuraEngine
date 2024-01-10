@@ -27,8 +27,8 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     // data ref & iterator
     using DataRef  = SparseHashSetDataRef<SetDataType, SizeType, HashType, false>;
     using CDataRef = SparseHashSetDataRef<SetDataType, SizeType, HashType, true>;
-    using It       = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, false>;
-    using CIt      = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, true>;
+    using StlIt    = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, false>;
+    using CStlIt   = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, true>;
 
     // ctor & dtor
     MultSparseHashSet(AllocatorCtorParam param = {});
@@ -114,8 +114,8 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     using Super::remove_all_if;
 
     // erase
-    It  erase(const It& it);
-    CIt erase(const CIt& it);
+    StlIt  erase(const StlIt& it);
+    CStlIt erase(const CStlIt& it);
 
     // find
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
@@ -165,10 +165,10 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     using Super::sort_stable;
 
     // support foreach
-    It  begin();
-    It  end();
-    CIt begin() const;
-    CIt end() const;
+    StlIt  begin();
+    StlIt  end();
+    CStlIt begin() const;
+    CStlIt end() const;
 };
 } // namespace skr::container
 
@@ -335,18 +335,18 @@ SKR_INLINE typename MultSparseHashSet<Memory>::SizeType MultSparseHashSet<Memory
 
 // erase
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::It MultSparseHashSet<Memory>::erase(const It& it)
+SKR_INLINE typename MultSparseHashSet<Memory>::StlIt MultSparseHashSet<Memory>::erase(const StlIt& it)
 {
     remove_at(it.index());
-    It new_it(it);
+    StlIt new_it(it);
     ++new_it;
     return new_it;
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::CIt MultSparseHashSet<Memory>::erase(const CIt& it)
+SKR_INLINE typename MultSparseHashSet<Memory>::CStlIt MultSparseHashSet<Memory>::erase(const CStlIt& it)
 {
     remove_at(it.index());
-    CIt new_it(it);
+    CStlIt new_it(it);
     ++new_it;
     return new_it;
 }
@@ -450,24 +450,24 @@ typename MultSparseHashSet<Memory>::SizeType MultSparseHashSet<Memory>::count_ex
 
 // support foreach
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::It MultSparseHashSet<Memory>::begin()
+SKR_INLINE typename MultSparseHashSet<Memory>::StlIt MultSparseHashSet<Memory>::begin()
 {
-    return It(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
+    return StlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::It MultSparseHashSet<Memory>::end()
+SKR_INLINE typename MultSparseHashSet<Memory>::StlIt MultSparseHashSet<Memory>::end()
 {
-    return It(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+    return StlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::CIt MultSparseHashSet<Memory>::begin() const
+SKR_INLINE typename MultSparseHashSet<Memory>::CStlIt MultSparseHashSet<Memory>::begin() const
 {
-    return CIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
+    return CStlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::CIt MultSparseHashSet<Memory>::end() const
+SKR_INLINE typename MultSparseHashSet<Memory>::CStlIt MultSparseHashSet<Memory>::end() const
 {
-    return CIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+    return CStlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
 }
 
 } // namespace skr::container
