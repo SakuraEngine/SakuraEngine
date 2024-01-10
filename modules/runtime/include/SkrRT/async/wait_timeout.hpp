@@ -5,24 +5,36 @@
 
 #include "SkrProfile/profile.h"
 
-template<typename F>
-bool wait_timeout(F f, uint32_t seconds_timeout = 3)
-{
-    SkrZoneScopedN("WaitTimeOut");
-    uint64_t milliseconds = 0;
-    const auto start = skr_sys_get_usec(true);
-    auto current = start;
-    while (!f())
+template <size_t N>
+struct __zzzStringLiteral {
+    constexpr __zzzStringLiteral(const char8_t (&str)[N]) { std::copy_n(str, N, __zzValue); }
+    char8_t __zzValue[N];
+};
+
+template <__zzzStringLiteral what = u8"drain timeout, force quit">
+struct wait_timeout {
+    template <typename F>
+    wait_timeout(F f, uint32_t seconds_timeout = 3)
     {
-        if (milliseconds > seconds_timeout * 1000)
+        SkrZoneScopedN("WaitTimeOut");
+        uint64_t   milliseconds = 0;
+        const auto start        = skr_sys_get_usec(true);
+        auto       current      = start;
+        while (!f())
         {
-            SKR_LOG_ERROR(u8"drain timeout, force quit");
-            return false;
+            if (milliseconds > seconds_timeout * 1000)
+            {
+                SKR_LOG_ERROR(what.__zzValue);
+                ret = false;
+                return;
+            }
+            for (auto waited = 0; waited < 40; ++waited)
+                skr_thread_sleep(0);
+            current      = skr_sys_get_usec(true);
+            milliseconds = (current - start) / 1000;
         }
-        for (auto waited = 0; waited < 40; ++waited)
-            skr_thread_sleep(0);
-        current = skr_sys_get_usec(true);
-        milliseconds = (current - start) / 1000;
+        ret = true;
     }
-    return true;
-}
+    operator bool() const { return ret; }
+    bool ret = false;
+};

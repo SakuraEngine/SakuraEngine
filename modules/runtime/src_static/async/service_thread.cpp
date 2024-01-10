@@ -1,6 +1,6 @@
+#include "SkrRT/misc/log.h"
 #include "SkrRT/async/async_service.h"
 #include "SkrRT/async/wait_timeout.hpp"
-#include "SkrRT/misc/log.hpp"
 #include "SkrBase/misc/defer.hpp"
 
 #include "SkrProfile/profile.h"
@@ -61,9 +61,7 @@ void ServiceThread::wait_stop(uint32_t fatal_timeout) SKR_NOEXCEPT
 void ServiceThread::request_run() SKR_NOEXCEPT
 {
     if (!t.has_started())
-    {
         t.start(&f);
-    }
     setAction(kActionWake);
 }
 
@@ -102,46 +100,33 @@ void ServiceThread::wait_exit(uint32_t fatal_timeout) SKR_NOEXCEPT
 
 void ServiceThread::setAction(Action target) SKR_NOEXCEPT
 {
-    const auto act = get_action();
-
-    if ((target != kActionNone) && (act != kActionNone) && (target != act))
-        SKR_LOG_FATAL(u8"service_thread: request_xxx is handling,"
-                      " current action: %d, to request: %d",
-                      act, target);
-
     skr_atomic32_store_release(&action_, target);
-    SKR_LOG_FMT_BACKTRACE(u8"service_thread: action set to: {}.", (int32_t)target);
+    SKR_LOG_BACKTRACE(u8"service_thread: action set to: %d.", target);
 }
 
 void ServiceThread::setStatus(Status target) SKR_NOEXCEPT
 {
     const auto S = get_status();
-    if (target == kStatusStopped)
+    if (S == target)
+        return;
+
+    if ((target == kStatusStopped) && (S == kStatusExitted))
     {
-        if (S == kStatusExitted)
-        {
-            SKR_LOG_FATAL(u8"service_thread: must stop from a running/stopped service! current status: %d", S);
-            SKR_ASSERT(S != kStatusExitted);
-        }
+        SKR_LOG_FATAL(u8"service_thread: must stop from a running/stopped service! current status: %d", S);
+        SKR_ASSERT(S != kStatusExitted);
     }
-    else if (target == kStatusRunning)
+    else if ((target == kStatusRunning) && (S != kStatusStopped))
     {
-        if (S != kStatusStopped)
-        {
-            SKR_LOG_FATAL(u8"service_thread: must wake from a stopped service! current status: %d", S);
-            SKR_ASSERT(S == kStatusStopped);
-        }
+        SKR_LOG_FATAL(u8"service_thread: must wake from a stopped service! current status: %d", S);
+        SKR_ASSERT(S == kStatusStopped);
     }
-    else if (target == kStatusExitted)
+    else if ((target == kStatusExitted) && (S != kStatusStopped))
     {
-        if (S != kStatusStopped)
-        {
-            SKR_LOG_FATAL(u8"service_thread: must exit from a stopped service! current status: %d", S);
-            SKR_ASSERT(S == kStatusStopped);
-        }
+        SKR_LOG_FATAL(u8"service_thread: must exit from a stopped service! current status: %d", S);
+        SKR_ASSERT(S == kStatusStopped);
     }
     skr_atomic32_store_release(&status_, target);
-    SKR_LOG_FMT_BACKTRACE(u8"service_thread: status set to: {}.", (int32_t)target);
+    SKR_LOG_BACKTRACE(u8"service_thread: status set to: %d.", target);
 }
 
 void ServiceThread::waitStatus(Status target, uint32_t fatal_timeout) SKR_NOEXCEPT
@@ -172,7 +157,9 @@ void ServiceThread::waitStatus(Status target, uint32_t fatal_timeout) SKR_NOEXCE
         SKR_LOG_FATAL(u8"service_thread: must wait from a exiting service!(current status: %d)", current);
         SKR_ASSERT(current == kStatusStopped);
     }
-    wait_timeout([&] { return get_status() == target; }, fatal_timeout);
+
+    if (!wait_timeout<u8"waitStatus timeout!">([&] { return get_status() == target; }, fatal_timeout))
+        SKR_LOG_FATAL(u8"service_thread: waitStatus timeout! current status: %d, target status: %d", current, target);
 }
 
 void ServiceThread::waitJoin() SKR_NOEXCEPT
@@ -184,12 +171,9 @@ void ServiceThread::waitJoin() SKR_NOEXCEPT
 ServiceThread::Status ServiceThread::takeAction() SKR_NOEXCEPT
 {
     const auto act = get_action();
-    setAction(kActionNone);
-
     const Status lut[] = { kStatusRunning, kStatusStopped, kStatusExitted };
-    if (act != kActionNone)
     {
-        const auto out = lut[act - 1];
+        const auto out = lut[act];
         setStatus(out);
         return out;
     }

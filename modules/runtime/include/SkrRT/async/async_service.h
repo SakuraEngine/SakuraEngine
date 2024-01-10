@@ -45,10 +45,9 @@ public:
     };
     enum Action
     {
-        kActionNone = 0,
-        kActionWake = 1,
-        kActionStop = 2,
-        kActionExit = 3
+        kActionWake = 0,
+        kActionStop = 1,
+        kActionExit = 2
     };
     Status get_status() const SKR_NOEXCEPT;
     Action get_action() const SKR_NOEXCEPT;
@@ -83,7 +82,7 @@ protected:
     ServiceFunc f;
     NamedThread t;
 private:
-    SAtomic32 action_ = kActionNone;
+    SAtomic32 action_ = kActionStop;
     SAtomic32 status_ = kStatusStopped;
 };
 
