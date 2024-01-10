@@ -31,8 +31,8 @@ struct SparseHashBase : protected SparseArray<Memory> {
     // data ref & iterator
     using DataRef  = SparseHashSetDataRef<SetDataType, SizeType, HashType, false>;
     using CDataRef = SparseHashSetDataRef<SetDataType, SizeType, HashType, true>;
-    using It       = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, false>;
-    using CIt      = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, true>;
+    using StlIt    = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, false>;
+    using CStlIt   = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, true>;
 
     // ctor & dtor
     SparseHashBase(AllocatorCtorParam param = {});

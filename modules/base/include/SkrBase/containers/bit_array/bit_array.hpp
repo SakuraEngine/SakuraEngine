@@ -11,15 +11,13 @@ namespace skr::container
 {
 template <typename Memory>
 struct BitArray final : protected Memory {
-
     using typename Memory::BitBlockType;
     using typename Memory::SizeType;
     using typename Memory::AllocatorCtorParam;
 
     using Algo    = algo::BitAlgo<BitBlockType>;
-    using It      = BitIt<BitBlockType, SizeType, false>;
-    using CIt     = BitIt<BitBlockType, SizeType, true>;
-    using TIt     = TrueBitIt<BitBlockType, SizeType, true>;
+    using StlIt   = BitIt<BitBlockType, SizeType, false>;
+    using CStlIt  = BitIt<BitBlockType, SizeType, true>;
     using DataRef = BitDataRef<BitBlockType, SizeType>;
     using BitRef  = BitRef<BitBlockType>;
 
@@ -86,10 +84,10 @@ struct BitArray final : protected Memory {
     void set_range(SizeType start, SizeType n, bool v);
 
     // support foreach
-    It  begin();
-    It  end();
-    CIt begin() const;
-    CIt end() const;
+    StlIt  begin();
+    StlIt  end();
+    CStlIt begin() const;
+    CStlIt end() const;
 
 private:
     // helper
@@ -376,8 +374,8 @@ SKR_INLINE void BitArray<Memory>::remove_at(SizeType start, SizeType n)
     SKR_ASSERT(start >= 0 && n > 0 && start + n < size());
     if (start + n != size())
     {
-        It write(data(), size(), start);
-        It read(data(), size(), start + n);
+        StlIt write(data(), size(), start);
+        StlIt read(data(), size(), start + n);
 
         while (read)
         {
@@ -448,24 +446,24 @@ SKR_INLINE void BitArray<Memory>::set_range(SizeType start, SizeType n, bool v)
 
 // support foreach
 template <typename Memory>
-SKR_INLINE typename BitArray<Memory>::It BitArray<Memory>::begin()
+SKR_INLINE typename BitArray<Memory>::StlIt BitArray<Memory>::begin()
 {
-    return It(data(), size());
+    return StlIt(data(), size());
 }
 template <typename Memory>
-SKR_INLINE typename BitArray<Memory>::It BitArray<Memory>::end()
+SKR_INLINE typename BitArray<Memory>::StlIt BitArray<Memory>::end()
 {
-    return It(data(), size(), size());
+    return StlIt(data(), size(), size());
 }
 template <typename Memory>
-SKR_INLINE typename BitArray<Memory>::CIt BitArray<Memory>::begin() const
+SKR_INLINE typename BitArray<Memory>::CStlIt BitArray<Memory>::begin() const
 {
-    return CIt(data(), size());
+    return CStlIt(data(), size());
 }
 template <typename Memory>
-SKR_INLINE typename BitArray<Memory>::CIt BitArray<Memory>::end() const
+SKR_INLINE typename BitArray<Memory>::CStlIt BitArray<Memory>::end() const
 {
-    return CIt(data(), size(), size());
+    return CStlIt(data(), size(), size());
 }
 
 } // namespace skr::container

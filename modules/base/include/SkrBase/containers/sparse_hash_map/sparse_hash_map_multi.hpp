@@ -34,13 +34,13 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     // data ref & iterator
     using DataRef  = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, false>;
     using CDataRef = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, true>;
-    using It       = typename Super::It;
-    using CIt      = typename Super::CIt;
+    using StlIt    = typename Super::StlIt;
+    using CStlIt   = typename Super::CStlIt;
     // data ref & iterator
     using DataRef  = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, false>;
     using CDataRef = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, true>;
-    using It       = typename Super::It;
-    using CIt      = typename Super::CIt;
+    using StlIt    = typename Super::StlIt;
+    using CStlIt   = typename Super::CStlIt;
 
     // ctor & dtor
     MultiSparseHashMap(AllocatorCtorParam param = {});
@@ -151,8 +151,8 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     using Super::remove_all_if;
 
     // erase
-    It  erase(const It& it);
-    CIt erase(const CIt& it);
+    StlIt  erase(const StlIt& it);
+    CStlIt erase(const CStlIt& it);
 
     // find
     template <typename UK = MapKeyType>
@@ -218,10 +218,10 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     using Super::sort_stable;
 
     // support foreach
-    It  begin();
-    It  end();
-    CIt begin() const;
-    CIt end() const;
+    StlIt  begin();
+    StlIt  end();
+    CStlIt begin() const;
+    CStlIt end() const;
 };
 } // namespace skr::container
 
@@ -446,18 +446,18 @@ SKR_INLINE bool MultiSparseHashMap<Memory>::remove_all_value(const UV& value)
 
 // erase
 template <typename Memory>
-SKR_INLINE typename MultiSparseHashMap<Memory>::It MultiSparseHashMap<Memory>::erase(const It& it)
+SKR_INLINE typename MultiSparseHashMap<Memory>::StlIt MultiSparseHashMap<Memory>::erase(const StlIt& it)
 {
     remove_at(it.index());
-    It new_it{ it };
+    StlIt new_it{ it };
     ++new_it;
     return new_it;
 }
 template <typename Memory>
-SKR_INLINE typename MultiSparseHashMap<Memory>::CIt MultiSparseHashMap<Memory>::erase(const CIt& it)
+SKR_INLINE typename MultiSparseHashMap<Memory>::CStlIt MultiSparseHashMap<Memory>::erase(const CStlIt& it)
 {
     remove_at(it.index());
-    CIt new_it{ it };
+    CStlIt new_it{ it };
     ++new_it;
     return new_it;
 }
@@ -593,23 +593,23 @@ SKR_INLINE typename MultiSparseHashMap<Memory>::SizeType MultiSparseHashMap<Memo
 
 // support foreach
 template <typename Memory>
-SKR_INLINE typename MultiSparseHashMap<Memory>::It MultiSparseHashMap<Memory>::begin()
+SKR_INLINE typename MultiSparseHashMap<Memory>::StlIt MultiSparseHashMap<Memory>::begin()
 {
-    return It(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
+    return StlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
 }
 template <typename Memory>
-SKR_INLINE typename MultiSparseHashMap<Memory>::It MultiSparseHashMap<Memory>::end()
+SKR_INLINE typename MultiSparseHashMap<Memory>::StlIt MultiSparseHashMap<Memory>::end()
 {
-    return It(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+    return StlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
 }
 template <typename Memory>
-SKR_INLINE typename MultiSparseHashMap<Memory>::CIt MultiSparseHashMap<Memory>::begin() const
+SKR_INLINE typename MultiSparseHashMap<Memory>::CStlIt MultiSparseHashMap<Memory>::begin() const
 {
-    return CIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
+    return CStlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
 }
 template <typename Memory>
-SKR_INLINE typename MultiSparseHashMap<Memory>::CIt MultiSparseHashMap<Memory>::end() const
+SKR_INLINE typename MultiSparseHashMap<Memory>::CStlIt MultiSparseHashMap<Memory>::end() const
 {
-    return CIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+    return CStlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
 }
 } // namespace skr::container

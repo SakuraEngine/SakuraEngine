@@ -16,8 +16,8 @@ struct RingBuffer : protected Memory {
     // data ref and iterator
     using DataRef  = RingBufferDataRef<DataType, SizeType, false>;
     using CDataRef = RingBufferDataRef<DataType, SizeType, true>;
-    using It       = RingBufferIt<DataType, SizeType, false>;
-    using CIt      = RingBufferIt<const DataType, SizeType, true>;
+    using StlIt    = RingBufferIt<DataType, SizeType, false>;
+    using CStlIt   = RingBufferIt<const DataType, SizeType, true>;
 
     // ctor & dtor
     RingBuffer(AllocatorCtorParam param = {});

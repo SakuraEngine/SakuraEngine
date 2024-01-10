@@ -18,8 +18,8 @@ struct Array : protected Memory {
     // data ref and iterator
     using DataRef  = ArrayDataRef<DataType, SizeType, false>;
     using CDataRef = ArrayDataRef<DataType, SizeType, true>;
-    using It       = DataType*;
-    using CIt      = const DataType*;
+    using StlIt    = DataType*;
+    using CStlIt   = const DataType*;
 
     // ctor & dtor
     Array(AllocatorCtorParam param = {}) noexcept;
@@ -140,10 +140,10 @@ struct Array : protected Memory {
     SizeType remove_all_if_swap(Pred&& pred);
 
     // erase
-    It  erase(const It& it);
-    CIt erase(const CIt& it);
-    It  erase_swap(const It& it);
-    CIt erase_swap(const CIt& it);
+    StlIt  erase(const StlIt& it);
+    CStlIt erase(const CStlIt& it);
+    StlIt  erase_swap(const StlIt& it);
+    CStlIt erase_swap(const CStlIt& it);
 
     // modify
     DataType&       operator[](SizeType index);
@@ -230,10 +230,10 @@ struct Array : protected Memory {
     const DataType& stack_bottom() const;
 
     // support foreach
-    It  begin();
-    It  end();
-    CIt begin() const;
-    CIt end() const;
+    StlIt  begin();
+    StlIt  end();
+    CStlIt begin() const;
+    CStlIt end() const;
 
 private:
     // helper
@@ -913,25 +913,25 @@ SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if_swap(Pr
 
 // erase
 template <typename Memory>
-typename Array<Memory>::It Array<Memory>::erase(const It& it)
+typename Array<Memory>::StlIt Array<Memory>::erase(const StlIt& it)
 {
     remove_at(it - begin());
     return it;
 }
 template <typename Memory>
-typename Array<Memory>::CIt Array<Memory>::erase(const CIt& it)
+typename Array<Memory>::CStlIt Array<Memory>::erase(const CStlIt& it)
 {
     remove_at(it - begin());
     return it;
 }
 template <typename Memory>
-typename Array<Memory>::It Array<Memory>::erase_swap(const It& it)
+typename Array<Memory>::StlIt Array<Memory>::erase_swap(const StlIt& it)
 {
     remove_at_swap(it - begin());
     return it;
 }
 template <typename Memory>
-typename Array<Memory>::CIt Array<Memory>::erase_swap(const CIt& it)
+typename Array<Memory>::CStlIt Array<Memory>::erase_swap(const CStlIt& it)
 {
     remove_at_swap(it - begin());
     return it;
@@ -1245,11 +1245,11 @@ SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::stack_bottom()
 
 // support foreach
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::It Array<Memory>::begin() { return data(); }
+SKR_INLINE typename Array<Memory>::StlIt Array<Memory>::begin() { return data(); }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::It Array<Memory>::end() { return data() + size(); }
+SKR_INLINE typename Array<Memory>::StlIt Array<Memory>::end() { return data() + size(); }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::CIt Array<Memory>::begin() const { return data(); }
+SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::begin() const { return data(); }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::CIt Array<Memory>::end() const { return data() + size(); }
+SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::end() const { return data() + size(); }
 } // namespace skr::container
