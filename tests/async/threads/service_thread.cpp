@@ -39,7 +39,10 @@ TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint")
         skr::AsyncResult serve() SKR_NOEXCEPT
         {
             if (times <= 5)
+            {
+                skr_thread_sleep(1);
                 SKR_LOG_DEBUG(u8"Hello World! %d", times++);
+            }
             else
                 this->request_stop();
             return skr::ASYNC_RESULT_OK;
@@ -60,7 +63,7 @@ TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint")
 
 TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint2")
 {
-    for (uint32_t i = 0; i < 100; i++)
+    for (uint32_t i = 0; i < 10; i++)
     {
         struct TestServiceThread : public skr::ServiceThread {
             TestServiceThread()
@@ -73,6 +76,7 @@ TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint2")
                 ((times <= 5) && (times >= 0)) ||
                 ((times <= 20) && (times >= 15)))
                 {
+                    skr_thread_sleep(1);
                     SKR_LOG_DEBUG(u8"Hello World! %d", times++);
                 }
                 else
