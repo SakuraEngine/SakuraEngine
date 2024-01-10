@@ -764,13 +764,79 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     // [needn't test] support foreach
 
-    // test iterator
-    SUBCASE("iterator")
+    // test foreach
+    SUBCASE("foreach")
     {
         TestArray a;
         for (auto n : a)
         {
             printf("%d\n", n);
+        }
+    }
+
+    // test cursor & iterator
+    SUBCASE("Cursor & iterator")
+    {
+        TestArray  a;
+        const auto kArraySize = clamp_capacity(100);
+        a.reserve(kArraySize);
+        for (size_t i = 0; i < kArraySize; ++i)
+        {
+            a.add(i);
+        }
+
+        uint64_t count;
+
+        // iter
+        count = 0;
+        for (auto it = a.iter(); it.has_next(); it.move_next())
+        {
+            REQUIRE_EQ(it.ref(), count);
+            ++count;
+        }
+        count = 0;
+        for (auto it = a.readonly().iter(); it.has_next(); it.move_next())
+        {
+            REQUIRE_EQ(it.ref(), count);
+            ++count;
+        }
+        count = 0;
+        for (auto it = a.iter_inv(); it.has_next(); it.move_next())
+        {
+            REQUIRE_EQ(it.ref(), kArraySize - 1 - count);
+            ++count;
+        }
+        count = 0;
+        for (auto it = a.readonly().iter_inv(); it.has_next(); it.move_next())
+        {
+            REQUIRE_EQ(it.ref(), kArraySize - 1 - count);
+            ++count;
+        }
+
+        // cursor
+        count = 0;
+        for (auto it = a.cursor_begin(); !it.reach_end(); it.move_next())
+        {
+            REQUIRE_EQ(it.ref(), count);
+            ++count;
+        }
+        count = 0;
+        for (auto it = a.readonly().cursor_begin(); !it.reach_end(); it.move_next())
+        {
+            REQUIRE_EQ(it.ref(), count);
+            ++count;
+        }
+        count = 0;
+        for (auto it = a.cursor_end(); !it.reach_begin(); it.move_prev())
+        {
+            REQUIRE_EQ(it.ref(), kArraySize - 1 - count);
+            ++count;
+        }
+        count = 0;
+        for (auto it = a.readonly().cursor_end(); !it.reach_begin(); it.move_prev())
+        {
+            REQUIRE_EQ(it.ref(), kArraySize - 1 - count);
+            ++count;
         }
     }
 }
