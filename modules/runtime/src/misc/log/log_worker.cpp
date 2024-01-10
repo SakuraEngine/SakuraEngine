@@ -247,14 +247,16 @@ void LogWorker::process_logs() SKR_NOEXCEPT
 
 void LogWorker::flush(SThreadID tid) SKR_NOEXCEPT
 {
-    SKR_ASSERT(this->t.get_id() != tid && "flush from worker thread is not allowed");
     queue_->mark_flushing(tid);
     this->awake();
     if (auto tok = queue_->query_token(tid))
     {
         while (skr_atomic32_load_relaxed(&tok->flush_status_) != kFlushed)
         {
-            skr_thread_sleep(0);
+            if (this->t.get_id() == tid) // flush self
+                process_logs();
+            else
+                skr_thread_sleep(0);
         }
         SKR_ASSERT(skr_atomic64_load_relaxed(&tok->tls_cnt_) == 0);
         LogManager::Get()->FlushAllSinks();
