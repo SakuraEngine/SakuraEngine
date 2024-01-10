@@ -352,7 +352,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_ad
     DataRef  ref  = add_ex_unsafe(hash, [&key](const MapKeyType& k) { return k == key; });
     if (!ref.already_exist())
     {
-        ref.key() = std::forward<UK>(key);
+        new (&ref.key()) MapKeyType(std::forward<UK>(key));
         memory::construct_stl_ub(&ref.value());
     }
     return ref;
@@ -366,7 +366,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_ad
     DataRef  ref  = add_ex_unsafe(hash, [&key](const MapKeyType& k) { return k == key; });
     if (!ref.already_exist())
     {
-        ref.key() = std::forward<UK>(key);
+        new (&ref.key()) MapKeyType(std::forward<UK>(key));
     }
     return ref;
 }
@@ -379,7 +379,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_ad
     DataRef  ref  = add_ex_unsafe(hash, [&key](const MapKeyType& k) { return k == key; });
     if (!ref.already_exist())
     {
-        ref.key() = std::forward<UK>(key);
+        new (&ref.key()) MapKeyType(std::forward<UK>(key));
         memory::construct(&ref.value());
     }
     return ref;
@@ -393,7 +393,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_ad
     DataRef  ref  = add_ex_unsafe(hash, [&key](const MapKeyType& k) { return k == key; });
     if (!ref.already_exist())
     {
-        ref.key() = std::forward<UK>(key);
+        new (&ref.key()) MapKeyType(std::forward<UK>(key));
         memset(&ref.value(), 0, sizeof(MapValueType));
     }
     return ref;
@@ -414,7 +414,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::emplac
     }
     else
     {
-        ref.key() = std::forward<UK>(key);
+        new (&ref.key()) MapKeyType(std::forward<UK>(key));
         new (&ref.value()) MapValueType(std::forward<Args>(args)...);
     }
     return ref;
@@ -430,7 +430,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_em
     DataRef  ref  = add_ex_unsafe(hash, [&key](const MapKeyType& k) { return k == key; });
     if (!ref.already_exist())
     {
-        ref.key() = std::forward<UK>(key);
+        new (&ref.key()) MapKeyType(std::forward<UK>(key));
         new (&ref.value()) MapValueType(std::forward<Args>(args)...);
     }
     return ref;
