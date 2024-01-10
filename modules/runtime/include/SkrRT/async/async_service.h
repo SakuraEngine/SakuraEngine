@@ -41,7 +41,7 @@ public:
     {
         kStatusStopped  = 0,
         kStatusRunning  = 1,
-        kStatusExitted  = 5
+        kStatusExitted  = 2
     };
     enum Action
     {
@@ -83,8 +83,8 @@ protected:
     ServiceFunc f;
     NamedThread t;
 private:
-    SAtomic32 action = kActionNone;
-    SAtomic32 status = kStatusStopped;
+    SAtomic32 action_ = kActionNone;
+    SAtomic32 status_ = kStatusStopped;
 };
 
 struct SKR_STATIC_API AsyncService : public skr::ServiceThread {
