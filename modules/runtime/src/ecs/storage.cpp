@@ -841,6 +841,11 @@ void sugoiS_destroy(sugoi_storage_t* storage, const sugoi_chunk_view_t* view)
     storage->destroy(*view);
 }
 
+void sugoiS_destroy_in_query(sugoi_storage_t* storage, const sugoi_query_t* query)
+{
+    storage->destroy(query);
+}
+
 void sugoiS_destroy_all(sugoi_storage_t* storage, const sugoi_meta_filter_t* meta)
 {
     SKR_ASSERT(sugoi::ordered(*meta));

@@ -349,6 +349,14 @@ SKR_RUNTIME_API void sugoiS_instantiate_entities(sugoi_storage_t* storage, sugoi
 SKR_RUNTIME_API void sugoiS_destroy(sugoi_storage_t* storage, const sugoi_chunk_view_t* view);
 /**
  * @brief destory entities
+ * destory all entities matching given query
+ * @param storage
+ * @param ents
+ * @param count
+ */
+SKR_RUNTIME_API void sugoiS_destroy_in_query(sugoi_storage_t* storage, const sugoi_query_t* query);
+/**
+ * @brief destory entities
  * destory all filtered entity
  * @param storage
  * @param ents

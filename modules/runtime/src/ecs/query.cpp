@@ -594,6 +594,25 @@ void sugoi_storage_t::query(const sugoi_query_t* q, sugoi_view_callback_t callba
     query_groups(q, SUGOI_LAMBDA(filterChunk));
 }
 
+void sugoi_storage_t::destroy(const sugoi_query_t* q)
+{
+    bool mainThread = true;
+    if(scheduler)
+    {
+        mainThread = scheduler->is_main_thread(this);
+    }
+    if(mainThread)
+    {
+        build_queries();
+    }
+    else
+        SKR_ASSERT(queriesBuilt);
+    
+    auto filterChunk = [&](sugoi_group_t* group) {
+        group->clear();
+    };
+    query_groups(q, SUGOI_LAMBDA(filterChunk));
+}
 
 void sugoi_storage_t::query_groups(const sugoi_query_t* q, sugoi_group_callback_t callback, void* u)
 {
