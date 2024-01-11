@@ -14,10 +14,7 @@ struct IteratorAsRange {
         It iter;
 
         // compare
-        inline friend bool operator==(const Adaptor& lhs, const Dummy& rhs) { return lhs.iter.has_next(); }
-        inline friend bool operator==(const Dummy& lhs, const Adaptor& rhs) { return rhs.iter.has_next(); }
-        inline friend bool operator!=(const Adaptor& lhs, const Dummy& rhs) { return !(lhs == rhs); }
-        inline friend bool operator!=(const Dummy& lhs, const Adaptor& rhs) { return !(lhs == rhs); }
+        inline friend bool operator!=(const Adaptor& lhs, const Dummy& rhs) { return lhs.iter.has_next(); }
 
         // move
         inline Adaptor& operator++()
@@ -25,16 +22,9 @@ struct IteratorAsRange {
             iter.move_next();
             return *this;
         }
-        inline Adaptor operator++(int)
-        {
-            auto tmp = *this;
-            iter.move_next();
-            return tmp;
-        }
 
         // dereference
-        inline DataType&       operator*() { return iter.ref(); }
-        inline const DataType& operator*() const { return iter.ref(); }
+        inline DataType& operator*() { return iter.ref(); }
     };
 
     SKR_INLINE IteratorAsRange(It&& iter)
