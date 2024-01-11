@@ -17,21 +17,6 @@ struct skr_vfs_t;
 typedef struct skr_vfile_t skr_io_file_t;
 typedef skr_io_file_t* skr_io_file_handle;
 
-typedef enum ESkrIOErrorCode
-{
-    SKR_IO_OK,
-    SKR_IO_ERROR_UNKNOWN,
-    SKR_IO_ERROR_BUFFER_ALLOC_FAILED,
-    SKR_IO_ERROR_COMPRESSED_BUFFER_ALLOC_FAILED,
-    SKR_IO_ERROR_FOPEN_FAILED,
-    SKR_IO_ERROR_FREAD_FAILED,
-    SKR_IO_ERROR_FCLOSE_FAILED,
-    SKR_IO_ERROR_INVALID_PATH,
-    SKR_IO_ERROR_INVALID_ARGUMENTS,
-    SKR_IO_ERROR_DECOMPRESS_FAILED,
-    SKR_IO_ERROR_CODE_MAX_ENUM = UINT32_MAX
-} ESkrIOErrorCode;
-
 typedef enum ESkrIOStage
 {
     SKR_IO_STAGE_NONE,
@@ -56,14 +41,6 @@ typedef enum ESkrIOFinishPoint
     SKR_IO_FINISH_POINT_COUNT = 3,
     SKR_IO_FINISH_POINT_MAX_ENUM = UINT32_MAX
 } ESkrIOFinishPoint;
-
-typedef enum ESkrIOEndpoint
-{
-    SKR_IO_ENDPOINT_DISK,
-    SKR_IO_ENDPOINT_RAM,
-    SKR_IO_ENDPOINT_VRAM,
-    SKR_IO_ENDPOINT_MAX_ENUM = UINT32_MAX
-} ESkrIOEndpoint;
 
 typedef struct skr_guid_t skr_io_decompress_method_t;
 typedef struct skr_guid_t skr_io_request_resolve_pass_t;

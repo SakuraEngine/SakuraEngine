@@ -7,10 +7,12 @@
 namespace skr::goap
 {
 
-template <concepts::WorldState StateType>
+template <concepts::WorldState TState, typename TAction = Action<TState>>
+    requires(std::is_base_of_v<Action<TState>, TAction> || std::is_same_v<TAction, Action<TState>>)
 struct Planner {
+    using StateType = TState;
+    using ActionType = TAction;
     using IdentifierType = typename StateType::IdentifierType;
-    using ActionType     = Action<StateType>;
     using ActionAndState = std::pair<ActionType, StateType>;
 
     template <bool> struct PlanTypeSelector;
@@ -84,9 +86,10 @@ protected:
     }
 };
 
-template <concepts::WorldState StateType>
+template <concepts::WorldState StateType, typename ActionType>
+    requires(std::is_base_of_v<Action<StateType>, ActionType> || std::is_same_v<ActionType, Action<StateType>>)
 template <bool WithState>
-SKR_NOINLINE auto Planner<StateType>::plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT -> PlanType<WithState>
+SKR_NOINLINE auto Planner<StateType, ActionType>::plan(const StateType& start, const StateType& goal, const skr::Vector<ActionType>& actions) SKR_NOEXCEPT -> PlanType<WithState>
 {
     using RetType = PlanType<WithState>;
     if (start.meets_goal(goal))

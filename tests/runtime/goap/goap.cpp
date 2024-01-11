@@ -27,6 +27,116 @@ protected:
     ~GoapTests() {}
 };
 
+TEST_CASE_METHOD(GoapTests, "BatchSync")
+{
+    using namespace skr;
+    using namespace skr::goap;
+
+    enum class EBatchStatus
+    {
+        Combined,
+        Split
+    };
+    enum class EActionStatus
+    {
+        Opened, // batch & open
+        Seeked, // split & seek
+        Readed, // batch & read
+        UnZipped, // split & unzip
+        Outputed // batch & output
+    };
+    enum class EPreferFlag
+    {
+        PreferSplitOpen = 0x0000'0001
+    };
+    using PreferFlags = uint32_t;
+    struct IOStates {
+        Atom<EBatchStatus, u8"batch_status"> batch_status;
+        Atom<EActionStatus, u8"action_status"> action_status;
+        Atom<PreferFlags, u8"prefer_flags"> prefer_flags;
+    };
+    using StaticWorldState = skr::goap::StaticWorldState<IOStates, u8"IOStates">;
+    struct Action : public skr::goap::Action<StaticWorldState>
+    {
+        Action& as_split_action()
+        {
+            add_effect<&IOStates::batch_status>(EBatchStatus::Split);
+            return *this;
+        }
+        Action& as_batch_action()
+        {
+            exist_and_equal<&IOStates::batch_status>(EBatchStatus::Combined);
+            return *this;
+        }
+    };
+    using Planner          = skr::goap::Planner<StaticWorldState, Action>;
+
+    skr::Vector<Action> actions;
+    actions.emplace(u8"sync_combine").ref()
+        .exist_and_equal<&IOStates::batch_status>(EBatchStatus::Split)
+        .add_effect<&IOStates::batch_status>(EBatchStatus::Combined);
+
+    actions.emplace(u8"open(batch)").ref()
+        .as_batch_action()
+        .without_flag<&IOStates::prefer_flags>(EPreferFlag::PreferSplitOpen)
+        .add_effect<&IOStates::action_status>(EActionStatus::Opened);
+
+    actions.emplace(u8"open(split)").ref()
+        .as_split_action()
+        .with_flag<&IOStates::prefer_flags>(EPreferFlag::PreferSplitOpen)
+        .add_effect<&IOStates::action_status>(EActionStatus::Opened);
+
+    actions.emplace(u8"seek").ref()
+        .as_split_action()
+        .exist_and_equal<&IOStates::action_status>(EActionStatus::Opened)
+        .add_effect<&IOStates::action_status>(EActionStatus::Seeked);
+
+    actions.emplace(u8"read").ref()
+        .as_batch_action()
+        .exist_and_equal<&IOStates::action_status>(EActionStatus::Seeked)
+        .add_effect<&IOStates::action_status>(EActionStatus::Readed);
+
+    actions.emplace(u8"unzip").ref()
+        .as_split_action()
+        .exist_and_equal<&IOStates::action_status>(EActionStatus::Readed)
+        .add_effect<&IOStates::action_status>(EActionStatus::UnZipped);
+
+    actions.emplace(u8"output").ref()
+        .as_batch_action()
+        .exist_and_equal<&IOStates::action_status>(EActionStatus::UnZipped)
+        .add_effect<&IOStates::action_status>(EActionStatus::Outputed);
+
+    {
+        auto init = StaticWorldState()
+                    .set<&IOStates::prefer_flags>(0)
+                    .set<&IOStates::batch_status>(EBatchStatus::Combined);
+        auto goal = StaticWorldState()
+                    .set<&IOStates::action_status>(EActionStatus::Outputed);
+        Planner planner;
+        auto    the_plan = planner.plan(init, goal, actions);
+        std::cout << "Prefer Batch:\n";
+        for (int64_t i = the_plan.size() - 1; i >= 0; --i)
+        {
+            std::cout << "    " << (const char*)the_plan[i].name() << std::endl;
+        }
+    }
+    {
+        auto init = StaticWorldState()
+                    .set<&IOStates::prefer_flags>(EPreferFlag::PreferSplitOpen)
+                    .set<&IOStates::batch_status>(EBatchStatus::Combined);
+        auto goal = StaticWorldState()
+                    .set<&IOStates::action_status>(EActionStatus::Outputed);
+        Planner planner;
+        auto    the_plan = planner.plan(init, goal, actions);
+        std::cout << "Prefer Split:\n";
+        for (int64_t i = the_plan.size() - 1; i >= 0; --i)
+        {
+            std::cout << "    " << (const char*)the_plan[i].name() << std::endl;
+        }
+    }
+
+}
+
 TEST_CASE_METHOD(GoapTests, "I/O Static")
 {
     using namespace skr;

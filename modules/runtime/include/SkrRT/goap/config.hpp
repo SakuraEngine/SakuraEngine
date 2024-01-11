@@ -34,7 +34,9 @@ enum class EConditionType : uint8_t
     GreaterEqual = 0x4,
     Less         = 0x5,
     LessEqual    = 0x6,
-    Exist        = 0x7
+    Exist        = 0x7,
+    And          = 0x8,
+    Nand         = 0x9
 };
 
 enum class EVariableFlag : uint8_t
