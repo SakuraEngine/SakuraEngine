@@ -15,11 +15,23 @@ struct BitArray final : protected Memory {
     using typename Memory::SizeType;
     using typename Memory::AllocatorCtorParam;
 
-    using Algo    = algo::BitAlgo<BitBlockType>;
-    using StlIt   = BitIt<BitBlockType, SizeType, false>;
-    using CStlIt  = BitIt<BitBlockType, SizeType, true>;
+    // data ref
     using DataRef = BitDataRef<BitBlockType, SizeType>;
     using BitRef  = BitRef<BitBlockType>;
+
+    // cursor & iterator
+    using Cursor   = BitCursor<BitBlockType, SizeType, false>;
+    using CCursor  = BitCursor<BitBlockType, SizeType, true>;
+    using Iter     = BitIter<BitBlockType, SizeType, false>;
+    using CIter    = BitIter<BitBlockType, SizeType, true>;
+    using IterInv  = BitIterInv<BitBlockType, SizeType, false>;
+    using CIterInv = BitIterInv<BitBlockType, SizeType, true>;
+
+    // stl style iterator
+    using StlIt  = StlStyleCursorIter<BitCursor<BitBlockType, SizeType, false>>;
+    using CStlIt = StlStyleCursorIter<BitCursor<BitBlockType, SizeType, true>>;
+
+    using Algo = algo::BitAlgo<BitBlockType>;
 
     // ctor & dtor
     BitArray(AllocatorCtorParam param = {});
@@ -83,11 +95,44 @@ struct BitArray final : protected Memory {
     // set range
     void set_range(SizeType start, SizeType n, bool v);
 
+    // cursor & iterator
+    // auto cursor_begin();
+    // auto cursor_begin() const;
+    // auto cursor_end();
+    // auto cursor_end() const;
+    // auto iter();
+    // auto iter() const;
+    // auto iter_inv();
+    // auto iter_inv() const;
+
+    // true cursor & iterator
+    // auto true_cursor_begin();
+    // auto true_cursor_begin() const;
+    // auto true_cursor_end();
+    // auto true_cursor_end() const;
+    // auto true_iter();
+    // auto true_iter() const;
+    // auto true_iter_inv();
+    // auto true_iter_inv() const;
+
+    // false cursor & iterator
+    // auto false_cursor_begin();
+    // auto false_cursor_begin() const;
+    // auto false_cursor_end();
+    // auto false_cursor_end() const;
+    // auto false_iter();
+    // auto false_iter() const;
+    // auto false_iter_inv();
+    // auto false_iter_inv() const;
+
     // support foreach
     StlIt  begin();
     StlIt  end();
     CStlIt begin() const;
     CStlIt end() const;
+
+    // syntax
+    const BitArray& readOnly() const;
 
 private:
     // helper
@@ -374,14 +419,14 @@ SKR_INLINE void BitArray<Memory>::remove_at(SizeType start, SizeType n)
     SKR_ASSERT(start >= 0 && n > 0 && start + n < size());
     if (start + n != size())
     {
-        StlIt write(data(), size(), start);
-        StlIt read(data(), size(), start + n);
+        Cursor write = { data(), size(), start };
+        Cursor read  = { data(), size(), start + n };
 
-        while (read)
+        while (!read.reach_end())
         {
-            *write = *read;
-            ++write;
-            ++read;
+            write.ref() = read.ref();
+            write.move_next();
+            read.move_next();
         }
     }
     _set_size(size() - n);
@@ -448,22 +493,29 @@ SKR_INLINE void BitArray<Memory>::set_range(SizeType start, SizeType n, bool v)
 template <typename Memory>
 SKR_INLINE typename BitArray<Memory>::StlIt BitArray<Memory>::begin()
 {
-    return StlIt(data(), size());
+    return { Cursor::Begin(data(), size()) };
 }
 template <typename Memory>
 SKR_INLINE typename BitArray<Memory>::StlIt BitArray<Memory>::end()
 {
-    return StlIt(data(), size(), size());
+    return { Cursor::EndOverflow(data(), size()) };
 }
 template <typename Memory>
 SKR_INLINE typename BitArray<Memory>::CStlIt BitArray<Memory>::begin() const
 {
-    return CStlIt(data(), size());
+    return { Cursor::End(data(), size()) };
 }
 template <typename Memory>
 SKR_INLINE typename BitArray<Memory>::CStlIt BitArray<Memory>::end() const
 {
-    return CStlIt(data(), size(), size());
+    return { Cursor::BeginOverflow(data(), size()) };
+}
+
+// syntax
+template <typename Memory>
+SKR_INLINE const BitArray<Memory>& BitArray<Memory>::readOnly() const
+{
+    return *this;
 }
 
 } // namespace skr::container

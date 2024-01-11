@@ -9,6 +9,7 @@ template <typename Array, bool kConst>
 struct ArrayCursor {
     using ArrayType = std::conditional_t<kConst, const Array, Array>;
     using DataType  = std::conditional_t<kConst, const typename ArrayType::DataType, typename ArrayType::DataType>;
+    using RefType   = DataType&;
     using SizeType  = typename ArrayType::SizeType;
 
     static constexpr SizeType npos = npos_of<SizeType>;
@@ -90,6 +91,12 @@ struct ArrayCursor {
     // compare
     bool operator==(const ArrayCursor& rhs) const { return _array == rhs._array && _index == rhs._index; }
     bool operator!=(const ArrayCursor& rhs) const { return !(*this == rhs); }
+
+    // convert
+    // as_iter
+    // as_iter_inv
+    // as_range
+    // as_range_inv
 
 private:
     ArrayType* _array;

@@ -10,34 +10,46 @@ template <typename T, typename TBitBlock, typename TS, bool Const>
 struct SparseArrayIt {
     using DataType  = std::conditional_t<Const, const SparseArrayData<T, TS>, SparseArrayData<T, TS>>;
     using ValueType = std::conditional_t<Const, const T, T>;
-    using BitItType = TrueBitIt<TBitBlock, TS, true>;
+    using Algo      = algo::BitAlgo<TBitBlock>;
+
+    static constexpr TS npos = npos_of<TS>;
 
     SKR_INLINE explicit SparseArrayIt(DataType* array, TS array_size, const TBitBlock* bit_array, TS start = 0)
         : _array(array)
-        , _bit_it(bit_array, array_size, start)
+        , _bit_array(bit_array)
+        , _array_size(array_size)
+        , _index(start)
     {
+        if (_array && _array_size > 0)
+        {
+            TS index = Algo::find(_bit_array, (TS)_index, _array_size - _index, true);
+            _index   = (index == npos) ? _array_size : index;
+        }
     }
 
     // impl cpp iterator
     SKR_INLINE SparseArrayIt& operator++()
     {
-        ++_bit_it;
+        TS result = Algo::find(_bit_array, _index + 1, _array_size - _index - 1, true);
+        _index    = (result == npos) ? _array_size : result;
         return *this;
     }
-    SKR_INLINE bool       operator==(const SparseArrayIt& rhs) const { return _bit_it == rhs._bit_it && _array == rhs._array; }
+    SKR_INLINE bool       operator==(const SparseArrayIt& rhs) const { return _index == rhs._index && _array == rhs._array; }
     SKR_INLINE bool       operator!=(const SparseArrayIt& rhs) const { return !(*this == rhs); }
-    SKR_INLINE explicit   operator bool() const { return (bool)_bit_it; }
+    SKR_INLINE explicit   operator bool() const { return _index != _array_size; }
     SKR_INLINE bool       operator!() const { return !(bool)*this; }
     SKR_INLINE ValueType& operator*() const { return _array[index()]._sparse_array_data; }
     SKR_INLINE ValueType* operator->() const { return &_array[index()]._sparse_array_data; }
 
     // other data
     SKR_INLINE ValueType* data() const { return &_array[index()]._sparse_array_data; }
-    SKR_INLINE TS         index() const { return _bit_it.index(); }
+    SKR_INLINE TS         index() const { return _index; }
 
 private:
-    DataType* _array;
-    BitItType _bit_it;
+    DataType*        _array;
+    const TBitBlock* _bit_array;
+    TS               _array_size;
+    TS               _index;
 };
 } // namespace skr::container
 

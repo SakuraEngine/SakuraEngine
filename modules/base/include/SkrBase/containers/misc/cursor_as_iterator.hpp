@@ -7,6 +7,7 @@ namespace skr::container
 template <typename T>
 struct CursorIter : protected T {
     using DataType = typename T::DataType;
+    using RefType  = typename T::RefType;
 
     // ctor & copy & move & assign & move assign
     inline CursorIter(T&& rhs)
@@ -23,7 +24,7 @@ struct CursorIter : protected T {
     inline CursorIter& operator=(CursorIter&& rhs)      = default;
 
     // getter
-    inline DataType& ref() const { return T::ref(); }
+    inline RefType ref() const { return T::ref(); }
 
     // move & validator
     inline void reset() { T::reset_to_begin(); }
@@ -42,6 +43,7 @@ struct CursorIter : protected T {
 template <typename T>
 struct CursorIterInv : protected T {
     using DataType = typename T::DataType;
+    using RefType  = typename T::RefType;
 
     // ctor & copy & move & assign & move assign
     inline CursorIterInv(T&& rhs)
@@ -58,7 +60,7 @@ struct CursorIterInv : protected T {
     inline CursorIterInv& operator=(CursorIterInv&& rhs)      = default;
 
     // getter
-    inline DataType& ref() const { return T::ref(); }
+    inline RefType ref() const { return T::ref(); }
 
     // move & validator
     inline void reset() { T::reset_to_end(); }
@@ -75,6 +77,7 @@ struct CursorIterInv : protected T {
 template <typename T>
 struct StlStyleCursorIter : protected T {
     using DataType = typename T::DataType;
+    using RefType  = typename T::RefType;
 
     // ctor & copy & move & assign & move assign
     inline StlStyleCursorIter(T&& rhs)
@@ -114,12 +117,13 @@ struct StlStyleCursorIter : protected T {
     }
 
     // dereference
-    inline const DataType& operator*() const { return T::ref(); }
-    inline DataType&       operator*() { return T::ref(); }
+    inline RefType operator*() const { return T::ref(); }
+    inline RefType operator*() { return T::ref(); }
 };
 template <typename T>
 struct StlStyleCursorIterInv : protected T {
     using DataType = typename T::DataType;
+    using RefType  = typename T::RefType;
 
     // ctor & copy & move & assign & move assign
     inline StlStyleCursorIterInv(T&& rhs)
@@ -159,7 +163,7 @@ struct StlStyleCursorIterInv : protected T {
     }
 
     // dereference
-    inline const DataType& operator*() const { return T::ref(); }
-    inline DataType&       operator*() { return T::ref(); }
+    inline RefType operator*() const { return T::ref(); }
+    inline RefType operator*() { return T::ref(); }
 };
 } // namespace skr::container
