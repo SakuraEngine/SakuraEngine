@@ -16,6 +16,7 @@ struct Compare<T> {
     static bool GreaterEqual(const T& a, const T& b) SKR_NOEXCEPT { return a >= b; }
     static bool Less(const T& a, const T& b) SKR_NOEXCEPT { return a < b; }
     static bool LessEqual(const T& a, const T& b) SKR_NOEXCEPT { return a <= b; }
+    static bool And(const T& a, const T& b) SKR_NOEXCEPT { return a & b; }
 };
 
 namespace concepts
