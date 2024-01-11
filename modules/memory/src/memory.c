@@ -1,4 +1,7 @@
+#ifndef SKR_MEMORY_IMPL
 #define SKR_MEMORY_IMPL
+#endif
+
 #include "SkrMemory/memory.h"
 #include "SkrProfile/profile.h"
 
