@@ -47,7 +47,8 @@ TEST_CASE_METHOD(GoapTests, "BatchSync")
     };
     enum class EPreferFlag
     {
-        PreferSplitOpen = 0x0000'0001
+        PreferSplitOpen = 0x0000'0001,
+        PreferDStorage = 0x0000'0002,
     };
     using PreferFlags = uint32_t;
     struct IOStates {
@@ -58,6 +59,10 @@ TEST_CASE_METHOD(GoapTests, "BatchSync")
     using StaticWorldState = skr::goap::StaticWorldState<IOStates, u8"IOStates">;
     struct Action : public skr::goap::Action<StaticWorldState>
     {
+        Action(const char8_t* name, CostType cost = 0) SKR_NOEXCEPT
+            : skr::goap::Action<StaticWorldState>(name, cost)
+        {
+        }
         Action& as_split_action()
         {
             add_effect<&IOStates::batch_status>(EBatchStatus::Split);
