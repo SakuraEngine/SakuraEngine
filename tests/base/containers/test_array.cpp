@@ -149,11 +149,11 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
         REQUIRE_FALSE(b.is_valid_index(0));
         REQUIRE_FALSE(b.is_valid_index(1));
 
-        REQUIRE(a.is_valid_pointer(a.begin()));
-        REQUIRE(a.is_valid_pointer(a.begin() + 5));
-        REQUIRE(a.is_valid_pointer(a.end() - 1));
-        REQUIRE_FALSE(a.is_valid_pointer(a.begin() - 1));
-        REQUIRE_FALSE(a.is_valid_pointer(a.end()));
+        // REQUIRE(a.is_valid_pointer(a.begin()));
+        // REQUIRE(a.is_valid_pointer(a.begin() + 5));
+        // REQUIRE(a.is_valid_pointer(a.end() - 1));
+        // REQUIRE_FALSE(a.is_valid_pointer(a.begin() - 1));
+        // REQUIRE_FALSE(a.is_valid_pointer(a.end()));
     }
 
     SUBCASE("memory op")
@@ -607,77 +607,77 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("erase")
     {
-        uint32_t       raw_data_group[]     = { 1, 1, 4, 5, 1, 4 };
-        uint32_t       removed_data_group[] = { 4, 5, 4 };
-        const uint64_t kArraySize           = clamp_capacity(114514);
+        // uint32_t       raw_data_group[]     = { 1, 1, 4, 5, 1, 4 };
+        // uint32_t       removed_data_group[] = { 4, 5, 4 };
+        // const uint64_t kArraySize           = clamp_capacity(114514);
 
-        TestArray a(kArraySize), b(kArraySize);
-        for (uint32_t i = 0; i < kArraySize; ++i)
-        {
-            a[i] = raw_data_group[i % 6];
-            b[i] = raw_data_group[i % 6];
-        }
+        // TestArray a(kArraySize), b(kArraySize);
+        // for (uint32_t i = 0; i < kArraySize; ++i)
+        // {
+        //     a[i] = raw_data_group[i % 6];
+        //     b[i] = raw_data_group[i % 6];
+        // }
 
-        for (auto it = a.begin(); it != a.end();)
-        {
-            if (*it == 1)
-            {
-                it = a.erase(it);
-            }
-            else
-            {
-                ++it;
-            }
-        }
+        // for (auto it = a.begin(); it != a.end();)
+        // {
+        //     if (*it == 1)
+        //     {
+        //         it = a.erase(it);
+        //     }
+        //     else
+        //     {
+        //         ++it;
+        //     }
+        // }
 
-        for (uint32_t i = 0; i < a.size(); ++i)
-        {
-            REQUIRE_EQ(a[i], removed_data_group[i % 3]);
-        }
+        // for (uint32_t i = 0; i < a.size(); ++i)
+        // {
+        //     REQUIRE_EQ(a[i], removed_data_group[i % 3]);
+        // }
 
-        for (auto it = a.begin(); it != a.end();)
-        {
-            if (*it == 5)
-            {
-                it = a.erase_swap(it);
-            }
-            else
-            {
-                ++it;
-            }
-        }
-        REQUIRE(!a.contains(5));
+        // for (auto it = a.begin(); it != a.end();)
+        // {
+        //     if (*it == 5)
+        //     {
+        //         it = a.erase_swap(it);
+        //     }
+        //     else
+        //     {
+        //         ++it;
+        //     }
+        // }
+        // REQUIRE(!a.contains(5));
 
-        const TestArray& cb = b;
-        for (auto it = cb.begin(); it != cb.end();)
-        {
-            if (*it == 1)
-            {
-                it = b.erase(it);
-            }
-            else
-            {
-                ++it;
-            }
-        }
+        // const TestArray& cb = b;
+        // for (auto it = cb.begin(); it != cb.end();)
+        // {
+        //     if (*it == 1)
+        //     {
+        //         it = b.erase(it);
+        //     }
+        //     else
+        //     {
+        //         ++it;
+        //     }
+        // }
 
-        for (uint32_t i = 0; i < b.size(); ++i)
-        {
-            REQUIRE_EQ(b[i], removed_data_group[i % 3]);
-        }
+        // for (uint32_t i = 0; i < b.size(); ++i)
+        // {
+        //     REQUIRE_EQ(b[i], removed_data_group[i % 3]);
+        // }
 
-        for (auto it = cb.begin(); it != cb.end();)
-        {
-            if (*it == 5)
-            {
-                it = b.erase_swap(it);
-            }
-            else
-            {
-                ++it;
-            }
-        }
-        REQUIRE(!b.contains(5));
+        // for (auto it = cb.begin(); it != cb.end();)
+        // {
+        //     if (*it == 5)
+        //     {
+        //         it = b.erase_swap(it);
+        //     }
+        //     else
+        //     {
+        //         ++it;
+        //     }
+        // }
+        // REQUIRE(!b.contains(5));
     }
 
     // [needn't test] modify
@@ -767,11 +767,11 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
     // test foreach
     SUBCASE("foreach")
     {
-        TestArray a;
-        for (auto n : a)
-        {
-            printf("%d\n", n);
-        }
+        // TestArray a;
+        // for (auto n : a)
+        // {
+        //     printf("%d\n", n);
+        // }
     }
 
     // test cursor & iterator

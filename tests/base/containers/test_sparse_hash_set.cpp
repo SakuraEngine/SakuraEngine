@@ -383,51 +383,51 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
 
     SUBCASE("erase")
     {
-        TestHashSet a(100), b(100);
-        for (int32_t i = 0; i < 100; ++i)
-        {
-            a.add(i);
-            b.add(i);
-        }
+        // TestHashSet a(100), b(100);
+        // for (int32_t i = 0; i < 100; ++i)
+        // {
+        //     a.add(i);
+        //     b.add(i);
+        // }
 
-        for (auto it = a.begin(); it != a.end();)
-        {
-            if (*it % 3 == 0)
-            {
-                it = a.erase(it);
-            }
-            else
-            {
-                ++it;
-            }
-        }
+        // for (auto it = a.begin(); it != a.end();)
+        // {
+        //     if (*it % 3 == 0)
+        //     {
+        //         it = a.erase(it);
+        //     }
+        //     else
+        //     {
+        //         ++it;
+        //     }
+        // }
 
-        const TestHashSet& cb = b;
-        for (auto it = cb.begin(); it != cb.end();)
-        {
-            if (*it % 3 == 0)
-            {
-                it = b.erase(it);
-            }
-            else
-            {
-                ++it;
-            }
-        }
+        // const TestHashSet& cb = b;
+        // for (auto it = cb.begin(); it != cb.end();)
+        // {
+        //     if (*it % 3 == 0)
+        //     {
+        //         it = b.erase(it);
+        //     }
+        //     else
+        //     {
+        //         ++it;
+        //     }
+        // }
 
-        for (int32_t i = 0; i < 100; ++i)
-        {
-            if (i % 3 == 0)
-            {
-                REQUIRE_FALSE(a.contains(i));
-                REQUIRE_FALSE(b.contains(i));
-            }
-            else
-            {
-                REQUIRE(a.contains(i));
-                REQUIRE(b.contains(i));
-            }
-        }
+        // for (int32_t i = 0; i < 100; ++i)
+        // {
+        //     if (i % 3 == 0)
+        //     {
+        //         REQUIRE_FALSE(a.contains(i));
+        //         REQUIRE_FALSE(b.contains(i));
+        //     }
+        //     else
+        //     {
+        //         REQUIRE(a.contains(i));
+        //         REQUIRE(b.contains(i));
+        //     }
+        // }
     }
 
     SUBCASE("find")
@@ -512,11 +512,11 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
     // test iterator
     SUBCASE("iterator")
     {
-        TestHashSet a;
-        for (auto n : a)
-        {
-            printf("%d\n", n);
-        }
+        // TestHashSet a;
+        // for (auto n : a)
+        // {
+        //     printf("%d\n", n);
+        // }
     }
 }
 

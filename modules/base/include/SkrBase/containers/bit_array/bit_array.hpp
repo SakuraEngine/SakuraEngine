@@ -125,12 +125,6 @@ struct BitArray final : protected Memory {
     // auto false_iter_inv();
     // auto false_iter_inv() const;
 
-    // support foreach
-    StlIt  begin();
-    StlIt  end();
-    CStlIt begin() const;
-    CStlIt end() const;
-
     // syntax
     const BitArray& readOnly() const;
 
@@ -487,28 +481,6 @@ SKR_INLINE void BitArray<Memory>::set_range(SizeType start, SizeType n, bool v)
 {
     SKR_ASSERT(start >= 0 && n > 0 && start + n <= size());
     Algo::set_range(data(), start, n, v);
-}
-
-// support foreach
-template <typename Memory>
-SKR_INLINE typename BitArray<Memory>::StlIt BitArray<Memory>::begin()
-{
-    return { Cursor::Begin(data(), size()) };
-}
-template <typename Memory>
-SKR_INLINE typename BitArray<Memory>::StlIt BitArray<Memory>::end()
-{
-    return { Cursor::EndOverflow(data(), size()) };
-}
-template <typename Memory>
-SKR_INLINE typename BitArray<Memory>::CStlIt BitArray<Memory>::begin() const
-{
-    return { Cursor::End(data(), size()) };
-}
-template <typename Memory>
-SKR_INLINE typename BitArray<Memory>::CStlIt BitArray<Memory>::end() const
-{
-    return { Cursor::BeginOverflow(data(), size()) };
 }
 
 // syntax

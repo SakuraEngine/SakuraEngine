@@ -2,6 +2,7 @@
 #include "SkrBase/containers/sparse_hash_map/kvpair.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_base.hpp"
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map_def.hpp"
+#include "SkrBase/containers/sparse_hash_map/sparse_hash_map_iterator.hpp"
 
 namespace skr::container
 {
@@ -31,11 +32,21 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     using DataArr                         = SparseArray<Memory>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
-    // data ref & iterator
+    // data ref
     using DataRef  = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, false>;
     using CDataRef = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, true>;
-    using StlIt    = typename Super::StlIt;
-    using CStlIt   = typename Super::CStlIt;
+
+    // cursor & iterator
+    using Cursor   = SparseHashMapCursor<SparseHashMap, false>;
+    using CCursor  = SparseHashMapCursor<SparseHashMap, true>;
+    using Iter     = SparseHashMapIter<SparseHashMap, false>;
+    using CIter    = SparseHashMapIter<SparseHashMap, true>;
+    using IterInv  = SparseHashMapIterInv<SparseHashMap, false>;
+    using CIterInv = SparseHashMapIterInv<SparseHashMap, true>;
+
+    // stl-style iterator
+    using StlIt  = CursorIterStl<Cursor, false>;
+    using CStlIt = CursorIterStl<CCursor, false>;
 
     // ctor & dtor
     SparseHashMap(AllocatorCtorParam param = {});
@@ -150,10 +161,6 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     using Super::remove_last_if;
     using Super::remove_all_if;
 
-    // erase
-    StlIt  erase(const StlIt& it);
-    CStlIt erase(const CStlIt& it);
-
     // find
     template <typename UK = MapKeyType>
     requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
@@ -200,10 +207,24 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     using Super::sort;
     using Super::sort_stable;
 
-    // support foreach
+    // cursor & iterator
+    Cursor   cursor_begin();
+    CCursor  cursor_begin() const;
+    Cursor   cursor_end();
+    CCursor  cursor_end() const;
+    Iter     iter();
+    CIter    iter() const;
+    IterInv  iter_inv();
+    CIterInv iter_inv() const;
+    auto     range();
+    auto     range() const;
+    auto     range_inv();
+    auto     range_inv() const;
+
+    // stl-style iterator
     StlIt  begin();
-    StlIt  end();
     CStlIt begin() const;
+    StlIt  end();
     CStlIt end() const;
 };
 } // namespace skr::container
@@ -442,24 +463,24 @@ SKR_INLINE void SparseHashMap<Memory>::append(const SparseHashMap& rhs)
 {
     // fill slack
     SizeType count = 0;
-    auto     it    = rhs.begin();
-    while (slack() > 0 && it != rhs.end())
+    auto     iter  = rhs.iter();
+    while (slack() > 0 && iter.has_next())
     {
-        add(it->key, it->value);
-        ++it;
+        add(iter.ref().key, iter.ref().value);
+        iter.move_next();
         ++count;
     }
 
     // reserve and add
-    if (it != rhs.end())
+    if (iter.has_next())
     {
         auto new_capacity = data_arr().capacity() + (rhs.size() - count);
         data_arr().reserve(new_capacity);
 
-        while (it != rhs.end())
+        while (iter.has_next())
         {
-            add(it->key, it->value);
-            ++it;
+            add(iter.ref().key, iter.ref().value);
+            iter.move_next();
         }
     }
 }
@@ -546,24 +567,6 @@ SKR_INLINE bool SparseHashMap<Memory>::remove_all_value(const UV& value)
     return remove_all_if([&value](const MapDataType& data) { return data.value == value; });
 }
 
-// erase
-template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::StlIt SparseHashMap<Memory>::erase(const StlIt& it)
-{
-    remove_at(it.index());
-    StlIt new_it{ it };
-    ++new_it;
-    return new_it;
-}
-template <typename Memory>
-SKR_INLINE typename SparseHashMap<Memory>::CStlIt SparseHashMap<Memory>::erase(const CStlIt& it)
-{
-    remove_at(it.index());
-    CStlIt new_it{ it };
-    ++new_it;
-    return new_it;
-}
-
 // find
 template <typename Memory>
 template <typename UK>
@@ -629,26 +632,87 @@ SKR_INLINE bool SparseHashMap<Memory>::contains_value(const UV& value) const
     return (bool)find_value(value);
 }
 
-// support foreach
+// cursor & iterator
 template <typename Memory>
-typename SparseHashMap<Memory>::StlIt SparseHashMap<Memory>::begin()
+SKR_INLINE typename SparseHashMap<Memory>::Cursor SparseHashMap<Memory>::cursor_begin()
 {
-    return StlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
+    return Cursor::Begin(this);
 }
 template <typename Memory>
-typename SparseHashMap<Memory>::StlIt SparseHashMap<Memory>::end()
+SKR_INLINE typename SparseHashMap<Memory>::CCursor SparseHashMap<Memory>::cursor_begin() const
 {
-    return StlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+    return CCursor::Begin(this);
 }
 template <typename Memory>
-typename SparseHashMap<Memory>::CStlIt SparseHashMap<Memory>::begin() const
+SKR_INLINE typename SparseHashMap<Memory>::Cursor SparseHashMap<Memory>::cursor_end()
 {
-    return CStlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
+    return Cursor::End(this);
 }
 template <typename Memory>
-typename SparseHashMap<Memory>::CStlIt SparseHashMap<Memory>::end() const
+SKR_INLINE typename SparseHashMap<Memory>::CCursor SparseHashMap<Memory>::cursor_end() const
 {
-    return CStlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+    return CCursor::End(this);
+}
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::Iter SparseHashMap<Memory>::iter()
+{
+    return { cursor_begin() };
+}
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::CIter SparseHashMap<Memory>::iter() const
+{
+    return { cursor_begin() };
+}
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::IterInv SparseHashMap<Memory>::iter_inv()
+{
+    return { cursor_end() };
+}
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::CIterInv SparseHashMap<Memory>::iter_inv() const
+{
+    return { cursor_end() };
+}
+template <typename Memory>
+SKR_INLINE auto SparseHashMap<Memory>::range()
+{
+    return cursor_begin().as_range();
+}
+template <typename Memory>
+SKR_INLINE auto SparseHashMap<Memory>::range() const
+{
+    return cursor_begin().as_range();
+}
+template <typename Memory>
+SKR_INLINE auto SparseHashMap<Memory>::range_inv()
+{
+    return cursor_end().as_range_inv();
+}
+template <typename Memory>
+SKR_INLINE auto SparseHashMap<Memory>::range_inv() const
+{
+    return cursor_end().as_range_inv();
 }
 
+// stl-style iterator
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::StlIt SparseHashMap<Memory>::begin()
+{
+    return { Cursor::Begin(this) };
+}
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::CStlIt SparseHashMap<Memory>::begin() const
+{
+    return { CCursor::Begin(this) };
+}
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::StlIt SparseHashMap<Memory>::end()
+{
+    return { Cursor::EndOverflow(this) };
+}
+template <typename Memory>
+SKR_INLINE typename SparseHashMap<Memory>::CStlIt SparseHashMap<Memory>::end() const
+{
+    return { CCursor::EndOverflow(this) };
+}
 } // namespace skr::container

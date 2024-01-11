@@ -243,8 +243,12 @@ struct Array : protected Memory {
     CIter    iter() const;
     IterInv  iter_inv();
     CIterInv iter_inv() const;
+    auto     range();
+    auto     range() const;
+    auto     range_inv();
+    auto     range_inv() const;
 
-    // support foreach
+    // stl-style iterator
     StlIt  begin();
     StlIt  end();
     CStlIt begin() const;
@@ -1286,8 +1290,28 @@ SKR_INLINE typename Array<Memory>::CIterInv Array<Memory>::iter_inv() const
 {
     return { cursor_end() };
 }
+template <typename Memory>
+SKR_INLINE auto Array<Memory>::range()
+{
+    return cursor_begin().as_range();
+}
+template <typename Memory>
+SKR_INLINE auto Array<Memory>::range() const
+{
+    return cursor_begin().as_range();
+}
+template <typename Memory>
+SKR_INLINE auto Array<Memory>::range_inv()
+{
+    return cursor_end().as_range();
+}
+template <typename Memory>
+SKR_INLINE auto Array<Memory>::range_inv() const
+{
+    return cursor_end().as_range();
+}
 
-// support foreach
+// stl-style iterator
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::StlIt Array<Memory>::begin() { return data(); }
 template <typename Memory>

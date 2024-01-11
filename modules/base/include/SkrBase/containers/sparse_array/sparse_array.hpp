@@ -20,11 +20,21 @@ struct SparseArray : protected Memory {
     using BitAlgo                         = algo::BitAlgo<BitBlockType>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
-    // data ref & iterator
+    // data ref
     using DataRef  = SparseArrayDataRef<DataType, SizeType, false>;
     using CDataRef = SparseArrayDataRef<DataType, SizeType, true>;
-    using StlIt    = SparseArrayIt<DataType, BitBlockType, SizeType, false>;
-    using CStlIt   = SparseArrayIt<DataType, BitBlockType, SizeType, true>;
+
+    // cursor & iterator
+    using Cursor   = SparseArrayCursor<SparseArray, false>;
+    using CCursor  = SparseArrayCursor<SparseArray, true>;
+    using Iter     = SparseArrayIter<SparseArray, false>;
+    using CIter    = SparseArrayIter<SparseArray, true>;
+    using IterInv  = SparseArrayIterInv<SparseArray, false>;
+    using CIterInv = SparseArrayIterInv<SparseArray, true>;
+
+    // stl-style iterator
+    using StlIt  = CursorIterStl<Cursor, false>;
+    using CStlIt = CursorIterStl<CCursor, false>;
 
     // ctor & dtor
     SparseArray(AllocatorCtorParam param = {});
@@ -117,10 +127,6 @@ struct SparseArray : protected Memory {
     template <typename U = DataType>
     SizeType remove_all(const U& v);
 
-    // erase, needn't update iterator, erase directly is safe
-    StlIt  erase(const StlIt& it);
-    CStlIt erase(const CStlIt& it);
-
     // remove if
     template <typename Pred>
     bool remove_if(Pred&& pred);
@@ -173,10 +179,24 @@ struct SparseArray : protected Memory {
     template <typename Functor = Less<DataType>>
     void sort_stable(Functor&& f = Functor());
 
-    // support foreach
+    // cursor & iterator
+    Cursor   cursor_begin();
+    CCursor  cursor_begin() const;
+    Cursor   cursor_end();
+    CCursor  cursor_end() const;
+    Iter     iter();
+    CIter    iter() const;
+    IterInv  iter_inv();
+    CIterInv iter_inv() const;
+    auto     range();
+    auto     range() const;
+    auto     range_inv();
+    auto     range_inv() const;
+
+    // stl-style iterator
     StlIt  begin();
-    StlIt  end();
     CStlIt begin() const;
+    StlIt  end();
     CStlIt end() const;
 
 private:
@@ -825,27 +845,27 @@ template <typename Memory>
 SKR_INLINE void SparseArray<Memory>::append(const SparseArray& arr)
 {
     // fill hole
-    SizeType count = 0;
-    auto     it    = arr.begin();
-    while (hole_size() > 0 && it != arr.end())
+    SizeType count  = 0;
+    auto     cursor = arr.cursor_begin();
+    while (hole_size() > 0 && !cursor.reach_end())
     {
-        add(*it);
-        ++it;
+        add(cursor.ref());
+        cursor.move_next();
         ++count;
     }
 
     // grow and copy
-    if (it != arr.end())
+    if (!cursor.reach_end())
     {
         auto write_idx  = sparse_size();
         auto grow_count = arr.size() - count;
         _grow(grow_count);
         BitAlgo::set_range(bit_array(), write_idx, grow_count, true);
-        while (it != arr.end())
+        while (!cursor.reach_end())
         {
-            new (&(data()[write_idx]._sparse_array_data)) DataType(*it);
+            new (&(data()[write_idx]._sparse_array_data)) DataType(cursor.ref());
             ++write_idx;
-            ++it;
+            cursor.move_next();
         }
         SKR_ASSERT(write_idx == sparse_size());
     }
@@ -961,24 +981,6 @@ SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_al
     return remove_all_if([&v](const DataType& a) { return a == v; });
 }
 
-// erase, needn't update iterator, erase directly is safe
-template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::StlIt SparseArray<Memory>::erase(const StlIt& it)
-{
-    remove_at(it.index());
-    StlIt new_it(it);
-    ++new_it;
-    return new_it;
-}
-template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::CStlIt SparseArray<Memory>::erase(const CStlIt& it)
-{
-    remove_at(it.index());
-    CStlIt new_it(it);
-    ++new_it;
-    return new_it;
-}
-
 // remove if
 template <typename Memory>
 template <typename Pred>
@@ -1007,12 +1009,15 @@ template <typename Pred>
 SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_all_if(Pred&& pred)
 {
     SizeType count = 0;
-    for (auto it = begin(); it != end(); ++it)
+    for (auto cursor = cursor_begin(); !cursor.reach_end();)
     {
-        if (pred(*it))
+        if (pred(cursor.ref()))
         {
-            remove_at(it.index());
-            ++count;
+            cursor.erase_and_move_next();
+        }
+        else
+        {
+            cursor.move_next();
         }
     }
     return count;
@@ -1089,11 +1094,11 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_if(Pred&& pred)
 {
-    for (auto it = begin(); it != end(); ++it)
+    for (auto cursor = cursor_begin(); !cursor.reach_end(); cursor.move_next())
     {
-        if (pred(*it))
+        if (pred(cursor.ref()))
         {
-            return { it.data(), it.index() };
+            return { cursor.ptr(), cursor.index() };
         }
     }
     return {};
@@ -1102,22 +1107,11 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last_if(Pred&& pred)
 {
-    // TODO. reverse iterator
-    // for (auto it = begin(); it != end(); ++it)
-    // {
-    //     if (p(*it))
-    //     {
-    //         return { it.data(), it.index() };
-    //     }
-    // }
-    for (SizeType i = sparse_size() - 1; i >= 0; --i)
+    for (auto cursor = cursor_end(); !cursor.reach_begin(); cursor.move_prev())
     {
-        if (has_data(i))
+        if (pred(cursor.ref()))
         {
-            if (pred(data()[i]._sparse_array_data))
-            {
-                return { &data()[i]._sparse_array_data, i };
-            }
+            return { cursor.ptr(), cursor.index() };
         }
     }
     return {};
@@ -1153,9 +1147,9 @@ template <typename U>
 SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::count(const U& v) const
 {
     SizeType count = 0;
-    for (auto it = begin(); it != end(); ++it)
+    for (auto cursor = cursor_begin(); !cursor.reach_end(); cursor.move_next())
     {
-        if (*it == v)
+        if (cursor.ref() == v)
         {
             ++count;
         }
@@ -1167,9 +1161,9 @@ template <typename Pred>
 SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::count_if(Pred&& pred) const
 {
     SizeType count = 0;
-    for (auto it = begin(); it != end(); ++it)
+    for (auto cursor = cursor_begin(); !cursor.reach_end(); cursor.move_next())
     {
-        if (pred(*it))
+        if (pred(cursor.ref()))
         {
             ++count;
         }
@@ -1209,25 +1203,87 @@ SKR_INLINE void SparseArray<Memory>::sort_stable(Functor&& f)
     }
 }
 
-// support foreach
+// cursor & iterator
+template <typename Memory>
+SKR_INLINE typename SparseArray<Memory>::Cursor SparseArray<Memory>::cursor_begin()
+{
+    return Cursor::Begin(this);
+}
+template <typename Memory>
+SKR_INLINE typename SparseArray<Memory>::CCursor SparseArray<Memory>::cursor_begin() const
+{
+    return CCursor::Begin(this);
+}
+template <typename Memory>
+SKR_INLINE typename SparseArray<Memory>::Cursor SparseArray<Memory>::cursor_end()
+{
+    return Cursor::End(this);
+}
+template <typename Memory>
+SKR_INLINE typename SparseArray<Memory>::CCursor SparseArray<Memory>::cursor_end() const
+{
+    return CCursor::End(this);
+}
+template <typename Memory>
+SKR_INLINE typename SparseArray<Memory>::Iter SparseArray<Memory>::iter()
+{
+    return { cursor_begin() };
+}
+template <typename Memory>
+SKR_INLINE typename SparseArray<Memory>::CIter SparseArray<Memory>::iter() const
+{
+    return { cursor_begin() };
+}
+template <typename Memory>
+SKR_INLINE typename SparseArray<Memory>::IterInv SparseArray<Memory>::iter_inv()
+{
+    return { cursor_end() };
+}
+template <typename Memory>
+SKR_INLINE typename SparseArray<Memory>::CIterInv SparseArray<Memory>::iter_inv() const
+{
+    return { cursor_end() };
+}
+template <typename Memory>
+SKR_INLINE auto SparseArray<Memory>::range()
+{
+    return cursor_begin().as_range();
+}
+template <typename Memory>
+SKR_INLINE auto SparseArray<Memory>::range() const
+{
+    return cursor_begin().as_range();
+}
+template <typename Memory>
+SKR_INLINE auto SparseArray<Memory>::range_inv()
+{
+    return cursor_end().as_range_inv();
+}
+template <typename Memory>
+SKR_INLINE auto SparseArray<Memory>::range_inv() const
+{
+    return cursor_end().as_range_inv();
+}
+
+// stl-style iterator
 template <typename Memory>
 SKR_INLINE typename SparseArray<Memory>::StlIt SparseArray<Memory>::begin()
 {
-    return StlIt(data(), sparse_size(), bit_array());
-}
-template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::StlIt SparseArray<Memory>::end()
-{
-    return StlIt(data(), sparse_size(), bit_array(), sparse_size());
+    return { Cursor::Begin(this) };
 }
 template <typename Memory>
 SKR_INLINE typename SparseArray<Memory>::CStlIt SparseArray<Memory>::begin() const
 {
-    return CStlIt(data(), sparse_size(), bit_array());
+    return { CCursor::Begin(this) };
+}
+template <typename Memory>
+SKR_INLINE typename SparseArray<Memory>::StlIt SparseArray<Memory>::end()
+{
+    return { Cursor::EndOverflow(this) };
 }
 template <typename Memory>
 SKR_INLINE typename SparseArray<Memory>::CStlIt SparseArray<Memory>::end() const
 {
-    return CStlIt(data(), sparse_size(), bit_array(), sparse_size());
+    return { CCursor::EndOverflow(this) };
 }
 } // namespace skr::container

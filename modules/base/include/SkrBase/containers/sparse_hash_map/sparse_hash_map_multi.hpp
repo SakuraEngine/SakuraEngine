@@ -2,6 +2,7 @@
 #include "SkrBase/containers/sparse_hash_map/kvpair.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_base.hpp"
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map_def.hpp"
+#include "SkrBase/containers/sparse_hash_map/sparse_hash_map_iterator.hpp"
 
 namespace skr::container
 {
@@ -31,11 +32,21 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     using DataArr                         = SparseArray<Memory>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
-    // data ref & iterator
+    // data ref
     using DataRef  = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, false>;
     using CDataRef = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, true>;
-    using StlIt    = typename Super::StlIt;
-    using CStlIt   = typename Super::CStlIt;
+
+    // cursor & iterator
+    using Cursor   = SparseHashMapCursor<MultiSparseHashMap, false>;
+    using CCursor  = SparseHashMapCursor<MultiSparseHashMap, true>;
+    using Iter     = SparseHashMapIter<MultiSparseHashMap, false>;
+    using CIter    = SparseHashMapIter<MultiSparseHashMap, true>;
+    using IterInv  = SparseHashMapIterInv<MultiSparseHashMap, false>;
+    using CIterInv = SparseHashMapIterInv<MultiSparseHashMap, true>;
+
+    // stl-style iterator
+    using StlIt  = CursorIterStl<Cursor, false>;
+    using CStlIt = CursorIterStl<CCursor, false>;
 
     // ctor & dtor
     MultiSparseHashMap(AllocatorCtorParam param = {});
@@ -145,10 +156,6 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     using Super::remove_last_if;
     using Super::remove_all_if;
 
-    // erase
-    StlIt  erase(const StlIt& it);
-    CStlIt erase(const CStlIt& it);
-
     // find
     template <typename UK = MapKeyType>
     requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
@@ -212,10 +219,24 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     using Super::sort;
     using Super::sort_stable;
 
-    // support foreach
+    // cursor & iterator
+    Cursor   cursor_begin();
+    CCursor  cursor_begin() const;
+    Cursor   cursor_end();
+    CCursor  cursor_end() const;
+    Iter     iter();
+    CIter    iter() const;
+    IterInv  iter_inv();
+    CIterInv iter_inv() const;
+    auto     range();
+    auto     range() const;
+    auto     range_inv();
+    auto     range_inv() const;
+
+    // stl-style iterator
     StlIt  begin();
-    StlIt  end();
     CStlIt begin() const;
+    StlIt  end();
     CStlIt end() const;
 };
 } // namespace skr::container
@@ -439,24 +460,6 @@ SKR_INLINE bool MultiSparseHashMap<Memory>::remove_all_value(const UV& value)
     return remove_all_if([&value](const MapDataType& data) { return data.value == value; });
 }
 
-// erase
-template <typename Memory>
-SKR_INLINE typename MultiSparseHashMap<Memory>::StlIt MultiSparseHashMap<Memory>::erase(const StlIt& it)
-{
-    remove_at(it.index());
-    StlIt new_it{ it };
-    ++new_it;
-    return new_it;
-}
-template <typename Memory>
-SKR_INLINE typename MultiSparseHashMap<Memory>::CStlIt MultiSparseHashMap<Memory>::erase(const CStlIt& it)
-{
-    remove_at(it.index());
-    CStlIt new_it{ it };
-    ++new_it;
-    return new_it;
-}
-
 // find
 template <typename Memory>
 template <typename UK>
@@ -586,25 +589,87 @@ SKR_INLINE typename MultiSparseHashMap<Memory>::SizeType MultiSparseHashMap<Memo
     return count_if([&value](const MapDataType& data) { return data.value == value; });
 }
 
-// support foreach
+// cursor & iterator
+template <typename Memory>
+SKR_INLINE typename MultiSparseHashMap<Memory>::Cursor MultiSparseHashMap<Memory>::cursor_begin()
+{
+    return Cursor::Begin(this);
+}
+template <typename Memory>
+SKR_INLINE typename MultiSparseHashMap<Memory>::CCursor MultiSparseHashMap<Memory>::cursor_begin() const
+{
+    return CCursor::Begin(this);
+}
+template <typename Memory>
+SKR_INLINE typename MultiSparseHashMap<Memory>::Cursor MultiSparseHashMap<Memory>::cursor_end()
+{
+    return Cursor::End(this);
+}
+template <typename Memory>
+SKR_INLINE typename MultiSparseHashMap<Memory>::CCursor MultiSparseHashMap<Memory>::cursor_end() const
+{
+    return CCursor::End(this);
+}
+template <typename Memory>
+SKR_INLINE typename MultiSparseHashMap<Memory>::Iter MultiSparseHashMap<Memory>::iter()
+{
+    return { cursor_begin() };
+}
+template <typename Memory>
+SKR_INLINE typename MultiSparseHashMap<Memory>::CIter MultiSparseHashMap<Memory>::iter() const
+{
+    return { cursor_begin() };
+}
+template <typename Memory>
+SKR_INLINE typename MultiSparseHashMap<Memory>::IterInv MultiSparseHashMap<Memory>::iter_inv()
+{
+    return { cursor_end() };
+}
+template <typename Memory>
+SKR_INLINE typename MultiSparseHashMap<Memory>::CIterInv MultiSparseHashMap<Memory>::iter_inv() const
+{
+    return { cursor_end() };
+}
+template <typename Memory>
+SKR_INLINE auto MultiSparseHashMap<Memory>::range()
+{
+    return cursor_begin().as_range();
+}
+template <typename Memory>
+SKR_INLINE auto MultiSparseHashMap<Memory>::range() const
+{
+    return cursor_begin().as_range();
+}
+template <typename Memory>
+SKR_INLINE auto MultiSparseHashMap<Memory>::range_inv()
+{
+    return cursor_end().as_range_inv();
+}
+template <typename Memory>
+SKR_INLINE auto MultiSparseHashMap<Memory>::range_inv() const
+{
+    return cursor_end().as_range_inv();
+}
+
+// stl-style iterator
 template <typename Memory>
 SKR_INLINE typename MultiSparseHashMap<Memory>::StlIt MultiSparseHashMap<Memory>::begin()
 {
-    return StlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
-}
-template <typename Memory>
-SKR_INLINE typename MultiSparseHashMap<Memory>::StlIt MultiSparseHashMap<Memory>::end()
-{
-    return StlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+    return { Cursor::Begin(this) };
 }
 template <typename Memory>
 SKR_INLINE typename MultiSparseHashMap<Memory>::CStlIt MultiSparseHashMap<Memory>::begin() const
 {
-    return CStlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
+    return { CCursor::Begin(this) };
+}
+template <typename Memory>
+SKR_INLINE typename MultiSparseHashMap<Memory>::StlIt MultiSparseHashMap<Memory>::end()
+{
+    return { Cursor::EndOverflow(this) };
 }
 template <typename Memory>
 SKR_INLINE typename MultiSparseHashMap<Memory>::CStlIt MultiSparseHashMap<Memory>::end() const
 {
-    return CStlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+    return { CCursor::EndOverflow(this) };
 }
 } // namespace skr::container

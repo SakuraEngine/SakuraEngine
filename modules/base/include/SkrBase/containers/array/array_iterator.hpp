@@ -5,12 +5,12 @@
 
 namespace skr::container
 {
-template <typename Array, bool kConst>
+template <typename Container, bool kConst>
 struct ArrayCursor;
 
-template <typename Array, bool kConst>
-struct ArrayIter : public CursorIter<ArrayCursor<Array, kConst>, false> {
-    using Super = CursorIter<ArrayCursor<Array, kConst>, false>;
+template <typename Container, bool kConst>
+struct ArrayIter : public CursorIter<ArrayCursor<Container, kConst>, false> {
+    using Super = CursorIter<ArrayCursor<Container, kConst>, false>;
     using Super::Super;
 
     inline void erase_and_move_next()
@@ -23,9 +23,9 @@ struct ArrayIter : public CursorIter<ArrayCursor<Array, kConst>, false> {
     }
 };
 
-template <typename Array, bool kConst>
-struct ArrayIterInv : public CursorIter<ArrayCursor<Array, kConst>, true> {
-    using Super = CursorIter<ArrayCursor<Array, kConst>, true>;
+template <typename Container, bool kConst>
+struct ArrayIterInv : public CursorIter<ArrayCursor<Container, kConst>, true> {
+    using Super = CursorIter<ArrayCursor<Container, kConst>, true>;
     using Super::Super;
 
     inline void erase_and_move_next()
@@ -38,16 +38,16 @@ struct ArrayIterInv : public CursorIter<ArrayCursor<Array, kConst>, true> {
     }
 };
 
-template <typename Array, bool kConst>
+template <typename Container, bool kConst>
 struct ArrayCursor {
-    using ArrayType = std::conditional_t<kConst, const Array, Array>;
-    using DataType  = std::conditional_t<kConst, const typename ArrayType::DataType, typename ArrayType::DataType>;
-    using SizeType  = typename ArrayType::SizeType;
+    using ContainerType = std::conditional_t<kConst, const Container, Container>;
+    using DataType      = std::conditional_t<kConst, const typename ContainerType::DataType, typename ContainerType::DataType>;
+    using SizeType      = typename ContainerType::SizeType;
 
     static constexpr SizeType npos = npos_of<SizeType>;
 
     // ctor & copy & move & assign & move assign
-    inline ArrayCursor(ArrayType* array, SizeType index)
+    inline ArrayCursor(ContainerType* array, SizeType index)
         : _array(array)
         , _index(index)
     {
@@ -59,10 +59,10 @@ struct ArrayCursor {
     inline ArrayCursor& operator=(ArrayCursor&& rhs)      = default;
 
     // factory
-    inline static ArrayCursor Begin(ArrayType* array) { return ArrayCursor{ array, 0 }; }
-    inline static ArrayCursor BeginOverflow(ArrayType* array) { return ArrayCursor{ array, npos }; }
-    inline static ArrayCursor End(ArrayType* array) { return ArrayCursor{ array, array->size() - 1 }; }
-    inline static ArrayCursor EndOverflow(ArrayType* array) { return ArrayCursor{ array, array->size() }; }
+    inline static ArrayCursor Begin(ContainerType* array) { return ArrayCursor{ array, 0 }; }
+    inline static ArrayCursor BeginOverflow(ContainerType* array) { return ArrayCursor{ array, npos }; }
+    inline static ArrayCursor End(ContainerType* array) { return ArrayCursor{ array, array->size() - 1 }; }
+    inline static ArrayCursor EndOverflow(ContainerType* array) { return ArrayCursor{ array, array->size() }; }
 
     // getter
     inline DataType& ref() const
@@ -125,14 +125,14 @@ struct ArrayCursor {
     bool operator!=(const ArrayCursor& rhs) const { return !(*this == rhs); }
 
     // convert
-    ArrayIter<Array, kConst>        as_iter() { return { *this }; }
-    ArrayIterInv<Array, kConst>     as_iter_inv() { return { *this }; }
-    CursorRange<ArrayCursor, false> as_range() { return { *this }; }
-    CursorRange<ArrayCursor, true>  as_range_inv() { return { *this }; }
+    inline ArrayIter<Container, kConst>    as_iter() const { return { *this }; }
+    inline ArrayIterInv<Container, kConst> as_iter_inv() const { return { *this }; }
+    inline CursorRange<ArrayCursor, false> as_range() const { return { *this }; }
+    inline CursorRange<ArrayCursor, true>  as_range_inv() const { return { *this }; }
 
 private:
-    ArrayType* _array;
-    SizeType   _index;
+    ContainerType* _array;
+    SizeType       _index;
 };
 
 } // namespace skr::container

@@ -24,11 +24,21 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     using DataArr                         = SparseArray<Memory>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
-    // data ref & iterator
+    // data ref
     using DataRef  = SparseHashSetDataRef<SetDataType, SizeType, HashType, false>;
     using CDataRef = SparseHashSetDataRef<SetDataType, SizeType, HashType, true>;
-    using StlIt    = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, false>;
-    using CStlIt   = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, true>;
+
+    // cursor & iterator
+    using Cursor   = SparseHashSetCursor<MultSparseHashSet, false>;
+    using CCursor  = SparseHashSetCursor<MultSparseHashSet, true>;
+    using Iter     = SparseHashSetIter<MultSparseHashSet, false>;
+    using CIter    = SparseHashSetIter<MultSparseHashSet, true>;
+    using IterInv  = SparseHashSetIterInv<MultSparseHashSet, false>;
+    using CIterInv = SparseHashSetIterInv<MultSparseHashSet, true>;
+
+    // stl-style iterator
+    using StlIt  = CursorIterStl<Cursor, false>;
+    using CStlIt = CursorIterStl<CCursor, false>;
 
     // ctor & dtor
     MultSparseHashSet(AllocatorCtorParam param = {});
@@ -113,10 +123,6 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     using Super::remove_last_if;
     using Super::remove_all_if;
 
-    // erase
-    StlIt  erase(const StlIt& it);
-    CStlIt erase(const CStlIt& it);
-
     // find
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     DataRef find(const U& v);
@@ -164,10 +170,24 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     using Super::sort;
     using Super::sort_stable;
 
-    // support foreach
+    // cursor & iterator
+    Cursor   cursor_begin();
+    CCursor  cursor_begin() const;
+    Cursor   cursor_end();
+    CCursor  cursor_end() const;
+    Iter     iter();
+    CIter    iter() const;
+    IterInv  iter_inv();
+    CIterInv iter_inv() const;
+    auto     range();
+    auto     range() const;
+    auto     range_inv();
+    auto     range_inv() const;
+
+    // stl-style iterator
     StlIt  begin();
-    StlIt  end();
     CStlIt begin() const;
+    StlIt  end();
     CStlIt end() const;
 };
 } // namespace skr::container
@@ -333,24 +353,6 @@ SKR_INLINE typename MultSparseHashSet<Memory>::SizeType MultSparseHashSet<Memory
     return Super::_remove_all(hash, std::forward<Pred>(pred));
 }
 
-// erase
-template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::StlIt MultSparseHashSet<Memory>::erase(const StlIt& it)
-{
-    remove_at(it.index());
-    StlIt new_it(it);
-    ++new_it;
-    return new_it;
-}
-template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::CStlIt MultSparseHashSet<Memory>::erase(const CStlIt& it)
-{
-    remove_at(it.index());
-    CStlIt new_it(it);
-    ++new_it;
-    return new_it;
-}
-
 // find
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
@@ -448,26 +450,87 @@ typename MultSparseHashSet<Memory>::SizeType MultSparseHashSet<Memory>::count_ex
     return count;
 }
 
-// support foreach
+// cursor & iterator
+template <typename Memory>
+SKR_INLINE typename MultSparseHashSet<Memory>::Cursor MultSparseHashSet<Memory>::cursor_begin()
+{
+    return Cursor::Begin(this);
+}
+template <typename Memory>
+SKR_INLINE typename MultSparseHashSet<Memory>::CCursor MultSparseHashSet<Memory>::cursor_begin() const
+{
+    return CCursor::Begin(this);
+}
+template <typename Memory>
+SKR_INLINE typename MultSparseHashSet<Memory>::Cursor MultSparseHashSet<Memory>::cursor_end()
+{
+    return Cursor::End(this);
+}
+template <typename Memory>
+SKR_INLINE typename MultSparseHashSet<Memory>::CCursor MultSparseHashSet<Memory>::cursor_end() const
+{
+    return CCursor::End(this);
+}
+template <typename Memory>
+SKR_INLINE typename MultSparseHashSet<Memory>::Iter MultSparseHashSet<Memory>::iter()
+{
+    return { cursor_begin() };
+}
+template <typename Memory>
+SKR_INLINE typename MultSparseHashSet<Memory>::CIter MultSparseHashSet<Memory>::iter() const
+{
+    return { cursor_begin() };
+}
+template <typename Memory>
+SKR_INLINE typename MultSparseHashSet<Memory>::IterInv MultSparseHashSet<Memory>::iter_inv()
+{
+    return { cursor_end() };
+}
+template <typename Memory>
+SKR_INLINE typename MultSparseHashSet<Memory>::CIterInv MultSparseHashSet<Memory>::iter_inv() const
+{
+    return { cursor_end() };
+}
+template <typename Memory>
+SKR_INLINE auto MultSparseHashSet<Memory>::range()
+{
+    return cursor_begin().as_range();
+}
+template <typename Memory>
+SKR_INLINE auto MultSparseHashSet<Memory>::range() const
+{
+    return cursor_begin().as_range();
+}
+template <typename Memory>
+SKR_INLINE auto MultSparseHashSet<Memory>::range_inv()
+{
+    return cursor_end().as_range_inv();
+}
+template <typename Memory>
+SKR_INLINE auto MultSparseHashSet<Memory>::range_inv() const
+{
+    return cursor_end().as_range_inv();
+}
+
+// stl-style iterator
 template <typename Memory>
 SKR_INLINE typename MultSparseHashSet<Memory>::StlIt MultSparseHashSet<Memory>::begin()
 {
-    return StlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
-}
-template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::StlIt MultSparseHashSet<Memory>::end()
-{
-    return StlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+    return { Cursor::Begin(this) };
 }
 template <typename Memory>
 SKR_INLINE typename MultSparseHashSet<Memory>::CStlIt MultSparseHashSet<Memory>::begin() const
 {
-    return CStlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array());
+    return { CCursor::Begin(this) };
+}
+template <typename Memory>
+SKR_INLINE typename MultSparseHashSet<Memory>::StlIt MultSparseHashSet<Memory>::end()
+{
+    return { Cursor::EndOverflow(this) };
 }
 template <typename Memory>
 SKR_INLINE typename MultSparseHashSet<Memory>::CStlIt MultSparseHashSet<Memory>::end() const
 {
-    return CStlIt(data_arr().data(), data_arr().sparse_size(), data_arr().bit_array(), data_arr().sparse_size());
+    return { CCursor::EndOverflow(this) };
 }
-
 } // namespace skr::container

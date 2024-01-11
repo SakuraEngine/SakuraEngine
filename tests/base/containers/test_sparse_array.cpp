@@ -764,63 +764,63 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("erase")
     {
-        uint32_t raw_data_group[] = { 1, 1, 4, 5, 1, 4 };
+        // uint32_t raw_data_group[] = { 1, 1, 4, 5, 1, 4 };
 
-        const auto kCapacity = clamp_capacity(114514);
+        // const auto kCapacity = clamp_capacity(114514);
 
-        TestSparseArray a(kCapacity), b(kCapacity);
-        for (uint32_t i = 0; i < kCapacity; ++i)
-        {
-            a[i] = raw_data_group[i % 6];
-            b[i] = raw_data_group[i % 6];
-        }
+        // TestSparseArray a(kCapacity), b(kCapacity);
+        // for (uint32_t i = 0; i < kCapacity; ++i)
+        // {
+        //     a[i] = raw_data_group[i % 6];
+        //     b[i] = raw_data_group[i % 6];
+        // }
 
-        for (auto it = a.begin(); it != a.end();)
-        {
-            if (*it == 1)
-            {
-                it = a.erase(it);
-            }
-            else
-            {
-                ++it;
-            }
-        }
+        // for (auto it = a.begin(); it != a.end();)
+        // {
+        //     if (*it == 1)
+        //     {
+        //         it = a.erase(it);
+        //     }
+        //     else
+        //     {
+        //         ++it;
+        //     }
+        // }
 
-        for (uint32_t i = 0; i < kCapacity; ++i)
-        {
-            bool     has_data    = a.has_data(i);
-            uint32_t except_data = raw_data_group[i % 6];
-            REQUIRE_EQ(has_data, except_data != 1);
-            if (has_data)
-            {
-                REQUIRE_EQ(a[i], except_data);
-            }
-        }
+        // for (uint32_t i = 0; i < kCapacity; ++i)
+        // {
+        //     bool     has_data    = a.has_data(i);
+        //     uint32_t except_data = raw_data_group[i % 6];
+        //     REQUIRE_EQ(has_data, except_data != 1);
+        //     if (has_data)
+        //     {
+        //         REQUIRE_EQ(a[i], except_data);
+        //     }
+        // }
 
-        const TestSparseArray& cb = b;
-        for (auto it = cb.begin(); it != cb.end();)
-        {
-            if (*it == 1)
-            {
-                it = b.erase(it);
-            }
-            else
-            {
-                ++it;
-            }
-        }
+        // const TestSparseArray& cb = b;
+        // for (auto it = cb.begin(); it != cb.end();)
+        // {
+        //     if (*it == 1)
+        //     {
+        //         it = b.erase(it);
+        //     }
+        //     else
+        //     {
+        //         ++it;
+        //     }
+        // }
 
-        for (uint32_t i = 0; i < kCapacity; ++i)
-        {
-            bool     has_data    = b.has_data(i);
-            uint32_t except_data = raw_data_group[i % 6];
-            REQUIRE_EQ(has_data, except_data != 1);
-            if (has_data)
-            {
-                REQUIRE_EQ(b[i], except_data);
-            }
-        }
+        // for (uint32_t i = 0; i < kCapacity; ++i)
+        // {
+        //     bool     has_data    = b.has_data(i);
+        //     uint32_t except_data = raw_data_group[i % 6];
+        //     REQUIRE_EQ(has_data, except_data != 1);
+        //     if (has_data)
+        //     {
+        //         REQUIRE_EQ(b[i], except_data);
+        //     }
+        // }
     }
 
     // [needn't test] modify

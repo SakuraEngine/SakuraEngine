@@ -153,14 +153,7 @@ SObjectPtr<InputMappingContext> InputSystemImpl::create_mapping_context() SKR_NO
 
 void InputSystemImpl::remove_mapping_context(SObjectPtr<InputMappingContext> ctx) SKR_NOEXCEPT
 {
-    for (auto it = contexts.begin(); it != contexts.end(); ++it)
-    {
-        if (it->value == ctx)
-        {
-            contexts.remove(it->key);
-            break;
-        }
-    }
+    contexts.remove_value(ctx);
 }
 
 SObjectPtr<InputMappingContext> InputSystemImpl::add_mapping_context(SObjectPtr<InputMappingContext> ctx, int32_t priority, const InputContextOptions& opts) SKR_NOEXCEPT
