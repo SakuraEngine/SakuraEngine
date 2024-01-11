@@ -151,6 +151,7 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
         auto filter = make_zeroed<sugoi_filter_t>();
         filter.all = renderableT.type;
         auto meta = make_zeroed<sugoi_meta_filter_t>();
+        sugoi_chunk_view_t* to_destroy = nullptr;
         auto freeFunc = [&](sugoi_chunk_view_t* view) {
             auto modelFree = [=](sugoi_chunk_view_t* view) {
                 auto mesh_comps = sugoi::get_owned_rw<skr_live2d_render_model_comp_t>(view);
@@ -164,9 +165,12 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
             };
             skr_render_effect_access(renderer, view, u8"Live2DEffect", SUGOI_LAMBDA(modelFree));
             skr_render_effect_detach(renderer, view, u8"Live2DEffect");
-            sugoiS_destroy(storage, view);
+
+            to_destroy = view;
         };
         sugoiS_query(storage, &filter, &meta, SUGOI_LAMBDA(freeFunc));
+        if (to_destroy)
+            sugoiS_destroy(storage, to_destroy);
     }
 
     // allocate new
