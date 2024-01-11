@@ -246,33 +246,32 @@ struct Array : protected Memory {
     CIterInv iter_inv() const;
 
     // support foreach
-    StlIt begin();
-
+    StlIt  begin();
     StlIt  end();
     CStlIt begin() const;
     CStlIt end() const;
 
     // erase
-    template <StlIterOfContainer<Array<Memory>> It>
-    It erase(const It& it);
-    template <CursorOfContainer<Array<Memory>> Cursor>
-    void erase(const Cursor& cursor);
-    template <DataRefOfContainer<Array<Memory>> Ref>
-    void erase(const Ref& ref);
-    template <IterOfContainer<Array<Memory>> Iter>
-    Iter erase(const Iter& iter);
-    template <InvIterOfContainer<Array<Memory>> Iter>
-    Iter erase(const Iter& iter);
-    template <StlIterOfContainer<Array<Memory>> It>
-    It erase_swap(const It& it);
-    template <CursorOfContainer<Array<Memory>> Cursor>
-    void erase_swap(const Cursor& cursor);
-    template <DataRefOfContainer<Array<Memory>> Ref>
-    void erase_swap(const Ref& ref);
-    template <IterOfContainer<Array<Memory>> Iter>
-    Iter erase_swap(const Iter& iter);
-    template <InvIterOfContainer<Array<Memory>> Iter>
-    Iter erase_swap(const Iter& iter);
+    StlIt    erase(const StlIt& it);
+    CStlIt   erase(const CStlIt& it);
+    Iter     erase(const Iter& it);
+    CIter    erase(const CIter& it);
+    IterInv  erase(const IterInv& it);
+    CIterInv erase(const CIterInv& it);
+    void     erase(const Cursor& cursor);
+    void     erase(const CCursor& cursor);
+    void     erase(const DataRef& ref);
+    void     erase(const CDataRef& ref);
+    StlIt    erase_swap(const StlIt& it);
+    CStlIt   erase_swap(const CStlIt& it);
+    Iter     erase_swap(const Iter& it);
+    CIter    erase_swap(const CIter& it);
+    IterInv  erase_swap(const IterInv& it);
+    CIterInv erase_swap(const CIterInv& it);
+    void     erase_swap(const Cursor& cursor);
+    void     erase_swap(const CCursor& cursor);
+    void     erase_swap(const DataRef& ref);
+    void     erase_swap(const CDataRef& ref);
 
     // syntax
     const Array& readonly() const;
@@ -1313,72 +1312,120 @@ SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::end() const { return da
 
 // erase
 template <typename Memory>
-template <StlIterOfContainer<Array<Memory>> It>
-SKR_INLINE It Array<Memory>::erase(const It& it)
+SKR_INLINE typename Array<Memory>::StlIt Array<Memory>::erase(const StlIt& it)
 {
     remove_at(it - begin());
     return it;
 }
 template <typename Memory>
-template <CursorOfContainer<Array<Memory>> Cursor>
+SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::erase(const CStlIt& it)
+{
+    remove_at(it - begin());
+    return it;
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::Iter Array<Memory>::erase(const Iter& it)
+{
+    remove_at(it.index());
+    return it;
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::CIter Array<Memory>::erase(const CIter& it)
+{
+    remove_at(it.index());
+    return it;
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::IterInv Array<Memory>::erase(const IterInv& it)
+{
+    remove_at(it.index());
+    it.move_next();
+    return it;
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::CIterInv Array<Memory>::erase(const CIterInv& it)
+{
+    remove_at(it.index());
+    it.move_next();
+    return it;
+}
+template <typename Memory>
 SKR_INLINE void Array<Memory>::erase(const Cursor& cursor)
 {
     remove_at(cursor.index());
 }
 template <typename Memory>
-template <DataRefOfContainer<Array<Memory>> Ref>
-SKR_INLINE void Array<Memory>::erase(const Ref& ref)
+SKR_INLINE void Array<Memory>::erase(const CCursor& cursor)
+{
+    remove_at(cursor.index());
+}
+template <typename Memory>
+SKR_INLINE void Array<Memory>::erase(const DataRef& ref)
 {
     remove_at(ref.index());
 }
 template <typename Memory>
-template <IterOfContainer<Array<Memory>> Iter>
-SKR_INLINE Iter Array<Memory>::erase(const Iter& iter)
+SKR_INLINE void Array<Memory>::erase(const CDataRef& ref)
 {
-    remove_at(iter.index());
-    return iter;
+    remove_at(ref.index());
 }
 template <typename Memory>
-template <InvIterOfContainer<Array<Memory>> Iter>
-SKR_INLINE Iter Array<Memory>::erase(const Iter& iter)
-{
-    remove_at(iter.index());
-    iter.move_next();
-    return iter;
-}
-template <typename Memory>
-template <StlIterOfContainer<Array<Memory>> It>
-SKR_INLINE It Array<Memory>::erase_swap(const It& it)
+SKR_INLINE typename Array<Memory>::StlIt Array<Memory>::erase_swap(const StlIt& it)
 {
     remove_at_swap(it - begin());
     return it;
 }
 template <typename Memory>
-template <CursorOfContainer<Array<Memory>> Cursor>
+SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::erase_swap(const CStlIt& it)
+{
+    remove_at_swap(it - begin());
+    return it;
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::Iter Array<Memory>::erase_swap(const Iter& it)
+{
+    remove_at_swap(it.index());
+    return it;
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::CIter Array<Memory>::erase_swap(const CIter& it)
+{
+    remove_at_swap(it.index());
+    return it;
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::IterInv Array<Memory>::erase_swap(const IterInv& it)
+{
+    remove_at_swap(it.index());
+    it.move_next();
+    return it;
+}
+template <typename Memory>
+SKR_INLINE typename Array<Memory>::CIterInv Array<Memory>::erase_swap(const CIterInv& it)
+{
+    remove_at_swap(it.index());
+    it.move_next();
+    return it;
+}
+template <typename Memory>
 SKR_INLINE void Array<Memory>::erase_swap(const Cursor& cursor)
 {
     remove_at_swap(cursor.index());
 }
 template <typename Memory>
-template <DataRefOfContainer<Array<Memory>> Ref>
-SKR_INLINE void Array<Memory>::erase_swap(const Ref& ref)
+SKR_INLINE void Array<Memory>::erase_swap(const CCursor& cursor)
+{
+    remove_at_swap(cursor.index());
+}
+template <typename Memory>
+SKR_INLINE void Array<Memory>::erase_swap(const DataRef& ref)
 {
     remove_at_swap(ref.index());
 }
 template <typename Memory>
-template <IterOfContainer<Array<Memory>> Iter>
-SKR_INLINE Iter Array<Memory>::erase_swap(const Iter& iter)
+SKR_INLINE void Array<Memory>::erase_swap(const CDataRef& ref)
 {
-    remove_at_swap(iter.index());
-    return iter;
-}
-template <typename Memory>
-template <InvIterOfContainer<Array<Memory>> Iter>
-SKR_INLINE Iter Array<Memory>::erase_swap(const Iter& iter)
-{
-    remove_at_swap(iter.index());
-    iter.move_next();
-    return iter;
+    remove_at_swap(ref.index());
 }
 
 // syntax
