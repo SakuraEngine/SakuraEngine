@@ -40,62 +40,48 @@ ServiceThread::Action ServiceThread::get_action() const SKR_NOEXCEPT
     return static_cast<Action>(skr_atomic32_load_acquire(&action_));
 }
 
-void ServiceThread::request_stop() SKR_NOEXCEPT
+uint64_t ServiceThread::request(Action action) SKR_NOEXCEPT
 {
-    setAction(kActionStop);
+    // wait last event
+    wait_timeout<u8"WaitLastAction">([&] { return get_action() == kActionNone; });
+
+    auto eid = skr_atomicu64_add_relaxed(&event_, 1) + 1;
+    setAction(action);
+    return eid;
+}
+
+void ServiceThread::wait(uint64_t event, uint32_t fatal_timeout) SKR_NOEXCEPT
+{
+    auto now = skr_atomicu64_load_acquire(&event_);
+    if (now == event)
+        wait_timeout<u8"WaitLastEvent">([&]{ return get_action() == kActionNone; }, fatal_timeout);
+    else if (now > event)
+        return;
+    else if (now < event)
+        SKR_LOG_FATAL(u8"service_thread: can't wait an event that doesn't exist! current event: %llu, target event: %llu", now, event);
 }
 
 void ServiceThread::stop() SKR_NOEXCEPT
 {
     SkrZoneScopedN("stop");
-    request_stop();
-    wait_stop();
-}
-
-void ServiceThread::wait_stop(uint32_t fatal_timeout) SKR_NOEXCEPT
-{
-    SkrZoneScopedN("wait_stop");
-    waitStatus(kStatusStopped, fatal_timeout);
-}
-
-void ServiceThread::request_run() SKR_NOEXCEPT
-{
-    if (!t.has_started())
-        t.start(&f);
-    setAction(kActionWake);
+    auto e = request_stop();
+    wait(e);
 }
 
 void ServiceThread::run() SKR_NOEXCEPT
 {
     SkrZoneScopedN("run");
-    request_run();
-    wait_run();
-}
-
-void ServiceThread::wait_run(uint32_t fatal_timeout) SKR_NOEXCEPT
-{
-    SkrZoneScopedN("wait_run");
-    waitStatus(kStatusRunning, fatal_timeout);
-}
-
-void ServiceThread::request_exit() SKR_NOEXCEPT
-{
-    setAction(kActionExit);
+    auto e = request_run();
+    wait(e);
 }
 
 void ServiceThread::exit() SKR_NOEXCEPT
 {
     SkrZoneScopedN("exit");
-    request_exit();
-    wait_exit();
+    auto e = request_exit();
+    wait(e);
 
     t.finalize();
-}
-
-void ServiceThread::wait_exit(uint32_t fatal_timeout) SKR_NOEXCEPT
-{
-    SkrZoneScopedN("wait_exit");
-    waitStatus(kStatusExitted, fatal_timeout);
 }
 
 void ServiceThread::setAction(Action target) SKR_NOEXCEPT
@@ -131,6 +117,8 @@ void ServiceThread::setStatus(Status target) SKR_NOEXCEPT
 
 void ServiceThread::waitStatus(Status target, uint32_t fatal_timeout) SKR_NOEXCEPT
 {
+    SkrZoneScopedN("waitStatus");
+
     const auto tid = skr_current_thread_id();
     if (tid == t.get_id())
     {
@@ -158,23 +146,19 @@ void ServiceThread::waitStatus(Status target, uint32_t fatal_timeout) SKR_NOEXCE
         SKR_ASSERT(current == kStatusStopped);
     }
 
-    if (!wait_timeout<u8"waitStatus timeout!">([&] { return get_status() == target; }, fatal_timeout))
+    if (!wait_timeout<u8"WaitStatus">([&] { return get_status() == target; }, fatal_timeout))
         SKR_LOG_FATAL(u8"service_thread: waitStatus timeout! current status: %d, target status: %d", current, target);
-}
-
-void ServiceThread::waitJoin() SKR_NOEXCEPT
-{
-    wait_exit();
-    t.join();
 }
 
 ServiceThread::Status ServiceThread::takeAction() SKR_NOEXCEPT
 {
     const auto act = get_action();
-    const Status lut[] = { kStatusRunning, kStatusStopped, kStatusExitted };
+    if (act != kActionNone)
     {
-        const auto out = lut[act];
+        const Status lut[] = { kStatusRunning, kStatusStopped, kStatusExitted };
+        const auto   out   = lut[act - 1];
         setStatus(out);
+        setAction(kActionNone);
         return out;
     }
     return get_status();

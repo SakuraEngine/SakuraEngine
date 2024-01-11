@@ -1,5 +1,6 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/log/logger.hpp"
+#include "SkrRT/async/wait_timeout.hpp"
 #include "misc/log/log_manager.hpp"
 
 #include "SkrProfile/profile.h"
@@ -192,7 +193,7 @@ LogWorker::~LogWorker() SKR_NOEXCEPT
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_QUITING);
         stop();
     }
-    wait_stop();
+    wait_timeout<u8"WaitLogWorkerStop">([&] { return get_status() == skr::ServiceThread::kStatusStopped; });
     exit();
 }
 
@@ -274,7 +275,6 @@ skr::AsyncResult LogWorker::serve() SKR_NOEXCEPT
         sleep();
         return ASYNC_RESULT_OK;
     }
-    
     {
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
         SkrZoneScopedNC("Dispatch", tracy::Color::Orchid3);

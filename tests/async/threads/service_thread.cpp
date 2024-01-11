@@ -1,6 +1,7 @@
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/async/async_service.h"
+#include "SkrRT/async/wait_timeout.hpp"
 
 #include "SkrTestFramework/framework.hpp"
 
@@ -39,10 +40,7 @@ TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint")
         skr::AsyncResult serve() SKR_NOEXCEPT
         {
             if (times <= 5)
-            {
-                skr_thread_sleep(1);
                 SKR_LOG_DEBUG(u8"Hello World! %d", times++);
-            }
             else
                 this->request_stop();
             return skr::ASYNC_RESULT_OK;
@@ -53,7 +51,7 @@ TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint")
     SKR_LOG_DEBUG(u8"Request Run");
     srv.run();
     SKR_LOG_DEBUG(u8"Wait Stop");
-    srv.wait_stop();
+    wait_timeout([&] { return srv.get_status() == skr::ServiceThread::kStatusStopped; });
     SKR_LOG_DEBUG(u8"Stopped");
     EXPECT_EQ(srv.times, 6);
     SKR_LOG_DEBUG(u8"Wait Exit");
@@ -76,7 +74,6 @@ TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint2")
                 ((times <= 5) && (times >= 0)) ||
                 ((times <= 20) && (times >= 15)))
                 {
-                    skr_thread_sleep(1);
                     SKR_LOG_DEBUG(u8"Hello World! %d", times++);
                 }
                 else
@@ -89,12 +86,12 @@ TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint2")
         };
         auto srv = TestServiceThread();
         srv.run();
-        srv.wait_stop();
+        wait_timeout([&] { return srv.get_status() == skr::ServiceThread::kStatusStopped; });
         EXPECT_EQ(srv.times, 6);
 
         srv.times = 15;
         srv.run();
-        srv.wait_stop();
+        wait_timeout([&] { return srv.get_status() == skr::ServiceThread::kStatusStopped; });
         EXPECT_EQ(srv.times, 21);
 
         srv.exit();

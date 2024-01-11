@@ -39,40 +39,44 @@ public:
 
     enum Status
     {
-        kStatusStopped  = 0,
-        kStatusRunning  = 1,
-        kStatusExitted  = 2
+        kStatusStopped = 0,
+        kStatusRunning = 1,
+        kStatusExitted = 2
     };
     enum Action
     {
-        kActionWake = 0,
-        kActionStop = 1,
-        kActionExit = 2
+        kActionNone = 0,
+        kActionWake = 1,
+        kActionStop = 2,
+        kActionExit = 3
     };
     Status get_status() const SKR_NOEXCEPT;
     Action get_action() const SKR_NOEXCEPT;
 
-    virtual void request_stop() SKR_NOEXCEPT;
-    void stop() SKR_NOEXCEPT;
-    virtual void wait_stop(uint32_t fatal_timeout = 8) SKR_NOEXCEPT;
-
-    void request_run() SKR_NOEXCEPT;
-    void run() SKR_NOEXCEPT;
-    void wait_run(uint32_t fatal_timeout = 8) SKR_NOEXCEPT;
-
-    void request_exit() SKR_NOEXCEPT;
-    void exit() SKR_NOEXCEPT;
-    void wait_exit(uint32_t fatal_timeout = 8) SKR_NOEXCEPT;
-
+    virtual uint64_t request(Action action) SKR_NOEXCEPT;
+    virtual void wait(uint64_t event, uint32_t fatal_timeout = 4) SKR_NOEXCEPT;
     virtual AsyncResult serve() SKR_NOEXCEPT = 0;
+
+    uint64_t request_stop() SKR_NOEXCEPT { return request(kActionStop); }
+    void stop() SKR_NOEXCEPT;
+
+    uint64_t request_run() SKR_NOEXCEPT
+    {
+        if (!t.has_started())
+            t.start(&f);
+        return request(kActionWake);
+    }
+    void run() SKR_NOEXCEPT;
+
+    uint64_t request_exit() SKR_NOEXCEPT { return request(kActionExit); }
+    void exit() SKR_NOEXCEPT;
 
 protected:
     Status takeAction() SKR_NOEXCEPT;
-    void setStatus(Status status) SKR_NOEXCEPT;
-    void setAction(Action action) SKR_NOEXCEPT;
+    void   setStatus(Status status) SKR_NOEXCEPT;
+    void   setAction(Action action) SKR_NOEXCEPT;
 
     void waitStatus(Status status, uint32_t fatal_timeout) SKR_NOEXCEPT;
-    void waitJoin() SKR_NOEXCEPT;
 
     struct ServiceFunc : public NamedThreadFunction {
         AsyncResult    run() SKR_NOEXCEPT;
@@ -81,9 +85,11 @@ protected:
     friend struct ServiceFunc;
     ServiceFunc f;
     NamedThread t;
+
 private:
-    SAtomic32 action_ = kActionStop;
+    SAtomic32 action_ = kActionNone;
     SAtomic32 status_ = kStatusStopped;
+    SAtomicU64 event_  = 0;
 };
 
 struct SKR_STATIC_API AsyncService : public skr::ServiceThread {
@@ -106,16 +112,17 @@ struct SKR_STATIC_API AsyncService : public skr::ServiceThread {
 
     void sleep() SKR_NOEXCEPT;
 
-    void request_stop() SKR_NOEXCEPT override
+    uint64_t request(Action action) SKR_NOEXCEPT override
     {
-        skr::ServiceThread::request_stop();
+        auto eid = skr::ServiceThread::request(action);
         awake();
+        return eid;
     }
 
-    void wait_stop(uint32_t fatal_timeout = 8) SKR_NOEXCEPT override
+    void wait(uint64_t event, uint32_t fatal_timeout = 4) SKR_NOEXCEPT override
     {
         awake();
-        skr::ServiceThread::wait_stop(fatal_timeout);
+        skr::ServiceThread::wait(event, fatal_timeout);
     }
 
     void awake() SKR_NOEXCEPT
