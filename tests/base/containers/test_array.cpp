@@ -813,6 +813,32 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
             ++count;
         }
 
+        // iter as range
+        count = 0;
+        for (auto v : a.iter().as_range())
+        {
+            REQUIRE_EQ(v, count);
+            ++count;
+        }
+        count = 0;
+        for (auto v : a.readonly().iter().as_range())
+        {
+            REQUIRE_EQ(v, count);
+            ++count;
+        }
+        count = 0;
+        for (auto v : a.iter_inv().as_range())
+        {
+            REQUIRE_EQ(v, kArraySize - 1 - count);
+            ++count;
+        }
+        count = 0;
+        for (auto v : a.readonly().iter_inv().as_range())
+        {
+            REQUIRE_EQ(v, kArraySize - 1 - count);
+            ++count;
+        }
+
         // cursor
         count = 0;
         for (auto it = a.cursor_begin(); !it.reach_end(); it.move_next())

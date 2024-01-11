@@ -74,8 +74,8 @@ private:
 };
 
 template <typename T, typename TS, bool kConst>
-using ArrayIter = CursorAsIteratorForward<ArrayCursor<T, TS, kConst>>;
+using ArrayIter = CursorIter<ArrayCursor<T, TS, kConst>>;
 
 template <typename T, typename TS, bool kConst>
-using ArrayIterInv = CursorAsIteratorBackward<ArrayCursor<T, TS, kConst>>;
+using ArrayIterInv = CursorIterInv<ArrayCursor<T, TS, kConst>>;
 } // namespace skr::container

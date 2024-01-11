@@ -1,27 +1,30 @@
 #pragma once
 #include "SkrBase/config.h"
+#include "SkrBase/containers/misc/iterator_as_range.hpp"
 
 namespace skr::container
 {
 template <typename T>
-struct CursorAsIteratorForward : protected T {
+struct CursorIter : protected T {
+    using DataType = typename T::DataType;
+
     // ctor & copy & move & assign & move assign
-    inline CursorAsIteratorForward(T&& rhs)
+    inline CursorIter(T&& rhs)
         : T(std::move(rhs))
     {
     }
-    inline CursorAsIteratorForward(const T& rhs)
+    inline CursorIter(const T& rhs)
         : T(rhs)
     {
     }
-    inline CursorAsIteratorForward(const CursorAsIteratorForward& rhs)            = default;
-    inline CursorAsIteratorForward(CursorAsIteratorForward&& rhs)                 = default;
-    inline CursorAsIteratorForward& operator=(const CursorAsIteratorForward& rhs) = default;
-    inline CursorAsIteratorForward& operator=(CursorAsIteratorForward&& rhs)      = default;
+    inline CursorIter(const CursorIter& rhs)            = default;
+    inline CursorIter(CursorIter&& rhs)                 = default;
+    inline CursorIter& operator=(const CursorIter& rhs) = default;
+    inline CursorIter& operator=(CursorIter&& rhs)      = default;
 
     // getter
-    inline decltype(auto) ref() const { return T::ref(); }
-    inline decltype(auto) ptr() const
+    inline DataType& ref() const { return T::ref(); }
+    inline DataType* ptr() const
     requires requires(const T& rng) { rng.ptr(); }
     {
         return T::ptr();
@@ -37,29 +40,33 @@ struct CursorAsIteratorForward : protected T {
     inline void move_next() { T::move_next(); }
     inline bool has_next() const { return !T::reach_end(); }
 
-    // cursor
-    inline const T& as_cursor() const { return *this; }
-    inline T&       as_cursor() { return *this; }
+    // cast
+    inline const T& cursor() const { return *this; }
+    inline T&       cursor() { return *this; }
+    inline auto     as_range() const { return IteratorAsRange<CursorIter>(*this); }
+    inline auto     as_range() { return IteratorAsRange<CursorIter>(*this); }
 };
 template <typename T>
-struct CursorAsIteratorBackward : protected T {
+struct CursorIterInv : protected T {
+    using DataType = typename T::DataType;
+
     // ctor & copy & move & assign & move assign
-    inline CursorAsIteratorBackward(T&& rhs)
+    inline CursorIterInv(T&& rhs)
         : T(std::move(rhs))
     {
     }
-    inline CursorAsIteratorBackward(const T& rhs)
+    inline CursorIterInv(const T& rhs)
         : T(rhs)
     {
     }
-    inline CursorAsIteratorBackward(const CursorAsIteratorBackward& rhs)            = default;
-    inline CursorAsIteratorBackward(CursorAsIteratorBackward&& rhs)                 = default;
-    inline CursorAsIteratorBackward& operator=(const CursorAsIteratorBackward& rhs) = default;
-    inline CursorAsIteratorBackward& operator=(CursorAsIteratorBackward&& rhs)      = default;
+    inline CursorIterInv(const CursorIterInv& rhs)            = default;
+    inline CursorIterInv(CursorIterInv&& rhs)                 = default;
+    inline CursorIterInv& operator=(const CursorIterInv& rhs) = default;
+    inline CursorIterInv& operator=(CursorIterInv&& rhs)      = default;
 
     // getter
-    inline decltype(auto) ref() const { return T::ref(); }
-    inline decltype(auto) ptr() const
+    inline DataType& ref() const { return T::ref(); }
+    inline DataType* ptr() const
     requires requires(const T& rng) { rng.ptr(); }
     {
         return T::ptr();
@@ -75,95 +82,101 @@ struct CursorAsIteratorBackward : protected T {
     inline void move_next() { T::move_prev(); }
     inline bool has_next() const { return !T::reach_begin(); }
 
-    // cursor
-    inline const T& as_cursor() const { return *this; }
-    inline T&       as_cursor() { return *this; }
+    // cast
+    inline const T& cursor() const { return *this; }
+    inline T&       cursor() { return *this; }
+    inline auto     as_range() const { return IteratorAsRange<CursorIterInv>(*this); }
+    inline auto     as_range() { return IteratorAsRange<CursorIterInv>(*this); }
 };
 
 template <typename T>
-struct CursorAsStlIteratorForward : protected T {
+struct StlStyleCursorIter : protected T {
+    using DataType = typename T::DataType;
+
     // ctor & copy & move & assign & move assign
-    inline CursorAsStlIteratorForward(T&& rhs)
+    inline StlStyleCursorIter(T&& rhs)
         : T(std::move(rhs))
     {
     }
-    inline CursorAsStlIteratorForward(const T& rhs)
+    inline StlStyleCursorIter(const T& rhs)
         : T(rhs)
     {
     }
-    inline CursorAsStlIteratorForward(const CursorAsStlIteratorForward& rhs)            = default;
-    inline CursorAsStlIteratorForward(CursorAsStlIteratorForward&& rhs)                 = default;
-    inline CursorAsStlIteratorForward& operator=(const CursorAsStlIteratorForward& rhs) = default;
-    inline CursorAsStlIteratorForward& operator=(CursorAsStlIteratorForward&& rhs)      = default;
+    inline StlStyleCursorIter(const StlStyleCursorIter& rhs)            = default;
+    inline StlStyleCursorIter(StlStyleCursorIter&& rhs)                 = default;
+    inline StlStyleCursorIter& operator=(const StlStyleCursorIter& rhs) = default;
+    inline StlStyleCursorIter& operator=(StlStyleCursorIter&& rhs)      = default;
 
     // compare
-    inline friend bool operator==(const CursorAsStlIteratorForward& lhs, const CursorAsStlIteratorForward& rhs)
+    inline friend bool operator==(const StlStyleCursorIter& lhs, const StlStyleCursorIter& rhs)
     {
         return static_cast<const T&>(lhs) == static_cast<const T&>(rhs);
     }
-    inline friend bool operator!=(const CursorAsStlIteratorForward& lhs, const CursorAsStlIteratorForward& rhs)
+    inline friend bool operator!=(const StlStyleCursorIter& lhs, const StlStyleCursorIter& rhs)
     {
         return !(lhs == rhs);
     }
 
     // move
-    inline CursorAsStlIteratorForward& operator++()
+    inline StlStyleCursorIter& operator++()
     {
-        static_cast<T&>(*this).move_next();
+        T::move_next();
         return *this;
     }
-    inline CursorAsStlIteratorForward operator++(int)
+    inline StlStyleCursorIter operator++(int)
     {
         auto tmp = *this;
-        static_cast<T&>(*this).move_next();
+        T::move_next();
         return tmp;
     }
 
     // dereference
-    inline decltype(auto) operator*() const { return static_cast<const T&>(*this).ref(); }
-    inline decltype(auto) operator*() { return static_cast<T&>(*this).ref(); }
+    inline const DataType& operator*() const { return T::ref(); }
+    inline DataType&       operator*() { return T::ref(); }
 };
 template <typename T>
-struct CursorAsStlIteratorBackward : protected T {
+struct StlStyleCursorIterInv : protected T {
+    using DataType = typename T::DataType;
+
     // ctor & copy & move & assign & move assign
-    inline CursorAsStlIteratorBackward(T&& rhs)
+    inline StlStyleCursorIterInv(T&& rhs)
         : T(std::move(rhs))
     {
     }
-    inline CursorAsStlIteratorBackward(const T& rhs)
+    inline StlStyleCursorIterInv(const T& rhs)
         : T(rhs)
     {
     }
-    inline CursorAsStlIteratorBackward(const CursorAsStlIteratorBackward& rhs)            = default;
-    inline CursorAsStlIteratorBackward(CursorAsStlIteratorBackward&& rhs)                 = default;
-    inline CursorAsStlIteratorBackward& operator=(const CursorAsStlIteratorBackward& rhs) = default;
-    inline CursorAsStlIteratorBackward& operator=(CursorAsStlIteratorBackward&& rhs)      = default;
+    inline StlStyleCursorIterInv(const StlStyleCursorIterInv& rhs)            = default;
+    inline StlStyleCursorIterInv(StlStyleCursorIterInv&& rhs)                 = default;
+    inline StlStyleCursorIterInv& operator=(const StlStyleCursorIterInv& rhs) = default;
+    inline StlStyleCursorIterInv& operator=(StlStyleCursorIterInv&& rhs)      = default;
 
     // compare
-    inline friend bool operator==(const CursorAsStlIteratorBackward& lhs, const CursorAsStlIteratorBackward& rhs)
+    inline friend bool operator==(const StlStyleCursorIterInv& lhs, const StlStyleCursorIterInv& rhs)
     {
         return static_cast<const T&>(lhs) == static_cast<const T&>(rhs);
     }
-    inline friend bool operator!=(const CursorAsStlIteratorBackward& lhs, const CursorAsStlIteratorBackward& rhs)
+    inline friend bool operator!=(const StlStyleCursorIterInv& lhs, const StlStyleCursorIterInv& rhs)
     {
         return !(lhs == rhs);
     }
 
     // move
-    inline CursorAsStlIteratorBackward& operator++()
+    inline StlStyleCursorIterInv& operator++()
     {
-        static_cast<T&>(*this).move_prev();
+        T::move_prev();
         return *this;
     }
-    inline CursorAsStlIteratorBackward operator++(int)
+    inline StlStyleCursorIterInv operator++(int)
     {
         auto tmp = *this;
-        static_cast<T&>(*this).move_prev();
+        T::move_prev();
         return tmp;
     }
 
     // dereference
-    inline decltype(auto) operator*() const { return static_cast<const T&>(*this).ref(); }
-    inline decltype(auto) operator*() { return static_cast<T&>(*this).ref(); }
+    inline const DataType& operator*() const { return T::ref(); }
+    inline DataType&       operator*() { return T::ref(); }
 };
 } // namespace skr::container

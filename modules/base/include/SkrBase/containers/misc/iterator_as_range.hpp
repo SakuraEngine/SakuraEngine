@@ -4,11 +4,13 @@
 
 namespace skr::container
 {
-template <Iterator It>
+template <typename It>
 struct IteratorAsRange {
     struct Dummy {
     };
     struct Adaptor {
+        using DataType = typename It::DataType;
+
         It iter;
 
         // compare
@@ -18,12 +20,12 @@ struct IteratorAsRange {
         inline friend bool operator!=(const Dummy& lhs, const Adaptor& rhs) { return !(lhs == rhs); }
 
         // move
-        inline IteratorAsRange& operator++()
+        inline Adaptor& operator++()
         {
             iter.move_next();
             return *this;
         }
-        inline IteratorAsRange operator++(int)
+        inline Adaptor operator++(int)
         {
             auto tmp = *this;
             iter.move_next();
@@ -31,9 +33,18 @@ struct IteratorAsRange {
         }
 
         // dereference
-        inline decltype(auto) operator*() { return iter.ref(); }
-        inline decltype(auto) operator*() const { return iter.ref(); }
+        inline DataType&       operator*() { return iter.ref(); }
+        inline const DataType& operator*() const { return iter.ref(); }
     };
+
+    SKR_INLINE IteratorAsRange(It&& iter)
+        : _iter(std::move(iter))
+    {
+    }
+    SKR_INLINE IteratorAsRange(const It& iter)
+        : _iter(iter)
+    {
+    }
 
     // begin & end
     inline Adaptor       begin() { return { _iter }; }
