@@ -36,11 +36,6 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     using CDataRef = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, true>;
     using StlIt    = typename Super::StlIt;
     using CStlIt   = typename Super::CStlIt;
-    // data ref & iterator
-    using DataRef  = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, false>;
-    using CDataRef = SparseHashMapDataRef<MapKeyType, MapValueType, SizeType, HashType, true>;
-    using StlIt    = typename Super::StlIt;
-    using CStlIt   = typename Super::CStlIt;
 
     // ctor & dtor
     MultiSparseHashMap(AllocatorCtorParam param = {});

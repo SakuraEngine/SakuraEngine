@@ -96,6 +96,55 @@ concept IteratorOfType = requires(It t) {
         t.has_next()
     } -> std::convertible_to<bool>;
 };
+
+template <typename It>
+concept StlStyleIterator = requires(It t) {
+    *t;
+    t != t;
+    ++t;
+    t++;
+};
+
+template <typename It, typename Container>
+concept StlIterOfContainer = requires {
+    typename Container::StlIt;
+    typename Container::CStlIt;
+    requires std::same_as<std::decay_t<It>, typename Container::StlIt> ||
+             std::same_as<std::decay_t<It>, typename Container::CStlIt>;
+};
+
+template <typename Cursor, typename Container>
+concept CursorOfContainer = requires {
+    typename Container::Cursor;
+    typename Container::CCursor;
+    requires std::same_as<std::decay_t<Cursor>, typename Container::Cursor> ||
+             std::same_as<std::decay_t<Cursor>, typename Container::CCursor>;
+};
+
+template <typename Iter, typename Container>
+concept IterOfContainer = requires {
+    typename Container::Iter;
+    typename Container::CIter;
+    requires std::same_as<std::decay_t<Iter>, typename Container::Iter> ||
+             std::same_as<std::decay_t<Iter>, typename Container::CIter>;
+};
+
+template <typename Iter, typename Container>
+concept InvIterOfContainer = requires {
+    typename Container::InvIter;
+    typename Container::CInvIter;
+    requires std::same_as<std::decay_t<Iter>, typename Container::InvIter> ||
+             std::same_as<std::decay_t<Iter>, typename Container::CInvIter>;
+};
+
+template <typename DataRef, typename Container>
+concept DataRefOfContainer = requires {
+    typename Container::DataRef;
+    typename Container::CDataRef;
+    requires std::same_as<std::decay_t<DataRef>, typename Container::DataRef> ||
+             std::same_as<std::decay_t<DataRef>, typename Container::CDataRef>;
+};
+
 } // namespace skr
 
 // TODO. linear memory traits，从某个对象中提取如下信息：
