@@ -171,7 +171,7 @@ TEST_CASE_METHOD(ECSTest, "destroy_entity")
 
 TEST_CASE_METHOD(ECSTest, "destroy_by_predicate")
 {
-    auto query = sugoiQ_from_literal(storage, "[in]test");
+    auto query = sugoiQ_from_literal(storage, u8"[in]test");
     sugoi_chunk_view_t view;
     sugoi_entity_type_t entityType;
     entityType.type = { &type_test, 1 };
