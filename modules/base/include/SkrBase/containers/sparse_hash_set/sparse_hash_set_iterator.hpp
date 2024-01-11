@@ -1,45 +1,48 @@
 #pragma once
-#include "sparse_hash_set_def.hpp"
 #include "SkrBase/containers/sparse_array/sparse_array_iterator.hpp"
 
-// SparseHashSet iterator
 namespace skr::container
 {
-template <typename T, typename TBitBlock, typename TS, typename TH, bool Const>
-struct SparseHashSetIt : protected SparseArrayIt<SparseHashSetData<T, TS, TH>, TBitBlock, TS, Const> {
-    using Super          = SparseArrayIt<SparseHashSetData<T, TS, TH>, TBitBlock, TS, Const>;
-    using DataType       = SparseHashSetData<T, TS, TH>;
-    using SparseDataType = std::conditional_t<Const, const SparseArrayData<DataType, TS>, SparseArrayData<DataType, TS>>;
-    using ValueType      = std::conditional_t<Const, const T, T>;
+template <typename Container, bool kConst>
+struct SparseHashSetCursor;
 
+template <typename Container, bool kConst>
+struct SparseHashSetIter : public CursorIter<SparseArrayCursor<Container, kConst>, false> {
+    using Super = CursorIter<SparseArrayCursor<Container, kConst>, false>;
     using Super::Super;
 
-    // impl cpp iterator
-    using Super::operator++;
-    SKR_INLINE bool operator==(const SparseHashSetIt& rhs) const { return Super::operator==(rhs); }
-    SKR_INLINE bool operator!=(const SparseHashSetIt& rhs) const { return Super::operator!=(rhs); }
-    using Super::operator bool;
-    using Super::operator!;
-    SKR_INLINE ValueType& operator*() const { return Super::operator*()._sparse_hash_set_data; }
-    SKR_INLINE ValueType* operator->() const { return &Super::operator*()._sparse_hash_set_data; }
-
-    // other data
-    SKR_INLINE TS index() const { return Super::index(); }
-    SKR_INLINE TH hash() const { return Super::operator*()._sparse_hash_set_hash; }
+    inline void erase_and_move_next()
+    {
+        Super::cursor().erase_and_move_next();
+    }
 };
-} // namespace skr::container
 
-namespace skr::container
-{
-template <typename T, typename TBitBlock, typename TS, typename THash, bool kConst>
-struct SparseHashSetCursor {
-    using SparseArrayCursorType = SparseArrayCursor<SparseHashSetData<T, TS, THash>, TBitBlock, TS, kConst>;
-    using DataType              = std::conditional_t<kConst, const T, T>;
-    using SizeType              = TS;
+template <typename Container, bool kConst>
+struct SparseHashSetIterInv : public CursorIter<SparseArrayCursor<Container, kConst>, true> {
+    using Super = CursorIter<SparseArrayCursor<Container, kConst>, true>;
+    using Super::Super;
+
+    inline void erase_and_move_next()
+    {
+        Super::cursor().erase_and_move_prev();
+    }
+};
+
+template <typename Container, bool kConst>
+struct SparseHashSetCursor : protected SparseArrayCursor<Container, kConst> {
+    using Super         = SparseArrayCursor<Container, kConst>;
+    using ContainerType = std::conditional_t<kConst, const Container, Container>;
+    using SizeType      = typename ContainerType::SizeType;
+    using DataType      = std::conditional_t<kConst, const typename ContainerType::SetDataType, typename ContainerType::SetDataType>;
+    using HashType      = ContainerType::HashType;
 
     // ctor & copy & move & assign & move assign
-    inline SparseHashSetCursor(const SparseArrayCursorType& sparse_array_cursor)
-        : _cursor(sparse_array_cursor)
+    inline SparseHashSetCursor(ContainerType* container, SizeType index)
+        : Super(container, index)
+    {
+    }
+    inline SparseHashSetCursor(ContainerType* container)
+        : Super(container)
     {
     }
     inline SparseHashSetCursor(const SparseHashSetCursor& rhs)            = default;
@@ -47,94 +50,61 @@ struct SparseHashSetCursor {
     inline SparseHashSetCursor& operator=(const SparseHashSetCursor& rhs) = default;
     inline SparseHashSetCursor& operator=(SparseHashSetCursor&& rhs)      = default;
 
-    // no factory, just wrapper of SparseArrayCursor
+    // factory
+    inline static SparseHashSetCursor Begin(ContainerType* array)
+    {
+        SparseHashSetCursor cursor{ array };
+        cursor.reset_to_begin();
+        return cursor;
+    }
+    inline static SparseHashSetCursor BeginOverflow(ContainerType* array)
+    {
+        SparseHashSetCursor cursor{ array };
+        cursor._reset_to_begin_overflow();
+        return cursor;
+    }
+    inline static SparseHashSetCursor End(ContainerType* array)
+    {
+        SparseHashSetCursor cursor{ array };
+        cursor.reset_to_end();
+        return cursor;
+    }
+    inline static SparseHashSetCursor EndOverflow(ContainerType* array)
+    {
+        SparseHashSetCursor cursor{ array };
+        cursor._reset_to_end_overflow();
+        return cursor;
+    }
 
     // getter
-    inline DataType& ref() const { return _cursor.ref()._sparse_hash_set_data; }
-    inline DataType* ptr() const { return &_cursor.ref()._sparse_hash_set_data; }
-    inline THash     hash() const { return _cursor.ref()._sparse_hash_set_hash; }
-    inline SizeType  index() const { return _cursor.index(); }
+    inline DataType& ref() const { return Super::ref()._sparse_hash_set_data; }
+    inline DataType* ptr() const { return &Super::ref()._sparse_hash_set_data; }
+    inline HashType  hash() const { return Super::ref()._sparse_hash_set_hash; }
+    inline SizeType  index() const { return Super::index(); }
 
     // move & validator
-    inline void move_next() { _cursor.move_next(); }
-    inline void move_prev() { _cursor.move_prev(); }
-    inline void reset_to_begin() { _cursor.reset_to_begin(); }
-    inline void reset_to_end() { _cursor.reset_to_end(); }
+    using Super::move_next;
+    using Super::move_prev;
+    using Super::reset_to_begin;
+    using Super::reset_to_end;
+
+    // erase
+    using Super::erase_and_move_next;
+    using Super::erase_and_move_prev;
 
     // reach & validate
-    inline bool reach_begin() const { return _cursor.reach_begin(); }
-    inline bool reach_end() const { return _cursor.reach_end(); }
-    inline bool is_valid() const { return _cursor.is_valid(); }
+    using Super::reach_begin;
+    using Super::reach_end;
+    using Super::is_valid;
 
     // compare
-    inline bool operator==(const SparseHashSetCursor& rhs) const { return _cursor == rhs._cursor; }
-    inline bool operator!=(const SparseHashSetCursor& rhs) const { return !(*this == rhs); }
+    inline bool operator==(const SparseHashSetCursor& rhs) const { return Super::operator==(rhs); }
+    inline bool operator!=(const SparseHashSetCursor& rhs) const { return Super::operator!=(rhs); }
 
-private:
-    SparseArrayCursorType _cursor;
-};
-
-template <typename T, typename TBitBlock, typename TS, typename THash, bool kConst>
-struct SparseHashSetIter {
-    using SparseArrayCursorType = SparseArrayCursor<SparseHashSetData<T, TS, THash>, TBitBlock, TS, kConst>;
-    using CursorType            = SparseHashSetCursor<T, TBitBlock, TS, THash, kConst>;
-    using DataType              = std::conditional_t<kConst, const T, T>;
-    using SizeType              = TS;
-
-    // ctor & copy & move & assign & move assign
-    inline SparseHashSetIter(SparseArrayCursorType sparse_array_cursor)
-        : _cursor(sparse_array_cursor)
-    {
-    }
-    inline SparseHashSetIter(const SparseHashSetIter& rhs)            = default;
-    inline SparseHashSetIter(SparseHashSetIter&& rhs)                 = default;
-    inline SparseHashSetIter& operator=(const SparseHashSetIter& rhs) = default;
-    inline SparseHashSetIter& operator=(SparseHashSetIter&& rhs)      = default;
-
-    // getter
-    inline DataType& ref() const { return _cursor.ref(); }
-    inline DataType* ptr() const { return _cursor.ptr(); }
-    inline THash     hash() const { return _cursor.hash(); }
-    inline SizeType  index() const { return _cursor.index(); }
-
-    // move & validator
-    inline void reset() { _cursor.reset_to_begin(); }
-    inline void move_next() { _cursor.move_next(); }
-    inline bool has_next() const { return !_cursor.reach_end(); }
-
-private:
-    CursorType _cursor;
-};
-
-template <typename T, typename TBitBlock, typename TS, typename THash, bool kConst>
-struct SparseHashSetIterInv {
-    using SparseArrayCursorType = SparseArrayCursor<SparseHashSetData<T, TS, THash>, TBitBlock, TS, kConst>;
-    using CursorType            = SparseHashSetCursor<T, TBitBlock, TS, THash, kConst>;
-    using DataType              = std::conditional_t<kConst, const T, T>;
-    using SizeType              = TS;
-
-    // ctor & copy & move & assign & move assign
-    inline SparseHashSetIterInv(SparseArrayCursorType sparse_array_cursor)
-        : _cursor(sparse_array_cursor)
-    {
-    }
-    inline SparseHashSetIterInv(const SparseHashSetIterInv& rhs)            = default;
-    inline SparseHashSetIterInv(SparseHashSetIterInv&& rhs)                 = default;
-    inline SparseHashSetIterInv& operator=(const SparseHashSetIterInv& rhs) = default;
-    inline SparseHashSetIterInv& operator=(SparseHashSetIterInv&& rhs)      = default;
-
-    // getter
-    inline DataType& ref() const { return _cursor.ref(); }
-    inline DataType* ptr() const { return _cursor.ptr(); }
-    inline THash     hash() const { return _cursor.hash(); }
-    inline SizeType  index() const { return _cursor.index(); }
-
-    // move & validator
-    inline void reset() { _cursor.reset_to_end(); }
-    inline void move_next() { _cursor.move_prev(); }
-    inline bool has_next() const { return !_cursor.reach_begin(); }
-
-private:
-    CursorType _cursor;
+    // convert
+    inline SparseHashSetIter<ContainerType, kConst>    as_iter() const { return { *this }; }
+    inline SparseHashSetIterInv<ContainerType, kConst> as_iter_inv() const { return { *this }; }
+    inline CursorRange<SparseHashSetCursor, false>     as_range() const { return { *this }; }
+    inline CursorRange<SparseHashSetCursor, true>      as_range_inv() const { return { *this }; }
 };
 } // namespace skr::container

@@ -64,7 +64,7 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
     {
         if (swapchains.size())
         {
-            const auto pInfo = swapchains.begin()->value->back_buffers[0]->info;
+            const auto pInfo = swapchains.cursor_begin().ref().value->back_buffers[0]->info;
             return pInfo->format;
         }
         return CGPU_FORMAT_B8G8R8A8_UNORM;

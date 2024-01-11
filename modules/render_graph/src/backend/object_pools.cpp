@@ -1,4 +1,4 @@
-#include "SkrBase/misc/debug.h" 
+#include "SkrBase/misc/debug.h"
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 
@@ -17,13 +17,13 @@ namespace render_graph
 size_t MergedBindTablePool::Key::hasher::operator()(const MergedBindTablePool::Key& val) const
 {
     const auto size = val.tables.size() * sizeof(CGPUXBindTableId);
-    return skr_hash(val.tables.data(), size, CGPU_NAME_HASH_SEED);   
+    return skr_hash(val.tables.data(), size, CGPU_NAME_HASH_SEED);
 }
 
 size_t MergedBindTablePool::Key::hasher::operator()(const MergedBindTablePool::Key::View& val) const
 {
     const auto size = val.count * sizeof(CGPUXBindTableId);
-    return skr_hash(val.tables, size, CGPU_NAME_HASH_SEED);   
+    return skr_hash(val.tables, size, CGPU_NAME_HASH_SEED);
 }
 
 size_t MergedBindTablePool::Key::equal_to::operator()(const MergedBindTablePool::Key& lhs, const MergedBindTablePool::Key& rhs) const
@@ -50,14 +50,14 @@ size_t MergedBindTablePool::Key::equal_to::operator()(const MergedBindTablePool:
 
 CGPUXMergedBindTableId MergedBindTablePool::pop(const CGPUXBindTableId* tables, uint32_t count)
 {
-    const auto view = Key::View{tables, count};
-    auto found = pool.find(view);
+    const auto view  = Key::View{ tables, count };
+    auto       found = pool.find(view);
     if (found == pool.end()) // allocate and do merge
     {
         CGPUXMergedBindTableDescriptor desc = {};
-        desc.root_signature = root_sig;
-        GuradedMergedBindTable guarded = {};
-        guarded.table =  cgpux_create_megred_bind_table(root_sig->device, &desc);
+        desc.root_signature                 = root_sig;
+        GuradedMergedBindTable guarded      = {};
+        guarded.table                       = cgpux_create_megred_bind_table(root_sig->device, &desc);
         cgpux_merged_bind_table_merge(guarded.table, tables, count); // only merge once otherwise reset has triggered
         guarded.update_gurad = true;
         pool.emplace(Key(tables, count), guarded);
@@ -106,10 +106,10 @@ void BindTablePool::expand(const char8_t* keys, const CGPUXName* names, uint32_t
     for (size_t i = 0; i < set_count; ++i)
     {
         CGPUXBindTableDescriptor table_desc = {};
-        table_desc.root_signature = root_sig;
-        table_desc.names = names;
-        table_desc.names_count = names_count;
-        auto new_table = cgpux_create_bind_table(root_sig->device, &table_desc);
+        table_desc.root_signature           = root_sig;
+        table_desc.names                    = names;
+        table_desc.names_count              = names_count;
+        auto new_table                      = cgpux_create_bind_table(root_sig->device, &table_desc);
         block.bind_tables.add(new_table);
     }
 }
@@ -119,7 +119,7 @@ CGPUXBindTableId BindTablePool::pop(const char8_t* keys, const CGPUXName* names,
     auto existed_block = pool.find(keys);
     if (existed_block == pool.end())
     {
-        pool.insert(std::make_pair( skr::String(keys), BindTablesBlock{} ));
+        pool.insert(std::make_pair(skr::String(keys), BindTablesBlock{}));
     }
     auto& block = pool[keys];
     if (block.cursor >= block.bind_tables.size())
@@ -129,8 +129,8 @@ CGPUXBindTableId BindTablePool::pop(const char8_t* keys, const CGPUXName* names,
     return block.bind_tables[block.cursor++];
 }
 
-void BindTablePool::reset() 
-{ 
+void BindTablePool::reset()
+{
     for (auto& [name, block] : pool)
     {
         block.cursor = 0;
@@ -165,7 +165,6 @@ TexturePool::Key::Key(CGPUDeviceId device, const CGPUTextureDescriptor& desc)
     , descriptors(desc.descriptors)
     , is_restrict_dedicated(desc.is_restrict_dedicated)
 {
-    
 }
 
 TexturePool::Key::operator size_t() const
@@ -202,7 +201,7 @@ std::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(const CGPUTex
         textures[key].emplace_back(new_tex, desc.start_state, mark);
     }
     textures[key].front().mark = mark;
-    allocated = { textures[key].front().texture, textures[key].front().state };
+    allocated                  = { textures[key].front().texture, textures[key].front().state };
     textures[key].pop_front();
     return allocated;
 }
@@ -235,18 +234,21 @@ TextureViewPool::Key::Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& 
     , unique_id(desc.texture->info->unique_id)
 
 {
-
 }
 
 uint32_t TextureViewPool::erase(CGPUTextureId texture)
 {
     auto prev_size = (uint32_t)views.size();
-    for (auto it = views.begin(); it != views.end(); ++it)
+    for (auto iter = views.iter(); iter.has_next();)
     {
-        if (it->key.texture == texture)
+        if (iter.key().texture == texture)
         {
-            cgpu_free_texture_view(it->value.texture_view);
-            views.remove(it->key);
+            cgpu_free_texture_view(iter.value().texture_view);
+            iter.erase_and_move_next();
+        }
+        else
+        {
+            iter.move_next();
         }
     }
     return prev_size - (uint32_t)views.size();
@@ -286,7 +288,7 @@ CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& des
     {
         // SKR_LOG_TRACE(u8"Creating texture view for texture %p (tex %p)", desc.texture, key.texture);
         CGPUTextureViewId new_view = cgpu_create_texture_view(device, &desc);
-        AllocationMark mark = {frame_index, 0};
+        AllocationMark    mark     = { frame_index, 0 };
         views.add(key, PooledTextureView(new_view, mark));
         return new_view;
     }
@@ -333,7 +335,7 @@ std::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBuffe
     std::pair<CGPUBufferId, ECGPUResourceState> allocated = {
         nullptr, CGPU_RESOURCE_STATE_UNDEFINED
     };
-    auto key = make_zeroed<BufferPool::Key>(device, desc);
+    auto    key         = make_zeroed<BufferPool::Key>(device, desc);
     int32_t found_index = -1;
     for (uint32_t i = 0; i < buffers[key].size(); ++i)
     {
@@ -344,16 +346,16 @@ std::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBuffe
             break;
         }
     }
-    if ( found_index > 0 )
+    if (found_index > 0)
     {
         PooledBuffer found = buffers[key][found_index];
         buffers[key].erase(buffers[key].begin() + found_index);
         buffers[key].emplace_front(found.buffer, found.state, mark);
     }
-    if ( found_index < 0 )
+    if (found_index < 0)
     {
         auto new_buffer = cgpu_create_buffer(device, &desc);
-        buffers[key].emplace_front(new_buffer, desc.start_state , mark);
+        buffers[key].emplace_front(new_buffer, desc.start_state, mark);
     }
     allocated = { buffers[key].front().buffer, buffers[key].front().state };
     buffers[key].pop_front();
@@ -365,11 +367,11 @@ void BufferPool::deallocate(const CGPUBufferDescriptor& desc, CGPUBufferId buffe
     auto key = make_zeroed<BufferPool::Key>(device, desc);
     for (auto&& iter : buffers[key])
     {
-        if (iter.buffer == buffer) 
+        if (iter.buffer == buffer)
             return;
     }
     buffers[key].emplace_back(buffer, final_state, mark);
 }
 
-}
-}
+} // namespace render_graph
+} // namespace skr

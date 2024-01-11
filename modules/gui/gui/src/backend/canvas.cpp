@@ -532,7 +532,7 @@ void ICanvas::path_end(const Pen& pen, const Brush& brush) SKR_NOEXCEPT
                                        surface_brush._uv_rect.height(),
                                        surface_brush._rotation,
                                        surface_brush._surface,
-                                       { surface_brush._color.r, surface_brush._color.g, surface_brush._color.b, surface_brush._color.a }));
+                                       { { { surface_brush._color.r, surface_brush._color.g, surface_brush._color.b, surface_brush._color.a } } }));
                 }
                 else if (brush.type() == EBrushType::SurfaceNine)
                 {
@@ -545,7 +545,7 @@ void ICanvas::path_end(const Pen& pen, const Brush& brush) SKR_NOEXCEPT
                                        surface_nine_brush._uv_rect.height(),
                                        surface_nine_brush._rotation,
                                        surface_nine_brush._surface,
-                                       { surface_nine_brush._color.r, surface_nine_brush._color.g, surface_nine_brush._color.b, surface_nine_brush._color.a }));
+                                       { { { surface_nine_brush._color.r, surface_nine_brush._color.g, surface_nine_brush._color.b, surface_nine_brush._color.a } } }));
                 }
                 else if (brush.type() == EBrushType::Color)
                 {

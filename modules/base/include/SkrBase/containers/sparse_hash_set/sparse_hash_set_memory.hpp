@@ -135,8 +135,8 @@ struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, t
     {
         if (Super::sparse_size() - Super::hole_size())
         {
-            SparseArrayIt<DataType, BitBlockType, SizeType, false> iter(Super::data(), Super::sparse_size(), Super::bit_array());
-            sparse_hash_set_build_bucket(_bucket, _bucket_mask, iter);
+            auto cursor = TrueBitCursor<BitBlockType, SizeType, false>::Begin(Super::bit_array(), Super::sparse_size());
+            sparse_hash_set_build_bucket(Super::data(), _bucket, _bucket_mask, cursor);
         }
     }
     inline void clean_bucket() noexcept
@@ -246,8 +246,8 @@ struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetDat
     {
         if (Super::sparse_size() - Super::hole_size())
         {
-            SparseArrayIt<DataType, BitBlockType, SizeType, false> iter(Super::data(), Super::sparse_size(), Super::bit_array());
-            sparse_hash_set_build_bucket(bucket(), kBucketMask, iter);
+            auto cursor = TrueBitCursor<BitBlockType, SizeType, false>::Begin(Super::bit_array(), Super::sparse_size());
+            sparse_hash_set_build_bucket(Super::data(), bucket(), kBucketMask, cursor);
         }
     }
     inline void clean_bucket() noexcept
@@ -453,8 +453,8 @@ struct InlineSparseHashSetMemory : public InlineSparseArrayMemory<SparseHashSetD
     {
         if (Super::sparse_size() - Super::hole_size())
         {
-            SparseArrayIt<DataType, BitBlockType, SizeType, false> iter(Super::data(), Super::sparse_size(), Super::bit_array());
-            sparse_hash_set_build_bucket(bucket(), _bucket_mask, iter);
+            auto cursor = TrueBitCursor<BitBlockType, SizeType, false>::Begin(Super::bit_array(), Super::sparse_size());
+            sparse_hash_set_build_bucket(Super::data(), bucket(), _bucket_mask, cursor);
         }
     }
     inline void clean_bucket() noexcept

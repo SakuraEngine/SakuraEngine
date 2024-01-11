@@ -32,14 +32,17 @@ inline void sparse_hash_set_clean_bucket(TS* bucket, TS bucket_size) noexcept
 {
     std::memset(bucket, 0xFF, sizeof(TS) * bucket_size);
 }
-template <typename TS, typename Iter>
-inline void sparse_hash_set_build_bucket(TS* bucket, TS bucket_mask, Iter&& it) noexcept
+template <typename TStorage, typename TS, typename BitCursor>
+inline void sparse_hash_set_build_bucket(TStorage* data, TS* bucket, TS bucket_mask, BitCursor&& cursor) noexcept
 {
-    for (; it; ++it)
+    while (!cursor.reach_end())
     {
-        TS& index_ref             = bucket[it->_sparse_hash_set_hash & bucket_mask];
-        it->_sparse_hash_set_next = index_ref;
-        index_ref                 = it.index();
+        TStorage& data_ref                                = data[cursor.index()];
+        TS&       index_ref                               = bucket[data_ref._sparse_array_data._sparse_hash_set_hash & bucket_mask];
+        data_ref._sparse_array_data._sparse_hash_set_next = index_ref;
+        index_ref                                         = cursor.index();
+
+        cursor.move_next();
     }
 }
 } // namespace skr::container

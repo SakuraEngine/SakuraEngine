@@ -119,6 +119,12 @@ struct TrueBitCursor {
         SKR_ASSERT((_bit_index >= 0 && _bit_index <= _bit_size) || _bit_index == npos);
         SKR_ASSERT(!is_valid() || ref() == true);
     }
+    inline TrueBitCursor(DataType* data, SizeType size)
+        : _data(data)
+        , _bit_size(size)
+        , _bit_index(npos)
+    {
+    }
     inline TrueBitCursor(const TrueBitCursor& rhs)            = default;
     inline TrueBitCursor(TrueBitCursor&& rhs)                 = default;
     inline TrueBitCursor& operator=(const TrueBitCursor& rhs) = default;
@@ -127,30 +133,27 @@ struct TrueBitCursor {
     // factory
     inline static TrueBitCursor Begin(DataType* data, SizeType size)
     {
-        if (data && size > 0)
-        {
-            SizeType index = Algo::find(data, (SizeType)0, size, true);
-            index          = (index == npos) ? size : index;
-            return TrueBitCursor{ data, size, index };
-        }
-        return TrueBitCursor{ data, size, 0 };
+        TrueBitCursor cursor{ data, size };
+        cursor.reset_to_begin();
+        return cursor;
     }
     inline static TrueBitCursor BeginOverflow(DataType* data, SizeType size)
     {
-        return TrueBitCursor{ data, size, npos };
+        TrueBitCursor cursor{ data, size };
+        cursor._reset_to_begin_overflow();
+        return cursor;
     }
     inline static TrueBitCursor End(DataType* data, SizeType size)
     {
-        if (data && size > 0)
-        {
-            SizeType index = Algo::find_last(data, (SizeType)0, size, true);
-            return TrueBitCursor{ data, size, index };
-        }
-        return TrueBitCursor{ data, size, size - 1 };
+        TrueBitCursor cursor{ data, size };
+        cursor.reset_to_end();
+        return cursor;
     }
     inline static TrueBitCursor EndOverflow(DataType* data, SizeType size)
     {
-        return TrueBitCursor{ data, size, size };
+        TrueBitCursor cursor{ data, size };
+        cursor._reset_to_end_overflow();
+        return cursor;
     }
 
     // getter
@@ -178,13 +181,13 @@ struct TrueBitCursor {
     inline void move_prev()
     {
         SKR_ASSERT(is_valid());
-        _bit_index = Algo::find_last(_data, 0, _bit_index, true);
+        _bit_index = Algo::find_last(_data, (SizeType)0, _bit_index, true);
     }
     inline void reset_to_begin()
     {
         if (_data && _bit_size > 0)
         {
-            SizeType index = Algo::find(_data, 0, _bit_size, true);
+            SizeType index = Algo::find(_data, (SizeType)0, _bit_size, true);
             _bit_index     = (index == npos) ? _bit_size : index;
         }
         _bit_index = 0;
@@ -193,7 +196,7 @@ struct TrueBitCursor {
     {
         if (_data && _bit_size > 0)
         {
-            _bit_index = Algo::find_last(_data, 0, _bit_size, true);
+            _bit_index = Algo::find_last(_data, (SizeType)0, _bit_size, true);
         }
         _bit_index = npos;
     }
@@ -206,6 +209,10 @@ struct TrueBitCursor {
     // compare
     bool operator==(const TrueBitCursor& rhs) const { return _data == rhs._data && _bit_index == rhs._bit_index; }
     bool operator!=(const TrueBitCursor& rhs) const { return !(*this == rhs); }
+
+protected:
+    inline void _reset_to_end_overflow() { _bit_index = _bit_size; }
+    inline void _reset_to_begin_overflow() { _bit_index = npos; }
 
 private:
     DataType* _data;

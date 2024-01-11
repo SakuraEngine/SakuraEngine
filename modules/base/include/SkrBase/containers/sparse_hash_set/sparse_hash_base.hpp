@@ -28,11 +28,9 @@ struct SparseHashBase : protected SparseArray<Memory> {
     using DataArr                         = SparseArray<Memory>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
-    // data ref & iterator
+    // data ref
     using DataRef  = SparseHashSetDataRef<SetDataType, SizeType, HashType, false>;
     using CDataRef = SparseHashSetDataRef<SetDataType, SizeType, HashType, true>;
-    using StlIt    = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, false>;
-    using CStlIt   = SparseHashSetIt<SetDataType, BitBlockType, SizeType, HashType, true>;
 
     // ctor & dtor
     SparseHashBase(AllocatorCtorParam param = {});
@@ -700,12 +698,12 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::find_if(Pred&& pred)
 {
-    if (DataRef ref = Super::find_if(std::forward<Pred>(pred)))
+    if (auto ref = Super::find_if([&pred](const SetStorageType& data) { return pred(data._sparse_hash_set_data); }))
     {
         return {
             &ref.ref()._sparse_hash_set_data,
             ref.index(),
-            ref.hash(),
+            ref.ref()._sparse_hash_set_hash,
             false,
         };
     }
@@ -718,12 +716,12 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::find_last_if(Pred&& pred)
 {
-    if (DataRef ref = Super::find_last_if(std::forward<Pred>(pred)))
+    if (auto ref = Super::find_last_if([&pred](const SetStorageType& data) { return pred(data._sparse_hash_set_data); }))
     {
         return {
             &ref.ref()._sparse_hash_set_data,
             ref.index(),
-            ref.hash(),
+            ref.ref()._sparse_hash_set_hash,
             false,
         };
     }

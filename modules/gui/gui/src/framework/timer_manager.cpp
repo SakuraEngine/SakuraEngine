@@ -6,9 +6,9 @@ namespace skr::gui
 void TimerManager::update(float time_stamp)
 {
     _cur_time_stamp = time_stamp;
-    for (auto it = _timers.begin(); it; ++it)
+    for (auto iter = _timers.iter(); iter.has_next();)
     {
-        auto&       data              = *it;
+        auto&       data              = iter.ref();
         auto&       timer             = data.timer;
         const float local_time_stamp  = _cur_time_stamp - data.initial_time_stamp;
         const float repeat_time_stamp = local_time_stamp - timer.first_signal_scape;
@@ -54,7 +54,11 @@ void TimerManager::update(float time_stamp)
         // remove
         if (data.signal_count >= timer.repeat_count || need_remove_timer)
         {
-            _timers.remove_at(it.index());
+            iter.erase_and_move_next();
+        }
+        else
+        {
+            iter.move_next();
         }
     }
 }
