@@ -83,10 +83,12 @@ inline void destruct_sparse_array_data(SparseArrayData<T, TS>* data, const TBitB
 {
     if constexpr (memory::MemoryTraits<T>::use_dtor)
     {
-        TrueBitIt<TBitBlock, TS, true> it(bit_array, size);
-        for (; it; ++it)
+        auto cursor = TrueBitCursor<TBitBlock, TS, true>::Begin(bit_array, size);
+
+        while (!cursor.reach_end())
         {
-            memory::destruct<T>(&data[it.index()]._sparse_array_data);
+            memory::destruct<T>(&data[cursor.index()]._sparse_array_data);
+            cursor.move_next();
         }
     }
 }
