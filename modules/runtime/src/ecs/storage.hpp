@@ -127,6 +127,7 @@ struct sugoi_storage_t {
     using batchmap_t = skr::FlatHashMap<sugoi_chunk_t*, sugoi_chunk_view_t>;
     void destroy(const sugoi_chunk_view_t& view);
     void destroy(const sugoi_query_t* view);
+    void destroy(const sugoi_query_t* view, sugoi_destroy_callback_t callback, void* u);
     void destroy(const sugoi_meta_filter_t& meta);
     void free(const sugoi_chunk_view_t& view);
 

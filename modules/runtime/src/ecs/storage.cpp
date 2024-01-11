@@ -841,9 +841,22 @@ void sugoiS_destroy(sugoi_storage_t* storage, const sugoi_chunk_view_t* view)
     storage->destroy(*view);
 }
 
-void sugoiS_destroy_in_query(sugoi_storage_t* storage, const sugoi_query_t* query)
+void sugoiS_destroy_entities(sugoi_storage_t *storage, const sugoi_entity_t *ents, EIndex n)
 {
-    storage->destroy(query);
+    auto destroy_callback = [storage](sugoi_chunk_view_t* view) {
+        storage->destroy(*view);
+    };
+    storage->batch(ents, 1, SUGOI_LAMBDA(destroy_callback));
+}
+
+void sugoiS_destroy_in_query(const sugoi_query_t* query)
+{
+    query->storage->destroy(query);
+}
+
+void sugoiS_destroy_in_query_if(const sugoi_query_t *query, sugoi_destroy_callback_t callback, void *u)
+{
+    query->storage->destroy(query, callback, u);
 }
 
 void sugoiS_destroy_all(sugoi_storage_t* storage, const sugoi_meta_filter_t* meta)

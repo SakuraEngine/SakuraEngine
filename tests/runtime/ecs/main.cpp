@@ -169,6 +169,42 @@ TEST_CASE_METHOD(ECSTest, "destroy_entity")
     }
 }
 
+TEST_CASE_METHOD(ECSTest, "destroy_by_predicate")
+{
+    auto query = sugoiQ_from_literal(storage, "[in]test");
+    sugoi_chunk_view_t view;
+    sugoi_entity_type_t entityType;
+    entityType.type = { &type_test, 1 };
+    entityType.meta = { nullptr, 0 };
+    int counter = 0;
+    auto callback = [&](sugoi_chunk_view_t* inView) 
+    { 
+        auto comps = (TestComp*)sugoiV_get_owned_ro(inView, type_test);
+        for (EIndex i = 0; i < inView->count; ++i)
+            comps[i] = counter++;
+        view = *inView; 
+    };
+    sugoiS_allocate_type(storage, &entityType, 10, SUGOI_LAMBDA(callback));
+    auto e2 = sugoiV_get_entities(&view)[1];
+    auto e3 = sugoiV_get_entities(&view)[4];
+    auto callback2 = [&](sugoi_chunk_view_t* inView, sugoi_view_callback_t destroy, void* u) 
+    { 
+        auto comps = (TestComp*)sugoiV_get_owned_ro(inView, type_test);
+        for(int i = 0; i < inView->count; ++i)
+        {
+            if(comps[i] % 2 == 0)
+            {
+                sugoi_chunk_view_t view2{ inView->chunk, inView->start + i, 1 };
+                destroy(u, &view2);
+            }
+        }
+    };
+    sugoiS_destroy_in_query_if(query, SUGOI_LAMBDA(callback2));
+    EXPECT_TRUE(sugoiS_exist(storage, e1));
+    EXPECT_TRUE(sugoiS_exist(storage, e2));
+    EXPECT_FALSE(sugoiS_exist(storage, e3));
+}
+
 TEST_CASE_METHOD(ECSTest, "add_component")
 {
     sugoi_chunk_view_t view;

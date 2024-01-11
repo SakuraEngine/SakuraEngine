@@ -224,6 +224,7 @@ typedef void (*sugoi_group_callback_t)(void* u, sugoi_group_t* view);
 typedef void (*sugoi_entity_callback_t)(void* u, sugoi_entity_t e);
 typedef void (*sugoi_cast_callback_t)(void* u, sugoi_chunk_view_t* new_view, sugoi_chunk_view_t* old_view);
 typedef void (*sugoi_type_callback_t)(void* u, sugoi_type_index_t t);
+typedef void (*sugoi_destroy_callback_t)(void* u, sugoi_chunk_view_t* view, sugoi_view_callback_t callback, void* u2);
 
 /**
  * @brief register a new component
@@ -346,7 +347,15 @@ SKR_RUNTIME_API void sugoiS_instantiate_entities(sugoi_storage_t* storage, sugoi
  * @param storage
  * @param view
  */
+[[deprecated("use other variants of sugoiS_destroy instead")]]
 SKR_RUNTIME_API void sugoiS_destroy(sugoi_storage_t* storage, const sugoi_chunk_view_t* view);
+/**
+ * @brief destroy entities
+ * destory given entities
+ * @param storage
+ * @param view
+ */
+SKR_RUNTIME_API void sugoiS_destroy_entities(sugoi_storage_t* storage, const sugoi_entity_t* ents, EIndex n);
 /**
  * @brief destory entities
  * destory all entities matching given query
@@ -354,7 +363,15 @@ SKR_RUNTIME_API void sugoiS_destroy(sugoi_storage_t* storage, const sugoi_chunk_
  * @param ents
  * @param count
  */
-SKR_RUNTIME_API void sugoiS_destroy_in_query(sugoi_storage_t* storage, const sugoi_query_t* query);
+SKR_RUNTIME_API void sugoiS_destroy_in_query(const sugoi_query_t* query);
+/**
+ * @brief destory entities
+ * destory all entities matching given query and callback
+ * @param storage
+ * @param ents
+ * @param count
+ */
+SKR_RUNTIME_API void sugoiS_destroy_in_query_if(const sugoi_query_t* query, sugoi_destroy_callback_t callback, void* u);
 /**
  * @brief destory entities
  * destory all filtered entity

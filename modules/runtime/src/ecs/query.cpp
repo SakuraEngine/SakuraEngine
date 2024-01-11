@@ -130,7 +130,7 @@ void sugoi_storage_t::build_query_cache(sugoi_query_t* query)
             if (at.data[i] == kDeadComponent)
                 query->includeDead = true;
             else if (at.data[i] == kDisableComponent)
-                query->includeDead = true;
+                query->includeDisabled = true;
         }
     }
     for (auto i : groups)
@@ -614,6 +614,43 @@ void sugoi_storage_t::destroy(const sugoi_query_t* q)
     
     auto filterChunk = [&](sugoi_group_t* group) {
         group->clear();
+    };
+    query_groups(q, SUGOI_LAMBDA(filterChunk));
+}
+
+void sugoi_storage_t::destroy(const sugoi_query_t* q, sugoi_destroy_callback_t callback, void* u)
+{
+    bool mainThread = true;
+    if(scheduler)
+    {
+        mainThread = scheduler->is_main_thread(this);
+    }
+    if(mainThread)
+    {
+        build_queries();
+    }
+    else
+        SKR_ASSERT(queriesBuilt);
+    
+    skr::InlineVector<sugoi_chunk_view_t, 16> viewsToDestroy;
+    auto callback3 = [&](sugoi_chunk_view_t* chunk) {
+        viewsToDestroy.push_back(*chunk);
+    };
+    auto filterChunk = [&](sugoi_group_t* group) {
+        auto callback2 = [&](sugoi_chunk_view_t* chunk) {
+            viewsToDestroy.clear();
+            callback(u, chunk, SUGOI_LAMBDA(callback3));
+            //perform destroy
+            if(viewsToDestroy.size() == 0)
+                return;
+
+            //destroy in reverse order
+            for(int i = viewsToDestroy.size() - 1; i >= 0; --i)
+            {
+                destroy(viewsToDestroy[i]);
+            }
+        };
+        query(group, q->filter, q->meta, SUGOI_LAMBDA(callback2));
     };
     query_groups(q, SUGOI_LAMBDA(filterChunk));
 }
