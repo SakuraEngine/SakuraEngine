@@ -22,12 +22,12 @@ struct Array : protected Memory {
     using CDataRef = ArrayDataRef<DataType, SizeType, true>;
 
     // cursor & iterator
-    using Cursor   = ArrayCursor<DataType, SizeType, false>;
-    using CCursor  = ArrayCursor<DataType, SizeType, true>;
-    using Iter     = ArrayIter<DataType, SizeType, false>;
-    using CIter    = ArrayIter<DataType, SizeType, true>;
-    using IterInv  = ArrayIterInv<DataType, SizeType, false>;
-    using CIterInv = ArrayIterInv<DataType, SizeType, true>;
+    using Cursor   = ArrayCursor<Array, false>;
+    using CCursor  = ArrayCursor<Array, true>;
+    using Iter     = ArrayIter<Array, false>;
+    using CIter    = ArrayIter<Array, true>;
+    using IterInv  = ArrayIterInv<Array, false>;
+    using CIterInv = ArrayIterInv<Array, true>;
 
     // stl iterator
     using StlIt  = DataType*;
@@ -252,26 +252,14 @@ struct Array : protected Memory {
     CStlIt end() const;
 
     // erase
-    StlIt    erase(const StlIt& it);
-    CStlIt   erase(const CStlIt& it);
-    Iter     erase(const Iter& it);
-    CIter    erase(const CIter& it);
-    IterInv  erase(const IterInv& it);
-    CIterInv erase(const CIterInv& it);
-    void     erase(const Cursor& cursor);
-    void     erase(const CCursor& cursor);
-    void     erase(const DataRef& ref);
-    void     erase(const CDataRef& ref);
-    StlIt    erase_swap(const StlIt& it);
-    CStlIt   erase_swap(const CStlIt& it);
-    Iter     erase_swap(const Iter& it);
-    CIter    erase_swap(const CIter& it);
-    IterInv  erase_swap(const IterInv& it);
-    CIterInv erase_swap(const CIterInv& it);
-    void     erase_swap(const Cursor& cursor);
-    void     erase_swap(const CCursor& cursor);
-    void     erase_swap(const DataRef& ref);
-    void     erase_swap(const CDataRef& ref);
+    StlIt  erase(const StlIt& it);
+    CStlIt erase(const CStlIt& it);
+    void   erase(const DataRef& ref);
+    void   erase(const CDataRef& ref);
+    StlIt  erase_swap(const StlIt& it);
+    CStlIt erase_swap(const CStlIt& it);
+    void   erase_swap(const DataRef& ref);
+    void   erase_swap(const CDataRef& ref);
 
     // syntax
     const Array& readonly() const;
@@ -1262,42 +1250,42 @@ SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::stack_bottom()
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::Cursor Array<Memory>::cursor_begin()
 {
-    return Cursor::Begin(data(), size());
+    return Cursor::Begin(this);
 }
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::CCursor Array<Memory>::cursor_begin() const
 {
-    return CCursor::Begin(data(), size());
+    return CCursor::Begin(this);
 }
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::Cursor Array<Memory>::cursor_end()
 {
-    return Cursor::End(data(), size());
+    return Cursor::End(this);
 }
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::CCursor Array<Memory>::cursor_end() const
 {
-    return CCursor::End(data(), size());
+    return CCursor::End(this);
 }
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::Iter Array<Memory>::iter()
 {
-    return { Cursor::Begin(data(), size()) };
+    return { cursor_begin() };
 }
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::CIter Array<Memory>::iter() const
 {
-    return { CCursor::Begin(data(), size()) };
+    return { cursor_begin() };
 }
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::IterInv Array<Memory>::iter_inv()
 {
-    return { Cursor::End(data(), size()) };
+    return { cursor_end() };
 }
 template <typename Memory>
 SKR_INLINE typename Array<Memory>::CIterInv Array<Memory>::iter_inv() const
 {
-    return { CCursor::End(data(), size()) };
+    return { cursor_end() };
 }
 
 // support foreach
@@ -1324,42 +1312,6 @@ SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::erase(const CStlIt& it)
     return it;
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::Iter Array<Memory>::erase(const Iter& it)
-{
-    remove_at(it.index());
-    return it;
-}
-template <typename Memory>
-SKR_INLINE typename Array<Memory>::CIter Array<Memory>::erase(const CIter& it)
-{
-    remove_at(it.index());
-    return it;
-}
-template <typename Memory>
-SKR_INLINE typename Array<Memory>::IterInv Array<Memory>::erase(const IterInv& it)
-{
-    remove_at(it.index());
-    it.move_next();
-    return it;
-}
-template <typename Memory>
-SKR_INLINE typename Array<Memory>::CIterInv Array<Memory>::erase(const CIterInv& it)
-{
-    remove_at(it.index());
-    it.move_next();
-    return it;
-}
-template <typename Memory>
-SKR_INLINE void Array<Memory>::erase(const Cursor& cursor)
-{
-    remove_at(cursor.index());
-}
-template <typename Memory>
-SKR_INLINE void Array<Memory>::erase(const CCursor& cursor)
-{
-    remove_at(cursor.index());
-}
-template <typename Memory>
 SKR_INLINE void Array<Memory>::erase(const DataRef& ref)
 {
     remove_at(ref.index());
@@ -1380,42 +1332,6 @@ SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::erase_swap(const CStlIt
 {
     remove_at_swap(it - begin());
     return it;
-}
-template <typename Memory>
-SKR_INLINE typename Array<Memory>::Iter Array<Memory>::erase_swap(const Iter& it)
-{
-    remove_at_swap(it.index());
-    return it;
-}
-template <typename Memory>
-SKR_INLINE typename Array<Memory>::CIter Array<Memory>::erase_swap(const CIter& it)
-{
-    remove_at_swap(it.index());
-    return it;
-}
-template <typename Memory>
-SKR_INLINE typename Array<Memory>::IterInv Array<Memory>::erase_swap(const IterInv& it)
-{
-    remove_at_swap(it.index());
-    it.move_next();
-    return it;
-}
-template <typename Memory>
-SKR_INLINE typename Array<Memory>::CIterInv Array<Memory>::erase_swap(const CIterInv& it)
-{
-    remove_at_swap(it.index());
-    it.move_next();
-    return it;
-}
-template <typename Memory>
-SKR_INLINE void Array<Memory>::erase_swap(const Cursor& cursor)
-{
-    remove_at_swap(cursor.index());
-}
-template <typename Memory>
-SKR_INLINE void Array<Memory>::erase_swap(const CCursor& cursor)
-{
-    remove_at_swap(cursor.index());
 }
 template <typename Memory>
 SKR_INLINE void Array<Memory>::erase_swap(const DataRef& ref)

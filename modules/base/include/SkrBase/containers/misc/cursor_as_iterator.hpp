@@ -24,16 +24,6 @@ struct CursorIter : protected T {
 
     // getter
     inline DataType& ref() const { return T::ref(); }
-    inline DataType* ptr() const
-    requires requires(const T& rng) { rng.ptr(); }
-    {
-        return T::ptr();
-    }
-    inline decltype(auto) index() const
-    requires requires(const T& rng) { rng.index(); }
-    {
-        return T::index();
-    }
 
     // move & validator
     inline void reset() { T::reset_to_begin(); }
@@ -41,10 +31,13 @@ struct CursorIter : protected T {
     inline bool has_next() const { return !T::reach_end(); }
 
     // cast
-    inline const T& cursor() const { return *this; }
-    inline T&       cursor() { return *this; }
-    inline auto     as_range() const { return IteratorAsRange<CursorIter>(*this); }
-    inline auto     as_range() { return IteratorAsRange<CursorIter>(*this); }
+    inline const T& cursor() const
+    {
+        return *this;
+    }
+    inline T&   cursor() { return *this; }
+    inline auto as_range() const { return IteratorAsRange<CursorIter>(*this); }
+    inline auto as_range() { return IteratorAsRange<CursorIter>(*this); }
 };
 template <typename T>
 struct CursorIterInv : protected T {
@@ -66,16 +59,6 @@ struct CursorIterInv : protected T {
 
     // getter
     inline DataType& ref() const { return T::ref(); }
-    inline DataType* ptr() const
-    requires requires(const T& rng) { rng.ptr(); }
-    {
-        return T::ptr();
-    }
-    inline decltype(auto) index() const
-    requires requires(const T& rng) { rng.index(); }
-    {
-        return T::index();
-    }
 
     // move & validator
     inline void reset() { T::reset_to_end(); }
