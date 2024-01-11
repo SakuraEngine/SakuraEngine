@@ -1,15 +1,47 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/misc/integer_tools.hpp"
-#include "SkrBase/containers/misc/cursor_as_iterator.hpp"
+#include "SkrBase/containers/misc/iterator.hpp"
 
 namespace skr::container
 {
 template <typename Array, bool kConst>
+struct ArrayCursor;
+
+template <typename Array, bool kConst>
+struct ArrayIter : public CursorIter<ArrayCursor<Array, kConst>, false> {
+    using Super = CursorIter<ArrayCursor<Array, kConst>, false>;
+    using Super::Super;
+
+    inline void erase_and_move_next()
+    {
+        Super::cursor().erase_and_move_next();
+    }
+    inline void erase_and_move_next_swap()
+    {
+        Super::cursor().erase_and_move_next_swap();
+    }
+};
+
+template <typename Array, bool kConst>
+struct ArrayIterInv : public CursorIter<ArrayCursor<Array, kConst>, true> {
+    using Super = CursorIter<ArrayCursor<Array, kConst>, true>;
+    using Super::Super;
+
+    inline void erase_and_move_next()
+    {
+        Super::cursor().erase_and_move_prev();
+    }
+    inline void erase_and_move_next_swap()
+    {
+        Super::cursor().erase_and_move_prev_swap();
+    }
+};
+
+template <typename Array, bool kConst>
 struct ArrayCursor {
     using ArrayType = std::conditional_t<kConst, const Array, Array>;
     using DataType  = std::conditional_t<kConst, const typename ArrayType::DataType, typename ArrayType::DataType>;
-    using RefType   = DataType&;
     using SizeType  = typename ArrayType::SizeType;
 
     static constexpr SizeType npos = npos_of<SizeType>;
@@ -93,44 +125,14 @@ struct ArrayCursor {
     bool operator!=(const ArrayCursor& rhs) const { return !(*this == rhs); }
 
     // convert
-    // as_iter
-    // as_iter_inv
-    // as_range
-    // as_range_inv
+    ArrayIter<Array, kConst>        as_iter() { return { *this }; }
+    ArrayIterInv<Array, kConst>     as_iter_inv() { return { *this }; }
+    CursorRange<ArrayCursor, false> as_range() { return { *this }; }
+    CursorRange<ArrayCursor, true>  as_range_inv() { return { *this }; }
 
 private:
     ArrayType* _array;
     SizeType   _index;
-};
-
-template <typename Array, bool kConst>
-struct ArrayIter : public CursorIter<ArrayCursor<Array, kConst>> {
-    using Super = CursorIter<ArrayCursor<Array, kConst>>;
-    using Super::Super;
-
-    inline void erase_and_move_next()
-    {
-        Super::cursor().erase_and_move_next();
-    }
-    inline void erase_and_move_next_swap()
-    {
-        Super::cursor().erase_and_move_next_swap();
-    }
-};
-
-template <typename Array, bool kConst>
-struct ArrayIterInv : public CursorIterInv<ArrayCursor<Array, kConst>> {
-    using Super = CursorIterInv<ArrayCursor<Array, kConst>>;
-    using Super::Super;
-
-    inline void erase_and_move_next()
-    {
-        Super::cursor().erase_and_move_prev();
-    }
-    inline void erase_and_move_next_swap()
-    {
-        Super::cursor().erase_and_move_prev_swap();
-    }
 };
 
 } // namespace skr::container

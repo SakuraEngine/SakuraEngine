@@ -5,7 +5,6 @@
 #include "SkrBase/algo/remove.hpp"
 #include "SkrBase/containers/array/array_def.hpp"
 #include "SkrBase/containers/array/array_iterator.hpp"
-#include "SkrBase/containers/concepts.h"
 
 // Array def
 namespace skr::container

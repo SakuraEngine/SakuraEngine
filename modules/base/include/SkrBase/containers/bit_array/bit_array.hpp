@@ -28,8 +28,8 @@ struct BitArray final : protected Memory {
     using CIterInv = BitIterInv<BitBlockType, SizeType, true>;
 
     // stl style iterator
-    using StlIt  = StlStyleCursorIter<BitCursor<BitBlockType, SizeType, false>>;
-    using CStlIt = StlStyleCursorIter<BitCursor<BitBlockType, SizeType, true>>;
+    using StlIt  = CursorIterStl<BitCursor<BitBlockType, SizeType, false>, false>;
+    using CStlIt = CursorIterStl<BitCursor<BitBlockType, SizeType, true>, false>;
 
     using Algo = algo::BitAlgo<BitBlockType>;
 

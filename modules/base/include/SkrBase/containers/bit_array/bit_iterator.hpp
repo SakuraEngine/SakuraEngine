@@ -2,10 +2,32 @@
 #include "SkrBase/config.h"
 #include "SkrBase/algo/bit_algo.hpp"
 #include "bit_ref.hpp"
-#include "SkrBase/containers/misc/cursor_as_iterator.hpp"
+#include "SkrBase/containers/misc/iterator.hpp"
 
 namespace skr::container
 {
+template <typename TBlock, typename TS, bool kConst>
+struct BitCursor;
+template <typename TBlock, typename TS, bool kConst>
+struct TrueBitCursor;
+template <typename TBlock, typename TS, bool kConst>
+struct FalseBitCursor;
+
+template <typename TBlock, typename TS, bool kConst>
+using BitIter = CursorIter<BitCursor<TBlock, TS, kConst>, false>;
+template <typename TBlock, typename TS, bool kConst>
+using BitIterInv = CursorIter<BitCursor<TBlock, TS, kConst>, true>;
+
+template <typename TBlock, typename TS, bool kConst>
+using TrueBitIter = CursorIter<TrueBitCursor<TBlock, TS, kConst>, false>;
+template <typename TBlock, typename TS, bool kConst>
+using TrueBitIterInv = CursorIter<TrueBitCursor<TBlock, TS, kConst>, true>;
+
+template <typename TBlock, typename TS, bool kConst>
+using FalseBitIter = CursorIter<FalseBitCursor<TBlock, TS, kConst>, false>;
+template <typename TBlock, typename TS, bool kConst>
+using FalseBitIterInv = CursorIter<FalseBitCursor<TBlock, TS, kConst>, true>;
+
 template <typename TBlock, typename TS, bool kConst>
 struct BitCursor {
     static_assert(std::is_integral_v<TBlock> && !std::is_signed_v<TBlock>);
@@ -302,19 +324,4 @@ private:
     SizeType  _bit_size;
     SizeType  _bit_index;
 };
-
-template <typename TBlock, typename TS, bool kConst>
-using BitIter = CursorIter<BitCursor<TBlock, TS, kConst>>;
-template <typename TBlock, typename TS, bool kConst>
-using BitIterInv = CursorIterInv<BitCursor<TBlock, TS, kConst>>;
-
-template <typename TBlock, typename TS, bool kConst>
-using TrueBitIter = CursorIter<TrueBitCursor<TBlock, TS, kConst>>;
-template <typename TBlock, typename TS, bool kConst>
-using TrueBitIterInv = CursorIterInv<TrueBitCursor<TBlock, TS, kConst>>;
-
-template <typename TBlock, typename TS, bool kConst>
-using FalseBitIter = CursorIter<FalseBitCursor<TBlock, TS, kConst>>;
-template <typename TBlock, typename TS, bool kConst>
-using FalseBitIterInv = CursorIterInv<FalseBitCursor<TBlock, TS, kConst>>;
 } // namespace skr::container
