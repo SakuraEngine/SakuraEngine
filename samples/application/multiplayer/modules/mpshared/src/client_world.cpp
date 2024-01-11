@@ -27,8 +27,8 @@ void MPClientWorld::Initialize()
     skr_init_hires_timer(&timer);
     input.inputs.resize_default(1);
     lastTime = predictedGameTime = skr_hires_timer_get_seconds(&timer, false);
-    snapshotQuery = sugoiQ_from_literal(storage, "[in]CNetwork");
-    healthQuery = sugoiQ_from_literal(storage, "[in]CHealth, [has]CController");
+    snapshotQuery = sugoiQ_from_literal(storage, u8"[in]CNetwork");
+    healthQuery = sugoiQ_from_literal(storage, u8"[in]CHealth, [has]CController");
     InitializeNetworkComponents();
     worldDeltaApplier = CreateWorldDeltaApplier();
     worldDeltaApplier->Initialize(storage, 

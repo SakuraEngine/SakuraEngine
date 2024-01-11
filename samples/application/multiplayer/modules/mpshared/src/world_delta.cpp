@@ -131,9 +131,9 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
         if (initialized)
             return;
         storage                                 = inStorage;
-        worldDeltaQuery                         = sugoiQ_from_literal(storage, "[in]CPrefab,[inout]CAuth,[inout]sugoi::dirty_comp_t,[inout]CAuthTypeData");
-        clearDirtyQuery                         = sugoiQ_from_literal(storage, "[inout]sugoi::dirty_comp_t,[has]CPrefab,[has]CAuth,[has]CAuthTypeData");
-        deadQuery                               = sugoiQ_from_literal(storage, "[in]CAuth, [has]dead");
+        worldDeltaQuery                         = sugoiQ_from_literal(storage, u8"[in]CPrefab, [inout]CAuth, [inout]sugoi::dirty_comp_t, [inout]CAuthTypeData");
+        clearDirtyQuery                         = sugoiQ_from_literal(storage, u8"[inout]sugoi::dirty_comp_t, [has]CPrefab, [has]CAuth, [has]CAuthTypeData");
+        deadQuery                               = sugoiQ_from_literal(storage, u8"[in]CAuth, [has]dead");
         ComponentDeltaBuilderRegistry& registry = ComponentDeltaBuilderRegistry::Get();
         for (auto& pair : registry.builders)
         {
@@ -466,7 +466,7 @@ struct WorldDeltaApplier : IWorldDeltaApplier {
             components.add(pair.second);
             components[components.size() - 1].Initialize(storage);
         }
-        worldDeltaQuery = sugoiQ_from_literal(storage, "[in]CNetwork");
+        worldDeltaQuery = sugoiQ_from_literal(storage, u8"[in]CNetwork");
         initialized     = true;
     }
 

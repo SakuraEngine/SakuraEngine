@@ -68,9 +68,9 @@ void RenderEffectForward::on_register(SRendererId renderer, sugoi_storage_t* sto
 void RenderEffectForward::initialize_queries(sugoi_storage_t* storage)
 {
     // initialize queries
-    mesh_query = sugoiQ_from_literal(storage, "[in]game::ForwardEffectToken, [in]skr::renderer::MeshComponent");
-    mesh_write_query = sugoiQ_from_literal(storage, "[inout]skr::renderer::MeshComponent");
-    draw_mesh_query = sugoiQ_from_literal(storage, "[in]game::ForwardEffectToken, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
+    mesh_query = sugoiQ_from_literal(storage, u8"[in]game::ForwardEffectToken, [in]skr::renderer::MeshComponent");
+    mesh_write_query = sugoiQ_from_literal(storage, u8"[inout]skr::renderer::MeshComponent");
+    draw_mesh_query = sugoiQ_from_literal(storage, u8"[in]game::ForwardEffectToken, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
 }
 
 void RenderEffectForward::release_queries()
@@ -592,10 +592,10 @@ void RenderEffectForwardSkin::on_register(SRendererId renderer, sugoi_storage_t*
 
 void RenderEffectForwardSkin::initialize_queries(sugoi_storage_t* storage)
 {
-    mesh_query = sugoiQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent");
-    mesh_write_query = sugoiQ_from_literal(storage, "[inout]forward_skin_render_identity, [inout]skr::renderer::MeshComponent");
-    draw_mesh_query = sugoiQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
-    install_query = sugoiQ_from_literal(storage, "[in]forward_skin_render_identity,[in]skr::anim::AnimComponent,[in]skr::anim::SkeletonComponent,[in]skr::anim::SkinComponent");
+    mesh_query = sugoiQ_from_literal(storage, u8"[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent");
+    mesh_write_query = sugoiQ_from_literal(storage, u8"[inout]forward_skin_render_identity, [inout]skr::renderer::MeshComponent");
+    draw_mesh_query = sugoiQ_from_literal(storage, u8"[in]forward_skin_render_identity, [in]skr::renderer::MeshComponent, [out]skr_render_group_t");
+    install_query = sugoiQ_from_literal(storage, u8"[in]forward_skin_render_identity, [in]skr::anim::AnimComponent, [in]skr::anim::SkeletonComponent, [in]skr::anim::SkinComponent");
 }
 
 void RenderEffectForwardSkin::release_queries()

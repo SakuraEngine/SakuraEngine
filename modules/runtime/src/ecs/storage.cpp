@@ -1012,7 +1012,7 @@ sugoi_query_t* sugoiQ_create(sugoi_storage_t* storage, const sugoi_filter_t* fil
     return storage->make_query(*filter, *params);
 }
 
-void sugoiQ_make_alias(sugoi_storage_t* storage, const char* component, const char* alias)
+void sugoiQ_make_alias(sugoi_storage_t* storage, const char8_t* component, const char8_t* alias)
 {
     storage->make_alias((ochar8_t*)component, (ochar8_t*)alias);
 }
@@ -1022,7 +1022,7 @@ void sugoiQ_release(sugoi_query_t *query)
     return query->storage->destroy_query(query);
 }
 
-sugoi_query_t* sugoiQ_from_literal(sugoi_storage_t* storage, const char* desc)
+sugoi_query_t* sugoiQ_from_literal(sugoi_storage_t* storage, const char8_t* desc)
 {
     return storage->make_query(desc);
 }
@@ -1045,9 +1045,9 @@ void sugoiQ_get_views_group(sugoi_query_t* query, sugoi_group_t* group, sugoi_vi
     query->storage->query(group, query->filter, query->meta, callback, u);
 }
 
-const char* sugoiQ_get_error()
+const char8_t* sugoiQ_get_error()
 {
-    return sugoi::get_error().c_str();
+    return sugoi::get_error().u8_str();
 }
 
 void sugoiQ_add_child(sugoi_query_t* query, sugoi_query_t* child)

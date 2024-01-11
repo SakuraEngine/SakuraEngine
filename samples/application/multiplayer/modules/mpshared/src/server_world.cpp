@@ -120,7 +120,7 @@ void MPServerWorld::Initialize()
     InitializeNetworkComponents();
     worldDeltaBuilder = CreateWorldDeltaBuilder();
     worldDeltaBuilder->Initialize(storage);
-    deadQuery = sugoiQ_from_literal(storage, "[inout]CAuth, [has]dead");
+    deadQuery = sugoiQ_from_literal(storage, u8"[inout]CAuth, [has]dead");
     skr_init_hires_timer(&timer);
     lastGameTime = skr_hires_timer_get_seconds(&timer, false);
     gameFrame = 0;

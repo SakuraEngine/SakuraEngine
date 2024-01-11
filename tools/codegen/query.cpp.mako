@@ -4,7 +4,7 @@
 <% query = generator.parse(record) %>
 void ${record.name}::Initialize(sugoi_storage_t* storage)
 {
-    query = sugoiQ_from_literal(storage, "${record.attrs.query}");
+    query = sugoiQ_from_literal(storage, u8"${record.attrs.query}");
 }
 
 ${record.name}::TaskContext::View ${record.name}::TaskContext::unpack()

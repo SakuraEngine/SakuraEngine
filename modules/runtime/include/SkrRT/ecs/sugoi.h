@@ -555,7 +555,7 @@ SKR_RUNTIME_API sugoi_query_t* sugoiQ_create(sugoi_storage_t* storage, const sug
  * @param component 
  * @param alias  
  */
-SKR_RUNTIME_API void sugoiQ_make_alias(sugoi_storage_t* storage, const char* component, const char* alias);
+SKR_RUNTIME_API void sugoiQ_make_alias(sugoi_storage_t* storage, const char8_t* component, const char8_t* alias);
 /**
  * @brief release a query
  * 
@@ -576,11 +576,11 @@ SKR_RUNTIME_API void sugoiQ_release(sugoi_query_t* query);
  * @param desc
  * @return sugoi_query_t*
  */
-SKR_RUNTIME_API sugoi_query_t* sugoiQ_from_literal(sugoi_storage_t* storage, const char* desc);
+SKR_RUNTIME_API sugoi_query_t* sugoiQ_from_literal(sugoi_storage_t* storage, const char8_t* desc);
 
 SKR_RUNTIME_API void sugoiQ_add_child(sugoi_query_t* query, sugoi_query_t* child);
 
-SKR_RUNTIME_API const char* sugoiQ_get_error();
+SKR_RUNTIME_API const char8_t* sugoiQ_get_error();
 
 SKR_RUNTIME_API void sugoiQ_sync(sugoi_query_t* query);
 

@@ -329,7 +329,7 @@ namespace skr::lua
         {
             auto trampoline = +[](lua_State* L) -> int {
                 sugoi_storage_t* storage = (sugoi_storage_t*)lua_touserdata(L, 1);
-                const char* literal = luaL_checkstring(L, 2);
+                const char8_t* literal = (const char8_t*)luaL_checkstring(L, 2);
                 auto query = sugoiQ_from_literal(storage, literal);
                 *(sugoi_query_t**)lua_newuserdatadtor(L, sizeof(void*), dtor_query) = query;
                 luaL_getmetatable(L, "sugoi_query_t");

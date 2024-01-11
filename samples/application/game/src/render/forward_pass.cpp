@@ -23,7 +23,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
 
     if (!anim_query)
     {
-        auto sig = "[in]skr::renderer::MeshComponent, [in]skr::anim::AnimComponent";
+        auto sig = u8"[in]skr::renderer::MeshComponent, [in]skr::anim::AnimComponent";
         *anim_query = sugoiQ_from_literal(storage, sig);
     }
     // upload skin mesh data
@@ -192,7 +192,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
             builder.set_name(SKR_UTF8("BarrierSkinVertexBuffers"))
                 .can_be_lone();
         },
-        [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context){
+        [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context){
             SkrZoneScopedN("BarrierSkinMeshes");
             CGPUResourceBarrierDescriptor barrier_desc = {};
             skr::stl_vector<CGPUBufferBarrier> barriers;

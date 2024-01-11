@@ -23,7 +23,7 @@
 
 namespace skr
 {
-inline void split(const skr::stl_string_view& s, skr::stl_vector<skr::stl_string_view>& tokens, const skr::stl_string_view& delimiters = " ")
+inline void split(const skr::stl_u8string_view& s, skr::stl_vector<skr::stl_u8string_view>& tokens, const skr::stl_u8string_view& delimiters = u8" ")
 {
     skr::stl_string::size_type lastPos = s.find_first_not_of(delimiters, 0);
     skr::stl_string::size_type pos = s.find_first_of(delimiters, lastPos);
@@ -36,13 +36,13 @@ inline void split(const skr::stl_string_view& s, skr::stl_vector<skr::stl_string
     }
 }
 
-inline bool ends_with(skr::stl_string_view const& value, skr::stl_string_view const& ending)
+inline bool ends_with(skr::stl_u8string_view const& value, skr::stl_u8string_view const& ending)
 {
     if (ending.size() > value.size()) return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
-inline bool starts_with(skr::stl_string_view const& value, skr::stl_string_view const& starting)
+inline bool starts_with(skr::stl_u8string_view const& value, skr::stl_u8string_view const& starting)
 {
     if (starting.size() > value.size()) return false;
     return std::equal(starting.begin(), starting.end(), value.begin());
@@ -179,16 +179,19 @@ sugoi_query_t* sugoi_storage_t::make_query(const sugoi_filter_t& filter, const s
 }
 
 //[in][rand]$|comp''
-sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
+sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
 {
     using namespace sugoi;
-    skr::String desc = skr::String::from_utf8((ochar8_t*)inDesc);
+    auto desc = skr::stl_u8string((ochar8_t*)inDesc);
     using namespace skr;
-    desc.replace(u8""_txtv, u8" "_txtv);
-    desc.replace(u8""_txtv, u8"\r"_txtv);
-    ostr::sequence<skr::StringView> parts;
-    auto spliter = u8","_txtv;
-    desc.split(spliter, parts, true);
+#ifdef _WIN32
+    desc.erase(std::remove_if(desc.begin(), desc.end(), [](char c) -> bool { return std::isspace(c); }), desc.end());
+#else
+    desc.erase(std::remove_if(desc.begin(), desc.end(), isspace), desc.end());
+#endif
+    skr::stl_vector<skr::stl_u8string_view> parts;
+    auto spliter = u8",";
+    skr::split(desc, parts, spliter);
     // todo: errorMsg? global error code?
     auto& error = get_error();
     int errorPos = 0;
@@ -217,11 +220,11 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
             ALL,
             NONE
         } selector = ALL;
-        if (part[i].get_codepoint() == '[') // attr: [in] [out] [inout] [has]
+        if (part[i] == u8'[') // attr: [in] [out] [inout] [has]
         {
             auto j = i + 1;
             errorPos = partBegin + i;
-            while (i < part.size() && part[i].get_codepoint() != ']')
+            while (i < part.size() && part[i] != u8']')
                 ++i;
             if (i == part.size())
             {
@@ -229,7 +232,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
                 SKR_ASSERT(false);
                 return nullptr;
             }
-            auto attr = part.subview(j, i - j);
+            auto attr = part.substr(j, i - j);
             errorPos = partBegin + j;
             if (attr == u8"in")
                 operation.readonly = true;
@@ -266,7 +269,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
         {
             auto j = i + 1;
             errorPos = partBegin + i;
-            while (i < part.size() && part[i].get_codepoint() != '>')
+            while (i < part.size() && part[i] != u8'>')
                 ++i;
             if (i == part.size())
             {
@@ -274,7 +277,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
                 SKR_ASSERT(false);
                 return nullptr;
             }
-            auto attr = part.subview(j, i - j);
+            auto attr = part.substr(j, i - j);
             errorPos = partBegin + j;
             if (attr == u8"seq")
                 operation.randomAccess = DOS_SEQ;
@@ -300,9 +303,9 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
             SKR_ASSERT(false);
             return nullptr;
         }
-        if (!std::isalpha(part[i].get_codepoint()))
+        if (!std::isalpha(part[i]))
         {
-            if (part[i] == '$')
+            if (part[i] == u8'$')
             {
                 if (!operation.readonly)
                 {
@@ -315,19 +318,19 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
                 shared = true;
                 ++i;
             }
-            if(operation.randomAccess == DOS_UNSEQ && part[i].get_codepoint() != '?')
+            if(operation.randomAccess == DOS_UNSEQ && part[i] != u8'?')
             {
                 errorPos = partBegin + i;
                 error = skr::format(u8"unseq component must be optional, loc {}.", errorPos);
                 SKR_ASSERT(false);
                 return nullptr;
             }
-            if (part[i] == '!')
+            if (part[i] == u8'!')
             {
                 selector = NONE;
                 filterOnly = true;
             }
-            else if (part[i] == '?')
+            else if (part[i] == u8'?')
                 selector = OPT;
             else
             {
@@ -338,7 +341,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
             }
             ++i;
         }
-        if (i == part.size() || !std::isalpha(part[i].get_codepoint()))
+        if (i == part.size() || !std::isalpha(part[i]))
         {
             errorPos = partBegin + i;
             error = skr::format(u8"no type specified, loc {}.", errorPos);
@@ -348,14 +351,15 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
         else
         {
             auto j = i;
-            auto validNameChar = [](char32_t c)
+            auto validNameChar = [](char8_t c)
             {
-                return std::isalpha(c) || c =='_' || (c > '0' && c <= '9') || c == ':';
+                return std::isalpha(c) || c == u8'_' || (c > u8'0' && c <= u8'9') || c == u8':';
             };
-            while (i < part.size() && validNameChar(part[i].get_codepoint()))
+            while (i < part.size() && validNameChar(part[i]))
                 ++i;
-            auto name = part.subview(j, i - j);
-            auto iter = aliases.find(name);
+            auto name = part.substr(j, i - j);
+            auto name_view = skr::StringView(name.data(), name.size());
+            auto iter = aliases.find(name_view);
             if(iter != aliases.end())
             {
                 type = iter->second.type;
@@ -371,7 +375,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
             }
             else
             {
-                type = reg.get_type(name);
+                type = reg.get_type(name_view);
                 if (type == kInvalidTypeIndex)
                 {
                     errorPos = partBegin + i;
