@@ -242,7 +242,6 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - simdjson v3.0.0 (Apache-2.0)
 - zlib v1.2.8
 - cgltf v1.13 (MIT)
-- EASTL v3.19.05, master-db16065 (BSD-3-Clause)
 - cpu_features v0.9.0 (Apache-2.0)
 - freetype 2.13.0 (GNU)
 - icu 72.1 ([LICENSE](https://github.com/unicode-org/icu/blob/main/icu4c/LICENSE))

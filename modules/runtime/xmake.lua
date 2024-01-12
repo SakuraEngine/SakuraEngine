@@ -1,9 +1,3 @@
--- if(has_config("shipping_one_archive")) then
-    -- add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = false } })
--- else
-    -- add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = true } })
--- end
-
 add_requires("lemon 1.3.1")
 add_requires("parallel-hashmap >=1.3.11-skr")
 add_requires("boost-context >=0.1.0-skr")
@@ -16,7 +10,6 @@ target("SkrRTStatic")
     set_exceptions("no-cxx")
     add_deps("SkrRoot", "SkrBase", "SkrMemory", {public = true})
     add_defines("SKR_RUNTIME_API=SKR_IMPORT", "SKR_RUNTIME_LOCAL=error")
-    -- add_packages("eastl")
     add_packages("parallel-hashmap", "simdjson", {public = true, inherit = true})
     add_packages("lemon", {public = false, inherit = false})
     add_rules("skr.static_module", {api = "SKR_RUNTIME_STATIC"})
@@ -75,7 +68,6 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/build.*.cpp")
     
     -- add marl source
-    -- add_defines("MARL_USE_EASTL", {public = true})
     local marl_source_dir = "$(projectdir)/thirdparty/marl"
     add_files(marl_source_dir.."/src/build.*.cpp")
     if not is_os("windows") then 
