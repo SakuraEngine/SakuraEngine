@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/misc/integer_tools.hpp"
+#include "SkrBase/memory/memory_traits.hpp"
 
 // SparseHashSet structs
 namespace skr::container
@@ -71,6 +72,14 @@ private:
     bool _already_exist = false;
 };
 } // namespace skr::container
+
+// SparseHashSetData memory traits
+namespace skr::memory
+{
+template <typename T, typename TS, typename HashType>
+struct MemoryTraits<skr::container::SparseHashSetData<T, TS, HashType>, skr::container::SparseHashSetData<T, TS, HashType>> : public MemoryTraits<T, T> {
+};
+} // namespace skr::memory
 
 // TODO. skr swap
 namespace std

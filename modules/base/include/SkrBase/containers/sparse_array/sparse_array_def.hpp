@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/containers/array/array_def.hpp"
+#include "SkrBase/memory/memory_traits.hpp"
 
 // SparseArray structs
 namespace skr::container
@@ -28,6 +29,14 @@ union SparseArrayData
 template <typename T, typename TS, bool kConst>
 using SparseArrayDataRef = ArrayDataRef<T, TS, kConst>;
 } // namespace skr::container
+
+// SparseArrayData data memory traits
+namespace skr::memory
+{
+template <typename T, typename TS>
+struct MemoryTraits<skr::container::SparseArrayData<T, TS>, skr::container::SparseArrayData<T, TS>> : public MemoryTraits<T, T> {
+};
+} // namespace skr::memory
 
 // TODO. skr swap
 namespace std
