@@ -2,7 +2,7 @@
 #include "common/texture.h"
 #include "math.h"
 #include "cgpu/api.h"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 
 #define FLIGHT_FRAMES 3
 #define BACK_BUFFER_COUNT 3

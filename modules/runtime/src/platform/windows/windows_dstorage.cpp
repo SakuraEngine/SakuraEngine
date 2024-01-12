@@ -1,13 +1,13 @@
 #include "cgpu/extensions/cgpu_d3d12_exts.h"
 #include "SkrRT/platform/win/misc.h"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/containers/stl_vector.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/concurrent_queue.hpp"
+#include "SkrContainers/stl_vector.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/concurrent_queue.hpp"
 
 #include "platform/windows/windows_dstorage.hpp"
 

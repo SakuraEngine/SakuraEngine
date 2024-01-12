@@ -19,12 +19,12 @@
 #include "SkrBase/math/rtm/quatf.h" // IWYU pragma: export
 #include "SkrBase/math/rtm/rtmx.h" // IWYU pragma: export
 
-#include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
-#include <SkrRT/containers/vector.hpp> // IWYU pragma: export
-#include <SkrRT/containers/string.hpp> // IWYU pragma: export
-#include <SkrRT/containers/hashmap.hpp> // IWYU pragma: export
-#include <SkrRT/containers/stl_vector.hpp> // IWYU pragma: export
-#include <SkrRT/containers/stl_string.hpp> // IWYU pragma: export
+#include <SkrContainers/sptr.hpp> // IWYU pragma: export
+#include <SkrContainers/vector.hpp> // IWYU pragma: export
+#include <SkrContainers/string.hpp> // IWYU pragma: export
+#include <SkrContainers/hashmap.hpp> // IWYU pragma: export
+#include <SkrContainers/stl_vector.hpp> // IWYU pragma: export
+#include <SkrContainers/stl_string.hpp> // IWYU pragma: export
 
 #include "SkrRT/ecs/sugoi.h" // IWYU pragma: export
 #include "SkrRT/ecs/set.hpp" // IWYU pragma: export

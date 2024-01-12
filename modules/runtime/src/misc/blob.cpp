@@ -1,7 +1,7 @@
 #include "SkrMemory/memory.h"
-#include "SkrRT/platform/atomic.h"
+#include "SkrThread/atomic.h"
 #include "SkrRT/misc/types.h"
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrContainers/sptr.hpp"
 
 namespace skr
 {

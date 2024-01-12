@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers/stl_vector.hpp"
+#include "SkrContainers/stl_vector.hpp"
 #include "SkrRenderGraph/frontend/base_types.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/resource_edge.hpp"

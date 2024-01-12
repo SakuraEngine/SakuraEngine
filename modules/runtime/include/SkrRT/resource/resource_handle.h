@@ -109,7 +109,7 @@ SKR_RUNTIME_API void skr_get_resource_guid(skr_resource_handle_t* handle, skr_gu
 SKR_RUNTIME_API void skr_get_resource(skr_resource_handle_t* handle, void** guid);
 
 // binary reader
-#include "SkrRT/serde/binary/reader_fwd.h"
+#include "SkrBase/types.h"
 
 namespace skr
 {
@@ -134,7 +134,7 @@ struct SKR_STATIC_API ReadTrait<skr_resource_handle_t> {
 } // namespace skr
 
 // binary writer
-#include "SkrRT/serde/binary/writer_fwd.h"
+#include "SkrBase/types.h"
 
 namespace skr
 {

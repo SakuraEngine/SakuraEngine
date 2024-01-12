@@ -2,7 +2,7 @@
 #include "reading_pool.hpp"
 #include "../common/reading_ring.hpp"
 #include "SkrMemory/memory.h"
-#include "SkrRT/platform/atomic.h"
+#include "SkrThread/atomic.h"
 #include "SkrBase/misc/debug.h"
 #include "SkrRT/misc/log.h"
 #include "SDL2/SDL_timer.h"

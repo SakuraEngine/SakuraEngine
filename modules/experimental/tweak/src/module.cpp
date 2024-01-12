@@ -4,13 +4,13 @@
 #include <fstream>
 #include "efsw/efsw.hpp"
 #include "SkrRT/platform/filesystem.hpp"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/misc/log.h"
-#include <SkrRT/containers/hashmap.hpp>
-#include "SkrRT/containers/variant.hpp"
-#include <SkrRT/containers/string.hpp>
-#include <SkrRT/containers/stl_vector.hpp>
+#include <SkrContainers/hashmap.hpp>
+#include "SkrContainers/variant.hpp"
+#include <SkrContainers/string.hpp>
+#include <SkrContainers/stl_vector.hpp>
 
 struct skr_tweak_value_t
 {

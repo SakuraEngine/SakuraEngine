@@ -5,12 +5,12 @@
 #include "./../common/common_utils.h"
 #ifdef __cplusplus
     #include "D3D12MemAlloc.h"
-    #include <SkrRT/containers/hashmap.hpp>
-    #include <SkrRT/containers/vector.hpp>
+    #include <SkrContainers/hashmap.hpp>
+    #include <SkrContainers/vector.hpp>
 #endif
 #ifdef CGPU_THREAD_SAFETY
-    #include "SkrRT/platform/thread.h"
-    #include "SkrRT/platform/atomic.h"
+    #include "SkrThread/thread.h"
+    #include "SkrThread/atomic.h"
 #endif
 
 #define CALC_SUBRESOURCE_INDEX(MipSlice, ArraySlice, PlaneSlice, MipLevels, ArraySize) ((MipSlice) + ((ArraySlice) * (MipLevels)) + ((PlaneSlice) * (MipLevels) * (ArraySize)))

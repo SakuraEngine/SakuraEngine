@@ -3,9 +3,9 @@
 #include "SkrInputSystem/input_trigger.hpp"
 #include "SkrInputSystem/input_modifier.hpp"
 #include "SkrRT/platform/guid.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers/stl_function.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/sptr.hpp"
+#include "SkrContainers/stl_function.hpp"
 
 namespace skr
 {

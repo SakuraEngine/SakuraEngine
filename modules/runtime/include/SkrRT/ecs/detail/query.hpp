@@ -2,9 +2,9 @@
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/SmallVector.h"
 
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/span.hpp"
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/span.hpp"
+#include "SkrContainers/hashmap.hpp"
 
 namespace sugoi
 {

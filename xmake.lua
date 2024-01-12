@@ -41,8 +41,6 @@ target("SkrRoot")
     set_kind("headeronly")
     -- core deps
     add_deps("SkrProfile", {public = true})
-    -- add OpenString defines
-    add_defines("OPEN_STRING_API=SKR_RUNTIME_API", {public = true})
     -- dispatch codegen task
     before_build(function(target)
         import("core.base.option")

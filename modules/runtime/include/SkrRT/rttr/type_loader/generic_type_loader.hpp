@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers/span.hpp"
+#include "SkrContainers/span.hpp"
 #include "SkrRT/rttr/type_desc.hpp"
 
 namespace skr::rttr

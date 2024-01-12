@@ -3,11 +3,11 @@
 #include "SkrRT/async/co_task.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/containers/function_ref.hpp"
-#include "SkrRT/containers/stl_deque.hpp"
+#include "SkrContainers/function_ref.hpp"
+#include "SkrContainers/stl_deque.hpp"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/containers/atomic_queue/atomic_queue.h"
-#include "SkrRT/containers/concurrent_queue.hpp"
+#include "SkrContainers/atomic_queue/atomic_queue.h"
+#include "SkrContainers/concurrent_queue.hpp"
 
 inline void nop() {
 #if defined(_WIN32)

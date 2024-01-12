@@ -3,7 +3,7 @@
 #include "SkrMemory/memory.h"
 #include "SkrRT/platform/shared_library.hpp"
 #include "SkrRT/misc/log.h"
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrContainers/hashmap.hpp"
 #include "SkrRT/serde/json/reader.h"
 #include "SkrRT/platform/filesystem.hpp"
 

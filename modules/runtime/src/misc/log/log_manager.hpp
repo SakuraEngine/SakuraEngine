@@ -2,11 +2,11 @@
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/log/log_sink.hpp"
 #include "SkrRT/misc/log/log_pattern.hpp"
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrContainers/hashmap.hpp"
 #include "log_worker.hpp"
 #include "tscns.hpp"
 
-#include "SkrRT/containers/deprecated.hpp"
+#include "SkrContainers/deprecated.hpp"
 
 
 namespace skr {

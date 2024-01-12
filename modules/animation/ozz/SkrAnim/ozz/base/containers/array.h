@@ -28,7 +28,7 @@
 #ifndef OZZ_OZZ_BASE_CONTAINERS_ARRAY_H_
 #define OZZ_OZZ_BASE_CONTAINERS_ARRAY_H_
 
-#include "SkrRT/containers/array.hpp"
+#include "SkrContainers/array.hpp"
 #include "SkrAnim/ozz/base/platform.h"
 
 namespace ozz {

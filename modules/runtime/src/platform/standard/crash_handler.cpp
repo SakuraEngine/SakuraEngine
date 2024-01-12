@@ -1,8 +1,8 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/crash.h"
-#include "SkrRT/platform/thread.h"
-#include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/string.hpp"
+#include "SkrThread/thread.h"
+#include "SkrContainers/hashmap.hpp"
+#include "SkrContainers/string.hpp"
 
 #include <signal.h>
 

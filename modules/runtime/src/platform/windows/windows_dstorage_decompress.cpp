@@ -1,10 +1,10 @@
 #include "SkrMemory/memory.h"
 #include "SkrRT/platform/win/dstorage_windows.h"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 #include "SkrRT/misc/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
-#include "SkrRT/containers/umap.hpp"
+#include "SkrContainers/umap.hpp"
 
 #include "platform/windows/windows_dstorage.hpp"
 

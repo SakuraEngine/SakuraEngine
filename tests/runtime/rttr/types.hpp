@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrRT/config.h"
 #include "SkrRT/resource/resource_handle.h"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/variant.hpp"
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/variant.hpp"
+#include "SkrContainers/sptr.hpp"
 #include "SkrTestFramework/framework.hpp"
 #include "RTTRTest/module.configure.h"
 

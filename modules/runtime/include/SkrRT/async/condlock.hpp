@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/async/result.hpp"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 
 namespace skr
 {

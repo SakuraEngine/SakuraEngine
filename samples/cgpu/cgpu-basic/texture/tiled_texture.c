@@ -3,7 +3,8 @@
 #include "common/texture.h"
 #include "math.h"
 #include "string.h"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
+#include "SkrMemory/memory.h"
 
 #define FLIGHT_FRAMES 3
 #define BACK_BUFFER_COUNT 3

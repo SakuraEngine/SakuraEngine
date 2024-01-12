@@ -6,17 +6,17 @@
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 #include <SkrRT/platform/filesystem.hpp>
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRenderer/render_device.h"
 
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrContainers/sptr.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/hashmap.hpp"
 
 #include "SkrProfile/profile.h"
 

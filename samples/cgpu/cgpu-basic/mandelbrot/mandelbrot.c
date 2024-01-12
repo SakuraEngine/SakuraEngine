@@ -258,7 +258,7 @@ void ComputeFunc(void* usrdata)
     sakura_free(image);
 }
 
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 
 int main(void)
 {

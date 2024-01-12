@@ -108,8 +108,8 @@ private:
 };
 } // namespace skr::rttr
 
-// #include "SkrRT/serde/binary/reader_fwd.h"
-// #include "SkrRT/serde/binary/writer_fwd.h"
+// #include "SkrBase/types.h"
+// #include "SkrBase/types.h"
 // namespace skr::binary
 // {
 // template <>

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/goap/static/state.hpp"
 #include "SkrRT/goap/dynamic/state.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrContainers/vector.hpp"
 
 namespace skr::goap
 {

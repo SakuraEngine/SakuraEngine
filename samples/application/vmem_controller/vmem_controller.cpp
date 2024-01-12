@@ -1,5 +1,5 @@
 #include "common/utils.h"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 #include "SkrRT/platform/system.h"
 #include "SkrRT/misc/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"

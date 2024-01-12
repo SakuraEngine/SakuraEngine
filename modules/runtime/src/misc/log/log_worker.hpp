@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/async/async_service.h"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/sptr.hpp"
 #include "log_queue.hpp"
 
 namespace skr {

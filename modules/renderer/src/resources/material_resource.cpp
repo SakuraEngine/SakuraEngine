@@ -1,5 +1,5 @@
 #include "SkrRT/platform/guid.hpp"
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrContainers/sptr.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
 

@@ -1,5 +1,5 @@
 #include "MPServer/server.h"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 #include "SkrRT/platform/time.h"
 #include "steam/isteamnetworkingutils.h"
 #include "steam/isteamnetworkingsockets.h"

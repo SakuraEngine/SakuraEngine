@@ -2,8 +2,9 @@
 #include "SkrBase/template/concepts.hpp"
 #include "SkrBase/template/count_member.hpp"
 #include "SkrBase/template/foreach_field.hpp"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/umap.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/umap.hpp"
+#include "SkrRT/module.configure.h"
 
 #ifndef SKR_GOAP_SET_NAME
     #ifdef _DEBUG

@@ -1,4 +1,4 @@
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/misc/log.h"
 #include <thread>
@@ -103,7 +103,7 @@ TEST_CASE_METHOD(ThreadsTest, "RecursiveCondVar")
     skr_destroy_mutex(&sm);
 }
 
-#include "SkrRT/platform/atomic.h"
+#include "SkrThread/atomic.h"
 
 TEST_CASE_METHOD(ThreadsTest, "Atomic")
 {

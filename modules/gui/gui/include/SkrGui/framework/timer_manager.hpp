@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
-#include "SkrRT/containers/sparse_vector.hpp"
+#include "SkrContainers/sparse_vector.hpp"
 #ifndef __meta__
     #include "SkrGui/framework/timer_manager.generated.h"
 #endif

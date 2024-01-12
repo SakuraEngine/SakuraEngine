@@ -2,8 +2,8 @@
 #include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/fwd_types.h"
 
-#include <SkrRT/containers/string.hpp>
-#include <SkrRT/containers/vector.hpp>
+#include <SkrContainers/string.hpp>
+#include <SkrContainers/vector.hpp>
 
 #ifndef __meta__
     #include "SkrRenderer/resources/mesh_resource.generated.h" // IWYU pragma: export

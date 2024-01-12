@@ -1,9 +1,9 @@
 #pragma once
-#include "SkrRT/containers/concurrent_queue.hpp"
-#include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/SPtr.hpp"
-#include "SkrRT/containers/stl_function.hpp"
-#include "SkrRT/containers/function_ref.hpp"
+#include "SkrContainers/concurrent_queue.hpp"
+#include "SkrContainers/hashmap.hpp"
+#include "SkrContainers/SPtr.hpp"
+#include "SkrContainers/stl_function.hpp"
+#include "SkrContainers/function_ref.hpp"
 
 namespace skr
 {

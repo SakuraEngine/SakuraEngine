@@ -1,12 +1,11 @@
 #pragma once
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 #include "SkrRT/resource/resource_handle.h"
-#include <SkrRT/containers/vector.hpp>
-#include <SkrRT/containers/deprecated.hpp>
-#include <SkrRT/containers/stl_vector.hpp>
+#include <SkrContainers/vector.hpp>
+#include <SkrContainers/deprecated.hpp>
+#include <SkrContainers/stl_vector.hpp>
 
-#include "SkrRT/serde/binary/reader_fwd.h"
-#include "SkrRT/serde/binary/writer_fwd.h"
+#include "SkrBase/types.h"
 
 typedef struct skr_resource_header_t {
     uint32_t                                      version;

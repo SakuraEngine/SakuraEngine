@@ -7,8 +7,8 @@
 
 #ifdef __cplusplus
     #include "SkrAnim/ozz/skeleton.h"
-    #include "SkrRT/serde/binary/reader_fwd.h"
-    #include "SkrRT/serde/binary/writer_fwd.h"
+    #include "SkrBase/types.h"
+    #include "SkrBase/types.h"
     #include "SkrRT/resource/resource_factory.h"
 
 namespace skr sreflect

@@ -1,10 +1,10 @@
 #pragma once
 #include "SkrRT/misc/types.h"
-#include "SkrRT/platform/atomic.h"
+#include "SkrThread/atomic.h"
 #include "SkrRT/async/async_service.h"
 #ifdef __cplusplus
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers/span.hpp"
+#include "SkrContainers/sptr.hpp"
+#include "SkrContainers/span.hpp"
 #endif
 
 #define SKR_IO_SERVICE_MAX_TASK_COUNT 32

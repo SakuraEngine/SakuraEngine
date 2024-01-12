@@ -5,8 +5,8 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrMemory/memory.h"
 #include "SkrRT/resource/resource_factory.h"
-#include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrContainers/hashmap.hpp"
+#include "SkrContainers/sptr.hpp"
 #include "option_utils.hpp"
 
 skr_stable_shader_hash_t::skr_stable_shader_hash_t(uint32_t a, uint32_t b, uint32_t c, uint32_t d) SKR_NOEXCEPT

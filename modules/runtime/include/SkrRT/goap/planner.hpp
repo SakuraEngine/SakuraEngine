@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/stl_vector.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/stl_vector.hpp"
 #include "SkrRT/goap/dynamic/state.hpp"
 #include "SkrRT/goap/action.hpp"
 
