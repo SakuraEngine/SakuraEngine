@@ -10,7 +10,7 @@ shared_module("SkrRTExporter", "SKR_RUNTIME_EXPORTER", engine_version)
     on_load(function (target, opt)
         local depend = import("core.project.depend")
         local includedir = path.join(os.scriptdir(), "include", "SkrRuntimeExporter", "exporters")
-        local runtime = path.join(os.scriptdir(), "..", "runtime", "include")
+        local runtime = path.join(os.scriptdir(), "..", "..", "runtime", "include")
         -- cgpu/api.h
         local cgpu_header = path.join(runtime, "cgpu", "api.h")
         local cgpu_header2 = path.join(includedir, "cgpu", "api.h")
