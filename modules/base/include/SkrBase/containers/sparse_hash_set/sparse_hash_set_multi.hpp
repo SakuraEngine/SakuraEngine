@@ -269,6 +269,7 @@ SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>
 {
     DataRef ref = add_ex_unsafe(hash);
     construct(ref.ptr());
+    SKR_ASSERT(HasherType()(ref.ref()) == hash);
     return ref;
 }
 template <typename Memory>

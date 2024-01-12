@@ -322,6 +322,7 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex
     { // construct case
         construct(ref.ptr());
     }
+    SKR_ASSERT(HasherType()(ref.ref()) == hash);
     return ref;
 }
 template <typename Memory>
