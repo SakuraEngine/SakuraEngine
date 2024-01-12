@@ -73,20 +73,12 @@ struct SparseHashBase : protected SparseArray<Memory> {
     bool compact_top();
 
     // rehash
-    bool sync_hash();
-    bool sync_hash_at(SizeType index);
     void rehash();
     bool rehash_if_need();
 
     // visitor
     const SetDataType& at(SizeType index) const;
     const SetDataType& last(SizeType index = 0) const;
-    template <typename Modifier>
-    bool modify_at(SizeType index, Modifier&& modifier, bool update_hash = true);
-    template <typename Modifier>
-    bool modify_last(SizeType index, Modifier&& modifier, bool update_hash = true);
-    template <typename Modifier, typename DataRef>
-    bool modify(DataRef ref, Modifier&& modifier, bool update_hash = true);
 
     // sort
     template <typename Functor = Less<SetDataType>>
@@ -129,6 +121,26 @@ protected:
     DataRef _find_if(Pred&& pred) const;
     template <typename DataRef, typename Pred>
     DataRef _find_last_if(Pred&& pred) const;
+
+    // contains & count
+    template <typename Pred>
+    bool _contains(HasherType hash, Pred&& pred);
+    template <typename Pred>
+    SizeType _count(HasherType hash, Pred&& pred);
+
+    // sync hash
+    template <bool kKeepUnique>
+    bool _sync_hash();
+    template <bool kKeepUnique>
+    bool _sync_hash_at(SizeType index);
+
+    // modify
+    template <bool kKeepUnique, typename Modifier>
+    bool _modify_at(SizeType index, Modifier&& modifier, bool update_hash = true);
+    template <bool kKeepUnique, typename Modifier>
+    bool _modify_last(SizeType index, Modifier&& modifier, bool update_hash = true);
+    template <bool kKeepUnique, typename Modifier, typename DataRef>
+    bool _modify(DataRef ref, Modifier&& modifier, bool update_hash = true);
 
     // helpers
     SizeType _bucket_index(SizeType hash) const; // get bucket data index by hash
@@ -421,42 +433,6 @@ SKR_INLINE bool SparseHashBase<Memory>::compact_top()
 
 // rehash
 template <typename Memory>
-SKR_INLINE bool SparseHashBase<Memory>::sync_hash()
-{
-    bool hash_changed = false;
-    for (auto it = Super::begin(); it != Super::end(); ++it)
-    {
-        HashType new_hash = HasherType()(it->_sparse_hash_set_data);
-        if (new_hash != it->_sparse_hash_set_hash)
-        {
-            it->_sparse_hash_set_hash = new_hash;
-            hash_changed              = true;
-        }
-    }
-
-    if (hash_changed)
-    {
-        _clean_bucket();
-        _build_bucket();
-    }
-
-    return hash_changed;
-}
-template <typename Memory>
-SKR_INLINE bool SparseHashBase<Memory>::sync_hash_at(SizeType index)
-{
-    auto&    data     = Super::at(index);
-    HashType new_hash = HasherType()(data._sparse_hash_set_data);
-    if (new_hash != data._sparse_hash_set_hash)
-    {
-        data._sparse_hash_set_hash = new_hash;
-        _remove_from_bucket(index);
-        _add_to_bucket(data, index);
-        return true;
-    }
-    return false;
-}
-template <typename Memory>
 SKR_INLINE void SparseHashBase<Memory>::rehash()
 {
     _resize_bucket();
@@ -485,40 +461,6 @@ template <typename Memory>
 SKR_INLINE const typename SparseHashBase<Memory>::SetDataType& SparseHashBase<Memory>::last(SizeType index) const
 {
     return Super::last(index)._sparse_hash_set_data;
-}
-template <typename Memory>
-template <typename Modifier>
-SKR_INLINE bool SparseHashBase<Memory>::modify_at(SizeType index, Modifier&& modifier, bool update_hash)
-{
-    modifier(at(index));
-    if (update_hash)
-    {
-        return sync_hash_at(index);
-    }
-    return false;
-}
-template <typename Memory>
-template <typename Modifier>
-SKR_INLINE bool SparseHashBase<Memory>::modify_last(SizeType index, Modifier&& modifier, bool update_hash)
-{
-    modifier(last(index));
-    if (update_hash)
-    {
-        return sync_hash_at(sparse_size() - 1 - index);
-    }
-    return false;
-}
-template <typename Memory>
-template <typename Modifier, typename DataRef>
-SKR_INLINE bool SparseHashBase<Memory>::modify(DataRef ref, Modifier&& modifier, bool update_hash)
-{
-    SKR_ASSERT(ref.is_valid());
-    modifier(ref.ref());
-    if (update_hash)
-    {
-        return sync_hash_at(ref.index());
-    }
-    return false;
 }
 
 // sort

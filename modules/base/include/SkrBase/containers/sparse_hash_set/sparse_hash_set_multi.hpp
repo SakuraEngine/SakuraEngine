@@ -85,8 +85,6 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     using Super::compact_top;
 
     // rehash
-    using Super::sync_hash;
-    using Super::sync_hash_at;
     using Super::rehash;
     using Super::rehash_if_need;
 
@@ -168,9 +166,6 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     // visitor & modifier
     using Super::at;
     using Super::last;
-    using Super::modify_at;
-    using Super::modify_last;
-    using Super::modify;
 
     // sort
     using Super::sort;
