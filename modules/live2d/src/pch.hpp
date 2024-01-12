@@ -14,7 +14,7 @@
 #include "SkrRT/platform/guid.hpp" // IWYU pragma: export
 #include "SkrRT/platform/thread.h" // IWYU pragma: export
 #include "SkrBase/math/rtm/rtmx.h" // IWYU pragma: export
-#include "SkrRT/misc/make_zeroed.hpp" // IWYU pragma: export
+#include "SkrBase/misc/make_zeroed.hpp" // IWYU pragma: export
 
 #include "SkrRT/ecs/entity.hpp" // IWYU pragma: export
 #include "SkrRT/ecs/sugoi.h" // IWYU pragma: export

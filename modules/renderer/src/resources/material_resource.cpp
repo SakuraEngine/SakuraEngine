@@ -1,6 +1,6 @@
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
 
 #include "SkrRenderer/resources/mesh_resource.h"

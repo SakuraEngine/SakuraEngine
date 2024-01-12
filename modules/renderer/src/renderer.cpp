@@ -1,5 +1,5 @@
 #include "SkrRT/misc/log.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/array.hpp"
 #include <SkrRT/containers/hashmap.hpp>

@@ -1,5 +1,5 @@
 #include "d3d12_utils.hpp"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/containers/span.hpp"
 
 #include <SkrRT/containers/stl_string.hpp>

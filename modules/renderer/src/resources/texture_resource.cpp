@@ -6,7 +6,7 @@
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/misc/log.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/sptr.hpp"

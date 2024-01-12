@@ -1,5 +1,5 @@
 #include "SkrRT/misc/log.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.hpp"
 #include "SkrMemory/memory.h"
 
@@ -30,7 +30,7 @@
 #include "SkrRT/platform/vfs.h"
 #include <SkrRT/platform/filesystem.hpp>
 
-#include "SkrRT/misc/parallel_for.hpp"
+#include "SkrRT/async/parallel_for.hpp"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrProfile/profile.h"
 

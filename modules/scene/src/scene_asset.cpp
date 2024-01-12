@@ -1,10 +1,10 @@
 #include "SkrScene/scene.h"
-#include "SkrRT/misc/parallel_for.hpp"
+#include "SkrRT/async/parallel_for.hpp"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/serde/json/writer.h"
 #include "SkrRT/serde/json/reader.h"
 #include "SkrRT/ecs/type_builder.hpp"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 
 #include "SkrRT/containers/vector.hpp"
 #include "SkrRT/containers/string.hpp"

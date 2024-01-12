@@ -5,7 +5,7 @@
 #include "cgpu/cgpux.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/platform/thread.h"
 #include <SkrRT/platform/filesystem.hpp>
 #include "SkrRenderer/render_mesh.h"

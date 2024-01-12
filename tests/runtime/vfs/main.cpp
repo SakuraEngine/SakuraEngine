@@ -4,7 +4,7 @@
 #include "SkrRT/platform/dstorage.h"
 #include <SkrRT/platform/filesystem.hpp>
 #include "SkrRT/misc/log.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
 #include "SkrRT/async/wait_timeout.hpp"
 #include "SkrRT/io/ram_io.hpp"

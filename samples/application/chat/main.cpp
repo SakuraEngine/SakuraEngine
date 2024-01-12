@@ -28,7 +28,7 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "imgui/skr_imgui_rg.h"
 #include "SkrProfile/profile.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #if SKR_PLAT_WINDOWS
     #include <shellscalingapi.h>
 #endif

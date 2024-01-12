@@ -3,7 +3,7 @@
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/misc/cmd_parser.hpp"
 #include "SkrRT/misc/log.hpp"
-#include "SkrRT/misc/parallel_for.hpp"
+#include "SkrRT/async/parallel_for.hpp"
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/stl_vector.hpp"
 #include "SkrRT/module/module_manager.hpp"
