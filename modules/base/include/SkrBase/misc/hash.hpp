@@ -29,7 +29,7 @@ struct Hash;
 namespace detail
 {
 template <typename T>
-using has_skr_hash = decltype(std::declval<const T&>()._skr_hash());
+using has_skr_hash = decltype(T::_skr_hash(std::declval<const T&>()));
 template <typename T>
 using skr_hashable = decltype(std::declval<Hash<T>>().operator()(std::declval<const T&>()));
 } // namespace detail
@@ -67,7 +67,18 @@ template <typename T>
 struct HashSelector<T, std::enable_if_t<has_skr_hash_v<T>>> {
     size_t operator()(const T& p) const
     {
-        return p._skr_hash();
+        return T::_skr_hash(p);
+    }
+    template <typename U>
+    requires requires(const U& u) {
+        {
+            T::_skr_hash(u)
+        }
+        -> std::same_as<size_t>;
+    }
+    size_t operator()(const U& u) const
+    {
+        return T::_skr_hash(u);
     }
 };
 } // namespace detail

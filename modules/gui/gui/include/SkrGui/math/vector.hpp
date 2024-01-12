@@ -90,12 +90,12 @@ struct Vector3 {
     }
 
     // hash
-    inline constexpr size_t _skr_hash() const SKR_NOEXCEPT
+    inline static constexpr size_t _skr_hash(const Vector3& v) SKR_NOEXCEPT
     {
         auto hasher = ::skr::Hash<float>{};
-        auto hash   = hasher(x);
-        hash        = ::skr::hash_combine(hash, hasher(y));
-        hash        = ::skr::hash_combine(hash, hasher(z));
+        auto hash   = hasher(v.x);
+        hash        = ::skr::hash_combine(hash, hasher(v.y));
+        hash        = ::skr::hash_combine(hash, hasher(v.z));
         return hash;
     }
 
@@ -195,13 +195,13 @@ struct Vector4 {
     }
 
     // hash
-    inline size_t _skr_hash() const SKR_NOEXCEPT
+    inline static size_t _skr_hash(const Vector4& v) SKR_NOEXCEPT
     {
         auto hasher = ::skr::Hash<float>{};
-        auto hash   = hasher(x);
-        hash        = ::skr::hash_combine(hash, hasher(y));
-        hash        = ::skr::hash_combine(hash, hasher(z));
-        hash        = ::skr::hash_combine(hash, hasher(w));
+        auto hash   = hasher(v.x);
+        hash        = ::skr::hash_combine(hash, hasher(v.y));
+        hash        = ::skr::hash_combine(hash, hasher(v.z));
+        hash        = ::skr::hash_combine(hash, hasher(v.w));
         return hash;
     }
 
