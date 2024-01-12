@@ -120,6 +120,15 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     template <typename UK = MapKeyType>
     requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
     DataRef try_add_zeroed(UK&& key);
+    template <typename UK = MapKeyType>
+    requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
+    DataRef try_add_unsafe(UK&& key, DataRef hint);
+    template <typename UK = MapKeyType>
+    requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
+    DataRef try_add_default(UK&& key, DataRef hint);
+    template <typename UK = MapKeyType>
+    requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
+    DataRef try_add_zeroed(UK&& key, DataRef hint);
 
     // emplace
     template <typename UK = MapKeyType, typename... Args>
@@ -403,6 +412,73 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_ad
         memset(&ref.value(), 0, sizeof(MapValueType));
     }
     return ref;
+}
+template <typename Memory>
+template <typename UK>
+requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_add_unsafe(UK&& key, DataRef hint)
+{
+    if (hint.is_valid())
+    { // assign case
+        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(find(key) == hint);
+        hint.key() = std::forward<UK>(key);
+        return hint;
+    }
+    else
+    { // construct case
+        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(!contains(key));
+        DataRef ref = Super::template _add_unsafe<DataRef>(hint.hash());
+        new (&ref.key()) MapKeyType(std::forward<UK>(key));
+        return ref;
+    }
+}
+template <typename Memory>
+template <typename UK>
+requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_add_default(UK&& key, DataRef hint)
+{
+    if (hint.is_valid())
+    { // assign case
+        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(find(key) == hint);
+        hint.key() = std::forward<UK>(key);
+        memory::construct(&hint.value());
+        return hint;
+    }
+    else
+    { // construct case
+        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(!contains(key));
+        DataRef ref = Super::template _add_unsafe<DataRef>(hint.hash());
+        new (&ref.key()) MapKeyType(std::forward<UK>(key));
+        memory::construct(&ref.value());
+        return ref;
+    }
+}
+template <typename Memory>
+template <typename UK>
+requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_add_zeroed(UK&& key, DataRef hint)
+{
+    if (hint.is_valid())
+    { // assign case
+        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(find(key) == hint);
+        hint.key() = std::forward<UK>(key);
+        memset(&hint.value(), 0, sizeof(MapValueType));
+        return hint;
+    }
+    else
+    { // construct case
+        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(!contains(key));
+        DataRef ref = Super::template _add_unsafe<DataRef>(hint.hash());
+        new (&ref.key()) MapKeyType(std::forward<UK>(key));
+        memset(&ref.value(), 0, sizeof(MapValueType));
+        return ref;
+    }
 }
 
 // emplace
