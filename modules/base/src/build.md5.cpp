@@ -1,10 +1,9 @@
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/misc/types.h"
-#include "SkrRT/misc/log.h"
+#include <string>
+#include "SkrBase/types.h"
+#include "SkrBase/misc/debug.h"
 
 constexpr int parse_hex_digit(const char8_t c)
 {
-    using namespace skr::StringLiterals;
     if (u8'0' <= c && c <= u8'9')
         return c - u8'0';
     else if (u8'a' <= c && c <= u8'f')
@@ -12,7 +11,7 @@ constexpr int parse_hex_digit(const char8_t c)
     else if (u8'A' <= c && c <= u8'F')
         return 10 + c - u8'A';
     else
-        SKR_LOG_ERROR(u8"Invalid character in GUID. Expected hex digit, got %c", c);
+        SKR_ASSERT((c == u8'0') && false && u8"Invalid character in GUID. Expected hex digit");
     return -1;
 }
 
@@ -31,18 +30,17 @@ bool parse_hex(const char8_t* ptr, T& value)
     return true;
 }
 
-bool make_md5(const skr::StringView& str, skr_md5_t& value)
+bool make_md5(const std::u8string_view& str, skr_md5_t& value)
 {
-    using namespace skr::StringLiterals;
     constexpr size_t md5_form_length = 32;
 
     if (str.size() != md5_form_length)
     {
-        skr::String str2(str);
-        SKR_LOG_ERROR(u8"String MD5 of the form XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX is expected, got %s", str2.c_str());
+        std::u8string str2(str);
+        SKR_ASSERT(str2.c_str() && false && u8"String MD5 of the form XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX is expected");
         return false;
     }
-    const auto begin = str.raw().data();
+    const auto begin = str.data();
     if (!parse_hex(begin, value.digest[0])) return false;
     if (!parse_hex(begin + 2, value.digest[1])) return false;
     if (!parse_hex(begin + 4, value.digest[2])) return false;
@@ -63,16 +61,16 @@ bool make_md5(const skr::StringView& str, skr_md5_t& value)
 }
 
 // exports
-#include "./../crypt/md5.h"
+#include "crypt/md5.h"
 
-bool skr_parse_md5(const char8_t* str32, skr_md5_t* out_md5)
+SKR_EXTERN_C bool skr_parse_md5(const char8_t* str32, skr_md5_t* out_md5)
 {
-    skr::StringView sv(str32, 32);
+    std::u8string_view sv(str32, 32);
     if (!out_md5) return false;
     return make_md5(sv, *out_md5);
 }
 
-void skr_make_md5(const char8_t* str, uint32_t str_size, skr_md5_t* out_md5)
+SKR_EXTERN_C void skr_make_md5(const char8_t* str, uint32_t str_size, skr_md5_t* out_md5)
 {
     return skr_crypt_make_md5(str, str_size, out_md5);
 }

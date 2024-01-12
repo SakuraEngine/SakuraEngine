@@ -13,9 +13,6 @@ inline skr_guid_t skr_guid_t::Create()
 }
 #endif
 
-SKR_EXTERN_C SKR_RUNTIME_API bool skr_parse_md5(const char8_t* str32, skr_md5_t* out_md5);
-SKR_EXTERN_C SKR_RUNTIME_API void skr_make_md5(const char8_t* str, uint32_t str_size, skr_md5_t* out_md5);
-
 extern const skr_guid_t $guid;
 
 #ifdef __cplusplus
