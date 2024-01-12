@@ -5,7 +5,7 @@
 #endif
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/log.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/module/module_manager.hpp"
 
 #include "SkrImGui/skr_imgui.h"

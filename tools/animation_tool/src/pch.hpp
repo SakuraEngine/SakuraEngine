@@ -16,7 +16,7 @@
 #include "SkrBase/misc/debug.h"  // IWYU pragma: export
 #include "SkrRT/platform/thread.h" // IWYU pragma: export
 #include "SkrRT/platform/filesystem.hpp" // IWYU pragma: export
-#include "SkrRT/misc/make_zeroed.hpp" // IWYU pragma: export
+#include "SkrBase/misc/make_zeroed.hpp" // IWYU pragma: export
 #include "SkrRT/misc/types.h" // IWYU pragma: export
 #include "SkrRT/misc/log.hpp" // IWYU pragma: export
 #include "SkrBase/misc/hash.h" // IWYU pragma: export

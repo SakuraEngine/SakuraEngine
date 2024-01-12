@@ -2,7 +2,7 @@
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/render_device.h"
 #include "SkrBase/misc/hash.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrMemory/memory.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/containers/hashmap.hpp"

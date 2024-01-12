@@ -3,7 +3,7 @@
 #include "SkrRT/platform/vfs.h"
 #include <SkrRT/containers/string.hpp>
 #include "SkrRT/misc/log.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/io/vram_io.hpp"
 #include "SkrRT/module/module_manager.hpp"
 

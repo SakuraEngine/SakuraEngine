@@ -1,5 +1,5 @@
 #include "MPShared/client_world.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/ecs/set.hpp"

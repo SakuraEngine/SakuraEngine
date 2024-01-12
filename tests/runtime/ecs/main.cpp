@@ -1,7 +1,7 @@
 #include "guid.hpp" //for guid
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
 
 #include "SkrTestFramework/framework.hpp"

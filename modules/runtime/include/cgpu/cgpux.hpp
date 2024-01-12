@@ -1,6 +1,6 @@
 #pragma once
 #include "cgpu/cgpux.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/containers/vector.hpp"
 
 struct CGPUXBindTableLocation;

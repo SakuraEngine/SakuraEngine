@@ -3,7 +3,7 @@
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "d3d12_utils.hpp"
 #include "SkrMemory/memory.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include <SkrRT/containers/stl_string.hpp>
 #include <SkrRT/containers/string.hpp>

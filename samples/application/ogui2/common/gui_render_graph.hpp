@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "common/render_application.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 
 #include "SkrProfile/profile.h"
 
