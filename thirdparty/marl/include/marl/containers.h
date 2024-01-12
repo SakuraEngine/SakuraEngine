@@ -21,20 +21,6 @@
 #include <cstddef>    // size_t
 #include <thread>
 
-#ifdef MARL_USE_EASTL
-#include <EASTL/deque.h>
-#include <EASTL/map.h>
-#include <EASTL/set.h>
-#include <EASTL/unordered_map.h>
-#include <EASTL/unordered_set.h>
-
-namespace marl { using eastl::map; using eastl::deque; using eastl::set; using eastl::unordered_map; using eastl::unordered_set; }
-template <>
-struct MARL_EXPORT eastl::hash<std::thread::id> {
-  size_t operator()(const std::thread::id _Keyval) const noexcept;
-};
-
-#else
 #include <algorithm>  // std::max
 #include <utility>    // std::move
 #include <deque>
@@ -43,33 +29,6 @@ struct MARL_EXPORT eastl::hash<std::thread::id> {
 #include <unordered_map>
 #include <unordered_set>
 namespace marl { using std::map; using std::deque; using std::set; using std::unordered_map; using std::unordered_set; }
-#endif
-
-#ifdef MARL_USE_EASTL
-
-namespace marl {
-namespace containers {
-
-template <typename T>
-using deque = marl::deque<T, EASTLAllocator>;
-
-template <typename K, typename V, typename C = eastl::less<K>>
-using map = marl::map<K, V, C, EASTLAllocator>;
-
-template <typename K, typename C = eastl::less<K>>
-using set = marl::set<K, C, EASTLAllocator>;
-
-template <typename K,
-          typename V,
-          typename H = eastl::hash<K>,
-          typename E = eastl::equal_to<K>>
-using unordered_map =
-    marl::unordered_map<K, V, H, E, EASTLAllocator>;
-
-template <typename K, typename H = eastl::hash<K>, typename E = eastl::equal_to<K>>
-using unordered_set = marl::unordered_set<K, H, E, EASTLAllocator>;
-
-#else
 
 namespace marl {
 namespace containers {
@@ -98,8 +57,6 @@ using unordered_map =
 
 template <typename K, typename H = std::hash<K>, typename E = std::equal_to<K>>
 using unordered_set = marl::unordered_set<K, H, E, marl::StlAllocator<K>>;
-
-#endif
 
 // take() takes and returns the front value from the deque.
 template <typename T>

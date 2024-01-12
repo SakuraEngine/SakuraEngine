@@ -45,13 +45,9 @@
 #include "marl/export.h"
 #include "marl/memory.h"
 
-#ifdef MARL_USE_EASTL
-#include <EASTL/functional.h>
-namespace marl { using eastl::function; }
-#else
 #include <functional>
 namespace marl { using std::function; }
-#endif
+
 #include <memory>
 
 extern "C" {
