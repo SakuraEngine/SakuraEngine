@@ -108,9 +108,6 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     // key only add
     template <typename UK = MapKeyType>
     requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
-    DataRef add(UK&& key);
-    template <typename UK = MapKeyType>
-    requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
     DataRef add_unsafe(UK&& key);
     template <typename UK = MapKeyType>
     requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
@@ -329,17 +326,6 @@ SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memor
 }
 
 // key only add
-template <typename Memory>
-template <typename UK>
-requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
-SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memory>::add(UK&& key)
-{
-    HashType hash = HasherType()(key);
-    DataRef  ref  = add_ex_unsafe(hash);
-    new (&ref.key()) MapKeyType{ std::move(key) };
-    memory::construct_stl_ub(&ref.value());
-    return ref;
-}
 template <typename Memory>
 template <typename UK>
 requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)

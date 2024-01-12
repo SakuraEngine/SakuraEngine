@@ -62,23 +62,23 @@ void InputSystem::Destroy(InputSystem* system) SKR_NOEXCEPT
 
 InputSystemImpl::InputSystemImpl() SKR_NOEXCEPT
 {
-    inputs.try_add(InputKindControllerAxis);
-    inputs.try_add(InputKindControllerButton);
-    inputs.try_add(InputKindControllerSwitch);
-    inputs.try_add(InputKindController);
+    inputs.try_add_default(InputKindControllerAxis);
+    inputs.try_add_default(InputKindControllerButton);
+    inputs.try_add_default(InputKindControllerSwitch);
+    inputs.try_add_default(InputKindController);
 
-    inputs.try_add(InputKindKeyboard);
-    inputs.try_add(InputKindMouse);
-    inputs.try_add(InputKindGamepad);
+    inputs.try_add_default(InputKindKeyboard);
+    inputs.try_add_default(InputKindMouse);
+    inputs.try_add_default(InputKindGamepad);
 
-    inputs.try_add(InputKindTouch);
-    inputs.try_add(InputKindMotion);
+    inputs.try_add_default(InputKindTouch);
+    inputs.try_add_default(InputKindMotion);
 
-    inputs.try_add(InputKindArcadeStick);
-    inputs.try_add(InputKindFlightStick);
+    inputs.try_add_default(InputKindArcadeStick);
+    inputs.try_add_default(InputKindFlightStick);
 
-    inputs.try_add(InputKindRacingWheel);
-    inputs.try_add(InputKindUiNavigation);
+    inputs.try_add_default(InputKindRacingWheel);
+    inputs.try_add_default(InputKindUiNavigation);
 }
 
 void InputSystemImpl::update(float delta) SKR_NOEXCEPT

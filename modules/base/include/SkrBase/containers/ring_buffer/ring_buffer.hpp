@@ -57,7 +57,6 @@ struct RingBuffer : protected Memory {
     void reserve(SizeType expect_capacity);
     void shrink();
     void resize(SizeType expect_size, const DataType& new_value);
-    void resize(SizeType expect_size);
     void resize_unsafe(SizeType expect_size);
     void resize_default(SizeType expect_size);
     void resize_zeroed(SizeType expect_size);
@@ -236,17 +235,6 @@ inline void RingBuffer<Memory>::_construct_value(SizeType front, SizeType back, 
         {
             new (_data() + src_idx + i) DataType(v);
         }
-    });
-}
-template <typename Memory>
-inline void RingBuffer<Memory>::_construct_stl_ub(SizeType front, SizeType back)
-{
-    process_ring_buffer_data(
-    capacity(),
-    front,
-    back,
-    [this](SizeType dst_idx, SizeType src_idx, SizeType size) {
-        memory::construct_stl_ub(_data() + src_idx, size);
     });
 }
 template <typename Memory>
@@ -447,30 +435,6 @@ inline void RingBuffer<Memory>::resize(SizeType expect_size, const DataType& new
         _rearrange_for_push_back(expect_size - size());
 
         _construct_value(_back(), _front() + expect_size, new_value);
-    }
-    else if (expect_size < size())
-    {
-        destruct_ring_buffer(_data(), capacity(), _front() + expect_size, _back());
-    }
-
-    // set back
-    _set_back(_front() + expect_size);
-}
-template <typename Memory>
-inline void RingBuffer<Memory>::resize(SizeType expect_size)
-{
-    // realloc memory if need
-    if (expect_size > capacity())
-    {
-        _realloc(expect_size);
-    }
-
-    // construct item or destruct item if need
-    if (expect_size > size())
-    {
-        _rearrange_for_push_back(expect_size - size());
-
-        _construct_stl_ub(_back(), _front() + expect_size);
     }
     else if (expect_size < size())
     {

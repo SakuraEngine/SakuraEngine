@@ -14,14 +14,6 @@ SKR_INLINE void construct(T* p)
     {
         new (p) T();
     }
-}
-template <typename T>
-SKR_INLINE void construct_stl_ub(T* p)
-{
-    if constexpr (MemoryTraits<T>::use_ctor)
-    {
-        new (p) T();
-    }
     else
     {
         std::memset(p, 0, sizeof(T));
@@ -137,19 +129,6 @@ namespace skr::memory
 // construct & destruct
 template <typename T>
 SKR_INLINE void construct(T* p, size_t count)
-{
-    if constexpr (MemoryTraits<T>::use_ctor)
-    {
-        while (count)
-        {
-            new (p) T();
-            ++p;
-            --count;
-        }
-    }
-}
-template <typename T>
-SKR_INLINE void construct_stl_ub(T* p, size_t count)
 {
     if constexpr (MemoryTraits<T>::use_ctor)
     {

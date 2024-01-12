@@ -14,7 +14,7 @@ void CGPUXBindTableValue::Initialize(const CGPUXBindTableLocation& loc, const CG
     data.binding = loc.binding;
     data.binding_type = rhs.binding_type;
     binded = false;
-    resources.resize(data.count);
+    resources.resize_default(data.count);
     for (uint32_t i = 0; i < data.count; i++)
     {
         resources[i] = data.ptrs[i];
@@ -23,7 +23,7 @@ void CGPUXBindTableValue::Initialize(const CGPUXBindTableLocation& loc, const CG
 
     if (data.buffers_params.offsets)
     {
-        offsets.resize(data.count);
+        offsets.resize_default(data.count);
         for (uint32_t i = 0; i < data.count; i++)
         {
             offsets[i] = data.buffers_params.offsets[i];
@@ -32,7 +32,7 @@ void CGPUXBindTableValue::Initialize(const CGPUXBindTableLocation& loc, const CG
     }
     if (data.buffers_params.sizes)
     {
-        sizes.resize(data.count);
+        sizes.resize_default(data.count);
         for (uint32_t i = 0; i < data.count; i++)
         {
             sizes[i] = data.buffers_params.sizes[i];
