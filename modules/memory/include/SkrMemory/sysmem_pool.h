@@ -1,11 +1,16 @@
 #pragma once
 #include "SkrMemory/memory.h"
 
+typedef struct SSysMemoryPoolDesc {
+    size_t size;
+    const char* pool_name;
+    bool use_large_page;
+} SSysMemoryPoolDesc;
+
 typedef struct SSysMemoryPool SSysMemoryPool;
 typedef struct SSysMemoryPool* SSysMemoryPoolId;
-SKR_EXTERN_C SKR_MEMORY_API SSysMemoryPoolId sakura_sysmem_pool_create(size_t size, const char* pool_name);
+SKR_EXTERN_C SKR_MEMORY_API SSysMemoryPoolId sakura_sysmem_pool_create(const SSysMemoryPoolDesc* pdesc);
 SKR_EXTERN_C SKR_MEMORY_API void sakura_sysmem_pool_destroy(SSysMemoryPoolId pool);
-
 SKR_EXTERN_C SKR_MEMORY_API void* _sakura_sysmem_pool_malloc(SSysMemoryPoolId pool, size_t size);
 SKR_EXTERN_C SKR_MEMORY_API void* _sakura_sysmem_pool_free(SSysMemoryPoolId pool, void* ptr);
 
@@ -31,11 +36,13 @@ SKR_FORCEINLINE void* SkrSysMemPoolFreeWithCZone(SSysMemoryPoolId pool, void* pt
     return ptr;
 }
 
+// thread unsafe
 #define sakura_sysmem_pool_malloc(pool, size) SkrSysMemPoolMallocWithCZone((pool), (size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
 #define sakura_sysmem_pool_free(pool, p) SkrSysMemPoolFreeWithCZone((pool), (p), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
 
 #else
 
+// thread unsafe
 #define sakura_sysmem_pool_malloc(pool, size) _sakura_sysmem_pool_malloc((pool), (size))
 #define sakura_sysmem_pool_free(pool, p) _sakura_sysmem_pool_free((pool), (p))
 
