@@ -91,6 +91,7 @@ SKR_INLINE void heapify(T* heap, TS count, TP&& p = TP())
 template <typename T, typename TS, class TP = Less<>>
 SKR_INLINE void heap_sort(T heap, TS count, TP&& p = TP())
 {
+    if (count == 0) return;
     auto reverse_pred = [&](const auto& a, const auto& b) -> bool { return !p(a, b); };
 
     // use reverse_pred heapify, and pop head swap to tail
