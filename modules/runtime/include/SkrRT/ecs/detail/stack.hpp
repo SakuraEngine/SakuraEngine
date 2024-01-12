@@ -2,7 +2,7 @@
 
 namespace sugoi
 {
-    struct fixed_stack_t
+    struct SKR_RUNTIME_API fixed_stack_t
     {
         void* buffer;
         size_t size;

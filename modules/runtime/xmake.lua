@@ -8,7 +8,6 @@ add_requires("lemon 1.3.1")
 add_requires("parallel-hashmap >=1.3.11-skr")
 add_requires("boost-context >=0.1.0-skr")
 add_requires("simdjson >=3.0.0-skr")
-add_requires("luau", { configs = { extern_c = true }})
 -- add_requires("cpu_features v0.9.0")
 
 target("SkrRTStatic")
@@ -32,7 +31,7 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     add_defines("SKR_RUNTIME_API=SKR_EXPORT", "SKR_RUNTIME_LOCAL=error")
 
     -- internal packages
-    add_packages("boost-context", "luau", {public = true, inherit = true})
+    add_packages("boost-context", {public = true, inherit = true})
 
     -- add source files
     add_files("src/**/build.*.c", "src/**/build.*.cpp")

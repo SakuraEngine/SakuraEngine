@@ -12,7 +12,6 @@ shared_module("SkrImGui", "SKR_IMGUI", engine_version)
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("include", {public=true})
     add_defines("IMGUI_IMPORT= extern SKR_IMGUI_API", {public=false})
-    add_files("src/build.*.cc", {unity_ignored = true})
     add_files("src/build.*.cpp")
     -- add render graph shaders
     add_rules("utils.dxc", {

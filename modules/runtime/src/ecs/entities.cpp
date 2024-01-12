@@ -1,6 +1,6 @@
 #include "SkrRT/ecs/entity.hpp"
 #include "SkrRT/ecs/entities.hpp"
-#include "chunk.hpp"
+#include "SkrRT/ecs/detail/chunk.hpp"
 
 sugoi_entity_debug_proxy_t dummy;
 namespace sugoi

@@ -113,7 +113,7 @@ SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_save_scene(sugoi_storage_t* world, str
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(sugoi_storage_t* world, struct skr_json_reader_t* reader);
 
 #ifdef __cplusplus
-    #include "SkrRT/lua/bind.hpp"
+    #include "SkrLua/bind.hpp"
 
 namespace skr::lua
 {

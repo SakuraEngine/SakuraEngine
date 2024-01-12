@@ -48,7 +48,7 @@
 
 #include "SkrProfile/profile.h"
 #include "SkrRT/misc/types.h"
-#include "SkrRT/lua/skr_lua.h"
+#include "SkrLua/skr_lua.h"
 // #include "SkrInspector/inspect_value.h" // FIXME. inspector
 
 #include "SkrScene/resources/scene_resource.h"

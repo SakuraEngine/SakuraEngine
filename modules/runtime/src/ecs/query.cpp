@@ -1,20 +1,22 @@
-#include "type_registry.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/SmallVector.h"
 #include "SkrRT/ecs/set.hpp"
-#include "archetype.hpp"
-#include "arena.hpp"
-#include "chunk.hpp"
-#include "query.hpp"
-#include "stack.hpp"
-#include "storage.hpp"
-#include "type.hpp"
 
+#include "SkrRT/ecs/detail/type_registry.hpp"
+#include "SkrRT/ecs/detail/archetype.hpp"
+#include "SkrRT/ecs/detail/arena.hpp"
+#include "SkrRT/ecs/detail/chunk.hpp"
+#include "SkrRT/ecs/detail/query.hpp"
+#include "SkrRT/ecs/detail/stack.hpp"
+#include "SkrRT/ecs/detail/storage.hpp"
+#include "SkrRT/ecs/detail/type.hpp"
+#include "SkrRT/ecs/detail/scheduler.hpp"
+
+#include <SkrRT/containers/span.hpp>
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/stl_string.hpp>
 #include "SkrRT/misc/bits.hpp"
-#include "scheduler.hpp"
-#include "SkrRT/containers/span.hpp"
+
 #if __SSE2__
     #include <emmintrin.h>
 #endif
