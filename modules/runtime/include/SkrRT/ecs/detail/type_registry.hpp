@@ -28,7 +28,7 @@ static constexpr type_index_t kMaskComponent = type_index_t(3, false, false, fal
 static constexpr type_index_t kGuidComponent = type_index_t(4, false, false, false, false);
 static constexpr type_index_t kDirtyComponent = type_index_t(5, false, false, false, false);
 
-struct type_registry_t {
+struct SKR_RUNTIME_API type_registry_t {
     type_registry_t(pool_t& pool);
     type_registry_t(const type_registry_t&) = delete;
     skr::Vector<type_description_t> descriptions;

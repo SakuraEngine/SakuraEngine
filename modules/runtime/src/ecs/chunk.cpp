@@ -1,8 +1,7 @@
 
-#include "chunk.hpp"
-#include "pool.hpp"
-#include "pool.hpp"
-#include "archetype.hpp"
+#include "SkrRT/ecs/detail/chunk.hpp"
+#include "SkrRT/ecs/detail/pool.hpp"
+#include "SkrRT/ecs/detail/archetype.hpp"
 
 sugoi_chunk_t* sugoi_chunk_t::create(sugoi::pool_type_t poolType)
 {

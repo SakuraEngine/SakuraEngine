@@ -1,14 +1,17 @@
 #include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/lua/skr_lua.h"
 #include "SkrMemory/memory.h"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"
-#include "SkrRT/lua/bind.hpp"
+
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/ecs/sugoi.h"
+
+#include "SkrLua/skr_lua.h"
+#include "SkrLua/bind.hpp"
+
 extern "C"
 {
 #include "luacode.h"

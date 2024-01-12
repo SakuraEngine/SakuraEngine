@@ -11,7 +11,7 @@ struct resource_fields_t
 };
 
 // chunk data layout descriptor
-struct archetype_t {
+struct SKR_RUNTIME_API archetype_t {
     struct sugoi_storage_t* storage;
     sugoi_type_set_t type;
     uint32_t* sizes;

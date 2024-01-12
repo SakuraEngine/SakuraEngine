@@ -4,13 +4,13 @@
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/serde/binary/writer.h"
 
-#include "chunk.hpp"
-#include "storage.hpp"
-#include "stack.hpp"
-#include "type.hpp"
-#include "archetype.hpp"
-#include "scheduler.hpp"
-#include "type_registry.hpp"
+#include "SkrRT/ecs/detail/chunk.hpp"
+#include "SkrRT/ecs/detail/storage.hpp"
+#include "SkrRT/ecs/detail/stack.hpp"
+#include "SkrRT/ecs/detail/type.hpp"
+#include "SkrRT/ecs/detail/archetype.hpp"
+#include "SkrRT/ecs/detail/scheduler.hpp"
+#include "SkrRT/ecs/detail/type_registry.hpp"
 
 #include "SkrProfile/profile.h"
 

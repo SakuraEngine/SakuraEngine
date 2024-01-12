@@ -1,6 +1,6 @@
 #pragma once
-#include "sugoi.h"
-#include "SkrRT/lua/bind.hpp"
+#include "SkrRT/ecs/sugoi.h"
+#include "SkrLua/bind.hpp"
 
 namespace sugoi
 {

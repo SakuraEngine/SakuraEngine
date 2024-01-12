@@ -4,14 +4,15 @@
 #include "SkrRT/ecs/entity.hpp"
 #include "SkrRT/ecs/set.hpp"
 #include "SkrRT/misc/parallel_for.hpp"
-#include "query.hpp"
-#include "storage.hpp"
-#include "pool.hpp"
-#include "mask.hpp"
-#include "chunk_view.hpp"
-#include "scheduler.hpp"
-#include "iterator_ref.hpp"
-#include "type_registry.hpp"
+
+#include "SkrRT/ecs/detail/query.hpp"
+#include "SkrRT/ecs/detail/storage.hpp"
+#include "SkrRT/ecs/detail/pool.hpp"
+#include "SkrRT/ecs/detail/mask.hpp"
+#include "SkrRT/ecs/detail/chunk_view.hpp"
+#include "SkrRT/ecs/detail/scheduler.hpp"
+#include "SkrRT/ecs/detail/iterator_ref.hpp"
+#include "SkrRT/ecs/detail/type_registry.hpp"
 
 sugoi_storage_t::sugoi_storage_t()
     : archetypeArena(sugoi::get_default_pool())

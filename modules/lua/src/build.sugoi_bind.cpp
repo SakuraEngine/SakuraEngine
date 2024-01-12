@@ -2,21 +2,19 @@ extern "C" {
 #include "lua.h"
 #include "lualib.h"
 }
-#include "stack.hpp"
-#include "query.hpp"
-#include "chunk.hpp"
-#include "archetype.hpp"
-#include "type_registry.hpp"
+#include "SkrRT/ecs/detail/stack.hpp"
+#include "SkrRT/ecs/detail/query.hpp"
+#include "SkrRT/ecs/detail/chunk.hpp"
+#include "SkrRT/ecs/detail/archetype.hpp"
+#include "SkrRT/ecs/detail/type_registry.hpp"
 #include "SkrRT/ecs/type_builder.hpp"
 
 #include "SkrRT/ecs/array.hpp"
 
-namespace sugoi
-{
-extern thread_local fixed_stack_t localStack;
-}
 namespace skr::lua
 {
+    thread_local sugoi::fixed_stack_t localStack(4096 * 8);
+
     using lua_push_t = int (*)(sugoi_chunk_t* chunk, EIndex index, char* data, struct lua_State* L);
     using lua_check_t = void (*)(sugoi_chunk_t* chunk, EIndex index, char* data, struct lua_State* L, int idx);
 
@@ -86,7 +84,7 @@ namespace skr::lua
     static lua_chunk_view_t inherit_chunk_view(sugoi_chunk_view_t* view, lua_chunk_view_t* parent)
     {
         lua_chunk_view_t luaView { parent->storage, *view, parent->count, parent->readonly, parent->entities, parent->types, parent->datas, parent->strides, parent->guidStrs, parent->elementSizes, parent->lua_pushs, parent->lua_checks };
-        luaView.datas = sugoi::localStack.allocate<void*>(parent->count);
+        luaView.datas = localStack.allocate<void*>(parent->count);
         luaView.entities = sugoiV_get_entities(view);
         forloop(i, 0, parent->count)
         {
@@ -103,12 +101,12 @@ namespace skr::lua
         lua_chunk_view_t luaView { storage, *view, count };
 
         luaView.types = indices;
-        luaView.datas = sugoi::localStack.allocate<void*>(count);
-        luaView.strides = sugoi::localStack.allocate<uint32_t>(count);
-        luaView.guidStrs = sugoi::localStack.allocate<const char8_t*>(count);
-        luaView.elementSizes = sugoi::localStack.allocate<uint32_t>(count);
-        luaView.lua_pushs = sugoi::localStack.allocate<lua_push_t>(count);
-        luaView.lua_checks = sugoi::localStack.allocate<lua_check_t>(count);
+        luaView.datas = localStack.allocate<void*>(count);
+        luaView.strides = localStack.allocate<uint32_t>(count);
+        luaView.guidStrs = localStack.allocate<const char8_t*>(count);
+        luaView.elementSizes = localStack.allocate<uint32_t>(count);
+        luaView.lua_pushs = localStack.allocate<lua_push_t>(count);
+        luaView.lua_checks = localStack.allocate<lua_check_t>(count);
         luaView.operations = operations;
         luaView.readonly = readonly;
 
@@ -197,7 +195,7 @@ namespace skr::lua
                 sugoi_entity_type_t type;
                 type.type = builder.build();
                 auto callback = [&](sugoi_chunk_view_t* view) -> void {
-                    sugoi::fixed_stack_scope_t scope(sugoi::localStack);
+                    sugoi::fixed_stack_scope_t scope(localStack);
                     auto luaView = init_chunk_view(storage, view, type.type);
                     lua_pushvalue(L, 3);
                     *(lua_chunk_view_t**)lua_newuserdata(L, sizeof(void*)) = &luaView;
@@ -295,7 +293,7 @@ namespace skr::lua
                 auto callback = [&](sugoi_chunk_view_t* view) -> void {
                     auto castCallback = [&](sugoi_chunk_view_t* new_view, sugoi_chunk_view_t* old_view)
                     {
-                        sugoi::fixed_stack_scope_t scope(sugoi::localStack);
+                        sugoi::fixed_stack_scope_t scope(localStack);
                         auto luaView = init_chunk_view(storage, view, delta.added.type);
                         lua_pushvalue(L, param);
                         *(lua_chunk_view_t**)lua_newuserdata(L, sizeof(void*)) = &luaView;
@@ -349,7 +347,7 @@ namespace skr::lua
                 sugoi_view_callback_t callback = +[](void* userdata, sugoi_chunk_view_t* view) -> void {
                     lua_State* L = (lua_State*)userdata;
                     sugoi_query_t* query = *(sugoi_query_t**)lua_touserdata(L, 1);
-                    sugoi::fixed_stack_scope_t scope(sugoi::localStack);
+                    sugoi::fixed_stack_scope_t scope(localStack);
                     auto luaView = query_chunk_view(view, query);
                     lua_pushvalue(L, 2);
 
@@ -505,7 +503,7 @@ namespace skr::lua
                                 lua_pop(L, 1);
                             }
                             auto callback = [&](sugoi_chunk_view_t* view) -> void {
-                                sugoi::fixed_stack_scope_t scope(sugoi::localStack);
+                                sugoi::fixed_stack_scope_t scope(localStack);
                                 auto luaView = inherit_chunk_view(view, parent);
                                 lua_pushvalue(L, 3);
                                 auto ptr = (lua_chunk_view_t**)lua_newuserdata(L, sizeof(void*));

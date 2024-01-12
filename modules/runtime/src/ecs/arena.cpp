@@ -1,6 +1,6 @@
-#include "arena.hpp"
-#include "pool.hpp"
 #include "SkrRT/ecs/sugoi_config.h"
+#include "SkrRT/ecs/detail/arena.hpp"
+#include "SkrRT/ecs/detail/pool.hpp"
 
 #include "SkrProfile/profile.h"
 
