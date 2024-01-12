@@ -225,6 +225,7 @@ typedef void (*sugoi_entity_callback_t)(void* u, sugoi_entity_t e);
 typedef void (*sugoi_cast_callback_t)(void* u, sugoi_chunk_view_t* new_view, sugoi_chunk_view_t* old_view);
 typedef void (*sugoi_type_callback_t)(void* u, sugoi_type_index_t t);
 typedef void (*sugoi_destroy_callback_t)(void* u, sugoi_chunk_view_t* view, sugoi_view_callback_t callback, void* u2);
+typedef bool (*sugoi_custom_filter_callback_t)(void* u, sugoi_chunk_view_t* view);
 
 /**
  * @brief register a new component
@@ -611,6 +612,15 @@ SKR_RUNTIME_API void sugoiQ_get(sugoi_query_t* query, sugoi_filter_t* filter, su
  * @param meta pass nullptr to clear meta
  */
 SKR_RUNTIME_API void sugoiQ_set_meta(sugoi_query_t* query, const sugoi_meta_filter_t* meta);
+/**
+ * @brief set custom filter callback for a query
+ * note: query does not own userdata
+ * @param query 
+ * @param callback 
+ * @param u 
+ * @return SKR_RUNTIME_API 
+ */
+SKR_RUNTIME_API void sugoiQ_set_custom_filter(sugoi_query_t* query, sugoi_custom_filter_callback_t callback, void* u);
 /**
  * @brief get filtered chunk view from query
  *

@@ -908,7 +908,7 @@ void sugoiS_query(sugoi_storage_t* storage, const sugoi_filter_t* filter, const 
                     storage->scheduler->sync_entry(group->archetype, idx, false);
             }
             if(callback)
-                storage->query(group, *filter, *meta, callback, u);
+                storage->query(group, *filter, *meta, nullptr, nullptr, callback, u);
         };
         storage->query_groups(*filter, *meta, SUGOI_LAMBDA(filterChunk));
     }
@@ -1019,6 +1019,12 @@ void sugoiQ_set_meta(sugoi_query_t* query, const sugoi_meta_filter_t* meta)
     }
 }
 
+void sugoiQ_set_custom_filter(sugoi_query_t* query, sugoi_custom_filter_callback_t callback, void* u)
+{
+    query->customFilter = callback;
+    query->customFilterUserData = u;
+}
+
 sugoi_query_t* sugoiQ_create(sugoi_storage_t* storage, const sugoi_filter_t* filter, const sugoi_parameters_t* params)
 {
     SKR_ASSERT(sugoi::ordered(*filter));
@@ -1055,7 +1061,7 @@ void sugoiQ_get_views_group(sugoi_query_t* query, sugoi_group_t* group, sugoi_vi
     query->storage->build_queries();
     if(!query->storage->match_group(query->filter, query->meta, group))
         return;
-    query->storage->query(group, query->filter, query->meta, callback, u);
+    query->storage->query(group, query->filter, query->meta, query->customFilter, query->customFilterUserData, callback, u);
 }
 
 const char8_t* sugoiQ_get_error()

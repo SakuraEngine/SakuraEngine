@@ -427,7 +427,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
                     startIndex += view->count;
                 };
                 auto group = sharedData->groups[i];
-                query->storage->query(group, query->filter, validatedMeta, SUGOI_LAMBDA(processView));
+                query->storage->query(group, query->filter, validatedMeta, query->customFilter, query->customFilterUserData, SUGOI_LAMBDA(processView));
             }
         }
         else
@@ -493,7 +493,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
                         }
                     };
                     auto group = sharedData->groups[i];
-                    query->storage->query(group, query->filter, validatedMeta, SUGOI_LAMBDA(scheduleView));
+                    query->storage->query(group, query->filter, validatedMeta, query->customFilter, query->customFilterUserData, SUGOI_LAMBDA(scheduleView));
                 };
                 if (currBatch.endTask != tasks.size())
                 {
