@@ -348,6 +348,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ex
     { // construct case
         construct(ref.ptr());
     }
+    SKR_ASSERT(HasherType()(ref.ref().key) == hash);
     return ref;
 }
 template <typename Memory>
