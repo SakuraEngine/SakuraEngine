@@ -190,6 +190,9 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     CStlIt begin() const;
     StlIt  end();
     CStlIt end() const;
+
+    // syntax
+    const MultSparseHashSet& readonly() const;
 };
 } // namespace skr::container
 
@@ -560,5 +563,12 @@ template <typename Memory>
 SKR_INLINE typename MultSparseHashSet<Memory>::CStlIt MultSparseHashSet<Memory>::end() const
 {
     return { CCursor::EndOverflow(this) };
+}
+
+// syntax
+template <typename Memory>
+SKR_INLINE const MultSparseHashSet<Memory>& MultSparseHashSet<Memory>::readonly() const
+{
+    return *this;
 }
 } // namespace skr::container

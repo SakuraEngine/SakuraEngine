@@ -199,6 +199,9 @@ struct SparseArray : protected Memory {
     StlIt  end();
     CStlIt end() const;
 
+    // syntax
+    const SparseArray& readonly() const;
+
 private:
     // helper
     void     _realloc(SizeType new_capacity);
@@ -1285,5 +1288,12 @@ template <typename Memory>
 SKR_INLINE typename SparseArray<Memory>::CStlIt SparseArray<Memory>::end() const
 {
     return { CCursor::EndOverflow(this) };
+}
+
+// syntax
+template <typename Memory>
+SKR_INLINE const SparseArray<Memory>& SparseArray<Memory>::readonly() const
+{
+    return *this;
 }
 } // namespace skr::container
