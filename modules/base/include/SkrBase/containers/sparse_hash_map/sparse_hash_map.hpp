@@ -81,7 +81,6 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     using Super::has_data;
     using Super::is_hole;
     using Super::is_valid_index;
-    using Super::is_valid_pointer;
 
     // memory op
     using Super::clear;

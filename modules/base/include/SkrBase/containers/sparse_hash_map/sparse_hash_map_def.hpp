@@ -48,5 +48,9 @@ struct SparseHashMapDataRef : private SparseHashSetDataRef<KVPair<K, V>, TS, THa
     SKR_INLINE explicit operator bool() { return is_valid(); }
     // SKR_INLINE T&       operator*() const { return ref(); }
     // SKR_INLINE T*       operator->() const { return ptr(); }
+
+    // compare
+    SKR_INLINE bool operator==(const SparseHashMapDataRef& rhs) const { return Super::operator==(rhs); }
+    SKR_INLINE bool operator!=(const SparseHashMapDataRef& rhs) const { return Super::operator!=(rhs); }
 };
 } // namespace skr::container

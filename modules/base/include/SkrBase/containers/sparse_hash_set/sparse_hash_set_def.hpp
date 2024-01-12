@@ -54,6 +54,10 @@ struct SparseHashSetDataRef {
     // SKR_INLINE DataRef&       operator*() const { return ref(); }
     // SKR_INLINE DataRef*       operator->() const { return ptr(); }
 
+    // compare
+    SKR_INLINE bool operator==(const SparseHashSetDataRef& rhs) const { return _ptr == rhs._ptr; }
+    SKR_INLINE bool operator!=(const SparseHashSetDataRef& rhs) const { return _ptr != rhs._ptr; }
+
 private:
     // add/emplace: 添加的元素指针
     // find: 找到的元素指针
