@@ -8,9 +8,9 @@
 #include "SkrRT/misc/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/sptr.hpp"
+#include "SkrContainers/hashmap.hpp"
 
 #include "SkrRenderer/render_device.h"
 #include "SkrRenderer/resources/texture_resource.h"

@@ -1,13 +1,13 @@
 #include "SkrRenderer/shader_map.h"
 #include "SkrRenderer/shader_hash.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/platform/atomic.h"
+#include "SkrThread/atomic.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/async/thread_job.hpp"
 
-#include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrContainers/hashmap.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/sptr.hpp"
 
 #include "SkrProfile/profile.h"
 

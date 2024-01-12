@@ -1,6 +1,6 @@
 #include "triangle_module.wa.c"
 #include "common/utils.h"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 #include "utils.h"
 #include "math.h"
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/containers/concurrent_queue.hpp"
+#include "SkrContainers/concurrent_queue.hpp"
 
 namespace sugoi
 {

@@ -9,9 +9,9 @@
     // #include "cgpu/backend/metal/cgpu_metal.h"
 #endif
 #include "common_utils.h"
-#include <SkrRT/containers/string.hpp>
-#include <SkrRT/containers/hashmap.hpp>
-#include <SkrRT/containers/vector.hpp>
+#include <SkrContainers/string.hpp>
+#include <SkrContainers/hashmap.hpp>
+#include <SkrContainers/vector.hpp>
 #include <functional>
 
 // Runtime Table

@@ -1,9 +1,9 @@
 #include "SkrBase/misc/debug.h" 
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
-#include <SkrRT/containers/hashmap.hpp>
+#include <SkrContainers/hashmap.hpp>
 #include "SkrBase/misc/hash.h"
-#include "SkrRT/containers/concurrent_queue.hpp"
+#include "SkrContainers/concurrent_queue.hpp"
 
 namespace skr
 {

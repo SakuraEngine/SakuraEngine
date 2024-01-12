@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrInput/input.h"
 #include "SkrMemory/memory.h"
-#include "SkrRT/platform/atomic.h"
-#include "SkrRT/containers/span.hpp"
+#include "SkrThread/atomic.h"
+#include "SkrContainers/span.hpp"
 
 namespace skr
 {

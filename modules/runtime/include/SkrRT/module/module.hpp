@@ -29,9 +29,9 @@
 #include "SkrRT/config.h"
 #ifdef __cplusplus
 #include "SkrRT/platform/shared_library.hpp"
-#include <SkrRT/containers/string.hpp>
-#include <SkrRT/containers/sptr.hpp>
-#include <SkrRT/containers/vector.hpp>
+#include <SkrContainers/string.hpp>
+#include <SkrContainers/sptr.hpp>
+#include <SkrContainers/vector.hpp>
 
 namespace skr
 {

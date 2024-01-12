@@ -1,6 +1,6 @@
 #include "SkrRT/platform/process.h"
 #include "SkrMemory/memory.h"
-#include "SkrRT/platform/atomic.h"
+#include "SkrThread/atomic.h"
 
 typedef struct SProcess
 {

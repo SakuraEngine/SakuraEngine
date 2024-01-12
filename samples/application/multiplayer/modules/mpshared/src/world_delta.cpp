@@ -1,9 +1,9 @@
 #include "MPShared/world_delta.h"
 #include "MPShared/components.h"
-#include "SkrRT/containers/hashmap.hpp"
+#include "SkrContainers/hashmap.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/ecs/type_builder.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrContainers/vector.hpp"
 #include "SkrRT/ecs/set.hpp"
 
 #include "SkrRT/ecs/array.hpp"

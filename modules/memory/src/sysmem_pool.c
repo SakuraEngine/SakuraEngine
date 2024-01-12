@@ -1,7 +1,3 @@
-#ifndef SKR_MEMORY_IMPL
-#define SKR_MEMORY_IMPL
-#endif
-
 #include "SkrMemory/sysmem_pool.h"
 // NOW MI-MALLOC IS A MUST
 #include "mimalloc.h"

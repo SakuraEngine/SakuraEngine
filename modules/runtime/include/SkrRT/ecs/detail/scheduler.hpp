@@ -2,11 +2,11 @@
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/ecs/entities.hpp"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 #include "archetype.hpp"
 
-#include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/stl_vector.hpp"
+#include "SkrContainers/hashmap.hpp"
+#include "SkrContainers/stl_vector.hpp"
 
 namespace sugoi
 {

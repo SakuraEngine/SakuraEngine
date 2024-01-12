@@ -2,10 +2,10 @@
 #include <atomic>
 #include <type_traits>
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/platform/atomic.h"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/atomic.h"
+#include "SkrThread/thread.h"
 #include "SkrMemory/memory.h"
-#include "SkrRT/containers/stl_queue.hpp"
+#include "SkrContainers/stl_queue.hpp"
 
 namespace skr
 {

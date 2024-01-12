@@ -12,16 +12,16 @@
 #include "SkrRT/resource/resource_factory.h" // IWYU pragma: export
 #include "SkrRT/io/ram_io.hpp" // IWYU pragma: export
 
-#include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
-#include <SkrRT/containers/vector.hpp> // IWYU pragma: export
-#include <SkrRT/containers/string.hpp> // IWYU pragma: export
-#include <SkrRT/containers/hashmap.hpp> // IWYU pragma: export
+#include <SkrContainers/sptr.hpp> // IWYU pragma: export
+#include <SkrContainers/vector.hpp> // IWYU pragma: export
+#include <SkrContainers/string.hpp> // IWYU pragma: export
+#include <SkrContainers/hashmap.hpp> // IWYU pragma: export
 
 #include "SkrRT/serde/json/reader.h" // IWYU pragma: export
 #include "SkrRT/serde/json/writer.h" // IWYU pragma: export
 
-#include <SkrRT/containers/stl_vector.hpp> // IWYU pragma: export
-#include <SkrRT/containers/stl_string.hpp> // IWYU pragma: export
+#include <SkrContainers/stl_vector.hpp> // IWYU pragma: export
+#include <SkrContainers/stl_string.hpp> // IWYU pragma: export
 
 #ifdef _WIN32
     #ifndef WIN32_LEAN_AND_MEAN

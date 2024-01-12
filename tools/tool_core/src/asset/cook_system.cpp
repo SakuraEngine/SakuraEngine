@@ -3,12 +3,13 @@
 #include "SkrRT/async/parallel_for.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/containers/string.hpp"
+#include "SkrContainers/string.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/async/thread_job.hpp"
 
 #include "SkrRT/serde/json/reader.h"
 #include "SkrRT/serde/json/writer.h"
+#include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/serde/binary/writer.h"
 
 #include "SkrToolCore/asset/cook_system.hpp"

@@ -7,9 +7,9 @@
 // #define TRACY_PROFILE_DIRECT_STORAGE
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
     #include "SkrMemory/memory.h"
-    #include "SkrRT/platform/atomic.h"
-    #include "SkrRT/platform/thread.h"
-    #include "SkrRT/containers/vector.hpp"
+    #include "SkrThread/atomic.h"
+    #include "SkrThread/thread.h"
+    #include "SkrContainers/vector.hpp"
 #endif
 
 struct SkrWindowsDStorageInstance : public SkrDStorageInstance

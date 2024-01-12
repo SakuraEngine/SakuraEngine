@@ -16,7 +16,6 @@ inline skr_guid_t skr_guid_t::Create()
 extern const skr_guid_t $guid;
 
 #ifdef __cplusplus
-#include "SkrRT/serde/binary/blob_fwd.h"
 
 namespace skr::binary
 {
@@ -39,17 +38,6 @@ using SPtr = SPtrHelper<T, true>;
 template <typename T>
 using SObjectPtr = SPtrHelper<T, false>;
 
-using SInterfaceDeleter = void (*)(struct SInterface*);
-struct SKR_RUNTIME_API         SInterface {
-    virtual ~SInterface() SKR_NOEXCEPT       = default;
-    virtual uint32_t          add_refcount() = 0;
-    virtual uint32_t          release()      = 0;
-    virtual skr_guid_t        get_type() { return {}; }
-    virtual SInterfaceDeleter custom_deleter() const { return nullptr; }
-};
-template <class T>
-constexpr bool is_object_v = std::is_base_of_v<skr::SInterface, T>;
-
 struct SKR_RUNTIME_API SObjectHeader : public SInterface {
     uint32_t                  rc      = 1;
     skr_guid_t                type    = {};
@@ -71,5 +59,5 @@ struct SKR_RUNTIME_API IBlob : public SInterface {
 using BlobId = SObjectPtr<IBlob>;
 
 } // namespace skr
-    #define sobject_cast static_cast
+
 #endif

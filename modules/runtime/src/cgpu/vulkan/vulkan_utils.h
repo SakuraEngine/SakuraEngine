@@ -14,7 +14,7 @@
 #include "vulkan/vulkan_core.h"
 
 #ifdef CGPU_THREAD_SAFETY
-    #include "SkrRT/platform/thread.h"
+    #include "SkrThread/thread.h"
 #endif
 
 #if defined(_MACOS)

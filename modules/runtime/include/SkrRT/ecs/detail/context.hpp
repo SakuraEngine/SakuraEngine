@@ -3,7 +3,7 @@
 #include "scheduler.hpp"
 #include "type_registry.hpp"
 
-#include "SkrRT/containers/string.hpp"
+#include "SkrContainers/string.hpp"
 
 struct sugoi_context_t {
     sugoi_context_t();

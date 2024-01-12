@@ -1,5 +1,5 @@
 #include "SkrRT/async/fib_task.hpp"
-#include "SkrRT/containers/stl_string.hpp"
+#include "SkrContainers/stl_string.hpp"
 #include "SkrMeshCore/mesh_processing.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"

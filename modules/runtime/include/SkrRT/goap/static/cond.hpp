@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/goap/static/proxy.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrContainers/vector.hpp"
 
 namespace skr::goap
 {

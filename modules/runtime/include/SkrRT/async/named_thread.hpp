@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrRT/async/result.hpp"
-#include "SkrRT/platform/thread.h"
-#include "SkrRT/platform/atomic.h"
+#include "SkrThread/thread.h"
+#include "SkrThread/atomic.h"
 
-#include "SkrRT/containers/string.hpp"
+#include "SkrContainers/string.hpp"
 
 namespace skr
 {

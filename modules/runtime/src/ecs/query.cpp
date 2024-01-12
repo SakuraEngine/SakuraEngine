@@ -12,9 +12,9 @@
 #include "SkrRT/ecs/detail/type.hpp"
 #include "SkrRT/ecs/detail/scheduler.hpp"
 
-#include <SkrRT/containers/span.hpp>
-#include <SkrRT/containers/string.hpp>
-#include <SkrRT/containers/stl_string.hpp>
+#include <SkrContainers/span.hpp>
+#include <SkrContainers/string.hpp>
+#include <SkrContainers/stl_string.hpp>
 #include "SkrRT/misc/bits.hpp"
 
 #if __SSE2__

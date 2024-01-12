@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/time.h"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 
 #include "SkrProfile/profile.h"
 

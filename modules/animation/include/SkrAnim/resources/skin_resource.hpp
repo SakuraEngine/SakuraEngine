@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrAnim/resources/skeleton_resource.hpp"
-#include "SkrRT/containers/span.hpp"
+#include "SkrContainers/span.hpp"
 #ifndef __meta__
     #include "SkrAnim/resources/skin_resource.generated.h" // IWYU pragma: export
 #endif

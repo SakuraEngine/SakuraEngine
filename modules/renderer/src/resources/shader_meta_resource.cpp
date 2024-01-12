@@ -1,6 +1,6 @@
-#include <SkrRT/containers/hashmap.hpp>
-#include <SkrRT/containers/uset.hpp>
-#include <SkrRT/containers/string.hpp>
+#include <SkrContainers/hashmap.hpp>
+#include <SkrContainers/uset.hpp>
+#include <SkrContainers/string.hpp>
 #include "option_utils.hpp"
 
 bool skr_shader_options_resource_t::flatten_options(skr::Vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT

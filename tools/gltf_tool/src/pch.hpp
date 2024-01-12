@@ -15,9 +15,9 @@
 #include "SkrRT/module/module.hpp" // IWYU pragma: export
 #include "SkrRT/resource/config_resource.h" // IWYU pragma: export
 
-#include "SkrRT/containers/string.hpp" // IWYU pragma: export
-#include "SkrRT/containers/vector.hpp" // IWYU pragma: export
-#include "SkrRT/containers/hashmap.hpp" // IWYU pragma: export
+#include "SkrContainers/string.hpp" // IWYU pragma: export
+#include "SkrContainers/vector.hpp" // IWYU pragma: export
+#include "SkrContainers/hashmap.hpp" // IWYU pragma: export
 
 #include "SkrRT/serde/json/reader.h" // IWYU pragma: export
 #include "SkrRT/serde/json/writer.h" // IWYU pragma: export

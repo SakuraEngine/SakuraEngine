@@ -2,7 +2,7 @@
 #include "SkrRT/config.h"
 #include "SkrTextureCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
-#include "SkrRT/containers/string.hpp"
+#include "SkrContainers/string.hpp"
 #ifndef __meta__
     #include "SkrTextureCompiler/texture_compiler.generated.h" // IWYU pragma: export
 #endif

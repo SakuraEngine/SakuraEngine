@@ -1,6 +1,6 @@
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/crash.h"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 #include "SkrRT/platform/dstorage.h"
 #include <SkrRT/platform/filesystem.hpp>
 #include "SkrRT/misc/log.h"

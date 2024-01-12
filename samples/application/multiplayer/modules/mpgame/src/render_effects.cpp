@@ -16,7 +16,7 @@
 #include "rfx_mesh.hpp"
 #include "rfx_skmesh.hpp"
 
-#include "SkrRT/containers/string.hpp"
+#include "SkrContainers/string.hpp"
 
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/resources/material_resource.hpp"

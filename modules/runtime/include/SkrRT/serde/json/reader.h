@@ -1,13 +1,13 @@
 #pragma once
-#include "SkrRT/serde/json/reader_fwd.h"
+#include "SkrBase/types.h"
 #if defined(__cplusplus)
     #define SIMDJSON_IMPLEMENTATION_HASWELL 0
     #define SIMDJSON_AVX512_ALLOWED 0
     #include "simdjson.h"
-    #include "SkrRT/containers/hashmap.hpp"
-    #include "SkrRT/containers/string.hpp"
-    #include "SkrRT/containers/vector.hpp"
-    #include "SkrRT/containers/vector.hpp"
+    #include "SkrContainers/hashmap.hpp"
+    #include "SkrContainers/string.hpp"
+    #include "SkrContainers/vector.hpp"
+    #include "SkrContainers/vector.hpp"
     #include "SkrRT/platform/guid.hpp"
     #include "SkrRT/rttr/rttr_traits.hpp"
 

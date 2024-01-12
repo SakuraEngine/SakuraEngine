@@ -5,9 +5,9 @@
 #include "SkrRT/rttr/type_desc.hpp"
 #include "SkrRT/rttr/type_registry.hpp"
 #include "SkrRT/rttr/type/type.hpp"
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/variant.hpp"
+#include "SkrContainers/sptr.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/variant.hpp"
 #include "SkrRT/rttr/strongly_enum.hpp"
 
 // RTTR traits

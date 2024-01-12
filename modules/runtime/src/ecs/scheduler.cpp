@@ -1,4 +1,4 @@
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrContainers/sptr.hpp"
 #include "SkrRT/ecs/SmallVector.h"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/entity.hpp"

@@ -10,7 +10,7 @@
 #include "Type/CubismBasicType.hpp"
 #include "Type/csmString.hpp"
 #include "Type/csmVector.hpp"
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 
 namespace Live2D { namespace Cubism { namespace Framework {
 

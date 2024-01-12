@@ -1,9 +1,9 @@
 #include "d3d12_utils.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/containers/span.hpp"
+#include "SkrContainers/span.hpp"
 
-#include <SkrRT/containers/stl_string.hpp>
-#include <SkrRT/containers/umap.hpp>
+#include <SkrContainers/stl_string.hpp>
+#include <SkrContainers/umap.hpp>
 
 // Should match all valid values from D3D12_DRED_ALLOCATION_TYPE
 static const TCHAR* D3D12_AllocTypesNames[] =

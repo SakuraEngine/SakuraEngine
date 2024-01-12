@@ -2,7 +2,7 @@
 
 #include "SkrRT/platform/time.h"
 #include "SkrBase/misc/debug.h" 
-#include "SkrRT/platform/thread.h"
+#include "SkrThread/thread.h"
 
 #include <time.h>
 #include <stdint.h>

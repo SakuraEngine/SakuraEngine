@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/platform/atomic.h"
-#include "SkrRT/containers/umap.hpp"
+#include "SkrThread/atomic.h"
+#include "SkrContainers/umap.hpp"
 #include "vram_service.hpp"
 
 

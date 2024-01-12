@@ -3,9 +3,9 @@
 #include "type.hpp"
 #include "SkrRT/platform/guid.hpp"
 
-#include <SkrRT/containers/hashmap.hpp>
-#include <SkrRT/containers/vector.hpp>
-#include <SkrRT/containers/array.hpp>
+#include <SkrContainers/hashmap.hpp>
+#include <SkrContainers/vector.hpp>
+#include <SkrContainers/array.hpp>
 
 namespace sugoi
 {
