@@ -40,7 +40,7 @@ public:
         int64_t unique_id = 0;
         
         operator size_t() const;
-        inline size_t _skr_hash() const { return (size_t)*this; }
+        inline static size_t _skr_hash(const Key& key) { return (size_t)key; }
 
         friend class TextureViewPool;
 

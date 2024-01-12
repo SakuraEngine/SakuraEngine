@@ -277,9 +277,9 @@ struct StackCmdMapKey
     {
         return queue == rhs.queue && batch == rhs.batch;
     }
-    inline size_t _skr_hash() const SKR_NOEXCEPT
+    inline static size_t _skr_hash(const StackCmdMapKey& k) SKR_NOEXCEPT
     {
-        return skr::hash_combine(Hash<CGPUQueueId>()(queue), Hash<IIOBatch*>()(batch));
+        return skr::hash_combine(Hash<CGPUQueueId>()(k.queue), Hash<IIOBatch*>()(k.batch));
     }
 };
 template <size_t N = 1>
