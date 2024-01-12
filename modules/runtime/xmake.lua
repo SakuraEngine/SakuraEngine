@@ -9,6 +9,7 @@ add_requires("parallel-hashmap >=1.3.11-skr")
 add_requires("boost-context >=0.1.0-skr")
 add_requires("simdjson >=3.0.0-skr")
 add_requires("luau", { configs = { extern_c = true }})
+-- add_requires("cpu_features v0.9.0")
 
 target("SkrRTStatic")
     set_group("01.modules")
@@ -103,9 +104,6 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
         add_links("nvapi_x64", {public = true})
         add_links("WinPixEventRuntime", {public = true})
     end
-
-    -- cpu info private include dir
-    add_includedirs("include/SkrRT/cpuinfo", {public = false})
 
     -- mimalloc private include dir
     add_includedirs("src", {public = false})
