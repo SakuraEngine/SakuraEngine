@@ -81,7 +81,6 @@ struct SparseArray : protected Memory {
     bool has_data(SizeType idx) const;
     bool is_hole(SizeType idx) const;
     bool is_valid_index(SizeType idx) const;
-    bool is_valid_pointer(const DataType* p) const;
 
     // memory op
     void clear();
@@ -558,22 +557,19 @@ SKR_INLINE const Memory& SparseArray<Memory>::memory() const
 template <typename Memory>
 SKR_INLINE bool SparseArray<Memory>::has_data(SizeType idx) const
 {
-    return idx < sparse_size() && BitAlgo::get(bit_array(), idx);
+    SKR_ASSERT(is_valid_index(idx));
+    return BitAlgo::get(bit_array(), idx);
 }
 template <typename Memory>
 SKR_INLINE bool SparseArray<Memory>::is_hole(SizeType idx) const
 {
+    SKR_ASSERT(is_valid_index(idx));
     return !BitAlgo::get(bit_array(), idx);
 }
 template <typename Memory>
 SKR_INLINE bool SparseArray<Memory>::is_valid_index(SizeType idx) const
 {
     return idx >= 0 && idx < sparse_size();
-}
-template <typename Memory>
-SKR_INLINE bool SparseArray<Memory>::is_valid_pointer(const DataType* p) const
-{
-    return p >= reinterpret_cast<const DataType*>(data()) && p < reinterpret_cast<const DataType*>(data() + sparse_size());
 }
 
 // memory op
@@ -612,7 +608,7 @@ SKR_INLINE void SparseArray<Memory>::shrink()
 template <typename Memory>
 SKR_INLINE bool SparseArray<Memory>::compact()
 {
-    if (!is_compact())
+    if (!empty() && !is_compact())
     {
         // fill hole
         SizeType compacted_index = sparse_size() - hole_size();
@@ -654,7 +650,7 @@ SKR_INLINE bool SparseArray<Memory>::compact()
 template <typename Memory>
 SKR_INLINE bool SparseArray<Memory>::compact_stable()
 {
-    if (!is_compact())
+    if (!empty() && !is_compact())
     {
         SizeType compacted_index = sparse_size() - hole_size();
         SizeType read_index      = 0;
@@ -669,7 +665,7 @@ SKR_INLINE bool SparseArray<Memory>::compact_stable()
         while (read_index < sparse_size())
         {
             // skip hole
-            while (!has_data(read_index) && read_index < sparse_size())
+            while (read_index < sparse_size() && !has_data(read_index))
                 ++read_index;
 
             // move items

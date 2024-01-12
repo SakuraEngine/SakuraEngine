@@ -216,7 +216,14 @@ struct SparseArrayMemory : public Allocator {
         SKR_ASSERT(new_capacity >= _sparse_size);
         if (new_capacity < _capacity)
         {
-            realloc(new_capacity);
+            if (new_capacity)
+            {
+                realloc(new_capacity);
+            }
+            else
+            {
+                free();
+            }
         }
     }
     inline void clear() noexcept
@@ -805,7 +812,14 @@ struct InlineSparseArrayMemory : public Allocator {
         SKR_ASSERT(new_capacity >= _sparse_size);
         if (new_capacity < _capacity)
         {
-            realloc(new_capacity);
+            if (new_capacity)
+            {
+                realloc(new_capacity);
+            }
+            else
+            {
+                free();
+            }
         }
     }
     inline void clear() noexcept
