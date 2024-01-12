@@ -735,12 +735,14 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
                 REQUIRE_EQ(it.ref(), count);
                 ++count;
             }
+            REQUIRE_EQ(count, kArraySize);
             count = 0;
             for (auto it = arr.iter_inv(); it.has_next(); it.move_next())
             {
                 REQUIRE_EQ(it.ref(), kArraySize - 1 - count);
                 ++count;
             }
+            REQUIRE_EQ(count, kArraySize);
 
             // range
             count = 0;
@@ -749,12 +751,14 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
                 REQUIRE_EQ(v, count);
                 ++count;
             }
+            REQUIRE_EQ(count, kArraySize);
             count = 0;
             for (auto v : arr.range_inv())
             {
                 REQUIRE_EQ(v, kArraySize - 1 - count);
                 ++count;
             }
+            REQUIRE_EQ(count, kArraySize);
 
             // cursor
             count = 0;
@@ -763,12 +767,14 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
                 REQUIRE_EQ(it.ref(), count);
                 ++count;
             }
+            REQUIRE_EQ(count, kArraySize);
             count = 0;
             for (auto it = arr.cursor_end(); !it.reach_begin(); it.move_prev())
             {
                 REQUIRE_EQ(it.ref(), kArraySize - 1 - count);
                 ++count;
             }
+            REQUIRE_EQ(count, kArraySize);
 
             // foreach
             count = 0;
@@ -777,6 +783,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
                 REQUIRE_EQ(v, count);
                 ++count;
             }
+            REQUIRE_EQ(count, kArraySize);
         };
 
         test_function(a);
@@ -787,6 +794,11 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
     SUBCASE("empty container")
     {
         TestArray a;
+
+        REQUIRE(a == a);
+        REQUIRE_FALSE(a != a);
+        REQUIRE(a.readonly() == a.readonly());
+        REQUIRE_FALSE(a.readonly() != a.readonly());
 
         a.clear();
         a.release();

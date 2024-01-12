@@ -49,7 +49,6 @@ struct RingBuffer : protected Memory {
 
     // validate
     bool is_valid_index(SizeType index) const;
-    bool is_valid_pointer(const DataType* ptr) const;
 
     // memory op
     void clear();
@@ -373,22 +372,6 @@ template <typename Memory>
 inline bool RingBuffer<Memory>::is_valid_index(SizeType idx) const
 {
     return idx >= 0 && idx < size();
-}
-template <typename Memory>
-inline bool RingBuffer<Memory>::is_valid_pointer(const DataType* ptr) const
-{
-    const SizeType resolved_front = _front() % capacity();
-    const SizeType resolved_back  = _back() % capacity();
-
-    if (resolved_front <= resolved_back)
-    {
-        return ptr >= _data() && ptr < _data() + capacity();
-    }
-    else
-    {
-        return (ptr >= _data() && ptr < _data() + resolved_back) ||
-               (ptr >= _data() + resolved_front && ptr < _data() + capacity());
-    }
 }
 
 // memory op

@@ -338,14 +338,14 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         TestSparseArray b({ 114, 114, 514, 114, 514, 114 });
         TestSparseArray c({ 1, 1, 4, 5, 1, 4 });
 
-        REQUIRE_EQ(a, c);
-        REQUIRE_NE(a, b);
+        REQUIRE_EQ(a.readonly(), c.readonly());
+        REQUIRE_NE(a.readonly(), b.readonly());
 
         c.remove_at(1);
-        REQUIRE_NE(a, c);
+        REQUIRE_NE(a.readonly(), c.readonly());
 
         a.remove_at(1);
-        REQUIRE_EQ(a, c);
+        REQUIRE_EQ(a.readonly(), c.readonly());
     }
 
     // [needn't test] getter
@@ -372,12 +372,6 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         REQUIRE(a.is_valid_index(3));
         REQUIRE(a.is_valid_index(5));
         REQUIRE_FALSE(a.is_valid_index(6));
-
-        // REQUIRE_FALSE(a.is_valid_pointer(&a[0] - 1));
-        // REQUIRE(a.is_valid_pointer(&a[0]));
-        // REQUIRE(a.is_valid_pointer(&a[3]));
-        // REQUIRE(a.is_valid_pointer(&a[5]));
-        // REQUIRE_FALSE(a.is_valid_pointer(&a[5] + 4));
     }
 
     SUBCASE("memory op")
@@ -762,85 +756,32 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         // REQUIRE_EQ(a[5], 4);
     }
 
-    SUBCASE("erase")
-    {
-        // uint32_t raw_data_group[] = { 1, 1, 4, 5, 1, 4 };
-
-        // const auto kCapacity = clamp_capacity(114514);
-
-        // TestSparseArray a(kCapacity), b(kCapacity);
-        // for (uint32_t i = 0; i < kCapacity; ++i)
-        // {
-        //     a[i] = raw_data_group[i % 6];
-        //     b[i] = raw_data_group[i % 6];
-        // }
-
-        // for (auto it = a.begin(); it != a.end();)
-        // {
-        //     if (*it == 1)
-        //     {
-        //         it = a.erase(it);
-        //     }
-        //     else
-        //     {
-        //         ++it;
-        //     }
-        // }
-
-        // for (uint32_t i = 0; i < kCapacity; ++i)
-        // {
-        //     bool     has_data    = a.has_data(i);
-        //     uint32_t except_data = raw_data_group[i % 6];
-        //     REQUIRE_EQ(has_data, except_data != 1);
-        //     if (has_data)
-        //     {
-        //         REQUIRE_EQ(a[i], except_data);
-        //     }
-        // }
-
-        // const TestSparseArray& cb = b;
-        // for (auto it = cb.begin(); it != cb.end();)
-        // {
-        //     if (*it == 1)
-        //     {
-        //         it = b.erase(it);
-        //     }
-        //     else
-        //     {
-        //         ++it;
-        //     }
-        // }
-
-        // for (uint32_t i = 0; i < kCapacity; ++i)
-        // {
-        //     bool     has_data    = b.has_data(i);
-        //     uint32_t except_data = raw_data_group[i % 6];
-        //     REQUIRE_EQ(has_data, except_data != 1);
-        //     if (has_data)
-        //     {
-        //         REQUIRE_EQ(b[i], except_data);
-        //     }
-        // }
-    }
-
     // [needn't test] modify
 
     // [test in remove] find
 
     // [test in remove] find if
 
-    SUBCASE("contains")
+    SUBCASE("contains & count")
     {
         TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
 
         REQUIRE(a.contains(5));
+        REQUIRE_EQ(a.count(1), 3);
+        REQUIRE_EQ(a.count(4), 2);
+        REQUIRE_EQ(a.count(5), 1);
         a.remove_all(5);
         REQUIRE_FALSE(a.contains(5));
+        REQUIRE_EQ(a.count(1), 3);
+        REQUIRE_EQ(a.count(4), 2);
+        REQUIRE_EQ(a.count(5), 0);
 
         auto cond = [](const u32& a) { return a < 4; };
         REQUIRE(a.contains_if(cond));
+        REQUIRE_EQ(a.count_if(cond), 3);
         a.remove_all_if(cond);
         REQUIRE_FALSE(a.contains_if(cond));
+        REQUIRE_EQ(a.count_if(cond), 0);
     }
 
     SUBCASE("sort")
@@ -889,68 +830,178 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         }
     }
 
-    SUBCASE("foreach")
+    SUBCASE("cursor & iter")
     {
         const auto kCapacity = clamp_capacity(114514);
 
         TestSparseArray a(kCapacity);
         for (size_t i = 0; i < kCapacity; ++i)
         {
-            a[i] = static_cast<u32>(kCapacity - 1 - i);
+            a[i] = i;
         }
-
-        size_t count = 0;
-        for (u32 v : a)
+        for (size_t i = 0; i < kCapacity; ++i)
         {
-            REQUIRE_LT(v, kCapacity);
-            REQUIRE_GE(v, 0);
-            REQUIRE_EQ(v, kCapacity - 1 - count);
-            ++count;
-        }
-        REQUIRE_EQ(count, kCapacity);
-
-        count = 0;
-        for (u32 v : a)
-        {
-            REQUIRE_LT(v, kCapacity);
-            REQUIRE_GE(v, 0);
-            REQUIRE_EQ(v, kCapacity - 1 - count);
-            ++count;
-        }
-        REQUIRE_EQ(count, kCapacity);
-    }
-
-    // test iterator
-    SUBCASE("iterator")
-    {
-        const auto kCapacity = clamp_capacity(1145);
-
-        TestSparseArray a;
-        for (auto n : a)
-        {
-            printf("%d\n", n);
-        }
-
-        TestSparseArray b;
-        b.reserve(kCapacity);
-        for (int i = 0; i < kCapacity; ++i)
-        {
-            b.add(i);
-        }
-        for (int i = 0; i < kCapacity; ++i)
-        {
-            if (i % 2 == 0)
+            if (i % 2 == 1)
             {
-                b.remove_at(i);
+                a.remove_at(i);
             }
         }
-        uint32_t count = 0;
-        for (auto n : b)
-        {
-            REQUIRE_EQ(n, count * 2 + 1);
-            ++count;
-        }
-        REQUIRE_EQ(count, kCapacity / 2);
+
+        auto test_func = [kCapacity](auto&& arr) {
+            uint64_t count;
+
+            // iter
+            count = 0;
+            for (auto it = arr.iter(); it.has_next(); it.move_next())
+            {
+                REQUIRE_EQ(it.ref(), count * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+            count = 0;
+            for (auto it = arr.iter_inv(); it.has_next(); it.move_next())
+            {
+                REQUIRE_EQ(it.ref(), (kCapacity / 2 - count - 1) * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+
+            // range
+            count = 0;
+            for (auto n : arr.range())
+            {
+                REQUIRE_EQ(n, count * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+            count = 0;
+            for (auto n : arr.range_inv())
+            {
+                REQUIRE_EQ(n, (kCapacity / 2 - count - 1) * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+
+            // cursor
+            count = 0;
+            for (auto cur = arr.cursor_begin(); !cur.reach_end(); cur.move_next())
+            {
+                REQUIRE_EQ(cur.ref(), count * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+            count = 0;
+            for (auto cur = arr.cursor_end(); !cur.reach_begin(); cur.move_prev())
+            {
+                REQUIRE_EQ(cur.ref(), (kCapacity / 2 - count - 1) * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+
+            // foreach
+            count = 0;
+            for (auto v : arr)
+            {
+                REQUIRE_EQ(v, count * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+        };
+
+        test_func(a);
+        test_func(a.readonly());
+    }
+
+    SUBCASE("empty container")
+    {
+        TestSparseArray a;
+
+        REQUIRE(a == a);
+        REQUIRE_FALSE(a != a);
+        REQUIRE(a.readonly() == a.readonly());
+        REQUIRE_FALSE(a.readonly() != a.readonly());
+
+        a.clear();
+        a.release();
+        a.reserve(0);
+        a.shrink();
+        a.compact();
+        a.compact_stable();
+        a.compact_top();
+        check_no_data(a);
+
+        REQUIRE_FALSE(a.remove(114514));
+        REQUIRE_FALSE(a.remove_last(114514));
+        REQUIRE_EQ(a.remove_all(114514), 0);
+
+        REQUIRE_FALSE((bool)a.find(114514));
+        REQUIRE_FALSE((bool)a.find_last(114514));
+        REQUIRE_FALSE((bool)a.readonly().find(114514));
+        REQUIRE_FALSE((bool)a.readonly().find_last(114514));
+
+        REQUIRE_FALSE(a.contains(114514));
+        REQUIRE_FALSE(a.readonly().contains(114514));
+        REQUIRE_EQ(a.count(114514), 0);
+        REQUIRE_EQ(a.readonly().count(114514), 0);
+
+        a.sort();
+        a.sort_stable();
+
+        auto test_func = [](auto&& arr) {
+            uint64_t count;
+
+            // iter
+            count = 0;
+            for (auto it = arr.iter(); it.has_next(); it.move_next())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+            count = 0;
+            for (auto it = arr.iter_inv(); it.has_next(); it.move_next())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+
+            // range
+            count = 0;
+            for ([[maybe_unused]] auto n : arr.range())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+            count = 0;
+            for ([[maybe_unused]] auto n : arr.range_inv())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+
+            // cursor
+            count = 0;
+            for (auto cur = arr.cursor_begin(); !cur.reach_end(); cur.move_next())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+            count = 0;
+            for (auto cur = arr.cursor_end(); !cur.reach_begin(); cur.move_prev())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+
+            // foreach
+            count = 0;
+            for ([[maybe_unused]] auto v : arr)
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+        };
+        test_func(a);
+        test_func(a.readonly());
     }
 }
 

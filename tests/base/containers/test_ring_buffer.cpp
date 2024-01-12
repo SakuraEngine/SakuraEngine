@@ -126,12 +126,6 @@ void template_test_ring_buffer(ModifyCapacity&& capacity_of, ClampCapacity&& cla
         REQUIRE_FALSE(b.is_valid_index(-1));
         REQUIRE_FALSE(b.is_valid_index(0));
         REQUIRE_FALSE(b.is_valid_index(1));
-
-        // REQUIRE(a.is_valid_pointer(a.begin()));
-        // REQUIRE(a.is_valid_pointer(a.begin() + 5));
-        // REQUIRE(a.is_valid_pointer(a.end() - 1));
-        // REQUIRE_FALSE(a.is_valid_pointer(a.begin() - 1));
-        // REQUIRE_FALSE(a.is_valid_pointer(a.end()));
     }
 
     SUBCASE("memory op")
@@ -441,6 +435,20 @@ void template_test_ring_buffer(ModifyCapacity&& capacity_of, ClampCapacity&& cla
     }
 
     // [needn't test] front & back
+
+    SUBCASE("empty container")
+    {
+        TestRingBuffer a;
+
+        a.clear();
+        a.release();
+        a.reserve(0);
+        a.shrink();
+        a.resize(0, 10);
+        a.resize_unsafe(0);
+        a.resize_default(0);
+        a.resize_zeroed(0);
+    }
 }
 
 TEST_CASE("test ring buffer")

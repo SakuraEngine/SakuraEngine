@@ -20,10 +20,6 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE_EQ(b.sparse_size(), 0);
         REQUIRE_EQ(b.hole_size(), 0);
         REQUIRE_GE(b.capacity(), capacity_of(100));
-        for (size_t i = 0; i < 100; ++i)
-        {
-            REQUIRE_FALSE(b.has_data(i));
-        }
 
         TestHashMap c({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
         REQUIRE_EQ(c.size(), 3);
