@@ -105,6 +105,9 @@ struct RingBuffer : protected Memory {
     DataType&       back();
     const DataType& back() const;
 
+    // syntax
+    const RingBuffer& readonly() const;
+
 private:
     // helper
     DataType*       _data();
@@ -757,6 +760,13 @@ inline const typename RingBuffer<Memory>::DataType& RingBuffer<Memory>::back() c
 {
     SKR_ASSERT(size() > 0 && "visit an empty buffer");
     return *(_data() + ((_back() - 1) % capacity()));
+}
+
+// syntax
+template <typename Memory>
+SKR_INLINE const RingBuffer<Memory>& RingBuffer<Memory>::readonly() const
+{
+    return *this;
 }
 
 } // namespace skr::container

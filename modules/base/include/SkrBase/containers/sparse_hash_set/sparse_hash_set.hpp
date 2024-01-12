@@ -190,6 +190,9 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     CStlIt begin() const;
     StlIt  end();
     CStlIt end() const;
+
+    // syntax
+    const SparseHashSet& readonly() const;
 };
 } // namespace skr::container
 
@@ -738,5 +741,12 @@ template <typename Memory>
 SKR_INLINE typename SparseHashSet<Memory>::CStlIt SparseHashSet<Memory>::end() const
 {
     return { CCursor::EndOverflow(this) };
+}
+
+// syntax
+template <typename Memory>
+SKR_INLINE const SparseHashSet<Memory>& SparseHashSet<Memory>::readonly() const
+{
+    return *this;
 }
 } // namespace skr::container

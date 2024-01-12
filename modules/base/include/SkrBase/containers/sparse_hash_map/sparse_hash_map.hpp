@@ -233,6 +233,9 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     CStlIt begin() const;
     StlIt  end();
     CStlIt end() const;
+
+    // syntax
+    const SparseHashMap& readonly() const;
 };
 } // namespace skr::container
 
@@ -801,5 +804,12 @@ template <typename Memory>
 SKR_INLINE typename SparseHashMap<Memory>::CStlIt SparseHashMap<Memory>::end() const
 {
     return { CCursor::EndOverflow(this) };
+}
+
+// syntax
+template <typename Memory>
+SKR_INLINE const SparseHashMap<Memory>& SparseHashMap<Memory>::readonly() const
+{
+    return *this;
 }
 } // namespace skr::container
