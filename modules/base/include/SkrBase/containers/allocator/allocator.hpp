@@ -118,10 +118,11 @@ inline TS default_get_grow(TS expect_size, TS current_capacity)
 template <typename T, typename TS>
 inline TS default_get_shrink(TS expect_size, TS current_capacity)
 {
-    SKR_ASSERT(expect_size < current_capacity);
+    SKR_ASSERT(expect_size <= current_capacity);
 
     TS result;
-    if ((3 * expect_size < 2 * current_capacity) && (current_capacity - expect_size > 64 || !expect_size))
+    if (((3 * expect_size) < (2 * current_capacity)) &&
+        ((current_capacity - expect_size) > 64 || !expect_size))
     {
         result = expect_size;
     }

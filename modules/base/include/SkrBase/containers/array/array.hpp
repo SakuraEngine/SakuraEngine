@@ -68,7 +68,6 @@ struct Array : protected Memory {
 
     // validate
     bool is_valid_index(SizeType idx) const;
-    bool is_valid_pointer(const DataType* p) const;
 
     // memory op
     void clear();
@@ -208,7 +207,7 @@ struct Array : protected Memory {
     template <typename Functor = Less<DataType>>
     void heapify(Functor&& f = {});
     template <typename Functor = Less<DataType>>
-    bool is_heap(Functor&& f = {});
+    bool is_heap(Functor&& f = {}) const;
     template <typename Functor = Less<DataType>>
     SizeType heap_push(DataType&& v, Functor&& f = {});
     template <typename Functor = Less<DataType>>
@@ -436,11 +435,6 @@ template <typename Memory>
 SKR_INLINE bool Array<Memory>::is_valid_index(SizeType idx) const
 {
     return idx >= 0 && idx < size();
-}
-template <typename Memory>
-SKR_INLINE bool Array<Memory>::is_valid_pointer(const DataType* p) const
-{
-    return p >= begin() && p < end();
 }
 
 // memory op
@@ -708,7 +702,6 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(const U* p, Siz
 template <typename Memory>
 SKR_INLINE void Array<Memory>::append_at(SizeType idx, const Array& arr)
 {
-    SKR_ASSERT(is_valid_index(idx));
     if (arr.size())
     {
         add_at_unsafe(idx, arr.size());
@@ -718,7 +711,6 @@ SKR_INLINE void Array<Memory>::append_at(SizeType idx, const Array& arr)
 template <typename Memory>
 SKR_INLINE void Array<Memory>::append_at(SizeType idx, std::initializer_list<DataType> init_list)
 {
-    SKR_ASSERT(is_valid_index(idx));
     if (init_list.size())
     {
         add_at_unsafe(idx, init_list.size());
@@ -729,7 +721,6 @@ template <typename Memory>
 template <typename U>
 SKR_INLINE void Array<Memory>::append_at(SizeType idx, const U* p, SizeType n)
 {
-    SKR_ASSERT(is_valid_index(idx));
     if (n)
     {
         add_at_unsafe(idx, n);
@@ -1031,14 +1022,17 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_if(Pred&& pred)
 {
-    auto p_begin = data();
-    auto p_end   = data() + size();
-
-    for (; p_begin < p_end; ++p_begin)
+    if (!empty())
     {
-        if (pred(*p_begin))
+        auto p_begin = data();
+        auto p_end   = data() + size();
+
+        for (; p_begin < p_end; ++p_begin)
         {
-            return { p_begin, static_cast<SizeType>(p_begin - data()) };
+            if (pred(*p_begin))
+            {
+                return { p_begin, static_cast<SizeType>(p_begin - data()) };
+            }
         }
     }
     return {};
@@ -1047,14 +1041,17 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_last_if(Pred&& pred)
 {
-    auto p_begin = data();
-    auto p_end   = data() + size() - 1;
-
-    for (; p_end >= p_begin; --p_end)
+    if (!empty())
     {
-        if (pred(*p_end))
+        auto p_begin = data();
+        auto p_end   = data() + size() - 1;
+
+        for (; p_end >= p_begin; --p_end)
         {
-            return { p_end, static_cast<SizeType>(p_end - data()) };
+            if (pred(*p_end))
+            {
+                return { p_end, static_cast<SizeType>(p_end - data()) };
+            }
         }
     }
     return {};
@@ -1136,7 +1133,7 @@ SKR_INLINE void Array<Memory>::heapify(Functor&& f)
 }
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE bool Array<Memory>::is_heap(Functor&& f)
+SKR_INLINE bool Array<Memory>::is_heap(Functor&& f) const
 {
     return algo::is_heap(data(), size(), std::forward<Functor>(f));
 }
@@ -1274,12 +1271,12 @@ SKR_INLINE auto Array<Memory>::range() const
 template <typename Memory>
 SKR_INLINE auto Array<Memory>::range_inv()
 {
-    return cursor_end().as_range();
+    return cursor_end().as_range_inv();
 }
 template <typename Memory>
 SKR_INLINE auto Array<Memory>::range_inv() const
 {
-    return cursor_end().as_range();
+    return cursor_end().as_range_inv();
 }
 
 // stl-style iterator
