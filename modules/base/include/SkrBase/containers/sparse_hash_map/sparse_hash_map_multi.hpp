@@ -185,8 +185,14 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     CDataRef find_value(const UV& value) const;
 
     // find if
-    using Super::find_if;
-    using Super::find_last_if;
+    template <typename Pred>
+    DataRef find_if(Pred&& pred);
+    template <typename Pred>
+    DataRef find_last_if(Pred&& pred);
+    template <typename Pred>
+    CDataRef find_if(Pred&& pred) const;
+    template <typename Pred>
+    CDataRef find_last_if(Pred&& pred) const;
 
     // contains
     template <typename UK = MapKeyType>
@@ -323,7 +329,7 @@ SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memor
 template <typename Memory>
 SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memory>::add_ex_unsafe(HashType hash)
 {
-    return Super::_add_unsafe(hash);
+    return Super::template _add_unsafe<DataRef>(hash);
 }
 
 // key only add
@@ -467,7 +473,7 @@ requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory:
 SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memory>::find(const UK& key)
 {
     HashType hash = HasherType()(key);
-    return Super::_find(hash, [&key](const MapDataType& data) { return data.key == key; });
+    return Super::template _find<DataRef>(hash, [&key](const MapDataType& data) { return data.key == key; });
 }
 template <typename Memory>
 template <typename UK>
@@ -475,45 +481,45 @@ requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory:
 SKR_INLINE typename MultiSparseHashMap<Memory>::CDataRef MultiSparseHashMap<Memory>::find(const UK& key) const
 {
     HashType hash = HasherType()(key);
-    return Super::_find(hash, [&key](const MapDataType& data) { return data.key == key; });
+    return Super::template _find<CDataRef>(hash, [&key](const MapDataType& data) { return data.key == key; });
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memory>::find_ex(HashType hash, Pred&& pred)
 {
-    return Super::_find(hash, [&pred](const MapDataType& data) { return pred(data.key); });
+    return Super::template _find<DataRef>(hash, [&pred](const MapDataType& data) { return pred(data.key); });
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename MultiSparseHashMap<Memory>::CDataRef MultiSparseHashMap<Memory>::find_ex(HashType hash, Pred&& pred) const
 {
-    return Super::_find(hash, [&pred](const MapDataType& data) { return pred(data.key); });
+    return Super::template _find<CDataRef>(hash, [&pred](const MapDataType& data) { return pred(data.key); });
 }
 template <typename Memory>
 template <typename UK>
 requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
 SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memory>::find_next(DataRef ref, const UK& key)
 {
-    return Super::_find_next(ref, [&key](const MapDataType& data) { return data.key == key; });
+    return Super::template _find_next<DataRef>(ref, [&key](const MapDataType& data) { return data.key == key; });
 }
 template <typename Memory>
 template <typename UK>
 requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory::HasherType>)
 SKR_INLINE typename MultiSparseHashMap<Memory>::CDataRef MultiSparseHashMap<Memory>::find_next(CDataRef ref, const UK& key) const
 {
-    return Super::_find_next(ref, [&key](const MapDataType& data) { return data.key == key; });
+    return Super::template _find_next<CDataRef>(ref, [&key](const MapDataType& data) { return data.key == key; });
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memory>::find_next_ex(DataRef ref, Pred&& pred)
 {
-    return Super::_find_next(ref, [&pred](const MapDataType& data) { return pred(data.key); });
+    return Super::template _find_next<DataRef>(ref, [&pred](const MapDataType& data) { return pred(data.key); });
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename MultiSparseHashMap<Memory>::CDataRef MultiSparseHashMap<Memory>::find_next_ex(CDataRef ref, Pred&& pred) const
 {
-    return Super::_find_next(ref, [&pred](const MapDataType& data) { return pred(data.key); });
+    return Super::template _find_next<CDataRef>(ref, [&pred](const MapDataType& data) { return pred(data.key); });
 }
 
 // find value
@@ -528,6 +534,32 @@ template <typename UV>
 SKR_INLINE typename MultiSparseHashMap<Memory>::CDataRef MultiSparseHashMap<Memory>::find_value(const UV& value) const
 {
     return find_if([&value](const MapDataType& data) { return data.value == value; });
+}
+
+// find if
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memory>::find_if(Pred&& pred)
+{
+    return Super::template _find_if<DataRef>(std::forward(pred));
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memory>::find_last_if(Pred&& pred)
+{
+    return Super::template _find_last_if<DataRef>(std::forward(pred));
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename MultiSparseHashMap<Memory>::CDataRef MultiSparseHashMap<Memory>::find_if(Pred&& pred) const
+{
+    return Super::template _find_if<CDataRef>(std::forward(pred));
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename MultiSparseHashMap<Memory>::CDataRef MultiSparseHashMap<Memory>::find_last_if(Pred&& pred) const
+{
+    return Super::template _find_last_if<CDataRef>(std::forward(pred));
 }
 
 // contains
@@ -558,11 +590,11 @@ SKR_INLINE typename MultiSparseHashMap<Memory>::SizeType MultiSparseHashMap<Memo
     SizeType count = 0;
 
     auto pred = [&key](const MapDataType& data) { return data.key == key; };
-    auto ref  = Super::_find(HasherType()(key), pred);
+    auto ref  = Super::template _find<CDataRef>(HasherType()(key), pred);
     while (ref.is_valid())
     {
         ++count;
-        ref = Super::_find_next(ref, pred);
+        ref = Super::template _find_next<CDataRef>(ref, pred);
     };
 
     return count;
@@ -573,11 +605,11 @@ SKR_INLINE typename MultiSparseHashMap<Memory>::SizeType MultiSparseHashMap<Memo
 {
     SizeType count = 0;
 
-    auto ref = Super::_find(hash, [&pred](const MapDataType& data) { return pred(data.key); });
+    auto ref = Super::template _find<CDataRef>(hash, [&pred](const MapDataType& data) { return pred(data.key); });
     while (ref.is_valid())
     {
         ++count;
-        ref = Super::_find_next(ref, [&pred](const MapDataType& data) { return pred(data.key); });
+        ref = Super::template _find_next<CDataRef>(ref, [&pred](const MapDataType& data) { return pred(data.key); });
     };
 
     return count;

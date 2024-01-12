@@ -180,8 +180,14 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     CDataRef find_value(const UV& value) const;
 
     // find if
-    using Super::find_if;
-    using Super::find_last_if;
+    template <typename Pred>
+    DataRef find_if(Pred&& pred);
+    template <typename Pred>
+    DataRef find_last_if(Pred&& pred);
+    template <typename Pred>
+    CDataRef find_if(Pred&& pred) const;
+    template <typename Pred>
+    CDataRef find_last_if(Pred&& pred) const;
 
     // contains
     template <typename UK = MapKeyType>
@@ -328,7 +334,7 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(UK
     { // construct case
         SKR_ASSERT(HashType()(key) == hint.hash());
         SKR_ASSERT(!contains(key));
-        DataRef ref = Super::_add_unsafe(hint.hash());
+        DataRef ref = Super::template _add_unsafe<DataRef>(hint.hash());
         new (&ref.key()) MapKeyType(std::forward<UK>(key));
         new (&ref.value()) MapValueType(std::forward<UV>(value));
         return ref;
@@ -353,13 +359,13 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add_ex_unsafe(HashType hash, Pred&& pred)
 {
-    if (DataRef ref = Super::_find(hash, [&pred](const MapDataType& data) { return pred(data.key); }))
+    if (DataRef ref = Super::template _find<DataRef>(hash, [&pred](const MapDataType& data) { return pred(data.key); }))
     {
         return { ref.ptr(), ref.index(), hash, true };
     }
     else
     {
-        return Super::_add_unsafe(hash);
+        return Super::template _add_unsafe<DataRef>(hash);
     }
 }
 
@@ -574,7 +580,7 @@ requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory:
 SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find(const UK& key)
 {
     HashType hash = HasherType()(key);
-    return Super::_find(hash, [&key](const MapDataType& data) { return data.key == key; });
+    return Super::template _find<DataRef>(hash, [&key](const MapDataType& data) { return data.key == key; });
 }
 template <typename Memory>
 template <typename UK>
@@ -582,19 +588,19 @@ requires(TransparentToOrSameAs<UK, typename Memory::MapKeyType, typename Memory:
 SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find(const UK& key) const
 {
     HashType hash = HasherType()(key);
-    return Super::_find(hash, [&key](const MapDataType& data) { return data.key == key; });
+    return Super::template _find<CDataRef>(hash, [&key](const MapDataType& data) { return data.key == key; });
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_ex(HashType hash, Pred&& pred)
 {
-    return Super::_find(hash, [&pred](const MapDataType& data) { return pred(data.key); });
+    return Super::template _find<DataRef>(hash, [&pred](const MapDataType& data) { return pred(data.key); });
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_ex(HashType hash, Pred&& pred) const
 {
-    return Super::_find(hash, [&pred](const MapDataType& data) { return pred(data.key); });
+    return Super::template _find<CDataRef>(hash, [&pred](const MapDataType& data) { return pred(data.key); });
 }
 
 // find value
@@ -609,6 +615,32 @@ template <typename UV>
 SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_value(const UV& value) const
 {
     return find_if([&value](const MapDataType& data) { return data.value == value; });
+}
+
+// find if
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_if(Pred&& pred)
+{
+    return Super::template _find_if<DataRef>(std::forward(pred));
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_last_if(Pred&& pred)
+{
+    return Super::template _find_last_if<DataRef>(std::forward(pred));
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_if(Pred&& pred) const
+{
+    return Super::template _find_if<CDataRef>(std::forward(pred));
+}
+template <typename Memory>
+template <typename Pred>
+SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_last_if(Pred&& pred) const
+{
+    return Super::template _find_last_if<CDataRef>(std::forward(pred));
 }
 
 // contains

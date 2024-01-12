@@ -28,10 +28,6 @@ struct SparseHashBase : protected SparseArray<Memory> {
     using DataArr                         = SparseArray<Memory>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
-    // data ref
-    using DataRef  = SparseHashSetDataRef<SetDataType, SizeType, HashType, false>;
-    using CDataRef = SparseHashSetDataRef<SetDataType, SizeType, HashType, true>;
-
     // ctor & dtor
     SparseHashBase(AllocatorCtorParam param = {});
     ~SparseHashBase();
@@ -89,7 +85,7 @@ struct SparseHashBase : protected SparseArray<Memory> {
     bool modify_at(SizeType index, Modifier&& modifier, bool update_hash = true);
     template <typename Modifier>
     bool modify_last(SizeType index, Modifier&& modifier, bool update_hash = true);
-    template <typename Modifier>
+    template <typename Modifier, typename DataRef>
     bool modify(DataRef ref, Modifier&& modifier, bool update_hash = true);
 
     // sort
@@ -108,16 +104,6 @@ struct SparseHashBase : protected SparseArray<Memory> {
     template <typename Pred>
     SizeType remove_all_if(Pred&& pred);
 
-    // find
-    template <typename Pred>
-    DataRef find_if(Pred&& pred);
-    template <typename Pred>
-    DataRef find_last_if(Pred&& pred);
-    template <typename Pred>
-    CDataRef find_if(Pred&& pred) const;
-    template <typename Pred>
-    CDataRef find_last_if(Pred&& pred) const;
-
     // constains
     template <typename Pred>
     bool contains_if(Pred&& pred) const;
@@ -126,16 +112,23 @@ struct SparseHashBase : protected SparseArray<Memory> {
 
 protected:
     // basic add/find/remove
+    template <typename DataRef>
     DataRef _add_unsafe(HashType hash);
-    template <typename Pred>
-    CDataRef _find(HashType hash, Pred&& pred) const;
-    template <typename Pred>
-    CDataRef _find_next(DataRef ref, Pred&& pred) const;
+    template <typename DataRef, typename Pred>
+    DataRef _find(HashType hash, Pred&& pred) const;
+    template <typename DataRef, typename Pred>
+    DataRef _find_next(DataRef ref, Pred&& pred) const;
     template <typename Pred>
     bool _remove(HashType hash, Pred&& pred);
     template <typename Pred>
     SizeType _remove_all(HashType hash, Pred&& pred);
     void     _remove_at(SizeType index);
+
+    // template find_if
+    template <typename DataRef, typename Pred>
+    DataRef _find_if(Pred&& pred) const;
+    template <typename DataRef, typename Pred>
+    DataRef _find_last_if(Pred&& pred) const;
 
     // helpers
     SizeType _bucket_index(SizeType hash) const; // get bucket data index by hash
@@ -516,7 +509,7 @@ SKR_INLINE bool SparseHashBase<Memory>::modify_last(SizeType index, Modifier&& m
     return false;
 }
 template <typename Memory>
-template <typename Modifier>
+template <typename Modifier, typename DataRef>
 SKR_INLINE bool SparseHashBase<Memory>::modify(DataRef ref, Modifier&& modifier, bool update_hash)
 {
     SKR_ASSERT(ref.is_valid());
@@ -550,16 +543,22 @@ SKR_INLINE void SparseHashBase<Memory>::sort_stable(Functor&& p)
 
 // basic add/find/remove
 template <typename Memory>
-SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::_add_unsafe(HashType hash)
+template <typename DataRef>
+SKR_INLINE DataRef SparseHashBase<Memory>::_add_unsafe(HashType hash)
 {
     auto data_arr_ref                        = Super::add_unsafe();
     data_arr_ref.ref()._sparse_hash_set_hash = hash;
     _add_to_bucket(data_arr_ref.ref(), data_arr_ref.index());
-    return { &data_arr_ref.ref()._sparse_hash_set_data, data_arr_ref.index(), hash, false };
+    return {
+        &data_arr_ref.ref()._sparse_hash_set_data,
+        data_arr_ref.index(),
+        hash,
+        false
+    };
 }
 template <typename Memory>
-template <typename Pred>
-SKR_INLINE typename SparseHashBase<Memory>::CDataRef SparseHashBase<Memory>::_find(HashType hash, Pred&& pred) const
+template <typename DataRef, typename Pred>
+SKR_INLINE DataRef SparseHashBase<Memory>::_find(HashType hash, Pred&& pred) const
 {
     if (!bucket()) return {};
 
@@ -569,15 +568,20 @@ SKR_INLINE typename SparseHashBase<Memory>::CDataRef SparseHashBase<Memory>::_fi
         auto& node = Super::at(search_index);
         if (node._sparse_hash_set_hash == hash && pred(node._sparse_hash_set_data))
         {
-            return { &node._sparse_hash_set_data, search_index, hash, false };
+            return {
+                const_cast<SetDataType*>(&node._sparse_hash_set_data),
+                search_index,
+                hash,
+                false
+            };
         }
         search_index = node._sparse_hash_set_next;
     }
     return {};
 }
 template <typename Memory>
-template <typename Pred>
-SKR_INLINE typename SparseHashBase<Memory>::CDataRef SparseHashBase<Memory>::_find_next(DataRef ref, Pred&& pred) const
+template <typename DataRef, typename Pred>
+SKR_INLINE DataRef SparseHashBase<Memory>::_find_next(DataRef ref, Pred&& pred) const
 {
     if (!bucket() || !ref.is_valid()) return {};
 
@@ -587,7 +591,12 @@ SKR_INLINE typename SparseHashBase<Memory>::CDataRef SparseHashBase<Memory>::_fi
         auto& node = Super::at(search_index);
         if (node._sparse_hash_set_hash == ref.hash() && pred(node._sparse_hash_set_data))
         {
-            return { &node._sparse_hash_set_data, search_index, ref.hash(), false };
+            return {
+                const_cast<SetDataType*>(&node._sparse_hash_set_data),
+                search_index,
+                ref.hash(),
+                false
+            };
         }
         search_index = node._sparse_hash_set_next;
     }
@@ -597,10 +606,18 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE bool SparseHashBase<Memory>::_remove(HashType hash, Pred&& pred)
 {
-    if (DataRef ref = _find(hash, std::forward<Pred>(pred)))
+    if (!bucket()) return false;
+
+    SizeType search_index = bucket()[_bucket_index(hash)];
+    while (search_index != npos)
     {
-        _remove_at(ref.index());
-        return true;
+        auto& node = Super::at(search_index);
+        if (node._sparse_hash_set_hash == hash && pred(node._sparse_hash_set_data))
+        {
+            remove_at(search_index);
+            return true;
+        }
+        search_index = node._sparse_hash_set_next;
     }
     return false;
 }
@@ -659,7 +676,7 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE bool SparseHashBase<Memory>::remove_if(Pred&& pred)
 {
-    if (DataRef ref = find_if(std::forward<Pred>(pred)))
+    if (auto ref = Super::find_if([&pred](const SetStorageType& data) { return pred(data._sparse_hash_set_data); }))
     {
         remove_at(ref.index());
         return true;
@@ -670,7 +687,7 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE bool SparseHashBase<Memory>::remove_last_if(Pred&& pred)
 {
-    if (DataRef ref = find_last_if(std::forward<Pred>(pred)))
+    if (auto ref = Super::find_if([&pred](const SetStorageType& data) { return pred(data._sparse_hash_set_data); }))
     {
         remove_at(ref.index());
         return true;
@@ -693,15 +710,15 @@ SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::rem
     return count;
 }
 
-// find
+// template find_if
 template <typename Memory>
-template <typename Pred>
-SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::find_if(Pred&& pred)
+template <typename DataRef, typename Pred>
+DataRef SparseHashBase<Memory>::_find_if(Pred&& pred) const
 {
     if (auto ref = Super::find_if([&pred](const SetStorageType& data) { return pred(data._sparse_hash_set_data); }))
     {
         return {
-            &ref.ref()._sparse_hash_set_data,
+            const_cast<SetDataType*>(&ref.ref()._sparse_hash_set_data),
             ref.index(),
             ref.ref()._sparse_hash_set_hash,
             false,
@@ -713,13 +730,13 @@ SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::find
     }
 }
 template <typename Memory>
-template <typename Pred>
-SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::find_last_if(Pred&& pred)
+template <typename DataRef, typename Pred>
+DataRef SparseHashBase<Memory>::_find_last_if(Pred&& pred) const
 {
     if (auto ref = Super::find_last_if([&pred](const SetStorageType& data) { return pred(data._sparse_hash_set_data); }))
     {
         return {
-            &ref.ref()._sparse_hash_set_data,
+            const_cast<SetDataType*>(&ref.ref()._sparse_hash_set_data),
             ref.index(),
             ref.ref()._sparse_hash_set_hash,
             false,
@@ -729,18 +746,6 @@ SKR_INLINE typename SparseHashBase<Memory>::DataRef SparseHashBase<Memory>::find
     {
         return {};
     }
-}
-template <typename Memory>
-template <typename Pred>
-SKR_INLINE typename SparseHashBase<Memory>::CDataRef SparseHashBase<Memory>::find_if(Pred&& pred) const
-{
-    return const_cast<SparseHashBase*>(this)->find_if(std::forward<Pred>(pred));
-}
-template <typename Memory>
-template <typename Pred>
-SKR_INLINE typename SparseHashBase<Memory>::CDataRef SparseHashBase<Memory>::find_last_if(Pred&& pred) const
-{
-    return const_cast<SparseHashBase*>(this)->find_last_if(std::forward<Pred>(pred));
 }
 
 // constains

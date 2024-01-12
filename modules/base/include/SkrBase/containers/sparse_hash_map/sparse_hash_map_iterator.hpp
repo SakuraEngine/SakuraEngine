@@ -43,7 +43,7 @@ struct SparseHashMapCursor : protected SparseArrayCursor<Container, kConst> {
     using ContainerType = std::conditional_t<kConst, const Container, Container>;
     using SizeType      = typename ContainerType::SizeType;
     using DataType      = std::conditional_t<kConst, const typename ContainerType::SetDataType, typename ContainerType::SetDataType>;
-    using HashType      = ContainerType::HashType;
+    using HashType      = typename ContainerType::HashType;
     using KeyType       = std::conditional_t<kConst, const typename ContainerType::MapKeyType, typename ContainerType::MapKeyType>;
     using ValueType     = std::conditional_t<kConst, const typename ContainerType::MapValueType, typename ContainerType::MapValueType>;
 
