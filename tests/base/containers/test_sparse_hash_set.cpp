@@ -217,8 +217,7 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE(a.contains(114514));
     }
 
-    // [needn't test] data op
-    // [needn't test] bucket op
+    // [needn't test] rehash
 
     SUBCASE("add")
     {
@@ -234,6 +233,17 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE(a.contains(4));
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
+
+        auto find_result = a.find(1);
+        REQUIRE(a.add(1, find_result).already_exist());
+        REQUIRE_EQ(a.size(), 4);
+        REQUIRE_EQ(a.sparse_size(), 4);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(4));
+        find_result = a.readonly().find(114514);
+        REQUIRE_FALSE(a.add(114514, find_result).already_exist());
+        REQUIRE(a.contains(114514));
+        a.remove(114514);
 
         a.add_ex(
         Hash<ValueType>()(100),
@@ -263,51 +273,6 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE(a.contains(100));
     }
 
-    SUBCASE("add or assign")
-    {
-        // TestHashSet a({ 1, 1, 4, 5, 1, 4 });
-        // a.add_or_assign(1);
-        // a.add_or_assign(4);
-        // a.add_or_assign(10);
-        // REQUIRE_EQ(a.size(), 4);
-        // REQUIRE_EQ(a.sparse_size(), 4);
-        // REQUIRE_EQ(a.hole_size(), 0);
-        // REQUIRE_GE(a.capacity(), capacity_of(4));
-        // REQUIRE(a.contains(1));
-        // REQUIRE(a.contains(4));
-        // REQUIRE(a.contains(5));
-        // REQUIRE(a.contains(10));
-
-        // using container::KVPair;
-        // using TestAddOrAssignValue = KVPair<ValueType, ValueType>;
-        // using TestAddOrAssignSet   = container::SparseHashSet<container::SparseHashSetMemory<
-        // TestAddOrAssignValue,
-        // uint64_t,
-        // uint64_t,
-        // Hash<ValueType>,
-        // Equal<ValueType>,
-        // false,
-        // uint64_t,
-        // SkrTestAllocator>>;
-        // TestAddOrAssignSet b({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
-        // b.add_or_assign({ 1, 2 });
-        // b.add_or_assign({ 4, 5 });
-        // b.add_or_assign({ 5, 6 });
-        // b.add_or_assign({ 10, 10 });
-        // REQUIRE_EQ(b.size(), 4);
-        // REQUIRE_EQ(b.sparse_size(), 4);
-        // REQUIRE_EQ(b.hole_size(), 0);
-        // REQUIRE_GE(b.capacity(), capacity_of(4));
-        // REQUIRE(b.contains(1));
-        // REQUIRE(b.contains(4));
-        // REQUIRE(b.contains(5));
-        // REQUIRE(b.contains(10));
-        // REQUIRE_EQ(b.find(1)->value, 2);
-        // REQUIRE_EQ(b.find(4)->value, 5);
-        // REQUIRE_EQ(b.find(5)->value, 6);
-        // REQUIRE_EQ(b.find(10)->value, 10);
-    }
-
     SUBCASE("emplace")
     {
         TestHashSet a({ { 1, 1, 4, 5, 1, 4 } });
@@ -324,6 +289,17 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE(a.contains(4));
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
+
+        auto find_result = a.find(1);
+        REQUIRE(a.emplace(find_result, 1).already_exist());
+        REQUIRE_EQ(a.size(), 4);
+        REQUIRE_EQ(a.sparse_size(), 4);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(4));
+        find_result = a.readonly().find(114514);
+        REQUIRE_FALSE(a.emplace(find_result, 114514).already_exist());
+        REQUIRE(a.contains(114514));
+        a.remove(114514);
     }
 
     SUBCASE("append")
@@ -377,53 +353,37 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE_FALSE(a.contains(114514));
     }
 
-    SUBCASE("erase")
+    SUBCASE("remove if")
     {
-        // TestHashSet a(100), b(100);
-        // for (int32_t i = 0; i < 100; ++i)
-        // {
-        //     a.add(i);
-        //     b.add(i);
-        // }
+        TestHashSet a({ 1, 1, 4, 5, 1, 4 });
+        a.remove_if([](const ValueType& v) { return v == 1; });
+        REQUIRE_EQ(a.size(), 2);
+        REQUIRE_LE(a.sparse_size(), 3);
+        REQUIRE_LE(a.hole_size(), 1);
+        REQUIRE_GE(a.capacity(), capacity_of(3));
+        REQUIRE(a.contains(5));
+        REQUIRE_FALSE(a.contains(1));
+        REQUIRE(a.contains(4));
 
-        // for (auto it = a.begin(); it != a.end();)
-        // {
-        //     if (*it % 3 == 0)
-        //     {
-        //         it = a.erase(it);
-        //     }
-        //     else
-        //     {
-        //         ++it;
-        //     }
-        // }
+        a.add(1);
+        a.add(6);
+        a.add(7);
+        a.add(8);
+        a.remove_last_if([](const ValueType& v) { return v > 5; });
+        REQUIRE(a.contains(1));
+        REQUIRE(a.contains(4));
+        REQUIRE(a.contains(5));
+        REQUIRE(a.contains(6));
+        REQUIRE(a.contains(7));
+        REQUIRE_FALSE(a.contains(8));
 
-        // const TestHashSet& cb = b;
-        // for (auto it = cb.begin(); it != cb.end();)
-        // {
-        //     if (*it % 3 == 0)
-        //     {
-        //         it = b.erase(it);
-        //     }
-        //     else
-        //     {
-        //         ++it;
-        //     }
-        // }
-
-        // for (int32_t i = 0; i < 100; ++i)
-        // {
-        //     if (i % 3 == 0)
-        //     {
-        //         REQUIRE_FALSE(a.contains(i));
-        //         REQUIRE_FALSE(b.contains(i));
-        //     }
-        //     else
-        //     {
-        //         REQUIRE(a.contains(i));
-        //         REQUIRE(b.contains(i));
-        //     }
-        // }
+        a.remove_all_if([](const ValueType& v) { return v % 2 == 1; });
+        REQUIRE_FALSE(a.contains(1));
+        REQUIRE(a.contains(4));
+        REQUIRE_FALSE(a.contains(5));
+        REQUIRE(a.contains(6));
+        REQUIRE_FALSE(a.contains(7));
+        REQUIRE_FALSE(a.contains(8));
     }
 
     SUBCASE("find")
@@ -439,20 +399,70 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
             REQUIRE(ref);
             REQUIRE_EQ(ref.ref(), 5);
         }
+        {
+            auto ref = a.readonly().find(1);
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.ref(), 1);
+        }
+        {
+            auto ref = a.readonly().find_ex(Hash<ValueType>()(5), [](const ValueType& key) { return key == 5; });
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.ref(), 5);
+        }
+    }
+
+    SUBCASE("find if")
+    {
+        TestHashSet a({ 1, 2, 3, 4, 5, 6 });
+        {
+            auto ref = a.find_if([](const ValueType& v) { return v >= 1; });
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.ref(), 1);
+        }
+        {
+            auto ref = a.find_last_if([](const ValueType& key) { return key <= 5; });
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.ref(), 5);
+        }
+        {
+            auto ref = a.readonly().find_if([](const ValueType& v) { return v >= 1; });
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.ref(), 1);
+        }
+        {
+            auto ref = a.readonly().find_last_if([](const ValueType& key) { return key <= 5; });
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.ref(), 5);
+        }
     }
 
     SUBCASE("contains")
     {
         TestHashSet a({ 1, 1, 4, 5, 1, 4 });
-        REQUIRE(a.contains(1));
-        REQUIRE(a.contains(4));
-        REQUIRE(a.contains(5));
+        REQUIRE(a.readonly().contains(1));
+        REQUIRE(a.readonly().contains(4));
+        REQUIRE(a.readonly().contains(5));
         REQUIRE_FALSE(a.contains(114514));
-        REQUIRE(a.contains_ex(Hash<ValueType>()(1), [](const ValueType& key) { return key == 1; }));
-        REQUIRE(a.contains_ex(Hash<ValueType>()(4), [](const ValueType& key) { return key == 4; }));
-        REQUIRE(a.contains_ex(Hash<ValueType>()(5), [](const ValueType& key) { return key == 5; }));
-        REQUIRE_FALSE(a.contains_ex(Hash<ValueType>()(114514), [](const ValueType& key) { return key == 114514; }));
+        REQUIRE(a.readonly().contains_ex(Hash<ValueType>()(1), [](const ValueType& key) { return key == 1; }));
+        REQUIRE(a.readonly().contains_ex(Hash<ValueType>()(4), [](const ValueType& key) { return key == 4; }));
+        REQUIRE(a.readonly().contains_ex(Hash<ValueType>()(5), [](const ValueType& key) { return key == 5; }));
+        REQUIRE_FALSE(a.readonly().contains_ex(Hash<ValueType>()(114514), [](const ValueType& key) { return key == 114514; }));
     }
+
+    SUBCASE("contains_if & count_if")
+    {
+        TestHashSet a({ 1, 1, 4, 5, 1, 4 });
+        REQUIRE(a.readonly().contains_if([](const ValueType v) { return v == 1; }));
+        REQUIRE(a.readonly().contains_if([](const ValueType v) { return v == 4; }));
+        REQUIRE(a.readonly().contains_if([](const ValueType v) { return v == 5; }));
+        REQUIRE_FALSE(a.readonly().contains_if([](const ValueType v) { return v == 114514; }));
+
+        REQUIRE_EQ(a.readonly().count_if([](const ValueType v) { return v == 1; }), 1);
+        REQUIRE_EQ(a.readonly().count_if([](const ValueType v) { return v != 5; }), 2);
+        REQUIRE_EQ(a.readonly().count_if([](const ValueType v) { return v > 1; }), 2);
+    }
+
+    // [needn't test] visitor & modifier
 
     SUBCASE("sort")
     {
@@ -505,14 +515,199 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE(sub_a_c == TestHashSet({ 4, 5 }));
     }
 
-    // test iterator
-    SUBCASE("iterator")
+    SUBCASE("cursor & iter")
     {
-        // TestHashSet a;
-        // for (auto n : a)
-        // {
-        //     printf("%d\n", n);
-        // }
+        const auto kCapacity = clamp_capacity(114514);
+
+        TestHashSet a(kCapacity);
+        for (size_t i = 0; i < kCapacity; ++i)
+        {
+            a.add(i);
+        }
+        for (size_t i = 0; i < kCapacity; ++i)
+        {
+            if (i % 2 == 1)
+            {
+                a.remove(i);
+            }
+        }
+
+        auto test_func = [kCapacity](auto&& set) {
+            uint64_t count;
+
+            // iter
+            count = 0;
+            for (auto it = set.iter(); it.has_next(); it.move_next())
+            {
+                REQUIRE_EQ(it.ref(), count * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+            count = 0;
+            for (auto it = set.iter_inv(); it.has_next(); it.move_next())
+            {
+                REQUIRE_EQ(it.ref(), (kCapacity / 2 - count - 1) * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+
+            // range
+            count = 0;
+            for (auto n : set.range())
+            {
+                REQUIRE_EQ(n, count * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+            count = 0;
+            for (auto n : set.range_inv())
+            {
+                REQUIRE_EQ(n, (kCapacity / 2 - count - 1) * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+
+            // cursor
+            count = 0;
+            for (auto cur = set.cursor_begin(); !cur.reach_end(); cur.move_next())
+            {
+                REQUIRE_EQ(cur.ref(), count * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+            count = 0;
+            for (auto cur = set.cursor_end(); !cur.reach_begin(); cur.move_prev())
+            {
+                REQUIRE_EQ(cur.ref(), (kCapacity / 2 - count - 1) * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+
+            // foreach
+            count = 0;
+            for (auto v : set)
+            {
+                REQUIRE_EQ(v, count * 2);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+        };
+        test_func(a);
+        test_func(a.readonly());
+    }
+
+    SUBCASE("empty container")
+    {
+        TestHashSet a;
+
+        REQUIRE(a == a);
+        REQUIRE_FALSE(a != a);
+        REQUIRE(a.readonly() == a.readonly());
+        REQUIRE_FALSE(a.readonly() != a.readonly());
+
+        a.clear();
+        a.release();
+        a.reserve(0);
+        a.shrink();
+        a.compact();
+        a.compact_stable();
+        a.compact_top();
+        REQUIRE_EQ(a.sparse_size(), 0);
+        REQUIRE_EQ(a.size(), 0);
+
+        a.rehash_if_need();
+        a.rehash();
+
+        REQUIRE_FALSE(a.remove(114514));
+        REQUIRE_FALSE(a.remove_ex(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; }));
+
+        REQUIRE_FALSE((bool)a.find(114514));
+        REQUIRE_FALSE((bool)a.find_ex(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; }));
+        REQUIRE_FALSE((bool)a.readonly().find(114514));
+        REQUIRE_FALSE((bool)a.readonly().find_ex(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; }));
+
+        REQUIRE_FALSE((bool)a.find_if([](const ValueType& v) { return v == 114514; }));
+        REQUIRE_FALSE((bool)a.find_last_if([](const ValueType& v) { return v == 114514; }));
+        REQUIRE_FALSE((bool)a.readonly().find_if([](const ValueType& v) { return v == 114514; }));
+        REQUIRE_FALSE((bool)a.readonly().find_last_if([](const ValueType& v) { return v == 114514; }));
+
+        REQUIRE_FALSE(a.contains(114514));
+        REQUIRE_FALSE(a.contains_ex(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; }));
+        REQUIRE_FALSE(a.readonly().contains(114514));
+        REQUIRE_FALSE(a.readonly().contains_ex(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; }));
+
+        REQUIRE_FALSE(a.contains_if([](const ValueType& v) { return v == 114514; }));
+        REQUIRE_EQ(a.count_if([](const ValueType& v) { return v == 114514; }), 0);
+        REQUIRE_FALSE(a.readonly().contains_if([](const ValueType& v) { return v == 114514; }));
+        REQUIRE_EQ(a.readonly().count_if([](const ValueType& v) { return v == 114514; }), 0);
+
+        a.sort();
+        a.sort_stable();
+
+        {
+            TestHashSet b, c, d;
+            c = a & b;
+            d = a | b;
+            c = a ^ b;
+            d = a - b;
+            REQUIRE(a.is_sub_set_of(b));
+        }
+
+        auto test_func = [](auto&& set) {
+            uint64_t count;
+
+            // iter
+            count = 0;
+            for (auto it = set.iter(); it.has_next(); it.move_next())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+            count = 0;
+            for (auto it = set.iter_inv(); it.has_next(); it.move_next())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+
+            // range
+            count = 0;
+            for ([[maybe_unused]] auto n : set.range())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+            count = 0;
+            for ([[maybe_unused]] auto n : set.range_inv())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+
+            // cursor
+            count = 0;
+            for (auto cur = set.cursor_begin(); !cur.reach_end(); cur.move_next())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+            count = 0;
+            for (auto cur = set.cursor_end(); !cur.reach_begin(); cur.move_prev())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+
+            // foreach
+            count = 0;
+            for ([[maybe_unused]] auto v : set)
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+        };
+        test_func(a);
+        test_func(a.readonly());
     }
 }
 

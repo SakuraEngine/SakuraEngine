@@ -37,6 +37,10 @@ struct ArrayDataRef {
     // SKR_INLINE DataType& operator*() const { return ref(); }
     // SKR_INLINE DataType* operator->() const { return ptr(); }
 
+    // compare
+    SKR_INLINE bool operator==(const ArrayDataRef& rhs) const { return _ptr == rhs._ptr; }
+    SKR_INLINE bool operator!=(const ArrayDataRef& rhs) const { return _ptr != rhs._ptr; }
+
 private:
     // add/append/emplace: 指向（第一个）添加的元素
     // find: 指向找到的元素

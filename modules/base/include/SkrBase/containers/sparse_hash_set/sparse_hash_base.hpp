@@ -61,7 +61,6 @@ struct SparseHashBase : protected SparseArray<Memory> {
     bool has_data(SizeType idx) const;
     bool is_hole(SizeType idx) const;
     bool is_valid_index(SizeType idx) const;
-    bool is_valid_pointer(const SetDataType* p) const;
 
     // memory op
     void clear();
@@ -367,11 +366,6 @@ SKR_INLINE bool SparseHashBase<Memory>::is_valid_index(SizeType idx) const
 {
     return Super::is_valid_index(idx);
 }
-template <typename Memory>
-SKR_INLINE bool SparseHashBase<Memory>::is_valid_pointer(const SetDataType* p) const
-{
-    return Super::is_valid_pointer(p);
-}
 
 // memory op
 template <typename Memory>
@@ -519,7 +513,12 @@ SKR_INLINE DataRef SparseHashBase<Memory>::_find(HashType hash, Pred&& pred) con
         }
         search_index = node._sparse_hash_set_next;
     }
-    return {};
+    return {
+        nullptr,
+        npos,
+        hash,
+        false
+    };
 }
 template <typename Memory>
 template <typename DataRef, typename Pred>
@@ -542,7 +541,12 @@ SKR_INLINE DataRef SparseHashBase<Memory>::_find_next(DataRef ref, Pred&& pred) 
         }
         search_index = node._sparse_hash_set_next;
     }
-    return {};
+    return {
+        nullptr,
+        npos,
+        ref.hash(),
+        false
+    };
 }
 template <typename Memory>
 template <typename Pred>
@@ -629,7 +633,7 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE bool SparseHashBase<Memory>::remove_last_if(Pred&& pred)
 {
-    if (auto ref = Super::find_if([&pred](const SetStorageType& data) { return pred(data._sparse_hash_set_data); }))
+    if (auto ref = Super::find_last_if([&pred](const SetStorageType& data) { return pred(data._sparse_hash_set_data); }))
     {
         remove_at(ref.index());
         return true;
@@ -641,12 +645,17 @@ template <typename Pred>
 SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::remove_all_if(Pred&& pred)
 {
     SizeType count = 0;
-    for (auto it = Super::begin(); it != Super::end(); ++it)
+    for (auto cursor = Super::cursor_begin(); !cursor.reach_end();)
     {
-        if (pred(*it))
+        if (pred(cursor.ref()._sparse_hash_set_data))
         {
-            remove_at(it.index());
+            _remove_from_bucket(cursor.index());
+            cursor.erase_and_move_next();
             ++count;
+        }
+        else
+        {
+            cursor.move_next();
         }
     }
     return count;
@@ -695,13 +704,13 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE bool SparseHashBase<Memory>::contains_if(Pred&& pred) const
 {
-    return Super::contains_if(std::forward<Pred>(pred));
+    return Super::contains_if([&pred](const SetStorageType& data) { return pred(data._sparse_hash_set_data); });
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::count_if(Pred&& pred) const
 {
-    return Super::count_if(std::forward<Pred>(pred));
+    return Super::count_if([&pred](const SetStorageType& data) { return pred(data._sparse_hash_set_data); });
 }
 
 } // namespace skr::container

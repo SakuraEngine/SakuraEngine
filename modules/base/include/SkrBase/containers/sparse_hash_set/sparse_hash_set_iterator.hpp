@@ -7,8 +7,8 @@ template <typename Container, bool kConst>
 struct SparseHashSetCursor;
 
 template <typename Container, bool kConst>
-struct SparseHashSetIter : public CursorIter<SparseArrayCursor<Container, kConst>, false> {
-    using Super = CursorIter<SparseArrayCursor<Container, kConst>, false>;
+struct SparseHashSetIter : public CursorIter<SparseHashSetCursor<Container, kConst>, false> {
+    using Super = CursorIter<SparseHashSetCursor<Container, kConst>, false>;
     using Super::Super;
 
     inline void erase_and_move_next()
@@ -18,8 +18,8 @@ struct SparseHashSetIter : public CursorIter<SparseArrayCursor<Container, kConst
 };
 
 template <typename Container, bool kConst>
-struct SparseHashSetIterInv : public CursorIter<SparseArrayCursor<Container, kConst>, true> {
-    using Super = CursorIter<SparseArrayCursor<Container, kConst>, true>;
+struct SparseHashSetIterInv : public CursorIter<SparseHashSetCursor<Container, kConst>, true> {
+    using Super = CursorIter<SparseHashSetCursor<Container, kConst>, true>;
     using Super::Super;
 
     inline void erase_and_move_next()
