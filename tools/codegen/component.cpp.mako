@@ -70,7 +70,7 @@ static struct RegisterComponent${type.id}Helper
         desc.alignment = alignof(${type.name});
     %endif
 
-        // sugoi::SetLuaBindCallback<${type.name}>(desc);
+        sugoi::SetLuaBindCallback<${type.name}>(desc);
         sugoi::SetSerdeCallback<${type.name}>(desc);
     
     %if hasattr(type.attrs.component, "custom"):
