@@ -773,7 +773,7 @@ template <typename Memory>
 SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add_default()
 {
     DataRef info = add_unsafe();
-    new (info.data) DataType();
+    memory::construct(info.ptr());
     return info;
 }
 template <typename Memory>
@@ -814,7 +814,7 @@ template <typename Memory>
 SKR_INLINE void SparseArray<Memory>::add_at_default(SizeType idx)
 {
     add_at_unsafe(idx);
-    new (&data()[idx]._sparse_array_data) DataType();
+    memory::construct(&data()[idx]._sparse_array_data);
 }
 template <typename Memory>
 SKR_INLINE void SparseArray<Memory>::add_at_zeroed(SizeType idx)

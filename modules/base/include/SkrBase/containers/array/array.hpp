@@ -76,7 +76,6 @@ struct Array : protected Memory {
     void reserve(SizeType expect_capacity);
     void shrink();
     void resize(SizeType expect_size, const DataType& new_value);
-    void resize(SizeType expect_size);
     void resize_unsafe(SizeType expect_size);
     void resize_default(SizeType expect_size);
     void resize_zeroed(SizeType expect_size);
@@ -305,7 +304,7 @@ template <typename Memory>
 SKR_INLINE Array<Memory>::Array(SizeType size, AllocatorCtorParam param) noexcept
     : Memory(std::move(param))
 {
-    resize(size);
+    resize_default(size);
 }
 template <typename Memory>
 SKR_INLINE Array<Memory>::Array(SizeType size, const DataType& v, AllocatorCtorParam param) noexcept
@@ -502,28 +501,6 @@ SKR_INLINE void Array<Memory>::resize(SizeType expect_size, const DataType& new_
     _set_size(expect_size);
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::resize(SizeType expect_size)
-{
-    // realloc memory if need
-    if (expect_size > capacity())
-    {
-        _realloc(expect_size);
-    }
-
-    // construct item or destruct item if need
-    if (expect_size > size())
-    {
-        memory::construct_stl_ub(data() + size(), expect_size - size());
-    }
-    else if (expect_size < size())
-    {
-        memory::destruct(data() + expect_size, size() - expect_size);
-    }
-
-    // set size
-    _set_size(expect_size);
-}
-template <typename Memory>
 SKR_INLINE void Array<Memory>::resize_unsafe(SizeType expect_size)
 {
     // realloc memory if need
@@ -626,10 +603,7 @@ template <typename Memory>
 SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add_default(SizeType n)
 {
     DataRef ref = add_unsafe(n);
-    for (SizeType i = ref.index(); i < size(); ++i)
-    {
-        new (data() + i) DataType();
-    }
+    memory::construct(ref.ptr(), n);
     return ref;
 }
 template <typename Memory>
@@ -668,10 +642,7 @@ template <typename Memory>
 SKR_INLINE void Array<Memory>::add_at_default(SizeType idx, SizeType n)
 {
     add_at_unsafe(idx, n);
-    for (SizeType i = 0; i < n; ++i)
-    {
-        new (data() + idx + i) DataType();
-    }
+    memory::construct(data() + idx, n);
 }
 template <typename Memory>
 SKR_INLINE void Array<Memory>::add_at_zeroed(SizeType idx, SizeType n)
