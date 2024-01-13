@@ -32,6 +32,8 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     if (is_os("macosx")) then 
         add_files("src/**/build.*.mm")
+        add_mxflags("-fno-objc-arc", {force = true})
+        add_frameworks("CoreFoundation", "Cocoa", "IOKit", {public = true})
     end
 
     -- runtime compile definitions
@@ -49,11 +51,6 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
         add_syslinks("advapi32", "user32", "shell32", "Ole32", "Shlwapi", {public = true})
     else
         add_syslinks("pthread")
-    end
-    if (is_os("macosx")) then 
-        -- add_mxflags(project_mxflags, {public = true, force = true})
-        add_mxflags("-fno-objc-arc", {force = true})
-        add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit", {public = true})
     end
 
     -- add FTL source 

@@ -108,29 +108,15 @@
 #pragma region LOG
 
 #ifndef CGPU_BUILD_STANDALONE
-    enum
-    {
-        CGPU_SKR_LOG_LEVEL_TRACE,
-        CGPU_SKR_LOG_LEVEL_DEBUG,
-        CGPU_SKR_LOG_LEVEL_INFO,
-        CGPU_SKR_LOG_LEVEL_WARN,
-        CGPU_SKR_LOG_LEVEL_ERROR,
-        CGPU_SKR_LOG_LEVEL_FATAL,
-        CGPU_SKR_LOG_LEVEL_BACKTRACE,
-    };
+#include "SkrCore/log.h"
 
-    CGPU_EXTERN_C IMPORT_FROM_RUNTIME 
-    void skr_log_log(int level, const char* file, const char* func, const char* line, const char8_t* fmt, ...);
-
-    #define __LOG_FUNC__ __FUNCTION__ 
-
-    #define cgpu_backtrace(...) skr_log_log(CGPU_SKR_LOG_LEVEL_BACKTRACE, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
-    #define cgpu_trace(...) skr_log_log(CGPU_SKR_LOG_LEVEL_TRACE, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
-    #define cgpu_debug(...) skr_log_log(CGPU_SKR_LOG_LEVEL_DEBUG, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
-    #define cgpu_info(...) skr_log_log(CGPU_SKR_LOG_LEVEL_INFO, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
-    #define cgpu_warn(...) skr_log_log(CGPU_SKR_LOG_LEVEL_WARN, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
-    #define cgpu_error(...) skr_log_log(CGPU_SKR_LOG_LEVEL_ERROR, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
-    #define cgpu_fatal(...) skr_log_log(CGPU_SKR_LOG_LEVEL_FATAL, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
+    #define cgpu_backtrace(...) SKR_LOG_BACKTRACE(__VA_ARGS__)
+    #define cgpu_trace(...) SKR_LOG_TRACE(__VA_ARGS__)
+    #define cgpu_debug(...) SKR_LOG_DEBUG(__VA_ARGS__)
+    #define cgpu_info(...) SKR_LOG_INFO(__VA_ARGS__)
+    #define cgpu_warn(...) SKR_LOG_WARN(__VA_ARGS__)
+    #define cgpu_error(...) SKR_LOG_ERROR(__VA_ARGS__)
+    #define cgpu_fatal(...) SKR_LOG_FATAL(__VA_ARGS__)
 #else
     #define cgpu_backtrace(...) (void)(__VA_ARGS__)
     #define cgpu_trace(...) (void)(__VA_ARGS__)
