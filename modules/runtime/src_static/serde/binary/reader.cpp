@@ -2,7 +2,7 @@
 #include "SkrMemory/memory.h"
 #include "SkrContainers/sptr.hpp"
 #include "SkrContainers/string.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include "SkrRT/misc/bits.hpp"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/resource/resource_handle.h"

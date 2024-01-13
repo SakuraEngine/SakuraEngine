@@ -2,7 +2,7 @@
 #include "SkrToolCore/project/project.hpp"
 #include "dxt_utils.hpp"
 #include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrCore/log.hpp"
 
 #include "SkrProfile/profile.h"
 

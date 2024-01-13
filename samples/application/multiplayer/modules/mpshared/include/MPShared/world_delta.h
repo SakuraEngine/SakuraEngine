@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrContainers/ring_buffer.hpp"
 #include "SkrRT/misc/types.h"
-#include "SkrRT/platform/time.h"
+#include "SkrCore/time.h"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrContainers/span.hpp"

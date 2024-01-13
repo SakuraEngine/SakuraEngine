@@ -1,6 +1,6 @@
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 #ifdef CGPU_USE_D3D12
-    #include "cgpu/extensions/cgpu_d3d12_exts.h"
+    #include "SkrGraphics/extensions/cgpu_d3d12_exts.h"
     #include "SkrTestFramework/framework.hpp"
     #include <vector>
 

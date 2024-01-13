@@ -1,5 +1,5 @@
 #include "SkrMemory/memory.h"
-#include "SkrThread/atomic.h"
+#include "SkrOS/atomic.h"
 #include "SkrRT/misc/types.h"
 #include "SkrContainers/sptr.hpp"
 

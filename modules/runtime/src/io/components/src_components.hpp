@@ -1,8 +1,8 @@
 #pragma once
+#include "SkrGraphics/dstorage.h"
 #include "SkrRT/io/io.h"
 #include "SkrRT/platform/vfs.h"
-#include "SkrRT/platform/dstorage.h"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrCore/guid.hpp"
 #include "../components/component.hpp"
 
 namespace skr {

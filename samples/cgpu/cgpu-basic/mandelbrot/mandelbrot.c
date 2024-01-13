@@ -1,9 +1,9 @@
-#include "cgpu/cgpu_config.h"
+#include "SkrGraphics/cgpu_config.h"
 #include "math.h"
 #include "lodepng.h"
 #include "SkrRT/config.h"
 #include "SkrMemory/memory.h"
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 #include "stdio.h"
 #include <stdint.h>
 
@@ -258,7 +258,7 @@ void ComputeFunc(void* usrdata)
     sakura_free(image);
 }
 
-#include "SkrThread/thread.h"
+#include "SkrOS/thread.h"
 
 int main(void)
 {

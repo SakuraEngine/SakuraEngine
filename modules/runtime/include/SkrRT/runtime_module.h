@@ -1,10 +1,7 @@
 #pragma once
-#include "SkrRT/module/module.hpp"
-#include "SkrRT/platform/shared_library.hpp"
-#include "SkrRT/platform/dstorage.h"
-#ifdef _WIN32
-#include "SkrRT/platform/win/dstorage_windows.h"
-#endif
+#include "SkrModule/module.hpp"
+#include "SkrOS/shared_library.hpp"
+#include "SkrGraphics/dstorage.h"
 
 class SKR_RUNTIME_API SkrRuntimeModule : public skr::IDynamicModule
 {

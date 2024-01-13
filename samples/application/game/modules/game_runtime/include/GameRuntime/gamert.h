@@ -1,10 +1,10 @@
 #pragma once
 #include "GameRuntime/module.configure.h"
 #include "SkrRT/platform/vfs.h"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include "SkrRenderer/skr_renderer.h"
 #ifdef __cplusplus
-    #include "SkrRT/module/module_manager.hpp"
+    #include "SkrModule/module_manager.hpp"
     #include "SkrRenderGraph/frontend/render_graph.hpp"
     #include "SkrRT/io/ram_io.hpp"
     #include "SkrRT/io/vram_io.hpp"

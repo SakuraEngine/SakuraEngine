@@ -1,9 +1,9 @@
 #include "SkrRenderer/shader_map.h"
 #include "SkrRenderer/shader_hash.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrThread/atomic.h"
+#include "SkrOS/atomic.h"
 #include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/async/thread_job.hpp"
+#include "SkrCore/async/thread_job.hpp"
 
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/string.hpp"

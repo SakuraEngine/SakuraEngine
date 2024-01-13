@@ -1,6 +1,7 @@
 includes("profile/xmake.lua")
 includes("base/xmake.lua")
-includes("memory/xmake.lua")
+includes("core/xmake.lua")
+includes("graphics/xmake.lua")
 includes("runtime/xmake.lua")
 includes("lua/xmake.lua")
 includes("lightning_storage/xmake.lua")

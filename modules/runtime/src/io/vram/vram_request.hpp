@@ -1,9 +1,9 @@
 #pragma once
+#include "SkrGraphics/api.h"
 #include "SkrRT/io/io.h"
 #include "SkrRT/io/vram_io.hpp"
-#include "io/vram/components.hpp"
-#include "io/common/io_request.hpp"
-#include "cgpu/api.h"
+#include "./../vram/components.hpp"
+#include "./../common/io_request.hpp"
 
 #include <string.h> // ::strlen
 

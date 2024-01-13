@@ -1,5 +1,5 @@
 #include "SkrProfile/profile.h"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include "SkrContainers/stl_string.hpp" //sv::starts_with
 #include "SkrShaderCompiler/dxc_compiler.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"

@@ -1,9 +1,9 @@
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 #include "common/render_application.h"
 #include "common/texture.h"
 #include "math.h"
 #include "string.h"
-#include "SkrThread/thread.h"
+#include "SkrOS/thread.h"
 #include "SkrMemory/memory.h"
 
 #define FLIGHT_FRAMES 3

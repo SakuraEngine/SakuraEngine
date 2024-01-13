@@ -1,6 +1,6 @@
-#include "cgpu/cgpux.hpp"
-#include "SkrThread/atomic.h"
-#include "SkrRT/async/thread_job.hpp"
+#include "SkrGraphics/cgpux.hpp"
+#include "SkrOS/atomic.h"
+#include "SkrCore/async/thread_job.hpp"
 #include "SkrContainers/sptr.hpp"
 #include "SkrContainers/hashmap.hpp"
 

@@ -9,7 +9,7 @@
 #include "SkrRT/platform/window.h"
 #include "SkrProfile/profile.h"
 #include "pass_profiler.h"
-#include "SkrThread/thread.h"
+#include "SkrOS/thread.h"
 #include "SkrBase/math/rtm/qvvf.h"
 
 thread_local SWindowHandle window;

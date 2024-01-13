@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/misc/types.h"
-#include "SkrThread/thread.h"
+#include "SkrOS/thread.h"
 #include "SkrContainers/sptr.hpp"
 #include "SkrContainers/umap.hpp"
 #include "SkrContainers/string.hpp"

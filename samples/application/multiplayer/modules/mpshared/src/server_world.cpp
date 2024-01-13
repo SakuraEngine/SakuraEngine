@@ -1,7 +1,7 @@
 #include "MPShared/server_world.h"
 #include "MPShared/components.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/ecs/array.hpp"

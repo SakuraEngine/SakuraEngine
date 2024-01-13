@@ -1,5 +1,5 @@
 #include "SkrBase/misc/debug.h" 
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include "SkrContainers/umap.hpp"
 #include "SkrInputSystem/input_system.hpp"
 #include "SkrInputSystem/input_modifier.hpp"

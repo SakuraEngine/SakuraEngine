@@ -3,10 +3,10 @@
 #ifdef TWEAK_USABLE
 #include <fstream>
 #include "efsw/efsw.hpp"
-#include "SkrRT/platform/filesystem.hpp"
-#include "SkrThread/thread.h"
+#include "SkrOS/filesystem.hpp"
+#include "SkrOS/thread.h"
 #include "SkrBase/misc/hash.h"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include <SkrContainers/hashmap.hpp>
 #include "SkrContainers/variant.hpp"
 #include <SkrContainers/string.hpp>

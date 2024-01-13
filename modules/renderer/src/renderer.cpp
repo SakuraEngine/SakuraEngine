@@ -1,4 +1,4 @@
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/array.hpp"

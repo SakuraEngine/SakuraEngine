@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/misc/types.h"
-#include "SkrThread/atomic.h"
-#include "SkrRT/async/async_service.h"
+#include "SkrOS/atomic.h"
+#include "SkrCore/async/async_service.h"
 #ifdef __cplusplus
 #include "SkrContainers/sptr.hpp"
 #include "SkrContainers/span.hpp"

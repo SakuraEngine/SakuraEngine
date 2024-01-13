@@ -4,7 +4,7 @@
 #include "MPShared/shared.h"
 #include "MPShared/world_delta.h"
 #include "SkrScene/scene.h"
-#include "SkrRT/platform/time.h"
+#include "SkrCore/time.h"
 #include "SkrContainers/vector.hpp"
 
 struct MP_SHARED_API MPServerWorld : MPGameWorld

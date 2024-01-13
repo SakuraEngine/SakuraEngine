@@ -91,7 +91,7 @@ typedef struct skr_json_writer_t skr_json_writer_t;
 #endif
 
 #if defined(__cplusplus)
-    #include "SkrRT/platform/guid.hpp"
+    #include "SkrCore/guid.hpp"
 
 // helper functions
 namespace skr::json

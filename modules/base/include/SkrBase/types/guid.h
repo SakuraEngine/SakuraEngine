@@ -63,3 +63,15 @@ typedef struct skr_guid_t {
     uint32_t Storage2 SKR_IF_CPP(= 0);
     uint32_t Storage3 SKR_IF_CPP(= 0);
 } skr_guid_t;
+
+
+SKR_EXTERN_C void skr_make_guid(skr_guid_t* out_guid);
+
+#ifdef __cplusplus
+inline skr_guid_t skr_guid_t::Create()
+{
+    skr_guid_t guid;
+    skr_make_guid(&guid);
+    return guid;
+}
+#endif

@@ -3,7 +3,7 @@
 
 #if __cpp_impl_coroutine
 #include <atomic>
-#include "SkrThread/thread.h"
+#include "SkrOS/thread.h"
 #include "SkrContainers/array.hpp"
 #include "SkrContainers/sptr.hpp"
 #include "SkrContainers/vector.hpp"

@@ -1,6 +1,6 @@
 #include "resource_request_impl.hpp"
 #include "SkrRT/async/fib_task.hpp"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrCore/guid.hpp"
 #include "SkrRT/ecs/entities.hpp"
 #include "SkrBase/misc/debug.h" 
 #include "SkrContainers/hashmap.hpp"

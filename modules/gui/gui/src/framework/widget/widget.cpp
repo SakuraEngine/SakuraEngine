@@ -1,5 +1,5 @@
 #include "SkrGui/framework/widget/widget.hpp"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrCore/guid.hpp"
 
 namespace skr::gui
 {

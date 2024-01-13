@@ -1,17 +1,12 @@
-add_requires("lemon 1.3.1")
-add_requires("parallel-hashmap >=1.3.11-skr")
 add_requires("boost-context >=0.1.0-skr")
-add_requires("simdjson >=3.0.0-skr")
 -- add_requires("cpu_features v0.9.0")
 
 target("SkrRTStatic")
     set_group("01.modules")
     set_optimize("fastest")
     set_exceptions("no-cxx")
-    add_deps("SkrRoot", "SkrBase", "SkrMemory", "SkrThread", {public = true})
+    add_deps("SkrRoot", "SkrCore", {public = true})
     add_defines("SKR_RUNTIME_API=SKR_IMPORT", "SKR_RUNTIME_LOCAL=error")
-    add_packages("parallel-hashmap", "simdjson", {public = true, inherit = true})
-    add_packages("lemon", {public = false, inherit = false})
     add_rules("skr.static_module", {api = "SKR_RUNTIME_STATIC"})
     add_includedirs("include", {public = true})
     set_pcxxheader("src_static/pch.hpp")
@@ -20,27 +15,20 @@ target("SkrRTStatic")
 
 shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     set_group("01.modules")
-    add_deps("SkrRTStatic", "SkrMemory", {public = true, inherit = true})
+    public_dependency("SkrCore", engine_version)
+    public_dependency("SkrGraphics", engine_version)
+    add_deps("SkrRTStatic", {public = true, inherit = true})
     add_defines("SKR_RUNTIME_API=SKR_EXPORT", "SKR_RUNTIME_LOCAL=error")
 
     -- internal packages
     add_packages("boost-context", {public = true, inherit = true})
 
     -- add source files
+    set_pcxxheader("src/pch.hpp")
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     if (is_os("macosx")) then 
         add_files("src/**/build.*.m", "src/**/build.*.mm")
     end
-
-    -- https://github.com/xmake-io/xmake/issues/3912
-    -- need xmake v2.8.1 to enable pch with objcpp
-    local mxx_pch = xmake.version():ge("2.8.1")
-    if (not is_os("macosx") or mxx_pch) then 
-        set_pcxxheader("src/pch.hpp")
-    end
-
-    -- add deps & links
-    add_deps("vulkan", {public = true})
 
     -- runtime compile definitions
     after_load(function (target,  opt)
@@ -79,22 +67,7 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     -- install sdks for windows platform
     libs_to_install = {}
     if(os.host() == "windows") then
-        table.insert(libs_to_install, "dstorage-1.2.1")
         table.insert(libs_to_install, "gns")
-        table.insert(libs_to_install, "amdags")
-        table.insert(libs_to_install, "nvapi")
-        table.insert(libs_to_install, "nsight")
-        table.insert(libs_to_install, "WinPixEventRuntime")
         table.insert(libs_to_install, "SDL2")
-        table.insert(libs_to_install, "dxc")
     end
     add_rules("utils.install-libs", { libnames = libs_to_install })
-
-    if (is_os("windows")) then 
-        add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public=true})
-        add_links("nvapi_x64", {public = true})
-        add_links("WinPixEventRuntime", {public = true})
-    end
-
-    -- mimalloc private include dir
-    add_includedirs("src", {public = false})

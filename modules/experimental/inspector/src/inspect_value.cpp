@@ -1,9 +1,9 @@
 #include "SkrInspector/inspect_value.h"
 #ifdef INSPECT_USABLE
-#include "SkrRT/module/subsystem.hpp"
-#include "SkrRT/platform/filesystem.hpp"
+#include "SkrModule/subsystem.hpp"
+#include "SkrOS/filesystem.hpp"
 #include "SkrContainers/hashmap.hpp"
-#include "SkrThread/thread.h"
+#include "SkrOS/thread.h"
 #include "SkrContainers/btree.hpp"
 #include "SkrContainers/optional.hpp"
 #include <SkrContainers/deprecated.hpp>

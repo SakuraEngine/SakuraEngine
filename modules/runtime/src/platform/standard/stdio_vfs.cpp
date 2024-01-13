@@ -1,7 +1,7 @@
 #include "SkrRT/platform/vfs.h"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include <string.h>
-#include <SkrRT/platform/filesystem.hpp>
+#include <SkrOS/filesystem.hpp>
 #include "SkrMemory/memory.h"
 
 #include "SkrProfile/profile.h"

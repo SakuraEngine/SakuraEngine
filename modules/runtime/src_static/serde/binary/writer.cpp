@@ -5,7 +5,7 @@
 #include "SkrRT/misc/bits.hpp"
 #include "SkrBase/math/rtm/scalarf.h"
 #include "SkrBase/math/rtm/scalard.h"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 
 // help functions
 namespace skr::binary

@@ -1,0 +1,5 @@
+#include "log/logger.cpp"
+#include "log/log_pattern.cpp"
+#include "log/log_sink.cpp"
+#include "log/log_manager.cpp"
+#include "log/log_worker.cpp"

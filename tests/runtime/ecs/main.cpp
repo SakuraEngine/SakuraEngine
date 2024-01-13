@@ -2,7 +2,7 @@
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 
 #include "SkrTestFramework/framework.hpp"
 

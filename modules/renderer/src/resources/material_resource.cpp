@@ -1,7 +1,7 @@
-#include "SkrRT/platform/guid.hpp"
+#include "SkrCore/guid.hpp"
 #include "SkrContainers/sptr.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/async/thread_job.hpp"
+#include "SkrCore/async/thread_job.hpp"
 
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/material_resource.hpp"
@@ -10,7 +10,7 @@
 #include "SkrRenderer/shader_map.h"
 
 #include "SkrRenderer/pso_map.h"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrCore/guid.hpp"
 
 namespace skr
 {

@@ -7,8 +7,8 @@
 #include "SkrRT/ecs/set.hpp"
 
 #include "SkrRT/ecs/array.hpp"
-#include "SkrRT/misc/log.hpp"
-#include "SkrRT/platform/time.h"
+#include "SkrCore/log.hpp"
+#include "SkrCore/time.h"
 #include "SkrRT/ecs/entity.hpp"
 
 BandwidthCounter::BandwidthCounter()

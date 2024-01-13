@@ -1,7 +1,7 @@
 #pragma once
 #include "common_layer.hpp"
 #include "SkrMemory/memory.h"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include <SkrContainers/concurrent_queue.hpp>
 
 namespace skr {
