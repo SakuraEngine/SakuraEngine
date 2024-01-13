@@ -395,7 +395,8 @@ bool ModuleManagerImpl::__internal_DestroyModuleGraph(const skr::String& nodenam
 {
     if (!get_module_property(nodename).bActive)
         return true;
-    dependency_graph->foreach_inv_neighbors(nodeMap.find(nodename)->second, 
+    auto node = nodeMap.find(nodename)->second;
+    dependency_graph->foreach_neighbors(node, 
         [this](DependencyGraphNode* node){
             ModuleProperty* property = static_cast<ModuleProperty*>(node);
             __internal_DestroyModuleGraph(property->name);
@@ -463,8 +464,10 @@ void ModuleManagerImpl::__internal_MakeModuleGraph(const skr::String& entry, boo
             __internal_MakeModuleGraph(iterName, false);
         else
             __internal_MakeModuleGraph(iterName, true);
-
-        dependency_graph->link(nodeMap[entry], nodeMap[iterName]);
+        
+        auto _this = nodeMap[entry];
+        auto dep = nodeMap[iterName];
+        dependency_graph->link(_this, dep);
     }
 }
 
@@ -492,7 +495,8 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::String& entry)
 {
     if (hotfixTraversalSet.find(entry) != hotfixTraversalSet.end())
         return true;
-    dependency_graph->foreach_neighbors(nodeMap.find(entry)->second, 
+    auto node = nodeMap.find(entry)->second;
+    dependency_graph->foreach_neighbors(node, 
         [this](DependencyGraphNode* node){
             ModuleProperty* property = static_cast<ModuleProperty*>(node);
             __internal_UpdateModuleGraph(property->name);
