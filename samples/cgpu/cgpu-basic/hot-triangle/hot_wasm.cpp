@@ -1,5 +1,5 @@
-#include "cgpu/api.h"
-#include "SkrThread/thread.h"
+#include "SkrGraphics/api.h"
+#include "SkrOS/thread.h"
 #include "utils.h"
 #include <filesystem>
 #include <fstream>

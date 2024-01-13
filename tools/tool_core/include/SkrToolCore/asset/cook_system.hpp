@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrContainers/span.hpp"
 #include "SkrRT/resource/resource_header.hpp"
-#include "SkrRT/platform/filesystem.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrOS/filesystem.hpp"
+#include "SkrCore/log.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrContainers/function_ref.hpp"

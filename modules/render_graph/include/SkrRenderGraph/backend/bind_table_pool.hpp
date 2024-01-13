@@ -3,7 +3,7 @@
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/vector.hpp"
-#include "cgpu/cgpux.h"
+#include "SkrGraphics/cgpux.h"
 
 namespace skr
 {

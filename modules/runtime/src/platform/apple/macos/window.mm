@@ -4,7 +4,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "stdio.h"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 
 @interface DemoView : NSView // interface of DemoView class
 {                            // (subclass of NSView class)

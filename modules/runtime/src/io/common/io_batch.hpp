@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/io/io.h"
 #include "pool.hpp"
-#include "SkrThread/thread.h"
+#include "SkrOS/thread.h"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrContainers/vector.hpp"
 

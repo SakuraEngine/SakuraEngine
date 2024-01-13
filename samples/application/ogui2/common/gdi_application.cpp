@@ -1,9 +1,9 @@
 #include "./gdi_application.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/platform/filesystem.hpp"
+#include "SkrOS/filesystem.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/async/thread_job.hpp"
+#include "SkrCore/async/thread_job.hpp"
 
 #include "SkrContainers/string.hpp"
 

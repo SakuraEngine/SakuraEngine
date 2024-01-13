@@ -1,7 +1,7 @@
 #pragma once
 #include "MPShared/module.configure.h"
 #include "SkrBase/misc/traits.hpp"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrCore/guid.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/vector.hpp"

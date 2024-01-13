@@ -1,7 +1,7 @@
 #pragma once
 #include "arena.hpp"
 #include "type.hpp"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrCore/guid.hpp"
 
 #include <SkrContainers/hashmap.hpp>
 #include <SkrContainers/vector.hpp>

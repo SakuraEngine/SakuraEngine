@@ -1,7 +1,5 @@
 #include "SkrRT/config.h"
-#include "shared_library.cpp"
 #include "vfs.cpp"
-#include "guid.cpp"
 
 #include "standard/stdio_vfs.cpp"
 #include "standard/crash_handler.cpp"
@@ -14,19 +12,10 @@
         #include "linux/crash_handler.cpp"
     #endif
     #include "unix/unix_vfs.cpp"
-    #include "unix/process.cpp"
     #include "unix/crash_handler.cpp"
 #elif SKR_PLAT_WINDOWS
     #include "windows/windows_vfs.cpp"
-    #include "windows/process.cpp"
     #include "windows/crash_handler.cpp"
-#endif
-
-#if SKR_PLAT_WINDOWS
-    #include "windows/windows_dstorage.cpp"
-    #include "windows/windows_dstorage_decompress.cpp"
-#else
-    #include "null/null_dstorage.cpp"
 #endif
 
 #include "SkrRT/platform/system.h"

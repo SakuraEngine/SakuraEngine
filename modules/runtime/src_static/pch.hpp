@@ -7,11 +7,11 @@
 
 #include <chrono> // IWYU pragma: export
 #include "SkrBase/misc/debug.h"  // IWYU pragma: export
-#include "SkrRT/platform/guid.hpp" // IWYU pragma: export
-#include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
+#include "SkrCore/guid.hpp" // IWYU pragma: export
+#include <SkrOS/filesystem.hpp> // IWYU pragma: export
 
-#include "SkrRT/misc/log.h" // IWYU pragma: export
-#include "SkrRT/misc/log.hpp" // IWYU pragma: export
+#include "SkrCore/log.h" // IWYU pragma: export
+#include "SkrCore/log.hpp" // IWYU pragma: export
 
 #include "SkrRT/resource/resource_handle.h" // IWYU pragma: export
 #include "SkrRT/serde/binary/writer.h" // IWYU pragma: export

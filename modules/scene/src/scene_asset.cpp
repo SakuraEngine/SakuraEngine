@@ -1,6 +1,6 @@
 #include "SkrScene/scene.h"
 #include "SkrRT/async/parallel_for.hpp"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrCore/guid.hpp"
 #include "SkrRT/serde/json/writer.h"
 #include "SkrRT/serde/json/reader.h"
 #include "SkrRT/ecs/type_builder.hpp"

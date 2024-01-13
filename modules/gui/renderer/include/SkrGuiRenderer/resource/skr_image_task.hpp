@@ -1,5 +1,5 @@
 #pragma once
-#include "cgpu/cgpux.h"
+#include "SkrGraphics/cgpux.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
 #include "SkrGuiRenderer/module.configure.h"

@@ -2,10 +2,10 @@
 #include "SkrMemory/memory.h"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/misc/types.h"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrCore/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"
 
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/ecs/sugoi.h"
 

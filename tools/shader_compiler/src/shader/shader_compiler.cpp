@@ -1,4 +1,4 @@
-#include "SkrRT/module/module.hpp"
+#include "SkrModule/module.hpp"
 #include "SkrContainers/vector.hpp"
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/stl_function.hpp"

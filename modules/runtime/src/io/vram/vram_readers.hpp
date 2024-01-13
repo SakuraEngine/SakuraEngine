@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrThread/atomic.h"
+#include "SkrOS/atomic.h"
 #include "SkrContainers/umap.hpp"
 #include "vram_service.hpp"
 

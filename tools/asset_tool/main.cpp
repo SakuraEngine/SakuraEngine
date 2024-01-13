@@ -1,11 +1,11 @@
 #include "../../../../samples/common/common/utils.h"
-#include "SkrRT/platform/time.h"
+#include "SkrCore/time.h"
 #include "SkrRT/platform/vfs.h"
 #include <SkrContainers/string.hpp>
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/io/vram_io.hpp"
-#include "SkrRT/module/module_manager.hpp"
+#include "SkrModule/module_manager.hpp"
 
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
@@ -37,7 +37,7 @@ public:
     skr_vfs_t* resource_vfs = nullptr;
 
 };
-#include "SkrRT/platform/filesystem.hpp"
+#include "SkrOS/filesystem.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SAssetImportModule, SkrAssetImport);
 

@@ -132,7 +132,7 @@ namespace Live2D { namespace Cubism { namespace Framework {
     };
 }}}
 
-#include "cgpu/flags.h"
+#include "SkrGraphics/flags.h"
 #include "SkrRT/misc/types.h"
 #include "Framework/Math/CubismMatrix44.hpp"
 #include "Framework/Math/CubismViewMatrix.hpp"

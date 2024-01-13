@@ -2,7 +2,7 @@
 #include "SkrRT/config.h"
 #include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/fwd_types.h"
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 
 struct skr_vfs_t;
 SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)

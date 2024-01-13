@@ -2,17 +2,6 @@
 #include "SkrBase/types.h"
 #include "SkrRT/config.h"
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_make_guid(skr_guid_t* out_guid);
-
-#ifdef __cplusplus
-inline skr_guid_t skr_guid_t::Create()
-{
-    skr_guid_t guid;
-    skr_make_guid(&guid);
-    return guid;
-}
-#endif
-
 extern const skr_guid_t $guid;
 
 #ifdef __cplusplus

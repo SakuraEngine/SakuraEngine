@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderGraph/rg_config.h"
-#include "SkrRT/misc/dependency_graph.hpp"
+#include "SkrDependencyGraph/dependency_graph.hpp"
 #include "SkrContainers/span.hpp"
 #include "SkrContainers/stl_function.hpp"
 #include "SkrContainers/string.hpp"

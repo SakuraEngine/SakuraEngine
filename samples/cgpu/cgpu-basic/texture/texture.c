@@ -1,8 +1,8 @@
 #include "common/utils.h"
 #include "common/texture.h"
 #include "math.h"
-#include "cgpu/api.h"
-#include "SkrThread/thread.h"
+#include "SkrGraphics/api.h"
+#include "SkrOS/thread.h"
 
 #define FLIGHT_FRAMES 3
 #define BACK_BUFFER_COUNT 3

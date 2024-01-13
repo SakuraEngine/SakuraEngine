@@ -3,7 +3,7 @@
 #include "SkrMeshCore/mesh_processing.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 
 #include "SkrProfile/profile.h"
 

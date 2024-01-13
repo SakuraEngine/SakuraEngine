@@ -1,5 +1,5 @@
-#include "SkrRT/platform/dstorage.h"
-#include "SkrRT/platform/filesystem.hpp"
+#include "SkrOS/filesystem.hpp"
+#include "SkrGraphics/dstorage.h"
 #include "../common/io_request.hpp"
 #include "../vram/components.hpp"
 #include "../vram/vram_resolvers.hpp"

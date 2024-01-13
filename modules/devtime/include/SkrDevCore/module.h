@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrDevCore/module.configure.h"
-#include "SkrRT/module/module.hpp"
+#include "SkrModule/module.hpp"
 
 class SKR_DEVCORE_API SkrDevCoreModule : public skr::IDynamicModule
 {

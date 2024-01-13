@@ -2,7 +2,7 @@
 #include "SkrMemory/memory.h"
 #include "SkrRT/platform/window.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 
 #include "SkrContainers/string.hpp"
 

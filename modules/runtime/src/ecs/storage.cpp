@@ -1,4 +1,4 @@
-#include "SkrThread/atomic.h"
+#include "SkrOS/atomic.h"
 #include "SkrRT/ecs/SmallVector.h"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/entity.hpp"

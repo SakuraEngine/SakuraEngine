@@ -1,5 +1,5 @@
 #pragma once
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 #include "SkrRT/platform/window.h"
 #include "SkrRT/io/vram_io.hpp"
 #include "SkrContainers/umap.hpp"

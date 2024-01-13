@@ -1,5 +1,5 @@
 #pragma once
-#include "cgpu/flags.h"
+#include "SkrGraphics/flags.h"
 #include "SkrShaderCompiler/module.configure.h"
 #include "SkrRT/misc/types.h"
 #include "SkrContainers/sptr.hpp"

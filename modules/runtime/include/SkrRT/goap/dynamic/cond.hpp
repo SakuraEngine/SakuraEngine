@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/goap/traits.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrCore/log.hpp"
 
 namespace skr::goap
 {

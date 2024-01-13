@@ -2,7 +2,7 @@
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/ecs/entities.hpp"
-#include "SkrThread/thread.h"
+#include "SkrOS/thread.h"
 #include "archetype.hpp"
 
 #include "SkrContainers/hashmap.hpp"

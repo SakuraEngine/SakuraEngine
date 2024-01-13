@@ -1,7 +1,7 @@
 #pragma once
 #include "shader_compiler.hpp"
-#include "SkrRT/module/subsystem.hpp"
-#include "SkrRT/platform/shared_library.hpp"
+#include "SkrModule/subsystem.hpp"
+#include "SkrOS/shared_library.hpp"
 #include "SkrContainers/stl_string.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #ifndef __meta__

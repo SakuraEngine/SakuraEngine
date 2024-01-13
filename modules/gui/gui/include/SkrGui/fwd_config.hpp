@@ -39,7 +39,7 @@
 #define SKR_GUI_ASSERT(__EXPR) SKR_ASSERT(__EXPR)
 
 // log
-#include "SkrRT/misc/log.hpp"
+#include "SkrCore/log.hpp"
 #define SKR_GUI_LOG_ERROR(...) SKR_LOG_ERROR(__VA_ARGS__)
 #define SKR_GUI_LOG_WARN(...) SKR_LOG_WARN(__VA_ARGS__)
 #define SKR_GUI_LOG_INFO(...) SKR_LOG_INFO(__VA_ARGS__)

@@ -1,5 +1,5 @@
-#include "SkrRT/async/thread_job.hpp"
-#include "SkrRT/async/wait_timeout.hpp"
+#include "SkrCore/async/thread_job.hpp"
+#include "SkrCore/async/wait_timeout.hpp"
 #include "../common/io_runnner.hpp"
 #include "io_batch.hpp"
 

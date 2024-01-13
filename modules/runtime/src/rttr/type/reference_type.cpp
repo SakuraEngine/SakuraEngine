@@ -1,4 +1,4 @@
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include "SkrRT/rttr/type/reference_type.hpp"
 #include "SkrRT/rttr/rttr_traits.hpp"
 

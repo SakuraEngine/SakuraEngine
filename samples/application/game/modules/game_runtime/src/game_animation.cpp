@@ -1,7 +1,7 @@
 #include "GameRuntime/game_animation.h"
 #include "SkrAnim/ozz/local_to_model_job.h"
 #include "SkrAnim/components/skin_component.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 // #include "SkrTweak/module.h"
 // #include "SkrInspector/inspect_value.h"
 

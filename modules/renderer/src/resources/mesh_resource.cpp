@@ -1,13 +1,13 @@
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrMemory/memory.h"
 #include "SkrRT/platform/vfs.h"
-#include "SkrRT/platform/guid.hpp"
-#include "cgpu/cgpux.hpp"
+#include "SkrCore/guid.hpp"
+#include "SkrGraphics/cgpux.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrThread/thread.h"
-#include <SkrRT/platform/filesystem.hpp>
+#include "SkrOS/thread.h"
+#include <SkrOS/filesystem.hpp>
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_system.h"

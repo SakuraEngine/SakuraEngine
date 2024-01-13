@@ -1,5 +1,5 @@
 #include "SkrRT/rttr/type/record_type.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrCore/log.hpp"
 
 namespace skr::rttr
 {

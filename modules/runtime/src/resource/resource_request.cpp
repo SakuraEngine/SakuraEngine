@@ -2,7 +2,7 @@
 #include "SkrBase/misc/debug.h" 
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrCore/log.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/serde/binary/reader.h"

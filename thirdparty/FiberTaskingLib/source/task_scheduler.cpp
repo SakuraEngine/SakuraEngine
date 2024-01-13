@@ -34,7 +34,7 @@
 #include <mutex>
 #include "SkrMemory/memory.h"
 #include "SkrProfile/profile.h"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 
 #if defined(FTL_WIN32_THREADS)
     #ifndef WIN32_LEAN_AND_MEAN

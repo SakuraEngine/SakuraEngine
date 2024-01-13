@@ -1,7 +1,7 @@
 #include "SkrRT/platform/crash.h"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/async/thread_job.hpp"
+#include "SkrCore/async/thread_job.hpp"
 
 #include "SkrTestFramework/framework.hpp"
 
@@ -47,8 +47,8 @@ TEST_CASE("JobQueue")
     jq.wait_empty();
 }
 
-#include "SkrRT/misc/log.h"
-#include "SkrRT/async/async_progress.hpp"
+#include "SkrCore/log.h"
+#include "SkrCore/async/async_progress.hpp"
 #include <SkrContainers/string.hpp>
 #include <SkrContainers/sptr.hpp>
 

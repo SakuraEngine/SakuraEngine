@@ -1,6 +1,6 @@
 #pragma once
 #include "sugoi.h"
-#include "SkrThread/thread.h"
+#include "SkrOS/thread.h"
 #include "SkrContainers/vector.hpp"
 
 namespace sugoi

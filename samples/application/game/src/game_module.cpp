@@ -1,12 +1,12 @@
 #include "common/utils.h"
 #include "GameRuntime/gamert.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/platform/filesystem.hpp"
+#include "SkrOS/filesystem.hpp"
 #include "SkrRT/platform/system.h"
 #include "SkrRT/config.h"
 #include "SkrMemory/memory.h"
-#include "SkrRT/platform/time.h"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrCore/time.h"
+#include "SkrCore/guid.hpp"
 #include "SkrRT/platform/window.h"
 
 #include "SkrRT/ecs/type_builder.hpp"
@@ -44,7 +44,7 @@
 #include "SkrAnim/components/skeleton_component.hpp"
 #include "GameRuntime/game_animation.h"
 
-#include "SkrRT/async/thread_job.hpp"
+#include "SkrCore/async/thread_job.hpp"
 
 #include "SkrProfile/profile.h"
 #include "SkrRT/misc/types.h"

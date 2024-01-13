@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrThread/thread.h"
+#include "SkrOS/thread.h"
 #include "SkrRT/resource/resource_handle.h"
 #include <SkrContainers/vector.hpp>
 #include <SkrContainers/deprecated.hpp>
