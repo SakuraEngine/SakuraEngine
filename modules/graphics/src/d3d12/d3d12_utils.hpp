@@ -1,16 +1,14 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrGraphics/backend/d3d12/cgpu_d3d12.h"
-#include "./../common/common_utils.h"
 #ifdef __cplusplus
-    #include "D3D12MemAlloc.h"
-    #include <SkrContainers/hashmap.hpp>
-    #include <SkrContainers/vector.hpp>
+#include "SkrGraphics/containers.hpp"
+#include "D3D12MemAlloc.h"
 #endif
 #ifdef CGPU_THREAD_SAFETY
-    #include "SkrOS/thread.h"
-    #include "SkrOS/atomic.h"
+#include "SkrOS/thread.h"
+#include "SkrOS/atomic.h"
 #endif
+#include "./../common/common_utils.h"
 
 #define CALC_SUBRESOURCE_INDEX(MipSlice, ArraySlice, PlaneSlice, MipLevels, ArraySize) ((MipSlice) + ((ArraySlice) * (MipLevels)) + ((PlaneSlice) * (MipLevels) * (ArraySize)))
 
@@ -84,7 +82,7 @@ typedef struct D3D12Util_DescriptorHeap {
     /// Start position in the heap
     D3D12Util_DescriptorHandle mStartHandle;
     /// Free List used for CPU only descriptor heaps
-    skr::Vector<D3D12Util_DescriptorHandle> mFreeList;
+    cgpu::Vector<D3D12Util_DescriptorHandle> mFreeList;
     /// Description
     D3D12_DESCRIPTOR_HEAP_DESC mDesc;
     /// DescriptorInfo Increment Size

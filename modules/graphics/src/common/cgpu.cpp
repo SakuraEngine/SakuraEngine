@@ -74,7 +74,7 @@ struct CGPURuntimeTable {
             }
         }
     }
-    skr::Vector<CreatedQueue> created_queues;
+    cgpu::Vector<CreatedQueue> created_queues;
     // TODO: replace with skr::hash_map
     skr::FlatHashMap<skr::String, void*, skr::Hash<skr::String>> custom_data_map;
     skr::FlatHashMap<skr::String, std::function<void()>, skr::Hash<skr::String>> custom_sweep_callbacks;

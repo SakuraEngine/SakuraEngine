@@ -27,7 +27,7 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     set_pcxxheader("src/pch.hpp")
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     if (is_os("macosx")) then 
-        add_files("src/**/build.*.m", "src/**/build.*.mm")
+        add_files("src/**/build.*.mm")
     end
 
     -- runtime compile definitions

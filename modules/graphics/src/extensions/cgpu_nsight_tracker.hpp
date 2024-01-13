@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGraphics/extensions/cgpu_nsight.h"
-#include <SkrContainers/vector.hpp>
+#include "SkrGraphics/containers.hpp"
 #include <mutex>
 
 struct CGPUNSightSingleton {
@@ -13,7 +13,7 @@ struct CGPUNSightSingleton {
 
     uint32_t                           rc;
     std::mutex                         trackers_mutex;
-    skr::Vector<CGPUNSightTrackerId> all_trackers;
+    cgpu::Vector<CGPUNSightTrackerId> all_trackers;
 };
 
 #define CGPU_NSIGNT_SINGLETON_NAME u8"CGPUNSightSingleton"

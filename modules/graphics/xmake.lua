@@ -5,6 +5,9 @@ shared_module("SkrGraphics", "SKR_GRAPHICS", engine_version)
     public_dependency("SkrCore", engine_version)
     add_includedirs("include", {public = true})
     add_files("src/build.*.c", "src/build.*.cpp")
+    if (is_os("macosx")) then 
+        add_files("src/**/build.*.m", "src/**/build.*.mm")
+    end
     -- install SDKs
     libs_to_install = {}
     if(os.host() == "windows") then
