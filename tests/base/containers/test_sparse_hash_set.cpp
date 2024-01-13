@@ -621,6 +621,10 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE_FALSE(a.remove(114514));
         REQUIRE_FALSE(a.remove_ex(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; }));
 
+        REQUIRE_FALSE(a.remove_if([](const ValueType& v) { return v == 114514; }));
+        REQUIRE_FALSE(a.remove_last_if([](const ValueType& v) { return v == 114514; }));
+        REQUIRE_EQ(a.remove_all_if([](const ValueType& v) { return v == 114514; }), 0);
+
         REQUIRE_FALSE((bool)a.find(114514));
         REQUIRE_FALSE((bool)a.find_ex(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; }));
         REQUIRE_FALSE((bool)a.readonly().find(114514));

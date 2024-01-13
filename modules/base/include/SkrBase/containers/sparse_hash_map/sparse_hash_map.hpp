@@ -157,7 +157,7 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     template <typename UV = MapValueType>
     bool remove_value(const UV& value);
     template <typename UV = MapValueType>
-    bool remove_all_value(const UV& value);
+    SizeType remove_all_value(const UV& value);
 
     // remove if
     using Super::remove_if;
@@ -198,6 +198,8 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     bool contains(const UK& key) const;
     template <typename Pred>
     bool contains_ex(HashType hash, Pred&& pred) const;
+
+    // contains value
     template <typename UV = MapValueType>
     bool contains_value(const UV& value) const;
 
@@ -327,15 +329,20 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::add(UK
 {
     if (hint.is_valid())
     { // assign case
-        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(HasherType()(key) == hint.hash());
         SKR_ASSERT(find(key) == hint);
         hint.key()   = std::forward<UK>(key);
         hint.value() = std::forward<UV>(value);
-        return hint;
+        return {
+            hint.ptr(),
+            hint.index(),
+            hint.hash(),
+            true,
+        };
     }
     else
     { // construct case
-        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(HasherType()(key) == hint.hash());
         SKR_ASSERT(!contains(key));
         DataRef ref = Super::template _add_unsafe<DataRef>(hint.hash());
         new (&ref.key()) MapKeyType(std::forward<UK>(key));
@@ -422,14 +429,18 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_ad
 {
     if (hint.is_valid())
     { // assign case
-        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(HasherType()(key) == hint.hash());
         SKR_ASSERT(find(key) == hint);
-        hint.key() = std::forward<UK>(key);
-        return hint;
+        return {
+            hint.ptr(),
+            hint.index(),
+            hint.hash(),
+            true,
+        };
     }
     else
     { // construct case
-        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(HasherType()(key) == hint.hash());
         SKR_ASSERT(!contains(key));
         DataRef ref = Super::template _add_unsafe<DataRef>(hint.hash());
         new (&ref.key()) MapKeyType(std::forward<UK>(key));
@@ -443,15 +454,18 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_ad
 {
     if (hint.is_valid())
     { // assign case
-        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(HasherType()(key) == hint.hash());
         SKR_ASSERT(find(key) == hint);
-        hint.key() = std::forward<UK>(key);
-        memory::construct(&hint.value());
-        return hint;
+        return {
+            hint.ptr(),
+            hint.index(),
+            hint.hash(),
+            true,
+        };
     }
     else
     { // construct case
-        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(HasherType()(key) == hint.hash());
         SKR_ASSERT(!contains(key));
         DataRef ref = Super::template _add_unsafe<DataRef>(hint.hash());
         new (&ref.key()) MapKeyType(std::forward<UK>(key));
@@ -466,15 +480,18 @@ SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::try_ad
 {
     if (hint.is_valid())
     { // assign case
-        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(HasherType()(key) == hint.hash());
         SKR_ASSERT(find(key) == hint);
-        hint.key() = std::forward<UK>(key);
-        memset(&hint.value(), 0, sizeof(MapValueType));
-        return hint;
+        return {
+            hint.ptr(),
+            hint.index(),
+            hint.hash(),
+            true,
+        };
     }
     else
     { // construct case
-        SKR_ASSERT(HashType()(key) == hint.hash());
+        SKR_ASSERT(HasherType()(key) == hint.hash());
         SKR_ASSERT(!contains(key));
         DataRef ref = Super::template _add_unsafe<DataRef>(hint.hash());
         new (&ref.key()) MapKeyType(std::forward<UK>(key));
@@ -625,7 +642,7 @@ SKR_INLINE bool SparseHashMap<Memory>::remove_value(const UV& value)
 }
 template <typename Memory>
 template <typename UV>
-SKR_INLINE bool SparseHashMap<Memory>::remove_all_value(const UV& value)
+SKR_INLINE typename SparseHashMap<Memory>::SizeType SparseHashMap<Memory>::remove_all_value(const UV& value)
 {
     return remove_all_if([&value](const MapDataType& data) { return data.value == value; });
 }
@@ -679,25 +696,25 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_if(Pred&& pred)
 {
-    return Super::template _find_if<DataRef>(std::forward(pred));
+    return Super::template _find_if<DataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashMap<Memory>::DataRef SparseHashMap<Memory>::find_last_if(Pred&& pred)
 {
-    return Super::template _find_last_if<DataRef>(std::forward(pred));
+    return Super::template _find_last_if<DataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_if(Pred&& pred) const
 {
-    return Super::template _find_if<CDataRef>(std::forward(pred));
+    return Super::template _find_if<CDataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashMap<Memory>::CDataRef SparseHashMap<Memory>::find_last_if(Pred&& pred) const
 {
-    return Super::template _find_last_if<CDataRef>(std::forward(pred));
+    return Super::template _find_last_if<CDataRef>(std::forward<Pred>(pred));
 }
 
 // contains

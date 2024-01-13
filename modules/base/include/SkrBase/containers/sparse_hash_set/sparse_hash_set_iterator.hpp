@@ -34,7 +34,7 @@ struct SparseHashSetCursor : protected SparseArrayCursor<Container, kConst> {
     using ContainerType = std::conditional_t<kConst, const Container, Container>;
     using SizeType      = typename ContainerType::SizeType;
     using DataType      = std::conditional_t<kConst, const typename ContainerType::SetDataType, typename ContainerType::SetDataType>;
-    using HashType      = ContainerType::HashType;
+    using HashType      = typename ContainerType::HashType;
 
     // ctor & copy & move & assign & move assign
     inline SparseHashSetCursor(ContainerType* container, SizeType index)
