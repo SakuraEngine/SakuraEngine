@@ -139,7 +139,7 @@ void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
     }
     for (auto setIdx : needsUpdateIndices)
     {
-        skr::InlineVector<CGPUDescriptorData, 4> datas;
+        cgpu::InlineVector<CGPUDescriptorData, 4> datas;
         for (uint32_t i = 0; i < names_count; i++)
         {
             const auto& location = name_locations[i];

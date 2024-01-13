@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrContainers/vector.hpp"
 #include "SkrGraphics/cgpux.h"
+#include "SkrGraphics/containers.hpp"
 
 struct CGPUXBindTableLocation;
 struct CGPUXBindTable;
@@ -22,9 +22,9 @@ protected:
     bool binded = false;
     CGPUDescriptorData data = {};
     // arena
-    skr::InlineVector<const void*, 1> resources;
-    skr::InlineVector<uint64_t, 1> offsets;
-    skr::InlineVector<uint64_t, 1> sizes;
+    cgpu::InlineVector<const void*, 1> resources;
+    cgpu::InlineVector<uint64_t, 1> offsets;
+    cgpu::InlineVector<uint64_t, 1> sizes;
 };
 
 struct CGPUXBindTableLocation

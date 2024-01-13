@@ -1,7 +1,7 @@
+#include "SkrGraphics/containers.hpp"
 #include "SkrGraphics/backend/d3d12/cgpu_d3d12.h"
 #include "./../common/common_utils.h"
 #include "./../dstorage/windows/dstorage.hpp"
-#include <SkrContainers/umap.hpp>
 
 #define SKR_DSTORAGE_SINGLETON_NAME u8"CGPUDStorageSingleton"
 
@@ -24,7 +24,7 @@ struct CGPUDStorageSingleton
         }
         return nullptr;
     }
-    skr::UMap<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
+    cgpu::UMap<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
 };
 
 inline static IDStorageFactory* GetDStorageFactory(CGPUInstanceId instance)

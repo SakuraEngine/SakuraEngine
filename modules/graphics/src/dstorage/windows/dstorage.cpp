@@ -3,11 +3,8 @@
 #include "SkrOS/thread.h"
 #include "SkrOS/filesystem.hpp"
 #include "SkrOS/windows/misc.h"
+#include "SkrGraphics/containers.hpp"
 #include "SkrGraphics/extensions/cgpu_d3d12_exts.h"
-
-#include "SkrContainers/stl_vector.hpp"
-#include "SkrContainers/vector.hpp"
-#include "SkrContainers/concurrent_queue.hpp"
 
 #include "dstorage.hpp"
 
@@ -69,7 +66,7 @@ protected:
     friend struct SkrDStorageEvent;
     friend struct DStorageEventPool;
     IDStorageStatusArray* pArray = nullptr;
-    skr::ConcurrentQueue<uint32_t> freeSlots;
+    cgpu::ConcurrentQueue<uint32_t> freeSlots;
 };
 
 bool SkrDStorageEvent::test() SKR_NOEXCEPT
@@ -167,7 +164,7 @@ private:
     }
 
     SRWMutex arrMutex;
-    skr::stl_vector<StatusEventArray*> statusArrays;
+    cgpu::stl_vector<StatusEventArray*> statusArrays;
     IDStorageFactory* pFactory = nullptr;
 };
 

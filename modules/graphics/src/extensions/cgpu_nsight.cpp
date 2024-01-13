@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include <SkrContainers/uset.hpp>
-#include <SkrContainers/string.hpp>
+#include "SkrGraphics/containers.hpp"
 #include "SkrGraphics/extensions/cgpu_nsight.h"
 #include "SkrGraphics/drivers/nsight/GFSDK_Aftermath.h" // IWYU pragma: keep
 #include "SkrGraphics/drivers/nsight/GFSDK_Aftermath_GpuCrashDump.h"
@@ -10,7 +9,7 @@
 #include "./../winheaders.h"
 #include "./cgpu_nsight_tracker.hpp"
 
-inline skr::String AftermathErrorMessage(GFSDK_Aftermath_Result result)
+inline cgpu::String AftermathErrorMessage(GFSDK_Aftermath_Result result)
 {
     switch (result)
     {
@@ -98,12 +97,12 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         // driver release) we may see redundant crash dumps. As a workaround,
         // attach a unique count to each generated file name.
         static int count = 0;
-        const skr::String baseFileNameFmt = applicationNameLength ? skr::String(applicationName.data()) : skr::String(u8"CGPUApplication-{}-{}");
+        const cgpu::String baseFileNameFmt = applicationNameLength ? cgpu::String(applicationName.data()) : cgpu::String(u8"CGPUApplication-{}-{}");
         const auto baseFileName = skr::format(baseFileNameFmt, baseInfo.pid, ++count);
 
         // Write the crash dump data to a file using the .nv-gpudmp extension
         // registered with Nsight Graphics.
-        skr::String crashDumpFileName = baseFileName;
+        cgpu::String crashDumpFileName = baseFileName;
         crashDumpFileName += u8".nv-gpudmp";
         std::ofstream dumpFile(crashDumpFileName.c_str(), std::ios::out | std::ios::binary);
         if (dumpFile)
@@ -124,7 +123,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
     {
         auto _this = (CGPUNSightSingleton*)pUserData;
         cgpu_trace(u8"NSIGHT GPU Crash Dump Callback");
-        skr::USet<struct ID3D12Device*> devices; 
+        cgpu::USet<struct ID3D12Device*> devices; 
         for (auto tracker : _this->all_trackers)
         {
             auto tracker_impl = static_cast<CGPUNSightTrackerBase*>(tracker);

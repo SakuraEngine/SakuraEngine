@@ -1,8 +1,6 @@
 ﻿#include "SkrGraphics/api.h"
+#include "SkrGraphics/containers.hpp"
 #include "common_utils.h"
-
-#include <SkrContainers/btree.hpp>
-#include <SkrContainers/stl_vector.hpp>
 
 extern "C" {
 bool CGPUUtil_ShaderResourceIsStaticSampler(CGPUShaderResource* resource, const struct CGPURootSignatureDescriptor* desc)
@@ -79,9 +77,9 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
     }
     // Collect all resources
     RS->pipeline_type = CGPU_PIPELINE_TYPE_NONE;
-    skr::stl_vector<CGPUShaderResource> all_resources;
-    skr::stl_vector<CGPUShaderResource> all_push_constants;
-    skr::stl_vector<CGPUShaderResource> all_static_samplers;
+    cgpu::stl_vector<CGPUShaderResource> all_resources;
+    cgpu::stl_vector<CGPUShaderResource> all_push_constants;
+    cgpu::stl_vector<CGPUShaderResource> all_static_samplers;
     for (uint32_t i = 0; i < desc->shader_count; i++)
     {
         CGPUShaderReflection* reflection = entry_reflections[i];
@@ -135,8 +133,8 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
             RS->pipeline_type = CGPU_PIPELINE_TYPE_GRAPHICS;
     }
     // Merge
-    skr::BTreeSet<uint32_t> valid_sets;
-    skr::stl_vector<CGPUShaderResource> RST_resources;
+    cgpu::BTreeSet<uint32_t> valid_sets;
+    cgpu::stl_vector<CGPUShaderResource> RST_resources;
     RST_resources.reserve(all_resources.size());
     for (auto&& shader_resource : all_resources)
     {

@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrProfile/profile.h"
 #include "SkrGraphics/dstorage.h"
+#include "SkrGraphics/containers.hpp"
 #include "SkrOS/shared_library.hpp"
 #include "sdk/dstorage.h"
 
@@ -9,7 +10,6 @@
     #include "SkrMemory/memory.h"
     #include "SkrOS/atomic.h"
     #include "SkrOS/thread.h"
-    #include "SkrContainers/vector.hpp"
 #endif
 
 struct SkrWindowsDStorageInstance : public SkrDStorageInstance
@@ -38,7 +38,7 @@ struct DStorageQueueWindows : public SkrDStorageQueue {
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
     SMutex profile_mutex;
     struct ProfileTracer {
-        skr::String name;
+        cgpu::String name;
         DStorageQueueWindows* Q;
         ID3D12Fence* fence;
         SThreadDesc desc;

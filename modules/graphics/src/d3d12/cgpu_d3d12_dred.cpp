@@ -1,9 +1,6 @@
 #include "d3d12_utils.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrContainers/span.hpp"
-
-#include <SkrContainers/stl_string.hpp>
-#include <SkrContainers/umap.hpp>
+#include "SkrGraphics/containers.hpp"
 
 // Should match all valid values from D3D12_DRED_ALLOCATION_TYPE
 static const TCHAR* D3D12_AllocTypesNames[] =
@@ -160,15 +157,15 @@ void D3D12Util_LogDREDPageFault1(const D3D12_DRED_PAGE_FAULT_OUTPUT1* pageFault)
     D3D12Util_LogDREDPageFaultImpl(pageFault);
 }
 
-inline static skr::span<D3D12_DRED_BREADCRUMB_CONTEXT> GetDREDBreadcrumbContexts(const D3D12_AUTO_BREADCRUMB_NODE* Node)
+inline static cgpu::span<D3D12_DRED_BREADCRUMB_CONTEXT> GetDREDBreadcrumbContexts(const D3D12_AUTO_BREADCRUMB_NODE* Node)
 {
 	return {};
 }
 
 #ifdef __ID3D12DeviceRemovedExtendedData1_INTERFACE_DEFINED__
-inline static skr::span<D3D12_DRED_BREADCRUMB_CONTEXT> GetDREDBreadcrumbContexts(const D3D12_AUTO_BREADCRUMB_NODE1* Node)
+inline static cgpu::span<D3D12_DRED_BREADCRUMB_CONTEXT> GetDREDBreadcrumbContexts(const D3D12_AUTO_BREADCRUMB_NODE1* Node)
 {
-	return skr::span<D3D12_DRED_BREADCRUMB_CONTEXT>(Node->pBreadcrumbContexts, Node->BreadcrumbContextsCount);
+	return cgpu::span<D3D12_DRED_BREADCRUMB_CONTEXT>(Node->pBreadcrumbContexts, Node->BreadcrumbContextsCount);
 }
 #endif
 
@@ -180,8 +177,8 @@ void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
     {
         cgpu_error(u8"DRED: Last tracked GPU operations:");
 
-        skr::stl_wstring ContextStr;
-        skr::UMap<int32_t, const wchar_t*> ContextStrings;
+        cgpu::stl_wstring ContextStr;
+        cgpu::UMap<int32_t, const wchar_t*> ContextStrings;
 
         uint32_t TracedCommandLists = 0;
         auto Node = breadcrumbs->pHeadAutoBreadcrumbNode;
