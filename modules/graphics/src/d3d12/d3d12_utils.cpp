@@ -1,3 +1,4 @@
+#include "SkrGraphics/containers.hpp"
 #include "SkrGraphics/backend/d3d12/cgpu_d3d12.h"
 #include "SkrGraphics/drivers/cgpu_nvapi.h"
 #include "SkrGraphics/drivers/cgpu_ags.h"
@@ -6,7 +7,6 @@
 #include <d3d12shader.h>
 #include "D3D12MemAlloc.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrContainers/stl_vector.hpp"
 #include <comutil.h>
 
 #define USE_PIX
@@ -135,8 +135,8 @@ void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, b
     cgpu_assert(instance->pAdapters == nullptr && "getProperGpuCount should be called only once!");
     cgpu_assert(instance->mAdaptersCount == 0 && "getProperGpuCount should be called only once!");
     IDXGIAdapter* _adapter = NULL;
-    skr::stl_vector<IDXGIAdapter4*> dxgi_adapters;
-    skr::stl_vector<D3D_FEATURE_LEVEL> adapter_levels;
+    cgpu::stl_vector<IDXGIAdapter4*> dxgi_adapters;
+    cgpu::stl_vector<D3D_FEATURE_LEVEL> adapter_levels;
     // Find number of usable GPUs
     // Use DXGI6 interface which lets us specify gpu preference so we dont need to use NVOptimus or AMDPowerExpress
     // exports

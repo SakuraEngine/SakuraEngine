@@ -1,6 +1,5 @@
 #include "common_utils.h"
-#include <SkrContainers/string.hpp>
-#include <SkrContainers/hashmap.hpp>
+#include "SkrGraphics/containers.hpp"
 
 struct RSCharacteristic
 {
@@ -178,11 +177,11 @@ public:
         }
     }
 protected:
-    const skr::String name;
+    const cgpu::String name;
     // TODO: replace with skr::hash_map
-    skr::ParallelFlatHashMap<RSCharacteristic, CGPURootSignatureId, RSCharacteristic::hasher> characterMap;
-    skr::ParallelFlatHashMap<CGPURootSignatureId, RSCharacteristic> biCharacterMap;
-    skr::ParallelFlatHashMap<CGPURootSignatureId, uint32_t> counterMap;
+    cgpu::ParallelFlatHashMap<RSCharacteristic, CGPURootSignatureId, RSCharacteristic::hasher> characterMap;
+    cgpu::ParallelFlatHashMap<CGPURootSignatureId, RSCharacteristic> biCharacterMap;
+    cgpu::ParallelFlatHashMap<CGPURootSignatureId, uint32_t> counterMap;
 };
 
 CGPURootSignaturePoolId CGPUUtil_CreateRootSignaturePool(const CGPURootSignaturePoolDescriptor* desc)

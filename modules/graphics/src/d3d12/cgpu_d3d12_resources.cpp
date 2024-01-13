@@ -1,11 +1,9 @@
-#include "SkrGraphics/backend/d3d12/cgpu_d3d12.h"
-#include "SkrGraphics/drivers/cgpu_nvapi.h"
-#include "SkrMemory/memory.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrBase/misc/defer.hpp"
-#include <SkrContainers/stl_string.hpp>
-#include <SkrContainers/string.hpp>
-#include <SkrContainers/concurrent_queue.hpp>
+#include "SkrMemory/memory.h"
+#include "SkrGraphics/containers.hpp"
+#include "SkrGraphics/backend/d3d12/cgpu_d3d12.h"
+#include "SkrGraphics/drivers/cgpu_nvapi.h"
 
 #include "d3d12_utils.hpp"
 #include <dxcapi.h>
@@ -671,7 +669,7 @@ FAIL:
 
 struct CGPUTextureAliasing_D3D12 : public CGPUTexture_D3D12 {
     D3D12_RESOURCE_DESC mDxDesc;
-    skr::String name;
+    cgpu::String name;
     CGPUTextureAliasing_D3D12(const D3D12_RESOURCE_DESC& dxDesc, const char8_t* name)
         : CGPUTexture_D3D12()
         , mDxDesc(dxDesc)
@@ -1186,7 +1184,7 @@ bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPU
                     wchar_t debugName[MAX_GPU_DEBUG_NAME_LENGTH] = {};
                     auto alisingName = Aliasing->name.append(u8"[aliasing]");
                     if (!Aliasing->name.is_empty())
-                        mbstowcs(debugName, alisingName.c_str(), MAX_GPU_DEBUG_NAME_LENGTH);
+                        mbstowcs(debugName, (const char*)alisingName.c_str(), MAX_GPU_DEBUG_NAME_LENGTH);
                     Aliasing->pDxResource->SetName(debugName);
                 }
             }
@@ -1195,7 +1193,7 @@ bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPU
     return result == S_OK;
 }
 
-const skr::stl_wstring shared_texture_name_format = L"cgpu-shared-texture-";
+const cgpu::stl_wstring shared_texture_name_format = L"cgpu-shared-texture-";
 uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc)
 {
     HRESULT result = S_OK;
@@ -1209,7 +1207,7 @@ uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const stru
     uint64_t hdl = (pid << 32) | shared_id;
 
     // calculate name
-    skr::stl_wstring name = shared_texture_name_format;
+    cgpu::stl_wstring name = shared_texture_name_format;
     name += std::to_wstring(hdl);
 
     // create shared resource handle
@@ -1239,7 +1237,7 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     HANDLE namedResourceHandle = (HANDLE)LongToHandle((long)desc->shared_handle);
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
 
-    skr::stl_wstring name = shared_texture_name_format;
+    cgpu::stl_wstring name = shared_texture_name_format;
     name += std::to_wstring(desc->shared_handle);
 
     result = D->pDxDevice->OpenSharedHandleByName(name.c_str(), GENERIC_ALL, &namedResourceHandle);

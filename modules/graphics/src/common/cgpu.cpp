@@ -1,4 +1,5 @@
 #include "SkrGraphics/api.h"
+#include "SkrGraphics/containers.hpp"
 #ifdef CGPU_USE_VULKAN
     // #include "SkrGraphics/backend/vulkan/cgpu_vulkan.h"
 #endif
@@ -9,9 +10,6 @@
     // #include "SkrGraphics/backend/metal/cgpu_metal.h"
 #endif
 #include "common_utils.h"
-#include <SkrContainers/string.hpp>
-#include <SkrContainers/hashmap.hpp>
-#include <SkrContainers/vector.hpp>
 #include <functional>
 
 // Runtime Table
@@ -39,10 +37,8 @@ struct CGPURuntimeTable {
         to_find.device = device;
         to_find.type = type;
         to_find.index = index;
-        if (auto found = created_queues.find(to_find);found.data)
-        {
+        if (auto found = created_queues.find(to_find))
             return found->queue;
-        }
         return nullptr;
     }
     void AddNewQueue(CGPUQueueId queue, ECGPUQueueType type, uint32_t index)
@@ -76,9 +72,9 @@ struct CGPURuntimeTable {
     }
     cgpu::Vector<CreatedQueue> created_queues;
     // TODO: replace with skr::hash_map
-    skr::FlatHashMap<skr::String, void*, skr::Hash<skr::String>> custom_data_map;
-    skr::FlatHashMap<skr::String, std::function<void()>, skr::Hash<skr::String>> custom_sweep_callbacks;
-    skr::FlatHashMap<skr::String, std::function<void()>, skr::Hash<skr::String>> custom_early_sweep_callbacks;
+    cgpu::FlatHashMap<cgpu::stl_u8string, void*> custom_data_map;
+    cgpu::FlatHashMap<cgpu::stl_u8string, std::function<void()>> custom_sweep_callbacks;
+    cgpu::FlatHashMap<cgpu::stl_u8string, std::function<void()>> custom_early_sweep_callbacks;
 };
 
 struct CGPURuntimeTable* cgpu_create_runtime_table()

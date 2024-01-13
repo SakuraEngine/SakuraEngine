@@ -1,10 +1,6 @@
-#include "vulkan_utils.h"
+#include "SkrGraphics/containers.hpp"
 #include "SkrGraphics/extensions/cgpu_vulkan_exts.h"
-
-#include <SkrContainers/stl_vector.hpp>
-#include <SkrContainers/stl_string.hpp>
-#include <SkrContainers/string.hpp>
-#include <SkrContainers/hashmap.hpp>
+#include "vulkan_utils.h"
 
 class VkUtil_Blackboard
 {
@@ -63,10 +59,10 @@ public:
     }
     const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr = CGPU_NULLPTR;
     const VkDebugReportCallbackCreateInfoEXT* report_info_ptr = CGPU_NULLPTR;
-    skr::stl_vector<const char*> instance_extensions;
-    skr::stl_vector<const char*> instance_layers;
-    skr::stl_vector<const char*> device_extensions;
-    skr::stl_vector<const char*> device_layers;
+    cgpu::stl_vector<const char*> instance_extensions;
+    cgpu::stl_vector<const char*> instance_layers;
+    cgpu::stl_vector<const char*> device_extensions;
+    cgpu::stl_vector<const char*> device_layers;
 };
 
 struct CGPUCachedRenderPass {
@@ -112,8 +108,8 @@ struct CGPUVkPassTable //
         }
     };
 
-    skr::FlatHashMap<VkUtil_RenderPassDesc, CGPUCachedRenderPass, rpdesc_hash, rpdesc_eq> cached_renderpasses;
-    skr::FlatHashMap<VkUtil_FramebufferDesc, CGPUCachedFramebuffer, fbdesc_hash, fbdesc_eq> cached_framebuffers;
+    cgpu::FlatHashMap<VkUtil_RenderPassDesc, CGPUCachedRenderPass, rpdesc_hash, rpdesc_eq> cached_renderpasses;
+    cgpu::FlatHashMap<VkUtil_FramebufferDesc, CGPUCachedFramebuffer, fbdesc_hash, fbdesc_eq> cached_framebuffers;
 };
 
 VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGPUVkPassTable* table, const VkUtil_FramebufferDesc* desc)
@@ -160,7 +156,7 @@ void VkUtil_RenderPassTableAdd(struct CGPUVkPassTable* table, const struct VkUti
     table->cached_renderpasses[*desc] = new_pass;
 }
 
-struct CGPUVkExtensionsTable : public skr::ParallelFlatHashMap<skr::stl_string, bool> //
+struct CGPUVkExtensionsTable : public cgpu::ParallelFlatHashMap<cgpu::stl_string, bool> //
 {
     static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
@@ -235,7 +231,7 @@ struct CGPUVkExtensionsTable : public skr::ParallelFlatHashMap<skr::stl_string, 
     }
 };
 
-struct CGPUVkLayersTable : public skr::ParallelFlatHashMap<skr::stl_string, bool> //
+struct CGPUVkLayersTable : public cgpu::ParallelFlatHashMap<cgpu::stl_string, bool> //
 {
     static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
@@ -441,7 +437,7 @@ CGPUDeviceId cgpu_create_device_vulkan(CGPUAdapterId adapter, const CGPUDeviceDe
     *const_cast<CGPUAdapterId*>(&D->super.adapter) = adapter;
 
     // Prepare Create Queues
-    skr::stl_vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    cgpu::stl_vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     queueCreateInfos.resize(desc->queue_group_count);
     for (uint32_t i = 0; i < desc->queue_group_count; i++)
     {

@@ -66,7 +66,7 @@ struct skr_win_dstorage_decompress_service_t
     SAtomicU32 thread_running;
 
     skr::JobQueue* job_queue = nullptr;
-    skr::stl_vector<skr::IFuture<bool>*> decompress_futures;
+    cgpu::stl_vector<skr::IFuture<bool>*> decompress_futures;
 };
 
 using DSDecompressFutureLauncher = skr::FutureLauncher<bool>;
