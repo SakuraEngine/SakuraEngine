@@ -63,28 +63,28 @@ SKR_FORCEINLINE static void* calloc_aligned(size_t count, size_t size, size_t al
 
 static const char* kDefaultOSAllocPoolName = "sakura::os_alloc";
 
-SKR_MEMORY_API void* traced_os_malloc(size_t size, const char* pool_name) 
+SKR_CORE_API void* traced_os_malloc(size_t size, const char* pool_name) 
 {
     void* ptr = malloc(size);
     SkrCAllocN(ptr, size, pool_name ? pool_name : kDefaultOSAllocPoolName);
     return ptr;
 }
 
-SKR_MEMORY_API void* traced_os_calloc(size_t count, size_t size, const char* pool_name) 
+SKR_CORE_API void* traced_os_calloc(size_t count, size_t size, const char* pool_name) 
 {
     void* ptr = calloc(count, size);
     SkrCAllocN(ptr, size, pool_name ? pool_name : kDefaultOSAllocPoolName);
     return ptr;
 }
 
-SKR_MEMORY_API void* traced_os_calloc_aligned(size_t count, size_t size, size_t alignment, const char* pool_name) 
+SKR_CORE_API void* traced_os_calloc_aligned(size_t count, size_t size, size_t alignment, const char* pool_name) 
 {
     void* ptr = calloc_aligned(count, size, alignment);
     SkrCAllocN(ptr, size, pool_name ? pool_name : kDefaultOSAllocPoolName);
     return ptr;
 }
 
-SKR_MEMORY_API void* traced_os_malloc_aligned(size_t size, size_t alignment, const char* pool_name) 
+SKR_CORE_API void* traced_os_malloc_aligned(size_t size, size_t alignment, const char* pool_name) 
 {
 #if !defined(_WIN32)
     void* ptr = (alignment == 1) ? malloc(size) : NULL;
@@ -104,7 +104,7 @@ SKR_MEMORY_API void* traced_os_malloc_aligned(size_t size, size_t alignment, con
     return ptr;
 }
 
-SKR_MEMORY_API void traced_os_free(void* p, const char* pool_name) 
+SKR_CORE_API void traced_os_free(void* p, const char* pool_name) 
 {
     free(p);
     SkrCFreeN(p, pool_name ? pool_name : kDefaultOSAllocPoolName);
@@ -116,13 +116,13 @@ SKR_MEMORY_API void traced_os_free(void* p, const char* pool_name)
 #define os_free_aligned(p, alignment) _aligned_free((p))
 #endif
 
-SKR_MEMORY_API void traced_os_free_aligned(void* p, size_t alignment, const char* pool_name) 
+SKR_CORE_API void traced_os_free_aligned(void* p, size_t alignment, const char* pool_name) 
 {
     os_free_aligned(p, alignment);
     SkrCFreeN(p, pool_name ? pool_name : kDefaultOSAllocPoolName);
 }
 
-SKR_MEMORY_API void* traced_os_realloc(void* p, size_t newsize, const char* pool_name) 
+SKR_CORE_API void* traced_os_realloc(void* p, size_t newsize, const char* pool_name) 
 {
     SkrCFreeN(p, pool_name ? pool_name : kDefaultOSAllocPoolName);
     void* ptr = realloc(p, newsize);
@@ -130,7 +130,7 @@ SKR_MEMORY_API void* traced_os_realloc(void* p, size_t newsize, const char* pool
     return ptr;
 }
 
-SKR_EXTERN_C SKR_MEMORY_API void* traced_os_realloc_aligned(void* p, size_t newsize, size_t alignment, const char* pool_name)
+SKR_EXTERN_C SKR_CORE_API void* traced_os_realloc_aligned(void* p, size_t newsize, size_t alignment, const char* pool_name)
 {
 #if defined(_WIN32)
     SkrCFreeN(p, pool_name ? pool_name : kDefaultOSAllocPoolName);
@@ -158,7 +158,7 @@ SKR_EXTERN_C SKR_MEMORY_API void* traced_os_realloc_aligned(void* p, size_t news
 // _sakura_alloc
 
 #if defined(SKR_RUNTIME_USE_MIMALLOC)
-SKR_MEMORY_API void* _sakura_malloc(size_t size, const char* pool_name) 
+SKR_CORE_API void* _sakura_malloc(size_t size, const char* pool_name) 
 {
     void* p = mi_malloc(size);
     if (pool_name)
@@ -172,7 +172,7 @@ SKR_MEMORY_API void* _sakura_malloc(size_t size, const char* pool_name)
     return p;
 }
 
-SKR_MEMORY_API void* _sakura_calloc(size_t count, size_t size, const char* pool_name) 
+SKR_CORE_API void* _sakura_calloc(size_t count, size_t size, const char* pool_name) 
 {
     void* p = mi_calloc(count, size);
     if (pool_name)
@@ -186,7 +186,7 @@ SKR_MEMORY_API void* _sakura_calloc(size_t count, size_t size, const char* pool_
     return p;
 }
 
-SKR_MEMORY_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t alignment, const char* pool_name) 
+SKR_CORE_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t alignment, const char* pool_name) 
 {
     void* p = mi_calloc_aligned(count, size, alignment);
     if (pool_name)
@@ -200,7 +200,7 @@ SKR_MEMORY_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t al
     return p;
 }
 
-SKR_MEMORY_API void* _sakura_malloc_aligned(size_t size, size_t alignment, const char* pool_name) 
+SKR_CORE_API void* _sakura_malloc_aligned(size_t size, size_t alignment, const char* pool_name) 
 {
     void* p = mi_malloc_aligned(size, alignment);
     if (pool_name)
@@ -214,7 +214,7 @@ SKR_MEMORY_API void* _sakura_malloc_aligned(size_t size, size_t alignment, const
     return p;
 }
 
-SKR_EXTERN_C SKR_MEMORY_API void* _sakura_new_n(size_t count, size_t size, const char* pool_name) 
+SKR_EXTERN_C SKR_CORE_API void* _sakura_new_n(size_t count, size_t size, const char* pool_name) 
 {
     void* p = mi_new_n(count, size);
     if (pool_name)
@@ -228,7 +228,7 @@ SKR_EXTERN_C SKR_MEMORY_API void* _sakura_new_n(size_t count, size_t size, const
     return p;
 }
 
-SKR_MEMORY_API void* _sakura_new_aligned(size_t size, size_t alignment, const char* pool_name) 
+SKR_CORE_API void* _sakura_new_aligned(size_t size, size_t alignment, const char* pool_name) 
 {
     void* p = mi_new_aligned(size, alignment);
     if (pool_name)
@@ -242,7 +242,7 @@ SKR_MEMORY_API void* _sakura_new_aligned(size_t size, size_t alignment, const ch
     return p;
 }
 
-SKR_MEMORY_API void _sakura_free(void* p, const char* pool_name) 
+SKR_CORE_API void _sakura_free(void* p, const char* pool_name) 
 {
     if (pool_name)
     {
@@ -255,7 +255,7 @@ SKR_MEMORY_API void _sakura_free(void* p, const char* pool_name)
     mi_free(p);
 }
 
-SKR_MEMORY_API void _sakura_free_aligned(void* p, size_t alignment, const char* pool_name) 
+SKR_CORE_API void _sakura_free_aligned(void* p, size_t alignment, const char* pool_name) 
 {
     if (pool_name)
     {
@@ -268,7 +268,7 @@ SKR_MEMORY_API void _sakura_free_aligned(void* p, size_t alignment, const char* 
     mi_free_aligned(p, alignment);
 }
 
-SKR_MEMORY_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_name) 
+SKR_CORE_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_name) 
 {
     if (pool_name)
     {
@@ -290,7 +290,7 @@ SKR_MEMORY_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_n
     return np;
 }
 
-SKR_MEMORY_API void* _sakura_realloc_aligned(void* p, size_t newsize, size_t alignment, const char* pool_name) 
+SKR_CORE_API void* _sakura_realloc_aligned(void* p, size_t newsize, size_t alignment, const char* pool_name) 
 {
     if (pool_name)
     {
@@ -316,53 +316,53 @@ SKR_MEMORY_API void* _sakura_realloc_aligned(void* p, size_t newsize, size_t ali
 
 #else
 
-SKR_MEMORY_API void* _sakura_malloc(size_t size, const char* pool_name) 
+SKR_CORE_API void* _sakura_malloc(size_t size, const char* pool_name) 
 {
     return traced_os_malloc(size, pool_name);
 }
 
-SKR_MEMORY_API void* _sakura_calloc(size_t count, size_t size, const char* pool_name) 
+SKR_CORE_API void* _sakura_calloc(size_t count, size_t size, const char* pool_name) 
 {
     return traced_os_calloc(count, size, pool_name);
 }
 
-SKR_EXTERN_C SKR_MEMORY_API void* _sakura_new_n(size_t count, size_t size, const char* pool_name)
+SKR_EXTERN_C SKR_CORE_API void* _sakura_new_n(size_t count, size_t size, const char* pool_name)
 {
     void* p = malloc(count * size);
     return p;
 }
 
-SKR_MEMORY_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t alignment, const char* pool_name) 
+SKR_CORE_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t alignment, const char* pool_name) 
 {
     return traced_os_calloc_aligned(count, size, alignment, pool_name);
 }
 
-SKR_MEMORY_API void* _sakura_malloc_aligned(size_t size, size_t alignment, const char* pool_name) 
+SKR_CORE_API void* _sakura_malloc_aligned(size_t size, size_t alignment, const char* pool_name) 
 {
     return traced_os_malloc_aligned(size, alignment, pool_name);
 }
 
-SKR_MEMORY_API void* _sakura_new_aligned(size_t size, size_t alignment, const char* pool_name)
+SKR_CORE_API void* _sakura_new_aligned(size_t size, size_t alignment, const char* pool_name)
 {
     return traced_os_malloc_aligned(size, alignment, pool_name);
 }
 
-SKR_MEMORY_API void _sakura_free(void* p, const char* pool_name) 
+SKR_CORE_API void _sakura_free(void* p, const char* pool_name) 
 {
     return traced_os_free(p, pool_name);
 }
 
-SKR_MEMORY_API void _sakura_free_aligned(void* p, size_t alignment, const char* pool_name) 
+SKR_CORE_API void _sakura_free_aligned(void* p, size_t alignment, const char* pool_name) 
 {
     traced_os_free_aligned(p, alignment, pool_name);
 }
 
-SKR_MEMORY_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_name) 
+SKR_CORE_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_name) 
 {
     return traced_os_realloc(p, newsize, pool_name);
 }
 
-SKR_MEMORY_API void* _sakura_realloc_aligned(void* p, size_t newsize, size_t align, const char* pool_name) 
+SKR_CORE_API void* _sakura_realloc_aligned(void* p, size_t newsize, size_t align, const char* pool_name) 
 {
     return traced_os_realloc_aligned(p, newsize, align, pool_name);
 }
