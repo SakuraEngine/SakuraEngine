@@ -1,7 +1,7 @@
 #include "metal_utils.h"
 #include "SkrGraphics/api.h"
 #include "string.h"
-#import "cgpu/backend/metal/cgpu_metal_types.h"
+#import "SkrGraphics/backend/metal/cgpu_metal_types.h"
 
 static const uint32_t kAMDVendorId = 0x1002;
 static const uint32_t kAppleVendorId = 0x106b;

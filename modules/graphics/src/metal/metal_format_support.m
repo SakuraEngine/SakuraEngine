@@ -1,5 +1,5 @@
 #include "metal_utils.h"
-#import "cgpu/backend/metal/cgpu_metal_types.h"
+#import "SkrGraphics/backend/metal/cgpu_metal_types.h"
 
 uint32_t MetalUtilInner_GetGPUFamilyTier(struct CGPUAdapter_Metal* MAdapter);
 void MetalUtilInner_EnumFormatShaderWriteSupports(struct CGPUAdapter_Metal* MAdapter, uint32_t familyTier);

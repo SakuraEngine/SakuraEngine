@@ -8,5 +8,5 @@
 
 namespace skr
 {
-    SKR_MEMORY_API const char* kConcurrentQueueMemoryName = "ConcurrentQueues";
+    SKR_CORE_API const char* kConcurrentQueueMemoryName = "ConcurrentQueues";
 }

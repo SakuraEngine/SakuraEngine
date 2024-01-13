@@ -16,7 +16,7 @@ struct DefaultDeleter
     void operator()(T* p) const SKR_NOEXCEPT { SkrDelete(p); }
 };
 
-struct SKR_MEMORY_API SRCBlock
+struct SKR_CORE_API SRCBlock
 {
     SRCBlock() = default;
     virtual ~SRCBlock() = default;

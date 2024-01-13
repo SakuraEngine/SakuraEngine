@@ -9,10 +9,10 @@ typedef struct SSysMemoryPoolDesc {
 
 typedef struct SSysMemoryPool SSysMemoryPool;
 typedef struct SSysMemoryPool* SSysMemoryPoolId;
-SKR_EXTERN_C SKR_MEMORY_API SSysMemoryPoolId sakura_sysmem_pool_create(const SSysMemoryPoolDesc* pdesc);
-SKR_EXTERN_C SKR_MEMORY_API void sakura_sysmem_pool_destroy(SSysMemoryPoolId pool);
-SKR_EXTERN_C SKR_MEMORY_API void* _sakura_sysmem_pool_malloc(SSysMemoryPoolId pool, size_t size);
-SKR_EXTERN_C SKR_MEMORY_API void* _sakura_sysmem_pool_free(SSysMemoryPoolId pool, void* ptr);
+SKR_EXTERN_C SKR_CORE_API SSysMemoryPoolId sakura_sysmem_pool_create(const SSysMemoryPoolDesc* pdesc);
+SKR_EXTERN_C SKR_CORE_API void sakura_sysmem_pool_destroy(SSysMemoryPoolId pool);
+SKR_EXTERN_C SKR_CORE_API void* _sakura_sysmem_pool_malloc(SSysMemoryPoolId pool, size_t size);
+SKR_EXTERN_C SKR_CORE_API void* _sakura_sysmem_pool_free(SSysMemoryPoolId pool, void* ptr);
 
 #if defined(SKR_PROFILE_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
 

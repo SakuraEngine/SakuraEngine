@@ -6,7 +6,11 @@ target("SkrRTStatic")
     set_optimize("fastest")
     set_exceptions("no-cxx")
     add_deps("SkrRoot", "SkrCore", {public = true})
-    add_defines("SKR_RUNTIME_API=SKR_IMPORT", "SKR_RUNTIME_LOCAL=error")
+    if(not has_config("shipping_one_archive")) then
+        add_defines("SKR_RUNTIME_API=SKR_IMPORT", "SKR_RUNTIME_LOCAL=error")
+    else
+        add_defines("SKR_RUNTIME_API=", "SKR_RUNTIME_LOCAL=error")
+    end
     add_rules("skr.static_module", {api = "SKR_RUNTIME_STATIC"})
     add_includedirs("include", {public = true})
     set_pcxxheader("src_static/pch.hpp")
