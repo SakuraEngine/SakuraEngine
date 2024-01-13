@@ -1,4 +1,4 @@
-#include "SkrGraphics/cgpu_config.h"
+#include "SkrGraphics/config.h"
 #if _WIN32
     #include "dstorage/windows/dstorage.cpp"
     #include "dstorage/windows/dstorage_decompress.cpp"

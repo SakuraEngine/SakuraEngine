@@ -1,4 +1,4 @@
-#include "SkrGraphics/cgpu_config.h"
+#include "SkrGraphics/config.h"
 
 #ifdef CGPU_USE_VULKAN
     #include "vulkan/cgpu_vulkan_instance.cpp"

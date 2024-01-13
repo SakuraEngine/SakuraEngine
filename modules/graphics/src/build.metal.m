@@ -1,4 +1,4 @@
-#include "SkrGraphics/cgpu_config.h"
+#include "SkrGraphics/config.h"
 #ifdef CGPU_USE_METAL
     #include "metal/cgpu_metal.m"
     #include "metal/metal_format_support.m"

@@ -1,4 +1,4 @@
-#include "SkrGraphics/cgpu_config.h"
+#include "SkrGraphics/config.h"
 #ifdef CGPU_USE_VULKAN
     #include "SkrGraphics/backend/vulkan/cgpu_vulkan.h" // IWYU pragma: keep
     #include "vulkan/volk.c"

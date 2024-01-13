@@ -1,5 +1,5 @@
 #pragma once
-#include "cgpu_config.h"
+#include "config.h"
 #include "SkrGraphics/dstorage.h" // IWYU pragma: export
 
 #ifdef __cplusplus

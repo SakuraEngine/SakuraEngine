@@ -99,8 +99,10 @@
 #endif
 #endif
 
-#ifndef SKR_RUNTIME_API
-    #define SKR_RUNTIME_API SKR_IMPORT
+#ifndef SHIPPING_ONE_ARCHIVE
+    #define IMPORT_FROM_RUNTIME SKR_IMPORT
+#else
+    #define IMPORT_FROM_RUNTIME
 #endif
 
 #pragma region LOG
@@ -117,7 +119,7 @@
         CGPU_SKR_LOG_LEVEL_BACKTRACE,
     };
 
-    CGPU_EXTERN_C SKR_RUNTIME_API 
+    CGPU_EXTERN_C IMPORT_FROM_RUNTIME 
     void skr_log_log(int level, const char* file, const char* func, const char* line, const char8_t* fmt, ...);
 
     #define __LOG_FUNC__ __FUNCTION__ 

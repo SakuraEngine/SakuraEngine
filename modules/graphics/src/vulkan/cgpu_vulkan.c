@@ -1,5 +1,5 @@
 #include "SkrGraphics/backend/vulkan/cgpu_vulkan.h"
-#include "SkrGraphics/cgpu_config.h"
+#include "SkrGraphics/config.h"
 #include "vulkan_utils.h"
 #include "SkrGraphics/shader-reflections/spirv/spirv_reflect.h"
 #include "../common/common_utils.h"

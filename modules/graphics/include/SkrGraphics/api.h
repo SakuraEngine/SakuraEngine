@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGraphics/flags.h"
-#include "SkrGraphics/cgpu_config.h"
+#include "SkrGraphics/config.h"
 
 #define CGPU_ARRAY_LEN(array) ((sizeof(array) / sizeof(array[0])))
 #define CGPU_MAX_MRT_COUNT 8u
