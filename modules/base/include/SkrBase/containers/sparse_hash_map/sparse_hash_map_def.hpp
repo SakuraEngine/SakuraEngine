@@ -30,7 +30,11 @@ struct SparseHashMapDataRef : private SparseHashSetDataRef<KVPair<K, V>, TS, THa
     }
     template <bool kConstRHS>
     SKR_INLINE SparseHashMapDataRef(const SparseHashMapDataRef<K, V, SizeType, HashType, kConstRHS>& rhs)
-        : Super(rhs)
+        : Super(
+          const_cast<PairType*>(rhs.ptr()),
+          rhs.index(),
+          rhs.hash(),
+          rhs.already_exist())
     {
     }
 

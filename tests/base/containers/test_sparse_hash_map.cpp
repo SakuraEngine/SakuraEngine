@@ -189,15 +189,14 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE(a.contains(114514));
     }
 
-    // [needn't test] data op
-    // [needn't test] bucket op
+    // [needn't test] rehash
 
     SUBCASE("add")
     {
         TestHashMap a({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
-        a.add(1, 1);
-        a.add(4, 4);
-        a.add(10, 10);
+        a.add(1, 2);
+        a.add(4, 5);
+        a.add(10, 11);
         REQUIRE_EQ(a.size(), 4);
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -206,6 +205,22 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE(a.contains(4));
         REQUIRE(a.contains(5));
         REQUIRE(a.contains(10));
+        REQUIRE(a.find(1).value() == 2);
+        REQUIRE(a.find(4).value() == 5);
+        REQUIRE(a.find(5).value() == 5);
+        REQUIRE(a.find(10).value() == 11);
+
+        auto find_result = a.find(1);
+        REQUIRE(a.add(1, 10, find_result).already_exist());
+        REQUIRE(a.find(1).value() == 10);
+        REQUIRE_EQ(a.size(), 4);
+        REQUIRE_EQ(a.sparse_size(), 4);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(4));
+        find_result = a.readonly().find(114514);
+        REQUIRE_FALSE(a.add(114514, 114514, find_result).already_exist());
+        REQUIRE(a.find(114514).value() == 114514);
+        a.remove(114514);
 
         a.add_ex(
         Hash<KeyType>()(100),
@@ -235,43 +250,123 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE(a.contains(100));
     }
 
-    SUBCASE("add or assign")
+    SUBCASE("try add")
     {
         TestHashMap a({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } });
-        a.add(1, 2);
-        a.add(4, 5);
-        a.add(5, 6);
-        a.add(10, 10);
+
+        REQUIRE(a.try_add_unsafe(1).already_exist());
+        REQUIRE_EQ(a.size(), 3);
+        REQUIRE_EQ(a.sparse_size(), 3);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(3));
+
+        REQUIRE(a.try_add_default(4).already_exist());
+        REQUIRE_EQ(a.size(), 3);
+        REQUIRE_EQ(a.sparse_size(), 3);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(3));
+
+        REQUIRE(a.try_add_zeroed(5).already_exist());
+        REQUIRE_EQ(a.size(), 3);
+        REQUIRE_EQ(a.sparse_size(), 3);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(3));
+
+        REQUIRE_FALSE(a.try_add_unsafe(10).already_exist());
         REQUIRE_EQ(a.size(), 4);
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), capacity_of(4));
-        REQUIRE(a.contains(1));
-        REQUIRE(a.contains(4));
-        REQUIRE(a.contains(5));
-        REQUIRE(a.contains(10));
-        REQUIRE_EQ(a.find(1).value(), 2);
-        REQUIRE_EQ(a.find(4).value(), 5);
-        REQUIRE_EQ(a.find(5).value(), 6);
-        REQUIRE_EQ(a.find(10).value(), 10);
+
+        REQUIRE_FALSE(a.try_add_unsafe(11).already_exist());
+        REQUIRE_EQ(a.size(), 5);
+        REQUIRE_EQ(a.sparse_size(), 5);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(5));
+
+        REQUIRE_FALSE(a.try_add_unsafe(12).already_exist());
+        REQUIRE_EQ(a.size(), 6);
+        REQUIRE_EQ(a.sparse_size(), 6);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(6));
+
+        auto find_result = a.find(1);
+        REQUIRE(a.try_add_unsafe(1, find_result).already_exist());
+        REQUIRE_EQ(a.size(), 6);
+        REQUIRE_EQ(a.sparse_size(), 6);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(6));
+
+        REQUIRE(a.try_add_default(1, find_result).already_exist());
+        REQUIRE_EQ(a.size(), 6);
+        REQUIRE_EQ(a.sparse_size(), 6);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(6));
+
+        REQUIRE(a.try_add_zeroed(1, find_result).already_exist());
+        REQUIRE_EQ(a.size(), 6);
+        REQUIRE_EQ(a.sparse_size(), 6);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(6));
+
+        find_result = a.find(100);
+        REQUIRE_FALSE(a.try_add_unsafe(100, find_result).already_exist());
+        REQUIRE_EQ(a.size(), 7);
+        REQUIRE_EQ(a.sparse_size(), 7);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(7));
+
+        find_result = a.find(101);
+        REQUIRE_FALSE(a.try_add_default(101, find_result).already_exist());
+        REQUIRE_EQ(a.size(), 8);
+        REQUIRE_EQ(a.sparse_size(), 8);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(8));
+        REQUIRE_EQ(a.find(101).value(), 0);
+
+        find_result = a.find(102);
+        REQUIRE_FALSE(a.try_add_zeroed(102, find_result).already_exist());
+        REQUIRE_EQ(a.size(), 9);
+        REQUIRE_EQ(a.sparse_size(), 9);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(9));
+        REQUIRE_EQ(a.find(102).value(), 0);
     }
 
     SUBCASE("emplace")
     {
         TestHashMap a({ { { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } } });
-        a.emplace(1, 1);
-        a.emplace(1, 1);
-        a.emplace(4, 4);
-        a.emplace(5, 5);
-        a.emplace(10, 10);
+        a.emplace(1, 114514);
+        a.emplace(1, 2);
+        a.emplace(4, 5);
+        a.emplace(5, 6);
+        a.emplace(10, 11);
         REQUIRE_EQ(a.size(), 4);
         REQUIRE_EQ(a.sparse_size(), 4);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_GE(a.capacity(), capacity_of(4));
-        REQUIRE(a.contains(1));
-        REQUIRE(a.contains(4));
-        REQUIRE(a.contains(5));
-        REQUIRE(a.contains(10));
+        REQUIRE_EQ(a.find(1).value(), 2);
+        REQUIRE_EQ(a.find(4).value(), 5);
+        REQUIRE_EQ(a.find(5).value(), 6);
+        REQUIRE_EQ(a.find(10).value(), 11);
+    }
+
+    SUBCASE("try emplace")
+    {
+        TestHashMap a({ { { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } } });
+        a.try_emplace(1, 114514);
+        a.try_emplace(1, 2);
+        a.try_emplace(4, 5);
+        a.try_emplace(5, 6);
+        a.try_emplace(10, 11);
+        REQUIRE_EQ(a.size(), 4);
+        REQUIRE_EQ(a.sparse_size(), 4);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), capacity_of(4));
+        REQUIRE_EQ(a.find(1).value(), 1);
+        REQUIRE_EQ(a.find(4).value(), 4);
+        REQUIRE_EQ(a.find(5).value(), 5);
+        REQUIRE_EQ(a.find(10).value(), 11);
     }
 
     SUBCASE("append")
@@ -325,53 +420,39 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE_FALSE(a.contains(114514));
     }
 
-    SUBCASE("erase")
+    SUBCASE("remove value")
     {
-        // TestHashMap a(100), b(100);
-        // for (int32_t i = 0; i < 100; ++i)
-        // {
-        //     a.add(i, i + 1);
-        //     b.add(i, i + 1);
-        // }
+        TestHashMap a({ { { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } } });
+        a.remove_value(1);
+        a.remove_value(4);
+        REQUIRE_EQ(a.size(), 1);
+        REQUIRE_LE(a.sparse_size(), 3);
+        REQUIRE_LE(a.hole_size(), 2);
+        REQUIRE_GE(a.capacity(), capacity_of(3));
+        REQUIRE(a.contains(5));
+        REQUIRE_FALSE(a.contains(1));
+        REQUIRE_FALSE(a.contains(4));
 
-        // for (auto it = a.begin(); it != a.end();)
-        // {
-        //     if (it->key % 3 == 0)
-        //     {
-        //         it = a.erase(it);
-        //     }
-        //     else
-        //     {
-        //         ++it;
-        //     }
-        // }
+        a.append({ { 1, 114514 }, { 2, 114514 }, { 3, 114514 }, { 4, 114514 } });
+        a.remove_all_value(114514);
+        REQUIRE_EQ(a.size(), 1);
+        REQUIRE(a.contains(5));
+        REQUIRE_FALSE(a.contains(1));
+        REQUIRE_FALSE(a.contains(4));
+    }
 
-        // const TestHashMap& cb = b;
-        // for (auto it = cb.begin(); it != cb.end();)
-        // {
-        //     if (it->key % 3 == 0)
-        //     {
-        //         it = b.erase(it);
-        //     }
-        //     else
-        //     {
-        //         ++it;
-        //     }
-        // }
+    SUBCASE("remove if")
+    {
+        TestHashMap a({ { { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } } });
+        a.remove_if([](auto&& pair) { return pair.key != 5; });
+        REQUIRE_EQ(a.size(), 2);
+        REQUIRE_GE(a.capacity(), capacity_of(3));
+        REQUIRE(a.contains(5));
 
-        // for (int32_t i = 0; i < 100; ++i)
-        // {
-        //     if (i % 3 == 0)
-        //     {
-        //         REQUIRE_FALSE(a.contains(i));
-        //         REQUIRE_FALSE(b.contains(i));
-        //     }
-        //     else
-        //     {
-        //         REQUIRE(a.contains(i));
-        //         REQUIRE(b.contains(i));
-        //     }
-        // }
+        a.append({ { 1, 114514 }, { 2, 114514 }, { 3, 114514 }, { 4, 114514 } });
+        a.remove_all_if([](auto&& pair) { return pair.value == 114514; });
+        REQUIRE_EQ(a.size(), 1);
+        REQUIRE(a.contains(5));
     }
 
     SUBCASE("find")
@@ -389,11 +470,85 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
             REQUIRE_EQ(ref.key(), 5);
             REQUIRE_EQ(ref.value(), 114514);
         }
+        {
+            auto ref = a.readonly().find(1);
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.key(), 1);
+            REQUIRE_EQ(ref.value(), 1);
+        }
+        {
+            auto ref = a.readonly().find_ex(Hash<KeyType>()(5), [](const KeyType& key) { return key == 5; });
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.key(), 5);
+            REQUIRE_EQ(ref.value(), 114514);
+        }
+    }
+
+    SUBCASE("find value")
+    {
+        TestHashMap a({ { { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 114514 }, { 1, 1 }, { 4, 4 } } });
+        {
+            auto ref = a.find_value(114514);
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.key(), 5);
+            REQUIRE_EQ(ref.value(), 114514);
+        }
+        {
+            auto ref = a.readonly().find_value(4);
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.key(), 4);
+            REQUIRE_EQ(ref.value(), 4);
+        }
+    }
+
+    SUBCASE("find if")
+    {
+        TestHashMap a({ { { 1, 1 }, { 2, 2 }, { 3, 3 }, { 4, 4 }, { 5, 5 }, { 6, 6 } } });
+        {
+            auto ref = a.find_if([](auto&& pair) { return pair.key <= 3; });
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.key(), 1);
+            REQUIRE_EQ(ref.value(), 1);
+        }
+        {
+            auto ref = a.find_last_if([](auto&& pair) { return pair.key >= 4; });
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.key(), 6);
+            REQUIRE_EQ(ref.value(), 6);
+        }
+        {
+            auto ref = a.readonly().find_if([](auto&& pair) { return pair.key <= 3; });
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.key(), 1);
+            REQUIRE_EQ(ref.value(), 1);
+        }
+        {
+            auto ref = a.readonly().find_last_if([](auto&& pair) { return pair.key >= 4; });
+            REQUIRE(ref);
+            REQUIRE_EQ(ref.key(), 6);
+            REQUIRE_EQ(ref.value(), 6);
+        }
+        {
+            auto ref = a.find_if([](auto&& pair) { return pair.key <= 0; });
+            REQUIRE_FALSE(ref);
+        }
+        {
+            auto ref = a.find_last_if([](auto&& pair) { return pair.key >= 7; });
+            REQUIRE_FALSE(ref);
+        }
+        {
+            auto ref = a.readonly().find_if([](auto&& pair) { return pair.key <= 0; });
+            REQUIRE_FALSE(ref);
+        }
+        {
+            auto ref = a.readonly().find_last_if([](auto&& pair) { return pair.key >= 7; });
+            REQUIRE_FALSE(ref);
+        }
     }
 
     SUBCASE("contains")
     {
-        TestHashMap a({ { { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 114514 }, { 1, 1 }, { 4, 4 } } });
+        TestHashMap a({ { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 114514 }, { 1, 1 }, { 4, 4 } });
         REQUIRE(a.contains(1));
         REQUIRE(a.contains(4));
         REQUIRE(a.contains(5));
@@ -403,6 +558,8 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE(a.contains_ex(Hash<KeyType>()(5), [](const KeyType& key) { return key == 5; }));
         REQUIRE_FALSE(a.contains_ex(Hash<KeyType>()(114514), [](const KeyType& key) { return key == 114514; }));
     }
+
+    // [test in sparse hash set] contains_if & count_if
 
     SUBCASE("sort")
     {
@@ -433,14 +590,208 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
 
     // [needn't test] set ops
 
-    // test iterator
-    SUBCASE("iterator")
+    SUBCASE("cursor & iter")
     {
-        // TestHashMap a;
-        // for (auto [k, v] : a)
-        // {
-        //     printf("%d: T%d\n", k, v);
-        // }
+        const auto kCapacity = clamp_capacity(114514);
+
+        TestHashMap a(kCapacity);
+        for (size_t i = 0; i < kCapacity; ++i)
+        {
+            a.add(i, i + 3);
+        }
+        for (size_t i = 0; i < kCapacity; ++i)
+        {
+            if (i % 2 == 1)
+            {
+                a.remove(i);
+            }
+        }
+
+        auto test_func = [kCapacity](auto&& set) {
+            uint64_t count;
+
+            // iter
+            count = 0;
+            for (auto it = set.iter(); it.has_next(); it.move_next())
+            {
+                REQUIRE_EQ(it.key(), count * 2);
+                REQUIRE_EQ(it.value(), it.key() + 3);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+            count = 0;
+            for (auto it = set.iter_inv(); it.has_next(); it.move_next())
+            {
+                REQUIRE_EQ(it.key(), (kCapacity / 2 - count - 1) * 2);
+                REQUIRE_EQ(it.value(), it.key() + 3);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+
+            // range
+            count = 0;
+            for (auto v : set.range())
+            {
+                REQUIRE_EQ(v.key, count * 2);
+                REQUIRE_EQ(v.value, v.key + 3);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+            count = 0;
+            for (auto v : set.range_inv())
+            {
+                REQUIRE_EQ(v.key, (kCapacity / 2 - count - 1) * 2);
+                REQUIRE_EQ(v.value, v.key + 3);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+
+            // cursor
+            count = 0;
+            for (auto cur = set.cursor_begin(); !cur.reach_end(); cur.move_next())
+            {
+                REQUIRE_EQ(cur.key(), count * 2);
+                REQUIRE_EQ(cur.value(), cur.key() + 3);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+            count = 0;
+            for (auto cur = set.cursor_end(); !cur.reach_begin(); cur.move_prev())
+            {
+                REQUIRE_EQ(cur.key(), (kCapacity / 2 - count - 1) * 2);
+                REQUIRE_EQ(cur.value(), cur.key() + 3);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+
+            // foreach
+            count = 0;
+            for (auto v : set)
+            {
+                REQUIRE_EQ(v.key, count * 2);
+                REQUIRE_EQ(v.value, v.key + 3);
+                ++count;
+            }
+            REQUIRE_EQ(count, kCapacity / 2);
+        };
+        test_func(a);
+        test_func(a.readonly());
+    }
+
+    SUBCASE("empty container")
+    {
+        TestHashMap a;
+
+        a.clear();
+        a.release();
+        a.reserve(0);
+        a.shrink();
+        a.compact();
+        a.compact_stable();
+        a.compact_top();
+        REQUIRE_EQ(a.sparse_size(), 0);
+        REQUIRE_EQ(a.size(), 0);
+
+        a.rehash_if_need();
+        a.rehash();
+
+        REQUIRE_FALSE(a.remove(114514));
+        REQUIRE_FALSE(a.remove_ex(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; }));
+
+        REQUIRE_FALSE(a.remove_value(114514));
+        REQUIRE_EQ(a.remove_all_value(114514), 0);
+
+        REQUIRE_FALSE(a.remove_if([](auto&& pair) { return pair.key == 114514; }));
+        REQUIRE_FALSE(a.remove_last_if([](auto&& pair) { return pair.key == 114514; }));
+        REQUIRE_EQ(a.remove_all_if([](auto&& pair) { return pair.key == 114514; }), 0);
+
+        REQUIRE_FALSE((bool)a.find(114514));
+        REQUIRE_FALSE((bool)a.find_ex(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; }));
+        REQUIRE_FALSE((bool)a.readonly().find(114514));
+        REQUIRE_FALSE((bool)a.readonly().find_ex(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; }));
+
+        REQUIRE_FALSE((bool)a.find_value(114514));
+        REQUIRE_FALSE((bool)a.readonly().find_value(114514));
+
+        REQUIRE_FALSE((bool)a.find_if([](auto&& pair) { return pair.value >= 114514; }));
+        REQUIRE_FALSE((bool)a.find_last_if([](auto&& pair) { return pair.value >= 114514; }));
+        REQUIRE_FALSE((bool)a.readonly().find_if([](auto&& pair) { return pair.value >= 114514; }));
+        REQUIRE_FALSE((bool)a.readonly().find_last_if([](auto&& pair) { return pair.value >= 114514; }));
+
+        REQUIRE_FALSE(a.contains(114514));
+        REQUIRE_FALSE(a.contains_ex(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; }));
+        REQUIRE_FALSE(a.readonly().contains(114514));
+        REQUIRE_FALSE(a.readonly().contains_ex(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; }));
+
+        REQUIRE_FALSE(a.contains_value(114514));
+        REQUIRE_FALSE(a.readonly().contains_value(114514));
+
+        REQUIRE_FALSE(a.contains_if([](auto&& pair) { return pair.key <= 114514; }));
+        REQUIRE_FALSE(a.readonly().contains_if([](auto&& pair) { return pair.key >= 114514; }));
+
+        REQUIRE_EQ(a.count_if([](auto&& pair) { return pair.key == 114514; }), 0);
+        REQUIRE_EQ(a.count_if([](auto&& pair) { return pair.value == 114514; }), 0);
+        REQUIRE_EQ(a.readonly().count_if([](auto&& pair) { return pair.key == 114514; }), 0);
+        REQUIRE_EQ(a.readonly().count_if([](auto&& pair) { return pair.value == 114514; }), 0);
+
+        // a.sort();
+        // a.sort_stable();
+
+        auto test_func = [](auto&& map) {
+            uint64_t count;
+
+            // iter
+            count = 0;
+            for (auto it = map.iter(); it.has_next(); it.move_next())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+            count = 0;
+            for (auto it = map.iter_inv(); it.has_next(); it.move_next())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+
+            // range
+            count = 0;
+            for ([[maybe_unused]] auto n : map.range())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+            count = 0;
+            for ([[maybe_unused]] auto n : map.range_inv())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+
+            // cursor
+            count = 0;
+            for (auto cur = map.cursor_begin(); !cur.reach_end(); cur.move_next())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+            count = 0;
+            for (auto cur = map.cursor_end(); !cur.reach_begin(); cur.move_prev())
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+
+            // foreach
+            count = 0;
+            for ([[maybe_unused]] auto v : map)
+            {
+                ++count;
+            }
+            REQUIRE_EQ(count, 0);
+        };
+        test_func(a);
+        test_func(a.readonly());
     }
 }
 
