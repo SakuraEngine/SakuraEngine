@@ -143,7 +143,7 @@
 
 #pragma region MEMORY
 
-#ifdef _CRTDBG_MAP_ALLOC
+#ifdef CGPU_BUILD_STANDALONE
     #include <crtdbg.h>
     
 SKR_FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t alignment)
@@ -163,6 +163,39 @@ SKR_FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t
     #define cgpu_freeN(ptr, ...) free(ptr)
     #define cgpu_free_aligned _aligned_free
     #define cgpu_free_alignedN(ptr, alignment, ...) _aligned_free((ptr), (alignment))
+
+    #ifdef __cplusplus
+    template <typename T, typename... Args>
+    T* cgpu_new_placed(void* memory, Args&&... args)
+    {
+        return new (memory) T(std::forward<Args>(args)...);
+    }
+
+    template <typename T, typename... Args>
+    T* cgpu_new(Args&&... args)
+    {
+        return new T(std::forward<Args>(args)...);
+    }
+
+    template <typename T, typename... Args>
+    T* cgpu_new_sized(uint64_t size, Args&&... args)
+    {
+        void* ptr = cgpu_calloc_aligned(1, size, alignof(T));
+        return new (ptr) T(std::forward<Args>(args)...);
+    }
+
+    template <typename T>
+    void cgpu_delete_placed(T* object)
+    {
+        object->~T();
+    }
+
+    template <typename T>
+    void cgpu_delete(T* object)
+    {
+        delete object;
+    }
+    #endif
 #else
     #include "SkrMemory/memory.h"
 

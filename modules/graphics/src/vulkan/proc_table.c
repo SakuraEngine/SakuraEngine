@@ -314,7 +314,7 @@ static void* VKAPI_PTR cgpu_vulkan_realloc(
     return result;
 }
 
-static const VkAllocationCallbacks GCGPUVkAllocationCallbacks = {
+const VkAllocationCallbacks GCGPUVkAllocationCallbacks = {
     .pfnAllocation = &cgpu_vulkan_alloc,
     .pfnReallocation = &cgpu_vulkan_realloc,
     .pfnFree = &cgpu_vulkan_free,
