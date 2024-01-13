@@ -31,7 +31,7 @@
 #include <SkrContainers/stl_deque.hpp> // IWYU pragma: export
 #include <SkrContainers/stl_list.hpp> // IWYU pragma: export
 
-#include "SkrGraphics/cgpu_config.h" // IWYU pragma: export
+#include "SkrGraphics/config.h" // IWYU pragma: export
 #ifdef CGPU_USE_D3D12
     #include <d3d12.h> // IWYU pragma: export
     #include <dxgi.h>  // IWYU pragma: export

@@ -1,4 +1,4 @@
-#include "SkrGraphics/cgpu_config.h"
+#include "SkrGraphics/config.h"
 #include "math.h"
 #include "lodepng.h"
 #include "SkrRT/config.h"

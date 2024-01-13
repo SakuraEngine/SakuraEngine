@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrGraphics/cgpu_config.h"
+#include "SkrGraphics/config.h"
 
 #ifdef __cplusplus
 extern "C" {

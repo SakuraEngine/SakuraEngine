@@ -1,4 +1,4 @@
-#include "SkrGraphics/cgpu_config.h" // IWYU pragma: keep
+#include "SkrGraphics/config.h" // IWYU pragma: keep
 
 #include "common/root_sig_table.cpp"
 #include "common/root_sig_pool.cpp"

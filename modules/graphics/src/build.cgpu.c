@@ -1,7 +1,7 @@
 #ifdef _WIN32
 #include "./winheaders.h"
 #endif
-#include "SkrGraphics/cgpu_config.h"
+#include "SkrGraphics/config.h"
 
 #ifdef CGPU_USE_VULKAN
     #include "vulkan/vulkan_utils.c"
