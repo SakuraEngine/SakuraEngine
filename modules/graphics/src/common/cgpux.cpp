@@ -1,9 +1,7 @@
 #include "SkrProfile/profile.h"
-#include "SkrContainers/uset.hpp"
-#include "SkrContainers/vector.hpp"
-#include "common_utils.h"
 #include "SkrGraphics/cgpux.hpp"
-
+#include "SkrGraphics/containers.hpp"
+#include "common_utils.h"
 
 // CGPUX bind table apis
 
@@ -130,7 +128,7 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
 
 void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
 {
-    skr::FixedUSet<uint32_t, 4> needsUpdateIndices;
+    cgpu::FixedUSet<uint32_t, 4> needsUpdateIndices;
     for (uint32_t i = 0; i < names_count; i++)
     {
         const auto& location = name_locations[i];
@@ -303,7 +301,7 @@ void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tabl
 
     auto to_update = merged[tbl_idx];
     // TODO: refactor & remove this vector
-    skr::Vector<CGPUDescriptorData> datas;
+    cgpu::Vector<CGPUDescriptorData> datas;
     // foreach table location to update values
     for (uint32_t i = 0; i < count; i++)
     {

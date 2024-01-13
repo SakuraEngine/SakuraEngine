@@ -83,7 +83,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
             GFSDK_Aftermath_GpuCrashDumpDescriptionKey_ApplicationName,
             &applicationNameLength));
 
-        skr::Vector<char8_t> applicationName(applicationNameLength, '\0');
+        cgpu::Vector<char8_t> applicationName(applicationNameLength, '\0');
         if (applicationNameLength)
         {
             AFTERMATH_CHECK_ERROR(aftermath_GpuCrashDump_GetDescription(

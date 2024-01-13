@@ -1,7 +1,6 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrOS/thread.h"
-#include "SkrMemory/memory.h"
-#include "SkrContainers/umap.hpp"
+#include "SkrGraphics/containers.hpp"
 #include "SkrCore/async/thread_job.hpp"
 
 #include "dstorage.hpp"
@@ -58,7 +57,7 @@ struct skr_win_dstorage_decompress_service_t
     };
     IDStorageCustomDecompressionQueue* decompress_queue = nullptr;
     HANDLE event_handle = nullptr;
-    skr::UMap<SkrDStorageCompression, DecompressionResolver> resolvers;
+    cgpu::UMap<SkrDStorageCompression, DecompressionResolver> resolvers;
     // threadpool items
     TP_WAIT* thread_pool_wait = nullptr;
     // thread items

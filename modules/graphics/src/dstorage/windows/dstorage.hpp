@@ -48,7 +48,7 @@ struct DStorageQueueWindows : public SkrDStorageQueue {
         uint32_t fence_value = 0;
         SAtomicU32 finished;
     };
-    skr::Vector<ProfileTracer*> profile_tracers;
+    cgpu::Vector<ProfileTracer*> profile_tracers;
 #endif
 
     ~DStorageQueueWindows() SKR_NOEXCEPT {
