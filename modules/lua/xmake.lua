@@ -1,7 +1,6 @@
 add_requires("luau", { configs = { extern_c = true }})
 
 shared_module("SkrLua", "SKR_LUA", engine_version)
-    set_group("01.modules")
     public_dependency("SkrRT", engine_version)
     public_dependency("SkrImGui", engine_version)
     add_packages("luau", {public = true, inherit = false})

@@ -1,5 +1,4 @@
 shared_module("SkrRTExporter", "SKR_RUNTIME_EXPORTER", engine_version)
-    set_group("01.modules")
     public_dependency("SkrRT", engine_version)
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},

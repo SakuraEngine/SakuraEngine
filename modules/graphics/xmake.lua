@@ -1,5 +1,4 @@
 shared_module("SkrGraphics", "SKR_GRAPHICS", engine_version)
-    set_group("01.modules")
     set_exceptions("no-cxx")
     add_deps("vulkan", "SkrBase", {public = true})
     public_dependency("SkrCore", engine_version)

@@ -5,7 +5,6 @@ else
 end
 
 shared_module("SkrImGui", "SKR_IMGUI", engine_version)
-    set_group("01.modules")
     public_dependency("SkrInput", engine_version)
     public_dependency("SkrRenderGraph", engine_version)
     add_packages("imgui", {public=true})

@@ -1,5 +1,4 @@
 shared_module("SkrOzz", "SKR_OZZ", engine_version)
-    set_group("01.modules")
     set_exceptions("no-cxx")
     set_optimize("fastest")
     public_dependency("SkrRT", engine_version)
@@ -10,7 +9,6 @@ shared_module("SkrOzz", "SKR_OZZ", engine_version)
     add_files("ozz_src/**.cc")
     
 shared_module("SkrAnim", "SKR_ANIM", engine_version)
-    set_group("01.modules") 
     public_dependency("SkrOzz", engine_version)
     public_dependency("SkrRenderer", engine_version)
     add_includedirs("include", {public=true})

@@ -1,31 +1,20 @@
 add_requires("boost-context >=0.1.0-skr")
 -- add_requires("cpu_features v0.9.0")
 
-static_module("SkrRTStatic", "SKR_RUNTIME_STATIC", engine_version)
-    set_group("01.modules")
+static_component("SkrSerde", "SkrRT")
     set_optimize("fastest")
-    add_deps("SkrCore", {public = true})
-    if(not has_config("shipping_one_archive")) then
-        add_defines("SKR_RUNTIME_API=SKR_IMPORT", "SKR_RUNTIME_LOCAL=error")
-    else
-        add_defines("SKR_RUNTIME_API=", "SKR_RUNTIME_LOCAL=error")
-    end
-    add_includedirs("include", {public = true})
-    set_pcxxheader("src_static/pch.hpp")
-    -- add_files("src_static/**/build.*.c")
-    add_files("src_static/**/build.*.cpp")
+    set_pcxxheader("serde/pch.hpp")
+    add_files("serde/build.*.cpp")
 
 shared_module("SkrRT", "SKR_RUNTIME", engine_version)
-    set_group("01.modules")
     public_dependency("SkrCore", engine_version)
     public_dependency("SkrGraphics", engine_version)
-    add_deps("SkrRTStatic", {public = true, inherit = true})
-    add_defines("SKR_RUNTIME_API=SKR_EXPORT", "SKR_RUNTIME_LOCAL=error")
-
     -- internal packages
     add_packages("boost-context", {public = true, inherit = true})
 
+    add_defines("SKR_RUNTIME_API=SKR_EXPORT", "SKR_RUNTIME_LOCAL=error")
     -- add source files
+    add_includedirs("include", {public = true})
     set_pcxxheader("src/pch.hpp")
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     if (is_os("macosx")) then 

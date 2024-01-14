@@ -8,19 +8,32 @@ if(has_config("shipping_one_archive")) then
     add_defines("SHIPPING_ONE_ARCHIVE")
 end
 
-rule("skr.shared")
-    on_load(function (target, opt)
-        local api = target:extraconf("rules", "skr.shared", "api")
-        target:set("kind", "shared")
-        target:add("defines", api.."_SHARED", {public=true})
-        target:add("defines", api.."_IMPL")
+rule("skr.component")
+    after_load(function (target, opt)
+        import("core.project.project")
+        local owner_name = target:extraconf("rules", "skr.component", "owner")
+        local owner = project.target(owner_name)
+        local owner_api = owner:extraconf("rules", "skr.dyn_module", "api") or owner:extraconf("rules", "skr.static_module", "api")
+        for _, owner_dep in pairs(owner:deps()) do
+            if owner_dep:name() ~= target:name() then
+                target:add("deps", owner_dep:name(), {public = true})
+            end
+        end
+        for _, owner_inc in pairs(owner:get("includedirs")) do
+            target:add("includedirs", owner_inc, {public = true})
+        end
+        if(not has_config("shipping_one_archive")) then
+            target:add("defines", owner_api.."_API=SKR_IMPORT", owner_api.."_LOCAL=error")
+        else
+            target:add("defines", owner_api.."_API=", owner_api.."_LOCAL=error")
+        end
     end)
 rule_end()
 
-rule("skr.module")
+rule("skr.dyn_module")
     on_load(function (target, opt)
-        local api = target:extraconf("rules", "skr.module", "api")
-        local version = target:extraconf("rules", "skr.module", "version")
+        local api = target:extraconf("rules", "skr.dyn_module", "api")
+        local version = target:extraconf("rules", "skr.dyn_module", "version")
         target:add("values", "skr.module.version", version)
         if(has_config("shipping_one_archive")) then
             target:add("defines","SHIPPING_ONE_ARCHIVE")
@@ -66,12 +79,12 @@ rule("skr.module")
 
         if (target:rule("c++.unity_build")) then
             local unity_build = target:rule("c++.unity_build"):clone()
-            unity_build:add("deps", "skr.module", {order = true})
+            unity_build:add("deps", "skr.dyn_module", {order = true})
             target:rule_add(unity_build)
         end
         if (target:rule("c.unity_build")) then
             local cunity_build = target:rule("c.unity_build"):clone()
-            cunity_build:add("deps", "skr.module", {order = true})
+            cunity_build:add("deps", "skr.dyn_module", {order = true})
             target:rule_add(cunity_build)
         end
     end)
@@ -82,7 +95,7 @@ rule("skr.module")
         import("core.project.depend")
         import("module_codegen")
         -- calculate deps
-        local api = target:extraconf("rules", "skr.module", "api")
+        local api = target:extraconf("rules", "skr.dyn_module", "api")
         local dep_modules = module_codegen.resolve_skr_module_dependencies(target)
         if has_config("shipping_one_archive") then
             if target:kind() == "binary" then
@@ -109,6 +122,7 @@ rule("skr.static_module")
         local api = target:extraconf("rules", "skr.static_module", "api")
         target:set("kind", "static")
         if(not has_config("shipping_one_archive")) then
+            target:add("defines", api.."_API", {public=true})
             target:add("defines", api.."_STATIC", {public=true})
             target:add("defines", api.."_IMPL")
         end
@@ -123,6 +137,7 @@ end
 
 function static_module(name, api, version, opt)
     target(name)
+        set_group("01.modules/"..name)
         set_kind("static")
         add_rules("skr.static_module", { api = api, version = engine_version }) 
         opt = opt or {}
@@ -135,6 +150,7 @@ end
 
 function shared_module(name, api, version, opt)
     target(name)
+        set_group("01.modules/"..name)
         if has_config("shipping_one_archive") then
             set_kind("static")
         else
@@ -147,7 +163,7 @@ function shared_module(name, api, version, opt)
                 end
             end
         end)
-        add_rules("skr.module", { api = api, version = engine_version }) 
+        add_rules("skr.dyn_module", { api = api, version = engine_version }) 
         opt = opt or {}
         if opt.exception and not opt.noexception then
             set_exceptions("cxx")
@@ -156,10 +172,30 @@ function shared_module(name, api, version, opt)
         end
 end
 
+function static_component(name, owner)
+    target(owner)
+        add_deps(name, {public = true})
+    target_end()
+    
+    target(name)
+        set_group("01.modules/"..owner.."/components")
+        add_rules("skr.component", { owner = owner })
+        on_load(function (target, opt)
+            local api = target:extraconf("rules", "skr.static_module", "api")
+            target:set("kind", "static")
+            if(not has_config("shipping_one_archive")) then
+                target:add("defines", api.."_API", {public=true})
+                target:add("defines", api.."_STATIC", {public=true})
+                target:add("defines", api.."_IMPL")
+            end
+        end)
+end
+
+
 function executable_module(name, api, version, opt)
     target(name)
         set_kind("binary")
-        add_rules("skr.module", { api = api, version = engine_version }) 
+        add_rules("skr.dyn_module", { api = api, version = engine_version }) 
         opt = opt or {}
         if opt.exception and not opt.noexception then
             set_exceptions("cxx")

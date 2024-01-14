@@ -11,7 +11,6 @@ target("daScriptVSCode")
     })
 
 shared_module("SkrDAScript", "SKR_DASCRIPT", engine_version)
-    set_group("01.modules")
     add_deps("daScriptVSCode")
     set_exceptions("no-cxx")
     set_optimize("fastest")
