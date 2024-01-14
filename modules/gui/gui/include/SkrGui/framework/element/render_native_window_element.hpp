@@ -9,7 +9,7 @@ namespace skr sreflect
 namespace gui sreflect
 {
 sreflect_struct(
-    "guid": "cddf8085-4ab4-46be-8de7-34bd1a2c290e"
+    "guid": "85142301-eaec-4908-8420-930bf85b02ff"
 )
 SKR_GUI_API RenderNativeWindowElement : public RenderWindowElement {
     SKR_RTTR_GENERATE_BODY()

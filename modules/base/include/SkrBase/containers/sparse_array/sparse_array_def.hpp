@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/containers/array/array_def.hpp"
+#include "SkrBase/memory/memory_traits.hpp"
 
 // SparseArray structs
 namespace skr::container
@@ -25,9 +26,17 @@ union SparseArrayData
 // SparseArray 的数据引用，代替单纯的指针/Index返回
 // 提供足够的信息，并将 npos 封装起来简化调用防止出错
 // 规则见 ArrayDataRef
-template <typename T, typename TS>
-using SparseArrayDataRef = ArrayDataRef<T, TS>;
+template <typename T, typename TS, bool kConst>
+using SparseArrayDataRef = ArrayDataRef<T, TS, kConst>;
 } // namespace skr::container
+
+// SparseArrayData data memory traits
+namespace skr::memory
+{
+template <typename T, typename TS>
+struct MemoryTraits<skr::container::SparseArrayData<T, TS>, skr::container::SparseArrayData<T, TS>> : public MemoryTraits<T, T> {
+};
+} // namespace skr::memory
 
 // TODO. skr swap
 namespace std

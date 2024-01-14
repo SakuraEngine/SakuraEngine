@@ -277,9 +277,9 @@ struct StackCmdMapKey
     {
         return queue == rhs.queue && batch == rhs.batch;
     }
-    inline size_t _skr_hash() const SKR_NOEXCEPT
+    inline static size_t _skr_hash(const StackCmdMapKey& k) SKR_NOEXCEPT
     {
-        return skr::hash_combine(Hash<CGPUQueueId>()(queue), Hash<IIOBatch*>()(batch));
+        return skr::hash_combine(Hash<CGPUQueueId>()(k.queue), Hash<IIOBatch*>()(k.batch));
     }
 };
 template <size_t N = 1>
@@ -294,14 +294,14 @@ struct StackCmdAllocator : public skr::FixedUMap<StackCmdMapKey, GPUUploadCmd, N
         {
             cmds.emplace(key, GPUUploadCmd(transfer_queue, batch));
         }
-        auto& cmd = cmds.find_or_add(key)->value;
+        auto& cmd = cmds.try_add_default(key).value();
         auto cmdqueue = cmd.get_queue();
         if (!cmdpools.contains(cmdqueue))
         {
-            auto pool = cmdpools.find_or_add(cmdqueue).data;
+            auto pool = cmdpools.try_add_default(cmdqueue).ptr();
             pool->value.initialize(cmdqueue);
         }
-        auto&& cmdpool = cmdpools.find(cmdqueue).data->value;
+        auto&& cmdpool = cmdpools.find(cmdqueue).value();
         if (cmd.get_cmdbuf() == nullptr)
         {
             SkrZoneScopedN("PrepareCmd");
@@ -581,7 +581,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
             {
                 _events.emplace(queue, events[priority]->allocate(queue));
             }
-            return _events.find_or_add(queue)->value;
+            return _events.try_add_default(queue).value();
         };
         SkrDStorageQueueId queue = nullptr;
         for (auto&& vram_request : batch->get_requests())

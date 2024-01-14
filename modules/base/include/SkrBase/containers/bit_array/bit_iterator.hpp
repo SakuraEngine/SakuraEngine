@@ -2,99 +2,165 @@
 #include "SkrBase/config.h"
 #include "SkrBase/algo/bit_algo.hpp"
 #include "bit_ref.hpp"
+#include "SkrBase/containers/misc/iterator.hpp"
 
-// bit iterator
 namespace skr::container
 {
-template <typename TBlock, typename TS, bool Const>
-struct BitIt {
+template <typename TBlock, typename TS, bool kConst>
+struct BitCursor;
+template <typename TBlock, typename TS, bool kConst>
+struct TrueBitCursor;
+template <typename TBlock, typename TS, bool kConst>
+struct FalseBitCursor;
+
+template <typename TBlock, typename TS, bool kConst>
+using BitIter = CursorIter<BitCursor<TBlock, TS, kConst>, false>;
+template <typename TBlock, typename TS, bool kConst>
+using BitIterInv = CursorIter<BitCursor<TBlock, TS, kConst>, true>;
+
+template <typename TBlock, typename TS, bool kConst>
+using TrueBitIter = CursorIter<TrueBitCursor<TBlock, TS, kConst>, false>;
+template <typename TBlock, typename TS, bool kConst>
+using TrueBitIterInv = CursorIter<TrueBitCursor<TBlock, TS, kConst>, true>;
+
+template <typename TBlock, typename TS, bool kConst>
+using FalseBitIter = CursorIter<FalseBitCursor<TBlock, TS, kConst>, false>;
+template <typename TBlock, typename TS, bool kConst>
+using FalseBitIterInv = CursorIter<FalseBitCursor<TBlock, TS, kConst>, true>;
+
+template <typename TBlock, typename TS, bool kConst>
+struct BitCursor {
     static_assert(std::is_integral_v<TBlock> && !std::is_signed_v<TBlock>);
+    using DataType = std::conditional_t<kConst, const TBlock, TBlock>;
+    using RefType  = std::conditional_t<kConst, bool, BitRef<TBlock>>;
+    using SizeType = TS;
+    using Algo     = algo::BitAlgo<TBlock>;
 
-public:
-    using DataPtr = std::conditional_t<Const, const TBlock*, TBlock*>;
-    using RefType = std::conditional_t<Const, bool, BitRef<TBlock>>;
-    using Algo    = algo::BitAlgo<TBlock>;
+    static constexpr SizeType npos = npos_of<TS>;
 
-    SKR_INLINE BitIt(DataPtr data, TS size, TS start = 0)
+    // ctor & copy & move & assign & move assign
+    inline BitCursor(DataType* data, SizeType size, SizeType index)
         : _data(data)
         , _bit_size(size)
-        , _bit_index(start)
+        , _bit_index(index)
     {
+        SKR_ASSERT((_bit_index >= 0 && _bit_index <= _bit_size) || _bit_index == npos);
     }
+    inline BitCursor(const BitCursor& rhs)            = default;
+    inline BitCursor(BitCursor&& rhs)                 = default;
+    inline BitCursor& operator=(const BitCursor& rhs) = default;
+    inline BitCursor& operator=(BitCursor&& rhs)      = default;
 
-    SKR_INLINE BitIt& operator++()
+    // factory
+    inline static BitCursor Begin(DataType* data, SizeType size) { return BitCursor{ data, size, 0 }; }
+    inline static BitCursor BeginOverflow(DataType* data, SizeType size) { return BitCursor{ data, size, npos }; }
+    inline static BitCursor End(DataType* data, SizeType size) { return BitCursor{ data, size, size - 1 }; }
+    inline static BitCursor EndOverflow(DataType* data, SizeType size) { return BitCursor{ data, size, size }; }
+
+    // getter
+    inline RefType ref() const
     {
+        SKR_ASSERT(is_valid());
+        if constexpr (kConst)
+        {
+            return Algo::get(_data, _bit_index);
+        }
+        else
+        {
+            return BitRef<TBlock>::At(_data, _bit_index);
+        }
+    }
+    inline SizeType index() const { return _bit_index; }
+
+    // move & reset
+    inline void move_next()
+    {
+        SKR_ASSERT(is_valid());
         ++_bit_index;
-        return *this;
     }
-    SKR_INLINE explicit operator bool() const { return _bit_index < _bit_size; }
-    SKR_INLINE bool     operator!() const { return !(bool)*this; }
-    SKR_INLINE bool     operator==(const BitIt& rhs) const { return _data == rhs._data && _bit_index == rhs._bit_index; }
-    SKR_INLINE bool     operator!=(const BitIt& rhs) const { return !(*this == rhs); }
-    SKR_INLINE RefType  operator*() const { return value(); }
-
-    SKR_INLINE RefType value() const
+    inline void move_prev()
     {
-        if constexpr (Const)
-        {
-            return Algo::get(_data, _bit_index);
-        }
-        else
-        {
-            return BitRef<TBlock>::At(_data, _bit_index);
-        }
+        SKR_ASSERT(is_valid());
+        --_bit_index;
     }
-    SKR_INLINE TS index() const { return _bit_index; }
+    inline void reset_to_begin() { _bit_index = 0; }
+    inline void reset_to_end() { _bit_index = _bit_size - 1; }
+
+    // reach & validate
+    bool reach_end() const { return _bit_index == _bit_size; }
+    bool reach_begin() const { return _bit_index == npos; }
+    bool is_valid() const { return !(reach_end() || reach_begin()); }
+
+    // compare
+    bool operator==(const BitCursor& rhs) const { return _data == rhs._data && _bit_index == rhs._bit_index; }
+    bool operator!=(const BitCursor& rhs) const { return !(*this == rhs); }
 
 private:
-    DataPtr _data;
-    TS      _bit_size;
-    TS      _bit_index;
+    DataType* _data;
+    SizeType  _bit_size;
+    SizeType  _bit_index;
 };
-} // namespace skr::container
+template <typename TBlock, typename TS, bool kConst>
+struct TrueBitCursor {
+    static_assert(std::is_integral_v<TBlock> && !std::is_signed_v<TBlock>);
+    using DataType = std::conditional_t<kConst, const TBlock, TBlock>;
+    using RefType  = std::conditional_t<kConst, bool, BitRef<TBlock>>;
+    using SizeType = TS;
+    using Algo     = algo::BitAlgo<TBlock>;
 
-// true bit iterator
-namespace skr::container
-{
-template <typename TBlock, typename TS, bool Const>
-struct TrueBitIt {
-    using DataPtr = std::conditional_t<Const, const TBlock*, TBlock*>;
-    using RefType = std::conditional_t<Const, bool, BitRef<TBlock>>;
-    using Algo    = algo::BitAlgo<TBlock>;
+    static constexpr SizeType npos = npos_of<TS>;
 
-    SKR_INLINE TrueBitIt(DataPtr data, TS size, TS start = 0)
+    // ctor & copy & move & assign & move assign
+    inline TrueBitCursor(DataType* data, SizeType size, SizeType index)
         : _data(data)
         , _bit_size(size)
-        , _bit_index(start)
+        , _bit_index(index)
     {
-        SKR_ASSERT(start >= 0 && start <= size);
-        if (data)
-        {
-            TS result  = Algo::find(_data, _bit_index, _bit_size, true);
-            _bit_index = result == npos_of<TBlock> ? _bit_size : result;
-        }
+        SKR_ASSERT((_bit_index >= 0 && _bit_index <= _bit_size) || _bit_index == npos);
+        SKR_ASSERT(!is_valid() || ref() == true);
+    }
+    inline TrueBitCursor(DataType* data, SizeType size)
+        : _data(data)
+        , _bit_size(size)
+        , _bit_index(npos)
+    {
+    }
+    inline TrueBitCursor(const TrueBitCursor& rhs)            = default;
+    inline TrueBitCursor(TrueBitCursor&& rhs)                 = default;
+    inline TrueBitCursor& operator=(const TrueBitCursor& rhs) = default;
+    inline TrueBitCursor& operator=(TrueBitCursor&& rhs)      = default;
+
+    // factory
+    inline static TrueBitCursor Begin(DataType* data, SizeType size)
+    {
+        TrueBitCursor cursor{ data, size };
+        cursor.reset_to_begin();
+        return cursor;
+    }
+    inline static TrueBitCursor BeginOverflow(DataType* data, SizeType size)
+    {
+        TrueBitCursor cursor{ data, size };
+        cursor._reset_to_begin_overflow();
+        return cursor;
+    }
+    inline static TrueBitCursor End(DataType* data, SizeType size)
+    {
+        TrueBitCursor cursor{ data, size };
+        cursor.reset_to_end();
+        return cursor;
+    }
+    inline static TrueBitCursor EndOverflow(DataType* data, SizeType size)
+    {
+        TrueBitCursor cursor{ data, size };
+        cursor._reset_to_end_overflow();
+        return cursor;
     }
 
-    SKR_INLINE TrueBitIt& operator++()
+    // getter
+    inline RefType ref() const
     {
-        TS result  = Algo::find(_data, _bit_index + 1, _bit_size, true);
-        _bit_index = result == npos_of<TBlock> ? _bit_size : result;
-        return *this;
-    }
-    SKR_INLINE TrueBitIt& operator--()
-    {
-        TS result  = Algo::find_last(_data, 0, _bit_index, true);
-        _bit_index = result == npos_of<TBlock> ? _bit_size : result;
-        return *this;
-    }
-
-    SKR_INLINE bool     operator==(const TrueBitIt& rhs) const { return _bit_index == rhs._bit_index && _data == rhs._data; }
-    SKR_INLINE bool     operator!=(const TrueBitIt& rhs) const { return !(*this == rhs); }
-    SKR_INLINE explicit operator bool() const { return _bit_index < _bit_size; } // !!!Only support in increasing order currently
-    SKR_INLINE bool     operator!() const { return !(bool)*this; }
-    SKR_INLINE RefType  value() const
-    {
-        if constexpr (Const)
+        SKR_ASSERT(is_valid());
+        if constexpr (kConst)
         {
             return Algo::get(_data, _bit_index);
         }
@@ -103,16 +169,166 @@ struct TrueBitIt {
             return BitRef<TBlock>::At(_data, _bit_index);
         }
     }
-    SKR_INLINE void flip() requires(!Const)
+    inline SizeType index() const { return _bit_index; }
+
+    // move & reset
+    inline void move_next()
     {
-        SKR_ASSERT(_bit_index < _bit_size && "flip an invalid iterator");
-        BitRef<TBlock>::At(_data, _bit_index) = false;
+        SKR_ASSERT(is_valid());
+        SizeType result = Algo::find(_data, _bit_index + 1, _bit_size - _bit_index - 1, true);
+        _bit_index      = result == npos ? _bit_size : result;
     }
-    SKR_INLINE TS index() const { return _bit_index; }
+    inline void move_prev()
+    {
+        SKR_ASSERT(is_valid());
+        _bit_index = Algo::find_last(_data, (SizeType)0, _bit_index, true);
+    }
+    inline void reset_to_begin()
+    {
+        if (_data && _bit_size > 0)
+        {
+            SizeType index = Algo::find(_data, (SizeType)0, _bit_size, true);
+            _bit_index     = (index == npos) ? _bit_size : index;
+        }
+        _bit_index = 0;
+    }
+    inline void reset_to_end()
+    {
+        if (_data && _bit_size > 0)
+        {
+            _bit_index = Algo::find_last(_data, (SizeType)0, _bit_size, true);
+        }
+        _bit_index = npos;
+    }
+
+    // reach & validate
+    bool reach_end() const { return _bit_index == _bit_size; }
+    bool reach_begin() const { return _bit_index == npos; }
+    bool is_valid() const { return !(reach_end() || reach_begin()); }
+
+    // compare
+    bool operator==(const TrueBitCursor& rhs) const { return _data == rhs._data && _bit_index == rhs._bit_index; }
+    bool operator!=(const TrueBitCursor& rhs) const { return !(*this == rhs); }
+
+protected:
+    inline void _reset_to_end_overflow() { _bit_index = _bit_size; }
+    inline void _reset_to_begin_overflow() { _bit_index = npos; }
 
 private:
-    DataPtr _data;
-    TS      _bit_size;
-    TS      _bit_index;
+    DataType* _data;
+    SizeType  _bit_size;
+    SizeType  _bit_index;
+};
+template <typename TBlock, typename TS, bool kConst>
+struct FalseBitCursor {
+    static_assert(std::is_integral_v<TBlock> && !std::is_signed_v<TBlock>);
+    using DataType = std::conditional_t<kConst, const TBlock, TBlock>;
+    using RefType  = std::conditional_t<kConst, bool, BitRef<TBlock>>;
+    using SizeType = TS;
+    using Algo     = algo::BitAlgo<TBlock>;
+
+    static constexpr SizeType npos = npos_of<TS>;
+
+    // ctor & copy & move & assign & move assign
+    inline FalseBitCursor(DataType* data, SizeType size, SizeType index)
+        : _data(data)
+        , _bit_size(size)
+        , _bit_index(index)
+    {
+        SKR_ASSERT((_bit_index >= 0 && _bit_index <= _bit_size) || _bit_index == npos);
+        SKR_ASSERT(!is_valid() || ref() == false);
+    }
+    inline FalseBitCursor(const FalseBitCursor& rhs)            = default;
+    inline FalseBitCursor(FalseBitCursor&& rhs)                 = default;
+    inline FalseBitCursor& operator=(const FalseBitCursor& rhs) = default;
+    inline FalseBitCursor& operator=(FalseBitCursor&& rhs)      = default;
+
+    // factory
+    inline static FalseBitCursor Begin(DataType* data, SizeType size)
+    {
+        if (data && size > 0)
+        {
+            SizeType index = Algo::find(data, 0, size, false);
+            index          = (index == npos) ? size : index;
+            return TrueBitCursor{ data, size, index };
+        }
+        return TrueBitCursor{ data, size, 0 };
+    }
+    inline static FalseBitCursor BeginOverflow(DataType* data, SizeType size)
+    {
+        return TrueBitCursor{ data, size, npos };
+    }
+    inline static FalseBitCursor End(DataType* data, SizeType size)
+    {
+        if (data && size > 0)
+        {
+            SizeType index = Algo::find_last(data, 0, size, false);
+            return TrueBitCursor{ data, size, index };
+        }
+        return TrueBitCursor{ data, size, size - 1 };
+    }
+    inline static FalseBitCursor EndOverflow(DataType* data, SizeType size)
+    {
+        return FalseBitCursor{ data, size, size };
+    }
+
+    // getter
+    inline RefType ref() const
+    {
+        SKR_ASSERT(is_valid());
+        if constexpr (kConst)
+        {
+            return Algo::get(_data, _bit_index);
+        }
+        else
+        {
+            return BitRef<TBlock>::At(_data, _bit_index);
+        }
+    }
+    inline SizeType index() const { return _bit_index; }
+
+    // move & reset
+    inline void move_next()
+    {
+        SKR_ASSERT(is_valid());
+        SizeType result = Algo::find(_data, _bit_index + 1, _bit_size - _bit_index - 1, false);
+        _bit_index      = result == npos ? _bit_size : result;
+    }
+    inline void move_prev()
+    {
+        SKR_ASSERT(is_valid());
+        _bit_index = Algo::find_last(_data, 0, _bit_index, false);
+    }
+    inline void reset_to_begin()
+    {
+        if (_data && _bit_size > 0)
+        {
+            SizeType index = Algo::find(_data, 0, _bit_size, false);
+            _bit_index     = (index == npos) ? _bit_size : index;
+        }
+        _bit_index = 0;
+    }
+    inline void reset_to_end()
+    {
+        if (_data && _bit_size > 0)
+        {
+            _bit_index = Algo::find_last(_data, 0, _bit_size, false);
+        }
+        _bit_index = npos;
+    }
+
+    // reach & validate
+    bool reach_end() const { return _bit_index == _bit_size; }
+    bool reach_begin() const { return _bit_index == npos; }
+    bool is_valid() const { return !(reach_end() || reach_begin()); }
+
+    // compare
+    bool operator==(const FalseBitCursor& rhs) const { return _data == rhs._data && _bit_index == rhs._bit_index; }
+    bool operator!=(const FalseBitCursor& rhs) const { return !(*this == rhs); }
+
+private:
+    DataType* _data;
+    SizeType  _bit_size;
+    SizeType  _bit_index;
 };
 } // namespace skr::container

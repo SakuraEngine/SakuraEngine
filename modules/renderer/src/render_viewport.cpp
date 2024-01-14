@@ -28,7 +28,7 @@ struct SViewportManagerImpl : public SViewportManager
             return found->second;
         }
         uint32_t idx = static_cast<uint32_t>(viewports.size());
-        auto& newViewport = *viewports.add_default();
+        auto& newViewport = viewports.add_default().ref();
         idMap[viewport_name] = newViewport.index = idx;
         return idx;
     }

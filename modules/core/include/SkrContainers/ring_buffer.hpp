@@ -7,7 +7,7 @@
 
 namespace skr
 {
-template <typename T, typename Allocator = SkrAllocator_New>
+template <typename T, typename Allocator = SkrAllocator>
 using RingBuffer = container::RingBuffer<container::RingBufferMemory<
 T,        /*type*/
 uint64_t, /*size type*/
@@ -21,7 +21,7 @@ uint64_t, /*size type*/
 kCount    /*count*/
 >>;
 
-template <typename T, uint64_t kInlineCount, typename Allocator = SkrAllocator_New>
+template <typename T, uint64_t kInlineCount, typename Allocator = SkrAllocator>
 using InlineRingBuffer = container::RingBuffer<container::InlineRingBufferMemory<
 T,            /*type*/
 uint64_t,     /*size type*/

@@ -281,9 +281,9 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                                 proper_pipeline = pass.pso;
                                 proper_bind_table = pass.bind_table;
                             }
-                            auto& push_const = *push_constants.add_default();
+                            auto& push_const = push_constants.add_default().ref();
                             push_const.model = model_matrix;
-                            auto& drawcall = *mesh_drawcalls.add_default();
+                            auto& drawcall = mesh_drawcalls.add_default().ref();
                             drawcall.pipeline = proper_pipeline;
                             drawcall.bind_table = proper_bind_table;
                             drawcall.push_const_name = push_constants_name;
@@ -309,9 +309,9 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                                 proper_pipeline = pass.pso;
                                 proper_bind_table = pass.bind_table;
                             }
-                            auto& push_const = *push_constants.add_default();
+                            auto& push_const = push_constants.add_default().ref();
                             push_const.model = model_matrix;
-                            auto& drawcall = *mesh_drawcalls.add_default();
+                            auto& drawcall = mesh_drawcalls.add_default().ref();
                             drawcall.pipeline = proper_pipeline;
                             drawcall.bind_table = proper_bind_table;
                             drawcall.push_const_name = push_constants_name;
@@ -325,9 +325,9 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                 }
                 else
                 {
-                    auto& push_const = *push_constants.add_default();
+                    auto& push_const = push_constants.add_default().ref();
                     push_const.model = model_matrix;
-                    auto& drawcall = *mesh_drawcalls.add_default();
+                    auto& drawcall = mesh_drawcalls.add_default().ref();
                     drawcall.pipeline = pipeline;
                     drawcall.push_const_name = push_constants_name;
                     drawcall.push_const = (const uint8_t*)(&push_const);

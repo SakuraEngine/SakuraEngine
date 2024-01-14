@@ -472,7 +472,7 @@ int ReadTrait<skr::String>::Read(skr_binary_reader_t* reader, skr::String& str)
         return ret;
     }
     skr::InlineVector<char8_t, 64> temp;
-    temp.resize(size);
+    temp.resize_default(size);
     ret = ReadBytes(reader, (void*)temp.data(), temp.size());
     if (ret != 0)
     {
