@@ -13,7 +13,7 @@ struct DynamicWorldState {
 
     DynamicWorldState& set(const Identifier& id, const ValueStoreType& value) SKR_NOEXCEPT
     {
-        variables_.add_or_assign(id, value);
+        variables_.add(id, value);
         return *this;
     }
 
@@ -22,7 +22,7 @@ struct DynamicWorldState {
         auto found = variables_.find(id);
         if (!found)
             return *this;
-        found->value = value;
+        found.value() = value;
         return *this;
     }
 
@@ -30,7 +30,7 @@ struct DynamicWorldState {
     {
         auto found = variables_.find(id);
         if (!found) return false;
-        value = found->value;
+        value = found.value();
         return true;
     }
 
@@ -41,7 +41,7 @@ struct DynamicWorldState {
             auto found = variables_.find(k);
             if (!found)
                 return false;
-            if (Compare<ValueStoreType>::NotEqual(v, found->value))
+            if (Compare<ValueStoreType>::NotEqual(v, found.value()))
                 return false;
         }
         return true;
@@ -53,7 +53,7 @@ struct DynamicWorldState {
         for (const auto& [k, v] : goal.variables_)
         {
             auto found = variables_.find(k);
-            if (!found || Compare<ValueStoreType>::NotEqual(v, found->value))
+            if (!found || Compare<ValueStoreType>::NotEqual(v, found.value()))
                 distance += 1;
         }
         return distance;
@@ -64,7 +64,7 @@ struct DynamicWorldState {
         for (const auto& [k, v] : other.variables_)
         {
             auto found = variables_.find(k);
-            if (!found || Compare<ValueStoreType>::NotEqual(v, found->value))
+            if (!found || Compare<ValueStoreType>::NotEqual(v, found.value()))
                 return false;
         }
         return true;
