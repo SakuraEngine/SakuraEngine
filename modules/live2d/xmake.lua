@@ -28,7 +28,7 @@ shared_module("SkrLive2D", "SKR_LIVE2D", engine_version)
     public_dependency("SkrRenderer", engine_version)
     add_includedirs("include", {public=true})
     add_includedirs("CubismNativeCore/include", "CubismFramework", "CubismFramework/Framework", {public=false})
-    set_pcxxheader("src/pch.hpp")
+    -- set_pcxxheader("src/pch.hpp")
     add_files("src/*.cpp")
     -- add live2d shaders
     add_rules("utils.dxc", {

@@ -60,6 +60,7 @@ rule("skr.dyn_module")
         target:add("defines", api.."_EXTERN_C=SKR_EXTERN_C", {public=true})
         if has_config("shipping_one_archive") then
             target:add("defines","SHIPPING_ONE_ARCHIVE")
+            target:add("defines", api.."_API=", {public=true})
         else
             target:add("defines", api.."_SHARED", {public=true})
             target:add("defines", api.."_API=SKR_IMPORT", {public=true})
