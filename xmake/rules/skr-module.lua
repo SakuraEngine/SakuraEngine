@@ -138,8 +138,8 @@ end
 function static_module(name, api, version, opt)
     target(name)
         set_group("01.modules/"..name)
+        add_rules("skr.static_module", { api = api, version = version }) 
         set_kind("static")
-        add_rules("skr.static_module", { api = api, version = engine_version }) 
         opt = opt or {}
         if opt.exception and not opt.noexception then
             set_exceptions("cxx")
@@ -151,6 +151,7 @@ end
 function shared_module(name, api, version, opt)
     target(name)
         set_group("01.modules/"..name)
+        add_rules("skr.dyn_module", { api = api, version = version }) 
         if has_config("shipping_one_archive") then
             set_kind("static")
         else
@@ -163,7 +164,6 @@ function shared_module(name, api, version, opt)
                 end
             end
         end)
-        add_rules("skr.dyn_module", { api = api, version = engine_version }) 
         opt = opt or {}
         if opt.exception and not opt.noexception then
             set_exceptions("cxx")
@@ -180,15 +180,7 @@ function static_component(name, owner)
     target(name)
         set_group("01.modules/"..owner.."/components")
         add_rules("skr.component", { owner = owner })
-        on_load(function (target, opt)
-            local api = target:extraconf("rules", "skr.static_module", "api")
-            target:set("kind", "static")
-            if(not has_config("shipping_one_archive")) then
-                target:add("defines", api.."_API", {public=true})
-                target:add("defines", api.."_STATIC", {public=true})
-                target:add("defines", api.."_IMPL")
-            end
-        end)
+        set_kind("static")
 end
 
 
