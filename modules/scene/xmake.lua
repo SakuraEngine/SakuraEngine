@@ -1,5 +1,4 @@
 shared_module("SkrScene", "SKR_SCENE", engine_version)
-    set_group("01.modules")
     public_dependency("SkrRT", engine_version)
     -- TODO: add binding module
     public_dependency("SkrLua", engine_version)
