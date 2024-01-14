@@ -41,7 +41,7 @@ typedef struct skr_resource_handle_t {
     SKR_RUNTIME_API void*                  get_resolved(bool requireInstalled = true) const;
     SKR_RUNTIME_API skr_guid_t             get_serialized() const;
     SKR_RUNTIME_API void                   resolve(bool requireInstalled, uint64_t requester, ESkrRequesterType requesterType);
-    void                                   resolve(bool requireInstalled, struct dual_storage_t* requester)
+    void                                   resolve(bool requireInstalled, struct sugoi_storage_t* requester)
     {
         resolve(requireInstalled, (uint64_t)requester, SKR_REQUESTER_ENTITY);
     }
@@ -55,7 +55,7 @@ typedef struct skr_resource_handle_t {
     {
         return { *this, requester, requesterType };
     }
-    skr_resource_handle_t clone(struct dual_storage_t* requester)
+    skr_resource_handle_t clone(struct sugoi_storage_t* requester)
     {
         return { *this, (uint64_t)requester, SKR_REQUESTER_ENTITY };
     }
@@ -88,7 +88,7 @@ struct TResourceHandle : skr_resource_handle_t {
     {
         return { *this, requester, requesterType };
     }
-    TResourceHandle clone(struct dual_storage_t* requester)
+    TResourceHandle clone(struct sugoi_storage_t* requester)
     {
         return { *this, (uint64_t)requester, SKR_REQUESTER_ENTITY };
     }

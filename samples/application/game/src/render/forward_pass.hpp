@@ -17,7 +17,7 @@ struct RenderPassForward : public IPrimitiveRenderPass
         return forward_pass_name;
     }
 
-    dual::query_t anim_query;
+    sugoi::query_t anim_query;
     bool need_clear = true;
     
     ECGPUShadingRate shading_rate = CGPU_SHADING_RATE_FULL;

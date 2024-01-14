@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrScene/module.configure.h"
 #include "SkrRT/misc/types.h"
-#include "SkrRT/ecs/dual_types.h"
+#include "SkrRT/ecs/sugoi_types.h"
 #ifndef __meta__
     #include "SkrScene/scene.generated.h" // IWYU pragma: export
 #endif
@@ -15,12 +15,12 @@ sreflect_struct(
         "buffer" : 4
     }
 ) skr_child_comp_t {
-    dual_entity_t entity;
+    sugoi_entity_t entity;
 };
 typedef struct skr_child_comp_t skr_child_comp_t;
 
 #ifdef __cplusplus
-using skr_children_t = dual::array_comp_T<skr_child_comp_t, 4>;
+using skr_children_t = sugoi::array_comp_T<skr_child_comp_t, 4>;
 #endif
 
 sreflect_struct(
@@ -28,7 +28,7 @@ sreflect_struct(
     "component" : true
 )
 skr_parent_comp_t {
-    dual_entity_t entity;
+    sugoi_entity_t entity;
 };
 typedef struct skr_parent_comp_t skr_parent_comp_t;
 
@@ -103,14 +103,14 @@ skr_camera_comp_t {
 };
 
 struct skr_transform_system_t {
-    dual_query_t* relativeToWorld;
+    sugoi_query_t* relativeToWorld;
 };
 
-SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_setup(dual_storage_t* world, skr_transform_system_t* system);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_setup(sugoi_storage_t* world, skr_transform_system_t* system);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_update(skr_transform_system_t* query);
-SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_propagate_transform(dual_storage_t* world, dual_entity_t* entities, uint32_t count);
-SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_save_scene(dual_storage_t* world, struct skr_json_writer_t* writer);
-SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(dual_storage_t* world, struct skr_json_reader_t* reader);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_propagate_transform(sugoi_storage_t* world, sugoi_entity_t* entities, uint32_t count);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_save_scene(sugoi_storage_t* world, struct skr_json_writer_t* writer);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(sugoi_storage_t* world, struct skr_json_reader_t* reader);
 
 #ifdef __cplusplus
     #include "SkrRT/lua/bind.hpp"
@@ -142,7 +142,7 @@ struct BindTrait<skr_child_comp_t> {
     static skr_child_comp_t check(lua_State* L, int index)
     {
         skr_child_comp_t result;
-        result.entity = static_cast<dual_entity_t>(luaL_checkinteger(L, index));
+        result.entity = static_cast<sugoi_entity_t>(luaL_checkinteger(L, index));
         return result;
     }
 };

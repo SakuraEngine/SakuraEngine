@@ -73,7 +73,7 @@ struct SKR_RUNTIME_API skr_resource_record_t {
     };
     struct entity_requester {
         uint32_t               id;
-        struct dual_storage_t* storage        = nullptr;
+        struct sugoi_storage_t* storage        = nullptr;
         uint32_t               entityRefCount = 0;
         bool                   operator==(const entity_requester& other) const { return id == other.id; };
     };

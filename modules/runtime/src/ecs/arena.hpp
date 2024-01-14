@@ -2,7 +2,7 @@
 #include <type_traits>
 #include <atomic>
 
-namespace dual
+namespace sugoi
 {
     struct fixed_arena_t
     {

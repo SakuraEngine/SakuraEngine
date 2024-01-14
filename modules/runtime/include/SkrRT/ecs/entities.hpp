@@ -1,13 +1,13 @@
 #pragma once
-#include "dual.h"
+#include "sugoi.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/containers/vector.hpp"
 
-namespace dual
+namespace sugoi
 {
 struct entity_registry_t {
     struct entry_t {
-        dual_chunk_t* chunk;
+        sugoi_chunk_t* chunk;
         uint32_t indexInChunk : 24;
         uint32_t version : 8;
     };
@@ -17,12 +17,12 @@ struct entity_registry_t {
 
     void reset();
     void shrink();
-    void new_entities(dual_entity_t* dst, EIndex count);
-    void free_entities(const dual_entity_t* dst, EIndex count);
-    void fill_entities(const dual_chunk_view_t& view);
-    void fill_entities(const dual_chunk_view_t& view, const dual_entity_t* src);
-    void free_entities(const dual_chunk_view_t& view);
-    void move_entities(const dual_chunk_view_t& view, const dual_chunk_t* src, EIndex srcIndex);
-    void move_entities(const dual_chunk_view_t& view, EIndex srcIndex);
+    void new_entities(sugoi_entity_t* dst, EIndex count);
+    void free_entities(const sugoi_entity_t* dst, EIndex count);
+    void fill_entities(const sugoi_chunk_view_t& view);
+    void fill_entities(const sugoi_chunk_view_t& view, const sugoi_entity_t* src);
+    void free_entities(const sugoi_chunk_view_t& view);
+    void move_entities(const sugoi_chunk_view_t& view, const sugoi_chunk_t* src, EIndex srcIndex);
+    void move_entities(const sugoi_chunk_view_t& view, EIndex srcIndex);
 };
-} // namespace dual
+} // namespace sugoi

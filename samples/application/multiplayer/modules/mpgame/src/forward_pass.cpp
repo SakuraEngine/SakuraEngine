@@ -27,7 +27,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
     if (!anim_query)
     {
         auto sig    = "[in]skr::renderer::MeshComponent, [in]skr::anim::AnimComponent";
-        *anim_query = dualQ_from_literal(storage, sig);
+        *anim_query = sugoiQ_from_literal(storage, sig);
     }
     // upload skin mesh data
     {
@@ -35,8 +35,8 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
         {
             SkrZoneScopedN("CalculateSkinMeshSize");
 
-            auto calcUploadBufferSize = [&](dual_chunk_view_t* r_cv) {
-                const auto anims = dual::get_component_ro<skr::anim::AnimComponent>(r_cv);
+            auto calcUploadBufferSize = [&](sugoi_chunk_view_t* r_cv) {
+                const auto anims = sugoi::get_component_ro<skr::anim::AnimComponent>(r_cv);
                 for (uint32_t i = 0; i < r_cv->count; i++)
                 {
                     auto*      anim               = anims + i;
@@ -48,7 +48,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
                     }
                 }
             };
-            dualQ_get_views(*anim_query, DUAL_LAMBDA(calcUploadBufferSize));
+            sugoiQ_get_views(*anim_query, SUGOI_LAMBDA(calcUploadBufferSize));
         }
         if (skinVerticesSize == 0) return;
 
@@ -69,13 +69,13 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
         [this, upload_buffer_handle](rg::RenderGraph& g, rg::CopyPassContext& context) {
             SkrZoneScopedN("CopySkinMesh");
 
-            auto uploadVertices = [&](dual_chunk_view_t* r_cv) {
+            auto uploadVertices = [&](sugoi_chunk_view_t* r_cv) {
                 skr::anim::AnimComponent* anims = nullptr;
                 {
                     SkrZoneScopedN("FetchAnims");
 
                     // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done
-                    anims = dual::get_owned_rw<skr::anim::AnimComponent>(r_cv);
+                    anims = sugoi::get_owned_rw<skr::anim::AnimComponent>(r_cv);
                 }
 
                 auto upload_buffer = context.resolve(upload_buffer_handle);
@@ -136,7 +136,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
                     }
                 }
             };
-            dualQ_get_views(*anim_query, DUAL_LAMBDA(uploadVertices));
+            sugoiQ_get_views(*anim_query, SUGOI_LAMBDA(uploadVertices));
         });
     }
 }
@@ -203,12 +203,12 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
         SkrZoneScopedN("BarrierSkinMeshes");
         CGPUResourceBarrierDescriptor  barrier_desc = {};
         skr::Vector<CGPUBufferBarrier> barriers;
-        auto                           barrierVertices = [&](dual_chunk_view_t* r_cv) {
+        auto                           barrierVertices = [&](sugoi_chunk_view_t* r_cv) {
             skr::anim::AnimComponent* anims = nullptr;
             {
                 SkrZoneScopedN("FetchAnims");
                 // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done
-                anims = dual::get_owned_rw<skr::anim::AnimComponent>(r_cv);
+                anims = sugoi::get_owned_rw<skr::anim::AnimComponent>(r_cv);
             }
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
@@ -232,7 +232,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                 cgpu_cmd_resource_barrier(context.cmd, &barrier_desc);
             }
         };
-        dualQ_get_views(*anim_query, DUAL_LAMBDA(barrierVertices));
+        sugoiQ_get_views(*anim_query, SUGOI_LAMBDA(barrierVertices));
     });
 
     // 4.add a render graph pass for forward shading

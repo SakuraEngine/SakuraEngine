@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/ecs/entities.hpp"
 #include "SkrRT/platform/thread.h"
@@ -8,7 +8,7 @@
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/stl_vector.hpp"
 
-namespace dual
+namespace sugoi
 {
 struct job_dependency_entry_t {
     skr::stl_vector<skr::task::weak_event_t> owned;
@@ -16,73 +16,73 @@ struct job_dependency_entry_t {
 };
 
 struct scheduler_t {
-    dual::entity_registry_t registry;
+    sugoi::entity_registry_t registry;
     skr::task::counter_t allCounter;
-    skr::stl_vector<dual::job_dependency_entry_t> allResources;
-    skr::FlatHashMap<dual::archetype_t*, skr::stl_vector<job_dependency_entry_t>> dependencyEntries;
+    skr::stl_vector<sugoi::job_dependency_entry_t> allResources;
+    skr::FlatHashMap<sugoi::archetype_t*, skr::stl_vector<job_dependency_entry_t>> dependencyEntries;
     SMutexObject entryMutex;
     SMutexObject resourceMutex;
-    skr::stl_vector<dual_storage_t*> storages;
+    skr::stl_vector<sugoi_storage_t*> storages;
     SMutexObject storageMutex;
 
     scheduler_t();
     ~scheduler_t();
     static scheduler_t& get();
-    bool is_main_thread(const dual_storage_t* storage);
-    void set_main_thread(const dual_storage_t* storage);
-    void add_storage(dual_storage_t* storage);
-    void remove_storage(const dual_storage_t* storage);
-    dual_entity_t add_resource();
-    void remove_resource(dual_entity_t id);
-    bool sync_archetype(dual::archetype_t* type);
-    bool sync_entry(dual::archetype_t* type, dual_type_index_t entry, bool readonly);
-    bool sync_query(dual_query_t* query);
+    bool is_main_thread(const sugoi_storage_t* storage);
+    void set_main_thread(const sugoi_storage_t* storage);
+    void add_storage(sugoi_storage_t* storage);
+    void remove_storage(const sugoi_storage_t* storage);
+    sugoi_entity_t add_resource();
+    void remove_resource(sugoi_entity_t id);
+    bool sync_archetype(sugoi::archetype_t* type);
+    bool sync_entry(sugoi::archetype_t* type, sugoi_type_index_t entry, bool readonly);
+    bool sync_query(sugoi_query_t* query);
     void sync_all();
     void gc_entries();
-    void sync_storage(const dual_storage_t* storage);
-    skr::task::event_t schedule_ecs_job(dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources);
-    skr::stl_vector<skr::task::weak_event_t> update_dependencies(dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources);
-    skr::task::event_t schedule_job(dual_query_t* query, dual_schedule_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources);
-    skr::stl_vector<skr::task::event_t> sync_resources(const skr::task::event_t& counter, dual_resource_operation_t* resources);
+    void sync_storage(const sugoi_storage_t* storage);
+    skr::task::event_t schedule_ecs_job(sugoi_query_t* query, EIndex batchSize, sugoi_system_callback_t callback, void* u, sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources);
+    skr::stl_vector<skr::task::weak_event_t> update_dependencies(sugoi_query_t* query, const skr::task::event_t& counter, sugoi_resource_operation_t* resources);
+    skr::task::event_t schedule_job(sugoi_query_t* query, sugoi_schedule_callback_t callback, void* u, sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources);
+    skr::stl_vector<skr::task::event_t> sync_resources(const skr::task::event_t& counter, sugoi_resource_operation_t* resources);
 };
-} // namespace dual
+} // namespace sugoi
 
 /*
-enum class dual_job_type
+enum class sugoi_job_type
 {
     simple,
     ecs
 };
 
-struct dual_job_t {
-    dual::scheduler_t* scheduler;
-    dual_job_type type;
+struct sugoi_job_t {
+    sugoi::scheduler_t* scheduler;
+    sugoi_job_type type;
     skr::task::event_t counter;
     skr::stl_vector<skr::task::event_t> dependencies;
     int dependencyCount;
-    dual_job_t(dual::scheduler_t& scheduler);
-    virtual ~dual_job_t();
+    sugoi_job_t(sugoi::scheduler_t& scheduler);
+    virtual ~sugoi_job_t();
 };
 
-struct dual_ecs_job_t : dual_job_t {
-    using dual_job_t::dual_job_t;
-    dual_group_t** groups;
+struct sugoi_ecs_job_t : sugoi_job_t {
+    using sugoi_job_t::sugoi_job_t;
+    sugoi_group_t** groups;
     uint32_t groupCount;
-    dual_type_index_t* localTypes;
+    sugoi_type_index_t* localTypes;
     std::bitset<32>* readonly;
     std::bitset<32>* atomic;
     std::bitset<32>* randomAccess;
     bool hasRandomWrite;
     EIndex entityCount;
-    dual_resource_operation_t resources;
-    const dual_query_t* query;
-    dual_system_callback_t callback;
-    dual_system_lifetime_callback_t init;
-    dual_system_lifetime_callback_t teardown;
+    sugoi_resource_operation_t resources;
+    const sugoi_query_t* query;
+    sugoi_system_callback_t callback;
+    sugoi_system_lifetime_callback_t init;
+    sugoi_system_lifetime_callback_t teardown;
     EIndex batchSize;
     void* userdata;
     void* payloads;
     void* tasks;
-    ~dual_ecs_job_t();
+    ~sugoi_ecs_job_t();
 };
 */

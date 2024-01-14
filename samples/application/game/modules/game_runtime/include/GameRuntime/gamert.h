@@ -10,7 +10,7 @@
     #include "SkrRT/io/vram_io.hpp"
 
 
-struct dual_storage_t;
+struct sugoi_storage_t;
 namespace skr::resource
 {
 struct SLocalResourceRegistry;
