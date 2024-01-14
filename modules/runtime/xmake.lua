@@ -3,7 +3,6 @@ add_requires("boost-context >=0.1.0-skr")
 
 static_component("SkrSerde", "SkrRT")
     set_optimize("fastest")
-    set_pcxxheader("serde/pch.hpp")
     add_files("serde/build.*.cpp")
     public_dependency("SkrCore", engine_version)
     
