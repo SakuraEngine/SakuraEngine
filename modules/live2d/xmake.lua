@@ -1,7 +1,8 @@
-static_component("CubismFramework", "SkrLive2D")
+static_component("CubismFramework", "SkrLive2D", { public = false })
     set_optimize("fastest")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("CubismNativeCore/include", "CubismFramework", "CubismFramework/Framework", {public=false})
+    set_pcxxheader("CubismFramework/pch.hpp")
     add_files("CubismFramework/Renderer/**.cpp", "CubismFramework/Framework/**.cpp")
     -- link to cubism core
     if (is_os("windows")) then 

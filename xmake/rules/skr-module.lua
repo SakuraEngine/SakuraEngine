@@ -186,9 +186,9 @@ function shared_module(name, api, version, opt)
         end
 end
 
-function static_component(name, owner)
+function static_component(name, owner, opt)
     target(owner)
-        add_deps(name, {public = true})
+        add_deps(name, { public = opt and opt.public or true })
     target_end()
     
     target(name)
