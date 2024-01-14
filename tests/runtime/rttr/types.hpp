@@ -5,7 +5,7 @@
 #include "SkrContainers/variant.hpp"
 #include "SkrContainers/sptr.hpp"
 #include "SkrTestFramework/framework.hpp"
-#include "RTTRTest/module.configure.h"
+#include "SkrBase/config.h"
 
 #if !defined(__meta__)
     #include "RTTRTest/types.generated.h"

@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/config.h"
-#include "SkrRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRenderer/fwd_types.h"
 #include "SkrGraphics/api.h"
 

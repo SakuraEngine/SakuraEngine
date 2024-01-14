@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#include "SkrCore/module.configure.h"
+#include "SkrBase/config.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>

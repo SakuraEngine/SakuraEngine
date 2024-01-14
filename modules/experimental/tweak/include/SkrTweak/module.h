@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrTweak/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrModule/module.hpp"
 
 #ifdef __cplusplus

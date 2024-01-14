@@ -1,5 +1,5 @@
 #pragma once
-#include "GameRuntime/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRT/resource/config_resource.h"
 #include "SkrContainers/function_ref.hpp"
 #ifndef __meta__

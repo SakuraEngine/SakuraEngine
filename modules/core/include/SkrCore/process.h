@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrCore/module.configure.h"
+#include "SkrBase/config.h"
 
 typedef struct SProcess SProcess;
 typedef struct SProcess* SProcessHandle;

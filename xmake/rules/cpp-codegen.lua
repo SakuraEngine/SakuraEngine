@@ -11,8 +11,7 @@ rule("c++.codegen")
         local target_gendir = path.join(gendir, target:name())
 
         if (not os.exists(target_gendir)) then
-            local nullcontent = "#ifndef __meta__\nstatic_assert(0, \"incomplete file included!\");\n#endif"
-            io.writefile(path.join(target_gendir, "module.configure.h"), nullcontent)
+            os.mkdir(target_gendir)
         end
 
         target:data_set("meta.codegen.dir", gendir)

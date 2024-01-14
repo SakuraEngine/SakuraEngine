@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrCore/module.configure.h"
+#include "SkrBase/config.h"
 
 #ifdef __cplusplus
 extern "C" {

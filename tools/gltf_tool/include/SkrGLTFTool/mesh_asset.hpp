@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGLTFTool/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrMeshCore/mesh_processing.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/asset/cooker.hpp"

@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRenderer/primitive_pass.h"
 #include "SkrRenderer/fwd_types.h"
 

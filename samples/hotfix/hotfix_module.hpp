@@ -1,4 +1,4 @@
-#include "HotfixTest/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrModule/module.hpp"
 namespace hotfix
 {

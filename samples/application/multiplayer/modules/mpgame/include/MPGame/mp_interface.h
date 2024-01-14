@@ -1,6 +1,6 @@
 
 #pragma once
-#include "MPGame/module.configure.h"
+#include "SkrBase/config.h"
 struct MP_GAME_API IApplication
 {
     virtual int Initialize() = 0;

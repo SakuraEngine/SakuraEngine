@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrGraphics/module.configure.h"
+#include "SkrBase/config.h"
 #ifdef __cplusplus
 #include "SkrOS/shared_library.hpp"  // IWYU pragma: export
 #endif

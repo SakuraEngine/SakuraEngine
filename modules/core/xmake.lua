@@ -15,11 +15,13 @@ static_component("SkrDependencyGraph", "SkrCore")
 
 static_component("SkrString", "SkrCore")
     set_optimize("fastest")
+    public_dependency("SkrBase", engine_version)
     add_defines("OPEN_STRING_API=", {public = true})
     add_files("src/string/build.*.cpp")
 
 static_component("SkrSimpleAsync", "SkrCore")
     set_optimize("fastest")
+    public_dependency("SkrBase", engine_version)
     add_files("src/async/build.*.cpp")
 
 shared_module("SkrCore", "SKR_CORE", engine_version)

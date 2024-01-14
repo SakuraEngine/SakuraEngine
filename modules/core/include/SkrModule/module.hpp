@@ -27,7 +27,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/types.h"
-#include "SkrCore/module.configure.h"
+#include "SkrBase/config.h"
 #ifdef __cplusplus
 #include "SkrOS/shared_library.hpp"
 #include <SkrContainers/string.hpp>

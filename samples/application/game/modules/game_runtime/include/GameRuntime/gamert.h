@@ -1,5 +1,5 @@
 #pragma once
-#include "GameRuntime/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrCore/log.h"
 #include "SkrRenderer/skr_renderer.h"

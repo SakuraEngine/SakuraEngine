@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRenderGraph/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/vector.hpp"

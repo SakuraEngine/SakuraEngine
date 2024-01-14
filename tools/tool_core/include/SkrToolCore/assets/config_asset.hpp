@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrToolCore/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrGuid/guid.hpp"

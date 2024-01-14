@@ -3,7 +3,7 @@
 #include "SkrBase/types/guid.h"
 #include "SkrBase/misc/hash.h"
 #include "SkrBase/misc/debug.h" 
-#include "SkrCore/module.configure.h"
+#include "SkrBase/config.h"
 
 inline SKR_CONSTEXPR bool operator==(skr_guid_t a, skr_guid_t b)
 {

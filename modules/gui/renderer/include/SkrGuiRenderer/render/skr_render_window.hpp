@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGuiRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrGraphics/api.h"
 #include "SkrRT/platform/window.h"
 #include "SkrGui/backend/canvas/canvas_types.hpp"

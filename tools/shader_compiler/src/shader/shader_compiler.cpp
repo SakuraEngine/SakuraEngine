@@ -2,7 +2,7 @@
 #include "SkrContainers/vector.hpp"
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/stl_function.hpp"
-#include "SkrShaderCompiler/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrShaderCompiler/shader_compiler.hpp"
 
 namespace skd

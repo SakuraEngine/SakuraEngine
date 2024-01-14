@@ -5,7 +5,7 @@
 #include "SkrContainers/sptr.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/rttr/rttr_traits.hpp"
-#include "SkrLua/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrLua/bind_fwd.hpp"
 
 extern "C" {

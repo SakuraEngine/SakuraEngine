@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrAssetTool/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrContainers/string.hpp"
 
 namespace skd::asset

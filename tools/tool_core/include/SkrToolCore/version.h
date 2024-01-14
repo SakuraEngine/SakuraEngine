@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/config.h"
-#include "SkrToolCore/module.configure.h"
+#include "SkrBase/config.h"
 #ifndef __meta__
     #include "SkrToolCore/version.generated.h"
 #endif

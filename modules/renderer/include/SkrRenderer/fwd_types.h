@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRenderer/module.configure.h" // IWYU pragma: export
+#include "SkrBase/config.h" // IWYU pragma: export
 #include "SkrRT/misc/types.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service);

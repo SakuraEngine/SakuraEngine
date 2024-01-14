@@ -27,7 +27,7 @@
 
 #ifndef OZZ_OZZ_GEOMETRY_EXPORT_H_
 #define OZZ_OZZ_GEOMETRY_EXPORT_H_
-#include "SkrOzz/module.configure.h"
+#include "SkrBase/config.h"
 
 #define OZZ_GEOMETRY_DLL SKR_OZZ_API
 
