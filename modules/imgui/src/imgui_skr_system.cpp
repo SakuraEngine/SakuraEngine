@@ -19,7 +19,7 @@
 
 namespace skr::imgui
 {
-SKR_EXPORT ImGuiContext* GImGuiContext = nullptr;
+SKR_IMGUI_API ImGuiContext* GImGuiContext = nullptr;
 
 void   imgui_create_window(ImGuiViewport* viewport);
 void   imgui_destroy_window(ImGuiViewport* viewport);

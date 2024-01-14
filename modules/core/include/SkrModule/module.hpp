@@ -50,6 +50,7 @@ namespace skr
 struct ModuleDependency {
     skr::String name;    //!< The name of the dependency
     skr::String version; //!< The version of the dependency
+    skr::String kind;    //!< The kind of the dependency
 };
 
 /**

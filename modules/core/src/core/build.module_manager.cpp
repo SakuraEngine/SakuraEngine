@@ -339,6 +339,7 @@ ModuleInfo ModuleManagerImpl::parseMetaData(const char8_t* metadata)
             ModuleDependency dep;
             SIMDJson_ReadString(jdep.find_field("name").value_unsafe(), dep.name);
             SIMDJson_ReadString(jdep.find_field("version").value_unsafe(), dep.version);
+            SIMDJson_ReadString(jdep.find_field("kind").value_unsafe(), dep.kind);
             info.dependencies.add(dep);
         }
     }
@@ -458,12 +459,10 @@ void ModuleManagerImpl::__internal_MakeModuleGraph(const skr::String& entry, boo
         roots.add(entry);
     for (auto i = 0u; i < moduleInfo->dependencies.size(); i++)
     {
-        auto iterName = moduleInfo->dependencies[i].name.u8_str();
-        // Static
-        if (initializeMap.find(iterName) != initializeMap.end())
-            __internal_MakeModuleGraph(iterName, false);
-        else
-            __internal_MakeModuleGraph(iterName, true);
+        const auto& depInfo = moduleInfo->dependencies[i];
+        auto iterName = depInfo.name.u8_str();
+        bool isShared = depInfo.kind == u8"shared";
+        __internal_MakeModuleGraph(iterName, isShared);
         
         auto _this = nodeMap[entry];
         auto dep = nodeMap[iterName];
