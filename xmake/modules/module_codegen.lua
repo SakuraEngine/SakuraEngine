@@ -55,7 +55,7 @@ function skr_module_gen_json(target, filename, dep_modules)
     json_content = json_content.."\t\"dependencies\": [\n "
     for _, dep in pairs(pub_deps) do
         local deptarget = project.target(dep)
-        assert(deptarget:rule("skr.dyn_module"), "public dependency must be a skr.module: "..deptarget:name())
+        assert(deptarget:rule("skr.module"), "public dependency must be a skr.module: "..deptarget:name())
         local depversion = target:values(dep..".version")
         json_content = json_content.."\t\t{ \"name\":\""..dep.."\", \"version\": \""..depversion.."\" },\n"
     end
@@ -103,7 +103,7 @@ function skr_module_gen_cpp(target, filename, dep_modules)
     cpp_content = cpp_content.."\t\"dependencies\": [\n "
     for _, dep in pairs(pub_deps) do
         local deptarget = project.target(dep)
-        assert(deptarget:rule("skr.dyn_module"), "public dependency must be a skr.module: "..deptarget:name())
+        assert(deptarget:rule("skr.module"), "public dependency must be a skr.module: "..deptarget:name())
         local depversion = target:values(dep..".version")
         cpp_content = cpp_content.."\t\t{ \"name\":\""..dep.."\", \"version\": \""..depversion.."\" },\n"
     end
