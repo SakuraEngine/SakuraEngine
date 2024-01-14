@@ -121,42 +121,49 @@ function public_dependency(dep, version, setting)
     add_values(dep..".version", version)
 end
 
+function static_module(name, api, version, opt)
+    target(name)
+        set_kind("static")
+        add_rules("skr.static_module", { api = api, version = engine_version }) 
+        opt = opt or {}
+        if opt.exception and not opt.noexception then
+            set_exceptions("cxx")
+        else
+            set_exceptions("no-cxx")
+        end
+end
+
 function shared_module(name, api, version, opt)
     target(name)
-    if has_config("shipping_one_archive") then
-        set_kind("static")
-    else
-        set_kind("shared")
-    end
-    on_load(function (target, opt)
-        if(has_config("shipping_one_archive")) then
-            for _, dep in pairs(target:get("links")) do
-                target:add("links", dep, {public = true})
-            end
+        if has_config("shipping_one_archive") then
+            set_kind("static")
+        else
+            set_kind("shared")
         end
-    end)
-    add_rules("skr.module", { api = api, version = engine_version }) 
-    opt = opt or {}
-    if opt.exception and not opt.noexception then
-        set_exceptions("cxx")
-    else
-        set_exceptions("no-cxx")
-    end
+        on_load(function (target, opt)
+            if(has_config("shipping_one_archive")) then
+                for _, dep in pairs(target:get("links")) do
+                    target:add("links", dep, {public = true})
+                end
+            end
+        end)
+        add_rules("skr.module", { api = api, version = engine_version }) 
+        opt = opt or {}
+        if opt.exception and not opt.noexception then
+            set_exceptions("cxx")
+        else
+            set_exceptions("no-cxx")
+        end
 end
 
 function executable_module(name, api, version, opt)
     target(name)
-    set_kind("binary")
-    add_rules("skr.module", { api = api, version = engine_version }) 
-    opt = opt or {}
-    if opt.exception and not opt.noexception then
-        set_exceptions("cxx")
-    else
-        set_exceptions("no-cxx")
-    end
-    --[[
-    if (is_os("windows")) then 
-        add_files(path.join(os.projectdir(), "resources/windows", "sakura.rc"))
-    end
-    ]]--
+        set_kind("binary")
+        add_rules("skr.module", { api = api, version = engine_version }) 
+        opt = opt or {}
+        if opt.exception and not opt.noexception then
+            set_exceptions("cxx")
+        else
+            set_exceptions("no-cxx")
+        end
 end
