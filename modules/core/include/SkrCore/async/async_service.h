@@ -32,7 +32,7 @@ struct ServiceThreadDesc {
     SThreadPriority priority = SKR_THREAD_NORMAL;
 };
 
-struct SKR_CORE_API ServiceThread {
+struct SKR_STATIC_API ServiceThread {
 public:
     ServiceThread(const ServiceThreadDesc& desc) SKR_NOEXCEPT;
     virtual ~ServiceThread() SKR_NOEXCEPT;
@@ -92,7 +92,7 @@ private:
     SAtomicU64 event_  = 0;
 };
 
-struct SKR_CORE_API AsyncService : public skr::ServiceThread {
+struct SKR_STATIC_API AsyncService : public skr::ServiceThread {
     AsyncService(const ServiceThreadDesc& desc) SKR_NOEXCEPT
         : skr::ServiceThread(desc)
     {

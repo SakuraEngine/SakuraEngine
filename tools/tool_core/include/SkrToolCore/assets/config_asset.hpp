@@ -2,7 +2,7 @@
 #include "SkrToolCore/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrRT/misc/types.h"
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #ifndef __meta__
     #include "SkrToolCore/assets/config_asset.generated.h" // IWYU pragma: export
 #endif

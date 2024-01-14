@@ -1,5 +1,5 @@
 #include "SkrMemory/memory.h"
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/serde/binary/writer.h"

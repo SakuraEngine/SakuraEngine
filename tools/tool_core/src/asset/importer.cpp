@@ -1,4 +1,4 @@
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/serde/json/reader.h"
 #include "SkrToolCore/asset/cook_system.hpp"

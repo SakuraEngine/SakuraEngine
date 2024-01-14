@@ -1,6 +1,12 @@
 #include <new>
 #include "SkrContainers/detail/shared_rc.hpp"
 
+namespace skr
+{
+    SKR_CORE_API const char* kConcurrentQueueMemoryName = "ConcurrentQueues";
+    SKR_CORE_API const char8_t* kOpenStringMemory = u8"OpenString";
+}
+
 void skr::SRCBlock::add_refcount() SKR_NOEXCEPT
 {
     skr_atomicu32_add_relaxed(&refcount, 1);

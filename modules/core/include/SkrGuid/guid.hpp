@@ -124,7 +124,8 @@ constexpr skr_guid_t operator""_guid(const char8_t* str, size_t N)
     return make_guid_helper(str + (N == long_guid_form_length ? 1 : 0));
 }
 } // namespace literals
-SKR_CORE_API bool make_guid(const skr::StringView& str, skr_guid_t& value);
+
+SKR_STATIC_API bool make_guid(const skr::StringView& str, skr_guid_t& value);
 
 } // namespace skr::guid
 

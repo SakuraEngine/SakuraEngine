@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrContainers/string.hpp"
 #include "SkrRT/_deprecated/type/type.h"
 #include <string_view> // TODO: replace with skr::StringView

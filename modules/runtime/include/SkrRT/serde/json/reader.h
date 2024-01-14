@@ -8,7 +8,7 @@
     #include "SkrContainers/string.hpp"
     #include "SkrContainers/vector.hpp"
     #include "SkrContainers/vector.hpp"
-    #include "SkrCore/guid.hpp"
+    #include "SkrGuid/guid.hpp"
     #include "SkrRT/rttr/rttr_traits.hpp"
 
 // forward declaration for resources

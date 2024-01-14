@@ -4,7 +4,7 @@ option("shipping_one_archive")
     set_description("Toggle to build modules in one executable file.")
 option_end()
 
-if(has_config("shipping_one_archive")) then
+if has_config("shipping_one_archive") then
     add_defines("SHIPPING_ONE_ARCHIVE")
 end
 
@@ -40,10 +40,10 @@ rule("skr.component")
             target:add("includedirs", owner_inc, {public = true})
         end
         -- import api from owner
-        if(not has_config("shipping_one_archive")) then
-            target:add("defines", owner_api.."_API=SKR_IMPORT", owner_api.."_LOCAL=error")
-        else
+        if has_config("shipping_one_archive") then
             target:add("defines", owner_api.."_API=", owner_api.."_LOCAL=error")
+        else
+            target:add("defines", owner_api.."_API=SKR_IMPORT", owner_api.."_LOCAL=error")
         end
     end)
 rule_end()
@@ -54,7 +54,7 @@ rule("skr.dyn_module")
         local api = target:extraconf("rules", "skr.dyn_module", "api")
         local version = target:extraconf("rules", "skr.dyn_module", "version")
         target:add("values", "skr.module.version", version)
-        if(has_config("shipping_one_archive")) then
+        if has_config("shipping_one_archive") then
             target:add("defines","SHIPPING_ONE_ARCHIVE")
             target:add("defines", api.."_IMPL")
         else
@@ -141,7 +141,7 @@ rule("skr.static_module")
     on_load(function (target, opt)
         local api = target:extraconf("rules", "skr.static_module", "api")
         target:set("kind", "static")
-        if(not has_config("shipping_one_archive")) then
+        if not has_config("shipping_one_archive") then
             target:add("defines", api.."_API", {public=true})
             target:add("defines", api.."_STATIC", {public=true})
             target:add("defines", api.."_IMPL")
@@ -172,7 +172,7 @@ function shared_module(name, api, version, opt)
             set_kind("shared")
         end
         on_load(function (target, opt)
-            if(has_config("shipping_one_archive")) then
+            if has_config("shipping_one_archive") then
                 for _, dep in pairs(target:get("links")) do
                     target:add("links", dep, {public = true})
                 end

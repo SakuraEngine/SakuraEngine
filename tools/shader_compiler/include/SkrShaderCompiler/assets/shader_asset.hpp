@@ -2,7 +2,7 @@
 #include "SkrShaderCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrRT/config.h"
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #ifndef __meta__
     #include "SkrShaderCompiler/assets/shader_asset.generated.h" // IWYU pragma: export

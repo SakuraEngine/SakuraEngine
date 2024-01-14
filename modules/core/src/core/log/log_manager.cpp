@@ -1,6 +1,6 @@
 #include "SkrProfile/profile.h"
 #include "SkrContainers/hashmap.hpp"
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "./log_manager.hpp"
 
 namespace skr {

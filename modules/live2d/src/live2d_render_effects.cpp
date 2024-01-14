@@ -4,7 +4,7 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrCore/time.h"
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrContainers/umap.hpp"
 #include "SkrRenderer/primitive_draw.h"

@@ -1,4 +1,4 @@
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrContainers/sptr.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/async/thread_job.hpp"
@@ -10,7 +10,7 @@
 #include "SkrRenderer/shader_map.h"
 
 #include "SkrRenderer/pso_map.h"
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 
 namespace skr
 {
