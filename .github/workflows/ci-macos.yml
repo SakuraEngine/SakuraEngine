@@ -101,7 +101,7 @@ jobs:
       - name: RemoveBuildDir
         uses: JesseTG/rm@v1.0.3
         with:
-          path: build
+          path: build/macosx
 
       - name: Shipping
         if: success() || failure()

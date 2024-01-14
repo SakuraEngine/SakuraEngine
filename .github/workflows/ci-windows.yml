@@ -108,7 +108,7 @@ jobs:
       - name: RemoveBuildDir
         uses: JesseTG/rm@v1.0.3
         with:
-          path: build
+          path: build/windows
       
       - name: Shipping
         if: success() || failure()
