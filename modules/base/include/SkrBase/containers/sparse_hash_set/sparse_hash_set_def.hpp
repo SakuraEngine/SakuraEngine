@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/misc/integer_tools.hpp"
+#include "SkrBase/memory/memory_traits.hpp"
 
 // SparseHashSet structs
 namespace skr::container
@@ -17,39 +18,72 @@ struct SparseHashSetData {
 
 // SparseHashSet 的数据引用，代替单纯的指针/Index返回
 // 提供足够的信息，并将 npos 封装起来简化调用防止出错
-template <typename T, typename TS>
+template <typename T, typename TS, typename THash, bool kConst>
 struct SparseHashSetDataRef {
+    using DataType = std::conditional_t<kConst, const T, T>;
+    using SizeType = TS;
+    using HashType = THash;
+
+    SKR_INLINE SparseHashSetDataRef() = default;
+    SKR_INLINE SparseHashSetDataRef(DataType* ptr, SizeType index, HashType hash, bool already_exist)
+        : _ptr(ptr)
+        , _index(index)
+        , _hash(hash)
+        , _already_exist(already_exist)
+    {
+    }
+    template <bool kConstRHS>
+    SKR_INLINE SparseHashSetDataRef(const SparseHashSetDataRef<T, SizeType, HashType, kConstRHS>& rhs)
+        : _ptr(const_cast<DataType*>(rhs.ptr()))
+        , _index(rhs.index())
+        , _hash(rhs.hash())
+        , _already_exist(rhs.already_exist())
+    {
+    }
+
+    // getter & validator
+    SKR_INLINE DataType* ptr() const { return _ptr; }
+    SKR_INLINE DataType& ref() const { return *_ptr; }
+    SKR_INLINE SizeType  index() const { return _index; }
+    SKR_INLINE HashType  hash() const { return _hash; }
+    SKR_INLINE bool      already_exist() const { return _already_exist; }
+    SKR_INLINE bool      is_valid() const { return _ptr != nullptr && _index != npos_of<SizeType>; }
+
+    // operators
+    SKR_INLINE explicit operator bool() { return is_valid(); }
+    // SKR_INLINE DataRef&       operator*() const { return ref(); }
+    // SKR_INLINE DataRef*       operator->() const { return ptr(); }
+
+    // compare
+    SKR_INLINE bool operator==(const SparseHashSetDataRef& rhs) const { return _ptr == rhs._ptr; }
+    SKR_INLINE bool operator!=(const SparseHashSetDataRef& rhs) const { return _ptr != rhs._ptr; }
+
+private:
     // add/emplace: 添加的元素指针
     // find: 找到的元素指针
-    // remove: nullptr // TODO. check it
-    T* data = nullptr;
+    DataType* _ptr = nullptr;
 
     // add/emplace: 添加的元素下标
     // find: 找到的元素下标
-    // remove: 移除的元素下标
-    TS index = npos_of<TS>;
+    SizeType _index = npos_of<SizeType>;
+
+    // add/emplace: 元素 hash
+    // find: 元素 hash
+    HashType _hash = 0;
 
     // add/emplace: 元素是否已经存在
     // find: false
-    // remove: false
-    bool already_exist = false;
-
-    SKR_INLINE SparseHashSetDataRef()
-    {
-    }
-    SKR_INLINE SparseHashSetDataRef(T* data, TS index, bool already_exist = false)
-        : data(data)
-        , index(index)
-        , already_exist(already_exist)
-    {
-    }
-    SKR_INLINE    operator bool() { return data != nullptr || index != npos_of<TS>; }
-    SKR_INLINE T& operator*() const { return *data; }
-    SKR_INLINE T* operator->() const { return data; }
-
-    SKR_INLINE T& ref() const { return *data; }
+    bool _already_exist = false;
 };
 } // namespace skr::container
+
+// SparseHashSetData memory traits
+namespace skr::memory
+{
+template <typename T, typename TS, typename HashType>
+struct MemoryTraits<skr::container::SparseHashSetData<T, TS, HashType>, skr::container::SparseHashSetData<T, TS, HashType>> : public MemoryTraits<T, T> {
+};
+} // namespace skr::memory
 
 // TODO. skr swap
 namespace std

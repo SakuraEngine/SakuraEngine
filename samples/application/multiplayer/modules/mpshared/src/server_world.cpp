@@ -52,7 +52,7 @@ void MPServerWorld::AddConnection(HSteamNetConnection connection)
 {
     connections.add(connection);
     worldDelta.add_default();
-    playerMap.add_default().data->emplace_back(playerId);
+    playerMap.add_default().ref().emplace_back(playerId);
     SpawnPlayerEntity(playerId, connections.size() - 1, 0);
     playerId++;
 }

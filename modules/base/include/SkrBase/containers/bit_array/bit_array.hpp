@@ -7,22 +7,31 @@
 #include <algorithm>
 
 // BitArray def
-// TODO. 包装一个更安全的 SizeType 作为查找返回
 namespace skr::container
 {
 template <typename Memory>
 struct BitArray final : protected Memory {
-
     using typename Memory::BitBlockType;
     using typename Memory::SizeType;
     using typename Memory::AllocatorCtorParam;
 
-    using Algo    = algo::BitAlgo<BitBlockType>;
-    using It      = BitIt<BitBlockType, SizeType, false>;
-    using CIt     = BitIt<BitBlockType, SizeType, true>;
-    using TIt     = TrueBitIt<BitBlockType, SizeType, true>;
+    // data ref
     using DataRef = BitDataRef<BitBlockType, SizeType>;
     using BitRef  = BitRef<BitBlockType>;
+
+    // cursor & iterator
+    using Cursor   = BitCursor<BitBlockType, SizeType, false>;
+    using CCursor  = BitCursor<BitBlockType, SizeType, true>;
+    using Iter     = BitIter<BitBlockType, SizeType, false>;
+    using CIter    = BitIter<BitBlockType, SizeType, true>;
+    using IterInv  = BitIterInv<BitBlockType, SizeType, false>;
+    using CIterInv = BitIterInv<BitBlockType, SizeType, true>;
+
+    // stl style iterator
+    using StlIt  = CursorIterStl<BitCursor<BitBlockType, SizeType, false>, false>;
+    using CStlIt = CursorIterStl<BitCursor<BitBlockType, SizeType, true>, false>;
+
+    using Algo = algo::BitAlgo<BitBlockType>;
 
     // ctor & dtor
     BitArray(AllocatorCtorParam param = {});
@@ -30,7 +39,7 @@ struct BitArray final : protected Memory {
     ~BitArray();
 
     // copy & move ctor
-    BitArray(const BitArray& other, AllocatorCtorParam param = {});
+    BitArray(const BitArray& other);
     BitArray(BitArray&& other) noexcept;
 
     // copy & move assign
@@ -86,11 +95,38 @@ struct BitArray final : protected Memory {
     // set range
     void set_range(SizeType start, SizeType n, bool v);
 
-    // support foreach
-    It  begin();
-    It  end();
-    CIt begin() const;
-    CIt end() const;
+    // cursor & iterator
+    // auto cursor_begin();
+    // auto cursor_begin() const;
+    // auto cursor_end();
+    // auto cursor_end() const;
+    // auto iter();
+    // auto iter() const;
+    // auto iter_inv();
+    // auto iter_inv() const;
+
+    // true cursor & iterator
+    // auto true_cursor_begin();
+    // auto true_cursor_begin() const;
+    // auto true_cursor_end();
+    // auto true_cursor_end() const;
+    // auto true_iter();
+    // auto true_iter() const;
+    // auto true_iter_inv();
+    // auto true_iter_inv() const;
+
+    // false cursor & iterator
+    // auto false_cursor_begin();
+    // auto false_cursor_begin() const;
+    // auto false_cursor_end();
+    // auto false_cursor_end() const;
+    // auto false_iter();
+    // auto false_iter() const;
+    // auto false_iter_inv();
+    // auto false_iter_inv() const;
+
+    // syntax
+    const BitArray& readOnly() const;
 
 private:
     // helper
@@ -157,8 +193,8 @@ SKR_INLINE BitArray<Memory>::~BitArray()
 
 // copy & move ctor
 template <typename Memory>
-SKR_INLINE BitArray<Memory>::BitArray(const BitArray& other, AllocatorCtorParam param)
-    : Memory(other, std::move(param))
+SKR_INLINE BitArray<Memory>::BitArray(const BitArray& other)
+    : Memory(other)
 {
     // handled in memory
 }
@@ -377,14 +413,14 @@ SKR_INLINE void BitArray<Memory>::remove_at(SizeType start, SizeType n)
     SKR_ASSERT(start >= 0 && n > 0 && start + n < size());
     if (start + n != size())
     {
-        It write(data(), size(), start);
-        It read(data(), size(), start + n);
+        Cursor write = { data(), size(), start };
+        Cursor read  = { data(), size(), start + n };
 
-        while (read)
+        while (!read.reach_end())
         {
-            *write = *read;
-            ++write;
-            ++read;
+            write.ref() = read.ref();
+            write.move_next();
+            read.move_next();
         }
     }
     _set_size(size() - n);
@@ -447,26 +483,11 @@ SKR_INLINE void BitArray<Memory>::set_range(SizeType start, SizeType n, bool v)
     Algo::set_range(data(), start, n, v);
 }
 
-// support foreach
+// syntax
 template <typename Memory>
-SKR_INLINE typename BitArray<Memory>::It BitArray<Memory>::begin()
+SKR_INLINE const BitArray<Memory>& BitArray<Memory>::readOnly() const
 {
-    return It(data(), size());
-}
-template <typename Memory>
-SKR_INLINE typename BitArray<Memory>::It BitArray<Memory>::end()
-{
-    return It(data(), size(), size());
-}
-template <typename Memory>
-SKR_INLINE typename BitArray<Memory>::CIt BitArray<Memory>::begin() const
-{
-    return CIt(data(), size());
-}
-template <typename Memory>
-SKR_INLINE typename BitArray<Memory>::CIt BitArray<Memory>::end() const
-{
-    return CIt(data(), size(), size());
+    return *this;
 }
 
 } // namespace skr::container

@@ -138,7 +138,7 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
 
         // make transform
         auto       tb_cursor      = _transforms.size();
-        auto&      transform      = *_transforms.add_default();
+        auto&      transform      = _transforms.add_default().ref();
         const auto scaleX         = 1.f;
         const auto scaleY         = 1.f;
         const auto scaleZ         = 1.f;
@@ -159,7 +159,7 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
 
         // make projection
         auto               pb_cursor    = _projections.size();
-        auto&              projection   = *_projections.add_default();
+        auto&              projection   = _projections.add_default().ref();
         const skr_float2_t zero_point   = { window_size.width * 0.5f, window_size.height * 0.5f };
         const skr_float2_t eye_position = { zero_point.x, zero_point.y };
         const auto         view         = rtm::look_at_matrix(
@@ -172,7 +172,7 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
 
         // make render data
         auto  rb_cursor     = _render_data.size();
-        auto& render_data   = *_render_data.add_default();
+        auto& render_data   = _render_data.add_default().ref();
         render_data.M[0][0] = static_cast<float>(cmd.texture_swizzle.r);
         render_data.M[0][1] = static_cast<float>(cmd.texture_swizzle.g);
         render_data.M[0][2] = static_cast<float>(cmd.texture_swizzle.b);

@@ -64,7 +64,7 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
     {
         if (swapchains.size())
         {
-            const auto pInfo = swapchains.begin()->value->back_buffers[0]->info;
+            const auto pInfo = swapchains.cursor_begin().ref().value->back_buffers[0]->info;
             return pInfo->format;
         }
         return CGPU_FORMAT_B8G8R8A8_UNORM;
@@ -185,18 +185,18 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     const auto cpy_queue_count_ =  cgpu_min(cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER), MAX_CPY_QUEUE_COUNT);
     const auto cmpt_queue_count_ = cgpu_min(cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_COMPUTE), MAX_CMPT_QUEUE_COUNT);
     skr::Vector<CGPUQueueGroupDescriptor> Gs;
-    auto& GfxDesc = *Gs.add_default();
+    auto& GfxDesc = Gs.add_default().ref();
     GfxDesc.queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
     GfxDesc.queue_count = 1;
     if (cpy_queue_count_)
     {
-        auto& CpyDesc = *Gs.add_default();
+        auto& CpyDesc = Gs.add_default().ref();
         CpyDesc.queue_type = CGPU_QUEUE_TYPE_TRANSFER;
         CpyDesc.queue_count = cpy_queue_count_;
     }
     if (cmpt_queue_count_)
     {
-        auto& CmptDesc = *Gs.add_default();
+        auto& CmptDesc = Gs.add_default().ref();
         CmptDesc.queue_type = CGPU_QUEUE_TYPE_COMPUTE;
         CmptDesc.queue_count = cmpt_queue_count_;
     }
@@ -275,17 +275,17 @@ CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
 {
     // find registered swapchain
     {
-        if (auto _ = swapchains.find(window)) return _->value;
+        if (auto _ = swapchains.find(window)) return _.value();
     }
     // find registered surface
     CGPUSurfaceId surface = nullptr;
     {
         if (auto _ = surfaces.find(window))
-            surface = _->value;
+            surface = _.value();
         else
         {
             surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
-            surfaces.add_or_assign(window, surface);
+            surfaces.add(window, surface);
         }
     }
     int32_t width, height;
@@ -301,7 +301,7 @@ CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
     auto swapchain = cgpu_create_swapchain(device, &chain_desc);
-    swapchains.add_or_assign(window, swapchain);
+    swapchains.add(window, swapchain);
     return swapchain;
 }
 
@@ -312,7 +312,7 @@ CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle wind
     {
         if (auto _ = swapchains.find(window))
         {
-            old = _->value;
+            old = _.value();
         }
         else 
         {
@@ -325,11 +325,11 @@ CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle wind
         cgpu_free_swapchain(old);
         if (auto _ = surfaces.find(window))
         {
-            cgpu_free_surface(device, _->value);
+            cgpu_free_surface(device, _.value());
         }
         {
             surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
-            surfaces.add_or_assign(window, surface);
+            surfaces.add(window, surface);
         }
     }
     int32_t width, height;
@@ -345,7 +345,7 @@ CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle wind
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
     auto swapchain = cgpu_create_swapchain(gfx_queue->device, &chain_desc);
-    swapchains.add_or_assign(window, swapchain);
+    swapchains.add(window, swapchain);
     return swapchain;
 }
 }

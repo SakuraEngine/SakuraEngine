@@ -17,8 +17,6 @@ typedef enum ESkrJsonType
     #include "SkrRT/containers/stl_vector.hpp"
     #include "SkrRT/rttr/rttr_traits.hpp"
 
-
-
 // forward declaration for resources
 struct skr_resource_handle_t;
 namespace skr::resource
@@ -84,9 +82,9 @@ protected:
     bool _Prefix(ESkrJsonType type);
     bool _NewLine();
 
-    bool               _hasRoot = false;
+    bool                   _hasRoot = false;
     skr::stl_vector<Level> _levelStack;
-    skr_json_format_t  _format;
+    skr_json_format_t      _format;
 };
 #else
 typedef struct skr_json_writer_t skr_json_writer_t;

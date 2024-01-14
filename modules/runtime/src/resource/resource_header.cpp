@@ -31,7 +31,7 @@ int ReadTrait<skr_resource_header_t>::Read(skr_binary_reader_t* reader, skr_reso
     ret           = bin::Archive(reader, size);
     if (ret != 0)
         return ret;
-    header.dependencies.resize(size);
+    header.dependencies.resize_default(size);
     for (uint32_t i = 0; i < size; i++)
     {
         ret = bin::Archive(reader, header.dependencies[i]);

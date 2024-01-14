@@ -341,7 +341,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
             }
             else
             {
-                old_keyed_children.find_or_add(child->widget()->key, child);
+                old_keyed_children.add(child->widget()->key, child);
             }
         }
         ++children_match_front;
@@ -356,7 +356,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
         // search old child
         if (auto found_child = old_keyed_children.find(new_widget->key))
         {
-            child = found_child->value;
+            child = found_child.value();
             if (!Widget::can_update(child->widget(), new_widget))
             {
                 child = nullptr;

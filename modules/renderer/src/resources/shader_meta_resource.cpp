@@ -5,7 +5,7 @@
 
 bool skr_shader_options_resource_t::flatten_options(skr::Vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
 {
-    skr::USet<skr::String>                                                           keys;
+    skr::USet<skr::String>                                                              keys;
     skr::FlatHashMap<skr::String, skr_shader_option_template_t, skr::Hash<skr::String>> kvs;
     // collect all keys & ensure unique
     for (auto& src : srcs)
@@ -17,7 +17,7 @@ bool skr_shader_options_resource_t::flatten_options(skr::Vector<skr_shader_optio
                 dst.empty();
                 return false;
             }
-            keys.find_or_add(opt.key);
+            keys.add(opt.key);
             kvs.insert({ opt.key, opt });
         }
     }
@@ -27,10 +27,10 @@ bool skr_shader_options_resource_t::flatten_options(skr::Vector<skr_shader_optio
         dst.add(kvs[key]);
     }
     // sort result by key
-    std::stable_sort(dst.begin(), dst.end(),
-        [](const skr_shader_option_template_t& a, const skr_shader_option_template_t& b) {
-            return skr::Hash<skr::String>()(a.key) < skr::Hash<skr::String>()(b.key);
-        });
+    dst.sort_stable(
+    [](const skr_shader_option_template_t& a, const skr_shader_option_template_t& b) {
+        return skr::Hash<skr::String>()(a.key) < skr::Hash<skr::String>()(b.key);
+    });
     return true;
 }
 
@@ -55,7 +55,7 @@ struct SKR_RENDERER_API SShaderOptionsFactoryImpl : public SShaderOptionsFactory
 
     ~SShaderOptionsFactoryImpl() noexcept = default;
 
-    bool          AsyncIO() override { return false; }
+    bool       AsyncIO() override { return false; }
     skr_guid_t GetResourceType() override
     {
         const auto collection_type = ::skr::rttr::type_id<skr_shader_options_resource_t>();

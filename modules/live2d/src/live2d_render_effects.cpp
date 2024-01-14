@@ -182,14 +182,14 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                 {
                     auto&& render_model = models[i].vram_future.render_model;
                     const auto& cmds = render_model->primitive_commands;
-                    push_constants.find_or_add(render_model)->value.resize(0);
+                    push_constants.try_add_default(render_model).value().resize(0);
 
                     auto&& model_resource = models[i].ram_future.model_resource;
                     const auto list = skr_live2d_model_get_sorted_drawable_list(model_resource);
                     if(!list) continue;
 
-                    auto drawable_list  = sorted_drawable_list.add_or_assign(render_model, { list , render_model->index_buffer_views.size() })->value;
-                    push_constants.find(render_model)->value.resize(drawable_list.size());
+                    auto drawable_list  = sorted_drawable_list.add(render_model, { list , render_model->index_buffer_views.size() }).value();
+                    push_constants.find(render_model).value().resize(drawable_list.size());
                     // record constant parameters
                     auto clipping_manager = render_model->clipping_manager;
                     if (auto clipping_list = clipping_manager->GetClippingContextListForDraw())
@@ -197,7 +197,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                         for (auto drawable : drawable_list)
                         {
                             const auto& cmd = cmds[drawable];
-                            auto& push_const = push_constants.find(render_model)->value[drawable];
+                            auto& push_const = push_constants.find(render_model).value()[drawable];
                             CubismClippingContext* clipping_context = (*clipping_list)[drawable];
                             push_const.use_mask = clipping_context && clipping_context->_isUsing;
                             if (push_const.use_mask)
@@ -236,13 +236,13 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                             {
                                 drawcall.pipeline = proper_pipeline;
                                 drawcall.push_const_name = push_constants_name;
-                                drawcall.push_const = (const uint8_t*)(push_constants.find(render_model)->value.data() + drawable);
+                                drawcall.push_const = (const uint8_t*)(push_constants.find(render_model).value().data() + drawable);
                                 drawcall.index_buffer = *cmd.ibv;
                                 drawcall.vertex_buffers = cmd.vbvs.data();
                                 drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                 {
                                     auto texture_view = skr_live2d_render_model_get_texture_view(render_model, drawable);
-                                    drawcall.bind_table = render_model->bind_tables.find(texture_view)->value;
+                                    drawcall.bind_table = render_model->bind_tables.find(texture_view).value();
                                 }
                             }
                         }
@@ -275,8 +275,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                     auto&& render_model = models[i].vram_future.render_model;
                     auto&& model_resource = models[i].ram_future.model_resource;
                     if (!mask_push_constants.contains(render_model))
-                        mask_push_constants.find_or_add(render_model);
-                    mask_push_constants.find(render_model)->value.resize(0);
+                        mask_push_constants.try_add_default(render_model);
+                    mask_push_constants.find(render_model).value().resize(0);
 
                     // TODO: move this to (some manager?) other than update morph/phys in a render pass
                     updateModelMotion(context->render_graph, render_model);
@@ -326,8 +326,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                         continue;
                                     }
 
-                                    sorted_mask_drawable_lists.find_or_add(render_model)->value.emplace(clipDrawIndex);
-                                    auto&& push_const = mask_push_constants.find(render_model)->value.emplace_back();
+                                    sorted_mask_drawable_lists.try_add_default(render_model).value().emplace(clipDrawIndex);
+                                    auto&& push_const = mask_push_constants.find(render_model).value().emplace_back();
                                     const auto proj_mat = rtm::matrix_set(
                                         rtm::vector_load( &clipping_context->_matrixForMask.GetArray()[4 * 0] ),
                                         rtm::vector_load( &clipping_context->_matrixForMask.GetArray()[4 * 1] ),
@@ -364,7 +364,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                         drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                         {
                                             auto texture_view = skr_live2d_render_model_get_texture_view(render_model, clipDrawIndex);
-                                            drawcall.bind_table = render_model->mask_bind_tables.find(texture_view)->value;
+                                            drawcall.bind_table = render_model->mask_bind_tables.find(texture_view).value();
                                         }
                                     }
                                 }
@@ -433,7 +433,7 @@ protected:
                     bind_table_desc.names = &color_texture_name;
                     bind_table_desc.names_count = 1;
                     auto bind_table = cgpux_create_bind_table(pipeline->device, &bind_table_desc);
-                    render_model->bind_tables.add_or_assign(texture_view, bind_table);
+                    render_model->bind_tables.add(texture_view, bind_table);
 
                     CGPUDescriptorData datas[1] = {};
                     datas[0] = make_zeroed<CGPUDescriptorData>();
@@ -454,7 +454,7 @@ protected:
                     bind_table_desc.names = &color_texture_name;
                     bind_table_desc.names_count = 1;
                     auto bind_table = cgpux_create_bind_table(pipeline->device, &bind_table_desc);
-                    render_model->mask_bind_tables.add_or_assign(texture_view, bind_table);
+                    render_model->mask_bind_tables.add(texture_view, bind_table);
                     
                     CGPUDescriptorData datas[1] = {};
                     datas[0] = make_zeroed<CGPUDescriptorData>();
@@ -492,8 +492,8 @@ protected:
 
         const auto model_resource = render_model->model_resource_id;
         if (!motion_timers.contains(render_model))
-            motion_timers.find_or_add(render_model);
-        last_ms = skr_timer_get_msec(&motion_timers.find(render_model)->value, true);
+            motion_timers.try_add_default(render_model);
+        last_ms = skr_timer_get_msec(&motion_timers.find(render_model).value(), true);
         static float delta_sum = 0.f;
         delta_sum += ((float)last_ms / 1000.f);
         if (delta_sum > (1.f / kMotionFramesPerSecond))
@@ -533,13 +533,13 @@ protected:
                     auto& view = render_model->vertex_buffer_views[j];
                     uint32_t vcount = 0;
                     const void* pSrc = getVBData(render_model, j, vcount); (void)pSrc;
-                    imported_vbs_map.add_or_assign(view.buffer, render_graph->create_buffer(
+                    imported_vbs_map.add(view.buffer, render_graph->create_buffer(
                             [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
                             skr::String name = skr::format(u8"live2d_vb-{}{}", (uint64_t)render_model, j);
                             builder.set_name((const char8_t*)name.c_str())
                                     .import(view.buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                             }));
-                    imported_vbs[j] = imported_vbs_map.find(view.buffer)->value;
+                    imported_vbs[j] = imported_vbs_map.find(view.buffer).value();
                     vb_sizes[j] = vcount * view.stride;
                     vb_offsets[j] = view.offset;
                     totalVertexSize += vcount * view.stride;

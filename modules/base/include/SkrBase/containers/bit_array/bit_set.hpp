@@ -79,8 +79,6 @@ struct Bitset {
     uint32_t to_uint32(uint32_t& value) const;
     uint32_t to_uint64(uint64_t& value) const;
 
-    // TODO. find api, if need
-
 private:
     // help function
     void    _clear_unused_bits();
