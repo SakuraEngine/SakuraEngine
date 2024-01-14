@@ -3,14 +3,14 @@ add_requires("parallel-hashmap >=1.3.11-skr")
 add_requires("simdjson >=3.0.0-skr")
 
 static_component("SkrGuid", "SkrCore")
-    public_dependency("SkrBase", engine_version)
     set_optimize("fastest")
+    public_dependency("SkrBase", engine_version)
     add_files("src/guid/build.*.cpp")
 
 static_component("SkrDependencyGraph", "SkrCore")
+    set_optimize("fastest")
     public_dependency("SkrBase", engine_version)
     add_packages("lemon", {public = false, inherit = false})
-    set_optimize("fastest")
     add_files("src/graph/build.*.cpp")
 
 static_component("SkrString", "SkrCore")

@@ -29,7 +29,7 @@ rule("skr.component")
             owner:add("values", pub_dep..".version", target:values(pub_dep..".version"))
         end
         -- import deps from owner
-        for _, owner_dep in pairs(owner:deps()) do
+        for _, owner_dep in pairs(owner:orderdeps()) do
             local _owner_name = owner_dep:extraconf("rules", "skr.component", "owner") or ""
             if _owner_name ~= owner_name then
                 target:add("deps", owner_dep:name(), {public = true})
