@@ -1,20 +1,21 @@
+#include "SkrRT/misc/log.h"
 #include "SkrRT/async/async_service.h"
 #include "SkrRT/async/wait_timeout.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrBase/misc/defer.hpp"
 
 #include "SkrProfile/profile.h"
 
 namespace skr
 {
 ServiceThread::ServiceThread(const ServiceThreadDesc& desc) SKR_NOEXCEPT
-    : status(kStatusStopped)
+    : status_(kStatusStopped)
 {
     f._service = this;
 
     NamedThreadDesc tDesc = {};
-    tDesc.name = desc.name;
-    tDesc.priority = desc.priority;
-    tDesc.stack_size = 16 * 1024;
+    tDesc.name            = desc.name;
+    tDesc.priority        = desc.priority;
+    tDesc.stack_size      = 16 * 1024;
     t.initialize(tDesc);
 }
 
@@ -31,219 +32,173 @@ ServiceThread::~ServiceThread() SKR_NOEXCEPT
 
 ServiceThread::Status ServiceThread::get_status() const SKR_NOEXCEPT
 {
-    return static_cast<Status>(skr_atomic32_load_acquire(&status));
+    return static_cast<Status>(skr_atomic32_load_acquire(&status_));
 }
 
-void ServiceThread::set_status(Status to_set) SKR_NOEXCEPT
+ServiceThread::Action ServiceThread::get_action() const SKR_NOEXCEPT
 {
-    const auto S = get_status();
-    if (to_set == kStatusStopping)
-    {
-        if (S != kStatusRunning)
-        {
-            SKR_LOG_FATAL(u8"must stop from a running service! current status: %d", S);
-            SKR_ASSERT(S == kStatusRunning);  
-        }
-    }
-    else if (to_set == kStatusWaking)
-    {
-        if (S != kStatusStopped)
-        {
-            SKR_LOG_FATAL(u8"must wake from a stopped service!");
-            SKR_ASSERT(S == kStatusStopped);
-        }
-    }
-    else if (to_set == kStatusExiting)
-    {
-        if (S != kStatusStopped)
-        {
-            SKR_LOG_FATAL(u8"must exit from a stopped service!");
-            SKR_ASSERT(S == kStatusStopped);
-        }
-    }
-    skr_atomic32_store_release(&status, to_set);
-    SKR_LOG_FMT_BACKTRACE(u8"service: status set to: {}.", (int32_t)to_set);
+    return static_cast<Action>(skr_atomic32_load_acquire(&action_));
 }
 
-void ServiceThread::request_stop() SKR_NOEXCEPT
+uint64_t ServiceThread::request(Action action) SKR_NOEXCEPT
 {
-    set_status(kStatusStopping);
+    // wait last event
+    wait_timeout<u8"WaitLastAction">([&] { return get_action() == kActionNone; });
+
+    auto eid = skr_atomicu64_add_relaxed(&event_, 1) + 1;
+    setAction(action);
+    return eid;
+}
+
+void ServiceThread::wait(uint64_t event, uint32_t fatal_timeout) SKR_NOEXCEPT
+{
+    auto now = skr_atomicu64_load_acquire(&event_);
+    if (now == event)
+        wait_timeout<u8"WaitLastEvent">([&]{ return get_action() == kActionNone; }, fatal_timeout);
+    else if (now > event)
+        return;
+    else if (now < event)
+        SKR_LOG_FATAL(u8"service_thread: can't wait an event that doesn't exist! current event: %llu, target event: %llu", now, event);
 }
 
 void ServiceThread::stop() SKR_NOEXCEPT
 {
     SkrZoneScopedN("stop");
-
-    request_stop();
-    wait_stop();
-}
-
-void ServiceThread::wait_stop(uint32_t fatal_timeout) SKR_NOEXCEPT
-{
-    SkrZoneScopedN("wait_stop");
-
-    const auto tid = skr_current_thread_id();
-    if (tid == t.get_id())
-    {
-        SKR_LOG_FATAL(u8"dead lock detected!");
-        SKR_ASSERT((tid != t.get_id()) && "dead lock detected!");
-    }
-
-    wait_timeout([&] { return get_status() == kStatusStopped; }, fatal_timeout);
-
-    SKR_LOG_BACKTRACE(u8"service: wait_stop done.");
+    auto e = request_stop();
+    wait(e);
 }
 
 void ServiceThread::run() SKR_NOEXCEPT
 {
-    // record last turn id
-    const auto orid = skr_atomic32_load_relaxed(&rid);
-    (void)orid;
-    
-    // signal waking
-    set_status(kStatusWaking);
-    if (!t.has_started())
-    {
-        t.start(&f);
-    }
-    
-    // secure runned
-    wait_timeout([&] { return skr_atomic32_load_relaxed(&rid) > orid; }, 8);
-}
-
-void ServiceThread::request_exit() SKR_NOEXCEPT
-{
-    set_status(kStatusExiting);
+    SkrZoneScopedN("run");
+    auto e = request_run();
+    wait(e);
 }
 
 void ServiceThread::exit() SKR_NOEXCEPT
 {
     SkrZoneScopedN("exit");
+    auto e = request_exit();
+    wait(e);
 
-    // SKR_LOG_TRACE(u8"ServiceThread::destroy: wait runner thread to request_exit...");
-    request_exit();
-    // SKR_LOG_TRACE(u8"ServiceThread::destroy: wait runner thread to wait_exit...");
-    wait_exit();
     t.finalize();
 }
 
-void ServiceThread::wait_exit(uint32_t fatal_timeout) SKR_NOEXCEPT
+void ServiceThread::setAction(Action target) SKR_NOEXCEPT
 {
-    SkrZoneScopedN("wait_exit");
+    skr_atomic32_store_release(&action_, target);
+    SKR_LOG_BACKTRACE(u8"service_thread: action set to: %d.", target);
+}
+
+void ServiceThread::setStatus(Status target) SKR_NOEXCEPT
+{
+    const auto S = get_status();
+    if (S == target)
+        return;
+
+    if ((target == kStatusStopped) && (S == kStatusExitted))
+    {
+        SKR_LOG_FATAL(u8"service_thread: must stop from a running/stopped service! current status: %d", S);
+        SKR_ASSERT(S != kStatusExitted);
+    }
+    else if ((target == kStatusRunning) && (S != kStatusStopped))
+    {
+        SKR_LOG_FATAL(u8"service_thread: must wake from a stopped service! current status: %d", S);
+        SKR_ASSERT(S == kStatusStopped);
+    }
+    else if ((target == kStatusExitted) && (S != kStatusStopped))
+    {
+        SKR_LOG_FATAL(u8"service_thread: must exit from a stopped service! current status: %d", S);
+        SKR_ASSERT(S == kStatusStopped);
+    }
+    skr_atomic32_store_release(&status_, target);
+    SKR_LOG_BACKTRACE(u8"service_thread: status set to: %d.", target);
+}
+
+void ServiceThread::waitStatus(Status target, uint32_t fatal_timeout) SKR_NOEXCEPT
+{
+    SkrZoneScopedN("waitStatus");
 
     const auto tid = skr_current_thread_id();
     if (tid == t.get_id())
     {
-        SKR_LOG_FATAL(u8"dead lock detected!");
-        SKR_ASSERT((tid != t.get_id()) && "dead lock detected!");
+        SKR_LOG_FATAL(u8"service_thread: dead lock detected!");
+        SKR_ASSERT((tid != t.get_id()) && "service_thread: dead lock detected!");
     }
 
-    const auto S = get_status();
-    if (S < kStatusExiting)
+    const auto current = get_status();
+    if (const auto earlyCheck = (current == target))
+        return;
+
+    if ((target == kStatusRunning) && (current != kStatusStopped))
     {
-        SKR_LOG_FATAL(u8"must wait from a exiting service!");
-        SKR_ASSERT(S  < kStatusStopped);
+        SKR_LOG_FATAL(u8"service_thread: must wait from a waking service!(current status: %d)", current);
+        SKR_ASSERT(current == kStatusStopped);
     }
-    
-    wait_timeout([&] { return get_status() == kStatusExitted; }, fatal_timeout);
+    else if ((target == kStatusStopped) && (current != kStatusRunning))
+    {
+        SKR_LOG_FATAL(u8"service_thread: must wait from a stopping service!(current status: %d)", current);
+        SKR_ASSERT(current == kStatusRunning);
+    }
+    else if ((target == kStatusExitted) && (current != kStatusStopped))
+    {
+        SKR_LOG_FATAL(u8"service_thread: must wait from a exiting service!(current status: %d)", current);
+        SKR_ASSERT(current == kStatusStopped);
+    }
+
+    if (!wait_timeout<u8"WaitStatus">([&] { return get_status() == target; }, fatal_timeout))
+        SKR_LOG_FATAL(u8"service_thread: waitStatus timeout! current status: %d, target status: %d", current, target);
 }
 
-void ServiceThread::waitJoin() SKR_NOEXCEPT
+ServiceThread::Status ServiceThread::takeAction() SKR_NOEXCEPT
 {
-    wait_exit();
-    t.join();
+    const auto act = get_action();
+    if (act != kActionNone)
+    {
+        const Status lut[] = { kStatusRunning, kStatusStopped, kStatusExitted };
+        const auto   out   = lut[act - 1];
+        setStatus(out);
+        setAction(kActionNone);
+        return out;
+    }
+    return get_status();
 }
 
 AsyncResult ServiceThread::ServiceFunc::run() SKR_NOEXCEPT
 {
-WAKING:    
-{
-    SkrZoneScopedN("WAKING");
-    auto S = _service->get_status();
-    if (S == kStatusWaking)
-    {
-        goto RUNNING;
-    }
-}
-
-RUNNING:
-{
-    SkrZoneScopedN("RUNNING");
-    _service->set_status(kStatusRunning);
-    skr_atomic32_add_relaxed(&_service->rid, 1);
+    SkrZoneScopedN("THREAD_SERVICE_BODY");
     for (;;)
     {
-        // 1. run service
-        auto R = _service->serve();
-        // 2. check result
-        if (R != ASYNC_RESULT_OK)
-        {
-            // deal_error();
-            return R;
-        }
-        // 3. check status
-        auto S = _service->get_status();
+        auto S = _service->takeAction();
         if (S == kStatusRunning)
         {
-            continue;
+            // running...
+            SkrZoneScopedN("RUNNING");
+            {
+                // 1. run service
+                auto R = _service->serve();
+                // 2. check result
+                if (R != ASYNC_RESULT_OK)
+                    return R;
+            }
         }
-        else if (S == kStatusStopping)
+        else if (S == kStatusStopped)
         {
-            goto STOP;
+            skr_thread_sleep(0);
         }
-        else // kStatusStopped/Exiting/Exitted/Waking
+        else if (S == kStatusExitted)
         {
-            SKR_ASSERT(0 && "ServiceThread::serve():RUNNING must set status to kStatusRunning or kStatusStopping");
+            SkrZoneScopedN("EXIT");
+            return ASYNC_RESULT_OK;
         }
     }
-    SKR_UNREACHABLE_CODE();
-}
-
-STOP:
-{
-    SkrZoneScopedN("STOP");
-
-    auto S = _service->get_status();
-    if (S == kStatusWaking)
-    {
-        goto WAKING;
-    }
-    else if (S == kStatusStopped)
-    {
-        // continue...
-    }
-    else if (S == kStatusStopping)
-    {
-        SKR_LOG_BACKTRACE(u8"service: stopped.");
-        _service->set_status(kStatusStopped);
-    }
-    else if (S == kStatusExiting)
-    {
-        goto EXIT;
-    }
-    else // kStatusRunning/Exitted
-    {
-        SKR_ASSERT(0 && "ServiceThread::serve():STOP must not set status to kStatusRunning or kStatusExitted");
-    }
-    skr_thread_sleep(0);
-    goto STOP;
-    SKR_UNREACHABLE_CODE();
-}
-
-EXIT:
-{
-    SkrZoneScopedN("EXIT");
-
-    _service->set_status(kStatusExitted);
-    // SKR_LOG_TRACE(u8"Service Thread exited!");
-}
     return ASYNC_RESULT_OK;
 }
 
 void AsyncService::sleep() SKR_NOEXCEPT
 {
     const auto ms = skr_atomicu32_load_relaxed(&sleep_time);
-    SkrZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
+    SkrZoneScopedNC("asyncService(Cond)", tracy::Color::Gray55);
 
     condlock.lock();
     if (!event)
@@ -254,4 +209,4 @@ void AsyncService::sleep() SKR_NOEXCEPT
     condlock.unlock();
 }
 
-}
+} // namespace skr

@@ -22,21 +22,21 @@ MPClientWorld::~MPClientWorld()
 void MPClientWorld::Initialize()
 {
     MPGameWorld::Initialize();
-    dualJ_bind_storage(storage);
+    sugoiJ_bind_storage(storage);
     snapshotStorage = nullptr;
     skr_init_hires_timer(&timer);
     input.inputs.resize_default(1);
     lastTime = predictedGameTime = skr_hires_timer_get_seconds(&timer, false);
-    snapshotQuery = dualQ_from_literal(storage, "[in]CNetwork");
-    healthQuery = dualQ_from_literal(storage, "[in]CHealth, [has]CController");
+    snapshotQuery = sugoiQ_from_literal(storage, "[in]CNetwork");
+    healthQuery = sugoiQ_from_literal(storage, "[in]CHealth, [has]CController");
     InitializeNetworkComponents();
     worldDeltaApplier = CreateWorldDeltaApplier();
     worldDeltaApplier->Initialize(storage, 
-    [this](dual_storage_t*, dual_entity_t entity, skr_guid_t prefab, dual_entity_type_t* type)
+    [this](sugoi_storage_t*, sugoi_entity_t entity, skr_guid_t prefab, sugoi_entity_type_t* type)
     {
         return SpawnPrefab(prefab, entity, *type);
     },
-    [this](dual_storage_t*, dual_entity_t entity)
+    [this](sugoi_storage_t*, sugoi_entity_t entity)
     {
         DestroyEntity(entity);
     });
@@ -45,12 +45,12 @@ void MPClientWorld::Initialize()
 
 void MPClientWorld::Shutdown()
 {
-    dualQ_release(snapshotQuery);
+    sugoiQ_release(snapshotQuery);
     if (snapshotStorage)
     {
-        dualS_release(snapshotStorage); 
+        sugoiS_release(snapshotStorage); 
     }
-    dualJ_unbind_storage(storage);
+    sugoiJ_unbind_storage(storage);
     MPGameWorld::Shutdown();
 }
 
@@ -95,36 +95,36 @@ void MPClientWorld::ReceiveWorldDelta(const void* data, size_t dataLength)
     // }
 }
 
-dual_entity_t MPClientWorld::SpawnPrefab(skr_resource_handle_t prefab, dual_entity_t entity, dual_entity_type_t extension)
+sugoi_entity_t MPClientWorld::SpawnPrefab(skr_resource_handle_t prefab, sugoi_entity_t entity, sugoi_entity_type_t extension)
 {
-    dual_entity_t result;
-    dual::type_builder_t builder;
+    sugoi_entity_t result;
+    sugoi::type_builder_t builder;
     builder.with<CPrefab, CNetwork, CGhost>();
     builder.with(extension.type.data, extension.type.length);
-    dual_entity_type_t type = make_zeroed<dual_entity_type_t>();
+    sugoi_entity_type_t type = make_zeroed<sugoi_entity_type_t>();
     type.type = builder.build();
-    auto initialize = [&](dual_chunk_view_t* view) {
-        auto prefabs = (CPrefab*)dualV_get_component_ro(view, dual_id_of<CPrefab>::get());
-        auto networks = (CNetwork*)dualV_get_component_ro(view, dual_id_of<CNetwork>::get());
-        auto ghosts = (CGhost*)dualV_get_component_ro(view, dual_id_of<CGhost>::get());
+    auto initialize = [&](sugoi_chunk_view_t* view) {
+        auto prefabs = (CPrefab*)sugoiV_get_component_ro(view, sugoi_id_of<CPrefab>::get());
+        auto networks = (CNetwork*)sugoiV_get_component_ro(view, sugoi_id_of<CNetwork>::get());
+        auto ghosts = (CGhost*)sugoiV_get_component_ro(view, sugoi_id_of<CGhost>::get());
         
 
         prefabs[0].prefab = prefab;
-        ghosts[0].mappedEntity = DUAL_NULL_ENTITY;
+        ghosts[0].mappedEntity = SUGOI_NULL_ENTITY;
         networks[0].serverEntity = entity;
-        result = dualV_get_entities(view)[0];
+        result = sugoiV_get_entities(view)[0];
     };
-    dualS_allocate_type(storage, &type, 1, DUAL_LAMBDA(initialize));
+    sugoiS_allocate_type(storage, &type, 1, SUGOI_LAMBDA(initialize));
     return result;
 }
 
-void MPClientWorld::DestroyEntity(dual_entity_t entity)
+void MPClientWorld::DestroyEntity(sugoi_entity_t entity)
 {
-    auto freeFunc = [&](dual_chunk_view_t* view) {
-        dualS_destroy(storage, view);
+    auto freeFunc = [&](sugoi_chunk_view_t* view) {
+        sugoiS_destroy(storage, view);
     };
-    dual_chunk_view_t view;
-    dualS_access(storage, entity, &view);
+    sugoi_chunk_view_t view;
+    sugoiS_access(storage, entity, &view);
     freeFunc(&view);
 }
 
@@ -163,10 +163,10 @@ void MPClientWorld::SendInput()
     SteamNetworkingSockets()->SendMessageToConnection(serverConnection, buffer.data(), buffer.size(), k_nSteamNetworkingSend_Reliable, nullptr);
 }
 
-skr::Vector<dual_chunk_view_t> merge_views(skr::Vector<dual_chunk_view_t>& views)
+skr::Vector<sugoi_chunk_view_t> merge_views(skr::Vector<sugoi_chunk_view_t>& views)
 {
-    skr::Vector<dual_chunk_view_t> merged;
-    std::sort(views.begin(), views.end(), [](const dual_chunk_view_t& lhs, const dual_chunk_view_t& rhs)
+    skr::Vector<sugoi_chunk_view_t> merged;
+    std::sort(views.begin(), views.end(), [](const sugoi_chunk_view_t& lhs, const sugoi_chunk_view_t& rhs)
     {
         return lhs.start < rhs.start;
     });
@@ -192,17 +192,17 @@ skr::Vector<dual_chunk_view_t> merge_views(skr::Vector<dual_chunk_view_t>& views
     return merged;
 }
 
-void SnapshotComponent(void* dst, const void* src, dual_type_index_t type, uint32_t count)
+void SnapshotComponent(void* dst, const void* src, sugoi_type_index_t type, uint32_t count)
 {
     //TODO: handle reference
-    auto desc = dualT_get_desc(type);
+    auto desc = sugoiT_get_desc(type);
     memcpy(dst, src, desc->size * count);
 }
 
-void ApplyComponent(void* dst, const void* src, dual_type_index_t type, uint32_t count)
+void ApplyComponent(void* dst, const void* src, sugoi_type_index_t type, uint32_t count)
 {
     //TODO: handle reference
-    auto desc = dualT_get_desc(type);
+    auto desc = sugoiT_get_desc(type);
     memcpy(dst, src, desc->size * count);
 }
 
@@ -210,31 +210,31 @@ void MPClientWorld::Snapshot()
 {
     SkrZoneScopedN("MPClientWorld::Snapshot");
     if(snapshotStorage)
-        dualS_reset(snapshotStorage);
+        sugoiS_reset(snapshotStorage);
     else
-        snapshotStorage = dualS_create();
+        snapshotStorage = sugoiS_create();
     //find out datas needed to snapshot by scan all gameplay related query
     //then create a snapshot entity to store those data
-    auto callback = [&](dual_group_t* group) 
+    auto callback = [&](sugoi_group_t* group) 
     {
-        skr::FlatHashMap<dual_chunk_t*, skr::Vector<dual_chunk_view_t>> views;
-        dual::type_builder_t predictedBuilder;
+        skr::FlatHashMap<sugoi_chunk_t*, skr::Vector<sugoi_chunk_view_t>> views;
+        sugoi::type_builder_t predictedBuilder;
         for(auto query : {movementQuery.query, controlQuery.query})
         {
             bool match = false;
-            auto callback = [&](dual_chunk_view_t* view)
+            auto callback = [&](sugoi_chunk_view_t* view)
             {
                 match = true;
                 //match end point
                 views[view->chunk].add(*view);
             };
-            dualQ_get_views_group(query, group, DUAL_LAMBDA(callback));
+            sugoiQ_get_views_group(query, group, SUGOI_LAMBDA(callback));
             
             if(match)
             {
-                dual_filter_t filter;
-                dual_parameters_t params;
-                dualQ_get(query, &filter, &params);
+                sugoi_filter_t filter;
+                sugoi_parameters_t params;
+                sugoiQ_get(query, &filter, &params);
                 for(int i=0; i<params.length; ++i)
                 {
                     if(!params.accesses[i].readonly)
@@ -244,43 +244,43 @@ void MPClientWorld::Snapshot()
         }
         auto predictedType = predictedBuilder.build();
         
-        dual_entity_type_t entType;
-        dualG_get_type(group, &entType);
-        std::vector<dual_type_index_t> buffer;
+        sugoi_entity_type_t entType;
+        sugoiG_get_type(group, &entType);
+        std::vector<sugoi_type_index_t> buffer;
         buffer.resize(std::max(predictedType.length, entType.type.length));
-        auto predictedInView = dual::set_utils<dual_type_index_t>::intersect(entType.type, predictedType, buffer.data());
-        dual::type_builder_t builder;
+        auto predictedInView = sugoi::set_utils<sugoi_type_index_t>::intersect(entType.type, predictedType, buffer.data());
+        sugoi::type_builder_t builder;
         builder.with(predictedInView.data, predictedInView.length);
         builder.with<CSnapshot>();
-        auto snapshotType = make_zeroed<dual_entity_type_t>();
+        auto snapshotType = make_zeroed<sugoi_entity_type_t>();
         snapshotType.type = builder.build();
 
         for(auto& pair : views)
         {
-            skr::Vector<dual_chunk_view_t> merged = merge_views(pair.second);
+            skr::Vector<sugoi_chunk_view_t> merged = merge_views(pair.second);
             
             for(auto view : merged)
             {
-                auto callback = [&](dual_chunk_view_t* sview)
+                auto callback = [&](sugoi_chunk_view_t* sview)
                 {
                     for(int i=0; i<predictedInView.length; ++i)
                     {
                         auto type = predictedInView.data[i];
-                        void* dst = (void*)dualV_get_owned_ro(sview, type);
-                        const void* src = dualV_get_owned_ro(&view, type);
+                        void* dst = (void*)sugoiV_get_owned_ro(sview, type);
+                        const void* src = sugoiV_get_owned_ro(&view, type);
                         SnapshotComponent(dst, src, type, sview->count);
                     }
-                    auto owners = dualV_get_owned_ro(sview, dual_id_of<CSnapshot>::get());
-                    const dual_entity_t* entities = dualV_get_entities(&view);
-                    std::memcpy((void*)owners, entities, sizeof(dual_entity_t) * sview->count);
+                    auto owners = sugoiV_get_owned_ro(sview, sugoi_id_of<CSnapshot>::get());
+                    const sugoi_entity_t* entities = sugoiV_get_entities(&view);
+                    std::memcpy((void*)owners, entities, sizeof(sugoi_entity_t) * sview->count);
                     view.start += sview->count;
                     view.count -= sview->count;
                 };
-                dualS_allocate_type(snapshotStorage, &snapshotType, view.count, DUAL_LAMBDA(callback));
+                sugoiS_allocate_type(snapshotStorage, &snapshotType, view.count, SUGOI_LAMBDA(callback));
             }
         }
     };
-    dualQ_get_groups(snapshotQuery, DUAL_LAMBDA(callback));
+    sugoiQ_get_groups(snapshotQuery, SUGOI_LAMBDA(callback));
 }
 
 void MPClientWorld::RollBack()
@@ -288,33 +288,33 @@ void MPClientWorld::RollBack()
     SkrZoneScopedN("MPClientWorld::RollBack");
     if(snapshotStorage)
     {
-        dual_type_index_t snapshotT = dual_id_of<CSnapshot>::get();
-        dual_filter_t filter = make_zeroed<dual_filter_t>();
+        sugoi_type_index_t snapshotT = sugoi_id_of<CSnapshot>::get();
+        sugoi_filter_t filter = make_zeroed<sugoi_filter_t>();
         filter.all.data = &snapshotT;
         filter.all.length = 1;
-        dual_meta_filter_t meta = make_zeroed<dual_meta_filter_t>();
-        auto callback = [&](dual_chunk_view_t* sview) {
-            auto owners = (const dual_entity_t*)dualV_get_owned_ro(sview, snapshotT);
-            dual_entity_type_t setype;
-            dualG_get_type(dualC_get_group(sview->chunk), &setype);
+        sugoi_meta_filter_t meta = make_zeroed<sugoi_meta_filter_t>();
+        auto callback = [&](sugoi_chunk_view_t* sview) {
+            auto owners = (const sugoi_entity_t*)sugoiV_get_owned_ro(sview, snapshotT);
+            sugoi_entity_type_t setype;
+            sugoiG_get_type(sugoiC_get_group(sview->chunk), &setype);
             int i = 0;
-            auto callback = [&](dual_chunk_view_t* dview)
+            auto callback = [&](sugoi_chunk_view_t* dview)
             {
                 for(int k=0; k<setype.type.length; ++k)
                 {
                     auto type = setype.type.data[k];
                     if(type == snapshotT)
                         continue;
-                    auto dst = dualV_get_owned_rw(dview, type);
-                    dual_chunk_view_t current = {sview->chunk, sview->start + i, sview->count - i};
-                    auto src = dualV_get_owned_ro(&current, type);
+                    auto dst = sugoiV_get_owned_rw(dview, type);
+                    sugoi_chunk_view_t current = {sview->chunk, sview->start + i, sview->count - i};
+                    auto src = sugoiV_get_owned_ro(&current, type);
                     ApplyComponent(dst, src, type, dview->count);
                 }
                 i += dview->count;
             };
-            dualS_batch(storage, owners, sview->count, DUAL_LAMBDA(callback));
+            sugoiS_batch(storage, owners, sview->count, SUGOI_LAMBDA(callback));
         };
-        dualS_query(snapshotStorage, &filter, &meta, DUAL_LAMBDA(callback));
+        sugoiS_query(snapshotStorage, &filter, &meta, SUGOI_LAMBDA(callback));
     }
 }
 
@@ -455,15 +455,15 @@ bool MPClientWorld::Update()
 float MPClientWorld::GetPlayerHealth()
 {
     float result = 0;
-    auto DisplayHealth = [&](dual_chunk_view_t* view)
+    auto DisplayHealth = [&](sugoi_chunk_view_t* view)
     {
-        auto healths = (const CHealth*)dualV_get_owned_ro(view, dual_id_of<CHealth>::get());
-        // auto entities = dualV_get_entities(view);
+        auto healths = (const CHealth*)sugoiV_get_owned_ro(view, sugoi_id_of<CHealth>::get());
+        // auto entities = sugoiV_get_entities(view);
         for(int i=0; i<view->count; ++i)
         {
             result = healths[i].health;
         }
     };
-    dualQ_get_views(healthQuery, DUAL_LAMBDA(DisplayHealth));
+    sugoiQ_get_views(healthQuery, SUGOI_LAMBDA(DisplayHealth));
     return result;
 }

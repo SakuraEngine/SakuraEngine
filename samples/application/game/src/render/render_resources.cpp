@@ -6,7 +6,7 @@
 
 #include "SkrRT/containers/string.hpp"
 
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/type_builder.hpp"
 
 #include "SkrRT/ecs/array.hpp"

@@ -80,12 +80,12 @@ skr_primitive_draw_packet_t IMeshRenderEffect::produce_draw_packets(const skr_pr
     if (strcmp((const char*)pass->identity(), (const char*)u8"ForwardPass") != 0) return {};
     // 1. calculate primitive count
     uint32_t primitiveCount = 0;
-    auto counterF = [&](dual_chunk_view_t* r_cv) {
+    auto counterF = [&](sugoi_chunk_view_t* r_cv) {
         SkrZoneScopedN("PreCalculateDrawCallCount");
         const skr::renderer::MeshComponent* meshes = nullptr;
         {
             SkrZoneScopedN("FetchRenderMeshes");
-            meshes = dual::get_component_ro<skr::renderer::MeshComponent>(r_cv);
+            meshes = sugoi::get_component_ro<skr::renderer::MeshComponent>(r_cv);
         }
         for (uint32_t i = 0; i < r_cv->count; i++)
         {

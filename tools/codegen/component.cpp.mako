@@ -10,7 +10,7 @@
     records = generator.filter_records(db.records)
 %>
 // BEGIN DUAL GENERATED
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/array.hpp"
 #include "SkrRT/ecs/luabind.hpp"
 #include "SkrRT/ecs/serde.hpp"
@@ -20,16 +20,16 @@ static struct RegisterComponent${type.id}Helper
 {
     RegisterComponent${type.id}Helper()
     {
-        dual_type_description_t desc;
+        sugoi_type_description_t desc;
         desc.name = u8"${type.name}";
         
     %if hasattr(type.attrs.component, "buffer"):
-        desc.size = sizeof(dual::array_comp_T<${type.name}, ${type.attrs.component.buffer}>);
+        desc.size = sizeof(sugoi::array_comp_T<${type.name}, ${type.attrs.component.buffer}>);
     %else:
         desc.size = std::is_empty_v<${type.name}> ? 0 : sizeof(${type.name});
     %endif
     <%
-        entityFields = filter_fileds(type.fields, lambda name, field: field.rawType == "dual_entity_t")
+        entityFields = filter_fileds(type.fields, lambda name, field: field.rawType == "sugoi_entity_t")
     %>
     %if entityFields:
         desc.entityFieldsCount = ${len(entityFields)};
@@ -54,10 +54,10 @@ static struct RegisterComponent${type.id}Helper
         desc.guidStr = u8"${type.attrs.guid}";
         desc.flags = 0;
     %if hasattr(type.attrs.component, "pin"):
-        desc.flags |= DTF_PIN;
+        desc.flags |= SUGOI_TYPE_FLAG_PIN;
     %endif 
     %if hasattr(type.attrs.component, "chunk"):
-        desc.flags |= DTF_CHUNK;
+        desc.flags |= SUGOI_TYPE_FLAG_CHUNK;
     %endif
     %if hasattr(type.attrs.component, "buffer"):
         desc.elementSize = sizeof(${type.name});
@@ -65,39 +65,39 @@ static struct RegisterComponent${type.id}Helper
         desc.elementSize = 0;
     %endif
     %if hasattr(type.attrs.component, "buffer"):
-        desc.alignment = alignof(dual::array_comp_T<${type.name}, ${type.attrs.component.buffer}>);
+        desc.alignment = alignof(sugoi::array_comp_T<${type.name}, ${type.attrs.component.buffer}>);
     %else:
         desc.alignment = alignof(${type.name});
     %endif
 
-        dual::SetLuaBindCallback<${type.name}>(desc);
-        dual::SetSerdeCallback<${type.name}>(desc);
+        sugoi::SetLuaBindCallback<${type.name}>(desc);
+        sugoi::SetSerdeCallback<${type.name}>(desc);
     
     %if hasattr(type.attrs.component, "custom"):
         ${type.attrs.component.custom}(desc, skr::type_t<${type.name}>{});
     %endif
     
     %if not hasattr(type.attrs.component, "unsafe"):
-        ::dual::check_managed(desc, skr::type_t<${type.name}>{});
+        ::sugoi::check_managed(desc, skr::type_t<${type.name}>{});
     %endif
-        type = dualT_register_type(&desc);
+        type = sugoiT_register_type(&desc);
     }
-    dual_type_index_t type = DUAL_NULL_TYPE;
+    sugoi_type_index_t type = SUGOI_NULL_TYPE;
 } _RegisterComponent${type.id}Helper;
 
-dual_type_index_t dual_id_of<::${type.name}>::get()
+sugoi_type_index_t sugoi_id_of<::${type.name}>::get()
 {
     auto result = _RegisterComponent${type.id}Helper.type;
-    SKR_ASSERT(result != DUAL_NULL_TYPE);
+    SKR_ASSERT(result != SUGOI_NULL_TYPE);
     return result;
 }
 %endfor
 
-skr::span<dual_type_index_t> dual_get_all_component_types_${module}()
+skr::span<sugoi_type_index_t> sugoi_get_all_component_types_${module}()
 {
-    static dual_type_index_t result[${len(records)}] {
+    static sugoi_type_index_t result[${len(records)}] {
     %for type in records:
-        dual_id_of<::${type.name}>::get(),
+        sugoi_id_of<::${type.name}>::get(),
     %endfor
     };
     return {result};

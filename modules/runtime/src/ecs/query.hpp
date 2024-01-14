@@ -1,36 +1,36 @@
 #pragma once
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/SmallVector.h"
 
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/span.hpp"
 #include "SkrRT/containers/hashmap.hpp"
 
-namespace dual
+namespace sugoi
 {
 struct phase_entry {
-    dual_type_index_t type;
+    sugoi_type_index_t type;
     uint32_t phase;
-    skr::span<dual_query_t*> queries;
-    skr::FlatHashMap<dual_group_t*, dual_query_t*> include;
+    skr::span<sugoi_query_t*> queries;
+    skr::FlatHashMap<sugoi_group_t*, sugoi_query_t*> include;
 };
 skr::String& get_error();
-} // namespace dual
+} // namespace sugoi
 
 
-struct dual_query_t {
-    dual_storage_t* storage = nullptr;
-    dual_filter_t filter;
-    dual_meta_filter_t meta;
-    dual_parameters_t parameters;
+struct sugoi_query_t {
+    sugoi_storage_t* storage = nullptr;
+    sugoi_filter_t filter;
+    sugoi_meta_filter_t meta;
+    sugoi_parameters_t parameters;
     skr::Vector<uint8_t> data;
-    llvm_vecsmall::SmallVector<dual_query_t*, 2> subqueries;
+    llvm_vecsmall::SmallVector<sugoi_query_t*, 2> subqueries;
 
     //cache
-    dual::phase_entry** phases = nullptr;
+    sugoi::phase_entry** phases = nullptr;
     uint32_t phaseCount = 0;
-    llvm_vecsmall::SmallVector<dual_type_set_t, 4> excludes;
+    llvm_vecsmall::SmallVector<sugoi_type_set_t, 4> excludes;
     bool includeDisabled = false;
     bool includeDead = false;
-    llvm_vecsmall::SmallVector<dual_group_t*, 32> groups;
+    llvm_vecsmall::SmallVector<sugoi_group_t*, 32> groups;
 };

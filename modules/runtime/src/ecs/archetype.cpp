@@ -1,6 +1,6 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/ecs/entity.hpp"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/set.hpp"
 
 #include "type.hpp"
@@ -13,7 +13,7 @@
 
 #include <algorithm>
 
-namespace dual
+namespace sugoi
 {
 
 thread_local fixed_stack_t localStack(4096 * 8);
@@ -23,25 +23,25 @@ bool archetype_t::with_chunk_component() const noexcept
     return firstChunkComponent != type.length;
 }
 
-SIndex archetype_t::index(dual_type_index_t inType) const noexcept
+SIndex archetype_t::index(sugoi_type_index_t inType) const noexcept
 {
     auto end = type.data + type.length;
-    const dual_type_index_t* result = std::lower_bound(type.data, end, inType);
+    const sugoi_type_index_t* result = std::lower_bound(type.data, end, inType);
     if (result != end && *result == inType)
         return (SIndex)(result - type.data);
     else
         return kInvalidSIndex;
 }
-} // namespace dual
+} // namespace sugoi
 
-dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& inType)
+sugoi::archetype_t* sugoi_storage_t::construct_archetype(const sugoi_type_set_t& inType)
 {
-    using namespace dual;
+    using namespace sugoi;
     fixed_stack_scope_t _(localStack);
     char* buffer = (char*)archetypeArena.allocate(data_size(inType), 1);
     archetype_t& proto = *archetypeArena.allocate<archetype_t>();
     proto.storage = this;
-    proto.type = dual::clone(inType, buffer);
+    proto.type = sugoi::clone(inType, buffer);
     proto.withMask = false;
     proto.withDirty = false;
     proto.sizeToPatch = 0;
@@ -58,9 +58,9 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     proto.callbackFlags = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
     proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
-    proto.resourceFields = archetypeArena.allocate<dual::resource_fields_t>(proto.type.length);
-    proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
-    ::memset(proto.callbacks, 0, sizeof(dual_callback_v) * proto.type.length);
+    proto.resourceFields = archetypeArena.allocate<sugoi::resource_fields_t>(proto.type.length);
+    proto.callbacks = archetypeArena.allocate<sugoi_callback_v>(proto.type.length);
+    ::memset(proto.callbacks, 0, sizeof(sugoi_callback_v) * proto.type.length);
     proto.stableOrder = archetypeArena.allocate<SIndex>(proto.type.length);
     auto& registry = type_registry_t::get();
     forloop (i, 0, proto.type.length)
@@ -68,19 +68,19 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         const auto& desc = registry.descriptions[type_index_t(proto.type.data[i]).index()];
         uint32_t callbackFlag = 0;
         if (desc.callback.constructor)
-            callbackFlag |= DCF_CTOR;
+            callbackFlag |= SUGOI_CALLBACK_FLAG_CTOR;
         if (desc.callback.destructor)
-            callbackFlag |= DCF_DTOR;
+            callbackFlag |= SUGOI_CALLBACK_FLAG_DTOR;
         if (desc.callback.copy)
-            callbackFlag |= DCF_COPY;
+            callbackFlag |= SUGOI_CALLBACK_FLAG_COPY;
         if (desc.callback.move)
-            callbackFlag |= DCF_MOVE;
+            callbackFlag |= SUGOI_CALLBACK_FLAG_MOVE;
         proto.callbackFlags[i] = callbackFlag;
         proto.callbacks[i] = desc.callback;
         proto.resourceFields[i] = { desc.resourceFields, desc.resourceFieldsCount };
     }
     auto guids = localStack.allocate<guid_t>(proto.type.length);
-    proto.entitySize = sizeof(dual_entity_t);
+    proto.entitySize = sizeof(sugoi_entity_t);
     uint32_t padding = 0;
     forloop (i, 0, proto.type.length)
     {
@@ -105,7 +105,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     std::sort(proto.stableOrder, proto.stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
         return guid_compare_t{}(guids[lhs], guids[rhs]);
     });
-    size_t caps[] = { kSmallBinSize - sizeof(dual_chunk_t), kFastBinSize - sizeof(dual_chunk_t), kLargeBinSize - sizeof(dual_chunk_t) };
+    size_t caps[] = { kSmallBinSize - sizeof(sugoi_chunk_t), kFastBinSize - sizeof(sugoi_chunk_t), kLargeBinSize - sizeof(sugoi_chunk_t) };
     const uint32_t versionSize = sizeof(uint32_t) * proto.type.length;
     forloop (i, 0, 3)
     {
@@ -128,7 +128,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         capacity = (uint32_t)(ccOffset - padding) / proto.entitySize;
         if (capacity == 0)
             continue;
-        uint32_t offset = sizeof(dual_entity_t) * capacity;
+        uint32_t offset = sizeof(sugoi_entity_t) * capacity;
         forloop (j, 0, proto.type.length)
         {
             SIndex id = proto.stableOrder[j];
@@ -146,15 +146,15 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     return archetypes.insert({ proto.type, &proto }).first->second;
 }
 
-dual::archetype_t* dual_storage_t::clone_archetype(archetype_t *src)
+sugoi::archetype_t* sugoi_storage_t::clone_archetype(archetype_t *src)
 {
-    using namespace dual;
+    using namespace sugoi;
     if(auto a = try_get_archetype(src->type))
         return a;
     char* buffer = (char*)archetypeArena.allocate(data_size(src->type), 1);
     archetype_t& proto = *archetypeArena.allocate<archetype_t>();
     proto.storage = this;
-    proto.type = dual::clone(src->type, buffer);
+    proto.type = sugoi::clone(src->type, buffer);
     proto.withMask = src->withMask;
     proto.withDirty = src->withMask;
     proto.sizeToPatch = src->sizeToPatch;
@@ -172,10 +172,10 @@ dual::archetype_t* dual_storage_t::clone_archetype(archetype_t *src)
     memcpy(proto.aligns, src->aligns, sizeof(uint32_t) * proto.type.length);
     proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
     memcpy(proto.sizes, src->sizes, sizeof(uint32_t) * proto.type.length);
-    proto.resourceFields = archetypeArena.allocate<dual::resource_fields_t>(proto.type.length);
-    memcpy(proto.resourceFields, src->resourceFields, sizeof(dual::resource_fields_t) * proto.type.length);
-    proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
-    memcpy(proto.callbacks, src->callbacks, sizeof(dual_callback_v) * proto.type.length);
+    proto.resourceFields = archetypeArena.allocate<sugoi::resource_fields_t>(proto.type.length);
+    memcpy(proto.resourceFields, src->resourceFields, sizeof(sugoi::resource_fields_t) * proto.type.length);
+    proto.callbacks = archetypeArena.allocate<sugoi_callback_v>(proto.type.length);
+    memcpy(proto.callbacks, src->callbacks, sizeof(sugoi_callback_v) * proto.type.length);
     proto.stableOrder = archetypeArena.allocate<SIndex>(proto.type.length);
     memcpy(proto.stableOrder, src->stableOrder, sizeof(SIndex) * proto.type.length);
     proto.entitySize = src->entitySize;
@@ -189,11 +189,11 @@ dual::archetype_t* dual_storage_t::clone_archetype(archetype_t *src)
     return archetypes.insert({ proto.type, &proto }).first->second;
 }
 
-dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
+sugoi_group_t* sugoi_storage_t::construct_group(const sugoi_entity_type_t& inType)
 {
-    using namespace dual;
+    using namespace sugoi;
     fixed_stack_scope_t _(localStack);
-    dual_type_set_t structure;
+    sugoi_type_set_t structure;
     SIndex firstTag = 0;
     for (; firstTag < inType.type.length; ++firstTag)
         if (type_index_t(inType.type.data[firstTag]).is_tag())
@@ -202,11 +202,11 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     structure.length = firstTag;
     archetype_t* archetype = get_archetype(structure);
     const auto typeSize = static_cast<uint32_t>(data_size(inType));
-    SKR_ASSERT((sizeof(dual_group_t) + typeSize) < kGroupBlockSize);(void)typeSize;
-    dual_group_t& proto = *new (groupPool.allocate()) dual_group_t();
+    SKR_ASSERT((sizeof(sugoi_group_t) + typeSize) < kGroupBlockSize);(void)typeSize;
+    sugoi_group_t& proto = *new (groupPool.allocate()) sugoi_group_t();
     char* buffer = (char*)(&proto + 1);
     proto.firstFree = 0;
-    dual_entity_type_t type = dual::clone(inType, buffer);
+    sugoi_entity_type_t type = sugoi::clone(inType, buffer);
     proto.type = type;
     auto toClean = localStack.allocate<TIndex>(proto.type.type.length + 1);
     SIndex toCleanCount = 0;
@@ -242,24 +242,24 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     update_query_cache(&proto, true);
     if (hasTracked && !proto.isDead)
     {
-        auto deadType = make_zeroed<dual_entity_type_t>();
+        auto deadType = make_zeroed<sugoi_entity_type_t>();
         deadType.type = { toClean, toCleanCount };
         proto.dead = get_group(deadType);
-        dual_entity_type_t cloneType = make_zeroed<dual_entity_type_t>();
+        sugoi_entity_type_t cloneType = make_zeroed<sugoi_entity_type_t>();
         cloneType.type = { toClone, toCloneCount };
         proto.cloned = get_group(cloneType);
     }
     return &proto;
 }
 
-dual_group_t* dual_storage_t::clone_group(dual_group_t* srcG)
+sugoi_group_t* sugoi_storage_t::clone_group(sugoi_group_t* srcG)
 {
     if(auto g = try_get_group(srcG->type))
         return g;
-    dual_group_t& proto = *new (groupPool.allocate()) dual_group_t();
-    std::memcpy(&proto, srcG, sizeof(dual_group_t));
+    sugoi_group_t& proto = *new (groupPool.allocate()) sugoi_group_t();
+    std::memcpy(&proto, srcG, sizeof(sugoi_group_t));
     char* buffer = (char*)(&proto + 1);
-    proto.type = dual::clone(srcG->type, buffer);
+    proto.type = sugoi::clone(srcG->type, buffer);
     proto.archetype = clone_archetype(srcG->archetype);
     if (srcG->dead)
     {
@@ -273,21 +273,21 @@ dual_group_t* dual_storage_t::clone_group(dual_group_t* srcG)
     return &proto;
 }
 
-dual::archetype_t* dual_storage_t::try_get_archetype(const dual_type_set_t& type) const
+sugoi::archetype_t* sugoi_storage_t::try_get_archetype(const sugoi_type_set_t& type) const
 {
     if (auto i = archetypes.find(type); i != archetypes.end())
         return i->second;
     return nullptr;
 }
 
-dual_group_t* dual_storage_t::try_get_group(const dual_entity_type_t& type) const
+sugoi_group_t* sugoi_storage_t::try_get_group(const sugoi_entity_type_t& type) const
 {
     if (auto i = groups.find(type); i != groups.end())
         return i->second;
     return nullptr;
 }
 
-dual::archetype_t* dual_storage_t::get_archetype(const dual_type_set_t& type)
+sugoi::archetype_t* sugoi_storage_t::get_archetype(const sugoi_type_set_t& type)
 {
     archetype_t* archetype = try_get_archetype(type);
     if (!archetype)
@@ -295,9 +295,9 @@ dual::archetype_t* dual_storage_t::get_archetype(const dual_type_set_t& type)
     return archetype;
 }
 
-dual_group_t* dual_storage_t::get_group(const dual_entity_type_t& type)
+sugoi_group_t* sugoi_storage_t::get_group(const sugoi_entity_type_t& type)
 {
-    using namespace dual;
+    using namespace sugoi;
     bool withTracked = false;
     bool dead = false;
     for(SIndex i=0; i < type.type.length; ++i)
@@ -310,29 +310,29 @@ dual_group_t* dual_storage_t::get_group(const dual_entity_type_t& type)
     }
     if(dead && !withTracked)
         return nullptr;
-    dual_group_t* group = try_get_group(type);
+    sugoi_group_t* group = try_get_group(type);
     if (!group)
         group = construct_group(type);
     return group;
 }
 
-void dual_storage_t::destruct_group(dual_group_t* group)
+void sugoi_storage_t::destruct_group(sugoi_group_t* group)
 {
     update_query_cache(group, false);
     groups.erase(group->type);
     groupPool.free(group);
 }
 
-dual_chunk_t* dual_group_t::get_first_free_chunk() const noexcept
+sugoi_chunk_t* sugoi_group_t::get_first_free_chunk() const noexcept
 {
     if (firstFree == (uint32_t)chunks.size())
         return nullptr;
     return chunks[firstFree];
 }
 
-dual_chunk_t* dual_group_t::new_chunk(uint32_t hint)
+sugoi_chunk_t* sugoi_group_t::new_chunk(uint32_t hint)
 {
-    using namespace dual;
+    using namespace sugoi;
     pool_type_t pt;
     if (chunks.size() < kSmallBinThreshold && hint < archetype->chunkCapacity[PT_small])
         pt = PT_small;
@@ -340,15 +340,15 @@ dual_chunk_t* dual_group_t::new_chunk(uint32_t hint)
         pt = PT_large;
     else
         pt = PT_default;
-    dual_chunk_t* chunk = dual_chunk_t::create(pt);
+    sugoi_chunk_t* chunk = sugoi_chunk_t::create(pt);
     add_chunk(chunk);
     construct_chunk(chunk);
     return chunk;
 }
 
-void dual_group_t::add_chunk(dual_chunk_t* chunk)
+void sugoi_group_t::add_chunk(sugoi_chunk_t* chunk)
 {
-    using namespace dual;
+    using namespace sugoi;
     size += chunk->count;
     chunk->type = archetype;
     chunk->group = this;
@@ -371,9 +371,9 @@ void dual_group_t::add_chunk(dual_chunk_t* chunk)
     }
 }
 
-void dual_group_t::resize_chunk(dual_chunk_t* chunk, EIndex newSize)
+void sugoi_group_t::resize_chunk(sugoi_chunk_t* chunk, EIndex newSize)
 {
-    using namespace dual;
+    using namespace sugoi;
     bool full = chunk->count == chunk->get_capacity();
     size = size + newSize - chunk->count;
     chunk->count = newSize;
@@ -381,7 +381,7 @@ void dual_group_t::resize_chunk(dual_chunk_t* chunk, EIndex newSize)
     {
         destruct_chunk(chunk);
         remove_chunk(chunk);
-        dual_chunk_t::destroy(chunk);
+        sugoi_chunk_t::destroy(chunk);
     }
     else
     {
@@ -392,9 +392,9 @@ void dual_group_t::resize_chunk(dual_chunk_t* chunk, EIndex newSize)
     }
 }
 
-void dual_group_t::remove_chunk(dual_chunk_t* chunk)
+void sugoi_group_t::remove_chunk(sugoi_chunk_t* chunk)
 {
-    using namespace dual;
+    using namespace sugoi;
     size -= chunk->count;
     if(chunk->index < firstFree)
         firstFree--;
@@ -411,9 +411,9 @@ void dual_group_t::remove_chunk(dual_chunk_t* chunk)
     chunk->group = nullptr;
 }
 
-void dual_group_t::mark_free(dual_chunk_t* chunk)
+void sugoi_group_t::mark_free(sugoi_chunk_t* chunk)
 {
-    using namespace dual;
+    using namespace sugoi;
     SKR_ASSERT(chunk->index < firstFree);
     firstFree--;
     auto& slot = chunks[chunk->index];
@@ -421,9 +421,9 @@ void dual_group_t::mark_free(dual_chunk_t* chunk)
     std::swap(chunks[firstFree], slot);
 }
 
-void dual_group_t::mark_full(dual_chunk_t* chunk)
+void sugoi_group_t::mark_full(sugoi_chunk_t* chunk)
 {
-    using namespace dual;
+    using namespace sugoi;
     
     SKR_ASSERT(chunk->index >= firstFree);
     auto& slot = chunks[chunk->index];
@@ -432,35 +432,35 @@ void dual_group_t::mark_full(dual_chunk_t* chunk)
     firstFree++;
 }
 
-void dual_group_t::clear()
+void sugoi_group_t::clear()
 {
-    using namespace dual;
+    using namespace sugoi;
     for(auto chunk : chunks)
     {
         archetype->storage->entities.free_entities({ chunk, 0, chunk->count });
         destruct_view({ chunk, 0, chunk->count });
         destruct_chunk(chunk);
-        dual_chunk_t::destroy(chunk);
+        sugoi_chunk_t::destroy(chunk);
     }
     chunks.clear();
     firstFree = 0;
     size = 0;
 }
 
-TIndex dual_group_t::index(dual_type_index_t inType) const noexcept
+TIndex sugoi_group_t::index(sugoi_type_index_t inType) const noexcept
 {
-    using namespace dual;
+    using namespace sugoi;
     auto end = type.type.data + type.type.length;
-    const dual_type_index_t* result = std::lower_bound(type.type.data, end, inType);
+    const sugoi_type_index_t* result = std::lower_bound(type.type.data, end, inType);
     if (result != end && *result == inType)
         return (TIndex)(result - type.type.data);
     else
         return kInvalidSIndex;
 }
 
-bool dual_group_t::share(dual_type_index_t t) const noexcept
+bool sugoi_group_t::share(sugoi_type_index_t t) const noexcept
 {
-    using namespace dual;
+    using namespace sugoi;
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
@@ -473,14 +473,14 @@ bool dual_group_t::share(dual_type_index_t t) const noexcept
     return false;
 }
 
-bool dual_group_t::own(const dual_type_set_t& subtype) const noexcept
+bool sugoi_group_t::own(const sugoi_type_set_t& subtype) const noexcept
 {
-    return dual::set_utils<dual_type_index_t>::all(type.type, subtype);
+    return sugoi::set_utils<sugoi_type_index_t>::all(type.type, subtype);
 }
 
-bool dual_group_t::share(const dual_type_set_t& subtype) const noexcept
+bool sugoi_group_t::share(const sugoi_type_set_t& subtype) const noexcept
 {
-    using namespace dual;
+    using namespace sugoi;
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
@@ -493,9 +493,9 @@ bool dual_group_t::share(const dual_type_set_t& subtype) const noexcept
     return false;
 }
 
-dual_mask_comp_t dual_group_t::get_shared_mask(const dual_type_set_t& subtype) const noexcept
+sugoi_mask_comp_t sugoi_group_t::get_shared_mask(const sugoi_type_set_t& subtype) const noexcept
 {
-    using namespace dual;
+    using namespace sugoi;
     std::bitset<32> mask;
     for (SIndex i = 0; i < subtype.length; ++i)
     {
@@ -508,23 +508,23 @@ dual_mask_comp_t dual_group_t::get_shared_mask(const dual_type_set_t& subtype) c
     return mask.to_ulong();
 }
 
-void dual_group_t::get_shared_type(dual_type_set_t& result, void* buffer) const noexcept
+void sugoi_group_t::get_shared_type(sugoi_type_set_t& result, void* buffer) const noexcept
 {
-    using namespace dual;
+    using namespace sugoi;
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
         auto view = storage->entity_view(type.meta.data[i]);
         auto metaGroup = view.chunk->group;
-        dual_type_set_t merged;
+        sugoi_type_set_t merged;
         if (metaGroup->archetype->withMask)
         {
-            auto mask = *(dual_mask_comp_t*)dualV_get_owned_ro(&view, kMaskComponent);
-            merged = set_utils<dual_type_index_t>::merge_with_mask(result, metaGroup->type.type, mask, buffer);
+            auto mask = *(sugoi_mask_comp_t*)sugoiV_get_owned_ro(&view, kMaskComponent);
+            merged = set_utils<sugoi_type_index_t>::merge_with_mask(result, metaGroup->type.type, mask, buffer);
         }
         else
         {
-            merged = set_utils<dual_type_index_t>::merge(result, metaGroup->type.type, buffer);
+            merged = set_utils<sugoi_type_index_t>::merge(result, metaGroup->type.type, buffer);
         }
         buffer = (void*)result.data;
         result = merged;
@@ -532,9 +532,9 @@ void dual_group_t::get_shared_type(dual_type_set_t& result, void* buffer) const 
     }
 }
 
-const dual_group_t* dual_group_t::get_owner(dual_type_index_t t) const noexcept
+const sugoi_group_t* sugoi_group_t::get_owner(sugoi_type_index_t t) const noexcept
 {
-    using namespace dual;
+    using namespace sugoi;
     if (index(t) != kInvalidSIndex)
         return this;
     auto storage = archetype->storage;
@@ -547,23 +547,23 @@ const dual_group_t* dual_group_t::get_owner(dual_type_index_t t) const noexcept
     return nullptr;
 }
 
-const void* dual_group_t::get_shared_ro(dual_type_index_t t) const noexcept
+const void* sugoi_group_t::get_shared_ro(sugoi_type_index_t t) const noexcept
 {
-    using namespace dual;
+    using namespace sugoi;
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
         auto view = storage->entity_view(type.meta.data[i]);
-        if (auto data = dualV_get_component_ro(&view, t))
+        if (auto data = sugoiV_get_component_ro(&view, t))
             return data;
         return view.chunk->group->get_shared_ro(t);
     }
     return nullptr;
 }
 
-dual_mask_comp_t dual_group_t::get_mask(const dual_type_set_t& subtype) const noexcept
+sugoi_mask_comp_t sugoi_group_t::get_mask(const sugoi_type_set_t& subtype) const noexcept
 {
-    using namespace dual;
+    using namespace sugoi;
     std::bitset<32> mask;
     SIndex i = 0, j = 0;
     auto stype = type.type;
@@ -584,32 +584,32 @@ dual_mask_comp_t dual_group_t::get_mask(const dual_type_set_t& subtype) const no
 }
 
 extern "C" {
-int dualG_has_components(const dual_group_t* group, const dual_type_set_t* types)
+int sugoiG_has_components(const sugoi_group_t* group, const sugoi_type_set_t* types)
 {
     return group->own(*types) || group->share(*types);
 }
 
-int dualG_own_components(const dual_group_t* group, const dual_type_set_t* types)
+int sugoiG_own_components(const sugoi_group_t* group, const sugoi_type_set_t* types)
 {
     return group->own(*types);
 }
 
-int dualG_share_components(const dual_group_t* group, const dual_type_set_t* types)
+int sugoiG_share_components(const sugoi_group_t* group, const sugoi_type_set_t* types)
 {
     return group->share(*types);
 }
 
-void dualG_get_type(const dual_group_t* group, dual_entity_type_t* type)
+void sugoiG_get_type(const sugoi_group_t* group, sugoi_entity_type_t* type)
 {
     *type = group->type;
 }
 
-uint32_t dualG_get_stable_order(const dual_group_t* group, dual_type_index_t localType)
+uint32_t sugoiG_get_stable_order(const sugoi_group_t* group, sugoi_type_index_t localType)
 {
     return group->archetype->stableOrder[localType];
 }
 
-const void* dualG_get_shared_ro(const dual_group_t* group, dual_type_index_t type)
+const void* sugoiG_get_shared_ro(const sugoi_group_t* group, sugoi_type_index_t type)
 {
     return group->get_shared_ro(type);
 }

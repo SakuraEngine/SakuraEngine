@@ -3,7 +3,7 @@
 #include "SkrRT/misc/types.h"
 #include "SkrRT/platform/time.h"
 #include "SkrRT/async/fib_task.hpp"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/containers/span.hpp"
 #include "SkrRT/containers/stl_function.hpp"
 #include "SkrRT/containers/hashmap.hpp"
@@ -14,21 +14,21 @@
 #include "SkrRT/serde/binary/writer_fwd.h"
 #include "MPShared/module.configure.h"
 
-// override the default serialization of dual_entity_t to use a packed version
+// override the default serialization of sugoi_entity_t to use a packed version
 struct packed_entity_t {
-    dual_entity_t entity;
+    sugoi_entity_t entity;
     packed_entity_t() = default;
-    packed_entity_t(dual_entity_t e)
+    packed_entity_t(sugoi_entity_t e)
         : entity(e)
     {
     }
-    operator dual_entity_t() const { return entity; }
-    packed_entity_t operator=(dual_entity_t e)
+    operator sugoi_entity_t() const { return entity; }
+    packed_entity_t operator=(sugoi_entity_t e)
     {
         entity = e;
         return *this;
     }
-    bool operator==(dual_entity_t e) const { return entity == e; }
+    bool operator==(sugoi_entity_t e) const { return entity == e; }
 };
 namespace skr
 {
@@ -36,11 +36,11 @@ namespace binary
 {
 template <>
 struct WriteTrait<packed_entity_t> {
-    static int Write(skr_binary_writer_t* writer, const packed_entity_t& value, dual_entity_t maxEntity);
+    static int Write(skr_binary_writer_t* writer, const packed_entity_t& value, sugoi_entity_t maxEntity);
 };
 template <>
 struct ReadTrait<packed_entity_t> {
-    static int Read(skr_binary_reader_t* reader, packed_entity_t& value, dual_entity_t maxEntity);
+    static int Read(skr_binary_reader_t* reader, packed_entity_t& value, sugoi_entity_t maxEntity);
 };
 BLOB_POD(packed_entity_t)
 } // namespace binary
@@ -102,7 +102,7 @@ sreflect_struct("guid": "0E7D9309-13EF-4EB8-9E8E-2DDE8D8F7BA0")
 sattr("blob" : true)
 sattr("debug" : true)
 MPWorldDeltaView {
-    dual_entity_t                   maxEntity;
+    sugoi_entity_t                   maxEntity;
     sattr("serialize_config" : "record.maxEntity")
     skr::span<packed_entity_t>      entities;
     sattr("serialize_config" : "(uint16_t)record.entities.size()")
@@ -128,34 +128,34 @@ MPWorldDelta {
 struct MPWorldDeltaBuildContext {
     uint32_t          connectionId;
     uint32_t          totalConnections;
-    dual_type_index_t historyComponent;
+    sugoi_type_index_t historyComponent;
 };
 
-using entity_map_t = skr::FlatHashMap<dual_entity_t, dual_entity_t>;
+using entity_map_t = skr::FlatHashMap<sugoi_entity_t, sugoi_entity_t>;
 
-using component_delta_build_callback_t = skr::task::event_t (*)(dual_type_index_t type, dual_query_t* query, MPWorldDeltaBuildContext ctx, MPWorldDeltaViewBuilder& builder);
-using component_delta_apply_callback_t = skr::task::event_t (*)(dual_type_index_t type, dual_query_t* query, const MPWorldDeltaView& delta, const entity_map_t& map);
+using component_delta_build_callback_t = skr::task::event_t (*)(sugoi_type_index_t type, sugoi_query_t* query, MPWorldDeltaBuildContext ctx, MPWorldDeltaViewBuilder& builder);
+using component_delta_apply_callback_t = skr::task::event_t (*)(sugoi_type_index_t type, sugoi_query_t* query, const MPWorldDeltaView& delta, const entity_map_t& map);
 
 struct IWorldDeltaBuilder {
     virtual ~IWorldDeltaBuilder()                                             = default;
-    virtual void Initialize(dual_storage_t* storage)                          = 0;
+    virtual void Initialize(sugoi_storage_t* storage)                          = 0;
     virtual void GenerateDelta(skr::Vector<MPWorldDeltaViewBuilder>& builder) = 0;
 };
 
 MP_SHARED_API IWorldDeltaBuilder* CreateWorldDeltaBuilder();
-void                              RegisterComponentDeltaBuilder(dual_type_index_t component, component_delta_build_callback_t inCallback, dual_type_index_t historyComponent = dual::kInvalidTypeIndex);
+void                              RegisterComponentDeltaBuilder(sugoi_type_index_t component, component_delta_build_callback_t inCallback, sugoi_type_index_t historyComponent = sugoi::kInvalidTypeIndex);
 
 struct IWorldDeltaApplier {
-    using SpawnPrefab_t                                                                                          = skr::stl_function<dual_entity_t(dual_storage_t*, dual_entity_t entity, skr_guid_t prefab, dual_entity_type_t* type)>;
-    using DestroyEntity_t                                                                                        = skr::stl_function<void(dual_storage_t*, dual_entity_t entity)>;
+    using SpawnPrefab_t                                                                                          = skr::stl_function<sugoi_entity_t(sugoi_storage_t*, sugoi_entity_t entity, skr_guid_t prefab, sugoi_entity_type_t* type)>;
+    using DestroyEntity_t                                                                                        = skr::stl_function<void(sugoi_storage_t*, sugoi_entity_t entity)>;
     virtual ~IWorldDeltaApplier()                                                                                = default;
-    virtual void   Initialize(dual_storage_t* storage, SpawnPrefab_t spawnPrefab, DestroyEntity_t destroyPrefab) = 0;
+    virtual void   Initialize(sugoi_storage_t* storage, SpawnPrefab_t spawnPrefab, DestroyEntity_t destroyPrefab) = 0;
     virtual void   ApplyDelta(const MPWorldDeltaView& delta, entity_map_t& map)                                  = 0;
-    virtual double GetBandwidthOf(dual_type_index_t component)                                                   = 0;
+    virtual double GetBandwidthOf(sugoi_type_index_t component)                                                   = 0;
 };
 
 MP_SHARED_API IWorldDeltaApplier* CreateWorldDeltaApplier();
-void                              RegisterComponentDeltaApplier(dual_type_index_t component, component_delta_apply_callback_t inCallback);
+void                              RegisterComponentDeltaApplier(sugoi_type_index_t component, component_delta_apply_callback_t inCallback);
 
 struct BandwidthCounter {
     BandwidthCounter();

@@ -1,24 +1,24 @@
 #pragma once
 
 #include "SkrRenderer/primitive_draw.h"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "MPShared/client_world.h"
 #include "SkrRenderGraph/api.h"
 #include "SkrRT/ecs/type_builder.hpp"
 
 struct MPRenderWorld
 {
-    dual_storage_t* storage;
+    sugoi_storage_t* storage;
     MPClientWorld* gameWorld;
 
-    dual_query_t* renderGhostsQuery;
-    dual_query_t* gameGhostsQuery;
-    dual_query_t* transformQuery;
-    dual_query_t* cameraQuery;
-    skr::FlatHashMap<dual_entity_t, dual_entity_t> renderToGameEntityMap;
-    skr::FlatHashMap<dual_entity_t, dual_entity_t> gameToRenderEntityMap;
-    skr::Vector<dual_entity_t> toDeleteRenderEntities;
-    skr::Vector<dual_entity_t> newGameEntities;
+    sugoi_query_t* renderGhostsQuery;
+    sugoi_query_t* gameGhostsQuery;
+    sugoi_query_t* transformQuery;
+    sugoi_query_t* cameraQuery;
+    skr::FlatHashMap<sugoi_entity_t, sugoi_entity_t> renderToGameEntityMap;
+    skr::FlatHashMap<sugoi_entity_t, sugoi_entity_t> gameToRenderEntityMap;
+    skr::Vector<sugoi_entity_t> toDeleteRenderEntities;
+    skr::Vector<sugoi_entity_t> newGameEntities;
     SHiresTimer renderTimer;
 
     SRendererId renderer;
@@ -31,5 +31,5 @@ struct MPRenderWorld
     void Update();
     void Render();
     void LoadScene();
-    dual::type_builder_t GetRenderEntityType(skr_resource_handle_t prefab, bool controller);
+    sugoi::type_builder_t GetRenderEntityType(skr_resource_handle_t prefab, bool controller);
 };

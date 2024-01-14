@@ -10,14 +10,14 @@
 
 struct SViewportManagerImpl : public SViewportManager
 {
-    SViewportManagerImpl(dual_storage_t* storage)
+    SViewportManagerImpl(sugoi_storage_t* storage)
     {
-        camera_query = dualQ_from_literal(storage, "[in]skr_camera_comp_t, [in]skr_translation_comp_t");
+        camera_query = sugoiQ_from_literal(storage, "[in]skr_camera_comp_t, [in]skr_translation_comp_t");
     }
 
     ~SViewportManagerImpl()
     {
-        dualQ_release(camera_query);
+        sugoiQ_release(camera_query);
     }
 
     uint32_t register_viewport(const char8_t* viewport_name) SKR_NOEXCEPT final override
@@ -72,14 +72,14 @@ struct SViewportManagerImpl : public SViewportManager
         viewports[index].index = UINT32_MAX;
     }
 
-    dual_query_t* camera_query = nullptr;
+    sugoi_query_t* camera_query = nullptr;
 
     skr::ParallelFlatHashMap<skr::String, uint32_t, skr::Hash<skr::String>> idMap;
     skr::Vector<skr_render_viewport_t> viewports;
     skr::Vector<uint32_t> free_list;
 };
 
-SViewportManager* SViewportManager::Create(dual_storage_t* storage)
+SViewportManager* SViewportManager::Create(sugoi_storage_t* storage)
 {
     return SkrNew<SViewportManagerImpl>(storage);
 }
@@ -117,14 +117,14 @@ void skr_resolve_camera_to_viewport(const skr_camera_comp_t* camera, const skr_t
     viewport->viewport_height = camera->viewport_height;
 }
 
-void skr_resolve_cameras_to_viewport(struct SViewportManager* viewport_manager, dual_storage_t* storage)
+void skr_resolve_cameras_to_viewport(struct SViewportManager* viewport_manager, sugoi_storage_t* storage)
 {
-    dual_query_t* camera_query = static_cast<SViewportManagerImpl*>(viewport_manager)->camera_query;
-    auto cameraSetup = [&](dual_chunk_view_t* g_cv) {
+    sugoi_query_t* camera_query = static_cast<SViewportManagerImpl*>(viewport_manager)->camera_query;
+    auto cameraSetup = [&](sugoi_chunk_view_t* g_cv) {
         SkrZoneScopedN("CameraResolve");
 
-        auto cameras = dual::get_owned_ro<skr_camera_comp_t>(g_cv);
-        auto camera_transforms = dual::get_owned_ro<skr_translation_comp_t>(g_cv);
+        auto cameras = sugoi::get_owned_ro<skr_camera_comp_t>(g_cv);
+        auto camera_transforms = sugoi::get_owned_ro<skr_translation_comp_t>(g_cv);
         for (uint32_t i = 0; i < g_cv->count; i++)
         {
             const auto viewport_index = cameras[i].viewport_id;
@@ -133,6 +133,6 @@ void skr_resolve_cameras_to_viewport(struct SViewportManager* viewport_manager, 
             skr_resolve_camera_to_viewport(cameras + i, camera_transforms + i, viewportManager->find_viewport(viewport_index));
         }
     };
-    dualQ_sync(camera_query);
-    dualQ_get_views(camera_query, DUAL_LAMBDA(cameraSetup));
+    sugoiQ_sync(camera_query);
+    sugoiQ_get_views(camera_query, SUGOI_LAMBDA(cameraSetup));
 }

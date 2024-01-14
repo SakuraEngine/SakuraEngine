@@ -20,7 +20,7 @@ struct MP_SHARED_API MPServerWorld : MPGameWorld
     double lastGameTime;
     int playerId = 0;
     IWorldDeltaBuilder* worldDeltaBuilder;
-    dual_query_t* deadQuery;
+    sugoi_query_t* deadQuery;
 
     void AddConnection(HSteamNetConnection connection);
     void RemoveConnection(HSteamNetConnection connection);
@@ -38,5 +38,5 @@ struct MP_SHARED_API MPServerWorld : MPGameWorld
     void AccumulateInput(uint32_t connectionId, const MPInputFrame& inputs);
 
     template<class T, class F>
-    void GenerateDelta(dual_type_index_t type, dual_query_t* query, F&& generator);
+    void GenerateDelta(sugoi_type_index_t type, sugoi_query_t* query, F&& generator);
 };

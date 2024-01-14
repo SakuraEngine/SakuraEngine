@@ -8,7 +8,7 @@
 #include "SkrRT/lua/bind.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/vfs.h"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 extern "C"
 {
 #include "luacode.h"

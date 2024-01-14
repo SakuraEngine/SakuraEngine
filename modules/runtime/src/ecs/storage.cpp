@@ -1,6 +1,6 @@
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/ecs/SmallVector.h"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/entity.hpp"
 #include "SkrRT/ecs/set.hpp"
 #include "SkrRT/misc/parallel_for.hpp"
@@ -13,15 +13,15 @@
 #include "iterator_ref.hpp"
 #include "type_registry.hpp"
 
-dual_storage_t::dual_storage_t()
-    : archetypeArena(dual::get_default_pool())
-    , queryBuildArena(dual::get_default_pool())
-    , groupPool(dual::kGroupBlockSize, dual::kGroupBlockCount)
+sugoi_storage_t::sugoi_storage_t()
+    : archetypeArena(sugoi::get_default_pool())
+    , queryBuildArena(sugoi::get_default_pool())
+    , groupPool(sugoi::kGroupBlockSize, sugoi::kGroupBlockCount)
     , scheduler(nullptr)
 {
 }
 
-dual_storage_t::~dual_storage_t()
+sugoi_storage_t::~sugoi_storage_t()
 {
     if(scheduler)
         scheduler->remove_storage(this);
@@ -31,15 +31,15 @@ dual_storage_t::~dual_storage_t()
     reset();
 }
 
-void dual_storage_t::reset()
+void sugoi_storage_t::reset()
 {
     for (auto iter : groups)
         iter.second->clear();
 }
 
-void dual_storage_t::allocate(dual_group_t* group, EIndex count, dual_view_callback_t callback, void* u)
+void sugoi_storage_t::allocate(sugoi_group_t* group, EIndex count, sugoi_view_callback_t callback, void* u)
 {
-    using namespace dual;
+    using namespace sugoi;
     if (scheduler)
     {
         SKR_ASSERT(scheduler->is_main_thread(this));
@@ -47,7 +47,7 @@ void dual_storage_t::allocate(dual_group_t* group, EIndex count, dual_view_callb
     }
     while (count != 0)
     {
-        dual_chunk_view_t v = allocate_view(group, count);
+        sugoi_chunk_view_t v = allocate_view(group, count);
         entities.fill_entities(v);
         construct_view(v);
         count -= v.count;
@@ -56,9 +56,9 @@ void dual_storage_t::allocate(dual_group_t* group, EIndex count, dual_view_callb
     }
 }
 
-dual_chunk_view_t dual_storage_t::allocate_view(dual_group_t* group, EIndex count)
+sugoi_chunk_view_t sugoi_storage_t::allocate_view(sugoi_group_t* group, EIndex count)
 {
-    dual_chunk_t* freeChunk = group->get_first_free_chunk();
+    sugoi_chunk_t* freeChunk = group->get_first_free_chunk();
     if (freeChunk == nullptr)
         freeChunk = group->new_chunk(count);
     EIndex start = freeChunk->count;
@@ -68,9 +68,9 @@ dual_chunk_view_t dual_storage_t::allocate_view(dual_group_t* group, EIndex coun
     return { freeChunk, start, allocated };
 }
 
-dual_chunk_view_t dual_storage_t::allocate_view_strict(dual_group_t* group, EIndex count)
+sugoi_chunk_view_t sugoi_storage_t::allocate_view_strict(sugoi_group_t* group, EIndex count)
 {
-    dual_chunk_t* freeChunk = nullptr;
+    sugoi_chunk_t* freeChunk = nullptr;
     for (auto i = group->firstFree; i < (uint32_t)group->chunks.size(); ++i)
     {
         auto chunk = group->chunks[i];
@@ -88,9 +88,9 @@ dual_chunk_view_t dual_storage_t::allocate_view_strict(dual_group_t* group, EInd
     return { freeChunk, start, count };
 }
 
-void dual_storage_t::destroy(const dual_chunk_view_t& view)
+void sugoi_storage_t::destroy(const sugoi_chunk_view_t& view)
 {
-    using namespace dual;
+    using namespace sugoi;
     auto group = view.chunk->group;
     if (scheduler)
     {
@@ -109,15 +109,15 @@ void dual_storage_t::destroy(const dual_chunk_view_t& view)
     }
 }
 
-void dual_storage_t::free(const dual_chunk_view_t& view)
+void sugoi_storage_t::free(const sugoi_chunk_view_t& view)
 {
-    using namespace dual;
+    using namespace sugoi;
     auto group = view.chunk->group;
     structural_change(group, view.chunk);
     uint32_t toMove = std::min(view.count, view.chunk->count - (view.start + view.count));
     if (toMove > 0)
     {
-        dual_chunk_view_t dstView{ view.chunk, view.start, toMove };
+        sugoi_chunk_view_t dstView{ view.chunk, view.start, toMove };
         EIndex srcIndex = view.chunk->count - toMove;
         entities.move_entities(dstView, srcIndex);
         move_view(dstView, srcIndex);
@@ -125,22 +125,22 @@ void dual_storage_t::free(const dual_chunk_view_t& view)
     group->resize_chunk(view.chunk, view.chunk->count - view.count);
 }
 
-void dual_storage_t::structural_change(dual_group_t* group, dual_chunk_t* chunk)
+void sugoi_storage_t::structural_change(sugoi_group_t* group, sugoi_chunk_t* chunk)
 {
     // todo: timestamp
 }
 
-void dual_storage_t::linked_to_prefab(const dual_entity_t* src, uint32_t size, bool keepExternal)
+void sugoi_storage_t::linked_to_prefab(const sugoi_entity_t* src, uint32_t size, bool keepExternal)
 {
-    using namespace dual;
+    using namespace sugoi;
     struct mapper_t {
-        const dual_entity_t* source;
+        const sugoi_entity_t* source;
         uint32_t count;
         bool keepExternal;
         void move() {}
         void reset() {}
 
-        void map(dual_entity_t& ent)
+        void map(sugoi_entity_t& ent)
         {
             forloop (i, 0, count)
                 if (ent == source[i])
@@ -159,16 +159,16 @@ void dual_storage_t::linked_to_prefab(const dual_entity_t* src, uint32_t size, b
         iterator_ref_view(entity_view(src[i]), m);
 }
 
-void dual_storage_t::prefab_to_linked(const dual_entity_t* src, uint32_t size)
+void sugoi_storage_t::prefab_to_linked(const sugoi_entity_t* src, uint32_t size)
 {
-    using namespace dual;
+    using namespace sugoi;
     struct mapper_t {
-        const dual_entity_t* source;
+        const sugoi_entity_t* source;
         uint32_t count;
         void move() {}
         void reset() {}
 
-        void map(dual_entity_t& ent)
+        void map(sugoi_entity_t& ent)
         {
             if (e_id(ent) > count || !e_transient(ent))
                 return;
@@ -181,19 +181,19 @@ void dual_storage_t::prefab_to_linked(const dual_entity_t* src, uint32_t size)
         iterator_ref_view(entity_view(src[i]), m);
 }
 
-void dual_storage_t::instantiate_prefab(const dual_entity_t* src, uint32_t size, uint32_t count, dual_view_callback_t callback, void* u)
+void sugoi_storage_t::instantiate_prefab(const sugoi_entity_t* src, uint32_t size, uint32_t count, sugoi_view_callback_t callback, void* u)
 {
-    using namespace dual;
-    skr::stl_vector<dual_entity_t> ents;
+    using namespace sugoi;
+    skr::stl_vector<sugoi_entity_t> ents;
     ents.resize(count * size);
     entities.new_entities(ents.data(), (EIndex)ents.size());
     struct mapper_t {
-        dual_entity_t* base;
-        dual_entity_t* curr;
+        sugoi_entity_t* base;
+        sugoi_entity_t* curr;
         uint32_t size;
         void move() { curr += size; }
         void reset() { curr = base; }
-        void map(dual_entity_t& ent)
+        void map(sugoi_entity_t& ent)
         {
             if (e_id(ent) > size || !e_transient(ent))
                 return;
@@ -201,7 +201,7 @@ void dual_storage_t::instantiate_prefab(const dual_entity_t* src, uint32_t size,
         }
     } m;
     m.size = size;
-    skr::stl_vector<dual_entity_t> localEnts;
+    skr::stl_vector<sugoi_entity_t> localEnts;
     localEnts.resize(count);
     forloop (i, 0, size)
     {
@@ -212,7 +212,7 @@ void dual_storage_t::instantiate_prefab(const dual_entity_t* src, uint32_t size,
         auto localCount = 0;
         while (localCount != count)
         {
-            dual_chunk_view_t v = allocate_view(group, count - localCount);
+            sugoi_chunk_view_t v = allocate_view(group, count - localCount);
             entities.fill_entities(v, localEnts.data() + localCount);
             duplicate_view(v, view.chunk, view.start);
             m.base = m.curr = ents.data() + localCount * size;
@@ -224,9 +224,9 @@ void dual_storage_t::instantiate_prefab(const dual_entity_t* src, uint32_t size,
     }
 }
 
-void dual_storage_t::instantiate(const dual_entity_t src, uint32_t count, dual_view_callback_t callback, void* u)
+void sugoi_storage_t::instantiate(const sugoi_entity_t src, uint32_t count, sugoi_view_callback_t callback, void* u)
 {
-    using namespace dual;
+    using namespace sugoi;
     auto view = entity_view(src);
     auto group = view.chunk->group->cloned;
     if (scheduler)
@@ -236,7 +236,7 @@ void dual_storage_t::instantiate(const dual_entity_t src, uint32_t count, dual_v
     }
     while (count != 0)
     {
-        dual_chunk_view_t v = allocate_view(group, count);
+        sugoi_chunk_view_t v = allocate_view(group, count);
         entities.fill_entities(v);
         duplicate_view(v, view.chunk, view.start);
         count -= v.count;
@@ -245,9 +245,9 @@ void dual_storage_t::instantiate(const dual_entity_t src, uint32_t count, dual_v
     }
 }
 
-void dual_storage_t::instantiate(const dual_entity_t src, uint32_t count, dual_group_t* group, dual_view_callback_t callback, void* u)
+void sugoi_storage_t::instantiate(const sugoi_entity_t src, uint32_t count, sugoi_group_t* group, sugoi_view_callback_t callback, void* u)
 {
-    using namespace dual;
+    using namespace sugoi;
     auto view = entity_view(src);
     if (scheduler)
     {
@@ -256,7 +256,7 @@ void dual_storage_t::instantiate(const dual_entity_t src, uint32_t count, dual_g
     }
     while (count != 0)
     {
-        dual_chunk_view_t v = allocate_view(group, count);
+        sugoi_chunk_view_t v = allocate_view(group, count);
         entities.fill_entities(v);
         duplicate_view(v, view.chunk, view.start);
         count -= v.count;
@@ -265,9 +265,9 @@ void dual_storage_t::instantiate(const dual_entity_t src, uint32_t count, dual_g
     }
 }
 
-void dual_storage_t::instantiate(const dual_entity_t* src, uint32_t n, uint32_t count, dual_view_callback_t callback, void* u)
+void sugoi_storage_t::instantiate(const sugoi_entity_t* src, uint32_t n, uint32_t count, sugoi_view_callback_t callback, void* u)
 {
-    using namespace dual;
+    using namespace sugoi;
     if (scheduler)
     {
         SKR_ASSERT(scheduler->is_main_thread(this));
@@ -283,9 +283,9 @@ void dual_storage_t::instantiate(const dual_entity_t* src, uint32_t n, uint32_t 
     prefab_to_linked(src, n);
 }
 
-dual_chunk_view_t dual_storage_t::entity_view(dual_entity_t e) const
+sugoi_chunk_view_t sugoi_storage_t::entity_view(sugoi_entity_t e) const
 {
-    using namespace dual;
+    using namespace sugoi;
     SKR_ASSERT(e_id(e) < entities.entries.size());
     auto& entry = entities.entries[e_id(e)];
     if(entry.version == e_version(e))
@@ -293,11 +293,11 @@ dual_chunk_view_t dual_storage_t::entity_view(dual_entity_t e) const
     return { nullptr, 0, 1 };
 }
 
-bool dual_storage_t::components_enabled(const dual_entity_t src, const dual_type_set_t& type)
+bool sugoi_storage_t::components_enabled(const sugoi_entity_t src, const sugoi_type_set_t& type)
 {
-    using namespace dual;
+    using namespace sugoi;
     auto view = entity_view(src);
-    auto mask = (mask_t*)dualV_get_owned_ro(&view, kMaskComponent);
+    auto mask = (mask_t*)sugoiV_get_owned_ro(&view, kMaskComponent);
     if (!mask)
         return true;
     auto set = view.chunk->group->get_mask(type);
@@ -306,20 +306,20 @@ bool dual_storage_t::components_enabled(const dual_entity_t src, const dual_type
     return (mask->load(std::memory_order_relaxed) & set) == set;
 }
 
-bool dual_storage_t::exist(dual_entity_t e) const noexcept
+bool sugoi_storage_t::exist(sugoi_entity_t e) const noexcept
 {
-    using namespace dual;
+    using namespace sugoi;
     return entities.entries.size() > e_id(e) && entities.entries[e_id(e)].version == e_version(e);
 }
 
-void dual_storage_t::validate_meta()
+void sugoi_storage_t::validate_meta()
 {
-    skr::stl_vector<dual_group_t*> groupsToFix;
+    skr::stl_vector<sugoi_group_t*> groupsToFix;
     for (auto i = groups.begin(); i != groups.end(); ++i)
     {
         auto g = i->second;
         auto type = g->type;
-        bool valid = !std::find_if(type.meta.data, type.meta.data + type.meta.length, [&](dual_entity_t e) {
+        bool valid = !std::find_if(type.meta.data, type.meta.data + type.meta.length, [&](sugoi_entity_t e) {
             return !exist(e);
         });
         if (!valid)
@@ -336,19 +336,19 @@ void dual_storage_t::validate_meta()
     }
 }
 
-void dual_storage_t::validate(dual_entity_set_t& meta)
+void sugoi_storage_t::validate(sugoi_entity_set_t& meta)
 {
     auto end = std::remove_if(
-    (dual_entity_t*)meta.data, (dual_entity_t*)meta.data + meta.length,
-    [&](const dual_entity_t e) {
+    (sugoi_entity_t*)meta.data, (sugoi_entity_t*)meta.data + meta.length,
+    [&](const sugoi_entity_t e) {
         return !exist(e);
     });
     meta.length = (SIndex)(end - meta.data);
 }
 
-void dual_storage_t::defragment()
+void sugoi_storage_t::defragment()
 {
-    using namespace dual;
+    using namespace sugoi;
     if (scheduler)
     {
         SKR_ASSERT(scheduler->is_main_thread(this));
@@ -388,16 +388,16 @@ void dual_storage_t::defragment()
             normalCount++;
 
         // step 2 : grab and sort existing chunk for reuse
-        skr::stl_vector<dual_chunk_t*> chunks = std::move(g->chunks);
-        std::sort(chunks.begin(), chunks.end(), [](dual_chunk_t* lhs, dual_chunk_t* rhs) {
+        skr::stl_vector<sugoi_chunk_t*> chunks = std::move(g->chunks);
+        std::sort(chunks.begin(), chunks.end(), [](sugoi_chunk_t* lhs, sugoi_chunk_t* rhs) {
             return lhs->pt > rhs->pt || lhs->count > rhs->count;
         });
 
         // step 3 : reaverage data into new layout
-        skr::stl_vector<dual_chunk_t*> newChunks;
+        skr::stl_vector<sugoi_chunk_t*> newChunks;
         int o = 0;
         int j = (int)(chunks.size() - 1);
-        auto fillChunk = [&](dual_chunk_t* chunk) {
+        auto fillChunk = [&](sugoi_chunk_t* chunk) {
             while (chunk->get_capacity() != chunk->count)
             {
                 if (j <= o) // no more chunk to reaverage
@@ -414,7 +414,7 @@ void dual_storage_t::defragment()
                 if (source->count == 0)
                 {
                     destruct_chunk(source);
-                    dual_chunk_t::destroy(source);
+                    sugoi_chunk_t::destroy(source);
                     --j;
                 }
             }
@@ -428,7 +428,7 @@ void dual_storage_t::defragment()
                     ++o;
                 }
                 else // or create new chunk
-                    newChunks.push_back(dual_chunk_t::create(type));
+                    newChunks.push_back(sugoi_chunk_t::create(type));
                 fillChunk(newChunks.back());
             }
         };
@@ -442,9 +442,9 @@ void dual_storage_t::defragment()
     }
 }
 
-void dual_storage_t::pack_entities()
+void sugoi_storage_t::pack_entities()
 {
-    using namespace dual;
+    using namespace sugoi;
     if (scheduler)
     {
         SKR_ASSERT(scheduler->is_main_thread(this));
@@ -469,14 +469,14 @@ void dual_storage_t::pack_entities()
         skr::stl_vector<EIndex>* data;
         void move() {}
         void reset() {}
-        void map(dual_entity_t& e)
+        void map(sugoi_entity_t& e)
         {
             if (e_id(e) < data->size())
                 e = e_id(e, (*data)[e_id(e)]);
         }
     } m;
     m.data = &map;
-    skr::stl_vector<dual_group_t*> gs;
+    skr::stl_vector<sugoi_group_t*> gs;
     for (auto& pair : groups)
         gs.push_back(pair.second);
     groups.clear();
@@ -489,31 +489,31 @@ void dual_storage_t::pack_entities()
         }
         auto meta = g->type.meta;
         forloop (i, 0, meta.length)
-            m.map(((dual_entity_t*)meta.data)[i]);
-        std::sort((dual_entity_t*)meta.data, (dual_entity_t*)meta.data + meta.length);
+            m.map(((sugoi_entity_t*)meta.data)[i]);
+        std::sort((sugoi_entity_t*)meta.data, (sugoi_entity_t*)meta.data + meta.length);
         groups.insert({ g->type, g });
     }
 }
 
-void dual_storage_t::cast_impl(const dual_chunk_view_t& view, dual_group_t* group, dual_cast_callback_t callback, void* u)
+void sugoi_storage_t::cast_impl(const sugoi_chunk_view_t& view, sugoi_group_t* group, sugoi_cast_callback_t callback, void* u)
 {
-    using namespace dual;
+    using namespace sugoi;
     uint32_t k = 0;
     while (k < view.count)
     {
-        dual_chunk_view_t dst = allocate_view(group, view.count - k);
+        sugoi_chunk_view_t dst = allocate_view(group, view.count - k);
         entities.move_entities(dst, view.chunk, view.start + k);
         cast_view(dst, view.chunk, view.start + k);
         k += dst.count;
         if (callback)
-            callback(u, &dst, (dual_chunk_view_t*)&view);
+            callback(u, &dst, (sugoi_chunk_view_t*)&view);
     }
     free(view);
 }
 
-void dual_storage_t::cast(const dual_chunk_view_t& view, dual_group_t* group, dual_cast_callback_t callback, void* u)
+void sugoi_storage_t::cast(const sugoi_chunk_view_t& view, sugoi_group_t* group, sugoi_cast_callback_t callback, void* u)
 {
-    using namespace dual;
+    using namespace sugoi;
     auto srcGroup = view.chunk->group;
     if (srcGroup == group)
         return;
@@ -543,9 +543,9 @@ void dual_storage_t::cast(const dual_chunk_view_t& view, dual_group_t* group, du
     cast_impl(view, group, callback, u);
 }
 
-void dual_storage_t::cast(dual_group_t* srcGroup, dual_group_t* group, dual_cast_callback_t callback, void* u)
+void sugoi_storage_t::cast(sugoi_group_t* srcGroup, sugoi_group_t* group, sugoi_cast_callback_t callback, void* u)
 {
-    using namespace dual;
+    using namespace sugoi;
     if (srcGroup == group)
         return;
     if (scheduler)
@@ -574,49 +574,49 @@ void dual_storage_t::cast(dual_group_t* srcGroup, dual_group_t* group, dual_cast
     auto chunks = srcGroup->chunks;
     for (auto chunk : chunks)
     {
-        dual_chunk_view_t view = { chunk, 0, chunk->count };
+        sugoi_chunk_view_t view = { chunk, 0, chunk->count };
         cast_impl(view, group, callback, u);
     }
 }
 
-dual_group_t* dual_storage_t::cast(dual_group_t* srcGroup, const dual_delta_type_t& diff)
+sugoi_group_t* sugoi_storage_t::cast(sugoi_group_t* srcGroup, const sugoi_delta_type_t& diff)
 {
-    using namespace dual;
+    using namespace sugoi;
     fixed_stack_scope_t _(localStack);
-    dual_entity_type_t type = srcGroup->type;
-    dual_entity_type_t final;
+    sugoi_entity_type_t type = srcGroup->type;
+    sugoi_entity_type_t final;
     final.type = type.type;
     final.meta = type.meta;
     if (diff.added.type.length > 0)
     {
         auto finalType = localStack.allocate<type_index_t>(type.type.length + diff.added.type.length);
-        final.type = set_utils<dual_type_index_t>::merge(final.type, diff.added.type, finalType);
+        final.type = set_utils<sugoi_type_index_t>::merge(final.type, diff.added.type, finalType);
     }
     if (diff.added.meta.length > 0)
     {
-        auto finalMeta = localStack.allocate<dual_entity_t>(type.meta.length + diff.added.meta.length);
-        final.meta = set_utils<dual_entity_t>::merge(final.meta, diff.added.meta, finalMeta);
+        auto finalMeta = localStack.allocate<sugoi_entity_t>(type.meta.length + diff.added.meta.length);
+        final.meta = set_utils<sugoi_entity_t>::merge(final.meta, diff.added.meta, finalMeta);
     }
     if (diff.removed.type.length > 0)
     {
         auto finalType = localStack.allocate<type_index_t>(type.type.length + diff.added.type.length);
-        final.type = set_utils<dual_type_index_t>::substract(final.type, diff.removed.type, finalType);
+        final.type = set_utils<sugoi_type_index_t>::substract(final.type, diff.removed.type, finalType);
     }
     if (diff.removed.meta.length > 0)
     {
-        auto finalMeta = localStack.allocate<dual_entity_t>(type.meta.length + diff.added.meta.length);
-        final.meta = set_utils<dual_entity_t>::substract(final.meta, diff.removed.meta, finalMeta);
+        auto finalMeta = localStack.allocate<sugoi_entity_t>(type.meta.length + diff.added.meta.length);
+        final.meta = set_utils<sugoi_entity_t>::substract(final.meta, diff.removed.meta, finalMeta);
     }
     return get_group(final);
 }
 
-void dual_storage_t::batch(const dual_entity_t* ents, EIndex count, dual_view_callback_t callback, void* u)
+void sugoi_storage_t::batch(const sugoi_entity_t* ents, EIndex count, sugoi_view_callback_t callback, void* u)
 {
     if(count == 0)
         return;
     else if(count == 1)
     {
-        dual_chunk_view_t v = entity_view(ents[0]);
+        sugoi_chunk_view_t v = entity_view(ents[0]);
         callback(u, &v);
         return;
     }
@@ -624,7 +624,7 @@ void dual_storage_t::batch(const dual_entity_t* ents, EIndex count, dual_view_ca
     auto view = entity_view(ents[current++]);
     while (current < count)
     {
-        dual_chunk_view_t v = entity_view(ents[current]);
+        sugoi_chunk_view_t v = entity_view(ents[current]);
         if (v.chunk == view.chunk && v.start == view.start + view.count)
         {
             view.count++;
@@ -640,22 +640,22 @@ void dual_storage_t::batch(const dual_entity_t* ents, EIndex count, dual_view_ca
     callback(u, &view);
 }
 
-void dual_storage_t::merge(dual_storage_t& src)
+void sugoi_storage_t::merge(sugoi_storage_t& src)
 {
-    using namespace dual;
+    using namespace sugoi;
     if (scheduler)
     {
         SKR_ASSERT(scheduler->is_main_thread(this));
         scheduler->sync_storage(&src);
     }
     auto& sents = src.entities;
-    skr::stl_vector<dual_entity_t> map;
+    skr::stl_vector<sugoi_entity_t> map;
     map.resize(sents.entries.size());
     EIndex moveCount = 0;
     for (auto& e : sents.entries)
         if (e.chunk != nullptr)
             moveCount++;
-    skr::stl_vector<dual_entity_t> newEnts;
+    skr::stl_vector<sugoi_entity_t> newEnts;
     newEnts.resize(moveCount);
     entities.new_entities(newEnts.data(), moveCount);
     int j = 0;
@@ -666,12 +666,12 @@ void dual_storage_t::merge(dual_storage_t& src)
     sents.reset();
     struct mapper {
         uint32_t count;
-        dual_entity_t* data;
+        sugoi_entity_t* data;
         void move() {}
         void reset() {}
-        void map(dual_entity_t& e)
+        void map(sugoi_entity_t& e)
         {
-            if (e_id(e) > count) DUAL_UNLIKELY
+            if (e_id(e) > count) SUGOI_UNLIKELY
                 {
                     e = kEntityNull;
                     return;
@@ -681,7 +681,7 @@ void dual_storage_t::merge(dual_storage_t& src)
     } m;
     m.count = (uint32_t)map.size();
     m.data = map.data();
-    skr::stl_vector<dual_chunk_t*> chunks;
+    skr::stl_vector<sugoi_chunk_t*> chunks;
     struct payload_t {
         mapper* m;
         uint32_t start, end;
@@ -694,7 +694,7 @@ void dual_storage_t::merge(dual_storage_t& src)
     uint32_t sizeRemain = sizePerBatch;
     for (auto& i : src.groups)
     {
-        dual_group_t* g = i.second;
+        sugoi_group_t* g = i.second;
         for(auto c : g->chunks)
         {
             chunks.push_back(c);
@@ -724,7 +724,7 @@ void dual_storage_t::merge(dual_storage_t& src)
             for(auto j=i->start; j<i->end; ++j)
             {
                 auto c = chunks[j];
-                auto ents = (dual_entity_t*)c->get_entities();
+                auto ents = (sugoi_entity_t*)c->get_entities();
                 forloop (k, 0, c->count)
                 {
                     i->m->map(ents[k]);
@@ -737,11 +737,11 @@ void dual_storage_t::merge(dual_storage_t& src)
     });
     for (auto& i : src.groups)
     {
-        dual_group_t* g = i.second;
+        sugoi_group_t* g = i.second;
         auto type = g->type;
         forloop (j, 0, type.meta.length)
-            m.map((dual_entity_t&)type.meta.data[j]);
-        dual_group_t* dstG = get_group(type);
+            m.map((sugoi_entity_t&)type.meta.data[j]);
+        sugoi_group_t* dstG = get_group(type);
         for(auto c : g->chunks)
         {
             dstG->add_chunk(c);
@@ -752,9 +752,9 @@ void dual_storage_t::merge(dual_storage_t& src)
     src.queries.clear();
 }
 
-dual_storage_t* dual_storage_t::clone()
+sugoi_storage_t* sugoi_storage_t::clone()
 {
-    dual_storage_t* dst = SkrNew<dual_storage_t>();
+    sugoi_storage_t* dst = SkrNew<sugoi_storage_t>();
     dst->entities = entities;
     dst->userdata = userdata;
     dst->timestamp = timestamp;
@@ -764,12 +764,12 @@ dual_storage_t* dual_storage_t::clone()
         for(auto chunk : group.second->chunks)
         {
             auto count = chunk->count;
-            auto view = dual_chunk_view_t{ chunk, 0, count };
+            auto view = sugoi_chunk_view_t{ chunk, 0, count };
             while (count != 0)
             {
-                dual_chunk_view_t v = dst->allocate_view(dstGroup, count);
-                dual::clone_view(v, view.chunk, view.start + (view.count - count));
-                std::memcpy((dual_entity_t*)v.chunk->get_entities() + v.start, view.chunk->get_entities() + view.start + (view.count - count), v.count * sizeof(dual_entity_t));
+                sugoi_chunk_view_t v = dst->allocate_view(dstGroup, count);
+                sugoi::clone_view(v, view.chunk, view.start + (view.count - count));
+                std::memcpy((sugoi_entity_t*)v.chunk->get_entities() + v.start, view.chunk->get_entities() + view.start + (view.count - count), v.count * sizeof(sugoi_entity_t));
                 count -= v.count;
             }
         }
@@ -781,118 +781,118 @@ dual_storage_t* dual_storage_t::clone()
     return dst;
 }
 
-void dual_storage_t::make_alias(skr::StringView name, skr::StringView aliasName)
+void sugoi_storage_t::make_alias(skr::StringView name, skr::StringView aliasName)
 {
-    auto& reg = dual::type_registry_t::get();
+    auto& reg = sugoi::type_registry_t::get();
     auto type = reg.get_type(name);
-    dual_phase_alias_t aliasPhase { type, ++aliasCount };
+    sugoi_phase_alias_t aliasPhase { type, ++aliasCount };
     aliases.insert({ aliasName, aliasPhase });
 }
 
 extern "C" {
-dual_storage_t* dualS_create()
+sugoi_storage_t* sugoiS_create()
 {
-    return SkrNew<dual_storage_t>();
+    return SkrNew<sugoi_storage_t>();
 }
 
-void dualS_release(dual_storage_t* storage)
+void sugoiS_release(sugoi_storage_t* storage)
 {
     SkrDelete(storage);
 }
 
-void dualS_set_userdata(dual_storage_t* storage, void* u)
+void sugoiS_set_userdata(sugoi_storage_t* storage, void* u)
 {
     storage->userdata = u;
 }
 
-void* dualS_get_userdata(dual_storage_t* storage)
+void* sugoiS_get_userdata(sugoi_storage_t* storage)
 {
     return storage->userdata;
 }
 
-void dualS_allocate_type(dual_storage_t* storage, const dual_entity_type_t* type, EIndex count, dual_view_callback_t callback, void* u)
+void sugoiS_allocate_type(sugoi_storage_t* storage, const sugoi_entity_type_t* type, EIndex count, sugoi_view_callback_t callback, void* u)
 {
-    SKR_ASSERT(dual::ordered(*type));
+    SKR_ASSERT(sugoi::ordered(*type));
     storage->allocate(storage->get_group(*type), count, callback, u);
 }
 
-void dualS_allocate_group(dual_storage_t* storage, dual_group_t* group, EIndex count, dual_view_callback_t callback, void* u)
+void sugoiS_allocate_group(sugoi_storage_t* storage, sugoi_group_t* group, EIndex count, sugoi_view_callback_t callback, void* u)
 {
     storage->allocate(group, count, callback, u);
 }
 
-void dualS_instantiate(dual_storage_t* storage, dual_entity_t prefab, EIndex count, dual_view_callback_t callback, void* u)
+void sugoiS_instantiate(sugoi_storage_t* storage, sugoi_entity_t prefab, EIndex count, sugoi_view_callback_t callback, void* u)
 {
     storage->instantiate(prefab, count, callback, u);
 }
 
-void dualS_instantiate_delta(dual_storage_t* storage, dual_entity_t prefab, EIndex count, const dual_delta_type_t* delta, dual_view_callback_t callback, void* u)
+void sugoiS_instantiate_delta(sugoi_storage_t* storage, sugoi_entity_t prefab, EIndex count, const sugoi_delta_type_t* delta, sugoi_view_callback_t callback, void* u)
 {
     storage->instantiate(prefab, count, storage->cast(storage->entity_view(prefab).chunk->group->cloned, *delta), callback, u);
 }
 
-void dualS_instantiate_entities(dual_storage_t* storage, dual_entity_t* ents, EIndex n, EIndex count, dual_view_callback_t callback, void* u)
+void sugoiS_instantiate_entities(sugoi_storage_t* storage, sugoi_entity_t* ents, EIndex n, EIndex count, sugoi_view_callback_t callback, void* u)
 {
     storage->instantiate(ents, n, count, callback, u);
 }
 
-void dualS_destroy(dual_storage_t* storage, const dual_chunk_view_t* view)
+void sugoiS_destroy(sugoi_storage_t* storage, const sugoi_chunk_view_t* view)
 {
     storage->destroy(*view);
 }
 
-void dualS_destroy_all(dual_storage_t* storage, const dual_meta_filter_t* meta)
+void sugoiS_destroy_all(sugoi_storage_t* storage, const sugoi_meta_filter_t* meta)
 {
-    SKR_ASSERT(dual::ordered(*meta));
+    SKR_ASSERT(sugoi::ordered(*meta));
     storage->destroy(*meta);
 }
 
-void dualS_cast_view_delta(dual_storage_t* storage, const dual_chunk_view_t* view, const dual_delta_type_t* delta, dual_cast_callback_t callback, void* u)
+void sugoiS_cast_view_delta(sugoi_storage_t* storage, const sugoi_chunk_view_t* view, const sugoi_delta_type_t* delta, sugoi_cast_callback_t callback, void* u)
 {
-    SKR_ASSERT(dual::ordered(*delta));
+    SKR_ASSERT(sugoi::ordered(*delta));
     storage->cast(*view, storage->cast(view->chunk->group, *delta), callback, u);
 }
 
-void dualS_cast_view_group(dual_storage_t* storage, const dual_chunk_view_t* view, const dual_group_t* group, dual_cast_callback_t callback, void* u)
+void sugoiS_cast_view_group(sugoi_storage_t* storage, const sugoi_chunk_view_t* view, const sugoi_group_t* group, sugoi_cast_callback_t callback, void* u)
 {
-    storage->cast(*view, (dual_group_t*)group, callback, u);
+    storage->cast(*view, (sugoi_group_t*)group, callback, u);
 }
 
-void dualS_cast_group_delta(dual_storage_t* storage, dual_group_t* group, const dual_delta_type_t* delta, dual_cast_callback_t callback, void* u)
+void sugoiS_cast_group_delta(sugoi_storage_t* storage, sugoi_group_t* group, const sugoi_delta_type_t* delta, sugoi_cast_callback_t callback, void* u)
 {
-    SKR_ASSERT(dual::ordered(*delta));
+    SKR_ASSERT(sugoi::ordered(*delta));
     storage->cast(group, storage->cast(group, *delta), callback, u);
 }
 
-void dualS_access(dual_storage_t* storage, dual_entity_t ent, dual_chunk_view_t* view)
+void sugoiS_access(sugoi_storage_t* storage, sugoi_entity_t ent, sugoi_chunk_view_t* view)
 {
     *view = storage->entity_view(ent);
 }
 
-void dualS_batch(dual_storage_t* storage, const dual_entity_t* ents, EIndex count, dual_view_callback_t callback, void* u)
+void sugoiS_batch(sugoi_storage_t* storage, const sugoi_entity_t* ents, EIndex count, sugoi_view_callback_t callback, void* u)
 {
     storage->batch(ents, count, callback, u);
 }
 
-void dualS_query(dual_storage_t* storage, const dual_filter_t* filter, const dual_meta_filter_t* meta, dual_view_callback_t callback, void* u)
+void sugoiS_query(sugoi_storage_t* storage, const sugoi_filter_t* filter, const sugoi_meta_filter_t* meta, sugoi_view_callback_t callback, void* u)
 {
-    SKR_ASSERT(dual::ordered(*filter));
-    SKR_ASSERT(dual::ordered(*meta));
+    SKR_ASSERT(sugoi::ordered(*filter));
+    SKR_ASSERT(sugoi::ordered(*meta));
     
     if (storage->scheduler)
     {
         SKR_ASSERT(storage->scheduler->is_main_thread(storage));
-        auto filterChunk = [&](dual_group_t* group) {
+        auto filterChunk = [&](sugoi_group_t* group) {
             for(EIndex i = 0; i < filter->all.length; ++i)
             {
                 int idx = group->index(filter->all.data[i]);
-                if(idx != dual::kInvalidTypeIndex)
+                if(idx != sugoi::kInvalidTypeIndex)
                     storage->scheduler->sync_entry(group->archetype, idx, false);
             }
             if(callback)
                 storage->query(group, *filter, *meta, callback, u);
         };
-        storage->query_groups(*filter, *meta, DUAL_LAMBDA(filterChunk));
+        storage->query_groups(*filter, *meta, SUGOI_LAMBDA(filterChunk));
     }
     else
     {
@@ -901,138 +901,138 @@ void dualS_query(dual_storage_t* storage, const dual_filter_t* filter, const dua
     }
 }
 
-void dualS_merge(dual_storage_t* storage, dual_storage_t* source)
+void sugoiS_merge(sugoi_storage_t* storage, sugoi_storage_t* source)
 {
     storage->merge(*source);
 }
 
-void dualS_serialize(dual_storage_t* storage, skr_binary_writer_t* v)
+void sugoiS_serialize(sugoi_storage_t* storage, skr_binary_writer_t* v)
 {
     storage->serialize(v);
 }
 
-void dualS_deserialize(dual_storage_t* storage, skr_binary_reader_t* v)
+void sugoiS_deserialize(sugoi_storage_t* storage, skr_binary_reader_t* v)
 {
     storage->deserialize(v);
 }
 
-int dualS_exist(dual_storage_t* storage, dual_entity_t ent)
+int sugoiS_exist(sugoi_storage_t* storage, sugoi_entity_t ent)
 {
     return storage->exist(ent);
 }
 
-int dualS_components_enabled(dual_storage_t* storage, dual_entity_t ent, const dual_type_set_t* types)
+int sugoiS_components_enabled(sugoi_storage_t* storage, sugoi_entity_t ent, const sugoi_type_set_t* types)
 {
-    SKR_ASSERT(dual::ordered(*types));
+    SKR_ASSERT(sugoi::ordered(*types));
     return storage->components_enabled(ent, *types);
 }
 
-dual_entity_t dualS_deserialize_entity(dual_storage_t* storage, skr_binary_reader_t* v)
+sugoi_entity_t sugoiS_deserialize_entity(sugoi_storage_t* storage, skr_binary_reader_t* v)
 {
     return storage->deserialize_prefab(v);
 }
 
-void dualS_serialize_entity(dual_storage_t* storage, dual_entity_t ent, skr_binary_writer_t* v)
+void sugoiS_serialize_entity(sugoi_storage_t* storage, sugoi_entity_t ent, skr_binary_writer_t* v)
 {
     storage->serialize_prefab(ent, v);
 }
 
-void dualS_serialize_entities(dual_storage_t* storage, dual_entity_t* ents, EIndex n, skr_binary_writer_t* v)
+void sugoiS_serialize_entities(sugoi_storage_t* storage, sugoi_entity_t* ents, EIndex n, skr_binary_writer_t* v)
 {
     storage->serialize_prefab(ents, n, v);
 }
 
-void dualS_reset(dual_storage_t* storage)
+void sugoiS_reset(sugoi_storage_t* storage)
 {
     storage->reset();
 }
 
-void dualS_validate_meta(dual_storage_t* storage)
+void sugoiS_validate_meta(sugoi_storage_t* storage)
 {
     storage->validate_meta();
 }
 
-void dualS_defragement(dual_storage_t* storage)
+void sugoiS_defragement(sugoi_storage_t* storage)
 {
     storage->defragment();
 }
 
-void dualS_pack_entities(dual_storage_t* storage)
+void sugoiS_pack_entities(sugoi_storage_t* storage)
 {
     storage->pack_entities();
 }
 
-void dualS_enable_components(const dual_chunk_view_t* view, const dual_type_set_t* types)
+void sugoiS_enable_components(const sugoi_chunk_view_t* view, const sugoi_type_set_t* types)
 {
-    using namespace dual;
-    SKR_ASSERT(dual::ordered(*types));
+    using namespace sugoi;
+    SKR_ASSERT(sugoi::ordered(*types));
     auto group = view->chunk->group;
-    auto masks = (mask_t*)dualV_get_owned_rw(view, kMaskComponent);
+    auto masks = (mask_t*)sugoiV_get_owned_rw(view, kMaskComponent);
     auto newMask = group->get_mask(*types);
-    if (!masks) DUAL_UNLIKELY
+    if (!masks) SUGOI_UNLIKELY
         return;
     for (uint32_t i = 0; i < view->count; ++i)
         masks[i].fetch_or(newMask);
 }
 
-void dualS_disable_components(const dual_chunk_view_t* view, const dual_type_set_t* types)
+void sugoiS_disable_components(const sugoi_chunk_view_t* view, const sugoi_type_set_t* types)
 {
-    using namespace dual;
-    SKR_ASSERT(dual::ordered(*types));
+    using namespace sugoi;
+    SKR_ASSERT(sugoi::ordered(*types));
     auto group = view->chunk->group;
-    auto masks = (mask_t*)dualV_get_owned_rw(view, kMaskComponent);
+    auto masks = (mask_t*)sugoiV_get_owned_rw(view, kMaskComponent);
     auto newMask = group->get_mask(*types);
-    if (!masks) DUAL_UNLIKELY
+    if (!masks) SUGOI_UNLIKELY
         return;
     for (uint32_t i = 0; i < view->count; ++i)
         masks[i].fetch_and(~newMask);
 }
 
-void dualQ_set_meta(dual_query_t* query, const dual_meta_filter_t* meta)
+void sugoiQ_set_meta(sugoi_query_t* query, const sugoi_meta_filter_t* meta)
 {
     if (!meta)
     {
-        std::memset(&query->meta, 0, sizeof(dual_meta_filter_t));
+        std::memset(&query->meta, 0, sizeof(sugoi_meta_filter_t));
     }
     else
     {
-        SKR_ASSERT(dual::ordered(*meta));
+        SKR_ASSERT(sugoi::ordered(*meta));
         query->meta = *meta;
     }
 }
 
-dual_query_t* dualQ_create(dual_storage_t* storage, const dual_filter_t* filter, const dual_parameters_t* params)
+sugoi_query_t* sugoiQ_create(sugoi_storage_t* storage, const sugoi_filter_t* filter, const sugoi_parameters_t* params)
 {
-    SKR_ASSERT(dual::ordered(*filter));
+    SKR_ASSERT(sugoi::ordered(*filter));
     return storage->make_query(*filter, *params);
 }
 
-void dualQ_make_alias(dual_storage_t* storage, const char* component, const char* alias)
+void sugoiQ_make_alias(sugoi_storage_t* storage, const char* component, const char* alias)
 {
     storage->make_alias((ochar8_t*)component, (ochar8_t*)alias);
 }
 
-void dualQ_release(dual_query_t *query)
+void sugoiQ_release(sugoi_query_t *query)
 {
     return query->storage->destroy_query(query);
 }
 
-dual_query_t* dualQ_from_literal(dual_storage_t* storage, const char* desc)
+sugoi_query_t* sugoiQ_from_literal(sugoi_storage_t* storage, const char* desc)
 {
     return storage->make_query(desc);
 }
 
-void dualQ_get_views(dual_query_t* query, dual_view_callback_t callback, void* u)
+void sugoiQ_get_views(sugoi_query_t* query, sugoi_view_callback_t callback, void* u)
 {
     return query->storage->query(query, callback, u);
 }
 
-void dualQ_get_groups(dual_query_t* query, dual_group_callback_t callback, void* u)
+void sugoiQ_get_groups(sugoi_query_t* query, sugoi_group_callback_t callback, void* u)
 {
     return query->storage->query_groups(query, callback, u);
 }
 
-void dualQ_get_views_group(dual_query_t* query, dual_group_t* group, dual_view_callback_t callback, void* u)
+void sugoiQ_get_views_group(sugoi_query_t* query, sugoi_group_t* group, sugoi_view_callback_t callback, void* u)
 {
     query->storage->build_queries();
     if(!query->storage->match_group(query->filter, query->meta, group))
@@ -1040,20 +1040,20 @@ void dualQ_get_views_group(dual_query_t* query, dual_group_t* group, dual_view_c
     query->storage->query(group, query->filter, query->meta, callback, u);
 }
 
-const char* dualQ_get_error()
+const char* sugoiQ_get_error()
 {
-    return dual::get_error().c_str();
+    return sugoi::get_error().c_str();
 }
 
-void dualQ_add_child(dual_query_t* query, dual_query_t* child)
+void sugoiQ_add_child(sugoi_query_t* query, sugoi_query_t* child)
 {
     query->subqueries.push_back(child);
 }
 
-EIndex dualQ_get_count(dual_query_t* query)
+EIndex sugoiQ_get_count(sugoi_query_t* query)
 {
     EIndex result = 0;
-    auto accumulator = +[](void* u, dual_group_t* view)
+    auto accumulator = +[](void* u, sugoi_group_t* view)
     {
         EIndex* result = (EIndex*)u;
         *result += view->size;
@@ -1062,13 +1062,13 @@ EIndex dualQ_get_count(dual_query_t* query)
     return result;
 }
 
-void dualQ_sync(dual_query_t* query)
+void sugoiQ_sync(sugoi_query_t* query)
 {
     if(query->storage->scheduler)
         query->storage->scheduler->sync_query(query);
 }
 
-void dualQ_get(dual_query_t* query, dual_filter_t* filter, dual_parameters_t* params)
+void sugoiQ_get(sugoi_query_t* query, sugoi_filter_t* filter, sugoi_parameters_t* params)
 {
     if(!query->storage->queriesBuilt)
         query->storage->build_queries();
@@ -1078,12 +1078,12 @@ void dualQ_get(dual_query_t* query, dual_filter_t* filter, dual_parameters_t* pa
         *params = query->parameters;
 }
 
-dual_storage_t* dualQ_get_storage(dual_query_t* query)
+sugoi_storage_t* sugoiQ_get_storage(sugoi_query_t* query)
 {
     return query->storage;
 }
 
-void dualS_all(dual_storage_t *storage, bool includeDisabled, bool includeDead, dual_view_callback_t callback, void *u)
+void sugoiS_all(sugoi_storage_t *storage, bool includeDisabled, bool includeDead, sugoi_view_callback_t callback, void *u)
 {
     for(auto& pair : storage->groups)
     {
@@ -1094,13 +1094,13 @@ void dualS_all(dual_storage_t *storage, bool includeDisabled, bool includeDead, 
             continue;
         for(auto c : group->chunks)
         {
-            dual_chunk_view_t view {c, 0, c->count};
+            sugoi_chunk_view_t view {c, 0, c->count};
             callback(u, &view);
         }
     }
 }
 
-EIndex dualS_count(dual_storage_t *storage, bool includeDisabled, bool includeDead)
+EIndex sugoiS_count(sugoi_storage_t *storage, bool includeDisabled, bool includeDead)
 {
     EIndex result = 0;
     for(auto& pair : storage->groups)
@@ -1115,7 +1115,7 @@ EIndex dualS_count(dual_storage_t *storage, bool includeDisabled, bool includeDe
     return result;
 }
 
-void dual_set_bit(uint32_t* mask, int32_t bit)
+void sugoi_set_bit(uint32_t* mask, int32_t bit)
 {
     //CAS
     uint32_t oldMask = *mask;
@@ -1128,17 +1128,17 @@ void dual_set_bit(uint32_t* mask, int32_t bit)
 }
 }
 
-dual_type_index_t dual_id_of<dual::dirty_comp_t>::get()
+sugoi_type_index_t sugoi_id_of<sugoi::dirty_comp_t>::get()
 {
-    return dual::kDirtyComponent;
+    return sugoi::kDirtyComponent;
 }
 
-dual_type_index_t dual_id_of<dual::mask_comp_t>::get()
+sugoi_type_index_t sugoi_id_of<sugoi::mask_comp_t>::get()
 {
-    return dual::kMaskComponent;
+    return sugoi::kMaskComponent;
 }
 
-dual_type_index_t dual_id_of<dual::guid_comp_t>::get()
+sugoi_type_index_t sugoi_id_of<sugoi::guid_comp_t>::get()
 {
-    return dual::kGuidComponent;
+    return sugoi::kGuidComponent;
 }

@@ -1,6 +1,6 @@
 #pragma once
 #include "MPShared/module.configure.h"
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/containers/vector.hpp"
 #include "SkrRT/containers/bitset.hpp"
 #include "SkrRT/resource/resource_handle.h"
@@ -52,7 +52,7 @@ sreflect_struct(
 ) 
 CNetwork
 {
-    dual_entity_t serverEntity;
+    sugoi_entity_t serverEntity;
 };
 
 sreflect_struct(
@@ -94,7 +94,7 @@ sreflect_struct(
 )
 CGhost
 {
-    dual_entity_t mappedEntity;
+    sugoi_entity_t mappedEntity;
 };
 
 sreflect_struct(
@@ -108,7 +108,7 @@ CAuth
 {
     skr::Bitset<128> mappedConnection;
     skr::Bitset<128> initializedConnection;
-    dual_type_set_t mappedType; //data store in CAuthType buffer component
+    sugoi_type_set_t mappedType; //data store in CAuthType buffer component
 };
 
 sreflect_struct(
@@ -120,7 +120,7 @@ sreflect_struct(
 )
 CAuthTypeData
 {
-    dual_type_index_t type;
+    sugoi_type_index_t type;
 };
 
 sreflect_struct(
@@ -210,7 +210,7 @@ sreflect_struct(
 )
 CSnapshot
 {
-    dual_entity_t owner;
+    sugoi_entity_t owner;
 };
 
 sreflect_struct(
@@ -260,7 +260,7 @@ CMPGameModeState
     float zombieSpawnInterval;
 };
 
-MP_SHARED_API dual_type_set_t GetNetworkComponents();
-MP_SHARED_API dual_type_index_t GetNetworkComponent(uint8_t index);
-MP_SHARED_API uint8_t GetNetworkComponentIndex(dual_type_index_t type);
+MP_SHARED_API sugoi_type_set_t GetNetworkComponents();
+MP_SHARED_API sugoi_type_index_t GetNetworkComponent(uint8_t index);
+MP_SHARED_API uint8_t GetNetworkComponentIndex(sugoi_type_index_t type);
 MP_SHARED_API void InitializeNetworkComponents();

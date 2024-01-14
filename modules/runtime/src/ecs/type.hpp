@@ -1,8 +1,8 @@
 #pragma once
-#include "SkrRT/ecs/dual.h" // IWYU pragma: export
+#include "SkrRT/ecs/sugoi.h" // IWYU pragma: export
 #include "SkrRT/ecs/constants.hpp" // IWYU pragma: export
 
-namespace dual
+namespace sugoi
 {
 class type_index_t
 {
@@ -47,4 +47,4 @@ public:
 
     constexpr operator TIndex() const { return value; }
 };
-} // namespace dual
+} // namespace sugoi

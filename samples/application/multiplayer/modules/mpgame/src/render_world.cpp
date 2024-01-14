@@ -12,33 +12,33 @@
 
 void MPRenderWorld::Initialize(MPClientWorld* gameWorld)
 {
-    this->storage = dualS_create();
+    this->storage = sugoiS_create();
     this->gameWorld = gameWorld;
     skr_init_hires_timer(&renderTimer);
-    renderGhostsQuery = dualQ_from_literal(storage, "[in]CGhost");
-    gameGhostsQuery = dualQ_from_literal(gameWorld->storage, "[in]CGhost, [has]CPrefab");
-    transformQuery = dualQ_from_literal(storage, "[in]skr_rotation_comp_t, [in]skr_translation_comp_t, [in]skr_scale_comp_t, [in]CGhost");
-    cameraQuery = dualQ_from_literal(storage,
+    renderGhostsQuery = sugoiQ_from_literal(storage, "[in]CGhost");
+    gameGhostsQuery = sugoiQ_from_literal(gameWorld->storage, "[in]CGhost, [has]CPrefab");
+    transformQuery = sugoiQ_from_literal(storage, "[in]skr_rotation_comp_t, [in]skr_translation_comp_t, [in]skr_scale_comp_t, [in]CGhost");
+    cameraQuery = sugoiQ_from_literal(storage,
         "[inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
-    dualJ_bind_storage(storage);
+    sugoiJ_bind_storage(storage);
 }
 
 void MPRenderWorld::Shutdown()
 {
-    dualJ_unbind_storage(storage);
-    dualQ_release(renderGhostsQuery);
-    dualQ_release(gameGhostsQuery);
-    dualQ_release(cameraQuery);
-    dualS_release(storage);
+    sugoiJ_unbind_storage(storage);
+    sugoiQ_release(renderGhostsQuery);
+    sugoiQ_release(gameGhostsQuery);
+    sugoiQ_release(cameraQuery);
+    sugoiS_release(storage);
 }
 
 void MPRenderWorld::LoadScene()
 {
     {
-        auto setup = [&](dual_chunk_view_t* view) {
-            auto translations = dual::get_owned_rw<skr_translation_comp_t>(view);
-            auto rotations = dual::get_owned_rw<skr_rotation_comp_t>(view);
-            auto scales = dual::get_owned_rw<skr_scale_comp_t>(view);
+        auto setup = [&](sugoi_chunk_view_t* view) {
+            auto translations = sugoi::get_owned_rw<skr_translation_comp_t>(view);
+            auto rotations = sugoi::get_owned_rw<skr_rotation_comp_t>(view);
+            auto scales = sugoi::get_owned_rw<skr_scale_comp_t>(view);
             
             for (uint32_t i = 0; i < view->count; i++)
             {
@@ -48,20 +48,20 @@ void MPRenderWorld::LoadScene()
             }
         };          
         // allocate 1 player entity
-        auto playerT_builder = make_zeroed<dual::type_builder_t>();
+        auto playerT_builder = make_zeroed<sugoi::type_builder_t>();
         playerT_builder
             .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
             .with<skr_camera_comp_t>();
-        auto playerT = make_zeroed<dual_entity_type_t>();
+        auto playerT = make_zeroed<sugoi_entity_type_t>();
         playerT.type = playerT_builder.build();
-        dualS_allocate_type(storage, &playerT, 1, DUAL_LAMBDA(setup));
+        sugoiS_allocate_type(storage, &playerT, 1, SUGOI_LAMBDA(setup));
     }
 }
 
 
-dual::type_builder_t MPRenderWorld::GetRenderEntityType(skr_resource_handle_t prefab, bool controller)
+sugoi::type_builder_t MPRenderWorld::GetRenderEntityType(skr_resource_handle_t prefab, bool controller)
 {
-    dual::type_builder_t builder;
+    sugoi::type_builder_t builder;
     builder.with<CGhost, skr_render_effect_t>();
     builder.with<skr_rotation_comp_t, skr_translation_comp_t, skr_scale_comp_t>();
     if (controller)
@@ -77,13 +77,13 @@ void MPRenderWorld::UpdateStructuralChanges()
     gameToRenderEntityMap.clear();
     toDeleteRenderEntities.clear();
     newGameEntities.clear();
-    auto buildMap = [&](dual_chunk_view_t* view)
+    auto buildMap = [&](sugoi_chunk_view_t* view)
     {
-        auto entities = dualV_get_entities(view);
-        auto ghosts = (CGhost*)dualV_get_owned_ro(view, dual_id_of<CGhost>::get());
+        auto entities = sugoiV_get_entities(view);
+        auto ghosts = (CGhost*)sugoiV_get_owned_ro(view, sugoi_id_of<CGhost>::get());
         for (int i = 0; i < view->count; ++i)
         {
-            if(ghosts[i].mappedEntity != DUAL_NULL_ENTITY)
+            if(ghosts[i].mappedEntity != SUGOI_NULL_ENTITY)
             {
                 gameToRenderEntityMap[entities[i]] = ghosts[i].mappedEntity;
             }
@@ -93,7 +93,7 @@ void MPRenderWorld::UpdateStructuralChanges()
             }
         }
     };
-    dualQ_get_views(gameGhostsQuery, DUAL_LAMBDA(buildMap));
+    sugoiQ_get_views(gameGhostsQuery, SUGOI_LAMBDA(buildMap));
     for(auto& pair : renderToGameEntityMap)
     {
         if(gameToRenderEntityMap.find(pair.second) == gameToRenderEntityMap.end())
@@ -101,31 +101,31 @@ void MPRenderWorld::UpdateStructuralChanges()
             toDeleteRenderEntities.add(pair.first);
         }
     }
-    auto deleteRenderEntity = [&](dual_chunk_view_t* view)
+    auto deleteRenderEntity = [&](sugoi_chunk_view_t* view)
     {
-        auto entities = (dual_entity_t*)dualV_get_entities(view);
+        auto entities = (sugoi_entity_t*)sugoiV_get_entities(view);
         for (int i = 0; i < view->count; ++i)
         {
             renderToGameEntityMap.erase(entities[i]);
         }
-        auto modelFree = [=](dual_chunk_view_t* view) {
+        auto modelFree = [=](sugoi_chunk_view_t* view) {
         };
-        skr_render_effect_access(renderer, view, u8"ForwardEffect", DUAL_LAMBDA(modelFree));
+        skr_render_effect_access(renderer, view, u8"ForwardEffect", SUGOI_LAMBDA(modelFree));
         skr_render_effect_detach(renderer, view, u8"ForwardEffect");
-        dualS_destroy(storage, view);
+        sugoiS_destroy(storage, view);
     };
-    dualS_batch(storage, toDeleteRenderEntities.data(), toDeleteRenderEntities.size(), DUAL_LAMBDA(deleteRenderEntity));
-    auto createRenderEntity = [&](dual_chunk_view_t* view)
+    sugoiS_batch(storage, toDeleteRenderEntities.data(), toDeleteRenderEntities.size(), SUGOI_LAMBDA(deleteRenderEntity));
+    auto createRenderEntity = [&](sugoi_chunk_view_t* view)
     {
-        auto entities = dualV_get_entities(view);
-        auto ghosts = (CGhost*)dualV_get_owned_rw(view, dual_id_of<CGhost>::get());
-        auto prefabs = (CPrefab*)dualV_get_owned_ro(view, dual_id_of<CPrefab>::get());
-        auto controllers = (CController*)dualV_get_owned_ro(view, dual_id_of<CController>::get());
-        auto translations = dual::get_owned_ro<skr_translation_comp_t>(view);
-        auto rotations = dual::get_owned_ro<skr_rotation_comp_t>(view);
-        auto scale = dual::get_owned_ro<skr_scale_comp_t>(view);
+        auto entities = sugoiV_get_entities(view);
+        auto ghosts = (CGhost*)sugoiV_get_owned_rw(view, sugoi_id_of<CGhost>::get());
+        auto prefabs = (CPrefab*)sugoiV_get_owned_ro(view, sugoi_id_of<CPrefab>::get());
+        auto controllers = (CController*)sugoiV_get_owned_ro(view, sugoi_id_of<CController>::get());
+        auto translations = sugoi::get_owned_ro<skr_translation_comp_t>(view);
+        auto rotations = sugoi::get_owned_ro<skr_rotation_comp_t>(view);
+        auto scale = sugoi::get_owned_ro<skr_scale_comp_t>(view);
         
-        dual_entity_type_t batchedType = make_zeroed<dual_entity_type_t>();
+        sugoi_entity_type_t batchedType = make_zeroed<sugoi_entity_type_t>();
         auto batchedBuilder = GetRenderEntityType(prefabs[0].prefab, controllers != nullptr);
         batchedType.type = batchedBuilder.build();
         EIndex start = 0;
@@ -133,13 +133,13 @@ void MPRenderWorld::UpdateStructuralChanges()
         auto create = [&]()
         {
             EIndex g_id = start;
-            auto initialize = [&](dual_chunk_view_t* view) {
-                auto renderGhosts = (CGhost*)dualV_get_owned_rw(view, dual_id_of<CGhost>::get());
-                auto renderEntities = dualV_get_entities(view);
-                auto renderControllers = (CController*)dualV_get_owned_rw(view, dual_id_of<CController>::get());
-                auto renderTranslations = dual::get_owned_rw<skr_translation_comp_t>(view);
-                auto renderRotations = dual::get_owned_rw<skr_rotation_comp_t>(view);
-                auto renderScale = dual::get_owned_rw<skr_scale_comp_t>(view);
+            auto initialize = [&](sugoi_chunk_view_t* view) {
+                auto renderGhosts = (CGhost*)sugoiV_get_owned_rw(view, sugoi_id_of<CGhost>::get());
+                auto renderEntities = sugoiV_get_entities(view);
+                auto renderControllers = (CController*)sugoiV_get_owned_rw(view, sugoi_id_of<CController>::get());
+                auto renderTranslations = sugoi::get_owned_rw<skr_translation_comp_t>(view);
+                auto renderRotations = sugoi::get_owned_rw<skr_rotation_comp_t>(view);
+                auto renderScale = sugoi::get_owned_rw<skr_scale_comp_t>(view);
                 for (int i = 0; i < view->count; ++i)
                 {
                     ghosts[g_id + i].mappedEntity = renderEntities[i];
@@ -155,14 +155,14 @@ void MPRenderWorld::UpdateStructuralChanges()
                 g_id += view->count;
                 skr_render_effect_attach(renderer, view, u8"ForwardEffect");
             };
-            dualS_allocate_type(storage, &batchedType, count, DUAL_LAMBDA(initialize));
+            sugoiS_allocate_type(storage, &batchedType, count, SUGOI_LAMBDA(initialize));
         };
         for(int j = 1; j < view->count; ++j)
         {
             auto builder = GetRenderEntityType(prefabs[j].prefab, controllers != nullptr);
-            dual_entity_type_t type = make_zeroed<dual_entity_type_t>();
+            sugoi_entity_type_t type = make_zeroed<sugoi_entity_type_t>();
             type.type = builder.build();
-            if(dual::equal(batchedType, type))
+            if(sugoi::equal(batchedType, type))
             {
                 ++count;
             }
@@ -177,7 +177,7 @@ void MPRenderWorld::UpdateStructuralChanges()
         }
         create();
     };
-    dualS_batch(gameWorld->storage, newGameEntities.data(), newGameEntities.size(), DUAL_LAMBDA(createRenderEntity));
+    sugoiS_batch(gameWorld->storage, newGameEntities.data(), newGameEntities.size(), SUGOI_LAMBDA(createRenderEntity));
 }
 
 void MPRenderWorld::Update()
@@ -186,24 +186,24 @@ void MPRenderWorld::Update()
     deltaTime = skr_hires_timer_get_seconds(&renderTimer, true);
     //camera follow entity with CController
     {
-        dual_filter_t filter = make_zeroed<dual_filter_t>();
-        dual::type_builder_t builder;
+        sugoi_filter_t filter = make_zeroed<sugoi_filter_t>();
+        sugoi::type_builder_t builder;
         builder.with<skr_translation_comp_t, CController>();
         filter.all = builder.build();
-        dual_meta_filter_t metaFilter = make_zeroed<dual_meta_filter_t>();
+        sugoi_meta_filter_t metaFilter = make_zeroed<sugoi_meta_filter_t>();
         skr_float3_t controllerPos = { 0.f, 0.f, 0.f };
-        auto getControllerPos = [&](dual_chunk_view_t* view)
+        auto getControllerPos = [&](sugoi_chunk_view_t* view)
         {
-            auto translations = dual::get_owned_ro<skr_translation_comp_t>(view);
+            auto translations = sugoi::get_owned_ro<skr_translation_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
                 controllerPos = translations[i].value;
             }
         };
-        dualS_query(storage, &filter, &metaFilter, DUAL_LAMBDA(getControllerPos));
-        auto updateCamera = [&](dual_chunk_view_t* view)
+        sugoiS_query(storage, &filter, &metaFilter, SUGOI_LAMBDA(getControllerPos));
+        auto updateCamera = [&](sugoi_chunk_view_t* view)
         {
-            auto translations = dual::get_owned_rw<skr_translation_comp_t>(view);
+            auto translations = sugoi::get_owned_rw<skr_translation_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
                 //translations[i].value = {controllerPos.x, translations[i].value.y, controllerPos.z};
@@ -220,22 +220,22 @@ void MPRenderWorld::Update()
                 }
             }
         };
-        dualQ_get_views(cameraQuery, DUAL_LAMBDA(updateCamera));
+        sugoiQ_get_views(cameraQuery, SUGOI_LAMBDA(updateCamera));
     }
     //TODO: switch to new api
-    auto updateTransform = +[](void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+    auto updateTransform = +[](void* u, sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex)
     {
         auto This = (MPRenderWorld*)u;
-        auto rotations = (skr_rotation_comp_t*)dualV_get_owned_ro_local(view, localTypes[0]);
-        auto translations = (skr_translation_comp_t*)dualV_get_owned_ro_local(view, localTypes[1]);
-        auto scales = (skr_scale_comp_t*)dualV_get_owned_ro_local(view, localTypes[2]);
-        auto ghosts = (dual_entity_t*)dualV_get_owned_ro_local(view, localTypes[3]);
+        auto rotations = (skr_rotation_comp_t*)sugoiV_get_owned_ro_local(view, localTypes[0]);
+        auto translations = (skr_translation_comp_t*)sugoiV_get_owned_ro_local(view, localTypes[1]);
+        auto scales = (skr_scale_comp_t*)sugoiV_get_owned_ro_local(view, localTypes[2]);
+        auto ghosts = (sugoi_entity_t*)sugoiV_get_owned_ro_local(view, localTypes[3]);
         auto r_id = 0;
-        auto update = [&](dual_chunk_view_t* view)
+        auto update = [&](sugoi_chunk_view_t* view)
         { 
-            auto gameRotations = (skr_rotation_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_rotation_comp_t>::get());
-            auto gameTranslations = (skr_translation_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_comp_t>::get());
-            auto gameScales = (skr_scale_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_scale_comp_t>::get());
+            auto gameRotations = (skr_rotation_comp_t*)sugoiV_get_owned_ro(view, sugoi_id_of<skr_rotation_comp_t>::get());
+            auto gameTranslations = (skr_translation_comp_t*)sugoiV_get_owned_ro(view, sugoi_id_of<skr_translation_comp_t>::get());
+            auto gameScales = (skr_scale_comp_t*)sugoiV_get_owned_ro(view, sugoi_id_of<skr_scale_comp_t>::get());
             for(EIndex i = 0; i < view->count; ++i)
             {
                 auto gameRotation = gameRotations[i].euler.yaw;
@@ -254,8 +254,8 @@ void MPRenderWorld::Update()
             }
             r_id += view->count;
         };
-        dualS_batch(This->gameWorld->storage, ghosts, view->count, DUAL_LAMBDA(update));
+        sugoiS_batch(This->gameWorld->storage, ghosts, view->count, SUGOI_LAMBDA(update));
     };
-    dualJ_schedule_ecs(transformQuery, 512, updateTransform, this, nullptr, nullptr, nullptr, nullptr);
-    dualJ_wait_all();
+    sugoiJ_schedule_ecs(transformQuery, 512, updateTransform, this, nullptr, nullptr, nullptr, nullptr);
+    sugoiJ_wait_all();
 }

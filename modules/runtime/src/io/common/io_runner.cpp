@@ -337,7 +337,7 @@ void RunnerBase::destroy() SKR_NOEXCEPT
         SKR_LOG_BACKTRACE(u8"runner: stop already requested.");
     }
 
-    wait_stop();
+    wait_timeout<u8"WaitIORunnerStop">([&] { return get_status() == skr::ServiceThread::kStatusStopped; });
     exit();
 }
 

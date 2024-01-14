@@ -7,7 +7,7 @@
 
 struct Prefab
 {
-    dual_entity_type_t (*Type)();
+    sugoi_entity_type_t (*Type)();
     void (*Initialize)();
 };
 
@@ -23,9 +23,9 @@ struct MP_SHARED_API MPClientWorld : MPGameWorld
     uint64_t inputFrame;
     MPInputFrame predictedInputs[MaxPredictFrame];
     MPInputFrame input;
-    dual_storage_t* snapshotStorage;
-    dual_query_t* snapshotQuery;
-    dual_query_t* healthQuery;
+    sugoi_storage_t* snapshotStorage;
+    sugoi_query_t* snapshotQuery;
+    sugoi_query_t* healthQuery;
     IWorldDeltaApplier* worldDeltaApplier;
 
     bool firstFrame = true;
@@ -56,8 +56,8 @@ struct MP_SHARED_API MPClientWorld : MPGameWorld
     double GetBytePerSecondBeforeCompress();
     double GetCompressRatio();
     double GetTickInterval() { return serverTickInterval; }
-    dual_entity_t SpawnPrefab(skr_resource_handle_t prefab, dual_entity_t entity, dual_entity_type_t extension);
-    void DestroyEntity(dual_entity_t entity);
+    sugoi_entity_t SpawnPrefab(skr_resource_handle_t prefab, sugoi_entity_t entity, sugoi_entity_type_t extension);
+    void DestroyEntity(sugoi_entity_t entity);
 
 
     float GetPlayerHealth();

@@ -2,7 +2,7 @@
 #include "SkrBase/misc/traits.hpp"
 #include "SkrRT/containers/function_ref.hpp"
 
-namespace dual
+namespace sugoi
 {
     template<class F, class R, class... Args>
     auto get_trampoline(skr::type_t<R(Args...)>)
@@ -21,5 +21,5 @@ namespace dual
     }
 }
 
-#define DUAL_LAMBDA(f) dual::get_trampoline<decltype(f)>(), &f
-#define DUAL_LAMBDA_POINTER(f) dual::get_trampoline<decltype(*f)>(), f, nullptr, +[](void* u, EIndex entityCount) { SkrDelete(((decltype(f))u)); }
+#define SUGOI_LAMBDA(f) sugoi::get_trampoline<decltype(f)>(), &f
+#define SUGOI_LAMBDA_POINTER(f) sugoi::get_trampoline<decltype(*f)>(), f, nullptr, +[](void* u, EIndex entityCount) { SkrDelete(((decltype(f))u)); }

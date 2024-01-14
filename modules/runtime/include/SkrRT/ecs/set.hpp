@@ -1,10 +1,10 @@
 #pragma once
-#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/sugoi.h"
 #include "hash.hpp"
 #include <algorithm>
 #include <bitset>
 
-namespace dual
+namespace sugoi
 {
     template<class T>
     struct set_utils
@@ -135,71 +135,71 @@ namespace dual
             return j == rhs.length;
         }
     };
-    SKR_RUNTIME_API void sort(const dual_type_set_t& value);
-    SKR_RUNTIME_API void sort(const dual_entity_set_t& value);
-    SKR_RUNTIME_API bool equal(const dual_type_set_t& a, const dual_type_set_t& b);
-    SKR_RUNTIME_API bool equal(const dual_entity_set_t& a, const dual_entity_set_t& b);
-    SKR_RUNTIME_API bool equal(const dual_entity_type_t& a, const dual_entity_type_t& b);
+    SKR_RUNTIME_API void sort(const sugoi_type_set_t& value);
+    SKR_RUNTIME_API void sort(const sugoi_entity_set_t& value);
+    SKR_RUNTIME_API bool equal(const sugoi_type_set_t& a, const sugoi_type_set_t& b);
+    SKR_RUNTIME_API bool equal(const sugoi_entity_set_t& a, const sugoi_entity_set_t& b);
+    SKR_RUNTIME_API bool equal(const sugoi_entity_type_t& a, const sugoi_entity_type_t& b);
 
-    SKR_RUNTIME_API bool ordered(const dual_type_set_t& value);
-    SKR_RUNTIME_API bool ordered(const dual_entity_set_t& value);
-    SKR_RUNTIME_API bool ordered(const dual_entity_type_t& value);
-    SKR_RUNTIME_API bool ordered(const dual_filter_t& value);
-    SKR_RUNTIME_API bool ordered(const dual_meta_filter_t& value);
-    SKR_RUNTIME_API bool ordered(const dual_delta_type_t& value);
+    SKR_RUNTIME_API bool ordered(const sugoi_type_set_t& value);
+    SKR_RUNTIME_API bool ordered(const sugoi_entity_set_t& value);
+    SKR_RUNTIME_API bool ordered(const sugoi_entity_type_t& value);
+    SKR_RUNTIME_API bool ordered(const sugoi_filter_t& value);
+    SKR_RUNTIME_API bool ordered(const sugoi_meta_filter_t& value);
+    SKR_RUNTIME_API bool ordered(const sugoi_delta_type_t& value);
 
-    SKR_RUNTIME_API size_t hash(const dual_type_set_t& value, size_t basis = _FNV_offset_basis);
-    SKR_RUNTIME_API size_t hash(const dual_entity_set_t& value, size_t basis = _FNV_offset_basis);
-    SKR_RUNTIME_API size_t hash(const dual_filter_t& value, size_t basis = _FNV_offset_basis);
-    SKR_RUNTIME_API size_t hash(const dual_meta_filter_t& value, size_t basis = _FNV_offset_basis);
-    SKR_RUNTIME_API size_t hash(const dual_entity_type_t& value, size_t basis = _FNV_offset_basis);
+    SKR_RUNTIME_API size_t hash(const sugoi_type_set_t& value, size_t basis = _FNV_offset_basis);
+    SKR_RUNTIME_API size_t hash(const sugoi_entity_set_t& value, size_t basis = _FNV_offset_basis);
+    SKR_RUNTIME_API size_t hash(const sugoi_filter_t& value, size_t basis = _FNV_offset_basis);
+    SKR_RUNTIME_API size_t hash(const sugoi_meta_filter_t& value, size_t basis = _FNV_offset_basis);
+    SKR_RUNTIME_API size_t hash(const sugoi_entity_type_t& value, size_t basis = _FNV_offset_basis);
 
-    SKR_RUNTIME_API size_t data_size(const dual_type_set_t& value);
-    SKR_RUNTIME_API size_t data_size(const dual_entity_set_t& value);
-    SKR_RUNTIME_API size_t data_size(const dual_filter_t& value);
-    SKR_RUNTIME_API size_t data_size(const dual_meta_filter_t& value);
-    SKR_RUNTIME_API size_t data_size(const dual_parameters_t& value);
-    SKR_RUNTIME_API size_t data_size(const dual_entity_type_t& value);
+    SKR_RUNTIME_API size_t data_size(const sugoi_type_set_t& value);
+    SKR_RUNTIME_API size_t data_size(const sugoi_entity_set_t& value);
+    SKR_RUNTIME_API size_t data_size(const sugoi_filter_t& value);
+    SKR_RUNTIME_API size_t data_size(const sugoi_meta_filter_t& value);
+    SKR_RUNTIME_API size_t data_size(const sugoi_parameters_t& value);
+    SKR_RUNTIME_API size_t data_size(const sugoi_entity_type_t& value);
 
-    SKR_RUNTIME_API dual_type_set_t clone(const dual_type_set_t& value, char*& buffer);
-    SKR_RUNTIME_API dual_entity_set_t clone(const dual_entity_set_t& value, char*& buffer);
-    SKR_RUNTIME_API dual_filter_t clone(const dual_filter_t& value, char*& buffer);
-    SKR_RUNTIME_API dual_meta_filter_t clone(const dual_meta_filter_t& value, char*& buffer);
-    SKR_RUNTIME_API dual_parameters_t clone(const dual_parameters_t& value, char*& buffer);
-    SKR_RUNTIME_API dual_entity_type_t clone(const dual_entity_type_t& value, char*& buffer);
-    SKR_RUNTIME_API bool match(const dual_entity_type_t& type, const dual_filter_t& value);
+    SKR_RUNTIME_API sugoi_type_set_t clone(const sugoi_type_set_t& value, char*& buffer);
+    SKR_RUNTIME_API sugoi_entity_set_t clone(const sugoi_entity_set_t& value, char*& buffer);
+    SKR_RUNTIME_API sugoi_filter_t clone(const sugoi_filter_t& value, char*& buffer);
+    SKR_RUNTIME_API sugoi_meta_filter_t clone(const sugoi_meta_filter_t& value, char*& buffer);
+    SKR_RUNTIME_API sugoi_parameters_t clone(const sugoi_parameters_t& value, char*& buffer);
+    SKR_RUNTIME_API sugoi_entity_type_t clone(const sugoi_entity_type_t& value, char*& buffer);
+    SKR_RUNTIME_API bool match(const sugoi_entity_type_t& type, const sugoi_filter_t& value);
 }
 
-DUAL_FORCEINLINE const dual_type_index_t* begin(dual_type_set_t& value)
+SUGOI_FORCEINLINE const sugoi_type_index_t* begin(sugoi_type_set_t& value)
 {
     return value.data;
 }
-DUAL_FORCEINLINE const dual_type_index_t* end(dual_type_set_t& value)
+SUGOI_FORCEINLINE const sugoi_type_index_t* end(sugoi_type_set_t& value)
 {
     return value.data + value.length;
 }
 
-DUAL_FORCEINLINE const dual_type_index_t* begin(const dual_type_set_t& value)
+SUGOI_FORCEINLINE const sugoi_type_index_t* begin(const sugoi_type_set_t& value)
 {
     return value.data;
 }
-DUAL_FORCEINLINE const dual_type_index_t* end(const dual_type_set_t& value)
+SUGOI_FORCEINLINE const sugoi_type_index_t* end(const sugoi_type_set_t& value)
 {
     return value.data + value.length;
 }
-DUAL_FORCEINLINE const dual_entity_t* begin(dual_entity_set_t& value)
+SUGOI_FORCEINLINE const sugoi_entity_t* begin(sugoi_entity_set_t& value)
 {
     return value.data;
 }
-DUAL_FORCEINLINE const dual_entity_t* end(dual_entity_set_t& value)
+SUGOI_FORCEINLINE const sugoi_entity_t* end(sugoi_entity_set_t& value)
 {
     return value.data + value.length;
 }
-DUAL_FORCEINLINE const dual_entity_t* begin(const dual_entity_set_t& value)
+SUGOI_FORCEINLINE const sugoi_entity_t* begin(const sugoi_entity_set_t& value)
 {
     return value.data;
 }
-DUAL_FORCEINLINE const dual_entity_t* end(const dual_entity_set_t& value)
+SUGOI_FORCEINLINE const sugoi_entity_t* end(const sugoi_entity_set_t& value)
 {
     return value.data + value.length;
 }

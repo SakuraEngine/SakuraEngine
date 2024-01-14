@@ -2,7 +2,7 @@
 #include "pool.hpp"
 #include <iterator>
 
-namespace dual
+namespace sugoi
 {
     struct cache_base_t
     { 
