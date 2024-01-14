@@ -2,7 +2,7 @@
 #include "SkrInputSystem/input_action.hpp"
 #include "SkrInputSystem/input_trigger.hpp"
 #include "SkrInputSystem/input_modifier.hpp"
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrContainers/vector.hpp"
 #include "SkrContainers/sptr.hpp"
 #include "SkrContainers/stl_function.hpp"

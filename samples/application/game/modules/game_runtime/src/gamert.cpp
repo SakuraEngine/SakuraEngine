@@ -6,7 +6,7 @@
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/runtime_module.h"
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRuntime);
 

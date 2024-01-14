@@ -3,7 +3,7 @@
 #ifdef _WIN32
 #include "SkrGraphics/extensions/cgpu_d3d12_exts.h"
 #endif
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrCore/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrModule/module_manager.hpp"

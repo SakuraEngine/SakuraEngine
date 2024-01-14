@@ -2,7 +2,7 @@
 #include "SkrMemory/memory.h"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/misc/types.h"
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"
 
 #include "SkrCore/log.h"

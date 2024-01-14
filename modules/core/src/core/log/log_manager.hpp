@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrCore/log/log_sink.hpp"
 #include "SkrCore/log/log_pattern.hpp"
 #include "SkrContainers/hashmap.hpp"

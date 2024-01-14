@@ -2,7 +2,7 @@
 #include "SkrRT/platform/vfs.h" // IWYU pragma: export
 #include "SkrBase/misc/debug.h"  // IWYU pragma: export
 #include "SkrOS/filesystem.hpp" // IWYU pragma: export
-#include "SkrCore/guid.hpp" // IWYU pragma: export
+#include "SkrGuid/guid.hpp" // IWYU pragma: export
 #include "SkrRT/misc/types.h" // IWYU pragma: export
 #include "SkrCore/log.h" // IWYU pragma: export
 #include "SkrBase/misc/make_zeroed.hpp" // IWYU pragma: export

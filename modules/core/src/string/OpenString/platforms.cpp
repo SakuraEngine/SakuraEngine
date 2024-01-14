@@ -6,11 +6,6 @@
 #include "OpenString/common/platforms.h"
 #include "OpenString/common/adapters.h"
 
-namespace ostr 
-{
-    const ochar8_t* kOpenStringMemory = u8"OpenString";
-}
-
 #if _WIN32
 
 #define WIN32_LEAN_AND_MEAN

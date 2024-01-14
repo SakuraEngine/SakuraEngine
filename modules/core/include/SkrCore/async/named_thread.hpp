@@ -20,7 +20,7 @@ struct NamedThreadFunction
     virtual AsyncResult run() SKR_NOEXCEPT = 0;
 };
 
-struct SKR_CORE_API NamedThread
+struct SKR_STATIC_API NamedThread
 {
 public:
     NamedThread() SKR_NOEXCEPT;

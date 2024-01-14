@@ -1,6 +1,6 @@
 #include "SkrRT/resource/config_resource.h"
 #include "SkrBase/misc/debug.h" 
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrMemory/memory.h"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/serde/binary/writer.h"

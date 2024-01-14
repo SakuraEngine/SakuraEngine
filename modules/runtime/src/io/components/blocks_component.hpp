@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/io/io.h"
-#include "SkrCore/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "../components/component.hpp"
 
 namespace skr {

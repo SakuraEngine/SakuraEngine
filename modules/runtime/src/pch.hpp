@@ -9,7 +9,7 @@
 #include <random> // IWYU pragma: export
 #include <chrono> // IWYU pragma: export
 #include "SkrBase/misc/debug.h"  // IWYU pragma: export
-#include "SkrCore/guid.hpp" // IWYU pragma: export
+#include "SkrGuid/guid.hpp" // IWYU pragma: export
 #include <SkrOS/filesystem.hpp> // IWYU pragma: export
 
 #include "SkrRT/ecs/entity.hpp" // IWYU pragma: export
