@@ -14,6 +14,11 @@ function public_dependency(dep, version, setting)
     add_values(dep..".version", version)
 end
 
+function library_dependency(dep, version, setting)
+    add_deps(dep, {public = true})
+    add_values(dep..".version", version)
+end
+
 rule("skr.module")
 rule_end()
 
@@ -138,11 +143,17 @@ rule("skr.dyn_module")
     end)
 rule_end()
 
+rule("skr.static_library")
+    on_load(function (target, opt)
+        target:set("kind", "static")
+    end)
+rule_end()
+
 rule("skr.static_module")
     add_deps("skr.module")
+    add_deps("skr.static_library")
     on_load(function (target, opt)
         local api = target:extraconf("rules", "skr.static_module", "api")
-        target:set("kind", "static")
         if not has_config("shipping_one_archive") then
             target:add("defines", api.."_API", {public=true})
             target:add("defines", api.."_STATIC", {public=true})
@@ -150,6 +161,19 @@ rule("skr.static_module")
         end
     end)
 rule_end()
+
+function static_library(name, api, version, opt)
+    target(name)
+        set_group("01.libraries/"..name)
+        add_rules("skr.static_library", { api = api, version = version }) 
+        set_kind("static")
+        opt = opt or {}
+        if opt.exception and not opt.noexception then
+            set_exceptions("cxx")
+        else
+            set_exceptions("no-cxx")
+        end
+end
 
 function static_module(name, api, version, opt)
     target(name)

@@ -1,4 +1,4 @@
-static_module("SkrBase", "SKR_BASE_STATIC", engine_version)
+static_library("SkrBase", "SKR_BASE_STATIC", engine_version)
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_deps("SkrRoot", {public = true})
     add_includedirs("include", {public = true})
