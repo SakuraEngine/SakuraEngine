@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGui/framework/widget/stateful_widget.hpp"
-#include "OGUI_Sandbox/module.configure.h"
+#include "SkrBase/config.h"
 #ifndef __meta__
     #include "OGUI_Sandbox/counter_state.generated.h"
 #endif

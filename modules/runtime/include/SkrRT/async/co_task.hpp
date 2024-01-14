@@ -3,11 +3,11 @@
 
 #if __cpp_impl_coroutine
 #include <atomic>
-#include "SkrRT/platform/thread.h"
-#include "SkrRT/containers/array.hpp"
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/stl_function.hpp"
+#include "SkrOS/thread.h"
+#include "SkrContainers/array.hpp"
+#include "SkrContainers/sptr.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/stl_function.hpp"
 
 #if __cpp_lib_coroutine
     #include <coroutine>

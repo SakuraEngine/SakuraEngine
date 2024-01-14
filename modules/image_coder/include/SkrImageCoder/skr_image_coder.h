@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/config.h"
 #include "SkrRT/misc/types.h"
-#include "SkrImageCoder/module.configure.h"
+#include "SkrBase/config.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr, IImageInterface, skr_image_interface)
 SKR_DECLARE_TYPE_ID_FWD(skr, IImageEncoder, skr_image_encoder)
@@ -44,7 +44,7 @@ typedef enum EImageCoderCompression {
 typedef uint32_t ImageCoderCompression;
 
 #ifdef __cplusplus
-#include <SkrRT/containers/span.hpp>
+#include <SkrContainers/span.hpp>
 
 namespace skr
 {

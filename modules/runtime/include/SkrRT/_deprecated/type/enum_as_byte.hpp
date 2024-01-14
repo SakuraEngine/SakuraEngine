@@ -43,7 +43,7 @@ protected:
 } // namespace skr
 
 // binary reader
-#include "SkrRT/serde/binary/reader_fwd.h"
+#include "SkrBase/types.h"
 
 namespace skr
 {
@@ -60,7 +60,7 @@ struct ReadTrait<TEnumAsByte<T>> {
 } // namespace skr
 
 // binary writer
-#include "SkrRT/serde/binary/writer_fwd.h"
+#include "SkrBase/types.h"
 
 namespace skr
 {

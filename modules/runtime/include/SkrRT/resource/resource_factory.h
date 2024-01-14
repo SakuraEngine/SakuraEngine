@@ -11,8 +11,8 @@ typedef enum ESkrInstallStatus
 
 typedef struct skr_vfs_t skr_vfs_t;
 #if defined(__cplusplus)
-    #include "SkrRT/serde/binary/reader_fwd.h"
-    #include "SkrRT/serde/binary/writer_fwd.h"
+    #include "SkrBase/types.h"
+    #include "SkrBase/types.h"
 namespace skr
 {
 namespace resource

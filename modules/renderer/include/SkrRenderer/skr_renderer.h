@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRenderer/primitive_pass.h"
 #include "SkrRenderer/fwd_types.h"
 
@@ -18,7 +18,7 @@ struct SKR_RENDERER_API SRenderer {
 };
 
 #ifdef __cplusplus
-    #include "SkrRT/module/module.hpp"
+    #include "SkrModule/module.hpp"
     #include "render_device.h"
 
 class SKR_RENDERER_API SkrRendererModule : public skr::IDynamicModule

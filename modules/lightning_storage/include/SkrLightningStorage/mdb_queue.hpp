@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrRT/misc/types.h"
-#include "SkrRT/platform/thread.h"
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers/umap.hpp"
-#include "SkrRT/containers/string.hpp"
+#include "SkrOS/thread.h"
+#include "SkrContainers/sptr.hpp"
+#include "SkrContainers/umap.hpp"
+#include "SkrContainers/string.hpp"
 #include "SkrLightningStorage/mdb.h"
 
 namespace skr {

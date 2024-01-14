@@ -25,19 +25,10 @@
 #define marl_finally_h
 
 #include "export.h"
-
-
-#ifdef MARL_USE_EASTL
-#include <EASTL/shared_ptr.h>
-#include <EASTL/functional.h>
-namespace marl { using eastl::make_shared; using eastl::shared_ptr; }
-namespace marl { using eastl::function; }
-#else
 #include <memory>
 #include <functional>
 namespace marl { using std::make_shared; using std::shared_ptr; }
 namespace marl { using std::function; }
-#endif
 
 namespace marl {
 

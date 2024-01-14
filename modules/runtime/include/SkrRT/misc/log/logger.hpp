@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/misc/log/log_base.hpp"
-#include "SkrRT/misc/log/log_formatter.hpp"
+#include "SkrCore/log/log_base.hpp"
+#include "SkrCore/log/log_formatter.hpp"
 
 namespace skr {
 namespace log {

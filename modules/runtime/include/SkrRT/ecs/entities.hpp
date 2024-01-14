@@ -1,7 +1,7 @@
 #pragma once
 #include "sugoi.h"
-#include "SkrRT/platform/thread.h"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrOS/thread.h"
+#include "SkrContainers/vector.hpp"
 
 namespace sugoi
 {

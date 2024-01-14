@@ -2,11 +2,11 @@
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/config.h"
 
-#include <SkrRT/containers/span.hpp>
-#include <SkrRT/containers/vector.hpp>
-#include <SkrRT/containers/uset.hpp>
-#include <SkrRT/containers/hashmap.hpp>
-#include "SkrRT/containers/sptr.hpp"
+#include <SkrContainers/span.hpp>
+#include <SkrContainers/vector.hpp>
+#include <SkrContainers/uset.hpp>
+#include <SkrContainers/hashmap.hpp>
+#include "SkrContainers/sptr.hpp"
 
 #include <limits>
 #include <type_traits>

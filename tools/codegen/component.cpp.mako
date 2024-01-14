@@ -12,7 +12,7 @@
 // BEGIN DUAL GENERATED
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/array.hpp"
-#include "SkrRT/ecs/luabind.hpp"
+#include "SkrLua/sugoi_bind.hpp"
 #include "SkrRT/ecs/serde.hpp"
 
 %for type in records:

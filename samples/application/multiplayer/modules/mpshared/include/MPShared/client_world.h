@@ -1,7 +1,7 @@
 
 #pragma once
 #include "steam/steamnetworkingtypes.h"
-#include "SkrRT/platform/time.h"
+#include "SkrCore/time.h"
 #include "MPShared/shared.h"
 #include "MPShared/world_delta.h"
 

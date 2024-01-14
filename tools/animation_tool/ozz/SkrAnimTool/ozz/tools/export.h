@@ -27,7 +27,7 @@
 
 #ifndef OZZ_OZZ_ANIMATION_OFFLINE_TOOLS_EXPORT_H_
 #define OZZ_OZZ_ANIMATION_OFFLINE_TOOLS_EXPORT_H_
-#include "SkrAnimTool/module.configure.h"
+#include "SkrBase/config.h"
 
 #define OZZ_ANIMTOOLS_DLL SKR_ANIMTOOL_API
 

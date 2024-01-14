@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/guid.hpp"
+#include "SkrGuid/guid.hpp"
 
 // FIXME. temporal solution
 #define SKR_IS_BIG_ENDIAN 0

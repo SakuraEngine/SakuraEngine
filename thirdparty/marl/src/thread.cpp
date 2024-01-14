@@ -18,16 +18,10 @@
 #include "marl/defer.h"
 #include "marl/trace.h"
 
-#ifdef MARL_USE_EASTL
-#include <EASTL/sort.h>
-#include <EASTL/vector.h> 
-namespace marl { using eastl::sort; using eastl::vector; }
-#else
 #include <algorithm>  // std::sort
 #include <vector>
 #include <array>
 namespace marl { using std::sort; using std::vector; }
-#endif
 
 #include <cstdarg>
 #include <cstdio>
@@ -53,13 +47,6 @@ namespace marl { using std::sort; using std::vector; }
 #include <pthread.h>
 #include <unistd.h>
 #include <thread>
-#endif
-
-#ifdef MARL_USE_EASTL
-size_t eastl::hash<std::thread::id>::operator()(const std::thread::id _Keyval) const noexcept {
-    std::hash<std::thread::id> hasher;
-    return hasher(_Keyval);
-}
 #endif
 
 namespace {

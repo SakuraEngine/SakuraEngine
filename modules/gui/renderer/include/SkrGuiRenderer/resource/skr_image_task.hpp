@@ -1,8 +1,8 @@
 #pragma once
-#include "cgpu/cgpux.h"
+#include "SkrGraphics/cgpux.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
-#include "SkrGuiRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrGui/backend/resource/resource.hpp"
 
 // format helper

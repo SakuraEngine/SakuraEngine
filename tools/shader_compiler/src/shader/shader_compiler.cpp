@@ -1,8 +1,8 @@
-#include "SkrRT/module/module.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/stl_function.hpp"
-#include "SkrShaderCompiler/module.configure.h"
+#include "SkrModule/module.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/hashmap.hpp"
+#include "SkrContainers/stl_function.hpp"
+#include "SkrBase/config.h"
 #include "SkrShaderCompiler/shader_compiler.hpp"
 
 namespace skd

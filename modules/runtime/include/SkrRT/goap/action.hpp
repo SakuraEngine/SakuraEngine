@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/goap/static/state.hpp"
 #include "SkrRT/goap/dynamic/state.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrContainers/vector.hpp"
 
 namespace skr::goap
 {
@@ -41,7 +41,7 @@ struct Action {
     template <concepts::AtomValue ValueType>
     Action& add_effect(const IdentifierType& id, const ValueType& value) SKR_NOEXCEPT
     {
-        effect_.set(id, value);
+        assign_effect_.set(id, value);
         return *this;
     }
 
@@ -71,7 +71,7 @@ struct Action {
     StateType act_on(StateType& ws) const SKR_NOEXCEPT
     {
         StateType tmp(ws);
-        effect_.foreachAtomValue([&](const auto& k, const auto& v) { tmp.set(k, v); return true; });
+        assign_effect_.foreachAtomValue([&](const auto& k, const auto& v) { tmp.set(k, v); return true; });
         return tmp;
     }
 
@@ -88,7 +88,6 @@ public:
     {
         return add_condition(id, EVariableFlag::Explicit, value, EConditionType::Equal);
     }
-
     template <auto Member>
     requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
     Action& exist_and_equal(const AtomValueType<typename MemberInfo<Member>::Type>& value)
@@ -101,7 +100,6 @@ public:
     {
         return add_condition(id, EVariableFlag::Explicit, value, EConditionType::NotEqual);
     }
-
     template <auto Member>
     requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
     Action& exist_and_nequal(const AtomValueType<typename MemberInfo<Member>::Type>& value)
@@ -114,7 +112,6 @@ public:
     {
         return add_condition(id, EVariableFlag::Optional, value, EConditionType::Equal);
     }
-
     template <auto Member>
     requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
     Action& none_or_equal(const AtomValueType<typename MemberInfo<Member>::Type>& value)
@@ -127,7 +124,6 @@ public:
     {
         return add_condition(id, EVariableFlag::Optional, value, EConditionType::NotEqual);
     }
-
     template <auto Member>
     requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
     Action& none_or_nequal(const AtomValueType<typename MemberInfo<Member>::Type>& value)
@@ -139,7 +135,6 @@ public:
     {
         return add_condition(id, EVariableFlag::None, ValueStoreType{}, EConditionType::Equal);
     }
-
     template <auto Member>
     requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
     Action& none()
@@ -151,7 +146,6 @@ public:
     {
         return add_condition(id, EVariableFlag::Explicit, ValueStoreType{}, EConditionType::Exist);
     }
-
     template <auto Member>
     requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
     Action& exist()
@@ -159,13 +153,36 @@ public:
         return exist(atom_id<Member>);
     }
 
+    template <typename FlagType>
+    Action& with_flag(const IdentifierType& id, const FlagType& value)
+    {
+        return add_condition(id, EVariableFlag::Explicit, static_cast<ValueStoreType>(value), EConditionType::And);
+    }
+    template <auto Member, typename FlagType>
+    requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
+    Action& with_flag(const FlagType& value)
+    {
+        return with_flag(atom_id<Member>, value);
+    }
+
+    template <typename FlagType>
+    Action& without_flag(const IdentifierType& id, const FlagType& value)
+    {
+        return add_condition(id, EVariableFlag::Optional, static_cast<ValueStoreType>(value), EConditionType::Nand);
+    }
+    template <auto Member, typename FlagType>
+    requires(concepts::IsStaticWorldState<StateType> && concepts::IsAtomMember<Member>)
+    Action& without_flag(const FlagType& value)
+    {
+        return without_flag(atom_id<Member>, value);
+    }
 protected:
 #ifdef SKR_GOAP_SET_NAME
     skr::String name_;
 #endif
     CostType  cost_ = 0;
     CondType  cond_;
-    StateType effect_;
+    StateType assign_effect_;
 };
 
 template <concepts::VariableType T>
@@ -187,7 +204,12 @@ inline static bool DoValueCompare(EConditionType cond, const T& lhs, const T& rh
             return Compare<T>::Less(lhs, rhs);
         case EConditionType::LessEqual:
             return Compare<T>::LessEqual(lhs, rhs);
+        case EConditionType::And:
+            return Compare<T>::And(lhs, rhs);
+        case EConditionType::Nand:
+            return !Compare<T>::And(lhs, rhs);
         default:
+            SKR_ASSERT(false && "unknown condition type");
             return false;
     }
 }

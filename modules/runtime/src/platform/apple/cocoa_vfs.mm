@@ -1,7 +1,7 @@
 #include "SkrRT/platform/vfs.h"
 #include "SkrMemory/memory.h"
-#include "SkrRT/misc/log.h"
-#include "SkrRT/platform/filesystem.hpp"
+#include "SkrCore/log.h"
+#include "SkrOS/filesystem.hpp"
 #import <Foundation/Foundation.h>
 
 inline static char8_t* duplicate_string(const char8_t* src_string) SKR_NOEXCEPT

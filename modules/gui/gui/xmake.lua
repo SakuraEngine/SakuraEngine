@@ -5,7 +5,6 @@ add_requires("harfbuzz >=7.1.0-skr", {system = false})
 add_requires("nanovg >=0.1.0-skr", {system = false})
 
 shared_module("SkrGui", "SKR_GUI", engine_version)
-    set_group("01.modules")
     add_packages("freetype", "icu", "harfbuzz")
     add_packages("nanovg")
     public_dependency("SkrRT", engine_version)

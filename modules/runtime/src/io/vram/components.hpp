@@ -2,8 +2,8 @@
 #include "SkrRT/misc/types.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
-#include "io/ram/ram_service.hpp"
-#include "io/components/component.hpp"
+#include "./../ram/ram_service.hpp"
+#include "./../components/component.hpp"
 
 struct CGPUBuffer;
 struct CGPUTexture;

@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGuiRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrGui/backend/device/device.hpp"
 #include "SkrGui/backend/device/display.hpp"
 #ifndef __meta__

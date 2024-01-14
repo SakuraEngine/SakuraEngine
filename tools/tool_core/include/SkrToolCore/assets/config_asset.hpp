@@ -1,8 +1,8 @@
 #pragma once
-#include "SkrToolCore/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrRT/misc/types.h"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #ifndef __meta__
     #include "SkrToolCore/assets/config_asset.generated.h" // IWYU pragma: export
 #endif

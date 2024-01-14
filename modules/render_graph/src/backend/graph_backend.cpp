@@ -3,11 +3,11 @@
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "SkrBase/misc/debug.h" 
 #include "SkrMemory/memory.h"
-#include "SkrRT/platform/thread.h"
-#include "SkrRT/misc/log.h"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/btree.hpp"
-#include "cgpu/cgpux.hpp"
+#include "SkrOS/thread.h"
+#include "SkrCore/log.h"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/btree.hpp"
+#include "SkrGraphics/cgpux.hpp"
 
 #include "SkrRenderGraph/phases/cull_phase.hpp"
 

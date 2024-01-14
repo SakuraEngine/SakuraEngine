@@ -13,19 +13,19 @@ struct StaticWorldState : public StaticWorldStateProxy<T> {
     using ValueStoreType = typename Super::ValueStoreType;
     using CondType = StaticCond<T>;
 
-    template <concepts::AtomValue ValueType>
+    template <typename ValueType>
     StaticWorldState& set(const IdentifierType& id, const ValueType& value) SKR_NOEXCEPT
     {
         return set(id.get_index(), static_cast<ValueStoreType>(value));
     }
-    template <auto Member>
+    template <auto Member, typename ValueType>
     requires(concepts::IsAtomMember<Member>)
-    StaticWorldState& set(const AtomMemberValueType<Member>& value) SKR_NOEXCEPT
+    StaticWorldState& set(const ValueType& value) SKR_NOEXCEPT
     {
         return set(atom_id<Member>, static_cast<ValueStoreType>(value));
     }
 
-    template <concepts::AtomValue ValueType>
+    template <typename ValueType>
     StaticWorldState& assign(const IdentifierType& id, const ValueType& value) SKR_NOEXCEPT
     {
         auto& atom = getAtom(id.get_index());
@@ -33,11 +33,11 @@ struct StaticWorldState : public StaticWorldStateProxy<T> {
             atom.value = static_cast<ValueStoreType>(value);
         return *this;
     }
-    template <auto Member>
+    template <auto Member, typename ValueType>
     requires(concepts::IsAtomMember<Member>)
-    StaticWorldState& assign(const AtomMemberValueType<Member>& value) SKR_NOEXCEPT
+    StaticWorldState& assign(const ValueType& value) SKR_NOEXCEPT
     {
-        return assign(atom_id<Member>, value);
+        return assign(atom_id<Member>, static_cast<ValueStoreType>(value));
     }
 
     template <concepts::AtomValue ValueType>

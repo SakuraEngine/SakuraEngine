@@ -1,5 +1,5 @@
 #pragma once
-#include "GameRuntime/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrAnim/resources/animation_resource.hpp"
 #include "SkrAnim/resources/skeleton_resource.hpp"
 #include "SkrAnim/resources/skin_resource.hpp"

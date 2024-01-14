@@ -1,5 +1,5 @@
-#include <SkrRT/containers/string.hpp>
-#include "SkrRT/misc/dependency_graph.hpp"
+#include <SkrContainers/string.hpp>
+#include "SkrDependencyGraph/dependency_graph.hpp"
 #include <fstream>
 
 #include "SkrTestFramework/framework.hpp"

@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrRT/config.h"
-#include "SkrRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRenderer/fwd_types.h"
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
 

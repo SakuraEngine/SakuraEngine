@@ -1,8 +1,8 @@
 #pragma once
-#include "SkrGLTFTool/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrMeshCore/mesh_processing.hpp"
 #include "SkrRT/io/ram_io.hpp"
-#include <SkrRT/containers/string.hpp>
+#include <SkrContainers/string.hpp>
 
 struct cgltf_data;
 struct cgltf_node;

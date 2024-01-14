@@ -3,7 +3,7 @@
 #include "SkrBase/misc/debug.h" 
 #include "SkrRT/rttr/type_registry.hpp"
 #include "SkrRT/rttr/type/type.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrCore/log.hpp"
 
 namespace skr
 {

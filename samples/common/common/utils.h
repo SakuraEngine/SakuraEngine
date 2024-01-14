@@ -6,7 +6,7 @@
 #ifdef TARGET_MACOS
     #include "SkrRT/platform/apple/macos/window.h"
 #endif
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>

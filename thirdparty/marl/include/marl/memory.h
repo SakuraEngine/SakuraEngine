@@ -20,20 +20,6 @@
 
 #include <stdint.h>
 
-#ifdef MARL_USE_EASTL
-#include <EASTL/array.h>
-#include <EASTL/shared_ptr.h>
-#include <EASTL/unique_ptr.h>
-#include <EASTL/numeric_limits.h> 
-
-namespace marl { using eastl::pair; using eastl::make_pair; }
-namespace marl { using eastl::array; using eastl::swap; }
-namespace marl { using eastl::unique_ptr; }
-namespace marl { using eastl::numeric_limits; }
-namespace marl { using eastl::make_shared; using eastl::shared_ptr; using eastl::weak_ptr; }
-namespace marl { using eastl::forward; using eastl::move; }
-namespace marl { using stdmutex = eastl::Internal::mutex; }
-#else
 #include <array>
 #include <cstdlib>
 #include <memory>
@@ -48,7 +34,6 @@ namespace marl { using std::numeric_limits; }
 namespace marl { using std::make_shared; using std::shared_ptr; using std::weak_ptr; }
 namespace marl { using std::forward; using std::move; }
 namespace marl { using stdmutex = std::mutex; }
-#endif
 
 namespace marl {
 
@@ -354,56 +339,6 @@ void TrackedAllocator::free(const Allocation& allocation) {
   }
   return allocator->free(allocation);
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// EASTLAllocator
-///////////////////////////////////////////////////////////////////////////////
-
-struct EASTLAllocator {
-  inline EASTLAllocator(Allocator* allocator);
-
-  inline void* allocate(size_t n, int /*flags*/ = 0)
-  {
-    Allocation::Request req = {};
-    req.size = n;
-    req.alignment = alignof(uint8_t);
-    req.usage = Allocation::Usage::Stl;
-    Allocation result = allocator->allocate(req);
-    return result.ptr;
-  }
-
-  inline void* allocate(size_t n, size_t alignment, size_t alignmentOffset, int /*flags*/ = 0)
-  {
-    if ((alignmentOffset % alignment) == 0) // We check for (offset % alignmnent == 0) instead of (offset == 0) because any block which is
-                        // aligned on e.g. 64 also is aligned at an offset of 64 by definition.
-    {
-      Allocation::Request req = {};
-      req.size = n;
-      req.alignment = alignment;
-      req.usage = Allocation::Usage::Stl;
-      Allocation result = allocator->allocate(req);
-      return result.ptr;
-    }
-    return NULL;
-  }
-
-  inline void deallocate(void* p, size_t n)
-  { 
-    Allocation::Request req = {};
-    req.size = n;
-    req.alignment = alignof(uint8_t);
-    req.usage = Allocation::Usage::Stl;
-
-    Allocation alloc;
-    alloc.ptr = p;
-    alloc.request = req;
-    allocator->free(alloc);
-  }
-
-  Allocator* allocator;
-};
-
-EASTLAllocator::EASTLAllocator(Allocator* allocator) : allocator(allocator) {}
 
 ///////////////////////////////////////////////////////////////////////////////
 // StlAllocator

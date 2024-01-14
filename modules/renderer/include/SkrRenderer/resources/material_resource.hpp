@@ -1,8 +1,8 @@
 #pragma once
-#include "SkrRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRT/resource/resource_factory.h"
-#include "cgpu/cgpux.h"
+#include "SkrGraphics/cgpux.h"
 
 #ifndef __meta__
     #include "SkrRenderer/resources/material_resource.generated.h" // IWYU pragma: export

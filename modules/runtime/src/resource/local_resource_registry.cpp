@@ -1,11 +1,11 @@
-﻿#include <SkrRT/platform/filesystem.hpp>
+﻿#include <SkrOS/filesystem.hpp>
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/local_resource_registry.hpp"
 #include "SkrRT/resource/resource_header.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrCore/log.hpp"
 #include "SkrRT/serde/binary/reader.h"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrGuid/guid.hpp"
 
 namespace skr::resource
 {

@@ -1,13 +1,13 @@
 #include "application.h"
 #include "steam/steamnetworkingtypes.h"
 #include "SkrRT/runtime_module.h"
-#include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/module/module_manager.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
+#include "SkrModule/module_manager.hpp"
 #include "SkrMemory/memory.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/window.h"
-#include "SkrRT/platform/filesystem.hpp"
-#include "SkrRT/containers/string.hpp"
+#include "SkrOS/filesystem.hpp"
+#include "SkrContainers/string.hpp"
 
 #include "SkrInputSystem/input_trigger.hpp"
 #include "SkrInputSystem/input_modifier.hpp"
@@ -29,7 +29,7 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 
 #include "SkrProfile/profile.h"
 

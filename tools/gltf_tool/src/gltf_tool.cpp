@@ -1,2 +1,2 @@
-#include "SkrRT/module/module_manager.hpp" // IWYU pragma: keep
-#include "SkrRT/misc/log.h" // IWYU pragma: keep
+#include "SkrModule/module_manager.hpp" // IWYU pragma: keep
+#include "SkrCore/log.h" // IWYU pragma: keep
