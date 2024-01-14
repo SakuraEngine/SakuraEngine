@@ -4,24 +4,24 @@ add_requires("simdjson >=3.0.0-skr")
 
 static_component("SkrGuid", "SkrCore")
     set_optimize("fastest")
-    public_dependency("SkrBase", engine_version)
+    library_dependency("SkrBase", engine_version)
     add_files("src/guid/build.*.cpp")
 
 static_component("SkrDependencyGraph", "SkrCore")
     set_optimize("fastest")
-    public_dependency("SkrBase", engine_version)
+    library_dependency("SkrBase", engine_version)
     add_packages("lemon", {public = false, inherit = false})
     add_files("src/graph/build.*.cpp")
 
 static_component("SkrString", "SkrCore")
     set_optimize("fastest")
-    public_dependency("SkrBase", engine_version)
+    library_dependency("SkrBase", engine_version)
     add_defines("OPEN_STRING_API=", {public = true})
     add_files("src/string/build.*.cpp")
 
 static_component("SkrSimpleAsync", "SkrCore")
     set_optimize("fastest")
-    public_dependency("SkrBase", engine_version)
+    library_dependency("SkrBase", engine_version)
     add_files("src/async/build.*.cpp")
 
 shared_module("SkrCore", "SKR_CORE", engine_version)

@@ -1,4 +1,4 @@
-static_module("OpenGUI_DemoResources", "OPENGUI_DEMO_RESOURCES", engine_version)
+static_library("OpenGUI_DemoResources", "OPENGUI_DEMO_RESOURCES", engine_version)
     set_group("04.examples/application")
     add_includedirs("common", {public = true})
     add_rules("utils.install-resources", {
