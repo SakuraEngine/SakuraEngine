@@ -3,6 +3,7 @@
 #include "SkrBase/config.h"
 #include "SkrBase/misc/traits.hpp"
 #include "internal/constexpr-xxh3.hpp"
+#include <concepts>
 
 namespace skr
 {
@@ -14,9 +15,11 @@ consteval uint64_t consteval_hash(const Bytes& input)
 } // namespace skr
 
 #ifdef __cplusplus
-// used for switch Name
-#define switchname(n) switch(std::string_view __str = n; skr_hash64(__str.data(), __str.size(), 0))
-#define casestr(s) case skr::consteval_hash(std::string_view(s)): if(__str != std::string_view(s)) break;
+  // used for switch Name
+    #define switchname(n) switch (std::string_view __str = n; skr_hash64(__str.data(), __str.size(), 0))
+    #define casestr(s)                                 \
+        case skr::consteval_hash(std::string_view(s)): \
+            if (__str != std::string_view(s)) break;
 #endif
 
 namespace skr
@@ -26,7 +29,7 @@ struct Hash;
 namespace detail
 {
 template <typename T>
-using has_skr_hash = decltype(std::declval<const T&>()._skr_hash());
+using has_skr_hash = decltype(T::_skr_hash(std::declval<const T&>()));
 template <typename T>
 using skr_hashable = decltype(std::declval<Hash<T>>().operator()(std::declval<const T&>()));
 } // namespace detail
@@ -34,6 +37,19 @@ template <typename T>
 inline constexpr bool has_skr_hash_v = is_detected_v<detail::has_skr_hash, T>;
 template <typename T>
 inline constexpr bool skr_hashable_v = is_detected_v<detail::skr_hashable, T>;
+
+template <typename T>
+concept EmbeddedHasher = requires(const T& t) {
+    {
+        t._skr_hash()
+    } -> std::same_as<size_t>;
+};
+template <typename T>
+concept Hashable = requires(const T& t) {
+    {
+        Hash<T>{}(t)
+    } -> std::same_as<size_t>;
+};
 
 namespace detail
 {
@@ -51,7 +67,18 @@ template <typename T>
 struct HashSelector<T, std::enable_if_t<has_skr_hash_v<T>>> {
     size_t operator()(const T& p) const
     {
-        return p._skr_hash();
+        return T::_skr_hash(p);
+    }
+    template <typename U>
+    requires requires(const U& u) {
+        {
+            T::_skr_hash(u)
+        }
+        -> std::same_as<size_t>;
+    }
+    size_t operator()(const U& u) const
+    {
+        return T::_skr_hash(u);
     }
 };
 } // namespace detail

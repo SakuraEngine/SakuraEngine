@@ -113,7 +113,8 @@ struct MultiChildRenderObjectMixin {
 
     inline void _sort_slots()
     {
-        std::sort(_children.begin(), _children.end(), [](const auto& lhs, const auto& rhs) {
+        _children.sort(
+        [](const auto& lhs, const auto& rhs) {
             return lhs.desired_slot.index < rhs.desired_slot.index;
         });
     }

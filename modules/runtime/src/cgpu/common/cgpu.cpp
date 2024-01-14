@@ -39,9 +39,9 @@ struct CGPURuntimeTable {
         to_find.device = device;
         to_find.type = type;
         to_find.index = index;
-        if (auto found = created_queues.find(to_find);found.data)
+        if (auto found = created_queues.find(to_find);found.is_valid())
         {
-            return found->queue;
+            return found.ref().queue;
         }
         return nullptr;
     }

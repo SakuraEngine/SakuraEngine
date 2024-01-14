@@ -32,9 +32,7 @@ void BuildOwner::flush_build() SKR_NOEXCEPT
     if (_dirty_elements.size() == 0) return;
 
     // sort by depth and is_dirty
-    std::sort(
-    _dirty_elements.begin(),
-    _dirty_elements.end(),
+    _dirty_elements.sort(
     +[](Element* a, Element* b) {
         return a->depth() == b->depth() ? a->is_dirty() < b->is_dirty() : a->depth() < b->depth();
     });
@@ -49,9 +47,7 @@ void BuildOwner::flush_build() SKR_NOEXCEPT
 }
 void BuildOwner::flush_layout()
 {
-    std::sort(
-    _nodes_needing_layout.begin(),
-    _nodes_needing_layout.end(),
+    _nodes_needing_layout.sort(
     +[](RenderObject* a, RenderObject* b) {
         return a->depth() < b->depth();
     });
@@ -70,9 +66,7 @@ void BuildOwner::flush_layout()
 }
 void BuildOwner::flush_paint()
 {
-    std::sort(
-    _nodes_needing_paint.begin(),
-    _nodes_needing_paint.end(),
+    _nodes_needing_paint.sort(
     +[](RenderObject* a, RenderObject* b) {
         return a->depth() < b->depth();
     });

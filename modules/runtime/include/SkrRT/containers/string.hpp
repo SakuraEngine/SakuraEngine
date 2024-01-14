@@ -7,17 +7,35 @@
 namespace skr
 {
 using namespace ostr;
-using String      = ostr::text;
+using String     = ostr::text;
 using StringView = ostr::text_view;
 
 template <>
 struct Hash<String> {
-    inline size_t operator()(const String& x) const { return ostr::hash_sequence_crc64(x.c_str(), x.size()); }
+    inline size_t operator()(const String& x) const
+    {
+        return ostr::hash_sequence_crc64(x.c_str(), x.size());
+    }
+    inline size_t operator()(const StringView& x) const
+    {
+        return ostr::hash_sequence_crc64(x.raw().data(), x.size());
+    }
+    inline size_t operator()(const char* x) const
+    {
+        return ostr::hash_sequence_crc64(x, std::strlen(x));
+    }
+    inline size_t operator()(const char8_t* x) const
+    {
+        return ostr::hash_sequence_crc64(x, std::strlen(reinterpret_cast<const char*>(x)));
+    }
 };
 
 template <>
 struct Hash<StringView> {
-    inline size_t operator()(const StringView& x) const { return ostr::hash_sequence_crc64(x.raw().data(), x.size()); }
+    inline size_t operator()(const StringView& x) const
+    {
+        return ostr::hash_sequence_crc64(x.raw().data(), x.size());
+    }
 };
 
 namespace StringLiterals

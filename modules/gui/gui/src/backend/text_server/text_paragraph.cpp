@@ -70,8 +70,8 @@ void TextParagraph::_shape_lines()
 
         float h_offset = 0.f;
         float v_offset = 0.f;
-        int   start = 0;
-        dropcap_lines = 0;
+        int   start    = 0;
+        dropcap_lines  = 0;
 
         if (TS->shaped_text_get_orientation(dropcap_rid) == TextServer::ORIENTATION_HORIZONTAL)
         {
@@ -91,7 +91,7 @@ void TextParagraph::_shape_lines()
             for (int i = 0; i < line_breaks.size(); i = i + 2)
             {
                 RID   line = TS->shaped_text_substr(rid, line_breaks[i], line_breaks[i + 1] - line_breaks[i]);
-                float h = (TS->shaped_text_get_orientation(line) == TextServer::ORIENTATION_HORIZONTAL) ? TS->shaped_text_get_size(line).y : TS->shaped_text_get_size(line).x;
+                float h    = (TS->shaped_text_get_orientation(line) == TextServer::ORIENTATION_HORIZONTAL) ? TS->shaped_text_get_size(line).y : TS->shaped_text_get_size(line).x;
                 if (v_offset < h)
                 {
                     TS->free_rid(line);
@@ -151,7 +151,7 @@ void TextParagraph::_shape_lines()
         if (autowrap_enabled)
         {
             int  visible_lines = (max_lines_visible >= 0) ? MIN(max_lines_visible, (int)lines_rid.size()) : (int)lines_rid.size();
-            bool lines_hidden = visible_lines > 0 && visible_lines < (int)lines_rid.size();
+            bool lines_hidden  = visible_lines > 0 && visible_lines < (int)lines_rid.size();
             if (lines_hidden)
             {
                 overrun_flags.set_flag(TextServer::OVERRUN_ENFORCE_ELLIPSIS);
@@ -316,7 +316,7 @@ bool TextParagraph::set_dropcap(const String& p_text, const Ref<Font>& p_font, i
     ERR_FAIL_COND_V(p_font.is_null(), false);
     TS->shaped_text_clear(dropcap_rid);
     dropcap_margins = p_dropcap_margins;
-    bool res = TS->shaped_text_add_string(dropcap_rid, p_text, p_font->get_rids(), p_font_size, p_font->get_opentype_features(), p_language);
+    bool res        = TS->shaped_text_add_string(dropcap_rid, p_text, p_font->get_rids(), p_font_size, p_font->get_opentype_features(), p_language);
     for (int i = 0; i < TextServer::SPACING_MAX; i++)
     {
         TS->shaped_text_set_spacing(dropcap_rid, TextServer::SpacingType(i), p_font->get_spacing(TextServer::SpacingType(i)));
@@ -358,7 +358,7 @@ bool TextParagraph::add_object(Variant p_key, const Size2& p_size, InlineAlignme
 {
     _THREAD_SAFE_METHOD_
 
-    bool res = TS->shaped_text_add_object(rid, p_key, p_size, p_inline_align, p_length, p_baseline);
+    bool res    = TS->shaped_text_add_object(rid, p_key, p_size, p_inline_align, p_length, p_baseline);
     lines_dirty = true;
     return res;
 }
@@ -367,7 +367,7 @@ bool TextParagraph::resize_object(Variant p_key, const Size2& p_size, InlineAlig
 {
     _THREAD_SAFE_METHOD_
 
-    bool res = TS->shaped_text_resize_object(rid, p_key, p_size, p_inline_align, p_baseline);
+    bool res    = TS->shaped_text_resize_object(rid, p_key, p_size, p_inline_align, p_baseline);
     lines_dirty = true;
     return res;
 }
@@ -380,7 +380,7 @@ void TextParagraph::set_alignment(HorizontalAlignment p_alignment)
     {
         if (alignment == HORIZONTAL_ALIGNMENT_FILL || p_alignment == HORIZONTAL_ALIGNMENT_FILL)
         {
-            alignment = p_alignment;
+            alignment   = p_alignment;
             lines_dirty = true;
         }
         else
@@ -399,7 +399,7 @@ void TextParagraph::tab_align(const Vector<float>& p_tab_stops)
 {
     _THREAD_SAFE_METHOD_
 
-    tab_stops = p_tab_stops;
+    tab_stops   = p_tab_stops;
     lines_dirty = true;
 }
 
@@ -409,7 +409,7 @@ void TextParagraph::set_justification_flags(BitField<TextServer::JustificationFl
 
     if (jst_flags != p_flags)
     {
-        jst_flags = p_flags;
+        jst_flags   = p_flags;
         lines_dirty = true;
     }
 }
@@ -425,7 +425,7 @@ void TextParagraph::set_break_flags(BitField<TextServer::LineBreakFlag> p_flags)
 
     if (brk_flags != p_flags)
     {
-        brk_flags = p_flags;
+        brk_flags   = p_flags;
         lines_dirty = true;
     }
 }
@@ -442,7 +442,7 @@ void TextParagraph::set_text_overrun_behavior(TextServer::OverrunBehavior p_beha
     if (overrun_behavior != p_behavior)
     {
         overrun_behavior = p_behavior;
-        lines_dirty = true;
+        lines_dirty      = true;
     }
 }
 
@@ -457,7 +457,7 @@ void TextParagraph::set_width(float p_width)
 
     if (width != p_width)
     {
-        width = p_width;
+        width       = p_width;
         lines_dirty = true;
     }
 }
@@ -521,7 +521,7 @@ void TextParagraph::set_max_lines_visible(int p_lines)
     if (p_lines != max_lines_visible)
     {
         max_lines_visible = p_lines;
-        lines_dirty = true;
+        lines_dirty       = true;
     }
 }
 
@@ -753,7 +753,7 @@ void TextParagraph::draw(RID p_canvas, const Vector2& p_pos, const Color& p_colo
     _THREAD_SAFE_METHOD_
 
     const_cast<TextParagraph*>(this)->_shape_lines();
-    Vector2 ofs = p_pos;
+    Vector2 ofs      = p_pos;
     float   h_offset = 0.f;
     if (TS->shaped_text_get_orientation(dropcap_rid) == TextServer::ORIENTATION_HORIZONTAL)
     {
@@ -1085,7 +1085,7 @@ void TextParagraph::draw_dropcap(RID p_canvas, const Vector2& p_pos, const Color
 {
     _THREAD_SAFE_METHOD_
 
-    Vector2 ofs = p_pos;
+    Vector2 ofs      = p_pos;
     float   h_offset = 0.f;
     if (TS->shaped_text_get_orientation(dropcap_rid) == TextServer::ORIENTATION_HORIZONTAL)
     {
@@ -1118,7 +1118,7 @@ void TextParagraph::draw_dropcap_outline(RID p_canvas, const Vector2& p_pos, int
 {
     _THREAD_SAFE_METHOD_
 
-    Vector2 ofs = p_pos;
+    Vector2 ofs      = p_pos;
     float   h_offset = 0.f;
     if (TS->shaped_text_get_orientation(dropcap_rid) == TextServer::ORIENTATION_HORIZONTAL)
     {
@@ -1202,7 +1202,7 @@ TextParagraph::TextParagraph(const String& p_text, const Ref<Font>& p_font, int 
 
 TextParagraph::TextParagraph()
 {
-    rid = TS->create_shaped_text();
+    rid         = TS->create_shaped_text();
     dropcap_rid = TS->create_shaped_text();
 }
 

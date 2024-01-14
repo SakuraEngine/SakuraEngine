@@ -5,7 +5,7 @@
 
 namespace skr
 {
-template <typename T, typename Allocator = SkrAllocator_New>
+template <typename T, typename Allocator = SkrAllocator>
 using Vector = container::Array<container::ArrayMemory<
 T,        /*type*/
 uint64_t, /*size type*/
@@ -19,7 +19,7 @@ uint64_t, /*size type*/
 kCount    /*allocator*/
 >>;
 
-template <typename T, uint64_t kCount, typename Allocator = SkrAllocator_New>
+template <typename T, uint64_t kCount, typename Allocator = SkrAllocator>
 using InlineVector = container::Array<container::InlineArrayMemory<
 T,        /*type*/
 uint64_t, /*size type*/

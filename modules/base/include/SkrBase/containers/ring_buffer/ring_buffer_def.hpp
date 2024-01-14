@@ -3,6 +3,6 @@
 
 namespace skr::container
 {
-template <typename T, typename TS>
-using RingBufferDataRef = ArrayDataRef<T, TS>;
+template <typename T, typename TS, bool kConst>
+using RingBufferDataRef = ArrayDataRef<T, TS, kConst>;
 }

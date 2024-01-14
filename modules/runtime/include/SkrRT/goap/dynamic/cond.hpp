@@ -14,11 +14,11 @@ struct CondType {
         EVariableFlag  flag;
         ValueStoreType value;
     };
-    
+
     void add(const IdentifierType& id, EVariableFlag flag,
              const ValueStoreType& value, EConditionType type) SKR_NOEXCEPT
     {
-        conditions_.add_or_assign(id, { type, flag, value });
+        conditions_.add(id, { type, flag, value });
     }
 
     template <typename F>

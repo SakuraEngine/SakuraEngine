@@ -26,25 +26,23 @@ struct ArrayMemory : public Allocator {
     }
 
     // copy & move
-    inline ArrayMemory(const ArrayMemory& other, AllocatorCtorParam param) noexcept
-        : Allocator(std::move(param))
+    inline ArrayMemory(const ArrayMemory& rhs) noexcept
+        : Allocator(rhs)
     {
-        if (other._size)
+        if (rhs._size)
         {
-            realloc(other._size);
-            memory::copy(_data, other._data, other._size);
-            _size = other._size;
+            realloc(rhs._size);
+            memory::copy(_data, rhs._data, rhs._size);
+            _size = rhs._size;
         }
     }
-    inline ArrayMemory(ArrayMemory&& other) noexcept
-        : Allocator(std::move(other))
-        , _data(other._data)
-        , _size(other._size)
-        , _capacity(other._capacity)
+    inline ArrayMemory(ArrayMemory&& rhs) noexcept
+        : Allocator(std::move(rhs))
+        , _data(rhs._data)
+        , _size(rhs._size)
+        , _capacity(rhs._capacity)
     {
-        other._data     = nullptr;
-        other._size     = 0;
-        other._capacity = 0;
+        rhs._reset();
     }
 
     // assign & move assign
@@ -52,11 +50,11 @@ struct ArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
             // copy allocator
             Allocator::operator=(rhs);
+
+            // clean up self
+            clear();
 
             // copy data
             if (rhs._size > 0)
@@ -77,22 +75,20 @@ struct ArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
-            // free
-            free();
-
             // move allocator
             Allocator::operator=(std::move(rhs));
 
+            // clean up self
+            clear();
+            free();
+
             // move data
-            _data         = rhs._data;
-            _size         = rhs._size;
-            _capacity     = rhs._capacity;
-            rhs._data     = nullptr;
-            rhs._size     = 0;
-            rhs._capacity = 0;
+            _data     = rhs._data;
+            _size     = rhs._size;
+            _capacity = rhs._capacity;
+
+            // clean up rhs
+            rhs._reset();
         }
     }
 
@@ -104,10 +100,10 @@ struct ArrayMemory : public Allocator {
         SKR_ASSERT(_size <= new_capacity);
         SKR_ASSERT((_capacity > 0 && _data != nullptr) || (_capacity == 0 && _data == nullptr));
 
+        // update memory
         if constexpr (memory::MemoryTraits<T>::use_realloc && Allocator::support_realloc)
         {
-            _data     = Allocator::template realloc<T>(_data, new_capacity);
-            _capacity = new_capacity;
+            _data = Allocator::template realloc<T>(_data, new_capacity);
         }
         else
         {
@@ -124,9 +120,11 @@ struct ArrayMemory : public Allocator {
             Allocator::template free<T>(_data);
 
             // update data
-            _data     = new_memory;
-            _capacity = new_capacity;
+            _data = new_memory;
         }
+
+        // update capacity
+        _capacity = new_capacity;
     }
     inline void free() noexcept
     {
@@ -134,7 +132,6 @@ struct ArrayMemory : public Allocator {
         {
             Allocator::template free<T>(_data);
             _data     = nullptr;
-            _size     = 0;
             _capacity = 0;
         }
     }
@@ -191,6 +188,15 @@ struct ArrayMemory : public Allocator {
     inline void set_size(SizeType value) noexcept { _size = value; }
 
 private:
+    // helper functions
+    inline void _reset() noexcept
+    {
+        _data     = nullptr;
+        _size     = 0;
+        _capacity = 0;
+    }
+
+private:
     T*       _data     = nullptr;
     SizeType _size     = 0;
     SizeType _capacity = 0;
@@ -220,7 +226,7 @@ struct FixedArrayMemory {
     }
 
     // copy & move
-    inline FixedArrayMemory(const FixedArrayMemory& other, AllocatorCtorParam) noexcept
+    inline FixedArrayMemory(const FixedArrayMemory& other) noexcept
     {
         if (other._size)
         {
@@ -235,7 +241,7 @@ struct FixedArrayMemory {
             memory::move(data(), other.data(), other._size);
             _size = other._size;
 
-            other._size = 0;
+            other._reset();
         }
     }
 
@@ -268,7 +274,7 @@ struct FixedArrayMemory {
                 memory::move(data(), rhs.data(), rhs._size);
                 _size = rhs._size;
 
-                rhs._size = 0;
+                rhs._reset();
             }
         }
     }
@@ -312,6 +318,12 @@ struct FixedArrayMemory {
     inline void set_size(SizeType value) noexcept { _size = value; }
 
 private:
+    inline void _reset() noexcept
+    {
+        _size = 0;
+    }
+
+private:
     Placeholder<T, kCount> _placeholder;
     SizeType               _size = 0;
 };
@@ -338,40 +350,34 @@ struct InlineArrayMemory : public Allocator {
     }
 
     // copy & move
-    inline InlineArrayMemory(const InlineArrayMemory& other, AllocatorCtorParam param) noexcept
-        : Allocator(std::move(param))
+    inline InlineArrayMemory(const InlineArrayMemory& rhs) noexcept
+        : Allocator(rhs)
     {
-        if (other._size)
+        if (rhs._size)
         {
-            realloc(other._size);
-            memory::copy(data(), other.data(), other._size);
-            _size = other._size;
+            realloc(rhs._size);
+            memory::copy(data(), rhs.data(), rhs._size);
+            _size = rhs._size;
         }
     }
-    inline InlineArrayMemory(InlineArrayMemory&& other) noexcept
-        : Allocator(std::move(other))
+    inline InlineArrayMemory(InlineArrayMemory&& rhs) noexcept
+        : Allocator(std::move(rhs))
     {
-        if (other._is_using_inline_memory())
+        // move data
+        if (rhs._is_using_inline_memory())
         {
-            // move inline data
-            memory::move(_placeholder.data_typed(), other._placeholder.data_typed(), other._size);
-            _size = other._size;
-
-            // invalidate other
-            other._size = 0;
+            memory::move(_placeholder.data_typed(), rhs._placeholder.data_typed(), rhs._size);
+            _size = rhs._size;
         }
         else
         {
-            // move heap data
-            _heap_data = other._heap_data;
-            _size      = other._size;
-            _capacity  = other._capacity;
-
-            // invalidate other
-            other._heap_data = nullptr;
-            other._size      = 0;
-            other._capacity  = kInlineCount;
+            _heap_data = rhs._heap_data;
+            _size      = rhs._size;
+            _capacity  = rhs._capacity;
         }
+
+        // reset rhs
+        rhs._reset();
     }
 
     // assign & move assign
@@ -379,11 +385,11 @@ struct InlineArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
             // copy allocator
             Allocator::operator=(rhs);
+
+            // clean up self
+            clear();
 
             // copy data
             if (rhs._size > 0)
@@ -404,43 +410,28 @@ struct InlineArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
+            // move allocator
+            Allocator::operator=(std::move(rhs));
+
+            // clean up self
+            clear();
+            free();
+
             // move data
             if (rhs._is_using_inline_memory())
             {
-                // clean up self
-                clear();
-
-                // move allocator
-                Allocator::operator=(std::move(rhs));
-
-                // move inline data
                 memory::move(data(), rhs.data(), rhs._size);
                 _size = rhs._size;
-
-                // invalidate rhs
-                rhs._size = 0;
             }
             else
             {
-                // clean up self
-                clear();
-
-                // free
-                free();
-
-                // move allocator
-                Allocator::operator=(std::move(rhs));
-
-                // move data
                 _heap_data = rhs._heap_data;
                 _size      = rhs._size;
                 _capacity  = rhs._capacity;
-
-                // invalidate rhs
-                rhs._heap_data = rhs._heap_data;
-                rhs._size      = 0;
-                rhs._capacity  = kInlineCount;
             }
+
+            // reset rhs
+            rhs._reset();
         }
     }
 
@@ -450,7 +441,9 @@ struct InlineArrayMemory : public Allocator {
         SKR_ASSERT(new_capacity != _capacity);
         SKR_ASSERT(new_capacity > 0);
         SKR_ASSERT(_size <= new_capacity);
+        new_capacity = new_capacity < kInlineCount ? kInlineCount : new_capacity;
 
+        // update data
         if (new_capacity > kInlineCount)
         {
             if (_is_using_inline_memory()) // inline -> heap
@@ -466,7 +459,6 @@ struct InlineArrayMemory : public Allocator {
 
                 // update data
                 _heap_data = new_memory;
-                _capacity  = new_capacity;
             }
             else // heap -> heap
             {
@@ -491,7 +483,6 @@ struct InlineArrayMemory : public Allocator {
 
                     // update data
                     _heap_data = new_memory;
-                    _capacity  = new_capacity;
                 }
             }
         }
@@ -513,11 +504,11 @@ struct InlineArrayMemory : public Allocator {
 
                 // release old memory
                 Allocator::template free<T>(cached_heap_data);
-
-                // update data
-                _capacity = kInlineCount;
             }
         }
+
+        // update capacity
+        _capacity = new_capacity;
     }
     inline void free() noexcept
     {
@@ -525,7 +516,6 @@ struct InlineArrayMemory : public Allocator {
         {
             Allocator::template free<T>(_heap_data);
             _heap_data = nullptr;
-            _size      = 0;
             _capacity  = kInlineCount;
         }
     }
@@ -584,6 +574,11 @@ struct InlineArrayMemory : public Allocator {
 private:
     // helper
     inline bool _is_using_inline_memory() const noexcept { return _capacity == kInlineCount; }
+    inline void _reset()
+    {
+        _size     = 0;
+        _capacity = kInlineCount;
+    }
 
 private:
     union

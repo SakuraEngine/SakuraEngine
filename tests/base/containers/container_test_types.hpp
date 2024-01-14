@@ -57,15 +57,20 @@ TestBitBlockType,
 TestSizeType,
 kCount>>;
 
+template <typename T, uint64_t kInlineCount>
+using InlineSparseArray = container::SparseArray<container::InlineSparseArrayMemory<
+T,
+TestBitBlockType,
+TestSizeType,
+kInlineCount,
+TestAllocatorType>>;
+
 //===========Sparse Hash Set===================================================================
 template <typename T>
 using SparseHashSet = container::SparseHashSet<container::SparseHashSetMemory<
 T,
 TestBitBlockType,
-TestHashType,
-Hash<T>,
-Equal<T>,
-false,
+container::HashTraits<T>,
 TestSizeType,
 TestAllocatorType>>;
 
@@ -73,12 +78,18 @@ template <typename T, uint64_t kCount>
 using FixedSparseHashSet = container::SparseHashSet<container::FixedSparseHashSetMemory<
 T,
 TestBitBlockType,
-TestHashType,
-Hash<T>,
-Equal<T>,
-false,
+container::HashTraits<T>,
 TestSizeType,
 kCount>>;
+
+template <typename T, uint64_t kInlineCount>
+using InlineSparseHashSet = container::SparseHashSet<container::InlineSparseHashSetMemory<
+T,
+TestBitBlockType,
+container::HashTraits<T>,
+TestSizeType,
+kInlineCount,
+TestAllocatorType>>;
 
 //===========Sparse Hash Map===================================================================
 template <typename K, typename V>
@@ -86,10 +97,7 @@ using SparseHashMap = container::SparseHashMap<container::SparseHashMapMemory<
 K,
 V,
 TestBitBlockType,
-TestHashType,
-Hash<K>,
-Equal<K>,
-false,
+container::HashTraits<K>,
 TestSizeType,
 TestAllocatorType>>;
 
@@ -98,12 +106,19 @@ using FixedSparseHashMap = container::SparseHashMap<container::FixedSparseHashMa
 K,
 V,
 TestBitBlockType,
-TestHashType,
-Hash<K>,
-Equal<K>,
-false,
+container::HashTraits<K>,
 TestSizeType,
 kCount>>;
+
+template <typename K, typename V, uint64_t kInlineCount>
+using InlineSparseHashMap = container::SparseHashMap<container::InlineSparseHashMapMemory<
+K,
+V,
+TestBitBlockType,
+container::HashTraits<K>,
+TestSizeType,
+kInlineCount,
+TestAllocatorType>>;
 
 //===========Bit Array===================================================================
 template <typename TBitBlock>

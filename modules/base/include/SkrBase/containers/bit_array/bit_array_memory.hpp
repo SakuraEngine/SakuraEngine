@@ -26,28 +26,26 @@ struct BitArrayMemory : public Allocator {
     }
 
     // copy & move ctor
-    inline BitArrayMemory(const BitArrayMemory& other, AllocatorCtorParam param) noexcept
-        : Allocator(std::move(param))
+    inline BitArrayMemory(const BitArrayMemory& rhs) noexcept
+        : Allocator(rhs)
     {
-        if (other._size)
+        if (rhs._size)
         {
             // alloc
-            realloc(Algo::num_blocks(other._size));
+            realloc(Algo::num_blocks(rhs._size));
 
             // copy
-            memory::copy(_data, other._data, Algo::num_blocks(other._size));
-            _size = other._size;
+            memory::copy(_data, rhs._data, Algo::num_blocks(rhs._size));
+            _size = rhs._size;
         }
     }
-    inline BitArrayMemory(BitArrayMemory&& other) noexcept
-        : Allocator(std::move(other))
-        , _data(other._data)
-        , _size(other._size)
-        , _capacity(other._capacity)
+    inline BitArrayMemory(BitArrayMemory&& rhs) noexcept
+        : Allocator(std::move(rhs))
+        , _data(rhs._data)
+        , _size(rhs._size)
+        , _capacity(rhs._capacity)
     {
-        other._data     = nullptr;
-        other._size     = 0;
-        other._capacity = 0;
+        rhs._reset();
     }
 
     // assign & move assign
@@ -55,11 +53,11 @@ struct BitArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
             // copy allocator
             Allocator::operator=(rhs);
+
+            // clean up self
+            clear();
 
             // copy data
             if (rhs._size)
@@ -80,20 +78,20 @@ struct BitArrayMemory : public Allocator {
     {
         if (this != &rhs)
         {
+            // move allocator
+            Allocator::operator=(std::move(rhs));
+
             // clean up self
             clear();
             free();
 
-            // move allocator
-            Allocator::operator=(std::move(rhs));
-
             // move data
-            _data         = rhs._data;
-            _size         = rhs._size;
-            _capacity     = rhs._capacity;
-            rhs._data     = nullptr;
-            rhs._size     = 0;
-            rhs._capacity = 0;
+            _data     = rhs._data;
+            _size     = rhs._size;
+            _capacity = rhs._capacity;
+
+            // reset rhs
+            rhs._reset();
         }
     }
 
@@ -110,10 +108,10 @@ struct BitArrayMemory : public Allocator {
 
         if (new_block_capacity != old_block_capacity)
         {
+            // update memory
             if constexpr (memory::MemoryTraits<BitBlockType>::use_realloc && Allocator::support_realloc)
             {
-                _data     = Allocator::template realloc<BitBlockType>(_data, new_block_capacity);
-                _capacity = new_block_capacity * Algo::PerBlockSize;
+                _data = Allocator::template realloc<BitBlockType>(_data, new_block_capacity);
             }
             else
             {
@@ -129,9 +127,11 @@ struct BitArrayMemory : public Allocator {
                 // release old memory
                 Allocator::template free<BitBlockType>(_data);
 
-                _data     = new_memory;
-                _capacity = new_block_capacity * Algo::PerBlockSize;
+                _data = new_memory;
             }
+
+            // update capacity
+            _capacity = new_block_capacity * Algo::PerBlockSize;
         }
     }
     inline void free() noexcept
@@ -140,7 +140,6 @@ struct BitArrayMemory : public Allocator {
         {
             Allocator::template free<BitBlockType>(_data);
             _data     = nullptr;
-            _size     = 0;
             _capacity = 0;
         }
     }
@@ -185,8 +184,11 @@ struct BitArrayMemory : public Allocator {
     }
     inline void clear() noexcept
     {
-        Algo::set_blocks(_data, SizeType(0), Algo::num_blocks(_size), false);
-        _size = 0;
+        if (_size)
+        {
+            Algo::set_blocks(_data, SizeType(0), Algo::num_blocks(_size), false);
+            _size = 0;
+        }
     }
 
     // getter
@@ -200,6 +202,13 @@ struct BitArrayMemory : public Allocator {
 
 private:
     using Algo = algo::BitAlgo<TBitBlock>;
+
+    inline void _reset()
+    {
+        _data     = nullptr;
+        _size     = 0;
+        _capacity = 0;
+    }
 
 private:
     BitBlockType* _data     = nullptr;

@@ -1,12 +1,12 @@
 #pragma once
-#include "SkrBase/config.h"
 #include "SkrBase/algo/utils.hpp"
+#include "SkrBase/misc/hash.hpp"
 
 namespace skr::container
 {
 template <typename T>
-struct KeyTraits {
-    using KeyType       = T;
-    using KeyMapperType = MapFwd<T>;
+struct HashTraits {
+    using HashType   = size_t;
+    using HasherType = Hash<T>;
 };
 } // namespace skr::container

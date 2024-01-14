@@ -29,7 +29,7 @@ void RenderNativeWindow::prepare_initial_frame() SKR_NOEXCEPT
 
 bool RenderNativeWindow::hit_test(HitTestResult* result, Offsetf local_position)
 {
-    if (child()->hit_test(result, local_position))
+    if (child() && child()->hit_test(result, local_position))
     {
         result->add(this);
         return true;
