@@ -40,17 +40,16 @@ end
 target("SkrRoot")
     set_kind("headeronly")
     -- core deps
-    add_deps("SkrProfile", {public = true})
+    add_deps("SkrCompileFlags", "SkrProfile", {public = true})
     -- dispatch codegen task
     before_build(function(target)
         import("core.base.option")
+        import("core.base.scheduler")
         local targetname = option.get("target")
         local function upzip_tasks(targetname)
             import("core.project.task")
             task.run("run-codegen-jobs", {}, targetname)
         end
-
-        import("core.base.scheduler")
         scheduler.co_start(upzip_tasks, targetname)
     end)
 target_end()
