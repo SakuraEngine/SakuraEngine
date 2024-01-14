@@ -45,15 +45,15 @@ typedef struct skr_guid_t {
     static skr_guid_t Create();
 
     // for skr::Hash
-    SKR_INLINE size_t _skr_hash() const
+    SKR_INLINE static size_t _skr_hash(const skr_guid_t& guid)
     {
         using namespace skr;
         Hash<uint32_t> hasher;
 
-        size_t result = hasher(Storage0);
-        result        = hash_combine(result, hasher(Storage1));
-        result        = hash_combine(result, hasher(Storage2));
-        result        = hash_combine(result, hasher(Storage3));
+        size_t result = hasher(guid.Storage0);
+        result        = hash_combine(result, hasher(guid.Storage1));
+        result        = hash_combine(result, hasher(guid.Storage2));
+        result        = hash_combine(result, hasher(guid.Storage3));
         return result;
     }
 

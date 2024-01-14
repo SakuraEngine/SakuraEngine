@@ -62,7 +62,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
     for (auto& pass : matType->passes)
     for (auto& shader_resource : pass.shader_resources)
     {
-        auto& variant = *blob.switch_variants.add_default(); 
+        auto& variant = blob.switch_variants.add_default().ref(); 
 
         shader_resource.resolve(false, nullptr);
         // initiate static switches to a permutation in shader collection 

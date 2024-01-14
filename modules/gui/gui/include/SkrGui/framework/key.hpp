@@ -77,7 +77,7 @@ struct SKR_GUI_API Key final {
     void set_storage(float v) SKR_NOEXCEPT;
     void set_storage(const String& v) SKR_NOEXCEPT;
 
-    size_t _skr_hash() const SKR_NOEXCEPT;
+    static size_t _skr_hash(const Key& k) SKR_NOEXCEPT;
 
 private:
     EKeyType _type = EKeyType::None;
@@ -266,25 +266,25 @@ inline void Key::set_storage(float v) SKR_NOEXCEPT
 }
 
 // hash
-inline size_t Key::_skr_hash() const SKR_NOEXCEPT
+inline size_t Key::_skr_hash(const Key& k) SKR_NOEXCEPT
 {
     using namespace ::skr::gui;
-    switch (type())
+    switch (k.type())
     {
         case EKeyType::None:
         case EKeyType::Unique:
             return 0;
         case EKeyType::KeepState:
-            return Hash<State*>()(get_state());
+            return Hash<State*>()(k.get_state());
         case EKeyType::Int:
         case EKeyType::IntStorage:
-            return Hash<int64_t>()(get_int());
+            return Hash<int64_t>()(k.get_int());
         case EKeyType::Float:
         case EKeyType::FloatStorage:
-            return Hash<float>()(get_float());
+            return Hash<float>()(k.get_float());
         case EKeyType::Name:
         case EKeyType::NameStorage: {
-            const auto& x = get_name();
+            const auto& x = k.get_name();
             return ostr::hash_sequence_crc64(x.c_str(), x.size());
         }
         default: {

@@ -37,8 +37,8 @@ struct CGPURuntimeTable {
         to_find.device = device;
         to_find.type = type;
         to_find.index = index;
-        if (auto found = created_queues.find(to_find))
-            return found->queue;
+        if (auto found = created_queues.find(to_find);found.is_valid())
+            return found.ref().queue;
         return nullptr;
     }
     void AddNewQueue(CGPUQueueId queue, ECGPUQueueType type, uint32_t index)

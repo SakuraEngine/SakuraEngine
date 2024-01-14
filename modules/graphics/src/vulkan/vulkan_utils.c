@@ -872,7 +872,9 @@ void VkUtil_EnumFormatSupports(CGPUAdapter_Vulkan* VkAdapter)
         adapter_detail->format_supports[i].shader_write = 0;
         adapter_detail->format_supports[i].render_target_write = 0;
         VkFormat fmt = (VkFormat)VkUtil_FormatTranslateToVk((ECGPUFormat)i);
+        const bool bPVRTC = (fmt >= VK_FORMAT_PVRTC1_2BPP_UNORM_BLOCK_IMG && fmt <= VK_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG);
         if (fmt == VK_FORMAT_UNDEFINED) continue;
+        if (bPVRTC) continue; // only iOS supports it and we dont use vulkan on iOS devices
 
         vkGetPhysicalDeviceFormatProperties(VkAdapter->pPhysicalDevice, fmt, &formatSupport);
         adapter_detail->format_supports[i].shader_read =

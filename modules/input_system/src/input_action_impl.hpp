@@ -36,7 +36,7 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction {
         storage.callback = [event, this]() {
             event(current_value);
         };
-        return events.add(storage).data->event_id;
+        return events.add(storage).ref().event_id;
     }
 
     const InputValueStorage& get_value() const SKR_NOEXCEPT final

@@ -134,7 +134,7 @@ void* RecordType::cast_to(const Type* target_type, void* p_self) const
     }
     else if (auto find_result = _base_types_map.find(target_type->type_id()))
     {
-        return find_result->value.cast_func(p_self);
+        return find_result.value().cast_func(p_self);
     }
     else
     {

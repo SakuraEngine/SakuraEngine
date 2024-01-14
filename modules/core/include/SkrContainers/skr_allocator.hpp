@@ -6,19 +6,19 @@ namespace skr
 {
 static const char* kContainersDefaultPoolName = "sakura::containers";
 
-struct SkrAllocator_New {
+struct SkrAllocator {
     struct DummyParam {
     };
     using CtorParam                       = DummyParam; // no ctor param
     static constexpr bool support_realloc = true;       // realloc supported
 
-    inline SkrAllocator_New(DummyParam) noexcept {}
-    inline SkrAllocator_New() noexcept {}
-    inline ~SkrAllocator_New() noexcept {}
-    inline SkrAllocator_New(const SkrAllocator_New&) {}
-    inline SkrAllocator_New(SkrAllocator_New&&) noexcept {}
-    inline SkrAllocator_New& operator=(const SkrAllocator_New&) { return *this; }
-    inline SkrAllocator_New& operator=(SkrAllocator_New&&) noexcept { return *this; }
+    inline SkrAllocator(DummyParam) noexcept {}
+    inline SkrAllocator() noexcept {}
+    inline ~SkrAllocator() noexcept {}
+    inline SkrAllocator(const SkrAllocator&) {}
+    inline SkrAllocator(SkrAllocator&&) noexcept {}
+    inline SkrAllocator& operator=(const SkrAllocator&) { return *this; }
+    inline SkrAllocator& operator=(SkrAllocator&&) noexcept { return *this; }
 
     template <typename T>
     inline static T* alloc(size_t size)
