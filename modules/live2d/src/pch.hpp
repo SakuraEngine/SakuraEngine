@@ -35,8 +35,6 @@
 
 #include "SkrRenderGraph/frontend/render_graph.hpp" // IWYU pragma: export
 
-// CUBISM HEADERS
-/* TODO: MAYBE THIS IS AN XMAKE PCH BUG
 #include "CubismDefaultParameterId.hpp" // IWYU pragma: export
 #include "CubismCdiJson.hpp" // IWYU pragma: export
 
@@ -66,6 +64,5 @@
 #include "Rendering/CubismRenderer.hpp" // IWYU pragma: export
 
 #include "live2d_helpers.hpp" // IWYU pragma: export
-*/
 
 #include "SkrProfile/profile.h" // IWYU pragma: export
