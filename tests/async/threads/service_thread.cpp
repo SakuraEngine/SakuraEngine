@@ -1,7 +1,7 @@
 #include "SkrRT/platform/crash.h"
-#include "SkrRT/misc/log.h"
-#include "SkrRT/async/async_service.h"
-#include "SkrRT/async/wait_timeout.hpp"
+#include "SkrCore/log.h"
+#include "SkrCore/async/async_service.h"
+#include "SkrCore/async/wait_timeout.hpp"
 
 #include "SkrTestFramework/framework.hpp"
 

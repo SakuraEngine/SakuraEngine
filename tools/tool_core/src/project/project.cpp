@@ -1,5 +1,5 @@
-#include "SkrRT/misc/log.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrCore/log.h"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/serde/json/reader.h"

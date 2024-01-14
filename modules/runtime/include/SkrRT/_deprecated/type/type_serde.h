@@ -1,9 +1,9 @@
 ﻿#pragma once
 #include "type.hpp"
-#include <SkrRT/containers/vector.hpp>
-#include <SkrRT/containers/sptr.hpp>
-#include <SkrRT/containers/span.hpp>
-#include <SkrRT/containers/deprecated.hpp>
+#include <SkrContainers/vector.hpp>
+#include <SkrContainers/sptr.hpp>
+#include <SkrContainers/span.hpp>
+#include <SkrContainers/deprecated.hpp>
 #include "SkrRT/resource/resource_handle.h"
 
 #if defined(__cplusplus)

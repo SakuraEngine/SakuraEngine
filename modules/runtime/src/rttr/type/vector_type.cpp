@@ -1,4 +1,4 @@
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #include "SkrRT/rttr/type/vector_type.hpp"
 #include "SkrRT/rttr/rttr_traits.hpp"
 #include "SkrRT/serde/json/writer.h"

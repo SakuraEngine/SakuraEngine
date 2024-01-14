@@ -3,7 +3,7 @@
 // to SteamNetworkingSockets P2P connections
 
 #pragma once
-#include "MPShared/module.configure.h"
+#include "SkrBase/config.h"
 #include <steam/steamnetworkingcustomsignaling.h>
 
 class ISteamNetworkingSockets;

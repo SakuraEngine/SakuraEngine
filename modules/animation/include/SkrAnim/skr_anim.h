@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrAnim/module.configure.h"
-#include "SkrRT/module/module.hpp"
+#include "SkrBase/config.h"
+#include "SkrModule/module.hpp"
 
 class SKR_ANIM_API SkrAnimModule : public skr::IDynamicModule
 {

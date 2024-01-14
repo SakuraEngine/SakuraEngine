@@ -1,6 +1,6 @@
 #include "SkrRT/rttr/type_registry.hpp"
-#include "SkrRT/containers/umap.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrContainers/umap.hpp"
+#include "SkrCore/log.h"
 #include "SkrRT/rttr/type_loader/type_loader.hpp"
 #include "SkrRT/rttr/type_loader/generic_type_loader.hpp"
 #include "SkrRT/rttr/type/type.hpp"

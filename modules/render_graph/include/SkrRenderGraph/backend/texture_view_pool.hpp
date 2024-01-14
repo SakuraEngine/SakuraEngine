@@ -1,6 +1,6 @@
 #pragma once
-#include "cgpu/api.h"
-#include "SkrRT/containers/umap.hpp"
+#include "SkrGraphics/api.h"
+#include "SkrContainers/umap.hpp"
 
 namespace skr
 {

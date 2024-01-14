@@ -1,8 +1,9 @@
 includes("profile/xmake.lua")
 includes("base/xmake.lua")
-includes("memory/xmake.lua")
+includes("core/xmake.lua")
+includes("graphics/xmake.lua")
 includes("runtime/xmake.lua")
-includes("runtime_exporter/xmake.lua")
+includes("lua/xmake.lua")
 includes("lightning_storage/xmake.lua")
 includes("image_coder/xmake.lua")
 includes("scene/xmake.lua")
@@ -13,13 +14,14 @@ includes("input/xmake.lua")
 includes("input_system/xmake.lua")
 includes("live2d/xmake.lua")
 includes("animation/xmake.lua")
--- includes("inspector/xmake.lua") -- TODO. resume
 includes("devtime/xmake.lua")
--- includes("tweak/xmake.lua") -- TODO. resume
 includes("physics/xmake.lua")
 includes("gui/xmake.lua") 
 includes("netcode/xmake.lua")
--- includes("daScript/xmake.lua")
+-- includes("experimental/tweak/xmake.lua") -- TODO. resume
+-- includes("experimental/inspector/xmake.lua") -- TODO. resume
+-- includes("experimental/runtime_exporter/xmake.lua")
+-- includes("experimental/daScript/xmake.lua")
 
 if has_config("build_cgpu_samples") then 
     includes("wasm/xmake.lua")

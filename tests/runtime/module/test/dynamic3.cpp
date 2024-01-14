@@ -1,5 +1,5 @@
-#include "SkrRT/module/module_manager.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrModule/module_manager.hpp"
+#include "SkrCore/log.h"
 
 class SDynamicModule3 : public skr::IDynamicModule
 {

@@ -6,37 +6,35 @@
 #endif
 
 #include "SkrBase/misc/debug.h"  // IWYU pragma: export
-#include "SkrRT/platform/guid.hpp" // IWYU pragma: export
-#include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
+#include "SkrGuid/guid.hpp" // IWYU pragma: export
+#include <SkrOS/filesystem.hpp> // IWYU pragma: export
 #include "SkrMemory/memory.h" // IWYU pragma: export
 #include "SkrRT/platform/vfs.h" // IWYU pragma: export
-#include "SkrRT/platform/time.h" // IWYU pragma: export
-#include "SkrRT/platform/guid.hpp" // IWYU pragma: export
-#include "SkrRT/platform/thread.h" // IWYU pragma: export
+#include "SkrCore/time.h" // IWYU pragma: export
+#include "SkrGuid/guid.hpp" // IWYU pragma: export
+#include "SkrOS/thread.h" // IWYU pragma: export
 #include "SkrBase/math/rtm/rtmx.h" // IWYU pragma: export
-#include "SkrRT/misc/make_zeroed.hpp" // IWYU pragma: export
+#include "SkrBase/misc/make_zeroed.hpp" // IWYU pragma: export
 
 #include "SkrRT/ecs/entity.hpp" // IWYU pragma: export
 #include "SkrRT/ecs/sugoi.h" // IWYU pragma: export
 #include "SkrRT/ecs/type_builder.hpp" // IWYU pragma: export
 
-#include "SkrRT/misc/log.h" // IWYU pragma: export
-#include "SkrRT/misc/log.hpp" // IWYU pragma: export
+#include "SkrCore/log.h" // IWYU pragma: export
+#include "SkrCore/log.hpp" // IWYU pragma: export
 
-#include <SkrRT/containers/concurrent_queue.hpp> // IWYU pragma: export
-#include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
-#include <SkrRT/containers/string.hpp> // IWYU pragma: export
-#include <SkrRT/containers/vector.hpp> // IWYU pragma: export
-#include <SkrRT/containers/hashmap.hpp> // IWYU pragma: export
+#include <SkrContainers/concurrent_queue.hpp> // IWYU pragma: export
+#include <SkrContainers/sptr.hpp> // IWYU pragma: export
+#include <SkrContainers/string.hpp> // IWYU pragma: export
+#include <SkrContainers/vector.hpp> // IWYU pragma: export
+#include <SkrContainers/hashmap.hpp> // IWYU pragma: export
 
-#include <SkrRT/containers/stl_vector.hpp> // IWYU pragma: export
-#include <SkrRT/containers/stl_deque.hpp> // IWYU pragma: export
-#include <SkrRT/containers/stl_string.hpp> // IWYU pragma: export
+#include <SkrContainers/stl_vector.hpp> // IWYU pragma: export
+#include <SkrContainers/stl_deque.hpp> // IWYU pragma: export
+#include <SkrContainers/stl_string.hpp> // IWYU pragma: export
 
 #include "SkrRenderGraph/frontend/render_graph.hpp" // IWYU pragma: export
 
-// CUBISM HEADERS
-/* TODO: MAYBE THIS IS AN XMAKE PCH BUG
 #include "CubismDefaultParameterId.hpp" // IWYU pragma: export
 #include "CubismCdiJson.hpp" // IWYU pragma: export
 
@@ -66,6 +64,5 @@
 #include "Rendering/CubismRenderer.hpp" // IWYU pragma: export
 
 #include "live2d_helpers.hpp" // IWYU pragma: export
-*/
 
 #include "SkrProfile/profile.h" // IWYU pragma: export

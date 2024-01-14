@@ -1,7 +1,5 @@
 target("SkrProfile")
-    set_group("01.modules")
     set_kind("shared")
-    add_deps("SkrCompileFlags", {public = true})
     add_includedirs("include", {public = true})
     add_files("internal/tracy/TracyClient.cpp") -- version("0.10.1alpha")
     if (is_config("use_profile", "enable")) then

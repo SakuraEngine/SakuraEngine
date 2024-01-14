@@ -1,5 +1,5 @@
 #pragma once
-#include "writer_fwd.h"
+#include "SkrBase/types.h"
 
 typedef enum ESkrJsonType
 {
@@ -11,10 +11,10 @@ typedef enum ESkrJsonType
 } ESkrJsonType;
 
 #if defined(__cplusplus)
-    #include "SkrRT/containers/string.hpp"
-    #include "SkrRT/containers/hashmap.hpp"
-    #include "SkrRT/containers/span.hpp"
-    #include "SkrRT/containers/stl_vector.hpp"
+    #include "SkrContainers/string.hpp"
+    #include "SkrContainers/hashmap.hpp"
+    #include "SkrContainers/span.hpp"
+    #include "SkrContainers/stl_vector.hpp"
     #include "SkrRT/rttr/rttr_traits.hpp"
 
 // forward declaration for resources
@@ -91,7 +91,7 @@ typedef struct skr_json_writer_t skr_json_writer_t;
 #endif
 
 #if defined(__cplusplus)
-    #include "SkrRT/platform/guid.hpp"
+    #include "SkrGuid/guid.hpp"
 
 // helper functions
 namespace skr::json

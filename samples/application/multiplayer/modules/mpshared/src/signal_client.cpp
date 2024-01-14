@@ -10,7 +10,7 @@
 #include <steam/isteamnetworkingsockets.h>
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingcustomsignaling.h>
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 
 #ifdef VALVE_POSIX
 	#include <unistd.h>

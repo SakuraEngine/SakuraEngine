@@ -1,5 +1,5 @@
-#include "HotfixTest/module.configure.h"
-#include "SkrRT/module/module.hpp"
+#include "SkrBase/config.h"
+#include "SkrModule/module.hpp"
 namespace hotfix
 {
     struct State

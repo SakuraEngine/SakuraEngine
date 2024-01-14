@@ -1,10 +1,10 @@
 #pragma once
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 #include "SkrRT/platform/window.h"
 #include "SkrRT/io/vram_io.hpp"
-#include "SkrRT/containers/umap.hpp"
+#include "SkrContainers/umap.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
-#include "SkrGuiRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrGui/fwd_config.hpp"
 
 namespace skr::gui

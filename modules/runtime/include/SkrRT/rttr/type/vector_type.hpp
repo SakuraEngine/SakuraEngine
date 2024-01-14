@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/rttr/type/generic_type.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/span.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/span.hpp"
 
 namespace skr::rttr
 {

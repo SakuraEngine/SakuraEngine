@@ -58,8 +58,7 @@ private:
 } // namespace skr
 
 // binary serde
-#include "SkrRT/serde/binary/reader_fwd.h"
-#include "SkrRT/serde/binary/writer_fwd.h"
+#include "SkrBase/types.h"
 namespace skr::binary
 {
 template <class T>
@@ -80,8 +79,7 @@ struct WriteTrait<StronglyEnum<T>> {
 } // namespace skr::binary
 
 // json serde
-#include "SkrRT/serde/json/writer_fwd.h"
-#include "SkrRT/serde/json/reader_fwd.h"
+#include "SkrBase/types.h"
 namespace skr::json
 {
 template <class T>

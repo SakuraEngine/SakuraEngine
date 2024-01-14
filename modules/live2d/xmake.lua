@@ -1,14 +1,10 @@
-shared_module("SkrLive2D", "SKR_LIVE2D", engine_version)
-    set_group("01.modules")
-    public_dependency("SkrImageCoder", engine_version)
-    public_dependency("SkrRenderer", engine_version)
-    add_includedirs("include", "CubismNativeCore/include", {public=true})
-    add_includedirs("src/Framework", {public=false})
+static_component("CubismFramework", "SkrLive2D", { public = false })
+    set_optimize("fastest")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
-    set_pcxxheader("src/pch.hpp")
-    add_files("src/*.cpp")
-    add_files("src/Framework/**.cpp", {unity_group = "framework"})
-    add_files("src/Renderer/**.cpp", {unity_group = "framework"})
+    library_dependency("SkrBase", engine_version)
+    add_includedirs("CubismNativeCore/include", "CubismFramework", "CubismFramework/Framework", {public=false})
+    set_pcxxheader("CubismFramework/pch.hpp")
+    add_files("CubismFramework/Renderer/**.cpp", "CubismFramework/Framework/**.cpp")
     -- link to cubism core
     if (is_os("windows")) then 
         add_linkdirs("CubismNativeCore/lib/windows/x86_64/142", {public=true})
@@ -25,6 +21,15 @@ shared_module("SkrLive2D", "SKR_LIVE2D", engine_version)
         add_linkdirs("CubismNativeCore/lib/macos/x86_64", {public=true})
         add_links("Live2DCubismCore", {public=true})
     end
+
+shared_module("SkrLive2D", "SKR_LIVE2D", engine_version)
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    public_dependency("SkrImageCoder", engine_version)
+    public_dependency("SkrRenderer", engine_version)
+    add_includedirs("include", {public=true})
+    add_includedirs("CubismNativeCore/include", "CubismFramework", "CubismFramework/Framework", {public=false})
+    -- set_pcxxheader("src/pch.hpp")
+    add_files("src/*.cpp")
     -- add live2d shaders
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders", 

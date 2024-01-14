@@ -1,8 +1,8 @@
 #pragma once
-#include "SkrLive2D/module.configure.h"
+#include "SkrBase/config.h"
 
 #ifdef __cplusplus
-#include "SkrRT/module/module.hpp"
+#include "SkrModule/module.hpp"
 
 class SKR_LIVE2D_API SkrLive2DModule : public skr::IDynamicModule
 {

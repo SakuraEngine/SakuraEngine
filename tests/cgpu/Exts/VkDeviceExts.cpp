@@ -1,6 +1,6 @@
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 #ifdef CGPU_USE_VULKAN
-    #include "cgpu/extensions/cgpu_vulkan_exts.h"
+    #include "SkrGraphics/extensions/cgpu_vulkan_exts.h"
     #include "SkrTestFramework/framework.hpp"
     #include <vector>
 

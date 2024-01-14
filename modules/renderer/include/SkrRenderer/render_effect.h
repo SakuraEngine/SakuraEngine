@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRenderer/primitive_pass.h"
 #ifndef __meta__

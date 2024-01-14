@@ -4,7 +4,7 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRT/ecs/type_builder.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrContainers/vector.hpp"
 
 typedef struct ForwardEffectToken {
     sugoi_entity_t game_entity;

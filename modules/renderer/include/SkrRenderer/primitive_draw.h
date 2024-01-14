@@ -1,11 +1,11 @@
 #pragma once
 #include "fwd_types.h"
 
-#include "cgpu/api.h"
-#include "cgpu/cgpux.h"
+#include "SkrGraphics/api.h"
+#include "SkrGraphics/cgpux.h"
 
 #ifdef __cplusplus
-#include "SkrRT/containers/span.hpp"
+#include "SkrContainers/span.hpp"
 extern "C" {
 #endif
 

@@ -1,8 +1,7 @@
 #pragma once
 #include "SkrRT/config.h"
 #include "SkrRT/resource/resource_factory.h"
-#include "SkrRT/serde/binary/reader_fwd.h"
-#include "SkrRT/serde/binary/writer_fwd.h"
+#include "SkrBase/types.h"
 #include "SkrRT/rttr/rttr_traits.hpp"
 
 typedef struct skr_config_resource_t skr_config_resource_t;

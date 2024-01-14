@@ -1,18 +1,16 @@
 #pragma once
-#include "SkrRT/containers/ring_buffer.hpp"
+#include "SkrContainers/ring_buffer.hpp"
 #include "SkrRT/misc/types.h"
-#include "SkrRT/platform/time.h"
+#include "SkrCore/time.h"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/containers/span.hpp"
-#include "SkrRT/containers/stl_function.hpp"
-#include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/serde/json/reader_fwd.h"
-#include "SkrRT/serde/json/writer_fwd.h"
-#include "SkrRT/serde/binary/reader_fwd.h"
-#include "SkrRT/serde/binary/writer_fwd.h"
-#include "MPShared/module.configure.h"
+#include "SkrContainers/span.hpp"
+#include "SkrContainers/stl_function.hpp"
+#include "SkrContainers/hashmap.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrBase/types.h"
+#include "SkrBase/types.h"
+#include "SkrBase/config.h"
 
 // override the default serialization of sugoi_entity_t to use a packed version
 struct packed_entity_t {

@@ -1,8 +1,8 @@
 #pragma once
-#include "MPShared/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/bitset.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/bitset.hpp"
 #include "SkrRT/resource/resource_handle.h"
 
 #ifndef __meta__

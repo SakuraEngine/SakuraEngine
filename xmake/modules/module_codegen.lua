@@ -9,18 +9,18 @@ function resolve_skr_module_dependencies(target)
     local calculated_flatten = {}
     for _, dep in ipairs(pub_deps) do
         local dep_target = project.target(dep)
-        if dep_target:rule("skr.module") then
+        if dep_target:rule("skr.dyn_module") then
             calculated_flatten[dep] = dep_target
         end
         for _, depdep in ipairs(dep_target:orderdeps()) do
-            if depdep:rule("skr.module") then
+            if depdep:rule("skr.dyn_module") then
                 calculated_flatten[depdep:name()] = depdep
             end
         end
     end
     local dep_modules = {}
     for _, dep in ipairs(target:orderdeps()) do
-        if dep:rule("skr.module") then
+        if dep:rule("skr.dyn_module") then
             table.insert(dep_modules, dep:name())
             assert(calculated_flatten[dep:name()], 
                 "linked skr.module "..dep:name().." is not public dependency of "..target:name()..", please add it to public/private_dependencies")
@@ -57,7 +57,8 @@ function skr_module_gen_json(target, filename, dep_modules)
         local deptarget = project.target(dep)
         assert(deptarget:rule("skr.module"), "public dependency must be a skr.module: "..deptarget:name())
         local depversion = target:values(dep..".version")
-        json_content = json_content.."\t\t{ \"name\":\""..dep.."\", \"version\": \""..depversion.."\" },\n"
+        local kind = deptarget:rule("skr.dyn_module") and "shared" or "static"
+        json_content = json_content.."\t\t{ \"name\":\""..dep.."\", \"version\": \""..depversion.."\", \"kind\": \""..kind.."\" },\n"
     end
     json_content = json_content.sub(json_content, 1, -3)
     json_content = json_content.."\n\t]\n}\n}"
@@ -89,7 +90,7 @@ function skr_module_gen_cpp(target, filename, dep_modules)
     assert(self_version, "module version not found: "..target:name())
     local delim = "__de___l___im__("
     local delim2 = ")__de___l___im__"
-    local cpp_content = "#include \"SkrRT/module/module.hpp\"\n\nSKR_MODULE_METADATA(u8R\""..delim.."\n{\n"
+    local cpp_content = "#include \"SkrModule/module.hpp\"\n\nSKR_MODULE_METADATA(u8R\""..delim.."\n{\n"
     cpp_content = cpp_content.."\t\"api\": \"" .. self_version.."\",\n"
     cpp_content = cpp_content.."\t\"name\": \"" .. target:name() .."\",\n"
     cpp_content = cpp_content.."\t\"prettyname\": \"" .. target:name() .."\",\n"
@@ -105,7 +106,8 @@ function skr_module_gen_cpp(target, filename, dep_modules)
         local deptarget = project.target(dep)
         assert(deptarget:rule("skr.module"), "public dependency must be a skr.module: "..deptarget:name())
         local depversion = target:values(dep..".version")
-        cpp_content = cpp_content.."\t\t{ \"name\":\""..dep.."\", \"version\": \""..depversion.."\" },\n"
+        local kind = deptarget:rule("skr.dyn_module") and "shared" or "static"
+        cpp_content = cpp_content.."\t\t{ \"name\":\""..dep.."\", \"version\": \""..depversion.."\", \"kind\": \""..kind.."\" },\n"
     end
     cpp_content = cpp_content.sub(cpp_content, 1, -3)
     cpp_content = cpp_content.."\n\t]\n}\n"..delim2.."\", "..target:name()..")"

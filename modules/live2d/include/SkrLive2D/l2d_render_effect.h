@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/config.h"
-#include "SkrLive2D/module.configure.h"
+#include "SkrBase/config.h"
 
 #ifdef __cplusplus
 struct SRenderer;

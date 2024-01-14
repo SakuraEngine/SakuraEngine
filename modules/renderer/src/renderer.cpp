@@ -1,8 +1,8 @@
-#include "SkrRT/misc/log.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrCore/log.h"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/array.hpp"
-#include <SkrRT/containers/hashmap.hpp>
+#include <SkrContainers/hashmap.hpp>
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRenderer/skr_renderer.h"

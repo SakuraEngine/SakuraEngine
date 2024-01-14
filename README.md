@@ -235,7 +235,6 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - FiberTaskingLib 9d7b27d (Apache-2.0)
 - parallel-hashmap 1.3.11 (Apache-2.0)
 - [TSCNS](https://github.com/MengRao/tscns) v2.0 (MIT)
-- cpu_features v0.7.0 (Apache-2.0)
 
 ## 在自定义包管理引入的开源库和版本
 - LEMON v1.3.1 (Boost Software License)
@@ -243,7 +242,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - simdjson v3.0.0 (Apache-2.0)
 - zlib v1.2.8
 - cgltf v1.13 (MIT)
-- EASTL v3.19.05, master-db16065 (BSD-3-Clause)
+- cpu_features v0.9.0 (Apache-2.0)
 - freetype 2.13.0 (GNU)
 - icu 72.1 ([LICENSE](https://github.com/unicode-org/icu/blob/main/icu4c/LICENSE))
 - harfbuzz 7.1.0 ([LICENSE](https://github.com/harfbuzz/harfbuzz/blob/main/COPYING))

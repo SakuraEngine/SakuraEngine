@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrShaderCompiler/module.configure.h"
+#include "SkrBase/config.h"
 #include "material_type_asset.hpp"
 
 #ifndef __meta__

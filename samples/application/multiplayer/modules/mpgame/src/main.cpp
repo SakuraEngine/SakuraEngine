@@ -1,6 +1,6 @@
-#include "SkrRT/module/module_manager.hpp"
+#include "SkrModule/module_manager.hpp"
 #include "MPGame/mp_interface.h"
-#include "SkrRT/platform/filesystem.hpp"
+#include "SkrOS/filesystem.hpp"
 int main(int argc, char** argv)
 {
     auto moduleManager = skr_get_module_manager();

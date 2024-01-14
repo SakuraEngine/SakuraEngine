@@ -40,20 +40,13 @@ end
 target("SkrRoot")
     set_kind("headeronly")
     -- core deps
-    add_deps("SkrProfile", {public = true})
-    -- add OpenString defines
-    add_defines("OPEN_STRING_API=SKR_RUNTIME_API", {public = true})
+    add_deps("SkrCompileFlags", "SkrProfile", {public = true})
     -- dispatch codegen task
     before_build(function(target)
         import("core.base.option")
+        import("core.project.task")
         local targetname = option.get("target")
-        local function upzip_tasks(targetname)
-            import("core.project.task")
-            task.run("run-codegen-jobs", {}, targetname)
-        end
-
-        import("core.base.scheduler")
-        scheduler.co_start(upzip_tasks, targetname)
+        task.run("run-codegen-jobs", {}, targetname)
     end)
 target_end()
 

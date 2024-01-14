@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrDAScript/daScript.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 
 // example type, which we are going to expose to das
 struct Color 

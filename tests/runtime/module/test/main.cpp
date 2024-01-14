@@ -1,5 +1,5 @@
-#include "SkrRT/module/module_manager.hpp"
-#include "SkrRT/platform/filesystem.hpp"
+#include "SkrModule/module_manager.hpp"
+#include "SkrOS/filesystem.hpp"
 
 #include "SkrTestFramework/framework.hpp"
 
