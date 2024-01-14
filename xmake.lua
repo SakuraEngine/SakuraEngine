@@ -44,13 +44,9 @@ target("SkrRoot")
     -- dispatch codegen task
     before_build(function(target)
         import("core.base.option")
-        import("core.base.scheduler")
+        import("core.project.task")
         local targetname = option.get("target")
-        local function upzip_tasks(targetname)
-            import("core.project.task")
-            task.run("run-codegen-jobs", {}, targetname)
-        end
-        scheduler.co_start(upzip_tasks, targetname)
+        task.run("run-codegen-jobs", {}, targetname)
     end)
 target_end()
 

@@ -5,7 +5,6 @@ task("run-codegen-jobs")
     end)
 
 rule("c++.codegen")
-    set_sourcekinds("cxx")
     on_load(function (target, opt)
         local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
         local target_gendir = path.join(gendir, target:name())
@@ -16,49 +15,22 @@ rule("c++.codegen")
 
         target:data_set("meta.codegen.dir", gendir)
         target:add("includedirs", gendir, {public = true})
-
-        local rule = target:rule("c++.build"):clone()
-        rule:add("deps", "c++.codegen", {order = true})
-        target:rule_add(rule)
     end)
-
-    before_build_files(function(target, batchjobs, sourcebatch, opt)
-        sourcebatch.objectfiles = {}
-    end, {batch = true}) 
-    
-    before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
-        -- avoid duplicate linking of object files
-        sourcebatch.objectfiles = {}
-    end)
-
-    on_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
-        -- add to sourcebatch
+    on_config(function(target)
         local gendir = target:data("meta.codegen.dir")
         local sourcebatches = target:sourcebatches()
-        local cppfiles = os.files(path.join(gendir, target:name(), "/*.cpp"))
-        if #cppfiles == 0 then
-            cprint("${red}error: no codegen files found for target [%s]", target:name())
-        end
-
-        -- compile generated cpp files
-        for _, file in ipairs(cppfiles) do
-            local sourcefile_cx = path.absolute(file)
-            -- add objectfile
-            local objectfile = target:objectfile(file)
-
-            table.insert(target:objectfiles(), objectfile)
-
-            if not opt.quiet then
-                batchcmds:show_progress(opt.progress, "${color.build.object}[%s]: compiling.codegen %s", target:name(), file)
+        if sourcebatches then
+            local sourcebatch = sourcebatches["c++.build"]
+            if sourcebatch then
+                local sourcefiles = os.files(path.join(gendir, target:name(), "/generated.cpp"))
+                for _, sourcefile in ipairs(sourcefiles) do
+                    -- add source file to this batch
+                    table.insert(sourcebatch.sourcefiles, sourcefile)
+                    -- insert object files to source batches
+                    local objectfile = target:objectfile(sourcefile, "cxx")
+                    table.insert(sourcebatch.objectfiles, objectfile)
+                    table.insert(sourcebatch.dependfiles, target:dependfile(objectfile))
+                end
             end
-
-            -- add commands
-            batchcmds:mkdir(path.directory(sourcefile_cx))
-            batchcmds:compile(sourcefile_cx, objectfile, {configs = {includedirs = gendir, languages = get_config("cxx_version")}})
-
-            -- add deps
-            batchcmds:add_depfiles(sourcefile_cx)
-            batchcmds:set_depmtime(os.mtime(objectfile))
-            batchcmds:set_depcache(target:dependfile(objectfile))
         end
     end)
