@@ -5,9 +5,9 @@ static_component("SkrSerde", "SkrRT")
     set_optimize("fastest")
     set_pcxxheader("serde/pch.hpp")
     add_files("serde/build.*.cpp")
-
-shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     public_dependency("SkrCore", engine_version)
+    
+shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     public_dependency("SkrGraphics", engine_version)
     -- internal packages
     add_packages("boost-context", {public = true, inherit = true})
