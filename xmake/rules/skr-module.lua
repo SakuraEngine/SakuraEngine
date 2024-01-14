@@ -8,29 +8,44 @@ if(has_config("shipping_one_archive")) then
     add_defines("SHIPPING_ONE_ARCHIVE")
 end
 
+function public_dependency(dep, version, setting)
+    add_deps(dep, {public = true})
+    add_values("skr.module.public_dependencies", dep)
+    add_values(dep..".version", version)
+end
+
+rule("skr.module")
+rule_end()
+
 rule("skr.component")
     after_load(function (target, opt)
         import("core.project.project")
         local owner_name = target:extraconf("rules", "skr.component", "owner")
         local owner = project.target(owner_name)
         local owner_api = owner:extraconf("rules", "skr.dyn_module", "api") or owner:extraconf("rules", "skr.static_module", "api")
+        -- add dep values to owner
+        for _, pub_dep in pairs(target:values("skr.module.public_dependencies")) do
+            owner:add("values", "skr.module.public_dependencies", pub_dep)
+            owner:add("values", pub_dep..".version", target:values(pub_dep..".version"))
+        end
+        -- import deps from owner
         for _, owner_dep in pairs(owner:deps()) do
-            if owner_dep:name() ~= target:name() then
+            local _owner_name = owner_dep:extraconf("rules", "skr.component", "owner") or ""
+            if _owner_name ~= owner_name then
                 target:add("deps", owner_dep:name(), {public = true})
             end
         end
+        -- insert owner's include dirs
         for _, owner_inc in pairs(owner:get("includedirs")) do
             target:add("includedirs", owner_inc, {public = true})
         end
+        -- import api from owner
         if(not has_config("shipping_one_archive")) then
             target:add("defines", owner_api.."_API=SKR_IMPORT", owner_api.."_LOCAL=error")
         else
             target:add("defines", owner_api.."_API=", owner_api.."_LOCAL=error")
         end
     end)
-rule_end()
-
-rule("skr.module")
 rule_end()
 
 rule("skr.dyn_module")
@@ -133,12 +148,6 @@ rule("skr.static_module")
         end
     end)
 rule_end()
-
-function public_dependency(dep, version, setting)
-    add_deps(dep, {public = true})
-    add_values("skr.module.public_dependencies", dep)
-    add_values(dep..".version", version)
-end
 
 function static_module(name, api, version, opt)
     target(name)
