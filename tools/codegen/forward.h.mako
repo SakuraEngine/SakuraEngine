@@ -3,7 +3,7 @@
 #ifdef __meta__
 #error "this file should not be inspected by meta"
 #endif
-#include "${config}"
+#include "SkrBase/config.h"
 #include <inttypes.h>
 #undef SKR_FILE_ID
 #define SKR_FILE_ID ${db.file_id}

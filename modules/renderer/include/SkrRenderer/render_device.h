@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/io/vram_io.hpp"
-#include "SkrRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "fwd_types.h"
 #ifdef __cplusplus
 #include "SkrRT/platform/window.h"

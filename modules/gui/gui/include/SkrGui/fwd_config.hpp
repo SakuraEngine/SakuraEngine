@@ -14,7 +14,7 @@
 #include "SkrRT/rttr/iobject.hpp"
 
 // export macro
-#include "SkrGui/module.configure.h"
+#include "SkrBase/config.h"
 
 // skr types
 #include "SkrRT/misc/types.h"

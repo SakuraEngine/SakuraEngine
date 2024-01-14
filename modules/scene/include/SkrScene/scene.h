@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrScene/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/ecs/sugoi_types.h"
 #ifndef __meta__

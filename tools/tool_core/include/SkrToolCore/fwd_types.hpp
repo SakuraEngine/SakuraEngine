@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrToolCore/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRT/config.h"
 
 struct skr_vfs_t;

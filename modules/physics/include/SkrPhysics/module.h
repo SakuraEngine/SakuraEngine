@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrPhysics/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrModule/module.hpp"
 
 class SKR_PHYSICS_API SkrPhysicsModule : public skr::IDynamicModule

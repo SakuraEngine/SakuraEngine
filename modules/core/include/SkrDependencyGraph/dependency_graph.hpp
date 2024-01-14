@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrContainers/stl_function.hpp"
-#include "SkrCore/module.configure.h"
+#include "SkrBase/config.h"
 
 namespace skr
 {

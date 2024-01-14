@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/config.h"
-#include "SkrLua/module.configure.h"
+#include "SkrBase/config.h"
 extern "C" {
 #include "lua.h"
 #include "lualib.h"

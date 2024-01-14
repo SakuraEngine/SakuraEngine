@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/misc/types.h"
-#include "SkrLua/module.configure.h"
+#include "SkrBase/config.h"
 
 struct lua_State;
 namespace skr::lua

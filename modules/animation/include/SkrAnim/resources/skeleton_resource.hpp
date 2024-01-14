@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrAnim/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRT/config.h"
 #ifndef __meta__
     #include "SkrAnim/resources/skeleton_resource.generated.h" // IWYU pragma: export

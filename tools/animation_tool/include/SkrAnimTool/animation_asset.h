@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrAnimTool/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrContainers/string.hpp"
 #ifndef __meta__

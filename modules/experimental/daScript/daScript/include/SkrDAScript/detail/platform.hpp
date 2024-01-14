@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrDAScript/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRT/config.h"
 #include <type_traits>
 #include <utility>

@@ -1,5 +1,5 @@
 #pragma once
-#include "MPShared/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrBase/misc/traits.hpp"
 #include "SkrGuid/guid.hpp"
 #include "SkrRT/ecs/sugoi.h"

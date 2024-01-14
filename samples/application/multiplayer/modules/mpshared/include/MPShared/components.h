@@ -1,5 +1,5 @@
 #pragma once
-#include "MPShared/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrContainers/vector.hpp"
 #include "SkrContainers/bitset.hpp"

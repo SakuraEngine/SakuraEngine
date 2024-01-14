@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/types.h"
-#include "SkrCore/module.configure.h"
+#include "SkrBase/config.h"
 
 namespace skr {
 namespace log {

@@ -10,7 +10,7 @@
 #include "SkrContainers/vector.hpp"
 #include "SkrBase/types.h"
 #include "SkrBase/types.h"
-#include "MPShared/module.configure.h"
+#include "SkrBase/config.h"
 
 // override the default serialization of sugoi_entity_t to use a packed version
 struct packed_entity_t {

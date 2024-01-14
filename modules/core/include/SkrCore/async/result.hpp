@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h" // IWYU pragma: keep
-#include "SkrCore/module.configure.h"
+#include "SkrBase/config.h"
 
 namespace skr
 {

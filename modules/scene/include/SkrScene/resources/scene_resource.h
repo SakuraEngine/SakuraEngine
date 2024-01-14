@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrScene/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrBase/types.h"

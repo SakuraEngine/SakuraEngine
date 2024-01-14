@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrInput/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRT/platform/input.h"
 #include "SkrContainers/span.hpp"
 #include "SkrRT/misc/types.h"

@@ -4,7 +4,7 @@
 #include "SkrBase/template/foreach_field.hpp"
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/umap.hpp"
-#include "SkrRT/module.configure.h"
+#include "SkrBase/config.h"
 
 #ifndef SKR_GOAP_SET_NAME
     #ifdef _DEBUG

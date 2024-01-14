@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGuiRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrGui/backend/device/window.hpp"
 #include "SkrRT/platform/window.h"
 #include "SkrGui/backend/device/device.hpp"
