@@ -13,6 +13,6 @@ rule("c++.codegen")
             genfile:print("static_assert(false, \"codegen of module "..target:name().." is not completed!\")")
             genfile:close()
         end
-        target:add("files", sourcefile)
+        target:add("files", sourcefile, { unity_ignored = true })
         target:add("includedirs", gendir, {public = true})
     end)
