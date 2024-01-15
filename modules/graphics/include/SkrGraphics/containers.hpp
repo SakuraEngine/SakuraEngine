@@ -2,8 +2,8 @@
 #include "config.h"
 #ifndef CGPU_BUILD_STANDALONE
 #include <SkrContainers/hashmap.hpp>
-#include <SkrContainers/umap.hpp>
-#include <SkrContainers/uset.hpp>
+#include <SkrContainers/map.hpp>
+#include <SkrContainers/set.hpp>
 #include <SkrContainers/btree.hpp>
 #include <SkrContainers/concurrent_queue.hpp>
 #include <SkrContainers/stl_string.hpp>
