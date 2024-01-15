@@ -6,9 +6,8 @@
 // SparseHashSet structs
 namespace skr::container
 {
-// SparseHashSet 的数据定义，存储于 SparseArray 中
+// SparseHashSet 的数据定义，存储于 SparseVector 中
 // 存储的 hash 用于快速比较，next 用于查找 hash 链表
-// TODO. memory traits 穿透
 template <typename T, typename TS, typename HashType>
 struct SparseHashSetData {
     T          _sparse_hash_set_data;

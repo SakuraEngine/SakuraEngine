@@ -10,7 +10,7 @@ template <typename Memory>
 struct SparseHashMap : protected SparseHashBase<Memory> {
     using Super = SparseHashBase<Memory>;
 
-    // sparse array configure
+    // sparse vector configure
     using typename Memory::SizeType;
     using typename Memory::DataType;
     using typename Memory::StorageType;

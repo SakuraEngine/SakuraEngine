@@ -11,7 +11,7 @@ template <typename Memory>
 struct SparseHashBase : protected SparseVector<Memory> {
     using Super = SparseVector<Memory>;
 
-    // sparse array configure
+    // sparse vector configure
     using typename Memory::SizeType;
     using typename Memory::DataType;
     using typename Memory::StorageType;
