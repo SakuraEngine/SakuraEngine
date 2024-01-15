@@ -8,8 +8,8 @@
 namespace skr::container
 {
 template <typename Memory>
-struct SparseHashBase : protected SparseArray<Memory> {
-    using Super = SparseArray<Memory>;
+struct SparseHashBase : protected SparseVector<Memory> {
+    using Super = SparseVector<Memory>;
 
     // sparse array configure
     using typename Memory::SizeType;
@@ -25,7 +25,7 @@ struct SparseHashBase : protected SparseArray<Memory> {
     using typename Memory::SetStorageType;
 
     // helper
-    using DataArr                         = SparseArray<Memory>;
+    using DataArr                         = SparseVector<Memory>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // ctor & dtor

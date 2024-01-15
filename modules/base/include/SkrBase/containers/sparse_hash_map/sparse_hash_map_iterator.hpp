@@ -38,8 +38,8 @@ struct SparseHashMapIterInv : public CursorIter<SparseHashMapCursor<Container, k
 };
 
 template <typename Container, bool kConst>
-struct SparseHashMapCursor : protected SparseArrayCursor<Container, kConst> {
-    using Super         = SparseArrayCursor<Container, kConst>;
+struct SparseHashMapCursor : protected SparseVectorCursor<Container, kConst> {
+    using Super         = SparseVectorCursor<Container, kConst>;
     using ContainerType = std::conditional_t<kConst, const Container, Container>;
     using SizeType      = typename ContainerType::SizeType;
     using DataType      = std::conditional_t<kConst, const typename ContainerType::SetDataType, typename ContainerType::SetDataType>;

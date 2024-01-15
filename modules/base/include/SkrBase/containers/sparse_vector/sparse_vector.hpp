@@ -6,11 +6,11 @@
 #include "SkrBase/algo/intro_sort.hpp"
 #include "SkrBase/algo/merge_sort.hpp"
 
-// SparseArray def
+// SparseVector def
 namespace skr::container
 {
 template <typename Memory>
-struct SparseArray : protected Memory {
+struct SparseVector : protected Memory {
     // from core
     using typename Memory::SizeType;
     using typename Memory::DataType;
@@ -21,44 +21,44 @@ struct SparseArray : protected Memory {
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // data ref
-    using DataRef  = SparseArrayDataRef<DataType, SizeType, false>;
-    using CDataRef = SparseArrayDataRef<DataType, SizeType, true>;
+    using DataRef  = SparseVectorDataRef<DataType, SizeType, false>;
+    using CDataRef = SparseVectorDataRef<DataType, SizeType, true>;
 
     // cursor & iterator
-    using Cursor   = SparseArrayCursor<SparseArray, false>;
-    using CCursor  = SparseArrayCursor<SparseArray, true>;
-    using Iter     = SparseArrayIter<SparseArray, false>;
-    using CIter    = SparseArrayIter<SparseArray, true>;
-    using IterInv  = SparseArrayIterInv<SparseArray, false>;
-    using CIterInv = SparseArrayIterInv<SparseArray, true>;
+    using Cursor   = SparseVectorCursor<SparseVector, false>;
+    using CCursor  = SparseVectorCursor<SparseVector, true>;
+    using Iter     = SparseVectorIter<SparseVector, false>;
+    using CIter    = SparseVectorIter<SparseVector, true>;
+    using IterInv  = SparseVectorIterInv<SparseVector, false>;
+    using CIterInv = SparseVectorIterInv<SparseVector, true>;
 
     // stl-style iterator
     using StlIt  = CursorIterStl<Cursor, false>;
     using CStlIt = CursorIterStl<CCursor, false>;
 
     // ctor & dtor
-    SparseArray(AllocatorCtorParam param = {});
-    SparseArray(SizeType size, AllocatorCtorParam param = {});
-    SparseArray(SizeType size, const DataType& v, AllocatorCtorParam param = {});
-    SparseArray(const DataType* p, SizeType n, AllocatorCtorParam param = {});
-    SparseArray(std::initializer_list<DataType> init_list, AllocatorCtorParam param = {});
-    ~SparseArray();
+    SparseVector(AllocatorCtorParam param = {});
+    SparseVector(SizeType size, AllocatorCtorParam param = {});
+    SparseVector(SizeType size, const DataType& v, AllocatorCtorParam param = {});
+    SparseVector(const DataType* p, SizeType n, AllocatorCtorParam param = {});
+    SparseVector(std::initializer_list<DataType> init_list, AllocatorCtorParam param = {});
+    ~SparseVector();
 
     // copy & move
-    SparseArray(const SparseArray& other);
-    SparseArray(SparseArray&& other) noexcept;
+    SparseVector(const SparseVector& other);
+    SparseVector(SparseVector&& other) noexcept;
 
     // assign & move assign
-    SparseArray& operator=(const SparseArray& rhs);
-    SparseArray& operator=(SparseArray&& rhs) noexcept;
+    SparseVector& operator=(const SparseVector& rhs);
+    SparseVector& operator=(SparseVector&& rhs) noexcept;
 
     // special assign
     void assign(const DataType* p, SizeType n);
     void assign(std::initializer_list<DataType> init_list);
 
     // compare
-    bool operator==(const SparseArray& rhs) const;
-    bool operator!=(const SparseArray& rhs) const;
+    bool operator==(const SparseVector& rhs) const;
+    bool operator!=(const SparseVector& rhs) const;
 
     // getter
     SizeType            size() const;
@@ -112,7 +112,7 @@ struct SparseArray : protected Memory {
     void emplace_at(SizeType index, Args&&... args);
 
     // append
-    void append(const SparseArray& arr);
+    void append(const SparseVector& arr);
     void append(std::initializer_list<DataType> init_list);
     void append(DataType* p, SizeType n);
 
@@ -199,7 +199,7 @@ struct SparseArray : protected Memory {
     CStlIt end() const;
 
     // syntax
-    const SparseArray& readonly() const;
+    const SparseVector& readonly() const;
 
 private:
     // helper
@@ -214,42 +214,42 @@ private:
 };
 } // namespace skr::container
 
-// SparseArray impl
+// SparseVector impl
 namespace skr::container
 {
 // helper
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::_realloc(SizeType new_capacity)
+SKR_INLINE void SparseVector<Memory>::_realloc(SizeType new_capacity)
 {
     Memory::realloc(new_capacity);
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::_free()
+SKR_INLINE void SparseVector<Memory>::_free()
 {
     Memory::free();
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::_grow(SizeType grow_size)
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::_grow(SizeType grow_size)
 {
     return Memory::grow(grow_size);
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::_set_sparse_size(SizeType value)
+SKR_INLINE void SparseVector<Memory>::_set_sparse_size(SizeType value)
 {
     Memory::set_sparse_size(value);
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::_set_freelist_head(SizeType value)
+SKR_INLINE void SparseVector<Memory>::_set_freelist_head(SizeType value)
 {
     Memory::set_freelist_head(value);
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::_set_hole_size(SizeType value)
+SKR_INLINE void SparseVector<Memory>::_set_hole_size(SizeType value)
 {
     Memory::set_hole_size(value);
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::_copy_compacted_data(StorageType* dst, const DataType* src, SizeType size)
+SKR_INLINE void SparseVector<Memory>::_copy_compacted_data(StorageType* dst, const DataType* src, SizeType size)
 {
     if constexpr (!memory::MemoryTraits<DataType>::use_copy && sizeof(DataType) == sizeof(StorageType))
     {
@@ -259,37 +259,37 @@ SKR_INLINE void SparseArray<Memory>::_copy_compacted_data(StorageType* dst, cons
     {
         for (SizeType i = 0; i < size; ++i)
         {
-            new (&dst[i]._sparse_array_data) DataType(src[i]);
+            new (&dst[i]._sparse_vector_data) DataType(src[i]);
         }
     }
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::_break_freelist_at(SizeType index)
+SKR_INLINE void SparseVector<Memory>::_break_freelist_at(SizeType index)
 {
     StorageType* p_node = data() + index;
 
     if (freelist_head() == index)
     {
-        _set_freelist_head(p_node->_sparse_array_freelist_next);
+        _set_freelist_head(p_node->_sparse_vector_freelist_next);
     }
-    if (p_node->_sparse_array_freelist_next != npos)
+    if (p_node->_sparse_vector_freelist_next != npos)
     {
-        data()[p_node->_sparse_array_freelist_next]._sparse_array_freelist_prev = p_node->_sparse_array_freelist_prev;
+        data()[p_node->_sparse_vector_freelist_next]._sparse_vector_freelist_prev = p_node->_sparse_vector_freelist_prev;
     }
-    if (p_node->_sparse_array_freelist_prev != npos)
+    if (p_node->_sparse_vector_freelist_prev != npos)
     {
-        data()[p_node->_sparse_array_freelist_prev]._sparse_array_freelist_next = p_node->_sparse_array_freelist_next;
+        data()[p_node->_sparse_vector_freelist_prev]._sparse_vector_freelist_next = p_node->_sparse_vector_freelist_next;
     }
 }
 
 // ctor & dtor
 template <typename Memory>
-SKR_INLINE SparseArray<Memory>::SparseArray(AllocatorCtorParam param)
+SKR_INLINE SparseVector<Memory>::SparseVector(AllocatorCtorParam param)
     : Memory(std::move(param))
 {
 }
 template <typename Memory>
-SKR_INLINE SparseArray<Memory>::SparseArray(SizeType size, AllocatorCtorParam param)
+SKR_INLINE SparseVector<Memory>::SparseVector(SizeType size, AllocatorCtorParam param)
     : Memory(std::move(param))
 {
     if (size)
@@ -306,7 +306,7 @@ SKR_INLINE SparseArray<Memory>::SparseArray(SizeType size, AllocatorCtorParam pa
         {
             for (SizeType i = 0; i < size; ++i)
             {
-                new (&data()[i]._sparse_array_data) DataType();
+                new (&data()[i]._sparse_vector_data) DataType();
             }
         }
         else
@@ -316,7 +316,7 @@ SKR_INLINE SparseArray<Memory>::SparseArray(SizeType size, AllocatorCtorParam pa
     }
 }
 template <typename Memory>
-SKR_INLINE SparseArray<Memory>::SparseArray(SizeType size, const DataType& v, AllocatorCtorParam param)
+SKR_INLINE SparseVector<Memory>::SparseVector(SizeType size, const DataType& v, AllocatorCtorParam param)
     : Memory(std::move(param))
 {
     if (size)
@@ -331,12 +331,12 @@ SKR_INLINE SparseArray<Memory>::SparseArray(SizeType size, const DataType& v, Al
         // call ctor
         for (SizeType i = 0; i < size; ++i)
         {
-            new (&data()[i]._sparse_array_data) DataType(v);
+            new (&data()[i]._sparse_vector_data) DataType(v);
         }
     }
 }
 template <typename Memory>
-SKR_INLINE SparseArray<Memory>::SparseArray(const DataType* p, SizeType n, AllocatorCtorParam param)
+SKR_INLINE SparseVector<Memory>::SparseVector(const DataType* p, SizeType n, AllocatorCtorParam param)
     : Memory(std::move(param))
 {
     if (n)
@@ -353,7 +353,7 @@ SKR_INLINE SparseArray<Memory>::SparseArray(const DataType* p, SizeType n, Alloc
     }
 }
 template <typename Memory>
-SKR_INLINE SparseArray<Memory>::SparseArray(std::initializer_list<DataType> init_list, AllocatorCtorParam param)
+SKR_INLINE SparseVector<Memory>::SparseVector(std::initializer_list<DataType> init_list, AllocatorCtorParam param)
     : Memory(std::move(param))
 {
     SizeType size = init_list.size();
@@ -371,20 +371,20 @@ SKR_INLINE SparseArray<Memory>::SparseArray(std::initializer_list<DataType> init
     }
 }
 template <typename Memory>
-SKR_INLINE SparseArray<Memory>::~SparseArray()
+SKR_INLINE SparseVector<Memory>::~SparseVector()
 {
     // handled in memory
 }
 
 // copy & move
 template <typename Memory>
-SKR_INLINE SparseArray<Memory>::SparseArray(const SparseArray& other)
+SKR_INLINE SparseVector<Memory>::SparseVector(const SparseVector& other)
     : Memory(other)
 {
     // handled in memory
 }
 template <typename Memory>
-SKR_INLINE SparseArray<Memory>::SparseArray(SparseArray&& other) noexcept
+SKR_INLINE SparseVector<Memory>::SparseVector(SparseVector&& other) noexcept
     : Memory(std::move(other))
 {
     // handled in memory
@@ -392,13 +392,13 @@ SKR_INLINE SparseArray<Memory>::SparseArray(SparseArray&& other) noexcept
 
 // assign & move assign
 template <typename Memory>
-SKR_INLINE SparseArray<Memory>& SparseArray<Memory>::operator=(const SparseArray& rhs)
+SKR_INLINE SparseVector<Memory>& SparseVector<Memory>::operator=(const SparseVector& rhs)
 {
     Memory::operator=(rhs);
     return *this;
 }
 template <typename Memory>
-SKR_INLINE SparseArray<Memory>& SparseArray<Memory>::operator=(SparseArray&& rhs) noexcept
+SKR_INLINE SparseVector<Memory>& SparseVector<Memory>::operator=(SparseVector&& rhs) noexcept
 {
     Memory::operator=(std::move(rhs));
     return *this;
@@ -406,7 +406,7 @@ SKR_INLINE SparseArray<Memory>& SparseArray<Memory>::operator=(SparseArray&& rhs
 
 // special assign
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::assign(const DataType* p, SizeType n)
+SKR_INLINE void SparseVector<Memory>::assign(const DataType* p, SizeType n)
 {
     clear();
 
@@ -424,7 +424,7 @@ SKR_INLINE void SparseArray<Memory>::assign(const DataType* p, SizeType n)
     }
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::assign(std::initializer_list<DataType> init_list)
+SKR_INLINE void SparseVector<Memory>::assign(std::initializer_list<DataType> init_list)
 {
     clear();
 
@@ -445,7 +445,7 @@ SKR_INLINE void SparseArray<Memory>::assign(std::initializer_list<DataType> init
 
 // compare
 template <typename Memory>
-SKR_INLINE bool SparseArray<Memory>::operator==(const SparseArray& rhs) const
+SKR_INLINE bool SparseVector<Memory>::operator==(const SparseVector& rhs) const
 {
     if (sparse_size() == rhs.sparse_size())
     {
@@ -471,115 +471,115 @@ SKR_INLINE bool SparseArray<Memory>::operator==(const SparseArray& rhs) const
     return false;
 }
 template <typename Memory>
-SKR_INLINE bool SparseArray<Memory>::operator!=(const SparseArray& rhs) const
+SKR_INLINE bool SparseVector<Memory>::operator!=(const SparseVector& rhs) const
 {
     return !((*this) == rhs);
 }
 
 // getter
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::size() const
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::size() const
 {
     return sparse_size() - hole_size();
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::capacity() const
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::capacity() const
 {
     return Memory::capacity();
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::slack() const
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::slack() const
 {
     return capacity() - sparse_size() + hole_size();
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::sparse_size() const
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::sparse_size() const
 {
     return Memory::sparse_size();
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::hole_size() const
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::hole_size() const
 {
     return Memory::hole_size();
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::bit_array_size() const
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::bit_array_size() const
 {
     return Memory::bit_array_size();
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::freelist_head() const
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::freelist_head() const
 {
     return Memory::freelist_head();
 }
 template <typename Memory>
-SKR_INLINE bool SparseArray<Memory>::is_compact() const
+SKR_INLINE bool SparseVector<Memory>::is_compact() const
 {
     return hole_size() == 0;
 }
 template <typename Memory>
-SKR_INLINE bool SparseArray<Memory>::empty() const
+SKR_INLINE bool SparseVector<Memory>::empty() const
 {
     return (sparse_size() - hole_size()) == 0;
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::StorageType* SparseArray<Memory>::data()
+SKR_INLINE typename SparseVector<Memory>::StorageType* SparseVector<Memory>::data()
 {
     return Memory::data();
 }
 template <typename Memory>
-SKR_INLINE const typename SparseArray<Memory>::StorageType* SparseArray<Memory>::data() const
+SKR_INLINE const typename SparseVector<Memory>::StorageType* SparseVector<Memory>::data() const
 {
     return Memory::data();
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::BitBlockType* SparseArray<Memory>::bit_array()
+SKR_INLINE typename SparseVector<Memory>::BitBlockType* SparseVector<Memory>::bit_array()
 {
     return Memory::bit_array();
 }
 template <typename Memory>
-SKR_INLINE const typename SparseArray<Memory>::BitBlockType* SparseArray<Memory>::bit_array() const
+SKR_INLINE const typename SparseVector<Memory>::BitBlockType* SparseVector<Memory>::bit_array() const
 {
     return Memory::bit_array();
 }
 template <typename Memory>
-SKR_INLINE Memory& SparseArray<Memory>::memory()
+SKR_INLINE Memory& SparseVector<Memory>::memory()
 {
     return *this;
 }
 template <typename Memory>
-SKR_INLINE const Memory& SparseArray<Memory>::memory() const
+SKR_INLINE const Memory& SparseVector<Memory>::memory() const
 {
     return *this;
 }
 
 // validate
 template <typename Memory>
-SKR_INLINE bool SparseArray<Memory>::has_data(SizeType idx) const
+SKR_INLINE bool SparseVector<Memory>::has_data(SizeType idx) const
 {
     SKR_ASSERT(is_valid_index(idx));
     return BitAlgo::get(bit_array(), idx);
 }
 template <typename Memory>
-SKR_INLINE bool SparseArray<Memory>::is_hole(SizeType idx) const
+SKR_INLINE bool SparseVector<Memory>::is_hole(SizeType idx) const
 {
     SKR_ASSERT(is_valid_index(idx));
     return !BitAlgo::get(bit_array(), idx);
 }
 template <typename Memory>
-SKR_INLINE bool SparseArray<Memory>::is_valid_index(SizeType idx) const
+SKR_INLINE bool SparseVector<Memory>::is_valid_index(SizeType idx) const
 {
     return idx >= 0 && idx < sparse_size();
 }
 
 // memory op
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::clear()
+SKR_INLINE void SparseVector<Memory>::clear()
 {
     Memory::clear();
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::release(SizeType reserve_capacity)
+SKR_INLINE void SparseVector<Memory>::release(SizeType reserve_capacity)
 {
     clear();
     if (reserve_capacity)
@@ -592,7 +592,7 @@ SKR_INLINE void SparseArray<Memory>::release(SizeType reserve_capacity)
     }
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::reserve(SizeType expect_capacity)
+SKR_INLINE void SparseVector<Memory>::reserve(SizeType expect_capacity)
 {
     if (expect_capacity > capacity())
     {
@@ -600,13 +600,13 @@ SKR_INLINE void SparseArray<Memory>::reserve(SizeType expect_capacity)
     }
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::shrink()
+SKR_INLINE void SparseVector<Memory>::shrink()
 {
     compact_top();
     Memory::shrink();
 }
 template <typename Memory>
-SKR_INLINE bool SparseArray<Memory>::compact()
+SKR_INLINE bool SparseVector<Memory>::compact()
 {
     if (!empty() && !is_compact())
     {
@@ -616,7 +616,7 @@ SKR_INLINE bool SparseArray<Memory>::compact()
         SizeType free_node       = freelist_head();
         while (free_node != npos)
         {
-            SizeType next_index = data()[free_node]._sparse_array_freelist_next;
+            SizeType next_index = data()[free_node]._sparse_vector_freelist_next;
             if (free_node < compacted_index)
             {
                 // find last allocated element
@@ -626,7 +626,7 @@ SKR_INLINE bool SparseArray<Memory>::compact()
                 } while (!has_data(search_index));
 
                 // move element to the hole
-                memory::move<DataType, DataType>(&data()[free_node]._sparse_array_data, &data()[search_index]._sparse_array_data);
+                memory::move<DataType, DataType>(&data()[free_node]._sparse_vector_data, &data()[search_index]._sparse_vector_data);
             }
             free_node = next_index;
         }
@@ -648,7 +648,7 @@ SKR_INLINE bool SparseArray<Memory>::compact()
     }
 }
 template <typename Memory>
-SKR_INLINE bool SparseArray<Memory>::compact_stable()
+SKR_INLINE bool SparseVector<Memory>::compact_stable()
 {
     if (!empty() && !is_compact())
     {
@@ -671,7 +671,7 @@ SKR_INLINE bool SparseArray<Memory>::compact_stable()
             // move items
             while (read_index < sparse_size() && has_data(read_index))
             {
-                memory::move(&data()[write_index]._sparse_array_data, &data()[read_index]._sparse_array_data);
+                memory::move(&data()[write_index]._sparse_vector_data, &data()[read_index]._sparse_vector_data);
                 ++write_index;
                 ++read_index;
             }
@@ -694,7 +694,7 @@ SKR_INLINE bool SparseArray<Memory>::compact_stable()
     }
 }
 template <typename Memory>
-SKR_INLINE bool SparseArray<Memory>::compact_top()
+SKR_INLINE bool SparseVector<Memory>::compact_top()
 {
     if (!is_compact())
     {
@@ -727,21 +727,21 @@ SKR_INLINE bool SparseArray<Memory>::compact_top()
 
 // add
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add(const DataType& v)
+SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::add(const DataType& v)
 {
     DataRef info = add_unsafe();
     new (info.ptr()) DataType(v);
     return info;
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add(DataType&& v)
+SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::add(DataType&& v)
 {
     DataRef info = add_unsafe();
     new (info.ptr()) DataType(std::move(v));
     return info;
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add_unsafe()
+SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::add_unsafe()
 {
     SizeType index;
 
@@ -749,13 +749,13 @@ SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add_unsafe
     {
         // remove and use first index from freelist
         index = freelist_head();
-        _set_freelist_head(data()[index]._sparse_array_freelist_next);
+        _set_freelist_head(data()[index]._sparse_vector_freelist_next);
         _set_hole_size(hole_size() - 1);
 
         // break link
         if (hole_size())
         {
-            data()[freelist_head()]._sparse_array_freelist_prev = npos;
+            data()[freelist_head()]._sparse_vector_freelist_prev = npos;
         }
     }
     else // no hole case
@@ -766,17 +766,17 @@ SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add_unsafe
     // setup bit
     BitAlgo::set(bit_array(), index, true);
 
-    return { &data()[index]._sparse_array_data, index };
+    return { &data()[index]._sparse_vector_data, index };
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add_default()
+SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::add_default()
 {
     DataRef info = add_unsafe();
     memory::construct(info.ptr());
     return info;
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add_zeroed()
+SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::add_zeroed()
 {
     DataRef info = add_unsafe();
     std::memset(info.ptr(), 0, sizeof(DataType));
@@ -785,19 +785,19 @@ SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::add_zeroed
 
 // add at
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::add_at(SizeType idx, const DataType& v)
+SKR_INLINE void SparseVector<Memory>::add_at(SizeType idx, const DataType& v)
 {
     add_at_unsafe(idx);
-    new (&data()[idx]._sparse_array_data) DataType(v);
+    new (&data()[idx]._sparse_vector_data) DataType(v);
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::add_at(SizeType idx, DataType&& v)
+SKR_INLINE void SparseVector<Memory>::add_at(SizeType idx, DataType&& v)
 {
     add_at_unsafe(idx);
-    new (&data()[idx]._sparse_array_data) DataType(std::move(v));
+    new (&data()[idx]._sparse_vector_data) DataType(std::move(v));
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::add_at_unsafe(SizeType idx)
+SKR_INLINE void SparseVector<Memory>::add_at_unsafe(SizeType idx)
 {
     SKR_ASSERT(is_hole(idx));
     SKR_ASSERT(is_valid_index(idx));
@@ -810,22 +810,22 @@ SKR_INLINE void SparseArray<Memory>::add_at_unsafe(SizeType idx)
     BitAlgo::set(bit_array(), idx, true);
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::add_at_default(SizeType idx)
+SKR_INLINE void SparseVector<Memory>::add_at_default(SizeType idx)
 {
     add_at_unsafe(idx);
-    memory::construct(&data()[idx]._sparse_array_data);
+    memory::construct(&data()[idx]._sparse_vector_data);
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::add_at_zeroed(SizeType idx)
+SKR_INLINE void SparseVector<Memory>::add_at_zeroed(SizeType idx)
 {
     add_at_unsafe(idx);
-    std::memset(&data()[idx]._sparse_array_data, 0, sizeof(DataType));
+    std::memset(&data()[idx]._sparse_vector_data, 0, sizeof(DataType));
 }
 
 // emplace
 template <typename Memory>
 template <typename... Args>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::emplace(Args&&... args)
+SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::emplace(Args&&... args)
 {
     DataRef info = add_unsafe();
     new (info.ptr()) DataType(std::forward<Args>(args)...);
@@ -833,15 +833,15 @@ SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::emplace(Ar
 }
 template <typename Memory>
 template <typename... Args>
-SKR_INLINE void SparseArray<Memory>::emplace_at(SizeType index, Args&&... args)
+SKR_INLINE void SparseVector<Memory>::emplace_at(SizeType index, Args&&... args)
 {
     add_at_unsafe(index);
-    new (&data()[index]._sparse_array_data) DataType(std::forward<Args>(args)...);
+    new (&data()[index]._sparse_vector_data) DataType(std::forward<Args>(args)...);
 }
 
 // append
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::append(const SparseArray& arr)
+SKR_INLINE void SparseVector<Memory>::append(const SparseVector& arr)
 {
     // fill hole
     SizeType count  = 0;
@@ -862,7 +862,7 @@ SKR_INLINE void SparseArray<Memory>::append(const SparseArray& arr)
         BitAlgo::set_range(bit_array(), write_idx, grow_count, true);
         while (!cursor.reach_end())
         {
-            new (&(data()[write_idx]._sparse_array_data)) DataType(cursor.ref());
+            new (&(data()[write_idx]._sparse_vector_data)) DataType(cursor.ref());
             ++write_idx;
             cursor.move_next();
         }
@@ -870,7 +870,7 @@ SKR_INLINE void SparseArray<Memory>::append(const SparseArray& arr)
     }
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::append(std::initializer_list<DataType> init_list)
+SKR_INLINE void SparseVector<Memory>::append(std::initializer_list<DataType> init_list)
 {
     // fill hole
     SizeType read_idx = 0;
@@ -891,7 +891,7 @@ SKR_INLINE void SparseArray<Memory>::append(std::initializer_list<DataType> init
     }
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::append(DataType* p, SizeType n)
+SKR_INLINE void SparseVector<Memory>::append(DataType* p, SizeType n)
 {
     // fill hole
     SizeType read_idx = 0;
@@ -914,7 +914,7 @@ SKR_INLINE void SparseArray<Memory>::append(DataType* p, SizeType n)
 
 // remove
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::remove_at(SizeType index, SizeType n)
+SKR_INLINE void SparseVector<Memory>::remove_at(SizeType index, SizeType n)
 {
     SKR_ASSERT(is_valid_index(index));
     SKR_ASSERT(is_valid_index(index + n - 1));
@@ -925,14 +925,14 @@ SKR_INLINE void SparseArray<Memory>::remove_at(SizeType index, SizeType n)
         for (SizeType i = 0; i < n; ++i)
         {
             SKR_ASSERT(has_data(index + i));
-            memory::destruct(&data()[index + i]._sparse_array_data);
+            memory::destruct(&data()[index + i]._sparse_vector_data);
         }
     }
 
     remove_at_unsafe(index, n);
 }
 template <typename Memory>
-SKR_INLINE void SparseArray<Memory>::remove_at_unsafe(SizeType index, SizeType n)
+SKR_INLINE void SparseVector<Memory>::remove_at_unsafe(SizeType index, SizeType n)
 {
     SKR_ASSERT(is_valid_index(index));
     SKR_ASSERT(is_valid_index(index + n - 1));
@@ -947,10 +947,10 @@ SKR_INLINE void SparseArray<Memory>::remove_at_unsafe(SizeType index, SizeType n
         // link to freelist
         if (hole_size())
         {
-            data()[freelist_head()]._sparse_array_freelist_prev = index;
+            data()[freelist_head()]._sparse_vector_freelist_prev = index;
         }
-        cur_data._sparse_array_freelist_prev = npos;
-        cur_data._sparse_array_freelist_next = freelist_head();
+        cur_data._sparse_vector_freelist_prev = npos;
+        cur_data._sparse_vector_freelist_next = freelist_head();
         _set_freelist_head(index);
         _set_hole_size(hole_size() + 1);
 
@@ -963,19 +963,19 @@ SKR_INLINE void SparseArray<Memory>::remove_at_unsafe(SizeType index, SizeType n
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE bool SparseArray<Memory>::remove(const U& v)
+SKR_INLINE bool SparseVector<Memory>::remove(const U& v)
 {
     return remove_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE bool SparseArray<Memory>::remove_last(const U& v)
+SKR_INLINE bool SparseVector<Memory>::remove_last(const U& v)
 {
     return remove_last_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_all(const U& v)
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::remove_all(const U& v)
 {
     return remove_all_if([&v](const DataType& a) { return a == v; });
 }
@@ -983,7 +983,7 @@ SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_al
 // remove if
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool SparseArray<Memory>::remove_if(Pred&& pred)
+SKR_INLINE bool SparseVector<Memory>::remove_if(Pred&& pred)
 {
     if (DataRef ref = find_if(std::forward<Pred>(pred)))
     {
@@ -994,7 +994,7 @@ SKR_INLINE bool SparseArray<Memory>::remove_if(Pred&& pred)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool SparseArray<Memory>::remove_last_if(Pred&& pred)
+SKR_INLINE bool SparseVector<Memory>::remove_last_if(Pred&& pred)
 {
     if (DataRef ref = find_last_if(std::forward<Pred>(pred)))
     {
@@ -1005,7 +1005,7 @@ SKR_INLINE bool SparseArray<Memory>::remove_last_if(Pred&& pred)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_all_if(Pred&& pred)
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::remove_all_if(Pred&& pred)
 {
     SizeType count = 0;
     for (auto cursor = cursor_begin(); !cursor.reach_end();)
@@ -1024,38 +1024,38 @@ SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::remove_al
 
 // modify
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::DataType& SparseArray<Memory>::operator[](SizeType index)
+SKR_INLINE typename SparseVector<Memory>::DataType& SparseVector<Memory>::operator[](SizeType index)
 {
     SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
-    return data()[index]._sparse_array_data;
+    return data()[index]._sparse_vector_data;
 }
 template <typename Memory>
-SKR_INLINE const typename SparseArray<Memory>::DataType& SparseArray<Memory>::operator[](SizeType index) const
+SKR_INLINE const typename SparseVector<Memory>::DataType& SparseVector<Memory>::operator[](SizeType index) const
 {
     SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
-    return data()[index]._sparse_array_data;
+    return data()[index]._sparse_vector_data;
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::DataType& SparseArray<Memory>::at(SizeType index)
+SKR_INLINE typename SparseVector<Memory>::DataType& SparseVector<Memory>::at(SizeType index)
 {
     SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
-    return data()[index]._sparse_array_data;
+    return data()[index]._sparse_vector_data;
 }
 template <typename Memory>
-SKR_INLINE const typename SparseArray<Memory>::DataType& SparseArray<Memory>::at(SizeType index) const
+SKR_INLINE const typename SparseVector<Memory>::DataType& SparseVector<Memory>::at(SizeType index) const
 {
     SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
-    return data()[index]._sparse_array_data;
+    return data()[index]._sparse_vector_data;
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::DataType& SparseArray<Memory>::last(SizeType index)
+SKR_INLINE typename SparseVector<Memory>::DataType& SparseVector<Memory>::last(SizeType index)
 {
     index = sparse_size() - index - 1;
     SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
     return *(data() + index);
 }
 template <typename Memory>
-SKR_INLINE const typename SparseArray<Memory>::DataType& SparseArray<Memory>::last(SizeType index) const
+SKR_INLINE const typename SparseVector<Memory>::DataType& SparseVector<Memory>::last(SizeType index) const
 {
     index = sparse_size() - index - 1;
     SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
@@ -1065,25 +1065,25 @@ SKR_INLINE const typename SparseArray<Memory>::DataType& SparseArray<Memory>::la
 // find
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find(const U& v)
+SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::find(const U& v)
 {
     return find_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last(const U& v)
+SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::find_last(const U& v)
 {
     return find_last_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find(const U& v) const
+SKR_INLINE typename SparseVector<Memory>::CDataRef SparseVector<Memory>::find(const U& v) const
 {
     return find_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last(const U& v) const
+SKR_INLINE typename SparseVector<Memory>::CDataRef SparseVector<Memory>::find_last(const U& v) const
 {
     return find_last_if([&v](const DataType& a) { return a == v; });
 }
@@ -1091,7 +1091,7 @@ SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last
 // find if
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_if(Pred&& pred)
+SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::find_if(Pred&& pred)
 {
     for (auto cursor = cursor_begin(); !cursor.reach_end(); cursor.move_next())
     {
@@ -1104,7 +1104,7 @@ SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_if(Pr
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last_if(Pred&& pred)
+SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::find_last_if(Pred&& pred)
 {
     for (auto cursor = cursor_end(); !cursor.reach_begin(); cursor.move_prev())
     {
@@ -1117,33 +1117,33 @@ SKR_INLINE typename SparseArray<Memory>::DataRef SparseArray<Memory>::find_last_
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_if(Pred&& pred) const
+SKR_INLINE typename SparseVector<Memory>::CDataRef SparseVector<Memory>::find_if(Pred&& pred) const
 {
-    return const_cast<SparseArray*>(this)->find_if(std::forward<Pred>(pred));
+    return const_cast<SparseVector*>(this)->find_if(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseArray<Memory>::CDataRef SparseArray<Memory>::find_last_if(Pred&& pred) const
+SKR_INLINE typename SparseVector<Memory>::CDataRef SparseVector<Memory>::find_last_if(Pred&& pred) const
 {
-    return const_cast<SparseArray*>(this)->find_last_if(std::forward<Pred>(pred));
+    return const_cast<SparseVector*>(this)->find_last_if(std::forward<Pred>(pred));
 }
 
 // contains
 template <typename Memory>
 template <typename U>
-SKR_INLINE bool SparseArray<Memory>::contains(const U& v) const
+SKR_INLINE bool SparseVector<Memory>::contains(const U& v) const
 {
     return (bool)find(v);
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool SparseArray<Memory>::contains_if(Pred&& pred) const
+SKR_INLINE bool SparseVector<Memory>::contains_if(Pred&& pred) const
 {
     return (bool)find_if(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::count(const U& v) const
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::count(const U& v) const
 {
     SizeType count = 0;
     for (auto cursor = cursor_begin(); !cursor.reach_end(); cursor.move_next())
@@ -1157,7 +1157,7 @@ SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::count(con
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::count_if(Pred&& pred) const
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::count_if(Pred&& pred) const
 {
     SizeType count = 0;
     for (auto cursor = cursor_begin(); !cursor.reach_end(); cursor.move_next())
@@ -1173,7 +1173,7 @@ SKR_INLINE typename SparseArray<Memory>::SizeType SparseArray<Memory>::count_if(
 // sort
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE void SparseArray<Memory>::sort(Functor&& f)
+SKR_INLINE void SparseVector<Memory>::sort(Functor&& f)
 {
     if (sparse_size())
     {
@@ -1182,13 +1182,13 @@ SKR_INLINE void SparseArray<Memory>::sort(Functor&& f)
         data(),
         data() + sparse_size(),
         [&f](const StorageType& a, const StorageType& b) {
-            return f(a._sparse_array_data, b._sparse_array_data);
+            return f(a._sparse_vector_data, b._sparse_vector_data);
         });
     }
 }
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE void SparseArray<Memory>::sort_stable(Functor&& f)
+SKR_INLINE void SparseVector<Memory>::sort_stable(Functor&& f)
 {
     if (sparse_size())
     {
@@ -1197,98 +1197,98 @@ SKR_INLINE void SparseArray<Memory>::sort_stable(Functor&& f)
         data(),
         data() + sparse_size(),
         [&f](const StorageType& a, const StorageType& b) {
-            return f(a._sparse_array_data, b._sparse_array_data);
+            return f(a._sparse_vector_data, b._sparse_vector_data);
         });
     }
 }
 
 // cursor & iterator
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::Cursor SparseArray<Memory>::cursor_begin()
+SKR_INLINE typename SparseVector<Memory>::Cursor SparseVector<Memory>::cursor_begin()
 {
     return Cursor::Begin(this);
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::CCursor SparseArray<Memory>::cursor_begin() const
+SKR_INLINE typename SparseVector<Memory>::CCursor SparseVector<Memory>::cursor_begin() const
 {
     return CCursor::Begin(this);
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::Cursor SparseArray<Memory>::cursor_end()
+SKR_INLINE typename SparseVector<Memory>::Cursor SparseVector<Memory>::cursor_end()
 {
     return Cursor::End(this);
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::CCursor SparseArray<Memory>::cursor_end() const
+SKR_INLINE typename SparseVector<Memory>::CCursor SparseVector<Memory>::cursor_end() const
 {
     return CCursor::End(this);
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::Iter SparseArray<Memory>::iter()
+SKR_INLINE typename SparseVector<Memory>::Iter SparseVector<Memory>::iter()
 {
     return { cursor_begin() };
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::CIter SparseArray<Memory>::iter() const
+SKR_INLINE typename SparseVector<Memory>::CIter SparseVector<Memory>::iter() const
 {
     return { cursor_begin() };
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::IterInv SparseArray<Memory>::iter_inv()
+SKR_INLINE typename SparseVector<Memory>::IterInv SparseVector<Memory>::iter_inv()
 {
     return { cursor_end() };
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::CIterInv SparseArray<Memory>::iter_inv() const
+SKR_INLINE typename SparseVector<Memory>::CIterInv SparseVector<Memory>::iter_inv() const
 {
     return { cursor_end() };
 }
 template <typename Memory>
-SKR_INLINE auto SparseArray<Memory>::range()
+SKR_INLINE auto SparseVector<Memory>::range()
 {
     return cursor_begin().as_range();
 }
 template <typename Memory>
-SKR_INLINE auto SparseArray<Memory>::range() const
+SKR_INLINE auto SparseVector<Memory>::range() const
 {
     return cursor_begin().as_range();
 }
 template <typename Memory>
-SKR_INLINE auto SparseArray<Memory>::range_inv()
+SKR_INLINE auto SparseVector<Memory>::range_inv()
 {
     return cursor_end().as_range_inv();
 }
 template <typename Memory>
-SKR_INLINE auto SparseArray<Memory>::range_inv() const
+SKR_INLINE auto SparseVector<Memory>::range_inv() const
 {
     return cursor_end().as_range_inv();
 }
 
 // stl-style iterator
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::StlIt SparseArray<Memory>::begin()
+SKR_INLINE typename SparseVector<Memory>::StlIt SparseVector<Memory>::begin()
 {
     return { Cursor::Begin(this) };
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::CStlIt SparseArray<Memory>::begin() const
+SKR_INLINE typename SparseVector<Memory>::CStlIt SparseVector<Memory>::begin() const
 {
     return { CCursor::Begin(this) };
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::StlIt SparseArray<Memory>::end()
+SKR_INLINE typename SparseVector<Memory>::StlIt SparseVector<Memory>::end()
 {
     return { Cursor::EndOverflow(this) };
 }
 template <typename Memory>
-SKR_INLINE typename SparseArray<Memory>::CStlIt SparseArray<Memory>::end() const
+SKR_INLINE typename SparseVector<Memory>::CStlIt SparseVector<Memory>::end() const
 {
     return { CCursor::EndOverflow(this) };
 }
 
 // syntax
 template <typename Memory>
-SKR_INLINE const SparseArray<Memory>& SparseArray<Memory>::readonly() const
+SKR_INLINE const SparseVector<Memory>& SparseVector<Memory>::readonly() const
 {
     return *this;
 }

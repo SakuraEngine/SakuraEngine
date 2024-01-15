@@ -44,21 +44,21 @@ TestAllocatorType>>;
 
 //===========Sparse Array===================================================================
 template <typename T>
-using SparseArray = container::SparseArray<container::SparseArrayMemory<
+using SparseArray = container::SparseVector<container::SparseVectorMemory<
 T,
 TestBitBlockType,
 TestSizeType,
 TestAllocatorType>>;
 
 template <typename T, uint64_t kCount>
-using FixedSparseArray = container::SparseArray<container::FixedSparseArrayMemory<
+using FixedSparseArray = container::SparseVector<container::FixedSparseVectorMemory<
 T,
 TestBitBlockType,
 TestSizeType,
 kCount>>;
 
 template <typename T, uint64_t kInlineCount>
-using InlineSparseArray = container::SparseArray<container::InlineSparseArrayMemory<
+using InlineSparseArray = container::SparseVector<container::InlineSparseVectorMemory<
 T,
 TestBitBlockType,
 TestSizeType,

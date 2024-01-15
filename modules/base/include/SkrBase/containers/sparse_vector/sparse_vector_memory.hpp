@@ -12,27 +12,27 @@
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename TS, typename Allocator>
-struct SparseArrayMemory : public Allocator {
+struct SparseVectorMemory : public Allocator {
     // configure
     using SizeType           = TS;
     using DataType           = T;
-    using StorageType        = SparseArrayData<T, SizeType>;
+    using StorageType        = SparseVectorData<T, SizeType>;
     using BitBlockType       = TBitBlock;
     using AllocatorCtorParam = typename Allocator::CtorParam;
 
     // ctor & dtor
-    inline SparseArrayMemory(AllocatorCtorParam param) noexcept
+    inline SparseVectorMemory(AllocatorCtorParam param) noexcept
         : Allocator(std::move(param))
     {
     }
-    inline ~SparseArrayMemory() noexcept
+    inline ~SparseVectorMemory() noexcept
     {
         clear();
         free();
     }
 
     // copy & move
-    inline SparseArrayMemory(const SparseArrayMemory& rhs) noexcept
+    inline SparseVectorMemory(const SparseVectorMemory& rhs) noexcept
         : Allocator(rhs)
     {
         if (rhs._sparse_size)
@@ -41,14 +41,14 @@ struct SparseArrayMemory : public Allocator {
             realloc(rhs._sparse_size);
 
             // copy data
-            copy_sparse_array_data(_data, rhs._data, rhs._bit_array, rhs._sparse_size);
-            copy_sparse_array_bit_array(_bit_array, rhs._bit_array, rhs._sparse_size);
+            copy_sparse_vector_data(_data, rhs._data, rhs._bit_array, rhs._sparse_size);
+            copy_sparse_vector_bit_array(_bit_array, rhs._bit_array, rhs._sparse_size);
             _sparse_size   = rhs._sparse_size;
             _freelist_head = rhs._freelist_head;
             _hole_size     = rhs._hole_size;
         }
     }
-    inline SparseArrayMemory(SparseArrayMemory&& rhs) noexcept
+    inline SparseVectorMemory(SparseVectorMemory&& rhs) noexcept
         : Allocator(std::move(rhs))
         , _data(rhs._data)
         , _bit_array(rhs._bit_array)
@@ -61,7 +61,7 @@ struct SparseArrayMemory : public Allocator {
     }
 
     // assign & move assign
-    inline void operator=(const SparseArrayMemory& rhs) noexcept
+    inline void operator=(const SparseVectorMemory& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -81,8 +81,8 @@ struct SparseArrayMemory : public Allocator {
                 }
 
                 // copy data
-                copy_sparse_array_data(_data, rhs._data, rhs._bit_array, rhs._sparse_size);
-                copy_sparse_array_bit_array(_bit_array, rhs._bit_array, rhs._sparse_size);
+                copy_sparse_vector_data(_data, rhs._data, rhs._bit_array, rhs._sparse_size);
+                copy_sparse_vector_bit_array(_bit_array, rhs._bit_array, rhs._sparse_size);
                 _sparse_size   = rhs._sparse_size;
                 _capacity      = rhs._capacity;
                 _freelist_head = rhs._freelist_head;
@@ -90,7 +90,7 @@ struct SparseArrayMemory : public Allocator {
             }
         }
     }
-    inline void operator=(SparseArrayMemory&& rhs) noexcept
+    inline void operator=(SparseVectorMemory&& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -165,7 +165,7 @@ struct SparseArrayMemory : public Allocator {
             // move items
             if (_sparse_size)
             {
-                move_sparse_array_data(new_memory, _data, _bit_array, _sparse_size);
+                move_sparse_vector_data(new_memory, _data, _bit_array, _sparse_size);
             }
 
             // release old memory
@@ -231,7 +231,7 @@ struct SparseArrayMemory : public Allocator {
         if (_sparse_size)
         {
             // destruct items
-            destruct_sparse_array_data(_data, _bit_array, _sparse_size);
+            destruct_sparse_vector_data(_data, _bit_array, _sparse_size);
 
             // clean up bit array
             if (_bit_array)
@@ -291,7 +291,7 @@ private:
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename TS, uint64_t kCount>
-struct FixedSparseArrayMemory {
+struct FixedSparseVectorMemory {
     static_assert(kCount > 0, "FixedArrayMemory must have a capacity larger than 0");
     struct DummyParam {
     };
@@ -299,39 +299,39 @@ struct FixedSparseArrayMemory {
     // configure
     using SizeType           = TS;
     using DataType           = T;
-    using StorageType        = SparseArrayData<T, SizeType>;
+    using StorageType        = SparseVectorData<T, SizeType>;
     using BitBlockType       = TBitBlock;
     using AllocatorCtorParam = DummyParam;
 
     // ctor & dtor
-    inline FixedSparseArrayMemory(AllocatorCtorParam) noexcept
+    inline FixedSparseVectorMemory(AllocatorCtorParam) noexcept
     {
     }
-    inline ~FixedSparseArrayMemory() noexcept
+    inline ~FixedSparseVectorMemory() noexcept
     {
         clear();
         free();
     }
 
     // copy & move
-    inline FixedSparseArrayMemory(const FixedSparseArrayMemory& rhs) noexcept
+    inline FixedSparseVectorMemory(const FixedSparseVectorMemory& rhs) noexcept
     {
         if (rhs._sparse_size)
         {
             // copy data
-            copy_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
-            copy_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
+            copy_sparse_vector_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
+            copy_sparse_vector_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
             _sparse_size   = rhs._sparse_size;
             _freelist_head = rhs._freelist_head;
             _hole_size     = rhs._hole_size;
         }
     }
-    inline FixedSparseArrayMemory(FixedSparseArrayMemory&& rhs) noexcept
+    inline FixedSparseVectorMemory(FixedSparseVectorMemory&& rhs) noexcept
     {
         if (rhs._sparse_size)
         {
-            move_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
-            move_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
+            move_sparse_vector_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
+            move_sparse_vector_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
             _sparse_size   = rhs._sparse_size;
             _freelist_head = rhs._freelist_head;
             _hole_size     = rhs._hole_size;
@@ -341,7 +341,7 @@ struct FixedSparseArrayMemory {
     }
 
     // assign & move assign
-    inline void operator=(const FixedSparseArrayMemory& rhs) noexcept
+    inline void operator=(const FixedSparseVectorMemory& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -352,15 +352,15 @@ struct FixedSparseArrayMemory {
             if ((rhs._sparse_size - rhs._hole_size) > 0)
             {
                 // copy data
-                copy_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
-                copy_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
+                copy_sparse_vector_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
+                copy_sparse_vector_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
                 _sparse_size   = rhs._sparse_size;
                 _freelist_head = rhs._freelist_head;
                 _hole_size     = rhs._hole_size;
             }
         }
     }
-    inline void operator=(FixedSparseArrayMemory&& rhs) noexcept
+    inline void operator=(FixedSparseVectorMemory&& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -370,8 +370,8 @@ struct FixedSparseArrayMemory {
             // move data
             if ((rhs.sparse_size() - rhs.hole_size()) > 0)
             {
-                move_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
-                move_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
+                move_sparse_vector_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
+                move_sparse_vector_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
                 _sparse_size   = rhs._sparse_size;
                 _freelist_head = rhs._freelist_head;
                 _hole_size     = rhs._hole_size;
@@ -385,7 +385,7 @@ struct FixedSparseArrayMemory {
     // memory operations
     inline void realloc(SizeType new_capacity) noexcept
     {
-        SKR_ASSERT(new_capacity <= kCount && "FixedSparseArrayMemory can't alloc memory that larger than kCount");
+        SKR_ASSERT(new_capacity <= kCount && "FixedSparseVectorMemory can't alloc memory that larger than kCount");
     }
     inline void free() noexcept
     {
@@ -393,7 +393,7 @@ struct FixedSparseArrayMemory {
     }
     inline SizeType grow(SizeType grow_size) noexcept
     {
-        SKR_ASSERT((_sparse_size + grow_size) <= kCount && "FixedSparseArrayMemory can't alloc memory that larger than kCount");
+        SKR_ASSERT((_sparse_size + grow_size) <= kCount && "FixedSparseVectorMemory can't alloc memory that larger than kCount");
 
         SizeType old_size = _sparse_size;
         _sparse_size += grow_size;
@@ -408,7 +408,7 @@ struct FixedSparseArrayMemory {
         if (_sparse_size)
         {
             // destruct items
-            destruct_sparse_array_data(data(), bit_array(), sparse_size());
+            destruct_sparse_vector_data(data(), bit_array(), sparse_size());
 
             // clean up bit array
             BitAlgo::set_blocks(bit_array(), SizeType(0), BitAlgo::num_blocks(_sparse_size), false);
@@ -465,27 +465,27 @@ private:
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename TS, uint64_t kInlineCount, typename Allocator>
-struct InlineSparseArrayMemory : public Allocator {
+struct InlineSparseVectorMemory : public Allocator {
     // configure
     using SizeType           = TS;
     using DataType           = T;
-    using StorageType        = SparseArrayData<T, SizeType>;
+    using StorageType        = SparseVectorData<T, SizeType>;
     using BitBlockType       = TBitBlock;
     using AllocatorCtorParam = typename Allocator::CtorParam;
 
     // ctor & dtor
-    inline InlineSparseArrayMemory(AllocatorCtorParam param) noexcept
+    inline InlineSparseVectorMemory(AllocatorCtorParam param) noexcept
         : Allocator(std::move(param))
     {
     }
-    inline ~InlineSparseArrayMemory() noexcept
+    inline ~InlineSparseVectorMemory() noexcept
     {
         clear();
         free();
     }
 
     // copy & move
-    inline InlineSparseArrayMemory(const InlineSparseArrayMemory& rhs) noexcept
+    inline InlineSparseVectorMemory(const InlineSparseVectorMemory& rhs) noexcept
         : Allocator(rhs)
     {
         if (rhs.sparse_size())
@@ -494,21 +494,21 @@ struct InlineSparseArrayMemory : public Allocator {
             realloc(rhs.sparse_size());
 
             // copy data
-            copy_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
-            copy_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
+            copy_sparse_vector_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
+            copy_sparse_vector_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
             _sparse_size   = rhs._sparse_size;
             _freelist_head = rhs._freelist_head;
             _hole_size     = rhs._hole_size;
         }
     }
-    inline InlineSparseArrayMemory(InlineSparseArrayMemory&& rhs) noexcept
+    inline InlineSparseVectorMemory(InlineSparseVectorMemory&& rhs) noexcept
         : Allocator(std::move(rhs))
     {
         if (rhs._is_using_inline_data())
         {
             // move data
-            move_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
-            move_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
+            move_sparse_vector_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
+            move_sparse_vector_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
             _sparse_size   = rhs._sparse_size;
             _freelist_head = rhs._freelist_head;
             _hole_size     = rhs._hole_size;
@@ -518,7 +518,7 @@ struct InlineSparseArrayMemory : public Allocator {
             // move bit array
             if (rhs._is_using_inline_bit_array())
             {
-                move_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
+                move_sparse_vector_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
             }
             else
             {
@@ -539,7 +539,7 @@ struct InlineSparseArrayMemory : public Allocator {
     }
 
     // assign & move assign
-    inline void operator=(const InlineSparseArrayMemory& rhs) noexcept
+    inline void operator=(const InlineSparseVectorMemory& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -559,8 +559,8 @@ struct InlineSparseArrayMemory : public Allocator {
                 }
 
                 // copy data
-                copy_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs._sparse_size);
-                copy_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs._sparse_size);
+                copy_sparse_vector_data(data(), rhs.data(), rhs.bit_array(), rhs._sparse_size);
+                copy_sparse_vector_bit_array(bit_array(), rhs.bit_array(), rhs._sparse_size);
                 _sparse_size   = rhs._sparse_size;
                 _capacity      = rhs._capacity;
                 _freelist_head = rhs._freelist_head;
@@ -568,7 +568,7 @@ struct InlineSparseArrayMemory : public Allocator {
             }
         }
     }
-    inline void operator=(InlineSparseArrayMemory&& rhs) noexcept
+    inline void operator=(InlineSparseVectorMemory&& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -585,8 +585,8 @@ struct InlineSparseArrayMemory : public Allocator {
             if (rhs._is_using_inline_data())
             {
                 // move data
-                move_sparse_array_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
-                move_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
+                move_sparse_vector_data(data(), rhs.data(), rhs.bit_array(), rhs.sparse_size());
+                move_sparse_vector_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
                 _sparse_size   = rhs._sparse_size;
                 _freelist_head = rhs._freelist_head;
                 _hole_size     = rhs._hole_size;
@@ -596,7 +596,7 @@ struct InlineSparseArrayMemory : public Allocator {
                 // move bit array
                 if (rhs._is_using_inline_bit_array())
                 {
-                    move_sparse_array_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
+                    move_sparse_vector_bit_array(bit_array(), rhs.bit_array(), rhs.sparse_size());
                 }
                 else
                 {
@@ -690,7 +690,7 @@ struct InlineSparseArrayMemory : public Allocator {
                     // move items
                     if (_sparse_size - _hole_size)
                     {
-                        move_sparse_array_bit_array(_bit_array_placeholder.data_typed(), _heap_bit_array, _sparse_size);
+                        move_sparse_vector_bit_array(_bit_array_placeholder.data_typed(), _heap_bit_array, _sparse_size);
                     }
 
                     // release old memory
@@ -714,7 +714,7 @@ struct InlineSparseArrayMemory : public Allocator {
                     // move items
                     if (_sparse_size - _hole_size)
                     {
-                        move_sparse_array_data(new_memory, _data_placeholder.data_typed(), moved_bit_array, _sparse_size);
+                        move_sparse_vector_data(new_memory, _data_placeholder.data_typed(), moved_bit_array, _sparse_size);
                     }
 
                     // update data
@@ -736,7 +736,7 @@ struct InlineSparseArrayMemory : public Allocator {
                     // move items
                     if (_sparse_size)
                     {
-                        move_sparse_array_data(new_memory, _heap_data, moved_bit_array, _sparse_size);
+                        move_sparse_vector_data(new_memory, _heap_data, moved_bit_array, _sparse_size);
                     }
 
                     // release old memory
@@ -760,7 +760,7 @@ struct InlineSparseArrayMemory : public Allocator {
                 // move items
                 if (_sparse_size - _hole_size)
                 {
-                    move_sparse_array_data(_data_placeholder.data_typed(), _heap_data, moved_bit_array, _sparse_size);
+                    move_sparse_vector_data(_data_placeholder.data_typed(), _heap_data, moved_bit_array, _sparse_size);
                 }
 
                 // release old memory
@@ -827,7 +827,7 @@ struct InlineSparseArrayMemory : public Allocator {
         if (_sparse_size)
         {
             // destruct items
-            destruct_sparse_array_data(data(), bit_array(), _sparse_size);
+            destruct_sparse_vector_data(data(), bit_array(), _sparse_size);
 
             // clean up bit array
             if (bit_array())

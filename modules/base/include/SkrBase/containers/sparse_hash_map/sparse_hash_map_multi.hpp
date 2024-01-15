@@ -29,7 +29,7 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     using typename Memory::MapDataType;
 
     // helper
-    using DataArr                         = SparseArray<Memory>;
+    using DataArr                         = SparseVector<Memory>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // data ref
