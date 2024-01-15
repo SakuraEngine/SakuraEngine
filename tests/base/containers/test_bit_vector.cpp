@@ -1,20 +1,20 @@
 #include "SkrTestFramework/framework.hpp"
 #include "container_test_types.hpp"
 
-TEST_CASE("test bit array")
+TEST_CASE("test bit vector")
 {
     using namespace skr;
-    using BitArray = BitArray<uint64_t>;
+    using BitVector = BitVector<uint64_t>;
 
     SUBCASE("test ctor")
     {
-        BitArray a;
+        BitVector a;
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.capacity(), 0);
         REQUIRE_EQ(a.data(), nullptr);
         REQUIRE(a.empty());
 
-        BitArray b(20, true);
+        BitVector b(20, true);
         REQUIRE_EQ(b.size(), 20);
         REQUIRE_GE(b.capacity(), 20);
         REQUIRE_NE(b.data(), nullptr);
@@ -23,7 +23,7 @@ TEST_CASE("test bit array")
             REQUIRE_EQ(b[i], true);
         }
 
-        BitArray c(100, false);
+        BitVector c(100, false);
         REQUIRE_EQ(c.size(), 100);
         REQUIRE_GE(c.capacity(), 100);
         REQUIRE_NE(c.data(), nullptr);
@@ -35,13 +35,13 @@ TEST_CASE("test bit array")
 
     SUBCASE("test copy & move")
     {
-        BitArray a(30, true);
+        BitVector a(30, true);
         for (int i = 0; i < 30; ++i)
         {
             a[i] = i % 2;
         }
 
-        BitArray b(a);
+        BitVector b(a);
         REQUIRE_EQ(a.size(), b.size());
         REQUIRE_EQ(a.capacity(), b.capacity());
         for (int i = 0; i < 30; ++i)
@@ -49,8 +49,8 @@ TEST_CASE("test bit array")
             REQUIRE_EQ(a[i], b[i]);
         }
 
-        auto     old_data = a.data();
-        BitArray c(std::move(a));
+        auto      old_data = a.data();
+        BitVector c(std::move(a));
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.capacity(), 0);
         REQUIRE_EQ(a.data(), nullptr);
@@ -65,7 +65,7 @@ TEST_CASE("test bit array")
 
     SUBCASE("test copy assign & move assign")
     {
-        BitArray a(30, true), b, c;
+        BitVector a(30, true), b, c;
 
         b = a;
         REQUIRE_EQ(a.size(), b.size());
@@ -90,7 +90,7 @@ TEST_CASE("test bit array")
 
     SUBCASE("test compare")
     {
-        BitArray a(30, true), b(30, true), c(20, true);
+        BitVector a(30, true), b(30, true), c(20, true);
 
         REQUIRE_EQ(a, b);
         REQUIRE_NE(a, c);
@@ -100,7 +100,7 @@ TEST_CASE("test bit array")
 
     SUBCASE("test validate")
     {
-        BitArray a(30, true);
+        BitVector a(30, true);
         REQUIRE(a.is_valid_index(0));
         REQUIRE(a.is_valid_index(15));
         REQUIRE(a.is_valid_index(29));
@@ -110,8 +110,8 @@ TEST_CASE("test bit array")
 
     SUBCASE("test memory op")
     {
-        BitArray a(30, true);
-        auto     old_capacity = a.capacity();
+        BitVector a(30, true);
+        auto      old_capacity = a.capacity();
         a.clear();
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.capacity(), old_capacity);
@@ -154,7 +154,7 @@ TEST_CASE("test bit array")
 
     SUBCASE("test add")
     {
-        BitArray a;
+        BitVector a;
 
         for (int i = 0; i < 40; ++i)
         {
@@ -178,7 +178,7 @@ TEST_CASE("test bit array")
 
     SUBCASE("test remove")
     {
-        BitArray a;
+        BitVector a;
         a.add(true, 10);
         a.add(false, 20);
         a.add(true, 10);
@@ -216,7 +216,7 @@ TEST_CASE("test bit array")
 
     SUBCASE("test modify")
     {
-        BitArray a(30, true);
+        BitVector a(30, true);
 
         for (int i = 0; i < 30; ++i)
         {
@@ -259,7 +259,7 @@ TEST_CASE("test bit array")
 
     SUBCASE("test find")
     {
-        BitArray a(30, true), b(30, false);
+        BitVector a(30, true), b(30, false);
 
         REQUIRE_EQ(a.find(false).index, npos_of<size_t>);
         REQUIRE_EQ(b.find(true).index, npos_of<size_t>);
@@ -277,14 +277,14 @@ TEST_CASE("test bit array")
 
     SUBCASE("test true it")
     {
-        BitArray a;
+        BitVector a;
         a.reserve(30);
         for (int i = 0; i < 30; ++i)
         {
             a.add(i % 5 == 0);
         }
 
-        // for (BitArray::TIt it(a.data(), a.size()); it; ++it)
+        // for (BitVector::TIt it(a.data(), a.size()); it; ++it)
         // {
         //     REQUIRE(it.index() % 5 == 0);
         // }
@@ -293,7 +293,7 @@ TEST_CASE("test bit array")
     // test iterator
     SUBCASE("iterator")
     {
-        // BitArray a;
+        // BitVector a;
         // for (auto b : a)
         // {
         //     printf("%s\n", (b ? "true" : "false"));

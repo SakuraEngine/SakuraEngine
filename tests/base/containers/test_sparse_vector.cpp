@@ -1,21 +1,21 @@
 #include "SkrTestFramework/framework.hpp"
 #include "container_test_types.hpp"
 
-template <typename TestSparseArray, typename ModifyCapacity, typename ClampCapacity, typename CheckData, typename CheckNoData, typename CheckDataEQ>
-void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_capacity, CheckData&& check_data, CheckNoData&& check_no_data, CheckDataEQ&& check_data_eq)
+template <typename TestSparseVector, typename ModifyCapacity, typename ClampCapacity, typename CheckData, typename CheckNoData, typename CheckDataEQ>
+void template_test_sparse_vector(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_capacity, CheckData&& check_data, CheckNoData&& check_no_data, CheckDataEQ&& check_data_eq)
 {
     using namespace skr;
-    using TestArray = Array<uint32_t>;
+    using TestVector = Vector<uint32_t>;
 
     SUBCASE("ctor")
     {
-        TestSparseArray a;
+        TestSparseVector a;
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.sparse_size(), 0);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_EQ(a.capacity(), capacity_of(0));
 
-        TestSparseArray b(100);
+        TestSparseVector b(100);
         REQUIRE_EQ(b.size(), 100);
         REQUIRE_EQ(b.sparse_size(), 100);
         REQUIRE_EQ(b.hole_size(), 0);
@@ -25,7 +25,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
             REQUIRE(b.has_data(i));
         }
 
-        TestSparseArray c(100, 114514);
+        TestSparseVector c(100, 114514);
         REQUIRE_EQ(c.size(), 100);
         REQUIRE_EQ(c.sparse_size(), 100);
         REQUIRE_EQ(c.hole_size(), 0);
@@ -36,7 +36,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
             REQUIRE_EQ(c[i], 114514);
         }
 
-        TestSparseArray d({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector d({ 1, 1, 4, 5, 1, 4 });
         REQUIRE_EQ(d.size(), 6);
         REQUIRE_EQ(d.sparse_size(), 6);
         REQUIRE_EQ(d.hole_size(), 0);
@@ -54,8 +54,8 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         REQUIRE(d.has_data(5));
         REQUIRE_EQ(d[5], 4);
 
-        u32             data[] = { 1, 1, 4, 5, 1, 4 };
-        TestSparseArray e(data, 6);
+        u32              data[] = { 1, 1, 4, 5, 1, 4 };
+        TestSparseVector e(data, 6);
         REQUIRE_EQ(e.size(), 6);
         REQUIRE_EQ(e.sparse_size(), 6);
         REQUIRE_EQ(e.hole_size(), 0);
@@ -76,7 +76,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("copy & move")
     {
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -88,7 +88,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         REQUIRE_EQ(a[4], 1);
         REQUIRE_EQ(a[5], 4);
 
-        TestSparseArray b(a);
+        TestSparseVector b(a);
         REQUIRE_EQ(b.size(), 6);
         REQUIRE_EQ(b.sparse_size(), 6);
         REQUIRE_EQ(b.hole_size(), 0);
@@ -100,8 +100,8 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         REQUIRE_EQ(b[4], 1);
         REQUIRE_EQ(b[5], 4);
 
-        auto            old_capacity = a.capacity();
-        TestSparseArray c(std::move(a));
+        auto             old_capacity = a.capacity();
+        TestSparseVector c(std::move(a));
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.sparse_size(), 0);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -120,7 +120,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("copy & move(with hole)")
     {
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
         a.remove_at(1);
         a.remove_at(4);
         REQUIRE_EQ(a.size(), 4);
@@ -134,7 +134,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         // REQUIRE_EQ(a[4], 1);
         REQUIRE_EQ(a[5], 4);
 
-        TestSparseArray b(a);
+        TestSparseVector b(a);
         REQUIRE_EQ(b.size(), 4);
         REQUIRE_EQ(b.sparse_size(), 6);
         REQUIRE_EQ(b.hole_size(), 2);
@@ -158,8 +158,8 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         REQUIRE_EQ(b[4], 2);
         REQUIRE_EQ(b[5], 4);
 
-        auto            old_capacity = a.capacity();
-        TestSparseArray c(std::move(a));
+        auto             old_capacity = a.capacity();
+        TestSparseVector c(std::move(a));
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.sparse_size(), 0);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -191,9 +191,9 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("assign & move assign")
     {
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
-        TestSparseArray b({ 114514, 114514, 1, 1, 4 });
-        TestSparseArray c({ 1, 1, 4, 514, 514, 514 });
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector b({ 114514, 114514, 1, 1, 4 });
+        TestSparseVector c({ 1, 1, 4, 514, 514, 514 });
 
         b = a;
         REQUIRE_EQ(b.size(), 6);
@@ -227,9 +227,9 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("assign & move assign(with hole)")
     {
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
-        TestSparseArray b({ 114514, 114514, 1, 1, 4 });
-        TestSparseArray c({ 1, 1, 4, 514, 514, 514 });
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector b({ 114514, 114514, 1, 1, 4 });
+        TestSparseVector c({ 1, 1, 4, 514, 514, 514 });
         a.remove_at(1);
         a.remove_at(4);
         REQUIRE_EQ(a.size(), 4);
@@ -306,7 +306,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
             data[i] = static_cast<u32>(99 - i);
         }
 
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
         a.remove_at(1);
         a.remove_at(4);
         a.assign(data, 50);
@@ -334,9 +334,9 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("compare")
     {
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
-        TestSparseArray b({ 114, 114, 514, 114, 514, 114 });
-        TestSparseArray c({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector b({ 114, 114, 514, 114, 514, 114 });
+        TestSparseVector c({ 1, 1, 4, 5, 1, 4 });
 
         REQUIRE_EQ(a.readonly(), c.readonly());
         REQUIRE_NE(a.readonly(), b.readonly());
@@ -352,7 +352,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("validate")
     {
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
         a.remove_at(0);
         a.remove_at(2);
         a.remove_at(4);
@@ -376,7 +376,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("memory op")
     {
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
         a.remove_at(1);
         a.remove_at(5);
         REQUIRE_EQ(a.size(), 4);
@@ -475,9 +475,9 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("add")
     {
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
-        auto            info = a.add(10);
-        info.ref()           = 100;
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
+        auto             info = a.add(10);
+        info.ref()            = 100;
         REQUIRE_EQ(a.size(), 7);
         REQUIRE_EQ(a.sparse_size(), 7);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -526,7 +526,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("add at")
     {
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
         a.remove_at(1);
         a.remove_at(4);
         a.add_at(1, 114514);
@@ -551,7 +551,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("emplace")
     {
-        TestSparseArray a({ { 1, 1, 4, 5, 1, 4 } });
+        TestSparseVector a({ { 1, 1, 4, 5, 1, 4 } });
         a.remove_at(1);
         a.remove_at(4);
         a.emplace(114514);
@@ -566,7 +566,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("append")
     {
-        TestSparseArray a;
+        TestSparseVector a;
         a.append({ 1, 1, 4, 5, 1, 4 });
         a.remove_at(1);
         a.remove_at(4);
@@ -583,7 +583,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         REQUIRE_EQ(a[5], 4);
         REQUIRE_EQ(a[6], 114514);
 
-        TestSparseArray b;
+        TestSparseVector b;
         b.append({ 1, 1, 4, 5, 1, 4 });
         b.remove_at(0);
         b.remove_at(1);
@@ -604,7 +604,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         REQUIRE_EQ(a[8], 5);
         REQUIRE_EQ(a[9], 1);
 
-        TestArray c(100, 114514);
+        TestVector c(100, 114514);
         a.remove_at(6, 4);
         a.append(c.data(), c.size());
         REQUIRE_EQ(a.size(), 106);
@@ -625,7 +625,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("remove")
     {
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
         a.remove_at(1);
         a.remove_at(4);
         REQUIRE_EQ(a.size(), 4);
@@ -703,7 +703,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("remove if")
     {
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
         a.remove_if([](const u32& a) { return a > 3; });
         REQUIRE_EQ(a.size(), 5);
         REQUIRE_EQ(a.sparse_size(), 6);
@@ -764,7 +764,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("contains & count")
     {
-        TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
+        TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
 
         REQUIRE(a.contains(5));
         REQUIRE_EQ(a.count(1), 3);
@@ -789,7 +789,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
         const auto kCapacity    = clamp_capacity(114514);
         const auto kRemovedSize = kCapacity / 2;
 
-        TestSparseArray a(kCapacity);
+        TestSparseVector a(kCapacity);
         for (size_t i = 0; i < kCapacity; ++i)
         {
             a[i] = static_cast<u32>(kCapacity - 1 - i);
@@ -834,7 +834,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
     {
         const auto kCapacity = clamp_capacity(114514);
 
-        TestSparseArray a(kCapacity);
+        TestSparseVector a(kCapacity);
         for (size_t i = 0; i < kCapacity; ++i)
         {
             a[i] = i;
@@ -914,7 +914,7 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
 
     SUBCASE("empty container")
     {
-        TestSparseArray a;
+        TestSparseVector a;
 
         REQUIRE(a == a);
         REQUIRE_FALSE(a != a);
@@ -1005,12 +1005,12 @@ void template_test_sparse_array(ModifyCapacity&& capacity_of, ClampCapacity&& cl
     }
 }
 
-TEST_CASE("test sparse array")
+TEST_CASE("test sparse vector")
 {
     using namespace skr;
-    using TestSparseArray = SparseArray<uint32_t>;
+    using TestSparseVector = SparseVector<uint32_t>;
 
-    template_test_sparse_array<TestSparseArray>(
+    template_test_sparse_vector<TestSparseVector>(
     [](auto capacity) { return capacity; },
     [](auto capacity) { return capacity; },
     [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
@@ -1018,14 +1018,14 @@ TEST_CASE("test sparse array")
     [](auto&& vec, auto&& v) { REQUIRE_EQ(vec.data(), v); });
 }
 
-TEST_CASE("test fixed sparse array")
+TEST_CASE("test fixed sparse vector")
 {
     using namespace skr;
     static constexpr uint64_t kFixedCapacity = 200;
 
-    using TestSparseArray = FixedSparseArray<uint32_t, kFixedCapacity>;
+    using TestSparseVector = FixedSparseVector<uint32_t, kFixedCapacity>;
 
-    template_test_sparse_array<TestSparseArray>(
+    template_test_sparse_vector<TestSparseVector>(
     [](auto capacity) { return kFixedCapacity; },
     [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; },
     [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
@@ -1033,15 +1033,15 @@ TEST_CASE("test fixed sparse array")
     [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); });
 }
 
-TEST_CASE("test inline sparse array")
+TEST_CASE("test inline sparse vector")
 {
     using namespace skr;
 
     static constexpr uint64_t kInlineCapacity = 10;
 
-    using TestSparseArray = InlineSparseArray<uint32_t, kInlineCapacity>;
+    using TestSparseVector = InlineSparseVector<uint32_t, kInlineCapacity>;
 
-    template_test_sparse_array<TestSparseArray>(
+    template_test_sparse_vector<TestSparseVector>(
     [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
     [](auto capacity) { return capacity; },
     [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
