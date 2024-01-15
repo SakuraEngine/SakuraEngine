@@ -91,7 +91,7 @@ protected:
         }
     }
     skr::String                           name_ = u8"";
-    skr::UMap<Identifier, ValueStoreType> variables_;
+    skr::Map<Identifier, ValueStoreType> variables_;
 };
 
 } // namespace skr::goap

@@ -178,7 +178,7 @@ void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
         cgpu_error(u8"DRED: Last tracked GPU operations:");
 
         cgpu::stl_wstring ContextStr;
-        cgpu::UMap<int32_t, const wchar_t*> ContextStrings;
+        cgpu::Map<int32_t, const wchar_t*> ContextStrings;
 
         uint32_t TracedCommandLists = 0;
         auto Node = breadcrumbs->pHeadAutoBreadcrumbNode;

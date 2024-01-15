@@ -10,7 +10,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler 
     template <typename T>
     using Handler = std::pair<T, void*>;
     template <typename T>
-    using RIDMap = skr::UMap<int64_t, T>;
+    using RIDMap = skr::Map<int64_t, T>;
 
     void on_window_resized(SWindowHandle window, int32_t w, int32_t h) SKR_NOEXCEPT
     {

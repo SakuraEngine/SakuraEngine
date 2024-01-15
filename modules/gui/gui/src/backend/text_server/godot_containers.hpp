@@ -144,7 +144,7 @@ public:
 };
 
 template <class T>
-class Set : public skr::USet<T>
+class Set : public skr::Set<T>
 {
 public:
     bool has(const T& key) const

@@ -5,7 +5,7 @@
 
 bool skr_shader_options_resource_t::flatten_options(skr::Vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
 {
-    skr::USet<skr::String>                                                              keys;
+    skr::Set<skr::String>                                                              keys;
     skr::FlatHashMap<skr::String, skr_shader_option_template_t, skr::Hash<skr::String>> kvs;
     // collect all keys & ensure unique
     for (auto& src : srcs)

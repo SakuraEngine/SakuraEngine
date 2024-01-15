@@ -210,7 +210,7 @@ skr::json::error_code RecordType::read_json(void* dst, skr::json::value_t&& read
 }
 
 // setup
-void RecordType::set_base_types(UMap<GUID, BaseInfo> base_types)
+void RecordType::set_base_types(Map<GUID, BaseInfo> base_types)
 {
     // validate
     for (const auto& data : base_types)
@@ -224,7 +224,7 @@ void RecordType::set_base_types(UMap<GUID, BaseInfo> base_types)
 
     _base_types_map = std::move(base_types);
 }
-void RecordType::set_fields(MultiUMap<skr::String, Field> fields)
+void RecordType::set_fields(MultiMap<skr::String, Field> fields)
 {
     // validate
     for (const auto& data : fields)
@@ -238,7 +238,7 @@ void RecordType::set_fields(MultiUMap<skr::String, Field> fields)
 
     _fields_map = std::move(fields);
 }
-void RecordType::set_methods(MultiUMap<skr::String, Method> methods)
+void RecordType::set_methods(MultiMap<skr::String, Method> methods)
 {
     _methods_map = std::move(methods);
 }

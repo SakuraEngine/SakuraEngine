@@ -128,10 +128,10 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     {
     }
 
-    skr::UMap<skr_live2d_render_model_id, skr::span<const uint32_t>>      sorted_drawable_list;
-    skr::UMap<skr_live2d_render_model_id, skr::InlineVector<uint32_t, 4>> sorted_mask_drawable_lists;
+    skr::Map<skr_live2d_render_model_id, skr::span<const uint32_t>>      sorted_drawable_list;
+    skr::Map<skr_live2d_render_model_id, skr::InlineVector<uint32_t, 4>> sorted_mask_drawable_lists;
     const float                                                           kMotionFramesPerSecond = 240.0f;
-    skr::UMap<skr_live2d_render_model_id, STimer>                         motion_timers;
+    skr::Map<skr_live2d_render_model_id, STimer>                         motion_timers;
     uint32_t                                                              last_ms                 = 0;
     const bool                                                            use_high_precision_mask = false;
 
@@ -517,7 +517,7 @@ protected:
             else if (vb_c)
             {
                 uint64_t                                                 totalVertexSize = 0;
-                skr::UMap<CGPUBufferId, skr::render_graph::BufferHandle> imported_vbs_map;
+                skr::Map<CGPUBufferId, skr::render_graph::BufferHandle> imported_vbs_map;
                 skr::stl_vector<skr::render_graph::BufferHandle>         imported_vbs;
                 skr::stl_vector<uint64_t>                                vb_sizes;
                 skr::stl_vector<uint64_t>                                vb_offsets;
@@ -614,8 +614,8 @@ protected:
         float           pad1;
         float           pad2;
     };
-    skr::UMap<skr_live2d_render_model_id, skr::stl_vector<PushConstants>> push_constants;
-    skr::UMap<skr_live2d_render_model_id, skr::stl_vector<PushConstants>> mask_push_constants;
+    skr::Map<skr_live2d_render_model_id, skr::stl_vector<PushConstants>> push_constants;
+    skr::Map<skr_live2d_render_model_id, skr::stl_vector<PushConstants>> mask_push_constants;
 
     CGPUVertexLayout              vertex_layout = {};
     CGPURasterizerStateDescriptor rs_state      = {};

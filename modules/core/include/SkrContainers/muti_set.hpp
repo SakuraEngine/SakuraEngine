@@ -8,7 +8,7 @@
 namespace skr
 {
 template <typename T, typename HashTraits = container::HashTraits<T>, typename Allocator = SkrAllocator>
-using MultiUSet = container::MultSparseHashSet<container::SparseHashSetMemory<
+using MultiSet = container::MultSparseHashSet<container::SparseHashSetMemory<
 T,           /*element Type*/
 uint64_t,    /*BitBlock Type*/
 HashTraits,  /*Hasher Traits*/
@@ -16,7 +16,7 @@ uint64_t,    /*Size Type*/
 Allocator>>; /*Allocator Type*/
 
 template <typename T, uint64_t kCount, typename HashTraits = container::HashTraits<T>>
-using FixedMultiUSet = container::MultSparseHashSet<container::FixedSparseHashSetMemory<
+using FixedMultiSet = container::MultSparseHashSet<container::FixedSparseHashSetMemory<
 T,          /*element Type*/
 uint64_t,   /*BitBlock Type*/
 HashTraits, /*Hasher Traits*/
@@ -24,7 +24,7 @@ uint64_t,   /*Size Type*/
 kCount>>;   /*Allocator Type*/
 
 template <typename T, uint64_t kInlineCount, typename HashTraits = container::HashTraits<T>, typename Allocator = SkrAllocator>
-using InlineMultiUSet = container::MultSparseHashSet<container::InlineSparseHashSetMemory<
+using InlineMultiSet = container::MultSparseHashSet<container::InlineSparseHashSetMemory<
 T,            /*element Type*/
 uint64_t,     /*BitBlock Type*/
 HashTraits,   /*Hasher Traits*/

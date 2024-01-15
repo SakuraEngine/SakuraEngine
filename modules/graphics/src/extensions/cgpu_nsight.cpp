@@ -123,7 +123,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
     {
         auto _this = (CGPUNSightSingleton*)pUserData;
         cgpu_trace(u8"NSIGHT GPU Crash Dump Callback");
-        cgpu::USet<struct ID3D12Device*> devices; 
+        cgpu::Set<struct ID3D12Device*> devices; 
         for (auto tracker : _this->all_trackers)
         {
             auto tracker_impl = static_cast<CGPUNSightTrackerBase*>(tracker);

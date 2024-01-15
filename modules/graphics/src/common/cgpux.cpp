@@ -128,7 +128,7 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
 
 void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
 {
-    cgpu::FixedUSet<uint32_t, 4> needsUpdateIndices;
+    cgpu::FixedSet<uint32_t, 4> needsUpdateIndices;
     for (uint32_t i = 0; i < names_count; i++)
     {
         const auto& location = name_locations[i];

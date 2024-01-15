@@ -32,7 +32,7 @@ SKR_GUI_API PointerGestureRecognizer : public GestureRecognizer {
     inline void clean_tracing_pointers() { _tracing_pointers.clear(); }
 
 private:
-    UMap<CombinePointerId, GestureArena*> _tracing_pointers;
+    Map<CombinePointerId, GestureArena*> _tracing_pointers;
 };
 
 } // namespace gui sreflect
