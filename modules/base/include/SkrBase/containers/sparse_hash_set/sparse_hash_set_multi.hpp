@@ -61,7 +61,7 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     using Super::slack;
     using Super::sparse_size;
     using Super::hole_size;
-    using Super::bit_array_size;
+    using Super::bit_size;
     using Super::free_list_head;
     using Super::is_compact;
     using Super::empty;

@@ -163,7 +163,7 @@ struct SparseVectorCursor {
 protected:
     inline auto _data() const { return _container->memory().data(); }
     inline auto _size() const { return _container->memory().sparse_size(); }
-    inline auto _bit_data() const { return _container->memory().bit_array(); }
+    inline auto _bit_data() const { return _container->memory().bit_data(); }
     inline bool _container_empty() const { return _container->empty(); }
 
     inline void _reset_to_end_overflow() { _index = _size(); }

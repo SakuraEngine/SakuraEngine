@@ -51,27 +51,27 @@ struct SparseHashSetCursor : protected SparseVectorCursor<Container, kConst> {
     inline SparseHashSetCursor& operator=(SparseHashSetCursor&& rhs)      = default;
 
     // factory
-    inline static SparseHashSetCursor Begin(ContainerType* array)
+    inline static SparseHashSetCursor Begin(ContainerType* container)
     {
-        SparseHashSetCursor cursor{ array };
+        SparseHashSetCursor cursor{ container };
         cursor.reset_to_begin();
         return cursor;
     }
-    inline static SparseHashSetCursor BeginOverflow(ContainerType* array)
+    inline static SparseHashSetCursor BeginOverflow(ContainerType* container)
     {
-        SparseHashSetCursor cursor{ array };
+        SparseHashSetCursor cursor{ container };
         cursor._reset_to_begin_overflow();
         return cursor;
     }
-    inline static SparseHashSetCursor End(ContainerType* array)
+    inline static SparseHashSetCursor End(ContainerType* container)
     {
-        SparseHashSetCursor cursor{ array };
+        SparseHashSetCursor cursor{ container };
         cursor.reset_to_end();
         return cursor;
     }
-    inline static SparseHashSetCursor EndOverflow(ContainerType* array)
+    inline static SparseHashSetCursor EndOverflow(ContainerType* container)
     {
-        SparseHashSetCursor cursor{ array };
+        SparseHashSetCursor cursor{ container };
         cursor._reset_to_end_overflow();
         return cursor;
     }

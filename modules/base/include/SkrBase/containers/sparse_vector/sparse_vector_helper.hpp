@@ -7,7 +7,7 @@
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename TS>
-inline void copy_sparse_vector_data(SparseVectorData<T, TS>* dst, const SparseVectorData<T, TS>* src, const TBitBlock* src_bit_array, TS size) noexcept
+inline void copy_sparse_vector_data(SparseVectorData<T, TS>* dst, const SparseVectorData<T, TS>* src, const TBitBlock* src_bit_data, TS size) noexcept
 {
     using BitAlgo     = algo::BitAlgo<TBitBlock>;
     using StorageType = SparseVectorData<T, TS>;
@@ -20,7 +20,7 @@ inline void copy_sparse_vector_data(SparseVectorData<T, TS>* dst, const SparseVe
             StorageType*       p_dst_data = dst + i;
             const StorageType* p_src_data = src + i;
 
-            if (BitAlgo::get(src_bit_array, i))
+            if (BitAlgo::get(src_bit_data, i))
             {
                 memory::copy(&p_dst_data->_sparse_vector_data, &p_src_data->_sparse_vector_data);
             }
@@ -37,7 +37,7 @@ inline void copy_sparse_vector_data(SparseVectorData<T, TS>* dst, const SparseVe
     }
 }
 template <typename T, typename TBitBlock, typename TS>
-inline void move_sparse_vector_data(SparseVectorData<T, TS>* dst, SparseVectorData<T, TS>* src, const TBitBlock* src_bit_array, TS size) noexcept
+inline void move_sparse_vector_data(SparseVectorData<T, TS>* dst, SparseVectorData<T, TS>* src, const TBitBlock* src_bit_data, TS size) noexcept
 {
     using BitAlgo     = algo::BitAlgo<TBitBlock>;
     using StorageType = SparseVectorData<T, TS>;
@@ -49,7 +49,7 @@ inline void move_sparse_vector_data(SparseVectorData<T, TS>* dst, SparseVectorDa
         {
             StorageType* p_dst_data = dst + i;
             StorageType* p_src_data = src + i;
-            if (BitAlgo::get(src_bit_array, i))
+            if (BitAlgo::get(src_bit_data, i))
             {
                 memory::move(&p_dst_data->_sparse_vector_data, &p_src_data->_sparse_vector_data);
             }
@@ -66,24 +66,24 @@ inline void move_sparse_vector_data(SparseVectorData<T, TS>* dst, SparseVectorDa
     }
 }
 template <typename TBitBlock, typename TS>
-inline void copy_sparse_vector_bit_array(TBitBlock* dst, const TBitBlock* src, TS size) noexcept
+inline void copy_sparse_vector_bit_data(TBitBlock* dst, const TBitBlock* src, TS size) noexcept
 {
     using BitAlgo = algo::BitAlgo<TBitBlock>;
     std::memcpy(dst, src, sizeof(TBitBlock) * BitAlgo::num_blocks(size));
 }
 template <typename TBitBlock, typename TS>
-inline void move_sparse_vector_bit_array(TBitBlock* dst, TBitBlock* src, TS size) noexcept
+inline void move_sparse_vector_bit_data(TBitBlock* dst, TBitBlock* src, TS size) noexcept
 {
     using BitAlgo       = algo::BitAlgo<TBitBlock>;
     const TS byte_count = sizeof(TBitBlock) * BitAlgo::num_blocks(size);
     std::memcpy(dst, src, byte_count);
 }
 template <typename T, typename TBitBlock, typename TS>
-inline void destruct_sparse_vector_data(SparseVectorData<T, TS>* data, const TBitBlock* bit_array, TS size) noexcept
+inline void destruct_sparse_vector_data(SparseVectorData<T, TS>* data, const TBitBlock* bit_data, TS size) noexcept
 {
     if constexpr (memory::MemoryTraits<T>::use_dtor)
     {
-        auto cursor = TrueBitCursor<TBitBlock, TS, true>::Begin(bit_array, size);
+        auto cursor = TrueBitCursor<TBitBlock, TS, true>::Begin(bit_data, size);
 
         while (!cursor.reach_end())
         {

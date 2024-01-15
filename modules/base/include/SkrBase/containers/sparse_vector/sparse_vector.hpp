@@ -66,14 +66,14 @@ struct SparseVector : protected Memory {
     SizeType            slack() const;
     SizeType            sparse_size() const;
     SizeType            hole_size() const;
-    SizeType            bit_array_size() const;
+    SizeType            bit_size() const;
     SizeType            freelist_head() const;
     bool                is_compact() const;
     bool                empty() const;
     StorageType*        data();
     const StorageType*  data() const;
-    BitBlockType*       bit_array();
-    const BitBlockType* bit_array() const;
+    BitBlockType*       bit_data();
+    const BitBlockType* bit_data() const;
     Memory&             memory();
     const Memory&       memory() const;
 
@@ -299,7 +299,7 @@ SKR_INLINE SparseVector<Memory>::SparseVector(SizeType size, AllocatorCtorParam 
 
         // setup size
         _set_sparse_size(size);
-        BitAlgo::set_range(bit_array(), SizeType(0), size, true);
+        BitAlgo::set_range(bit_data(), SizeType(0), size, true);
 
         // call ctor (stl ub)
         if constexpr (memory::MemoryTraits<DataType>::use_ctor)
@@ -326,7 +326,7 @@ SKR_INLINE SparseVector<Memory>::SparseVector(SizeType size, const DataType& v, 
 
         // setup size
         _set_sparse_size(size);
-        BitAlgo::set_range(bit_array(), SizeType(0), size, true);
+        BitAlgo::set_range(bit_data(), SizeType(0), size, true);
 
         // call ctor
         for (SizeType i = 0; i < size; ++i)
@@ -346,7 +346,7 @@ SKR_INLINE SparseVector<Memory>::SparseVector(const DataType* p, SizeType n, All
 
         // setup size
         _set_sparse_size(n);
-        BitAlgo::set_range(bit_array(), SizeType(0), n, true);
+        BitAlgo::set_range(bit_data(), SizeType(0), n, true);
 
         // call ctor
         _copy_compacted_data(data(), p, n);
@@ -364,7 +364,7 @@ SKR_INLINE SparseVector<Memory>::SparseVector(std::initializer_list<DataType> in
 
         // setup size
         _set_sparse_size(size);
-        BitAlgo::set_range(bit_array(), SizeType(0), size, true);
+        BitAlgo::set_range(bit_data(), SizeType(0), size, true);
 
         // call ctor
         _copy_compacted_data(data(), init_list.begin(), size);
@@ -417,7 +417,7 @@ SKR_INLINE void SparseVector<Memory>::assign(const DataType* p, SizeType n)
 
         // setup size
         _set_sparse_size(n);
-        BitAlgo::set_range(bit_array(), SizeType(0), n, true);
+        BitAlgo::set_range(bit_data(), SizeType(0), n, true);
 
         // call ctor
         _copy_compacted_data(data(), p, n);
@@ -436,7 +436,7 @@ SKR_INLINE void SparseVector<Memory>::assign(std::initializer_list<DataType> ini
 
         // setup size
         _set_sparse_size(size);
-        BitAlgo::set_range(bit_array(), SizeType(0), size, true);
+        BitAlgo::set_range(bit_data(), SizeType(0), size, true);
 
         // call ctor
         _copy_compacted_data(data(), init_list.begin(), size);
@@ -503,9 +503,9 @@ SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::hole_si
     return Memory::hole_size();
 }
 template <typename Memory>
-SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::bit_array_size() const
+SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::bit_size() const
 {
-    return Memory::bit_array_size();
+    return Memory::bit_size();
 }
 template <typename Memory>
 SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::freelist_head() const
@@ -533,14 +533,14 @@ SKR_INLINE const typename SparseVector<Memory>::StorageType* SparseVector<Memory
     return Memory::data();
 }
 template <typename Memory>
-SKR_INLINE typename SparseVector<Memory>::BitBlockType* SparseVector<Memory>::bit_array()
+SKR_INLINE typename SparseVector<Memory>::BitBlockType* SparseVector<Memory>::bit_data()
 {
-    return Memory::bit_array();
+    return Memory::bit_data();
 }
 template <typename Memory>
-SKR_INLINE const typename SparseVector<Memory>::BitBlockType* SparseVector<Memory>::bit_array() const
+SKR_INLINE const typename SparseVector<Memory>::BitBlockType* SparseVector<Memory>::bit_data() const
 {
-    return Memory::bit_array();
+    return Memory::bit_data();
 }
 template <typename Memory>
 SKR_INLINE Memory& SparseVector<Memory>::memory()
@@ -558,13 +558,13 @@ template <typename Memory>
 SKR_INLINE bool SparseVector<Memory>::has_data(SizeType idx) const
 {
     SKR_ASSERT(is_valid_index(idx));
-    return BitAlgo::get(bit_array(), idx);
+    return BitAlgo::get(bit_data(), idx);
 }
 template <typename Memory>
 SKR_INLINE bool SparseVector<Memory>::is_hole(SizeType idx) const
 {
     SKR_ASSERT(is_valid_index(idx));
-    return !BitAlgo::get(bit_array(), idx);
+    return !BitAlgo::get(bit_data(), idx);
 }
 template <typename Memory>
 SKR_INLINE bool SparseVector<Memory>::is_valid_index(SizeType idx) const
@@ -631,9 +631,9 @@ SKR_INLINE bool SparseVector<Memory>::compact()
             free_node = next_index;
         }
 
-        // setup bit array
-        BitAlgo::set_range(bit_array(), compacted_index, hole_size(), false);
-        BitAlgo::set_range(bit_array(), SizeType(0), compacted_index, true);
+        // setup bit data
+        BitAlgo::set_range(bit_data(), compacted_index, hole_size(), false);
+        BitAlgo::set_range(bit_data(), SizeType(0), compacted_index, true);
 
         // setup data
         _set_hole_size(0);
@@ -677,9 +677,9 @@ SKR_INLINE bool SparseVector<Memory>::compact_stable()
             }
         }
 
-        // setup bit array
-        BitAlgo::set_range(bit_array(), compacted_index, hole_size(), false);
-        BitAlgo::set_range(bit_array(), SizeType(0), compacted_index, true);
+        // setup bit data
+        BitAlgo::set_range(bit_data(), compacted_index, hole_size(), false);
+        BitAlgo::set_range(bit_data(), SizeType(0), compacted_index, true);
 
         // reset data
         _set_hole_size(0);
@@ -764,7 +764,7 @@ SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::add_unsa
     }
 
     // setup bit
-    BitAlgo::set(bit_array(), index, true);
+    BitAlgo::set(bit_data(), index, true);
 
     return { &data()[index]._sparse_vector_data, index };
 }
@@ -807,7 +807,7 @@ SKR_INLINE void SparseVector<Memory>::add_at_unsafe(SizeType idx)
     _break_freelist_at(idx);
 
     // setup bit
-    BitAlgo::set(bit_array(), idx, true);
+    BitAlgo::set(bit_data(), idx, true);
 }
 template <typename Memory>
 SKR_INLINE void SparseVector<Memory>::add_at_default(SizeType idx)
@@ -859,7 +859,7 @@ SKR_INLINE void SparseVector<Memory>::append(const SparseVector& arr)
         auto write_idx  = sparse_size();
         auto grow_count = arr.size() - count;
         _grow(grow_count);
-        BitAlgo::set_range(bit_array(), write_idx, grow_count, true);
+        BitAlgo::set_range(bit_data(), write_idx, grow_count, true);
         while (!cursor.reach_end())
         {
             new (&(data()[write_idx]._sparse_vector_data)) DataType(cursor.ref());
@@ -886,7 +886,7 @@ SKR_INLINE void SparseVector<Memory>::append(std::initializer_list<DataType> ini
         auto write_idx  = sparse_size();
         auto grow_count = init_list.size() - read_idx;
         _grow(grow_count);
-        BitAlgo::set_range(bit_array(), write_idx, grow_count, true);
+        BitAlgo::set_range(bit_data(), write_idx, grow_count, true);
         _copy_compacted_data(data() + write_idx, init_list.begin() + read_idx, grow_count);
     }
 }
@@ -907,7 +907,7 @@ SKR_INLINE void SparseVector<Memory>::append(DataType* p, SizeType n)
         auto write_idx  = sparse_size();
         auto grow_count = n - read_idx;
         _grow(grow_count);
-        BitAlgo::set_range(bit_array(), write_idx, grow_count, true);
+        BitAlgo::set_range(bit_data(), write_idx, grow_count, true);
         _copy_compacted_data(data() + write_idx, p + read_idx, grow_count);
     }
 }
@@ -955,7 +955,7 @@ SKR_INLINE void SparseVector<Memory>::remove_at_unsafe(SizeType index, SizeType 
         _set_hole_size(hole_size() + 1);
 
         // set flag
-        BitAlgo::set(bit_array(), index, false);
+        BitAlgo::set(bit_data(), index, false);
 
         // update index
         ++index;
