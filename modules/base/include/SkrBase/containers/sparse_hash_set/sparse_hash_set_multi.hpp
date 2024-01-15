@@ -7,7 +7,7 @@ template <typename Memory>
 struct MultSparseHashSet : protected SparseHashBase<Memory> {
     using Super = SparseHashBase<Memory>;
 
-    // sparse array configure
+    // sparse vector configure
     using typename Super::SizeType;
     using typename Super::DataType;
     using typename Super::StorageType;

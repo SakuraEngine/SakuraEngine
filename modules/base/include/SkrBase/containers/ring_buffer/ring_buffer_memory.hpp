@@ -210,7 +210,7 @@ namespace skr::container
 {
 template <typename T, typename TS, uint64_t kCount>
 struct FixedRingBufferMemory {
-    static_assert(kCount > 0, "FixedArrayMemory must have a capacity larger than 0");
+    static_assert(kCount > 0, "FixedRingBufferMemory must have a capacity larger than 0");
     struct DummyParam {
     };
     using DataType           = T;

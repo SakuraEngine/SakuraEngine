@@ -10,7 +10,7 @@ template <typename K, typename V, typename TBitBlock, typename HashTraits, typen
 struct SparseHashMapMemory : public SparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, Allocator> {
     using Super = SparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, Allocator>;
 
-    // sparse array configure
+    // sparse vector configure
     using typename Super::SizeType;
     using typename Super::DataType;
     using typename Super::StorageType;
@@ -66,7 +66,7 @@ template <typename K, typename V, typename TBitBlock, typename HashTraits, typen
 struct FixedSparseHashMapMemory : public FixedSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, kCount> {
     using Super = FixedSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, kCount>;
 
-    // sparse array configure
+    // sparse vector configure
     using typename Super::SizeType;
     using typename Super::DataType;
     using typename Super::StorageType;
@@ -122,7 +122,7 @@ template <typename K, typename V, typename TBitBlock, typename HashTraits, typen
 struct InlineSparseHashMapMemory : public InlineSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, kCount, Allocator> {
     using Super = InlineSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, kCount, Allocator>;
 
-    // sparse array configure
+    // sparse vector configure
     using typename Super::SizeType;
     using typename Super::DataType;
     using typename Super::StorageType;

@@ -8,7 +8,7 @@
 #include "SkrBase/containers/sparse_vector/sparse_vector_helper.hpp"
 #include <algorithm>
 
-// util sparse array memory
+// util sparse vector memory
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename TS, typename Allocator>
@@ -287,12 +287,12 @@ private:
 };
 } // namespace skr::container
 
-// fixed sparse array memory
+// fixed sparse vector memory
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename TS, uint64_t kCount>
 struct FixedSparseVectorMemory {
-    static_assert(kCount > 0, "FixedArrayMemory must have a capacity larger than 0");
+    static_assert(kCount > 0, "FixedSparseVectorMemory must have a capacity larger than 0");
     struct DummyParam {
     };
 

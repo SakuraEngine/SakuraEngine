@@ -7,7 +7,7 @@ template <typename Memory>
 struct SparseHashSet : protected SparseHashBase<Memory> {
     using Super = SparseHashBase<Memory>;
 
-    // sparse array configure
+    // sparse vector configure
     using typename Super::SizeType;
     using typename Super::DataType;
     using typename Super::StorageType;
@@ -346,7 +346,7 @@ template <typename Memory>
 template <typename... Args>
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplace(Args&&... args)
 {
-    // emplace to data array
+    // emplace to data vector
     auto data_arr_ref = data_arr().add_unsafe();
     new (&data_arr_ref.ref()._sparse_hash_set_data) SetDataType(std::forward<Args>(args)...);
     data_arr_ref.ref()._sparse_hash_set_hash = HasherType()(data_arr_ref.ref()._sparse_hash_set_data);
