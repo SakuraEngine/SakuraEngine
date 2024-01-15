@@ -583,8 +583,8 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
         {
             REQUIRE(a.contains(i));
             REQUIRE(a.find(i).value() == i * 5);
-            REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data.key, i);
-            REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data.value, i * 5);
+            REQUIRE_EQ(a.data_vector()[i]._sparse_hash_set_data.key, i);
+            REQUIRE_EQ(a.data_vector()[i]._sparse_hash_set_data.value, i * 5);
         }
     }
 

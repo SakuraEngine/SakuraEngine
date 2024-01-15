@@ -29,7 +29,7 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     using typename Memory::MapDataType;
 
     // helper
-    using DataArr                         = SparseVector<Memory>;
+    using DataVector                      = SparseVector<Memory>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // data ref
@@ -73,7 +73,7 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
     using Super::free_list_head;
     using Super::is_compact;
     using Super::empty;
-    using Super::data_arr;
+    using Super::data_vector;
     using Super::bucket;
     using Super::memory;
 
@@ -554,8 +554,8 @@ SKR_INLINE void SparseHashMap<Memory>::append(const SparseHashMap& rhs)
     // reserve and add
     if (iter.has_next())
     {
-        auto new_capacity = data_arr().capacity() + (rhs.size() - count);
-        data_arr().reserve(new_capacity);
+        auto new_capacity = data_vector().capacity() + (rhs.size() - count);
+        data_vector().reserve(new_capacity);
 
         while (iter.has_next())
         {
@@ -579,8 +579,8 @@ SKR_INLINE void SparseHashMap<Memory>::append(std::initializer_list<MapDataType>
     // reserve and add
     if (read_idx < init_list.size())
     {
-        auto new_capacity = data_arr().capacity() + (init_list.size() - read_idx);
-        data_arr().reserve(new_capacity);
+        auto new_capacity = data_vector().capacity() + (init_list.size() - read_idx);
+        data_vector().reserve(new_capacity);
 
         while (read_idx < init_list.size())
         {
@@ -605,8 +605,8 @@ SKR_INLINE void SparseHashMap<Memory>::append(const MapDataType* p, SizeType n)
     // reserve and add
     if (read_idx < n)
     {
-        auto new_capacity = data_arr().capacity() + (n - read_idx);
-        data_arr().reserve(new_capacity);
+        auto new_capacity = data_vector().capacity() + (n - read_idx);
+        data_vector().reserve(new_capacity);
 
         while (read_idx < n)
         {

@@ -1013,9 +1013,9 @@ TEST_CASE("test sparse vector")
     template_test_sparse_vector<TestSparseVector>(
     [](auto capacity) { return capacity; },
     [](auto capacity) { return capacity; },
-    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto&& vec) { REQUIRE_EQ(vec.data(), nullptr); },
-    [](auto&& vec, auto&& v) { REQUIRE_EQ(vec.data(), v); });
+    [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
+    [](auto&& vec) { REQUIRE_EQ(vec.storage(), nullptr); },
+    [](auto&& vec, auto&& v) { REQUIRE_EQ(vec.storage(), v); });
 }
 
 TEST_CASE("test fixed sparse vector")
@@ -1028,9 +1028,9 @@ TEST_CASE("test fixed sparse vector")
     template_test_sparse_vector<TestSparseVector>(
     [](auto capacity) { return kFixedCapacity; },
     [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; },
-    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); });
+    [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
+    [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
+    [](auto&& vec, auto&& v) { REQUIRE_NE(vec.storage(), nullptr); });
 }
 
 TEST_CASE("test inline sparse vector")
@@ -1044,7 +1044,7 @@ TEST_CASE("test inline sparse vector")
     template_test_sparse_vector<TestSparseVector>(
     [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
     [](auto capacity) { return capacity; },
-    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); });
+    [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
+    [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
+    [](auto&& vec, auto&& v) { REQUIRE_NE(vec.storage(), nullptr); });
 }

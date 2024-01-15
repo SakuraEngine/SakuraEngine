@@ -70,8 +70,8 @@ struct SparseVector : protected Memory {
     SizeType            freelist_head() const;
     bool                is_compact() const;
     bool                empty() const;
-    StorageType*        data();
-    const StorageType*  data() const;
+    StorageType*        storage();
+    const StorageType*  storage() const;
     BitBlockType*       bit_data();
     const BitBlockType* bit_data() const;
     Memory&             memory();
@@ -266,7 +266,7 @@ SKR_INLINE void SparseVector<Memory>::_copy_compacted_data(StorageType* dst, con
 template <typename Memory>
 SKR_INLINE void SparseVector<Memory>::_break_freelist_at(SizeType index)
 {
-    StorageType* p_node = data() + index;
+    StorageType* p_node = storage() + index;
 
     if (freelist_head() == index)
     {
@@ -274,11 +274,11 @@ SKR_INLINE void SparseVector<Memory>::_break_freelist_at(SizeType index)
     }
     if (p_node->_sparse_vector_freelist_next != npos)
     {
-        data()[p_node->_sparse_vector_freelist_next]._sparse_vector_freelist_prev = p_node->_sparse_vector_freelist_prev;
+        storage()[p_node->_sparse_vector_freelist_next]._sparse_vector_freelist_prev = p_node->_sparse_vector_freelist_prev;
     }
     if (p_node->_sparse_vector_freelist_prev != npos)
     {
-        data()[p_node->_sparse_vector_freelist_prev]._sparse_vector_freelist_next = p_node->_sparse_vector_freelist_next;
+        storage()[p_node->_sparse_vector_freelist_prev]._sparse_vector_freelist_next = p_node->_sparse_vector_freelist_next;
     }
 }
 
@@ -306,12 +306,12 @@ SKR_INLINE SparseVector<Memory>::SparseVector(SizeType size, AllocatorCtorParam 
         {
             for (SizeType i = 0; i < size; ++i)
             {
-                new (&data()[i]._sparse_vector_data) DataType();
+                new (&storage()[i]._sparse_vector_data) DataType();
             }
         }
         else
         {
-            std::memset(data(), 0, sizeof(StorageType) * size);
+            std::memset(storage(), 0, sizeof(StorageType) * size);
         }
     }
 }
@@ -331,7 +331,7 @@ SKR_INLINE SparseVector<Memory>::SparseVector(SizeType size, const DataType& v, 
         // call ctor
         for (SizeType i = 0; i < size; ++i)
         {
-            new (&data()[i]._sparse_vector_data) DataType(v);
+            new (&storage()[i]._sparse_vector_data) DataType(v);
         }
     }
 }
@@ -349,7 +349,7 @@ SKR_INLINE SparseVector<Memory>::SparseVector(const DataType* p, SizeType n, All
         BitAlgo::set_range(bit_data(), SizeType(0), n, true);
 
         // call ctor
-        _copy_compacted_data(data(), p, n);
+        _copy_compacted_data(storage(), p, n);
     }
 }
 template <typename Memory>
@@ -367,7 +367,7 @@ SKR_INLINE SparseVector<Memory>::SparseVector(std::initializer_list<DataType> in
         BitAlgo::set_range(bit_data(), SizeType(0), size, true);
 
         // call ctor
-        _copy_compacted_data(data(), init_list.begin(), size);
+        _copy_compacted_data(storage(), init_list.begin(), size);
     }
 }
 template <typename Memory>
@@ -420,7 +420,7 @@ SKR_INLINE void SparseVector<Memory>::assign(const DataType* p, SizeType n)
         BitAlgo::set_range(bit_data(), SizeType(0), n, true);
 
         // call ctor
-        _copy_compacted_data(data(), p, n);
+        _copy_compacted_data(storage(), p, n);
     }
 }
 template <typename Memory>
@@ -439,7 +439,7 @@ SKR_INLINE void SparseVector<Memory>::assign(std::initializer_list<DataType> ini
         BitAlgo::set_range(bit_data(), SizeType(0), size, true);
 
         // call ctor
-        _copy_compacted_data(data(), init_list.begin(), size);
+        _copy_compacted_data(storage(), init_list.begin(), size);
     }
 }
 
@@ -523,12 +523,12 @@ SKR_INLINE bool SparseVector<Memory>::empty() const
     return (sparse_size() - hole_size()) == 0;
 }
 template <typename Memory>
-SKR_INLINE typename SparseVector<Memory>::StorageType* SparseVector<Memory>::data()
+SKR_INLINE typename SparseVector<Memory>::StorageType* SparseVector<Memory>::storage()
 {
     return Memory::data();
 }
 template <typename Memory>
-SKR_INLINE const typename SparseVector<Memory>::StorageType* SparseVector<Memory>::data() const
+SKR_INLINE const typename SparseVector<Memory>::StorageType* SparseVector<Memory>::storage() const
 {
     return Memory::data();
 }
@@ -616,7 +616,7 @@ SKR_INLINE bool SparseVector<Memory>::compact()
         SizeType free_node       = freelist_head();
         while (free_node != npos)
         {
-            SizeType next_index = data()[free_node]._sparse_vector_freelist_next;
+            SizeType next_index = storage()[free_node]._sparse_vector_freelist_next;
             if (free_node < compacted_index)
             {
                 // find last allocated element
@@ -626,7 +626,7 @@ SKR_INLINE bool SparseVector<Memory>::compact()
                 } while (!has_data(search_index));
 
                 // move element to the hole
-                memory::move<DataType, DataType>(&data()[free_node]._sparse_vector_data, &data()[search_index]._sparse_vector_data);
+                memory::move<DataType, DataType>(&storage()[free_node]._sparse_vector_data, &storage()[search_index]._sparse_vector_data);
             }
             free_node = next_index;
         }
@@ -671,7 +671,7 @@ SKR_INLINE bool SparseVector<Memory>::compact_stable()
             // move items
             while (read_index < sparse_size() && has_data(read_index))
             {
-                memory::move(&data()[write_index]._sparse_vector_data, &data()[read_index]._sparse_vector_data);
+                memory::move(&storage()[write_index]._sparse_vector_data, &storage()[read_index]._sparse_vector_data);
                 ++write_index;
                 ++read_index;
             }
@@ -749,13 +749,13 @@ SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::add_unsa
     {
         // remove and use first index from freelist
         index = freelist_head();
-        _set_freelist_head(data()[index]._sparse_vector_freelist_next);
+        _set_freelist_head(storage()[index]._sparse_vector_freelist_next);
         _set_hole_size(hole_size() - 1);
 
         // break link
         if (hole_size())
         {
-            data()[freelist_head()]._sparse_vector_freelist_prev = npos;
+            storage()[freelist_head()]._sparse_vector_freelist_prev = npos;
         }
     }
     else // no hole case
@@ -766,7 +766,7 @@ SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::add_unsa
     // setup bit
     BitAlgo::set(bit_data(), index, true);
 
-    return { &data()[index]._sparse_vector_data, index };
+    return { &storage()[index]._sparse_vector_data, index };
 }
 template <typename Memory>
 SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::add_default()
@@ -788,13 +788,13 @@ template <typename Memory>
 SKR_INLINE void SparseVector<Memory>::add_at(SizeType idx, const DataType& v)
 {
     add_at_unsafe(idx);
-    new (&data()[idx]._sparse_vector_data) DataType(v);
+    new (&storage()[idx]._sparse_vector_data) DataType(v);
 }
 template <typename Memory>
 SKR_INLINE void SparseVector<Memory>::add_at(SizeType idx, DataType&& v)
 {
     add_at_unsafe(idx);
-    new (&data()[idx]._sparse_vector_data) DataType(std::move(v));
+    new (&storage()[idx]._sparse_vector_data) DataType(std::move(v));
 }
 template <typename Memory>
 SKR_INLINE void SparseVector<Memory>::add_at_unsafe(SizeType idx)
@@ -813,13 +813,13 @@ template <typename Memory>
 SKR_INLINE void SparseVector<Memory>::add_at_default(SizeType idx)
 {
     add_at_unsafe(idx);
-    memory::construct(&data()[idx]._sparse_vector_data);
+    memory::construct(&storage()[idx]._sparse_vector_data);
 }
 template <typename Memory>
 SKR_INLINE void SparseVector<Memory>::add_at_zeroed(SizeType idx)
 {
     add_at_unsafe(idx);
-    std::memset(&data()[idx]._sparse_vector_data, 0, sizeof(DataType));
+    std::memset(&storage()[idx]._sparse_vector_data, 0, sizeof(DataType));
 }
 
 // emplace
@@ -836,7 +836,7 @@ template <typename... Args>
 SKR_INLINE void SparseVector<Memory>::emplace_at(SizeType index, Args&&... args)
 {
     add_at_unsafe(index);
-    new (&data()[index]._sparse_vector_data) DataType(std::forward<Args>(args)...);
+    new (&storage()[index]._sparse_vector_data) DataType(std::forward<Args>(args)...);
 }
 
 // append
@@ -862,7 +862,7 @@ SKR_INLINE void SparseVector<Memory>::append(const SparseVector& arr)
         BitAlgo::set_range(bit_data(), write_idx, grow_count, true);
         while (!cursor.reach_end())
         {
-            new (&(data()[write_idx]._sparse_vector_data)) DataType(cursor.ref());
+            new (&(storage()[write_idx]._sparse_vector_data)) DataType(cursor.ref());
             ++write_idx;
             cursor.move_next();
         }
@@ -887,7 +887,7 @@ SKR_INLINE void SparseVector<Memory>::append(std::initializer_list<DataType> ini
         auto grow_count = init_list.size() - read_idx;
         _grow(grow_count);
         BitAlgo::set_range(bit_data(), write_idx, grow_count, true);
-        _copy_compacted_data(data() + write_idx, init_list.begin() + read_idx, grow_count);
+        _copy_compacted_data(storage() + write_idx, init_list.begin() + read_idx, grow_count);
     }
 }
 template <typename Memory>
@@ -908,7 +908,7 @@ SKR_INLINE void SparseVector<Memory>::append(DataType* p, SizeType n)
         auto grow_count = n - read_idx;
         _grow(grow_count);
         BitAlgo::set_range(bit_data(), write_idx, grow_count, true);
-        _copy_compacted_data(data() + write_idx, p + read_idx, grow_count);
+        _copy_compacted_data(storage() + write_idx, p + read_idx, grow_count);
     }
 }
 
@@ -925,7 +925,7 @@ SKR_INLINE void SparseVector<Memory>::remove_at(SizeType index, SizeType n)
         for (SizeType i = 0; i < n; ++i)
         {
             SKR_ASSERT(has_data(index + i));
-            memory::destruct(&data()[index + i]._sparse_vector_data);
+            memory::destruct(&storage()[index + i]._sparse_vector_data);
         }
     }
 
@@ -942,12 +942,12 @@ SKR_INLINE void SparseVector<Memory>::remove_at_unsafe(SizeType index, SizeType 
     {
         SKR_ASSERT(has_data(index));
 
-        StorageType& cur_data = data()[index];
+        StorageType& cur_data = storage()[index];
 
         // link to freelist
         if (hole_size())
         {
-            data()[freelist_head()]._sparse_vector_freelist_prev = index;
+            storage()[freelist_head()]._sparse_vector_freelist_prev = index;
         }
         cur_data._sparse_vector_freelist_prev = npos;
         cur_data._sparse_vector_freelist_next = freelist_head();
@@ -1027,39 +1027,39 @@ template <typename Memory>
 SKR_INLINE typename SparseVector<Memory>::DataType& SparseVector<Memory>::operator[](SizeType index)
 {
     SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
-    return data()[index]._sparse_vector_data;
+    return storage()[index]._sparse_vector_data;
 }
 template <typename Memory>
 SKR_INLINE const typename SparseVector<Memory>::DataType& SparseVector<Memory>::operator[](SizeType index) const
 {
     SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
-    return data()[index]._sparse_vector_data;
+    return storage()[index]._sparse_vector_data;
 }
 template <typename Memory>
 SKR_INLINE typename SparseVector<Memory>::DataType& SparseVector<Memory>::at(SizeType index)
 {
     SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
-    return data()[index]._sparse_vector_data;
+    return storage()[index]._sparse_vector_data;
 }
 template <typename Memory>
 SKR_INLINE const typename SparseVector<Memory>::DataType& SparseVector<Memory>::at(SizeType index) const
 {
     SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
-    return data()[index]._sparse_vector_data;
+    return storage()[index]._sparse_vector_data;
 }
 template <typename Memory>
 SKR_INLINE typename SparseVector<Memory>::DataType& SparseVector<Memory>::last(SizeType index)
 {
     index = sparse_size() - index - 1;
     SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
-    return *(data() + index);
+    return *(storage() + index);
 }
 template <typename Memory>
 SKR_INLINE const typename SparseVector<Memory>::DataType& SparseVector<Memory>::last(SizeType index) const
 {
     index = sparse_size() - index - 1;
     SKR_ASSERT(!empty() && is_valid_index(index) && has_data(index));
-    return *(data() + index);
+    return *(storage() + index);
 }
 
 // find
@@ -1179,8 +1179,8 @@ SKR_INLINE void SparseVector<Memory>::sort(Functor&& f)
     {
         compact();
         algo::intro_sort(
-        data(),
-        data() + sparse_size(),
+        storage(),
+        storage() + sparse_size(),
         [&f](const StorageType& a, const StorageType& b) {
             return f(a._sparse_vector_data, b._sparse_vector_data);
         });
@@ -1194,8 +1194,8 @@ SKR_INLINE void SparseVector<Memory>::sort_stable(Functor&& f)
     {
         compact_stable();
         algo::merge_sort(
-        data(),
-        data() + sparse_size(),
+        storage(),
+        storage() + sparse_size(),
         [&f](const StorageType& a, const StorageType& b) {
             return f(a._sparse_vector_data, b._sparse_vector_data);
         });

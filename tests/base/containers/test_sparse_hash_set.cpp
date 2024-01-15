@@ -485,7 +485,7 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
         for (auto i = 0; i < 100; ++i)
         {
             REQUIRE(a.contains(i));
-            REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data, i);
+            REQUIRE_EQ(a.data_vector()[i]._sparse_hash_set_data, i);
         }
     }
 
