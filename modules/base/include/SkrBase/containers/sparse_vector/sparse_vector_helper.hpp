@@ -7,10 +7,10 @@
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename TS>
-inline void copy_sparse_vector_data(SparseVectorData<T, TS>* dst, const SparseVectorData<T, TS>* src, const TBitBlock* src_bit_data, TS size) noexcept
+inline void copy_sparse_vector_data(SparseVectorStorage<T, TS>* dst, const SparseVectorStorage<T, TS>* src, const TBitBlock* src_bit_data, TS size) noexcept
 {
     using BitAlgo     = algo::BitAlgo<TBitBlock>;
-    using StorageType = SparseVectorData<T, TS>;
+    using StorageType = SparseVectorStorage<T, TS>;
 
     // copy data
     if constexpr (memory::MemoryTraits<T>::use_ctor)
@@ -37,10 +37,10 @@ inline void copy_sparse_vector_data(SparseVectorData<T, TS>* dst, const SparseVe
     }
 }
 template <typename T, typename TBitBlock, typename TS>
-inline void move_sparse_vector_data(SparseVectorData<T, TS>* dst, SparseVectorData<T, TS>* src, const TBitBlock* src_bit_data, TS size) noexcept
+inline void move_sparse_vector_data(SparseVectorStorage<T, TS>* dst, SparseVectorStorage<T, TS>* src, const TBitBlock* src_bit_data, TS size) noexcept
 {
     using BitAlgo     = algo::BitAlgo<TBitBlock>;
-    using StorageType = SparseVectorData<T, TS>;
+    using StorageType = SparseVectorStorage<T, TS>;
 
     // move data
     if constexpr (memory::MemoryTraits<T>::use_move)
@@ -79,7 +79,7 @@ inline void move_sparse_vector_bit_data(TBitBlock* dst, TBitBlock* src, TS size)
     std::memcpy(dst, src, byte_count);
 }
 template <typename T, typename TBitBlock, typename TS>
-inline void destruct_sparse_vector_data(SparseVectorData<T, TS>* data, const TBitBlock* bit_data, TS size) noexcept
+inline void destruct_sparse_vector_data(SparseVectorStorage<T, TS>* data, const TBitBlock* bit_data, TS size) noexcept
 {
     if constexpr (memory::MemoryTraits<T>::use_dtor)
     {

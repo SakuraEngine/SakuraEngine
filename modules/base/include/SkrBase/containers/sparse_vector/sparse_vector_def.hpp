@@ -10,7 +10,7 @@ namespace skr::container
 // 空穴状态会变为链表的节点，带来的问题是当 sizeof(T) < sizeof(TS) * 2 时，会产生不必要的浪费的浪费
 // 不过通常这种浪费是可接受的
 template <typename T, typename TS>
-union SparseVectorData
+union SparseVectorStorage
 {
     // free linked list
     struct
@@ -30,11 +30,11 @@ template <typename T, typename TS, bool kConst>
 using SparseVectorDataRef = VectorDataRef<T, TS, kConst>;
 } // namespace skr::container
 
-// SparseVectorData data memory traits
+// SparseVectorStorage data memory traits
 namespace skr::memory
 {
 template <typename T, typename TS>
-struct MemoryTraits<skr::container::SparseVectorData<T, TS>, skr::container::SparseVectorData<T, TS>> : public MemoryTraits<T, T> {
+struct MemoryTraits<skr::container::SparseVectorStorage<T, TS>, skr::container::SparseVectorStorage<T, TS>> : public MemoryTraits<T, T> {
 };
 } // namespace skr::memory
 
@@ -42,7 +42,7 @@ struct MemoryTraits<skr::container::SparseVectorData<T, TS>, skr::container::Spa
 namespace std
 {
 template <typename T, typename TS>
-SKR_INLINE void swap(::skr::container::SparseVectorData<T, TS>& a, ::skr::container::SparseVectorData<T, TS>& b)
+SKR_INLINE void swap(::skr::container::SparseVectorStorage<T, TS>& a, ::skr::container::SparseVectorStorage<T, TS>& b)
 {
     ::std::swap(a._sparse_vector_data, b._sparse_vector_data);
 }

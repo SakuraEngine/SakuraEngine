@@ -10,8 +10,8 @@
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename HashTraits, typename TS, typename Allocator>
-struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator> {
-    using Super = SparseVectorMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator>;
+struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator> {
+    using Super = SparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator>;
 
     // sparse vector configure
     using typename Super::SizeType;
@@ -24,7 +24,7 @@ struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetData<T, TS, 
     using HashType       = typename HashTraits::HashType;
     using HasherType     = typename HashTraits::HasherType;
     using SetDataType    = T;
-    using SetStorageType = SparseHashSetData<T, TS, HashType>;
+    using SetStorageType = SparseHashSetStorage<T, TS, HashType>;
 
     // ctor & dtor
     inline SparseHashSetMemory(AllocatorCtorParam param) noexcept
@@ -169,8 +169,8 @@ private:
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename HashTraits, typename TS, uint64_t kCount>
-struct FixedSparseHashSetMemory : public FixedSparseVectorMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount> {
-    using Super = FixedSparseVectorMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount>;
+struct FixedSparseHashSetMemory : public FixedSparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount> {
+    using Super = FixedSparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount>;
 
     // sparse vector configure
     using typename Super::SizeType;
@@ -183,7 +183,7 @@ struct FixedSparseHashSetMemory : public FixedSparseVectorMemory<SparseHashSetDa
     using HashType       = typename HashTraits::HashType;
     using HasherType     = typename HashTraits::HasherType;
     using SetDataType    = T;
-    using SetStorageType = SparseHashSetData<T, TS, HashType>;
+    using SetStorageType = SparseHashSetStorage<T, TS, HashType>;
 
     // ctor & dtor
     inline FixedSparseHashSetMemory(AllocatorCtorParam param) noexcept
@@ -278,8 +278,8 @@ private:
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename HashTraits, typename TS, uint64_t kInlineCount, typename Allocator>
-struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator> {
-    using Super = InlineSparseVectorMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator>;
+struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator> {
+    using Super = InlineSparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator>;
 
     // sparse data configure
     using typename Super::SizeType;
@@ -292,7 +292,7 @@ struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSet
     using HashType       = typename HashTraits::HashType;
     using HasherType     = typename HashTraits::HasherType;
     using SetDataType    = T;
-    using SetStorageType = SparseHashSetData<T, TS, HashType>;
+    using SetStorageType = SparseHashSetStorage<T, TS, HashType>;
 
     // ctor & dtor
     inline InlineSparseHashSetMemory(AllocatorCtorParam param) noexcept
