@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrBase/containers/sparse_array/sparse_array_iterator.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector_iterator.hpp"
 
 namespace skr::container
 {
@@ -38,8 +38,8 @@ struct SparseHashMapIterInv : public CursorIter<SparseHashMapCursor<Container, k
 };
 
 template <typename Container, bool kConst>
-struct SparseHashMapCursor : protected SparseArrayCursor<Container, kConst> {
-    using Super         = SparseArrayCursor<Container, kConst>;
+struct SparseHashMapCursor : protected SparseVectorCursor<Container, kConst> {
+    using Super         = SparseVectorCursor<Container, kConst>;
     using ContainerType = std::conditional_t<kConst, const Container, Container>;
     using SizeType      = typename ContainerType::SizeType;
     using DataType      = std::conditional_t<kConst, const typename ContainerType::SetDataType, typename ContainerType::SetDataType>;
@@ -62,27 +62,27 @@ struct SparseHashMapCursor : protected SparseArrayCursor<Container, kConst> {
     inline SparseHashMapCursor& operator=(SparseHashMapCursor&& rhs)      = default;
 
     // factory
-    inline static SparseHashMapCursor Begin(ContainerType* array)
+    inline static SparseHashMapCursor Begin(ContainerType* container)
     {
-        SparseHashMapCursor cursor{ array };
+        SparseHashMapCursor cursor{ container };
         cursor.reset_to_begin();
         return cursor;
     }
-    inline static SparseHashMapCursor BeginOverflow(ContainerType* array)
+    inline static SparseHashMapCursor BeginOverflow(ContainerType* container)
     {
-        SparseHashMapCursor cursor{ array };
+        SparseHashMapCursor cursor{ container };
         cursor._reset_to_begin_overflow();
         return cursor;
     }
-    inline static SparseHashMapCursor End(ContainerType* array)
+    inline static SparseHashMapCursor End(ContainerType* container)
     {
-        SparseHashMapCursor cursor{ array };
+        SparseHashMapCursor cursor{ container };
         cursor.reset_to_end();
         return cursor;
     }
-    inline static SparseHashMapCursor EndOverflow(ContainerType* array)
+    inline static SparseHashMapCursor EndOverflow(ContainerType* container)
     {
-        SparseHashMapCursor cursor{ array };
+        SparseHashMapCursor cursor{ container };
         cursor._reset_to_end_overflow();
         return cursor;
     }

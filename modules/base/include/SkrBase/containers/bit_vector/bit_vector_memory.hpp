@@ -6,27 +6,27 @@
 #include "SkrBase/memory/memory_ops.hpp"
 #include "SkrBase/algo/bit_algo.hpp"
 
-// util bit array memory
+// util bit vector memory
 namespace skr::container
 {
 template <typename TBitBlock, typename TS, typename Allocator>
-struct BitArrayMemory : public Allocator {
+struct BitVectorMemory : public Allocator {
     using BitBlockType       = TBitBlock;
     using SizeType           = TS;
     using AllocatorCtorParam = typename Allocator::CtorParam;
 
     // ctor & dtor
-    inline BitArrayMemory(AllocatorCtorParam param) noexcept
+    inline BitVectorMemory(AllocatorCtorParam param) noexcept
         : Allocator(std::move(param))
     {
     }
-    inline ~BitArrayMemory() noexcept
+    inline ~BitVectorMemory() noexcept
     {
         free();
     }
 
     // copy & move ctor
-    inline BitArrayMemory(const BitArrayMemory& rhs) noexcept
+    inline BitVectorMemory(const BitVectorMemory& rhs) noexcept
         : Allocator(rhs)
     {
         if (rhs._size)
@@ -39,7 +39,7 @@ struct BitArrayMemory : public Allocator {
             _size = rhs._size;
         }
     }
-    inline BitArrayMemory(BitArrayMemory&& rhs) noexcept
+    inline BitVectorMemory(BitVectorMemory&& rhs) noexcept
         : Allocator(std::move(rhs))
         , _data(rhs._data)
         , _size(rhs._size)
@@ -49,7 +49,7 @@ struct BitArrayMemory : public Allocator {
     }
 
     // assign & move assign
-    inline void operator=(const BitArrayMemory& rhs) noexcept
+    inline void operator=(const BitVectorMemory& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -74,7 +74,7 @@ struct BitArrayMemory : public Allocator {
             }
         }
     }
-    inline void operator=(BitArrayMemory&& rhs) noexcept
+    inline void operator=(BitVectorMemory&& rhs) noexcept
     {
         if (this != &rhs)
         {

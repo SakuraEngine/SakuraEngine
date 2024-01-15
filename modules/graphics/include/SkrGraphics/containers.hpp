@@ -2,8 +2,8 @@
 #include "config.h"
 #ifndef CGPU_BUILD_STANDALONE
 #include <SkrContainers/hashmap.hpp>
-#include <SkrContainers/umap.hpp>
-#include <SkrContainers/uset.hpp>
+#include <SkrContainers/map.hpp>
+#include <SkrContainers/set.hpp>
 #include <SkrContainers/btree.hpp>
 #include <SkrContainers/concurrent_queue.hpp>
 #include <SkrContainers/stl_string.hpp>
@@ -39,13 +39,13 @@ using ConcurrentQueue = skr::ConcurrentQueue<T>;
 using String = skr::String;
 
 template <typename T>
-using USet = skr::USet<T>;
+using Set = skr::Set<T>;
 
 template <typename T, size_t N>
-using FixedUSet = skr::FixedUSet<T, N>;
+using FixedSet = skr::FixedSet<T, N>;
 
 template <typename K, typename V>
-using UMap = skr::UMap<K, V>;
+using Map = skr::Map<K, V>;
 
 template <typename T>
 using span = skr::span<T>;

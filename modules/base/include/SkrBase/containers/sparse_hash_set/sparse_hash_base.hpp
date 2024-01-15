@@ -2,16 +2,16 @@
 #include "SkrBase/config.h"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_def.hpp"
 #include "sparse_hash_set_iterator.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector.hpp"
 #include "SkrBase/containers/misc/transparent.hpp"
 
 namespace skr::container
 {
 template <typename Memory>
-struct SparseHashBase : protected SparseArray<Memory> {
-    using Super = SparseArray<Memory>;
+struct SparseHashBase : protected SparseVector<Memory> {
+    using Super = SparseVector<Memory>;
 
-    // sparse array configure
+    // sparse vector configure
     using typename Memory::SizeType;
     using typename Memory::DataType;
     using typename Memory::StorageType;
@@ -25,7 +25,7 @@ struct SparseHashBase : protected SparseArray<Memory> {
     using typename Memory::SetStorageType;
 
     // helper
-    using DataArr                         = SparseArray<Memory>;
+    using DataVector                      = SparseVector<Memory>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // ctor & dtor
@@ -41,21 +41,21 @@ struct SparseHashBase : protected SparseArray<Memory> {
     void operator=(SparseHashBase&& rhs) noexcept;
 
     // getter
-    SizeType        size() const;
-    SizeType        capacity() const;
-    SizeType        slack() const;
-    SizeType        sparse_size() const;
-    SizeType        hole_size() const;
-    SizeType        bit_array_size() const;
-    SizeType        free_list_head() const;
-    bool            is_compact() const;
-    bool            empty() const;
-    DataArr&        data_arr();
-    const DataArr&  data_arr() const;
-    SizeType*       bucket();
-    const SizeType* bucket() const;
-    Memory&         memory();
-    const Memory&   memory() const;
+    SizeType          size() const;
+    SizeType          capacity() const;
+    SizeType          slack() const;
+    SizeType          sparse_size() const;
+    SizeType          hole_size() const;
+    SizeType          bit_size() const;
+    SizeType          free_list_head() const;
+    bool              is_compact() const;
+    bool              empty() const;
+    DataVector&       data_vector();
+    const DataVector& data_vector() const;
+    SizeType*         bucket();
+    const SizeType*   bucket() const;
+    Memory&           memory();
+    const Memory&     memory() const;
 
     // validator
     bool has_data(SizeType idx) const;
@@ -300,9 +300,9 @@ SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::hol
     return Super::hole_size();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::bit_array_size() const
+SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::bit_size() const
 {
-    return Super::bit_array_size();
+    return Super::bit_size();
 }
 template <typename Memory>
 SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::free_list_head() const
@@ -320,12 +320,12 @@ SKR_INLINE bool SparseHashBase<Memory>::empty() const
     return Super::empty();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashBase<Memory>::DataArr& SparseHashBase<Memory>::data_arr()
+SKR_INLINE typename SparseHashBase<Memory>::DataVector& SparseHashBase<Memory>::data_vector()
 {
     return *this;
 }
 template <typename Memory>
-SKR_INLINE const typename SparseHashBase<Memory>::DataArr& SparseHashBase<Memory>::data_arr() const
+SKR_INLINE const typename SparseHashBase<Memory>::DataVector& SparseHashBase<Memory>::data_vector() const
 {
     return *this;
 }
@@ -462,7 +462,7 @@ template <typename Memory>
 template <typename Functor>
 SKR_INLINE void SparseHashBase<Memory>::sort(Functor&& p)
 {
-    data_arr().sort([&](const SetStorageType& a, const SetStorageType& b) {
+    data_vector().sort([&](const SetStorageType& a, const SetStorageType& b) {
         return p(a._sparse_hash_set_data, b._sparse_hash_set_data);
     });
     rehash();
@@ -471,7 +471,7 @@ template <typename Memory>
 template <typename Functor>
 SKR_INLINE void SparseHashBase<Memory>::sort_stable(Functor&& p)
 {
-    data_arr().sort_stable([&](const SetStorageType& a, const SetStorageType& b) {
+    data_vector().sort_stable([&](const SetStorageType& a, const SetStorageType& b) {
         return p(a._sparse_hash_set_data, b._sparse_hash_set_data);
     });
     rehash();
@@ -602,7 +602,7 @@ template <typename Memory>
 SKR_INLINE void SparseHashBase<Memory>::_remove_at(SizeType index)
 {
     _remove_from_bucket(index);
-    data_arr().remove_at(index);
+    data_vector().remove_at(index);
 }
 
 // remove

@@ -57,7 +57,7 @@ struct skr_win_dstorage_decompress_service_t
     };
     IDStorageCustomDecompressionQueue* decompress_queue = nullptr;
     HANDLE event_handle = nullptr;
-    cgpu::UMap<SkrDStorageCompression, DecompressionResolver> resolvers;
+    cgpu::Map<SkrDStorageCompression, DecompressionResolver> resolvers;
     // threadpool items
     TP_WAIT* thread_pool_wait = nullptr;
     // thread items

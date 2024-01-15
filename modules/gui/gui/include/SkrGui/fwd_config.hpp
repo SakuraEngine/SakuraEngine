@@ -21,8 +21,8 @@
 
 // skr containers
 #include "SkrContainers/vector.hpp"
-#include "SkrContainers/umap.hpp"
-#include "SkrContainers/uset.hpp"
+#include "SkrContainers/map.hpp"
+#include "SkrContainers/set.hpp"
 #include "SkrContainers/optional.hpp"
 #include "SkrContainers/span.hpp"
 #include "SkrContainers/string.hpp"
@@ -79,8 +79,8 @@ using StringView = skr::StringView;
 template <typename T>
 using Array = skr::Vector<T>;
 template <typename K, typename V>
-using Map = skr::UMap<K, V>;
+using Map = skr::Map<K, V>;
 template <typename T>
-using Set = skr::USet<T>;
+using Set = skr::Set<T>;
 
 } // namespace skr::gui
