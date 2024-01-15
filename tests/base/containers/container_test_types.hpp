@@ -122,7 +122,7 @@ TestAllocatorType>>;
 
 //===========Bit Array===================================================================
 template <typename TBitBlock>
-using BitArray = container::BitArray<container::BitArrayMemory<
+using BitArray = container::BitVector<container::BitVectorMemory<
 TBitBlock,
 TestSizeType,
 TestAllocatorType>>;
