@@ -4,23 +4,23 @@
 
 namespace skr::container
 {
-// Array 的数据引用，代替单纯的指针/Index返回
+// Vector 的数据引用，代替单纯的指针/Index返回
 // 提供足够的信息，并将 npos 封装起来简化调用防止出错
 template <typename T, typename TS, bool kConst>
-struct ArrayDataRef {
+struct VectorDataRef {
     using DataType = std::conditional_t<kConst, const T, T>;
     using SizeType = TS;
 
     // ctor
     SKR_INLINE
-    ArrayDataRef() = default;
-    SKR_INLINE ArrayDataRef(DataType* ptr, SizeType index)
+    VectorDataRef() = default;
+    SKR_INLINE VectorDataRef(DataType* ptr, SizeType index)
         : _ptr(ptr)
         , _index(index)
     {
     }
     template <bool kConstRHS>
-    SKR_INLINE ArrayDataRef(const ArrayDataRef<T, SizeType, kConstRHS>& rhs)
+    SKR_INLINE VectorDataRef(const VectorDataRef<T, SizeType, kConstRHS>& rhs)
         : _ptr(const_cast<DataType*>(rhs.ptr()))
         , _index(rhs.index())
     {
@@ -38,8 +38,8 @@ struct ArrayDataRef {
     // SKR_INLINE DataType* operator->() const { return ptr(); }
 
     // compare
-    SKR_INLINE bool operator==(const ArrayDataRef& rhs) const { return _ptr == rhs._ptr; }
-    SKR_INLINE bool operator!=(const ArrayDataRef& rhs) const { return _ptr != rhs._ptr; }
+    SKR_INLINE bool operator==(const VectorDataRef& rhs) const { return _ptr == rhs._ptr; }
+    SKR_INLINE bool operator!=(const VectorDataRef& rhs) const { return _ptr != rhs._ptr; }
 
 private:
     // add/append/emplace: 指向（第一个）添加的元素

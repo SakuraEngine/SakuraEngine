@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
+#include <concepts>
 
 namespace skr::container
 {

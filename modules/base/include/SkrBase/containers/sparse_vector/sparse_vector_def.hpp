@@ -27,7 +27,7 @@ union SparseArrayData
 // 提供足够的信息，并将 npos 封装起来简化调用防止出错
 // 规则见 ArrayDataRef
 template <typename T, typename TS, bool kConst>
-using SparseArrayDataRef = ArrayDataRef<T, TS, kConst>;
+using SparseArrayDataRef = VectorDataRef<T, TS, kConst>;
 } // namespace skr::container
 
 // SparseArrayData data memory traits

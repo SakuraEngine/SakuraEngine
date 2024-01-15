@@ -5,28 +5,28 @@
 #include "SkrBase/containers/allocator/allocator.hpp"
 #include "SkrBase/memory/memory_ops.hpp"
 
-// util array memory
+// util vector memory
 namespace skr::container
 {
 template <typename T, typename TS, typename Allocator>
-struct ArrayMemory : public Allocator {
+struct VectorMemory : public Allocator {
     using DataType           = T;
     using SizeType           = TS;
     using AllocatorCtorParam = typename Allocator::CtorParam;
 
     // ctor & dtor
-    inline ArrayMemory(AllocatorCtorParam param) noexcept
+    inline VectorMemory(AllocatorCtorParam param) noexcept
         : Allocator(std::move(param))
     {
     }
-    inline ~ArrayMemory() noexcept
+    inline ~VectorMemory() noexcept
     {
         clear();
         free();
     }
 
     // copy & move
-    inline ArrayMemory(const ArrayMemory& rhs) noexcept
+    inline VectorMemory(const VectorMemory& rhs) noexcept
         : Allocator(rhs)
     {
         if (rhs._size)
@@ -36,7 +36,7 @@ struct ArrayMemory : public Allocator {
             _size = rhs._size;
         }
     }
-    inline ArrayMemory(ArrayMemory&& rhs) noexcept
+    inline VectorMemory(VectorMemory&& rhs) noexcept
         : Allocator(std::move(rhs))
         , _data(rhs._data)
         , _size(rhs._size)
@@ -46,7 +46,7 @@ struct ArrayMemory : public Allocator {
     }
 
     // assign & move assign
-    inline void operator=(const ArrayMemory& rhs) noexcept
+    inline void operator=(const VectorMemory& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -71,7 +71,7 @@ struct ArrayMemory : public Allocator {
             }
         }
     }
-    inline void operator=(ArrayMemory&& rhs) noexcept
+    inline void operator=(VectorMemory&& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -203,12 +203,12 @@ private:
 };
 } // namespace skr::container
 
-// fixed array memory
+// fixed vector memory
 namespace skr::container
 {
 template <typename T, typename TS, uint64_t kCount>
-struct FixedArrayMemory {
-    static_assert(kCount > 0, "FixedArrayMemory must have a capacity larger than 0");
+struct FixedVectorMemory {
+    static_assert(kCount > 0, "FixedVectorMemory must have a capacity larger than 0");
     struct DummyParam {
     };
     using DataType           = T;
@@ -216,17 +216,17 @@ struct FixedArrayMemory {
     using AllocatorCtorParam = DummyParam;
 
     // ctor & dtor
-    inline FixedArrayMemory(AllocatorCtorParam) noexcept
+    inline FixedVectorMemory(AllocatorCtorParam) noexcept
     {
     }
-    inline ~FixedArrayMemory() noexcept
+    inline ~FixedVectorMemory() noexcept
     {
         clear();
         free();
     }
 
     // copy & move
-    inline FixedArrayMemory(const FixedArrayMemory& other) noexcept
+    inline FixedVectorMemory(const FixedVectorMemory& other) noexcept
     {
         if (other._size)
         {
@@ -234,7 +234,7 @@ struct FixedArrayMemory {
             _size = other._size;
         }
     }
-    inline FixedArrayMemory(FixedArrayMemory&& other) noexcept
+    inline FixedVectorMemory(FixedVectorMemory&& other) noexcept
     {
         if (other._size)
         {
@@ -246,7 +246,7 @@ struct FixedArrayMemory {
     }
 
     // assign & move assign
-    inline void operator=(const FixedArrayMemory& rhs) noexcept
+    inline void operator=(const FixedVectorMemory& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -261,7 +261,7 @@ struct FixedArrayMemory {
             }
         }
     }
-    inline void operator=(FixedArrayMemory&& rhs) noexcept
+    inline void operator=(FixedVectorMemory&& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -282,14 +282,14 @@ struct FixedArrayMemory {
     // memory operations
     inline void realloc(SizeType new_capacity) noexcept
     {
-        SKR_ASSERT(new_capacity <= kCount && "FixedArrayMemory can't alloc memory that larger than kCount");
+        SKR_ASSERT(new_capacity <= kCount && "FixedVectorMemory can't alloc memory that larger than kCount");
     }
     inline void free() noexcept
     {
     }
     inline SizeType grow(SizeType grow_size) noexcept
     {
-        SKR_ASSERT((_size + grow_size) <= kCount && "FixedArrayMemory can't alloc memory that larger than kCount");
+        SKR_ASSERT((_size + grow_size) <= kCount && "FixedVectorMemory can't alloc memory that larger than kCount");
 
         SizeType old_size = _size;
         _size += grow_size;
@@ -329,28 +329,28 @@ private:
 };
 } // namespace skr::container
 
-// inline array memory
+// inline vector memory
 namespace skr::container
 {
 template <typename T, typename TS, uint64_t kInlineCount, typename Allocator>
-struct InlineArrayMemory : public Allocator {
+struct InlineVectorMemory : public Allocator {
     using DataType           = T;
     using SizeType           = TS;
     using AllocatorCtorParam = typename Allocator::CtorParam;
 
     // ctor & dtor
-    inline InlineArrayMemory(AllocatorCtorParam param) noexcept
+    inline InlineVectorMemory(AllocatorCtorParam param) noexcept
         : Allocator(std::move(param))
     {
     }
-    inline ~InlineArrayMemory() noexcept
+    inline ~InlineVectorMemory() noexcept
     {
         clear();
         free();
     }
 
     // copy & move
-    inline InlineArrayMemory(const InlineArrayMemory& rhs) noexcept
+    inline InlineVectorMemory(const InlineVectorMemory& rhs) noexcept
         : Allocator(rhs)
     {
         if (rhs._size)
@@ -360,7 +360,7 @@ struct InlineArrayMemory : public Allocator {
             _size = rhs._size;
         }
     }
-    inline InlineArrayMemory(InlineArrayMemory&& rhs) noexcept
+    inline InlineVectorMemory(InlineVectorMemory&& rhs) noexcept
         : Allocator(std::move(rhs))
     {
         // move data
@@ -381,7 +381,7 @@ struct InlineArrayMemory : public Allocator {
     }
 
     // assign & move assign
-    inline void operator=(const InlineArrayMemory& rhs) noexcept
+    inline void operator=(const InlineVectorMemory& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -406,7 +406,7 @@ struct InlineArrayMemory : public Allocator {
             }
         }
     }
-    inline void operator=(InlineArrayMemory&& rhs) noexcept
+    inline void operator=(InlineVectorMemory&& rhs) noexcept
     {
         if (this != &rhs)
         {
