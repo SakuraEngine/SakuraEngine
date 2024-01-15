@@ -283,7 +283,7 @@ struct StackCmdMapKey
     }
 };
 template <size_t N = 1>
-struct StackCmdAllocator : public skr::FixedUMap<StackCmdMapKey, GPUUploadCmd, N>
+struct StackCmdAllocator : public skr::FixedMap<StackCmdMapKey, GPUUploadCmd, N>
 {
     auto& allocate(IOBatchId& batch, SwapableCmdPoolMap& cmdpools, VRAMUploadComponent* pUpload)
     {
@@ -568,7 +568,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
 {
     auto instance = skr_get_dstorage_instnace();
     IOBatchId batch;
-    skr::FixedUMap<SkrDStorageQueueId, skr::SObjectPtr<DStorageEvent>, 2> _events;
+    skr::FixedMap<SkrDStorageQueueId, skr::SObjectPtr<DStorageEvent>, 2> _events;
 #ifdef SKR_PROFILE_ENABLE
     SkrCZoneCtx Zone;
     bool bZoneSet = false;

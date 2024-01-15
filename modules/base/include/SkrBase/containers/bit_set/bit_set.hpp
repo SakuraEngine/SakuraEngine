@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrBase/containers/bit_array/bit_ref.hpp"
+#include "SkrBase/containers/bit_tools/bit_ref.hpp"
 #include "SkrBase/algo/bit_algo.hpp"
 
 namespace skr::container

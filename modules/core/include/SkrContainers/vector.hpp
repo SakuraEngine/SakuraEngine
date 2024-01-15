@@ -1,27 +1,27 @@
 #pragma once
 #include "SkrBase/types.h"
-#include "SkrBase/containers/array/array_memory.hpp"
-#include "SkrBase/containers/array/array.hpp"
+#include "SkrBase/containers/vector/vector_memory.hpp"
+#include "SkrBase/containers/vector/vector.hpp"
 #include "SkrContainers/skr_allocator.hpp"
 
 namespace skr
 {
 template <typename T, typename Allocator = SkrAllocator>
-using Vector = container::Array<container::ArrayMemory<
+using Vector = container::Vector<container::VectorMemory<
 T,        /*type*/
 uint64_t, /*size type*/
 Allocator /*allocator*/
 >>;
 
 template <typename T, uint64_t kCount>
-using FixedVector = container::Array<container::FixedArrayMemory<
+using FixedVector = container::Vector<container::FixedVectorMemory<
 T,        /*type*/
 uint64_t, /*size type*/
 kCount    /*allocator*/
 >>;
 
 template <typename T, uint64_t kCount, typename Allocator = SkrAllocator>
-using InlineVector = container::Array<container::InlineArrayMemory<
+using InlineVector = container::Vector<container::InlineVectorMemory<
 T,        /*type*/
 uint64_t, /*size type*/
 kCount,   /*allocator*/

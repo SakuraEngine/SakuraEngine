@@ -1,5 +1,5 @@
 #include "SkrRT/rttr/type_registry.hpp"
-#include "SkrContainers/umap.hpp"
+#include "SkrContainers/map.hpp"
 #include "SkrCore/log.h"
 #include "SkrRT/rttr/type_loader/type_loader.hpp"
 #include "SkrRT/rttr/type_loader/generic_type_loader.hpp"
@@ -7,19 +7,19 @@
 
 namespace skr::rttr
 {
-static UMap<GUID, TypeLoader*>& type_loaders()
+static Map<GUID, TypeLoader*>& type_loaders()
 {
-    static UMap<GUID, TypeLoader*> s_type_loaders;
+    static Map<GUID, TypeLoader*> s_type_loaders;
     return s_type_loaders;
 }
-static UMap<GUID, Type*>& loaded_types()
+static Map<GUID, Type*>& loaded_types()
 {
-    static UMap<GUID, Type*> s_types;
+    static Map<GUID, Type*> s_types;
     return s_types;
 }
-static UMap<GUID, GenericTypeLoader*>& generic_type_loader()
+static Map<GUID, GenericTypeLoader*>& generic_type_loader()
 {
-    static UMap<GUID, GenericTypeLoader*> s_generic_type_loaders;
+    static Map<GUID, GenericTypeLoader*> s_generic_type_loaders;
     return s_generic_type_loaders;
 }
 

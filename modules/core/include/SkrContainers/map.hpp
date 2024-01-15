@@ -1,14 +1,14 @@
 #pragma once
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map_memory.hpp"
 #include "SkrContainers/skr_allocator.hpp"
-#include "SkrBase/containers/sparse_hash_map/sparse_hash_map_multi.hpp"
+#include "SkrBase/containers/sparse_hash_map/sparse_hash_map.hpp"
 #include "SkrBase/misc/hash.hpp"
 #include "SkrBase/algo/utils.hpp"
 
 namespace skr
 {
 template <typename K, typename V, typename HashTraits = container::HashTraits<K>, typename Allocator = SkrAllocator>
-using MultiUMap = container::MultiSparseHashMap<container::SparseHashMapMemory<
+using Map = container::SparseHashMap<container::SparseHashMapMemory<
 K,           /*Key Type*/
 V,           /*Value Type*/
 uint64_t,    /*BitBlock Type*/
@@ -17,7 +17,7 @@ uint64_t,    /*Size Type*/
 Allocator>>; /*Allocator Type*/
 
 template <typename K, typename V, uint64_t kCount, typename HashTraits = container::HashTraits<K>>
-using FixedMultiUMap = container::MultiSparseHashMap<container::FixedSparseHashMapMemory<
+using FixedMap = container::SparseHashMap<container::FixedSparseHashMapMemory<
 K,          /*Key Type*/
 V,          /*Value Type*/
 uint64_t,   /*BitBlock Type*/
@@ -27,7 +27,7 @@ kCount      /*Count*/
 >>;
 
 template <typename K, typename V, uint64_t kInlineCount, typename HashTraits = container::HashTraits<K>, typename Allocator = SkrAllocator>
-using InlineMultiUMap = container::MultiSparseHashMap<container::InlineSparseHashMapMemory<
+using InlineMap = container::SparseHashMap<container::InlineSparseHashMapMemory<
 K,            /*Key Type*/
 V,            /*Value Type*/
 uint64_t,     /*BitBlock Type*/

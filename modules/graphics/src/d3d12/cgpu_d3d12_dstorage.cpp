@@ -24,7 +24,7 @@ struct CGPUDStorageSingleton
         }
         return nullptr;
     }
-    cgpu::UMap<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
+    cgpu::Map<CGPUDeviceId, ECGPUDStorageAvailability> availability_map = {};
 };
 
 inline static IDStorageFactory* GetDStorageFactory(CGPUInstanceId instance)

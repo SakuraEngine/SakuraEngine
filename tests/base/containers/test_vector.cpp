@@ -1,24 +1,24 @@
 #include "SkrTestFramework/framework.hpp"
 #include "container_test_types.hpp"
 
-template <typename TestArray, typename ModifyCapacity, typename ClampCapacity, typename CheckData, typename CheckNoData, typename CheckDataEQ>
-void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_capacity, CheckData&& check_data, CheckNoData&& check_no_data, CheckDataEQ&& check_data_eq)
+template <typename TestVector, typename ModifyCapacity, typename ClampCapacity, typename CheckData, typename CheckNoData, typename CheckDataEQ>
+void template_test_vector(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_capacity, CheckData&& check_data, CheckNoData&& check_no_data, CheckDataEQ&& check_data_eq)
 {
     using namespace skr;
 
     SUBCASE("ctor")
     {
-        TestArray a;
+        TestVector a;
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.capacity(), capacity_of(0));
         check_no_data(a);
 
-        TestArray b(20);
+        TestVector b(20);
         REQUIRE_EQ(b.size(), 20);
         REQUIRE_GE(b.capacity(), capacity_of(20));
         check_data(b);
 
-        TestArray c(20, 114514);
+        TestVector c(20, 114514);
         REQUIRE_EQ(c.size(), 20);
         REQUIRE_GE(c.capacity(), capacity_of(20));
         check_data(c);
@@ -27,7 +27,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
             REQUIRE_EQ(c[i], 114514);
         }
 
-        TestArray d(c.data(), c.size() - 5);
+        TestVector d(c.data(), c.size() - 5);
         REQUIRE_EQ(d.size(), 15);
         REQUIRE_GE(d.capacity(), capacity_of(15));
         check_data(d);
@@ -36,7 +36,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
             REQUIRE_EQ(d[i], 114514);
         }
 
-        TestArray e({ 1, 1, 4, 5, 1, 4 });
+        TestVector e({ 1, 1, 4, 5, 1, 4 });
         REQUIRE_EQ(e.size(), 6);
         REQUIRE_GE(e.capacity(), capacity_of(6));
         check_data(e);
@@ -50,17 +50,17 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("copy & move")
     {
-        TestArray a(100, 114514);
+        TestVector a(100, 114514);
 
-        TestArray b = a;
+        TestVector b = a;
         REQUIRE_EQ(b.size(), a.size());
         REQUIRE_GE(b.capacity(), capacity_of(a.capacity()));
         check_data(b);
 
-        auto      old_size     = a.size();
-        auto      old_capacity = a.capacity();
-        auto      old_data     = a.data();
-        TestArray c            = std::move(a);
+        auto       old_size     = a.size();
+        auto       old_capacity = a.capacity();
+        auto       old_data     = a.data();
+        TestVector c            = std::move(a);
         REQUIRE_EQ(a.size(), 0);
         REQUIRE_EQ(a.capacity(), capacity_of(0));
         check_no_data(a);
@@ -71,7 +71,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("assign & move assign")
     {
-        TestArray a(100, 114514), b, c;
+        TestVector a(100, 114514), b, c;
 
         b = a;
         REQUIRE_EQ(b.size(), a.size());
@@ -92,8 +92,8 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("spacial assign")
     {
-        TestArray a(100, 114514);
-        TestArray b(200, 114);
+        TestVector a(100, 114514);
+        TestVector b(200, 114);
 
         a.assign({ 1, 1, 4, 5, 1, 4 });
         REQUIRE_EQ(a.size(), 6);
@@ -116,10 +116,10 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("compare")
     {
-        TestArray a({ 1, 1, 4, 5, 1, 4 });
-        TestArray b(6);
-        TestArray c(10, 114514);
-        TestArray d(6, 114514);
+        TestVector a({ 1, 1, 4, 5, 1, 4 });
+        TestVector b(6);
+        TestVector c(10, 114514);
+        TestVector d(6, 114514);
         b[0] = 1;
         b[1] = 1;
         b[2] = 4;
@@ -137,7 +137,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("validate")
     {
-        TestArray a(10), b;
+        TestVector a(10), b;
 
         REQUIRE_FALSE(a.readonly().is_valid_index(-1));
         REQUIRE_FALSE(a.readonly().is_valid_index(11));
@@ -152,7 +152,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("memory op")
     {
-        TestArray a(50, 114514);
+        TestVector a(50, 114514);
 
         auto old_capacity = a.capacity();
         auto old_data     = a.data();
@@ -181,7 +181,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
         REQUIRE_EQ(a.capacity(), capacity_of(0));
         check_no_data(a);
 
-        a = TestArray(10, 114514);
+        a = TestVector(10, 114514);
         a.resize(40, 1145140);
         REQUIRE_EQ(a.size(), 40);
         REQUIRE_GE(a.capacity(), capacity_of(40));
@@ -221,7 +221,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("add")
     {
-        TestArray a(10, 114514);
+        TestVector a(10, 114514);
         a.add(1145140, 5);
         a.add(114514, 20);
         REQUIRE_EQ(a.size(), 35);
@@ -275,7 +275,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("add at")
     {
-        TestArray a(10, 114514);
+        TestVector a(10, 114514);
 
         a.add_at(5, 1145140, 20);
         REQUIRE_EQ(a.size(), 30);
@@ -333,7 +333,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
             REQUIRE_EQ(a[i], 114514);
         }
 
-        TestArray b{};
+        TestVector b{};
         b.add_at(0, 1);
         b.add_at(0, 1);
         b.add_at(0, 4);
@@ -350,7 +350,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("emplace")
     {
-        TestArray a(10, 114514);
+        TestVector a(10, 114514);
         a.emplace(10);
         REQUIRE_EQ(a.size(), 11);
         REQUIRE_GE(a.capacity(), capacity_of(11));
@@ -375,8 +375,8 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("append")
     {
-        TestArray a(20, 114514);
-        TestArray b(10, 114);
+        TestVector a(20, 114514);
+        TestVector b(10, 114);
 
         a.append(b);
         REQUIRE_EQ(a.size(), 30);
@@ -433,8 +433,8 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("append at")
     {
-        TestArray a(20, 114514);
-        TestArray b(10, 114);
+        TestVector a(20, 114514);
+        TestVector b(10, 114);
 
         a.append_at(10, b);
         REQUIRE_EQ(a.size(), 30);
@@ -496,7 +496,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
             REQUIRE_EQ(a[i], 114514);
         }
 
-        TestArray c;
+        TestVector c;
         c.append_at(0, { 1, 1, 4 });
         c.append_at(0, { 5, 1, 4 });
         REQUIRE_EQ(c[0], 5);
@@ -509,7 +509,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("remove")
     {
-        TestArray a = { 1, 1, 4, 5, 1, 4 };
+        TestVector a = { 1, 1, 4, 5, 1, 4 };
         a.add(114514, 20);
 
         a.remove_at(0, 2);
@@ -612,7 +612,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
             REQUIRE_EQ(a[i], 114514);
         }
 
-        TestArray aa = { 5, 1, 2, 5, 5, 2, 5 };
+        TestVector aa = { 5, 1, 2, 5, 5, 2, 5 };
         aa.remove_all(5);
         REQUIRE_EQ(aa.size(), 3);
         for (uint32_t i = 0; i < aa.size(); ++i)
@@ -627,7 +627,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("find")
     {
-        TestArray a({ 1, 1, 4, 5, 1, 4 });
+        TestVector a({ 1, 1, 4, 5, 1, 4 });
 
         REQUIRE_EQ(a.find(1).index(), 0);
         REQUIRE_EQ(a.find(4).index(), 2);
@@ -650,30 +650,30 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
 
     SUBCASE("sort")
     {
-        const uint64_t kArraySize = clamp_capacity(114514);
+        const uint64_t kVectorSize = clamp_capacity(114514);
 
-        TestArray a(kArraySize);
-        for (int i = 0; i < kArraySize; ++i)
+        TestVector a(kVectorSize);
+        for (int i = 0; i < kVectorSize; ++i)
         {
-            a[i] = kArraySize - 1 - i;
+            a[i] = kVectorSize - 1 - i;
         }
 
         a.sort();
-        for (int i = 0; i < kArraySize; ++i)
+        for (int i = 0; i < kVectorSize; ++i)
         {
             REQUIRE_EQ(a[i], i);
         }
 
         a.sort_stable(Greater<uint32_t>());
-        for (int i = 0; i < kArraySize; ++i)
+        for (int i = 0; i < kVectorSize; ++i)
         {
-            REQUIRE_EQ(a[i], kArraySize - 1 - i);
+            REQUIRE_EQ(a[i], kVectorSize - 1 - i);
         }
     }
 
     SUBCASE("heap")
     {
-        TestArray a({ 1, 1, 4, 5, 1, 4, 1 });
+        TestVector a({ 1, 1, 4, 5, 1, 4, 1 });
 
         REQUIRE_FALSE(a.is_heap());
 
@@ -717,15 +717,15 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
     // test cursor & iterator & foreach
     SUBCASE("Cursor & iterator")
     {
-        TestArray  a;
-        const auto kArraySize = clamp_capacity(100);
-        a.reserve(kArraySize);
-        for (size_t i = 0; i < kArraySize; ++i)
+        TestVector a;
+        const auto kVectorSize = clamp_capacity(100);
+        a.reserve(kVectorSize);
+        for (size_t i = 0; i < kVectorSize; ++i)
         {
             a.add(i);
         }
 
-        auto test_function = [kArraySize](auto&& arr) {
+        auto test_function = [kVectorSize](auto&& arr) {
             uint64_t count;
 
             // iter
@@ -735,14 +735,14 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
                 REQUIRE_EQ(it.ref(), count);
                 ++count;
             }
-            REQUIRE_EQ(count, kArraySize);
+            REQUIRE_EQ(count, kVectorSize);
             count = 0;
             for (auto it = arr.iter_inv(); it.has_next(); it.move_next())
             {
-                REQUIRE_EQ(it.ref(), kArraySize - 1 - count);
+                REQUIRE_EQ(it.ref(), kVectorSize - 1 - count);
                 ++count;
             }
-            REQUIRE_EQ(count, kArraySize);
+            REQUIRE_EQ(count, kVectorSize);
 
             // range
             count = 0;
@@ -751,14 +751,14 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
                 REQUIRE_EQ(v, count);
                 ++count;
             }
-            REQUIRE_EQ(count, kArraySize);
+            REQUIRE_EQ(count, kVectorSize);
             count = 0;
             for (auto v : arr.range_inv())
             {
-                REQUIRE_EQ(v, kArraySize - 1 - count);
+                REQUIRE_EQ(v, kVectorSize - 1 - count);
                 ++count;
             }
-            REQUIRE_EQ(count, kArraySize);
+            REQUIRE_EQ(count, kVectorSize);
 
             // cursor
             count = 0;
@@ -767,14 +767,14 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
                 REQUIRE_EQ(it.ref(), count);
                 ++count;
             }
-            REQUIRE_EQ(count, kArraySize);
+            REQUIRE_EQ(count, kVectorSize);
             count = 0;
             for (auto it = arr.cursor_end(); !it.reach_begin(); it.move_prev())
             {
-                REQUIRE_EQ(it.ref(), kArraySize - 1 - count);
+                REQUIRE_EQ(it.ref(), kVectorSize - 1 - count);
                 ++count;
             }
-            REQUIRE_EQ(count, kArraySize);
+            REQUIRE_EQ(count, kVectorSize);
 
             // foreach
             count = 0;
@@ -783,7 +783,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
                 REQUIRE_EQ(v, count);
                 ++count;
             }
-            REQUIRE_EQ(count, kArraySize);
+            REQUIRE_EQ(count, kVectorSize);
         };
 
         test_function(a);
@@ -793,7 +793,7 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
     // test API when empty
     SUBCASE("empty container")
     {
-        TestArray a;
+        TestVector a;
 
         REQUIRE(a == a);
         REQUIRE_FALSE(a != a);
@@ -886,12 +886,12 @@ void template_test_array(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_cap
     }
 }
 
-TEST_CASE("test array")
+TEST_CASE("test vector")
 {
     using namespace skr;
-    using TestArray = Array<uint32_t>;
+    using TestVector = Vector<uint32_t>;
 
-    template_test_array<TestArray>(
+    template_test_vector<TestVector>(
     [](auto capacity) { return capacity; },
     [](auto capacity) { return capacity; },
     [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
@@ -899,15 +899,15 @@ TEST_CASE("test array")
     [](auto&& vec, auto&& v) { REQUIRE_EQ(vec.data(), v); });
 }
 
-TEST_CASE("test fixed array")
+TEST_CASE("test fixed vector")
 {
     using namespace skr;
     using namespace skr::container;
     static constexpr uint64_t kFixedCapacity = 200;
 
-    using TestArray = FixedArray<uint32_t, kFixedCapacity>;
+    using TestVector = FixedVector<uint32_t, kFixedCapacity>;
 
-    template_test_array<TestArray>(
+    template_test_vector<TestVector>(
     [](auto capacity) { return kFixedCapacity; },
     [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; },
     [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
@@ -915,14 +915,14 @@ TEST_CASE("test fixed array")
     [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); });
 }
 
-TEST_CASE("test inline array")
+TEST_CASE("test inline vector")
 {
     using namespace skr;
     static constexpr uint64_t kInlineCapacity = 10;
 
-    using TestArray = InlineArray<uint32_t, kInlineCapacity>;
+    using TestVector = InlineVector<uint32_t, kInlineCapacity>;
 
-    template_test_array<TestArray>(
+    template_test_vector<TestVector>(
     [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
     [](auto capacity) { return capacity; },
     [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },

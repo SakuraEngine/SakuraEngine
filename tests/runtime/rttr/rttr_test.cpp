@@ -34,7 +34,7 @@ TEST_CASE("test serde")
 ////  1. optr/SkrNewObj/SkrDeleteObj
 ////  2. record type test
 //  3. enum type test
-//  4. Vector, UMap, MultiUMap, USet, MultiUSet impl & test
+//  4. Vector, Map, MultiMap, Set, MultiSet impl & test
 //  5. TResourceHandle, SPtrHelper, StronglyEnum, variant impl & test
 //
 

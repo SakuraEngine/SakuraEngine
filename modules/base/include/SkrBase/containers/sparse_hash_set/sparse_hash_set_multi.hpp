@@ -7,7 +7,7 @@ template <typename Memory>
 struct MultSparseHashSet : protected SparseHashBase<Memory> {
     using Super = SparseHashBase<Memory>;
 
-    // sparse array configure
+    // sparse vector configure
     using typename Super::SizeType;
     using typename Super::DataType;
     using typename Super::StorageType;
@@ -21,7 +21,7 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     using typename Super::SetStorageType;
 
     // helper
-    using DataArr                         = SparseArray<Memory>;
+    using DataVector                      = SparseVector<Memory>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // data ref
@@ -61,11 +61,11 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     using Super::slack;
     using Super::sparse_size;
     using Super::hole_size;
-    using Super::bit_array_size;
+    using Super::bit_size;
     using Super::free_list_head;
     using Super::is_compact;
     using Super::empty;
-    using Super::data_arr;
+    using Super::data_vector;
     using Super::bucket;
     using Super::memory;
 
@@ -285,7 +285,7 @@ template <typename Memory>
 template <typename... Args>
 SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::emplace(Args&&... args)
 {
-    auto data_arr_ref = data_arr().add_unsafe();
+    auto data_arr_ref = data_vector().add_unsafe();
     new (&data_arr_ref.ref()._sparse_hash_set_data) SetDataType(std::forward<Args>(args)...);
     data_arr_ref.ref()._sparse_hash_set_hash = HasherType()(data_arr_ref.ref()._sparse_hash_set_data);
     Super::_add_to_bucket(data_arr_ref.ref(), data_arr_ref.index());

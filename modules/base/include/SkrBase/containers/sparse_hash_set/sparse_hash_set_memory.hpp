@@ -1,19 +1,19 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_traits.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array_memory.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector_memory.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_def.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array_iterator.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector_iterator.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_helper.hpp"
 
 // util sparse hash set memory
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename HashTraits, typename TS, typename Allocator>
-struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator> {
-    using Super = SparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator>;
+struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator> {
+    using Super = SparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator>;
 
-    // sparse array configure
+    // sparse vector configure
     using typename Super::SizeType;
     using typename Super::DataType;
     using typename Super::StorageType;
@@ -24,7 +24,7 @@ struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, t
     using HashType       = typename HashTraits::HashType;
     using HasherType     = typename HashTraits::HasherType;
     using SetDataType    = T;
-    using SetStorageType = SparseHashSetData<T, TS, HashType>;
+    using SetStorageType = SparseHashSetStorage<T, TS, HashType>;
 
     // ctor & dtor
     inline SparseHashSetMemory(AllocatorCtorParam param) noexcept
@@ -135,7 +135,7 @@ struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, t
     {
         if (Super::sparse_size() - Super::hole_size())
         {
-            auto cursor = TrueBitCursor<BitBlockType, SizeType, false>::Begin(Super::bit_array(), Super::sparse_size());
+            auto cursor = TrueBitCursor<BitBlockType, SizeType, false>::Begin(Super::bit_data(), Super::sparse_size());
             sparse_hash_set_build_bucket(Super::data(), _bucket, _bucket_mask, cursor);
         }
     }
@@ -169,10 +169,10 @@ private:
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename HashTraits, typename TS, uint64_t kCount>
-struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount> {
-    using Super = FixedSparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount>;
+struct FixedSparseHashSetMemory : public FixedSparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount> {
+    using Super = FixedSparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount>;
 
-    // sparse array configure
+    // sparse vector configure
     using typename Super::SizeType;
     using typename Super::DataType;
     using typename Super::StorageType;
@@ -183,7 +183,7 @@ struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetDat
     using HashType       = typename HashTraits::HashType;
     using HasherType     = typename HashTraits::HasherType;
     using SetDataType    = T;
-    using SetStorageType = SparseHashSetData<T, TS, HashType>;
+    using SetStorageType = SparseHashSetStorage<T, TS, HashType>;
 
     // ctor & dtor
     inline FixedSparseHashSetMemory(AllocatorCtorParam param) noexcept
@@ -246,7 +246,7 @@ struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetDat
     {
         if (Super::sparse_size() - Super::hole_size())
         {
-            auto cursor = TrueBitCursor<BitBlockType, SizeType, false>::Begin(Super::bit_array(), Super::sparse_size());
+            auto cursor = TrueBitCursor<BitBlockType, SizeType, false>::Begin(Super::bit_data(), Super::sparse_size());
             sparse_hash_set_build_bucket(Super::data(), bucket(), kBucketMask, cursor);
         }
     }
@@ -278,10 +278,10 @@ private:
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename HashTraits, typename TS, uint64_t kInlineCount, typename Allocator>
-struct InlineSparseHashSetMemory : public InlineSparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator> {
-    using Super = InlineSparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator>;
+struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator> {
+    using Super = InlineSparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator>;
 
-    // sparse array configure
+    // sparse data configure
     using typename Super::SizeType;
     using typename Super::DataType;
     using typename Super::StorageType;
@@ -292,7 +292,7 @@ struct InlineSparseHashSetMemory : public InlineSparseArrayMemory<SparseHashSetD
     using HashType       = typename HashTraits::HashType;
     using HasherType     = typename HashTraits::HasherType;
     using SetDataType    = T;
-    using SetStorageType = SparseHashSetData<T, TS, HashType>;
+    using SetStorageType = SparseHashSetStorage<T, TS, HashType>;
 
     // ctor & dtor
     inline InlineSparseHashSetMemory(AllocatorCtorParam param) noexcept
@@ -453,7 +453,7 @@ struct InlineSparseHashSetMemory : public InlineSparseArrayMemory<SparseHashSetD
     {
         if (Super::sparse_size() - Super::hole_size())
         {
-            auto cursor = TrueBitCursor<BitBlockType, SizeType, false>::Begin(Super::bit_array(), Super::sparse_size());
+            auto cursor = TrueBitCursor<BitBlockType, SizeType, false>::Begin(Super::bit_data(), Super::sparse_size());
             sparse_hash_set_build_bucket(Super::data(), bucket(), _bucket_mask, cursor);
         }
     }

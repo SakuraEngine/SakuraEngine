@@ -34,6 +34,6 @@ struct CondType {
     }
 
 private:
-    skr::UMap<IdentifierType, Condition> conditions_;
+    skr::Map<IdentifierType, Condition> conditions_;
 };
 } // namespace skr::goap

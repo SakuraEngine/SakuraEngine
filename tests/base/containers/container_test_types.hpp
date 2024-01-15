@@ -1,14 +1,14 @@
 #pragma once
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map.hpp"
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map_memory.hpp"
-#include "SkrBase/containers/array/array.hpp"
-#include "SkrBase/containers/array/array_memory.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array_memory.hpp"
+#include "SkrBase/containers/vector/vector.hpp"
+#include "SkrBase/containers/vector/vector_memory.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector_memory.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_memory.hpp"
-#include "SkrBase/containers/bit_array/bit_array.hpp"
-#include "SkrBase/containers/bit_array/bit_array_memory.hpp"
+#include "SkrBase/containers/bit_vector/bit_vector.hpp"
+#include "SkrBase/containers/bit_vector/bit_vector_memory.hpp"
 #include "SkrBase/containers/ring_buffer/ring_buffer.hpp"
 #include "SkrBase/containers/ring_buffer/ring_buffer_memory.hpp"
 
@@ -22,43 +22,43 @@ using TestHashType      = uint64_t;
 using TestBitBlockType  = uint64_t;
 using TestAllocatorType = SkrTestAllocator;
 
-//===========Array===================================================================
+//===========Vector===================================================================
 template <typename T>
-using Array = container::Array<container::ArrayMemory<
+using Vector = container::Vector<container::VectorMemory<
 T,
 TestSizeType,
 TestAllocatorType>>;
 
 template <typename T, uint64_t kCount>
-using FixedArray = container::Array<container::FixedArrayMemory<
+using FixedVector = container::Vector<container::FixedVectorMemory<
 T,
 TestSizeType,
 kCount>>;
 
 template <typename T, uint64_t kInlineCount>
-using InlineArray = container::Array<container::InlineArrayMemory<
+using InlineVector = container::Vector<container::InlineVectorMemory<
 T,
 TestSizeType,
 kInlineCount,
 TestAllocatorType>>;
 
-//===========Sparse Array===================================================================
+//===========Sparse Vector===================================================================
 template <typename T>
-using SparseArray = container::SparseArray<container::SparseArrayMemory<
+using SparseVector = container::SparseVector<container::SparseVectorMemory<
 T,
 TestBitBlockType,
 TestSizeType,
 TestAllocatorType>>;
 
 template <typename T, uint64_t kCount>
-using FixedSparseArray = container::SparseArray<container::FixedSparseArrayMemory<
+using FixedSparseVector = container::SparseVector<container::FixedSparseVectorMemory<
 T,
 TestBitBlockType,
 TestSizeType,
 kCount>>;
 
 template <typename T, uint64_t kInlineCount>
-using InlineSparseArray = container::SparseArray<container::InlineSparseArrayMemory<
+using InlineSparseVector = container::SparseVector<container::InlineSparseVectorMemory<
 T,
 TestBitBlockType,
 TestSizeType,
@@ -120,9 +120,9 @@ TestSizeType,
 kInlineCount,
 TestAllocatorType>>;
 
-//===========Bit Array===================================================================
+//===========Bit Vector===================================================================
 template <typename TBitBlock>
-using BitArray = container::BitArray<container::BitArrayMemory<
+using BitVector = container::BitVector<container::BitVectorMemory<
 TBitBlock,
 TestSizeType,
 TestAllocatorType>>;

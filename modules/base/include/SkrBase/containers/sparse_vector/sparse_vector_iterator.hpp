@@ -5,11 +5,11 @@
 namespace skr::container
 {
 template <typename Container, bool kConst>
-struct SparseArrayCursor;
+struct SparseVectorCursor;
 
 template <typename Container, bool kConst>
-struct SparseArrayIter : public CursorIter<SparseArrayCursor<Container, kConst>, false> {
-    using Super = CursorIter<SparseArrayCursor<Container, kConst>, false>;
+struct SparseVectorIter : public CursorIter<SparseVectorCursor<Container, kConst>, false> {
+    using Super = CursorIter<SparseVectorCursor<Container, kConst>, false>;
     using Super::Super;
 
     inline void erase_and_move_next()
@@ -19,8 +19,8 @@ struct SparseArrayIter : public CursorIter<SparseArrayCursor<Container, kConst>,
 };
 
 template <typename Container, bool kConst>
-struct SparseArrayIterInv : public CursorIter<SparseArrayCursor<Container, kConst>, true> {
-    using Super = CursorIter<SparseArrayCursor<Container, kConst>, true>;
+struct SparseVectorIterInv : public CursorIter<SparseVectorCursor<Container, kConst>, true> {
+    using Super = CursorIter<SparseVectorCursor<Container, kConst>, true>;
     using Super::Super;
 
     inline void erase_and_move_next()
@@ -30,7 +30,7 @@ struct SparseArrayIterInv : public CursorIter<SparseArrayCursor<Container, kCons
 };
 
 template <typename Container, bool kConst>
-struct SparseArrayCursor {
+struct SparseVectorCursor {
     using ContainerType = std::conditional_t<kConst, const Container, Container>;
     using DataType      = std::conditional_t<kConst, const typename ContainerType::DataType, typename ContainerType::DataType>;
     using SizeType      = typename ContainerType::SizeType;
@@ -39,45 +39,45 @@ struct SparseArrayCursor {
     static constexpr SizeType npos = npos_of<SizeType>;
 
     // ctor & copy & move & assign & move assign
-    inline SparseArrayCursor(ContainerType* array, SizeType index)
-        : _array(array)
+    inline SparseVectorCursor(ContainerType* container, SizeType index)
+        : _container(container)
         , _index(index)
     {
-        SKR_ASSERT((_index >= 0 && _index <= _array->sparse_size()) || _index == npos);
-        SKR_ASSERT(!is_valid() || _array->has_data(_index));
+        SKR_ASSERT((_index >= 0 && _index <= _container->sparse_size()) || _index == npos);
+        SKR_ASSERT(!is_valid() || _container->has_data(_index));
     }
-    inline SparseArrayCursor(ContainerType* array)
-        : _array(array)
+    inline SparseVectorCursor(ContainerType* container)
+        : _container(container)
         , _index(npos)
     {
     }
-    inline SparseArrayCursor(const SparseArrayCursor& rhs)            = default;
-    inline SparseArrayCursor(SparseArrayCursor&& rhs)                 = default;
-    inline SparseArrayCursor& operator=(const SparseArrayCursor& rhs) = default;
-    inline SparseArrayCursor& operator=(SparseArrayCursor&& rhs)      = default;
+    inline SparseVectorCursor(const SparseVectorCursor& rhs)            = default;
+    inline SparseVectorCursor(SparseVectorCursor&& rhs)                 = default;
+    inline SparseVectorCursor& operator=(const SparseVectorCursor& rhs) = default;
+    inline SparseVectorCursor& operator=(SparseVectorCursor&& rhs)      = default;
 
     // factory
-    inline static SparseArrayCursor Begin(ContainerType* array)
+    inline static SparseVectorCursor Begin(ContainerType* container)
     {
-        SparseArrayCursor cursor{ array };
+        SparseVectorCursor cursor{ container };
         cursor.reset_to_begin();
         return cursor;
     }
-    inline static SparseArrayCursor BeginOverflow(ContainerType* array)
+    inline static SparseVectorCursor BeginOverflow(ContainerType* container)
     {
-        SparseArrayCursor cursor{ array };
+        SparseVectorCursor cursor{ container };
         cursor._reset_to_begin_overflow();
         return cursor;
     }
-    inline static SparseArrayCursor End(ContainerType* array)
+    inline static SparseVectorCursor End(ContainerType* container)
     {
-        SparseArrayCursor cursor{ array };
+        SparseVectorCursor cursor{ container };
         cursor.reset_to_end();
         return cursor;
     }
-    inline static SparseArrayCursor EndOverflow(ContainerType* array)
+    inline static SparseVectorCursor EndOverflow(ContainerType* container)
     {
-        SparseArrayCursor cursor{ array };
+        SparseVectorCursor cursor{ container };
         cursor._reset_to_end_overflow();
         return cursor;
     }
@@ -86,12 +86,12 @@ struct SparseArrayCursor {
     inline DataType& ref() const
     {
         SKR_ASSERT(is_valid());
-        return _data()[_index]._sparse_array_data;
+        return _data()[_index]._sparse_vector_data;
     }
     inline DataType* ptr() const
     {
         SKR_ASSERT(is_valid());
-        return &_data()[_index]._sparse_array_data;
+        return &_data()[_index]._sparse_vector_data;
     }
     inline SizeType index() const { return _index; }
 
@@ -109,7 +109,7 @@ struct SparseArrayCursor {
     }
     inline void reset_to_begin()
     {
-        if (!_array_empty())
+        if (!_container_empty())
         {
             _index = Algo::find(_bit_data(), (SizeType)0, _size(), true);
             _index = (_index == npos) ? _size() : _index;
@@ -121,7 +121,7 @@ struct SparseArrayCursor {
     }
     inline void reset_to_end()
     {
-        if (!_array_empty())
+        if (!_container_empty())
         {
             _index = Algo::find_last(_bit_data(), (SizeType)0, _size(), true);
         }
@@ -135,13 +135,13 @@ struct SparseArrayCursor {
     inline void erase_and_move_next()
     {
         SKR_ASSERT(is_valid());
-        _array->remove_at(_index);
+        _container->remove_at(_index);
         move_next();
     }
     inline void erase_and_move_prev()
     {
         SKR_ASSERT(is_valid());
-        _array->remove_at(_index);
+        _container->remove_at(_index);
         move_prev();
     }
 
@@ -151,26 +151,26 @@ struct SparseArrayCursor {
     bool is_valid() const { return !(reach_end() || reach_begin()); }
 
     // compare
-    bool operator==(const SparseArrayCursor& rhs) const { return _array == rhs._array && _index == rhs._index; }
-    bool operator!=(const SparseArrayCursor& rhs) const { return !(*this == rhs); }
+    bool operator==(const SparseVectorCursor& rhs) const { return _container == rhs._container && _index == rhs._index; }
+    bool operator!=(const SparseVectorCursor& rhs) const { return !(*this == rhs); }
 
     // convert
-    inline SparseArrayIter<ContainerType, kConst>    as_iter() const { return { *this }; }
-    inline SparseArrayIterInv<ContainerType, kConst> as_iter_inv() const { return { *this }; }
-    inline CursorRange<SparseArrayCursor, false>     as_range() const { return { *this }; }
-    inline CursorRange<SparseArrayCursor, true>      as_range_inv() const { return { *this }; }
+    inline SparseVectorIter<ContainerType, kConst>    as_iter() const { return { *this }; }
+    inline SparseVectorIterInv<ContainerType, kConst> as_iter_inv() const { return { *this }; }
+    inline CursorRange<SparseVectorCursor, false>     as_range() const { return { *this }; }
+    inline CursorRange<SparseVectorCursor, true>      as_range_inv() const { return { *this }; }
 
 protected:
-    inline auto _data() const { return _array->memory().data(); }
-    inline auto _size() const { return _array->memory().sparse_size(); }
-    inline auto _bit_data() const { return _array->memory().bit_array(); }
-    inline bool _array_empty() const { return _array->empty(); }
+    inline auto _data() const { return _container->memory().data(); }
+    inline auto _size() const { return _container->memory().sparse_size(); }
+    inline auto _bit_data() const { return _container->memory().bit_data(); }
+    inline bool _container_empty() const { return _container->empty(); }
 
     inline void _reset_to_end_overflow() { _index = _size(); }
     inline void _reset_to_begin_overflow() { _index = npos; }
 
 private:
-    ContainerType* _array;
+    ContainerType* _container;
     SizeType       _index;
 };
 } // namespace skr::container

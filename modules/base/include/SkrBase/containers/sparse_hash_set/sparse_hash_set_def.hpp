@@ -6,11 +6,10 @@
 // SparseHashSet structs
 namespace skr::container
 {
-// SparseHashSet 的数据定义，存储于 SparseArray 中
+// SparseHashSet 的数据定义，存储于 SparseVector 中
 // 存储的 hash 用于快速比较，next 用于查找 hash 链表
-// TODO. memory traits 穿透
 template <typename T, typename TS, typename HashType>
-struct SparseHashSetData {
+struct SparseHashSetStorage {
     T          _sparse_hash_set_data;
     HashType   _sparse_hash_set_hash;
     mutable TS _sparse_hash_set_next;
@@ -77,11 +76,11 @@ private:
 };
 } // namespace skr::container
 
-// SparseHashSetData memory traits
+// SparseHashSetStorage memory traits
 namespace skr::memory
 {
 template <typename T, typename TS, typename HashType>
-struct MemoryTraits<skr::container::SparseHashSetData<T, TS, HashType>, skr::container::SparseHashSetData<T, TS, HashType>> : public MemoryTraits<T, T> {
+struct MemoryTraits<skr::container::SparseHashSetStorage<T, TS, HashType>, skr::container::SparseHashSetStorage<T, TS, HashType>> : public MemoryTraits<T, T> {
 };
 } // namespace skr::memory
 
@@ -89,7 +88,7 @@ struct MemoryTraits<skr::container::SparseHashSetData<T, TS, HashType>, skr::con
 namespace std
 {
 template <typename T, typename TS, typename HashType>
-SKR_INLINE void swap(::skr::container::SparseHashSetData<T, TS, HashType>& a, ::skr::container::SparseHashSetData<T, TS, HashType>& b)
+SKR_INLINE void swap(::skr::container::SparseHashSetStorage<T, TS, HashType>& a, ::skr::container::SparseHashSetStorage<T, TS, HashType>& b)
 {
     ::std::swap(a._sparse_hash_set_data, b._sparse_hash_set_data);
     ::std::swap(a._sparse_hash_set_hash, b._sparse_hash_set_hash);
