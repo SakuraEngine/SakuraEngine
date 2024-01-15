@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrBase/types.h"
-#include "SkrBase/containers/array/array_memory.hpp"
-#include "SkrBase/containers/array/array.hpp"
+#include "SkrBase/containers/vector/vector_memory.hpp"
+#include "SkrBase/containers/vector/vector.hpp"
 #include "SkrContainers/skr_allocator.hpp"
 
 namespace skr

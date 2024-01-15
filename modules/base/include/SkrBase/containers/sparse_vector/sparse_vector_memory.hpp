@@ -1,11 +1,11 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/algo/bit_algo.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array_def.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector_def.hpp"
 #include "SkrBase/misc/debug.h"
 #include "SkrBase/containers/misc/placeholder.hpp"
 #include "SkrBase/containers/allocator/allocator.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array_helper.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector_helper.hpp"
 #include <algorithm>
 
 // util sparse array memory

@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_traits.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array_memory.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector_memory.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_def.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array_iterator.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector_iterator.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_helper.hpp"
 
 // util sparse hash set memory

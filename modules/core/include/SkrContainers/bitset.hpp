@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/types.h"
-#include "SkrBase/containers/bit_array/bit_set.hpp"
+#include "SkrBase/containers/bit_set/bit_set.hpp"
 
 namespace skr
 {
