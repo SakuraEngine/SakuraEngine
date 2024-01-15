@@ -16,7 +16,7 @@ struct SparseVectorMemory : public Allocator {
     // configure
     using SizeType           = TS;
     using DataType           = T;
-    using StorageType        = SparseVectorData<T, SizeType>;
+    using StorageType        = SparseVectorStorage<T, SizeType>;
     using BitBlockType       = TBitBlock;
     using AllocatorCtorParam = typename Allocator::CtorParam;
 
@@ -299,7 +299,7 @@ struct FixedSparseVectorMemory {
     // configure
     using SizeType           = TS;
     using DataType           = T;
-    using StorageType        = SparseVectorData<T, SizeType>;
+    using StorageType        = SparseVectorStorage<T, SizeType>;
     using BitBlockType       = TBitBlock;
     using AllocatorCtorParam = DummyParam;
 
@@ -469,7 +469,7 @@ struct InlineSparseVectorMemory : public Allocator {
     // configure
     using SizeType           = TS;
     using DataType           = T;
-    using StorageType        = SparseVectorData<T, SizeType>;
+    using StorageType        = SparseVectorStorage<T, SizeType>;
     using BitBlockType       = TBitBlock;
     using AllocatorCtorParam = typename Allocator::CtorParam;
 
