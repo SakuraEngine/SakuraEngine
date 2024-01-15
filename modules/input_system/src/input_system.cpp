@@ -30,7 +30,7 @@ struct InputSystemImpl : public InputSystem {
     // create
     [[nodiscard]] SObjectPtr<InputAction> create_input_action(EValueType type) SKR_NOEXCEPT final;
 
-    skr::UMap<int32_t, SObjectPtr<InputMappingContext>> contexts;
+    skr::Map<int32_t, SObjectPtr<InputMappingContext>> contexts;
     struct RawInput {
         RawInput() SKR_NOEXCEPT = default;
         RawInput(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
@@ -42,7 +42,7 @@ struct InputSystemImpl : public InputSystem {
         InputLayer*   layer   = nullptr;
         InputReading* reading = nullptr;
     };
-    skr::UMap<EInputKind, skr::Vector<RawInput>> inputs;
+    skr::Map<EInputKind, skr::Vector<RawInput>> inputs;
     skr::Vector<SObjectPtr<InputAction>>         actions;
 };
 

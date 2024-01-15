@@ -21,7 +21,7 @@ SKR_GUI_API GestureArenaManager {
     bool route_event(Event* event);
 
 private:
-    UMap<CombinePointerId, GestureArena*> _arenas = {};
+    Map<CombinePointerId, GestureArena*> _arenas = {};
 };
 } // namespace gui sreflect
 } // namespace skr sreflect

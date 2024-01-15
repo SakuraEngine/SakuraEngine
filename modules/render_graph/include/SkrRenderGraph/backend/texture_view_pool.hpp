@@ -53,7 +53,7 @@ public:
 
 protected:
     CGPUDeviceId                      device;
-    skr::UMap<Key, PooledTextureView> views;
+    skr::Map<Key, PooledTextureView> views;
 };
 } // namespace render_graph
 } // namespace skr

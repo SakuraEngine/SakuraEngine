@@ -118,8 +118,8 @@ public:
 
     skr::stl_vector<skr_io_future_t>         expressionFutures;
     skr::stl_vector<skr::BlobId>             expressionBlobs;
-    skr::UMap<skr_io_future_t*, skr::String> expressionNames;
-    skr::UMap<skr_io_future_t*, skr::String> expressionPaths;
+    skr::Map<skr_io_future_t*, skr::String> expressionNames;
+    skr::Map<skr_io_future_t*, skr::String> expressionPaths;
     L2DRequestCallbackData*                  cbData;
 };
 class csmMotionMap : public csmMap<csmString, csmVector<ACubismMotion*>>, public IAsyncL2DResourceInterface
@@ -131,8 +131,8 @@ public:
 
     skr::stl_vector<skr_io_future_t>                              motionFutures;
     skr::stl_vector<skr::BlobId>                                  motionBlobs;
-    skr::UMap<skr_io_future_t*, std::pair<skr::String, uint32_t>> motionEntries;
-    skr::UMap<skr_io_future_t*, skr::String>                      motionPaths;
+    skr::Map<skr_io_future_t*, std::pair<skr::String, uint32_t>> motionEntries;
+    skr::Map<skr_io_future_t*, skr::String>                      motionPaths;
     L2DRequestCallbackData*                                       cbData;
 };
 } // namespace Framework

@@ -63,8 +63,8 @@ struct skr_live2d_render_model_t {
     skr::Vector<skr::renderer::IndexBufferView>  index_buffer_views;
     skr::Vector<skr::renderer::PrimitiveCommand> primitive_commands;
     // bind table cache
-    skr::UMap<CGPUTextureViewId, CGPUXBindTableId> bind_tables;
-    skr::UMap<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;
+    skr::Map<CGPUTextureViewId, CGPUXBindTableId> bind_tables;
+    skr::Map<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;
 };
 
     #include "SkrRT/ecs/sugoi.h"

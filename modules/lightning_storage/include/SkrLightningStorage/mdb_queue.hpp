@@ -25,7 +25,7 @@ struct TopicDesc {
 
 struct TopicStatus {
     uint64_t                         producer_head;
-    skr::UMap<skr::String, uint64_t> consumer_heads;
+    skr::Map<skr::String, uint64_t> consumer_heads;
 };
 
 struct Environment {
@@ -46,7 +46,7 @@ private:
     Environment& operator=(const Environment&);
 
     using TopicPtr = skr::SPtr<Topic>;
-    using TopicMap = skr::UMap<skr::String, TopicPtr>;
+    using TopicMap = skr::Map<skr::String, TopicPtr>;
 
     skr::String             _root;
     skr::mdb::EnvironmentId _env;
@@ -60,7 +60,7 @@ public:
 
 private:
     using EnvPtr = skr::SPtr<Environment>;
-    using EnvMap = skr::UMap<skr::String, EnvPtr>;
+    using EnvMap = skr::Map<skr::String, EnvPtr>;
     SMutex _mtx;
     EnvMap _envMap;
 };

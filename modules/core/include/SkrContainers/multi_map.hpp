@@ -8,7 +8,7 @@
 namespace skr
 {
 template <typename K, typename V, typename HashTraits = container::HashTraits<K>, typename Allocator = SkrAllocator>
-using MultiUMap = container::MultiSparseHashMap<container::SparseHashMapMemory<
+using MultiMap = container::MultiSparseHashMap<container::SparseHashMapMemory<
 K,           /*Key Type*/
 V,           /*Value Type*/
 uint64_t,    /*BitBlock Type*/
@@ -17,7 +17,7 @@ uint64_t,    /*Size Type*/
 Allocator>>; /*Allocator Type*/
 
 template <typename K, typename V, uint64_t kCount, typename HashTraits = container::HashTraits<K>>
-using FixedMultiUMap = container::MultiSparseHashMap<container::FixedSparseHashMapMemory<
+using FixedMultiMap = container::MultiSparseHashMap<container::FixedSparseHashMapMemory<
 K,          /*Key Type*/
 V,          /*Value Type*/
 uint64_t,   /*BitBlock Type*/
@@ -27,7 +27,7 @@ kCount      /*Count*/
 >>;
 
 template <typename K, typename V, uint64_t kInlineCount, typename HashTraits = container::HashTraits<K>, typename Allocator = SkrAllocator>
-using InlineMultiUMap = container::MultiSparseHashMap<container::InlineSparseHashMapMemory<
+using InlineMultiMap = container::MultiSparseHashMap<container::InlineSparseHashMapMemory<
 K,            /*Key Type*/
 V,            /*Value Type*/
 uint64_t,     /*BitBlock Type*/

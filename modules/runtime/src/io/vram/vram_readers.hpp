@@ -65,7 +65,7 @@ private:
     SAtomic32         rcs[2]   = { 0, 0 };
     uint32_t          index    = 0;
 };
-using SwapableCmdPoolMap = skr::UMap<CGPUQueueId, SwapableCmdPool>;
+using SwapableCmdPoolMap = skr::Map<CGPUQueueId, SwapableCmdPool>;
 
 struct GPUUploadCmd {
     GPUUploadCmd() SKR_NOEXCEPT;

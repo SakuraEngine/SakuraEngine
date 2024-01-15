@@ -94,10 +94,10 @@ private:
     RenderGraph* _render_graph = nullptr;
 
     // PSO
-    skr::UMap<SkrPipelineKey, CGPURenderPipelineId> _pipelines;
-    CGPURootSignaturePoolId                         _rs_pool;
-    CGPUSamplerId                                   _static_color_sampler;
-    CGPUVertexLayout                                _vertex_layout = {};
+    skr::Map<SkrPipelineKey, CGPURenderPipelineId> _pipelines;
+    CGPURootSignaturePoolId                        _rs_pool;
+    CGPUSamplerId                                  _static_color_sampler;
+    CGPUVertexLayout                               _vertex_layout = {};
 
     // Texture updates
     Array<IUpdatableImage*> _texture_updates;

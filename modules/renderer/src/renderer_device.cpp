@@ -80,8 +80,8 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice {
 protected:
     // Device objects
     uint32_t                                  backbuffer_index = 0;
-    skr::UMap<SWindowHandle, CGPUSurfaceId>   surfaces;
-    skr::UMap<SWindowHandle, CGPUSwapChainId> swapchains;
+    skr::Map<SWindowHandle, CGPUSurfaceId>   surfaces;
+    skr::Map<SWindowHandle, CGPUSwapChainId> swapchains;
     CGPUInstanceId                            instance  = nullptr;
     CGPUAdapterId                             adapter   = nullptr;
     CGPUDeviceId                              device    = nullptr;
