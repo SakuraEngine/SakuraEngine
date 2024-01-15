@@ -1,7 +1,7 @@
 #pragma once
-#include "SkrBase/containers/sparse_array/sparse_array_memory.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector_memory.hpp"
 #include "SkrContainers/skr_allocator.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector.hpp"
 
 namespace skr
 {

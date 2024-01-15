@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/containers/bit_array/bit_iterator.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array_def.hpp"
+#include "SkrBase/containers/bit_tools/bit_iterator.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector_def.hpp"
 
 // helper function
 namespace skr::container

@@ -2,7 +2,7 @@
 #include "SkrBase/config.h"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_def.hpp"
 #include "sparse_hash_set_iterator.hpp"
-#include "SkrBase/containers/sparse_array/sparse_array.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector.hpp"
 #include "SkrBase/containers/misc/transparent.hpp"
 
 namespace skr::container

@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrBase/containers/sparse_array/sparse_array_iterator.hpp"
+#include "SkrBase/containers/sparse_vector/sparse_vector_iterator.hpp"
 
 namespace skr::container
 {

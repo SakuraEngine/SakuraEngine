@@ -2,8 +2,8 @@
 #include "SkrBase/config.h"
 #include "SkrBase/memory/memory_ops.hpp"
 #include "SkrBase/algo/bit_algo.hpp"
-#include "bit_ref.hpp"
-#include "bit_iterator.hpp"
+#include "SkrBase/containers/bit_tools/bit_ref.hpp"
+#include "SkrBase/containers/bit_tools/bit_iterator.hpp"
 #include <algorithm>
 
 // BitArray def

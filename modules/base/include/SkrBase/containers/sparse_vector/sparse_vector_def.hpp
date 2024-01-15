@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/containers/array/array_def.hpp"
+#include "SkrBase/containers/vector/vector_def.hpp"
 #include "SkrBase/memory/memory_traits.hpp"
 
 // SparseArray structs
