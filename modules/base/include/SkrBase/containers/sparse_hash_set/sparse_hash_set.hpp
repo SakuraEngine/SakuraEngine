@@ -21,7 +21,7 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     using typename Super::SetStorageType;
 
     // helper
-    using DataArr                         = SparseVector<Memory>;
+    using DataVector                      = SparseVector<Memory>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // data ref
@@ -69,7 +69,7 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     using Super::free_list_head;
     using Super::is_compact;
     using Super::empty;
-    using Super::data_arr;
+    using Super::data_vector;
     using Super::bucket;
     using Super::memory;
 
@@ -347,7 +347,7 @@ template <typename... Args>
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplace(Args&&... args)
 {
     // emplace to data vector
-    auto data_arr_ref = data_arr().add_unsafe();
+    auto data_arr_ref = data_vector().add_unsafe();
     new (&data_arr_ref.ref()._sparse_hash_set_data) SetDataType(std::forward<Args>(args)...);
     data_arr_ref.ref()._sparse_hash_set_hash = HasherType()(data_arr_ref.ref()._sparse_hash_set_data);
 
@@ -361,7 +361,7 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplac
         memory::move(ref.ptr(), &data_arr_ref.ref()._sparse_hash_set_data);
 
         // remove placeholder
-        data_arr().remove_at_unsafe(data_arr_ref.index());
+        data_vector().remove_at_unsafe(data_arr_ref.index());
 
         // return old data
         return { ref.ptr(), ref.index(), ref.hash(), true };
@@ -396,7 +396,7 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplac
     }
     else
     { // add case
-        auto data_arr_ref = data_arr().add_unsafe();
+        auto data_arr_ref = data_vector().add_unsafe();
         new (&data_arr_ref.ref()._sparse_hash_set_data) SetDataType(std::forward<Args>(args)...);
         data_arr_ref.ref()._sparse_hash_set_hash = HasherType()(data_arr_ref.ref()._sparse_hash_set_data);
         SKR_ASSERT(data_arr_ref.ref()._sparse_hash_set_hash = hint.hash());
@@ -428,8 +428,8 @@ SKR_INLINE void SparseHashSet<Memory>::append(const SparseHashSet& rhs)
     // reserve and add
     if (!cursor.reach_end())
     {
-        auto new_capacity = data_arr().capacity() + (rhs.size() - count);
-        data_arr().reserve(new_capacity);
+        auto new_capacity = data_vector().capacity() + (rhs.size() - count);
+        data_vector().reserve(new_capacity);
 
         while (!cursor.reach_end())
         {
@@ -453,8 +453,8 @@ SKR_INLINE void SparseHashSet<Memory>::append(std::initializer_list<SetDataType>
     // reserve and add
     if (read_idx < init_list.size())
     {
-        auto new_capacity = data_arr().capacity() + (init_list.size() - read_idx);
-        data_arr().reserve(new_capacity);
+        auto new_capacity = data_vector().capacity() + (init_list.size() - read_idx);
+        data_vector().reserve(new_capacity);
 
         while (read_idx < init_list.size())
         {
@@ -479,8 +479,8 @@ SKR_INLINE void SparseHashSet<Memory>::append(const SetDataType* p, SizeType n)
     // reserve and add
     if (read_idx < n)
     {
-        auto new_capacity = data_arr().capacity() + (n - read_idx);
-        data_arr().reserve(new_capacity);
+        auto new_capacity = data_vector().capacity() + (n - read_idx);
+        data_vector().reserve(new_capacity);
 
         while (read_idx < n)
         {

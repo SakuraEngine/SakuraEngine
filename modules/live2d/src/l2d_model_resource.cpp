@@ -490,13 +490,15 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         }
     }
     auto batch = ioService->open_batch(motionFutures.size());
+    SKR_ASSERT(motionPaths.is_compact() && "use at() API in an sparse map is not safe");
+    SKR_ASSERT(motionEntries.is_compact() && "use at() API in an sparse map is not safe");
     for (uint32_t i = 0; i < motionFutures.size(); i++)
     {
         SkrZoneScopedN("Request Motion");
 
         auto& future = motionFutures[i];
-        const auto& path = motionPaths.data_arr()[i]._sparse_hash_set_data.value;
-        const auto& entry = motionEntries.data_arr()[i]._sparse_hash_set_data.value;
+        const auto& path = motionPaths.at(i).value;
+        const auto& entry = motionEntries.at(i).value;
         SKR_LOG_TRACE(u8"Request Live2D Motion in group %s at %d", entry.first.c_str(), entry.second);
 
         auto rq = ioService->open_request();
