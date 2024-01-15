@@ -24,19 +24,19 @@ using TestAllocatorType = SkrTestAllocator;
 
 //===========Array===================================================================
 template <typename T>
-using Array = container::Array<container::ArrayMemory<
+using Array = container::Vector<container::VectorMemory<
 T,
 TestSizeType,
 TestAllocatorType>>;
 
 template <typename T, uint64_t kCount>
-using FixedArray = container::Array<container::FixedArrayMemory<
+using FixedArray = container::Vector<container::FixedVectorMemory<
 T,
 TestSizeType,
 kCount>>;
 
 template <typename T, uint64_t kInlineCount>
-using InlineArray = container::Array<container::InlineArrayMemory<
+using InlineArray = container::Vector<container::InlineVectorMemory<
 T,
 TestSizeType,
 kInlineCount,

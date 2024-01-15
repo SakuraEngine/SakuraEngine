@@ -4,5 +4,5 @@
 namespace skr::container
 {
 template <typename T, typename TS, bool kConst>
-using RingBufferDataRef = ArrayDataRef<T, TS, kConst>;
+using RingBufferDataRef = VectorDataRef<T, TS, kConst>;
 }

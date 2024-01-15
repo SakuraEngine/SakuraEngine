@@ -6,55 +6,55 @@
 #include "SkrBase/containers/vector/vector_def.hpp"
 #include "SkrBase/containers/vector/vector_iterator.hpp"
 
-// Array def
+// Vector def
 namespace skr::container
 {
 template <typename Memory>
-struct Array : protected Memory {
+struct Vector : protected Memory {
     // from memory
     using typename Memory::DataType;
     using typename Memory::SizeType;
     using typename Memory::AllocatorCtorParam;
 
     // data ref
-    using DataRef  = ArrayDataRef<DataType, SizeType, false>;
-    using CDataRef = ArrayDataRef<DataType, SizeType, true>;
+    using DataRef  = VectorDataRef<DataType, SizeType, false>;
+    using CDataRef = VectorDataRef<DataType, SizeType, true>;
 
     // cursor & iterator
-    using Cursor   = ArrayCursor<Array, false>;
-    using CCursor  = ArrayCursor<Array, true>;
-    using Iter     = ArrayIter<Array, false>;
-    using CIter    = ArrayIter<Array, true>;
-    using IterInv  = ArrayIterInv<Array, false>;
-    using CIterInv = ArrayIterInv<Array, true>;
+    using Cursor   = VectorCursor<Vector, false>;
+    using CCursor  = VectorCursor<Vector, true>;
+    using Iter     = VectorIter<Vector, false>;
+    using CIter    = VectorIter<Vector, true>;
+    using IterInv  = VectorIterInv<Vector, false>;
+    using CIterInv = VectorIterInv<Vector, true>;
 
     // stl iterator
     using StlIt  = DataType*;
     using CStlIt = const DataType*;
 
     // ctor & dtor
-    Array(AllocatorCtorParam param = {}) noexcept;
-    Array(SizeType size, AllocatorCtorParam param = {}) noexcept;
-    Array(SizeType size, const DataType& v, AllocatorCtorParam param = {}) noexcept;
-    Array(const DataType* p, SizeType n, AllocatorCtorParam param = {}) noexcept;
-    Array(std::initializer_list<DataType> init_list, AllocatorCtorParam param = {}) noexcept;
-    ~Array();
+    Vector(AllocatorCtorParam param = {}) noexcept;
+    Vector(SizeType size, AllocatorCtorParam param = {}) noexcept;
+    Vector(SizeType size, const DataType& v, AllocatorCtorParam param = {}) noexcept;
+    Vector(const DataType* p, SizeType n, AllocatorCtorParam param = {}) noexcept;
+    Vector(std::initializer_list<DataType> init_list, AllocatorCtorParam param = {}) noexcept;
+    ~Vector();
 
     // copy & move
-    Array(const Array& other);
-    Array(Array&& other) noexcept;
+    Vector(const Vector& other);
+    Vector(Vector&& other) noexcept;
 
     // assign & move assign
-    Array& operator=(const Array& rhs);
-    Array& operator=(Array&& rhs) noexcept;
+    Vector& operator=(const Vector& rhs);
+    Vector& operator=(Vector&& rhs) noexcept;
 
     // special assign
     void assign(const DataType* p, SizeType n);
     void assign(std::initializer_list<DataType> init_list);
 
     // compare
-    bool operator==(const Array& rhs) const;
-    bool operator!=(const Array& rhs) const;
+    bool operator==(const Vector& rhs) const;
+    bool operator!=(const Vector& rhs) const;
 
     // getter
     SizeType        size() const;
@@ -101,13 +101,13 @@ struct Array : protected Memory {
     void emplace_at(SizeType index, Args&&... args);
 
     // append
-    DataRef append(const Array& arr);
+    DataRef append(const Vector& arr);
     DataRef append(std::initializer_list<DataType> init_list);
     template <typename U = DataType>
     DataRef append(const U* p, SizeType n);
 
     // append at
-    void append_at(SizeType idx, const Array& arr);
+    void append_at(SizeType idx, const Vector& arr);
     void append_at(SizeType idx, std::initializer_list<DataType> init_list);
     template <typename U = DataType>
     void append_at(SizeType idx, const U* p, SizeType n);
@@ -116,7 +116,7 @@ struct Array : protected Memory {
     DataRef operator+=(const DataType& v);
     DataRef operator+=(DataType&& v);
     DataRef operator+=(std::initializer_list<DataType> init_list);
-    DataRef operator+=(const Array& arr);
+    DataRef operator+=(const Vector& arr);
 
     // remove
     void remove_at(SizeType index, SizeType n = 1);
@@ -263,7 +263,7 @@ struct Array : protected Memory {
     void   erase_swap(const CDataRef& ref);
 
     // syntax
-    const Array& readonly() const;
+    const Vector& readonly() const;
 
 private:
     // helper
@@ -273,73 +273,73 @@ private:
 };
 } // namespace skr::container
 
-// Array impl
+// Vector impl
 namespace skr::container
 {
 // helper
 template <typename Memory>
-SKR_INLINE void Array<Memory>::_realloc(SizeType expect_capacity)
+SKR_INLINE void Vector<Memory>::_realloc(SizeType expect_capacity)
 {
     Memory::realloc(expect_capacity);
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::_free()
+SKR_INLINE void Vector<Memory>::_free()
 {
     Memory::free();
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::_set_size(SizeType new_size)
+SKR_INLINE void Vector<Memory>::_set_size(SizeType new_size)
 {
     Memory::set_size(new_size);
 }
 
 // ctor & dtor
 template <typename Memory>
-SKR_INLINE Array<Memory>::Array(AllocatorCtorParam param) noexcept
+SKR_INLINE Vector<Memory>::Vector(AllocatorCtorParam param) noexcept
     : Memory(std::move(param))
 {
 }
 template <typename Memory>
-SKR_INLINE Array<Memory>::Array(SizeType size, AllocatorCtorParam param) noexcept
+SKR_INLINE Vector<Memory>::Vector(SizeType size, AllocatorCtorParam param) noexcept
     : Memory(std::move(param))
 {
     resize_default(size);
 }
 template <typename Memory>
-SKR_INLINE Array<Memory>::Array(SizeType size, const DataType& v, AllocatorCtorParam param) noexcept
+SKR_INLINE Vector<Memory>::Vector(SizeType size, const DataType& v, AllocatorCtorParam param) noexcept
     : Memory(std::move(param))
 {
     resize(size, v);
 }
 template <typename Memory>
-SKR_INLINE Array<Memory>::Array(const DataType* p, SizeType n, AllocatorCtorParam param) noexcept
+SKR_INLINE Vector<Memory>::Vector(const DataType* p, SizeType n, AllocatorCtorParam param) noexcept
     : Memory(std::move(param))
 {
     resize_unsafe(n);
     memory::copy(data(), p, n);
 }
 template <typename Memory>
-SKR_INLINE Array<Memory>::Array(std::initializer_list<DataType> init_list, AllocatorCtorParam param) noexcept
+SKR_INLINE Vector<Memory>::Vector(std::initializer_list<DataType> init_list, AllocatorCtorParam param) noexcept
     : Memory(std::move(param))
 {
     resize_unsafe(init_list.size());
     memory::copy(data(), init_list.begin(), init_list.size());
 }
 template <typename Memory>
-SKR_INLINE Array<Memory>::~Array()
+SKR_INLINE Vector<Memory>::~Vector()
 {
     // handled in memory
 }
 
 // copy & move
 template <typename Memory>
-SKR_INLINE Array<Memory>::Array(const Array& other)
+SKR_INLINE Vector<Memory>::Vector(const Vector& other)
     : Memory(other)
 {
     // handled in memory
 }
 template <typename Memory>
-SKR_INLINE Array<Memory>::Array(Array&& other) noexcept
+SKR_INLINE Vector<Memory>::Vector(Vector&& other) noexcept
     : Memory(std::move(other))
 {
     // handled in memory
@@ -347,13 +347,13 @@ SKR_INLINE Array<Memory>::Array(Array&& other) noexcept
 
 // assign & move assign
 template <typename Memory>
-SKR_INLINE Array<Memory>& Array<Memory>::operator=(const Array& rhs)
+SKR_INLINE Vector<Memory>& Vector<Memory>::operator=(const Vector& rhs)
 {
     Memory::operator=(rhs);
     return *this;
 }
 template <typename Memory>
-SKR_INLINE Array<Memory>& Array<Memory>::operator=(Array&& rhs) noexcept
+SKR_INLINE Vector<Memory>& Vector<Memory>::operator=(Vector&& rhs) noexcept
 {
     Memory::operator=(std::move(rhs));
     return *this;
@@ -361,7 +361,7 @@ SKR_INLINE Array<Memory>& Array<Memory>::operator=(Array&& rhs) noexcept
 
 // special assign
 template <typename Memory>
-SKR_INLINE void Array<Memory>::assign(const DataType* p, SizeType n)
+SKR_INLINE void Vector<Memory>::assign(const DataType* p, SizeType n)
 {
     // clear and resize
     clear();
@@ -371,80 +371,80 @@ SKR_INLINE void Array<Memory>::assign(const DataType* p, SizeType n)
     memory::copy(data(), p, n);
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::assign(std::initializer_list<DataType> init_list)
+SKR_INLINE void Vector<Memory>::assign(std::initializer_list<DataType> init_list)
 {
     assign(init_list.begin(), init_list.size());
 }
 
 // compare
 template <typename Memory>
-SKR_INLINE bool Array<Memory>::operator==(const Array& rhs) const
+SKR_INLINE bool Vector<Memory>::operator==(const Vector& rhs) const
 {
     return size() == rhs.size() && memory::compare(data(), rhs.data(), size());
 }
 template <typename Memory>
-SKR_INLINE bool Array<Memory>::operator!=(const Array& rhs) const
+SKR_INLINE bool Vector<Memory>::operator!=(const Vector& rhs) const
 {
     return !(*this == rhs);
 }
 
 // getter
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::size() const
+SKR_INLINE typename Vector<Memory>::SizeType Vector<Memory>::size() const
 {
     return Memory::size();
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::capacity() const
+SKR_INLINE typename Vector<Memory>::SizeType Vector<Memory>::capacity() const
 {
     return Memory::capacity();
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::slack() const
+SKR_INLINE typename Vector<Memory>::SizeType Vector<Memory>::slack() const
 {
     return capacity() - size();
 }
 template <typename Memory>
-SKR_INLINE bool Array<Memory>::empty() const
+SKR_INLINE bool Vector<Memory>::empty() const
 {
     return size() == 0;
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataType* Array<Memory>::data()
+SKR_INLINE typename Vector<Memory>::DataType* Vector<Memory>::data()
 {
     return Memory::data();
 }
 template <typename Memory>
-SKR_INLINE const typename Array<Memory>::DataType* Array<Memory>::data() const
+SKR_INLINE const typename Vector<Memory>::DataType* Vector<Memory>::data() const
 {
     return Memory::data();
 }
 template <typename Memory>
-SKR_INLINE Memory& Array<Memory>::memory()
+SKR_INLINE Memory& Vector<Memory>::memory()
 {
     return *this;
 }
 template <typename Memory>
-SKR_INLINE const Memory& Array<Memory>::memory() const
+SKR_INLINE const Memory& Vector<Memory>::memory() const
 {
     return *this;
 }
 
 // validate
 template <typename Memory>
-SKR_INLINE bool Array<Memory>::is_valid_index(SizeType idx) const
+SKR_INLINE bool Vector<Memory>::is_valid_index(SizeType idx) const
 {
     return idx >= 0 && idx < size();
 }
 
 // memory op
 template <typename Memory>
-SKR_INLINE void Array<Memory>::clear()
+SKR_INLINE void Vector<Memory>::clear()
 {
     Memory::clear();
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::release(SizeType reserve_capacity)
+SKR_INLINE void Vector<Memory>::release(SizeType reserve_capacity)
 {
     clear();
     if (reserve_capacity)
@@ -457,7 +457,7 @@ SKR_INLINE void Array<Memory>::release(SizeType reserve_capacity)
     }
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::reserve(SizeType expect_capacity)
+SKR_INLINE void Vector<Memory>::reserve(SizeType expect_capacity)
 {
     if (expect_capacity > capacity())
     {
@@ -465,12 +465,12 @@ SKR_INLINE void Array<Memory>::reserve(SizeType expect_capacity)
     }
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::shrink()
+SKR_INLINE void Vector<Memory>::shrink()
 {
     Memory::shrink();
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::resize(SizeType expect_size, const DataType& new_value)
+SKR_INLINE void Vector<Memory>::resize(SizeType expect_size, const DataType& new_value)
 {
     // realloc memory if need
     if (expect_size > capacity())
@@ -495,7 +495,7 @@ SKR_INLINE void Array<Memory>::resize(SizeType expect_size, const DataType& new_
     _set_size(expect_size);
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::resize_unsafe(SizeType expect_size)
+SKR_INLINE void Vector<Memory>::resize_unsafe(SizeType expect_size)
 {
     // realloc memory if need
     if (expect_size > capacity())
@@ -513,7 +513,7 @@ SKR_INLINE void Array<Memory>::resize_unsafe(SizeType expect_size)
     _set_size(expect_size);
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::resize_default(SizeType expect_size)
+SKR_INLINE void Vector<Memory>::resize_default(SizeType expect_size)
 {
     // realloc memory if need
     if (expect_size > capacity())
@@ -535,7 +535,7 @@ SKR_INLINE void Array<Memory>::resize_default(SizeType expect_size)
     _set_size(expect_size);
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::resize_zeroed(SizeType expect_size)
+SKR_INLINE void Vector<Memory>::resize_zeroed(SizeType expect_size)
 {
     // realloc memory if need
     if (expect_size > capacity())
@@ -559,7 +559,7 @@ SKR_INLINE void Array<Memory>::resize_zeroed(SizeType expect_size)
 
 // add
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add(const DataType& v, SizeType n)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::add(const DataType& v, SizeType n)
 {
     DataRef ref = add_unsafe(n);
     for (SizeType i = ref.index(); i < size(); ++i)
@@ -569,14 +569,14 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add(const DataType& v,
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add(DataType&& v)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::add(DataType&& v)
 {
     DataRef ref = add_unsafe();
     new (ref.ptr()) DataType(std::move(v));
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add_unique(const DataType& v)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::add_unique(const DataType& v)
 {
     if (DataRef ref = find(v))
     {
@@ -588,20 +588,20 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add_unique(const DataT
     }
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add_unsafe(SizeType n)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::add_unsafe(SizeType n)
 {
     SizeType old_size = Memory::grow(n);
     return { data() + old_size, old_size };
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add_default(SizeType n)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::add_default(SizeType n)
 {
     DataRef ref = add_unsafe(n);
     memory::construct(ref.ptr(), n);
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add_zeroed(SizeType n)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::add_zeroed(SizeType n)
 {
     DataRef ref = add_unsafe(n);
     std::memset(ref.ptr(), 0, n * sizeof(DataType));
@@ -610,7 +610,7 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::add_zeroed(SizeType n)
 
 // add at
 template <typename Memory>
-SKR_INLINE void Array<Memory>::add_at(SizeType idx, const DataType& v, SizeType n)
+SKR_INLINE void Vector<Memory>::add_at(SizeType idx, const DataType& v, SizeType n)
 {
     add_at_unsafe(idx, n);
     for (SizeType i = 0; i < n; ++i)
@@ -619,13 +619,13 @@ SKR_INLINE void Array<Memory>::add_at(SizeType idx, const DataType& v, SizeType 
     }
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::add_at(SizeType idx, DataType&& v)
+SKR_INLINE void Vector<Memory>::add_at(SizeType idx, DataType&& v)
 {
     add_at_unsafe(idx);
     new (data() + idx) DataType(std::move(v));
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::add_at_unsafe(SizeType idx, SizeType n)
+SKR_INLINE void Vector<Memory>::add_at_unsafe(SizeType idx, SizeType n)
 {
     SKR_ASSERT((empty() && idx == 0) || is_valid_index(idx));
     auto move_n = size() - idx;
@@ -633,13 +633,13 @@ SKR_INLINE void Array<Memory>::add_at_unsafe(SizeType idx, SizeType n)
     memory::move(data() + idx + n, data() + idx, move_n);
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::add_at_default(SizeType idx, SizeType n)
+SKR_INLINE void Vector<Memory>::add_at_default(SizeType idx, SizeType n)
 {
     add_at_unsafe(idx, n);
     memory::construct(data() + idx, n);
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::add_at_zeroed(SizeType idx, SizeType n)
+SKR_INLINE void Vector<Memory>::add_at_zeroed(SizeType idx, SizeType n)
 {
     add_at_unsafe(idx, n);
     std::memset(data() + idx, 0, n * sizeof(DataType));
@@ -648,7 +648,7 @@ SKR_INLINE void Array<Memory>::add_at_zeroed(SizeType idx, SizeType n)
 // emplace
 template <typename Memory>
 template <typename... Args>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::emplace(Args&&... args)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::emplace(Args&&... args)
 {
     DataRef ref = add_unsafe();
     new (ref.ptr()) DataType(std::forward<Args>(args)...);
@@ -656,7 +656,7 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::emplace(Args&&... args
 }
 template <typename Memory>
 template <typename... Args>
-SKR_INLINE void Array<Memory>::emplace_at(SizeType index, Args&&... args)
+SKR_INLINE void Vector<Memory>::emplace_at(SizeType index, Args&&... args)
 {
     add_at_unsafe(index);
     new (data() + index) DataType(std::forward<Args>(args)...);
@@ -664,7 +664,7 @@ SKR_INLINE void Array<Memory>::emplace_at(SizeType index, Args&&... args)
 
 // append
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(const Array& arr)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::append(const Vector& arr)
 {
     if (arr.size())
     {
@@ -675,7 +675,7 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(const Array& ar
     return data() ? DataRef(data() + size(), size()) : DataRef();
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(std::initializer_list<DataType> init_list)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::append(std::initializer_list<DataType> init_list)
 {
     if (init_list.size())
     {
@@ -687,7 +687,7 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(std::initialize
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(const U* p, SizeType n)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::append(const U* p, SizeType n)
 {
     if (n)
     {
@@ -700,7 +700,7 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::append(const U* p, Siz
 
 // append at
 template <typename Memory>
-SKR_INLINE void Array<Memory>::append_at(SizeType idx, const Array& arr)
+SKR_INLINE void Vector<Memory>::append_at(SizeType idx, const Vector& arr)
 {
     if (arr.size())
     {
@@ -709,7 +709,7 @@ SKR_INLINE void Array<Memory>::append_at(SizeType idx, const Array& arr)
     }
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::append_at(SizeType idx, std::initializer_list<DataType> init_list)
+SKR_INLINE void Vector<Memory>::append_at(SizeType idx, std::initializer_list<DataType> init_list)
 {
     if (init_list.size())
     {
@@ -719,7 +719,7 @@ SKR_INLINE void Array<Memory>::append_at(SizeType idx, std::initializer_list<Dat
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE void Array<Memory>::append_at(SizeType idx, const U* p, SizeType n)
+SKR_INLINE void Vector<Memory>::append_at(SizeType idx, const U* p, SizeType n)
 {
     if (n)
     {
@@ -730,17 +730,17 @@ SKR_INLINE void Array<Memory>::append_at(SizeType idx, const U* p, SizeType n)
 
 // operator append
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::operator+=(const DataType& v) { return add(v); }
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(const DataType& v) { return add(v); }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::operator+=(DataType&& v) { return add(std::move(v)); }
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(DataType&& v) { return add(std::move(v)); }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::operator+=(std::initializer_list<DataType> init_list) { return append(init_list); }
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(std::initializer_list<DataType> init_list) { return append(init_list); }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::operator+=(const Array<Memory>& arr) { return append(arr); }
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(const Vector<Memory>& arr) { return append(arr); }
 
 // remove
 template <typename Memory>
-SKR_INLINE void Array<Memory>::remove_at(SizeType index, SizeType n)
+SKR_INLINE void Vector<Memory>::remove_at(SizeType index, SizeType n)
 {
     SKR_ASSERT(is_valid_index(index) && size() - index >= n);
 
@@ -763,7 +763,7 @@ SKR_INLINE void Array<Memory>::remove_at(SizeType index, SizeType n)
     }
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::remove_at_swap(SizeType index, SizeType n)
+SKR_INLINE void Vector<Memory>::remove_at_swap(SizeType index, SizeType n)
 {
     SKR_ASSERT(is_valid_index(index) && size() - index >= n);
     if (n)
@@ -786,7 +786,7 @@ SKR_INLINE void Array<Memory>::remove_at_swap(SizeType index, SizeType n)
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE bool Array<Memory>::remove(const U& v)
+SKR_INLINE bool Vector<Memory>::remove(const U& v)
 {
     if (DataRef ref = find(v))
     {
@@ -797,7 +797,7 @@ SKR_INLINE bool Array<Memory>::remove(const U& v)
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE bool Array<Memory>::remove_swap(const U& v)
+SKR_INLINE bool Vector<Memory>::remove_swap(const U& v)
 {
     if (DataRef ref = find(v))
     {
@@ -808,7 +808,7 @@ SKR_INLINE bool Array<Memory>::remove_swap(const U& v)
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE bool Array<Memory>::remove_last(const U& v)
+SKR_INLINE bool Vector<Memory>::remove_last(const U& v)
 {
     if (DataRef ref = find_last(v))
     {
@@ -819,7 +819,7 @@ SKR_INLINE bool Array<Memory>::remove_last(const U& v)
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE bool Array<Memory>::remove_last_swap(const U& v)
+SKR_INLINE bool Vector<Memory>::remove_last_swap(const U& v)
 {
     if (DataRef ref = find_last(v))
     {
@@ -830,13 +830,13 @@ SKR_INLINE bool Array<Memory>::remove_last_swap(const U& v)
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all(const U& v)
+SKR_INLINE typename Vector<Memory>::SizeType Vector<Memory>::remove_all(const U& v)
 {
     return remove_all_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_swap(const U& v)
+SKR_INLINE typename Vector<Memory>::SizeType Vector<Memory>::remove_all_swap(const U& v)
 {
     return remove_all_if_swap([&v](const DataType& a) { return a == v; });
 }
@@ -844,7 +844,7 @@ SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_swap(const
 // remove by
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool Array<Memory>::remove_if(Pred&& pred)
+SKR_INLINE bool Vector<Memory>::remove_if(Pred&& pred)
 {
     if (DataRef ref = find_if(std::forward<Pred>(pred)))
     {
@@ -855,7 +855,7 @@ SKR_INLINE bool Array<Memory>::remove_if(Pred&& pred)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool Array<Memory>::remove_if_swap(Pred&& pred)
+SKR_INLINE bool Vector<Memory>::remove_if_swap(Pred&& pred)
 {
     if (DataRef ref = find_if(std::forward<Pred>(pred)))
     {
@@ -866,7 +866,7 @@ SKR_INLINE bool Array<Memory>::remove_if_swap(Pred&& pred)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool Array<Memory>::remove_last_if(Pred&& pred)
+SKR_INLINE bool Vector<Memory>::remove_last_if(Pred&& pred)
 {
     if (DataRef ref = find_last_if(std::forward<Pred>(pred)))
     {
@@ -877,7 +877,7 @@ SKR_INLINE bool Array<Memory>::remove_last_if(Pred&& pred)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool Array<Memory>::remove_last_if_swap(Pred&& pred)
+SKR_INLINE bool Vector<Memory>::remove_last_if_swap(Pred&& pred)
 {
     if (DataRef ref = find_last_if(std::forward<Pred>(pred)))
     {
@@ -888,7 +888,7 @@ SKR_INLINE bool Array<Memory>::remove_last_if_swap(Pred&& pred)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if(Pred&& pred)
+SKR_INLINE typename Vector<Memory>::SizeType Vector<Memory>::remove_all_if(Pred&& pred)
 {
     DataType* pos = algo::remove_all(begin(), end(), std::forward<Pred>(pred));
     SizeType  n   = end() - pos;
@@ -897,7 +897,7 @@ SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if(Pred&& 
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if_swap(Pred&& pred)
+SKR_INLINE typename Vector<Memory>::SizeType Vector<Memory>::remove_all_if_swap(Pred&& pred)
 {
     DataType* pos = algo::remove_all_swap(begin(), end(), pred);
     SizeType  n   = end() - pos;
@@ -907,38 +907,38 @@ SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::remove_all_if_swap(Pr
 
 // modify
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::operator[](SizeType index)
+SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::operator[](SizeType index)
 {
     SKR_ASSERT(!empty() && is_valid_index(index));
     return *(data() + index);
 }
 template <typename Memory>
-SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::operator[](SizeType index) const
+SKR_INLINE const typename Vector<Memory>::DataType& Vector<Memory>::operator[](SizeType index) const
 {
     SKR_ASSERT(!empty() && is_valid_index(index));
     return *(data() + index);
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::at(SizeType index)
+SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::at(SizeType index)
 {
     SKR_ASSERT(!empty() && is_valid_index(index));
     return *(data() + index);
 }
 template <typename Memory>
-SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::at(SizeType index) const
+SKR_INLINE const typename Vector<Memory>::DataType& Vector<Memory>::at(SizeType index) const
 {
     SKR_ASSERT(!empty() && is_valid_index(index));
     return *(data() + index);
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::last(SizeType index)
+SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::last(SizeType index)
 {
     index = size() - index - 1;
     SKR_ASSERT(!empty() && is_valid_index(index));
     return *(data() + index);
 }
 template <typename Memory>
-SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::last(SizeType index) const
+SKR_INLINE const typename Vector<Memory>::DataType& Vector<Memory>::last(SizeType index) const
 {
     index = size() - index - 1;
     SKR_ASSERT(!empty() && is_valid_index(index));
@@ -947,46 +947,46 @@ SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::last(SizeType 
 
 // front/back
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::front()
+SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::front()
 {
-    SKR_ASSERT(size() > 0 && "visit an empty array");
+    SKR_ASSERT(size() > 0 && "visit an empty vector");
     return data()[0];
 }
 template <typename Memory>
-SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::front() const
+SKR_INLINE const typename Vector<Memory>::DataType& Vector<Memory>::front() const
 {
-    SKR_ASSERT(size() > 0 && "visit an empty array");
+    SKR_ASSERT(size() > 0 && "visit an empty vector");
     return data()[0];
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::back()
+SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::back()
 {
-    SKR_ASSERT(size() > 0 && "visit an empty array");
+    SKR_ASSERT(size() > 0 && "visit an empty vector");
     return data()[size() - 1];
 }
 template <typename Memory>
-SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::back() const
+SKR_INLINE const typename Vector<Memory>::DataType& Vector<Memory>::back() const
 {
-    SKR_ASSERT(size() > 0 && "visit an empty array");
+    SKR_ASSERT(size() > 0 && "visit an empty vector");
     return data()[size() - 1];
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::push_back(const DataType& v)
+SKR_INLINE void Vector<Memory>::push_back(const DataType& v)
 {
     add(v);
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::push_back(DataType&& v)
+SKR_INLINE void Vector<Memory>::push_back(DataType&& v)
 {
     add(std::move(v));
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::pop_back()
+SKR_INLINE void Vector<Memory>::pop_back()
 {
     stack_pop();
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::pop_back_get()
+SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::pop_back_get()
 {
     return stack_pop_get();
 }
@@ -994,25 +994,25 @@ SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::pop_back_get()
 // find
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find(const U& v)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::find(const U& v)
 {
     return find_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_last(const U& v)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::find_last(const U& v)
 {
     return find_last_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find(const U& v) const
+SKR_INLINE typename Vector<Memory>::CDataRef Vector<Memory>::find(const U& v) const
 {
     return find_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last(const U& v) const
+SKR_INLINE typename Vector<Memory>::CDataRef Vector<Memory>::find_last(const U& v) const
 {
     return find_last_if([&v](const DataType& a) { return a == v; });
 }
@@ -1020,7 +1020,7 @@ SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last(const U& v)
 // find by
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_if(Pred&& pred)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::find_if(Pred&& pred)
 {
     if (!empty())
     {
@@ -1039,7 +1039,7 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_if(Pred&& pred)
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_last_if(Pred&& pred)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::find_last_if(Pred&& pred)
 {
     if (!empty())
     {
@@ -1058,30 +1058,30 @@ SKR_INLINE typename Array<Memory>::DataRef Array<Memory>::find_last_if(Pred&& pr
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_if(Pred&& pred) const
+SKR_INLINE typename Vector<Memory>::CDataRef Vector<Memory>::find_if(Pred&& pred) const
 {
-    return const_cast<Array<Memory>*>(this)->find_if(std::forward<Pred>(pred));
+    return const_cast<Vector<Memory>*>(this)->find_if(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::CDataRef Array<Memory>::find_last_if(Pred&& pred) const
+SKR_INLINE typename Vector<Memory>::CDataRef Vector<Memory>::find_last_if(Pred&& pred) const
 {
-    return const_cast<Array<Memory>*>(this)->find_last_if(std::forward<Pred>(pred));
+    return const_cast<Vector<Memory>*>(this)->find_last_if(std::forward<Pred>(pred));
 }
 
 // contains
 template <typename Memory>
 template <typename U>
-SKR_INLINE bool Array<Memory>::contains(const U& v) const { return (bool)find(v); }
+SKR_INLINE bool Vector<Memory>::contains(const U& v) const { return (bool)find(v); }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool Array<Memory>::contains_if(Pred&& pred) const
+SKR_INLINE bool Vector<Memory>::contains_if(Pred&& pred) const
 {
     return (bool)find_if(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename U>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::count(const U& v) const
+SKR_INLINE typename Vector<Memory>::SizeType Vector<Memory>::count(const U& v) const
 {
     SizeType count = 0;
     for (const DataType& data : *this)
@@ -1095,7 +1095,7 @@ SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::count(const U& v) con
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::count_if(Pred&& pred) const
+SKR_INLINE typename Vector<Memory>::SizeType Vector<Memory>::count_if(Pred&& pred) const
 {
     SizeType count = 0;
     for (const DataType& v : *this)
@@ -1111,56 +1111,56 @@ SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::count_if(Pred&& pred)
 // sort
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE void Array<Memory>::sort(Functor&& f)
+SKR_INLINE void Vector<Memory>::sort(Functor&& f)
 {
     algo::intro_sort(begin(), end(), std::forward<Functor>(f));
 }
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE void Array<Memory>::sort_stable(Functor&& f)
+SKR_INLINE void Vector<Memory>::sort_stable(Functor&& f)
 {
     algo::merge_sort(begin(), end(), std::forward<Functor>(f));
 }
 
 // support heap
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::heap_top() { return *data(); }
+SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::heap_top() { return *data(); }
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE void Array<Memory>::heapify(Functor&& f)
+SKR_INLINE void Vector<Memory>::heapify(Functor&& f)
 {
     algo::heapify(data(), size(), std::forward<Functor>(f));
 }
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE bool Array<Memory>::is_heap(Functor&& f) const
+SKR_INLINE bool Vector<Memory>::is_heap(Functor&& f) const
 {
     return algo::is_heap(data(), size(), std::forward<Functor>(f));
 }
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::heap_push(DataType&& v, Functor&& f)
+SKR_INLINE typename Vector<Memory>::SizeType Vector<Memory>::heap_push(DataType&& v, Functor&& f)
 {
     DataRef ref = emplace(std::move(v));
     return algo::heap_sift_up(data(), (SizeType)0, ref.index(), std::forward<Functor>(f));
 }
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE typename Array<Memory>::SizeType Array<Memory>::heap_push(const DataType& v, Functor&& f)
+SKR_INLINE typename Vector<Memory>::SizeType Vector<Memory>::heap_push(const DataType& v, Functor&& f)
 {
     DataRef ref = add(v);
     return algo::heap_sift_up(data(), SizeType(0), ref.index(), std::forward<Functor>(f));
 }
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE void Array<Memory>::heap_pop(Functor&& f)
+SKR_INLINE void Vector<Memory>::heap_pop(Functor&& f)
 {
     remove_at_swap(0);
     algo::heap_sift_down(data(), (SizeType)0, size(), std::forward<Functor>(f));
 }
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE typename Array<Memory>::DataType Array<Memory>::heap_pop_get(Functor&& f)
+SKR_INLINE typename Vector<Memory>::DataType Vector<Memory>::heap_pop_get(Functor&& f)
 {
     DataType result = std::move(*data());
     heap_pop(std::forward<Functor>(f));
@@ -1168,7 +1168,7 @@ SKR_INLINE typename Array<Memory>::DataType Array<Memory>::heap_pop_get(Functor&
 }
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE void Array<Memory>::heap_remove_at(SizeType index, Functor&& f)
+SKR_INLINE void Vector<Memory>::heap_remove_at(SizeType index, Functor&& f)
 {
     remove_at_swap(index);
 
@@ -1177,27 +1177,27 @@ SKR_INLINE void Array<Memory>::heap_remove_at(SizeType index, Functor&& f)
 }
 template <typename Memory>
 template <typename Functor>
-SKR_INLINE void Array<Memory>::heap_sort(Functor&& f)
+SKR_INLINE void Vector<Memory>::heap_sort(Functor&& f)
 {
     algo::heap_sort(data(), size(), std::forward<Functor>(f));
 }
 
 // support stack
 template <typename Memory>
-SKR_INLINE void Array<Memory>::stack_pop(SizeType n)
+SKR_INLINE void Vector<Memory>::stack_pop(SizeType n)
 {
     SKR_ASSERT(n > 0 && n <= size() && "pop size must be in [1, size()]");
     memory::destruct(data() + size() - n, n);
     _set_size(size() - n);
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::stack_pop_unsafe(SizeType n)
+SKR_INLINE void Vector<Memory>::stack_pop_unsafe(SizeType n)
 {
     SKR_ASSERT(n > 0 && n <= size() && "pop size must be in [1, size()]");
     _set_size(size() - n);
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataType Array<Memory>::stack_pop_get()
+SKR_INLINE typename Vector<Memory>::DataType Vector<Memory>::stack_pop_get()
 {
     SKR_ASSERT(size() > 0 && "pop an empty stack");
     DataType result = std::move(*(data() + size() - 1));
@@ -1205,139 +1205,139 @@ SKR_INLINE typename Array<Memory>::DataType Array<Memory>::stack_pop_get()
     return std::move(result);
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::stack_push(const DataType& v) { add(v); }
+SKR_INLINE void Vector<Memory>::stack_push(const DataType& v) { add(v); }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::stack_push(DataType&& v) { add(std::move(v)); }
+SKR_INLINE void Vector<Memory>::stack_push(DataType&& v) { add(std::move(v)); }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::stack_top() { return *(data() + size() - 1); }
+SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::stack_top() { return *(data() + size() - 1); }
 template <typename Memory>
-SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::stack_top() const { return *(data() + size() - 1); }
+SKR_INLINE const typename Vector<Memory>::DataType& Vector<Memory>::stack_top() const { return *(data() + size() - 1); }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::DataType& Array<Memory>::stack_bottom() { return *data(); }
+SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::stack_bottom() { return *data(); }
 template <typename Memory>
-SKR_INLINE const typename Array<Memory>::DataType& Array<Memory>::stack_bottom() const { return *data(); }
+SKR_INLINE const typename Vector<Memory>::DataType& Vector<Memory>::stack_bottom() const { return *data(); }
 
 // cursor & iter
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::Cursor Array<Memory>::cursor_begin()
+SKR_INLINE typename Vector<Memory>::Cursor Vector<Memory>::cursor_begin()
 {
     return Cursor::Begin(this);
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::CCursor Array<Memory>::cursor_begin() const
+SKR_INLINE typename Vector<Memory>::CCursor Vector<Memory>::cursor_begin() const
 {
     return CCursor::Begin(this);
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::Cursor Array<Memory>::cursor_end()
+SKR_INLINE typename Vector<Memory>::Cursor Vector<Memory>::cursor_end()
 {
     return Cursor::End(this);
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::CCursor Array<Memory>::cursor_end() const
+SKR_INLINE typename Vector<Memory>::CCursor Vector<Memory>::cursor_end() const
 {
     return CCursor::End(this);
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::Iter Array<Memory>::iter()
+SKR_INLINE typename Vector<Memory>::Iter Vector<Memory>::iter()
 {
     return { cursor_begin() };
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::CIter Array<Memory>::iter() const
+SKR_INLINE typename Vector<Memory>::CIter Vector<Memory>::iter() const
 {
     return { cursor_begin() };
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::IterInv Array<Memory>::iter_inv()
+SKR_INLINE typename Vector<Memory>::IterInv Vector<Memory>::iter_inv()
 {
     return { cursor_end() };
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::CIterInv Array<Memory>::iter_inv() const
+SKR_INLINE typename Vector<Memory>::CIterInv Vector<Memory>::iter_inv() const
 {
     return { cursor_end() };
 }
 template <typename Memory>
-SKR_INLINE auto Array<Memory>::range()
+SKR_INLINE auto Vector<Memory>::range()
 {
     return cursor_begin().as_range();
 }
 template <typename Memory>
-SKR_INLINE auto Array<Memory>::range() const
+SKR_INLINE auto Vector<Memory>::range() const
 {
     return cursor_begin().as_range();
 }
 template <typename Memory>
-SKR_INLINE auto Array<Memory>::range_inv()
+SKR_INLINE auto Vector<Memory>::range_inv()
 {
     return cursor_end().as_range_inv();
 }
 template <typename Memory>
-SKR_INLINE auto Array<Memory>::range_inv() const
+SKR_INLINE auto Vector<Memory>::range_inv() const
 {
     return cursor_end().as_range_inv();
 }
 
 // stl-style iterator
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::StlIt Array<Memory>::begin() { return data(); }
+SKR_INLINE typename Vector<Memory>::StlIt Vector<Memory>::begin() { return data(); }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::StlIt Array<Memory>::end() { return data() + size(); }
+SKR_INLINE typename Vector<Memory>::StlIt Vector<Memory>::end() { return data() + size(); }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::begin() const { return data(); }
+SKR_INLINE typename Vector<Memory>::CStlIt Vector<Memory>::begin() const { return data(); }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::end() const { return data() + size(); }
+SKR_INLINE typename Vector<Memory>::CStlIt Vector<Memory>::end() const { return data() + size(); }
 
 // erase
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::StlIt Array<Memory>::erase(const StlIt& it)
+SKR_INLINE typename Vector<Memory>::StlIt Vector<Memory>::erase(const StlIt& it)
 {
     remove_at(it - begin());
     return it;
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::erase(const CStlIt& it)
+SKR_INLINE typename Vector<Memory>::CStlIt Vector<Memory>::erase(const CStlIt& it)
 {
     remove_at(it - begin());
     return it;
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::erase(const DataRef& ref)
+SKR_INLINE void Vector<Memory>::erase(const DataRef& ref)
 {
     remove_at(ref.index());
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::erase(const CDataRef& ref)
+SKR_INLINE void Vector<Memory>::erase(const CDataRef& ref)
 {
     remove_at(ref.index());
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::StlIt Array<Memory>::erase_swap(const StlIt& it)
+SKR_INLINE typename Vector<Memory>::StlIt Vector<Memory>::erase_swap(const StlIt& it)
 {
     remove_at_swap(it - begin());
     return it;
 }
 template <typename Memory>
-SKR_INLINE typename Array<Memory>::CStlIt Array<Memory>::erase_swap(const CStlIt& it)
+SKR_INLINE typename Vector<Memory>::CStlIt Vector<Memory>::erase_swap(const CStlIt& it)
 {
     remove_at_swap(it - begin());
     return it;
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::erase_swap(const DataRef& ref)
+SKR_INLINE void Vector<Memory>::erase_swap(const DataRef& ref)
 {
     remove_at_swap(ref.index());
 }
 template <typename Memory>
-SKR_INLINE void Array<Memory>::erase_swap(const CDataRef& ref)
+SKR_INLINE void Vector<Memory>::erase_swap(const CDataRef& ref)
 {
     remove_at_swap(ref.index());
 }
 
 // syntax
 template <typename Memory>
-SKR_INLINE const Array<Memory>& Array<Memory>::readonly() const
+SKR_INLINE const Vector<Memory>& Vector<Memory>::readonly() const
 {
     return *this;
 }
