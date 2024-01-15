@@ -2,6 +2,8 @@ set_xmakever("2.8.1")
 set_project("SakuraEngine")
 
 set_policy("build.ccache", false)
+set_policy("check.auto_ignore_flags", false)
+
 add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" }) -- xmake 2.7.4 
 
 add_moduledirs("xmake/modules")
