@@ -21,7 +21,7 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     using typename Super::SetStorageType;
 
     // helper
-    using DataArr                         = SparseArray<Memory>;
+    using DataArr                         = SparseVector<Memory>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // data ref

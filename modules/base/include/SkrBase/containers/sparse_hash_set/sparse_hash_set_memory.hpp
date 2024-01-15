@@ -10,8 +10,8 @@
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename HashTraits, typename TS, typename Allocator>
-struct SparseHashSetMemory : public SparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator> {
-    using Super = SparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator>;
+struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator> {
+    using Super = SparseVectorMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator>;
 
     // sparse array configure
     using typename Super::SizeType;
@@ -169,8 +169,8 @@ private:
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename HashTraits, typename TS, uint64_t kCount>
-struct FixedSparseHashSetMemory : public FixedSparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount> {
-    using Super = FixedSparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount>;
+struct FixedSparseHashSetMemory : public FixedSparseVectorMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount> {
+    using Super = FixedSparseVectorMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount>;
 
     // sparse array configure
     using typename Super::SizeType;
@@ -278,8 +278,8 @@ private:
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename HashTraits, typename TS, uint64_t kInlineCount, typename Allocator>
-struct InlineSparseHashSetMemory : public InlineSparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator> {
-    using Super = InlineSparseArrayMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator>;
+struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator> {
+    using Super = InlineSparseVectorMemory<SparseHashSetData<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator>;
 
     // sparse array configure
     using typename Super::SizeType;
