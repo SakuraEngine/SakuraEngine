@@ -22,43 +22,43 @@ using TestHashType      = uint64_t;
 using TestBitBlockType  = uint64_t;
 using TestAllocatorType = SkrTestAllocator;
 
-//===========Array===================================================================
+//===========Vector===================================================================
 template <typename T>
-using Array = container::Vector<container::VectorMemory<
+using Vector = container::Vector<container::VectorMemory<
 T,
 TestSizeType,
 TestAllocatorType>>;
 
 template <typename T, uint64_t kCount>
-using FixedArray = container::Vector<container::FixedVectorMemory<
+using FixedVector = container::Vector<container::FixedVectorMemory<
 T,
 TestSizeType,
 kCount>>;
 
 template <typename T, uint64_t kInlineCount>
-using InlineArray = container::Vector<container::InlineVectorMemory<
+using InlineVector = container::Vector<container::InlineVectorMemory<
 T,
 TestSizeType,
 kInlineCount,
 TestAllocatorType>>;
 
-//===========Sparse Array===================================================================
+//===========Sparse Vector===================================================================
 template <typename T>
-using SparseArray = container::SparseVector<container::SparseVectorMemory<
+using SparseVector = container::SparseVector<container::SparseVectorMemory<
 T,
 TestBitBlockType,
 TestSizeType,
 TestAllocatorType>>;
 
 template <typename T, uint64_t kCount>
-using FixedSparseArray = container::SparseVector<container::FixedSparseVectorMemory<
+using FixedSparseVector = container::SparseVector<container::FixedSparseVectorMemory<
 T,
 TestBitBlockType,
 TestSizeType,
 kCount>>;
 
 template <typename T, uint64_t kInlineCount>
-using InlineSparseArray = container::SparseVector<container::InlineSparseVectorMemory<
+using InlineSparseVector = container::SparseVector<container::InlineSparseVectorMemory<
 T,
 TestBitBlockType,
 TestSizeType,
@@ -120,9 +120,9 @@ TestSizeType,
 kInlineCount,
 TestAllocatorType>>;
 
-//===========Bit Array===================================================================
+//===========Bit Vector===================================================================
 template <typename TBitBlock>
-using BitArray = container::BitVector<container::BitVectorMemory<
+using BitVector = container::BitVector<container::BitVectorMemory<
 TBitBlock,
 TestSizeType,
 TestAllocatorType>>;
