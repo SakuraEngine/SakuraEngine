@@ -37,19 +37,6 @@ else
     -- ...
 end
 
-target("SkrRoot")
-    set_kind("headeronly")
-    -- core deps
-    add_deps("SkrCompileFlags", "SkrProfile", {public = true})
-    -- dispatch codegen task
-    before_build(function(target)
-        import("core.base.option")
-        import("core.project.task")
-        local targetname = option.get("target")
-        task.run("run-codegen-jobs", {}, targetname)
-    end)
-target_end()
-
 includes("xmake/thirdparty.lua")
 includes("tools/codegen/xmake.lua")
 
