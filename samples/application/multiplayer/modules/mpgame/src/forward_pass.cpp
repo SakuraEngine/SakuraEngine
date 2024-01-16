@@ -26,7 +26,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
 
     if (!anim_query)
     {
-        auto sig    = "[in]skr::renderer::MeshComponent, [in]skr::anim::AnimComponent";
+        auto sig    = u8"[in]skr::renderer::MeshComponent, [in]skr::anim::AnimComponent";
         *anim_query = sugoiQ_from_literal(storage, sig);
     }
     // upload skin mesh data

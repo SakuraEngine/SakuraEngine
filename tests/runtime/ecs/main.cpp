@@ -169,6 +169,42 @@ TEST_CASE_METHOD(ECSTest, "destroy_entity")
     }
 }
 
+TEST_CASE_METHOD(ECSTest, "destroy_by_predicate")
+{
+    auto query = sugoiQ_from_literal(storage, u8"[in]test");
+    sugoi_chunk_view_t view;
+    sugoi_entity_type_t entityType;
+    entityType.type = { &type_test, 1 };
+    entityType.meta = { nullptr, 0 };
+    int counter = 0;
+    auto callback = [&](sugoi_chunk_view_t* inView) 
+    { 
+        auto comps = (TestComp*)sugoiV_get_owned_ro(inView, type_test);
+        for (EIndex i = 0; i < inView->count; ++i)
+            comps[i] = counter++;
+        view = *inView; 
+    };
+    sugoiS_allocate_type(storage, &entityType, 10, SUGOI_LAMBDA(callback));
+    auto e2 = sugoiV_get_entities(&view)[1];
+    auto e3 = sugoiV_get_entities(&view)[4];
+    auto callback2 = [&](sugoi_chunk_view_t* inView, sugoi_view_callback_t destroy, void* u) 
+    { 
+        auto comps = (TestComp*)sugoiV_get_owned_ro(inView, type_test);
+        for(int i = 0; i < inView->count; ++i)
+        {
+            if(comps[i] % 2 == 0)
+            {
+                sugoi_chunk_view_t view2{ inView->chunk, inView->start + i, 1 };
+                destroy(u, &view2);
+            }
+        }
+    };
+    sugoiS_destroy_in_query_if(query, SUGOI_LAMBDA(callback2));
+    EXPECT_TRUE(sugoiS_exist(storage, e1));
+    EXPECT_TRUE(sugoiS_exist(storage, e2));
+    EXPECT_FALSE(sugoiS_exist(storage, e3));
+}
+
 TEST_CASE_METHOD(ECSTest, "add_component")
 {
     sugoi_chunk_view_t view;
@@ -222,7 +258,7 @@ TEST_CASE_METHOD(ECSTest, "pin")
         EXPECT_EQ(*(TestComp*)sugoiV_get_owned_ro(&view2, type_test), 123);
         //only explicit query can access dead entity
         {
-            auto query = sugoiQ_from_literal(storage, "[in]pinned, [has]dead");
+            auto query = sugoiQ_from_literal(storage, u8"[in]pinned, [has]dead");
             sugoi_chunk_view_t view3;
             auto callback = [&](sugoi_chunk_view_t* inView) {
                 view3 = *inView;
@@ -231,7 +267,7 @@ TEST_CASE_METHOD(ECSTest, "pin")
             EXPECT_EQ(*sugoiV_get_entities(&view3), e2);
         }
         {
-            auto query2 = sugoiQ_from_literal(storage, "[in]pinned");
+            auto query2 = sugoiQ_from_literal(storage, u8"[in]pinned");
             sugoi_chunk_view_t view4 = { 0 };
             auto callback = [&](sugoi_chunk_view_t* inView) {
                 view4 = *inView;
@@ -362,7 +398,7 @@ TEST_CASE_METHOD(ECSTest, "filter")
 
 TEST_CASE_METHOD(ECSTest, "query")
 {
-    auto query = sugoiQ_from_literal(storage, "[in]test");
+    auto query = sugoiQ_from_literal(storage, u8"[in]test");
 
     sugoi_chunk_view_t view;
     auto callback = [&](sugoi_chunk_view_t* inView) {
@@ -405,10 +441,10 @@ TEST_CASE_METHOD(ECSTest, "query_overload")
 
         e3 = sugoiV_get_entities(&view)[0];
     }
-    sugoiQ_make_alias(storage, "test", "test:a");
-    auto query1 = sugoiQ_from_literal(storage, "[inout]test:a");
-    auto query2 = sugoiQ_from_literal(storage, "[inout]test:a,[in]test2");
-    SKR_UNUSED auto query3 = sugoiQ_from_literal(storage, "[inout]test:a,[in]test3");
+    sugoiQ_make_alias(storage, u8"test", u8"test:a");
+    auto query1 = sugoiQ_from_literal(storage, u8"[inout]test:a");
+    auto query2 = sugoiQ_from_literal(storage, u8"[inout]test:a, [in]test2");
+    SKR_UNUSED auto query3 = sugoiQ_from_literal(storage, u8"[inout]test:a, [in]test3");
 
     {
         sugoi_chunk_view_t view;

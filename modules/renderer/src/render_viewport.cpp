@@ -12,7 +12,7 @@ struct SViewportManagerImpl : public SViewportManager
 {
     SViewportManagerImpl(sugoi_storage_t* storage)
     {
-        camera_query = sugoiQ_from_literal(storage, "[in]skr_camera_comp_t, [in]skr_translation_comp_t");
+        camera_query = sugoiQ_from_literal(storage, u8"[in]skr_camera_comp_t, [in]skr_translation_comp_t");
     }
 
     ~SViewportManagerImpl()
