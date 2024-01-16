@@ -25,7 +25,7 @@
 
 namespace skr
 {
-inline void split(const skr::stl_string_view& s, skr::stl_vector<skr::stl_string_view>& tokens, const skr::stl_string_view& delimiters = " ")
+inline void split(const skr::stl_u8string_view& s, skr::stl_vector<skr::stl_u8string_view>& tokens, const skr::stl_u8string_view& delimiters = u8" ")
 {
     skr::stl_string::size_type lastPos = s.find_first_not_of(delimiters, 0);
     skr::stl_string::size_type pos = s.find_first_of(delimiters, lastPos);
@@ -38,13 +38,13 @@ inline void split(const skr::stl_string_view& s, skr::stl_vector<skr::stl_string
     }
 }
 
-inline bool ends_with(skr::stl_string_view const& value, skr::stl_string_view const& ending)
+inline bool ends_with(skr::stl_u8string_view const& value, skr::stl_u8string_view const& ending)
 {
     if (ending.size() > value.size()) return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
-inline bool starts_with(skr::stl_string_view const& value, skr::stl_string_view const& starting)
+inline bool starts_with(skr::stl_u8string_view const& value, skr::stl_u8string_view const& starting)
 {
     if (starting.size() > value.size()) return false;
     return std::equal(starting.begin(), starting.end(), value.begin());
@@ -132,7 +132,7 @@ void sugoi_storage_t::build_query_cache(sugoi_query_t* query)
             if (at.data[i] == kDeadComponent)
                 query->includeDead = true;
             else if (at.data[i] == kDisableComponent)
-                query->includeDead = true;
+                query->includeDisabled = true;
         }
     }
     for (auto i : groups)
@@ -181,16 +181,19 @@ sugoi_query_t* sugoi_storage_t::make_query(const sugoi_filter_t& filter, const s
 }
 
 //[in][rand]$|comp''
-sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
+sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
 {
     using namespace sugoi;
-    skr::String desc = skr::String::from_utf8((ochar8_t*)inDesc);
+    auto desc = skr::stl_u8string((ochar8_t*)inDesc);
     using namespace skr;
-    desc.replace(u8""_txtv, u8" "_txtv);
-    desc.replace(u8""_txtv, u8"\r"_txtv);
-    ostr::sequence<skr::StringView> parts;
-    auto spliter = u8","_txtv;
-    desc.split(spliter, parts, true);
+#ifdef _WIN32
+    desc.erase(std::remove_if(desc.begin(), desc.end(), [](char c) -> bool { return std::isspace(c); }), desc.end());
+#else
+    desc.erase(std::remove_if(desc.begin(), desc.end(), isspace), desc.end());
+#endif
+    skr::stl_vector<skr::stl_u8string_view> parts;
+    auto spliter = u8",";
+    skr::split(desc, parts, spliter);
     // todo: errorMsg? global error code?
     auto& error = get_error();
     int errorPos = 0;
@@ -219,11 +222,11 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
             ALL,
             NONE
         } selector = ALL;
-        if (part[i].get_codepoint() == '[') // attr: [in] [out] [inout] [has]
+        if (part[i] == u8'[') // attr: [in] [out] [inout] [has]
         {
             auto j = i + 1;
             errorPos = partBegin + i;
-            while (i < part.size() && part[i].get_codepoint() != ']')
+            while (i < part.size() && part[i] != u8']')
                 ++i;
             if (i == part.size())
             {
@@ -231,7 +234,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
                 SKR_ASSERT(false);
                 return nullptr;
             }
-            auto attr = part.subview(j, i - j);
+            auto attr = part.substr(j, i - j);
             errorPos = partBegin + j;
             if (attr == u8"in")
                 operation.readonly = true;
@@ -268,7 +271,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
         {
             auto j = i + 1;
             errorPos = partBegin + i;
-            while (i < part.size() && part[i].get_codepoint() != '>')
+            while (i < part.size() && part[i] != u8'>')
                 ++i;
             if (i == part.size())
             {
@@ -276,7 +279,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
                 SKR_ASSERT(false);
                 return nullptr;
             }
-            auto attr = part.subview(j, i - j);
+            auto attr = part.substr(j, i - j);
             errorPos = partBegin + j;
             if (attr == u8"seq")
                 operation.randomAccess = DOS_SEQ;
@@ -302,9 +305,9 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
             SKR_ASSERT(false);
             return nullptr;
         }
-        if (!std::isalpha(part[i].get_codepoint()))
+        if (!std::isalpha(part[i]))
         {
-            if (part[i] == '$')
+            if (part[i] == u8'$')
             {
                 if (!operation.readonly)
                 {
@@ -317,19 +320,19 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
                 shared = true;
                 ++i;
             }
-            if(operation.randomAccess == DOS_UNSEQ && part[i].get_codepoint() != '?')
+            if(operation.randomAccess == DOS_UNSEQ && part[i] != u8'?')
             {
                 errorPos = partBegin + i;
                 error = skr::format(u8"unseq component must be optional, loc {}.", errorPos);
                 SKR_ASSERT(false);
                 return nullptr;
             }
-            if (part[i] == '!')
+            if (part[i] == u8'!')
             {
                 selector = NONE;
                 filterOnly = true;
             }
-            else if (part[i] == '?')
+            else if (part[i] == u8'?')
                 selector = OPT;
             else
             {
@@ -340,7 +343,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
             }
             ++i;
         }
-        if (i == part.size() || !std::isalpha(part[i].get_codepoint()))
+        if (i == part.size() || !std::isalpha(part[i]))
         {
             errorPos = partBegin + i;
             error = skr::format(u8"no type specified, loc {}.", errorPos);
@@ -350,14 +353,15 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
         else
         {
             auto j = i;
-            auto validNameChar = [](char32_t c)
+            auto validNameChar = [](char8_t c)
             {
-                return std::isalpha(c) || c =='_' || (c > '0' && c <= '9') || c == ':';
+                return std::isalpha(c) || c == u8'_' || (c > u8'0' && c <= u8'9') || c == u8':';
             };
-            while (i < part.size() && validNameChar(part[i].get_codepoint()))
+            while (i < part.size() && validNameChar(part[i]))
                 ++i;
-            auto name = part.subview(j, i - j);
-            auto iter = aliases.find(name);
+            auto name = part.substr(j, i - j);
+            auto name_view = skr::StringView(name.data(), name.size());
+            auto iter = aliases.find(name_view);
             if(iter != aliases.end())
             {
                 type = iter->second.type;
@@ -373,7 +377,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char* inDesc)
             }
             else
             {
-                type = reg.get_type(name);
+                type = reg.get_type(name_view);
                 if (type == kInvalidTypeIndex)
                 {
                     errorPos = partBegin + i;
@@ -591,11 +595,67 @@ void sugoi_storage_t::query(const sugoi_query_t* q, sugoi_view_callback_t callba
         SKR_ASSERT(queriesBuilt);
     
     auto filterChunk = [&](sugoi_group_t* group) {
-        query(group, q->filter, q->meta, callback, u);
+        query(group, q->filter, q->meta, q->customFilter, q->customFilterUserData, callback, u);
     };
     query_groups(q, SUGOI_LAMBDA(filterChunk));
 }
 
+void sugoi_storage_t::destroy(const sugoi_query_t* q)
+{
+    bool mainThread = true;
+    if(scheduler)
+    {
+        mainThread = scheduler->is_main_thread(this);
+    }
+    if(mainThread)
+    {
+        build_queries();
+    }
+    else
+        SKR_ASSERT(queriesBuilt);
+    
+    auto filterChunk = [&](sugoi_group_t* group) {
+        group->clear();
+    };
+    query_groups(q, SUGOI_LAMBDA(filterChunk));
+}
+
+void sugoi_storage_t::destroy(const sugoi_query_t* q, sugoi_destroy_callback_t callback, void* u)
+{
+    bool mainThread = true;
+    if(scheduler)
+    {
+        mainThread = scheduler->is_main_thread(this);
+    }
+    if(mainThread)
+    {
+        build_queries();
+    }
+    else
+        SKR_ASSERT(queriesBuilt);
+    
+    skr::InlineVector<sugoi_chunk_view_t, 16> viewsToDestroy;
+    auto callback3 = [&](sugoi_chunk_view_t* chunk) {
+        viewsToDestroy.push_back(*chunk);
+    };
+    auto filterChunk = [&](sugoi_group_t* group) {
+        auto callback2 = [&](sugoi_chunk_view_t* chunk) {
+            viewsToDestroy.clear();
+            callback(u, chunk, SUGOI_LAMBDA(callback3));
+            //perform destroy
+            if(viewsToDestroy.size() == 0)
+                return;
+
+            //destroy in reverse order
+            for(int i = viewsToDestroy.size() - 1; i >= 0; --i)
+            {
+                destroy(viewsToDestroy[i]);
+            }
+        };
+        query(group, q->filter, q->meta, q->customFilter, q->customFilterUserData, SUGOI_LAMBDA(callback2));
+    };
+    query_groups(q, SUGOI_LAMBDA(filterChunk));
+}
 
 void sugoi_storage_t::query_groups(const sugoi_query_t* q, sugoi_group_callback_t callback, void* u)
 {
@@ -757,9 +817,10 @@ bool sugoi_storage_t::match_group(const sugoi_filter_t& filter, const sugoi_meta
     return match_group_type(group->type, filter, group->archetype->withMask);
 }
 
-void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_view_callback_t callback, void* u)
+void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_custom_filter_callback_t customFilter, void* u1, sugoi_view_callback_t callback, void* u)
 {
     using namespace sugoi;
+    bool withCustomFilter = customFilter != nullptr;
     if (!group->archetype->withMask)
     {
         for(auto c : group->chunks)
@@ -767,7 +828,8 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
             if (match_chunk_changed(c->type->type, c->timestamps(), meta))
             {
                 sugoi_chunk_view_t view{ c, (EIndex)0, c->count };
-                callback(u, &view);
+                if(!withCustomFilter || customFilter(u1, &view))
+                    callback(u, &view);
             }
         }
     }
@@ -847,7 +909,8 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
                     }
                     view.count = i - view.start;
                     if (view.count > 0)
-                        callback(u, &view);
+                        if(!withCustomFilter || customFilter(u1, &view))
+                            callback(u, &view);
                 }
             }
         }
@@ -876,7 +939,8 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
                         ++i;
                     view.count = i - view.start;
                     if (view.count > 0)
-                        callback(u, &view);
+                        if(!withCustomFilter || customFilter(u1, &view))
+                            callback(u, &view);
                 }
             }
         }
@@ -887,7 +951,7 @@ void sugoi_storage_t::query(const sugoi_filter_t& filter, const sugoi_meta_filte
 {
     using namespace sugoi;
     auto filterChunk = [&](sugoi_group_t* group) {
-        query(group, filter, meta, callback, u);
+        query(group, filter, meta, nullptr, nullptr, callback, u);
     };
     query_groups(filter, meta, SUGOI_LAMBDA(filterChunk));
 }

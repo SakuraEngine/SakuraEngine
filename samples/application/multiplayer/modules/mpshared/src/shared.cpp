@@ -13,23 +13,23 @@
 void MPGameWorld::Initialize()
 {
     storage = sugoiS_create();
-    sugoiQ_make_alias(storage, "skr_translation_comp_t", "skr_translation_comp_t:move");
+    sugoiQ_make_alias(storage, u8"skr_translation_comp_t", u8"skr_translation_comp_t:move");
     controlQuery.Initialize(storage);
     healthCheckQuery.Initialize(storage);
     fireQuery.Initialize(storage);
     movementQuery.Initialize(storage);
     ballQuery.Initialize(storage);
-    ballChildQuery = sugoiQ_from_literal(storage, "[in]skr_translation_comp_t@move, [inout]CHealth, [in]CSphereCollider2D");
+    ballChildQuery = sugoiQ_from_literal(storage, u8"[in]skr_translation_comp_t@move, [inout]CHealth, [in]CSphereCollider2D");
     sugoiQ_add_child(ballQuery.query, ballChildQuery);
     killBallQuery.Initialize(storage);
     killZombieQuery.Initialize(storage);
     relevanceQuery.Initialize(storage);
-    relevanceChildQuery = sugoiQ_from_literal(storage, "[in]skr_translation_comp_t, [in]CController");
+    relevanceChildQuery = sugoiQ_from_literal(storage, u8"[in]skr_translation_comp_t, [in]CController");
     sugoiQ_add_child(relevanceQuery.query, relevanceChildQuery);
     zombieAIQuery.Initialize(storage);
-    zombieAIChildQuery = sugoiQ_from_literal(storage, "[has]CPlayer, [in]skr_translation_comp_t");
+    zombieAIChildQuery = sugoiQ_from_literal(storage, u8"[has]CPlayer, [in]skr_translation_comp_t");
     sugoiQ_add_child(zombieAIQuery.query, zombieAIChildQuery);
-    gameStateQuery = sugoiQ_from_literal(storage, "[inout]CMPGameModeState");
+    gameStateQuery = sugoiQ_from_literal(storage, u8"[inout]CMPGameModeState");
     skr_transform_setup(storage, &transformSystem);
     config = 
     {
