@@ -1,7 +1,7 @@
 #include "SkrBase/math/rtm/vector4f.h"
 #include "SkrBase/math/rtm/rtmx.h"
-#include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrContainers/hashmap.hpp"
+#include "SkrContainers/vector.hpp"
 
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/skr_renderer.h"
@@ -28,7 +28,7 @@ struct SViewportManagerImpl : public SViewportManager
             return found->second;
         }
         uint32_t idx = static_cast<uint32_t>(viewports.size());
-        auto& newViewport = *viewports.add_default();
+        auto& newViewport = viewports.add_default().ref();
         idMap[viewport_name] = newViewport.index = idx;
         return idx;
     }

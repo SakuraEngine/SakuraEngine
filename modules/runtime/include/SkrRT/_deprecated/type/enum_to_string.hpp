@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/config.h"
-#include <SkrRT/containers/string.hpp>
+#include <SkrContainers/string.hpp>
 
 namespace skr::type
 {

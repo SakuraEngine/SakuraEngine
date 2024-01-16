@@ -1,8 +1,7 @@
 #pragma once
 #include "SkrBase/misc/traits.hpp"
-#include "SkrRT/serde/binary/writer_fwd.h"
+#include "SkrBase/types.h"
 #include "SkrRT/misc/types.h"
-#include "SkrRT/serde/binary/serde.h"
 
 // writer
 struct skr_binary_writer_t {

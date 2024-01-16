@@ -62,7 +62,7 @@
 #include "SkrRT/config.h"
 #include "imgui/imgui.h"
 #include "imgui_impl_sdl.h"
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 
 // SDL
 #include <SDL2/SDL.h>

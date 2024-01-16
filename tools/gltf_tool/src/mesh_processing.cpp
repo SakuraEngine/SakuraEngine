@@ -1,7 +1,7 @@
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 #include "cgltf/cgltf.h"
 #include "SkrRT/platform/vfs.h"
-#include "SkrRT/platform/filesystem.hpp"
+#include "SkrOS/filesystem.hpp"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrMeshCore/mesh_processing.hpp"
@@ -34,7 +34,7 @@ inline static SRawMesh GenerateRawMeshForGLTFMesh(cgltf_mesh* mesh)
     for (uint32_t pid = 0; pid < mesh->primitives_count; pid++)
     {
         const auto gltf_primitive = mesh->primitives + pid;
-        SRawPrimitive& primitive = *raw_mesh.primitives.add_default();
+        SRawPrimitive& primitive = raw_mesh.primitives.add_default().ref();
         // fill indices
         {
             const auto buffer_view = gltf_primitive->indices->buffer_view;
@@ -55,7 +55,7 @@ inline static SRawMesh GenerateRawMeshForGLTFMesh(cgltf_mesh* mesh)
             const auto buffer_data = static_cast<const uint8_t*>(buffer_view->data ? buffer_view->data : buffer_view->buffer->data);
             const auto view_data = buffer_data + buffer_view->offset;
             const auto vertex_count = attribute.data->count;
-            SRawVertexStream& vertex_stream = *primitive.vertex_streams.add_default();
+            SRawVertexStream& vertex_stream = primitive.vertex_streams.add_default().ref();
             vertex_stream.buffer_view = skr::span<const uint8_t>(view_data + attribute.data->offset, attribute.data->stride * vertex_count);
             vertex_stream.offset = 0;
             vertex_stream.count = vertex_count;
@@ -147,7 +147,7 @@ void CookGLTFMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mes
     for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
     {
         const auto node_ = gltf_data->nodes + i;
-        auto& mesh_section = *out_resource.sections.add_default();
+        auto& mesh_section = out_resource.sections.add_default().ref();
         mesh_section.parent_index = node_->parent ? (int32_t)(node_->parent - gltf_data->nodes) : -1;
         GetGLTFNodeTransform(node_, mesh_section.translation, mesh_section.scale, mesh_section.rotation);
         if (node_->mesh != nullptr)
@@ -171,7 +171,7 @@ void CookGLTFMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mes
     }
     {
         // record buffer bins
-        auto& out_buffer0 = *out_resource.bins.add_default();
+        auto& out_buffer0 = out_resource.bins.add_default().ref();
         out_buffer0.index = 0;
         out_buffer0.byte_length = buffer0.size();
         out_buffer0.used_with_index = true;
@@ -201,7 +201,7 @@ void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, SMeshCookConfig* cf
     for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
     {
         const auto node_ = gltf_data->nodes + i;
-        auto& mesh_section = *out_resource.sections.add_default();
+        auto& mesh_section = out_resource.sections.add_default().ref();
         mesh_section.parent_index = node_->parent ? (int32_t)(node_->parent - gltf_data->nodes) : -1;
         GetGLTFNodeTransform(node_, mesh_section.translation, mesh_section.scale, mesh_section.rotation);
         if (node_->mesh != nullptr)
@@ -226,12 +226,12 @@ void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, SMeshCookConfig* cf
     }
     {
         // record buffer bins
-        auto& out_buffer0 = *out_resource.bins.add_default();
+        auto& out_buffer0 = out_resource.bins.add_default().ref();
         out_buffer0.index = 0;
         out_buffer0.byte_length = buffer0.size();
         out_buffer0.used_with_index = true;
         out_buffer0.used_with_vertex = true;
-        auto& out_buffer1 = *out_resource.bins.add_default();
+        auto& out_buffer1 = out_resource.bins.add_default().ref();
         out_buffer1.index = 1;
         out_buffer1.byte_length = buffer1.size();
         out_buffer1.used_with_index = false;

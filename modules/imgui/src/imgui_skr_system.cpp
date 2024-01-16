@@ -1,7 +1,7 @@
 #include "SkrImGui/skr_imgui.config.h"
-#include <SkrRT/containers/string.hpp>
-#include <SkrRT/containers/vector.hpp>
-#include "SkrRT/misc/log.h"
+#include <SkrContainers/string.hpp>
+#include <SkrContainers/vector.hpp>
+#include "SkrCore/log.h"
 #include "SkrRT/platform/input.h"
 #include "SkrRT/platform/system.h"
 
@@ -19,7 +19,7 @@
 
 namespace skr::imgui
 {
-SKR_EXPORT ImGuiContext* GImGuiContext = nullptr;
+SKR_IMGUI_API ImGuiContext* GImGuiContext = nullptr;
 
 void   imgui_create_window(ImGuiViewport* viewport);
 void   imgui_destroy_window(ImGuiViewport* viewport);

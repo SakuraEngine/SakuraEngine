@@ -10,7 +10,7 @@ target("GoapTest")
     set_group("05.tests/runtime")
     public_dependency("SkrRT", engine_version)
     add_deps("SkrTestFramework", {public = false})
-    add_files("goap/goap.cpp")
+    add_files("goap/test_goap.cpp")
 
 target("GraphTest")
     set_group("05.tests/runtime")

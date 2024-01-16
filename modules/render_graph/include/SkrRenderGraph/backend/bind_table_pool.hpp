@@ -1,9 +1,9 @@
 #pragma once
-#include "SkrRenderGraph/module.configure.h"
-#include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "cgpu/cgpux.h"
+#include "SkrBase/config.h"
+#include "SkrContainers/hashmap.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrGraphics/cgpux.h"
 
 namespace skr
 {

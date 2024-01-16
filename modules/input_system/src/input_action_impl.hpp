@@ -2,10 +2,10 @@
 #include "SkrInputSystem/input_action.hpp"
 #include "SkrInputSystem/input_trigger.hpp"
 #include "SkrInputSystem/input_modifier.hpp"
-#include "SkrRT/platform/guid.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers/stl_function.hpp"
+#include "SkrGuid/guid.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/sptr.hpp"
+#include "SkrContainers/stl_function.hpp"
 
 namespace skr
 {
@@ -36,7 +36,7 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction {
         storage.callback = [event, this]() {
             event(current_value);
         };
-        return events.add(storage).data->event_id;
+        return events.add(storage).ref().event_id;
     }
 
     const InputValueStorage& get_value() const SKR_NOEXCEPT final

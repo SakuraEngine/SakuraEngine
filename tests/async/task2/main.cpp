@@ -1,5 +1,5 @@
 #include "SkrRT/platform/crash.h"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 
 #include "SkrTestFramework/framework.hpp"
 
@@ -20,7 +20,7 @@ static struct ProcInitializer
 
 #if __cpp_impl_coroutine
 #include "SkrRT/async/co_task.hpp"
-#include "SkrRT/platform/filesystem.hpp"
+#include "SkrOS/filesystem.hpp"
 
 class Task2
 {

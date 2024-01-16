@@ -1,10 +1,10 @@
 #pragma once
-#include "MPShared/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrBase/misc/traits.hpp"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrContainers/hashmap.hpp"
+#include "SkrContainers/vector.hpp"
 #include "SkrScene/scene.h"
 #include "MPShared/components.h"
 #ifndef __meta__

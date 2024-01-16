@@ -1,5 +1,5 @@
-#include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrBase/misc/make_zeroed.hpp"
+#include "SkrCore/log.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
 
@@ -12,7 +12,7 @@
 #include "live2d_helpers.hpp"
 
 #include <string> // TODO: replace this (std::stoi)
-#include <SkrRT/platform/filesystem.hpp>
+#include <SkrOS/filesystem.hpp>
 
 #include "SkrImageCoder/skr_image_coder.h"
 #ifdef _WIN32

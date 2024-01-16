@@ -1,11 +1,11 @@
 #pragma once
-#include "SkrRT/containers/span.hpp"
+#include "SkrContainers/span.hpp"
 #include "SkrRT/resource/resource_header.hpp"
-#include "SkrRT/platform/filesystem.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrOS/filesystem.hpp"
+#include "SkrCore/log.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/serde/binary/writer.h"
-#include "SkrRT/containers/function_ref.hpp"
+#include "SkrContainers/function_ref.hpp"
 #include "SkrToolCore/asset/cooker.hpp"
 #include "simdjson/padded_string.h"
 

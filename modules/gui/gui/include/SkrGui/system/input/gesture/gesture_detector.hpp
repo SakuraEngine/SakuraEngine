@@ -18,7 +18,7 @@ SKR_GUI_API RawGestureDetector : public StatefulWidget {
     using GestureRecognizerFactory = Function<GestureRecognizer*()>;
 
     Widget*                              child    = nullptr;
-    UMap<GUID, GestureRecognizerFactory> gestures = {};
+    Map<GUID, GestureRecognizerFactory> gestures = {};
 };
 } // namespace gui sreflect
 } // namespace skr sreflect

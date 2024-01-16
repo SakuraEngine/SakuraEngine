@@ -2,7 +2,7 @@
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_events.h>
 #include <algorithm>
-#include "SkrRT/containers/span.hpp"
+#include "SkrContainers/span.hpp"
 
 namespace skr
 {

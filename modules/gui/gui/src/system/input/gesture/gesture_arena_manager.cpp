@@ -29,16 +29,16 @@ GestureArena* GestureArenaManager::add_gesture(CombinePointerId pointer, Gesture
 GestureArena* GestureArenaManager::find_arena(CombinePointerId pointer)
 {
     auto result = _arenas.find(pointer);
-    return result ? _arenas.find(pointer)->value : nullptr;
+    return result ? _arenas.find(pointer).value() : nullptr;
 }
 GestureArena* GestureArenaManager::find_arena_or_add(CombinePointerId pointer)
 {
-    auto result = _arenas.find_or_add_unsafe(pointer);
-    if (!result.already_exist)
+    auto result = _arenas.try_add_default(pointer);
+    if (!result.already_exist())
     {
-        result->value = SkrNew<GestureArena>(pointer);
+        result.value() = SkrNew<GestureArena>(pointer);
     }
-    return result->value;
+    return result.value();
 }
 
 bool GestureArenaManager::route_event(Event* event)

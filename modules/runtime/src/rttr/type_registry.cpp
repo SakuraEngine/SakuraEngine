@@ -1,25 +1,25 @@
 #include "SkrRT/rttr/type_registry.hpp"
-#include "SkrRT/containers/umap.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrContainers/map.hpp"
+#include "SkrCore/log.h"
 #include "SkrRT/rttr/type_loader/type_loader.hpp"
 #include "SkrRT/rttr/type_loader/generic_type_loader.hpp"
 #include "SkrRT/rttr/type/type.hpp"
 
 namespace skr::rttr
 {
-static UMap<GUID, TypeLoader*>& type_loaders()
+static Map<GUID, TypeLoader*>& type_loaders()
 {
-    static UMap<GUID, TypeLoader*> s_type_loaders;
+    static Map<GUID, TypeLoader*> s_type_loaders;
     return s_type_loaders;
 }
-static UMap<GUID, Type*>& loaded_types()
+static Map<GUID, Type*>& loaded_types()
 {
-    static UMap<GUID, Type*> s_types;
+    static Map<GUID, Type*> s_types;
     return s_types;
 }
-static UMap<GUID, GenericTypeLoader*>& generic_type_loader()
+static Map<GUID, GenericTypeLoader*>& generic_type_loader()
 {
-    static UMap<GUID, GenericTypeLoader*> s_generic_type_loaders;
+    static Map<GUID, GenericTypeLoader*> s_generic_type_loaders;
     return s_generic_type_loaders;
 }
 
@@ -32,8 +32,8 @@ static auto& load_type_mutex()
 // type register (loader)
 void register_type_loader(const GUID& guid, TypeLoader* loader)
 {
-    auto result = type_loaders().find_or_add(guid, loader);
-    if (result.already_exist)
+    auto result = type_loaders().add(guid, loader);
+    if (result.already_exist())
     {
         // TODO. log
         SKR_LOG_WARN(u8"type loader already exist.");
@@ -52,8 +52,8 @@ void unregister_type_loader(const GUID& guid)
 // generic type loader
 void register_generic_type_loader(const GUID& generic_guid, GenericTypeLoader* loader)
 {
-    auto result = generic_type_loader().find_or_add(generic_guid, loader);
-    if (result.already_exist)
+    auto result = generic_type_loader().add(generic_guid, loader);
+    if (result.already_exist())
     {
         // TODO. log
         SKR_LOG_WARN(u8"generic type loader already exist.");
@@ -77,16 +77,16 @@ Type* get_type_from_guid(const GUID& guid)
     auto loaded_result = loaded_types().find(guid);
     if (loaded_result)
     {
-        return loaded_result->value;
+        return loaded_result.value();
     }
     else
     {
         auto loader_result = type_loaders().find(guid);
         if (loader_result)
         {
-            auto type = loader_result->value->create();
-            loaded_types().find_or_add(guid, type);
-            loader_result->value->load(type);
+            auto type = loader_result.value()->create();
+            loaded_types().add(guid, type);
+            loader_result.value()->load(type);
             return type;
         }
     }
@@ -110,8 +110,8 @@ Type* get_type_from_type_desc(span<TypeDesc> type_desc)
             // TODO. 类型查重
             if (result)
             {
-                auto type = result->value->load(type_desc);
-                loaded_types().find_or_add(type->type_id(), type);
+                auto type = result.value()->load(type_desc);
+                loaded_types().add(type->type_id(), type);
                 return type;
             }
         }

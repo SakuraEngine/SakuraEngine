@@ -1,11 +1,11 @@
 #include "./gdi_application.h"
-#include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/platform/filesystem.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
+#include "SkrOS/filesystem.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/async/thread_job.hpp"
+#include "SkrCore/async/thread_job.hpp"
 
-#include "SkrRT/containers/string.hpp"
+#include "SkrContainers/string.hpp"
 
 // bool initialize_gdi_application(gdi_application_t* app)
 // {

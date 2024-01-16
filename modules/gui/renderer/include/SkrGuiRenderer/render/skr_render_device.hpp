@@ -1,10 +1,10 @@
 #pragma once
-#include "cgpu/api.h"
+#include "SkrGraphics/api.h"
 #include "SkrRT/platform/window.h"
 #include "SkrRT/io/vram_io.hpp"
-#include "SkrRT/containers/umap.hpp"
+#include "SkrContainers/map.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
-#include "SkrGuiRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrGui/fwd_config.hpp"
 
 namespace skr::gui
@@ -26,7 +26,7 @@ enum ESkrPipelineFlag
 struct SkrPipelineKey {
     ESkrPipelineFlag flags;
     ECGPUSampleCount sample_count;
-    inline bool operator==(const SkrPipelineKey& other) const
+    inline bool      operator==(const SkrPipelineKey& other) const
     {
         return flags == other.flags && sample_count == other.sample_count;
     }
@@ -45,18 +45,18 @@ struct SkrPipelineKey {
 namespace skr
 {
 template <>
-struct skr::Hash<gui::SkrPipelineKey>
-{
+struct skr::Hash<gui::SkrPipelineKey> {
     inline size_t operator()(const gui::SkrPipelineKey& key) const
     {
-        const auto FlagsHash = skr::Hash<gui::ESkrPipelineFlag>()(key.flags);
+        const auto FlagsHash       = skr::Hash<gui::ESkrPipelineFlag>()(key.flags);
         const auto SampleCountHash = skr::Hash<ECGPUSampleCount>()(key.sample_count);
         return skr::hash_combine(FlagsHash, SampleCountHash);
     }
 };
 } // namespace skr
 
-namespace skr::gui {
+namespace skr::gui
+{
 
 struct SKR_GUI_RENDERER_API SkrRenderDevice final {
 
@@ -94,10 +94,10 @@ private:
     RenderGraph* _render_graph = nullptr;
 
     // PSO
-    skr::UMap<SkrPipelineKey, CGPURenderPipelineId> _pipelines;
-    CGPURootSignaturePoolId                                 _rs_pool;
-    CGPUSamplerId                                           _static_color_sampler;
-    CGPUVertexLayout                                        _vertex_layout = {};
+    skr::Map<SkrPipelineKey, CGPURenderPipelineId> _pipelines;
+    CGPURootSignaturePoolId                        _rs_pool;
+    CGPUSamplerId                                  _static_color_sampler;
+    CGPUVertexLayout                               _vertex_layout = {};
 
     // Texture updates
     Array<IUpdatableImage*> _texture_updates;

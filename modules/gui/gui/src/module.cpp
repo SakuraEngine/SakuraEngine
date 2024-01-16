@@ -1,4 +1,4 @@
-#include "SkrRT/module/module.hpp"
+#include "SkrModule/module.hpp"
 
 class SkrGuiModule : public skr::IDynamicModule
 {

@@ -1,10 +1,9 @@
 #pragma once
-#include "SkrRT/containers/concurrent_queue.hpp"
-#include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/SPtr.hpp"
-#include "SkrRT/containers/stl_function.hpp"
-#include "SkrRT/containers/function_ref.hpp"
+#include "SkrContainers/concurrent_queue.hpp"
+#include "SkrContainers/hashmap.hpp"
+#include "SkrContainers/SPtr.hpp"
+#include "SkrContainers/stl_function.hpp"
+#include "SkrContainers/function_ref.hpp"
 
 namespace skr
 {
@@ -20,11 +19,11 @@ namespace skr
     template<class... Args>
     struct EventRegistry<void(Args...)>
     {
-        flat_hash_map<void*, void(*)(void*, Args...)> methods;
-        flat_hash_map<SWeakPtr<void>, void(*)(void*, Args...)> weakMethods;
-        flat_hash_map<void*, skr::stl_function<void(Args...)>> methodLambdas;
-        flat_hash_map<SWeakPtr<void>, skr::stl_function<void(Args...)>> weakMethodLambdas;
-        flat_hash_map<int, skr::stl_function<void(Args...)>> lambdas;
+        FlatHashMap<void*, void(*)(void*, Args...)> methods;
+        FlatHashMap<SWeakPtr<void>, void(*)(void*, Args...)> weakMethods;
+        FlatHashMap<void*, skr::stl_function<void(Args...)>> methodLambdas;
+        FlatHashMap<SWeakPtr<void>, skr::stl_function<void(Args...)>> weakMethodLambdas;
+        FlatHashMap<int, skr::stl_function<void(Args...)>> lambdas;
         int currentHandle = 0;
 
         void Clear()

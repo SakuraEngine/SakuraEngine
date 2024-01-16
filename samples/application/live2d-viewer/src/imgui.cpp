@@ -1,8 +1,8 @@
 #include "common/utils.h"
 #include "SkrMemory/memory.h"
 #include "SkrRT/platform/window.h"
-#include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrBase/misc/make_zeroed.hpp"
+#include "SkrCore/log.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRenderer/render_effect.h"
@@ -10,7 +10,7 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
-#include "SkrRT/containers/string.hpp"
+#include "SkrContainers/string.hpp"
 
 SKR_EXTERN_C SKR_RUNTIME_API bool skr_runtime_is_dpi_aware();
 

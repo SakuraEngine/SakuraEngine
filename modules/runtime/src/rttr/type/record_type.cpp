@@ -1,5 +1,5 @@
 #include "SkrRT/rttr/type/record_type.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrCore/log.hpp"
 
 namespace skr::rttr
 {
@@ -134,7 +134,7 @@ void* RecordType::cast_to(const Type* target_type, void* p_self) const
     }
     else if (auto find_result = _base_types_map.find(target_type->type_id()))
     {
-        return find_result->value.cast_func(p_self);
+        return find_result.value().cast_func(p_self);
     }
     else
     {
@@ -210,7 +210,7 @@ skr::json::error_code RecordType::read_json(void* dst, skr::json::value_t&& read
 }
 
 // setup
-void RecordType::set_base_types(UMap<GUID, BaseInfo> base_types)
+void RecordType::set_base_types(Map<GUID, BaseInfo> base_types)
 {
     // validate
     for (const auto& data : base_types)
@@ -224,7 +224,7 @@ void RecordType::set_base_types(UMap<GUID, BaseInfo> base_types)
 
     _base_types_map = std::move(base_types);
 }
-void RecordType::set_fields(MultiUMap<skr::String, Field> fields)
+void RecordType::set_fields(MultiMap<skr::String, Field> fields)
 {
     // validate
     for (const auto& data : fields)
@@ -238,7 +238,7 @@ void RecordType::set_fields(MultiUMap<skr::String, Field> fields)
 
     _fields_map = std::move(fields);
 }
-void RecordType::set_methods(MultiUMap<skr::String, Method> methods)
+void RecordType::set_methods(MultiMap<skr::String, Method> methods)
 {
     _methods_map = std::move(methods);
 }

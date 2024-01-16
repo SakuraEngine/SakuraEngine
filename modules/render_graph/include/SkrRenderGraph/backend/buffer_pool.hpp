@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrRT/config.h"
-#include <SkrRT/containers/hashmap.hpp>
-#include <SkrRT/containers/stl_deque.hpp>
-#include "cgpu/api.h"
+#include <SkrContainers/hashmap.hpp>
+#include <SkrContainers/stl_deque.hpp>
+#include "SkrGraphics/api.h"
 #include "SkrBase/config.h"
 
 namespace skr

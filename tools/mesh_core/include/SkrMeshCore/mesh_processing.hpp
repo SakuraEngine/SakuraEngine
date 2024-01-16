@@ -1,11 +1,11 @@
 #pragma once
 #include "SkrRT/config.h"
-#include "SkrMeshCore/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
-#include <SkrRT/containers/string.hpp>
-#include <SkrRT/containers/span.hpp>
-#include <SkrRT/containers/vector.hpp>
+#include <SkrContainers/string.hpp>
+#include <SkrContainers/span.hpp>
+#include <SkrContainers/vector.hpp>
 #ifndef __meta__
 #include "SkrMeshCore/mesh_processing.generated.h" // IWYU pragma: export
 #endif

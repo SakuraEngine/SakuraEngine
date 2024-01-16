@@ -1,5 +1,5 @@
 // BEGIN LUA GENERATED
-#include "SkrRT/lua/bind.hpp"
+#include "SkrLua/bind.hpp"
 extern "C"
 {
     #include "lua.h"

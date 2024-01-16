@@ -1,9 +1,9 @@
 #pragma once
-#include "SkrShaderCompiler/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrGuid/guid.hpp"
 
 #ifndef __meta__
     #include "SkrShaderCompiler/assets/material_type_asset.generated.h" // IWYU pragma: export

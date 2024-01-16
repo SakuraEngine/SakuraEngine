@@ -1,8 +1,8 @@
 #pragma once
-#include "SkrRT/misc/log.h"
-#include "SkrRT/platform/atomic.h"
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/containers/concurrent_queue.hpp"
+#include "SkrCore/log.h"
+#include "SkrOS/atomic.h"
+#include "SkrContainers/sptr.hpp"
+#include "SkrContainers/concurrent_queue.hpp"
 
 namespace skr {
 

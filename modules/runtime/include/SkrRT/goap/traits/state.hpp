@@ -24,7 +24,7 @@ concept VariableType = goap::concepts::IsComparable<T>;
 } // namespace concepts
 
 template <concepts::IdentifierType Identifier, concepts::VariableType Variable>
-using StateMap = skr::UMap<Identifier, Variable>;
+using StateMap = skr::Map<Identifier, Variable>;
 
 template <concepts::StaticState T, StringLiteral Literal>
 struct StaticWorldState;

@@ -3,9 +3,9 @@
 #include "type_id.hpp"
 #include "SkrRT/_deprecated/type/type_helper.hpp"
 
-#include "SkrRT/containers/span.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/string.hpp"
+#include "SkrContainers/span.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/string.hpp"
 
 #if defined(__cplusplus)
 namespace skr

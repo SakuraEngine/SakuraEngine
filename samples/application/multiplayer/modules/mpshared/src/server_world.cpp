@@ -1,7 +1,7 @@
 #include "MPShared/server_world.h"
 #include "MPShared/components.h"
-#include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrBase/misc/make_zeroed.hpp"
+#include "SkrCore/log.h"
 
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/ecs/array.hpp"
@@ -52,7 +52,7 @@ void MPServerWorld::AddConnection(HSteamNetConnection connection)
 {
     connections.add(connection);
     worldDelta.add_default();
-    playerMap.add_default().data->emplace_back(playerId);
+    playerMap.add_default().ref().emplace_back(playerId);
     SpawnPlayerEntity(playerId, connections.size() - 1, 0);
     playerId++;
 }

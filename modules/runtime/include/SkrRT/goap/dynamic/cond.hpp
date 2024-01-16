@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/goap/traits.hpp"
-#include "SkrRT/misc/log.hpp"
+#include "SkrCore/log.hpp"
 
 namespace skr::goap
 {
@@ -14,11 +14,11 @@ struct CondType {
         EVariableFlag  flag;
         ValueStoreType value;
     };
-    
+
     void add(const IdentifierType& id, EVariableFlag flag,
              const ValueStoreType& value, EConditionType type) SKR_NOEXCEPT
     {
-        conditions_.add_or_assign(id, { type, flag, value });
+        conditions_.add(id, { type, flag, value });
     }
 
     template <typename F>
@@ -34,6 +34,6 @@ struct CondType {
     }
 
 private:
-    skr::UMap<IdentifierType, Condition> conditions_;
+    skr::Map<IdentifierType, Condition> conditions_;
 };
 } // namespace skr::goap

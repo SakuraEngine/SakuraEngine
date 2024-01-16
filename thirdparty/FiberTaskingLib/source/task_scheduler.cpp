@@ -29,12 +29,12 @@
 #include "ftl/fiber.h"
 #include "ftl/task_counter.h"
 #include "ftl/thread_abstraction.h"
-#include "SkrRT/containers/string.hpp"
+#include "SkrContainers/string.hpp"
 #include <memory>
 #include <mutex>
 #include "SkrMemory/memory.h"
 #include "SkrProfile/profile.h"
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 
 #if defined(FTL_WIN32_THREADS)
     #ifndef WIN32_LEAN_AND_MEAN
@@ -49,7 +49,7 @@
 #endif
 
 #ifdef SKR_PROFILE_ENABLE
-    #include <SkrRT/containers/string.hpp>
+    #include <SkrContainers/string.hpp>
 #endif
 
 namespace ftl

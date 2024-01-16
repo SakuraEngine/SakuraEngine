@@ -1,5 +1,5 @@
-#include "SkrRT/async/thread_job.hpp"
-#include "SkrRT/async/wait_timeout.hpp"
+#include "SkrCore/async/thread_job.hpp"
+#include "SkrCore/async/wait_timeout.hpp"
 #include "../common/io_runnner.hpp"
 #include "io_batch.hpp"
 
@@ -337,7 +337,7 @@ void RunnerBase::destroy() SKR_NOEXCEPT
         SKR_LOG_BACKTRACE(u8"runner: stop already requested.");
     }
 
-    wait_stop();
+    wait_timeout<u8"WaitIORunnerStop">([&] { return get_status() == skr::ServiceThread::kStatusStopped; });
     exit();
 }
 

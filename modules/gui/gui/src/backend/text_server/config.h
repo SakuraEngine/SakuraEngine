@@ -2,11 +2,11 @@
 #include "SkrBase/misc/hash.h"
 #include "SkrRT/config.h"
 
-#include <SkrRT/containers/span.hpp>
-#include <SkrRT/containers/vector.hpp>
-#include <SkrRT/containers/uset.hpp>
-#include <SkrRT/containers/hashmap.hpp>
-#include "SkrRT/containers/sptr.hpp"
+#include <SkrContainers/span.hpp>
+#include <SkrContainers/vector.hpp>
+#include <SkrContainers/set.hpp>
+#include <SkrContainers/hashmap.hpp>
+#include "SkrContainers/sptr.hpp"
 
 #include <limits>
 #include <type_traits>
@@ -83,20 +83,20 @@ using real_t = float;
 enum InlineAlignment
 {
     // Image alignment points.
-    INLINE_ALIGNMENT_TOP_TO = 0b0000,
-    INLINE_ALIGNMENT_CENTER_TO = 0b0001,
-    INLINE_ALIGNMENT_BOTTOM_TO = 0b0010,
+    INLINE_ALIGNMENT_TOP_TO     = 0b0000,
+    INLINE_ALIGNMENT_CENTER_TO  = 0b0001,
+    INLINE_ALIGNMENT_BOTTOM_TO  = 0b0010,
     INLINE_ALIGNMENT_IMAGE_MASK = 0b0011,
 
     // Text alignment points.
-    INLINE_ALIGNMENT_TO_TOP = 0b0000,
-    INLINE_ALIGNMENT_TO_CENTER = 0b0100,
+    INLINE_ALIGNMENT_TO_TOP      = 0b0000,
+    INLINE_ALIGNMENT_TO_CENTER   = 0b0100,
     INLINE_ALIGNMENT_TO_BASELINE = 0b1000,
-    INLINE_ALIGNMENT_TO_BOTTOM = 0b1100,
-    INLINE_ALIGNMENT_TEXT_MASK = 0b1100,
+    INLINE_ALIGNMENT_TO_BOTTOM   = 0b1100,
+    INLINE_ALIGNMENT_TEXT_MASK   = 0b1100,
 
     // Presets.
-    INLINE_ALIGNMENT_TOP = INLINE_ALIGNMENT_TOP_TO | INLINE_ALIGNMENT_TO_TOP,
+    INLINE_ALIGNMENT_TOP    = INLINE_ALIGNMENT_TOP_TO | INLINE_ALIGNMENT_TO_TOP,
     INLINE_ALIGNMENT_CENTER = INLINE_ALIGNMENT_CENTER_TO | INLINE_ALIGNMENT_TO_CENTER,
     INLINE_ALIGNMENT_BOTTOM = INLINE_ALIGNMENT_BOTTOM_TO | INLINE_ALIGNMENT_TO_BOTTOM
 };
@@ -182,8 +182,8 @@ template <class T>
 inline void __swap_tmpl(T& x, T& y)
 {
     T aux = x;
-    x = y;
-    y = aux;
+    x     = y;
+    y     = aux;
 }
 #endif // SWAP
 
@@ -228,8 +228,8 @@ class TextServer* get_text_server();
 
 namespace Math
 {
-    inline int abs(int a) { return ABS(a); }
-};
+inline int abs(int a) { return ABS(a); }
+}; // namespace Math
 
 #define MODULE_FREETYPE_ENABLED
 } // namespace godot

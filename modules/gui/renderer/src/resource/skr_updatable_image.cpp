@@ -1,7 +1,7 @@
 #include "SkrGuiRenderer/resource/skr_updatable_image.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
 #include "SkrGuiRenderer/resource/skr_image_task.hpp"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 
 namespace skr::gui
 {

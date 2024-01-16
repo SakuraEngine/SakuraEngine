@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrRenderer/fwd_types.h"
-#include "cgpu/flags.h"
+#include "SkrGraphics/flags.h"
 #ifdef __cplusplus
-    #include "SkrRT/containers/string.hpp"
+    #include "SkrContainers/string.hpp"
     #include "SkrRT/rttr/strongly_enum.hpp"
 #endif
 

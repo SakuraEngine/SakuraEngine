@@ -1,5 +1,5 @@
 #include "SkrRT/resource/config_resource.h"
-#include "SkrRT/misc/log.hpp"
+#include "SkrCore/log.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrToolCore/assets/config_asset.hpp"

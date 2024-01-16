@@ -1,16 +1,16 @@
 #pragma once
 #include "SkrRT/platform/system.h"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/umap.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/map.hpp"
 
-namespace skr {
-
-struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
+namespace skr
 {
+
+struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler {
     template <typename T>
     using Handler = std::pair<T, void*>;
     template <typename T>
-    using RIDMap = skr::UMap<int64_t, T>;
+    using RIDMap = skr::Map<int64_t, T>;
 
     void on_window_resized(SWindowHandle window, int32_t w, int32_t h) SKR_NOEXCEPT
     {
@@ -120,7 +120,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     inline int64_t add_window_resize_handler(SWindowResizeHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        window_resize_handlers.add_or_assign(rid, { proc, usr_data });
+        window_resize_handlers.add(rid, { proc, usr_data });
         return rid;
     }
 
@@ -132,7 +132,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_window_close_handler(SWindowCloseHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        window_close_handlers.add_or_assign(rid, {proc, usr_data});
+        window_close_handlers.add(rid, { proc, usr_data });
         return rid;
     }
 
@@ -144,7 +144,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_window_move_handler(SWindowMoveHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        window_move_handlers.add_or_assign(rid, {proc, usr_data});
+        window_move_handlers.add(rid, { proc, usr_data });
         return rid;
     }
 
@@ -156,7 +156,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_mouse_wheel_handler(SMouseWheelHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        mouse_wheel_handlers.add_or_assign(rid, {proc, usr_data});
+        mouse_wheel_handlers.add(rid, { proc, usr_data });
         return rid;
     }
 
@@ -168,7 +168,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_mouse_button_down_handler(SMouseButtonDownHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        mouse_button_down_handlers.add_or_assign(rid, {proc, usr_data});
+        mouse_button_down_handlers.add(rid, { proc, usr_data });
         return rid;
     }
 
@@ -180,7 +180,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_mouse_button_up_handler(SMouseButtonUpHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        mouse_button_up_handlers.add_or_assign(rid, {proc, usr_data});
+        mouse_button_up_handlers.add(rid, { proc, usr_data });
         return rid;
     }
 
@@ -192,7 +192,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_key_down_handler(SKeyDownHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        key_down_handlers.add_or_assign(rid, {proc, usr_data});
+        key_down_handlers.add(rid, { proc, usr_data });
         return rid;
     }
 
@@ -204,7 +204,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_key_up_handler(SKeyUpHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        key_up_handlers.add_or_assign(rid, {proc, usr_data});
+        key_up_handlers.add(rid, { proc, usr_data });
         return rid;
     }
 
@@ -216,7 +216,7 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
     int64_t add_text_input_handler(STextInputHandlerProc proc, void* usr_data) SKR_NOEXCEPT
     {
         auto rid = next_handler_id++;
-        text_input_handlers.add_or_assign(rid, {proc, usr_data});
+        text_input_handlers.add(rid, { proc, usr_data });
         return rid;
     }
 
@@ -225,21 +225,20 @@ struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         text_input_handlers.remove(rid);
     }
 
-    skr::Vector<ISystemMessageHandler*> message_handlers;
-    RIDMap<Handler<SWindowResizeHandlerProc>> window_resize_handlers;
-    RIDMap<Handler<SWindowCloseHandlerProc>> window_close_handlers;
-    RIDMap<Handler<SWindowMoveHandlerProc>> window_move_handlers;
-    RIDMap<Handler<SMouseWheelHandlerProc>> mouse_wheel_handlers;
+    skr::Vector<ISystemMessageHandler*>          message_handlers;
+    RIDMap<Handler<SWindowResizeHandlerProc>>    window_resize_handlers;
+    RIDMap<Handler<SWindowCloseHandlerProc>>     window_close_handlers;
+    RIDMap<Handler<SWindowMoveHandlerProc>>      window_move_handlers;
+    RIDMap<Handler<SMouseWheelHandlerProc>>      mouse_wheel_handlers;
     RIDMap<Handler<SMouseButtonDownHandlerProc>> mouse_button_down_handlers;
-    RIDMap<Handler<SMouseButtonUpHandlerProc>> mouse_button_up_handlers;
-    RIDMap<Handler<SKeyDownHandlerProc>> key_down_handlers;
-    RIDMap<Handler<SKeyUpHandlerProc>> key_up_handlers;
-    RIDMap<Handler<STextInputHandlerProc>> text_input_handlers;
-    int64_t next_handler_id = 0;
+    RIDMap<Handler<SMouseButtonUpHandlerProc>>   mouse_button_up_handlers;
+    RIDMap<Handler<SKeyDownHandlerProc>>         key_down_handlers;
+    RIDMap<Handler<SKeyUpHandlerProc>>           key_up_handlers;
+    RIDMap<Handler<STextInputHandlerProc>>       text_input_handlers;
+    int64_t                                      next_handler_id = 0;
 };
 
-struct SystemHandlerBase : public ISystemHandler
-{
+struct SystemHandlerBase : public ISystemHandler {
     virtual void add_message_handler(ISystemMessageHandler* handler) SKR_NOEXCEPT override;
     virtual void remove_message_handler(ISystemMessageHandler* handler) SKR_NOEXCEPT override;
 
@@ -346,4 +345,4 @@ inline void SystemHandlerBase::remove_message_handler(ISystemMessageHandler* uid
     message_handler_proxy.remove_message_handler(uid);
 }
 
-}
+} // namespace skr

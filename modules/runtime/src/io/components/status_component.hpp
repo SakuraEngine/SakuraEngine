@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/io/io.h"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "../components/component.hpp"
 
 #include "SkrProfile/profile.h"

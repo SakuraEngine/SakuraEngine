@@ -11,7 +11,7 @@ void PointerGestureRecognizer::add_pointer(NotNull<Event*> event)
         if (!_tracing_pointers.find(id))
         {
             GestureArena* arena = input_manager()->gesture_arena_manager()->add_gesture(id, this);
-            _tracing_pointers.find_or_add(id, arena);
+            _tracing_pointers.add(id, arena);
             on_pointer_added(pointer_down_event);
         }
     }
@@ -27,14 +27,14 @@ void PointerGestureRecognizer::request_accept(CombinePointerId pointer)
 {
     if (auto found = _tracing_pointers.find(pointer))
     {
-        found->value->accept_gesture(this);
+        found.value()->accept_gesture(this);
     }
 }
 void PointerGestureRecognizer::request_reject(CombinePointerId pointer)
 {
     if (auto found = _tracing_pointers.find(pointer))
     {
-        found->value->reject_gesture(this);
+        found.value()->reject_gesture(this);
     }
 }
 void PointerGestureRecognizer::request_accept_all()

@@ -1,6 +1,6 @@
 #include "SkrProfile/profile.h"
-#include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/containers/umap.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
+#include "SkrContainers/map.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_viewport.h"
@@ -12,7 +12,7 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 #include "forward_pass.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrContainers/vector.hpp"
 
 void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
 {
@@ -94,7 +94,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
                             const bool use_dynamic_buffer = anim->use_dynamic_buffer;
                             if (anim->vbs[j] && !use_dynamic_buffer)
                             {
-                                CGPUBufferBarrier& barrier = *barriers.add_default();
+                                CGPUBufferBarrier& barrier = barriers.add_default().ref();
                                 barrier.buffer             = anim->vbs[j];
                                 barrier.src_state          = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
                                 barrier.dst_state          = CGPU_RESOURCE_STATE_COPY_DEST;
@@ -218,7 +218,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                     const bool use_dynamic_buffer = anim->use_dynamic_buffer;
                     if (anim->vbs[j] && !use_dynamic_buffer)
                     {
-                        CGPUBufferBarrier& barrier = *barriers.add_default();
+                        CGPUBufferBarrier& barrier = barriers.add_default().ref();
                         barrier.buffer             = anim->vbs[j];
                         barrier.src_state          = CGPU_RESOURCE_STATE_COPY_DEST;
                         barrier.dst_state          = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
@@ -278,7 +278,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
         {
             SkrZoneScopedN("DrawCalls");
             CGPURenderPipelineId                             old_pipeline = nullptr;
-            skr::UMap<CGPURootSignatureId, CGPUXBindTableId> bind_tables;
+            skr::Map<CGPURootSignatureId, CGPUXBindTableId> bind_tables;
             for (uint32_t i = 0; i < drawcalls.size(); i++)
                 for (uint32_t j = 0; j < drawcalls[i].count; j++)
                     for (uint32_t k = 0; k < drawcalls[i].lists[j].count; k++)
@@ -295,9 +295,9 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                         CGPURootSignatureId dcRS = dc.pipeline->root_signature;
                         if (!bind_tables.contains(dcRS))
                         {
-                            bind_tables.find_or_add(dcRS, pass_context.create_and_update_bind_table(dc.pipeline->root_signature));
+                            bind_tables.add(dcRS, pass_context.create_and_update_bind_table(dc.pipeline->root_signature));
                         }
-                        CGPUXBindTableId pass_table = bind_tables.find(dcRS)->value;
+                        CGPUXBindTableId pass_table = bind_tables.find(dcRS).value();
                         if (dc.bind_table)
                         {
                             CGPUXBindTableId tables[2] = { dc.bind_table, pass_table };

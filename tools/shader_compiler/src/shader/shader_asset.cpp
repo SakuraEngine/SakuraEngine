@@ -1,5 +1,5 @@
-#include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/misc/parallel_for.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
+#include "SkrRT/async/parallel_for.hpp"
 #include "SkrRT/misc/cartesian_product.hpp"
 #include "SkrRT/serde/json/writer.h"
 #include "SkrToolCore/asset/cook_system.hpp"
@@ -290,7 +290,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         {
             switches_blob.types.add(static_switch.type);
             switches_blob.keys.add(static_switch.key);
-            auto& values = *switches_blob.values.add_default();
+            auto& values = switches_blob.values.add_default().ref();
             for (const auto& value : static_switch.value_selections)
             {
                 values.add(value);
@@ -300,7 +300,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         {
             options_blob.types.add(option_switch.type);
             options_blob.keys.add(option_switch.key);
-            auto& values = *options_blob.values.add_default();
+            auto& values = options_blob.values.add_default().ref();
             for (const auto& value : option_switch.value_selections)
             {
                 values.add(value);

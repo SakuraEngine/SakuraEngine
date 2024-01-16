@@ -1,15 +1,15 @@
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/ecs/entity.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/set.hpp"
 
-#include "type.hpp"
-#include "stack.hpp"
-#include "chunk.hpp"
-#include "chunk_view.hpp"
-#include "storage.hpp"
-#include "archetype.hpp"
-#include "type_registry.hpp"
+#include "SkrRT/ecs/detail/type.hpp"
+#include "SkrRT/ecs/detail/stack.hpp"
+#include "SkrRT/ecs/detail/chunk.hpp"
+#include "SkrRT/ecs/detail/chunk_view.hpp"
+#include "SkrRT/ecs/detail/storage.hpp"
+#include "SkrRT/ecs/detail/archetype.hpp"
+#include "SkrRT/ecs/detail/type_registry.hpp"
 
 #include <algorithm>
 

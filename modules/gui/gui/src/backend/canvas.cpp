@@ -1,6 +1,6 @@
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include <nanovg.h>
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrBase/math/rtm/rtmx.h"
 #include "SkrGui/backend/resource/resource.hpp"
 
@@ -284,7 +284,7 @@ struct _NVGHelper {
             // init data
             auto  canvas       = (ICanvas*)uptr;
             auto  invTransform = nvg__getMatrix(paint);
-            auto& command      = *canvas->_commands.add_default();
+            auto& command      = canvas->_commands.add_default().ref();
             auto  begin        = canvas->_indices.size();
 
             // combine vertices
@@ -335,7 +335,7 @@ struct _NVGHelper {
         // init data
         auto  canvas       = (ICanvas*)uptr;
         auto  invTransform = nvg__getMatrix(paint);
-        auto& command      = *canvas->_commands.add_default();
+        auto& command      = canvas->_commands.add_default().ref();
         auto  begin        = canvas->_indices.size();
         float aa           = (fringe * 0.5f + strokeWidth * 0.5f) / fringe;
 
@@ -532,7 +532,7 @@ void ICanvas::path_end(const Pen& pen, const Brush& brush) SKR_NOEXCEPT
                                        surface_brush._uv_rect.height(),
                                        surface_brush._rotation,
                                        surface_brush._surface,
-                                       { surface_brush._color.r, surface_brush._color.g, surface_brush._color.b, surface_brush._color.a }));
+                                       { { { surface_brush._color.r, surface_brush._color.g, surface_brush._color.b, surface_brush._color.a } } }));
                 }
                 else if (brush.type() == EBrushType::SurfaceNine)
                 {
@@ -545,7 +545,7 @@ void ICanvas::path_end(const Pen& pen, const Brush& brush) SKR_NOEXCEPT
                                        surface_nine_brush._uv_rect.height(),
                                        surface_nine_brush._rotation,
                                        surface_nine_brush._surface,
-                                       { surface_nine_brush._color.r, surface_nine_brush._color.g, surface_nine_brush._color.b, surface_nine_brush._color.a }));
+                                       { { { surface_nine_brush._color.r, surface_nine_brush._color.g, surface_nine_brush._color.b, surface_nine_brush._color.a } } }));
                 }
                 else if (brush.type() == EBrushType::Color)
                 {

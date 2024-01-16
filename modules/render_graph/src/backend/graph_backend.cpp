@@ -3,11 +3,11 @@
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "SkrBase/misc/debug.h" 
 #include "SkrMemory/memory.h"
-#include "SkrRT/platform/thread.h"
-#include "SkrRT/misc/log.h"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/btree.hpp"
-#include "cgpu/cgpux.hpp"
+#include "SkrOS/thread.h"
+#include "SkrCore/log.h"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/btree.hpp"
+#include "SkrGraphics/cgpux.hpp"
 
 #include "SkrRenderGraph/phases/cull_phase.hpp"
 
@@ -304,7 +304,7 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
         if (!tex_resolve_set.contains(texture->get_handle()) )
         {
             resolved_textures.emplace(texture->get_handle(), tex_resolved);
-            tex_resolve_set.add_or_assign(texture->get_handle());
+            tex_resolve_set.add(texture->get_handle());
 
             const auto current_state = get_lastest_state(texture, pass);
             const auto dst_state     = edge->requested_state;
@@ -324,7 +324,7 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
         if (!buf_resolve_set.find(buffer->get_handle()) )
         {
             resolved_buffers.emplace(buffer->get_handle(), buf_resolved);
-            buf_resolve_set.add_or_assign(buffer->get_handle());
+            buf_resolve_set.add(buffer->get_handle());
 
             const auto current_state = get_lastest_state(buffer, pass);
             const auto dst_state     = edge->requested_state;
@@ -815,7 +815,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         for (auto [buffer_handle, state] : pass->bbarriers)
         {
             auto  buffer      = stack.resolve(buffer_handle);
-            auto& barrier     = *late_buf_barriers.emplace();
+            auto& barrier     = late_buf_barriers.emplace().ref();
             barrier.buffer    = buffer;
             barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
             barrier.dst_state = state;
@@ -823,7 +823,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         for (auto [texture_handle, state] : pass->tbarriers)
         {
             auto  texture     = stack.resolve(texture_handle);
-            auto& barrier     = *late_tex_barriers.emplace();
+            auto& barrier     = late_tex_barriers.emplace().ref();
             barrier.texture   = texture;
             barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
             barrier.dst_state = state;

@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrGuiRenderer/module.configure.h"
-#include "cgpu/api.h"
+#include "SkrBase/config.h"
+#include "SkrGraphics/api.h"
 #include "SkrRT/platform/window.h"
 #include "SkrGui/backend/canvas/canvas_types.hpp"
 #include "SkrBase/math/rtm/rtmx.h"

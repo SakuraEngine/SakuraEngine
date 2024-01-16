@@ -23,8 +23,8 @@
  */
 
 #pragma once
-#include "SkrRT/containers/stl_vector.hpp"
-#include "SkrRT/containers/stl_function.hpp"
+#include "SkrContainers/stl_vector.hpp"
+#include "SkrContainers/stl_function.hpp"
 #include "ftl/callbacks.h"
 #include "ftl/fiber.h"
 #include "ftl/task.h"
@@ -38,7 +38,7 @@
 #include <vector>
 #include <memory>
 
-#include "SkrRT/containers/deprecated.hpp"
+#include "SkrContainers/deprecated.hpp"
 
 namespace ftl
 {

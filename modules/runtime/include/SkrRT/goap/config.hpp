@@ -2,8 +2,9 @@
 #include "SkrBase/template/concepts.hpp"
 #include "SkrBase/template/count_member.hpp"
 #include "SkrBase/template/foreach_field.hpp"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/umap.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/map.hpp"
+#include "SkrBase/config.h"
 
 #ifndef SKR_GOAP_SET_NAME
     #ifdef _DEBUG
@@ -24,7 +25,7 @@ using NameType     = skr::String;
 using OffsetType   = decltype(offsetof(skr_guid_t, Storage0));
 
 template <typename Identifier, typename Variable>
-using MapType = skr::UMap<Identifier, Variable>;
+using MapType = skr::Map<Identifier, Variable>;
 
 enum class EConditionType : uint8_t
 {
@@ -34,7 +35,9 @@ enum class EConditionType : uint8_t
     GreaterEqual = 0x4,
     Less         = 0x5,
     LessEqual    = 0x6,
-    Exist        = 0x7
+    Exist        = 0x7,
+    And          = 0x8,
+    Nand         = 0x9
 };
 
 enum class EVariableFlag : uint8_t

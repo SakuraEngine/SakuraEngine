@@ -74,7 +74,7 @@ void swa_delete(T* object)
 
 #include "SkrBase/misc/hash.h"
 #define swa_hash(buffer, size, seed) skr_hash((buffer), (size), (seed))
-#include "SkrRT/misc/log.h"
+#include "SkrCore/log.h"
 #define swa_trace(...) SKR_LOG_TRACE(__VA_ARGS__)
 #define swa_debug(...) SKR_LOG_DEBUG(__VA_ARGS__)
 #define swa_info(...) SKR_LOG_INFO(__VA_ARGS__)

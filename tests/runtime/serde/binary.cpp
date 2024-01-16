@@ -1,9 +1,9 @@
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/serde/binary/reader.h"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/span.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/containers/vector.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/span.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrContainers/vector.hpp"
 
 #include "SkrTestFramework/framework.hpp"
 

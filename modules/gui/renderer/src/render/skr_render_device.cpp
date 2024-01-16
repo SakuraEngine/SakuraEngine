@@ -1,6 +1,6 @@
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
 #include "SkrGuiRenderer/render/skr_render_window.hpp"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrMemory/memory.h"
 #include "SkrGui/backend/canvas/canvas_types.hpp"
 
@@ -169,9 +169,9 @@ void SkrRenderDevice::destroy_window(SkrRenderWindow* view)
 CGPURenderPipelineId SkrRenderDevice::get_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count)
 {
     SkrPipelineKey key = { flags, sample_count };
-    if (auto _  = _pipelines.find(key)) return _->value;
+    if (auto _  = _pipelines.find(key)) return _.value();
     auto pipeline   = create_pipeline(flags, sample_count);
-    _pipelines.add_or_assign(key, pipeline);
+    _pipelines.add(key, pipeline);
     return pipeline;
 }
 CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count)

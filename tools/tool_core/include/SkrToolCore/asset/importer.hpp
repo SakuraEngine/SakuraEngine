@@ -2,7 +2,7 @@
 #include "SkrToolCore/fwd_types.hpp"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrToolCore/asset/cooker.hpp"
-#include "SkrRT/serde/json/reader_fwd.h"
+#include "SkrBase/types.h"
 #ifndef __meta__
     #include "SkrToolCore/asset/importer.generated.h" // IWYU pragma: export
 #endif

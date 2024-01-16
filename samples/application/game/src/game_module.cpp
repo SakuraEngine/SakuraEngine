@@ -1,12 +1,12 @@
 #include "common/utils.h"
 #include "GameRuntime/gamert.h"
-#include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/platform/filesystem.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
+#include "SkrOS/filesystem.hpp"
 #include "SkrRT/platform/system.h"
 #include "SkrRT/config.h"
 #include "SkrMemory/memory.h"
-#include "SkrRT/platform/time.h"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrCore/time.h"
+#include "SkrGuid/guid.hpp"
 #include "SkrRT/platform/window.h"
 
 #include "SkrRT/ecs/type_builder.hpp"
@@ -26,7 +26,7 @@
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_effect.h"
 
-#include <SkrRT/containers/string.hpp>
+#include <SkrContainers/string.hpp>
 #include "SkrRT/async/fib_task.hpp"
 
 #include "SkrRT/resource/local_resource_registry.hpp"
@@ -44,11 +44,11 @@
 #include "SkrAnim/components/skeleton_component.hpp"
 #include "GameRuntime/game_animation.h"
 
-#include "SkrRT/async/thread_job.hpp"
+#include "SkrCore/async/thread_job.hpp"
 
 #include "SkrProfile/profile.h"
 #include "SkrRT/misc/types.h"
-#include "SkrRT/lua/skr_lua.h"
+#include "SkrLua/skr_lua.h"
 // #include "SkrInspector/inspect_value.h" // FIXME. inspector
 
 #include "SkrScene/resources/scene_resource.h"

@@ -1,8 +1,8 @@
 #pragma once
-#include "SkrGuiRenderer/module.configure.h"
+#include "SkrBase/config.h"
 #include "SkrGui/backend/resource/resource.hpp"
-#include "cgpu/api.h"
-#include "cgpu/cgpux.h"
+#include "SkrGraphics/api.h"
+#include "SkrGraphics/cgpux.h"
 #ifndef __meta__
     #include "SkrGuiRenderer/resource/skr_updatable_image.generated.h"
 #endif

@@ -2,6 +2,8 @@ set_xmakever("2.8.1")
 set_project("SakuraEngine")
 
 set_policy("build.ccache", false)
+set_policy("check.auto_ignore_flags", false)
+
 add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" }) -- xmake 2.7.4 
 
 add_moduledirs("xmake/modules")
@@ -36,26 +38,6 @@ elseif (is_os("macosx") or is_os("linux")) then
 else
     -- ...
 end
-
-target("SkrRoot")
-    set_kind("headeronly")
-    -- core deps
-    add_deps("SkrProfile", {public = true})
-    -- add OpenString defines
-    add_defines("OPEN_STRING_API=SKR_RUNTIME_API", {public = true})
-    -- dispatch codegen task
-    before_build(function(target)
-        import("core.base.option")
-        local targetname = option.get("target")
-        local function upzip_tasks(targetname)
-            import("core.project.task")
-            task.run("run-codegen-jobs", {}, targetname)
-        end
-
-        import("core.base.scheduler")
-        scheduler.co_start(upzip_tasks, targetname)
-    end)
-target_end()
 
 includes("xmake/thirdparty.lua")
 includes("tools/codegen/xmake.lua")

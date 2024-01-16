@@ -26,28 +26,25 @@ struct RingBufferMemory : public Allocator {
     }
 
     // copy & move
-    inline RingBufferMemory(const RingBufferMemory& other, AllocatorCtorParam param)
-        : Allocator(std::move(param))
+    inline RingBufferMemory(const RingBufferMemory& rhs)
+        : Allocator(rhs)
     {
-        if (other.size())
+        if (rhs.size())
         {
-            realloc(other.size());
-            copy_ring_buffer(_data, other._data, other._capacity, other._front, other._back);
+            realloc(rhs.size());
+            copy_ring_buffer(_data, rhs._data, rhs._capacity, rhs._front, rhs._back);
             _front = 0;
-            _back  = other.size();
+            _back  = rhs.size();
         }
     }
-    inline RingBufferMemory(RingBufferMemory&& other) noexcept
-        : Allocator(std::move(other))
-        , _data(other._data)
-        , _capacity(other._capacity)
-        , _front(other._front)
-        , _back(other._back)
+    inline RingBufferMemory(RingBufferMemory&& rhs) noexcept
+        : Allocator(std::move(rhs))
+        , _data(rhs._data)
+        , _capacity(rhs._capacity)
+        , _front(rhs._front)
+        , _back(rhs._back)
     {
-        other._data     = nullptr;
-        other._capacity = 0;
-        other._front    = 0;
-        other._back     = 0;
+        rhs._reset();
     }
 
     // assign & move assign
@@ -55,11 +52,11 @@ struct RingBufferMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
             // copy allocator
             Allocator::operator=(rhs);
+
+            // clean up self
+            clear();
 
             // copy data
             if (rhs.data())
@@ -81,24 +78,23 @@ struct RingBufferMemory : public Allocator {
     {
         if (this != &rhs)
         {
+            // move allocator
+            Allocator::operator=(std::move(rhs));
+
             // clean up self
             clear();
 
             // free self
             free();
 
-            // move allocator
-            Allocator::operator=(std::move(rhs));
-
             // move data
-            _data         = rhs._data;
-            _capacity     = rhs._capacity;
-            _front        = rhs._front;
-            _back         = rhs._back;
-            rhs._data     = nullptr;
-            rhs._capacity = 0;
-            rhs._front    = 0;
-            rhs._back     = 0;
+            _data     = rhs._data;
+            _capacity = rhs._capacity;
+            _front    = rhs._front;
+            _back     = rhs._back;
+
+            // reset rhs
+            rhs._reset();
         }
     }
 
@@ -110,37 +106,26 @@ struct RingBufferMemory : public Allocator {
         SKR_ASSERT(size() <= new_capacity);
         SKR_ASSERT((_capacity > 0 && _data != nullptr) || (_capacity == 0 && _data == nullptr));
 
-        if constexpr (memory::MemoryTraits<T>::use_realloc && Allocator::support_realloc)
+        // NOTE. 鉴于 ring buffer 元素分布的特殊性，realloc 未必会有性能优势，此处暂不实现
+
+        // alloc new memory
+        T* new_memory = Allocator::template alloc<T>(new_capacity);
+
+        // copy data
+        SizeType cached_size = size();
+        if (cached_size)
         {
-            // trim data to fit realloc logic
-            if (size())
-            {
-                trim_ring_buffer_for_new_capacity(_data, _capacity, new_capacity, _front, _back);
-            }
-            _data     = Allocator::template realloc<T>(_data, new_capacity);
-            _capacity = new_capacity;
+            copy_ring_buffer(new_memory, _data, _capacity, _front, _back);
         }
-        else
-        {
-            // alloc new memory
-            T* new_memory = Allocator::template alloc<T>(new_capacity);
 
-            // copy data
-            SizeType cached_size = size();
-            if (cached_size)
-            {
-                copy_ring_buffer(new_memory, _data, _capacity, _front, _back);
-            }
+        // release old memory
+        Allocator::template free<T>(_data);
 
-            // release old memory
-            Allocator::template free<T>(_data);
-
-            // update data
-            _data     = new_memory;
-            _capacity = new_capacity;
-            _front    = 0;
-            _back     = cached_size;
-        }
+        // update data
+        _data     = new_memory;
+        _capacity = new_capacity;
+        _front    = 0;
+        _back     = cached_size;
     }
     inline void free() noexcept
     {
@@ -204,6 +189,15 @@ struct RingBufferMemory : public Allocator {
     inline void set_back(SizeType value) noexcept { _back = value; }
 
 private:
+    inline void _reset()
+    {
+        _data     = nullptr;
+        _capacity = 0;
+        _front    = 0;
+        _back     = 0;
+    }
+
+private:
     T*       _data     = nullptr;
     SizeType _capacity = 0;
     SizeType _front    = 0;
@@ -216,7 +210,7 @@ namespace skr::container
 {
 template <typename T, typename TS, uint64_t kCount>
 struct FixedRingBufferMemory {
-    static_assert(kCount > 0, "FixedArrayMemory must have a capacity larger than 0");
+    static_assert(kCount > 0, "FixedRingBufferMemory must have a capacity larger than 0");
     struct DummyParam {
     };
     using DataType           = T;
@@ -234,25 +228,24 @@ struct FixedRingBufferMemory {
     }
 
     // copy & move
-    inline FixedRingBufferMemory(const FixedRingBufferMemory& other, AllocatorCtorParam param)
+    inline FixedRingBufferMemory(const FixedRingBufferMemory& rhs)
     {
-        if (other.size())
+        if (rhs.size())
         {
-            copy_ring_buffer(data(), other.data(), other.capacity(), other._front, other._back);
+            copy_ring_buffer(data(), rhs.data(), rhs.capacity(), rhs._front, rhs._back);
             _front = 0;
-            _back  = other.size();
+            _back  = rhs.size();
         }
     }
-    inline FixedRingBufferMemory(FixedRingBufferMemory&& other) noexcept
+    inline FixedRingBufferMemory(FixedRingBufferMemory&& rhs) noexcept
     {
-        if (other.size())
+        if (rhs.size())
         {
-            move_ring_buffer(data(), other.data(), other.capacity(), other._front, other._back);
+            move_ring_buffer(data(), rhs.data(), rhs.capacity(), rhs._front, rhs._back);
             _front = 0;
-            _back  = other.size();
+            _back  = rhs.size();
 
-            other._front = 0;
-            other._back  = 0;
+            rhs._reset();
         }
     }
 
@@ -286,10 +279,10 @@ struct FixedRingBufferMemory {
                 move_ring_buffer(data(), rhs.data(), rhs.capacity(), rhs._front, rhs._back);
                 _front = 0;
                 _back  = rhs.size();
-
-                rhs._front = 0;
-                rhs._back  = 0;
             }
+
+            // reset rhs
+            rhs._reset();
         }
     }
 
@@ -332,6 +325,13 @@ struct FixedRingBufferMemory {
     inline void set_back(SizeType value) noexcept { _back = value; }
 
 private:
+    inline void _reset()
+    {
+        _front = 0;
+        _back  = 0;
+    }
+
+private:
     Placeholder<T, kCount> _placeholder;
     SizeType               _front = 0;
     SizeType               _back  = 0;
@@ -359,45 +359,37 @@ struct InlineRingBufferMemory : public Allocator {
     }
 
     // copy & move
-    inline InlineRingBufferMemory(const InlineRingBufferMemory& other, AllocatorCtorParam param)
-        : Allocator(std::move(param))
+    inline InlineRingBufferMemory(const InlineRingBufferMemory& rhs)
+        : Allocator(rhs)
     {
-        if (other.size())
+        if (rhs.size())
         {
-            realloc(other.size());
-            copy_ring_buffer(data(), other.data(), other._capacity, other._front, other._back);
+            realloc(rhs.size());
+            copy_ring_buffer(data(), rhs.data(), rhs._capacity, rhs._front, rhs._back);
             _front = 0;
-            _back  = other.size();
+            _back  = rhs.size();
         }
     }
-    inline InlineRingBufferMemory(InlineRingBufferMemory&& other) noexcept
-        : Allocator(std::move(other))
+    inline InlineRingBufferMemory(InlineRingBufferMemory&& rhs) noexcept
+        : Allocator(std::move(rhs))
     {
-        if (other._is_using_inline_memory())
+        // move data
+        if (rhs._is_using_inline_memory())
         {
-            // move inline data
-            move_ring_buffer(data(), other.data(), other._capacity, other._front, other._back);
+            move_ring_buffer(data(), rhs.data(), rhs._capacity, rhs._front, rhs._back);
             _front = 0;
-            _back  = other.size();
-
-            // invalidate other
-            other._front = 0;
-            other._back  = 0;
+            _back  = rhs.size();
         }
         else
         {
-            // move heap data
-            _heap_data = other._heap_data;
-            _capacity  = other._capacity;
-            _front     = other._front;
-            _back      = other._back;
-
-            // invalidate other
-            other._heap_data = nullptr;
-            other._capacity  = kInlineCount;
-            other._front     = 0;
-            other._back      = 0;
+            _heap_data = rhs._heap_data;
+            _capacity  = rhs._capacity;
+            _front     = rhs._front;
+            _back      = rhs._back;
         }
+
+        // reset rhs
+        rhs._reset();
     }
 
     // assign & move assign
@@ -405,11 +397,11 @@ struct InlineRingBufferMemory : public Allocator {
     {
         if (this != &rhs)
         {
-            // clean up self
-            clear();
-
             // copy allocator
             Allocator::operator=(rhs);
+
+            // clean up self
+            clear();
 
             // copy data
             if (rhs.data())
@@ -431,46 +423,32 @@ struct InlineRingBufferMemory : public Allocator {
     {
         if (this != &rhs)
         {
+            // move allocator
+            Allocator::operator=(std::move(rhs));
+
+            // clean up self
+            clear();
+            free();
+
+            // move data
             if (rhs._is_using_inline_memory())
             {
-                // clean up self
-                clear();
-
-                // move allocator
-                Allocator::operator=(std::move(rhs));
-
                 // move inline data
                 move_ring_buffer(data(), rhs.data(), rhs._capacity, rhs._front, rhs._back);
                 _front = 0;
                 _back  = rhs.size();
-
-                // invalidate other
-                rhs._front = 0;
-                rhs._back  = 0;
             }
             else
             {
-                // clean up self
-                clear();
-
-                // free self
-                free();
-
-                // move allocator
-                Allocator::operator=(std::move(rhs));
-
                 // move data
                 _heap_data = rhs._heap_data;
                 _capacity  = rhs._capacity;
                 _front     = rhs._front;
                 _back      = rhs._back;
-
-                // invalidate other
-                rhs._heap_data = nullptr;
-                rhs._capacity  = kInlineCount;
-                rhs._front     = 0;
-                rhs._back      = 0;
             }
+
+            // reset rhs
+            rhs._reset();
         }
     }
 
@@ -480,7 +458,9 @@ struct InlineRingBufferMemory : public Allocator {
         SKR_ASSERT(new_capacity != _capacity);
         SKR_ASSERT(new_capacity > 0);
         SKR_ASSERT(size() <= new_capacity);
+        new_capacity = new_capacity < kInlineCount ? kInlineCount : new_capacity;
 
+        // update data
         if (new_capacity > kInlineCount)
         {
             if (_is_using_inline_memory()) // inline -> heap
@@ -489,50 +469,39 @@ struct InlineRingBufferMemory : public Allocator {
                 T* new_memory = Allocator::template alloc<T>(new_capacity);
 
                 // move items
-                if (size())
+                SizeType cached_size = size();
+                if (cached_size)
                 {
                     move_ring_buffer(new_memory, _placeholder.data_typed(), _capacity, _front, _back);
                 }
 
                 // update data
                 _heap_data = new_memory;
-                _capacity  = new_capacity;
                 _front     = 0;
-                _back      = size();
+                _back      = cached_size;
             }
             else // heap -> heap
             {
-                if constexpr (memory::MemoryTraits<T>::use_realloc && Allocator::support_realloc)
+
+                // NOTE. 鉴于 ring buffer 元素分布的特殊性，realloc 未必会有性能优势，此处暂不实现
+
+                // alloc new memory
+                T* new_memory = Allocator::template alloc<T>(new_capacity);
+
+                // copy data
+                SizeType cached_size = size();
+                if (cached_size)
                 {
-                    // trim data to fit realloc logic
-                    if (size())
-                    {
-                        trim_ring_buffer_for_new_capacity(_heap_data, _capacity, new_capacity, _front, _back);
-                    }
-                    _heap_data = Allocator::template realloc<T>(_heap_data, new_capacity);
-                    _capacity  = new_capacity;
+                    copy_ring_buffer(new_memory, _heap_data, _capacity, _front, _back);
                 }
-                else
-                {
-                    // alloc new memory
-                    T* new_memory = Allocator::template alloc<T>(new_capacity);
 
-                    // copy data
-                    SizeType cached_size = size();
-                    if (cached_size)
-                    {
-                        copy_ring_buffer(new_memory, _heap_data, _capacity, _front, _back);
-                    }
+                // release old memory
+                Allocator::template free<T>(_heap_data);
 
-                    // release old memory
-                    Allocator::template free<T>(_heap_data);
-
-                    // update data
-                    _heap_data = new_memory;
-                    _capacity  = new_capacity;
-                    _front     = 0;
-                    _back      = cached_size;
-                }
+                // update data
+                _heap_data = new_memory;
+                _front     = 0;
+                _back      = cached_size;
             }
         }
         else
@@ -546,7 +515,8 @@ struct InlineRingBufferMemory : public Allocator {
                 T* cached_heap_data = _heap_data;
 
                 // move items
-                if (size())
+                SizeType cached_size = size();
+                if (cached_size)
                 {
                     move_ring_buffer(_placeholder.data_typed(), cached_heap_data, _capacity, _front, _back);
                 }
@@ -555,11 +525,13 @@ struct InlineRingBufferMemory : public Allocator {
                 Allocator::template free<T>(cached_heap_data);
 
                 // update data
-                _capacity = kInlineCount;
-                _front    = 0;
-                _back     = size();
+                _front = 0;
+                _back  = cached_size;
             }
         }
+
+        // update capacity
+        _capacity = new_capacity;
     }
     inline void free() noexcept
     {
@@ -625,6 +597,13 @@ struct InlineRingBufferMemory : public Allocator {
 private:
     // helper
     inline bool _is_using_inline_memory() const noexcept { return _capacity == kInlineCount; }
+
+    inline void _reset()
+    {
+        _capacity = kInlineCount;
+        _front    = 0;
+        _back     = 0;
+    }
 
 private:
     union

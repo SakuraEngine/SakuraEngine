@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRenderer/fwd_types.h"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/containers/span.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/span.hpp"
 #ifndef __meta__
     #include "SkrRenderer/resources/shader_meta_resource.generated.h" // IWYU pragma: export
 #endif

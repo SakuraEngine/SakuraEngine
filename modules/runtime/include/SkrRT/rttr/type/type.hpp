@@ -1,9 +1,8 @@
 #pragma once
 #include <cstdint>
 #include "SkrRT/rttr/guid.hpp"
-#include "SkrRT/containers/string.hpp"
-#include "SkrRT/serde/json/writer_fwd.h"
-#include "SkrRT/serde/json/reader_fwd.h"
+#include "SkrContainers/string.hpp"
+#include "SkrBase/types.h"
 
 namespace skr::rttr
 {

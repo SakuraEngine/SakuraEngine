@@ -1,12 +1,12 @@
 
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRenderer/render_mesh.h"
 
 #include "SkrAnim/components/skin_component.hpp"
 #include "SkrAnim/components/skeleton_component.hpp"
 #include "SkrAnim/ozz/geometry/skinning_job.h"
 #include "SkrAnim/ozz/base/span.h"
-#include "SkrRT/containers/sptr.hpp"
+#include "SkrContainers/sptr.hpp"
 
 #include "SkrProfile/profile.h"
 
@@ -140,21 +140,21 @@ void skr_init_anim_buffers(CGPUDeviceId device, skr::anim::AnimComponent* anim, 
                     auto attr = mesh_resource->primitives[k].vertex_buffers[z].attribute;
                     if(attr == SKR_VERT_ATTRIB_POSITION)
                     {
-                        auto& view = *anim->views.add_default();
+                        auto& view = anim->views.add_default().ref();
                         view.buffer = anim->vbs[j];
                         view.offset = prim.position.offset;
                         view.stride = prim.position.stride;
                     }
                     else if(attr == SKR_VERT_ATTRIB_NORMAL)
                     {
-                        auto& view = *anim->views.add_default();
+                        auto& view = anim->views.add_default().ref();
                         view.buffer = anim->vbs[j];
                         view.offset = prim.normal.offset;
                         view.stride = prim.normal.stride;
                     }
                     else if(attr == SKR_VERT_ATTRIB_TANGENT)
                     {
-                        auto& view = *anim->views.add_default();
+                        auto& view = anim->views.add_default().ref();
                         view.buffer = anim->vbs[j];
                         view.offset = prim.tangent.offset;
                         view.stride = prim.tangent.stride;

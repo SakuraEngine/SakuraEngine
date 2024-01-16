@@ -45,15 +45,15 @@ typedef struct skr_guid_t {
     static skr_guid_t Create();
 
     // for skr::Hash
-    SKR_INLINE size_t _skr_hash() const
+    SKR_INLINE static size_t _skr_hash(const skr_guid_t& guid)
     {
         using namespace skr;
         Hash<uint32_t> hasher;
 
-        size_t result = hasher(Storage0);
-        result        = hash_combine(result, hasher(Storage1));
-        result        = hash_combine(result, hasher(Storage2));
-        result        = hash_combine(result, hasher(Storage3));
+        size_t result = hasher(guid.Storage0);
+        result        = hash_combine(result, hasher(guid.Storage1));
+        result        = hash_combine(result, hasher(guid.Storage2));
+        result        = hash_combine(result, hasher(guid.Storage3));
         return result;
     }
 
@@ -63,3 +63,15 @@ typedef struct skr_guid_t {
     uint32_t Storage2 SKR_IF_CPP(= 0);
     uint32_t Storage3 SKR_IF_CPP(= 0);
 } skr_guid_t;
+
+
+SKR_EXTERN_C void skr_make_guid(skr_guid_t* out_guid);
+
+#ifdef __cplusplus
+inline skr_guid_t skr_guid_t::Create()
+{
+    skr_guid_t guid;
+    skr_make_guid(&guid);
+    return guid;
+}
+#endif

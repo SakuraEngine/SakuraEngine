@@ -1,8 +1,8 @@
 #pragma once
 #include "shader_compiler.hpp"
-#include "SkrRT/module/subsystem.hpp"
-#include "SkrRT/platform/shared_library.hpp"
-#include "SkrRT/containers/stl_string.hpp"
+#include "SkrModule/subsystem.hpp"
+#include "SkrOS/shared_library.hpp"
+#include "SkrContainers/stl_string.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #ifndef __meta__
     #include "SkrShaderCompiler/dxc_compiler.generated.h" // IWYU pragma: export

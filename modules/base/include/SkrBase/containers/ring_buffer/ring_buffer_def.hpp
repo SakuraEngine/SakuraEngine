@@ -1,8 +1,8 @@
 #pragma once
-#include "SkrBase/containers/array/array_def.hpp"
+#include "SkrBase/containers/vector/vector_def.hpp"
 
 namespace skr::container
 {
-template <typename T, typename TS>
-using RingBufferDataRef = ArrayDataRef<T, TS>;
+template <typename T, typename TS, bool kConst>
+using RingBufferDataRef = VectorDataRef<T, TS, kConst>;
 }
