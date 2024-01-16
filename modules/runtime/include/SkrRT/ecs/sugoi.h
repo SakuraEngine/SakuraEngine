@@ -348,7 +348,7 @@ SKR_RUNTIME_API void sugoiS_instantiate_entities(sugoi_storage_t* storage, sugoi
  * @param storage
  * @param view
  */
-[[deprecated("use other variants of sugoiS_destroy instead")]]
+SKR_DEPRECATED("use other variants of sugoiS_destroy instead")
 SKR_RUNTIME_API void sugoiS_destroy(sugoi_storage_t* storage, const sugoi_chunk_view_t* view);
 /**
  * @brief destroy entities

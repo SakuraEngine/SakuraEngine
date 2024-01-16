@@ -239,6 +239,26 @@
 #define SKR_IS_BIG_ENDIAN 0
 #define SKR_IS_LITTLE_ENDIAN 1
 
+#pragma region deprecated
+
+#if defined(__has_cpp_attribute) && __cplusplus >= 201402L
+	#if __has_cpp_attribute(deprecated)
+		#define SKR_DEPRECATED(msg) [[deprecated(msg)]]
+	#endif
+#endif
+
+#if !defined(SKR_DEPRECATED)
+	#if defined(__GNUC__) || defined(__clang__)
+		#define SKR_DEPRECATED(msg) __attribute__((deprecated))
+	#elif defined(_MSC_VER)
+		#define SKR_DEPRECATED(msg) __declspec(deprecated)
+	#else
+		#define SKR_DEPRECATED(msg)
+	#endif
+#endif
+
+#pragma endregion
+
 
 #ifdef __cplusplus
 typedef struct Dummy {
