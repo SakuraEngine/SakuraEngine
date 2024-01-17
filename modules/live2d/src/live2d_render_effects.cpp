@@ -72,9 +72,9 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
             identity_type  = sugoiT_register_type(&desc);
         }
         type_builder
-        .with(identity_type)
-        .with<skr_live2d_render_model_comp_t>();
-        effect_query = sugoiQ_from_literal(storage, "[in]live2d_identity");
+            .with(identity_type)
+            .with<skr_live2d_render_model_comp_t>();
+        effect_query = sugoiQ_from_literal(storage, u8"[in]live2d_identity");
         // prepare render resources
         prepare_pipeline_settings();
         prepare_pipeline(renderer);

@@ -1,7 +1,7 @@
 mimalloc_includes_dir = "$(projectdir)/thirdparty/mimalloc"
 
 target("mimalloc")
-    set_group("00.thirdparty")
+    set_group("01.libraries")
     set_optimize("fastest")
     add_files("$(projectdir)/thirdparty/mimalloc/build.mimalloc.c")
     add_includedirs(mimalloc_includes_dir, {public = true})

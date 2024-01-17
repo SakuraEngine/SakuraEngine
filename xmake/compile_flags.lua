@@ -1,4 +1,5 @@
 target("SkrCompileFlags")
+    set_group("00.utilities")
     set_kind("headeronly")
     -- uses utf-8 charset at runtime
     if is_plat("windows") then
