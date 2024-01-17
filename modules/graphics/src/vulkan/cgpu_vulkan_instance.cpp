@@ -518,6 +518,6 @@ void cgpu_free_device_vulkan(CGPUDeviceId device)
     VkUtil_FreeVMAAllocator(I, A, D);
     VkUtil_FreeDescriptorPool(D->pDescriptorPool);
     VkUtil_FreePipelineCache(I, A, D);
-    vkDestroyDevice(D->pVkDevice, nullptr);
+    vkDestroyDevice(D->pVkDevice, GLOBAL_VkAllocationCallbacks);
     cgpu_free(D);
 }

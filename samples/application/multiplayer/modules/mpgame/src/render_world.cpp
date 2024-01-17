@@ -15,11 +15,10 @@ void MPRenderWorld::Initialize(MPClientWorld* gameWorld)
     this->storage = sugoiS_create();
     this->gameWorld = gameWorld;
     skr_init_hires_timer(&renderTimer);
-    renderGhostsQuery = sugoiQ_from_literal(storage, "[in]CGhost");
-    gameGhostsQuery = sugoiQ_from_literal(gameWorld->storage, "[in]CGhost, [has]CPrefab");
-    transformQuery = sugoiQ_from_literal(storage, "[in]skr_rotation_comp_t, [in]skr_translation_comp_t, [in]skr_scale_comp_t, [in]CGhost");
-    cameraQuery = sugoiQ_from_literal(storage,
-        "[inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
+    renderGhostsQuery = sugoiQ_from_literal(storage, u8"[in]CGhost");
+    gameGhostsQuery = sugoiQ_from_literal(gameWorld->storage, u8"[in]CGhost, [has]CPrefab");
+    transformQuery = sugoiQ_from_literal(storage, u8"[in]skr_rotation_comp_t, [in]skr_translation_comp_t, [in]skr_scale_comp_t, [in]CGhost");
+    cameraQuery = sugoiQ_from_literal(storage, u8"[inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
     sugoiJ_bind_storage(storage);
 }
 

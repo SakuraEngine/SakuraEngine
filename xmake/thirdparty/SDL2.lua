@@ -11,5 +11,5 @@ else
 
 end
 
-target("SkrRoot")
+target("SkrCompileFlags")
     add_includedirs(sdl2_includes_dir, {public = true})

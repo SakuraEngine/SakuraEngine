@@ -25,6 +25,8 @@ struct sugoi_query_t {
     sugoi_parameters_t parameters;
     skr::Vector<uint8_t> data;
     llvm_vecsmall::SmallVector<sugoi_query_t*, 2> subqueries;
+    sugoi_custom_filter_callback_t customFilter = nullptr;
+    void* customFilterUserData = nullptr;
 
     //cache
     sugoi::phase_entry** phases = nullptr;

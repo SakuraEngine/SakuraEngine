@@ -126,6 +126,8 @@ struct sugoi_storage_t {
 
     using batchmap_t = skr::FlatHashMap<sugoi_chunk_t*, sugoi_chunk_view_t>;
     void destroy(const sugoi_chunk_view_t& view);
+    void destroy(const sugoi_query_t* view);
+    void destroy(const sugoi_query_t* view, sugoi_destroy_callback_t callback, void* u);
     void destroy(const sugoi_meta_filter_t& meta);
     void free(const sugoi_chunk_view_t& view);
 
@@ -139,9 +141,9 @@ struct sugoi_storage_t {
     void query(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_view_callback_t callback, void* u);
     void query_groups(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_group_callback_t callback, void* u);
     bool match_group(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, const sugoi_group_t* group);
-    void query(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_view_callback_t callback, void* u);
+    void query(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_custom_filter_callback_t customFilter, void* u1, sugoi_view_callback_t callback, void* u);
     sugoi_query_t* make_query(const sugoi_filter_t& filter, const sugoi_parameters_t& parameters);
-    sugoi_query_t* make_query(const char* desc);
+    sugoi_query_t* make_query(const char8_t* desc);
     void destroy_query(sugoi_query_t* query);
     void query(const sugoi_query_t* query, sugoi_view_callback_t callback, void* u);
     void query_groups(const sugoi_query_t* query, sugoi_group_callback_t callback, void* u);

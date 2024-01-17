@@ -224,6 +224,8 @@ typedef void (*sugoi_group_callback_t)(void* u, sugoi_group_t* view);
 typedef void (*sugoi_entity_callback_t)(void* u, sugoi_entity_t e);
 typedef void (*sugoi_cast_callback_t)(void* u, sugoi_chunk_view_t* new_view, sugoi_chunk_view_t* old_view);
 typedef void (*sugoi_type_callback_t)(void* u, sugoi_type_index_t t);
+typedef void (*sugoi_destroy_callback_t)(void* u, sugoi_chunk_view_t* view, sugoi_view_callback_t callback, void* u2);
+typedef bool (*sugoi_custom_filter_callback_t)(void* u, sugoi_chunk_view_t* view);
 
 /**
  * @brief register a new component
@@ -346,7 +348,31 @@ SKR_RUNTIME_API void sugoiS_instantiate_entities(sugoi_storage_t* storage, sugoi
  * @param storage
  * @param view
  */
+SKR_DEPRECATED("use other variants of sugoiS_destroy instead")
 SKR_RUNTIME_API void sugoiS_destroy(sugoi_storage_t* storage, const sugoi_chunk_view_t* view);
+/**
+ * @brief destroy entities
+ * destory given entities
+ * @param storage
+ * @param view
+ */
+SKR_RUNTIME_API void sugoiS_destroy_entities(sugoi_storage_t* storage, const sugoi_entity_t* ents, EIndex n);
+/**
+ * @brief destory entities
+ * destory all entities matching given query
+ * @param storage
+ * @param ents
+ * @param count
+ */
+SKR_RUNTIME_API void sugoiS_destroy_in_query(const sugoi_query_t* query);
+/**
+ * @brief destory entities
+ * destory all entities matching given query and callback
+ * @param storage
+ * @param ents
+ * @param count
+ */
+SKR_RUNTIME_API void sugoiS_destroy_in_query_if(const sugoi_query_t* query, sugoi_destroy_callback_t callback, void* u);
 /**
  * @brief destory entities
  * destory all filtered entity
@@ -547,7 +573,7 @@ SKR_RUNTIME_API sugoi_query_t* sugoiQ_create(sugoi_storage_t* storage, const sug
  * @param component 
  * @param alias  
  */
-SKR_RUNTIME_API void sugoiQ_make_alias(sugoi_storage_t* storage, const char* component, const char* alias);
+SKR_RUNTIME_API void sugoiQ_make_alias(sugoi_storage_t* storage, const char8_t* component, const char8_t* alias);
 /**
  * @brief release a query
  * 
@@ -568,11 +594,11 @@ SKR_RUNTIME_API void sugoiQ_release(sugoi_query_t* query);
  * @param desc
  * @return sugoi_query_t*
  */
-SKR_RUNTIME_API sugoi_query_t* sugoiQ_from_literal(sugoi_storage_t* storage, const char* desc);
+SKR_RUNTIME_API sugoi_query_t* sugoiQ_from_literal(sugoi_storage_t* storage, const char8_t* desc);
 
 SKR_RUNTIME_API void sugoiQ_add_child(sugoi_query_t* query, sugoi_query_t* child);
 
-SKR_RUNTIME_API const char* sugoiQ_get_error();
+SKR_RUNTIME_API const char8_t* sugoiQ_get_error();
 
 SKR_RUNTIME_API void sugoiQ_sync(sugoi_query_t* query);
 
@@ -586,6 +612,15 @@ SKR_RUNTIME_API void sugoiQ_get(sugoi_query_t* query, sugoi_filter_t* filter, su
  * @param meta pass nullptr to clear meta
  */
 SKR_RUNTIME_API void sugoiQ_set_meta(sugoi_query_t* query, const sugoi_meta_filter_t* meta);
+/**
+ * @brief set custom filter callback for a query
+ * note: query does not own userdata
+ * @param query 
+ * @param callback 
+ * @param u 
+ * @return SKR_RUNTIME_API 
+ */
+SKR_RUNTIME_API void sugoiQ_set_custom_filter(sugoi_query_t* query, sugoi_custom_filter_callback_t callback, void* u);
 /**
  * @brief get filtered chunk view from query
  *
