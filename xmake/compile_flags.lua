@@ -16,6 +16,9 @@ target("SkrCompileFlags")
         "-Wno-nullability-completeness", "-Wno-tautological-undefined-compare",
         "-Werror=return-type", { public = true, tools = {"clang_cl", "clang"} }
     )
+    add_cxflags("/Zc:__cplusplus", "/FC", "/GR-", "/wd4251",
+        { public = true, tools = {"clang_cl", "cl"} }
+    )
     add_cxflags("-Wno-microsoft-cast", 
         "-Wno-microsoft-include", 
         "-Wno-microsoft-enum-forward-reference",
@@ -27,6 +30,3 @@ target("SkrCompileFlags")
     end
     add_ldflags("/IGNORE:4217,4286", { public = true, tools = {"clang_cl", "cl"} })
 
-    add_cxflags("/Zc:__cplusplus", "/FC", "/GR-", "/wd4251",
-        { public = true, tools = {"clang_cl", "cl"} }
-    )
