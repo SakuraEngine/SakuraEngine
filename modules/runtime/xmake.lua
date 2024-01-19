@@ -1,4 +1,5 @@
 add_requires("boost-context >=0.1.0-skr")
+add_requires("ispc 1.22.0")
 -- add_requires("cpu_features v0.9.0")
 
 static_component("SkrSerde", "SkrRT")

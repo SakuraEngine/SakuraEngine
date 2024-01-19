@@ -1,4 +1,3 @@
-includes("rules/ispc.lua")
 includes("rules/dxc.lua")
 includes("rules/install-resources.lua")
 includes("rules/cpp-codegen.lua")
