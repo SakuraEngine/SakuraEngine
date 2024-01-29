@@ -113,7 +113,6 @@ protected:
     bool _remove(HashType hash, Pred&& pred);
     template <typename Pred>
     SizeType _remove_all(HashType hash, Pred&& pred);
-    void     _remove_at(SizeType index);
 
     // template find_if
     template <typename DataRef, typename Pred>
@@ -571,6 +570,8 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::_remove_all(HashType hash, Pred&& pred)
 {
+    if (empty()) return 0;
+
     SizeType count = 0;
 
     SizeType* p_next_idx = bucket() + _bucket_index(hash);
@@ -586,7 +587,7 @@ SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::_re
             *p_next_idx    = next_data._sparse_hash_set_next;
 
             // remove item
-            _remove_at(index);
+            Super::remove_at(index);
             ++count;
         }
         else
@@ -597,12 +598,6 @@ SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::_re
     }
 
     return count;
-}
-template <typename Memory>
-SKR_INLINE void SparseHashBase<Memory>::_remove_at(SizeType index)
-{
-    _remove_from_bucket(index);
-    data_vector().remove_at(index);
 }
 
 // remove
