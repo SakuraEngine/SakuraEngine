@@ -160,7 +160,7 @@ SKR_UNUSED static const char* cgpu_wanted_instance_exts[] = {
 #elif defined(_MACOS)
     VK_MVK_MACOS_SURFACE_EXTENSION_NAME,
     "VK_EXT_metal_surface",
-#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+#ifdef VK_KHR_portability_enumeration
     VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
 #endif
 #elif defined(VK_USE_PLATFORM_XLIB_KHR)
@@ -174,7 +174,12 @@ SKR_UNUSED static const char* cgpu_wanted_instance_exts[] = {
 #elif defined(VK_USE_PLATFORM_VI_NN)
     VK_NN_VI_SURFACE_EXTENSION_NAME,
 #endif
+#ifdef USE_EXTERNAL_MEMORY_EXTENSIONS
     VK_NV_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME,
+    VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME,
+    VK_KHR_EXTERNAL_SEMAPHORE_CAPABILITIES_EXTENSION_NAME,
+    VK_KHR_EXTERNAL_FENCE_CAPABILITIES_EXTENSION_NAME,
+#endif
     // To legally use HDR formats
     VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME,
     /************************************************************************/
@@ -302,7 +307,11 @@ SKR_UNUSED static const char* cgpu_wanted_device_exts[] = {
     /************************************************************************/
     // RDNA2 Extensions
     /************************************************************************/
+#if VK_KHR_create_renderpass2
+    VK_KHR_MULTIVIEW_EXTENSION_NAME,
+    VK_KHR_MAINTENANCE_2_EXTENSION_NAME,
     VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
+#endif
 #if VK_KHR_fragment_shading_rate
     VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME,
 #endif
