@@ -1239,10 +1239,10 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
         .commandBufferCount = CmdCount,
         .pCommandBuffers = vkCmds,
         .waitSemaphoreCount = waitCount,
-        .pWaitSemaphores = wait_semaphores,
-        .pWaitDstStageMask = wait_stages,
+        .pWaitSemaphores = waitCount > 0 ? wait_semaphores : VK_NULL_HANDLE,
+        .pWaitDstStageMask = waitCount > 0 ? wait_stages : VK_NULL_HANDLE,
         .signalSemaphoreCount = signalCount,
-        .pSignalSemaphores = signal_semaphores,
+        .pSignalSemaphores = signalCount > 0 ? signal_semaphores : VK_NULL_HANDLE,
     };
 #ifdef CGPU_THREAD_SAFETY
     if (Q->pMutex) skr_mutex_acquire(Q->pMutex);
@@ -1299,7 +1299,7 @@ void cgpu_queue_present_vulkan(CGPUQueueId queue, const struct CGPUQueuePresentD
             .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
             .pNext = VK_NULL_HANDLE,
             .waitSemaphoreCount = waitCount,
-            .pWaitSemaphores = wait_semaphores,
+            .pWaitSemaphores = waitCount > 0 ? wait_semaphores : VK_NULL_HANDLE,
             .swapchainCount = 1,
             .pSwapchains = &SC->pVkSwapChain,
             .pImageIndices = &presentIndex,
