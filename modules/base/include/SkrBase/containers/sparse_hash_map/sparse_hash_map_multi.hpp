@@ -280,7 +280,7 @@ SKR_INLINE MultiSparseHashMap<Memory>::MultiSparseHashMap(const MultiSparseHashM
 }
 template <typename Memory>
 SKR_INLINE MultiSparseHashMap<Memory>::MultiSparseHashMap(MultiSparseHashMap&& rhs)
-    : Super(rhs)
+    : Super(std::move(rhs))
 {
     // handled by SparseHashBase
 }
@@ -308,8 +308,8 @@ SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memor
 {
     HashType hash = HasherType()(key);
     DataRef  ref  = add_ex_unsafe(hash);
-    new (&ref.key()) MapKeyType{ std::move(key) };
-    new (&ref.value()) MapValueType{ std::move(value) };
+    new (&ref.key()) MapKeyType(std::forward<UK>(key));
+    new (&ref.value()) MapValueType(std::forward<UV>(value));
     return ref;
 }
 template <typename Memory>
@@ -335,7 +335,7 @@ SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memor
 {
     HashType hash = HasherType()(key);
     DataRef  ref  = add_ex_unsafe(hash);
-    new (&ref.key()) MapKeyType{ std::move(key) };
+    new (&ref.key()) MapKeyType(std::forward<UK>(key));
     return ref;
 }
 template <typename Memory>
@@ -345,7 +345,7 @@ SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memor
 {
     HashType hash = HasherType()(key);
     DataRef  ref  = add_ex_unsafe(hash);
-    new (&ref.key()) MapKeyType{ std::move(key) };
+    new (&ref.key()) MapKeyType(std::forward<UK>(key));
     memory::construct(&ref.value());
     return ref;
 }
@@ -356,7 +356,7 @@ SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memor
 {
     HashType hash = HasherType()(key);
     DataRef  ref  = add_ex_unsafe(hash);
-    new (&ref.key()) MapKeyType{ std::move(key) };
+    new (&ref.key()) MapKeyType(std::forward<UK>(key));
     memset(&ref.value(), 0, sizeof(MapValueType));
     return ref;
 }
@@ -369,8 +369,8 @@ SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memor
 {
     HashType hash = HasherType()(key);
     DataRef  ref  = add_ex_unsafe(hash);
-    new (&ref.key()) MapKeyType{ std::move(key) };
-    new (&ref.value()) MapValueType{ std::forward<Args>(args)... };
+    new (&ref.key()) MapKeyType(std::forward<UK>(key));
+    new (&ref.value()) MapValueType(std::forward<Args>(args)...);
     return ref;
 }
 
@@ -525,25 +525,25 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memory>::find_if(Pred&& pred)
 {
-    return Super::template _find_if<DataRef>(std::forward(pred));
+    return Super::template _find_if<DataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename MultiSparseHashMap<Memory>::DataRef MultiSparseHashMap<Memory>::find_last_if(Pred&& pred)
 {
-    return Super::template _find_last_if<DataRef>(std::forward(pred));
+    return Super::template _find_last_if<DataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename MultiSparseHashMap<Memory>::CDataRef MultiSparseHashMap<Memory>::find_if(Pred&& pred) const
 {
-    return Super::template _find_if<CDataRef>(std::forward(pred));
+    return Super::template _find_if<CDataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename MultiSparseHashMap<Memory>::CDataRef MultiSparseHashMap<Memory>::find_last_if(Pred&& pred) const
 {
-    return Super::template _find_last_if<CDataRef>(std::forward(pred));
+    return Super::template _find_last_if<CDataRef>(std::forward<Pred>(pred));
 }
 
 // contains
@@ -693,5 +693,6 @@ SKR_INLINE typename MultiSparseHashMap<Memory>::CStlIt MultiSparseHashMap<Memory
 template <typename Memory>
 SKR_INLINE const MultiSparseHashMap<Memory>& MultiSparseHashMap<Memory>::readonly() const
 {
+    return *this;
 }
 } // namespace skr::container
