@@ -414,25 +414,25 @@ template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::find_if(Pred&& pred)
 {
-    return Super::template _find_if<DataRef>(std::forward(pred));
+    return Super::template _find_if<DataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::find_last_if(Pred&& pred)
 {
-    return Super::template _find_last_if<DataRef>(std::forward(pred));
+    return Super::template _find_last_if<DataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memory>::find_if(Pred&& pred) const
 {
-    return Super::template _find_if<CDataRef>(std::forward(pred));
+    return Super::template _find_if<CDataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memory>::find_last_if(Pred&& pred) const
 {
-    return Super::template _find_last_if<CDataRef>(std::forward(pred));
+    return Super::template _find_last_if<CDataRef>(std::forward<Pred>(pred));
 }
 
 // contains
@@ -474,7 +474,7 @@ typename MultiSparseHashSet<Memory>::SizeType MultiSparseHashSet<Memory>::count_
     while (ref.is_valid())
     {
         ++count;
-        ref = Super::template _find_next<CDataRef>(ref, std::forward<pred>());
+        ref = Super::template _find_next<CDataRef>(ref, std::forward<Pred>(pred));
     };
 
     return count;
