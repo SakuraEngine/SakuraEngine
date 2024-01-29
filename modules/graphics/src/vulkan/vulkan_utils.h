@@ -339,7 +339,11 @@ SKR_UNUSED static const char* cgpu_wanted_device_exts[] = {
     VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME,
 #endif
     /************************************************************************/
+    // PCRTC format support
     /************************************************************************/
+#if VK_IMG_format_pvrtc
+    VK_IMG_FORMAT_PVRTC_EXTENSION_NAME,
+#endif
 };
 
 #ifdef __cplusplus
