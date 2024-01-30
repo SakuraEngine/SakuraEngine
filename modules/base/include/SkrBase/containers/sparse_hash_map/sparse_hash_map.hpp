@@ -3,7 +3,9 @@
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_base.hpp"
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map_def.hpp"
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map_iterator.hpp"
+#include "SkrBase/containers/misc/container_traits.hpp"
 
+// SparseHashSet def
 namespace skr::container
 {
 template <typename Memory>
@@ -240,6 +242,7 @@ struct SparseHashMap : protected SparseHashBase<Memory> {
 };
 } // namespace skr::container
 
+// SparseHashSet impl
 namespace skr::container
 {
 // ctor & dtor
@@ -828,4 +831,22 @@ SKR_INLINE const SparseHashMap<Memory>& SparseHashMap<Memory>::readonly() const
 {
     return *this;
 }
+} // namespace skr::container
+
+// container traits
+namespace skr::container
+{
+template <typename Memory>
+struct ContainerTraits<SparseHashMap<Memory>> {
+    constexpr static bool is_linear_memory = false; // data(), size()
+    constexpr static bool has_size         = true;  // size()
+    constexpr static bool is_iterable      = true;  // begin(), end()
+
+    static inline size_t size(const SparseHashMap<Memory>& container) { return container.size(); }
+
+    inline static typename SparseHashMap<Memory>::StlIt  begin(SparseHashMap<Memory>& set) { return set.begin(); }
+    inline static typename SparseHashMap<Memory>::StlIt  end(SparseHashMap<Memory>& set) { return set.end(); }
+    inline static typename SparseHashMap<Memory>::CStlIt begin(const SparseHashMap<Memory>& set) { return set.begin(); }
+    inline static typename SparseHashMap<Memory>::CStlIt end(const SparseHashMap<Memory>& set) { return set.end(); }
+};
 } // namespace skr::container
