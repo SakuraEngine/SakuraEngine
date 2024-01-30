@@ -5,6 +5,7 @@
 #include "sparse_vector_iterator.hpp"
 #include "SkrBase/algo/intro_sort.hpp"
 #include "SkrBase/algo/merge_sort.hpp"
+#include "SkrBase/containers/misc/container_traits.hpp"
 
 // SparseVector def
 namespace skr::container
@@ -42,6 +43,8 @@ struct SparseVector : protected Memory {
     SparseVector(SizeType size, const DataType& v, AllocatorCtorParam param = {});
     SparseVector(const DataType* p, SizeType n, AllocatorCtorParam param = {});
     SparseVector(std::initializer_list<DataType> init_list, AllocatorCtorParam param = {});
+    template <EachAbleContainer U>
+    SparseVector(U&& container, AllocatorCtorParam param = {});
     ~SparseVector();
 
     // copy & move
@@ -55,6 +58,8 @@ struct SparseVector : protected Memory {
     // special assign
     void assign(const DataType* p, SizeType n);
     void assign(std::initializer_list<DataType> init_list);
+    template <EachAbleContainer U>
+    void assign(U&& container);
 
     // compare
     bool operator==(const SparseVector& rhs) const;
@@ -115,6 +120,8 @@ struct SparseVector : protected Memory {
     void append(const SparseVector& arr);
     void append(std::initializer_list<DataType> init_list);
     void append(DataType* p, SizeType n);
+    template <EachAbleContainer U>
+    void append(U&& container);
 
     // remove
     void remove_at(SizeType index, SizeType n = 1);
@@ -371,6 +378,50 @@ SKR_INLINE SparseVector<Memory>::SparseVector(std::initializer_list<DataType> in
     }
 }
 template <typename Memory>
+template <EachAbleContainer U>
+SKR_INLINE SparseVector<Memory>::SparseVector(U&& container, AllocatorCtorParam param)
+    : Memory(std::move(param))
+{
+    using Traits = ContainerTraits<std::decay_t<U>>;
+    if constexpr (Traits::is_linear_memory)
+    {
+        auto n = Traits::size(std::forward<U>(container));
+        auto p = Traits::data(std::forward<U>(container));
+        if (n)
+        {
+            // realloc
+            _realloc(n);
+
+            // setup size
+            _set_sparse_size(n);
+            BitAlgo::set_range(bit_data(), SizeType(0), n, true);
+
+            // call ctor
+            _copy_compacted_data(storage(), p, n);
+        }
+    }
+    else if constexpr (Traits::is_iterable && Traits::has_size)
+    {
+        auto n     = Traits::size(std::forward<U>(container));
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        reserve(n);
+        for (; begin != end; ++begin)
+        {
+            emplace(*begin);
+        }
+    }
+    else if constexpr (Traits::is_iterable)
+    {
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        for (; begin != end; ++begin)
+        {
+            emplace(*begin);
+        }
+    }
+}
+template <typename Memory>
 SKR_INLINE SparseVector<Memory>::~SparseVector()
 {
     // handled in memory
@@ -440,6 +491,51 @@ SKR_INLINE void SparseVector<Memory>::assign(std::initializer_list<DataType> ini
 
         // call ctor
         _copy_compacted_data(storage(), init_list.begin(), size);
+    }
+}
+template <typename Memory>
+template <EachAbleContainer U>
+SKR_INLINE void SparseVector<Memory>::assign(U&& container)
+{
+    clear();
+
+    using Traits = ContainerTraits<std::decay_t<U>>;
+    if constexpr (Traits::is_linear_memory)
+    {
+        auto n = Traits::size(std::forward<U>(container));
+        auto p = Traits::data(std::forward<U>(container));
+        if (n)
+        {
+            // realloc
+            reserve(n);
+
+            // setup size
+            _set_sparse_size(n);
+            BitAlgo::set_range(bit_data(), SizeType(0), n, true);
+
+            // call ctor
+            _copy_compacted_data(storage(), p, n);
+        }
+    }
+    else if constexpr (Traits::is_iterable && Traits::has_size)
+    {
+        auto n     = Traits::size(std::forward<U>(container));
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        reserve(n);
+        for (; begin != end; ++begin)
+        {
+            emplace(*begin);
+        }
+    }
+    else if constexpr (Traits::is_iterable)
+    {
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        for (; begin != end; ++begin)
+        {
+            emplace(*begin);
+        }
     }
 }
 
@@ -911,6 +1007,57 @@ SKR_INLINE void SparseVector<Memory>::append(DataType* p, SizeType n)
         _copy_compacted_data(storage() + write_idx, p + read_idx, grow_count);
     }
 }
+template <typename Memory>
+template <EachAbleContainer U>
+SKR_INLINE void SparseVector<Memory>::append(U&& container)
+{
+    using Traits = ContainerTraits<std::decay_t<U>>;
+    if constexpr (Traits::is_linear_memory)
+    {
+        auto n = Traits::size(std::forward<U>(container));
+        auto p = Traits::data(std::forward<U>(container));
+        append(p, n);
+    }
+    else if constexpr (Traits::is_iterable && Traits::has_size)
+    {
+        auto n     = Traits::size(std::forward<U>(container));
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        // fill hole
+        SizeType count = 0;
+        while (hole_size() > 0 && begin != end)
+        {
+            add(*begin);
+            ++begin;
+            ++count;
+        }
+
+        // grow and copy
+        if (begin != end)
+        {
+            auto write_idx  = sparse_size();
+            auto grow_count = n - count;
+            _grow(grow_count);
+            BitAlgo::set_range(bit_data(), write_idx, grow_count, true);
+            while (begin != end)
+            {
+                new (&(storage()[write_idx]._sparse_vector_data)) DataType(*begin);
+                ++write_idx;
+                ++begin;
+            }
+            SKR_ASSERT(write_idx == sparse_size());
+        }
+    }
+    else if constexpr (Traits::is_iterable)
+    {
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        for (; begin != end; ++begin)
+        {
+            emplace(*begin);
+        }
+    }
+}
 
 // remove
 template <typename Memory>
@@ -1292,4 +1439,22 @@ SKR_INLINE const SparseVector<Memory>& SparseVector<Memory>::readonly() const
 {
     return *this;
 }
+} // namespace skr::container
+
+// container traits
+namespace skr::container
+{
+template <typename Memory>
+struct ContainerTraits<SparseVector<Memory>> {
+    constexpr static bool is_linear_memory = false; // data(), size()
+    constexpr static bool has_size         = true;  // size()
+    constexpr static bool is_iterable      = true;  // begin(), end()
+
+    static inline size_t size(const SparseVector<Memory>& vec) { return vec.size(); }
+
+    static inline auto begin(const SparseVector<Memory>& vec) noexcept { return vec.begin(); }
+    static inline auto end(const SparseVector<Memory>& vec) noexcept { return vec.end(); }
+    static inline auto begin(SparseVector<Memory>& vec) noexcept { return vec.begin(); }
+    static inline auto end(SparseVector<Memory>& vec) noexcept { return vec.end(); }
+};
 } // namespace skr::container

@@ -1,6 +1,8 @@
 #pragma once
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_base.hpp"
+#include "SkrBase/containers/misc/container_traits.hpp"
 
+// MultiSparseHashSet def
 namespace skr::container
 {
 template <typename Memory>
@@ -45,6 +47,8 @@ struct MultiSparseHashSet : protected SparseHashBase<Memory> {
     MultiSparseHashSet(SizeType reserve_size, AllocatorCtorParam param = {});
     MultiSparseHashSet(const SetDataType* p, SizeType n, AllocatorCtorParam param = {});
     MultiSparseHashSet(std::initializer_list<SetDataType> init_list, AllocatorCtorParam param = {});
+    template <EachAbleContainer U>
+    MultiSparseHashSet(U&& container, AllocatorCtorParam param = {});
     ~MultiSparseHashSet();
 
     // copy & move
@@ -102,6 +106,8 @@ struct MultiSparseHashSet : protected SparseHashBase<Memory> {
     void append(const MultiSparseHashSet& set);
     void append(std::initializer_list<SetDataType> init_list);
     void append(const SetDataType* p, SizeType n);
+    template <EachAbleContainer U>
+    void append(U&& container);
 
     // remove
     using Super::remove_at;
@@ -195,6 +201,7 @@ struct MultiSparseHashSet : protected SparseHashBase<Memory> {
 };
 } // namespace skr::container
 
+// MultiSparseHashSet impl
 namespace skr::container
 {
 // ctor & dtor
@@ -220,6 +227,13 @@ SKR_INLINE MultiSparseHashSet<Memory>::MultiSparseHashSet(std::initializer_list<
     : Super(std::move(param))
 {
     append(init_list);
+}
+template <typename Memory>
+template <EachAbleContainer U>
+SKR_INLINE MultiSparseHashSet<Memory>::MultiSparseHashSet(U&& container, AllocatorCtorParam param)
+    : Super(std::move(param))
+{
+    append(container);
 }
 template <typename Memory>
 SKR_INLINE MultiSparseHashSet<Memory>::~MultiSparseHashSet()
@@ -326,6 +340,38 @@ SKR_INLINE void MultiSparseHashSet<Memory>::append(const SetDataType* p, SizeTyp
     for (SizeType i = 0; i < n; ++i)
     {
         add(p[i]);
+    }
+}
+template <typename Memory>
+template <EachAbleContainer U>
+SKR_INLINE void MultiSparseHashSet<Memory>::append(U&& container)
+{
+    using Traits = ContainerTraits<std::decay_t<U>>;
+    if constexpr (Traits::is_linear_memory)
+    {
+        auto n = Traits::size(std::forward<U>(container));
+        auto p = Traits::data(std::forward<U>(container));
+        append(p, n);
+    }
+    else if constexpr (Traits::is_iterable && Traits::has_size)
+    {
+        auto n     = Traits::size(std::forward<U>(container));
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        reserve(size() + n);
+        for (; begin != end; ++begin)
+        {
+            add(*begin);
+        }
+    }
+    else if constexpr (Traits::is_iterable)
+    {
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        for (; begin != end; ++begin)
+        {
+            add(*begin);
+        }
     }
 }
 
@@ -570,4 +616,22 @@ SKR_INLINE const MultiSparseHashSet<Memory>& MultiSparseHashSet<Memory>::readonl
 {
     return *this;
 }
+} // namespace skr::container
+
+// container traits
+namespace skr::container
+{
+template <typename Memory>
+struct ContainerTraits<MultiSparseHashSet<Memory>> {
+    constexpr static bool is_linear_memory = false; // data(), size()
+    constexpr static bool has_size         = true;  // size()
+    constexpr static bool is_iterable      = true;  // begin(), end()
+
+    static inline size_t size(const MultiSparseHashSet<Memory>& container) { return container.size(); }
+
+    inline static typename MultiSparseHashSet<Memory>::StlIt  begin(MultiSparseHashSet<Memory>& set) { return set.begin(); }
+    inline static typename MultiSparseHashSet<Memory>::StlIt  end(MultiSparseHashSet<Memory>& set) { return set.end(); }
+    inline static typename MultiSparseHashSet<Memory>::CStlIt begin(const MultiSparseHashSet<Memory>& set) { return set.begin(); }
+    inline static typename MultiSparseHashSet<Memory>::CStlIt end(const MultiSparseHashSet<Memory>& set) { return set.end(); }
+};
 } // namespace skr::container

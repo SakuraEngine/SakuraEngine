@@ -3,7 +3,9 @@
 #include "SkrBase/containers/ring_buffer/ring_buffer_def.hpp"
 #include "SkrBase/containers/ring_buffer/ring_buffer_iterator.hpp"
 #include "SkrBase/containers/ring_buffer/ring_buffer_heler.hpp"
+#include "SkrBase/containers/misc/container_traits.hpp"
 
+// RingBuffer def
 namespace skr::container
 {
 template <typename Memory>
@@ -128,6 +130,7 @@ private:
 };
 } // namespace skr::container
 
+// RingBuffer impl
 namespace skr::container
 {
 // helper
@@ -752,4 +755,22 @@ SKR_INLINE const RingBuffer<Memory>& RingBuffer<Memory>::readonly() const
     return *this;
 }
 
+} // namespace skr::container
+
+// container traits
+namespace skr::container
+{
+template <typename Memory>
+struct ContainerTraits<RingBuffer<Memory>> {
+    constexpr static bool is_linear_memory = false; // data(), size()
+    constexpr static bool has_size         = true;  // size()
+    constexpr static bool is_iterable      = true;  // begin(), end()
+
+    static inline size_t size(const RingBuffer<Memory>& container) { return container.size(); }
+
+    inline static typename RingBuffer<Memory>::StlIt  begin(RingBuffer<Memory>& container) { return container.begin(); }
+    inline static typename RingBuffer<Memory>::StlIt  end(RingBuffer<Memory>& container) { return container.end(); }
+    inline static typename RingBuffer<Memory>::CStlIt begin(const RingBuffer<Memory>& container) { return container.begin(); }
+    inline static typename RingBuffer<Memory>::CStlIt end(const RingBuffer<Memory>& container) { return container.end(); }
+};
 } // namespace skr::container

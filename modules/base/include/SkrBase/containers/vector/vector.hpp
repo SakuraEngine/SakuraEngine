@@ -5,6 +5,7 @@
 #include "SkrBase/algo/remove.hpp"
 #include "SkrBase/containers/vector/vector_def.hpp"
 #include "SkrBase/containers/vector/vector_iterator.hpp"
+#include "SkrBase/containers/misc/container_traits.hpp"
 
 // Vector def
 namespace skr::container
@@ -38,6 +39,8 @@ struct Vector : protected Memory {
     Vector(SizeType size, const DataType& v, AllocatorCtorParam param = {}) noexcept;
     Vector(const DataType* p, SizeType n, AllocatorCtorParam param = {}) noexcept;
     Vector(std::initializer_list<DataType> init_list, AllocatorCtorParam param = {}) noexcept;
+    template <EachAbleContainer U>
+    Vector(U&& container, AllocatorCtorParam param = {}) noexcept;
     ~Vector();
 
     // copy & move
@@ -51,6 +54,8 @@ struct Vector : protected Memory {
     // special assign
     void assign(const DataType* p, SizeType n);
     void assign(std::initializer_list<DataType> init_list);
+    template <EachAbleContainer U>
+    void assign(U&& container);
 
     // compare
     bool operator==(const Vector& rhs) const;
@@ -101,22 +106,28 @@ struct Vector : protected Memory {
     void emplace_at(SizeType index, Args&&... args);
 
     // append
-    DataRef append(const Vector& arr);
+    DataRef append(const Vector<Memory>& vec);
     DataRef append(std::initializer_list<DataType> init_list);
+    template <EachAbleContainer U>
+    DataRef append(U&& container);
     template <typename U = DataType>
     DataRef append(const U* p, SizeType n);
 
     // append at
     void append_at(SizeType idx, const Vector& arr);
     void append_at(SizeType idx, std::initializer_list<DataType> init_list);
+    template <EachAbleContainer U>
+    void append_at(SizeType idx, U&& container);
     template <typename U = DataType>
     void append_at(SizeType idx, const U* p, SizeType n);
 
     // operator append
     DataRef operator+=(const DataType& v);
     DataRef operator+=(DataType&& v);
+    DataRef operator+=(const Vector<Memory>& vec);
     DataRef operator+=(std::initializer_list<DataType> init_list);
-    DataRef operator+=(const Vector& arr);
+    template <EachAbleContainer U = std::initializer_list<SizeType>>
+    DataRef operator+=(U&& container);
 
     // remove
     void remove_at(SizeType index, SizeType n = 1);
@@ -326,6 +337,40 @@ SKR_INLINE Vector<Memory>::Vector(std::initializer_list<DataType> init_list, All
     memory::copy(data(), init_list.begin(), init_list.size());
 }
 template <typename Memory>
+template <EachAbleContainer U>
+SKR_INLINE Vector<Memory>::Vector(U&& container, AllocatorCtorParam param) noexcept
+    : Memory(std::move(param))
+{
+    using Traits = ContainerTraits<std::decay_t<U>>;
+    if constexpr (Traits::is_linear_memory)
+    {
+        auto n = Traits::size(std::forward<U>(container));
+        auto p = Traits::data(std::forward<U>(container));
+        resize_unsafe(n);
+        memory::copy(data(), p, n);
+    }
+    else if constexpr (Traits::is_iterable && Traits::has_size)
+    {
+        auto n     = Traits::size(std::forward<U>(container));
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        reserve(n);
+        for (; begin != end; ++begin)
+        {
+            emplace(*begin);
+        }
+    }
+    else if constexpr (Traits::is_iterable)
+    {
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        for (; begin != end; ++begin)
+        {
+            emplace(*begin);
+        }
+    }
+}
+template <typename Memory>
 SKR_INLINE Vector<Memory>::~Vector()
 {
     // handled in memory
@@ -374,6 +419,42 @@ template <typename Memory>
 SKR_INLINE void Vector<Memory>::assign(std::initializer_list<DataType> init_list)
 {
     assign(init_list.begin(), init_list.size());
+}
+template <typename Memory>
+template <EachAbleContainer U>
+SKR_INLINE void Vector<Memory>::assign(U&& container)
+{
+    using Traits = ContainerTraits<std::decay_t<U>>;
+
+    clear();
+
+    if constexpr (Traits::is_linear_memory)
+    {
+        auto n = Traits::size(std::forward<U>(container));
+        auto p = Traits::data(std::forward<U>(container));
+        resize_unsafe(n);
+        memory::copy(data(), p, n);
+    }
+    else if constexpr (Traits::is_iterable && Traits::has_size)
+    {
+        auto n     = Traits::size(std::forward<U>(container));
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        reserve(n);
+        for (; begin != end; ++begin)
+        {
+            emplace(*begin);
+        }
+    }
+    else if constexpr (Traits::is_iterable)
+    {
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        for (; begin != end; ++begin)
+        {
+            emplace(*begin);
+        }
+    }
 }
 
 // compare
@@ -664,26 +745,56 @@ SKR_INLINE void Vector<Memory>::emplace_at(SizeType index, Args&&... args)
 
 // append
 template <typename Memory>
-SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::append(const Vector& arr)
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::append(const Vector<Memory>& vec)
 {
-    if (arr.size())
-    {
-        DataRef ref = add_unsafe(arr.size());
-        memory::copy(ref.ptr(), arr.data(), arr.size());
-        return ref;
-    }
-    return data() ? DataRef(data() + size(), size()) : DataRef();
+    return append(vec.data(), vec.size());
 }
 template <typename Memory>
 SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::append(std::initializer_list<DataType> init_list)
 {
-    if (init_list.size())
+    return append(init_list.begin(), init_list.size());
+}
+template <typename Memory>
+template <EachAbleContainer U>
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::append(U&& container)
+{
+    using Traits = ContainerTraits<std::decay_t<U>>;
+    if constexpr (Traits::is_linear_memory)
     {
-        DataRef ref = add_unsafe(init_list.size());
-        memory::copy(ref.ptr(), init_list.begin(), init_list.size());
-        return ref;
+        auto n = Traits::size(std::forward<U>(container));
+        auto p = Traits::data(std::forward<U>(container));
+        if (n)
+        {
+            DataRef ref = add_unsafe(n);
+            memory::copy(ref.ptr(), p, n);
+            return ref;
+        }
     }
-    return data() ? DataRef(data() + size(), size()) : DataRef();
+    else if constexpr (Traits::is_iterable && Traits::has_size)
+    {
+        auto n        = Traits::size(std::forward<U>(container));
+        auto begin    = Traits::begin(std::forward<U>(container));
+        auto end      = Traits::end(std::forward<U>(container));
+        auto old_size = size();
+        reserve(size() + n);
+        for (; begin != end; ++begin)
+        {
+            emplace(*begin);
+        }
+        return { data() + old_size, old_size };
+    }
+    else if constexpr (Traits::is_iterable)
+    {
+        auto begin    = Traits::begin(std::forward<U>(container));
+        auto end      = Traits::end(std::forward<U>(container));
+        auto old_size = size();
+        for (; begin != end; ++begin)
+        {
+            emplace(*begin);
+        }
+        return { data() + old_size, old_size };
+    }
+    return {};
 }
 template <typename Memory>
 template <typename U>
@@ -718,6 +829,46 @@ SKR_INLINE void Vector<Memory>::append_at(SizeType idx, std::initializer_list<Da
     }
 }
 template <typename Memory>
+template <EachAbleContainer U>
+SKR_INLINE void Vector<Memory>::append_at(SizeType idx, U&& container)
+{
+    using Traits = ContainerTraits<std::decay_t<U>>;
+    if constexpr (Traits::is_linear_memory)
+    {
+        auto n = Traits::size(std::forward<U>(container));
+        auto p = Traits::data(std::forward<U>(container));
+        if (n)
+        {
+            add_at_unsafe(idx, n);
+            memory::copy(data() + idx, p, n);
+        }
+    }
+    else if constexpr (Traits::is_iterable && Traits::has_size)
+    {
+        auto n        = Traits::size(std::forward<U>(container));
+        auto begin    = Traits::begin(std::forward<U>(container));
+        auto end      = Traits::end(std::forward<U>(container));
+        auto old_size = size();
+        add_at_unsafe(idx, n);
+        for (; begin != end; ++begin)
+        {
+            new (data() + idx) DataType(*begin);
+            ++idx;
+        }
+    }
+    else if constexpr (Traits::is_iterable)
+    {
+        auto begin    = Traits::begin(std::forward<U>(container));
+        auto end      = Traits::end(std::forward<U>(container));
+        auto old_size = size();
+        for (; begin != end; ++begin)
+        {
+            emplace_at(idx, *begin);
+            ++idx;
+        }
+    }
+}
+template <typename Memory>
 template <typename U>
 SKR_INLINE void Vector<Memory>::append_at(SizeType idx, const U* p, SizeType n)
 {
@@ -730,13 +881,31 @@ SKR_INLINE void Vector<Memory>::append_at(SizeType idx, const U* p, SizeType n)
 
 // operator append
 template <typename Memory>
-SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(const DataType& v) { return add(v); }
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(const DataType& v)
+{
+    return add(v);
+}
 template <typename Memory>
-SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(DataType&& v) { return add(std::move(v)); }
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(DataType&& v)
+{
+    return add(std::move(v));
+}
 template <typename Memory>
-SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(std::initializer_list<DataType> init_list) { return append(init_list); }
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(const Vector<Memory>& vec)
+{
+    return append(vec);
+}
 template <typename Memory>
-SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(const Vector<Memory>& arr) { return append(arr); }
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(std::initializer_list<DataType> init_list)
+{
+    return append(init_list);
+}
+template <typename Memory>
+template <EachAbleContainer U>
+SKR_INLINE typename Vector<Memory>::DataRef Vector<Memory>::operator+=(U&& container)
+{
+    return append(std::forward<U>(container));
+}
 
 // remove
 template <typename Memory>
@@ -1072,7 +1241,10 @@ SKR_INLINE typename Vector<Memory>::CDataRef Vector<Memory>::find_last_if(Pred&&
 // contains
 template <typename Memory>
 template <typename U>
-SKR_INLINE bool Vector<Memory>::contains(const U& v) const { return (bool)find(v); }
+SKR_INLINE bool Vector<Memory>::contains(const U& v) const
+{
+    return (bool)find(v);
+}
 template <typename Memory>
 template <typename Pred>
 SKR_INLINE bool Vector<Memory>::contains_if(Pred&& pred) const
@@ -1124,7 +1296,10 @@ SKR_INLINE void Vector<Memory>::sort_stable(Functor&& f)
 
 // support heap
 template <typename Memory>
-SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::heap_top() { return *data(); }
+SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::heap_top()
+{
+    return *data();
+}
 template <typename Memory>
 template <typename Functor>
 SKR_INLINE void Vector<Memory>::heapify(Functor&& f)
@@ -1205,17 +1380,35 @@ SKR_INLINE typename Vector<Memory>::DataType Vector<Memory>::stack_pop_get()
     return std::move(result);
 }
 template <typename Memory>
-SKR_INLINE void Vector<Memory>::stack_push(const DataType& v) { add(v); }
+SKR_INLINE void Vector<Memory>::stack_push(const DataType& v)
+{
+    add(v);
+}
 template <typename Memory>
-SKR_INLINE void Vector<Memory>::stack_push(DataType&& v) { add(std::move(v)); }
+SKR_INLINE void Vector<Memory>::stack_push(DataType&& v)
+{
+    add(std::move(v));
+}
 template <typename Memory>
-SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::stack_top() { return *(data() + size() - 1); }
+SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::stack_top()
+{
+    return *(data() + size() - 1);
+}
 template <typename Memory>
-SKR_INLINE const typename Vector<Memory>::DataType& Vector<Memory>::stack_top() const { return *(data() + size() - 1); }
+SKR_INLINE const typename Vector<Memory>::DataType& Vector<Memory>::stack_top() const
+{
+    return *(data() + size() - 1);
+}
 template <typename Memory>
-SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::stack_bottom() { return *data(); }
+SKR_INLINE typename Vector<Memory>::DataType& Vector<Memory>::stack_bottom()
+{
+    return *data();
+}
 template <typename Memory>
-SKR_INLINE const typename Vector<Memory>::DataType& Vector<Memory>::stack_bottom() const { return *data(); }
+SKR_INLINE const typename Vector<Memory>::DataType& Vector<Memory>::stack_bottom() const
+{
+    return *data();
+}
 
 // cursor & iter
 template <typename Memory>
@@ -1281,13 +1474,25 @@ SKR_INLINE auto Vector<Memory>::range_inv() const
 
 // stl-style iterator
 template <typename Memory>
-SKR_INLINE typename Vector<Memory>::StlIt Vector<Memory>::begin() { return data(); }
+SKR_INLINE typename Vector<Memory>::StlIt Vector<Memory>::begin()
+{
+    return data();
+}
 template <typename Memory>
-SKR_INLINE typename Vector<Memory>::StlIt Vector<Memory>::end() { return data() + size(); }
+SKR_INLINE typename Vector<Memory>::StlIt Vector<Memory>::end()
+{
+    return data() + size();
+}
 template <typename Memory>
-SKR_INLINE typename Vector<Memory>::CStlIt Vector<Memory>::begin() const { return data(); }
+SKR_INLINE typename Vector<Memory>::CStlIt Vector<Memory>::begin() const
+{
+    return data();
+}
 template <typename Memory>
-SKR_INLINE typename Vector<Memory>::CStlIt Vector<Memory>::end() const { return data() + size(); }
+SKR_INLINE typename Vector<Memory>::CStlIt Vector<Memory>::end() const
+{
+    return data() + size();
+}
 
 // erase
 template <typename Memory>
@@ -1341,4 +1546,24 @@ SKR_INLINE const Vector<Memory>& Vector<Memory>::readonly() const
 {
     return *this;
 }
+} // namespace skr::container
+
+// container traits
+namespace skr::container
+{
+template <typename Memory>
+struct ContainerTraits<Vector<Memory>> {
+    constexpr static bool is_linear_memory = true; // data(), size()
+    constexpr static bool has_size         = true; // size()
+    constexpr static bool is_iterable      = true; // begin(), end()
+
+    static inline const typename Vector<Memory>::DataType* data(const Vector<Memory>& vec) { return vec.data(); }
+    static inline typename Vector<Memory>::DataType*       data(Vector<Memory>& vec) { return vec.data(); }
+    static inline size_t                                   size(const Vector<Memory>& vec) { return vec.size(); }
+
+    static inline auto begin(const Vector<Memory>& vec) noexcept { return vec.begin(); }
+    static inline auto end(const Vector<Memory>& vec) noexcept { return vec.end(); }
+    static inline auto begin(Vector<Memory>& vec) noexcept { return vec.begin(); }
+    static inline auto end(Vector<Memory>& vec) noexcept { return vec.end(); }
+};
 } // namespace skr::container
