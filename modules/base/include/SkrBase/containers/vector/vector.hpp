@@ -39,8 +39,6 @@ struct Vector : protected Memory {
     Vector(SizeType size, const DataType& v, AllocatorCtorParam param = {}) noexcept;
     Vector(const DataType* p, SizeType n, AllocatorCtorParam param = {}) noexcept;
     Vector(std::initializer_list<DataType> init_list, AllocatorCtorParam param = {}) noexcept;
-    template <EachAbleContainer U>
-    Vector(U&& container, AllocatorCtorParam param = {}) noexcept;
     ~Vector();
 
     // copy & move
@@ -335,40 +333,6 @@ SKR_INLINE Vector<Memory>::Vector(std::initializer_list<DataType> init_list, All
 {
     resize_unsafe(init_list.size());
     memory::copy(data(), init_list.begin(), init_list.size());
-}
-template <typename Memory>
-template <EachAbleContainer U>
-SKR_INLINE Vector<Memory>::Vector(U&& container, AllocatorCtorParam param) noexcept
-    : Memory(std::move(param))
-{
-    using Traits = ContainerTraits<std::decay_t<U>>;
-    if constexpr (Traits::is_linear_memory)
-    {
-        auto n = Traits::size(std::forward<U>(container));
-        auto p = Traits::data(std::forward<U>(container));
-        resize_unsafe(n);
-        memory::copy(data(), p, n);
-    }
-    else if constexpr (Traits::is_iterable && Traits::has_size)
-    {
-        auto n     = Traits::size(std::forward<U>(container));
-        auto begin = Traits::begin(std::forward<U>(container));
-        auto end   = Traits::end(std::forward<U>(container));
-        reserve(n);
-        for (; begin != end; ++begin)
-        {
-            emplace(*begin);
-        }
-    }
-    else if constexpr (Traits::is_iterable)
-    {
-        auto begin = Traits::begin(std::forward<U>(container));
-        auto end   = Traits::end(std::forward<U>(container));
-        for (; begin != end; ++begin)
-        {
-            emplace(*begin);
-        }
-    }
 }
 template <typename Memory>
 SKR_INLINE Vector<Memory>::~Vector()

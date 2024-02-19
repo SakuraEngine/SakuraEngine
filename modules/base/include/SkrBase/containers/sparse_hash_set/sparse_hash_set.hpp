@@ -47,8 +47,6 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     SparseHashSet(SizeType reserve_size, AllocatorCtorParam param = {});
     SparseHashSet(const SetDataType* p, SizeType n, AllocatorCtorParam param = {});
     SparseHashSet(std::initializer_list<SetDataType> init_list, AllocatorCtorParam param = {});
-    template <EachAbleContainer U>
-    SparseHashSet(U&& container, AllocatorCtorParam param = {});
     ~SparseHashSet();
 
     // copy & move
@@ -227,13 +225,6 @@ SKR_INLINE SparseHashSet<Memory>::SparseHashSet(std::initializer_list<SetDataTyp
     : Super(std::move(param))
 {
     append(init_list);
-}
-template <typename Memory>
-template <EachAbleContainer U>
-SKR_INLINE SparseHashSet<Memory>::SparseHashSet(U&& container, AllocatorCtorParam param)
-    : Super(std::move(param))
-{
-    append(container);
 }
 template <typename Memory>
 SKR_INLINE SparseHashSet<Memory>::~SparseHashSet()
