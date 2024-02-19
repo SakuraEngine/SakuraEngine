@@ -1,6 +1,8 @@
 #pragma once
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_base.hpp"
+#include "SkrBase/containers/misc/container_traits.hpp"
 
+// SparseHashSet def
 namespace skr::container
 {
 template <typename Memory>
@@ -111,6 +113,8 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     void append(const SparseHashSet& set);
     void append(std::initializer_list<SetDataType> init_list);
     void append(const SetDataType* p, SizeType n);
+    template <EachAbleContainer U>
+    void append(U&& container);
 
     // remove
     using Super::remove_at;
@@ -195,6 +199,7 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
 };
 } // namespace skr::container
 
+// SparseHashSet impl
 namespace skr::container
 {
 // ctor & dtor
@@ -490,6 +495,55 @@ SKR_INLINE void SparseHashSet<Memory>::append(const SetDataType* p, SizeType n)
         }
     }
 }
+template <typename Memory>
+template <EachAbleContainer U>
+SKR_INLINE void SparseHashSet<Memory>::append(U&& container)
+{
+    using Traits = ContainerTraits<std::decay_t<U>>;
+    if constexpr (Traits::is_linear_memory)
+    {
+        auto n = Traits::size(std::forward<U>(container));
+        auto p = Traits::data(std::forward<U>(container));
+        append(p, n);
+    }
+    else if constexpr (Traits::is_iterable && Traits::has_size)
+    {
+        auto n     = Traits::size(std::forward<U>(container));
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+
+        // fill slack
+        SizeType count = 0;
+        while (slack() > 0 && begin != end)
+        {
+            add(*begin);
+            ++begin;
+            ++count;
+        }
+
+        // reserve and add
+        if (begin != end)
+        {
+            auto new_capacity = data_vector().capacity() + (n - count);
+            data_vector().reserve(new_capacity);
+
+            while (begin != end)
+            {
+                add(*begin);
+                ++begin;
+            }
+        }
+    }
+    else if constexpr (Traits::is_iterable)
+    {
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        for (; begin != end; ++begin)
+        {
+            add(*begin);
+        }
+    }
+}
 
 // remove
 template <typename Memory>
@@ -753,4 +807,22 @@ SKR_INLINE const SparseHashSet<Memory>& SparseHashSet<Memory>::readonly() const
 {
     return *this;
 }
+} // namespace skr::container
+
+// container traits
+namespace skr::container
+{
+template <typename Memory>
+struct ContainerTraits<SparseHashSet<Memory>> {
+    constexpr static bool is_linear_memory = false; // data(), size()
+    constexpr static bool has_size         = true;  // size()
+    constexpr static bool is_iterable      = true;  // begin(), end()
+
+    static inline size_t size(const SparseHashSet<Memory>& container) { return container.size(); }
+
+    inline static typename SparseHashSet<Memory>::StlIt  begin(SparseHashSet<Memory>& container) { return container.begin(); }
+    inline static typename SparseHashSet<Memory>::StlIt  end(SparseHashSet<Memory>& container) { return container.end(); }
+    inline static typename SparseHashSet<Memory>::CStlIt begin(const SparseHashSet<Memory>& container) { return container.begin(); }
+    inline static typename SparseHashSet<Memory>::CStlIt end(const SparseHashSet<Memory>& container) { return container.end(); }
+};
 } // namespace skr::container

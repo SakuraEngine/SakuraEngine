@@ -1,10 +1,12 @@
 #pragma once
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_base.hpp"
+#include "SkrBase/containers/misc/container_traits.hpp"
 
+// MultiSparseHashSet def
 namespace skr::container
 {
 template <typename Memory>
-struct MultSparseHashSet : protected SparseHashBase<Memory> {
+struct MultiSparseHashSet : protected SparseHashBase<Memory> {
     using Super = SparseHashBase<Memory>;
 
     // sparse vector configure
@@ -29,31 +31,31 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     using CDataRef = SparseHashSetDataRef<SetDataType, SizeType, HashType, true>;
 
     // cursor & iterator
-    using Cursor   = SparseHashSetCursor<MultSparseHashSet, false>;
-    using CCursor  = SparseHashSetCursor<MultSparseHashSet, true>;
-    using Iter     = SparseHashSetIter<MultSparseHashSet, false>;
-    using CIter    = SparseHashSetIter<MultSparseHashSet, true>;
-    using IterInv  = SparseHashSetIterInv<MultSparseHashSet, false>;
-    using CIterInv = SparseHashSetIterInv<MultSparseHashSet, true>;
+    using Cursor   = SparseHashSetCursor<MultiSparseHashSet, false>;
+    using CCursor  = SparseHashSetCursor<MultiSparseHashSet, true>;
+    using Iter     = SparseHashSetIter<MultiSparseHashSet, false>;
+    using CIter    = SparseHashSetIter<MultiSparseHashSet, true>;
+    using IterInv  = SparseHashSetIterInv<MultiSparseHashSet, false>;
+    using CIterInv = SparseHashSetIterInv<MultiSparseHashSet, true>;
 
     // stl-style iterator
     using StlIt  = CursorIterStl<Cursor, false>;
     using CStlIt = CursorIterStl<CCursor, false>;
 
     // ctor & dtor
-    MultSparseHashSet(AllocatorCtorParam param = {});
-    MultSparseHashSet(SizeType reserve_size, AllocatorCtorParam param = {});
-    MultSparseHashSet(const SetDataType* p, SizeType n, AllocatorCtorParam param = {});
-    MultSparseHashSet(std::initializer_list<SetDataType> init_list, AllocatorCtorParam param = {});
-    ~MultSparseHashSet();
+    MultiSparseHashSet(AllocatorCtorParam param = {});
+    MultiSparseHashSet(SizeType reserve_size, AllocatorCtorParam param = {});
+    MultiSparseHashSet(const SetDataType* p, SizeType n, AllocatorCtorParam param = {});
+    MultiSparseHashSet(std::initializer_list<SetDataType> init_list, AllocatorCtorParam param = {});
+    ~MultiSparseHashSet();
 
     // copy & move
-    MultSparseHashSet(const MultSparseHashSet& rhs);
-    MultSparseHashSet(MultSparseHashSet&& rhs);
+    MultiSparseHashSet(const MultiSparseHashSet& rhs);
+    MultiSparseHashSet(MultiSparseHashSet&& rhs);
 
     // assign & move assign
-    MultSparseHashSet& operator=(const MultSparseHashSet& rhs);
-    MultSparseHashSet& operator=(MultSparseHashSet&& rhs);
+    MultiSparseHashSet& operator=(const MultiSparseHashSet& rhs);
+    MultiSparseHashSet& operator=(MultiSparseHashSet&& rhs);
 
     // getter
     using Super::size;
@@ -99,9 +101,11 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     DataRef emplace(Args&&... args);
 
     // append
-    void append(const MultSparseHashSet& set);
+    void append(const MultiSparseHashSet& set);
     void append(std::initializer_list<SetDataType> init_list);
     void append(const SetDataType* p, SizeType n);
+    template <EachAbleContainer U>
+    void append(U&& container);
 
     // remove
     using Super::remove_at;
@@ -191,51 +195,52 @@ struct MultSparseHashSet : protected SparseHashBase<Memory> {
     CStlIt end() const;
 
     // syntax
-    const MultSparseHashSet& readonly() const;
+    const MultiSparseHashSet& readonly() const;
 };
 } // namespace skr::container
 
+// MultiSparseHashSet impl
 namespace skr::container
 {
 // ctor & dtor
 template <typename Memory>
-SKR_INLINE MultSparseHashSet<Memory>::MultSparseHashSet(AllocatorCtorParam param)
+SKR_INLINE MultiSparseHashSet<Memory>::MultiSparseHashSet(AllocatorCtorParam param)
     : Super(std::move(param))
 {
 }
 template <typename Memory>
-SKR_INLINE MultSparseHashSet<Memory>::MultSparseHashSet(SizeType reserve_size, AllocatorCtorParam param)
+SKR_INLINE MultiSparseHashSet<Memory>::MultiSparseHashSet(SizeType reserve_size, AllocatorCtorParam param)
     : Super(std::move(param))
 {
     reserve(reserve_size);
 }
 template <typename Memory>
-SKR_INLINE MultSparseHashSet<Memory>::MultSparseHashSet(const SetDataType* p, SizeType n, AllocatorCtorParam param)
+SKR_INLINE MultiSparseHashSet<Memory>::MultiSparseHashSet(const SetDataType* p, SizeType n, AllocatorCtorParam param)
     : Super(std::move(param))
 {
     append(p, n);
 }
 template <typename Memory>
-SKR_INLINE MultSparseHashSet<Memory>::MultSparseHashSet(std::initializer_list<SetDataType> init_list, AllocatorCtorParam param)
+SKR_INLINE MultiSparseHashSet<Memory>::MultiSparseHashSet(std::initializer_list<SetDataType> init_list, AllocatorCtorParam param)
     : Super(std::move(param))
 {
     append(init_list);
 }
 template <typename Memory>
-SKR_INLINE MultSparseHashSet<Memory>::~MultSparseHashSet()
+SKR_INLINE MultiSparseHashSet<Memory>::~MultiSparseHashSet()
 {
     // handled by SparseHashBase
 }
 
 // copy & move
 template <typename Memory>
-SKR_INLINE MultSparseHashSet<Memory>::MultSparseHashSet(const MultSparseHashSet& rhs)
+SKR_INLINE MultiSparseHashSet<Memory>::MultiSparseHashSet(const MultiSparseHashSet& rhs)
     : Super(rhs)
 {
     // handled by SparseHashBase
 }
 template <typename Memory>
-SKR_INLINE MultSparseHashSet<Memory>::MultSparseHashSet(MultSparseHashSet&& rhs)
+SKR_INLINE MultiSparseHashSet<Memory>::MultiSparseHashSet(MultiSparseHashSet&& rhs)
     : Super(std::move(rhs))
 {
     // handled by SparseHashBase
@@ -243,13 +248,13 @@ SKR_INLINE MultSparseHashSet<Memory>::MultSparseHashSet(MultSparseHashSet&& rhs)
 
 // assign & move assign
 template <typename Memory>
-SKR_INLINE MultSparseHashSet<Memory>& MultSparseHashSet<Memory>::operator=(const MultSparseHashSet& rhs)
+SKR_INLINE MultiSparseHashSet<Memory>& MultiSparseHashSet<Memory>::operator=(const MultiSparseHashSet& rhs)
 {
     Super::operator=(rhs);
     return *this;
 }
 template <typename Memory>
-SKR_INLINE MultSparseHashSet<Memory>& MultSparseHashSet<Memory>::operator=(MultSparseHashSet&& rhs)
+SKR_INLINE MultiSparseHashSet<Memory>& MultiSparseHashSet<Memory>::operator=(MultiSparseHashSet&& rhs)
 {
     Super::operator=(std::move(rhs));
     return *this;
@@ -258,7 +263,7 @@ SKR_INLINE MultSparseHashSet<Memory>& MultSparseHashSet<Memory>::operator=(MultS
 // add
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
-SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::add(U&& v)
+SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::add(U&& v)
 {
     HashType hash = HasherType()(v);
     DataRef  ref  = add_ex_unsafe(hash);
@@ -267,7 +272,7 @@ SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>
 }
 template <typename Memory>
 template <typename ConstructFunc>
-SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::add_ex(HashType hash, ConstructFunc&& construct)
+SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::add_ex(HashType hash, ConstructFunc&& construct)
 {
     DataRef ref = add_ex_unsafe(hash);
     construct(ref.ptr());
@@ -275,7 +280,7 @@ SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>
     return ref;
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::add_ex_unsafe(HashType hash)
+SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::add_ex_unsafe(HashType hash)
 {
     return Super::template _add_unsafe<DataRef>(hash);
 }
@@ -283,7 +288,7 @@ SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>
 // emplace
 template <typename Memory>
 template <typename... Args>
-SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::emplace(Args&&... args)
+SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::emplace(Args&&... args)
 {
     auto data_arr_ref = data_vector().add_unsafe();
     new (&data_arr_ref.ref()._sparse_hash_set_data) SetDataType(std::forward<Args>(args)...);
@@ -299,7 +304,7 @@ SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>
 
 // append
 template <typename Memory>
-SKR_INLINE void MultSparseHashSet<Memory>::append(const MultSparseHashSet& set)
+SKR_INLINE void MultiSparseHashSet<Memory>::append(const MultiSparseHashSet& set)
 {
     reserve(size() + set.size());
 
@@ -309,7 +314,7 @@ SKR_INLINE void MultSparseHashSet<Memory>::append(const MultSparseHashSet& set)
     }
 }
 template <typename Memory>
-SKR_INLINE void MultSparseHashSet<Memory>::append(std::initializer_list<SetDataType> init_list)
+SKR_INLINE void MultiSparseHashSet<Memory>::append(std::initializer_list<SetDataType> init_list)
 {
     reserve(size() + init_list.size());
 
@@ -319,7 +324,7 @@ SKR_INLINE void MultSparseHashSet<Memory>::append(std::initializer_list<SetDataT
     }
 }
 template <typename Memory>
-SKR_INLINE void MultSparseHashSet<Memory>::append(const SetDataType* p, SizeType n)
+SKR_INLINE void MultiSparseHashSet<Memory>::append(const SetDataType* p, SizeType n)
 {
     reserve(size() + n);
 
@@ -328,31 +333,63 @@ SKR_INLINE void MultSparseHashSet<Memory>::append(const SetDataType* p, SizeType
         add(p[i]);
     }
 }
+template <typename Memory>
+template <EachAbleContainer U>
+SKR_INLINE void MultiSparseHashSet<Memory>::append(U&& container)
+{
+    using Traits = ContainerTraits<std::decay_t<U>>;
+    if constexpr (Traits::is_linear_memory)
+    {
+        auto n = Traits::size(std::forward<U>(container));
+        auto p = Traits::data(std::forward<U>(container));
+        append(p, n);
+    }
+    else if constexpr (Traits::is_iterable && Traits::has_size)
+    {
+        auto n     = Traits::size(std::forward<U>(container));
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        reserve(size() + n);
+        for (; begin != end; ++begin)
+        {
+            add(*begin);
+        }
+    }
+    else if constexpr (Traits::is_iterable)
+    {
+        auto begin = Traits::begin(std::forward<U>(container));
+        auto end   = Traits::end(std::forward<U>(container));
+        for (; begin != end; ++begin)
+        {
+            add(*begin);
+        }
+    }
+}
 
 // remove
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
-SKR_INLINE bool MultSparseHashSet<Memory>::remove(const U& v)
+SKR_INLINE bool MultiSparseHashSet<Memory>::remove(const U& v)
 {
     HashType hash = HasherType()(v);
     return Super::_remove(hash, [&v](const SetDataType& k) { return k == v; });
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE bool MultSparseHashSet<Memory>::remove_ex(HashType hash, Pred&& pred)
+SKR_INLINE bool MultiSparseHashSet<Memory>::remove_ex(HashType hash, Pred&& pred)
 {
     return Super::_remove(hash, std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
-SKR_INLINE typename MultSparseHashSet<Memory>::SizeType MultSparseHashSet<Memory>::remove_all(const U& v)
+SKR_INLINE typename MultiSparseHashSet<Memory>::SizeType MultiSparseHashSet<Memory>::remove_all(const U& v)
 {
     HashType hash = HasherType()(v);
     return Super::_remove_all(hash, [&v](const SetDataType& k) { return k == v; });
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename MultSparseHashSet<Memory>::SizeType MultSparseHashSet<Memory>::remove_all_ex(HashType hash, Pred&& pred)
+SKR_INLINE typename MultiSparseHashSet<Memory>::SizeType MultiSparseHashSet<Memory>::remove_all_ex(HashType hash, Pred&& pred)
 {
     return Super::_remove_all(hash, std::forward<Pred>(pred));
 }
@@ -360,51 +397,51 @@ SKR_INLINE typename MultSparseHashSet<Memory>::SizeType MultSparseHashSet<Memory
 // find
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
-SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::find(const U& v)
+SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::find(const U& v)
 {
     HashType hash = HasherType()(v);
     return Super::template _find<DataRef>(hash, [&v](const SetDataType& k) { return k == v; });
 }
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
-SKR_INLINE typename MultSparseHashSet<Memory>::CDataRef MultSparseHashSet<Memory>::find(const U& v) const
+SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memory>::find(const U& v) const
 {
     HashType hash = HasherType()(v);
     return Super::template _find<CDataRef>(hash, [&v](const SetDataType& k) { return k == v; });
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::find_ex(HashType hash, Pred&& pred)
+SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::find_ex(HashType hash, Pred&& pred)
 {
     return Super::template _find<DataRef>(hash, std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename MultSparseHashSet<Memory>::CDataRef MultSparseHashSet<Memory>::find_ex(HashType hash, Pred&& pred) const
+SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memory>::find_ex(HashType hash, Pred&& pred) const
 {
     return Super::template _find<CDataRef>(hash, std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
-SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::find_next(DataRef ref, const U& v)
+SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::find_next(DataRef ref, const U& v)
 {
     return Super::template _find_next<DataRef>(ref, [&v](const SetDataType& k) { return k == v; });
 }
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
-SKR_INLINE typename MultSparseHashSet<Memory>::CDataRef MultSparseHashSet<Memory>::find_next(CDataRef ref, const U& v) const
+SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memory>::find_next(CDataRef ref, const U& v) const
 {
     return Super::template _find_next<CDataRef>(ref, [&v](const SetDataType& k) { return k == v; });
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::find_next_ex(CDataRef ref, Pred&& pred)
+SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::find_next_ex(CDataRef ref, Pred&& pred)
 {
     return Super::template _find_next<DataRef>(ref, std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename MultSparseHashSet<Memory>::CDataRef MultSparseHashSet<Memory>::find_next_ex(CDataRef ref, Pred&& pred) const
+SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memory>::find_next_ex(CDataRef ref, Pred&& pred) const
 {
     return Super::template _find_next<CDataRef>(ref, std::forward<Pred>(pred));
 }
@@ -412,45 +449,45 @@ SKR_INLINE typename MultSparseHashSet<Memory>::CDataRef MultSparseHashSet<Memory
 // find if
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::find_if(Pred&& pred)
+SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::find_if(Pred&& pred)
 {
-    return Super::template _find_if<DataRef>(std::forward(pred));
+    return Super::template _find_if<DataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename MultSparseHashSet<Memory>::DataRef MultSparseHashSet<Memory>::find_last_if(Pred&& pred)
+SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::find_last_if(Pred&& pred)
 {
-    return Super::template _find_last_if<DataRef>(std::forward(pred));
+    return Super::template _find_last_if<DataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename MultSparseHashSet<Memory>::CDataRef MultSparseHashSet<Memory>::find_if(Pred&& pred) const
+SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memory>::find_if(Pred&& pred) const
 {
-    return Super::template _find_if<CDataRef>(std::forward(pred));
+    return Super::template _find_if<CDataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
-SKR_INLINE typename MultSparseHashSet<Memory>::CDataRef MultSparseHashSet<Memory>::find_last_if(Pred&& pred) const
+SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memory>::find_last_if(Pred&& pred) const
 {
-    return Super::template _find_last_if<CDataRef>(std::forward(pred));
+    return Super::template _find_last_if<CDataRef>(std::forward<Pred>(pred));
 }
 
 // contains
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
-bool MultSparseHashSet<Memory>::contains(const U& v) const
+bool MultiSparseHashSet<Memory>::contains(const U& v) const
 {
     return (bool)find(v);
 }
 template <typename Memory>
 template <typename Pred>
-bool MultSparseHashSet<Memory>::contains_ex(HashType hash, Pred&& pred) const
+bool MultiSparseHashSet<Memory>::contains_ex(HashType hash, Pred&& pred) const
 {
     return (bool)find_ex(hash, std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U>
-typename MultSparseHashSet<Memory>::SizeType MultSparseHashSet<Memory>::count(const U& v) const
+typename MultiSparseHashSet<Memory>::SizeType MultiSparseHashSet<Memory>::count(const U& v) const
 {
     SizeType count = 0;
 
@@ -466,7 +503,7 @@ typename MultSparseHashSet<Memory>::SizeType MultSparseHashSet<Memory>::count(co
 }
 template <typename Memory>
 template <typename Pred>
-typename MultSparseHashSet<Memory>::SizeType MultSparseHashSet<Memory>::count_ex(HashType hash, Pred&& pred) const
+typename MultiSparseHashSet<Memory>::SizeType MultiSparseHashSet<Memory>::count_ex(HashType hash, Pred&& pred) const
 {
     SizeType count = 0;
 
@@ -474,7 +511,7 @@ typename MultSparseHashSet<Memory>::SizeType MultSparseHashSet<Memory>::count_ex
     while (ref.is_valid())
     {
         ++count;
-        ref = Super::template _find_next<CDataRef>(ref, std::forward<pred>());
+        ref = Super::template _find_next<CDataRef>(ref, std::forward<Pred>(pred));
     };
 
     return count;
@@ -482,92 +519,110 @@ typename MultSparseHashSet<Memory>::SizeType MultSparseHashSet<Memory>::count_ex
 
 // cursor & iterator
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::Cursor MultSparseHashSet<Memory>::cursor_begin()
+SKR_INLINE typename MultiSparseHashSet<Memory>::Cursor MultiSparseHashSet<Memory>::cursor_begin()
 {
     return Cursor::Begin(this);
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::CCursor MultSparseHashSet<Memory>::cursor_begin() const
+SKR_INLINE typename MultiSparseHashSet<Memory>::CCursor MultiSparseHashSet<Memory>::cursor_begin() const
 {
     return CCursor::Begin(this);
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::Cursor MultSparseHashSet<Memory>::cursor_end()
+SKR_INLINE typename MultiSparseHashSet<Memory>::Cursor MultiSparseHashSet<Memory>::cursor_end()
 {
     return Cursor::End(this);
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::CCursor MultSparseHashSet<Memory>::cursor_end() const
+SKR_INLINE typename MultiSparseHashSet<Memory>::CCursor MultiSparseHashSet<Memory>::cursor_end() const
 {
     return CCursor::End(this);
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::Iter MultSparseHashSet<Memory>::iter()
+SKR_INLINE typename MultiSparseHashSet<Memory>::Iter MultiSparseHashSet<Memory>::iter()
 {
     return { cursor_begin() };
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::CIter MultSparseHashSet<Memory>::iter() const
+SKR_INLINE typename MultiSparseHashSet<Memory>::CIter MultiSparseHashSet<Memory>::iter() const
 {
     return { cursor_begin() };
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::IterInv MultSparseHashSet<Memory>::iter_inv()
+SKR_INLINE typename MultiSparseHashSet<Memory>::IterInv MultiSparseHashSet<Memory>::iter_inv()
 {
     return { cursor_end() };
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::CIterInv MultSparseHashSet<Memory>::iter_inv() const
+SKR_INLINE typename MultiSparseHashSet<Memory>::CIterInv MultiSparseHashSet<Memory>::iter_inv() const
 {
     return { cursor_end() };
 }
 template <typename Memory>
-SKR_INLINE auto MultSparseHashSet<Memory>::range()
+SKR_INLINE auto MultiSparseHashSet<Memory>::range()
 {
     return cursor_begin().as_range();
 }
 template <typename Memory>
-SKR_INLINE auto MultSparseHashSet<Memory>::range() const
+SKR_INLINE auto MultiSparseHashSet<Memory>::range() const
 {
     return cursor_begin().as_range();
 }
 template <typename Memory>
-SKR_INLINE auto MultSparseHashSet<Memory>::range_inv()
+SKR_INLINE auto MultiSparseHashSet<Memory>::range_inv()
 {
     return cursor_end().as_range_inv();
 }
 template <typename Memory>
-SKR_INLINE auto MultSparseHashSet<Memory>::range_inv() const
+SKR_INLINE auto MultiSparseHashSet<Memory>::range_inv() const
 {
     return cursor_end().as_range_inv();
 }
 
 // stl-style iterator
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::StlIt MultSparseHashSet<Memory>::begin()
+SKR_INLINE typename MultiSparseHashSet<Memory>::StlIt MultiSparseHashSet<Memory>::begin()
 {
     return { Cursor::Begin(this) };
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::CStlIt MultSparseHashSet<Memory>::begin() const
+SKR_INLINE typename MultiSparseHashSet<Memory>::CStlIt MultiSparseHashSet<Memory>::begin() const
 {
     return { CCursor::Begin(this) };
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::StlIt MultSparseHashSet<Memory>::end()
+SKR_INLINE typename MultiSparseHashSet<Memory>::StlIt MultiSparseHashSet<Memory>::end()
 {
     return { Cursor::EndOverflow(this) };
 }
 template <typename Memory>
-SKR_INLINE typename MultSparseHashSet<Memory>::CStlIt MultSparseHashSet<Memory>::end() const
+SKR_INLINE typename MultiSparseHashSet<Memory>::CStlIt MultiSparseHashSet<Memory>::end() const
 {
     return { CCursor::EndOverflow(this) };
 }
 
 // syntax
 template <typename Memory>
-SKR_INLINE const MultSparseHashSet<Memory>& MultSparseHashSet<Memory>::readonly() const
+SKR_INLINE const MultiSparseHashSet<Memory>& MultiSparseHashSet<Memory>::readonly() const
 {
     return *this;
 }
+} // namespace skr::container
+
+// container traits
+namespace skr::container
+{
+template <typename Memory>
+struct ContainerTraits<MultiSparseHashSet<Memory>> {
+    constexpr static bool is_linear_memory = false; // data(), size()
+    constexpr static bool has_size         = true;  // size()
+    constexpr static bool is_iterable      = true;  // begin(), end()
+
+    static inline size_t size(const MultiSparseHashSet<Memory>& container) { return container.size(); }
+
+    inline static typename MultiSparseHashSet<Memory>::StlIt  begin(MultiSparseHashSet<Memory>& set) { return set.begin(); }
+    inline static typename MultiSparseHashSet<Memory>::StlIt  end(MultiSparseHashSet<Memory>& set) { return set.end(); }
+    inline static typename MultiSparseHashSet<Memory>::CStlIt begin(const MultiSparseHashSet<Memory>& set) { return set.begin(); }
+    inline static typename MultiSparseHashSet<Memory>::CStlIt end(const MultiSparseHashSet<Memory>& set) { return set.end(); }
+};
 } // namespace skr::container

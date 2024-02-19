@@ -1,19 +1,42 @@
 #pragma once
-#include "SkrBase/containers/sparse_hash_map/sparse_hash_map.hpp"
-#include "SkrBase/containers/sparse_hash_map/sparse_hash_map_memory.hpp"
+// !! FUCK U MSVC
+#include "SkrBase/containers/sparse_vector/sparse_vector_def.hpp"
+#include "SkrBase/containers/sparse_hash_set/sparse_hash_set_def.hpp"
+
+// allocator
+#include "skr_test_allocator.hpp"
+
+// vector
 #include "SkrBase/containers/vector/vector.hpp"
 #include "SkrBase/containers/vector/vector_memory.hpp"
+
+// sparse vector
 #include "SkrBase/containers/sparse_vector/sparse_vector.hpp"
 #include "SkrBase/containers/sparse_vector/sparse_vector_memory.hpp"
+
+// sparse hash set
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_memory.hpp"
+
+// multi sparse hash set
+#include "SkrBase/containers/sparse_hash_set/sparse_hash_set_multi.hpp"
+#include "SkrBase/containers/sparse_hash_set/sparse_hash_set_memory.hpp"
+
+// sparse hash map
+#include "SkrBase/containers/sparse_hash_map/sparse_hash_map.hpp"
+#include "SkrBase/containers/sparse_hash_map/sparse_hash_map_memory.hpp"
+
+// multi sparse hash map
+#include "SkrBase/containers/sparse_hash_map/sparse_hash_map_multi.hpp"
+#include "SkrBase/containers/sparse_hash_map/sparse_hash_map_memory.hpp"
+
+// bit vector
 #include "SkrBase/containers/bit_vector/bit_vector.hpp"
 #include "SkrBase/containers/bit_vector/bit_vector_memory.hpp"
+
+// ring buffer
 #include "SkrBase/containers/ring_buffer/ring_buffer.hpp"
 #include "SkrBase/containers/ring_buffer/ring_buffer_memory.hpp"
-
-#include "SkrBase/misc/hash.hpp"
-#include "skr_test_allocator.hpp"
 
 namespace skr
 {
@@ -91,6 +114,32 @@ TestSizeType,
 kInlineCount,
 TestAllocatorType>>;
 
+//===========Multi Sparse Hash Set===================================================================
+template <typename T>
+using MultiSparseHashSet = container::MultiSparseHashSet<container::SparseHashSetMemory<
+T,
+TestBitBlockType,
+container::HashTraits<T>,
+TestSizeType,
+TestAllocatorType>>;
+
+template <typename T, uint64_t kCount>
+using FixedMultiSparseHashSet = container::MultiSparseHashSet<container::FixedSparseHashSetMemory<
+T,
+TestBitBlockType,
+container::HashTraits<T>,
+TestSizeType,
+kCount>>;
+
+template <typename T, uint64_t kInlineCount>
+using InlineMultiSparseHashSet = container::MultiSparseHashSet<container::InlineSparseHashSetMemory<
+T,
+TestBitBlockType,
+container::HashTraits<T>,
+TestSizeType,
+kInlineCount,
+TestAllocatorType>>;
+
 //===========Sparse Hash Map===================================================================
 template <typename K, typename V>
 using SparseHashMap = container::SparseHashMap<container::SparseHashMapMemory<
@@ -112,6 +161,35 @@ kCount>>;
 
 template <typename K, typename V, uint64_t kInlineCount>
 using InlineSparseHashMap = container::SparseHashMap<container::InlineSparseHashMapMemory<
+K,
+V,
+TestBitBlockType,
+container::HashTraits<K>,
+TestSizeType,
+kInlineCount,
+TestAllocatorType>>;
+
+//===========Multi Sparse Hash Map===================================================================
+template <typename K, typename V>
+using MultiSparseHashMap = container::MultiSparseHashMap<container::SparseHashMapMemory<
+K,
+V,
+TestBitBlockType,
+container::HashTraits<K>,
+TestSizeType,
+TestAllocatorType>>;
+
+template <typename K, typename V, uint64_t kCount>
+using FixedMultiSparseHashMap = container::MultiSparseHashMap<container::FixedSparseHashMapMemory<
+K,
+V,
+TestBitBlockType,
+container::HashTraits<K>,
+TestSizeType,
+kCount>>;
+
+template <typename K, typename V, uint64_t kInlineCount>
+using InlineMultiSparseHashMap = container::MultiSparseHashMap<container::InlineSparseHashMapMemory<
 K,
 V,
 TestBitBlockType,
