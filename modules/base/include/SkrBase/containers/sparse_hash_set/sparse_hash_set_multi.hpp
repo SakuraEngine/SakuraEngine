@@ -47,8 +47,6 @@ struct MultiSparseHashSet : protected SparseHashBase<Memory> {
     MultiSparseHashSet(SizeType reserve_size, AllocatorCtorParam param = {});
     MultiSparseHashSet(const SetDataType* p, SizeType n, AllocatorCtorParam param = {});
     MultiSparseHashSet(std::initializer_list<SetDataType> init_list, AllocatorCtorParam param = {});
-    template <EachAbleContainer U>
-    MultiSparseHashSet(U&& container, AllocatorCtorParam param = {});
     ~MultiSparseHashSet();
 
     // copy & move
@@ -227,13 +225,6 @@ SKR_INLINE MultiSparseHashSet<Memory>::MultiSparseHashSet(std::initializer_list<
     : Super(std::move(param))
 {
     append(init_list);
-}
-template <typename Memory>
-template <EachAbleContainer U>
-SKR_INLINE MultiSparseHashSet<Memory>::MultiSparseHashSet(U&& container, AllocatorCtorParam param)
-    : Super(std::move(param))
-{
-    append(container);
 }
 template <typename Memory>
 SKR_INLINE MultiSparseHashSet<Memory>::~MultiSparseHashSet()

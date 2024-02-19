@@ -43,8 +43,6 @@ struct SparseVector : protected Memory {
     SparseVector(SizeType size, const DataType& v, AllocatorCtorParam param = {});
     SparseVector(const DataType* p, SizeType n, AllocatorCtorParam param = {});
     SparseVector(std::initializer_list<DataType> init_list, AllocatorCtorParam param = {});
-    template <EachAbleContainer U>
-    SparseVector(U&& container, AllocatorCtorParam param = {});
     ~SparseVector();
 
     // copy & move
@@ -375,50 +373,6 @@ SKR_INLINE SparseVector<Memory>::SparseVector(std::initializer_list<DataType> in
 
         // call ctor
         _copy_compacted_data(storage(), init_list.begin(), size);
-    }
-}
-template <typename Memory>
-template <EachAbleContainer U>
-SKR_INLINE SparseVector<Memory>::SparseVector(U&& container, AllocatorCtorParam param)
-    : Memory(std::move(param))
-{
-    using Traits = ContainerTraits<std::decay_t<U>>;
-    if constexpr (Traits::is_linear_memory)
-    {
-        auto n = Traits::size(std::forward<U>(container));
-        auto p = Traits::data(std::forward<U>(container));
-        if (n)
-        {
-            // realloc
-            _realloc(n);
-
-            // setup size
-            _set_sparse_size(n);
-            BitAlgo::set_range(bit_data(), SizeType(0), n, true);
-
-            // call ctor
-            _copy_compacted_data(storage(), p, n);
-        }
-    }
-    else if constexpr (Traits::is_iterable && Traits::has_size)
-    {
-        auto n     = Traits::size(std::forward<U>(container));
-        auto begin = Traits::begin(std::forward<U>(container));
-        auto end   = Traits::end(std::forward<U>(container));
-        reserve(n);
-        for (; begin != end; ++begin)
-        {
-            emplace(*begin);
-        }
-    }
-    else if constexpr (Traits::is_iterable)
-    {
-        auto begin = Traits::begin(std::forward<U>(container));
-        auto end   = Traits::end(std::forward<U>(container));
-        for (; begin != end; ++begin)
-        {
-            emplace(*begin);
-        }
     }
 }
 template <typename Memory>
