@@ -679,7 +679,6 @@ void VkUtil_QueryHostVisbleVramInfo(CGPUAdapter_Vulkan* VkAdapter)
                     adapter_detail->host_visible_vram_budget = mem_prop.memoryHeaps[heap_index].size;
                     break;
                 }
-                break;
             }
         }
     }
