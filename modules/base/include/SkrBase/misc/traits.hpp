@@ -1,5 +1,6 @@
 #pragma once
 #include <type_traits>
+#include <stdio.h>
 
 namespace skr
 {
@@ -71,13 +72,14 @@ using is_detected = detail::is_detected_impl<void, Op, T...>;
 template <template <typename...> class Op, typename... T>
 inline constexpr bool is_detected_v = is_detected<Op, T...>::value;
 
+
 template <std::size_t N, class T>
 [[nodiscard]] constexpr T* assume_aligned(T* ptr)
 {
 #if defined(__clang__) || (defined(__GNUC__) && !defined(__ICC))
     return reinterpret_cast<T*>(__builtin_assume_aligned(ptr, N));
 #elif defined(_MSC_VER)
-    if (reinterpret_cast<std::uintptr_t>(ptr) & -static_cast<std::intptr_t>(N) == 0)
+    if ((reinterpret_cast<std::uintptr_t>(ptr) & -static_cast<std::intptr_t>(N)) == 0)
         return ptr;
     else
         __assume(0);
@@ -114,7 +116,11 @@ template <std::size_t N, class T>
 }
 
 #ifdef SKR_USE_FALLBACK_ASSUME_ALIGNED
+} // namespace skr
+
     #include <memory>
+namespace skr
+{
     #if __cpp_lib_assume_aligned
 using std::assume_aligned;
     #endif
