@@ -1,17 +1,24 @@
-rule("utils.ispc")
+rule("compile")
     set_extensions(".ispc")
     add_deps("utils.inherit.links")
-
     on_config(function (target, opt)
         local header_outputdir =  path.join(path.absolute(target:autogendir()), "rules", "utils", "ispc-headers")
         local obj_outputdir =  path.join(path.absolute(target:autogendir()), "rules", "utils", "ispc-obj")
         os.mkdir(target:autogendir())
         os.mkdir(header_outputdir)
+        os.mkdir(obj_outputdir)
         target:add("includedirs", header_outputdir, {public = true})
     end)
     before_buildcmd_file(function (target, batchcmds, sourcefile_ispc, opt)
-        import("find_sdk")
-        ispc = find_sdk.find_program("ispc")
+        local binpath = path.join(os.scriptdir(), "..", "bin")
+        local wdir = binpath
+        local cc = ""
+        if is_plat("windows") then
+            cc = path.join(binpath, "ispc.exe")
+        else
+            cc = path.join(binpath, "ispc")
+        end
+        ispc = { program = cc, wdir = wdir }
 
         -- permission
         if (os.host() == "macosx") then
@@ -39,7 +46,7 @@ rule("utils.ispc")
         if ispc.wdir ~= nil then
             batchcmds:cd(ispc.wdir)
         end
-        batchcmds:vrunv(ispc.vexec, 
+        batchcmds:vrunv(ispc.program, 
             {"-O2",
             path.join(os.projectdir(), sourcefile_ispc),
             "-o", obj_path, 
