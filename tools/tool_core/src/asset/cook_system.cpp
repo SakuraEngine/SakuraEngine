@@ -95,8 +95,9 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule {
     skr::JobQueue* io_callback_job_queue = nullptr;
     virtual void   on_load(int argc, char8_t** argv) override
     {
-        skr_init_mutex(&cook_system.ioMutex);
-        skr_init_mutex(&cook_system.assetMutex);
+        auto cook_system = (skd::asset::SCookSystemImpl*)skd::asset::GetCookSystem();
+        skr_init_mutex(&cook_system->ioMutex);
+        skr_init_mutex(&cook_system->assetMutex);
 
         auto jqDesc         = make_zeroed<skr::JobQueueDesc>();
         jqDesc.thread_count = 1;
@@ -107,7 +108,7 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule {
         jqDesc.name           = u8"Tool-IOCallbackJobQueue";
         io_callback_job_queue = SkrNew<skr::JobQueue>(jqDesc);
 
-        for (auto& ioService : cook_system.ioServices)
+        for (auto& ioService : cook_system->ioServices)
         {
             // all used up
             if (ioService == nullptr)
@@ -126,30 +127,30 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule {
 
     virtual void on_unload() override
     {
-        skr_destroy_mutex(&cook_system.ioMutex);
-        for (auto ioService : cook_system.ioServices)
+        auto cook_system = (skd::asset::SCookSystemImpl*)skd::asset::GetCookSystem();
+        skr_destroy_mutex(&cook_system->ioMutex);
+        for (auto ioService : cook_system->ioServices)
         {
             if (ioService)
                 skr_io_ram_service_t::destroy(ioService);
         }
 
-        skr_destroy_mutex(&cook_system.assetMutex);
-        for (auto& pair : cook_system.assets)
+        skr_destroy_mutex(&cook_system->assetMutex);
+        for (auto& pair : cook_system->assets)
             SkrDelete(pair.second);
 
         SkrDelete(io_callback_job_queue);
         SkrDelete(io_job_queue);
     }
-    static skd::asset::SCookSystemImpl cook_system;
 };
 IMPLEMENT_DYNAMIC_MODULE(SkrToolCoreModule, SkrToolCore);
-skd::asset::SCookSystemImpl SkrToolCoreModule::cook_system;
 
 namespace skd::asset
 {
 SCookSystem* GetCookSystem()
 {
-    return &SkrToolCoreModule::cook_system;
+    static skd::asset::SCookSystemImpl cook_system;
+    return &cook_system;
 }
 
 void RegisterCookerToSystem(SCookSystem* system, bool isDefault, skr_guid_t cooker, skr_guid_t type, SCooker* instance)
