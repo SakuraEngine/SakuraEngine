@@ -13,7 +13,11 @@ target("Luau.VM")
     add_includedirs("luau/VM/include", {public = true})
     add_headerfiles("luau/VM/include/**.h")
     add_files("luau/VM/src/**.cpp")
-    add_files("luau/VM/src/lvmexecute.cc", {force = {cxflags = "/d2ssa-pre-"}})
+    if is_plat("windows") then
+        add_files("luau/VM/src/lvmexecute.cc", {force = {cxflags = "/d2ssa-pre-"}})
+    else
+        add_files("luau/VM/src/lvmexecute.cc")
+    end
     add_cxflags("-fno-math-errno", { public = true, tools = {"clang_cl", "clang"} })
 
 target("Luau.Ast")
