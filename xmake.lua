@@ -34,7 +34,7 @@ if (is_os("windows")) then
         set_runtimes("MDd")
     end
 elseif (is_os("macosx") or is_os("linux")) then
-    add_requires("libsdl")
+    add_requires("libsdl archive:2.30.0")
 else
     -- ...
 end
