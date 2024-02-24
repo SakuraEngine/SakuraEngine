@@ -4,7 +4,7 @@ if (is_os("windows")) then
     target("SkrRT")
         add_links("SDL2", {public = true})
 elseif (is_os("macosx") or is_os("linux")) then
-    add_requires("libsdl", {configs = {shared = true}})
+    add_requires("libsdl 2.28.5", {configs = {shared = true}})
     target("SkrRT")
         add_packages("libsdl", {public = true})
 else

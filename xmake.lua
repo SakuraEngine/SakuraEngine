@@ -33,10 +33,6 @@ if (is_os("windows")) then
     else
         set_runtimes("MDd")
     end
-elseif (is_os("macosx") or is_os("linux")) then
-    add_requires("libsdl 2.28.5")
-else
-    -- ...
 end
 
 includes("xmake/thirdparty.lua")
