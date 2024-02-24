@@ -2,7 +2,7 @@ package("luau")
     set_homepage("https://luau-lang.org/")
     set_description("A fast, small, safe, gradually typed embeddable scripting language derived from Lua.")
     set_license("MIT")
-    add_versions("0.613", "27965c7c0a3e53ea92e7a51892b94acf12472268")
+    add_versions("0.613.1", "27965c7c0a3e53ea92e7a51892b94acf12472268")
     on_install("linux", "windows", "mingw|x86_64", "macosx", function(package)
         -- install with xmake
         os.mkdir(package:installdir())
