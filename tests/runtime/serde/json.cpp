@@ -61,8 +61,8 @@ TEST_CASE_METHOD(JSONSerdeTests, "structure")
     writer.EndObject();
     auto result = writer.Str();
     simdjson::padded_string str = simdjson::padded_string((char*)result.c_str(), result.raw().size());
-    simdjson::ondemand::document doc = parser.iterate(str);
-    simdjson::ondemand::object obj = doc.get_object();
+    simdjson::ondemand::document doc = parser.iterate(str).value_unsafe();
+    simdjson::ondemand::object obj = doc.get_object().value_unsafe();
     simdjson::ondemand::value field = obj["arr"].value_unsafe();
     skr::Vector<uint64_t> readArr;
     skr::json::Read(std::move(field), readArr);
