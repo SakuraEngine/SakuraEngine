@@ -3,6 +3,7 @@ add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
 
 target("lemon")
     set_kind("static")
+    set_exceptions("cxx")
     set_optimize("fastest")
     add_headerfiles("lemon/(**.h)")
     add_headerfiles("lemon/lemon/**.h", {prefixdir = "lemon"})
