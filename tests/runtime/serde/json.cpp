@@ -30,8 +30,8 @@ TEST_CASE_METHOD(JSONSerdeTests, "primitives")
     writer.EndArray();
     auto result = writer.Str();
     simdjson::padded_string str = simdjson::padded_string((char*)result.c_str(), result.raw().size());
-    simdjson::ondemand::document doc = parser.iterate(str);
-    simdjson::ondemand::array obj = doc.get_array();
+    simdjson::ondemand::document doc = parser.iterate(str).value_unsafe();
+    simdjson::ondemand::array obj = doc.get_array().value_unsafe();
     simdjson::ondemand::value field = obj.at(0).value_unsafe();
     simdjson::ondemand::value field2 = obj.at(1).value_unsafe();
     uint64_t readValue;
