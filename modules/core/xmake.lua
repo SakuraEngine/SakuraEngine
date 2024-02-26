@@ -1,4 +1,4 @@
-add_requires("lemon 1.3.1")
+add_requires("lemon v1.3.1")
 add_requires("parallel-hashmap >=1.3.11-skr")
 add_requires("simdjson >=3.0.0-skr")
 
