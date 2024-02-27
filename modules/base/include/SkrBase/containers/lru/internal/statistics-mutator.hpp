@@ -50,10 +50,10 @@ namespace Internal {
 /// thus access its members. At the same time the interface it defines is narrow
 /// and provides only the necessary interface for the cache classes to register
 /// hits and misses.
-template <typename Key>
+template <typename Key, typename HashFunction>
 class StatisticsMutator {
  public:
-  using StatisticsPointer = std::shared_ptr<Statistics<Key>>;
+  using StatisticsPointer = std::shared_ptr<Statistics<Key, HashFunction>>;
 
   /// Constructor.
   StatisticsMutator() noexcept = default;
@@ -103,13 +103,13 @@ class StatisticsMutator {
   }
 
   /// \returns A reference to the statistics object.
-  Statistics<Key>& get() noexcept {
+  Statistics<Key, HashFunction>& get() noexcept {
     assert(has_stats());
     return *_stats;
   }
 
   /// \returns A const reference to the statistics object.
-  const Statistics<Key>& get() const noexcept {
+  const Statistics<Key, HashFunction>& get() const noexcept {
     assert(has_stats());
     return *_stats;
   }
@@ -141,7 +141,7 @@ class StatisticsMutator {
 
  private:
   /// A shared pointer to a statistics object.
-  std::shared_ptr<Statistics<Key>> _stats;
+  std::shared_ptr<Statistics<Key, HashFunction>> _stats;
 };
 
 }  // namespace Internal

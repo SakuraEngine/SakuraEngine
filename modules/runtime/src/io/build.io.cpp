@@ -11,6 +11,8 @@
 #include "ram/ram_readers.cpp"
 #include "ram/ram_service.cpp"
 
+#include "ram/ram_service_v3.cpp"
+
 #include "vram/vram_request.cpp"
 #include "vram/vram_batch.cpp"
 #include "vram/vram_resolvers.cpp"

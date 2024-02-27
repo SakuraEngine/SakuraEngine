@@ -42,18 +42,20 @@ typedef enum ESkrIOFinishPoint
     SKR_IO_FINISH_POINT_MAX_ENUM = UINT32_MAX
 } ESkrIOFinishPoint;
 
-typedef enum ESkrIOTickType
+typedef enum ESkrIOTickStage
 {
-    SKR_IO_TICK_TYPE_LOAD,
-    SKR_IO_TICK_TYPE_UNLOAD,
+    SKR_IO_TICK_STAGE_LOAD,
+    SKR_IO_TICK_STAGE_UNLOAD,
 
-    SKR_IO_TICK_TYPE_COMPLETE_CALLBACK,
-    SKR_IO_TICK_TYPE_CANCEL_CALLBACK,
-    SKR_IO_TICK_TYPE_ERROR_CALLBACK,
+    SKR_IO_TICK_STAGE_COMPLETE_CALLBACK,
+    SKR_IO_TICK_STAGE_CANCEL_CALLBACK,
+    SKR_IO_TICK_STAGE_ERROR_CALLBACK,
 
-    SKR_IO_TYPE_CALLBACKS_START = SKR_IO_TICK_TYPE_COMPLETE_CALLBACK,
-    SKR_IO_TYPE_CALLBACKS_END = SKR_IO_TICK_TYPE_ERROR_CALLBACK
-} ESkrIOTickType;
+    SKR_IO_TICK_STAGE_COUNT,
+
+    SKR_IO_TICK_STAGE_CALLBACKS_START = SKR_IO_TICK_STAGE_COMPLETE_CALLBACK,
+    SKR_IO_TICK_STAGE_CALLBACKS_END = SKR_IO_TICK_STAGE_ERROR_CALLBACK
+} ESkrIOTickStage;
 
 typedef struct skr_guid_t skr_io_decompress_method_t;
 typedef struct skr_guid_t skr_io_request_resolve_pass_t;
@@ -235,9 +237,9 @@ struct SKR_RUNTIME_API IIOServiceV3
 {
     virtual void cancel(IOFuture* future) SKR_NOEXCEPT = 0;
 
-    virtual void tick(ESkrIOTickType type) SKR_NOEXCEPT = 0;
+    virtual void tick(ESkrIOTickStage type) SKR_NOEXCEPT = 0;
 
-    virtual uint64_t remaining_count(ESkrIOTickType type) SKR_NOEXCEPT = 0;
+    virtual uint64_t remaining_count(ESkrIOTickStage type) SKR_NOEXCEPT = 0;
 
     virtual ~IIOServiceV3() SKR_NOEXCEPT = default;
     IIOServiceV3() SKR_NOEXCEPT = default;

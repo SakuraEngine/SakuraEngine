@@ -135,7 +135,7 @@ class BaseCache {
  public:
   using Tag = TagType;
   using InitializerList = std::initializer_list<std::pair<Key, Value>>;
-  using StatisticsPointer = std::shared_ptr<Statistics<Key>>;
+  using StatisticsPointer = std::shared_ptr<Statistics<Key, HashFunction>>;
   using size_t = std::size_t;
 
   static constexpr Tag tag() noexcept {
@@ -1263,7 +1263,7 @@ class BaseCache {
             typename = std::enable_if_t<
                 Internal::none_of_type<StatisticsPointer, Args...>>>
   void monitor(Args&&... args) {
-    _stats = std::make_shared<Statistics<Key>>(std::forward<Args>(args)...);
+    _stats = std::make_shared<Statistics<Key, HashFunction>>(std::forward<Args>(args)...);
   }
 
   /// Stops any monitoring being performed with a statistics object.
@@ -1282,7 +1282,7 @@ class BaseCache {
   /// \returns The statistics object currently in use by the cache.
   /// \throws LRU::Error::NotMonitoring if the cache is currently not
   /// monitoring.
-  virtual Statistics<Key>& stats() {
+  virtual Statistics<Key, HashFunction>& stats() {
     if (!is_monitoring()) {
       SKR_ASSERT(0 && "NotMonitoring!");
     }
@@ -1292,7 +1292,7 @@ class BaseCache {
   /// \returns The statistics object currently in use by the cache.
   /// \throws LRU::Error::NotMonitoring if the cache is currently not
   /// monitoring.
-  virtual const Statistics<Key>& stats() const {
+  virtual const Statistics<Key, HashFunction>& stats() const {
     if (!is_monitoring()) {
       SKR_ASSERT(0 && "NotMonitoring!");
     }
@@ -1570,7 +1570,7 @@ class BaseCache {
   mutable Queue _order;
 
   /// The object to mutate statistics if any are registered.
-  mutable StatisticsMutator<Key> _stats;
+  mutable StatisticsMutator<Key, HashFunction> _stats;
 
   /// The last-accessed cache object.
   mutable LastAccessed _last_accessed;

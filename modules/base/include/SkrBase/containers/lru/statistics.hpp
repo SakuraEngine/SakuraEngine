@@ -37,7 +37,7 @@
 
 namespace skr::container::LRU {
 namespace Internal {
-template <typename>
+template <typename Key, typename HashFunction = std::hash<Key>>
 class StatisticsMutator;
 }
 
@@ -51,7 +51,7 @@ class StatisticsMutator;
 /// never signify an "access".
 ///
 /// \tparam Key The type of the keys being monitored.
-template <typename Key>
+template <typename Key, typename HashFunction = std::hash<Key>>
 class Statistics {
  public:
   using size_t = std::size_t;
@@ -232,10 +232,10 @@ class Statistics {
   }
 
  private:
-  template <typename>
+  template <typename _Key, typename _Hash>
   friend class Internal::StatisticsMutator;
 
-  using HitMap = std::unordered_map<Key, KeyStatistics>;
+  using HitMap = std::unordered_map<Key, KeyStatistics, HashFunction>;
 
   /// The total number of accesses made for any key.
   size_t _total_accesses;
