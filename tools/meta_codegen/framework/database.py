@@ -10,3 +10,29 @@ plugin 只负责向 database 提供数据，并在渲染前进行检查
 header_db 与 global_db：
 
 '''
+
+from typing import List
+from typing import Dict
+from record import Record
+from enum import Enum
+from function import Function
+
+
+class TinyDatabase:
+    def __init__(self) -> None:
+        self.records: List[Record] = []
+        self.enums: List[Enum] = []
+        self.functions: List[Function] = []
+
+        self.__name_to_record: Dict[str, Record] = {}
+        self.__name_to_enum: Dict[str, Enum] = {}
+
+
+class Database:
+    def __init__(self) -> None:
+        # full data
+        self.records: List[Record] = []
+        self.enums: List[Enum] = []
+        self.functions: List[Function] = []
+
+        # per header data

@@ -13,20 +13,22 @@ Record json structure
 
 from typing import List
 from typing import Dict
+from method import Method
+from field import Field
+
 
 class Record(object):
     def __init__(self) -> None:
         # code info
-        self.full_name:str
-        self.short_name:str
-        self.namespace:str
-        # self.bases
-        # self.fields
-        # self.methods
+        self.name: str
+        self.short_name: str
+        self.namespace: str
+        self.bases: List[str]
+        self.fields: List[Field]
+        self.methods: List[Method]
 
         # source info
-        self.file_name:str
-        self.line:int
+        self.file_name: str
+        self.line: int
 
-        # user attributes
-        self.functional:Dict[str, object] = {}
+        self.generator_data: Dict[str, object]

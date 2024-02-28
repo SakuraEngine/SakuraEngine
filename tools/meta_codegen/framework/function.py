@@ -1,14 +1,13 @@
 '''
-Method json structure
+Function json structure
 {
     "name": <name: str>,
     "isStatic": <is_static: bool>,
     "isConst": <is_const: bool>,
-    "isNothrow": <is_nothrow: bool>,
     "attrs": <user attributes: Object>,
     "comment": <comment: str>,
     "parameters": {
-        <name: str>: {
+        <parameter_name> : {
             "type": <type: str>,
             "arraySize": <array_size: int>,
             "rawType": <raw_type: str>,
@@ -24,24 +23,26 @@ Method json structure
     },
     "retType": <return_type: str>,
     "rawRetType": <raw_return_type: str>,
-    "line": <line: int>,
+    "fileName": <file_name: str>
+    "line": <line: int>
+    }
 }
 '''
 
-
 from typing import Dict
+from typing import List
 from parameter import Parameter
 
 
-class Method:
+class Function:
     def __init__(self) -> None:
         self.name: str
         self.is_static: bool
         self.is_const: bool
-        self.is_nothrow: bool
         self.comment: str
         self.parameters: Dict[str, Parameter]
         self.ret_type: str
         self.raw_ret_type: str
+        self.file_name: str
         self.line: int
         self.generator_data: Dict[str, object]

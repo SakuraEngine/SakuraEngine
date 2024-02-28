@@ -47,6 +47,6 @@
             "stopAtEntry": false,
             "type": "cppvsdbg",
             "console": "externalTerminal"
-        }
+        },
     }
 }

@@ -4,11 +4,13 @@ import importlib.util
 import glob
 import os
 
+
 def load_generator(i, path):
-    spec = importlib.util.spec_from_file_location("Generator%d"%i, path)
+    spec = importlib.util.spec_from_file_location("Generator%d" % i, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return getattr(module, "Generator")()
+
 
 if __name__ == '__main__':
     # parse args
@@ -22,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument("-includes", help="include directory list.", nargs="+")
     args = parser.parse_args()
 
-    # load plugins
+    # load generators
     generators = []
     for i, x in enumerate(args.generators):
         generators.append(load_generator(i, x))
