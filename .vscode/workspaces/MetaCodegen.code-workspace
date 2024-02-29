@@ -6,31 +6,19 @@
         },
         {
             "path": "../../build/.gens/",
-            "name": "code-gen"
+            "name": "gen-temp-files"
         },
         {
-            "path": "../../modules/base/",
-            "name": "base"
+            "path": "../../tools/meta_codegen/",
+            "name": "gen-script"
         },
         {
-            "path": "../../modules/runtime/",
-            "name": "runtime"
+            "path": "../../modules/meta_system/",
+            "name": "gen-module"
         },
         {
-            "path": "../../modules/gui/gui/",
-            "name": "gui"
-        },
-        {
-            "path": "../../build/.gens/SkrGui/",
-            "name": "gui-gen"
-        },
-        {
-            "path": "../../modules/gui/renderer",
-            "name": "gui-renderer"
-        },
-        {
-            "path": "../../build/.gens/SkrGuiRenderer/",
-            "name": "gui-renderer-gen"
+            "path": "../../tests/meta_system/",
+            "name": "gen-test"
         }
     ],
     "settings": {
