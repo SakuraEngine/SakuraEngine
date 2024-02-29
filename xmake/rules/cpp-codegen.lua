@@ -21,3 +21,19 @@ rule("c++.codegen")
         target:add("files", sourcefile, { unity_ignored = true })
         target:add("includedirs", gendir, {public = true})
     end)
+    before_build(function (target)
+        local generators = target:values("skr.cpp_codegen.generators")
+        if generators then
+            print(target:name()..generators)
+        end
+    end)
+rule_end()
+
+-- 使用 rule 来实现这个功能比较好
+function add_generator(name, path, files)
+    add_values("skr.cpp_codegen.generators", {
+        name = name,
+        path = path,
+        files = files
+    })
+end

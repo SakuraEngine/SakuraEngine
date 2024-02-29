@@ -1,4 +1,10 @@
 {
     "dascript.experimental": true,
-    "dascript.server.connectTimeout": 10
+    "dascript.server.connectTimeout": 10,
+    "Lua.diagnostics.disable": [
+        "undefined-global",
+        "lowercase-global",
+        "undefined-field",
+        "need-check-nil"
+    ]
 }
