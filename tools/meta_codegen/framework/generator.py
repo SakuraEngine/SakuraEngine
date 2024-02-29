@@ -21,4 +21,7 @@ Json 源数据处理：
 同一 key 下可以容纳多个 generator 给出的功能，只要保证不发生名称冲突即可
 generator 以离散的形式给出（逐个 target 给出），联合判定（比如 field 的 rttr enable 默认值受到 record 的 rttr enable 影响）通过传入函数来实现
 generator 本身通常不存储任何信息，只负责解析和向 db 写入信息
+
+Generator 类型：
+有时候在生成 CPP 文件的同时还要输出一些副产物（比如语言之间的胶水层等），需要给出一个 API 来自定义生成
 '''
