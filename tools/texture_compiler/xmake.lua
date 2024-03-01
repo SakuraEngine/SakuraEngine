@@ -17,6 +17,6 @@ shared_module("SkrTextureCompiler", "SKR_TEXTURE_COMPILER", engine_version)
         rootdir = "include/SkrTextureCompiler",
         api = "SKR_TEXTURE_COMPILER"
     })
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_includedirs("include", {public=true})
     add_files("src/**.cpp")

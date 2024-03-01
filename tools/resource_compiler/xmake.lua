@@ -7,5 +7,5 @@ executable_module("SkrResourceCompiler", "SKR_RESOURCE_COMPILER", engine_version
     public_dependency("SkrGLTFTool", engine_version)
     public_dependency("GameTool", engine_version)
     public_dependency("SkrAnimTool", engine_version)
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_files("**.cpp")

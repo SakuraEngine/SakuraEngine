@@ -29,7 +29,6 @@
         "dascript.server.connectTimeout": 10,
         "xmake.additionalConfigArguments": [
             "--use_profile=disable",
-            "--build_tests=y",
             "--cxx_version=cxx20"
         ],
         "xmake.customDebugConfig": {

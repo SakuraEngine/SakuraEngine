@@ -11,7 +11,7 @@ shared_module("SkrShaderCompiler", "SKR_SHADER_COMPILER", engine_version)
         api = "SKR_SHADER_COMPILER"
     })
     set_pcxxheader("src/pch.hpp")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
 
     -- dxc compiler uses ms-extensions
     if (os.host() == "macosx") then

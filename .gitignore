@@ -36,3 +36,5 @@ scenes
 /vsxmake
 /vsxmake*
 xmake.log
+
+./project.lua

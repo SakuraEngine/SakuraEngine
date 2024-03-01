@@ -1,0 +1,5 @@
+shared_module("SkrPhysics", "SKR_PHYSICS", engine_version)
+    public_dependency("SkrRT", engine_version)
+    add_includedirs("include", {public=true})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
+    add_files("src/**.cpp")

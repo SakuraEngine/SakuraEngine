@@ -1,18 +1,14 @@
 includes("application/xmake.lua")
 includes("hotfix/xmake.lua")
 
-if has_config("build_cgpu_samples") then 
+if build_part("samples.cgpu") then
     includes("cgpu/xmake.lua")
 end
 
-if has_config("build_rg_samples") then 
+if build_part("samples.render_graph") then
     includes("render_graph/xmake.lua")
 end
 
-if has_config("build_AAA") then 
+if build_part("samples.AAA") then
     includes("AAA/xmake.lua")
-end
-
-if(has_config("build_editors")) then
-    includes("editor/xmake.lua")
 end
