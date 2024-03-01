@@ -54,10 +54,6 @@ if build_part("samples") then
     includes("samples/xmake.lua")
 end
 
-if build_part("tools") then
-    includes("tools/xmake.lua")
-end
-
 if build_part("editors") then
     includes("editors/xmake.lua")
 end
