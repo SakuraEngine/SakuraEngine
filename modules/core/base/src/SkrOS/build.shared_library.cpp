@@ -86,7 +86,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
 #if SKR_PLAT_UNIX
     bool skr::SharedLibrary::loadImpl(const char8_t* path)
     {
-        _lastError.empty();
+        _lastError.clear();
         _handle = dlopen((const char*)path, RTLD_LAZY | RTLD_LOCAL);
         if (!_handle)
         {
@@ -98,7 +98,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
 
     bool skr::SharedLibrary::unloadImpl()
     {
-        _lastError.empty();
+        _lastError.clear();
         // dlclose returns 0 on success
         if (_handle != nullptr && dlclose(_handle) != 0)
         {
@@ -111,7 +111,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
 
     void* skr::SharedLibrary::getImpl(const char8_t* symbolName)
     {
-        _lastError.empty();
+        _lastError.clear();
         dlerror();
         if (!_handle) _handle = dlopen(NULL, RTLD_LAZY | RTLD_LOCAL);
         void* symbol = dlsym(_handle, (const char*)symbolName);
@@ -159,7 +159,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
 
     bool skr::SharedLibrary::loadImpl(const char8_t* path)
     {
-        _lastError.empty();
+        _lastError.clear();
         if (path == nullptr)
         {
             _handle = GetModuleHandle(nullptr);
@@ -183,7 +183,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
 
     bool skr::SharedLibrary::unloadImpl()
     {
-        _lastError.empty();
+        _lastError.clear();
         if (!FreeLibrary((HMODULE)_handle))
         {
             _lastError = getWindowsError();
@@ -195,7 +195,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
 
     void* skr::SharedLibrary::getImpl(const char8_t* symbolName)
     {
-        _lastError.empty();
+        _lastError.clear();
         void* addr = (void*)GetProcAddress((HMODULE)_handle, (const char*)symbolName);
         if (!addr)
         {
