@@ -17,7 +17,7 @@ shared_module("SkrAnimTool", "SKR_ANIMTOOL", engine_version)
         rootdir = "include/SkrAnimTool",
         api = "SKR_ANIMTOOL"
     })
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     set_pcxxheader("src/pch.hpp")
 
     add_files("src/*.cc", {unity_group = "utils"})

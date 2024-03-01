@@ -2,7 +2,7 @@ target("CGPUMandelbrot")
     set_group("04.examples/cgpu")
     set_kind("binary")
     set_exceptions("no-cxx")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-mandelbrot",
         dxil_outdir = "/../resources/shaders/cgpu-mandelbrot"})
@@ -15,7 +15,7 @@ target("CGPUIndexedInstance")
     set_group("04.examples/cgpu")
     set_kind("binary")
     set_exceptions("no-cxx")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-indexed-instance",
         dxil_outdir = "/../resources/shaders/cgpu-indexed-instance"})
@@ -28,7 +28,7 @@ target("CGPUTexture")
     set_group("04.examples/cgpu")
     set_kind("binary")
     set_exceptions("no-cxx")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-texture",
         dxil_outdir = "/../resources/shaders/cgpu-texture"})
@@ -41,13 +41,13 @@ target("CGPUTiledTexture")
     set_group("04.examples/cgpu")
     set_exceptions("no-cxx")
     set_kind("binary")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     public_dependency("SkrRT", engine_version)
     add_includedirs("./../../common", {public = false})
     add_files("texture/tiled_texture.c")
     
 -- close this demo until we fix exception rule issue
-if has_config("build_cgpu_samples") then 
+if build_part("samples.cgpu") then
     if (os.host() == "windows") then
         target("HotTriangle")
             set_group("04.examples/cgpu")
@@ -57,7 +57,7 @@ if has_config("build_cgpu_samples") then
             set_kind("binary")
             -- file_watch.hpp needs exceptions
             set_exceptions("cxx")
-            add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+            add_rules("c++.unity_build", {batchsize = default_unity_batch})
             public_dependency("SkrRT", engine_version)
             public_dependency("SkrWASM", engine_version)
             add_includedirs("./../../common", {public = false})

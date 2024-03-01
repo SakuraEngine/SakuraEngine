@@ -1,6 +1,6 @@
 includes("game/xmake.lua")
 
-if(has_config("build_tools")) then
+if build_part("tools") then
     if(not has_config("shipping_one_archive")) then
 
     shared_module("GameTool", "GAMETOOL", engine_version)
@@ -10,7 +10,7 @@ if(has_config("build_tools")) then
         add_includedirs("gametool/include", {public=true})
         add_includedirs("./../common", {public = false})
         add_files("gametool/src/**.cpp")
-        add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+        add_rules("c++.unity_build", {batchsize = default_unity_batch})
         on_config(function (target, opt)
             local dep = target:dep("GameRuntime");
             local toolgendir = path.join(dep:autogendir({root = true}), dep:plat(), "codegen", dep:name(), "tool")
@@ -32,7 +32,7 @@ executable_module("VMemController", "VMEM_CONTROLLER", engine_version)
     public_dependency("SkrImGui", engine_version)
     set_exceptions("no-cxx")
     add_includedirs("./../common", {public = false})
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_files("vmem_controller/**.cpp")
 
 if (os.host() == "windows" and has_config("build_chat")) then
@@ -51,7 +51,7 @@ executable_module("Live2DViewer", "LIVE2D_VIEWER", engine_version)
         spv_outdir = "/../resources/shaders/Live2DViewer",
         dxil_outdir = "/../resources/shaders/Live2DViewer"})
     set_exceptions("no-cxx")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_includedirs("./../common", {public = false})
     add_includedirs("live2d-viewer/include", {public=true})
     add_files("live2d-viewer/src/main.cpp", "live2d-viewer/src/viewer_module.cpp", "live2d-viewer/src/imgui.cpp")

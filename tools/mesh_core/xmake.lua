@@ -11,6 +11,6 @@ shared_module("SkrMeshCore", "MESH_CORE", engine_version)
     public_dependency("GameRuntime", engine_version)
     add_includedirs("include", {public=true})
     add_files("src/**.cpp")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     -- meshoptimizer
     add_packages("meshoptimizer", {public=true})

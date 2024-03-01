@@ -1,0 +1,1 @@
+build_parts = { "core", "engine", "render", "tests", "samples" }
