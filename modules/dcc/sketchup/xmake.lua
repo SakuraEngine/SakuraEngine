@@ -11,12 +11,12 @@ shared_module("SkrSketchUp", "SKR_SKETCH_UP", engine_version)
         add_links("SketchUpAPI", {public = true})
     elseif is_os("macosx") then
         add_links(
-            "libCommonGeometry",
-            "libCommonGeoutils",
-            "libCommonImage",
-            "libCommonPreferences",
-            "libCommonUnits",
-            "libCommonUtils",
-            "libCommonZip"
+            "CommonGeometry",
+            "CommonGeoutils",
+            "CommonImage",
+            "CommonPreferences",
+            "CommonUnits",
+            "CommonUtils",
+            "CommonZip"
         , {public = true})
     end
