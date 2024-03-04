@@ -32,7 +32,7 @@ target("SerdeTest")
     set_kind("binary")
     public_dependency("SkrRT", engine_version)
     add_deps("SkrTestFramework", {public = false})
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_files("serde/main.cpp")
 
 target("ECSTest")

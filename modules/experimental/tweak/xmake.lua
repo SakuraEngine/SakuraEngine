@@ -8,7 +8,7 @@ end
 shared_module("SkrTweak", "SKR_TWEAK", engine_version)
     public_dependency("SkrRT", engine_version)
     add_includedirs("include", {public=true})
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_files("src/**.cpp")
     add_defines("SKR_SOURCE_ROOT=R\"($(projectdir))\"", {public=false})
     if(efsw_pak) then

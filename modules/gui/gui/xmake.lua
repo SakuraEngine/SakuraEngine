@@ -17,7 +17,7 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     })
 
     -- unity build & pch
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     set_pcxxheader("src/pch.hpp")
     add_includedirs("include", {public = true})
     add_includedirs("src", {public = false})

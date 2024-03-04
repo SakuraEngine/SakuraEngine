@@ -1,6 +1,6 @@
 shared_module("SkrToolCore", "TOOL_CORE", engine_version)
     set_group("02.tools")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
     set_pcxxheader("src/pch.hpp")
     add_files("src/**.cpp")
     public_dependency("SkrRT", engine_version)
