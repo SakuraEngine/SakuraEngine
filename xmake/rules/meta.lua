@@ -4,9 +4,10 @@ target("SkrMetaCodegenPolicy")
     -- dispatch codegen task
     before_build(function(target)
         -- TODO. dispatch
+        import("meta_system")()
     end)
 
-rule("skr.meta")
+rule("c++.meta.codegen")
     on_load(function (target, opt)
         -- add dependency
         target:add("deps", "SkrMetaCodegenPolicy")
@@ -28,6 +29,6 @@ rule("skr.meta")
     end)
 rule_end()
 
-rule("skr.meta.generator")
+rule("c++.meta.generators")
 
 rule_end()
