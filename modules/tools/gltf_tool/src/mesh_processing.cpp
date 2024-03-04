@@ -2,7 +2,7 @@
 #include "cgltf/cgltf.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrOS/filesystem.hpp"
-#include "SkrRT/async/fib_task.hpp"
+#include "SkrTask/fib_task.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrMeshCore/mesh_processing.hpp"
 #include "SkrGLTFTool/mesh_processing.hpp"

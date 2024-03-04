@@ -9,9 +9,9 @@ static_component("SkrSerde", "SkrRT")
     
 shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     -- dependencies
+    public_dependency("SkrTask", engine_version)
     public_dependency("SkrGraphics", engine_version)
-    -- internal packages
-    add_packages("boost-context", {public = true, inherit = true})
+
     -- link system libs/frameworks
     add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public = true})
     if (is_os("windows")) then 
@@ -29,25 +29,6 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
         add_mxflags("-fno-objc-arc", {force = true})
         add_frameworks("CoreFoundation", "Cocoa", "IOKit", {public = true})
     end
-
-    -- add FTL source 
-    add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/build.*.cpp")
-    -- add marl source
-    local marl_source_dir = "$(projectdir)/thirdparty/marl"
-    add_files(marl_source_dir.."/src/build.*.cpp")
-    if not is_os("windows") then 
-        add_files(marl_source_dir.."/src/**.c")
-        add_files(marl_source_dir.."/src/**.S")
-    end
-    add_includedirs("$(projectdir)/thirdparty/marl/include", {public = true})
-    -- marl runtime compile definitions
-    after_load(function (target,  opt)
-        if (target:get("kind") == "shared") then
-            import("core.project.project")
-            target:add("defines", "MARL_DLL", {public = true})
-            target:add("defines", "MARL_BUILDING_DLL")
-        end
-    end)
 
     -- install sdks for windows platform
     libs_to_install = {}

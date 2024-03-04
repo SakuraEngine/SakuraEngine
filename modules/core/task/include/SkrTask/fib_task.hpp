@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/config.h"
+#include "SkrBase/config.h"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrBase/misc/debug.h" 
 
@@ -10,7 +10,7 @@ namespace skr::task
     struct weak_counter_t;
     struct weak_event_t;
     struct scheduler_t;
-    struct SKR_RUNTIME_API scheudler_config_t
+    struct SKR_TASK_API scheudler_config_t
     {
         scheudler_config_t();
         uint32_t numThreads = 0;
@@ -28,7 +28,7 @@ namespace skr::task
 
 namespace skr::task
 {
-    struct SKR_RUNTIME_API counter_t
+    struct SKR_TASK_API counter_t
     {
     public:
         using internal_t = skr::shared_ptr<ftl::TaskCounter>;
@@ -49,7 +49,7 @@ namespace skr::task
         friend scheduler_t;
     };
 
-    struct SKR_RUNTIME_API weak_counter_t
+    struct SKR_TASK_API weak_counter_t
     {
     public:
         using internal_t = skr::weak_ptr<ftl::TaskCounter>;
@@ -67,7 +67,7 @@ namespace skr::task
         friend scheduler_t;
     };
 
-    struct SKR_RUNTIME_API event_t
+    struct SKR_TASK_API event_t
     {
     public:
         using internal_t = skr::shared_ptr<ftl::TaskCounter>;
@@ -88,7 +88,7 @@ namespace skr::task
         friend scheduler_t;
     };
 
-    struct SKR_RUNTIME_API weak_event_t
+    struct SKR_TASK_API weak_event_t
     {
     public:
         using internal_t = skr::weak_ptr<ftl::TaskCounter>;
@@ -106,7 +106,7 @@ namespace skr::task
         friend scheduler_t;
     };
 
-    struct SKR_RUNTIME_API scheduler_t
+    struct SKR_TASK_API scheduler_t
     {
         using internal_t = ftl::TaskScheduler*;
     public:
@@ -148,7 +148,7 @@ namespace skr::task
 
     void* current_fiber();
 
-    struct SKR_RUNTIME_API details
+    struct SKR_TASK_API details
     {
         private:
         static scheduler_t* get_scheduler();
@@ -183,7 +183,7 @@ namespace skr::task
 
 namespace skr::task
 {
-    struct SKR_RUNTIME_API counter_t
+    struct SKR_TASK_API counter_t
     {
     public:
         using internal_t = marl::WaitGroup;
@@ -203,7 +203,7 @@ namespace skr::task
         internal_t internal;
     };
 
-    struct SKR_RUNTIME_API weak_counter_t
+    struct SKR_TASK_API weak_counter_t
     {
     public:
         using internal_t = marl::WeakWaitGroup;
@@ -219,7 +219,7 @@ namespace skr::task
         internal_t internal;
     };
 
-    struct SKR_RUNTIME_API event_t
+    struct SKR_TASK_API event_t
     {
     public:
         using internal_t = marl::Event;
@@ -251,7 +251,7 @@ namespace skr::task
         internal_t internal;
     };
 
-    struct SKR_RUNTIME_API weak_event_t
+    struct SKR_TASK_API weak_event_t
     {
     public:
         using internal_t = marl::WeakEvent;
@@ -266,7 +266,7 @@ namespace skr::task
         internal_t internal;
     };
 
-    struct SKR_RUNTIME_API scheduler_t
+    struct SKR_TASK_API scheduler_t
     {
     public:
         using internal_t = marl::Scheduler*;

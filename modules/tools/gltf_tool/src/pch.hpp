@@ -8,8 +8,8 @@
 #include "SkrGuid/guid.hpp" // IWYU pragma: export
 #include "SkrBase/misc/defer.hpp" // IWYU pragma: export
 #include "SkrCore/log.hpp" // IWYU pragma: export
-#include "SkrRT/async/parallel_for.hpp" // IWYU pragma: export
-#include "SkrRT/async/fib_task.hpp" // IWYU pragma: export
+#include "SkrTask/parallel_for.hpp" // IWYU pragma: export
+#include "SkrTask/fib_task.hpp" // IWYU pragma: export
 #include "SkrRT/io/ram_io.hpp" // IWYU pragma: export
 
 #include "SkrModule/module.hpp" // IWYU pragma: export

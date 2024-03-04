@@ -1,6 +1,6 @@
 #include "SkrModule/module.hpp"
 #include "SkrGuid/guid.hpp"
-#include "SkrRT/async/parallel_for.hpp"
+#include "SkrTask/parallel_for.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrContainers/string.hpp"

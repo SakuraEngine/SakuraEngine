@@ -3,7 +3,7 @@
 #include "SkrRT/misc/types.h"
 #if defined(__cplusplus)
 #include "SkrCore/log.h"
-#include "SkrRT/async/fib_task.hpp"
+#include "SkrTask/fib_task.hpp"
 #include "SkrRT/ecs/callback.hpp"
 #endif
 

@@ -33,7 +33,7 @@ namespace ftl
  * FullAtomicCounter implements the full set of functions
  * of an atomic (with more overhead vs TaskCounter)
  */
-class SKR_RUNTIME_API FullAtomicCounter : public BaseCounter
+class SKR_TASK_API FullAtomicCounter : public BaseCounter
 {
 public:
     /**
@@ -157,7 +157,7 @@ public:
 /**
  * AtomicFlag implements a simple Set/Clear counter
  */
-class SKR_RUNTIME_API AtomicFlag : public BaseCounter
+class SKR_TASK_API AtomicFlag : public BaseCounter
 {
 public:
     /**

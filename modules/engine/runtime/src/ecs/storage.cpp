@@ -3,7 +3,7 @@
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/entity.hpp"
 #include "SkrRT/ecs/set.hpp"
-#include "SkrRT/async/parallel_for.hpp"
+#include "SkrTask/parallel_for.hpp"
 
 #include "SkrRT/ecs/detail/query.hpp"
 #include "SkrRT/ecs/detail/storage.hpp"

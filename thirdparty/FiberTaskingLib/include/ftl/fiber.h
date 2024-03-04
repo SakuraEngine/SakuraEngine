@@ -32,14 +32,14 @@
 
 #include "task.h"
 
-#include "SkrRT/config.h"
+#include "SkrBase/config.h"
 
 namespace ftl
 {
 
 using FiberStartRoutine = void (*)(void* arg);
 
-class SKR_RUNTIME_API Fiber
+class SKR_TASK_API Fiber
 {
 public:
     /**

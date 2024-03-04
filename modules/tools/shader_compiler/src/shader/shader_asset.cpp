@@ -1,5 +1,5 @@
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/async/parallel_for.hpp"
+#include "SkrTask/parallel_for.hpp"
 #include "SkrRT/misc/cartesian_product.hpp"
 #include "SkrRT/serde/json/writer.h"
 #include "SkrToolCore/asset/cook_system.hpp"

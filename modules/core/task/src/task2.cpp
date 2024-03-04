@@ -7,7 +7,7 @@
 #include "SkrContainers/stl_deque.hpp"
 #include "SkrContainers/atomic_queue/atomic_queue.h"
 #include "SkrContainers/concurrent_queue.hpp"
-#include "SkrRT/async/co_task.hpp"
+#include "SkrTask/co_task.hpp"
 
 inline void nop() {
 #if defined(_WIN32)
