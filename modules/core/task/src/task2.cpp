@@ -9,6 +9,10 @@
 #include "SkrContainers/concurrent_queue.hpp"
 #include "SkrTask/co_task.hpp"
 
+#if defined(_WIN32)
+#include <intrin.h>
+#endif
+
 inline void nop() {
 #if defined(_WIN32)
     __nop();
