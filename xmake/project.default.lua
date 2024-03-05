@@ -1,1 +1,1 @@
-build_parts = { "core", "engine", "render", "devtime", "tools", "dcc", "samples" }
+build_parts = { "core", "engine", "render", "gui", "devtime", "tools", "dcc", "samples" }
