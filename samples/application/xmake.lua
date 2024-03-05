@@ -6,7 +6,7 @@ if build_part("render") then
     includes("multiplayer/xmake.lua")
     includes("game/xmake.lua")
 
-    if os.host() == "windows" then
+    if os.host() == "windows" and false then
         includes("chat/xmake.lua")
     end
 
