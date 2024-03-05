@@ -6,6 +6,8 @@ shared_module("SkrTask", "SKR_TASK", engine_version)
     -- internal packages
     add_packages("boost-context", {public = true, inherit = true})
     -- add FTL source 
+    local ftl_includes_dir = "$(projectdir)/thirdparty/FiberTaskingLib/include"
+    add_includedirs(ftl_includes_dir, {public = true})
     add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/build.*.cpp")
     -- add marl source
     local marl_source_dir = "$(projectdir)/thirdparty/marl"
