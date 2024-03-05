@@ -1,3 +1,5 @@
+add_requires("boost-context >=0.1.0-skr")
+
 shared_module("SkrTask", "SKR_TASK", engine_version)
     -- add source files
     public_dependency("SkrCore", engine_version)
