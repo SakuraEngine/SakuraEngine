@@ -11,6 +11,14 @@ includes("gui/xmake.lua")
 -- includes("experimental/runtime_exporter/xmake.lua")
 -- includes("experimental/daScript/xmake.lua")
 
+if build_part("dcc") then
+    includes("dcc/xmake.lua")
+end
+
+if build_part("tools") then
+    includes("tools/xmake.lua")
+end
+
 if build_part("samples.wasm") then
     includes("experimental/wasm/xmake.lua")
 end

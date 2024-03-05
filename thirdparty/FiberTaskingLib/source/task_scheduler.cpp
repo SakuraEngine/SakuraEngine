@@ -36,6 +36,10 @@
 #include "SkrProfile/profile.h"
 #include "SkrCore/log.h"
 
+#if defined(_WIN32)
+#include <intrin.h>
+#endif
+
 #if defined(FTL_WIN32_THREADS)
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN

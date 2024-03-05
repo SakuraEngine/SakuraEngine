@@ -1,7 +1,7 @@
 #include "SkrModule/module_manager.hpp"
 #include "SkrOS/filesystem.hpp"
 #include "SkrCore/log.h"
-#include "SkrRT/async/fib_task.hpp"
+#include "SkrTask/fib_task.hpp"
 
 #include "SkrProfile/profile.h"
 

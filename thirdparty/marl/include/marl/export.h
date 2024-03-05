@@ -45,6 +45,6 @@
 #define MARL_NO_EXPORT
 #endif
 
-#include "SkrRT/config.h"
+#include "SkrBase/config.h"
 
 #endif  // marl_export_h
