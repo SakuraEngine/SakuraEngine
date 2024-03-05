@@ -16,10 +16,10 @@ local _meta_data_headers_name = "meta.headers"
 local _meta_data_generators_name = "meta.generators"
 
 -- rule names
-local _meta_rule_codegen_name = "c++.meta.codegen"
+local _meta_rule_codegen_name = "c++.codegen" -- TODO. use new name
 local _meta_rule_generators_name = "c++.meta.generators"
 
--- tools
+-- commands
 function _compile_task(compile_func, target, opt)
     -- get config
     local refl_batch = target:data(_meta_data_batch_name ) or {}
@@ -44,18 +44,17 @@ function _compile_task(compile_func, target, opt)
     end
 end
 function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
-    opt = opt or {
-        target = target,
-        rawargs = true
-    }
+    opt = opt or {}
+    opt.target = target
+    opt.rawargs = true
     local start_time = os.time()
     local using_msvc = target:toolchain("msvc")
     local using_clang_cl = target:toolchain("clang-cl")
 
     -- load compiler and get compilation command
-    local source_kind = opt.sourcekind
-    if not source_kind and type(sourcefile) == "string" then
-        source_kind = language.sourcekind_of(sourcefile)
+    local sourcekind = opt.sourcekind
+    if not sourcekind and type(sourcefile) == "string" then
+        sourcekind = language.sourcekind_of(sourcefile)
     end
     local compiler_inst = compiler.load(sourcekind, opt)
     local program, argv = compiler_inst:compargv(sourcefile, sourcefile..".o", opt)
@@ -99,7 +98,7 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
     end
 
     -- compile meta source
-    os.runv(meta.program, argv)
+    os.runv(_meta.program, argv)
     if not opt.quiet then
         cprint(
             "${green}[%s]: finish.meta ${clear}%s cost ${red}%d seconds"
@@ -109,9 +108,9 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
         )
     end
 end
-function _codegen_command(target, mako_generators, use_deps_data, metadir, gendir, opt)
+function _meta_codegen_command(target, scripts, metadir, gendir, opt)
     -- get config
-    local api = target:extraconf("rules", meta_rule, "api")
+    local api = target:extraconf("rules", _meta_rule_codegen_name, "api")
     local generator = os.projectdir()..vformat("/tools/codegen/codegen.py")
     local start_time = os.time()
     
@@ -141,26 +140,38 @@ function _codegen_command(target, mako_generators, use_deps_data, metadir, gendi
         table.insert(command, dep)
     end
 
-    -- config
-    table.insert(command, "-config")
-    table.insert(command, path.join(target:name(), "module.configure.h"))
-    for _, generator in pairs(mako_generators) do
-        table.insert(command, generator[1])
+    -- generators
+    table.insert(command, "-generators")
+    for _, script in pairs(scripts) do
+        table.insert(command, script)
+    end
+
+    if verbos then
+        cprint(
+            "[%s] python %s"
+            , target:name()
+            , table.concat(command, " ")
+        )
     end
 
     -- call codegen script
-    os.iorunv(python.program, command)
+    os.iorunv(_python.program, command)
 
     if not opt.quiet then
-        local now = os.time()
-        cprint("${cyan}[%s]: %s${clear} %s cost ${red}%d seconds", target:name(), path.filename(generator), path.relative(metadir), now - last)
+        cprint(
+            "${cyan}[%s]: %s${clear} %s cost ${red}%d seconds"
+            , target:name()
+            , path.filename(generator)
+            , path.relative(metadir)
+            , os.time() - start_time)
     end
 end
 
 -- steps
 --  1. collect header batch
---  2. compile headers to meta json
---  3. call codegen scripts
+--  2. solve generators
+--  3. compile headers to meta json
+--  4. call codegen scripts
 function _collect_headers_batch(target)
     -- get config
     local headerfiles = {}
@@ -180,7 +191,7 @@ function _collect_headers_batch(target)
     local meta_batch = {}
     local batch_id = 1
     local file_count = 0
-    for idx, headerfile in pairs(headerfiles) do
+    for _, headerfile in pairs(headerfiles) do
         -- new batch
         if batchsize and file_count >= batchsize then
             batch_id = batch_id + 1
@@ -188,16 +199,17 @@ function _collect_headers_batch(target)
         end
 
         -- add source to batch
-        local sourcefile = path.join(sourcedir, "reflection_" .. tostring(id) .. ".cpp")
+        local sourcefile = path.join(sourcedir, "reflection_" .. tostring(batch_id) .. ".cpp")
         if sourcefile then
-            local sourceinfo = meta_batch[id]
+            local sourceinfo = meta_batch[batch_id]
             if not sourceinfo then
-                meta_batch[id] = {
+                sourceinfo = {
                     sourcefile = sourcefile,
                     metadir = metadir,
                     gendir = gendir,
                     headerfiles = {}
                 }
+                meta_batch[batch_id] = sourceinfo
             end
             table.insert(sourceinfo.headerfiles, headerfile)
         end
@@ -208,6 +220,32 @@ function _collect_headers_batch(target)
     -- set data
     target:data_set(_meta_data_batch_name, meta_batch)
     target:data_set(_meta_data_headers_name, headerfiles)
+end
+function _solve_generators(target)
+    -- get config
+    local generator_config = target:extraconf("rules", _meta_rule_generators_name)
+    
+    -- solve config
+    local solved_config = {
+        scripts = {},
+        dep_files = {}
+    }
+    for _, script_config in ipairs(generator_config.scripts) do
+        table.insert(solved_config.scripts, {
+            file = path.join(target:scriptdir(), script_config.file),
+            private = script_config.private,
+            use_new_framework = script_config.use_new_framework
+        })
+    end
+    for _, dep_file in ipairs(generator_config.dep_files) do
+        local match_files = os.files(path.join(target:scriptdir(), dep_file))
+        for __, file in ipairs(match_files) do
+            table.insert(solved_config.dep_files, file)
+        end
+    end
+
+    -- save config
+    target:data_set(_meta_data_generators_name, solved_config)
 end
 function _meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
     -- generate headers dummy
@@ -236,22 +274,100 @@ function _meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles
 end
 function _meta_codegen(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
     -- collect generators
-    local generators = { target:extraconf("rules", _meta_rule_generators_name) }
+    local generator_configs = { }
+    if target:data(_meta_data_generators_name) then
+        table.insert(generator_configs, target:data(_meta_data_generators_name))
+    end
     for _, dep in pairs(target:deps()) do
-        local dep_generator = dep:extraconf("rules", _meta_rule_generators_name)
+        local dep_generator = dep:data(_meta_data_generators_name)
         if dep_generator then
-            table.insert(generators, dep_generator)
+            table.insert(generator_configs, dep_generator)
         end
     end
+
+    -- extract info
+    local scripts = {}
+    local dep_files = {
+        path.join(os.projectdir(), "tools/codegen/codegen.py"),
+        path.join(os.projectdir(), "tools/codegen/forward.h.mako"),
+        path.join(os.projectdir(), "tools/codegen/impl_begin.cpp.mako"),
+        path.join(os.projectdir(), "tools/codegen/impl_end.cpp.mako"),
+    }
+    for _, gen_config in ipairs(generator_configs) do
+        -- extract scripts
+        for __, script_config in ipairs(gen_config.scripts) do
+            if not script_config.private then
+                table.insert(scripts, script_config.file)
+            end
+        end
+
+        -- extract dep_files
+        for __, dep_file in ipairs(gen_config.dep_files) do
+            table.insert(dep_files, dep_file)
+        end
+    end
+
+    -- call codegen scripts
+    depend.on_changed(function ()
+        _meta_codegen_command(target, scripts, metadir, gendir, opt)
+    end, {dependfile = target:dependfile(target:name()..".mako"), files = dep_files})
 end
 
 function main()
     if not _g.MetaGenerated then
         local targets = project.ordertargets()
-        
+
+        -- permission
+        if (os.host() == "macosx") then
+            os.exec("chmod -R 777 ".._meta.program)
+        end
+
+        -- parameters
+        local opt = opt or {}
+
+        -- collect headers batch
+        for _, target in ipairs(targets) do
+            _collect_headers_batch(target)
+        end
+
         -- solve generators
         for _, target in ipairs(targets) do
-            _meta_codegen(target)
+            if target:rule(_meta_rule_generators_name) then
+                _solve_generators(target)
+            end
+        end
+
+        -- compile meta files
+        for _, target in ipairs(targets) do
+            if target:rule(_meta_rule_codegen_name) then
+                -- resume meta compile
+                scheduler.co_group_begin(target:name()..".cppgen.meta", function ()
+                    meta_target = target:clone()
+                    meta_target:set("pcxxheader", nil)
+                    meta_target:set("pcheader", nil)
+                    scheduler.co_start(_compile_task, _meta_compile, meta_target, opt)
+                end)
+            end
+        end
+
+        -- compile mako templates
+        for _, target in ipairs(targets) do
+            if target:rule(_meta_rule_codegen_name) then
+                -- wait depend metas
+                for _, dep in pairs(target:deps()) do
+                    if dep:rule(_meta_rule_codegen_name) then
+                        scheduler.co_group_wait(dep:name()..".cppgen.meta")
+                    end
+                end
+
+                -- wait self metas
+                scheduler.co_group_wait(target:name()..".cppgen.meta")
+                
+                -- dispatch
+                scheduler.co_group_begin(target:name()..".cppgen.mako", function ()
+                    scheduler.co_start(_compile_task, _meta_codegen, target, opt)
+                end)
+            end
         end
 
         _g.MetaGenerated = true

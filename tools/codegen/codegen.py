@@ -11,9 +11,11 @@ from mako import exceptions
 from mako.template import Template
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
+
 def abort(message):
     print(message, file=sys.stderr)
     sys.exit(1)
+
 
 class Field(object):
     def __init__(self, name, type):
@@ -21,6 +23,7 @@ class Field(object):
         self.type = type
         self.getter = None
         self.setter = None
+
 
 class Record(object):
     def __init__(self, name, fields, bases, fileName):
@@ -42,6 +45,7 @@ class Record(object):
             result.extend(base.allFields())
         return result
 
+
 class Enumerator(object):
     def __init__(self, name, value):
         self.name = name
@@ -49,15 +53,17 @@ class Enumerator(object):
         self.value = value
         self.export_to_c = not "::" in name
 
+
 class Enum(object):
     def __init__(self, name, underlying_type, enumerators, fileName):
-        
+
         self.enumerators = enumerators
         self.fileName = fileName
         for enumerator in enumerators:
             if not enumerator.export_to_c:
                 self.export_to_c = False
                 break
+
 
 class MetaDatabase(object):
     def __init__(self):
@@ -114,27 +120,34 @@ class MetaDatabase(object):
         except Exception:
             # Uncomment to see a traceback in generated Python code:
             # raise
-            abort(exceptions.text_error_template().render())  
+            abort(exceptions.text_error_template().render())
 
     def generate_forward(self, args):
         template = os.path.join(BASE, "forward.h.mako")
-        return self.render(template, db=self, config = args.config)
+        return self.render(template, db=self)
+
     def generate_impl_begin(self):
         template = os.path.join(BASE, "impl_begin.cpp.mako")
         return self.render(template, db=self)
+
     def generate_impl_end(self):
         template = os.path.join(BASE, "impl_end.cpp.mako")
         return self.render(template, db=self)
+
     def guid_constant(self, type):
         guid = type.attrs.guid
         return "0x{}, 0x{}, 0x{}, {{0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}, 0x{}}}".format(
             guid[0:8], guid[9:13], guid[14:18], guid[19:21], guid[21:23], guid[24:26], guid[26:28], guid[28:30], guid[30:32], guid[32:34], guid[34:36])
+
     def short_name(self, name):
         return str.rsplit(name, "::", 1)[-1]
+
     def call_expr(self, desc):
         return ", ".join(["args["+str(i)+"].Convert<"+field.type+">()" for i, (name, field) in enumerate(vars(desc.parameters).items())])
+
     def signature(self, record, desc):
         return self.retType + "(" + (record.name + "::" if record else "") + "*)(" + str.join(", ",  [x.type for name, x in vars(desc.fields).items()]) + ")" + ("const" if desc.isConst else "")
+
     def write(self, path, content):
         RE_PYTHON_ADDR = re.compile(r"<.+? object at 0x[0-9a-fA-F]+>")
         directory = os.path.dirname(path)
@@ -149,20 +162,21 @@ class MetaDatabase(object):
 
 
 def load_generator(i, path):
-    spec = importlib.util.spec_from_file_location("Generator%d"%i, path)
+    spec = importlib.util.spec_from_file_location("Generator%d" % i, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return getattr(module, "Generator")()
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="generate code from meta files")
-    parser.add_argument('generators', help="generator file list.", nargs="*")
     parser.add_argument('-root', help="root directory of meta files.", required=True, type=str)
     parser.add_argument('-outdir', help="output directory.", required=True, type=str)
     parser.add_argument("-api", help="api name.", required=True, type=str)
     parser.add_argument("-module", help="module name.", required=True, type=str)
-    parser.add_argument("-config", help="config file name.", required=True)
+    # parser.add_argument("-config", help="config file name.", required=True)  # deprecated
     parser.add_argument("-includes", help="include directory list.", nargs="+")
+    parser.add_argument('-generators', help="generator file list.", nargs="*")
     args = parser.parse_args()
 
     generators = []
@@ -171,7 +185,7 @@ if __name__ == '__main__':
 
     db = MetaDatabase()
     header_dbs = []
-    
+
     metas = glob.glob(os.path.join(args.root, "**", "*.h.meta"), recursive=True)
     for meta in metas:
         db.load_meta_file(meta, True)
@@ -180,30 +194,26 @@ if __name__ == '__main__':
         header_db.relative_path = os.path.relpath(meta, args.root)
         header_db.file_id = "FID_" + re.sub(r'\W+', '_', header_db.relative_path)
         header_dbs.append(header_db)
-    
+
     if args.includes:
         for path in args.includes:
             metas = glob.glob(os.path.join(path, "**", "*.h.meta"), recursive=True)
             for meta in metas:
                 db.load_meta_file(meta, False)
-    
+
     # gen headers
     for header_db in header_dbs:
-        forward_content : str = header_db.generate_forward(args)
+        forward_content: str = header_db.generate_forward(args)
         for generator in generators:
             if hasattr(generator, "generate_forward"):
                 forward_content = forward_content + generator.generate_forward(header_db, args)
         generated_header = re.sub(r"(.*?)\.(.*?)\.meta", r"\g<1>.generated.\g<2>", header_db.relative_path)
         db.write(os.path.join(args.outdir, generated_header), forward_content)
 
-    impl_content : str = db.generate_impl_begin()
+    impl_content: str = db.generate_impl_begin()
     for generator in generators:
         if hasattr(generator, "generate_impl"):
             impl_content = impl_content + generator.generate_impl(db, args)
     impl_content = impl_content + db.generate_impl_end()
 
     db.write(os.path.join(args.outdir, "generated.cpp"), impl_content)
-
-
-    
-    

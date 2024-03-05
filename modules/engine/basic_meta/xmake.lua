@@ -1,0 +1,27 @@
+target("SkrBasicMeta")
+    set_kind("headeronly")
+    add_rules("c++.meta.generators", {
+        scripts = {
+            -- ecs
+            { file = "ecs/component.py" },
+            { file = "ecs/query.py"},
+            -- lua
+            { file = "lua/luabind.py" },
+            -- rttr
+            { file = "rttr/rttr.py" },
+            -- serialize
+            { file = "serialize/serialize.py" },
+            { file = "serialize/serialize_json.py" },
+            -- static ctor
+            { file = "static_ctor/static_ctor.py" },
+            -- trait object
+            { file = "trait_object/trait_object.py" }
+        },
+        dep_files = {
+            "**.py",
+            "**.mako"
+        }
+    })
+
+target("SkrRT")
+    add_deps("SkrBasicMeta")

@@ -3,7 +3,6 @@ includes("engine/xmake.lua")
 includes("render/xmake.lua")
 includes("devtime/xmake.lua")
 includes("gui/xmake.lua") 
-includes("meta_system/xmake.lua")
 
 -- includes("experimental/netcode/xmake.lua")
 -- includes("experimental/physics/xmake.lua")
