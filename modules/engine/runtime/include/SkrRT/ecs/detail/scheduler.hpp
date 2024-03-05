@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/async/fib_task.hpp"
+#include "SkrTask/fib_task.hpp"
 #include "SkrRT/ecs/entities.hpp"
 #include "SkrOS/thread.h"
 #include "archetype.hpp"

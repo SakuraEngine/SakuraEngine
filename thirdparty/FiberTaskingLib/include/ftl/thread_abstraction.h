@@ -86,7 +86,7 @@ typedef void* (*ThreadStartRoutine)(void* arg); // NOLINT(modernize-use-using)
  * @param returnThread    The handle for the newly created thread. Undefined if thread creation fails
  * @return                True if thread creation succeeds, false if it fails
  */
-SKR_RUNTIME_API bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void* arg, const char* name, ThreadType* returnThread);
+SKR_TASK_API bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void* arg, const char* name, ThreadType* returnThread);
 /**
  * Create a native thread
  *
@@ -98,51 +98,51 @@ SKR_RUNTIME_API bool CreateThread(size_t stackSize, ThreadStartRoutine startRout
  * @param returnThread    The handle for the newly created thread. Undefined if thread creation fails
  * @return                True if thread creation succeeds, false if it fails
  */
-SKR_RUNTIME_API bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void* arg, const char* name, size_t coreAffinity, ThreadType* returnThread);
+SKR_TASK_API bool CreateThread(size_t stackSize, ThreadStartRoutine startRoutine, void* arg, const char* name, size_t coreAffinity, ThreadType* returnThread);
 
 /**
  * Get the current thread
  *
  * @return    The current thread
  */
-SKR_RUNTIME_API ThreadType GetCurrentThread();
+SKR_TASK_API ThreadType GetCurrentThread();
 
 /**
  * Terminate the current thread
  */
-SKR_RUNTIME_API void EndCurrentThread();
+SKR_TASK_API void EndCurrentThread();
 
 /**
  * Join 'thread' with the current thread, blocking until 'thread' finishes
  *
  * @param thread    The thread to join
  */
-SKR_RUNTIME_API bool JoinThread(ThreadType thread);
+SKR_TASK_API bool JoinThread(ThreadType thread);
 
 /**
  * Set the core affinity for the current thread
  *
  * @param coreAffinity    The requested core affinity
  */
-SKR_RUNTIME_API bool SetCurrentThreadAffinity(size_t coreAffinity);
+SKR_TASK_API bool SetCurrentThreadAffinity(size_t coreAffinity);
 
 /**
  * Sleep the current thread
  *
  * @param msDuration    The number of milliseconds to sleep
  */
-SKR_RUNTIME_API void SleepThread(int msDuration);
+SKR_TASK_API void SleepThread(int msDuration);
 
 /**
  * Yield the rest of this thread's timeslice back to the scheduler
  */
-SKR_RUNTIME_API void YieldThread();
+SKR_TASK_API void YieldThread();
 
 /**
  * Get the number of hardware threads. This should take Hyperthreading, etc. into account
  *
  * @return    The number of hardware threads
  */
-SKR_RUNTIME_API unsigned GetNumHardwareThreads();
+SKR_TASK_API unsigned GetNumHardwareThreads();
 
 } // namespace ftl

@@ -9,7 +9,7 @@
 #include "SkrRT/misc/types.h" // IWYU pragma: export
 #include "SkrRT/misc/bits.hpp" // IWYU pragma: export
 #include "SkrCore/log.hpp" // IWYU pragma: export
-#include "SkrRT/async/parallel_for.hpp" // IWYU pragma: export
+#include "SkrTask/parallel_for.hpp" // IWYU pragma: export
 #include "SkrRT/io/ram_io.hpp" // IWYU pragma: export
 #include "SkrRT/resource/resource_factory.h" // IWYU pragma: export
 #include "SkrRT/resource/resource_handle.h" // IWYU pragma: export

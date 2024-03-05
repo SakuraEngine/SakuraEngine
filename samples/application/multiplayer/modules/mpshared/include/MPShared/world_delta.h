@@ -2,7 +2,7 @@
 #include "SkrContainers/ring_buffer.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrCore/time.h"
-#include "SkrRT/async/fib_task.hpp"
+#include "SkrTask/fib_task.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrContainers/span.hpp"
 #include "SkrContainers/stl_function.hpp"

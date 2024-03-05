@@ -26,7 +26,7 @@
 
 #include <atomic>
 #include <limits>
-#include "SkrRT/config.h"
+#include "SkrBase/config.h"
 
 namespace ftl
 {
@@ -57,7 +57,7 @@ TaskScheduler* GetScheduler();
  *
  * You should never use this class directly. Use the other AtomicCounter-type classes
  */
-class SKR_RUNTIME_API BaseCounter
+class SKR_TASK_API BaseCounter
 {
 
 public:

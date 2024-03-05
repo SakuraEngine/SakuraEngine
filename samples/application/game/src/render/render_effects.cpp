@@ -30,7 +30,7 @@
 #include "SkrRT/platform/vfs.h"
 #include <SkrOS/filesystem.hpp>
 
-#include "SkrRT/async/parallel_for.hpp"
+#include "SkrTask/parallel_for.hpp"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrProfile/profile.h"
 

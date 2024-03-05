@@ -27,7 +27,7 @@
 #include "SkrRenderer/render_effect.h"
 
 #include <SkrContainers/string.hpp>
-#include "SkrRT/async/fib_task.hpp"
+#include "SkrTask/fib_task.hpp"
 
 #include "SkrRT/resource/local_resource_registry.hpp"
 #include "SkrRenderer/shader_map.h"

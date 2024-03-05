@@ -18,6 +18,8 @@ if (os.host() == "windows") then
     find_sdk.lib_from_github("nsight", "nsight-windows-x64.zip")
     find_sdk.lib_from_github("dstorage-1.2.1", "dstorage-1.2.1-windows-x64.zip")
     find_sdk.lib_from_github("SDL2", "SDL2-windows-x64.zip")
+    -- dcc sdk
+    find_sdk.lib_from_github("sketchup-sdk-v2023.1.315", "sketchup-sdk-v2023.1.315-windows-x64.zip")
     -- tools & compilers
     find_sdk.tool_from_github("dxc", "dxc-windows-x64.zip")
     find_sdk.tool_from_github("wasm-clang", "wasm-clang-windows-x64.zip")
@@ -34,11 +36,15 @@ if (os.host() == "macosx") then
         find_sdk.tool_from_github("dxc", "dxc-macosx-x86_64.zip")
         find_sdk.tool_from_github("meta-v1.0.0-llvm_17.0.6", "meta-v1.0.0-llvm_17.0.6-macosx-x86_64.zip")
         find_sdk.tool_from_github("tracy-gui-0.10.1a", "tracy-gui-0.10.1a-macosx-x86_64.zip")
+        -- dcc sdk
+        find_sdk.lib_from_github("sketchup-sdk-v2023.1.315", "sketchup-sdk-v2023.1.315-macosx-x86_64.zip")
         -- network
         find_sdk.lib_from_github("gns", "gns-macosx-x86_64.zip")
         find_sdk.lib_from_github("gns_d", "gns_d-macosx-x86_64.zip")
     else
         find_sdk.tool_from_github("dxc", "dxc-macosx-arm64.zip")
+        -- dcc sdk
+        find_sdk.lib_from_github("sketchup-sdk-v2023.1.315", "sketchup-sdk-v2023.1.315-macosx-arm64.zip")
     end
 end
 

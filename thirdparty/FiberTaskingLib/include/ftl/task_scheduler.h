@@ -75,7 +75,7 @@ struct TaskSchedulerInitOptions {
  * Underneath the covers, it uses fibers to allow cores to work on other tasks
  * when the current task is waiting on a synchronization atomic
  */
-class SKR_RUNTIME_API TaskScheduler
+class SKR_TASK_API TaskScheduler
 {
 public:
     TaskScheduler();

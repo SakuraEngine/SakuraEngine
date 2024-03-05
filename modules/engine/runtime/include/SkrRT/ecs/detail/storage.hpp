@@ -3,7 +3,7 @@
 #include "SkrRT/ecs/set.hpp"
 #include "SkrRT/ecs/entities.hpp"
 #include "SkrContainers/hashmap.hpp"
-#include "SkrRT/async/fib_task.hpp"
+#include "SkrTask/fib_task.hpp"
 
 #include <memory>
 #include "stack.hpp"

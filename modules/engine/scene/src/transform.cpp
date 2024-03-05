@@ -2,7 +2,7 @@
 #include "SkrRT/ecs/sugoi.h"
 
 #include "SkrRT/ecs/sugoi_config.h"
-#include "SkrRT/async/parallel_for.hpp"
+#include "SkrTask/parallel_for.hpp"
 #include "SkrScene/scene.h"
 #include "SkrBase/math/matrix4x4f.h"
 #include "SkrBase/math/vector.h"
