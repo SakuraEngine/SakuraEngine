@@ -1,4 +1,3 @@
-add_requires("boost-context >=0.1.0-skr")
 if (is_os("macosx") or is_os("linux")) then
     add_requires("libsdl 2.28.5", {configs = {shared = true}})
 end
