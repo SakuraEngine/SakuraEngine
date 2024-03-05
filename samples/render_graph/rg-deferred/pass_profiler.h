@@ -32,7 +32,7 @@ public:
     virtual void on_acquire_executor(class skr::render_graph::RenderGraph& g, class skr::render_graph::RenderGraphFrameExecutor& e)
     {
         auto timestamps = readback_query_data();
-        times_ms.resize(timestamps.size());
+        times_ms.resize_default(timestamps.size());
         auto ns_period = cgpu_queue_get_timestamp_period_ns(g.get_gfx_queue());
         for (uint32_t i = 1; i < times_ms.size(); i++)
         {
