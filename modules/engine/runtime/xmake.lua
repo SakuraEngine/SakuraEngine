@@ -1,4 +1,7 @@
 add_requires("boost-context >=0.1.0-skr")
+if (is_os("macosx") or is_os("linux")) then
+    add_requires("libsdl 2.28.5", {configs = {shared = true}})
+end
 -- add_requires("cpu_features v0.9.0")
 
 static_component("SkrSerde", "SkrRT")
@@ -29,6 +32,15 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
         add_mxflags("-fno-objc-arc", {force = true})
         add_frameworks("CoreFoundation", "Cocoa", "IOKit", {public = true})
     end
+
+    -- add SDL2
+if (is_os("windows")) then 
+    add_links("SDL2", {public = true})
+    sdl2_includes_dir = "$(projectdir)/thirdparty/SDL2"
+    add_includedirs(sdl2_includes_dir, {public = true})
+elseif (is_os("macosx") or is_os("linux")) then
+    add_packages("libsdl", {public = true})
+end
 
     -- install sdks for windows platform
     libs_to_install = {}
