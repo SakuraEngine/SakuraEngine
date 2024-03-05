@@ -1,8 +1,22 @@
-includes("core/xmake.lua")
-includes("engine/xmake.lua")
-includes("render/xmake.lua")
-includes("devtime/xmake.lua")
-includes("gui/xmake.lua") 
+if build_part("core") then
+    includes("core/xmake.lua")
+end
+
+if build_part("engine") then
+    includes("engine/xmake.lua")
+end
+
+if build_part("render") then
+    includes("render/xmake.lua")
+end 
+
+if build_part("devtime") then
+    includes("devtime/xmake.lua")
+end
+
+if build_part("gui") then
+    includes("gui/xmake.lua") 
+end
 
 -- includes("experimental/netcode/xmake.lua")
 -- includes("experimental/physics/xmake.lua")
