@@ -26,7 +26,7 @@ typedef struct render_application_t
     CGPUFenceId present_fence;
 } render_application_t;
 
-inline int app_create_gfx_objects(render_application_t* pApp)
+inline static int app_create_gfx_objects(render_application_t* pApp)
 {
     // Create instance
     SKR_DECLARE_ZERO(CGPUInstanceDescriptor, instance_desc);
@@ -91,7 +91,7 @@ inline static int app_create_window(render_application_t* pApp, uint32_t width, 
     return 0;
 }
 
-inline int app_resize_window(render_application_t* pApp, uint32_t w, uint32_t h)
+inline static int app_resize_window(render_application_t* pApp, uint32_t w, uint32_t h)
 {
     cgpu_wait_queue_idle(pApp->gfx_queue);
     cgpu_free_swapchain(pApp->swapchain);
@@ -111,14 +111,14 @@ inline int app_resize_window(render_application_t* pApp, uint32_t w, uint32_t h)
     return 0;
 }
 
-inline int app_wait_gpu_idle(render_application_t* pApp)
+inline static int app_wait_gpu_idle(render_application_t* pApp)
 {
     if (pApp->gfx_queue) cgpu_wait_queue_idle(pApp->gfx_queue);
     if (pApp->present_fence) cgpu_wait_fences(&pApp->present_fence, 1);
     return 0;
 }
 
-inline int app_finalize(render_application_t* pApp)
+inline static int app_finalize(render_application_t* pApp)
 {
     app_wait_gpu_idle(pApp);
 
