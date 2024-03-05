@@ -34,13 +34,13 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     end
 
     -- add SDL2
-if (is_os("windows")) then 
-    add_links("SDL2", {public = true})
-    sdl2_includes_dir = "$(projectdir)/thirdparty/SDL2"
-    add_includedirs(sdl2_includes_dir, {public = true})
-elseif (is_os("macosx") or is_os("linux")) then
-    add_packages("libsdl", {public = true})
-end
+    if (is_os("windows")) then 
+        add_links("SDL2", {public = true})
+        sdl2_includes_dir = "$(projectdir)/thirdparty/SDL2"
+        add_includedirs(sdl2_includes_dir, {public = true})
+    elseif (is_os("macosx") or is_os("linux")) then
+        add_packages("libsdl", {public = true})
+    end
 
     -- install sdks for windows platform
     libs_to_install = {}
