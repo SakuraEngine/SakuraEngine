@@ -8,3 +8,7 @@ end
 if build_part("render") then
     includes("render_graph/xmake.lua")
 end
+
+if build_part("dcc") then
+    includes("dcc/xmake.lua")
+end
