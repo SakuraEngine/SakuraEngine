@@ -108,7 +108,7 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
         )
     end
 end
-function _meta_codegen_command(target, scripts, metadir, gendir, opt)
+function _meta_codegen_command_old(target, scripts, metadir, gendir, opt)
     -- get config
     local api = target:extraconf("rules", _meta_rule_codegen_name, "api")
     local generator = os.projectdir()..vformat("/tools/codegen/codegen.py")
@@ -156,6 +156,68 @@ function _meta_codegen_command(target, scripts, metadir, gendir, opt)
 
     -- call codegen script
     os.iorunv(_python.program, command)
+
+    if not opt.quiet then
+        cprint(
+            "${cyan}[%s]: %s${clear} %s cost ${red}%d seconds"
+            , target:name()
+            , path.filename(generator)
+            , path.relative(metadir)
+            , os.time() - start_time)
+    end
+end
+function _meta_codegen_command(target, scripts, metadir, gendir, opt)
+    -- get config
+    local api = target:extraconf("rules", _meta_rule_codegen_name, "api")
+    local generator = os.projectdir()..vformat("/tools/meta_codegen/main.py")
+    local start_time = os.time()
+    
+    -- collect deps data
+    local meta_deps_dir = {}
+    for _, dep in pairs(target:deps()) do
+        local depmetadir = path.join(dep:autogendir({root = true}), dep:plat(), "reflection/meta")
+        table.insert(meta_deps_dir, depmetadir)
+    end
+
+    if not opt.quiet then
+        cprint("${cyan}[%s]: %s${clear} %s", target:name(), path.filename(generator), path.relative(metadir))
+    end
+    
+    -- baisc commands
+    local command = {
+        generator,
+        "-root", path.absolute(metadir),
+        "-outdir", gendir,
+        "-api", api and api:upper() or target:name():upper(),
+        "-module", target:name(),
+    }
+
+    -- strong order
+    table.insert(command, "-includes")
+    for _, dep in ipairs(meta_deps_dir) do
+        table.insert(command, dep)
+    end
+
+    -- generators
+    table.insert(command, "-generators")
+    for _, script in pairs(scripts) do
+        table.insert(command, script)
+    end
+
+    if verbos then
+        cprint(
+            "[%s] python %s"
+            , target:name()
+            , table.concat(command, " ")
+        )
+    end
+
+    -- call codegen script
+    os.execv(_python.program, command, {
+        envs = {
+            PATH = path.join(os.projectdir(), "/tools/meta_codegen/")
+        }
+    })
 
     if not opt.quiet then
         cprint(
@@ -234,7 +296,6 @@ function _solve_generators(target)
         table.insert(solved_config.scripts, {
             file = path.join(target:scriptdir(), script_config.file),
             private = script_config.private,
-            use_new_framework = script_config.use_new_framework
         })
     end
     for _, dep_file in ipairs(generator_config.dep_files) do
@@ -273,6 +334,8 @@ function _meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles
     end
 end
 function _meta_codegen(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
+    local use_new_framework = target:extraconf("rules", _meta_rule_codegen_name, "use_new_framework")
+
     -- collect generators
     local generator_configs = { }
     if target:data(_meta_data_generators_name) then
@@ -287,12 +350,22 @@ function _meta_codegen(target, rootdir, metadir, gendir, sourcefile, headerfiles
 
     -- extract info
     local scripts = {}
-    local dep_files = {
-        path.join(os.projectdir(), "tools/codegen/codegen.py"),
-        path.join(os.projectdir(), "tools/codegen/forward.h.mako"),
-        path.join(os.projectdir(), "tools/codegen/impl_begin.cpp.mako"),
-        path.join(os.projectdir(), "tools/codegen/impl_end.cpp.mako"),
-    }
+    local dep_files = {}
+    if use_new_framework then
+        local py_pattern = path.join(os.projectdir(), "tools/meta_codegen/**.py")
+        local mako_pattern = path.join(os.projectdir(), "tools/meta_codegen/**.mako")
+        dep_files = os.files(py_pattern)
+        for _, file in ipairs(os.files(mako_pattern)) do
+            table.insert(dep_files, file)
+        end
+    else
+        local py_pattern = path.join(os.projectdir(), "tools/codegen/**.py")
+        local mako_pattern = path.join(os.projectdir(), "tools/codegen/**.mako")
+        dep_files = os.files(py_pattern)
+        for _, file in ipairs(os.files(mako_pattern)) do
+            table.insert(dep_files, file)
+        end
+    end
     for _, gen_config in ipairs(generator_configs) do
         -- extract scripts
         for __, script_config in ipairs(gen_config.scripts) do
@@ -309,7 +382,11 @@ function _meta_codegen(target, rootdir, metadir, gendir, sourcefile, headerfiles
 
     -- call codegen scripts
     depend.on_changed(function ()
-        _meta_codegen_command(target, scripts, metadir, gendir, opt)
+        if use_new_framework then
+            _meta_codegen_command(target, scripts, metadir, gendir, opt)
+        else
+            _meta_codegen_command_old(target, scripts, metadir, gendir, opt)
+        end
     end, {dependfile = target:dependfile(target:name()..".mako"), files = dep_files})
 end
 

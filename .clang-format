@@ -58,6 +58,7 @@ AttributeMacros: ["SUGOI_UNLIKELY", "SUGOI_FORCEINLINE", "FORCEINLINE"]
 WhitespaceSensitiveMacros:
   - "sattr"
   - "spush_attr"
+  - "spop_attr"
   - "sreflect_enum"
   - "sreflect_struct"
   - "sreflect_enum_class"
@@ -85,6 +86,17 @@ Macros:
   - spush_attr(x,y,z,w,a,b,c)=/* x */
   - spush_attr(x,y,z,w,a,b,c,d)=/* x */
   - spush_attr(x,y,z,w,a,b,c,d,e)=/* x */
+    # pop attr
+  - spop_attr(x)=/* x */
+  - spop_attr(x,y)=/* x */
+  - spop_attr(x,y,z)=/* x */
+  - spop_attr(x,y,z)=/* x */
+  - spop_attr(x,y,z,w)=/* x */
+  - spop_attr(x,y,z,w,a)=/* x */
+  - spop_attr(x,y,z,w,a,b)=/* x */
+  - spop_attr(x,y,z,w,a,b,c)=/* x */
+  - spop_attr(x,y,z,w,a,b,c,d)=/* x */
+  - spop_attr(x,y,z,w,a,b,c,d,e)=/* x */
   # enum
   - sreflect_enum(x)=enum class
   - sreflect_enum(x,y)=enum class

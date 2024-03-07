@@ -12,6 +12,7 @@ target("SkrMetaCodegenPolicy")
     files = { "include/**.h, include/**.hpp" }  -- files need reflection
     rootdir = "include/" -- root directory, codegen files will keep the same directory structure relative to this directory
     api = "SKR_XXXX_API" -- export api, used for export generated api
+    use_new_framework = true, -- TODO. 过渡用，后面删
 }
 ]]
 rule("c++.codegen") -- TODO. use new name
@@ -42,7 +43,6 @@ rule_end()
         {
             file = "script.py", -- script file
             private = false, -- if true, generated files will not be exported
-            use_new_framework = true, -- TODO. 过渡用，后面删
         }
     },
     dep_files = { "test/*.py", "test/*.mako" }, -- dep_files

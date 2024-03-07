@@ -13,7 +13,7 @@
             "name": "gen-script"
         },
         {
-            "path": "../../modules/meta_system/",
+            "path": "../../modules/engine/basic_meta/",
             "name": "gen-module"
         },
         {
