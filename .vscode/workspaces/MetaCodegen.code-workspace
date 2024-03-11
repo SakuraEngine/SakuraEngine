@@ -40,6 +40,9 @@
             "lowercase-global",
             "undefined-field",
             "need-check-nil"
+        ],
+        "python.analysis.extraPaths": [
+            "../../tools/meta_codegen/"
         ]
     }
 }

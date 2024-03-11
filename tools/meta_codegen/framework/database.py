@@ -10,43 +10,6 @@ from framework.attr_parser import *
 
 
 class HeaderDatabase:
-    '''
-    load step:
-        1. load raw data
-        2. load cpp types
-
-    attr parse step (v0):
-        1. check structure
-        2. check unrecognized attr
-        3. check path
-        4. expand shorthand
-        5. to object
-
-    attr parse step:
-        1. check structure -> longhand
-            - error value type
-        2. expand shorthand -> shorthand
-            - unrecognized shorthand
-            - [check structure]
-        3. expand path -> longhand path, expanded path from shorthand
-            - error value type
-        4. check unrecognized attr -> longhand, shorthand, path (none expand)
-        5. to object (and solve override)
-
-    attr parse step (v2):
-        1. expand shorthand (需要考虑 shorthand 中的 shorthand)
-        2. expand path (需要考虑 path 的 末端为 shorthand)
-        3. check structure (不同的 source 有不同的 path 组装风格)
-        4. to object
-
-    attr parse step(v3):
-        0. expand path(在 json_parser 中完成)
-        1. expand shorthand (shorthand 的映射不提供 path 解析，shorthand 中的 shorthand 和 path 在输出时直接完成展开)
-
-        2. check structure (检查值是否正确的的同时，检查值是否被识别)
-        3. to object
-    '''
-
     def __init__(self) -> None:
         # header file path
         self.header_path: str = ""
@@ -71,72 +34,74 @@ class HeaderDatabase:
         # extract cpp types
         self.__extract_cpp_types(raw_json)
 
+    def expand_shorthand_and_path(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+        def __expand_shorthand_and_path(error_tracker: ErrorTracker, target: FunctionalTarget, raw_attrs: JsonDict) -> None:
+            parser = parser_manager.functional[target]
+            parser.dispatch_expand_shorthand_and_path(raw_attrs, error_tracker)
+        self.__each_attrs_and_apply_functional(error_tracker, __expand_shorthand_and_path)
+
+    def check_structure(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+        # check structure
+        def __check_structure(error_tracker: ErrorTracker, target: FunctionalTarget, raw_attrs: JsonDict) -> None:
+            parser = parser_manager.functional[target]
+            parser.check_structure(raw_attrs, error_tracker)
+        self.__each_attrs_and_apply_functional(error_tracker, __check_structure)
+
+        # check unrecognized attr
+
+    def to_object(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+        pass
+
     def __each_attrs_and_apply_functional(self, error_tracker: ErrorTracker, func):
         # record
         for record in self.records:
             error_tracker.set_source(record.file_name, record.line)
-            error_tracker.push_path(f"[{record.name}]")
+            with error_tracker.path_guard(f"[{record.name}]"):
+                # record attr
+                func(error_tracker, FunctionalTarget.RECORD, record.raw_attrs)
 
-            # record attr
-            func(error_tracker, FunctionalTarget.RECORD, record.raw_attrs)
+                # field
+                for field in record.fields:
+                    error_tracker.source_line = field.line
+                    with error_tracker.path_guard(f"[{field.type}]"):
+                        func(error_tracker, FunctionalTarget.FIELD, field.raw_attrs)
 
-            # field
-            for field in record.fields:
-                error_tracker.source_line = field.line
-                error_tracker.push_path(f"[{field.name}]")
-                func(error_tracker, FunctionalTarget.FIELD, field.raw_attrs)
-                error_tracker.pop_path()
+                # method
+                for method in record.methods:
+                    error_tracker.source_line = method.line
+                    with error_tracker.path_guard(f"[{method.short_name}]"):
+                        # method attr
+                        func(error_tracker, FunctionalTarget.METHOD, method.raw_attrs)
 
-            # method
-            for method in record.methods:
-                error_tracker.source_line = method.line
-                error_tracker.push_path(f"[{method.short_name}()]")
-
-                # method attr
-                func(error_tracker, FunctionalTarget.METHOD, method.raw_attrs)
-
-                # parameter
-                for (_, parameter) in method.parameters.items():
-                    error_tracker.push_path(f"[{parameter.name}]")
-                    func(error_tracker, FunctionalTarget.PARAMETER, parameter.raw_attrs)
-                    error_tracker.pop_path()
-
-                error_tracker.pop_path()
-
-            error_tracker.pop_path()
+                        # parameter
+                        for (_, parameter) in method.parameters.items():
+                            with error_tracker.path_guard(f"[{parameter.name}]"):
+                                func(error_tracker, FunctionalTarget.PARAMETER, parameter.raw_attrs)
 
         # enum
         for enum in self.enums:
             error_tracker.set_source(enum.file_name, enum.line)
-            error_tracker.push_path(f"[{enum.name}]")
+            with error_tracker.path_guard(f"[{enum.name}]"):
+                # enum attr
+                func(error_tracker, FunctionalTarget.ENUM, enum.raw_attrs)
 
-            # enum attr
-            func(error_tracker, FunctionalTarget.ENUM, enum.raw_attrs)
-
-            # enum value
-            for (_, enum_value) in enum.values.items():
-                error_tracker.source_line = enum_value.line
-                error_tracker.push_path(f"[{enum_value.short_name}]")
-                func(error_tracker, FunctionalTarget.ENUM_VALUE, enum_value.raw_attrs)
-                error_tracker.pop_path()
-
-            error_tracker.pop_path()
+                # enum value
+                for (_, enum_value) in enum.values.items():
+                    error_tracker.source_line = enum_value.line
+                    with error_tracker.path_guard(f"[{enum_value.short_name}]"):
+                        func(error_tracker, FunctionalTarget.ENUM_VALUE, enum_value.raw_attrs)
 
         # function
         for function in self.functions:
             error_tracker.set_source(function.file_name, function.line)
-            error_tracker.push_path(f"[{function.name}()]")
+            with error_tracker.path_guard(f"[{function.name}]"):
+                # function attrs
+                func(error_tracker, FunctionalTarget.FUNCTION, function.raw_attrs)
 
-            # function attrs
-            func(error_tracker, FunctionalTarget.FUNCTION, function.raw_attrs)
-
-            # parameters
-            for (_, parameter) in function.parameters.items():
-                error_tracker.push_path(f"[{parameter.name}]")
-                func(error_tracker, FunctionalTarget.PARAMETER, parameter.raw_attrs)
-                error_tracker.pop_path()
-
-            error_tracker.pop_path()
+                # parameters
+                for (_, parameter) in function.parameters.items():
+                    with error_tracker.path_guard(f"[{parameter.name}]"):
+                        func(error_tracker, FunctionalTarget.PARAMETER, parameter.raw_attrs)
 
     def __extract_cpp_types(self, raw_json: JsonDict):
         unique_dict = raw_json.unique_dict()
@@ -172,7 +137,26 @@ class ModuleDatabase:
 
         # header files
         self.header_files: List[str] = []
+        self.header_dbs: List[HeaderDatabase] = []
 
         # fast search
         self.__name_to_record: Dict[str, Record] = {}
         self.__name_to_enum: Dict[str, Enumeration] = {}
+
+    def load_header(self, path: str):
+        self.header_files.append(path)
+        db = HeaderDatabase()
+        db.load_header(path)
+        self.header_dbs.append(db)
+
+    def expand_shorthand_and_path(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+        for db in self.header_dbs:
+            db.expand_shorthand_and_path(error_tracker, parser_manager)
+
+    def check_structure(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+        for db in self.header_dbs:
+            db.check_structure(error_tracker, parser_manager)
+
+    def to_object(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+        for db in self.header_dbs:
+            db.to_object(error_tracker, parser_manager)

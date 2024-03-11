@@ -16,8 +16,10 @@ def load_generator(i, path):
 if __name__ == '__main__':
     sys.path.insert(0, os.path.dirname(sys.argv[0]))
     from framework.database import HeaderDatabase
-    from framework.error_tracker import ErrorTracker
+    from framework.error_tracker import *
     from framework.attr_parser import *
+    from framework.generator import *
+    from framework.database import *
 
     # parse args
     parser = argparse.ArgumentParser(description="generate code from meta files")
@@ -30,20 +32,28 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # load generators
-    generators = []
+    generators: List[GeneratorBase] = []
     for i, x in enumerate(args.generators):
         generators.append(load_generator(i, x))
+
+    # load parser
+    parser_manager = FunctionalManager()
+    for generator in generators:
+        generator.load_functional(parser_manager)
 
     # collect meta files
     meta_files = glob.glob(os.path.join(args.root, "**", "*.h.meta"), recursive=True)
 
     # load meta files
+    module_db = ModuleDatabase()
+    module_db.module_name = args.module
 
     for file in meta_files:
         tracker = ErrorTracker()
         tracker.set_phase("CheckStructure")
 
-        database = HeaderDatabase()
-        database.load_header(file)
+        module_db.load_header(file)
+        module_db.expand_shorthand_and_path(tracker, parser_manager)
+        module_db.check_structure(tracker, parser_manager)
 
         tracker.dump()

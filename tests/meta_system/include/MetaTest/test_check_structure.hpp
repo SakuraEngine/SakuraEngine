@@ -6,18 +6,17 @@
 
 namespace test_ns sreflect
 {
-sreflect_struct("test": true) TestRecord {
-    sattr("test": true)
-    int test_field;
-
-    sattr("test": true)
-    int test_method(int sattr("test": true) test_param);
+sreflect_struct(
+    "test": {
+        "int": false,
+        "float": "f",
+        "str": 100,
+        "bool": "shit",
+        "sub" : 10
+    },
+    "test::sub::count": "100"
+)
+TestRecord {
 };
 
-sreflect sattr("test": true) int test_function(int sattr("test": true) test_param);
-
-sreflect_enum_class("test": true) TestEnum
-{
-    TestValue sattr("test": true)
-};
 } // namespace test_ns sreflect
