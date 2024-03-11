@@ -1,28 +1,52 @@
-'''
-所有 plugin 的 parse 结果最终都会被存入 database 中，一般来说 mako 模板的渲染只依赖于 database
-plugin 只负责向 database 提供数据，并在渲染前进行检查
-
-除了基本的类型信息外，还提供：
-- module：模块名
-- module_api：模块 api
-- file_id：文件 id 的 marco
-
-header_db 与 global_db：
-
-'''
-
 import os
 import os.path
 from typing import List, Dict
 import itertools
 import json
-from framework.json_parser import JsonValue, parse_json_data, error_unrecognized
-from framework.cpp_types import Record, Enumeration, Function
-from framework.error_tracker import ErrorTracker
-from framework.attr_parser import FunctionalManager, FunctionalTarget, FunctionalParser
+from framework.json_parser import *
+from framework.cpp_types import *
+from framework.error_tracker import *
+from framework.attr_parser import *
 
 
 class HeaderDatabase:
+    '''
+    load step:
+        1. load raw data
+        2. load cpp types
+
+    attr parse step (v0):
+        1. check structure
+        2. check unrecognized attr
+        3. check path
+        4. expand shorthand
+        5. to object
+
+    attr parse step:
+        1. check structure -> longhand
+            - error value type
+        2. expand shorthand -> shorthand
+            - unrecognized shorthand
+            - [check structure]
+        3. expand path -> longhand path, expanded path from shorthand
+            - error value type
+        4. check unrecognized attr -> longhand, shorthand, path (none expand)
+        5. to object (and solve override)
+
+    attr parse step (v2):
+        1. expand shorthand (需要考虑 shorthand 中的 shorthand)
+        2. expand path (需要考虑 path 的 末端为 shorthand)
+        3. check structure (不同的 source 有不同的 path 组装风格)
+        4. to object
+
+    attr parse step(v3):
+        0. expand path(在 json_parser 中完成)
+        1. expand shorthand (shorthand 的映射不提供 path 解析，shorthand 中的 shorthand 和 path 在输出时直接完成展开)
+
+        2. check structure (检查值是否正确的的同时，检查值是否被识别)
+        3. to object
+    '''
+
     def __init__(self) -> None:
         # header file path
         self.header_path: str = ""
@@ -40,33 +64,12 @@ class HeaderDatabase:
         self.header_path = os.path.normpath(path).replace(os.sep, "/")
 
         # load raw data
-        raw_json_data: Dict[str, JsonValue]
+        raw_json: JsonDict
         with open(path, encoding="utf-8") as f:
-            raw_json_data = json.load(f, object_pairs_hook=parse_json_data)
+            raw_json = json.load(f, object_pairs_hook=parse_json_hook)
 
         # extract cpp types
-        self.__extract_cpp_types(raw_json_data)
-
-    def attr_check_structure(self, error_tracker: ErrorTracker, functional_manager: FunctionalManager):
-        def each(error_tracker: ErrorTracker, target: FunctionalTarget, raw_attrs:  Dict[str, JsonValue]):
-            for k, v in raw_attrs.items():
-                error_tracker.push_path(k)
-                error_unrecognized(v, error_tracker)
-                error_tracker.pop_path()
-        self.__each_attrs_and_apply_functional(error_tracker, each)
-        error_tracker.print_as_warning()
-
-    def attr_expand_path(self):
-        pass
-
-    def attr_expand_shorthand(self):
-        pass
-
-    def attr_check_override(self):
-        pass
-
-    def attr_to_object(self):
-        pass
+        self.__extract_cpp_types(raw_json)
 
     def __each_attrs_and_apply_functional(self, error_tracker: ErrorTracker, func):
         # record
@@ -135,24 +138,29 @@ class HeaderDatabase:
 
             error_tracker.pop_path()
 
-    def __extract_cpp_types(self, raw_json_data: Dict[str, JsonValue]):
+    def __extract_cpp_types(self, raw_json: JsonDict):
+        unique_dict = raw_json.unique_dict()
+        records = unique_dict["records"].unique_dict()
+        functions = unique_dict["functions"]
+        enums = unique_dict["enums"].unique_dict()
+
         # load records
-        for (k, v) in raw_json_data["records"].unique_val().items():
-            record = Record(k)
-            record.load_from_raw_json(v.unique_val())
+        for (record_name, record_data) in records.items():
+            record = Record(record_name)
+            record.load_from_raw_json(record_data)
             self.records.append(record)
             self.__name_to_record[record.name] = record
 
         # load functions
-        for v in raw_json_data["functions"].unique_val():
+        for function_data in functions:
             function = Function()
-            function.load_from_raw_json(v)
+            function.load_from_raw_json(function_data)
             self.functions.append(function)
 
         # load enums
-        for (k, v) in raw_json_data["enums"].unique_val().items():
-            enum = Enumeration(k)
-            enum.load_from_raw_json(v.unique_val())
+        for (enum_name, enum_data) in enums.items():
+            enum = Enumeration(enum_name)
+            enum.load_from_raw_json(enum_data)
             self.enums.append(enum)
             self.__name_to_enum[enum.name] = enum
 

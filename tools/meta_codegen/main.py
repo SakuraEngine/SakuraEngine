@@ -37,10 +37,13 @@ if __name__ == '__main__':
     # collect meta files
     meta_files = glob.glob(os.path.join(args.root, "**", "*.h.meta"), recursive=True)
 
-    print(args.root)
+    # load meta files
+
     for file in meta_files:
-        database = HeaderDatabase()
-        database.load_header(file)
         tracker = ErrorTracker()
         tracker.set_phase("CheckStructure")
-        database.attr_check_structure(tracker, FunctionalManager())
+
+        database = HeaderDatabase()
+        database.load_header(file)
+
+        tracker.dump()

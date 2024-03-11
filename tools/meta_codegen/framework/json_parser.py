@@ -11,91 +11,107 @@ class JsonOverrideMark(Enum):
     APPEND = 3      # end with mark '+'
 
 
+def parse_override(key: str) -> Tuple[str, JsonOverrideMark]:
+    if key.endswith("!!"):
+        return (key[:-2], JsonOverrideMark.REWRITE)
+    elif key.endswith("!"):
+        return (key[:-1], JsonOverrideMark.OVERRIDE)
+    elif key.endswith("+"):
+        return (key[:-1], JsonOverrideMark.APPEND)
+    else:
+        return (key, JsonOverrideMark.NONE)
+
+
 @dataclass
 class JsonOverrideData:
     val: object = None
     override_mark: JsonOverrideMark = JsonOverrideMark.NONE
+    is_recognized: bool = False
 
 
 @dataclass
-class JsonValue:
-    overrides: List[JsonOverrideData] = field(default_factory=lambda: [])
-    is_recognized: bool = False
-
-    def add_override(self, val: object, mark: JsonOverrideMark):
-        self.overrides.append(JsonOverrideData(val, mark))
-
-    def unique_val(self) -> object:
-        if len(self.overrides) != 1:
-            raise Exception("Multiple overrides found!")
-        return self.overrides[0].val
-
-    def mark_recognized(self):
-        self.is_recognized = True
+class JsonOverrideDataPath(JsonOverrideData):
+    path_nodes: List[Tuple[str, JsonOverrideMark]] = None
+    raw_value: object = None
+    is_root: bool = False
 
 
-def setup_recognized_recursive(json_value: JsonValue, recognized: bool):
-    json_value.is_recognized = recognized
-    for override in json_value.overrides:
-        if isinstance(override.val, dict):
-            for (k, v) in override.val.items():
-                setup_recognized_recursive(v, recognized)
+@dataclass
+class JsonOverrideDataShorthand(JsonOverrideData):
+    key: str = ""
+    shorthand: object = None
+    raw_value: object = None
+    raw_dict: Dict = None
+    is_root: bool = False
 
 
-def error_unrecognized(json_value: JsonValue, error_tracker: ErrorTracker):
-    if not json_value.is_recognized:
-        error_tracker.error("Unrecognized json value!")
-    for override in json_value.overrides:
-        if isinstance(override.val, dict):
-            for (k, v) in override.val.items():
-                error_tracker.push_path(k)
-                error_unrecognized(v, error_tracker)
-                error_tracker.pop_path()
+class JsonDict:
+    def __init__(self) -> None:
+        self.__sorted_overrides: List[Tuple[str, JsonOverrideData]] = []
+
+    def add(self, key: str, override: JsonOverrideData) -> None:
+        self.__sorted_overrides.append((key, override))
+
+    def unique_dict(self) -> Dict[str, object]:
+        result = {}
+        for (k, override) in self.__sorted_overrides:
+            if k in result:
+                raise Exception(f"Key {k} already exists in dict!")
+            result[k] = override.val
+        return result
 
 
-def parse_json_data(data: List[Tuple[str, object]]):
-    vals: Dict[str, JsonValue] = {}
+@dataclass
+class JsonListItem:
+    val: object = None
+    recognized: bool = False
 
-    def get_or_add(key: str) -> JsonValue:
-        if key not in vals:
-            vals[key] = JsonValue()
-        return vals[key]
+
+class JsonList:
+    def __init__(self) -> None:
+        self.__override_list: List[JsonListItem] = []
+
+    def __getitem__(self, index: int) -> JsonListItem:
+        return self.__override_list[index].val
+
+    def list(self) -> List[JsonListItem]:
+        return self.__override_list
+
+
+def parse_json_hook(data: List[Tuple[str, object]]) -> JsonDict:
+    result = JsonDict()
 
     for (k, v) in data:
-        if k.endswith("!!"):
-            true_key = k[:-2]
-            get_or_add(true_key).add_override(v, JsonOverrideMark.REWRITE)
-        elif k.endswith("!"):
-            true_key = k[:-1]
-            get_or_add(true_key).add_override(v, JsonOverrideMark.OVERRIDE)
-        elif k.endswith("+"):
-            true_key = k[:-1]
-            get_or_add(true_key).add_override(v, JsonOverrideMark.APPEND)
-        else:
-            get_or_add(k).add_override(v, JsonOverrideMark.NONE)
+        # path_nodes = [parse_override(node) for node in k.split("::")]
+        # if len(path_nodes) > 1:  # path case
+        #     cur_dict: JsonDict = result
+        #     index = 0
+        #     while index < len(path_nodes):
+        #         (key, mark) = path_nodes[index]
+        #         if index == len(path_nodes) - 1:  # last node
+        #             cur_dict.add(key, JsonOverrideDataPath(
+        #                 val=v,
+        #                 override_mark=mark,
+        #                 path_nodes=path_nodes,
+        #                 raw_value=v,
+        #                 is_root=True if cur_dict is result else False
+        #             ))
+        #         else:  # path node
+        #             new_dict = JsonDict()
+        #             cur_dict.add(key, JsonOverrideDataPath(
+        #                 val=new_dict,
+        #                 override_mark=mark,
+        #                 path_nodes=path_nodes,
+        #                 raw_value=v,
+        #                 is_root=True if cur_dict is result else False
+        #             ))
+        #             cur_dict = new_dict
+        #         index = index + 1
 
-    return vals
+        key, mark = parse_override(k)
+        result.add(key, JsonOverrideData(
+            val=v,
+            override_mark=mark
+        ))
 
-
-if __name__ == '__main__':
-    data = '''{
-        "test": {
-            "a": 1,
-            "b": 2
-        },
-        "test!": {
-            "b": 114514,
-            "c": 3
-        },
-        "test!!": {
-            "a": 114514
-        },
-        "test": {
-            "a+": "shit"
-        }
-    }'''
-    import json
-    val: Dict[str, JsonValue] = json.loads(data, object_pairs_hook=parse_json_data)
-
-    for override in val["test"].overrides:
-        print(override.val)
+    return result

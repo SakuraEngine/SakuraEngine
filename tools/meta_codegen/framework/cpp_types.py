@@ -116,7 +116,7 @@ Function json structure
 '''
 
 from typing import List, Dict
-from framework.json_parser import JsonValue, JsonOverrideData, JsonOverrideMark
+from framework.json_parser import *
 
 
 class EnumValue:
@@ -130,16 +130,17 @@ class EnumValue:
         self.comment: str
         self.line: int
         self.generator_data: Dict[str, object]
-        self.raw_attrs: Dict[str, JsonValue]
+        self.raw_attrs: JsonDict
 
-    def load_from_raw_json(self, raw_json: Dict[str, JsonValue]):
-        # load basic data
-        self.value = raw_json["value"].unique_val()
-        self.comment = raw_json["comment"].unique_val()
-        self.line = raw_json["line"].unique_val()
+    def load_from_raw_json(self, raw_json: JsonDict):
+        unique_dict = raw_json.unique_dict()
+
+        self.value = unique_dict["value"]
+        self.comment = unique_dict["comment"]
+        self.line = unique_dict["line"]
 
         # load fields
-        self.raw_attrs = raw_json["attrs"].unique_val()
+        self.raw_attrs = unique_dict["attrs"]
 
 
 class Enumeration:
@@ -156,24 +157,26 @@ class Enumeration:
         self.file_name: str
         self.line: int
         self.generator_data: Dict[str, object]
+        self.raw_attrs: JsonDict
 
-    def load_from_raw_json(self, raw_json: Dict[str, JsonValue]):
-        # load basic data
-        self.is_scoped = raw_json["isScoped"].unique_val()
-        self.underlying_type = raw_json["underlying_type"].unique_val()
-        self.comment = raw_json["comment"].unique_val()
-        self.file_name = raw_json["fileName"].unique_val()
-        self.line = raw_json["line"].unique_val()
+    def load_from_raw_json(self, raw_json: JsonDict):
+        unique_dict = raw_json.unique_dict()
+
+        self.is_scoped = unique_dict["isScoped"]
+        self.underlying_type = unique_dict["underlying_type"]
+        self.comment = unique_dict["comment"]
+        self.file_name = unique_dict["fileName"]
+        self.line = unique_dict["line"]
 
         # load values
         self.values = {}
-        for (k, v) in raw_json["values"].unique_val().items():
-            value = EnumValue(k)
-            value.load_from_raw_json(v.unique_val())
-            self.values[k] = value
+        for (enum_value_name, enum_value_data) in unique_dict["values"].unique_dict().items():
+            value = EnumValue(enum_value_name)
+            value.load_from_raw_json(enum_value_data)
+            self.values[enum_value_name] = value
 
         # load attrs
-        self.raw_attrs = raw_json["attrs"].unique_val()
+        self.raw_attrs = unique_dict["attrs"]
 
 
 class Record:
@@ -189,31 +192,32 @@ class Record:
         self.file_name: str
         self.line: int
         self.generator_data: Dict[str, object]
-        self.raw_attrs: Dict[str, JsonValue]
+        self.raw_attrs: JsonDict
 
-    def load_from_raw_json(self, raw_json: Dict[str, JsonValue]):
-        # load basic data
-        self.bases = raw_json["bases"].unique_val()
-        self.comment = raw_json["comment"].unique_val()
-        self.file_name = raw_json["fileName"].unique_val()
-        self.line = raw_json["line"].unique_val()
+    def load_from_raw_json(self, raw_json: JsonDict):
+        unique_dict = raw_json.unique_dict()
+
+        self.bases = unique_dict["bases"]
+        self.comment = unique_dict["comment"]
+        self.file_name = unique_dict["fileName"]
+        self.line = unique_dict["line"]
 
         # load fields
         self.fields = []
-        for (k, v) in raw_json["fields"].unique_val().items():
-            field = Field(k)
-            field.load_from_raw_json(v.unique_val())
+        for (field_name, field_data) in unique_dict["fields"].unique_dict().items():
+            field = Field(field_name)
+            field.load_from_raw_json(field_data)
             self.fields.append(field)
 
         # load methods
         self.methods = []
-        for v in raw_json["methods"].unique_val():
+        for method_data in unique_dict["methods"]:
             method = Method()
-            method.load_from_raw_json(v)
+            method.load_from_raw_json(method_data)
             self.methods.append(method)
 
         # load attrs
-        self.raw_attrs = raw_json["attrs"].unique_val()
+        self.raw_attrs = unique_dict["attrs"]
 
 
 class Field:
@@ -229,21 +233,22 @@ class Field:
         self.offset: int
         self.line: int
         self.generator_data: Dict[str, object]
-        self.raw_attrs: Dict[str, JsonValue]
+        self.raw_attrs: JsonDict
 
-    def load_from_raw_json(self, raw_json: Dict[str, JsonValue]):
-        # load basic data
-        self.type = raw_json["type"].unique_val()
-        self.raw_type = raw_json["rawType"].unique_val()
-        self.array_size = raw_json["arraySize"].unique_val()
-        self.is_functor = raw_json["isFunctor"].unique_val()
-        self.is_anonymous = raw_json["isAnonymous"].unique_val()
-        self.comment = raw_json["comment"].unique_val()
-        self.offset = raw_json["offset"].unique_val()
-        self.line = raw_json["line"].unique_val()
+    def load_from_raw_json(self, raw_json: JsonDict):
+        unique_dict = raw_json.unique_dict()
+
+        self.type = unique_dict["type"]
+        self.raw_type = unique_dict["rawType"]
+        self.array_size = unique_dict["arraySize"]
+        self.is_functor = unique_dict["isFunctor"]
+        self.is_anonymous = unique_dict["isAnonymous"]
+        self.comment = unique_dict["comment"]
+        self.offset = unique_dict["offset"]
+        self.line = unique_dict["line"]
 
         # load attrs
-        self.raw_attrs = raw_json["attrs"].unique_val()
+        self.raw_attrs = unique_dict["attrs"]
 
 
 class Method:
@@ -261,31 +266,33 @@ class Method:
         self.raw_ret_type: str
         self.line: int
         self.generator_data: Dict[str, object]
-        self.raw_attrs: Dict[str, JsonValue]
+        self.raw_attrs: JsonDict
 
-    def load_from_raw_json(self, raw_json: Dict[str, JsonValue]):
-        # load basic data
-        self.name = raw_json["name"].unique_val()
+    def load_from_raw_json(self, raw_json: JsonDict):
+        unique_dict = raw_json.unique_dict()
+
+        self.name = unique_dict["name"]
         split_name = str.rsplit(self.name, "::", 1)
         self.short_name: str = split_name[-1]
         self.namespace: str = split_name[0] if len(split_name) > 1 else ""
-        self.is_static = raw_json["isStatic"].unique_val()
-        self.is_const = raw_json["isConst"].unique_val()
-        self.is_nothrow = raw_json["isNothrow"].unique_val()
-        self.comment = raw_json["comment"].unique_val()
-        self.ret_type = raw_json["retType"].unique_val()
-        self.raw_ret_type = raw_json["rawRetType"].unique_val()
-        self.line = raw_json["line"].unique_val()
+
+        self.is_static = unique_dict["isStatic"]
+        self.is_const = unique_dict["isConst"]
+        self.is_nothrow = unique_dict["isNothrow"]
+        self.comment = unique_dict["comment"]
+        self.ret_type = unique_dict["retType"]
+        self.raw_ret_type = unique_dict["rawRetType"]
+        self.line = unique_dict["line"]
 
         # load parameters
         self.parameters = {}
-        for (k, v) in raw_json["parameters"].unique_val().items():
-            param = Parameter(k)
-            param.load_from_raw_json(v.unique_val())
-            self.parameters[k] = param
+        for (param_name, param_data) in unique_dict["parameters"].unique_dict().items():
+            param = Parameter(param_name)
+            param.load_from_raw_json(param_data)
+            self.parameters[param_name] = param
 
         # load attrs
-        self.raw_attrs = raw_json["attrs"].unique_val()
+        self.raw_attrs = unique_dict["attrs"]
 
 
 class Parameter:
@@ -301,21 +308,22 @@ class Parameter:
         self.offset: int
         self.line: int
         self.generator_data: Dict[str, object]
-        self.raw_attrs: Dict[str, JsonValue]
+        self.raw_attrs: JsonDict
 
-    def load_from_raw_json(self, raw_json: Dict[str, JsonValue]):
-        # load basic data
-        self.type = raw_json["type"].unique_val()
-        self.array_size = raw_json["arraySize"].unique_val()
-        self.raw_type = raw_json["rawType"].unique_val()
-        self.is_functor = raw_json["isFunctor"].unique_val()
-        self.is_anonymous = raw_json["isAnonymous"].unique_val()
-        self.comment = raw_json["comment"].unique_val()
-        self.offset = raw_json["offset"].unique_val()
-        self.line = raw_json["line"].unique_val()
+    def load_from_raw_json(self, raw_json: JsonDict):
+        unique_dict = raw_json.unique_dict()
+
+        self.type = unique_dict["type"]
+        self.array_size = unique_dict["arraySize"]
+        self.raw_type = unique_dict["rawType"]
+        self.is_functor = unique_dict["isFunctor"]
+        self.is_anonymous = unique_dict["isAnonymous"]
+        self.comment = unique_dict["comment"]
+        self.offset = unique_dict["offset"]
+        self.line = unique_dict["line"]
 
         # load attrs
-        self.raw_attrs = raw_json["attrs"].unique_val()
+        self.raw_attrs = unique_dict["attrs"]
 
 
 class Function:
@@ -333,28 +341,30 @@ class Function:
         self.file_name: str
         self.line: int
         self.generator_data: Dict[str, object]
-        self.raw_attrs: Dict[str, JsonValue]
+        self.raw_attrs: JsonDict
 
-    def load_from_raw_json(self, raw_json: Dict[str, JsonValue]):
-        # load basic data
-        self.name = raw_json["name"].unique_val()
+    def load_from_raw_json(self, raw_json: JsonDict):
+        unique_dict = raw_json.unique_dict()
+
+        self.name = unique_dict["name"]
         split_name = str.rsplit(self.name, "::", 1)
         self.short_name: str = split_name[-1]
         self.namespace: str = split_name[0] if len(split_name) > 1 else ""
-        self.is_static = raw_json["isStatic"].unique_val()
-        self.is_const = raw_json["isConst"].unique_val()
-        self.comment = raw_json["comment"].unique_val()
-        self.ret_type = raw_json["retType"].unique_val()
-        self.raw_ret_type = raw_json["rawRetType"].unique_val()
-        self.file_name = raw_json["fileName"].unique_val()
-        self.line = raw_json["line"].unique_val()
+
+        self.is_static = unique_dict["isStatic"]
+        self.is_const = unique_dict["isConst"]
+        self.comment = unique_dict["comment"]
+        self.ret_type = unique_dict["retType"]
+        self.raw_ret_type = unique_dict["rawRetType"]
+        self.file_name = unique_dict["fileName"]
+        self.line = unique_dict["line"]
 
         # load parameters
         self.parameters = {}
-        for (k, v) in raw_json["parameters"].unique_val().items():
-            param = Parameter(k)
-            param.load_from_raw_json(v.unique_val())
-            self.parameters[k] = param
+        for (param_name, param_data) in unique_dict["parameters"].unique_dict().items():
+            param = Parameter(param_name)
+            param.load_from_raw_json(param_data)
+            self.parameters[param_name] = param
 
         # load attrs
-        self.raw_attrs = raw_json["attrs"].unique_val()
+        self.raw_attrs = unique_dict["attrs"]
