@@ -350,18 +350,22 @@ function _meta_codegen(target, rootdir, metadir, gendir, sourcefile, headerfiles
 
     -- extract info
     local scripts = {}
-    local dep_files = {}
+    local dep_files = os.files(path.join(metadir, "**.meta"))
     if use_new_framework then
         local py_pattern = path.join(os.projectdir(), "tools/meta_codegen/**.py")
         local mako_pattern = path.join(os.projectdir(), "tools/meta_codegen/**.mako")
-        dep_files = os.files(py_pattern)
+        for _, file in ipairs(os.files(py_pattern)) do
+            table.insert(dep_files, file)
+        end
         for _, file in ipairs(os.files(mako_pattern)) do
             table.insert(dep_files, file)
         end
     else
         local py_pattern = path.join(os.projectdir(), "tools/codegen/**.py")
         local mako_pattern = path.join(os.projectdir(), "tools/codegen/**.mako")
-        dep_files = os.files(py_pattern)
+        for _, file in ipairs(os.files(py_pattern)) do
+            table.insert(dep_files, file)
+        end
         for _, file in ipairs(os.files(mako_pattern)) do
             table.insert(dep_files, file)
         end

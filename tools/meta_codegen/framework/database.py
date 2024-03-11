@@ -48,8 +48,15 @@ class HeaderDatabase:
         self.__each_attrs_and_apply_functional(error_tracker, __check_structure)
 
         # check unrecognized attr
+        def __check_unrecognized_attr(error_tracker: ErrorTracker, target: FunctionalTarget, raw_attrs: JsonDict) -> None:
+            raw_attrs.warning_recognized_attr_recursive(error_tracker)
+        self.__each_attrs_and_apply_functional(error_tracker, __check_unrecognized_attr)
 
     def to_object(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+        # solve override
+
+        # to object
+
         pass
 
     def __each_attrs_and_apply_functional(self, error_tracker: ErrorTracker, func):

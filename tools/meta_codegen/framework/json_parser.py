@@ -39,6 +39,9 @@ class JsonOverrideData:
     override_mark: JsonOverrideMark = JsonOverrideMark.NONE
     is_recognized: bool = False
 
+    def mark_recognized(self) -> None:
+        self.is_recognized = True
+
     def push_path(self, error_tracker: ErrorTracker, key: str) -> None:
         error_tracker.push_path(key)
 
@@ -157,6 +160,16 @@ class JsonDict:
 
             index = index + 1
 
+    def warning_recognized_attr_recursive(self, error_tracker: ErrorTracker) -> None:
+        for (key, override) in self.__sorted_overrides:
+            override.push_path(error_tracker, key)
+            if override.is_recognized:
+                if type(override.val) is JsonDict:
+                    override.val.warning_recognized_attr_recursive(error_tracker)
+            else:
+                error_tracker.warning(f"unrecognized attribute!!!")
+            override.pop_path(error_tracker)
+
     def load_from_dict(self, data: Dict[str, object]) -> None:
         for (k, v) in data.items():
             key, mark = parse_override(k)
@@ -210,3 +223,29 @@ def parse_json_hook(data: List[Tuple[str, object]]) -> JsonDict:
         ))
 
     return result
+
+
+class ObjDictTools:
+    @staticmethod
+    def as_obj(dict: Dict) -> object:
+        result = ObjDictTools()
+        result.__dict__ = dict
+        return result
+
+    @staticmethod
+    def as_dict(obj: object) -> Dict:
+        return obj.__dict__
+
+    @staticmethod
+    def to_obj(dict: Dict) -> object:
+        result = ObjDictTools()
+        result.__dict__.update(dict)
+        return result
+
+    @staticmethod
+    def to_dict(obj: object) -> Dict:
+        return obj.__dict__.copy()
+
+
+class JsonOverrideSolver:
+    pass
