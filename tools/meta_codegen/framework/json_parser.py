@@ -5,10 +5,10 @@ from framework.error_tracker import ErrorTracker
 
 
 class JsonOverrideMark(Enum):
-    NONE = 0        # no mark
-    OVERRIDE = 1    # end with mark '!'
-    REWRITE = 2     # end with mark '!!'
-    APPEND = 3      # end with mark '+'
+    NONE = 0  # no mark
+    OVERRIDE = 1  # end with mark '!'
+    REWRITE = 2  # end with mark '!!'
+    APPEND = 3  # end with mark '+'
 
 
 def parse_override(key: str) -> Tuple[str, JsonOverrideMark]:
@@ -33,6 +33,30 @@ def apply_override(key: str, mark: JsonOverrideMark) -> str:
         return key
 
 
+def merge_override_mark(parent: JsonOverrideMark, child: JsonOverrideMark, error_tracker: ErrorTracker) -> JsonOverrideMark:
+    if parent == JsonOverrideMark.NONE:
+        return child
+    if parent == JsonOverrideMark.OVERRIDE:
+        if child == JsonOverrideMark.REWRITE:
+            return child
+        else:
+            return parent
+    if parent == JsonOverrideMark.REWRITE:
+        if child == JsonOverrideMark.OVERRIDE:
+            error_tracker.warning("override mark '!' under rewrite mark '!!' will be ignored!")
+        elif child == JsonOverrideMark.APPEND:
+            error_tracker.warning("append mark '+' under rewrite mark '!!' will be ignored!")
+        return parent
+    if parent == JsonOverrideMark.APPEND:
+        if child == JsonOverrideMark.OVERRIDE:
+            error_tracker.warning("override mark '!' under append mark '+' will be ignored!")
+        elif child == JsonOverrideMark.REWRITE:
+            error_tracker.warning("rewrite mark '!!' under append mark '+' will be ignored!")
+        elif child == JsonOverrideMark.APPEND:
+            error_tracker.warning("append mark '+' under append mark '+' will be ignored!")
+        return parent
+
+
 @dataclass
 class JsonOverrideData:
     val: object = None
@@ -43,10 +67,10 @@ class JsonOverrideData:
         self.is_recognized = True
 
     def push_path(self, error_tracker: ErrorTracker, key: str) -> None:
-        error_tracker.push_path(key)
+        error_tracker.path_push(key)
 
     def pop_path(self, error_tracker: ErrorTracker) -> None:
-        error_tracker.pop_path()
+        error_tracker.path_pop()
 
 
 @dataclass
@@ -57,11 +81,11 @@ class JsonOverrideDataPath(JsonOverrideData):
 
     def push_path(self, error_tracker: ErrorTracker, key: str) -> None:
         if self.is_root:
-            error_tracker.push_path("::".join([apply_override(k, override) for (k, override) in self.path_nodes]))
+            error_tracker.path_push("::".join([apply_override(k, override) for (k, override) in self.path_nodes]))
 
     def pop_path(self, error_tracker: ErrorTracker) -> None:
         if self.is_root:
-            error_tracker.pop_path()
+            error_tracker.path_pop()
 
 
 @dataclass
@@ -248,4 +272,76 @@ class ObjDictTools:
 
 
 class JsonOverrideSolver:
-    pass
+    class OverrideData:
+        def __init__(self, override: JsonOverrideData, error_tracker: ErrorTracker, parent: 'JsonOverrideSolver.OverrideData' = None) -> None:
+            self.override: JsonOverrideData = override
+            self.passed_override_mark: JsonOverrideMark
+            self.parent: 'JsonOverrideSolver.OverrideData' = parent
+            self.ignored_by: 'JsonOverrideSolver.OverrideData' = None
+
+            if parent:
+                if parent.passed_override_mark == JsonOverrideMark.APPEND:
+                    error_tracker.error("cannot solve value override under append mark '+'!")
+                self.passed_override_mark = merge_override_mark(parent.passed_override_mark, override.override_mark, error_tracker)
+                if parent.ignored_by:
+                    self.ignored_by = parent.ignored_by
+            else:
+                self.passed_override_mark = override.override_mark
+
+    @dataclass
+    class Node:
+        key: str = None
+        override_data: List['JsonOverrideSolver.OverrideData'] = field(default_factory=[])
+
+    __node_stack: List[Node] = field(default_factory=[])
+    root_dict: JsonDict = None
+
+    def push_node(self, key: str, error_tracker: ErrorTracker) -> None:
+        # expand override
+        new_node: JsonOverrideSolver.Node = None
+        if len(self.__node_stack) == 0:
+            new_node = JsonOverrideSolver.Node(key=key)
+            self.__node_stack.append(new_node)
+            for (k, override) in self.root_dict:
+                if k == key:
+                    new_node.override_data.append(JsonOverrideSolver.OverrideData(
+                        parent=override,
+                        error_tracker=error_tracker,
+                    ))
+        else:
+            new_node = JsonOverrideSolver.Node(key=key)
+            self.__node_stack[-1].override_data.append(new_node)
+            for parent_override in self.__node_stack[-1].override_data:
+                if isinstance(parent_override.override.val, JsonDict):
+                    for (k, override) in parent_override.override.val:
+                        if k == key:
+                            # pass override mark
+                            new_node.override_data.append(JsonOverrideSolver.OverrideData(
+                                override=override,
+                                error_tracker=error_tracker,
+                                parent=parent_override,
+                            ))
+
+        # solve ignored
+        index = len(new_node.override_data) - 1
+        while index >= 0:
+            override = new_node.override_data[index]
+            if override.passed_override_mark == JsonOverrideMark.REWRITE:
+                ignore_index = index - 1
+                while ignore_index >= 0:
+                    new_node.override_data[ignore_index].ignored_by = override
+                    ignore_index = ignore_index - 1
+                break
+            index = index - 1
+
+    def pop_node(self, error_tracker: ErrorTracker) -> None:
+        self.__node_stack.pop()
+
+    def solve_override(self, key: str, error_tracker: ErrorTracker) -> object:
+        # push node
+        self.push_node(key, error_tracker)
+
+        # solve override
+        current_value = None
+        for node in self.__node_stack[-1].override_data:
+            pass

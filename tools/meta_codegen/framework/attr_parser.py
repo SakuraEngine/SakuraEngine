@@ -22,6 +22,7 @@ class ParserBase:
     def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
         pass
 
+    # TODO. to object 的前后顺序与 cpp 的父子关系保持一致，并给给出父信息
     def parse_to_object(self, value: object, error_tracker: ErrorTracker) -> object:
         pass
 
@@ -226,6 +227,10 @@ class FunctionalTarget(Enum):
     FUNCTION = 5
     ENUM = 6
     ENUM_VALUE = 7
+
+# TODO. functional 原则上不能同时存在多个，但是可以加入扩展功能，通常情况下关闭扩展，需要再打开
+# TODO. ListShorthand 可能需要由多个 Generator 提供 expand，可能也需要提供扩展选项？
+# TODO. Functional 之间应当互不干扰（比如 default_value 的解析）
 
 
 class FunctionalManager:

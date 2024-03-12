@@ -69,13 +69,13 @@ class HeaderDatabase:
 
                 # field
                 for field in record.fields:
-                    error_tracker.source_line = field.line
+                    error_tracker.set_source_line(field.line)
                     with error_tracker.path_guard(f"[{field.type}]"):
                         func(error_tracker, FunctionalTarget.FIELD, field.raw_attrs)
 
                 # method
                 for method in record.methods:
-                    error_tracker.source_line = method.line
+                    error_tracker.set_source_line(method.line)
                     with error_tracker.path_guard(f"[{method.short_name}]"):
                         # method attr
                         func(error_tracker, FunctionalTarget.METHOD, method.raw_attrs)
@@ -94,7 +94,7 @@ class HeaderDatabase:
 
                 # enum value
                 for (_, enum_value) in enum.values.items():
-                    error_tracker.source_line = enum_value.line
+                    error_tracker.set_source_line(enum_value.line)
                     with error_tracker.path_guard(f"[{enum_value.short_name}]"):
                         func(error_tracker, FunctionalTarget.ENUM_VALUE, enum_value.raw_attrs)
 
