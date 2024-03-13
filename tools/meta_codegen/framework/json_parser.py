@@ -219,23 +219,6 @@ class JsonDict:
         return result
 
 
-@dataclass
-class JsonListItem:
-    val: object = None
-    recognized: bool = False
-
-
-class JsonList:
-    def __init__(self) -> None:
-        self.__override_list: List[JsonListItem] = []
-
-    def __getitem__(self, index: int) -> JsonListItem:
-        return self.__override_list[index].val
-
-    def list(self) -> List[JsonListItem]:
-        return self.__override_list
-
-
 def parse_json_hook(data: List[Tuple[str, object]]) -> JsonDict:
     result = JsonDict()
 
@@ -273,6 +256,7 @@ class ObjDictTools:
 
 class JsonOverrideSolver:
     class OverrideData:
+        # TODO. override data 拼接逻辑可以写在这里
         def __init__(self, override: JsonOverrideData, error_tracker: ErrorTracker, parent: 'JsonOverrideSolver.OverrideData' = None) -> None:
             self.override: JsonOverrideData = override
             self.passed_override_mark: JsonOverrideMark
@@ -291,27 +275,28 @@ class JsonOverrideSolver:
     @dataclass
     class Node:
         key: str = None
-        override_data: List['JsonOverrideSolver.OverrideData'] = field(default_factory=[])
+        override_data: List['JsonOverrideSolver.OverrideData'] = field(default_factory=lambda: [])
 
-    __node_stack: List[Node] = field(default_factory=[])
-    root_dict: JsonDict = None
+    def __init__(self) -> None:
+        self.__node_stack: List[JsonOverrideSolver.Node] = []
+        self.root_dict: JsonDict = None
 
     def push_node(self, key: str, error_tracker: ErrorTracker) -> None:
+        # add node
+        last_node = self.__node_stack[-1] if len(self.__node_stack) else None
+        new_node = JsonOverrideSolver.Node(key=key)
+        self.__node_stack.append(new_node)
+
         # expand override
-        new_node: JsonOverrideSolver.Node = None
-        if len(self.__node_stack) == 0:
-            new_node = JsonOverrideSolver.Node(key=key)
-            self.__node_stack.append(new_node)
+        if not last_node:  # root node case
             for (k, override) in self.root_dict:
                 if k == key:
                     new_node.override_data.append(JsonOverrideSolver.OverrideData(
-                        parent=override,
+                        override=override,
                         error_tracker=error_tracker,
                     ))
-        else:
-            new_node = JsonOverrideSolver.Node(key=key)
-            self.__node_stack[-1].override_data.append(new_node)
-            for parent_override in self.__node_stack[-1].override_data:
+        else:  # usual case
+            for parent_override in last_node.override_data:
                 if isinstance(parent_override.override.val, JsonDict):
                     for (k, override) in parent_override.override.val:
                         if k == key:
@@ -339,9 +324,48 @@ class JsonOverrideSolver:
 
     def solve_override(self, key: str, error_tracker: ErrorTracker) -> object:
         # push node
-        self.push_node(key, error_tracker)
+        if key:
+            self.push_node(key, error_tracker)
+        print(f"{self.__node_stack[-1].key}::{key}")
 
         # solve override
-        current_value = None
-        for node in self.__node_stack[-1].override_data:
-            pass
+        cur_value = None
+        cur_mark: JsonOverrideMark = JsonOverrideMark.NONE
+        cur_ignored_by: JsonOverrideSolver.OverrideData = None
+        for override_data in self.__node_stack[-1].override_data:
+            if override_data.passed_override_mark == JsonOverrideMark.NONE and cur_value:  # bad override
+                error_tracker.error(f"override value without '!' mark")
+            elif override_data.passed_override_mark == JsonOverrideMark.APPEND:  # append case
+                merge_source = None if cur_ignored_by else cur_value
+                # make sure cur_value is list
+                if type(merge_source) is list:
+                    merge_source = merge_source.copy()
+                elif not merge_source:
+                    merge_source = []
+                else:
+                    merge_source = [merge_source]
+
+                # append
+                if type(override_data.override.val) is list:
+                    merge_source.extend(override_data.override.val)
+                else:
+                    merge_source.append(override_data.override.val)
+
+                # update mark
+                cur_value = merge_source
+                cur_mark = override_data.override.override_mark
+                cur_ignored_by = override_data.ignored_by
+            else:  # update current value
+                cur_value = override_data.override.val
+                cur_mark = override_data.override.override_mark
+                cur_ignored_by = override_data.ignored_by
+
+        # pop node
+        if key:
+            self.pop_node(error_tracker)
+
+        # result
+        if cur_ignored_by:
+            return None
+        else:
+            return cur_value

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from framework.error_tracker import ErrorTracker
 from framework.json_parser import *
-from framework.json_parser import JsonDict
+from framework.json_parser import JsonDict, JsonOverrideSolver
 
 
 class ParserBase:
@@ -23,34 +23,30 @@ class ParserBase:
         pass
 
     # TODO. to object 的前后顺序与 cpp 的父子关系保持一致，并给给出父信息
-    def parse_to_object(self, value: object, error_tracker: ErrorTracker) -> object:
+    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
         pass
 
 
 class RootParser(ParserBase):
     def __init__(self) -> None:
         super().__init__()
-        self.functional: Dict[str, List[FunctionalParser]] = {}
+        self.__functional_dict: Dict[str, FunctionalParser] = {}
 
     def add_functional(self, name, parser) -> None:
-        if name not in self.functional:
-            self.functional[name] = []
-        self.functional[name].append(parser)
+        if name in self.__functional_dict:
+            raise Exception("functional name already exists!")
+        self.__functional_dict[name] = parser
 
     def dispatch_expand_shorthand_and_path(self, json_dict: JsonDict, error_tracker: ErrorTracker) -> None:
         json_dict.expand_path_recursive()
 
         def __dispatch(k, dict):
-            if k in self.functional:
-                for functional in self.functional[k]:
-                    functional.dispatch_expand_shorthand_and_path(dict, error_tracker)
+            if k in self.__functional_dict:
+                self.__functional_dict[k].dispatch_expand_shorthand_and_path(dict, error_tracker)
 
         def __expand(k, v):
-            if k in self.functional:
-                for functional in self.functional[k]:
-                    mapping = functional.expand_shorthand_and_path(v, error_tracker)
-                    if mapping:  # TODO. 支持多 mapping 合并映射
-                        return mapping
+            if k in self.__functional_dict:
+                return self.__functional_dict[k].expand_shorthand_and_path(v, error_tracker)
 
         json_dict.expand_shorthand(__expand, __dispatch)
 
@@ -58,13 +54,18 @@ class RootParser(ParserBase):
         if type(value) is JsonDict:
             for (k, override) in value:
                 override.push_path(error_tracker, k)
-                if k in self.functional:
+                if k in self.__functional_dict:
                     override.mark_recognized()
-                    for functional in self.functional[k]:
-                        functional.check_structure(override.val, error_tracker)
+                    self.__functional_dict[k].check_structure(override.val, error_tracker)
                 override.pop_path(error_tracker)
         else:
             error_tracker.error("value type error, must be JsonDict!")
+
+    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+        for (k, functional) in self.__functional_dict.items():
+            override_solve.push_node(k, error_tracker)
+            functional.parse_to_object(override_solve, error_tracker)
+            override_solve.pop_node(error_tracker)
 
 
 class FunctionalParser(ParserBase):
@@ -116,16 +117,26 @@ class FunctionalParser(ParserBase):
         else:
             error_tracker.error("value type error, must be JsonDict!")
 
-    def parse_to_object(self, value: object, error_tracker: ErrorTracker) -> object:
+    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+        result_dict = {}
         # parse enable
+        result_dict["enable"] = override_solve.solve_override("enable", error_tracker)
 
         # parse options
-        pass
+        for (option_key, parser) in self.options.items():
+            override_solve.push_node(option_key, error_tracker)
+            result_dict[option_key] = parser.parse_to_object(override_solve, error_tracker)
+            override_solve.pop_node(error_tracker)
+
+        return ObjDictTools.as_obj(result_dict)
 
 
 class ValueParser(ParserBase):
     def __init__(self) -> None:
         super().__init__()
+
+    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+        return override_solve.solve_override(None, error_tracker)
 
 
 class BoolParser(ValueParser):

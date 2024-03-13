@@ -28,6 +28,25 @@ class Generator:
                 }
             ))
 
+        # test check override
+        parser_manager.add_functional(
+            FunctionalTarget.RECORD,
+            "test_check_override",
+            FunctionalParser(
+                options={
+                    "test_override": StrParser(),
+                    "test_rewrite": FunctionalParser(
+                        options={
+                            "a": StrParser(),
+                            "b": StrParser(),
+                            "c": StrParser()
+                        }
+                    ),
+                    "test_append": ListParser()
+                }
+            )
+        )
+
         # record
         parser_manager.add_functional(
             FunctionalTarget.RECORD,

@@ -53,11 +53,12 @@ class HeaderDatabase:
         self.__each_attrs_and_apply_functional(error_tracker, __check_unrecognized_attr)
 
     def to_object(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
-        # solve override
-
-        # to object
-
-        pass
+        def __to_object(error_tracker: ErrorTracker, target: FunctionalTarget, raw_attrs: JsonDict) -> None:
+            parser = parser_manager.functional[target]
+            solver = JsonOverrideSolver()
+            solver.root_dict = raw_attrs
+            parser.parse_to_object(solver, error_tracker)
+        self.__each_attrs_and_apply_functional(error_tracker, __to_object)
 
     def __each_attrs_and_apply_functional(self, error_tracker: ErrorTracker, func):
         # record

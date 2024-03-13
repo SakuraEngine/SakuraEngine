@@ -55,5 +55,6 @@ if __name__ == '__main__':
         module_db.load_header(file)
         module_db.expand_shorthand_and_path(tracker, parser_manager)
         module_db.check_structure(tracker, parser_manager)
+        module_db.to_object(tracker, parser_manager)
 
         tracker.dump()

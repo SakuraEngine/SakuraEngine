@@ -52,11 +52,11 @@ class ErrorTracker:
                 self.tracker = tracker
 
             def __enter__(self):
-                self.tracker.push_path(name)
+                self.tracker.path_push(name)
                 return self
 
             def __exit__(self, type, value, exc_tb):
-                self.tracker.pop_path()
+                self.tracker.path_pop()
         return __PathGuard(self)
 
     def error_scope_push(self) -> None:
