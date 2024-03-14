@@ -3,6 +3,12 @@ from dataclasses import dataclass, field
 from enum import Enum
 from framework.error_tracker import ErrorTracker
 
+# TODO. 统一化的 Json Override 结构
+#   override 在 json 结构上以树状连接以追溯树状关系
+#   [路径展开部分] 如果是由 path 或 shorthand 生成的，需要记录 source，source 不传递，获取 source 时候需要在 json 结构上回溯
+#   [覆写解析] override 同时记录本节点的标记与从父节点继承下来的标记，还记录在本层次上的忽略信息(标记"!!"")
+#   [路径追踪] 通过回溯查找 source 来完成正确的路径拼接
+
 
 class JsonOverrideMark(Enum):
     NONE = 0  # no mark

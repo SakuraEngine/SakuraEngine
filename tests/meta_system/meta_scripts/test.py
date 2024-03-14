@@ -3,6 +3,11 @@ from framework.generator import *
 
 class Generator:
     def load_functional(self, parser_manager: FunctionalManager):
+        def assert_value_to_object(target_value, value, error_tracker: ErrorTracker):
+            if value != target_value:
+                error_tracker.add_error("value not match")
+            return value
+
         # test expand path
         # TODO. 使用 check_value 和 to_object 联合检查
         parser_manager.add_functional(

@@ -69,10 +69,11 @@ class RootParser(ParserBase):
 
 
 class FunctionalParser(ParserBase):
-    def __init__(self, options: Dict[str, ParserBase] = {}, shorthands: List['Shorthand'] = []) -> None:
+    def __init__(self, options: Dict[str, ParserBase] = {}, shorthands: List['Shorthand'] = [], custom_to_object=None) -> None:
         super().__init__()
         self.shorthands: List[Shorthand] = shorthands
         self.options: Dict[str, ParserBase] = options
+        self.custom_to_object = custom_to_object
 
         # update owner
         for v in self.shorthands:
@@ -124,69 +125,129 @@ class FunctionalParser(ParserBase):
             result_dict[option_key] = parser.parse_to_object(override_solve, error_tracker)
             override_solve.pop_node(error_tracker)
 
-        return ObjDictTools.as_obj(result_dict)
+        if self.custom_to_object:
+            return self.custom_to_object(result_dict, error_tracker)
+        else:
+            return ObjDictTools.as_obj(result_dict)
 
 
 class ValueParser(ParserBase):
     def __init__(self) -> None:
         super().__init__()
 
-    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
-        return override_solve.solve_override(None, error_tracker)
-
 
 class BoolParser(ValueParser):
-    def __init__(self) -> None:
+    def __init__(self, custom_to_object=None) -> None:
         super().__init__()
+        self.custom_to_object = custom_to_object
 
     def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
         if type(value) is not bool:
             error_tracker.error("value type error, must be bool!")
 
+    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+        result = override_solve.solve_override(None, error_tracker)
+        if type(result) is not bool:
+            error_tracker.error("value type error, must be bool!")
+        if self.custom_to_object:
+            return self.custom_to_object(result, error_tracker)
+        else:
+            return result
+
 
 class StrParser(ValueParser):
-    def __init__(self) -> None:
+    def __init__(self, custom_to_object=None) -> None:
         super().__init__()
+        self.custom_to_object = custom_to_object
 
     def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
         if type(value) is not str:
             error_tracker.error("value type error, must be str!")
 
+    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+        result = override_solve.solve_override(None, error_tracker)
+        if type(result) is not str:
+            error_tracker.error("value type error, must be str!")
+        if self.custom_to_object:
+            return self.custom_to_object(result, error_tracker)
+        else:
+            return result
+
 
 class IntParser(ValueParser):
-    def __init__(self) -> None:
+    def __init__(self, custom_to_object=None) -> None:
         super().__init__()
+        self.custom_to_object = custom_to_object
 
     def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
         if type(value) is not int:
             error_tracker.error("value type error, must be int!")
 
+    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+        result = override_solve.solve_override(None, error_tracker)
+        if type(result) is not int:
+            error_tracker.error("value type error, must be int!")
+        if self.custom_to_object:
+            return self.custom_to_object(result, error_tracker)
+        else:
+            return result
+
 
 class FloatParser(ValueParser):
-    def __init__(self) -> None:
+    def __init__(self, custom_to_object=None) -> None:
         super().__init__()
+        self.custom_to_object = custom_to_object
 
     def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
         if type(value) is not float:
             error_tracker.error("value type error, must be float!")
 
+    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+        result = override_solve.solve_override(None, error_tracker)
+        if type(result) is not float:
+            error_tracker.error("value type error, must be float!")
+        if self.custom_to_object:
+            return self.custom_to_object(result, error_tracker)
+        else:
+            return result
+
 
 class ListParser(ValueParser):
-    def __init__(self) -> None:
+    def __init__(self, custom_to_object=None) -> None:
         super().__init__()
+        self.custom_to_object = custom_to_object
 
     def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
         if type(value) is not list:
             error_tracker.error("value type error, must be list!")
 
+    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+        result = override_solve.solve_override(None, error_tracker)
+        if type(result) is not list:
+            error_tracker.error("value type error, must be list!")
+        if self.custom_to_object:
+            return self.custom_to_object(result, error_tracker)
+        else:
+            return result
+
 
 class DictParser(ValueParser):
-    def __init__(self) -> None:
+    def __init__(self, custom_to_object=None) -> None:
         super().__init__()
+        self.custom_to_object = custom_to_object
 
     def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
         if type(value) is not dict:
             error_tracker.error("value type error, must be dict!")
+
+    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+        result = override_solve.solve_override(None, error_tracker)
+        if type(result) is not dict:
+            error_tracker.error("value type error, must be dict!")
+        if self.custom_to_object:
+            return self.custom_to_object(result, error_tracker)
+        else:
+            return result
 
 
 class Shorthand:
