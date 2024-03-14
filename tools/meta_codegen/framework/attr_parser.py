@@ -53,7 +53,7 @@ class RootParser(ParserBase):
     def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
         if type(value) is JsonDict:
             for (k, override) in value:
-                override.push_path(error_tracker, k)
+                override.push_path(error_tracker)
                 if k in self.__functional_dict:
                     override.mark_recognized()
                     self.__functional_dict[k].check_structure(override.val, error_tracker)
@@ -109,7 +109,7 @@ class FunctionalParser(ParserBase):
     def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
         if type(value) is JsonDict:
             for (k, override) in value:
-                override.push_path(error_tracker, k)
+                override.push_path(error_tracker)
                 if k in self.options:
                     override.mark_recognized()
                     self.options[k].check_structure(override.val, error_tracker)

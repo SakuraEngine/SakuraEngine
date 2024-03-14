@@ -59,6 +59,7 @@ def merge_override_mark(parent: JsonOverrideMark, child: JsonOverrideMark, error
 
 @dataclass
 class JsonOverrideData:
+    key: str = None
     val: object = None
     override_mark: JsonOverrideMark = JsonOverrideMark.NONE
     is_recognized: bool = False
@@ -66,8 +67,8 @@ class JsonOverrideData:
     def mark_recognized(self) -> None:
         self.is_recognized = True
 
-    def push_path(self, error_tracker: ErrorTracker, key: str) -> None:
-        error_tracker.path_push(key)
+    def push_path(self, error_tracker: ErrorTracker) -> None:
+        error_tracker.path_push(self.key)
 
     def pop_path(self, error_tracker: ErrorTracker) -> None:
         error_tracker.path_pop()
@@ -79,7 +80,7 @@ class JsonOverrideDataPath(JsonOverrideData):
     raw_value: object = None
     is_root: bool = False
 
-    def push_path(self, error_tracker: ErrorTracker, key: str) -> None:
+    def push_path(self, error_tracker: ErrorTracker) -> None:
         if self.is_root:
             error_tracker.path_push("::".join([apply_override(k, override) for (k, override) in self.path_nodes]))
 
@@ -105,6 +106,7 @@ class JsonDict:
         return self.__sorted_overrides[index]
 
     def add(self, key: str, override: JsonOverrideData) -> None:
+        override.key = key
         self.__sorted_overrides.append((key, override))
 
     def expand_path(self) -> int:
@@ -186,7 +188,7 @@ class JsonDict:
 
     def warning_recognized_attr_recursive(self, error_tracker: ErrorTracker) -> None:
         for (key, override) in self.__sorted_overrides:
-            override.push_path(error_tracker, key)
+            override.push_path(error_tracker)
             if override.is_recognized:
                 if type(override.val) is JsonDict:
                     override.val.warning_recognized_attr_recursive(error_tracker)
@@ -272,6 +274,26 @@ class JsonOverrideSolver:
             else:
                 self.passed_override_mark = override.override_mark
 
+        def __recursive_push_path(self, error_tracker: ErrorTracker):
+            if self.parent:
+                self.parent.__recursive_push_path(error_tracker)
+            self.override.push_path(error_tracker)
+
+        def __recursive_pop_path(self, error_tracker: ErrorTracker):
+            if self.parent:
+                self.parent.__recursive_pop_path(error_tracker)
+            self.override.pop_path(error_tracker)
+
+        def error_with_path(self, error: str, error_tracker: ErrorTracker):
+            # add path
+            self.__recursive_push_path(error_tracker)
+
+            # log error
+            error_tracker.error(error)
+
+            # remove path
+            self.__recursive_pop_path(error_tracker)
+
     @dataclass
     class Node:
         key: str = None
@@ -326,7 +348,6 @@ class JsonOverrideSolver:
         # push node
         if key:
             self.push_node(key, error_tracker)
-        print(f"{self.__node_stack[-1].key}::{key}")
 
         # solve override
         cur_value = None
@@ -334,7 +355,7 @@ class JsonOverrideSolver:
         cur_ignored_by: JsonOverrideSolver.OverrideData = None
         for override_data in self.__node_stack[-1].override_data:
             if override_data.passed_override_mark == JsonOverrideMark.NONE and cur_value:  # bad override
-                error_tracker.error(f"override value without '!' mark")
+                override_data.error_with_path(f"override value without '!' mark", error_tracker)
             elif override_data.passed_override_mark == JsonOverrideMark.APPEND:  # append case
                 merge_source = None if cur_ignored_by else cur_value
                 # make sure cur_value is list
