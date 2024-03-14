@@ -48,7 +48,7 @@ class RootParser(ParserBase):
             if k in self.__functional_dict:
                 return self.__functional_dict[k].expand_shorthand_and_path(v, error_tracker)
 
-        json_dict.expand_shorthand(__expand, __dispatch)
+        json_dict.expand_shorthand(__expand, __dispatch, error_tracker)
 
     def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
         if type(value) is JsonDict:
@@ -94,17 +94,13 @@ class FunctionalParser(ParserBase):
     def dispatch_expand_shorthand_and_path(self, json_dict: JsonDict, error_tracker: ErrorTracker) -> None:
         def __dispatch(k, dict):
             if k in self.options:
-                for parser in self.options[k]:
-                    parser.dispatch_expand_shorthand_and_path(dict, error_tracker)
+                self.options[k].dispatch_expand_shorthand_and_path(dict, error_tracker)
 
         def __expand(k, v):
             if k in self.options:
-                for parser in self.options[k]:
-                    mapping = parser.expand_shorthand_and_path(v, error_tracker)
-                    if mapping:  # TODO. 支持多 mapping 合并映射
-                        return mapping
+                return self.options[k].expand_shorthand_and_path(v, error_tracker)
 
-        json_dict.expand_shorthand(__expand, __dispatch)
+        json_dict.expand_shorthand(__expand, __dispatch, error_tracker)
 
     def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
         if type(value) is JsonDict:
@@ -115,7 +111,7 @@ class FunctionalParser(ParserBase):
                     self.options[k].check_structure(override.val, error_tracker)
                 override.pop_path(error_tracker)
         else:
-            error_tracker.error("value type error, must be JsonDict!")
+            error_tracker.error(f"value type error, passed [{type(value)}]{value}, must be JsonDict!")
 
     def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
         result_dict = {}

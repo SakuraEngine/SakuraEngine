@@ -51,6 +51,7 @@ if __name__ == '__main__':
     for file in meta_files:
         tracker = ErrorTracker()
         tracker.set_phase("CheckStructure")
+        # tracker.set_raise_error(True)
 
         module_db.load_header(file)
         module_db.expand_shorthand_and_path(tracker, parser_manager)

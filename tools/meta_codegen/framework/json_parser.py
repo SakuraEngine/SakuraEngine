@@ -91,11 +91,18 @@ class JsonOverrideDataPath(JsonOverrideData):
 
 @dataclass
 class JsonOverrideDataShorthand(JsonOverrideData):
-    key: str = ""
     shorthand: object = None
-    raw_value: object = None
-    raw_dict: Dict = None
     is_root: bool = False
+
+    def push_path(self, error_tracker: ErrorTracker) -> None:
+        if self.is_root:
+            error_tracker.path_push(self.key)
+            error_tracker.path_push(f"[SHORTHAND: {self.shorthand}]")
+
+    def pop_path(self, error_tracker: ErrorTracker) -> None:
+        if self.is_root:
+            error_tracker.path_pop()
+            error_tracker.path_pop()
 
 
 class JsonDict:
@@ -115,6 +122,7 @@ class JsonDict:
         while index < len(self.__sorted_overrides):
             (k, override) = self.__sorted_overrides[index]
             path_nodes = [parse_override(node) for node in k.split("::")]
+            path_nodes[-1] = (path_nodes[-1][0], override.override_mark)
             if len(path_nodes) > 1:
                 # build node dict
                 root_dict = JsonDict()
@@ -145,6 +153,7 @@ class JsonDict:
                 # replace old data
                 (root_key, root_mark) = path_nodes[0]
                 self.__sorted_overrides[index] = (root_key, JsonOverrideDataPath(
+                    key=root_key,
                     val=root_dict,
                     override_mark=root_mark,
                     path_nodes=path_nodes,
@@ -163,7 +172,7 @@ class JsonDict:
                 count = count + override.val.expand_path_recursive()
         return count
 
-    def expand_shorthand(self, expand_shorthand, dispatch_expand) -> None:
+    def expand_shorthand(self, expand_shorthand, dispatch_expand, error_tracker: ErrorTracker) -> None:
         index = 0
         while index < len(self.__sorted_overrides):
             (k, override) = self.__sorted_overrides[index]
@@ -174,15 +183,25 @@ class JsonDict:
                 if mapping:
                     # expand to new dict
                     json_dict = JsonDict()
-                    json_dict.load_from_dict(mapping)
+                    json_dict.load_from_dict(mapping, lambda val, mark: JsonOverrideDataShorthand(
+                        val=val,
+                        override_mark=mark,
+                        shorthand=override.val,
+                        is_root=False
+                    ))
                     json_dict.expand_path_recursive()
-                    dispatch_expand(k, json_dict)
 
                     # replace shorthand
-                    self.__sorted_overrides[index] = (k, JsonOverrideData(
+                    self.__sorted_overrides[index] = (k, JsonOverrideDataShorthand(
+                        key=k,
                         val=json_dict,
-                        override_mark=override.override_mark
+                        override_mark=override.override_mark,
+                        shorthand=override.val,
+                        is_root=True
                     ))
+
+                    # dispatch again
+                    dispatch_expand(k, json_dict)
 
             index = index + 1
 
@@ -196,21 +215,15 @@ class JsonDict:
                 error_tracker.warning(f"unrecognized attribute!!!")
             override.pop_path(error_tracker)
 
-    def load_from_dict(self, data: Dict[str, object]) -> None:
+    def load_from_dict(self, data: Dict[str, object], make_override) -> None:
         for (k, v) in data.items():
             key, mark = parse_override(k)
             if v is dict:
                 json_dict = JsonDict()
                 json_dict.load_from_dict(v)
-                self.add(key, JsonOverrideData(
-                    val=json_dict,
-                    override_mark=mark
-                ))
+                self.add(key, make_override(json_dict, mark))
             else:
-                self.add(key, JsonOverrideData(
-                    val=v,
-                    override_mark=mark
-                ))
+                self.add(key, make_override(v, mark))
 
     def unique_dict(self) -> Dict[str, object]:
         result = {}
@@ -290,6 +303,16 @@ class JsonOverrideSolver:
 
             # log error
             error_tracker.error(error)
+
+            # remove path
+            self.__recursive_pop_path(error_tracker)
+
+        def warning_with_path(self, warning: str, error_tracker: ErrorTracker):
+            # add path
+            self.__recursive_push_path(error_tracker)
+
+            # log warning
+            error_tracker.warning(warning)
 
             # remove path
             self.__recursive_pop_path(error_tracker)

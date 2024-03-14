@@ -26,6 +26,14 @@ class ErrorTracker:
         self.__path: List[str] = []
         self.__error_data: List[ErrorData] = []
         self.__error_check_scope_stack: List[int] = []
+        self.__raise_error: bool = False
+        self.__raise_warning: bool = False
+
+    def set_raise_error(self, raise_error: bool) -> None:
+        self.__raise_error = raise_error
+
+    def set_raise_warning(self, raise_warning: bool) -> None:
+        self.__raise_warning = raise_warning
 
     def set_phase(self, phase: str) -> None:
         self.__phase = phase
@@ -41,6 +49,8 @@ class ErrorTracker:
         self.__source_line = line
 
     def path_push(self, name: str) -> None:
+        if name is None:
+            raise ValueError("name should not be None")
         self.__path.append(name)
 
     def path_pop(self) -> None:
@@ -106,6 +116,8 @@ class ErrorTracker:
         self.__error_data.extend(tracker.__error_data)
 
     def error(self, message: str) -> None:
+        if self.__raise_error:
+            raise Exception(f"error: {message}")
         self.__error_data.append(ErrorData(
             phase=self.__phase,
             source_file=self.__source_file,
@@ -116,6 +128,8 @@ class ErrorTracker:
         ))
 
     def warning(self, message: str) -> None:
+        if self.__raise_warning:
+            raise Warning(f"warning: {message}")
         self.__error_data.append(ErrorData(
             phase=self.__phase,
             source_file=self.__source_file,
@@ -151,7 +165,7 @@ class ErrorTracker:
         print()
         for error in self.__error_data:
             print(f"[{error.phase}] {error.source_file}:{error.source_line}")
-            print(f"\033[35m{'>'.join(error.path)}\033[0m")
+            print(f"\033[35m{' > '.join(error.path)}\033[0m")
             if error.level == ErrorLevel.ERROR:
                 print(f"\033[31merror: {error.message}\033[0m")
             elif error.level == ErrorLevel.WARNING:

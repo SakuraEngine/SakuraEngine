@@ -47,6 +47,41 @@ class Generator:
             )
         )
 
+        # test check expand
+        parser_manager.add_functional(
+            FunctionalTarget.RECORD,
+            "test_functional_shorthand",
+            FunctionalParser(
+                shorthands=[
+                    StrShorthand(
+                        options_mapping={
+                            "all": {
+                                "assert_10": 10,
+                                "assert_fuck": "fuck",
+                                "assert_11.1": 11.1,
+                                "assert_false": False,
+                                "assert_1_1_2": [1, 1, 2]
+                            },
+                            "bad_type": {
+                                "assert_10": [1, 1, 2],
+                                "assert_fuck": "fuck",
+                                "assert_11.1": False,
+                                "assert_false": 114514,
+                                "assert_1_1_2": "fuck"
+                            }
+                        }
+                    )
+                ],
+                options={
+                    "assert_10": IntParser(),
+                    "assert_fuck": StrParser(),
+                    "assert_11.1": FloatParser(),
+                    "assert_false": BoolParser(),
+                    "assert_1_1_2": ListParser(),
+                }
+            )
+        )
+
         # record
         parser_manager.add_functional(
             FunctionalTarget.RECORD,
