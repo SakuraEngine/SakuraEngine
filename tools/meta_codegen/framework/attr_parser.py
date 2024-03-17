@@ -23,7 +23,7 @@ class ParserBase:
         pass
 
     # TODO. to object 的前后顺序与 cpp 的父子关系保持一致，并给给出父信息
-    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+    def parse_to_object(self, override_solver: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
         pass
 
 
@@ -61,11 +61,11 @@ class RootParser(ParserBase):
         else:
             error_tracker.error("value type error, must be JsonDict!")
 
-    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+    def parse_to_object(self, override_solver: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
         for (k, functional) in self.__functional_dict.items():
-            override_solve.push_node(k, error_tracker)
-            functional.parse_to_object(override_solve, error_tracker)
-            override_solve.pop_node(error_tracker)
+            override_solver.push_node(k, error_tracker)
+            functional.parse_to_object(override_solver, error_tracker)
+            override_solver.pop_node(error_tracker)
 
 
 class FunctionalParser(ParserBase):
@@ -114,16 +114,16 @@ class FunctionalParser(ParserBase):
         else:
             error_tracker.error(f"value type error, passed [{type(value)}]{value}, must be JsonDict!")
 
-    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+    def parse_to_object(self, override_solver: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
         result_dict = {}
         # parse enable
-        result_dict["enable"] = override_solve.solve_override("enable", error_tracker)
+        result_dict["enable"] = override_solver.solve_override("enable", error_tracker)
 
         # parse options
         for (option_key, parser) in self.options.items():
-            override_solve.push_node(option_key, error_tracker)
-            result_dict[option_key] = parser.parse_to_object(override_solve, error_tracker)
-            override_solve.pop_node(error_tracker)
+            override_solver.push_node(option_key, error_tracker)
+            result_dict[option_key] = parser.parse_to_object(override_solver, error_tracker)
+            override_solver.pop_node(error_tracker)
 
         if self.custom_to_object:
             return self.custom_to_object(result_dict, error_tracker)
@@ -132,122 +132,55 @@ class FunctionalParser(ParserBase):
 
 
 class ValueParser(ParserBase):
-    def __init__(self) -> None:
+    def __init__(self, type, type_name, default_value, custom_to_object) -> None:
         super().__init__()
+        self.type = type
+        self.type_name = type_name
+        self.default_value = default_value
+        self.custom_to_object = custom_to_object
+
+    def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
+        if type(value) is not self.type:
+            error_tracker.error(f"value type error, must be {self.type_name}!")
+
+    def parse_to_object(self, override_solver: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+        result = override_solver.solve_override(None, error_tracker)
+        if type(result) is not self.type:
+            error_tracker.error(f"value type error, must be {self.type_name}!")
+        if self.custom_to_object:
+            return self.custom_to_object(result, error_tracker)
+        else:
+            return result if result else self.default_value
 
 
 class BoolParser(ValueParser):
-    def __init__(self, custom_to_object=None) -> None:
-        super().__init__()
-        self.custom_to_object = custom_to_object
-
-    def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
-        if type(value) is not bool:
-            error_tracker.error("value type error, must be bool!")
-
-    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
-        result = override_solve.solve_override(None, error_tracker)
-        if type(result) is not bool:
-            error_tracker.error("value type error, must be bool!")
-        if self.custom_to_object:
-            return self.custom_to_object(result, error_tracker)
-        else:
-            return result
+    def __init__(self, default_value=False, custom_to_object=None) -> None:
+        super().__init__(bool, "bool", default_value, custom_to_object)
 
 
 class StrParser(ValueParser):
-    def __init__(self, custom_to_object=None) -> None:
-        super().__init__()
-        self.custom_to_object = custom_to_object
-
-    def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
-        if type(value) is not str:
-            error_tracker.error("value type error, must be str!")
-
-    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
-        result = override_solve.solve_override(None, error_tracker)
-        if type(result) is not str:
-            error_tracker.error("value type error, must be str!")
-        if self.custom_to_object:
-            return self.custom_to_object(result, error_tracker)
-        else:
-            return result
+    def __init__(self, default_value="", custom_to_object=None) -> None:
+        super().__init__(str, "str", default_value, custom_to_object)
 
 
 class IntParser(ValueParser):
-    def __init__(self, custom_to_object=None) -> None:
-        super().__init__()
-        self.custom_to_object = custom_to_object
-
-    def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
-        if type(value) is not int:
-            error_tracker.error("value type error, must be int!")
-
-    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
-        result = override_solve.solve_override(None, error_tracker)
-        if type(result) is not int:
-            error_tracker.error("value type error, must be int!")
-        if self.custom_to_object:
-            return self.custom_to_object(result, error_tracker)
-        else:
-            return result
+    def __init__(self, default_value=0, custom_to_object=None) -> None:
+        super().__init__(int, "int", default_value, custom_to_object)
 
 
 class FloatParser(ValueParser):
-    def __init__(self, custom_to_object=None) -> None:
-        super().__init__()
-        self.custom_to_object = custom_to_object
-
-    def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
-        if type(value) is not float:
-            error_tracker.error("value type error, must be float!")
-
-    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
-        result = override_solve.solve_override(None, error_tracker)
-        if type(result) is not float:
-            error_tracker.error("value type error, must be float!")
-        if self.custom_to_object:
-            return self.custom_to_object(result, error_tracker)
-        else:
-            return result
+    def __init__(self, default_value=0.0, custom_to_object=None) -> None:
+        super().__init__(float, "float", default_value, custom_to_object)
 
 
 class ListParser(ValueParser):
-    def __init__(self, custom_to_object=None) -> None:
-        super().__init__()
-        self.custom_to_object = custom_to_object
-
-    def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
-        if type(value) is not list:
-            error_tracker.error("value type error, must be list!")
-
-    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
-        result = override_solve.solve_override(None, error_tracker)
-        if type(result) is not list:
-            error_tracker.error("value type error, must be list!")
-        if self.custom_to_object:
-            return self.custom_to_object(result, error_tracker)
-        else:
-            return result
+    def __init__(self, default_value=[], custom_to_object=None) -> None:
+        super().__init__(list, "list", default_value, custom_to_object)
 
 
 class DictParser(ValueParser):
-    def __init__(self, custom_to_object=None) -> None:
-        super().__init__()
-        self.custom_to_object = custom_to_object
-
-    def check_structure(self, value: object, error_tracker: ErrorTracker) -> None:
-        if type(value) is not dict:
-            error_tracker.error("value type error, must be dict!")
-
-    def parse_to_object(self, override_solve: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
-        result = override_solve.solve_override(None, error_tracker)
-        if type(result) is not dict:
-            error_tracker.error("value type error, must be dict!")
-        if self.custom_to_object:
-            return self.custom_to_object(result, error_tracker)
-        else:
-            return result
+    def __init__(self, default_value={}, custom_to_object=None) -> None:
+        super().__init__(JsonDict, "dict", default_value, custom_to_object)
 
 
 class Shorthand:

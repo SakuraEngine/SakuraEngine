@@ -112,7 +112,7 @@ end
 function _meta_codegen_command_old(target, scripts, metadir, gendir, opt)
     -- get config
     local api = target:extraconf("rules", _meta_rule_codegen_name, "api")
-    local generator = os.projectdir()..vformat("/tools/codegen/codegen.py")
+    local generator = os.projectdir()..vformat("/tools/meta_codegen/_deprecated/codegen.py")
     local start_time = os.time()
     
     -- collect deps data

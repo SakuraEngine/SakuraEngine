@@ -5,29 +5,7 @@ import glob
 import os
 import sys
 from types import SimpleNamespace
-from dataclasses import *
 from typing import List, Dict
-
-
-@dataclass
-class ModuleConfig:
-    module_name: str
-    meta_dir: str
-    api: str
-
-
-@dataclass
-class GeneratorConfig:
-    entry_file: str
-    import_dirs: List[str]
-
-
-@dataclass
-class CodegenConfig:
-    output_dir: str
-    main_module: ModuleConfig
-    include_modules: List[ModuleConfig] = field(default_factory=lambda: [])
-    generators: List[GeneratorConfig] = field(default_factory=lambda: [])
 
 
 if __name__ == '__main__':
@@ -37,6 +15,7 @@ if __name__ == '__main__':
     from framework.attr_parser import *
     from framework.generator import *
     from framework.database import *
+    import framework.config
 
     # parse args
     parser = argparse.ArgumentParser(description="generate code from meta files")
@@ -44,8 +23,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # load config
-    with open(args.config, "r") as f:
-        config = json.load(f, object_hook=lambda d: SimpleNamespace(**d))
+    config = framework.config.load_config(args.config)
 
     # load generators
     generators: List[GeneratorBase] = []
@@ -63,26 +41,44 @@ if __name__ == '__main__':
         for generator in module.load_generators():
             generators.append(generator)
 
-    # load parser
+    # init error tracker
+    error_tracker = ErrorTracker()
+
+    # step1. load parser
     parser_manager = FunctionalManager()
     for generator in generators:
         generator.load_functional(parser_manager)
 
-    # collect meta files
-    meta_files = glob.glob(os.path.join(config.main_module.meta_dir, "**", "*.h.meta"), recursive=True)
+    # step2. load main module
+    main_module_db = ModuleDatabase()
+    main_module_db.load(config.main_module, config)
+    main_module_db.solve_attr(config, error_tracker, parser_manager)
 
-    # load meta files
-    module_db = ModuleDatabase()
-    module_db.module_name = config.main_module.module_name
+    # step3. load include module
+    include_module_dbs = []
+    require_include_dbs = False
+    for generator in generators:
+        require_include_dbs = require_include_dbs or generator.require_include_dbs()
+    if require_include_dbs:
+        for include_module in config.include_modules:
+            module_db = ModuleDatabase()
+            module_db.load(include_module, config)
+            module_db.solve_attr(config, error_tracker, parser_manager)
+            include_module_dbs.append(module_db)
 
-    for file in meta_files:
-        tracker = ErrorTracker()
-        tracker.set_phase("CheckStructure")
-        # tracker.set_raise_error(True)
+    # step4. generate code
+    file_cache = FileCache()
+    for generator in generators:
+        generator.pre_generate(config, main_module_db, include_module_dbs, error_tracker, file_cache)
+    for generator in generators:
+        generator.generate(config, main_module_db, include_module_dbs, error_tracker, file_cache)
+    for generator in generators:
+        generator.post_generate(config, main_module_db, include_module_dbs, error_tracker, file_cache)
+    file_cache.output()
+    if error_tracker.any_error():
+        error_tracker.dump()
+        raise Exception("generate code failed")
 
-        module_db.load_header(file)
-        module_db.expand_shorthand_and_path(tracker, parser_manager)
-        module_db.check_structure(tracker, parser_manager)
-        module_db.to_object(tracker, parser_manager)
-
-        tracker.dump()
+    # dump error
+    error_tracker.dump()
+    

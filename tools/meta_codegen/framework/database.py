@@ -1,3 +1,4 @@
+import glob
 import os
 import os.path
 from typing import List, Dict
@@ -7,12 +8,18 @@ from framework.json_parser import *
 from framework.cpp_types import *
 from framework.error_tracker import *
 from framework.attr_parser import *
+from framework.config import CodegenConfig, ModuleConfig
+import re
 
 
 class HeaderDatabase:
-    def __init__(self) -> None:
+    def __init__(self, module_db: 'ModuleDatabase') -> None:
+        self.module_db: 'ModuleDatabase' = module_db
+
         # header file path
-        self.header_path: str = ""
+        self.meta_path: str = ""
+        self.relative_meta_path: str = ""
+        self.file_id: str = ""
 
         # all data
         self.records: List[Record] = []
@@ -23,12 +30,14 @@ class HeaderDatabase:
         self.__name_to_record: Dict[str, Record] = {}
         self.__name_to_enum: Dict[str, Enumeration] = {}
 
-    def load_header(self, path: str):
-        self.header_path = os.path.normpath(path).replace(os.sep, "/")
+    def load_header(self, meta_file_path: str, config: CodegenConfig):
+        self.meta_path = os.path.normpath(meta_file_path).replace(os.sep, "/")
+        self.relative_meta_path = os.path.relpath(self.meta_path, self.module_db.meta_dir)
+        self.file_id = f"FID_{self.module_db.module_name}_" + re.sub(r'\W+', '_', self.relative_meta_path)
 
         # load raw data
         raw_json: JsonDict
-        with open(path, encoding="utf-8") as f:
+        with open(meta_file_path, encoding="utf-8") as f:
             raw_json = json.load(f, object_pairs_hook=parse_json_hook)
 
         # extract cpp types
@@ -139,32 +148,55 @@ class HeaderDatabase:
 
 
 class ModuleDatabase:
-    def __init__(self) -> None:
-        # module name
+    def __init__(self, ) -> None:
+        # module info
         self.module_name: str = ""
+        self.meta_dir: str = ""
+        self.api: str = ""
 
         # header files
-        self.header_files: List[str] = []
         self.header_dbs: List[HeaderDatabase] = []
 
         # fast search
         self.__name_to_record: Dict[str, Record] = {}
         self.__name_to_enum: Dict[str, Enumeration] = {}
 
-    def load_header(self, path: str):
-        self.header_files.append(path)
-        db = HeaderDatabase()
-        db.load_header(path)
-        self.header_dbs.append(db)
+    def load(self, module_config: ModuleConfig, config: CodegenConfig):
+        # load module info
+        self.module_name = module_config.module_name
+        self.meta_dir = module_config.meta_dir
+        self.api = module_config.api
 
-    def expand_shorthand_and_path(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+        # get files
+        meta_files = glob.glob(os.path.join(module_config.meta_dir, "**", "*.h.meta"), recursive=True)
+
+        # load meta files
+        for meta_file in meta_files:
+            db = HeaderDatabase(self)
+            db.load_header(meta_file, config)
+            self.header_dbs.append(db)
+
+    def solve_attr(self, config: CodegenConfig, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+        # expand_shorthand_and_path
+        error_tracker.set_phase("ExpandShorthandAndPath")
         for db in self.header_dbs:
             db.expand_shorthand_and_path(error_tracker, parser_manager)
+        if error_tracker.any_error():
+            error_tracker.dump()
+            raise Exception("ExpandShorthandAndPath failed")
 
-    def check_structure(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+        # check_structure
+        error_tracker.set_phase("CheckStructure")
         for db in self.header_dbs:
             db.check_structure(error_tracker, parser_manager)
+        if error_tracker.any_error():
+            error_tracker.dump()
+            raise Exception("ExpandShorthandAndPath failed")
 
-    def to_object(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+        # to_object
+        error_tracker.set_phase("ToObjects")
         for db in self.header_dbs:
             db.to_object(error_tracker, parser_manager)
+        if error_tracker.any_error():
+            error_tracker.dump()
+            raise Exception("ExpandShorthandAndPath failed")
