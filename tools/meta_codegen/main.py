@@ -4,13 +4,30 @@ import importlib.util
 import glob
 import os
 import sys
+from types import SimpleNamespace
+from dataclasses import *
+from typing import List, Dict
 
 
-def load_generator(i, path):
-    spec = importlib.util.spec_from_file_location("Generator%d" % i, path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return getattr(module, "Generator")()
+@dataclass
+class ModuleConfig:
+    module_name: str
+    meta_dir: str
+    api: str
+
+
+@dataclass
+class GeneratorConfig:
+    entry_file: str
+    import_dirs: List[str]
+
+
+@dataclass
+class CodegenConfig:
+    output_dir: str
+    main_module: ModuleConfig
+    include_modules: List[ModuleConfig] = field(default_factory=lambda: [])
+    generators: List[GeneratorConfig] = field(default_factory=lambda: [])
 
 
 if __name__ == '__main__':
@@ -23,18 +40,28 @@ if __name__ == '__main__':
 
     # parse args
     parser = argparse.ArgumentParser(description="generate code from meta files")
-    parser.add_argument('-root', help="root directory of meta files.", required=True, type=str)
-    parser.add_argument('-outdir', help="output directory.", required=True, type=str)
-    parser.add_argument("-api", help="api name.", required=True, type=str)
-    parser.add_argument("-module", help="module name.", required=True, type=str)
-    parser.add_argument("-includes", help="include directory list.", nargs="+")
-    parser.add_argument('-generators', help="generator file list.", nargs="*")
+    parser.add_argument('-c', '--config', help="config file.", required=True, type=str)
     args = parser.parse_args()
+
+    # load config
+    with open(args.config, "r") as f:
+        config = json.load(f, object_hook=lambda d: SimpleNamespace(**d))
 
     # load generators
     generators: List[GeneratorBase] = []
-    for i, x in enumerate(args.generators):
-        generators.append(load_generator(i, x))
+    for i, generator_config in enumerate(config.generators):
+        # add import dir
+        # for path in generator_config.import_dirs:
+        #     sys.path.insert(0, generator_config.import_dirs)
+
+        # load module
+        spec = importlib.util.spec_from_file_location("Generator%d" % i, generator_config.entry_file)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        # get generators
+        for generator in module.load_generators():
+            generators.append(generator)
 
     # load parser
     parser_manager = FunctionalManager()
@@ -42,11 +69,11 @@ if __name__ == '__main__':
         generator.load_functional(parser_manager)
 
     # collect meta files
-    meta_files = glob.glob(os.path.join(args.root, "**", "*.h.meta"), recursive=True)
+    meta_files = glob.glob(os.path.join(config.main_module.meta_dir, "**", "*.h.meta"), recursive=True)
 
     # load meta files
     module_db = ModuleDatabase()
-    module_db.module_name = args.module
+    module_db.module_name = config.main_module.module_name
 
     for file in meta_files:
         tracker = ErrorTracker()

@@ -1,7 +1,7 @@
 from framework.generator import *
 
 
-class Generator:
+class TestGenerator:
     def load_functional(self, parser_manager: FunctionalManager):
         def assert_value_to_object(target_value, value, error_tracker: ErrorTracker):
             if value != target_value:
@@ -119,3 +119,9 @@ class Generator:
                     )
                 }
             ))
+
+
+def load_generators():
+    return [
+        TestGenerator(),
+    ]

@@ -5,6 +5,7 @@ import("core.project.project")
 import("core.language.language")
 import("core.tool.compiler")
 import("find_sdk")
+import("core.base.json")
 
 -- programs
 local _meta = find_sdk.find_program("meta")
@@ -169,40 +170,54 @@ end
 function _meta_codegen_command(target, scripts, metadir, gendir, opt)
     -- get config
     local api = target:extraconf("rules", _meta_rule_codegen_name, "api")
-    local generator = os.projectdir()..vformat("/tools/meta_codegen/main.py")
+    local generate_script = os.projectdir()..vformat("/tools/meta_codegen/main.py")
     local start_time = os.time()
-    
-    -- collect deps data
-    local meta_deps_dir = {}
-    for _, dep in pairs(target:deps()) do
-        local depmetadir = path.join(dep:autogendir({root = true}), dep:plat(), "reflection/meta")
-        table.insert(meta_deps_dir, depmetadir)
-    end
 
     if not opt.quiet then
-        cprint("${cyan}[%s]: %s${clear} %s", target:name(), path.filename(generator), path.relative(metadir))
+        cprint("${cyan}[%s]: %s${clear} %s", target:name(), path.filename(generate_script), path.relative(metadir))
     end
+
+    -- config
+    local config = {
+        output_dir = gendir,
+        main_module = {
+            module_name = target:name(),
+            meta_dir = path.absolute(metadir),
+            api = api and api:upper() or target:name():upper(),
+        },
+    }
     
+
+    -- collect include modules
+    config.include_modules = {}
+    for _, dep_target in pairs(target:deps()) do
+        local dep_api = dep_target:extraconf("rules", _meta_rule_codegen_name, "api")
+
+        table.insert(config.include_modules, {
+            module_name = dep_target:name(),
+            meta_dir = path.join(dep_target:autogendir({root = true}), dep_target:plat(), "reflection/meta"),
+            api = dep_api and dep_api:upper() or dep_target:name():upper(),
+        })
+    end
+
+    -- collect generators
+    config.generators = {}
+    for _, script in pairs(scripts) do
+        table.insert(config.generators, {
+            entry_file = script,
+            -- import_dirs = {},
+        })
+    end
+
+    -- output config
+    config_file = path.join(target:autogendir({root = true}), target:plat(), "codegen/meta_codegen_config.json")
+    json.savefile(config_file, config)
+
     -- baisc commands
     local command = {
-        generator,
-        "-root", path.absolute(metadir),
-        "-outdir", gendir,
-        "-api", api and api:upper() or target:name():upper(),
-        "-module", target:name(),
+        generate_script,
+        "--config", config_file
     }
-
-    -- strong order
-    table.insert(command, "-includes")
-    for _, dep in ipairs(meta_deps_dir) do
-        table.insert(command, dep)
-    end
-
-    -- generators
-    table.insert(command, "-generators")
-    for _, script in pairs(scripts) do
-        table.insert(command, script)
-    end
 
     if verbos then
         cprint(
@@ -213,17 +228,13 @@ function _meta_codegen_command(target, scripts, metadir, gendir, opt)
     end
 
     -- call codegen script
-    os.execv(_python.program, command, {
-        envs = {
-            PATH = path.join(os.projectdir(), "/tools/meta_codegen/")
-        }
-    })
+    os.execv(_python.program, command)
 
     if not opt.quiet then
         cprint(
             "${cyan}[%s]: %s${clear} %s cost ${red}%d seconds"
             , target:name()
-            , path.filename(generator)
+            , path.filename(generate_script)
             , path.relative(metadir)
             , os.time() - start_time)
     end

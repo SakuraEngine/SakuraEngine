@@ -1,4 +1,4 @@
-#include "MetaTest/test_check_structure.hpp"
+#include "MetaTest/basic_test.hpp"
 
 int main()
 {

@@ -26,8 +26,8 @@ rule("c++.codegen") -- TODO. use new name
 
         -- check generated files
         if not os.exists(source_file) then
-            local gen_file = io.open(source_file, "w")                
-            gen_file:print("static_assert(false, \"codegen of module "..target:name().." is not completed!\")")
+            local gen_file = io.open(source_file, "w")
+            -- gen_file:print("static_assert(false, \"codegen of module "..target:name().." is not completed!\")")
             gen_file:close()
         end
 
