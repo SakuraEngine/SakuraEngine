@@ -1,5 +1,5 @@
 CompileFlags:
-  Add: [-D__skr_clangd__, -Wno-ignored-attributes, -Wno-unused-function, -xc++]
+  Add: [-D__skr_clangd__, -Wno-ignored-attributes, -Wno-unused-function]
 
 Diagnostics:
   Suppress:
