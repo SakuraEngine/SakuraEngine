@@ -144,7 +144,7 @@ function _meta_codegen_command_old(target, scripts, metadir, gendir, opt)
     -- generators
     table.insert(command, "-generators")
     for _, script in pairs(scripts) do
-        table.insert(command, script)
+        table.insert(command, script.file)
     end
 
     if verbos then
@@ -204,8 +204,8 @@ function _meta_codegen_command(target, scripts, metadir, gendir, opt)
     config.generators = {}
     for _, script in pairs(scripts) do
         table.insert(config.generators, {
-            entry_file = script,
-            -- import_dirs = {},
+            entry_file = script.file,
+            import_dirs = script.import_dirs,
         })
     end
 
@@ -303,12 +303,26 @@ function _solve_generators(target)
         scripts = {},
         dep_files = {}
     }
+
+    -- solve scripts
     for _, script_config in ipairs(generator_config.scripts) do
+        -- collect import dirs
+        local import_dirs = {}
+        if script_config.import_dirs then
+            for _, dir in ipairs(script_config.import_dirs) do
+                table.insert(import_dirs, path.join(target:scriptdir(), dir))
+            end 
+        end
+        
+        -- save config
         table.insert(solved_config.scripts, {
             file = path.join(target:scriptdir(), script_config.file),
             private = script_config.private,
+            import_dirs = import_dirs,
         })
     end
+
+    -- solve dep files
     for _, dep_file in ipairs(generator_config.dep_files) do
         local match_files = os.files(path.join(target:scriptdir(), dep_file))
         for __, file in ipairs(match_files) do
@@ -385,7 +399,7 @@ function _meta_codegen(target, rootdir, metadir, gendir, sourcefile, headerfiles
         -- extract scripts
         for __, script_config in ipairs(gen_config.scripts) do
             if not script_config.private then
-                table.insert(scripts, script_config.file)
+                table.insert(scripts, script_config)
             end
         end
 

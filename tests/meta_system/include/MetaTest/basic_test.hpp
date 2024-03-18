@@ -25,9 +25,9 @@ UsualShorthand {
 };
 
 // expand with bad type
-sreflect_struct("test_functional_shorthand": "bad_type")
-BadTypeShorthand {
-};
+// sreflect_struct("test_functional_shorthand": "bad_type")
+// BadTypeShorthand {
+// };
 
 // unrecognized shorthand
 

@@ -62,18 +62,21 @@ class RootParser(ParserBase):
             error_tracker.error("value type error, must be JsonDict!")
 
     def parse_to_object(self, override_solver: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
+        result_dict = {}
         for (k, functional) in self.__functional_dict.items():
             override_solver.push_node(k, error_tracker)
-            functional.parse_to_object(override_solver, error_tracker)
+            result_dict[k] = functional.parse_to_object(override_solver, error_tracker)
             override_solver.pop_node(error_tracker)
+        return ObjDictTools.as_obj(result_dict)
 
 
 class FunctionalParser(ParserBase):
-    def __init__(self, options: Dict[str, ParserBase] = {}, shorthands: List['Shorthand'] = [], custom_to_object=None) -> None:
+    def __init__(self, options: Dict[str, ParserBase] = {}, shorthands: List['Shorthand'] = [], custom_to_object=None, default_enable=False) -> None:
         super().__init__()
         self.shorthands: List[Shorthand] = shorthands
         self.options: Dict[str, ParserBase] = options
         self.custom_to_object = custom_to_object
+        self.default_enable = default_enable
 
         # update owner
         for v in self.shorthands:
@@ -117,7 +120,8 @@ class FunctionalParser(ParserBase):
     def parse_to_object(self, override_solver: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
         result_dict = {}
         # parse enable
-        result_dict["enable"] = override_solver.solve_override("enable", error_tracker)
+        solved_enable = override_solver.solve_override("enable", error_tracker)
+        result_dict["enable"] = solved_enable if solved_enable else self.default_enable or override_solver.current_has_value()
 
         # parse options
         for (option_key, parser) in self.options.items():
@@ -145,12 +149,15 @@ class ValueParser(ParserBase):
 
     def parse_to_object(self, override_solver: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
         result = override_solver.solve_override(None, error_tracker)
-        if type(result) is not self.type:
-            error_tracker.error(f"value type error, must be {self.type_name}!")
-        if self.custom_to_object:
-            return self.custom_to_object(result, error_tracker)
+        if result:
+            if type(result) is not self.type:
+                error_tracker.error(f"value type error, must be {self.type_name}!")
+            if self.custom_to_object:
+                return self.custom_to_object(result, error_tracker)
+            else:
+                return result
         else:
-            return result if result else self.default_value
+            return self.default_value
 
 
 class BoolParser(ValueParser):

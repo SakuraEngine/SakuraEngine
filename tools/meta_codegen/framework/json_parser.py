@@ -373,6 +373,9 @@ class JsonOverrideSolver:
     def pop_node(self, error_tracker: ErrorTracker) -> None:
         self.__node_stack.pop()
 
+    def current_has_value(self) -> bool:
+        return len(self.__node_stack) > 0 and len(self.__node_stack[-1].override_data) > 0
+
     def solve_override(self, key: str, error_tracker: ErrorTracker) -> object:
         # push node
         if key:

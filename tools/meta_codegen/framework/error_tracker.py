@@ -173,3 +173,23 @@ class ErrorTracker:
             else:
                 raise ValueError(f"Unknown error level: {error.level}")
             print()
+
+
+class ErrorStack:
+    def print() -> str:
+        pass
+
+
+class CPPSourceStack:
+    def print() -> str:
+        pass
+
+
+class AttrPathStack:
+    def print() -> str:
+        pass
+
+
+class PythonSourceStack:
+    def print() -> str:
+        pass

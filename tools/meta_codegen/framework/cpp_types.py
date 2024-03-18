@@ -129,8 +129,9 @@ class EnumValue:
         self.value: int
         self.comment: str
         self.line: int
-        self.generator_data: Dict[str, object]
+
         self.raw_attrs: JsonDict
+        self.attrs: object
 
     def load_from_raw_json(self, raw_json: JsonDict):
         unique_dict = raw_json.unique_dict()
@@ -156,8 +157,9 @@ class Enumeration:
         self.comment: str
         self.file_name: str
         self.line: int
-        self.generator_data: Dict[str, object]
+
         self.raw_attrs: JsonDict
+        self.attrs: object
 
     def load_from_raw_json(self, raw_json: JsonDict):
         unique_dict = raw_json.unique_dict()
@@ -191,8 +193,9 @@ class Record:
         self.methods: List[Method]
         self.file_name: str
         self.line: int
-        self.generator_data: Dict[str, object]
+
         self.raw_attrs: JsonDict
+        self.attrs: object
 
     def load_from_raw_json(self, raw_json: JsonDict):
         unique_dict = raw_json.unique_dict()
@@ -232,8 +235,9 @@ class Field:
         self.comment: str
         self.offset: int
         self.line: int
-        self.generator_data: Dict[str, object]
+
         self.raw_attrs: JsonDict
+        self.attrs: object
 
     def load_from_raw_json(self, raw_json: JsonDict):
         unique_dict = raw_json.unique_dict()
@@ -265,8 +269,9 @@ class Method:
         self.ret_type: str
         self.raw_ret_type: str
         self.line: int
-        self.generator_data: Dict[str, object]
+
         self.raw_attrs: JsonDict
+        self.attrs: object
 
     def load_from_raw_json(self, raw_json: JsonDict):
         unique_dict = raw_json.unique_dict()
@@ -307,8 +312,9 @@ class Parameter:
         self.comment: str
         self.offset: int
         self.line: int
-        self.generator_data: Dict[str, object]
+
         self.raw_attrs: JsonDict
+        self.attrs: object
 
     def load_from_raw_json(self, raw_json: JsonDict):
         unique_dict = raw_json.unique_dict()
@@ -340,8 +346,9 @@ class Function:
         self.raw_ret_type: str
         self.file_name: str
         self.line: int
-        self.generator_data: Dict[str, object]
+
         self.raw_attrs: JsonDict
+        self.attrs: object
 
     def load_from_raw_json(self, raw_json: JsonDict):
         unique_dict = raw_json.unique_dict()

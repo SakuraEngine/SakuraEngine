@@ -1,10 +1,8 @@
 import argparse
 import importlib
 import importlib.util
-import glob
 import os
 import sys
-from types import SimpleNamespace
 from typing import List, Dict
 
 
@@ -29,8 +27,8 @@ if __name__ == '__main__':
     generators: List[GeneratorBase] = []
     for i, generator_config in enumerate(config.generators):
         # add import dir
-        # for path in generator_config.import_dirs:
-        #     sys.path.insert(0, generator_config.import_dirs)
+        for path in generator_config.import_dirs:
+            sys.path.insert(0, path)
 
         # load module
         spec = importlib.util.spec_from_file_location("Generator%d" % i, generator_config.entry_file)
@@ -79,6 +77,8 @@ if __name__ == '__main__':
         error_tracker.dump()
         raise Exception("generate code failed")
 
+    for header_db in main_module_db.header_dbs:
+        header_db.dump_attr_object()
+
     # dump error
     error_tracker.dump()
-    

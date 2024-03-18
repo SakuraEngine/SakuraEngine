@@ -28,7 +28,7 @@ class GeneratorConfig:
         self.entry_file = json_data["entry_file"]
 
         # load dirs
-        import_dir = get_list(json_data, "import_dirs")
+        self.import_dirs = get_list(json_data, "import_dirs")
 
 
 @dataclass

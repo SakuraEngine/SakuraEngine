@@ -44,30 +44,36 @@ class HeaderDatabase:
         self.__extract_cpp_types(raw_json)
 
     def expand_shorthand_and_path(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
-        def __expand_shorthand_and_path(error_tracker: ErrorTracker, target: FunctionalTarget, raw_attrs: JsonDict) -> None:
+        def __expand_shorthand_and_path(error_tracker: ErrorTracker, target: FunctionalTarget, cpp_obj: object) -> None:
             parser = parser_manager.functional[target]
-            parser.dispatch_expand_shorthand_and_path(raw_attrs, error_tracker)
+            parser.dispatch_expand_shorthand_and_path(cpp_obj.raw_attrs, error_tracker)
         self.__each_attrs_and_apply_functional(error_tracker, __expand_shorthand_and_path)
 
     def check_structure(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
         # check structure
-        def __check_structure(error_tracker: ErrorTracker, target: FunctionalTarget, raw_attrs: JsonDict) -> None:
+        def __check_structure(error_tracker: ErrorTracker, target: FunctionalTarget, cpp_obj: object) -> None:
             parser = parser_manager.functional[target]
-            parser.check_structure(raw_attrs, error_tracker)
+            parser.check_structure(cpp_obj.raw_attrs, error_tracker)
         self.__each_attrs_and_apply_functional(error_tracker, __check_structure)
 
         # check unrecognized attr
-        def __check_unrecognized_attr(error_tracker: ErrorTracker, target: FunctionalTarget, raw_attrs: JsonDict) -> None:
-            raw_attrs.warning_recognized_attr_recursive(error_tracker)
+        def __check_unrecognized_attr(error_tracker: ErrorTracker, target: FunctionalTarget, cpp_obj: object) -> None:
+            cpp_obj.raw_attrs.warning_recognized_attr_recursive(error_tracker)
         self.__each_attrs_and_apply_functional(error_tracker, __check_unrecognized_attr)
 
     def to_object(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
-        def __to_object(error_tracker: ErrorTracker, target: FunctionalTarget, raw_attrs: JsonDict) -> None:
+        def __to_object(error_tracker: ErrorTracker, target: FunctionalTarget, cpp_obj: object) -> None:
             parser = parser_manager.functional[target]
             solver = JsonOverrideSolver()
-            solver.root_dict = raw_attrs
-            parser.parse_to_object(solver, error_tracker)
+            solver.root_dict = cpp_obj.raw_attrs
+            cpp_obj.attrs = parser.parse_to_object(solver, error_tracker)
         self.__each_attrs_and_apply_functional(error_tracker, __to_object)
+
+    def dump_attr_object(self):
+        def __dump_object(error_tracker: ErrorTracker, target: FunctionalTarget, cpp_obj: object) -> None:
+            print(f"===================={target}====================")
+            print(cpp_obj.attrs.__dict__)
+        self.__each_attrs_and_apply_functional(ErrorTracker(), __dump_object)
 
     def __each_attrs_and_apply_functional(self, error_tracker: ErrorTracker, func):
         # record
@@ -75,50 +81,50 @@ class HeaderDatabase:
             error_tracker.set_source(record.file_name, record.line)
             with error_tracker.path_guard(f"[{record.name}]"):
                 # record attr
-                func(error_tracker, FunctionalTarget.RECORD, record.raw_attrs)
+                func(error_tracker, FunctionalTarget.RECORD, record)
 
                 # field
                 for field in record.fields:
                     error_tracker.set_source_line(field.line)
                     with error_tracker.path_guard(f"[{field.type}]"):
-                        func(error_tracker, FunctionalTarget.FIELD, field.raw_attrs)
+                        func(error_tracker, FunctionalTarget.FIELD, field)
 
                 # method
                 for method in record.methods:
                     error_tracker.set_source_line(method.line)
                     with error_tracker.path_guard(f"[{method.short_name}]"):
                         # method attr
-                        func(error_tracker, FunctionalTarget.METHOD, method.raw_attrs)
+                        func(error_tracker, FunctionalTarget.METHOD, method)
 
                         # parameter
                         for (_, parameter) in method.parameters.items():
                             with error_tracker.path_guard(f"[{parameter.name}]"):
-                                func(error_tracker, FunctionalTarget.PARAMETER, parameter.raw_attrs)
+                                func(error_tracker, FunctionalTarget.PARAMETER, parameter)
 
         # enum
         for enum in self.enums:
             error_tracker.set_source(enum.file_name, enum.line)
             with error_tracker.path_guard(f"[{enum.name}]"):
                 # enum attr
-                func(error_tracker, FunctionalTarget.ENUM, enum.raw_attrs)
+                func(error_tracker, FunctionalTarget.ENUM, enum)
 
                 # enum value
                 for (_, enum_value) in enum.values.items():
                     error_tracker.set_source_line(enum_value.line)
                     with error_tracker.path_guard(f"[{enum_value.short_name}]"):
-                        func(error_tracker, FunctionalTarget.ENUM_VALUE, enum_value.raw_attrs)
+                        func(error_tracker, FunctionalTarget.ENUM_VALUE, enum_value)
 
         # function
         for function in self.functions:
             error_tracker.set_source(function.file_name, function.line)
             with error_tracker.path_guard(f"[{function.name}]"):
                 # function attrs
-                func(error_tracker, FunctionalTarget.FUNCTION, function.raw_attrs)
+                func(error_tracker, FunctionalTarget.FUNCTION, function)
 
                 # parameters
                 for (_, parameter) in function.parameters.items():
                     with error_tracker.path_guard(f"[{parameter.name}]"):
-                        func(error_tracker, FunctionalTarget.PARAMETER, parameter.raw_attrs)
+                        func(error_tracker, FunctionalTarget.PARAMETER, parameter)
 
     def __extract_cpp_types(self, raw_json: JsonDict):
         unique_dict = raw_json.unique_dict()

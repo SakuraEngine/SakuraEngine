@@ -15,7 +15,7 @@ target("MetaTest")
 
     add_rules("c++.meta.generators", {
         scripts = {
-            { file = "meta_scripts/test.py" },
+            { file = "meta_scripts/test_script/install_test.py", import_dirs={"meta_scripts/test_script/"} },
         },
         dep_files = {
             "**.py",
