@@ -1,12 +1,12 @@
-// BEGIN SOGOI GENERATED
+// BEGIN SUGOI GENERATED
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/array.hpp"
 #include "SkrLua/sugoi_bind.hpp"
 #include "SkrRT/ecs/serde.hpp"
 
-// sogoi query
+// sugoi query
 %for record in module_db.get_records():
-%if record.attrs.sogoi.query:
+%if record.attrs.sugoi.query:
 <% query = generator.parse(record) %>
 void ${record.name}::Initialize(sugoi_storage_t* storage)
 {
@@ -39,7 +39,7 @@ ${record.name}::TaskContext::Ref ${record.name}::TaskContext::unpack(int i)
 %endif
 %endfor
 
-// sogoi component
+// sugoi component
 <%
     def filter_fileds(fields, pred, base=0):
         result = []
@@ -139,4 +139,4 @@ skr::span<sugoi_type_index_t> sugoi_get_all_component_types_${module}()
     return {result};
 }
 
-// END SOGOI GENERATED
+// END SUGOI GENERATED

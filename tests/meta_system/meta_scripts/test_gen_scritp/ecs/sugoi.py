@@ -9,14 +9,14 @@ import re
 
 
 @dataclass
-class SogoiAccess:
+class SugoiAccess:
     readonly: bool
     atomic: bool
     order: str
     optional: bool
 
 
-class SogoiQuery(object):
+class SugoiQuery(object):
     def __init__(self, literal: str):
         self.all = []
         self.any = []
@@ -63,7 +63,7 @@ class SogoiQuery(object):
                 count = 0
             if access != "has" and cat is not self.none:
                 self.components.append(type)
-                acc = SogoiAccess(access == "in", access == "atomic", order, optional)
+                acc = SugoiAccess(access == "in", access == "atomic", order, optional)
                 self.accesses.append(acc)
             if cat is not None:
                 cat.append(type)
@@ -75,10 +75,10 @@ class SogoiQuery(object):
         return [(i, c) for i, c in enumerate(self.components) if self.accesses[i].order != "seq"]
 
 
-class SogoiGenerator(GeneratorBase):
+class SugoiGenerator(GeneratorBase):
     def load_functional(self, parser_manager: ParserManager):
         parser_manager.add_record_parser(
-            "sogoi",
+            "sugoi",
             FunctionalParser(
                 options={
                     "query": StrParser(),

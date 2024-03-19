@@ -1,9 +1,9 @@
-// BEGIN SOGOI GENERATED
+// BEGIN SUGOI GENERATED
 #include "SkrRT/ecs/sugoi.h"
 
-// sogoi query
+// sugoi query
 %for record in header_db.get_records():
-if record.attrs.sogoi.query:
+if record.attrs.sugoi.query:
 <% query = generator.parse(record) %>
 #define GENERATED_QUERY_BODY_${header_db.file_id}_${record.short_name} ${"\\"}
 sugoi_query_t* query; ${"\\"}
@@ -49,9 +49,9 @@ struct TaskContext : private sugoi::task_context_t ${"\\"}
 %endif
 %endfor
 
-// sogoi component
+// sugoi component
 %for record in header_db.get_records():
-%if record.attrs.sogoi.component.enable:
+%if record.attrs.sugoi.component.enable:
 template<>
 struct sugoi_id_of<::${record.name}>
 {
@@ -60,4 +60,4 @@ struct sugoi_id_of<::${record.name}>
 %endif
 %endfor
 
-// END SOGOI GENERATED
+// END SUGOI GENERATED
