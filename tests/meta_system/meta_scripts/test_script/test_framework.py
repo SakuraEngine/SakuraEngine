@@ -2,16 +2,10 @@ from framework.generator import *
 
 
 class TestFrameworkGenerator(GeneratorBase):
-    def load_functional(self, parser_manager: FunctionalManager):
-        def assert_value_to_object(target_value, value, error_tracker: ErrorTracker):
-            if value != target_value:
-                error_tracker.add_error("value not match")
-            return value
-
+    def load_functional(self, parser_manager: ParserManager):
         # test expand path
         # TODO. 使用 check_value 和 to_object 联合检查
-        parser_manager.add_functional(
-            FunctionalTarget.RECORD,
+        parser_manager.add_record_parser(
             "test_expand_path",
             FunctionalParser(
                 options={
@@ -34,8 +28,7 @@ class TestFrameworkGenerator(GeneratorBase):
             ))
 
         # test check override
-        parser_manager.add_functional(
-            FunctionalTarget.RECORD,
+        parser_manager.add_record_parser(
             "test_check_override",
             FunctionalParser(
                 options={
@@ -53,8 +46,7 @@ class TestFrameworkGenerator(GeneratorBase):
         )
 
         # test check expand
-        parser_manager.add_functional(
-            FunctionalTarget.RECORD,
+        parser_manager.add_record_parser(
             "test_functional_shorthand",
             FunctionalParser(
                 shorthands=[
@@ -88,8 +80,7 @@ class TestFrameworkGenerator(GeneratorBase):
         )
 
         # record
-        parser_manager.add_functional(
-            FunctionalTarget.RECORD,
+        parser_manager.add_record_parser(
             "test_check_structure",
             FunctionalParser(
                 options={
@@ -104,8 +95,7 @@ class TestFrameworkGenerator(GeneratorBase):
                     )
                 }
             ))
-        parser_manager.add_functional(
-            FunctionalTarget.RECORD,
+        parser_manager.add_record_parser(
             "test_unrecognized_attr",
             FunctionalParser(
                 options={

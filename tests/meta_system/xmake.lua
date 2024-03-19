@@ -7,15 +7,20 @@ target("MetaTest")
     
     add_deps("SkrBase")
     
-    add_rules("c++.codegen", {
-        files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/MetaTest/",
-        use_new_framework = true,
-    })
+    -- add_rules("c++.codegen", {
+    --     files = {"include/**.h", "include/**.hpp"},
+    --     rootdir = "include/MetaTest/",
+    --     use_new_framework = true,
+    -- })
 
     add_rules("c++.meta.generators", {
         scripts = {
-            { file = "meta_scripts/test_script/install_test.py", import_dirs={"meta_scripts/test_script/"} },
+            -- test
+            { file = "meta_scripts/test_script/install_test.py", import_dirs={"meta_scripts/test_script/"}, private = true },
+            -- gen script
+            { file = "meta_scripts/test_gen_scritp/basic/basic.py" },
+            { file = "meta_scripts/test_gen_scritp/guid.py" },
+            { file = "meta_scripts/test_gen_scritp/rttr/rttr.py" },
         },
         dep_files = {
             "**.py",

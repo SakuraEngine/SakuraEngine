@@ -43,7 +43,7 @@ if __name__ == '__main__':
     error_tracker = ErrorTracker()
 
     # step1. load parser
-    parser_manager = FunctionalManager()
+    parser_manager = ParserManager()
     for generator in generators:
         generator.load_functional(parser_manager)
 
@@ -65,20 +65,23 @@ if __name__ == '__main__':
             include_module_dbs.append(module_db)
 
     # step4. generate code
-    file_cache = FileCache()
+    env = GenerateCodeEnv(
+        file_cache=FileCache(config.output_dir),
+        module_db=main_module_db,
+        include_dbs=include_module_dbs,
+        codegen_config=config,
+        error_tracker=error_tracker,
+    )
     for generator in generators:
-        generator.pre_generate(config, main_module_db, include_module_dbs, error_tracker, file_cache)
+        generator.pre_generate(env)
     for generator in generators:
-        generator.generate(config, main_module_db, include_module_dbs, error_tracker, file_cache)
+        generator.generate(env)
     for generator in generators:
-        generator.post_generate(config, main_module_db, include_module_dbs, error_tracker, file_cache)
-    file_cache.output()
+        generator.post_generate(env)
+    env.file_cache.output()
     if error_tracker.any_error():
         error_tracker.dump()
         raise Exception("generate code failed")
-
-    for header_db in main_module_db.header_dbs:
-        header_db.dump_attr_object()
 
     # dump error
     error_tracker.dump()

@@ -30,23 +30,23 @@ class ParserBase:
 class RootParser(ParserBase):
     def __init__(self) -> None:
         super().__init__()
-        self.__functional_dict: Dict[str, FunctionalParser] = {}
+        self.__parser_dict: Dict[str, ParserBase] = {}
 
-    def add_functional(self, name, parser) -> None:
-        if name in self.__functional_dict:
-            raise Exception("functional name already exists!")
-        self.__functional_dict[name] = parser
+    def add_parser(self, name, parser) -> None:
+        if name in self.__parser_dict:
+            raise Exception(f"functional name [{name}] already exists!")
+        self.__parser_dict[name] = parser
 
     def dispatch_expand_shorthand_and_path(self, json_dict: JsonDict, error_tracker: ErrorTracker) -> None:
         json_dict.expand_path_recursive()
 
         def __dispatch(k, dict):
-            if k in self.__functional_dict:
-                self.__functional_dict[k].dispatch_expand_shorthand_and_path(dict, error_tracker)
+            if k in self.__parser_dict:
+                self.__parser_dict[k].dispatch_expand_shorthand_and_path(dict, error_tracker)
 
         def __expand(k, v):
-            if k in self.__functional_dict:
-                return self.__functional_dict[k].expand_shorthand_and_path(v, error_tracker)
+            if k in self.__parser_dict:
+                return self.__parser_dict[k].expand_shorthand_and_path(v, error_tracker)
 
         json_dict.expand_shorthand(__expand, __dispatch, error_tracker)
 
@@ -54,18 +54,18 @@ class RootParser(ParserBase):
         if type(value) is JsonDict:
             for (k, override) in value:
                 override.push_path(error_tracker)
-                if k in self.__functional_dict:
+                if k in self.__parser_dict:
                     override.mark_recognized()
-                    self.__functional_dict[k].check_structure(override.val, error_tracker)
+                    self.__parser_dict[k].check_structure(override.val, error_tracker)
                 override.pop_path(error_tracker)
         else:
             error_tracker.error("value type error, must be JsonDict!")
 
     def parse_to_object(self, override_solver: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
         result_dict = {}
-        for (k, functional) in self.__functional_dict.items():
+        for (k, parser) in self.__parser_dict.items():
             override_solver.push_node(k, error_tracker)
-            result_dict[k] = functional.parse_to_object(override_solver, error_tracker)
+            result_dict[k] = parser.parse_to_object(override_solver, error_tracker)
             override_solver.pop_node(error_tracker)
         return ObjDictTools.as_obj(result_dict)
 
@@ -241,9 +241,9 @@ class FunctionalTarget(Enum):
 # TODO. Functional 之间应当互不干扰（比如 default_value 的解析）
 
 
-class FunctionalManager:
+class ParserManager:
     def __init__(self) -> None:
-        self.functional: Dict[FunctionalTarget, RootParser] = {
+        self.parser_dict: Dict[FunctionalTarget, RootParser] = {
             FunctionalTarget.RECORD: RootParser(),
             FunctionalTarget.FIELD: RootParser(),
             FunctionalTarget.METHOD: RootParser(),
@@ -253,7 +253,23 @@ class FunctionalManager:
             FunctionalTarget.ENUM_VALUE: RootParser(),
         }
 
-    def add_functional(self, target: FunctionalTarget, key: str, parser: FunctionalParser) -> None:
-        if type(parser) is not FunctionalParser:
-            raise TypeError("parser must be a FunctionalParser!")
-        self.functional[target].add_functional(key, parser)
+    def add_record_parser(self, key: str, parser: ParserBase) -> None:
+        self.parser_dict[FunctionalTarget.RECORD].add_parser(key, parser)
+
+    def add_field_parser(self, key: str, parser: ParserBase) -> None:
+        self.parser_dict[FunctionalTarget.FIELD].add_parser(key, parser)
+
+    def add_method_parser(self, key: str, parser: ParserBase) -> None:
+        self.parser_dict[FunctionalTarget.METHOD].add_parser(key, parser)
+
+    def add_parameter_parser(self, key: str, parser: ParserBase) -> None:
+        self.parser_dict[FunctionalTarget.PARAMETER].add_parser(key, parser)
+
+    def add_function_parser(self, key: str, parser: ParserBase) -> None:
+        self.parser_dict[FunctionalTarget.FUNCTION].add_parser(key, parser)
+
+    def add_enum_parser(self, key: str, parser: ParserBase) -> None:
+        self.parser_dict[FunctionalTarget.ENUM].add_parser(key, parser)
+
+    def add_enum_value_parser(self, key: str, parser: ParserBase) -> None:
+        self.parser_dict[FunctionalTarget.ENUM_VALUE].add_parser(key, parser)

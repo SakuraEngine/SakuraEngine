@@ -19,6 +19,8 @@ class HeaderDatabase:
         # header file path
         self.meta_path: str = ""
         self.relative_meta_path: str = ""
+        self.relative_target_header_path: str = ""
+        self.include_header_path: str = ""
         self.file_id: str = ""
 
         # all data
@@ -30,9 +32,19 @@ class HeaderDatabase:
         self.__name_to_record: Dict[str, Record] = {}
         self.__name_to_enum: Dict[str, Enumeration] = {}
 
+    def get_records(self):
+        return self.records
+
+    def get_enums(self):
+        return self.enums
+
+    def get_functions(self):
+        return self.functions
+
     def load_header(self, meta_file_path: str, config: CodegenConfig):
         self.meta_path = os.path.normpath(meta_file_path).replace(os.sep, "/")
-        self.relative_meta_path = os.path.relpath(self.meta_path, self.module_db.meta_dir)
+        self.relative_meta_path = os.path.relpath(self.meta_path, self.module_db.meta_dir).replace(os.sep, "/")
+        self.relative_target_header_path = re.sub(r"(.*?)\.(.*?)\.meta", r"\g<1>.generated.\g<2>", self.relative_meta_path).replace(os.sep, "/")
         self.file_id = f"FID_{self.module_db.module_name}_" + re.sub(r'\W+', '_', self.relative_meta_path)
 
         # load raw data
@@ -43,16 +55,33 @@ class HeaderDatabase:
         # extract cpp types
         self.__extract_cpp_types(raw_json)
 
-    def expand_shorthand_and_path(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+        # get include header path
+        for record in self.records:
+            include_path = record.file_name.replace(os.sep, "/")
+            if self.include_header_path and self.include_header_path != include_path:
+                raise Exception(f"Include header path is different: {self.include_header_path} != {include_path}")
+            self.include_header_path = include_path
+        for enum in self.enums:
+            include_path = enum.file_name.replace(os.sep, "/")
+            if self.include_header_path and self.include_header_path != include_path:
+                raise Exception(f"Include header path is different: {self.include_header_path} != {include_path}")
+            self.include_header_path = include_path
+        for function in self.functions:
+            include_path = function.file_name.replace(os.sep, "/")
+            if self.include_header_path and self.include_header_path != include_path:
+                raise Exception(f"Include header path is different: {self.include_header_path} != {include_path}")
+            self.include_header_path = include_path
+
+    def expand_shorthand_and_path(self, error_tracker: ErrorTracker, parser_manager: ParserManager) -> None:
         def __expand_shorthand_and_path(error_tracker: ErrorTracker, target: FunctionalTarget, cpp_obj: object) -> None:
-            parser = parser_manager.functional[target]
+            parser = parser_manager.parser_dict[target]
             parser.dispatch_expand_shorthand_and_path(cpp_obj.raw_attrs, error_tracker)
         self.__each_attrs_and_apply_functional(error_tracker, __expand_shorthand_and_path)
 
-    def check_structure(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+    def check_structure(self, error_tracker: ErrorTracker, parser_manager: ParserManager) -> None:
         # check structure
         def __check_structure(error_tracker: ErrorTracker, target: FunctionalTarget, cpp_obj: object) -> None:
-            parser = parser_manager.functional[target]
+            parser = parser_manager.parser_dict[target]
             parser.check_structure(cpp_obj.raw_attrs, error_tracker)
         self.__each_attrs_and_apply_functional(error_tracker, __check_structure)
 
@@ -61,9 +90,9 @@ class HeaderDatabase:
             cpp_obj.raw_attrs.warning_recognized_attr_recursive(error_tracker)
         self.__each_attrs_and_apply_functional(error_tracker, __check_unrecognized_attr)
 
-    def to_object(self, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+    def to_object(self, error_tracker: ErrorTracker, parser_manager: ParserManager) -> None:
         def __to_object(error_tracker: ErrorTracker, target: FunctionalTarget, cpp_obj: object) -> None:
-            parser = parser_manager.functional[target]
+            parser = parser_manager.parser_dict[target]
             solver = JsonOverrideSolver()
             solver.root_dict = cpp_obj.raw_attrs
             cpp_obj.attrs = parser.parse_to_object(solver, error_tracker)
@@ -178,11 +207,22 @@ class ModuleDatabase:
 
         # load meta files
         for meta_file in meta_files:
+            # load header db
             db = HeaderDatabase(self)
             db.load_header(meta_file, config)
             self.header_dbs.append(db)
 
-    def solve_attr(self, config: CodegenConfig, error_tracker: ErrorTracker, parser_manager: FunctionalManager) -> None:
+            # append to fast search
+            for record in db.records:
+                if record.name in self.__name_to_record:
+                    raise Exception(f"Record name {record.name} is duplicated")
+                self.__name_to_record[record.name] = record
+            for enum in db.enums:
+                if enum.name in self.__name_to_enum:
+                    raise Exception(f"Enum name {enum.name} is duplicated")
+                self.__name_to_enum[enum.name] = enum
+
+    def solve_attr(self, config: CodegenConfig, error_tracker: ErrorTracker, parser_manager: ParserManager) -> None:
         # expand_shorthand_and_path
         error_tracker.set_phase("ExpandShorthandAndPath")
         for db in self.header_dbs:
@@ -206,3 +246,27 @@ class ModuleDatabase:
         if error_tracker.any_error():
             error_tracker.dump()
             raise Exception("ExpandShorthandAndPath failed")
+
+    def get_records(self):
+        return self.__name_to_record.values()
+
+    def get_enums(self):
+        return self.__name_to_enum.values()
+
+    def get_functions(self):
+        return itertools.chain.from_iterable([db.functions for db in self.header_dbs])
+
+
+class CodegenDatabase:
+    def __init__(self) -> None:
+        self.main_module: ModuleDatabase = None
+        self.include_modules: List[ModuleDatabase] = []
+
+    def get_records(self):
+        return itertools.chain(self.main_module.get_records(), [module.get_records() for module in self.include_modules])
+
+    def get_enums(self):
+        return itertools.chain(self.main_module.get_enums(), [module.get_enums() for module in self.include_modules])
+
+    def get_functions(self):
+        return itertools.chain(self.main_module.get_functions(), [module.get_functions() for module in self.include_modules])
