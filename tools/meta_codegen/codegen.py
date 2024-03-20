@@ -84,7 +84,7 @@ if __name__ == '__main__':
         generator.generate(env)
 
     # mix in old framework generate
-    import old_framework
+    import framework.old_framework as old_framework
     old_framework.generate(env)
 
     # post gen, pair with pre gen

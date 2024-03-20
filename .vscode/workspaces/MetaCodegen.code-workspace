@@ -7,22 +7,18 @@
         {
             "path": "../../build/.gens/",
             "name": "gen-temp-files",
-            "root": "../../",
         },
         {
             "path": "../../tools/meta_codegen/",
             "name": "gen-script",
-            "root": "../../",
         },
         {
             "path": "../../modules/engine/basic_meta/",
             "name": "gen-module",
-            "root": "../../",
         },
         {
             "path": "../../tests/meta_system/",
             "name": "gen-test",
-            "root": "../../",
         }
     ],
     "settings": {
@@ -30,20 +26,20 @@
         "xmake.additionalConfigArguments": [
             "--use_profile=enable",
             "--toolchain=clang-cl",
-            "--cxx_version=cxx20"
+            "--cxx_version=cxx20",
         ],
         "editor.formatOnSave": true,
         "xmake.customDebugConfig": {
             // "visualizerFile": "${workspaceFolder}\\SDKs\\natvis\\SkrContainer.natvis",
             "stopAtEntry": false,
             "type": "cppvsdbg",
-            "console": "externalTerminal"
+            "console": "externalTerminal",
         },
         "Lua.diagnostics.disable": [
             "undefined-global",
             "lowercase-global",
             "undefined-field",
-            "need-check-nil"
+            "need-check-nil",
         ],
         "python.analysis.extraPaths": [
             "${workspaceFolder:root}/tools/meta_codegen/",
@@ -52,6 +48,7 @@
             "${workspaceFolder:root}/tools/meta_codegen/",
         ],
         "python.defaultInterpreterPath": "${workspaceFolder:root}/SDKs/tools/windows/python-embed/python.exe",
+        "terminal.integrated.cwd": "${workspaceFolder:root}",
     },
     "launch": {
         "version": "0.2.0",
@@ -63,7 +60,7 @@
                 "program": "${workspaceFolder:root}/tools/meta_codegen/codegen.py",
                 "args": [
                     "--config=${workspaceFolder:root}/build/.gens/MPShared/windows/codegen/meta_codegen_config.json",
-                ]
+                ],
             }
         ]
     }

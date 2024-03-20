@@ -63,6 +63,7 @@ Method json structure
             "comment": <comment: str>,
             "offset": <offset: int>,
             "line": <line: int>,
+            "functor": <functor: Function>
         },
         ...
     },
@@ -104,6 +105,7 @@ Function json structure
             "comment": <comment: str>,
             "offset": <offset: int>,
             "line": <line: int>,
+            "functor": <functor: Function>
         },
         ...
     },
@@ -309,6 +311,7 @@ class Parameter:
         self.is_functor: bool
         self.is_callback: bool
         self.is_anonymous: bool
+        self.functor: 'Function'
         self.comment: str
         self.offset: int
         self.line: int
@@ -327,6 +330,8 @@ class Parameter:
         self.comment = unique_dict["comment"]
         self.offset = unique_dict["offset"]
         self.line = unique_dict["line"]
+
+        # TODO. load functor
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]

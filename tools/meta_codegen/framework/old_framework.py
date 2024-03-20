@@ -9,6 +9,9 @@ import sys
 from types import SimpleNamespace
 from mako import exceptions
 from mako.template import Template
+from framework.config import *
+from framework.generator import *
+
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
 
@@ -122,7 +125,7 @@ class MetaDatabase(object):
             # raise
             abort(exceptions.text_error_template().render())
 
-    def generate_forward(self, args):
+    def generate_forward(self):
         template = os.path.join(BASE, "forward.h.mako")
         return self.render(template, db=self)
 
@@ -168,52 +171,59 @@ def load_generator(i, path):
     return getattr(module, "Generator")()
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="generate code from meta files")
-    parser.add_argument('-root', help="root directory of meta files.", required=True, type=str)
-    parser.add_argument('-outdir', help="output directory.", required=True, type=str)
-    parser.add_argument("-api", help="api name.", required=True, type=str)
-    parser.add_argument("-module", help="module name.", required=True, type=str)
-    # parser.add_argument("-config", help="config file name.", required=True)  # deprecated
-    parser.add_argument("-includes", help="include directory list.", nargs="+")
-    parser.add_argument('-generators', help="generator file list.", nargs="*")
-    args = parser.parse_args()
+def generate(env: GenerateCodeEnv):
+    fake_args = ObjDictTools.as_obj({
+        "root": env.codegen_config.main_module.meta_dir,
+        "outdir": env.codegen_config.output_dir,
+        "api": env.codegen_config.main_module.api,
+        "module": env.codegen_config.main_module.module_name,
+        # "includes": None, #! never use
+        # "generators": None, #! never use
+    })
 
+    # load generators
     generators = []
-    for i, x in enumerate(args.generators):
-        generators.append(load_generator(i, x))
+    for i, generator_config in enumerate(env.codegen_config.generators):
+        if generator_config.use_new_framework:
+            continue
+        generators.append(load_generator(i, generator_config.entry_file))
 
+    # load db
     db = MetaDatabase()
     header_dbs = []
-
-    metas = glob.glob(os.path.join(args.root, "**", "*.h.meta"), recursive=True)
+    metas = glob.glob(os.path.join(env.codegen_config.main_module.meta_dir, "**", "*.h.meta"), recursive=True)
     for meta in metas:
         db.load_meta_file(meta, True)
         header_db = MetaDatabase()
         header_db.load_meta_file(meta, True)
-        header_db.relative_path = os.path.relpath(meta, args.root)
-        header_db.file_id = "FID_" + re.sub(r'\W+', '_', header_db.relative_path)
+        header_db.relative_path = os.path.relpath(meta, env.codegen_config.main_module.meta_dir)
+        header_db.file_id = f"FID_{env.codegen_config.main_module.module_name}_" + re.sub(r'\W+', '_', header_db.relative_path)
         header_dbs.append(header_db)
 
-    if args.includes:
-        for path in args.includes:
-            metas = glob.glob(os.path.join(path, "**", "*.h.meta"), recursive=True)
-            for meta in metas:
-                db.load_meta_file(meta, False)
+    # load includes
+    for include_module in env.codegen_config.include_modules:
+        metas = glob.glob(os.path.join(include_module.meta_dir, "**", "*.h.meta"), recursive=True)
+        for meta in metas:
+            db.load_meta_file(meta, False)
 
     # gen headers
     for header_db in header_dbs:
-        forward_content: str = header_db.generate_forward(args)
+        header_content = ""
         for generator in generators:
             if hasattr(generator, "generate_forward"):
-                forward_content = forward_content + generator.generate_forward(header_db, args)
+                header_content += generator.generate_forward(header_db, fake_args)
         generated_header = re.sub(r"(.*?)\.(.*?)\.meta", r"\g<1>.generated.\g<2>", header_db.relative_path)
-        db.write(os.path.join(args.outdir, generated_header), forward_content)
+        env.file_cache.append_content(
+            generated_header,
+            header_content
+        )
 
-    impl_content: str = db.generate_impl_begin()
+    # gen source
+    source_content = ""
     for generator in generators:
         if hasattr(generator, "generate_impl"):
-            impl_content = impl_content + generator.generate_impl(db, args)
-    impl_content = impl_content + db.generate_impl_end()
-
-    db.write(os.path.join(args.outdir, "generated.cpp"), impl_content)
+            source_content += generator.generate_impl(db, fake_args)
+    env.file_cache.append_content(
+        "generated.cpp",
+        source_content
+    )

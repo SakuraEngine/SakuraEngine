@@ -113,6 +113,10 @@ class FunctionalParser(ParserBase):
                 if k in self.options:
                     override.mark_recognized()
                     self.options[k].check_structure(override.val, error_tracker)
+                elif k == "enable":
+                    override.mark_recognized()
+                    if type(override.val) is not bool:
+                        error_tracker.error(f"value type error, must be bool!")
                 override.pop_path(error_tracker)
         else:
             error_tracker.error(f"value type error, passed [{type(value)}]{value}, must be JsonDict!")
