@@ -36,7 +36,7 @@ class GeneratorConfig:
 @dataclass
 class CodegenConfig:
     output_dir: str = ""
-    main_module: ModuleConfig = ModuleConfig()
+    main_module: ModuleConfig = field(default_factory=lambda: ModuleConfig())
     include_modules: List[ModuleConfig] = field(default_factory=lambda: [])
     generators: List[GeneratorConfig] = field(default_factory=lambda: [])
 

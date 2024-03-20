@@ -229,9 +229,12 @@ function _meta_codegen_command(target, scripts, metadir, gendir, opt)
     end
 
     -- call codegen script
-    os.execv(_python.program, command)
+    result = os.iorunv(_python.program, command)
 
     if not opt.quiet then
+        if result then
+            print(result)
+        end
         cprint(
             "${cyan}[%s]: %s${clear} %s cost ${red}%d seconds"
             , target:name()
