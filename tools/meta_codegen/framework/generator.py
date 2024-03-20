@@ -17,7 +17,7 @@ class FileCache:
         self.root_dir: str = root_dir
 
     def load_template(self, template_path: str) -> mako.template.Template:
-        with open(template_path, "r", encoding="utf-8") as f:
+        with open(template_path, "rb") as f:
             return mako.template.Template(
                 f.read(),
                 filename=template_path,
@@ -38,8 +38,11 @@ class FileCache:
 
     def output(self):
         for file, content in self.__file_content.items():
-            with open(file, "w") as f:
-                f.write(content)
+            directory = os.path.dirname(file)
+            if not os.path.exists(directory):
+                os.makedirs(directory, exist_ok=True)
+            with open(file, "wb") as f:
+                f.write(content.encode("utf-8"))
 
 
 @dataclass

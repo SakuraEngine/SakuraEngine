@@ -6,5 +6,11 @@
         "lowercase-global",
         "undefined-field",
         "need-check-nil"
-    ]
+    ],
+    "python.analysis.extraPaths": [
+        "../tools/meta_codegen/"
+    ],
+    "python.autoComplete.extraPaths": [
+        "../tools/meta_codegen/"
+    ],
 }

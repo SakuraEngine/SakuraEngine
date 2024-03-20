@@ -25,6 +25,9 @@ if __name__ == '__main__':
     # load generators
     generators: List[GeneratorBase] = []
     for i, generator_config in enumerate(config.generators):
+        if not generator_config.use_new_framework:
+            continue
+
         # add import dir
         for path in generator_config.import_dirs:
             sys.path.insert(0, path)
@@ -71,10 +74,20 @@ if __name__ == '__main__':
         codegen_config=config,
         error_tracker=error_tracker,
     )
+
+    # pre gen, used to generate include & forward & pragma...
     for generator in generators:
         generator.pre_generate(env)
+
+    # generate body
     for generator in generators:
         generator.generate(env)
+
+    # mix in old framework generate
+    import old_framework
+    old_framework.generate(env)
+
+    # post gen, pair with pre gen
     for generator in generators:
         generator.post_generate(env)
     env.file_cache.output()

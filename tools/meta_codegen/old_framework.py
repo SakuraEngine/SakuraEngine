@@ -171,19 +171,19 @@ def load_generator(i, path):
     return getattr(module, "Generator")()
 
 
-def generate(config: CodegenConfig, env: GenerateCodeEnv):
+def generate(env: GenerateCodeEnv):
     fake_args = ObjDictTools.as_obj({
-        "root": config.main_module.meta_dir,
-        "outdir": config.output_dir,
-        "api": config.main_module.api,
-        "module": config.main_module.module_name,
+        "root": env.codegen_config.main_module.meta_dir,
+        "outdir": env.codegen_config.output_dir,
+        "api": env.codegen_config.main_module.api,
+        "module": env.codegen_config.main_module.module_name,
         # "includes": None, #! never use
         # "generators": None, #! never use
     })
 
     # load generators
     generators = []
-    for i, generator_config in enumerate(config.generators):
+    for i, generator_config in enumerate(env.codegen_config.generators):
         if generator_config.use_new_framework:
             continue
         generators.append(load_generator(i, generator_config.entry_file))
@@ -191,37 +191,39 @@ def generate(config: CodegenConfig, env: GenerateCodeEnv):
     # load db
     db = MetaDatabase()
     header_dbs = []
-    metas = glob.glob(os.path.join(config.main_module.meta_dir, "**", "*.h.meta"), recursive=True)
+    metas = glob.glob(os.path.join(env.codegen_config.main_module.meta_dir, "**", "*.h.meta"), recursive=True)
     for meta in metas:
         db.load_meta_file(meta, True)
         header_db = MetaDatabase()
         header_db.load_meta_file(meta, True)
-        header_db.relative_path = os.path.relpath(meta, config.main_module.meta_dir)
-        header_db.file_id = "FID_" + re.sub(r'\W+', '_', header_db.relative_path)
+        header_db.relative_path = os.path.relpath(meta, env.codegen_config.main_module.meta_dir)
+        header_db.file_id = f"FID_{env.codegen_config.main_module.module_name}_" + re.sub(r'\W+', '_', header_db.relative_path)
         header_dbs.append(header_db)
 
     # load includes
-    for include_module in config.include_modules:
+    for include_module in env.codegen_config.include_modules:
         metas = glob.glob(os.path.join(include_module.meta_dir, "**", "*.h.meta"), recursive=True)
         for meta in metas:
             db.load_meta_file(meta, False)
 
     # gen headers
     for header_db in header_dbs:
+        header_content = ""
         for generator in generators:
             if hasattr(generator, "generate_forward"):
-                forward_content = forward_content + generator.generate_forward(header_db, fake_args)
+                header_content += generator.generate_forward(header_db, fake_args)
         generated_header = re.sub(r"(.*?)\.(.*?)\.meta", r"\g<1>.generated.\g<2>", header_db.relative_path)
         env.file_cache.append_content(
             generated_header,
-            forward_content
+            header_content
         )
 
     # gen source
     for generator in generators:
+        source_content = ""
         if hasattr(generator, "generate_impl"):
-            impl_content = impl_content + generator.generate_impl(db, fake_args)
+            source_content += generator.generate_impl(db, fake_args)
     env.file_cache.append_content(
         "generated.cpp",
-        impl_content
+        source_content
     )

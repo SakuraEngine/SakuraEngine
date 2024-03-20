@@ -2,6 +2,8 @@ target("SkrBasicMeta")
     set_kind("headeronly")
     add_rules("c++.meta.generators", {
         scripts = {
+            -- baisc
+            { file = "basic/basic.py", use_new_framework = true },
             -- ecs
             { file = "ecs/component.py" },
             { file = "ecs/query.py"},

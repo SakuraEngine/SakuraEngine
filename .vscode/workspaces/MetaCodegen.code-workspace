@@ -6,19 +6,23 @@
         },
         {
             "path": "../../build/.gens/",
-            "name": "gen-temp-files"
+            "name": "gen-temp-files",
+            "root": "../../",
         },
         {
             "path": "../../tools/meta_codegen/",
-            "name": "gen-script"
+            "name": "gen-script",
+            "root": "../../",
         },
         {
             "path": "../../modules/engine/basic_meta/",
-            "name": "gen-module"
+            "name": "gen-module",
+            "root": "../../",
         },
         {
             "path": "../../tests/meta_system/",
-            "name": "gen-test"
+            "name": "gen-test",
+            "root": "../../",
         }
     ],
     "settings": {
@@ -42,7 +46,25 @@
             "need-check-nil"
         ],
         "python.analysis.extraPaths": [
-            "../../tools/meta_codegen/"
+            "${workspaceFolder:root}/tools/meta_codegen/",
+        ],
+        "python.autoComplete.extraPaths": [
+            "${workspaceFolder:root}/tools/meta_codegen/",
+        ],
+        "python.defaultInterpreterPath": "${workspaceFolder:root}/SDKs/tools/windows/python-embed/python.exe",
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "codegen",
+                "type": "debugpy",
+                "request": "launch",
+                "program": "${workspaceFolder:root}/tools/meta_codegen/codegen.py",
+                "args": [
+                    "--config=${workspaceFolder:root}/build/.gens/MPShared/windows/codegen/meta_codegen_config.json",
+                ]
+            }
         ]
     }
 }

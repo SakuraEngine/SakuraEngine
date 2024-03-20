@@ -30,6 +30,7 @@ class GeneratorConfig:
 
         # load dirs
         self.import_dirs = get_list(json_data, "import_dirs")
+        self.use_new_framework = json_data["use_new_framework"]
 
 
 @dataclass
