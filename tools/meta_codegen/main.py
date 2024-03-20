@@ -8,7 +8,6 @@ from typing import List, Dict
 
 if __name__ == '__main__':
     sys.path.insert(0, os.path.dirname(sys.argv[0]))
-    from framework.database import HeaderDatabase
     from framework.error_tracker import *
     from framework.attr_parser import *
     from framework.generator import *

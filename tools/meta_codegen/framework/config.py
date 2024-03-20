@@ -23,6 +23,7 @@ class ModuleConfig:
 class GeneratorConfig:
     entry_file: str = ""
     import_dirs: List[str] = field(default_factory=lambda: [])
+    use_new_framework: bool = False  # TODO. 过渡用，后续移除
 
     def load(self, json_data: Dict):
         self.entry_file = json_data["entry_file"]
