@@ -1,0 +1,5 @@
+target("stb-image")
+    set_kind("static")
+    set_optimize("fastest")
+    add_files("stb/stb.cpp")
+    add_includedirs("./", {public = true})
