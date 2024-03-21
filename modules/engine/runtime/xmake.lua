@@ -1,3 +1,5 @@
+add_requires("nlohmann_json")
+
 if (is_os("macosx") or is_os("linux")) then
     add_requires("libsdl 2.28.5", {configs = {shared = true}})
 end
@@ -31,6 +33,7 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
         add_mxflags("-fno-objc-arc", {force = true})
         add_frameworks("CoreFoundation", "Cocoa", "IOKit", {public = true})
     end
+        add_packages("nlohmann_json", {public = true})
 
     -- add SDL2
     if (is_os("windows")) then 
