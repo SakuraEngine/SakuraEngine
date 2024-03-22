@@ -91,6 +91,10 @@ class DummyGenerator(GeneratorBase):
                 ]
             )
         )
+        
+        # TODO. 静态调用标记
+        parser_manager.add_method_parser("static_invoke", FunctionalParser())
+        parser_manager.add_function_parser("static_invoke", FunctionalParser())
 
 def load_generators():
     return [

@@ -2,6 +2,7 @@
 #include "SkrAnim/resources/skin_resource.hpp"
 #include "SkrRenderer/primitive_draw.h"
 #include "SkrAnim/ozz/base/maths/simd_math.h"
+#include "SkrRT/ecs/sugoi_meta.hpp"
 #ifndef __meta__
     #include "SkrAnim/components/skin_component.generated.h" // IWYU pragma: export
 #endif
@@ -32,7 +33,7 @@ SkinPrimitive {
 sreflect_managed_component("guid" : "02753B87-0D94-4C35-B768-DE3BFE3E0DEB")
 AnimComponent {
     ~AnimComponent();
-    bool                                    use_dynamic_buffer = false;
+    bool                                  use_dynamic_buffer = false;
 
     spush_attr("transient": true)
     skr::Vector<ozz::math::Float4x4>      joint_matrices;
