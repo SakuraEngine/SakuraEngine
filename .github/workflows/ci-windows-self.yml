@@ -1,4 +1,4 @@
-name: windows-build
+name: windows-build(self-hosted)
 
 on: [push, pull_request]
 
