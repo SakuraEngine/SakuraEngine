@@ -68,7 +68,7 @@ rule("skr.dyn_module")
             target:add("defines", api.."_API=", {public=true})
         else
             target:add("defines", api.."_SHARED", {public=true})
-            target:add("defines", api.."_API=SKR_IMPORT", {public=true})
+            target:add("defines", api.."_API=SKR_IMPORT", {interface=true})
             target:add("defines", api.."_API=SKR_EXPORT", {public=false})
         end
         -- add codegen headers to include dir
