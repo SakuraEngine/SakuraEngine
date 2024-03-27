@@ -5,7 +5,7 @@ import("find_sdk", {rootdir = module_root})
 find_sdk.file_from_github("SourceSansPro-Regular.ttf")
 if (os.host() == "windows") then
     find_sdk.tool_from_github("python-embed", "python-embed-windows-x64.zip")
-    python = find_sdk.find_program("python")
+    python = find_sdk.find_embed_python()
     os.runv(python.program, {"-m", "pip", "install", "autopep8"})
 else
     pip = find_sdk.find_program("pip3") or find_sdk.find_program("pip") or {program = "pip"}

@@ -118,16 +118,18 @@ function Split(s, delimiter)
 end
 
 function find_program(name, sdkdir, use_which, force_in_sdkdir)
+    local detect = import("lib.detect")
+    local sdkdir = sdkdir or path.join(os.projectdir(), tooldir())
     if (force_in_sdkdir) then
         if (not os.exists(sdkdir)) then
             return nil
         end
     end
-    local detect = import("lib.detect")
-    local sdkdir = sdkdir or path.join(os.projectdir(), tooldir())
 
     -- find in project embed tool dir
-    local prog = detect.find_program(name, {paths = {sdkdir}})
+    local prog = detect.find_program(name, {
+        paths = { sdkdir },
+    })
     local wdir = nil
     local vexec = nil
 
