@@ -3,12 +3,27 @@ from framework.attr_parser import ErrorTracker, List
 from framework.config import *
 from framework.config import CodegenConfig, List
 from framework.database import *
+import framework.log as log
 import mako
 import mako.template
 
 from framework.database import CodegenConfig, ErrorTracker, List, ModuleDatabase
 
-# TODO. 需要提供依赖图谱
+# codegen workflow
+#   --- generator load，加载生成器，做前期处理
+#   1. load generators
+#   2. init generators (在此处阶段可以检查 generator 依赖，向别的 generator 注入信息等)
+#   3. load schema
+#   --- schema parse，本阶段只进行语法解析，不进复杂的验证操作
+#   4. expand shorthand and path
+#   5. check structure
+#   6. to object (with attr stack)，本阶段可以顺便将如 guid 等复杂属性解析出来
+#   --- check attribute，检查属性和属性组合是否合法，如果有值域限制，也在此处检查
+#   7. check attribute
+#   --- generate code
+#   8. pre generate，用于生成文件的头部内容，也可以在此阶段向其它 generator（如 generate body）注入内容
+#   9. generate，用于生成文件的中段内容，通常在此阶段生成代码
+#   10. post generate，用于生成文件的尾部内容
 
 
 class FileCache:

@@ -10,9 +10,6 @@ class ParserBase:
     def __init__(self) -> None:
         self.owner: ParserBase
 
-    def is_path_valid(self, path_nodes: List[str]):
-        raise NotImplementedError("is_path_valid is not implemented!")
-
     def expand_shorthand_and_path(self, shorthand: object, error_tracker: ErrorTracker) -> Dict:
         pass
 
