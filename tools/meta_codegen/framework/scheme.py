@@ -10,11 +10,38 @@ import framework.log as log
 class Scheme:
     description: str = None
 
-    def expand_shorthand_and_path(self, raw_value: 'JsonObject', logger: log.Logger) -> 'JsonObject':
+    def dispatch_expand_shorthand_and_path(self, value: 'JsonObject', logger: log.Logger) -> None:
+        if value.is_dict and type(value.val) is list:
+            # expand shorthand
+
+            # expand path
+            if self.should_expand_path():
+                def __recursive_make_path(cut, index, parent, source, scheme) -> 'JsonObject':
+                    pass
+
+            # dispatch expand shorthand
+            for child in value.val:
+                child_scheme = self.find_children(child.key)
+                if child_scheme:
+                    child_scheme.dispatch_expand_shorthand_and_path(child, logger)
+
+    def dispatch_check_structure(self, value: 'JsonObject', logger: log.Logger) -> None:
         pass
-    # expand_shorthand_and_path
-    # check_structure
-    pass
+
+    def should_expand_path(self) -> bool:
+        return False
+
+    def expand_shorthand(self, shorthand_value: 'JsonObject', logger: log.Logger) -> 'JsonObject':
+        raise NotImplementedError("expand_shorthand() is not implemented")
+
+    def check_structure(self, value: 'JsonObject', logger: log.Logger) -> None:
+        raise NotImplementedError("check_structure() is not implemented")
+
+    def visit_children(self, visitor) -> None:
+        raise NotImplementedError("visit_children() is not implemented")
+
+    def find_children(self, option_name: str) -> 'Scheme':
+        raise NotImplementedError("find_children() is not implemented")
 
 
 @dataclass
@@ -30,32 +57,41 @@ class Functional(Scheme):
 
 
 @dataclass
-class Bool(Scheme):
+class LeafValue(Scheme):
+    def visit_children(self, visitor) -> None:
+        pass
+
+    def find_children(self, option_name: str) -> Scheme:
+        return None
+
+
+@dataclass
+class Bool(LeafValue):
     pass
 
 
 @dataclass
-class Str(Scheme):
+class Str(LeafValue):
     pass
 
 
 @dataclass
-class Int(Scheme):
+class Int(LeafValue):
     pass
 
 
 @dataclass
-class Float(Scheme):
+class Float(LeafValue):
     pass
 
 
 @dataclass
-class List(Scheme):
+class List(LeafValue):
     pass
 
 
 @dataclass
-class Dict(Scheme):
+class Dict(LeafValue):
     pass
 
 
