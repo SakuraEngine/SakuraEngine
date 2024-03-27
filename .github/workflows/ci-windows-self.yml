@@ -16,7 +16,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout code
-        uses: nschloe/action-cached-lfs-checkout@v2
+        uses: actions/checkout@v1
         
       # many thanks to NazaraEngine: https://github.com/NazaraEngine/NazaraEngine
       - name: Get current date as package key
