@@ -54,7 +54,7 @@ jobs:
           xmake l setup.lua -v
 
       - name: ConfigureDebug
-        run: xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --project_script=./.github/workflows/ci.project.lua --policies=build.ccache:n
+        run: xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --project_script=./.github/workflows/ci.project.lua --use_profile=disable --policies=build.ccache:n
       
       - name: BuildDebug
         if: success() || failure()
