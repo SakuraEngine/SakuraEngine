@@ -5,11 +5,6 @@ import framework
 import framework.log as log
 
 # -------------------------- scheme --------------------------
-# TODO. scheme 合并，一些冲突解决如下
-#   - 简单叶子 value 直接不允许合并
-#   - functional 需要处理 option 合并并查重，shorthand 直接合并数组，同时，shorthand expand 完毕需要进行 recognized 检查（如果遇到 list）
-#   - namespace 需要处理 option 合并并查重
-#   - 如果是一些枚举性质的叶子节点，需要使用特定的 Scheme 解决
 
 
 @dataclass
@@ -114,16 +109,14 @@ class Scheme:
 
     def dispatch_parse_to_object(self, override_solve: 'JsonOverrideSolver', logger: log.Logger) -> t.Any:
         # parse child dict
-        child_dict = None
+        child_dict = {}
 
         def __visitor(key: str, scheme: 'Scheme'):
-            if child_dict is None:
-                child_dict = {}
-            with override_solve.key_scope(key):
+            with override_solve.key_scope(key, logger):
                 child_dict[key] = scheme.dispatch_parse_to_object(override_solve, logger)
         self.visit_children(__visitor)
 
-        value = child_dict if child_dict else override_solve.solve()
+        value = child_dict if child_dict else override_solve.solve(logger)
         return self.parse_to_object(value, logger)
 
     def merge_scheme(self, scheme: 'Scheme') -> 'Scheme':
@@ -153,11 +146,22 @@ class Namespace(Scheme):
     options: t.Dict[str, 'Scheme'] = field(default_factory=lambda: {})
 
     def __post_init__(self):
-        super.__post_init__()
+        super().__post_init__()
         for scheme in self.options.values():
             if not isinstance(scheme, Scheme):
                 raise ValueError("options must be Scheme object")
             scheme.parent = self
+
+    def merge_scheme(self, scheme: 'Scheme') -> 'Scheme':
+        if not isinstance(scheme, Namespace):
+            raise ValueError("scheme must be Namespace object")
+        for (key, child_scheme) in scheme.options.items():
+            if key in self.options:  # if exist then merge
+                self.options[key] = self.options[key].merge_scheme(child_scheme)
+            else:  # else add
+                self.options[key] = child_scheme
+                child_scheme.parent = self
+        return self
 
     def visit_children(self, visitor) -> None:
         for (key, scheme) in self.options.items():
@@ -173,9 +177,9 @@ class Namespace(Scheme):
                 logger.error("value must be dict")
 
     def parse_to_object(self, value: 'JsonObject.Value', logger: log.Logger) -> object:
-        if not value.is_dict or type(value.val) is not list:  # must be checked in check_structure phase
+        if value and type(value) is not dict:
             raise ValueError("value must be dict")
-        return super.parse_to_object(value, logger)
+        return super().parse_to_object(value, logger)
 
 
 @dataclass
@@ -183,14 +187,44 @@ class Functional(Scheme):
     # functional 规则，提供 enable 和简写服务
     # TODO. enable shorthand 可以在 post init 中自动添加，并使用一个标记来控制这个行为
     options: t.Dict[str, 'Scheme'] = field(default_factory=lambda: {})
-    shorthands: t.Dict[str, 'Shorthand'] = field(default_factory=lambda: {})
+    shorthands: t.List['Shorthand'] = field(default_factory=lambda: [])
 
     def __post_init__(self):
-        super.__post_init__()
+        super().__post_init__()
         for scheme in self.options.values():
             if not isinstance(scheme, Scheme):
                 raise ValueError("options must be Scheme object")
             scheme.parent = self
+
+        has_enable_shorthand = False
+        for shorthand in self.shorthands:
+            if not isinstance(shorthand, Shorthand):
+                raise ValueError("shorthands must be Shorthand object")
+            has_enable_shorthand = has_enable_shorthand or isinstance(shorthand, EnableShorthand)
+            shorthand.owner = self
+
+        # append enable option if not exist
+        if "enable" not in self.options:
+            self.options["enable"] = Bool()
+        if not has_enable_shorthand:
+            self.shorthands.append(EnableShorthand(owner=self))
+
+    def merge_scheme(self, scheme: Scheme) -> Scheme:
+        if not isinstance(scheme, Functional):
+            raise ValueError("scheme must be Functional object")
+
+        # merge options
+        for (key, child_scheme) in scheme.options.items():
+            if key in self.options:  # if exist then merge
+                self.options[key] = self.options[key].merge_scheme(child_scheme)
+            else:  # else add
+                self.options[key] = child_scheme
+                child_scheme.parent = self
+
+        # merge shorthands
+        self.shorthands.extend(scheme.shorthands)
+
+        return self
 
     def visit_children(self, visitor) -> None:
         for (key, scheme) in self.options.items():
@@ -198,7 +232,10 @@ class Functional(Scheme):
                 break
 
     def expand_shorthand(self, shorthand_object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
-        pass
+        for shorthand in self.shorthands:
+            new_object = shorthand.expand(shorthand_object, logger)
+            if new_object:
+                return new_object
 
     def find_child(self, key: str) -> Scheme:
         return self.options.get(key)
@@ -209,98 +246,93 @@ class Functional(Scheme):
                 logger.error("value must be dict")
 
     def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
-        if not value.is_dict or type(value.val) is not list:  # must be checked in check_structure phase
+        if value and type(value) is not dict:
             raise ValueError("value must be dict")
-        return super.parse_to_object(value, logger)
+        return super().parse_to_object(value, logger)
 
 
 @dataclass
 class LeafValue(Scheme):
     enable_path_shorthand: bool = False
+    default_value: t.Any = None
+
+    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
+        if type(object.val) is not self.get_value_type():
+            with logger.stack_scope(object.make_attr_stack()):
+                logger.error(f"value must be {self.get_value_name(self)}")
+
+    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
+        if value and type(value) is not self.get_value_type():  # must be checked in check_structure phase
+            raise ValueError(f"value must be {self.get_value_name(self)}")
+        return super().parse_to_object(value, logger) if value else self.default_value
+
+    def get_value_type(self) -> t.Type:
+        raise NotImplementedError("get_value_type(self) must be implemented in subclass")
+
+    def get_value_name(self) -> str:
+        raise NotImplementedError("get_value_name(self) must be implemented in subclass")
 
 
 @dataclass
 class Bool(LeafValue):
-    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
-        if type(object.val) is not bool:
-            with logger.stack_scope(object.make_attr_stack()):
-                logger.error("value must be bool")
+    def get_value_type(self) -> t.Type:
+        return bool
 
-    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
-        if type(value) is not bool:  # must be checked in check_structure phase
-            raise ValueError("value must be bool")
-        return super.parse_to_object(value, logger)
+    def get_value_name(self) -> str:
+        return "bool"
 
 
 @dataclass
 class Str(LeafValue):
-    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
-        if type(object.val) is not str:
-            with logger.stack_scope(object.make_attr_stack()):
-                logger.error("value must be str")
+    def get_value_type(self) -> t.Type:
+        return str
 
-    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
-        if type(value) is not str:  # must be checked in check_structure phase
-            raise ValueError("value must be str")
-        return super.parse_to_object(value, logger)
+    def get_value_name(self) -> str:
+        return "str"
 
 
 @dataclass
 class Int(LeafValue):
-    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
-        if type(object.val) is not int:
-            with logger.stack_scope(object.make_attr_stack()):
-                logger.error("value must be int")
+    def get_value_type(self) -> t.Type:
+        return int
 
-    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
-        if type(value) is not int:  # must be checked in check_structure phase
-            raise ValueError("value must be int")
-        return super.parse_to_object(value, logger)
+    def get_value_name(self) -> str:
+        return "int"
 
 
 @dataclass
 class Float(LeafValue):
-    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
-        if type(object.val) is not float:
-            with logger.stack_scope(object.make_attr_stack()):
-                logger.error("value must be float")
+    def get_value_type(self) -> t.Type:
+        return float
 
-    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
-        if type(value) is not float:  # must be checked in check_structure phase
-            raise ValueError("value must be float")
-        return super.parse_to_object(value, logger)
+    def get_value_name(self) -> str:
+        return "float"
 
 
 @dataclass
 class List(LeafValue):
-    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
-        if type(object.val) is not list:
-            with logger.stack_scope(object.make_attr_stack()):
-                logger.error("value must be list")
+    def get_value_type(self) -> t.Type:
+        return list
 
-    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
-        if type(value) is not list:  # must be checked in check_structure phase
-            raise ValueError("value must be list")
-        return super.parse_to_object(value, logger)
+    def get_value_name(self) -> str:
+        return "list"
 
 
 @dataclass
 class Dict(LeafValue):
-    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
-        if type(object.val) is not dict:
-            with logger.stack_scope(object.make_attr_stack()):
-                logger.error("value must be dict")
+    def get_value_type(self) -> t.Type:
+        return dict
 
-    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
-        if type(value) is not dict:  # must be checked in check_structure phase
-            raise ValueError("value must be dict")
-        return super.parse_to_object(value, logger)
+    def get_value_name(self) -> str:
+        return "dict"
 
 
 # -------------------------- shorthand --------------------------
 
 @dataclass
 class Shorthand:
+    owner: Functional = None
+
     def expand(self, object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
         pass
 
@@ -313,6 +345,7 @@ class EnableShorthand(Shorthand):
                 {
                     "enable": object.val
                 },
+                key=object.key,
                 source=object,
                 source_kind=JsonSourceKind.SHORTHAND,
             )
@@ -327,21 +360,21 @@ class OptionShorthand(Shorthand):
             if object.val in self.mappings:
                 return JsonObject.load_from_dict(
                     self.mappings[object.val],
+                    key=object.key,
                     source=object,
                     source_kind=JsonSourceKind.SHORTHAND,
                 )
         elif not object.is_dict and type(object.val) is list:
             final_map = {}
-            for shorthand in object.val:
-                if type(shorthand) is str and shorthand in self.mappings:
-                    final_map.update(self.mappings[shorthand])
+            for shorthand_object in object.val:
+                if type(shorthand_object.val) is str and shorthand_object.val in self.mappings:
+                    final_map.update(self.mappings[shorthand_object.val])
             return JsonObject.load_from_dict(
                 final_map,
+                key=object.key,
                 source=object,
                 source_kind=JsonSourceKind.SHORTHAND,
             ) if final_map else None
-
-# TODO. scheme manager, 或许放在 Generator 内比较合适
 
 
 # -------------------------- json tool --------------------------
@@ -512,7 +545,7 @@ class JsonObject:
                 child = JsonObject.load_from_list(v, source=source, source_kind=source_kind)
                 child.parent = result
             else:
-                child.val = JsonObject(
+                child = JsonObject(
                     parent=result,
                     val=v,
                     source=source,
@@ -523,8 +556,9 @@ class JsonObject:
 
         return result
 
-    def load_from_dict(data: t.Dict, source: 'JsonObject' = None, source_kind: 'JsonSourceKind' = None) -> 'JsonObject':
+    def load_from_dict(data: t.Dict, key=None, source: 'JsonObject' = None, source_kind: 'JsonSourceKind' = None) -> 'JsonObject':
         result = JsonObject(
+            key=key,
             val=[],
             is_dict=True,
             source=source,
@@ -558,13 +592,22 @@ class JsonObject:
 
         return result
 
-    def unique_dict(self) -> t.Dict:
+    def unique_dict(self) -> t.Dict[str, 'JsonObject']:
         if type(self.val) is list and self.is_dict:
             result = {}
             for child in self.val:
                 if child.key is None:
                     raise ValueError("empty key in dict")
-                result[child.key] = child.val
+
+                def __expand_child(child: 'JsonObject'):
+                    if type(child.val) is list and child.is_dict:  # dict case
+                        return child
+                    elif type(child.val) is list:  # list case
+                        return [__expand_child(c) for c in child.val]
+                    else:
+                        return child.val
+
+                result[child.key] = __expand_child(child)
             return result
         else:
             raise ValueError("unique_dict() only works for dict")
@@ -585,6 +628,9 @@ def json_object_pairs_hook(data: t.List[t.Tuple[str, object]]) -> JsonObject:
             child = v
         elif type(v) is list:  # child is list
             child = JsonObject.load_from_list(v)
+            child.key = key
+            child.override_mark = mark
+            child.parent = result
         else:  # child is int/float/str/bool
             child = JsonObject(
                 key=key,
@@ -633,8 +679,7 @@ class JsonOverrideSolver:
 
         # solve rewrite
         cur_rewrite_source = None
-        for index in reversed(range(new_node.objects)):
-            object = new_node.objects[index]
+        for object in reversed(new_node.objects):
             if object.passed_override_mark == JsonOverrideMark.REWRITE:
                 cur_rewrite_source = object
             if not object.rewrite_by:
@@ -643,18 +688,19 @@ class JsonOverrideSolver:
     def pop_key(self, key: str, logger: log.Logger) -> None:
         self.__node_stack.pop()
 
-    def key_scope(self, key: str):
+    def key_scope(self, key: str, logger: log.Logger):
         class _KeyGuard:
-            def __init__(self, solver: JsonOverrideSolver, key: str) -> None:
+            def __init__(self, solver: JsonOverrideSolver, key: str, logger: log.Logger) -> None:
                 self.solver = solver
                 self.key = key
+                self.logger = logger
 
             def __enter__(self):
-                self.solver.push_key(self.key)
+                self.solver.push_key(self.key, self.logger)
 
             def __exit__(self, exc_type, exc_val, exc_tb):
-                self.solver.pop_key(self.key)
-        return _KeyGuard(self, key)
+                self.solver.pop_key(self.key, self.logger)
+        return _KeyGuard(self, key, logger)
 
     def solve(self, logger: log.Logger) -> None:
         cur_value = None

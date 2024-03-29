@@ -10,7 +10,7 @@ from typing import Dict, List
 from enum import Enum
 
 import framework.cpp_types as cpp
-import framework.scheme as scheme
+import framework.scheme as sc
 import framework.database as db
 import framework.log as log
 import framework.config as config
@@ -70,10 +70,10 @@ class GenerateManager:
         self.__generators: Dict[str, GeneratorBase] = {}
 
         # scheme
-        self.__schemes: Dict[type, scheme.Namespace] = {}
+        self.__schemes: Dict[type, sc.Namespace] = {}
 
         # database
-        self.__database: db.CodegenDatabase = None
+        self.__database: db.CodegenDatabase = db.CodegenDatabase()
 
         # logger
         self.__logger: log.Logger = log.Logger()
@@ -106,39 +106,39 @@ class GenerateManager:
         return self.__generators.get(name, None)
 
     # ----- scheme
-    def add_record_scheme(self, scheme: db.Scheme):
+    def add_record_scheme(self, scheme: sc.Scheme):
         if cpp.Record not in self.__schemes:
-            self.__schemes[cpp.Record] = scheme.Namespace()
+            self.__schemes[cpp.Record] = sc.Namespace()
         self.__schemes[cpp.Record].merge_scheme(scheme)
 
-    def add_field_scheme(self, scheme: db.Scheme):
+    def add_field_scheme(self, scheme: sc.Scheme):
         if cpp.Field not in self.__schemes:
-            self.__schemes[cpp.Field] = scheme.Namespace()
+            self.__schemes[cpp.Field] = sc.Namespace()
         self.__schemes[cpp.Field].merge_scheme(scheme)
 
-    def add_method_scheme(self, scheme: db.Scheme):
+    def add_method_scheme(self, scheme: sc.Scheme):
         if cpp.Method not in self.__schemes:
-            self.__schemes[cpp.Method] = scheme.Namespace()
+            self.__schemes[cpp.Method] = sc.Namespace()
         self.__schemes[cpp.Method].merge_scheme(scheme)
 
-    def add_parameter_scheme(self, scheme: db.Scheme):
+    def add_parameter_scheme(self, scheme: sc.Scheme):
         if cpp.Parameter not in self.__schemes:
-            self.__schemes[cpp.Parameter] = scheme.Namespace()
+            self.__schemes[cpp.Parameter] = sc.Namespace()
         self.__schemes[cpp.Parameter].merge_scheme(scheme)
 
-    def add_function_scheme(self, scheme: db.Scheme):
+    def add_function_scheme(self, scheme: sc.Scheme):
         if cpp.Function not in self.__schemes:
-            self.__schemes[cpp.Function] = scheme.Namespace()
+            self.__schemes[cpp.Function] = sc.Namespace()
         self.__schemes[cpp.Function].merge_scheme(scheme)
 
-    def add_enum_scheme(self, scheme: db.Scheme):
+    def add_enum_scheme(self, scheme: sc.Scheme):
         if cpp.Enumeration not in self.__schemes:
-            self.__schemes[cpp.Enumeration] = scheme.Namespace()
+            self.__schemes[cpp.Enumeration] = sc.Namespace()
         self.__schemes[cpp.Enumeration].merge_scheme(scheme)
 
-    def add_enum_value_scheme(self, scheme: db.Scheme):
+    def add_enum_value_scheme(self, scheme: sc.Scheme):
         if cpp.EnumerationValue not in self.__schemes:
-            self.__schemes[cpp.EnumerationValue] = scheme.Namespace()
+            self.__schemes[cpp.EnumerationValue] = sc.Namespace()
         self.__schemes[cpp.EnumerationValue].merge_scheme(scheme)
 
     # ----- file cache
@@ -212,8 +212,8 @@ class GenerateManager:
         def __expand_shorthand_and_path(cpp_type):
             scheme = self.__schemes.get(type(cpp_type), None)
             if scheme:
-                scheme.dispatch_expand_shorthand(cpp_type.raw_attrs)
-                scheme.dispatch_expand_path(cpp_type.raw_attrs)
+                scheme.dispatch_expand_shorthand(cpp_type.raw_attrs, self.__logger)
+                scheme.dispatch_expand_path(cpp_type.raw_attrs, self.__logger)
         self.__database.each_cpp_types_with_attr(__expand_shorthand_and_path)
         self.__error_exit("expand shorthand and path")
 
@@ -221,15 +221,16 @@ class GenerateManager:
         def __check_structure(cpp_type):
             scheme = self.__schemes.get(type(cpp_type), None)
             if scheme:
-                scheme.dispatch_check_structure(cpp_type.raw_attrs)
+                scheme.dispatch_check_structure(cpp_type.raw_attrs, self.__logger)
         self.__database.each_cpp_types_with_attr(__check_structure)
         self.__error_exit("check structure")
 
         # parse to object (with attr stack)
         def __parse_to_object(cpp_type):
             scheme = self.__schemes.get(type(cpp_type), None)
+            override_solve = sc.JsonOverrideSolver(cpp_type.raw_attrs)
             if scheme:
-                cpp_type.attrs = scheme.dispatch_parse_to_object(cpp_type.raw_attrs)
+                cpp_type.attrs = scheme.dispatch_parse_to_object(override_solve, self.__logger)
         self.__database.each_cpp_types_with_attr(__parse_to_object)
         self.__error_exit("parse to object")
 

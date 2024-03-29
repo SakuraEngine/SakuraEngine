@@ -14,8 +14,6 @@ target("SkrBasicMeta")
             -- serialize
             { file = "serialize/serialize.py" },
             { file = "serialize/serialize_json.py" },
-            -- static ctor
-            { file = "static_ctor/static_ctor.py" },
             -- trait object
             { file = "trait_object/trait_object.py" },
         }, 

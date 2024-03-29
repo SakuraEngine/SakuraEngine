@@ -11,7 +11,7 @@ from mako import exceptions
 from mako.template import Template
 import framework.config as config
 import framework.generator as generator
-import framework.scheme as scheme
+import framework.scheme as sc
 
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
@@ -173,7 +173,7 @@ def load_generator(i, path):
 
 
 def generate(codegen_config: config.CodegenConfig, generate_manager: generator.GenerateManager):
-    fake_args = scheme.ObjDictTools.as_obj({
+    fake_args = sc.ObjDictTools.as_obj({
         "root": codegen_config.main_module.meta_dir,
         "outdir": codegen_config.output_dir,
         "api": codegen_config.main_module.api,

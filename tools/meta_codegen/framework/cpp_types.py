@@ -118,7 +118,7 @@ Function json structure
 '''
 
 from typing import List, Dict
-import framework.scheme as scheme
+import framework.scheme as sc
 
 
 class EnumValue:
@@ -132,10 +132,10 @@ class EnumValue:
         self.comment: str
         self.line: int
 
-        self.raw_attrs: scheme.JsonObject
+        self.raw_attrs: sc.JsonObject
         self.attrs: object
 
-    def load_from_raw_json(self, raw_json: scheme.JsonObject):
+    def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
 
         self.value = unique_dict["value"]
@@ -160,10 +160,10 @@ class Enumeration:
         self.file_name: str
         self.line: int
 
-        self.raw_attrs: scheme.JsonObject
+        self.raw_attrs: sc.JsonObject
         self.attrs: object
 
-    def load_from_raw_json(self, raw_json: scheme.JsonObject):
+    def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
 
         self.is_scoped = unique_dict["isScoped"]
@@ -196,10 +196,10 @@ class Record:
         self.file_name: str
         self.line: int
 
-        self.raw_attrs: scheme.JsonObject
+        self.raw_attrs: sc.JsonObject
         self.attrs: object
 
-    def load_from_raw_json(self, raw_json: scheme.JsonObject):
+    def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
 
         self.bases = unique_dict["bases"]
@@ -238,10 +238,10 @@ class Field:
         self.offset: int
         self.line: int
 
-        self.raw_attrs: scheme.JsonObject
+        self.raw_attrs: sc.JsonObject
         self.attrs: object
 
-    def load_from_raw_json(self, raw_json: scheme.JsonObject):
+    def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
 
         self.type = unique_dict["type"]
@@ -272,10 +272,10 @@ class Method:
         self.raw_ret_type: str
         self.line: int
 
-        self.raw_attrs: scheme.JsonObject
+        self.raw_attrs: sc.JsonObject
         self.attrs: object
 
-    def load_from_raw_json(self, raw_json: scheme.JsonObject):
+    def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
 
         self.name = unique_dict["name"]
@@ -316,10 +316,10 @@ class Parameter:
         self.offset: int
         self.line: int
 
-        self.raw_attrs: scheme.JsonObject
+        self.raw_attrs: sc.JsonObject
         self.attrs: object
 
-    def load_from_raw_json(self, raw_json: scheme.JsonObject):
+    def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
 
         self.type = unique_dict["type"]
@@ -352,10 +352,10 @@ class Function:
         self.file_name: str
         self.line: int
 
-        self.raw_attrs: scheme.JsonObject
+        self.raw_attrs: sc.JsonObject
         self.attrs: object
 
-    def load_from_raw_json(self, raw_json: scheme.JsonObject):
+    def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
 
         self.name = unique_dict["name"]

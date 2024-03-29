@@ -6,7 +6,7 @@ import json
 import re
 from typing import List, Dict
 from enum import Enum
-import framework.scheme as scheme
+import framework.scheme as sc
 import framework.cpp_types as cpp
 import framework.log as log
 import framework.config as config
@@ -48,9 +48,9 @@ class HeaderDatabase:
         self.file_id = f"FID_{self.module_db.module_name}_" + re.sub(r'\W+', '_', self.relative_meta_path)
 
         # load raw data
-        raw_json: scheme.JsonObject
+        raw_json: sc.JsonObject
         with open(meta_file_path, encoding="utf-8") as f:
-            raw_json = json.load(f, object_pairs_hook=scheme.json_object_pairs_hook)
+            raw_json = json.load(f, object_pairs_hook=sc.json_object_pairs_hook)
 
         # extract cpp types
         unique_dict = raw_json.unique_dict()
@@ -112,7 +112,7 @@ class HeaderDatabase:
                     visitor(parameters)
 
         # enum
-        for enum in self.records:
+        for enum in self.enums:
             visitor(enum)
 
             # enum values

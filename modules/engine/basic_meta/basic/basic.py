@@ -6,7 +6,6 @@ import framework.scheme as sc
 class BasicCPPGenerator(gen.GeneratorBase):
     def load_scheme(self):
         # dummy scheme to prevent warning
-        # TODO. remove it
         # guid
         self.owner.add_record_scheme(
             sc.Namespace(
@@ -31,7 +30,7 @@ class BasicCPPGenerator(gen.GeneratorBase):
             },
             shorthands=[
                 sc.OptionShorthand(
-                    options_mapping={
+                    mappings={
                         "bin": {"bin": True},
                         "json": {"json": True},
                     }
@@ -154,8 +153,8 @@ class BasicCPPGenerator(gen.GeneratorBase):
                             "reflect_methods": sc.Bool(default_value=False),
                         },
                         shorthands=[
-                            sc.StrShorthand(
-                                {
+                            sc.OptionShorthand(
+                                mappings={
                                     "all": {
                                         "reflect_bases": True,
                                         "reflect_fields": True,
@@ -169,7 +168,7 @@ class BasicCPPGenerator(gen.GeneratorBase):
             )
         )
 
-        # TODO. 静态调用标记
+        # 静态调用标记
         self.owner.add_method_scheme(
             sc.Namespace(
                 options={
