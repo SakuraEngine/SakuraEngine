@@ -1,7 +1,7 @@
 from typing import List, Dict, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
-from framework.error_tracker import ErrorTracker
+from framework._deprecated.error_tracker import ErrorTracker
 
 # TODO. 统一化的 Json Override 结构
 #   override 在 json 结构上以树状连接以追溯树状关系

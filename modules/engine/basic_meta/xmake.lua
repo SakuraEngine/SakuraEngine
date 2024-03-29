@@ -18,8 +18,6 @@ target("SkrBasicMeta")
             { file = "static_ctor/static_ctor.py" },
             -- trait object
             { file = "trait_object/trait_object.py" },
-            -- dummy generator for prevent warning
-            { file = "dummy/dummy.py", use_new_framework = true },
         }, 
         dep_files = {
             "**.py",

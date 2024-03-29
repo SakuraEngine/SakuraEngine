@@ -54,7 +54,7 @@ class Logger:
     def pop_stack(self) -> None:
         self.__stack.pop()
 
-    def stack_guard(self, stack: 'LogStack') -> None:
+    def stack_scope(self, stack: 'LogStack'):
         class __StackGuard:
             def __init__(self, logger: Logger, stack: 'LogStack') -> None:
                 self.__logger = logger
@@ -111,6 +111,11 @@ class Logger:
         if stack:
             self.pop_stack
 
+    def any_error(self) -> bool:
+        for log in self.__log_data:
+            if log.level == LogLevel.ERROR:
+                return True
+
     def clear(self) -> None:
         self.__log_data.clear()
 
@@ -136,6 +141,13 @@ class LogStack:
     def print(self) -> None:
         pass
 
+# TODO. 尽量直接使用对象，而不是字符串
+# stack 类型：
+#   - cpp source，用于追踪 attr 所在的 cpp 源码位置
+#   - attr，用于追踪 attr 的路径
+#   - python source，用于追踪 python 源码位置
+#   - scheme，用于追踪 scheme 路径
+
 
 @dataclass
 class CppSourceStack(LogStack):
@@ -156,6 +168,17 @@ class AttrStack(LogStack):
             print(f"in attribute {' > '.join(self.path)}: {self.val}")
         else:
             print(f"in attribute {' > '.join(self.path)}")
+
+
+@dataclass
+class AttrPathStack(AttrStack):
+    source: str
+
+
+@dataclass
+class AttrShorthandStack(AttrStack):
+    source: str
+    source_val: str
 
 
 @dataclass

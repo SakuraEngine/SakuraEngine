@@ -1,9 +1,9 @@
 from typing import List, Dict, Tuple
 from dataclasses import dataclass
 from enum import Enum
-from framework.error_tracker import ErrorTracker
-from framework.json_parser import *
-from framework.json_parser import JsonDict, JsonOverrideSolver
+from framework._deprecated.error_tracker import ErrorTracker
+from framework._deprecated.json_parser import *
+from framework._deprecated.json_parser import JsonDict, JsonOverrideSolver
 
 
 class ParserBase:
@@ -20,6 +20,7 @@ class ParserBase:
         pass
 
     # TODO. to object 的前后顺序与 cpp 的父子关系保持一致，并给给出父信息
+
     def parse_to_object(self, override_solver: JsonOverrideSolver, error_tracker: ErrorTracker) -> object:
         pass
 

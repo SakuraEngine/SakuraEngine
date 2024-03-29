@@ -1,9 +1,10 @@
-from dataclasses import *
-from typing import List, Dict
+
+from dataclasses import dataclass, field
+from typing import Dict, List
 import json
 
 
-def get_list(dict: Dict, key: str) -> list:
+def _get_list_or_empty(dict: Dict, key: str) -> list:
     return dict[key] if key in dict and type(dict[key]) is list else []
 
 
@@ -29,7 +30,7 @@ class GeneratorConfig:
         self.entry_file = json_data["entry_file"]
 
         # load dirs
-        self.import_dirs = get_list(json_data, "import_dirs")
+        self.import_dirs = _get_list_or_empty(json_data, "import_dirs")
         self.use_new_framework = json_data["use_new_framework"]
 
 
@@ -47,21 +48,13 @@ class CodegenConfig:
         self.main_module.load(json_data["main_module"])
 
         # load include modules
-        for module in get_list(json_data, "include_modules"):
+        for module in _get_list_or_empty(json_data, "include_modules"):
             module_config = ModuleConfig()
             module_config.load(module)
             self.include_modules.append(module_config)
 
         # load generators
-        for generator in get_list(json_data, "generators"):
+        for generator in _get_list_or_empty(json_data, "generators"):
             generator_config = GeneratorConfig()
             generator_config.load(generator)
             self.generators.append(generator_config)
-
-
-def load_config(path: str) -> CodegenConfig:
-    with open(path, "r", encoding="utf-8") as f:
-        json_data = json.load(f)
-        config = CodegenConfig()
-        config.load(json_data)
-        return config

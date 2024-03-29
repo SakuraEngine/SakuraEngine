@@ -76,9 +76,9 @@
 #endif
 
 #if defined(_MSC_VER)
-#define SKR_NOINLINE __declspec(noinline)
+    #define SKR_NOINLINE __declspec(noinline)
 #else
-#define SKR_NOINLINE __attribute__((noinline))
+    #define SKR_NOINLINE __attribute__((noinline))
 #endif
 
 // EXTERN_C
@@ -252,28 +252,19 @@ typedef char char8_t;
 #pragma region deprecated
 
 #if defined(__has_cpp_attribute) && __cplusplus >= 201402L
-	#if __has_cpp_attribute(deprecated)
-		#define SKR_DEPRECATED(msg) [[deprecated(msg)]]
-	#endif
+    #if __has_cpp_attribute(deprecated)
+        #define SKR_DEPRECATED(msg) [[deprecated(msg)]]
+    #endif
 #endif
 
 #if !defined(SKR_DEPRECATED)
-	#if defined(__GNUC__) || defined(__clang__)
-		#define SKR_DEPRECATED(msg) __attribute__((deprecated))
-	#elif defined(_MSC_VER)
-		#define SKR_DEPRECATED(msg) __declspec(deprecated)
-	#else
-		#define SKR_DEPRECATED(msg)
-	#endif
+    #if defined(__GNUC__) || defined(__clang__)
+        #define SKR_DEPRECATED(msg) __attribute__((deprecated))
+    #elif defined(_MSC_VER)
+        #define SKR_DEPRECATED(msg) __declspec(deprecated)
+    #else
+        #define SKR_DEPRECATED(msg)
+    #endif
 #endif
 
 #pragma endregion
-
-#ifdef __cplusplus
-typedef struct Dummy {
-    int dummy;
-    int dummy2();
-} Dummy;
-extern const int Dummy::*$field_ptr;
-extern int               (Dummy::*$method_ptr)();
-#endif

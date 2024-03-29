@@ -1,112 +1,347 @@
 import typing as t
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
+import framework
 import framework.log as log
 
-# -------------------------- schema --------------------------
+# -------------------------- scheme --------------------------
+# TODO. scheme 合并，一些冲突解决如下
+#   - 简单叶子 value 直接不允许合并
+#   - functional 需要处理 option 合并并查重，shorthand 直接合并数组，同时，shorthand expand 完毕需要进行 recognized 检查（如果遇到 list）
+#   - namespace 需要处理 option 合并并查重
+#   - 如果是一些枚举性质的叶子节点，需要使用特定的 Scheme 解决
 
 
 @dataclass
 class Scheme:
+    owner: 'framework.generator.GeneratorBase' = None
+    parent: 'Scheme' = None
     description: str = None
+    enable_path_shorthand: bool = True
+    # enable_override: bool = True # TODO. override 解析也应当根据 scheme 来，这样，对 json 特性的扩展就可以完全由 scheme 控制
 
-    def dispatch_expand_shorthand_and_path(self, value: 'JsonObject', logger: log.Logger) -> None:
-        if value.is_dict and type(value.val) is list:
-            # expand shorthand
-
-            # expand path
-            if self.should_expand_path():
-                def __recursive_make_path(cut, index, parent, source, scheme) -> 'JsonObject':
-                    pass
-
-            # dispatch expand shorthand
-            for child in value.val:
-                child_scheme = self.find_children(child.key)
-                if child_scheme:
-                    child_scheme.dispatch_expand_shorthand_and_path(child, logger)
-
-    def dispatch_check_structure(self, value: 'JsonObject', logger: log.Logger) -> None:
+    def __post_init__(self):
+        # TODO. 存储堆栈，用于解析时的错误提示
         pass
 
-    def should_expand_path(self) -> bool:
-        return False
+    def dispatch_expand_shorthand(self, value: 'JsonObject', logger: log.Logger) -> None:
+        if value.is_dict and type(value.val) is list:
+            # expand shorthand
+            for index in range(len(value.val)):
+                child = value.val[index]
+                child_scheme = self.find_child(child.key)
+                if child_scheme:
+                    if child.is_dict and type(child.val) is list:  # dispatch case
+                        child_scheme.dispatch_expand_shorthand(child, logger)
+                    else:  # expand case
+                        new_child = child_scheme.expand_shorthand(child, logger)
+                        if new_child:
+                            value.val[index] = new_child
+                            # dispatch solve for new child part
+                            child_scheme.dispatch_expand_shorthand(new_child, logger)
+                            child_scheme.dispatch_check_structure(new_child, logger)
 
-    def expand_shorthand(self, shorthand_value: 'JsonObject', logger: log.Logger) -> 'JsonObject':
-        raise NotImplementedError("expand_shorthand() is not implemented")
+    def dispatch_expand_path(self, value: 'JsonObject', logger: log.Logger) -> None:
+        if self.enable_path_shorthand and value.is_dict and type(value.val) is list:
+            def __recursive_make_path(cur_path: str, cur_scheme: 'Scheme', parent: 'JsonObject', source: 'JsonObject') -> 'JsonObject':
+                found_path_token = cur_path.find("::")
+                result = JsonObject(
+                    parent=parent,
+                    is_dict=True,
+                    source=source,
+                    source_kind=JsonSourceKind.PATH
+                )
 
-    def check_structure(self, value: 'JsonObject', logger: log.Logger) -> None:
-        raise NotImplementedError("check_structure() is not implemented")
+                if found_path_token == -1:
+                    (key, mark) = parse_override(cur_path)
+                    result.key = key
+                    result.override_mark = mark
+                    result.val = source.val
+                else:
+                    (key, mark) = parse_override(cur_path[:found_path_token])
+                    child_scheme = cur_scheme.find_child(key)
+
+                    if child_scheme and child_scheme.enable_path_shorthand:
+                        result.key = key
+                        result.override_mark = mark
+                        result.val = [__recursive_make_path(
+                            cur_path=cur_path[found_path_token + 2:],
+                            cur_scheme=cur_scheme,
+                            parent=result,
+                            source=source,
+                        )]
+                    else:
+                        result.key = cur_path
+                        result.override_mark = JsonOverrideMark.NONE
+                        result.val = source.val
+                return result
+
+            # expand path for self
+            for index in range(len(value.val)):
+                child = value.val[index]
+                if "::" in child.key:
+                    # do expand
+                    value.val[index] = __recursive_make_path(
+                        cur_path=child.key,
+                        cur_scheme=self,
+                        parent=value,
+                        source=value,
+                    )
+
+                    # dispatch solve for new child part
+                    new_child = value.val[index]
+                    child_scheme = self.find_child(new_child.key)
+                    if child_scheme:
+                        child_scheme.dispatch_expand_path(new_child, logger)
+                        child_scheme.dispatch_check_structure(new_child, logger)
+
+            # dispatch expand path
+            for child in value.val:
+                child_scheme = self.find_child(child.key)
+                if child_scheme:
+                    child_scheme.dispatch_expand_path(child, logger)
+
+    def dispatch_check_structure(self, value: 'JsonObject', logger: log.Logger) -> None:
+        # check structure for self
+        self.check_structure(value, logger)
+
+        # dispatch check structure
+        if value.is_dict and type(value.val) is list:
+            for child in value.val:
+                child_scheme = self.find_child(child.key)
+                if child_scheme:
+                    child_scheme.dispatch_check_structure(child, logger)
+
+    def dispatch_parse_to_object(self, override_solve: 'JsonOverrideSolver', logger: log.Logger) -> t.Any:
+        # parse child dict
+        child_dict = None
+
+        def __visitor(key: str, scheme: 'Scheme'):
+            if child_dict is None:
+                child_dict = {}
+            with override_solve.key_scope(key):
+                child_dict[key] = scheme.dispatch_parse_to_object(override_solve, logger)
+        self.visit_children(__visitor)
+
+        value = child_dict if child_dict else override_solve.solve()
+        return self.parse_to_object(value, logger)
+
+    def merge_scheme(self, scheme: 'Scheme') -> 'Scheme':
+        pass
 
     def visit_children(self, visitor) -> None:
-        raise NotImplementedError("visit_children() is not implemented")
+        # @visitor: (key, Scheme) -> bool, return True to stop visit
+        pass
 
-    def find_children(self, option_name: str) -> 'Scheme':
-        raise NotImplementedError("find_children() is not implemented")
+    def find_child(self, key: str) -> 'Scheme':
+        return None
+
+    def expand_shorthand(self, shorthand_object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
+        return None
+
+    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
+        pass
+
+    # TODO. 想想带 stack 追踪的 parse 怎么做，直接传入 override solve 是否是比较好的选择
+    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
+        return value
 
 
 @dataclass
 class Namespace(Scheme):
     # 命名空间，单纯的用来构建 json 的层级结构
-    pass
+    options: t.Dict[str, 'Scheme'] = field(default_factory=lambda: {})
+
+    def __post_init__(self):
+        super.__post_init__()
+        for scheme in self.options.values():
+            if not isinstance(scheme, Scheme):
+                raise ValueError("options must be Scheme object")
+            scheme.parent = self
+
+    def visit_children(self, visitor) -> None:
+        for (key, scheme) in self.options.items():
+            if visitor(key, scheme):
+                break
+
+    def find_child(self, key: str) -> Scheme:
+        return self.options.get(key)
+
+    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
+        if not object.is_dict or type(object.val) is not list:
+            with logger.stack_scope(object.make_attr_stack()):
+                logger.error("value must be dict")
+
+    def parse_to_object(self, value: 'JsonObject.Value', logger: log.Logger) -> object:
+        if not value.is_dict or type(value.val) is not list:  # must be checked in check_structure phase
+            raise ValueError("value must be dict")
+        return super.parse_to_object(value, logger)
 
 
 @dataclass
 class Functional(Scheme):
     # functional 规则，提供 enable 和简写服务
-    pass
+    # TODO. enable shorthand 可以在 post init 中自动添加，并使用一个标记来控制这个行为
+    options: t.Dict[str, 'Scheme'] = field(default_factory=lambda: {})
+    shorthands: t.Dict[str, 'Shorthand'] = field(default_factory=lambda: {})
+
+    def __post_init__(self):
+        super.__post_init__()
+        for scheme in self.options.values():
+            if not isinstance(scheme, Scheme):
+                raise ValueError("options must be Scheme object")
+            scheme.parent = self
+
+    def visit_children(self, visitor) -> None:
+        for (key, scheme) in self.options.items():
+            if visitor(key, scheme):
+                break
+
+    def expand_shorthand(self, shorthand_object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
+        pass
+
+    def find_child(self, key: str) -> Scheme:
+        return self.options.get(key)
+
+    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
+        if not object.is_dict or type(object.val) is not list:
+            with logger.stack_scope(object.make_attr_stack()):
+                logger.error("value must be dict")
+
+    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
+        if not value.is_dict or type(value.val) is not list:  # must be checked in check_structure phase
+            raise ValueError("value must be dict")
+        return super.parse_to_object(value, logger)
 
 
 @dataclass
 class LeafValue(Scheme):
-    def visit_children(self, visitor) -> None:
-        pass
-
-    def find_children(self, option_name: str) -> Scheme:
-        return None
+    enable_path_shorthand: bool = False
 
 
 @dataclass
 class Bool(LeafValue):
-    pass
+    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
+        if type(object.val) is not bool:
+            with logger.stack_scope(object.make_attr_stack()):
+                logger.error("value must be bool")
+
+    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
+        if type(value) is not bool:  # must be checked in check_structure phase
+            raise ValueError("value must be bool")
+        return super.parse_to_object(value, logger)
 
 
 @dataclass
 class Str(LeafValue):
-    pass
+    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
+        if type(object.val) is not str:
+            with logger.stack_scope(object.make_attr_stack()):
+                logger.error("value must be str")
+
+    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
+        if type(value) is not str:  # must be checked in check_structure phase
+            raise ValueError("value must be str")
+        return super.parse_to_object(value, logger)
 
 
 @dataclass
 class Int(LeafValue):
-    pass
+    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
+        if type(object.val) is not int:
+            with logger.stack_scope(object.make_attr_stack()):
+                logger.error("value must be int")
+
+    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
+        if type(value) is not int:  # must be checked in check_structure phase
+            raise ValueError("value must be int")
+        return super.parse_to_object(value, logger)
 
 
 @dataclass
 class Float(LeafValue):
-    pass
+    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
+        if type(object.val) is not float:
+            with logger.stack_scope(object.make_attr_stack()):
+                logger.error("value must be float")
+
+    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
+        if type(value) is not float:  # must be checked in check_structure phase
+            raise ValueError("value must be float")
+        return super.parse_to_object(value, logger)
 
 
 @dataclass
 class List(LeafValue):
-    pass
+    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
+        if type(object.val) is not list:
+            with logger.stack_scope(object.make_attr_stack()):
+                logger.error("value must be list")
+
+    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
+        if type(value) is not list:  # must be checked in check_structure phase
+            raise ValueError("value must be list")
+        return super.parse_to_object(value, logger)
 
 
 @dataclass
 class Dict(LeafValue):
-    pass
+    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
+        if type(object.val) is not dict:
+            with logger.stack_scope(object.make_attr_stack()):
+                logger.error("value must be dict")
+
+    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
+        if type(value) is not dict:  # must be checked in check_structure phase
+            raise ValueError("value must be dict")
+        return super.parse_to_object(value, logger)
 
 
 # -------------------------- shorthand --------------------------
 
 @dataclass
 class Shorthand:
-    pass
+    def expand(self, object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
+        pass
+
+
+@dataclass
+class EnableShorthand(Shorthand):
+    def expand(self, object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
+        if type(object.val) is bool:
+            return JsonObject.load_from_dict(
+                {
+                    "enable": object.val
+                },
+                source=object,
+                source_kind=JsonSourceKind.SHORTHAND,
+            )
 
 
 @dataclass
 class OptionShorthand(Shorthand):
-    pass
+    mappings: t.Dict[str, Dict] = field(default_factory=lambda: {})
 
-# TODO. schema manager
+    def expand(self, object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
+        if type(object.val) is str:
+            if object.val in self.mappings:
+                return JsonObject.load_from_dict(
+                    self.mappings[object.val],
+                    source=object,
+                    source_kind=JsonSourceKind.SHORTHAND,
+                )
+        elif not object.is_dict and type(object.val) is list:
+            final_map = {}
+            for shorthand in object.val:
+                if type(shorthand) is str and shorthand in self.mappings:
+                    final_map.update(self.mappings[shorthand])
+            return JsonObject.load_from_dict(
+                final_map,
+                source=object,
+                source_kind=JsonSourceKind.SHORTHAND,
+            ) if final_map else None
+
+# TODO. scheme manager, 或许放在 Generator 内比较合适
 
 
 # -------------------------- json tool --------------------------
@@ -132,6 +367,39 @@ def parse_override(key: str) -> t.Tuple[str, JsonOverrideMark]:
         return (key, JsonOverrideMark.NONE)
 
 
+def encode_override(key: str, mark: JsonOverrideMark) -> str:
+    if mark == JsonOverrideMark.REWRITE:
+        return f"{key}!!"
+    elif mark == JsonOverrideMark.OVERRIDE:
+        return f"{key}!"
+    elif mark == JsonOverrideMark.APPEND:
+        return f"{key}+"
+    else:
+        return key
+
+
+def pass_override_mark(parent: JsonOverrideMark, child: JsonOverrideMark, logger: log.Logger) -> JsonOverrideMark:
+    if parent == JsonOverrideMark.NONE:  # keep override mark
+        return child
+    if parent == JsonOverrideMark.OVERRIDE:
+        if child == JsonOverrideMark.REWRITE:  # '!' => '!!, use '!!'
+            return child
+        elif child == JsonOverrideMark.APPEND:  # '!' => '+', ignore '+'
+            logger.warning("append mark '+' under override mark '!' will be ignored!")
+            return parent
+        else:  # keep override mark
+            return parent
+    if parent == JsonOverrideMark.REWRITE:
+        if child == JsonOverrideMark.OVERRIDE:  # '!!' => '!', ignore '!'
+            logger.warning("override mark '!' under rewrite mark '!!' will be ignored!")
+        elif child == JsonOverrideMark.APPEND:  # '!!' => '+', ignore '+'
+            logger.warning("append mark '+' under rewrite mark '!!' will be ignored!")
+        return parent
+    if parent == JsonOverrideMark.APPEND:
+        logger.error("append mark '+' only support for list")
+        return parent
+
+
 class JsonSourceKind(Enum):
     SHORTHAND = 0
     PATH = 1
@@ -139,56 +407,86 @@ class JsonSourceKind(Enum):
 
 @dataclass
 class JsonObject:
+    Value = str | int | float | bool | t.List['JsonObject']
+
     # key & parent
     key: str = None
     override_mark: JsonOverrideMark = JsonOverrideMark.NONE  # 由 key 上的 override 标记提供
     parent: 'JsonObject' = None  # json 结构上的父节点
 
     # value
-    val: str | int | float | bool | t.List['JsonObject'] = None
+    val: Value = None
     is_dict: bool = False
 
     # expand shorthand and path phase
-    source: 'JsonObject' = None  # 用于标记该节点的来源（由 shorthand/source 展开的节点）
-    source_kind: 'JsonSourceKind' = None  # 来源类型
+    source: 'JsonObject' = None  # 用于标记该节点的来源（由 shorthand/source 展开的节点，只有展开的根节点会有值）
+    source_kind: 'JsonSourceKind' = None  # 来源类型（shorthand/path）
 
     # structure check phase
-    is_recognized: bool = False  # 用于未知 attr 的检查
+    is_recognized: bool = False  # 用于未知 attr 的检查，在 check_structure 阶段会被标记为 True，只有叶子节点是有意义的
 
     # solve override phase
-    passed_override_mark: JsonOverrideMark = JsonOverrideMark.NONE  # 在 solve override 时记录从父亲向下传播的 override mark
-    ignored_by: 'JsonObject' = None  # 在 solve override 时记录同级的 ignore 标记
+    passed_override_mark: JsonOverrideMark = None  # 在 solve override 时记录同级的 override 标记
+    rewrite_by: 'JsonObject' = None  # 在 solve override 时最近的 rewrite 来源（'!!' 标记）同时也会从父节点向子节点传播
 
-    def make_path(path_nodes: t.List[t.Tuple[str, JsonOverrideMark]], source: 'JsonObject') -> 'JsonObject':
-        def __recursive_make_path(path_nodes, index, parent, source) -> 'JsonObject':
-            (key, mark) = path_nodes[index]
-            result = JsonObject(
-                key=key,
-                override_mark=mark,
-                parent=parent,
-                is_dict=True,
-                source=source,
-                source_kind=JsonSourceKind.PATH,
-            )
-            if index + 1 < len(path_nodes):
-                result.val = [__recursive_make_path(path_nodes, index + 1, result, source)]
+    # def make_path(path_nodes: t.List[t.Tuple[str, JsonOverrideMark]], source: 'JsonObject') -> 'JsonObject':
+    #     def __recursive_make_path(path_nodes, index, parent, source) -> 'JsonObject':
+    #         (key, mark) = path_nodes[index]
+    #         result = JsonObject(
+    #             key=key,
+    #             override_mark=mark,
+    #             parent=parent,
+    #             is_dict=True,
+    #             source=source,
+    #             source_kind=JsonSourceKind.PATH,
+    #         )
+    #         if index + 1 < len(path_nodes):
+    #             result.val = [__recursive_make_path(path_nodes, index + 1, result, source)]
+    #         else:
+    #             result.val = source.val
+    #         return result
+    #     return __recursive_make_path(path_nodes, 0, source.parent, source)
+
+    # def expand_path(self) -> None:
+    #     if not self.is_dict or type(self.val) is not list:
+    #         raise Exception("expand_path() only works for dict")
+
+    #     for index in range(len(self.val)):
+    #         json_object = self.val[index]
+    #         path_nodes = [parse_override(node) for node in json_object.key.split("::")]
+
+    #         if len(path_nodes) > 1:
+    #             self.val[index] = JsonObject.make_path(
+    #                 path_nodes=path_nodes,
+    #                 source=json_object)
+
+    # TODO. 展开为多个 stack 会更为合适
+    # TODO. source 只存在于展开的 root 上做跳跃用途比较好
+    def make_attr_stack(self) -> log.AttrStack:
+        path: t.List[str] = []
+        cur_object = self
+        cur_source = self.source
+
+        while cur_object.parent:
+            if cur_object.parent.source == cur_source:  # same scope
+                path.append(cur_object.key)
+                cur_object = cur_object.parent
+            elif cur_source:  # jump to source
+                path.append(cur_object.key)
+                # append source
+                path.append(f"[{cur_object.source_kind}: {cur_source.key}]")
+                cur_object = cur_source.parent
+                cur_source = cur_source.parent.source
             else:
-                result.val = source.val
-            return result
-        return __recursive_make_path(path_nodes, 0, source.parent, source)
+                raise Exception("source won't be None in the middle of path")
 
-    def expand_path(self) -> None:
-        if not self.is_dict or type(self.val) is not list:
-            raise Exception("expand_path() only works for dict")
+        path.reverse()
 
-        for index in range(len(self.val)):
-            json_object = self.val[index]
-            path_nodes = [parse_override(node) for node in json_object.key.split("::")]
-
-            if len(path_nodes) > 1:
-                self.val[index] = JsonObject.make_path(
-                    path_nodes=path_nodes,
-                    source=json_object)
+        stack = log.AttrStack(
+            path=path,
+            val=self.val
+        )
+        return stack
 
     def recursive_expand_path(self) -> None:
         if not self.is_dict or type(self.val) is not list:
@@ -207,18 +505,19 @@ class JsonObject:
         )
 
         for v in data:
-            child = JsonObject(
-                parent=result,
-                source=source,
-                source_kind=source_kind,
-            )
-
             if type(v) is dict:
-                child.val = JsonObject.load_from_dict(v, source=source, source_kind=source_kind)
+                child = JsonObject.load_from_dict(v, source=source, source_kind=source_kind)
+                child.parent = result
             elif type(v) is list:
-                child.val = JsonObject.load_from_list(v, source=source, source_kind=source_kind)
+                child = JsonObject.load_from_list(v, source=source, source_kind=source_kind)
+                child.parent = result
             else:
-                child.val = v
+                child.val = JsonObject(
+                    parent=result,
+                    val=v,
+                    source=source,
+                    source_kind=source_kind,
+                )
 
             result.val.append(child)
 
@@ -234,20 +533,26 @@ class JsonObject:
 
         for (k, v) in data.items():
             key, mark = parse_override(k)
-            child = JsonObject(
-                key=key,
-                override_mark=mark,
-                parent=result,
-                source=source,
-                source_kind=source_kind,
-            )
 
             if type(v) is dict:
-                child.val = JsonObject.load_from_dict(v, source=source, source_kind=source_kind)
+                child = JsonObject.load_from_dict(v, source=source, source_kind=source_kind)
+                child.key = key
+                child.override_mark = mark
+                child.parent = result
             elif type(v) is list:
                 child.val = JsonObject.load_from_list(v, source=source, source_kind=source_kind)
+                child.key = key
+                child.override_mark = mark
+                child.parent = result
             else:
-                child.val = v
+                child = JsonObject(
+                    key=key,
+                    override_mark=mark,
+                    parent=result,
+                    val=v,
+                    source=source,
+                    source_kind=source_kind,
+                )
 
             result.val.append(child)
 
@@ -265,30 +570,133 @@ class JsonObject:
             raise ValueError("unique_dict() only works for dict")
 
 
-def json_hook(data: t.List[t.Tuple[str, object]]) -> JsonObject:
-    result = JsonObject(val=[])
+def json_object_pairs_hook(data: t.List[t.Tuple[str, object]]) -> JsonObject:
+    result = JsonObject(
+        val=[],
+        is_dict=True,
+    )
 
     for (k, v) in data:
         key, mark = parse_override(k)
-        child = JsonObject(
-            key=key,
-            override_mark=mark,
-            parent=result,
-        )
-
-        if type(v) is dict:
-            child.val = JsonObject.load_from_dict(v)
-        elif type(v) is list:
-            child.val = JsonObject.load_from_list(v)
-        else:
-            child.val = v
+        if type(v) is JsonObject:  # child is dict
+            v.key = key
+            v.override_mark = mark
+            v.parent = result
+            child = v
+        elif type(v) is list:  # child is list
+            child = JsonObject.load_from_list(v)
+        else:  # child is int/float/str/bool
+            child = JsonObject(
+                key=key,
+                override_mark=mark,
+                parent=result,
+                val=v
+            )
 
         result.val.append(child)
 
     return result
 
 
+class JsonOverrideSolver:
+    @dataclass
+    class Node:
+        key: str = None
+        objects: t.List[JsonObject] = field(default_factory=lambda: [])
+
+    def __init__(self, root_object: JsonObject) -> None:
+        self.__node_stack: t.List[JsonOverrideSolver.Node] = []
+        self.root_object: JsonObject = root_object
+
+    def push_key(self, key: str, logger: log.Logger) -> None:
+        # push node
+        last_node = self.__node_stack[-1] if self.__node_stack else None
+        new_node = JsonOverrideSolver.Node(key=key)
+        self.__node_stack.append(new_node)
+
+        # collect overrides
+        parent_object_list = last_node.objects if last_node else [self.root_object]
+        for parent_object in parent_object_list:
+            if parent_object.is_dict and type(parent_object.val) is list:
+                # each child to pickup override
+                for child in parent_object.val:
+                    if child.key == key:
+                        child.passed_override_mark = pass_override_mark(
+                            parent=parent_object.override_mark,
+                            child=child.override_mark,
+                            logger=logger
+                        )
+                        child.rewrite_by = parent_object.rewrite_by
+                        new_node.objects.append(child)
+            else:
+                raise Exception("push_key() only works for dict")
+
+        # solve rewrite
+        cur_rewrite_source = None
+        for index in reversed(range(new_node.objects)):
+            object = new_node.objects[index]
+            if object.passed_override_mark == JsonOverrideMark.REWRITE:
+                cur_rewrite_source = object
+            if not object.rewrite_by:
+                object.rewrite_by = cur_rewrite_source
+
+    def pop_key(self, key: str, logger: log.Logger) -> None:
+        self.__node_stack.pop()
+
+    def key_scope(self, key: str):
+        class _KeyGuard:
+            def __init__(self, solver: JsonOverrideSolver, key: str) -> None:
+                self.solver = solver
+                self.key = key
+
+            def __enter__(self):
+                self.solver.push_key(self.key)
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                self.solver.pop_key(self.key)
+        return _KeyGuard(self, key)
+
+    def solve(self, logger: log.Logger) -> None:
+        cur_value = None
+        cur_rewrite_by = None
+        for object in self.__node_stack[-1].objects:
+            if object.passed_override_mark == JsonOverrideMark.NONE and cur_value:  # illegal override
+                with logger.stack_scope(object.make_attr_stack()):
+                    logger.error(f"override value without '!' mark")
+            elif object.passed_override_mark == JsonOverrideMark.APPEND:  # append
+                merge_source = None if cur_rewrite_by else cur_value
+
+                # value type must be checked in above phase
+                if type(cur_value) is not list or type(object.val) is not list:
+                    raise Exception("append mark '+' only support for list")
+
+                # merge list
+                merge_source.extend(object.val)
+
+                # update mark
+                cur_value = merge_source
+                cur_rewrite_by = object.rewrite_by
+            else:  # normal case, update current value
+                if object.is_dict and type(object.val) is list:  # dict case
+                    # TODO. 递归解析 dict
+                    cur_value = {}
+                    for child in object.val:
+                        cur_value[child.key] = child.val
+                elif not object.is_dict and type(object.val) is list:  # list case
+                    # TODO. 递归解析 list
+                    cur_value = []
+                    for child in object.val:
+                        cur_value.append(child.val)
+                else:
+                    cur_value = object.val
+                cur_rewrite_by = object.rewrite_by
+
+        return None if cur_rewrite_by else cur_value
+
+
 # -------------------------- dict <=> obj tool --------------------------
+
+
 class ObjDictTools:
     @staticmethod
     def as_obj(dict: Dict) -> object:
