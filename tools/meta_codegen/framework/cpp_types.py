@@ -361,7 +361,10 @@ class Parameter:
         self.raw_attrs = unique_dict["attrs"]
 
     def make_log_stack(self) -> log.CppSourceStack:
-        return log.CppSourceStack(self.parent.file_name, self.line)
+        if isinstance(self.parent, Method):
+            return log.CppSourceStack(self.parent.parent.file_name, self.line)
+        else:
+            return log.CppSourceStack(self.parent.file_name, self.line)
 
 
 class Function:
