@@ -212,8 +212,9 @@ class GenerateManager:
         def __expand_shorthand_and_path(cpp_type):
             scheme = self.__schemes.get(type(cpp_type), None)
             if scheme:
-                scheme.dispatch_expand_shorthand(cpp_type.raw_attrs, self.__logger)
-                scheme.dispatch_expand_path(cpp_type.raw_attrs, self.__logger)
+                with self.__logger.stack_scope(cpp_type.make_log_stack()):
+                    scheme.dispatch_expand_shorthand(cpp_type.raw_attrs, self.__logger)
+                    scheme.dispatch_expand_path(cpp_type.raw_attrs, self.__logger)
         self.__database.each_cpp_types_with_attr(__expand_shorthand_and_path)
         self.__error_exit("expand shorthand and path")
 
@@ -221,7 +222,8 @@ class GenerateManager:
         def __check_structure(cpp_type):
             scheme = self.__schemes.get(type(cpp_type), None)
             if scheme:
-                scheme.dispatch_check_structure(cpp_type.raw_attrs, self.__logger)
+                with self.__logger.stack_scope(cpp_type.make_log_stack()):
+                    scheme.dispatch_check_structure(cpp_type.raw_attrs, self.__logger)
         self.__database.each_cpp_types_with_attr(__check_structure)
         self.__error_exit("check structure")
 
@@ -230,7 +232,8 @@ class GenerateManager:
             scheme = self.__schemes.get(type(cpp_type), None)
             override_solve = sc.JsonOverrideSolver(cpp_type.raw_attrs)
             if scheme:
-                cpp_type.attrs = scheme.dispatch_parse_to_object(override_solve, self.__logger)
+                with self.__logger.stack_scope(cpp_type.make_log_stack()):
+                    cpp_type.attrs = scheme.dispatch_parse_to_object(override_solve, self.__logger)
         self.__database.each_cpp_types_with_attr(__parse_to_object)
         self.__error_exit("parse to object")
 

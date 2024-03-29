@@ -119,10 +119,13 @@ Function json structure
 
 from typing import List, Dict
 import framework.scheme as sc
+import framework.log as log
 
 
 class EnumValue:
-    def __init__(self, name) -> None:
+    def __init__(self, name, parent) -> None:
+        self.parent: 'Enumeration' = parent
+
         split_name = str.rsplit(name, "::", 1)
         self.name: str = name
         self.short_name: str = split_name[-1]
@@ -144,6 +147,9 @@ class EnumValue:
 
         # load fields
         self.raw_attrs = unique_dict["attrs"]
+
+    def make_log_stack(self) -> log.CppSourceStack:
+        return log.CppSourceStack(self.parent.file_name, self.line)
 
 
 class Enumeration:
@@ -175,12 +181,15 @@ class Enumeration:
         # load values
         self.values = {}
         for (enum_value_name, enum_value_data) in unique_dict["values"].unique_dict().items():
-            value = EnumValue(enum_value_name)
+            value = EnumValue(enum_value_name, self)
             value.load_from_raw_json(enum_value_data)
             self.values[enum_value_name] = value
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
+
+    def make_log_stack(self) -> log.CppSourceStack:
+        return log.CppSourceStack(self.file_name, self.line)
 
 
 class Record:
@@ -210,23 +219,28 @@ class Record:
         # load fields
         self.fields = []
         for (field_name, field_data) in unique_dict["fields"].unique_dict().items():
-            field = Field(field_name)
+            field = Field(field_name, self)
             field.load_from_raw_json(field_data)
             self.fields.append(field)
 
         # load methods
         self.methods = []
         for method_data in unique_dict["methods"]:
-            method = Method()
+            method = Method(self)
             method.load_from_raw_json(method_data)
             self.methods.append(method)
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
 
+    def make_log_stack(self) -> log.CppSourceStack:
+        return log.CppSourceStack(self.file_name, self.line)
+
 
 class Field:
-    def __init__(self, name) -> None:
+    def __init__(self, name, parent) -> None:
+        self.parent: Record = parent
+
         self.name: str = name
 
         self.type: str
@@ -256,9 +270,14 @@ class Field:
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
 
+    def make_log_stack(self) -> log.CppSourceStack:
+        return log.CppSourceStack(self.parent.file_name, self.line)
+
 
 class Method:
-    def __init__(self) -> None:
+    def __init__(self, parent) -> None:
+        self.parent: Record = parent
+
         self.name: str
         self.short_name: str
         self.namespace: str
@@ -294,16 +313,21 @@ class Method:
         # load parameters
         self.parameters = {}
         for (param_name, param_data) in unique_dict["parameters"].unique_dict().items():
-            param = Parameter(param_name)
+            param = Parameter(param_name, self)
             param.load_from_raw_json(param_data)
             self.parameters[param_name] = param
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
 
+    def make_log_stack(self) -> log.CppSourceStack:
+        return log.CppSourceStack(self.parent.file_name, self.line)
+
 
 class Parameter:
-    def __init__(self, name) -> None:
+    def __init__(self, name, parent) -> None:
+        self.parent: Method | 'Function' = parent
+
         self.name: str = name
         self.type: str
         self.array_size: int
@@ -335,6 +359,9 @@ class Parameter:
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
+
+    def make_log_stack(self) -> log.CppSourceStack:
+        return log.CppSourceStack(self.parent.file_name, self.line)
 
 
 class Function:
@@ -374,9 +401,12 @@ class Function:
         # load parameters
         self.parameters = {}
         for (param_name, param_data) in unique_dict["parameters"].unique_dict().items():
-            param = Parameter(param_name)
+            param = Parameter(param_name, self)
             param.load_from_raw_json(param_data)
             self.parameters[param_name] = param
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
+
+    def make_log_stack(self) -> log.CppSourceStack:
+        return log.CppSourceStack(self.file_name, self.line)

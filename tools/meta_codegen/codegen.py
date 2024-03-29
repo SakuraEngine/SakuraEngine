@@ -8,7 +8,6 @@ from typing import List, Dict
 
 if __name__ == '__main__':
     sys.path.insert(0, os.path.dirname(sys.argv[0]))
-
     import framework.config as config
     import framework.generator as generator
 

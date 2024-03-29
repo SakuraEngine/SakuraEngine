@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 import framework
 import framework.log as log
+import inspect
 
 # -------------------------- scheme --------------------------
 
@@ -16,8 +17,60 @@ class Scheme:
     # enable_override: bool = True # TODO. override 解析也应当根据 scheme 来，这样，对 json 特性的扩展就可以完全由 scheme 控制
 
     def __post_init__(self):
-        # TODO. 存储堆栈，用于解析时的错误提示
-        pass
+        # get init call location
+        frame = inspect.currentframe().f_back
+        while frame:
+            if frame.f_code.co_name == "__init__":
+                break
+            frame = frame.f_back
+        frame = frame.f_back
+
+        # record call location
+        if frame:
+            self.construct_file = frame.f_code.co_filename
+            self.construct_line = frame.f_lineno
+            self.construct_function = frame.f_code.co_name
+        else:
+            self.construct_file = 'Unknown'
+            self.construct_line = 0
+            self.construct_function = 'Unknown'
+
+    def make_log_stack(self, json_object: 'JsonObject') -> t.List[log.LogStack]:
+        result = []
+
+        # make call stack
+        frame = inspect.currentframe().f_back
+        result.append(log.PythonSourceStack(file=frame.f_code.co_filename, line=frame.f_lineno))
+
+        # make scheme stack
+        result.append(log.SchemeStack(self.construct_file, self.construct_line))
+
+        # make attr stack
+        attr_val = json_object.dump_json(with_key=False)
+        attr_stack = log.AttrStack(val=attr_val)
+        cur_object = json_object
+        while cur_object.parent:
+            # end key
+            if cur_object.key == "attrs":
+                break
+
+            # append path
+            if cur_object.key:
+                attr_stack.path.append(cur_object.key)
+
+            # switch stack
+            if cur_object.source:
+                result.append(attr_stack)
+                cur_object = cur_object.source
+                if cur_object.source_kind == JsonSourceKind.PATH:
+                    attr_stack = log.AttrPathStack(val=attr_val)
+                else:
+                    attr_stack = log.AttrStack(val=cur_object.source.dump_json(with_key=False))
+            else:
+                cur_object = cur_object.parent
+        result.append(attr_stack)
+
+        return result
 
     def dispatch_expand_shorthand(self, value: 'JsonObject', logger: log.Logger) -> None:
         if value.is_dict and type(value.val) is list:
@@ -173,8 +226,7 @@ class Namespace(Scheme):
 
     def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
         if not object.is_dict or type(object.val) is not list:
-            with logger.stack_scope(object.make_attr_stack()):
-                logger.error("value must be dict")
+            logger.error("value must be dict")
 
     def parse_to_object(self, value: 'JsonObject.Value', logger: log.Logger) -> object:
         if value and type(value) is not dict:
@@ -242,8 +294,7 @@ class Functional(Scheme):
 
     def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
         if not object.is_dict or type(object.val) is not list:
-            with logger.stack_scope(object.make_attr_stack()):
-                logger.error("value must be dict")
+            logger.error("value must be dict")
 
     def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
         if value and type(value) is not dict:
@@ -258,8 +309,7 @@ class LeafValue(Scheme):
 
     def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
         if type(object.val) is not self.get_value_type():
-            with logger.stack_scope(object.make_attr_stack()):
-                logger.error(f"value must be {self.get_value_name(self)}")
+            logger.error(f"value must be {self.get_value_name(self)}")
 
     def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
         if value and type(value) is not self.get_value_type():  # must be checked in check_structure phase
@@ -341,14 +391,15 @@ class Shorthand:
 class EnableShorthand(Shorthand):
     def expand(self, object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
         if type(object.val) is bool:
-            return JsonObject.load_from_dict(
+            result = JsonObject.load_from_dict(
                 {
                     "enable": object.val
                 },
                 key=object.key,
-                source=object,
-                source_kind=JsonSourceKind.SHORTHAND,
             )
+            result.source = object
+            result.source_kind = JsonSourceKind.SHORTHAND
+            return result
 
 
 @dataclass
@@ -358,23 +409,26 @@ class OptionShorthand(Shorthand):
     def expand(self, object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
         if type(object.val) is str:
             if object.val in self.mappings:
-                return JsonObject.load_from_dict(
+                result = JsonObject.load_from_dict(
                     self.mappings[object.val],
                     key=object.key,
-                    source=object,
-                    source_kind=JsonSourceKind.SHORTHAND,
                 )
+                result.source = object
+                result.source_kind = JsonSourceKind.SHORTHAND
+                return result
         elif not object.is_dict and type(object.val) is list:
             final_map = {}
             for shorthand_object in object.val:
                 if type(shorthand_object.val) is str and shorthand_object.val in self.mappings:
                     final_map.update(self.mappings[shorthand_object.val])
-            return JsonObject.load_from_dict(
-                final_map,
-                key=object.key,
-                source=object,
-                source_kind=JsonSourceKind.SHORTHAND,
-            ) if final_map else None
+            if final_map:
+                result = JsonObject.load_from_dict(
+                    final_map,
+                    key=object.key,
+                )
+                result.source = object
+                result.source_kind = JsonSourceKind.SHORTHAND
+                return result
 
 
 # -------------------------- json tool --------------------------
@@ -521,6 +575,20 @@ class JsonObject:
         )
         return stack
 
+    def dump_json(self, with_key=True) -> str:
+        result = f'"{self.key}": ' if self.key and with_key else ""
+
+        if self.is_dict and type(self.val) is list:
+            result += f"{{{', '.join([child.dump_json() for child in self.val])}}}"
+        elif type(self.val) is list:
+            result += f"[{', '.join([child.dump_json() for child in self.val])}]"
+        elif type(self.val) is str:
+            result += f'"{self.val}"'
+        else:
+            result += f"{self.val}"
+
+        return result
+
     def recursive_expand_path(self) -> None:
         if not self.is_dict or type(self.val) is not list:
             raise Exception("recursive_expand_path() only works for dict")
@@ -530,51 +598,45 @@ class JsonObject:
             if child.is_dict:
                 child.recursive_expand_path()
 
-    def load_from_list(data: t.List, source: 'JsonObject' = None, source_kind: 'JsonSourceKind' = None) -> 'JsonObject':
+    def load_from_list(data: t.List) -> 'JsonObject':
         result = JsonObject(
             val=[],
-            source=source,
-            source_kind=source_kind,
         )
 
         for v in data:
-            if type(v) is dict:
-                child = JsonObject.load_from_dict(v, source=source, source_kind=source_kind)
+            if type(v) is JsonObject:
+                child = v
                 child.parent = result
             elif type(v) is list:
-                child = JsonObject.load_from_list(v, source=source, source_kind=source_kind)
+                child = JsonObject.load_from_list(v)
                 child.parent = result
             else:
                 child = JsonObject(
                     parent=result,
                     val=v,
-                    source=source,
-                    source_kind=source_kind,
                 )
 
             result.val.append(child)
 
         return result
 
-    def load_from_dict(data: t.Dict, key=None, source: 'JsonObject' = None, source_kind: 'JsonSourceKind' = None) -> 'JsonObject':
+    def load_from_dict(data: t.Dict, key=None) -> 'JsonObject':
         result = JsonObject(
             key=key,
             val=[],
             is_dict=True,
-            source=source,
-            source_kind=source_kind,
         )
 
         for (k, v) in data.items():
             key, mark = parse_override(k)
 
             if type(v) is dict:
-                child = JsonObject.load_from_dict(v, source=source, source_kind=source_kind)
+                child = JsonObject.load_from_dict(v)
                 child.key = key
                 child.override_mark = mark
                 child.parent = result
             elif type(v) is list:
-                child.val = JsonObject.load_from_list(v, source=source, source_kind=source_kind)
+                child.val = JsonObject.load_from_list(v)
                 child.key = key
                 child.override_mark = mark
                 child.parent = result
@@ -584,8 +646,6 @@ class JsonObject:
                     override_mark=mark,
                     parent=result,
                     val=v,
-                    source=source,
-                    source_kind=source_kind,
                 )
 
             result.val.append(child)
@@ -707,8 +767,7 @@ class JsonOverrideSolver:
         cur_rewrite_by = None
         for object in self.__node_stack[-1].objects:
             if object.passed_override_mark == JsonOverrideMark.NONE and cur_value:  # illegal override
-                with logger.stack_scope(object.make_attr_stack()):
-                    logger.error(f"override value without '!' mark")
+                logger.error(f"override value without '!' mark")
             elif object.passed_override_mark == JsonOverrideMark.APPEND:  # append
                 merge_source = None if cur_rewrite_by else cur_value
 
