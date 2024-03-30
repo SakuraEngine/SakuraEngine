@@ -1,6 +1,7 @@
 from typing import List, Dict
 from dataclasses import dataclass, field
 from enum import Enum
+import sys
 
 
 class LogHelper:
@@ -67,14 +68,14 @@ class Logger:
                 if type(self.__stack) is list:
                     for stack in self.__stack:
                         self.__logger.push_stack(stack)
-                else:
+                elif self.__stack:
                     self.__logger.push_stack(self.__stack)
 
             def __exit__(self, exc_type, exc_value, traceback) -> None:
                 if type(self.__stack) is list:
                     for _ in self.__stack:
                         self.__logger.pop_stack()
-                else:
+                elif self.__stack:
                     self.__logger.pop_stack()
 
         return __StackGuard(self, stack)
@@ -118,22 +119,25 @@ class Logger:
     def clear(self) -> None:
         self.__log_data.clear()
 
-    def dump(self):
-        for log in self.__log_data:
-            # empty line
-            print()
+    def dump(self, error_mode: bool = False) -> None:
+        output_file = sys.stderr if error_mode else sys.stdout
+        if self.__log_data:
+            for log in self.__log_data:
+                # empty line
+                print(file=output_file)
 
-            # print message
-            if log.level == LogLevel.ERROR:
-                print(LogHelper.red(log.message))
-            elif log.level == LogLevel.WARNING:
-                print(LogHelper.yellow(log.message))
-            elif log.level == LogLevel.VERBOSE:
-                print(LogHelper.blue(log.message))
+                # print message
+                if log.level == LogLevel.ERROR:
+                    print(LogHelper.red(f"error: {log.message}"), file=output_file)
+                elif log.level == LogLevel.WARNING:
+                    print(LogHelper.yellow(f"warning: {log.message}"), file=output_file)
+                elif log.level == LogLevel.VERBOSE:
+                    print(LogHelper.blue(f"verbose: {log.message}"), file=output_file)
 
-            # print stack
-            for stack in reversed(log.stack):
-                print(LogHelper.gray(str(stack)))
+                # print stack
+                for stack in reversed(log.stack):
+                    print(LogHelper.gray(str(stack)), file=output_file)
+            print(file=output_file, flush=True)
 
 
 class LogStack:
@@ -161,14 +165,14 @@ class AttrStack(LogStack):
 @dataclass
 class AttrPathStack(AttrStack):
     def __str__(self) -> str:
-        return f"in path shorthand: {' > '.join(self.path)}: {self.val}"
+        return f"in path shorthand: [{' > '.join(self.path)}: {self.val}]"
 
 
 @dataclass
 class AttrShorthandStack(AttrStack):
 
     def __str__(self) -> str:
-        return f"in shorthand: {' > '.join(self.path): {self.val}}"
+        return f"in shorthand: [{' > '.join(self.path): {self.val}}]"
 
 
 @dataclass

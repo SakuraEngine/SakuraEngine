@@ -229,12 +229,13 @@ function _meta_codegen_command(target, scripts, metadir, gendir, opt)
     end
 
     -- call codegen script
-    result = os.iorunv(_python.program, command)
+    local result = os.iorunv(_python.program, command)
+    -- os.execv(_python.program, command)
+    if result then
+        print(result)
+    end
 
     if not opt.quiet then
-        if result then
-            print(result)
-        end
         cprint(
             "${cyan}[%s]: %s${clear} %s cost ${red}%d seconds"
             , target:name()
@@ -364,18 +365,6 @@ function _meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles
     end
 end
 function _meta_codegen(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
-    -- collect generators
-    local generator_configs = { }
-    if target:data(_meta_data_generators_name) then
-        table.insert(generator_configs, target:data(_meta_data_generators_name))
-    end
-    for _, dep in pairs(target:deps()) do
-        local dep_generator = dep:data(_meta_data_generators_name)
-        if dep_generator then
-            table.insert(generator_configs, dep_generator)
-        end
-    end
-
     -- collect framework depend files
     local dep_files = os.files(path.join(metadir, "**.meta"))
     do
@@ -388,20 +377,35 @@ function _meta_codegen(target, rootdir, metadir, gendir, sourcefile, headerfiles
             table.insert(dep_files, file)
         end
     end
-
-    -- extract generator scripts and generator depend files
+    
     local scripts = {}
-    for _, gen_config in ipairs(generator_configs) do
-        -- extract scripts
-        for __, script_config in ipairs(gen_config.scripts) do
-            if not script_config.private then
-                table.insert(scripts, script_config)
-            end
-        end
 
-        -- extract dep_files
-        for __, dep_file in ipairs(gen_config.dep_files) do
+    -- extract self generator scripts and dep_files
+    if target:data(_meta_data_generators_name) then
+        local self_generator_config = target:data(_meta_data_generators_name)
+        for _, script_config in ipairs(self_generator_config.scripts) do
+            table.insert(scripts, script_config)
+        end
+        for _, dep_file in ipairs(self_generator_config.dep_files) do
             table.insert(dep_files, dep_file)
+        end
+    end
+
+    -- extract dep generator scripts and dep_files
+    for _, dep in pairs(target:deps()) do
+        local dep_generator = dep:data(_meta_data_generators_name)
+        if dep_generator then
+            -- extract scripts
+            for __, script_config in ipairs(dep_generator.scripts) do
+                if not script_config.private then
+                    table.insert(scripts, script_config)
+                end
+            end
+
+            -- extract dep_files
+            for __, dep_file in ipairs(dep_generator.dep_files) do
+                table.insert(dep_files, dep_file)
+            end
         end
     end
 

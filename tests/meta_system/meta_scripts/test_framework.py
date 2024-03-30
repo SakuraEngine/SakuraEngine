@@ -42,7 +42,7 @@ class TestFrameworkGenerator(gen.GeneratorBase):
                     "test_functional_shorthand": sc.Functional(
                         shorthands=[
                             sc.OptionShorthand(
-                                options_mapping={
+                                mappings={
                                     "all": {
                                         "assert_10": 10,
                                         "assert_fuck": "fuck",

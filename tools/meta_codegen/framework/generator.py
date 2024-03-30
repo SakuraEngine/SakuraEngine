@@ -224,6 +224,8 @@ class GenerateManager:
             if scheme:
                 with self.__logger.stack_scope(cpp_type.make_log_stack()):
                     scheme.dispatch_check_structure(cpp_type.raw_attrs, self.__logger)
+            with self.__logger.stack_scope(cpp_type.make_log_stack()):
+                cpp_type.raw_attrs.check_unrecognized_attrs(self.__logger)
         self.__database.each_cpp_types_with_attr(__check_structure)
         self.__error_exit("check structure")
 
@@ -267,5 +269,5 @@ class GenerateManager:
 
     def __error_exit(self, phase: str) -> None:
         if self.__logger.any_error():
-            self.__logger.dump()
+            self.__logger.dump(error_mode=True)
             raise Exception("toggle error when %s" % phase)

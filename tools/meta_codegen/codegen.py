@@ -41,4 +41,4 @@ if __name__ == '__main__':
     generate_manager.output_content()
 
     # dump log
-    generate_manager.logger.dump()
+    generate_manager.logger.dump(error_mode=False)

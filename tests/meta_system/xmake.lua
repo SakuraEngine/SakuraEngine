@@ -10,7 +10,6 @@ target("MetaTest")
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
         rootdir = "include/MetaTest/",
-        use_new_framework = true,
     })
 
     add_rules("c++.meta.generators", {
@@ -20,6 +19,7 @@ target("MetaTest")
                 file = "meta_scripts/install_test.py", 
                 import_dirs={ "meta_scripts/" }, 
                 private = true,
+                use_new_framework = true,
             },
         },
         dep_files = {
