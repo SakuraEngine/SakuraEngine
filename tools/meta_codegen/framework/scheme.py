@@ -6,6 +6,16 @@ import framework.log as log
 import inspect
 
 # -------------------------- scheme --------------------------
+# TODO. 使用 json type 来进行 structure check
+
+
+class JsonType(Enum):
+    BOOL = 0
+    STR = 1
+    INT = 2
+    FLOAT = 3
+    LIST = 4
+    DICT = 5
 
 
 @dataclass
@@ -515,65 +525,6 @@ class JsonObject:
     # solve override phase
     passed_override_mark: JsonOverrideMark = None  # 在 solve override 时记录同级的 override 标记
     rewrite_by: 'JsonObject' = None  # 在 solve override 时最近的 rewrite 来源（'!!' 标记）同时也会从父节点向子节点传播
-
-    # def make_path(path_nodes: t.List[t.Tuple[str, JsonOverrideMark]], source: 'JsonObject') -> 'JsonObject':
-    #     def __recursive_make_path(path_nodes, index, parent, source) -> 'JsonObject':
-    #         (key, mark) = path_nodes[index]
-    #         result = JsonObject(
-    #             key=key,
-    #             override_mark=mark,
-    #             parent=parent,
-    #             is_dict=True,
-    #             source=source,
-    #             source_kind=JsonSourceKind.PATH,
-    #         )
-    #         if index + 1 < len(path_nodes):
-    #             result.val = [__recursive_make_path(path_nodes, index + 1, result, source)]
-    #         else:
-    #             result.val = source.val
-    #         return result
-    #     return __recursive_make_path(path_nodes, 0, source.parent, source)
-
-    # def expand_path(self) -> None:
-    #     if not self.is_dict or type(self.val) is not list:
-    #         raise Exception("expand_path() only works for dict")
-
-    #     for index in range(len(self.val)):
-    #         json_object = self.val[index]
-    #         path_nodes = [parse_override(node) for node in json_object.key.split("::")]
-
-    #         if len(path_nodes) > 1:
-    #             self.val[index] = JsonObject.make_path(
-    #                 path_nodes=path_nodes,
-    #                 source=json_object)
-
-    # TODO. 展开为多个 stack 会更为合适
-    # TODO. source 只存在于展开的 root 上做跳跃用途比较好
-    def make_attr_stack(self) -> log.AttrStack:
-        path: t.List[str] = []
-        cur_object = self
-        cur_source = self.source
-
-        while cur_object.parent:
-            if cur_object.parent.source == cur_source:  # same scope
-                path.append(cur_object.key)
-                cur_object = cur_object.parent
-            elif cur_source:  # jump to source
-                path.append(cur_object.key)
-                # append source
-                path.append(f"[{cur_object.source_kind}: {cur_source.key}]")
-                cur_object = cur_source.parent
-                cur_source = cur_source.parent.source
-            else:
-                raise Exception("source won't be None in the middle of path")
-
-        path.reverse()
-
-        stack = log.AttrStack(
-            path=path,
-            val=self.val
-        )
-        return stack
 
     def dump_json(self, with_key=True) -> str:
         result = f'"{self.key}": ' if self.key and with_key else ""
