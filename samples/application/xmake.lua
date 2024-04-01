@@ -1,4 +1,43 @@
-includes("game/xmake.lua")
+if build_part("gui") then
+    includes("ogui2/xmake.lua")
+end
+
+if build_part("render") then
+    includes("multiplayer/xmake.lua")
+    includes("game/xmake.lua")
+
+    if os.host() == "windows" and false then
+        includes("chat/xmake.lua")
+    end
+
+    executable_module("VMemController", "VMEM_CONTROLLER", engine_version)
+        set_group("04.examples/application")
+        public_dependency("SkrRenderGraph", engine_version)
+        public_dependency("SkrImGui", engine_version)
+        set_exceptions("no-cxx")
+        add_includedirs("./../common", {public = false})
+        add_rules("c++.unity_build", {batchsize = default_unity_batch})
+        add_files("vmem_controller/**.cpp")
+
+    executable_module("Live2DViewer", "LIVE2D_VIEWER", engine_version)
+        set_group("04.examples/application")
+        public_dependency("SkrLive2D", engine_version)
+        public_dependency("SkrImGui", engine_version)
+        add_rules("utils.install-resources", {
+            extensions = {".json", ".moc3", ".png"},
+            outdir = "/../resources/Live2DViewer", 
+            rootdir = os.curdir().."/live2d-viewer/resources"})
+        add_rules("utils.dxc", {
+            spv_outdir = "/../resources/shaders/Live2DViewer",
+            dxil_outdir = "/../resources/shaders/Live2DViewer"})
+        set_exceptions("no-cxx")
+        add_rules("c++.unity_build", {batchsize = default_unity_batch})
+        add_includedirs("./../common", {public = false})
+        add_includedirs("live2d-viewer/include", {public=true})
+        add_files("live2d-viewer/src/main.cpp", "live2d-viewer/src/viewer_module.cpp", "live2d-viewer/src/imgui.cpp")
+        -- add_files("live2d-viewer/shaders/**.hlsl")
+        add_files("live2d-viewer/**.json", "live2d-viewer/**.moc3", "live2d-viewer/**.png")
+end
 
 if build_part("tools") then
     if(not has_config("shipping_one_archive")) then
@@ -26,37 +65,3 @@ if build_part("tools") then
     end
 end
 
-executable_module("VMemController", "VMEM_CONTROLLER", engine_version)
-    set_group("04.examples/application")
-    public_dependency("SkrRenderGraph", engine_version)
-    public_dependency("SkrImGui", engine_version)
-    set_exceptions("no-cxx")
-    add_includedirs("./../common", {public = false})
-    add_rules("c++.unity_build", {batchsize = default_unity_batch})
-    add_files("vmem_controller/**.cpp")
-
-if (os.host() == "windows" and has_config("build_chat")) then
-    includes("chat/xmake.lua")
-end
-
-executable_module("Live2DViewer", "LIVE2D_VIEWER", engine_version)
-    set_group("04.examples/application")
-    public_dependency("SkrLive2D", engine_version)
-    public_dependency("SkrImGui", engine_version)
-    add_rules("utils.install-resources", {
-        extensions = {".json", ".moc3", ".png"},
-        outdir = "/../resources/Live2DViewer", 
-        rootdir = os.curdir().."/live2d-viewer/resources"})
-    add_rules("utils.dxc", {
-        spv_outdir = "/../resources/shaders/Live2DViewer",
-        dxil_outdir = "/../resources/shaders/Live2DViewer"})
-    set_exceptions("no-cxx")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch})
-    add_includedirs("./../common", {public = false})
-    add_includedirs("live2d-viewer/include", {public=true})
-    add_files("live2d-viewer/src/main.cpp", "live2d-viewer/src/viewer_module.cpp", "live2d-viewer/src/imgui.cpp")
-    -- add_files("live2d-viewer/shaders/**.hlsl")
-    add_files("live2d-viewer/**.json", "live2d-viewer/**.moc3", "live2d-viewer/**.png")
-
-includes("ogui2/xmake.lua")
-includes("multiplayer/xmake.lua")
