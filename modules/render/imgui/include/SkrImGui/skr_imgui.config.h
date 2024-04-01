@@ -1,8 +1,6 @@
 #pragma once
 
-#ifdef __cplusplus
-    #define SKR_IMGUI_EXTERN_C extern "C"
-#else
+#ifndef __cplusplus
     #define SKR_IMGUI_EXTERN_C
 #endif
 

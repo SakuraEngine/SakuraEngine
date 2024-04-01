@@ -25,12 +25,12 @@ GLTFTOOL_API SGltfMeshImporter final : public SImporter {
 
     void* Import(skr_io_ram_service_t*, SCookContext* context) override;
     void  Destroy(void* resource) override;
-} sregister_importer();
+};
 
 sreflect_struct("guid" : "5a378356-7bfa-461a-9f96-4bbbd2e95368")
 GLTFTOOL_API SMeshCooker final : public SCooker {
     bool     Cook(SCookContext* ctx) override;
     uint32_t Version() override;
-} sregister_default_cooker(u8"3b8ca511-33d1-4db4-b805-00eea6a8d5e1");
+};
 } // namespace asset sreflect
 } // namespace skd sreflect

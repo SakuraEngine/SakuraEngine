@@ -2,8 +2,6 @@
 #include "SkrBase/types.h"
 #include "SkrRT/config.h"
 
-extern const skr_guid_t $guid;
-
 #ifdef __cplusplus
 
 namespace skr::binary
