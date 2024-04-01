@@ -69,7 +69,7 @@ rule("skr.dyn_module")
         else
             target:add("defines", api.."_SHARED", {public=true})
             target:add("defines", api.."_API=SKR_IMPORT", {interface=true})
-            target:add("defines", api.."_API=SKR_EXPORT", {private=false})
+            target:add("defines", api.."_API=SKR_EXPORT", {public=false})
         end
         -- add codegen headers to include dir
         local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
