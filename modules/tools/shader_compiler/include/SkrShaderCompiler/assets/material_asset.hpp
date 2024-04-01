@@ -41,7 +41,7 @@ SKR_SHADER_COMPILER_API SMaterialImporter final : public SImporter {
 
     void* Import(skr_io_ram_service_t*, SCookContext* context) override;
     void  Destroy(void* resource) override;
-} sregister_importer();
+};
 
 // Cookers
 
@@ -49,7 +49,7 @@ sreflect_struct("guid" : "0e3b550f-cdd7-4796-a6d5-0c457e0640bd")
 SKR_SHADER_COMPILER_API SMaterialCooker final : public SCooker {
     bool     Cook(SCookContext* ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
-} sregister_default_cooker(u8"2efad635-b331-4fc6-8c52-2f8ca954823e");
+};
 
 } // namespace asset sreflect
 } // namespace skd sreflect

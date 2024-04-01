@@ -46,6 +46,12 @@
             "stopAtEntry": false,
             "type": "cppvsdbg",
             "console": "externalTerminal"
-        }
+        },
+        "Lua.diagnostics.disable": [
+            "undefined-global",
+            "lowercase-global",
+            "undefined-field",
+            "need-check-nil"
+        ]
     }
 }

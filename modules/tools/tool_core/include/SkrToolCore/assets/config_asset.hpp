@@ -17,13 +17,12 @@ TOOL_CORE_API SJsonConfigImporter final : public SImporter {
     skr_guid_t  configType;
     void*       Import(skr_io_ram_service_t*, SCookContext* context) override;
     void        Destroy(void* resource) override;
-} sattr("serialize" : "json")
-sregister_importer();
+} sattr("serialize" : "json");
 
 sreflect_struct("guid" : "EC5275CA-E406-4051-9403-77517C421890")
 TOOL_CORE_API SConfigCooker final : public SCooker {
     bool     Cook(SCookContext* ctx) override;
     uint32_t Version() override;
-} sregister_default_cooker(u8"8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74");
+};
 } // namespace asset sreflect
 } // namespace skd sreflect

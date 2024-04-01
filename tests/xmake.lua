@@ -10,6 +10,7 @@ target("SkrTestFramework")
 if build_part("core") then
     includes("base/xmake.lua")
     includes("memory/xmake.lua")
+    includes("meta_system/xmake.lua")
 end
 
 if build_part("engine") then

@@ -1,10 +1,9 @@
 #pragma once
 #include "SkrGraphics/api.h"
 
-#ifdef __cplusplus
-    #define SKR_RENDER_GRAPH_EXTERN_C extern "C"
-#else
-    #define SKR_RENDER_GRAPH_EXTERN_C
+#ifndef __cplusplus
+    #define 
+    SKR_RENDER_GRAPH_EXTERN_C
 #endif
 
 #ifndef SKR_RENDER_GRAPH_EXPORT

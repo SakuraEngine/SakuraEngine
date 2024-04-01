@@ -47,7 +47,6 @@ if (is_os("windows")) then
 end
 
 includes("xmake/thirdparty.lua")
-includes("tools/codegen/xmake.lua")
 includes("modules/xmake.lua")
 
 if build_part("samples") then
