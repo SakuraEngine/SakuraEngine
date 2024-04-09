@@ -1,13 +1,14 @@
 package("v8")
     set_homepage("https://chromium.googlesource.com/v8/v8.git")
     set_description("V8 JavaScript Engine")
-    set_urls("https://github.com/SakuraEngine/v8-compile/releases/download/v8_$(version)/",
+    set_urls("https://github.com/SakuraEngine/v8-compile/releases/download/$(version)/",
     {
         version = function (version) 
             return version:gsub("(%S*)-skr", "%1")
         end
     })
-    add_versions("12.4-skr", "be9e9cbd9f6874e455a537bdefdcc24f895bc4d2b2646f5e25217436dcf6c081")
+    add_versions("11.2-test-skr", "65057ad701861ce61dcceebfaff9b717861e8c54b61f5cc3c7194e9a4f4895e6")
+    add_versions("11.2-skr", "b1cab859d7eb654527fc9aaec81ef2942424d3ff69cb9a20a21a2021696bb644")
 
     -- v8 sys env
     if is_plat("linux", "bsd") then
@@ -30,39 +31,75 @@ package("v8")
     on_download(function (package, opt) 
         import("net.http")
         import("utils.archive")
+        import("core.base.json")
 
         -- get url config
-        local raw_url = opt.url
+        local base_url = opt.url
         local plat = package:plat()
         local arch = package:arch()
+        local toolchain = "unknown"
+        if package:is_plat("windows") then
+            if package:toolchain("clang-cl") then
+                toolchain = "clang-cl"
+            elseif package:toolchain("msvc") then
+                toolchain = "msvc"
+            else
+                toolchain = "msvc"
+            end
+        end 
 
         -- combine url
-        local url = format("%sv8-%s-%s.tgz", raw_url, plat, arch)
+        local manifest_url = base_url.."manifest.json"
 
         -- get download config
         local sourcedir = opt.sourcedir
-        local packagefile = path.filename(url)
-        local sourcehash = package:sourcehash(opt.url_alias)
+        local manifest_file = "manifest.json"
+        local manifest_hash = package:sourcehash(opt.url_alias)
+
+        -- download manifest file
+        if not os.isfile(manifest_file) or sourcehash ~= hash.sha256(manifest_file) then
+            -- attempt to remove manifest file first
+            print("downloading manifest file from \"%s\"\n", manifest_url)
+            os.tryrm(manifest_file)
+            http.download(manifest_url, manifest_file)
+
+            -- check hash
+            if manifest_hash and manifest_hash ~= hash.sha256(manifest_file) then
+                raise("unmatched checksum, current hash(%s) != original hash(%s)"
+                    , hash.sha256(manifest_file):sub(1, 8)
+                    , manifest_hash:sub(1, 8))
+            end
+        end
+
+        -- load manifest and solve package url
+        local manifest = json.loadfile(manifest_file)
+        local package_file = format("%s-%s-%s.tgz", plat, arch, toolchain)
+        local package_url = base_url..package_file
+        local package_hash = manifest[package_file]
+        if not package_hash then 
+            raise("package(%s) not found in manifest file(%s)\n", package_file, manifest_file)
+        end
 
         -- process cache and try download package file
         local cached = true
-        if not os.isfile(packagefile) or sourcehash ~= hash.sha256(packagefile) then
+        if not os.isfile(package_file) or package_hash ~= hash.sha256(package_file) then
             cached = false
 
             -- attempt to remove package file first
-            os.tryrm(packagefile)
-            http.download(url, packagefile)
+            print("downloading package file from \"%s\"\n", package_url)
+            os.tryrm(package_file)
+            http.download(package_url, package_file)
 
             -- check hash
-            if sourcehash and sourcehash ~= hash.sha256(packagefile) then
-                raise("unmatched checksum, current hash(%s) != original hash(%s)", hash.sha256(packagefile):sub(1, 8), sourcehash:sub(1, 8))
+            if package_hash and package_hash ~= hash.sha256(package_file) then
+                raise("unmatched checksum, current hash(%s) != original hash(%s)", hash.sha256(package_file):sub(1, 8), package_hash:sub(1, 8))
             end
         end
 
         -- extract package file
         local sourcedir_tmp = sourcedir .. ".tmp"
         os.rm(sourcedir_tmp)
-        if archive.extract(packagefile, sourcedir_tmp) then
+        if archive.extract(package_file, sourcedir_tmp) then
             os.rm(sourcedir)
             os.mv(sourcedir_tmp, sourcedir)
         else
@@ -72,7 +109,7 @@ package("v8")
         end
 
         -- save original file path
-        package:originfile_set(path.absolute(packagefile))
+        package:originfile_set(path.absolute(package_file))
     end)
 
     on_install("windows|x64", function (package) 
