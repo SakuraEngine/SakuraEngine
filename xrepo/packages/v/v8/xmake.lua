@@ -7,8 +7,9 @@ package("v8")
             return version:gsub("(%S*)-skr", "%1")
         end
     })
-    add_versions("11.2-test-skr", "65057ad701861ce61dcceebfaff9b717861e8c54b61f5cc3c7194e9a4f4895e6")
-    add_versions("11.2-skr", "b1cab859d7eb654527fc9aaec81ef2942424d3ff69cb9a20a21a2021696bb644")
+    add_versions("11.2-skr", "554181c47ef4f13a8ed9b08955a085e5196ab50df689c923ac314a1e0e955287")
+
+    add_configs("symbols",  {description = "Enable debug symbols in release", default = false, type = "boolean"})
 
     -- v8 sys env
     if is_plat("linux", "bsd") then
@@ -38,6 +39,7 @@ package("v8")
         local plat = package:plat()
         local arch = package:arch()
         local toolchain = "unknown"
+        local mode = "unknown"
         if package:is_plat("windows") then
             if package:toolchain("clang-cl") then
                 toolchain = "clang-cl"
@@ -46,7 +48,33 @@ package("v8")
             else
                 toolchain = "msvc"
             end
-        end 
+        end
+        -- if is_mode("debug") then
+        --     mode = "debug"
+        -- elseif is_mode("release") then
+        --     mode = "release"
+        -- elseif is_mode("releasedbg") then
+        --     mode = "releasedbg"
+        -- end
+        if package:is_debug() then
+            mode = "debug"
+        else
+            if package:config("symbols") then 
+                mode = "releasedbg"
+            else
+                mode = "release"
+            end
+        end
+
+        -- print debug info
+        -- print("===============> begin debug info <===============")
+        -- print("base_url: %s", base_url)
+        -- print("plat: %s", plat)
+        -- print("arch: %s", arch)
+        -- print("toolchain: %s", toolchain)
+        -- print("mode: %s", mode)
+        -- print("===============> end debug info <===============")
+        -- raise()
 
         -- combine url
         local manifest_url = base_url.."manifest.json"
@@ -73,7 +101,7 @@ package("v8")
 
         -- load manifest and solve package url
         local manifest = json.loadfile(manifest_file)
-        local package_file = format("%s-%s-%s.tgz", plat, arch, toolchain)
+        local package_file = format("%s-%s-%s-%s.tgz", plat, arch, toolchain, mode)
         local package_url = base_url..package_file
         local package_hash = manifest[package_file]
         if not package_hash then 
@@ -112,7 +140,7 @@ package("v8")
         package:originfile_set(path.absolute(package_file))
     end)
 
-    on_install("windows|x64", function (package) 
+    on_install(function (package) 
         os.mkdir(package:installdir())
         os.cp("include", package:installdir())
         os.cp("lib/*.lib", package:installdir("lib"))
