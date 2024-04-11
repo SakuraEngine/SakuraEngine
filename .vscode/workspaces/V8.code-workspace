@@ -1,0 +1,69 @@
+{
+    "folders": [
+        {
+            "path": "../../",
+            "name": "root",
+        },
+        // {
+        //     "path": "../../build/.gens/",
+        //     "name": "gen-temp-files",
+        // },
+        // {
+        //     "path": "../../tools/meta_codegen/",
+        //     "name": "gen-script",
+        // },
+        // {
+        //     "path": "../../modules/engine/basic_meta/",
+        //     "name": "gen-module",
+        // },
+        // {
+        //     "path": "../../tests/meta_system/",
+        //     "name": "gen-test",
+        // }
+    ],
+    "settings": {
+        "dascript.server.connectTimeout": 10,
+        "xmake.additionalConfigArguments": [
+            "--use_profile=enable",
+            "--toolchain=clang-cl",
+            "--cxx_version=cxx20",
+            "-m",
+            "release",
+        ],
+        "editor.formatOnSave": true,
+        "xmake.customDebugConfig": {
+            // "visualizerFile": "${workspaceFolder}\\SDKs\\natvis\\SkrContainer.natvis",
+            "stopAtEntry": false,
+            "type": "cppvsdbg",
+            "console": "externalTerminal",
+        },
+        "Lua.diagnostics.disable": [
+            "undefined-global",
+            "lowercase-global",
+            "undefined-field",
+            "need-check-nil",
+        ],
+        "python.analysis.extraPaths": [
+            "${workspaceFolder:root}/tools/meta_codegen/",
+        ],
+        "python.autoComplete.extraPaths": [
+            "${workspaceFolder:root}/tools/meta_codegen/",
+        ],
+        "python.defaultInterpreterPath": "${workspaceFolder:root}/SDKs/tools/windows/python-embed/python.exe",
+        "terminal.integrated.cwd": "${workspaceFolder:root}",
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "codegen",
+                "type": "debugpy",
+                "request": "launch",
+                "program": "${workspaceFolder:root}/tools/meta_codegen/codegen.py",
+                "args": [
+                    "--config=${workspaceFolder:gen-temp-files}/MetaTest/windows/codegen/meta_codegen_config.json",
+                ],
+            }
+        ]
+    }
+}

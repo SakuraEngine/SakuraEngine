@@ -65,7 +65,6 @@ executable_module("RTTRTest", "RTTR_TEST", engine_version)
     
 executable_module("TraitTest", "TRAIT_TEST", engine_version, {exception = true})
     set_group("05.tests/runtime")
-    set_kind("binary")
     public_dependency("SkrRT", engine_version)
     add_deps("SkrTestFramework", {public = false})
     add_rules("c++.codegen", {
@@ -74,6 +73,14 @@ executable_module("TraitTest", "TRAIT_TEST", engine_version, {exception = true})
         api = "TRAIT_TEST"
     })
     add_files("trait/trait_test.cpp")
+
+if build_part("v8") then
+    executable_module("V8Test", "V8_TEST", engine_version)
+    set_group("05.tests/runtime")
+    public_dependency("SkrV8", engine_version)
+    -- add_deps("SkrTestFramework", {public = false})
+    add_files("v8/hello_fucking_google.cpp")
+end
 
 
 -- includes("module/xmake.lua")
