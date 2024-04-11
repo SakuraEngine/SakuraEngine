@@ -164,6 +164,17 @@ int main(int argc, char* argv[])
                     my_print(`call sb [${this.content} + ${this.times}]`)
                 }
                 test[sb]()
+
+                class MyClass {
+                    constructor() {
+                        my_print(`=====> type: ${typeof(new.target)}`)
+                        my_print(`=====> name: ${new.target.name}`)
+                        my_print(`=====> static value: ${new.target.aaa}`)
+                    }
+
+                    static aaa = "fuck u google"
+                }
+                my_cls = new MyClass();
                 
                 {
                     let new_data = new MyData()
@@ -177,8 +188,8 @@ int main(int argc, char* argv[])
             // Run the script to get the result.
             v8::Local<v8::Value> result = script->Run(context).ToLocalChecked();
             // Convert the result to an UTF8 string and print it.
-            // v8::String::Utf8Value utf8(isolate, result);
-            // printf("%s\n", *utf8);
+            v8::String::Utf8Value utf8(isolate, result);
+            printf("%s\n", *utf8);
         }
 
         isolate->RequestGarbageCollectionForTesting(v8::Isolate::kFullGarbageCollection);
