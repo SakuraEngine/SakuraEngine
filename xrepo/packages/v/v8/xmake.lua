@@ -101,7 +101,12 @@ package("v8")
 
         -- load manifest and solve package url
         local manifest = json.loadfile(manifest_file)
-        local package_file = format("%s-%s-%s-%s.tgz", plat, arch, toolchain, mode)
+        local package_file
+        if toolchain == "clang-cl" and mode == "debug" and arch == "x64" then 
+            package_file = format("%s-%s-%s-%s.tgz", plat, "x64", "msvc", "debug") -- clang-cl can't export internal class symbols
+        else
+            package_file = format("%s-%s-%s-%s.tgz", plat, arch, toolchain, mode)
+        end
         local package_url = base_url..package_file
         local package_hash = manifest[package_file]
         if not package_hash then 
