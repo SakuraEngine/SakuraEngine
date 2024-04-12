@@ -231,7 +231,8 @@ function _meta_codegen_command(target, scripts, metadir, gendir, opt)
     -- call codegen script
     local result = os.iorunv(_python.program, command)
     -- os.execv(_python.program, command)
-    if result then
+    
+    if result and #result > 0 then
         print(result)
     end
 
