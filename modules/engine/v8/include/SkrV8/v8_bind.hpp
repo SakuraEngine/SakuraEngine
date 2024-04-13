@@ -55,6 +55,13 @@ namespace skr
 //  2. V8 提供了 Template 级别的 Inherit，但是只支持单继承链
 //  3. interface 的实现待定，由于不是 JS 的语言特性，可以自由发挥
 //  4. 导出至 v8 时需要拿到类的 new 时类型，因此必须依赖 IObject，对于非 IObject 对象，视为 struct，不保证导出行为的继承关系正确
+//
+// 手写导出/FunctionTemplateBuilder
+//  1. 需要一套手写导出工具来支持快速手动导出类（并统一实现）
+//  2. 这套工具会生产一个必要信息组，同时携带可能的 Debug 信息，在生产 Template 时会依据它进行生产
+//  3. 这些信息可以被一起放在 V8 对象的附带信息中，以便能更好的追踪问题
+//  4. 参数类型问题，const T&、T& 等，通过模板来进行转换，因为 v8 对象中是直接存储对象指针，如果是 primitive 则需要处理，但是总体可以用模板控制
+//  5. 标记为 out 的参数需要进行分化处理，如果是 struct 类型还好，但如果是 primitive 和 string 类型，就需要外部配合创建变量了
 
 struct V8Isolate;
 struct V8Context;
