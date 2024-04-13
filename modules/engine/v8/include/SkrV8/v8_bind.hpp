@@ -77,19 +77,30 @@ struct V8Bind {
         ForceOverrideWarn,  // if already exist, force override and warn
         ForceOverrideError, // if already exist, force override and error
     };
+    enum class EType
+    {
+        Primitive, // primitive type: integer, floating, boolean, string
+        Object,    // impl IObject，will solve inheritance automatically
+        Struct,    // other record types, require guid, will not solve inheritance
+    };
 
-    static constexpr bool is_primitive = false; // primitive type: integer, floating, boolean, string
+    static constexpr EType export_type = EType::Primitive;
 
     // primitive convert
     static v8::Local<v8::Value> primitive_to_v8(V8Context* ctx, const T& value);
     static T                    primitive_from_v8(V8Context* ctx, v8::Local<v8::Value> value);
 
-    // object bind info
+    // object/struct bind info
     static v8::Local<v8::FunctionTemplate> make_template(V8Isolate* isolate);
 
     // object convert
-    static v8::Local<v8::Value> find_v8(V8Context* ctx, T* p_obj);
-    static v8::Local<v8::Value> to_v8(V8Context* ctx, T* p_obj, EOwnerShip ownership, EOwnerShipOp ownership_op = EOwnerShipOp::InitOrWarn);
-    static T*                   from_v8(V8Context* ctx, v8::Local<v8::Value> value);
+    static v8::Local<v8::Value> obj_find_v8(V8Context* ctx, T* p_obj);
+    static v8::Local<v8::Value> obj_to_v8(V8Context* ctx, T* p_obj, EOwnerShip ownership, EOwnerShipOp ownership_op = EOwnerShipOp::InitOrWarn);
+    static T*                   obj_from_v8(V8Context* ctx, v8::Local<v8::Value> value);
+
+    // struct convert
+    static v8::Local<v8::Value> struct_find_v8(V8Context* ctx, T* p_struct);
+    static v8::Local<v8::Value> struct_to_v8(V8Context* ctx, T* p_struct, EOwnerShip ownership, EOwnerShipOp ownership_op = EOwnerShipOp::InitOrWarn);
+    static T*                   struct_from_v8(V8Context* ctx, v8::Local<v8::Value> value);
 };
 } // namespace skr
