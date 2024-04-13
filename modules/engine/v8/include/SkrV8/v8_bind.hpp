@@ -43,6 +43,18 @@ namespace skr
 //  10. 函数返回值有时候视为 JS 的 OwnerShip 比较好，比如一些 load 系的 API，可以通过 meta flag 进行标记
 //  11. 延申自 10，由 JS 创建的对象所产出的对象，其 OwnerShip 也应当被标记为 JS，生成用的 API 需要通过 meta flag 来进行标记
 //  12. 说了这么多，还是裸指针太垃圾，用 EmbeddedRC 可以解决绝大多数问题
+//
+// 命名空间：
+//  1. xmake.lua 内指定一个根空间，其中导出的所有代码都强制在这个空间下
+//  2. xmake.lua 内指定一个默认 pattern，用于生成空间名，比如将 ::skr::(.*) 替代为 $1，来移除代码自带的根空间
+//  3. 代码内指定一个 meta flag 来替换原有的空间
+//  4. 底层命名空间视为 module 名，其下的命名空间在 import 时使用解构赋值
+//
+// 继承模型
+//  1. 与 JS 保持一致，使用原型链继承成员函数（由于 CPP 都是通过访问器访问的，所以不存在 Field）
+//  2. V8 提供了 Template 级别的 Inherit，但是只支持单继承链
+//  3. interface 的实现待定，由于不是 JS 的语言特性，可以自由发挥
+//  4. 导出至 v8 时需要拿到类的 new 时类型，因此必须依赖 IObject，对于非 IObject 对象，视为 struct，不保证导出行为的继承关系正确
 
 struct V8Isolate;
 struct V8Context;

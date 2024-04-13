@@ -4,10 +4,10 @@
             "path": "../../",
             "name": "root",
         },
-        // {
-        //     "path": "../../build/.gens/",
-        //     "name": "gen-temp-files",
-        // },
+        {
+            "path": "../../build/.gens/",
+            "name": "gen-temp-files",
+        },
         // {
         //     "path": "../../tools/meta_codegen/",
         //     "name": "gen-script",
@@ -52,18 +52,4 @@
         "python.defaultInterpreterPath": "${workspaceFolder:root}/SDKs/tools/windows/python-embed/python.exe",
         "terminal.integrated.cwd": "${workspaceFolder:root}",
     },
-    "launch": {
-        "version": "0.2.0",
-        "configurations": [
-            {
-                "name": "codegen",
-                "type": "debugpy",
-                "request": "launch",
-                "program": "${workspaceFolder:root}/tools/meta_codegen/codegen.py",
-                "args": [
-                    "--config=${workspaceFolder:gen-temp-files}/MetaTest/windows/codegen/meta_codegen_config.json",
-                ],
-            }
-        ]
-    }
 }

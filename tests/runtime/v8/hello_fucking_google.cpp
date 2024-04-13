@@ -145,8 +145,7 @@ int main(int argc, char* argv[])
         {
             // Create a string containing the JavaScript source code.
             v8::Local<v8::String> source = v8::String::NewFromUtf8Literal(isolate, R"__(
-                function Fuck()
-                {
+                function Fuck() {
                     this.content = "fuck u google"
                     this.times = 114514 
                 }
@@ -193,6 +192,9 @@ int main(int argc, char* argv[])
         }
 
         isolate->RequestGarbageCollectionForTesting(v8::Isolate::kFullGarbageCollection);
+        // GC 通知 isolate->LowMemoryNotification()
+        // 等待 GC isolate->IdleNotificationDeadline()
+
         my_data_instances.clear();
     }
     // Dispose the isolate and tear down V8.
