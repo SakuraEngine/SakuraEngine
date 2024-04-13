@@ -4,10 +4,10 @@
             "path": "../../",
             "name": "root",
         },
-        // {
-        //     "path": "../../build/.gens/",
-        //     "name": "gen-temp-files",
-        // },
+        {
+            "path": "../../build/.gens/",
+            "name": "gen-temp-files",
+        },
         // {
         //     "path": "../../tools/meta_codegen/",
         //     "name": "gen-script",

@@ -179,7 +179,7 @@ function _meta_codegen_command(target, scripts, metadir, gendir, opt)
 
     -- config
     local config = {
-        output_dir = gendir,
+        output_dir = path.absolute(gendir),
         main_module = {
             module_name = target:name(),
             meta_dir = path.absolute(metadir),
@@ -195,7 +195,7 @@ function _meta_codegen_command(target, scripts, metadir, gendir, opt)
 
         table.insert(config.include_modules, {
             module_name = dep_target:name(),
-            meta_dir = path.join(dep_target:autogendir({root = true}), dep_target:plat(), "reflection/meta"),
+            meta_dir = path.absolute(path.join(dep_target:autogendir({root = true}), dep_target:plat(), "reflection/meta")),
             api = dep_api and dep_api:upper() or dep_target:name():upper(),
         })
     end
