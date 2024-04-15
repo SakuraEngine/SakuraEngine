@@ -378,6 +378,13 @@ function _meta_codegen(target, rootdir, metadir, gendir, sourcefile, headerfiles
             table.insert(dep_files, file)
         end
     end
+
+    -- collect target depend files
+    -- TODO. use config comapre
+    table.insert(dep_files, path.join(target:scriptdir(), "xmake.lua"))
+    for _, dep_target in ipairs(target:deps()) do
+        target.insert(dep_files, path.join(dep_target:scriptdir(), "xmake.lua"))
+    end
     
     local scripts = {}
 
