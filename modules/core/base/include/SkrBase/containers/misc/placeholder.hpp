@@ -3,7 +3,7 @@
 #include "SkrBase/misc/integer_tools.hpp"
 #include "SkrBase/misc/debug.h"
 
-namespace skr::container
+namespace skr
 {
 template <uint64_t Size, uint64_t Align>
 struct AlignedStorage {
@@ -28,4 +28,4 @@ struct Placeholder : AlignedStorage<sizeof(T) * N, alignof(T)> {
     }
 };
 
-}; // namespace skr::container
+}; // namespace skr

@@ -5,7 +5,7 @@ import framework.scheme as sc
 
 class FunctionBindGenerator(gen.GeneratorBase):
     def generate(self):
-        pass
+        script_dir = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
 
 def load_generators(generate_manager: gen.GenerateManager):
