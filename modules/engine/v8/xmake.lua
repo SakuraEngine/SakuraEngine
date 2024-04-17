@@ -12,6 +12,7 @@ shared_module("SkrV8", "SKR_V8", engine_version)
 
     -- dependencies
     public_dependency("SkrRT", engine_version)
+    public_dependency("SkrScript", engine_version)
     add_packages("v8", {public = true})
 
     -- add source files
