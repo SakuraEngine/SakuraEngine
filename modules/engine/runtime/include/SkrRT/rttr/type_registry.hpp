@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrContainers/span.hpp"
 #include "SkrRT/rttr/type_desc.hpp"
-#include "SkrRT/rttr/guid.hpp"
+#include "SkrGuid/guid.hpp"
 
 namespace skr::rttr
 {

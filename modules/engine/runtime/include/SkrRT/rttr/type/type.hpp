@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "SkrRT/rttr/guid.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrContainers/string.hpp"
 #include "SkrBase/types.h"
 
@@ -38,9 +38,9 @@ struct SKR_RUNTIME_API Type {
     // getter
     SKR_INLINE ETypeCategory type_category() const { return _type_category; }
     SKR_INLINE const skr::String& name() const { return _name; }
-    SKR_INLINE GUID          type_id() const { return _type_id; }
-    SKR_INLINE size_t        size() const { return _size; }
-    SKR_INLINE size_t        alignment() const { return _alignment; }
+    SKR_INLINE GUID               type_id() const { return _type_id; }
+    SKR_INLINE size_t             size() const { return _size; }
+    SKR_INLINE size_t             alignment() const { return _alignment; }
 
     // feature query
     virtual bool query_feature(ETypeFeature feature) const = 0;
@@ -63,7 +63,7 @@ struct SKR_RUNTIME_API Type {
 private:
     // basic data
     ETypeCategory _type_category = ETypeCategory::SKR_TYPE_CATEGORY_INVALID;
-    skr::String        _name          = {};
+    skr::String   _name          = {};
     GUID          _type_id       = {};
     size_t        _size          = 0;
     size_t        _alignment     = 0;

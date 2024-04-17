@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrBase/containers/misc/placeholder.hpp"
 #include "SkrContainers/vector.hpp"
-#include "SkrRT/rttr/guid.hpp"
+#include "SkrGuid/guid.hpp"
 
 namespace skr::script
 {
