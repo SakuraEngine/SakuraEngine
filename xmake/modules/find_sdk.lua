@@ -2,8 +2,7 @@ import("net.http")
 import("utils.archive")
 import("lib.detect.find_file")
 import("core.project.config")
-
-find_sdk = find_sdk or {}
+import("core.base.json")
 
 function tooldir()
     return vformat("SDKs/tools/$(host)")
@@ -18,14 +17,43 @@ function binarydir()
 end
 
 -- use_lib_cache = true
+manifest_cache=nil
+function fetch_github_manifest(force)
+    if force or manifest_cache == nil then
+        local sdkdir = sdkdir or os.projectdir().."/SDKs"
+        local manifest_path = sdkdir.."/manifest.json"
+        local url = "https://github.com/SakuraEngine/Sakura.Resources/releases/download/SDKs/manifest.json"
+        print("[fetch manifest]: "..url.."to"..sdkdir.."/manifest.json")
+        http.download(url, manifest_path, {continue = false})
+        manifest_cache = json.loadfile(manifest_path)
+    end
+
+    return manifest_cache
+end
 
 function file_from_github(zip)
     local sdkdir = sdkdir or os.projectdir().."/SDKs"
     local zip_dir = find_file(zip, {sdkdir})
-    if(zip_dir == nil) then
+    local manifest = fetch_github_manifest()
+    local manifest_zip_sha = manifest[zip]
+
+    if manifest_zip_sha == nil then
+        raise("failed to find "..zip.." in manifest!")
+    end
+
+    local download_path = os.projectdir().."/SDKs/"..zip
+    if (zip_dir == nil) then
         local url = vformat("https://github.com/SakuraEngine/Sakura.Resources/releases/download/SDKs/")
-        print("download: "..url..zip.." to: "..os.projectdir().."/SDKs/"..zip)
-        http.download(url..zip, os.projectdir().."/SDKs/"..zip, {continue = false})
+        print("download: "..url..zip.." to: "..download_path)
+        http.download(url..zip, download_path, {continue = false})
+    elseif (hash.sha256(zip_dir) ~= manifest_zip_sha) then
+        local url = vformat("https://github.com/SakuraEngine/Sakura.Resources/releases/download/SDKs/")
+        print("[sha256 miss match] download: "..url..zip.." to: "..download_path)
+        http.download(url..zip, download_path, {continue = false})
+    end
+
+    if hash.sha256(download_path) ~= manifest_zip_sha then
+        raise("sha miss match, failed to download "..zip.." from github!\n".."expect: "..manifest_zip_sha.."\n".."actual: "..hash.sha256(download_path))
     end
 end
 

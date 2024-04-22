@@ -28,6 +28,7 @@ _deps
 /SDKs/python
 /SDKs/*.zip
 /SDKs/*.ttf
+/SDKs/manifest.json
 stressTest
 /thirdparty/*.zip
 scenes
