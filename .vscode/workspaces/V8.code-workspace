@@ -8,10 +8,6 @@
             "path": "../../build/.gens/",
             "name": "gen-temp-files",
         },
-        {
-            "path": "../../modules/engine/script/",
-            "name": "script-core",
-        },
     ],
     "settings": {
         "dascript.server.connectTimeout": 10,
