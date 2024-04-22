@@ -9,6 +9,6 @@ NotNull<RenderObject*> ColorPicker::create_render_object() SKR_NOEXCEPT
 }
 void ColorPicker::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
 {
-    auto r_obj = render_object->type_cast_fast<RenderColorPicker>();
+    [[maybe_unused]] auto r_obj = render_object->type_cast_fast<RenderColorPicker>();
 }
 } // namespace skr::gui

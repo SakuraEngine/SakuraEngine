@@ -84,7 +84,7 @@ void SkrRenderDevice::init()
 
     // create rg
     _render_graph = RenderGraph::create(
-    [=](render_graph::RenderGraphBuilder& b) {
+    [=, this](render_graph::RenderGraphBuilder& b) {
         b.with_device(_cgpu_device)
         .with_gfx_queue(_cgpu_queue);
     });

@@ -782,7 +782,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
         // [inout]skr::anim::AnimComponent, [in]game::anim_state_t, [in]skr::anim::SkeletonComponent
         {
             SkrZoneScopedN("AnimSystem");
-            auto animJob = SkrNewLambda([=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
+            auto animJob = SkrNewLambda([=, this](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
                 SkrZoneScopedN("AnimJob");
                 auto     states     = (game::anim_state_t*)sugoiV_get_owned_ro_local(view, localTypes[1]);
                 uint32_t g_id       = 0;

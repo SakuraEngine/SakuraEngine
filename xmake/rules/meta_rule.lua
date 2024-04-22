@@ -2,7 +2,7 @@ target("SkrMetaCodegenPolicy")
     set_kind("headeronly")
     set_group("00.utilities")
     -- dispatch codegen task
-    before_build(function(target)
+    on_config(function(target)
         import("meta_system")
         meta_system()
     end)
