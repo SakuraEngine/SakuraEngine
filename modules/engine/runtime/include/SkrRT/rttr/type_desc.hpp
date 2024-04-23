@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/config.h"
 #include <cstdint>
-#include "SkrRT/rttr/guid.hpp"
+#include "SkrGuid/guid.hpp"
 
 namespace skr::rttr
 {

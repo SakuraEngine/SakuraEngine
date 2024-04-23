@@ -1,6 +1,6 @@
 #pragma once
 #include <v8.h>
-#include "SkrRT/rttr/guid.hpp"
+#include "SkrGuid/guid.hpp"
 
 namespace skr
 {

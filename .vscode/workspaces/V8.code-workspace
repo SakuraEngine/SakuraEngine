@@ -8,18 +8,6 @@
             "path": "../../build/.gens/",
             "name": "gen-temp-files",
         },
-        // {
-        //     "path": "../../tools/meta_codegen/",
-        //     "name": "gen-script",
-        // },
-        // {
-        //     "path": "../../modules/engine/basic_meta/",
-        //     "name": "gen-module",
-        // },
-        // {
-        //     "path": "../../tests/meta_system/",
-        //     "name": "gen-test",
-        // }
     ],
     "settings": {
         "dascript.server.connectTimeout": 10,

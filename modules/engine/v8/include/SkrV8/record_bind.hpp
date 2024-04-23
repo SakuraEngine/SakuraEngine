@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrContainers/vector.hpp"
-#include "SkrRT/rttr/guid.hpp"
+#include "SkrGuid/guid.hpp"
 
 namespace skr::v8_bind
 {

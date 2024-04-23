@@ -1,7 +1,7 @@
 #pragma once
+#include "SkrGuid/guid.hpp"
 #include "SkrRT/config.h"
 #include "SkrRT/resource/resource_handle.h"
-#include "SkrRT/rttr/guid.hpp"
 #include "SkrRT/rttr/type_desc.hpp"
 #include "SkrRT/rttr/type_registry.hpp"
 #include "SkrRT/rttr/type/type.hpp"
@@ -93,33 +93,33 @@ struct RTTRTraits<volatile T> : RTTRTraits<T> {
 
 // help marcos
 #define SKR_RTTR_MAKE_U8(__VALUE) u8##__VALUE
-#define SKR_RTTR_TYPE(__TYPE, __GUID)                                              \
-    namespace skr::rttr                                                            \
-    {                                                                              \
-    template <>                                                                    \
-    struct RTTRTraits<__TYPE> {                                                    \
-        inline static constexpr size_t type_desc_size = 1;                         \
-        inline static void             write_type_desc(TypeDesc* desc)             \
-        {                                                                          \
-            new (desc) TypeDesc{ get_guid() };                                     \
-        }                                                                          \
-                                                                                   \
+#define SKR_RTTR_TYPE(__TYPE, __GUID)                                                  \
+    namespace skr::rttr                                                                \
+    {                                                                                  \
+    template <>                                                                        \
+    struct RTTRTraits<__TYPE> {                                                        \
+        inline static constexpr size_t type_desc_size = 1;                             \
+        inline static void             write_type_desc(TypeDesc* desc)                 \
+        {                                                                              \
+            new (desc) TypeDesc{ get_guid() };                                         \
+        }                                                                              \
+                                                                                       \
         inline static skr::StringView get_name() { return SKR_RTTR_MAKE_U8(#__TYPE); } \
-        inline static GUID        get_guid()                                       \
-        {                                                                          \
-            using namespace skr::guid::literals;                                   \
-            return u8##__GUID##_guid;                                              \
-        }                                                                          \
-        inline static Type* get_type()                                             \
-        {                                                                          \
-            static Type* type = nullptr;                                           \
-            if (!type)                                                             \
-            {                                                                      \
-                type = get_type_from_guid(get_guid());                             \
-            }                                                                      \
-            return type;                                                           \
-        }                                                                          \
-    };                                                                             \
+        inline static GUID            get_guid()                                       \
+        {                                                                              \
+            using namespace skr::guid::literals;                                       \
+            return u8##__GUID##_guid;                                                  \
+        }                                                                              \
+        inline static Type* get_type()                                                 \
+        {                                                                              \
+            static Type* type = nullptr;                                               \
+            if (!type)                                                                 \
+            {                                                                          \
+                type = get_type_from_guid(get_guid());                                 \
+            }                                                                          \
+            return type;                                                               \
+        }                                                                              \
+    };                                                                                 \
     }
 
 // primitive types
