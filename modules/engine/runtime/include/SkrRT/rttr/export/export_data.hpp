@@ -52,26 +52,44 @@ struct ParamData {
     MakeDefaultFunc make_default;
 
     // TODO. meta data
+
+    template <typename Arg>
+    inline static ParamData Make()
+    {
+        return {
+            {},
+            TypeIdentifier::Make<Arg>(),
+            {},
+            {}
+        };
+    }
 };
 
 struct FunctionData {
     // signature
-    String                 name;
-    Vector<String>         name_space;
-    TypeIdentifier         ret_type;
-    Vector<TypeIdentifier> param_type;
+    String            name;
+    Vector<String>    name_space;
+    TypeIdentifier    ret_type;
+    Vector<ParamData> param_data;
     // TODO. meta data
 
     // [Provided by export platform]
     void* invoke;
+
+    template <typename Ret, typename... Args>
+    inline void fill_signature(Ret (*)(Args...))
+    {
+        ret_type   = TypeIdentifier::Make<Ret>();
+        param_data = { ParamData::Make<Args>()... };
+    }
 };
 
 struct MethodData {
     // signature
-    String                 name;
-    TypeIdentifier         ret_type;
-    Vector<TypeIdentifier> param_type;
-    bool                   is_const;
+    String            name;
+    TypeIdentifier    ret_type;
+    Vector<ParamData> param_data;
+    bool              is_const;
     // TODO. meta data
 
     // [Provided by export platform]
@@ -81,14 +99,14 @@ struct MethodData {
     inline void fill_signature(Ret (T::*)(Args...))
     {
         ret_type   = TypeIdentifier::Make<Ret>();
-        param_type = { TypeIdentifier::Make<Args>()... };
+        param_data = { ParamData::Make<Args>()... };
         is_const   = false;
     }
     template <class T, typename Ret, typename... Args>
     inline void fill_signature(Ret (T::*)(Args...) const)
     {
         ret_type   = TypeIdentifier::Make<Ret>();
-        param_type = { TypeIdentifier::Make<Args>()... };
+        param_data = { ParamData::Make<Args>()... };
         is_const   = true;
     }
 };
@@ -114,9 +132,9 @@ struct FieldData {
 
 struct StaticMethodData {
     // signature
-    String                 name;
-    TypeIdentifier         ret_type;
-    Vector<TypeIdentifier> param_type;
+    String            name;
+    TypeIdentifier    ret_type;
+    Vector<ParamData> param_data;
     // TODO. meta data
 
     // [Provided by export platform]
@@ -126,7 +144,7 @@ struct StaticMethodData {
     inline void fill_signature(Ret (*)(Args...))
     {
         ret_type   = TypeIdentifier::Make<Ret>();
-        param_type = { TypeIdentifier::Make<Args>()... };
+        param_data = { ParamData::Make<Args>()... };
     }
 };
 
@@ -148,11 +166,17 @@ struct StaticFieldData {
 
 struct CtorData {
     // signature
-    Vector<TypeIdentifier> param_type;
+    Vector<ParamData> param_data;
     // TODO. meta data
 
     // [Provided by export platform]
     void* invoke;
+
+    template <typename... Args>
+    inline void fill_signature()
+    {
+        param_data = { ParamData::Make<Args>()... };
+    }
 };
 
 struct DtorData {

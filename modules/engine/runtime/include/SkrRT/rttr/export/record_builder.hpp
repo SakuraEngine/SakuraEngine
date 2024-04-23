@@ -15,9 +15,9 @@ struct RecordBuilder {
     template <typename... Args>
     inline RecordBuilder& ctor()
     {
-        auto& ctor_data      = _data->ctor_data.emplace().ref();
-        ctor_data.param_type = { TypeIdentifier::Make<Args>()... };
-        ctor_data.invoke     = nullptr;
+        auto& ctor_data = _data->ctor_data.emplace().ref();
+        ctor_data.fill_signature<Args...>();
+        ctor_data.invoke = nullptr;
         return *this;
     }
 
