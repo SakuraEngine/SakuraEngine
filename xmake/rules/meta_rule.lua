@@ -1,8 +1,9 @@
 target("SkrMetaCodegenPolicy")
-    set_kind("headeronly")
+    set_kind("phony")
     set_group("00.utilities")
+    set_policy("build.across_targets_in_parallel", false)
     -- dispatch codegen task
-    before_build(function(target)
+    on_config(function(target)
         import("meta_system")
         meta_system()
     end)
