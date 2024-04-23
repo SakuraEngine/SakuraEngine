@@ -26,6 +26,9 @@ struct B : A, ITest {
     static int64_t static_i64;
 };
 
+int32_t B::static_i32 = 114;
+int64_t B::static_i64 = 514;
+
 struct TestBackend {
 };
 
