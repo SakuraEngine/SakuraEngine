@@ -17,6 +17,16 @@ namespace skr
 //  c. 针对第 1 点，可以增加一个 OwnerShip 标记，CPP 如果期望主动管理（回收），需要获取 OwnerShip
 //     反之，如果期望跟随 v8 对象，可以将 OwnerShip 让渡给 v8
 //
+// 关于值类型处理，与是否需要暴露指针类型
+//  确定一定要支持的：
+//      1. 值类型 Field 引用会一直保持其原本对象的引用，如果对象失效，Field 引用也应当失效
+//      2. 值类型容器，Get 出来的 Object 内存的其实是容器对象引用和一个索引，这回导致 Add/Remove 后行为出现变化，
+//         这与 CPP 内的行为一致，是为了避免 SegmentFault 的妥协做法，在语言交界层需要注意这个问题
+//      3. JS 层需要一个区分 object 类型的手段，为 FieldRef 或 ContainerRef 提供 Extract 方法解除引用提取为对象
+//  不一定要做的：
+//      1. 支持以指针类型直接暴露，一般来说胶水层代码用不到
+//      2. 值类型容器和指针类型容器区分导出，否则 Vector<T> 和 Vector<T*> 都导出为 Vector<T> 在 JS 层写代码时候难以引起足够注意
+//
 // Bind Traits:
 //  主要的运用场景为便利导出至 V8 的书写，尤其是 Class 导出的 Codegen，通过模板特化，最大限度的保障代码的整洁、复用、灵活
 //  1. 内存管理交叉问题需要一个以 Isolate 为单位的包装，在这个包装内用一张 map 存储 native 与 v8 对象的映射关系，同时
@@ -80,6 +90,11 @@ namespace skr
 //    2. 为避免多重继承，每个导出类都要实现其继承链上所有的导出虚函数
 //    3. meta 阶段需要知晓哪些函数是可以被覆写的
 //    4. 冻结必须是 devirtualize 的，因此成员函数指针并无法达成这一点，必须手动调用，这就意味着必须硬编码实现
+//
+// 导出多维 ArrayDim，多重指针等 field 的问题：
+//    1. RTTR 系统提供了 generic type 来辅助导出
+//    2. 导出层能处理一重指针和三维数组，以减少创建 generic type 的次数，对于超过这一上限的，需要创建 generic type，此时 js 侧的导出会有问题
+//    3. JS 对于指针的导出策略需要商榷
 
 struct V8Isolate;
 struct V8Context;
