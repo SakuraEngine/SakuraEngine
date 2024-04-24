@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
+#include <type_traits>
 
 namespace skr::rttr
 {

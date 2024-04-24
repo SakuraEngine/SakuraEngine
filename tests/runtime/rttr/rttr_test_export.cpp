@@ -46,6 +46,7 @@ struct TestBackend {
 SKR_RTTR_TYPE(A, "03ae55ec-5cab-4b57-8c7c-fabddb9c8e87")
 SKR_RTTR_TYPE(ITest, "ceb4726c-e321-4dd8-9d18-ddba2019d0f2")
 SKR_RTTR_TYPE(B, "ee9389fe-6152-4540-904b-8424078c963c")
+SKR_RTTR_TYPE(ETestEnum, "ec8a3592-a1d7-445f-94a4-6087bd27e006")
 
 TEST_CASE("test rttr export")
 {

@@ -12,6 +12,9 @@ struct EnumItem {
     // TODO. meta data
 };
 struct EnumData {
+    String           name;
+    Vector<String>   name_space;
+    GUID             type_id;
     GUID             underlying_type_id;
     Vector<EnumItem> items;
     // TODO. meta data

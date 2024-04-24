@@ -91,6 +91,23 @@ inline RecordBuilder<T, Backend>::RecordBuilder(RecordData* data)
 {
 }
 
+// basic info
+template <typename T, typename Backend>
+inline RecordBuilder<T, Backend>& RecordBuilder<T, Backend>::name(String name)
+{
+    // TODO. parse namesapce
+    _data->name = std::move(name);
+    return *this;
+}
+template <typename T, typename Backend>
+inline RecordBuilder<T, Backend>& RecordBuilder<T, Backend>::basic_info()
+{
+    _data->type_id = RTTRTraits<T>::get_guid();
+    // TODO. platform provide
+    // _data->dtor_data.invoke = +[](void* ptr) { reinterpret_cast<T*>(ptr)->~T(); };
+    return *this;
+}
+
 // ctor
 template <typename T, typename Backend>
 template <typename... Args>

@@ -51,9 +51,12 @@ namespace skr
 //  4. 底层命名空间视为 module 名，其下的命名空间在 import 时使用解构赋值
 //
 // 继承模型
-//  1. 与 JS 保持一致，使用原型链继承成员函数（由于 CPP 都是通过访问器访问的，所以不存在 Field）
-//  2. V8 提供了 Template 级别的 Inherit，但是只支持单继承链
-//  3. interface 的实现待定，由于不是 JS 的语言特性，可以自由发挥
+// // 1. 与 JS 保持一致，使用原型链继承成员函数（由于 CPP 都是通过访问器访问的，所以不存在 Field）
+// // 2. V8 提供了 Template 级别的 Inherit，但是只支持单继承链
+// // 3. interface 的实现待定，由于不是 JS 的语言特性，可以自由发挥
+//  1. 为了不对 cpp 侧的编码造成侵入，js 不识别任何 cpp 的继承关系，由于其脚本的性质，没有继承关系不影响它对 API 的调用
+//  2. 继承的 field 和 method 导出时直接展平到导出的类型中去
+//  3. 需要知晓 cpp 侧继承情况的时候，用引擎提供的 cpp_instance_of 来进行判断
 //  4. 导出至 v8 时需要拿到类的 new 时类型，因此必须依赖 IObject，对于非 IObject 对象，视为 struct，不保证导出行为的继承关系正确
 //
 // 手写导出/FunctionTemplateBuilder

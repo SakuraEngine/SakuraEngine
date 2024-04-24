@@ -22,3 +22,10 @@
 #define sreflect_struct(...) struct sreflect sattr(__VA_ARGS__)
 #define sreflect_enum(...) enum sreflect sattr(__VA_ARGS__)
 #define sreflect_enum_class(...) enum class sreflect sattr(__VA_ARGS__)
+
+// meta tools
+#ifdef __meta__
+    #define unimplemented_no_meta(__MSG)
+#else
+    #define unimplemented_no_meta(__MSG) static_assert(std::is_same_v<int, void>, __MSG)
+#endif
