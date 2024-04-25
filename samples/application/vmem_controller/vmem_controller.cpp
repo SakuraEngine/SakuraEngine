@@ -186,7 +186,7 @@ int SVMemCCModule::main_module_exec(int argc, char8_t** argv)
     // initialize render graph
     namespace render_graph = skr::render_graph;
     graph = render_graph::RenderGraph::create(
-    [=](skr::render_graph::RenderGraphBuilder& builder) {
+    [=, this](skr::render_graph::RenderGraphBuilder& builder) {
         builder.with_device(device)
         .with_gfx_queue(gfx_queue)
         .enable_memory_aliasing();
@@ -241,7 +241,7 @@ int SVMemCCModule::main_module_exec(int argc, char8_t** argv)
         });
         render_graph_imgui_add_render_pass(graph, back_buffer, CGPU_LOAD_ACTION_CLEAR);
         graph->add_present_pass(
-            [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+            [=, this](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
                 builder.set_name(SKR_UTF8("present_pass"))
                 .swapchain(swapchain, backbuffer_index)
                 .texture(back_buffer, true);
