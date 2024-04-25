@@ -1,5 +1,5 @@
 #include "SkrOS/thread.h"
-#include "SkrRT/platform/crash.h"
+#include "SkrCore/crash.h"
 #include "SkrCore/log.h"
 #include <thread>
 #include <future>

@@ -1,4 +1,4 @@
-#include "SkrRT/platform/crash.h"
+#include "SkrCore/crash.h"
 #include "SkrCore/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/async/thread_job.hpp"

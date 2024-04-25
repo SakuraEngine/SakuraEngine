@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/misc/types.h"
+#include "SkrBase/types.h"
 #ifdef __cplusplus
 #include "SkrOS/thread.h"
 #include <SkrContainers/span.hpp>
@@ -28,7 +28,7 @@ enum
     kCrashCodeCount
 };
 typedef int32_t                CrashTerminateCode;
-SKR_RUNTIME_API const char8_t* skr_crash_code_string(CrashTerminateCode code) SKR_NOEXCEPT;
+SKR_CORE_API const char8_t* skr_crash_code_string(CrashTerminateCode code) SKR_NOEXCEPT;
 
 typedef struct SCrashHandler SCrashHandler;
 typedef struct SCrashContext {
@@ -44,10 +44,10 @@ typedef int (*SProcCrashCallback)(struct SCrashContext* context, void* usr_data)
 
 typedef struct SCrashHandler* SCrashHandlerId;
 
-SKR_RUNTIME_API SCrashHandlerId skr_initialize_crash_handler() SKR_NOEXCEPT;
-SKR_RUNTIME_API SCrashHandlerId skr_crash_handler_get() SKR_NOEXCEPT;
-SKR_RUNTIME_API void            skr_crash_handler_add_callback(SCrashHandlerId handler, SProcCrashCallback callback, void* usr_data) SKR_NOEXCEPT;
-SKR_RUNTIME_API void            skr_finalize_crash_handler() SKR_NOEXCEPT;
+SKR_CORE_API SCrashHandlerId skr_initialize_crash_handler() SKR_NOEXCEPT;
+SKR_CORE_API SCrashHandlerId skr_crash_handler_get() SKR_NOEXCEPT;
+SKR_CORE_API void            skr_crash_handler_add_callback(SCrashHandlerId handler, SProcCrashCallback callback, void* usr_data) SKR_NOEXCEPT;
+SKR_CORE_API void            skr_finalize_crash_handler() SKR_NOEXCEPT;
 
 #ifdef __cplusplus
 }

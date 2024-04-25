@@ -2,23 +2,14 @@
 #include "vfs.cpp"
 
 #include "standard/stdio_vfs.cpp"
-#include "standard/crash_handler.cpp"
 #if SKR_PLAT_UNIX
-    #if SKR_PLAT_MACOSX
-        #define UNIX_CRASH_HANDLER_IMPLEMENTED
-        #include "apple/crash_handler.cpp"
-    #elif SKR_PLAT_LINUX
-        #define UNIX_CRASH_HANDLER_IMPLEMENTED
-        #include "linux/crash_handler.cpp"
-    #endif
     #include "unix/unix_vfs.cpp"
-    #include "unix/crash_handler.cpp"
 #elif SKR_PLAT_WINDOWS
     #include "windows/windows_vfs.cpp"
-    #include "windows/crash_handler.cpp"
 #endif
 
 #include "SkrRT/platform/system.h"
+
 namespace skr
 {
 ISystemMessageHandler::~ISystemMessageHandler() SKR_NOEXCEPT {}

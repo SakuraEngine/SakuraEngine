@@ -1,4 +1,4 @@
-#include "SkrRT/platform/crash.h"
+#include "SkrCore/crash.h"
 #include "SkrCore/log.h"
 
 #include "SkrTestFramework/framework.hpp"
