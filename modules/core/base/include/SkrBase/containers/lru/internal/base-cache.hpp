@@ -345,7 +345,7 @@ class BaseCache {
   BaseCache(size_t capacity,
             const HashFunction& hash,
             const KeyEqual& key_equal)
-  : _map(0, hash, key_equal), _capacity(capacity), _last_accessed(key_equal) {
+  : _map(0, hash, key_equal), _last_accessed(key_equal), _capacity(capacity) {
   }
 
   /// Constructor.

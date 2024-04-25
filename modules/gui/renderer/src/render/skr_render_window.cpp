@@ -361,7 +361,7 @@ void SkrRenderWindow::_declare_render_resources()
         });
     }
     _depth_buffer = graph->create_texture(
-    [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+    [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
         const auto texInfo = _cgpu_swapchain->back_buffers[0]->info;
         builder.set_name(SKR_UTF8("depth"))
         .extent(texInfo->width, texInfo->height)
@@ -452,7 +452,7 @@ void SkrRenderWindow::_render()
 
     // present pass
     rg->add_present_pass(
-    [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+    [=, this](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
         builder.set_name(SKR_UTF8("present"))
         .swapchain(_cgpu_swapchain, _backbuffer_index)
         .texture(_back_buffer, true);

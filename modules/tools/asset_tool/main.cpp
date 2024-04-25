@@ -238,7 +238,7 @@ int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
             render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_CLEAR);
         }
         renderGraph->add_present_pass(
-        [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+        [=, this](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
             builder.set_name(u8"present_pass")
             .swapchain(swapchain, backbuffer_index)
             .texture(back_buffer, true);

@@ -920,7 +920,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
 
         // early render jobs. When the main timeline is doing present jobs, we can do some work in parallel
         auto back_buffer = renderGraph->create_texture(
-        [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+        [=, this](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
             builder.set_name(u8"backbuffer")
             .import(swapchain->back_buffers[backbuffer_index], CGPU_RESOURCE_STATE_UNDEFINED)
             .allow_render_target();
@@ -955,7 +955,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
 
         // blit backbuffer & present
         auto present_pass = renderGraph->add_present_pass(
-        [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+        [=, this](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
             builder.set_name(u8"present_pass")
             .swapchain(swapchain, backbuffer_index)
             .texture(back_buffer, true);

@@ -199,7 +199,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
         builder.set_name(u8"BarrierSkinVertexBuffers")
         .can_be_lone();
     },
-    [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context) {
+    [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context) {
         SkrZoneScopedN("BarrierSkinMeshes");
         CGPUResourceBarrierDescriptor  barrier_desc = {};
         skr::Vector<CGPUBufferBarrier> barriers;
@@ -246,7 +246,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
     if (!root_signature) return; // no drawcalls
 
     renderGraph->add_render_pass(
-    [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
+    [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
         const auto out_color    = renderGraph->get_texture(u8"backbuffer");
         const auto depth_buffer = renderGraph->get_texture(u8"depth");
         builder.set_name(u8"forward_pass")
@@ -263,7 +263,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
         }
         need_clear = false;
     },
-    [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
+    [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
         auto cb = pass_context.resolve(cbuffer);
         SKR_ASSERT(cb && "cbuffer not found");
         ::memcpy(cb->info->cpu_mapped_address, &viewport->view_projection, sizeof(viewport->view_projection));

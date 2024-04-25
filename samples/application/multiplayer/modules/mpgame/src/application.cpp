@@ -357,7 +357,7 @@ void MPApplication::Render()
     if(stage == MP_STAGE_GAME)
     {
         // Update camera
-        auto cameraUpdate = [=](sugoi_chunk_view_t* view) {
+        auto cameraUpdate = [=, this](sugoi_chunk_view_t* view) {
             auto cameras = sugoi::get_owned_rw<skr_camera_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
@@ -380,7 +380,7 @@ void MPApplication::Render()
     }
     render_graph_imgui_add_render_pass(renderer.renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
     renderer.renderGraph->add_present_pass(
-    [=](skr::render_graph::RenderGraph& g, skr::render_graph::PresentPassBuilder& builder) {
+    [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::PresentPassBuilder& builder) {
         builder.set_name(u8"present_pass")
         .swapchain(renderer.swapChain, backbuffer_index)
         .texture(back_buffer, true);
