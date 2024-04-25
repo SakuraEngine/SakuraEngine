@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "marl_test.h" // IWYU pragma: export
-#include "SkrRT/platform/crash.h"
+#include "SkrCore/crash.h"
 
 static struct ProcInitializer
 {
