@@ -32,6 +32,10 @@ jobs:
           xmake-version: latest
           actions-cache-folder: .xmake-cache-W${{ steps.cache_key.outputs.key }}
 
+      # FIXME. switch to dev branch to fix ci temporary
+      - name: Use xmake dev branch
+        run: xmake update -s dev
+
       # Update xmake repository (in order to have the file that will be cached)
       - name: Update xmake repository
         run: xmake repo --update
