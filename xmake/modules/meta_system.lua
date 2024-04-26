@@ -71,7 +71,7 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
     local argv2 = {
         sourcefile, 
         "--output="..path.absolute(outdir), 
-        "--root="..rootdir or path.absolute(target:scriptdir()), 
+        "--root="..rootdir or path.absolute(target:scriptdir()),
         "--"
     }
     if is_host("windows") then
@@ -89,7 +89,14 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
     
     -- print commands
     local command = program .. " " .. table.concat(argv, " ")
-    if not opt.quiet then
+    if option.get("verbose") then
+        cprint(
+            "${green}[%s]: compiling.meta ${clear}%ss\n%s"
+            , target:name()
+            , path.relative(outdir)
+            , command
+        )
+    elseif not opt.quiet then
         cprint(
             "${green}[%s]: compiling.meta ${clear}%ss"
             , target:name()
