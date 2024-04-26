@@ -109,64 +109,6 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
         )
     end
 end
-function _meta_codegen_command_old(target, scripts, metadir, gendir, opt)
-    -- get config
-    local api = target:extraconf("rules", _meta_rule_codegen_name, "api")
-    local generator = os.projectdir()..vformat("/tools/meta_codegen/_deprecated/codegen.py")
-    local start_time = os.time()
-    
-    -- collect deps data
-    local meta_deps_dir = {}
-    for _, dep in pairs(target:deps()) do
-        local depmetadir = path.join(dep:autogendir({root = true}), dep:plat(), "reflection/meta")
-        table.insert(meta_deps_dir, depmetadir)
-    end
-
-    if not opt.quiet then
-        cprint("${cyan}[%s]: %s${clear} %s", target:name(), path.filename(generator), path.relative(metadir))
-    end
-    
-    -- baisc commands
-    local command = {
-        generator,
-        "-root", path.absolute(metadir),
-        "-outdir", gendir,
-        "-api", api and api:upper() or target:name():upper(),
-        "-module", target:name(),
-    }
-
-    -- strong order
-    table.insert(command, "-includes")
-    for _, dep in ipairs(meta_deps_dir) do
-        table.insert(command, dep)
-    end
-
-    -- generators
-    table.insert(command, "-generators")
-    for _, script in pairs(scripts) do
-        table.insert(command, script.file)
-    end
-
-    if verbos then
-        cprint(
-            "[%s] python %s"
-            , target:name()
-            , table.concat(command, " ")
-        )
-    end
-
-    -- call codegen script
-    os.iorunv(_python.program, command)
-
-    if not opt.quiet then
-        cprint(
-            "${cyan}[%s]: %s${clear} %s cost ${red}%d seconds"
-            , target:name()
-            , path.filename(generator)
-            , path.relative(metadir)
-            , os.time() - start_time)
-    end
-end
 function _meta_codegen_command(target, scripts, metadir, gendir, opt)
     -- get config
     local api = target:extraconf("rules", _meta_rule_codegen_name, "api")
@@ -353,6 +295,7 @@ function _meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles
             for _, headerfile in ipairs(headerfiles) do
                 headerfile = path.absolute(headerfile)
                 local relative_include = path.relative(headerfile, path.directory(sourcefile))
+                relative_include = relative_include:gsub("\\", "/")
                 unity_cpp:print("#include \"%s\"", relative_include)
                 if verbose then
                     cprint("${magenta}[%s]: meta.header ${clear}%s", target:name(), path.relative(headerfile))
