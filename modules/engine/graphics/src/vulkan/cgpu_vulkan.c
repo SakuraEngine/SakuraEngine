@@ -1826,7 +1826,7 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGPUCommandBufferId cm
     CGPUCommandBuffer_Vulkan* Cmd = (CGPUCommandBuffer_Vulkan*)cmd;
     const CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)cmd->device;
     // Find or create render pass
-    uint32_t Width, Height;
+    uint32_t Width=0, Height=0;
     VkRenderPass render_pass = VK_NULL_HANDLE;
     {
         VkUtil_RenderPassDesc rpdesc = {

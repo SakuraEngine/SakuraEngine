@@ -93,11 +93,11 @@ class SGameModule : public skr::IDynamicModule
     skr::resource::SLocalResourceRegistry* registry;
 
     struct sugoi_storage_t* game_world         = nullptr;
-    SRenderDeviceId        game_render_device = nullptr;
-    SRendererId            game_renderer      = nullptr;
-    CGPUSwapChainId        swapchain          = nullptr;
-    CGPUFenceId            present_fence      = nullptr;
-    SWindowHandle          main_window        = nullptr;
+    SRenderDeviceId         game_render_device = nullptr;
+    SRendererId             game_renderer      = nullptr;
+    CGPUSwapChainId         swapchain          = nullptr;
+    CGPUFenceId             present_fence      = nullptr;
+    SWindowHandle           main_window        = nullptr;
 
     skr::SPtr<skr::JobQueue> job_queue = nullptr;
 
@@ -597,21 +597,21 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
     // loop
     bool               quit = false;
     skr::task::event_t pSkinCounter(nullptr);
-    sugoi_query_t*      initAnimSkinQuery;
-    sugoi_query_t*      skinQuery;
-    sugoi_query_t*      moveQuery;
-    sugoi_query_t*      cameraQuery;
-    sugoi_query_t*      animQuery;
+    sugoi_query_t*     initAnimSkinQuery;
+    sugoi_query_t*     skinQuery;
+    sugoi_query_t*     moveQuery;
+    sugoi_query_t*     cameraQuery;
+    sugoi_query_t*     animQuery;
     moveQuery         = sugoiQ_from_literal(game_world,
-                                           u8"[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t,!skr_camera_comp_t");
+                                            u8"[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t,!skr_camera_comp_t");
     cameraQuery       = sugoiQ_from_literal(game_world,
-                                           u8"[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
+                                            u8"[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
     animQuery         = sugoiQ_from_literal(game_world,
-                                           u8"[in]skr_render_effect_t, [in]game::anim_state_t, [out]<unseq>skr::anim::AnimComponent, [in]<unseq>skr::anim::SkeletonComponent");
+                                            u8"[in]skr_render_effect_t, [in]game::anim_state_t, [out]<unseq>skr::anim::AnimComponent, [in]<unseq>skr::anim::SkeletonComponent");
     initAnimSkinQuery = sugoiQ_from_literal(game_world,
-                                           u8"[inout]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
+                                            u8"[inout]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
     skinQuery         = sugoiQ_from_literal(game_world,
-                                           u8"[in]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
+                                            u8"[in]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
 
     auto handler = skr_system_get_default_handler();
     handler->add_window_close_handler(
@@ -782,7 +782,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
         // [inout]skr::anim::AnimComponent, [in]game::anim_state_t, [in]skr::anim::SkeletonComponent
         {
             SkrZoneScopedN("AnimSystem");
-            auto animJob = SkrNewLambda([=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
+            auto animJob = SkrNewLambda([=, this](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
                 SkrZoneScopedN("AnimJob");
                 auto     states     = (game::anim_state_t*)sugoiV_get_owned_ro_local(view, localTypes[1]);
                 uint32_t g_id       = 0;
@@ -920,7 +920,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
 
         // early render jobs. When the main timeline is doing present jobs, we can do some work in parallel
         auto back_buffer = renderGraph->create_texture(
-        [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+        [=, this](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
             builder.set_name(u8"backbuffer")
             .import(swapchain->back_buffers[backbuffer_index], CGPU_RESOURCE_STATE_UNDEFINED)
             .allow_render_target();
@@ -955,7 +955,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
 
         // blit backbuffer & present
         auto present_pass = renderGraph->add_present_pass(
-        [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+        [=, this](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
             builder.set_name(u8"present_pass")
             .swapchain(swapchain, backbuffer_index)
             .texture(back_buffer, true);

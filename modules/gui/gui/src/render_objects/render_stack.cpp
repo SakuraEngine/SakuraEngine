@@ -14,6 +14,9 @@ struct _StackHelper {
                 return BoxConstraints::Tight(constraints.biggest());
             case EPositionalFit::PassThrough:
                 return constraints;
+            default:
+                SKR_UNREACHABLE_CODE();
+                return {};
         }
     }
 

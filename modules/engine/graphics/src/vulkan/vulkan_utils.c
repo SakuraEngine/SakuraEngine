@@ -16,11 +16,11 @@ bool VkUtil_InitializeEnvironment(struct CGPUInstance* Inst)
     Inst->runtime_table = cgpu_create_runtime_table();
     // AGS
     bool AGS_started = false;
-    AGS_started = (cgpu_ags_init(Inst) == CGPU_AGS_SUCCESS);
+    AGS_started      = (cgpu_ags_init(Inst) == CGPU_AGS_SUCCESS);
     (void)AGS_started;
     // NVAPI
     bool NVAPI_started = false;
-    NVAPI_started = (cgpu_nvapi_init(Inst) == CGPU_NVAPI_OK);
+    NVAPI_started      = (cgpu_nvapi_init(Inst) == CGPU_NVAPI_OK);
     (void)NVAPI_started;
     // VOLK
 #if !defined(NX64)
@@ -44,13 +44,12 @@ void VkUtil_DeInitializeEnvironment(struct CGPUInstance* Inst)
 
 typedef struct VkUtil_MessageToSkip {
     const char* what;
-    uint64_t hash;
+    uint64_t    hash;
 } VkUtil_MessageToSkip;
 
 VkUtil_MessageToSkip kSkippedMessages[] = {
-    { "UNASSIGNED-BestPractices-vkCreateDevice-deprecated-extension" },
+    { "UNASSIGNED-BestPractices-vkCreateDevice-deprecated-extension", {} },
 };
-
 
 SKR_FORCEINLINE bool VkUtil_TryIgnoreMessage(const char* MessageId, bool Scan)
 {
@@ -83,22 +82,22 @@ SKR_FORCEINLINE void VkUtil_InitializeMessagesToSkip()
 {
     for (uint32_t i = 0; i < sizeof(kSkippedMessages) / sizeof(VkUtil_MessageToSkip); ++i)
     {
-        const char* what = kSkippedMessages[i].what;
+        const char* what         = kSkippedMessages[i].what;
         kSkippedMessages[i].hash = cgpu_hash(what, strlen(what), CGPU_NAME_HASH_SEED);
     }
 }
 
 // Instance APIs
 void VkUtil_EnableValidationLayer(
-    CGPUInstance_Vulkan* I,
-    const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
-    const VkDebugReportCallbackCreateInfoEXT* report_info_ptr)
+CGPUInstance_Vulkan*                      I,
+const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
+const VkDebugReportCallbackCreateInfoEXT* report_info_ptr)
 {
     VkUtil_InitializeMessagesToSkip();
     if (I->debug_utils)
     {
         VkDebugUtilsMessengerCreateInfoEXT messengerInfo = {
-            .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+            .sType           = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
             .pfnUserCallback = VkUtil_DebugUtilsCallback,
             .messageSeverity =
             VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
@@ -107,16 +106,16 @@ void VkUtil_EnableValidationLayer(
             VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
-            .flags = 0,
+            .flags     = 0,
             .pUserData = NULL
         };
         const VkDebugUtilsMessengerCreateInfoEXT* messengerInfoPtr =
-            (messenger_info_ptr != CGPU_NULLPTR) ? messenger_info_ptr : &messengerInfo;
+        (messenger_info_ptr != CGPU_NULLPTR) ? messenger_info_ptr : &messengerInfo;
 
         cgpu_assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugUtilsMessengerEXT failed!");
         VkResult res = vkCreateDebugUtilsMessengerEXT(I->pVkInstance,
-            messengerInfoPtr, GLOBAL_VkAllocationCallbacks,
-            &(I->pVkDebugUtilsMessenger));
+                                                      messengerInfoPtr, GLOBAL_VkAllocationCallbacks,
+                                                      &(I->pVkDebugUtilsMessenger));
         if (VK_SUCCESS != res)
         {
             cgpu_assert(0 && "vkCreateDebugUtilsMessengerEXT failed - disabling Vulkan debug callbacks");
@@ -125,8 +124,8 @@ void VkUtil_EnableValidationLayer(
     else if (I->debug_report)
     {
         VkDebugReportCallbackCreateInfoEXT reportInfo = {
-            .sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT,
-            .pNext = NULL,
+            .sType       = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT,
+            .pNext       = NULL,
             .pfnCallback = VkUtil_DebugReportCallback,
             .flags =
 #if defined(NX64) || defined(__ANDROID__)
@@ -137,8 +136,8 @@ void VkUtil_EnableValidationLayer(
         const VkDebugReportCallbackCreateInfoEXT* reportInfoPtr =
         (report_info_ptr != CGPU_NULLPTR) ? report_info_ptr : &reportInfo;
         VkResult res = vkCreateDebugReportCallbackEXT(I->pVkInstance,
-        reportInfoPtr, GLOBAL_VkAllocationCallbacks,
-        &(I->pVkDebugReport));
+                                                      reportInfoPtr, GLOBAL_VkAllocationCallbacks,
+                                                      &(I->pVkDebugReport));
         cgpu_assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugReportCallbackEXT failed!");
         if (VK_SUCCESS != res)
         {
@@ -148,8 +147,8 @@ void VkUtil_EnableValidationLayer(
 }
 
 void VkUtil_QueryAllAdapters(CGPUInstance_Vulkan* I,
-const char* const* device_layers, uint32_t device_layers_count,
-const char* const* device_extensions, uint32_t device_extension_count)
+                             const char* const* device_layers, uint32_t device_layers_count,
+                             const char* const* device_extensions, uint32_t device_extension_count)
 {
     cgpu_assert((I->mPhysicalDeviceCount == 0) && "VkUtil_QueryAllAdapters should only be called once!");
 
@@ -173,36 +172,36 @@ const char* const* device_extensions, uint32_t device_extension_count)
             VkAdapter->mPhysicalDeviceProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR;
             // Append pNexts
             {
-                void** ppNext = &VkAdapter->mPhysicalDeviceProps.pNext;
+                void** ppNext                        = &VkAdapter->mPhysicalDeviceProps.pNext;
                 VkAdapter->mSubgroupProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES;
                 VkAdapter->mSubgroupProperties.pNext = NULL;
-                *ppNext = &VkAdapter->mSubgroupProperties;
-                ppNext = &VkAdapter->mSubgroupProperties.pNext;
+                *ppNext                              = &VkAdapter->mSubgroupProperties;
+                ppNext                               = &VkAdapter->mSubgroupProperties.pNext;
 #if VK_KHR_depth_stencil_resolve
                 VkAdapter->mPhysicalDeviceDepthStencilResolveProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_STENCIL_RESOLVE_PROPERTIES_KHR;
-                *ppNext = &VkAdapter->mPhysicalDeviceDepthStencilResolveProps;
-                ppNext = &VkAdapter->mPhysicalDeviceDepthStencilResolveProps.pNext;
+                *ppNext                                                  = &VkAdapter->mPhysicalDeviceDepthStencilResolveProps;
+                ppNext                                                   = &VkAdapter->mPhysicalDeviceDepthStencilResolveProps.pNext;
 #endif
 #if VK_EXT_extended_dynamic_state3
                 VkAdapter->mPhysicalDeviceExtendedDynamicState3Properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_PROPERTIES_EXT;
-                *ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicState3Properties;
-                ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicState3Properties.pNext;
+                *ppNext                                                         = &VkAdapter->mPhysicalDeviceExtendedDynamicState3Properties;
+                ppNext                                                          = &VkAdapter->mPhysicalDeviceExtendedDynamicState3Properties.pNext;
 #endif
 #if VK_EXT_shader_object
                 VkAdapter->mPhysicalDeviceShaderObjectProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_PROPERTIES_EXT;
-                *ppNext = &VkAdapter->mPhysicalDeviceShaderObjectProperties;
-                ppNext = &VkAdapter->mPhysicalDeviceShaderObjectProperties.pNext;
+                *ppNext                                                = &VkAdapter->mPhysicalDeviceShaderObjectProperties;
+                ppNext                                                 = &VkAdapter->mPhysicalDeviceShaderObjectProperties.pNext;
 #endif
 
 #if VK_EXT_descriptor_buffer
                 VkAdapter->mPhysicalDeviceDescriptorBufferProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT;
-                *ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferProperties;
-                ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferProperties.pNext;
+                *ppNext                                                    = &VkAdapter->mPhysicalDeviceDescriptorBufferProperties;
+                ppNext                                                     = &VkAdapter->mPhysicalDeviceDescriptorBufferProperties.pNext;
 #endif
 #if VK_KHR_fragment_shading_rate
                 VkAdapter->mPhysicalDeviceFragmentShadingRateProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_PROPERTIES_KHR;
-                *ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps;
-                ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps.pNext;
+                *ppNext                                                  = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps;
+                ppNext                                                   = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps.pNext;
 #endif
             }
             vkGetPhysicalDeviceProperties2KHR(pysicalDevices[i], &VkAdapter->mPhysicalDeviceProps);
@@ -213,45 +212,45 @@ const char* const* device_extensions, uint32_t device_extension_count)
                 void** ppNext = &VkAdapter->mPhysicalDeviceFeatures.pNext;
 #if VK_KHR_buffer_device_address
                 VkAdapter->mPhysicalDeviceBufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_EXT;
-                *ppNext = &VkAdapter->mPhysicalDeviceBufferDeviceAddressFeatures;
-                ppNext = &VkAdapter->mPhysicalDeviceBufferDeviceAddressFeatures.pNext;
+                *ppNext                                                     = &VkAdapter->mPhysicalDeviceBufferDeviceAddressFeatures;
+                ppNext                                                      = &VkAdapter->mPhysicalDeviceBufferDeviceAddressFeatures.pNext;
 #endif
 #if VK_EXT_descriptor_buffer
                 VkAdapter->mPhysicalDeviceDescriptorBufferFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT;
-                *ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferFeatures;
-                ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferFeatures.pNext;
+                *ppNext                                                  = &VkAdapter->mPhysicalDeviceDescriptorBufferFeatures;
+                ppNext                                                   = &VkAdapter->mPhysicalDeviceDescriptorBufferFeatures.pNext;
 #endif
 
 #if VK_KHR_fragment_shading_rate
                 VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR;
-                *ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures;
-                ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.pNext;
+                *ppNext                                                     = &VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures;
+                ppNext                                                      = &VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.pNext;
 #endif
 
 #if VK_KHR_dynamic_rendering
                 VkAdapter->mPhysicalDeviceDynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
-                *ppNext = &VkAdapter->mPhysicalDeviceDynamicRenderingFeatures;
-                ppNext = &VkAdapter->mPhysicalDeviceDynamicRenderingFeatures.pNext;
+                *ppNext                                                  = &VkAdapter->mPhysicalDeviceDynamicRenderingFeatures;
+                ppNext                                                   = &VkAdapter->mPhysicalDeviceDynamicRenderingFeatures.pNext;
 #endif
 #if VK_EXT_extended_dynamic_state
                 VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT;
-                *ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures;
-                ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.pNext;
+                *ppNext                                                      = &VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures;
+                ppNext                                                       = &VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.pNext;
 #endif
 #if VK_EXT_extended_dynamic_state2
                 VkAdapter->mPhysicalDeviceExtendedDynamicState2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT;
-                *ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicState2Features;
-                ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicState2Features.pNext;
+                *ppNext                                                       = &VkAdapter->mPhysicalDeviceExtendedDynamicState2Features;
+                ppNext                                                        = &VkAdapter->mPhysicalDeviceExtendedDynamicState2Features.pNext;
 #endif
 #if VK_EXT_extended_dynamic_state3
                 VkAdapter->mPhysicalDeviceExtendedDynamicState3Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT;
-                *ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicState3Features;
-                ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicState3Features.pNext;
+                *ppNext                                                       = &VkAdapter->mPhysicalDeviceExtendedDynamicState3Features;
+                ppNext                                                        = &VkAdapter->mPhysicalDeviceExtendedDynamicState3Features.pNext;
 #endif
 #if VK_EXT_shader_object
                 VkAdapter->mPhysicalDeviceShaderObjectFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT;
-                *ppNext = &VkAdapter->mPhysicalDeviceShaderObjectFeatures;
-                ppNext = &VkAdapter->mPhysicalDeviceShaderObjectFeatures.pNext;
+                *ppNext                                              = &VkAdapter->mPhysicalDeviceShaderObjectFeatures;
+                ppNext                                               = &VkAdapter->mPhysicalDeviceShaderObjectFeatures.pNext;
 #endif
             }
 #ifndef NX64
@@ -284,13 +283,13 @@ void VkUtil_CreatePipelineCache(CGPUDevice_Vulkan* D)
 
     // TODO: serde
     VkPipelineCacheCreateInfo info = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
-        .pNext = NULL,
+        .sType           = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+        .pNext           = NULL,
         .initialDataSize = 0,
-        .pInitialData = NULL
+        .pInitialData    = NULL
     };
     D->mVkDeviceTable.vkCreatePipelineCache(D->pVkDevice,
-    &info, GLOBAL_VkAllocationCallbacks, &D->pPipelineCache);
+                                            &info, GLOBAL_VkAllocationCallbacks, &D->pPipelineCache);
 }
 
 // Shader Reflection
@@ -327,14 +326,14 @@ static ECGPUTextureDimension ArrDIMLut[SpvDimSubpassData + 1] = {
     CGPU_TEX_DIMENSION_UNDEFINED   // SpvDimSubpassData
 };
 const char8_t* push_constants_name = "push_constants";
-void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vulkan* S, const struct CGPUShaderLibraryDescriptor* desc)
+void           VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vulkan* S, const struct CGPUShaderLibraryDescriptor* desc)
 {
-    S->pReflect = (SpvReflectShaderModule*)cgpu_calloc(1, sizeof(SpvReflectShaderModule));
+    S->pReflect             = (SpvReflectShaderModule*)cgpu_calloc(1, sizeof(SpvReflectShaderModule));
     SpvReflectResult spvRes = spvReflectCreateShaderModule(desc->code_size, desc->code, S->pReflect);
     (void)spvRes;
     cgpu_assert(spvRes == SPV_REFLECT_RESULT_SUCCESS && "Failed to Reflect Shader!");
-    uint32_t entry_count = S->pReflect->entry_point_count;
-    S->super.entrys_count = entry_count;
+    uint32_t entry_count       = S->pReflect->entry_point_count;
+    S->super.entrys_count      = entry_count;
     S->super.entry_reflections = cgpu_calloc(entry_count, sizeof(CGPUShaderReflection));
     for (uint32_t i = 0; i < entry_count; i++)
     {
@@ -342,8 +341,8 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
         CGPUShaderReflection* reflection = &S->super.entry_reflections[i];
         // ATTENTION: We have only one entry point now
         const SpvReflectEntryPoint* entry = spvReflectGetEntryPoint(S->pReflect, S->pReflect->entry_points[i].name);
-        reflection->entry_name = (const char8_t*)entry->name;
-        reflection->stage = (ECGPUShaderStage)entry->shader_stage;
+        reflection->entry_name            = (const char8_t*)entry->name;
+        reflection->stage                 = (ECGPUShaderStage)entry->shader_stage;
         if (reflection->stage == CGPU_SHADER_STAGE_COMPUTE)
         {
             reflection->thread_group_sizes[0] = entry->local_size.x;
@@ -353,7 +352,7 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
         const bool bGLSL = S->pReflect->source_language & SpvSourceLanguageGLSL;
         (void)bGLSL;
         const bool bHLSL = S->pReflect->source_language & SpvSourceLanguageHLSL;
-        uint32_t icount;
+        uint32_t   icount;
         spvReflectEnumerateInputVariables(S->pReflect, &icount, NULL);
         if (icount > 0)
         {
@@ -362,7 +361,7 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
             if ((entry->shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT))
             {
                 reflection->vertex_inputs_count = icount;
-                reflection->vertex_inputs = cgpu_calloc(icount, sizeof(CGPUVertexInput));
+                reflection->vertex_inputs       = cgpu_calloc(icount, sizeof(CGPUVertexInput));
                 // Handle Vertex Inputs
                 for (uint32_t i = 0; i < icount; i++)
                 {
@@ -392,7 +391,7 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
             }
             bcount += ccount;
             reflection->shader_resources_count = bcount;
-            reflection->shader_resources = cgpu_calloc(bcount, sizeof(CGPUShaderResource));
+            reflection->shader_resources       = cgpu_calloc(bcount, sizeof(CGPUShaderResource));
             // Fill Shader Resources
             uint32_t i_res = 0;
             for (uint32_t i_set = 0; i_set < scount; i_set++)
@@ -401,12 +400,12 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
                 for (uint32_t i_binding = 0; i_binding < current_set->binding_count; i_binding++, i_res++)
                 {
                     SpvReflectDescriptorBinding* current_binding = current_set->bindings[i_binding];
-                    CGPUShaderResource* current_res = &reflection->shader_resources[i_res];
-                    current_res->set = current_binding->set;
-                    current_res->binding = current_binding->binding;
-                    current_res->stages = S->pReflect->shader_stage;
-                    current_res->type = RTLut[current_binding->descriptor_type];
-                    current_res->name = current_binding->name;
+                    CGPUShaderResource*          current_res     = &reflection->shader_resources[i_res];
+                    current_res->set                             = current_binding->set;
+                    current_res->binding                         = current_binding->binding;
+                    current_res->stages                          = S->pReflect->shader_stage;
+                    current_res->type                            = RTLut[current_binding->descriptor_type];
+                    current_res->name                            = current_binding->name;
                     current_res->name_hash =
                     cgpu_name_hash(current_binding->name, strlen(current_binding->name));
                     current_res->size = current_binding->count;
@@ -430,14 +429,14 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
             for (uint32_t i = 0; i < ccount; i++)
             {
                 CGPUShaderResource* current_res = &reflection->shader_resources[i_res + i];
-                current_res->set = 0;
-                current_res->type = CGPU_RESOURCE_TYPE_PUSH_CONSTANT;
-                current_res->binding = 0;
-                current_res->name = push_constants_name;
+                current_res->set                = 0;
+                current_res->type               = CGPU_RESOURCE_TYPE_PUSH_CONSTANT;
+                current_res->binding            = 0;
+                current_res->name               = push_constants_name;
                 current_res->name_hash =
                 cgpu_name_hash(current_res->name, strlen(current_res->name));
                 current_res->stages = S->pReflect->shader_stage;
-                current_res->size = root_sets[i]->size;
+                current_res->size   = root_sets[i]->size;
                 current_res->offset = root_sets[i]->offset;
             }
         }
@@ -464,31 +463,31 @@ void VkUtil_FreeShaderReflection(CGPUShaderLibrary_Vulkan* S)
 void VkUtil_CreateVMAAllocator(CGPUInstance_Vulkan* I, CGPUAdapter_Vulkan* A, CGPUDevice_Vulkan* D)
 {
     VmaVulkanFunctions vulkanFunctions = {
-        .vkAllocateMemory = D->mVkDeviceTable.vkAllocateMemory,
-        .vkBindBufferMemory = D->mVkDeviceTable.vkBindBufferMemory,
-        .vkBindImageMemory = D->mVkDeviceTable.vkBindImageMemory,
-        .vkCreateBuffer = D->mVkDeviceTable.vkCreateBuffer,
-        .vkCreateImage = D->mVkDeviceTable.vkCreateImage,
-        .vkDestroyBuffer = D->mVkDeviceTable.vkDestroyBuffer,
-        .vkDestroyImage = D->mVkDeviceTable.vkDestroyImage,
-        .vkFreeMemory = D->mVkDeviceTable.vkFreeMemory,
-        .vkGetBufferMemoryRequirements = D->mVkDeviceTable.vkGetBufferMemoryRequirements,
-        .vkGetBufferMemoryRequirements2KHR = D->mVkDeviceTable.vkGetBufferMemoryRequirements2KHR,
-        .vkGetImageMemoryRequirements = D->mVkDeviceTable.vkGetImageMemoryRequirements,
-        .vkGetImageMemoryRequirements2KHR = D->mVkDeviceTable.vkGetImageMemoryRequirements2KHR,
+        .vkAllocateMemory                    = D->mVkDeviceTable.vkAllocateMemory,
+        .vkBindBufferMemory                  = D->mVkDeviceTable.vkBindBufferMemory,
+        .vkBindImageMemory                   = D->mVkDeviceTable.vkBindImageMemory,
+        .vkCreateBuffer                      = D->mVkDeviceTable.vkCreateBuffer,
+        .vkCreateImage                       = D->mVkDeviceTable.vkCreateImage,
+        .vkDestroyBuffer                     = D->mVkDeviceTable.vkDestroyBuffer,
+        .vkDestroyImage                      = D->mVkDeviceTable.vkDestroyImage,
+        .vkFreeMemory                        = D->mVkDeviceTable.vkFreeMemory,
+        .vkGetBufferMemoryRequirements       = D->mVkDeviceTable.vkGetBufferMemoryRequirements,
+        .vkGetBufferMemoryRequirements2KHR   = D->mVkDeviceTable.vkGetBufferMemoryRequirements2KHR,
+        .vkGetImageMemoryRequirements        = D->mVkDeviceTable.vkGetImageMemoryRequirements,
+        .vkGetImageMemoryRequirements2KHR    = D->mVkDeviceTable.vkGetImageMemoryRequirements2KHR,
         .vkGetPhysicalDeviceMemoryProperties = vkGetPhysicalDeviceMemoryProperties,
-        .vkGetPhysicalDeviceProperties = vkGetPhysicalDeviceProperties,
-        .vkMapMemory = D->mVkDeviceTable.vkMapMemory,
-        .vkUnmapMemory = D->mVkDeviceTable.vkUnmapMemory,
-        .vkFlushMappedMemoryRanges = D->mVkDeviceTable.vkFlushMappedMemoryRanges,
-        .vkInvalidateMappedMemoryRanges = D->mVkDeviceTable.vkInvalidateMappedMemoryRanges,
-        .vkCmdCopyBuffer = D->mVkDeviceTable.vkCmdCopyBuffer
+        .vkGetPhysicalDeviceProperties       = vkGetPhysicalDeviceProperties,
+        .vkMapMemory                         = D->mVkDeviceTable.vkMapMemory,
+        .vkUnmapMemory                       = D->mVkDeviceTable.vkUnmapMemory,
+        .vkFlushMappedMemoryRanges           = D->mVkDeviceTable.vkFlushMappedMemoryRanges,
+        .vkInvalidateMappedMemoryRanges      = D->mVkDeviceTable.vkInvalidateMappedMemoryRanges,
+        .vkCmdCopyBuffer                     = D->mVkDeviceTable.vkCmdCopyBuffer
     };
     VmaAllocatorCreateInfo vmaInfo = {
-        .device = D->pVkDevice,
-        .physicalDevice = A->pPhysicalDevice,
-        .instance = I->pVkInstance,
-        .pVulkanFunctions = &vulkanFunctions,
+        .device               = D->pVkDevice,
+        .physicalDevice       = A->pPhysicalDevice,
+        .instance             = I->pVkInstance,
+        .pVulkanFunctions     = &vulkanFunctions,
         .pAllocationCallbacks = GLOBAL_VkAllocationCallbacks
     };
 #if !defined(_MACOS)
@@ -528,35 +527,35 @@ struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGPUDevice_Vulkan* D)
     VkDescriptorPoolCreateFlags flags = (VkDescriptorPoolCreateFlags)0;
     // TODO: It is possible to avoid using that flag by updating descriptor sets instead of deleting them.
     flags |= VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    Pool->Device = D;
-    Pool->mFlags = flags;
+    Pool->Device                              = D;
+    Pool->mFlags                              = flags;
     VkDescriptorPoolCreateInfo poolCreateInfo = {
-        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-        .pNext = NULL,
+        .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+        .pNext         = NULL,
         .poolSizeCount = CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE,
-        .pPoolSizes = gDescriptorPoolSizes,
-        .flags = Pool->mFlags,
-        .maxSets = 8192
+        .pPoolSizes    = gDescriptorPoolSizes,
+        .flags         = Pool->mFlags,
+        .maxSets       = 8192
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorPool(
-        D->pVkDevice, &poolCreateInfo, GLOBAL_VkAllocationCallbacks, &Pool->pVkDescPool));
+    D->pVkDevice, &poolCreateInfo, GLOBAL_VkAllocationCallbacks, &Pool->pVkDescPool));
     return Pool;
 }
 
 void VkUtil_ConsumeDescriptorSets(struct VkUtil_DescriptorPool* pPool,
-const VkDescriptorSetLayout* pLayouts, VkDescriptorSet* pSets, uint32_t numDescriptorSets)
+                                  const VkDescriptorSetLayout* pLayouts, VkDescriptorSet* pSets, uint32_t numDescriptorSets)
 {
 #ifdef CGPU_THREAD_SAFETY
     skr_mutex_acquire(pPool->pMutex);
 #endif
     {
-        CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)pPool->Device;
+        CGPUDevice_Vulkan*          D          = (CGPUDevice_Vulkan*)pPool->Device;
         VkDescriptorSetAllocateInfo alloc_info = {
-            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-            .pNext = NULL,
-            .descriptorPool = pPool->pVkDescPool,
+            .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+            .pNext              = NULL,
+            .descriptorPool     = pPool->pVkDescPool,
             .descriptorSetCount = numDescriptorSets,
-            .pSetLayouts = pLayouts
+            .pSetLayouts        = pLayouts
         };
         VkResult vk_res = D->mVkDeviceTable.vkAllocateDescriptorSets(D->pVkDevice, &alloc_info, pSets);
         if (vk_res != VK_SUCCESS)
@@ -600,16 +599,16 @@ void VkUtil_FreeDescriptorPool(struct VkUtil_DescriptorPool* DescPool)
     cgpu_free(DescPool);
 }
 
-VkDescriptorSetLayout VkUtil_CreateDescriptorSetLayout(CGPUDevice_Vulkan* D,
-const VkDescriptorSetLayoutBinding* bindings, uint32_t bindings_count)
+VkDescriptorSetLayout VkUtil_CreateDescriptorSetLayout(CGPUDevice_Vulkan*                  D,
+                                                       const VkDescriptorSetLayoutBinding* bindings, uint32_t bindings_count)
 {
-    VkDescriptorSetLayout out_layout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout           out_layout  = VK_NULL_HANDLE;
     VkDescriptorSetLayoutCreateInfo layout_info = {
-        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-        .pNext = NULL,
+        .sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .pNext        = NULL,
         .bindingCount = bindings_count,
-        .pBindings = bindings,
-        .flags = 0
+        .pBindings    = bindings,
+        .flags        = 0
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorSetLayout(
     D->pVkDevice, &layout_info, GLOBAL_VkAllocationCallbacks, &out_layout));
@@ -624,7 +623,7 @@ void VkUtil_FreeDescriptorSetLayout(CGPUDevice_Vulkan* D, VkDescriptorSetLayout 
 // Select Helpers
 void VkUtil_QueryHostVisbleVramInfo(CGPUAdapter_Vulkan* VkAdapter)
 {
-    CGPUAdapterDetail* adapter_detail = &VkAdapter->adapter_detail;
+    CGPUAdapterDetail* adapter_detail         = &VkAdapter->adapter_detail;
     adapter_detail->support_host_visible_vram = false;
 #ifdef VK_EXT_memory_budget
     #if VK_EXT_memory_budget
@@ -676,7 +675,7 @@ void VkUtil_QueryHostVisbleVramInfo(CGPUAdapter_Vulkan* VkAdapter)
                 if (isDeviceLocal && isHostVisible)
                 {
                     adapter_detail->support_host_visible_vram = true;
-                    adapter_detail->host_visible_vram_budget = mem_prop.memoryHeaps[heap_index].size;
+                    adapter_detail->host_visible_vram_budget  = mem_prop.memoryHeaps[heap_index].size;
                     break;
                 }
             }
@@ -684,18 +683,17 @@ void VkUtil_QueryHostVisbleVramInfo(CGPUAdapter_Vulkan* VkAdapter)
     }
 }
 
-static inline uint32_t VkUtil_CombineVersion(uint32_t a, uint32_t b) 
+static inline uint32_t VkUtil_CombineVersion(uint32_t a, uint32_t b)
 {
-   uint32_t times = 1;
-   while (times <= b)
-      times *= 10;
-   return a*times + b;
-} 
+    uint32_t times = 1;
+    while (times <= b)
+        times *= 10;
+    return a * times + b;
+}
 
 void VkUitl_QueryDynamicPipelineStates(CGPUAdapter_Vulkan* VkAdapter, uint32_t* pCount, VkDynamicState* pStates)
 {
-    VkDynamicState base_states[] =
-    {
+    VkDynamicState base_states[] = {
         VK_DYNAMIC_STATE_VIEWPORT,
         VK_DYNAMIC_STATE_SCISSOR,
         VK_DYNAMIC_STATE_BLEND_CONSTANTS,
@@ -703,7 +701,7 @@ void VkUitl_QueryDynamicPipelineStates(CGPUAdapter_Vulkan* VkAdapter, uint32_t* 
         VK_DYNAMIC_STATE_STENCIL_REFERENCE
     };
 
-    uint32_t base_states_count = sizeof(base_states) / sizeof(VkDynamicState);
+    uint32_t base_states_count  = sizeof(base_states) / sizeof(VkDynamicState);
     uint32_t total_states_count = base_states_count;
     if (pStates)
     {
@@ -719,16 +717,15 @@ void VkUitl_QueryDynamicPipelineStates(CGPUAdapter_Vulkan* VkAdapter, uint32_t* 
     {
         *pCount = total_states_count;
     }
-
 }
 
 void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter)
 {
-    CGPUAdapterDetail* adapter_detail = &VkAdapter->adapter_detail;
-    VkPhysicalDeviceProperties* prop = &VkAdapter->mPhysicalDeviceProps.properties;
-    adapter_detail->is_cpu = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU;
-    adapter_detail->is_virtual = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU;
-    adapter_detail->is_uma = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
+    CGPUAdapterDetail*          adapter_detail = &VkAdapter->adapter_detail;
+    VkPhysicalDeviceProperties* prop           = &VkAdapter->mPhysicalDeviceProps.properties;
+    adapter_detail->is_cpu                     = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU;
+    adapter_detail->is_virtual                 = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU;
+    adapter_detail->is_uma                     = prop->deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
     cgpu_assert(prop->deviceType != VK_PHYSICAL_DEVICE_TYPE_OTHER && "VK_PHYSICAL_DEVICE_TYPE_OTHER not supported!");
 
     // vendor info
@@ -736,18 +733,18 @@ void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter)
     adapter_detail->vendor_preset.vendor_id = prop->vendorID;
     if (adapter_detail->vendor_preset.vendor_id == 0x10DE) // NVIDIA
     {
-        const uint32_t vraw = prop->driverVersion; 
-        const uint32_t v0 = (vraw >> 22) & 0x3ff;
-        const uint32_t v1 = (vraw >> 14) & 0x0ff;
-        const uint32_t v2 = (vraw >> 6) & 0x0ff;
-        const uint32_t v3 = (vraw) & 0x03f;
+        const uint32_t vraw                          = prop->driverVersion;
+        const uint32_t v0                            = (vraw >> 22) & 0x3ff;
+        const uint32_t v1                            = (vraw >> 14) & 0x0ff;
+        const uint32_t v2                            = (vraw >> 6) & 0x0ff;
+        const uint32_t v3                            = (vraw) & 0x03f;
         adapter_detail->vendor_preset.driver_version = VkUtil_CombineVersion(VkUtil_CombineVersion(VkUtil_CombineVersion(v0, v1), v2), v3);
     }
-    else if (adapter_detail->vendor_preset.vendor_id == 0x8086 ) // Intel
+    else if (adapter_detail->vendor_preset.vendor_id == 0x8086) // Intel
     {
-        const uint32_t vraw = prop->driverVersion; 
-        const uint32_t v0 = (vraw >> 14);
-        const uint32_t v1 = (vraw) & 0x3fff;
+        const uint32_t vraw                          = prop->driverVersion;
+        const uint32_t v0                            = (vraw >> 14);
+        const uint32_t v1                            = (vraw) & 0x3fff;
         adapter_detail->vendor_preset.driver_version = VkUtil_CombineVersion(v0, v1);
     }
     else
@@ -765,14 +762,14 @@ void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter)
     adapter_detail->upload_buffer_texture_row_alignment =
     (uint32_t)prop->limits.optimalBufferCopyRowPitchAlignment;
     adapter_detail->max_vertex_input_bindings = prop->limits.maxVertexInputBindings;
-    adapter_detail->multidraw_indirect = prop->limits.maxDrawIndirectCount > 1;
-    adapter_detail->wave_lane_count = VkAdapter->mSubgroupProperties.subgroupSize;
-    adapter_detail->support_geom_shader = VkAdapter->mPhysicalDeviceFeatures.features.geometryShader;
-    adapter_detail->support_tessellation = VkAdapter->mPhysicalDeviceFeatures.features.tessellationShader;
+    adapter_detail->multidraw_indirect        = prop->limits.maxDrawIndirectCount > 1;
+    adapter_detail->wave_lane_count           = VkAdapter->mSubgroupProperties.subgroupSize;
+    adapter_detail->support_geom_shader       = VkAdapter->mPhysicalDeviceFeatures.features.geometryShader;
+    adapter_detail->support_tessellation      = VkAdapter->mPhysicalDeviceFeatures.features.tessellationShader;
 #if VK_KHR_fragment_shading_rate
-    adapter_detail->support_shading_rate = VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.pipelineFragmentShadingRate;
+    adapter_detail->support_shading_rate      = VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.pipelineFragmentShadingRate;
     adapter_detail->support_shading_rate_mask = VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.attachmentFragmentShadingRate;
-    adapter_detail->support_shading_rate_sv = VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.primitiveFragmentShadingRate;
+    adapter_detail->support_shading_rate_sv   = VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.primitiveFragmentShadingRate;
 #endif
 #if VK_EXT_extended_dynamic_state
     adapter_detail->dynamic_state_features |= VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.extendedDynamicState ? CGPU_DYNAMIC_STATE_Tier1 : 0;
@@ -825,12 +822,12 @@ void VkUtil_SelectQueueIndices(CGPUAdapter_Vulkan* VkAdapter)
 {
     // Query Queue Information.
     vkGetPhysicalDeviceQueueFamilyProperties(
-        VkAdapter->pPhysicalDevice, &VkAdapter->mQueueFamiliesCount,
-        CGPU_NULLPTR);
+    VkAdapter->pPhysicalDevice, &VkAdapter->mQueueFamiliesCount,
+    CGPU_NULLPTR);
     VkAdapter->pQueueFamilyProperties = (VkQueueFamilyProperties*)cgpu_calloc(
     VkAdapter->mQueueFamiliesCount, sizeof(VkQueueFamilyProperties));
-        vkGetPhysicalDeviceQueueFamilyProperties(VkAdapter->pPhysicalDevice,
-        &VkAdapter->mQueueFamiliesCount, VkAdapter->pQueueFamilyProperties);
+    vkGetPhysicalDeviceQueueFamilyProperties(VkAdapter->pPhysicalDevice,
+                                             &VkAdapter->mQueueFamiliesCount, VkAdapter->pQueueFamilyProperties);
 
     for (uint32_t j = 0; j < VkAdapter->mQueueFamiliesCount; j++)
     {
@@ -864,34 +861,34 @@ void VkUtil_EnumFormatSupports(CGPUAdapter_Vulkan* VkAdapter)
     for (uint32_t i = 0; i < CGPU_FORMAT_COUNT; ++i)
     {
         VkFormatProperties formatSupport;
-        adapter_detail->format_supports[i].shader_read = 0;
-        adapter_detail->format_supports[i].shader_write = 0;
+        adapter_detail->format_supports[i].shader_read         = 0;
+        adapter_detail->format_supports[i].shader_write        = 0;
         adapter_detail->format_supports[i].render_target_write = 0;
-        VkFormat fmt = (VkFormat)VkUtil_FormatTranslateToVk((ECGPUFormat)i);
-        const bool bPVRTC = (fmt >= VK_FORMAT_PVRTC1_2BPP_UNORM_BLOCK_IMG && fmt <= VK_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG);
+        VkFormat   fmt                                         = (VkFormat)VkUtil_FormatTranslateToVk((ECGPUFormat)i);
+        const bool bPVRTC                                      = (fmt >= VK_FORMAT_PVRTC1_2BPP_UNORM_BLOCK_IMG && fmt <= VK_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG);
         if (fmt == VK_FORMAT_UNDEFINED) continue;
         if (bPVRTC) continue; // only iOS supports it and we dont use vulkan on iOS devices
 
         vkGetPhysicalDeviceFormatProperties(VkAdapter->pPhysicalDevice, fmt, &formatSupport);
         adapter_detail->format_supports[i].shader_read =
-            (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0;
+        (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0;
         adapter_detail->format_supports[i].shader_write =
-            (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT) != 0;
+        (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT) != 0;
         adapter_detail->format_supports[i].render_target_write =
-            (formatSupport.optimalTilingFeatures &
-                (VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)) != 0;
+        (formatSupport.optimalTilingFeatures &
+         (VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)) != 0;
     }
     return;
 }
 
 void VkUtil_SelectInstanceLayers(struct CGPUInstance_Vulkan* vkInstance,
-const char* const* instance_layers, uint32_t instance_layers_count)
+                                 const char* const* instance_layers, uint32_t instance_layers_count)
 {
     uint32_t count = 0;
     vkEnumerateInstanceLayerProperties(&count, NULL);
     if (count != 0)
     {
-        vkInstance->pLayerNames = cgpu_calloc(instance_layers_count, sizeof(const char*));
+        vkInstance->pLayerNames      = cgpu_calloc(instance_layers_count, sizeof(const char*));
         vkInstance->pLayerProperties = cgpu_calloc(instance_layers_count, sizeof(VkLayerProperties));
 
         SKR_DECLARE_ZERO_VLA(VkLayerProperties, layer_props, count)
@@ -903,9 +900,9 @@ const char* const* instance_layers, uint32_t instance_layers_count)
             {
                 if (strcmp(layer_props[i].layerName, instance_layers[j]) == 0)
                 {
-                    VkLayerProperties* pLayer = &layer_props[i];
+                    VkLayerProperties* pLayer                 = &layer_props[i];
                     vkInstance->pLayerProperties[filled_exts] = *pLayer;
-                    vkInstance->pLayerNames[filled_exts] = vkInstance->pLayerProperties[filled_exts].layerName;
+                    vkInstance->pLayerNames[filled_exts]      = vkInstance->pLayerProperties[filled_exts].layerName;
                     filled_exts++;
                     break;
                 }
@@ -917,15 +914,15 @@ const char* const* instance_layers, uint32_t instance_layers_count)
 }
 
 void VkUtil_SelectInstanceExtensions(struct CGPUInstance_Vulkan* VkInstance,
-const char* const* instance_extensions, uint32_t instance_extension_count)
+                                     const char* const* instance_extensions, uint32_t instance_extension_count)
 {
     const char* layer_name = NULL; // Query Vulkan implementation or by implicitly enabled layers
-    uint32_t count = 0;
+    uint32_t    count      = 0;
     vkEnumerateInstanceExtensionProperties(layer_name, &count, NULL);
     if (count > 0)
     {
         VkInstance->pExtensionProperties = cgpu_calloc(instance_extension_count, sizeof(VkExtensionProperties));
-        VkInstance->pExtensionNames = cgpu_calloc(instance_extension_count, sizeof(const char*));
+        VkInstance->pExtensionNames      = cgpu_calloc(instance_extension_count, sizeof(const char*));
 
         SKR_DECLARE_ZERO_VLA(VkExtensionProperties, ext_props, count)
         vkEnumerateInstanceExtensionProperties(layer_name, &count, ext_props);
@@ -938,7 +935,7 @@ const char* const* instance_extensions, uint32_t instance_extension_count)
                 if (strcmp(ext_prop.extensionName, instance_extensions[j]) == 0)
                 {
                     VkInstance->pExtensionProperties[filled_exts] = ext_prop;
-                    VkInstance->pExtensionNames[filled_exts] = VkInstance->pExtensionProperties[filled_exts].extensionName;
+                    VkInstance->pExtensionNames[filled_exts]      = VkInstance->pExtensionProperties[filled_exts].extensionName;
                     filled_exts++;
                     break;
                 }
@@ -950,13 +947,13 @@ const char* const* instance_extensions, uint32_t instance_extension_count)
 }
 
 void VkUtil_SelectPhysicalDeviceLayers(struct CGPUAdapter_Vulkan* VkAdapter,
-const char* const* device_layers, uint32_t device_layers_count)
+                                       const char* const* device_layers, uint32_t device_layers_count)
 {
     uint32_t count;
     vkEnumerateDeviceLayerProperties(VkAdapter->pPhysicalDevice, &count, NULL);
     if (count != 0)
     {
-        VkAdapter->pLayerNames = cgpu_calloc(device_layers_count, sizeof(const char*));
+        VkAdapter->pLayerNames      = cgpu_calloc(device_layers_count, sizeof(const char*));
         VkAdapter->pLayerProperties = cgpu_calloc(device_layers_count, sizeof(VkLayerProperties));
 
         SKR_DECLARE_ZERO_VLA(VkLayerProperties, layer_props, count)
@@ -969,7 +966,7 @@ const char* const* device_layers, uint32_t device_layers_count)
                 if (strcmp(layer_props[i].layerName, device_layers[j]) == 0)
                 {
                     VkAdapter->pLayerProperties[filled_exts] = layer_props[i];
-                    VkAdapter->pLayerNames[filled_exts] = VkAdapter->pLayerProperties[filled_exts].layerName;
+                    VkAdapter->pLayerNames[filled_exts]      = VkAdapter->pLayerProperties[filled_exts].layerName;
                     filled_exts++;
                     break;
                 }
@@ -981,15 +978,15 @@ const char* const* device_layers, uint32_t device_layers_count)
 }
 
 void VkUtil_SelectPhysicalDeviceExtensions(struct CGPUAdapter_Vulkan* VkAdapter,
-const char* const* device_extensions, uint32_t device_extension_count)
+                                           const char* const* device_extensions, uint32_t device_extension_count)
 {
     const char* layer_name = NULL; // Query Vulkan implementation or by implicitly enabled layers
-    uint32_t count = 0;
+    uint32_t    count      = 0;
     vkEnumerateDeviceExtensionProperties(VkAdapter->pPhysicalDevice, layer_name, &count, NULL);
     if (count > 0)
     {
         VkAdapter->pExtensionProperties = cgpu_calloc(device_extension_count, sizeof(VkExtensionProperties));
-        VkAdapter->pExtensionNames = cgpu_calloc(device_extension_count, sizeof(const char*));
+        VkAdapter->pExtensionNames      = cgpu_calloc(device_extension_count, sizeof(const char*));
 
         SKR_DECLARE_ZERO_VLA(VkExtensionProperties, ext_props, count)
         vkEnumerateDeviceExtensionProperties(VkAdapter->pPhysicalDevice, layer_name, &count, ext_props);
@@ -1001,8 +998,8 @@ const char* const* device_extensions, uint32_t device_extension_count)
                 if (strcmp(ext_props[i].extensionName, device_extensions[j]) == 0)
                 {
                     VkAdapter->pExtensionProperties[filled_exts] = ext_props[i];
-                    const char* enabledName = VkAdapter->pExtensionProperties[filled_exts].extensionName;
-                    VkAdapter->pExtensionNames[filled_exts] = enabledName;
+                    const char* enabledName                      = VkAdapter->pExtensionProperties[filled_exts].extensionName;
+                    VkAdapter->pExtensionNames[filled_exts]      = enabledName;
                     filled_exts++;
                     continue;
                 }
@@ -1015,24 +1012,24 @@ const char* const* device_extensions, uint32_t device_extension_count)
 
 // Debug Callback
 SKR_FORCEINLINE static void VkUtil_DebugUtilsSetObjectName(VkDevice pDevice, uint64_t handle,
-VkObjectType type, const char* pName)
+                                                           VkObjectType type, const char* pName)
 {
     VkDebugUtilsObjectNameInfoEXT nameInfo = {
-        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
-        .objectType = type,
+        .sType        = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+        .objectType   = type,
         .objectHandle = handle,
-        .pObjectName = pName
+        .pObjectName  = pName
     };
     vkSetDebugUtilsObjectNameEXT(pDevice, &nameInfo);
 }
 
 SKR_FORCEINLINE static void VkUtil_DebugReportSetObjectName(VkDevice pDevice, uint64_t handle,
-    VkDebugReportObjectTypeEXT type, const char* pName)
+                                                            VkDebugReportObjectTypeEXT type, const char* pName)
 {
     VkDebugMarkerObjectNameInfoEXT nameInfo = {
-        .sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT,
-        .objectType = type,
-        .object = (uint64_t)handle,
+        .sType       = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT,
+        .objectType  = type,
+        .object      = (uint64_t)handle,
         .pObjectName = pName
     };
     vkDebugMarkerSetObjectNameEXT(pDevice, &nameInfo);
@@ -1056,10 +1053,10 @@ void VkUtil_OptionalSetObjectName(struct CGPUDevice_Vulkan* device, uint64_t han
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL
-VkUtil_DebugUtilsCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData)
+VkUtil_DebugUtilsCallback(VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
+                          VkDebugUtilsMessageTypeFlagsEXT             messageType,
+                          const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                          void*                                       pUserData)
 {
     if (VkUtil_TryIgnoreMessage(pCallbackData->pMessageIdName, false))
         return VK_FALSE;
@@ -1086,9 +1083,9 @@ VkUtil_DebugUtilsCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity
 
 VKAPI_ATTR VkBool32 VKAPI_CALL
 VkUtil_DebugReportCallback(
-    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
-    uint64_t object, size_t location, int32_t messageCode,
-    const char* pLayerPrefix, const char* pMessage, void* pUserData)
+VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
+uint64_t object, size_t location, int32_t messageCode,
+const char* pLayerPrefix, const char* pMessage, void* pUserData)
 {
     if (VkUtil_TryIgnoreMessage(pMessage, true))
         return VK_FALSE;

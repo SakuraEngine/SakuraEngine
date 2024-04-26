@@ -8,7 +8,7 @@ end
 
 
 shared_module("SkrV8", "SKR_V8", engine_version)
-    add_cxxflags("/Zc:dllexportInlines-", {public=true})
+    add_cxxflags("/Zc:dllexportInlines-", {tools={"clang_cl"}, public=true})
 
     -- dependencies
     public_dependency("SkrRT", engine_version)

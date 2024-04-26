@@ -21,22 +21,22 @@ struct RTTRTraits {
     inline static constexpr size_t type_desc_size = 1;
     static void                    write_type_desc(TypeDesc* desc)
     {
-        unimplemented_no_meta("RTTRTraits<T>::write_type_desc() is not implemented");
+        unimplemented_no_meta(T, "RTTRTraits<T>::write_type_desc() is not implemented");
     }
 
     static skr::StringView get_name()
     {
-        unimplemented_no_meta("RTTRTraits<T>::write_type_desc() is not implemented");
+        unimplemented_no_meta(T, "RTTRTraits<T>::write_type_desc() is not implemented");
         return {};
     }
     static GUID get_guid()
     {
-        unimplemented_no_meta("RTTRTraits<T>::write_type_desc() is not implemented");
+        unimplemented_no_meta(T, "RTTRTraits<T>::write_type_desc() is not implemented");
         return {};
     }
     static Type* get_type()
     {
-        unimplemented_no_meta("RTTRTraits<T>::write_type_desc() is not implemented");
+        unimplemented_no_meta(T, "RTTRTraits<T>::write_type_desc() is not implemented");
         return {};
     }
 };

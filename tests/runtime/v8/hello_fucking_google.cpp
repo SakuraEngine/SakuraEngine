@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
             v8::String::Utf8Value utf8(isolate, result);
             printf("%s\n", *utf8);
 
-            bool done = global_resolver.Get(isolate)->Resolve(context, v8::String::NewFromUtf8Literal(isolate, "fuck u google")).ToChecked();
+            [[maybe_unused]] bool done = global_resolver.Get(isolate)->Resolve(context, v8::String::NewFromUtf8Literal(isolate, "fuck u google")).ToChecked();
             global_resolver.Reset();
 
             // context->GetMicrotaskQueue()->PerformCheckpoint(isolate);

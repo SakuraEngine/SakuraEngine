@@ -25,7 +25,7 @@
 
 // meta tools
 #ifdef __meta__
-    #define unimplemented_no_meta(__MSG)
+    #define unimplemented_no_meta(__TYPE, __MSG)
 #else
-    #define unimplemented_no_meta(__MSG) static_assert(std::is_same_v<int, void>, __MSG)
+    #define unimplemented_no_meta(__TYPE, __MSG) static_assert(std::is_same_v<__TYPE, __TYPE*>, __MSG)
 #endif

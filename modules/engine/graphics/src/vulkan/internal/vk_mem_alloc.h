@@ -19,6 +19,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored"-Wmissing-field-initializers"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored"-Wmissing-field-initializers"
+#endif
 
 #ifndef AMD_VULKAN_MEMORY_ALLOCATOR_H
 #define AMD_VULKAN_MEMORY_ALLOCATOR_H
@@ -19556,3 +19563,8 @@ Features deliberately excluded from the scope of this library:
 -# This is a C++ library with C interface. **Bindings or ports to any other programming languages** are welcome as external projects but
    are not going to be included into this repository.
 */
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif

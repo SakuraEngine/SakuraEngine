@@ -251,7 +251,7 @@ typedef char char8_t;
 
 #pragma region deprecated
 
-#if defined(__has_cpp_attribute) && __cplusplus >= 201402L
+#if defined(__has_cpp_attribute)
     #if __has_cpp_attribute(deprecated)
         #define SKR_DEPRECATED(msg) [[deprecated(msg)]]
     #endif

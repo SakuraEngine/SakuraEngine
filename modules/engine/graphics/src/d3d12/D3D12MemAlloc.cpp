@@ -4023,7 +4023,7 @@ void BlockMetadata_Linear::Alloc(
     }
     case ALLOC_REQUEST_END_OF_2ND:
     {
-        SuballocationVectorType& suballocations1st = AccessSuballocations1st();
+        [[maybe_unused]] SuballocationVectorType& suballocations1st = AccessSuballocations1st();
         // New allocation at the end of 2-part ring buffer, so before first allocation from 1st vector.
         D3D12MA_ASSERT(!suballocations1st.empty() &&
             offset + request.size <= suballocations1st[m_1stNullItemsBeginCount].offset);
@@ -6284,8 +6284,8 @@ private:
     BlockVector* m_PoolBlockVector;
     BlockVector** m_pBlockVectors;
     size_t m_ImmovableBlockCount = 0;
-    DEFRAGMENTATION_STATS m_GlobalStats = { 0 };
-    DEFRAGMENTATION_STATS m_PassStats = { 0 };
+    DEFRAGMENTATION_STATS m_GlobalStats = {};
+    DEFRAGMENTATION_STATS m_PassStats = {};
     void* m_AlgorithmState = NULL;
 
     static MoveAllocationData GetMoveData(AllocHandle handle, BlockMetadata* metadata);
@@ -9058,7 +9058,7 @@ HRESULT DefragmentationContextPimpl::DefragmentPassEnd(DEFRAGMENTATION_PASS_MOVE
     m_GlobalStats.BytesFreed += m_PassStats.BytesFreed;
     m_GlobalStats.BytesMoved += m_PassStats.BytesMoved;
     m_GlobalStats.HeapsFreed += m_PassStats.HeapsFreed;
-    m_PassStats = { 0 };
+    m_PassStats = {};
 
     // Move blocks with immovable allocations according to algorithm
     if (immovableBlocks.size() > 0)

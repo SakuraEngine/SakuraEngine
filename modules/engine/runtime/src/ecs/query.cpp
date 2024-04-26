@@ -28,13 +28,13 @@ namespace skr
 inline void split(const skr::stl_u8string_view& s, skr::stl_vector<skr::stl_u8string_view>& tokens, const skr::stl_u8string_view& delimiters = u8" ")
 {
     skr::stl_string::size_type lastPos = s.find_first_not_of(delimiters, 0);
-    skr::stl_string::size_type pos = s.find_first_of(delimiters, lastPos);
+    skr::stl_string::size_type pos     = s.find_first_of(delimiters, lastPos);
     while (skr::stl_string::npos != pos || skr::stl_string::npos != lastPos)
     {
         auto substr = s.substr(lastPos, pos - lastPos);
         tokens.push_back(substr); // use emplace_back after C++11
         lastPos = s.find_first_not_of(delimiters, pos);
-        pos = s.find_first_of(delimiters, lastPos);
+        pos     = s.find_first_of(delimiters, lastPos);
     }
 }
 
@@ -49,7 +49,7 @@ inline bool starts_with(skr::stl_u8string_view const& value, skr::stl_u8string_v
     if (starting.size() > value.size()) return false;
     return std::equal(starting.begin(), starting.end(), value.begin());
 }
-} 
+} // namespace skr
 
 namespace sugoi
 {
@@ -76,7 +76,7 @@ bool match_group_shared(const sugoi_type_set_t& shared, const sugoi_filter_t& fi
 bool match_chunk_changed(const sugoi_type_set_t& type, uint32_t* timestamp, const sugoi_meta_filter_t& filter)
 {
     uint16_t i = 0, j = 0;
-    auto& changed = filter.changed;
+    auto&    changed = filter.changed;
     if (changed.length == 0)
         return true;
     while (i < changed.length && j < type.length)
@@ -101,19 +101,19 @@ bool match_group_meta(const sugoi_entity_type_t& type, const sugoi_meta_filter_t
 bool match_group(sugoi_query_t* q, sugoi_group_t* g)
 {
     bool match = true;
-    match = match && q->includeDead >= g->isDead;
-    match = match && q->includeDisabled >= g->disabled;
-    if(q->excludes.size() > 0)
+    match      = match && q->includeDead >= g->isDead;
+    match      = match && q->includeDisabled >= g->disabled;
+    if (q->excludes.size() > 0)
     {
-        for(int i = 0; i < q->excludes.size(); ++i)
+        for (size_t i = 0; i < q->excludes.size(); ++i)
         {
             auto exclude = q->excludes[i];
-            if(set_utils<sugoi_type_index_t>::all(g->type.type, exclude))
+            if (set_utils<sugoi_type_index_t>::all(g->type.type, exclude))
                 return false;
         }
     }
     match = match && match_group_type(g->type, q->filter, g->archetype->withMask);
-    if(!match)
+    if (!match)
         return false;
     return true;
 }
@@ -123,7 +123,7 @@ void sugoi_storage_t::build_query_cache(sugoi_query_t* query)
 {
     using namespace sugoi;
     query->groups.clear();
-    query->includeDead = false;
+    query->includeDead     = false;
     query->includeDisabled = false;
     {
         auto at = query->filter.all;
@@ -137,9 +137,9 @@ void sugoi_storage_t::build_query_cache(sugoi_query_t* query)
     }
     for (auto i : groups)
     {
-        auto g = i.second;
+        auto g     = i.second;
         bool match = sugoi::match_group(query, g);
-        if(!match)
+        if (!match)
             continue;
         query->groups.push_back(g);
     }
@@ -148,13 +148,13 @@ void sugoi_storage_t::build_query_cache(sugoi_query_t* query)
 void sugoi_storage_t::update_query_cache(sugoi_group_t* group, bool isAdd)
 {
     using namespace sugoi;
-    
+
     if (!isAdd)
     {
         for (auto& query : queries)
             query->groups.erase(std::remove(query->groups.begin(), query->groups.end(), group), query->groups.end());
     }
-    else 
+    else
     {
         for (auto& query : queries)
         {
@@ -167,14 +167,14 @@ void sugoi_storage_t::update_query_cache(sugoi_group_t* group, bool isAdd)
 sugoi_query_t* sugoi_storage_t::make_query(const sugoi_filter_t& filter, const sugoi_parameters_t& params)
 {
     using namespace sugoi;
-    
+
     sugoi::fixed_arena_t arena(4096);
-    auto result = arena.allocate<sugoi_query_t>();
-    auto buffer = (char*)arena.allocate(data_size(filter) + data_size(params), alignof(sugoi_type_index_t));
-    result->filter = sugoi::clone(filter, buffer);
-    result->parameters = sugoi::clone(params, buffer);
-    queriesBuilt = false;
-    result->storage = this;
+    auto                 result = arena.allocate<sugoi_query_t>();
+    auto                 buffer = (char*)arena.allocate(data_size(filter) + data_size(params), alignof(sugoi_type_index_t));
+    result->filter              = sugoi::clone(filter, buffer);
+    result->parameters          = sugoi::clone(params, buffer);
+    queriesBuilt                = false;
+    result->storage             = this;
     arena.forget();
     queries.push_back(result);
     return result;
@@ -192,30 +192,30 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
     desc.erase(std::remove_if(desc.begin(), desc.end(), isspace), desc.end());
 #endif
     skr::stl_vector<skr::stl_u8string_view> parts;
-    auto spliter = u8",";
+    auto                                    spliter = u8",";
     skr::split(desc, parts, spliter);
     // todo: errorMsg? global error code?
-    auto& error = get_error();
-    int errorPos = 0;
-    int partBegin = 0;
-    auto& reg = type_registry_t::get();
+    auto&                                              error     = get_error();
+    int                                                errorPos  = 0;
+    int                                                partBegin = 0;
+    auto&                                              reg       = type_registry_t::get();
     llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> all;
     llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> none;
     llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> all_shared;
     llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> none_shared;
     llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> entry;
-    llvm_vecsmall::SmallVector<sugoi_operation_t, 20> operations;
+    llvm_vecsmall::SmallVector<sugoi_operation_t, 20>  operations;
     for (auto part : parts)
     {
-        int i = 0;
+        int                i = 0;
         sugoi_type_index_t type;
-        sugoi_operation_t operation;
-        bool shared = false;
-        bool filterOnly = false;
-        operation.randomAccess = DOS_PAR;
-        operation.readonly = true;
-        operation.atomic = false;
-        operation.phase = -1;
+        sugoi_operation_t  operation;
+        bool               shared     = false;
+        bool               filterOnly = false;
+        operation.randomAccess        = DOS_PAR;
+        operation.readonly            = true;
+        operation.atomic              = false;
+        operation.phase               = -1;
         enum
         {
             OPT,
@@ -224,7 +224,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
         } selector = ALL;
         if (part[i] == u8'[') // attr: [in] [out] [inout] [has]
         {
-            auto j = i + 1;
+            auto j   = i + 1;
             errorPos = partBegin + i;
             while (i < part.size() && part[i] != u8']')
                 ++i;
@@ -235,7 +235,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
                 return nullptr;
             }
             auto attr = part.substr(j, i - j);
-            errorPos = partBegin + j;
+            errorPos  = partBegin + j;
             if (attr == u8"in")
                 operation.readonly = true;
             else if (attr == u8"inout")
@@ -243,12 +243,12 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
             else if (attr == u8"out")
             {
                 operation.readonly = false;
-                operation.phase = 0;
+                operation.phase    = 0;
             }
             else if (attr == u8"atomic")
             {
                 operation.readonly = false;
-                operation.atomic = true;
+                operation.atomic   = true;
             }
             else if (attr == u8"has")
                 filterOnly = true;
@@ -263,13 +263,13 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
         if (i == part.size())
         {
             errorPos = partBegin + i;
-            error = skr::format(u8"unexpected end of part, loc {}.", errorPos);
+            error    = skr::format(u8"unexpected end of part, loc {}.", errorPos);
             SKR_ASSERT(false);
             return nullptr;
         }
         if (part[i] == '<') // attr: <rand> <seq>
         {
-            auto j = i + 1;
+            auto j   = i + 1;
             errorPos = partBegin + i;
             while (i < part.size() && part[i] != u8'>')
                 ++i;
@@ -280,14 +280,14 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
                 return nullptr;
             }
             auto attr = part.substr(j, i - j);
-            errorPos = partBegin + j;
+            errorPos  = partBegin + j;
             if (attr == u8"seq")
                 operation.randomAccess = DOS_SEQ;
             else if (attr == u8"par")
                 operation.randomAccess = DOS_PAR;
             else if (attr == u8"unseq")
             {
-                selector = OPT;
+                selector               = OPT;
                 operation.randomAccess = DOS_UNSEQ;
             }
             else
@@ -301,7 +301,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
         if (i == part.size())
         {
             errorPos = partBegin + i;
-            error = skr::format(u8"unexpected end of part, loc {}.", errorPos);
+            error    = skr::format(u8"unexpected end of part, loc {}.", errorPos);
             SKR_ASSERT(false);
             return nullptr;
         }
@@ -312,24 +312,24 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
                 if (!operation.readonly)
                 {
                     errorPos = partBegin + i;
-                    error = skr::format(u8"shared component is readonly, loc {}.", errorPos);
+                    error    = skr::format(u8"shared component is readonly, loc {}.", errorPos);
                     SKR_ASSERT(false);
                     return nullptr;
                 }
                 operation.randomAccess = DOS_SEQ;
-                shared = true;
+                shared                 = true;
                 ++i;
             }
-            if(operation.randomAccess == DOS_UNSEQ && part[i] != u8'?')
+            if (operation.randomAccess == DOS_UNSEQ && part[i] != u8'?')
             {
                 errorPos = partBegin + i;
-                error = skr::format(u8"unseq component must be optional, loc {}.", errorPos);
+                error    = skr::format(u8"unseq component must be optional, loc {}.", errorPos);
                 SKR_ASSERT(false);
                 return nullptr;
             }
             if (part[i] == u8'!')
             {
-                selector = NONE;
+                selector   = NONE;
                 filterOnly = true;
             }
             else if (part[i] == u8'?')
@@ -337,7 +337,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
             else
             {
                 errorPos = partBegin + i;
-                error = skr::format(u8"unknown selector '{}', loc {}.", part[i], errorPos);
+                error    = skr::format(u8"unknown selector '{}', loc {}.", part[i], errorPos);
                 SKR_ASSERT(false);
                 return nullptr;
             }
@@ -346,30 +346,29 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
         if (i == part.size() || !std::isalpha(part[i]))
         {
             errorPos = partBegin + i;
-            error = skr::format(u8"no type specified, loc {}.", errorPos);
+            error    = skr::format(u8"no type specified, loc {}.", errorPos);
             SKR_ASSERT(false);
             return nullptr;
         }
         else
         {
-            auto j = i;
-            auto validNameChar = [](char8_t c)
-            {
+            auto j             = i;
+            auto validNameChar = [](char8_t c) {
                 return std::isalpha(c) || c == u8'_' || (c > u8'0' && c <= u8'9') || c == u8':';
             };
             while (i < part.size() && validNameChar(part[i]))
                 ++i;
-            auto name = part.substr(j, i - j);
+            auto name      = part.substr(j, i - j);
             auto name_view = skr::StringView(name.data(), name.size());
-            auto iter = aliases.find(name_view);
-            if(iter != aliases.end())
+            auto iter      = aliases.find(name_view);
+            if (iter != aliases.end())
             {
                 type = iter->second.type;
-                
+
                 if (operation.phase == 0)
                 {
                     errorPos = partBegin + j;
-                    error = skr::format(u8"unexpected phase alias.([out] is always phase 0), loc {}.", errorPos);
+                    error    = skr::format(u8"unexpected phase alias.([out] is always phase 0), loc {}.", errorPos);
                     SKR_ASSERT(false);
                     return nullptr;
                 }
@@ -381,7 +380,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
                 if (type == kInvalidTypeIndex)
                 {
                     errorPos = partBegin + i;
-                    error = skr::format(u8"unknown type name or alias name '{}', loc {}.", name, errorPos);
+                    error    = skr::format(u8"unknown type name or alias name '{}', loc {}.", name, errorPos);
                     SKR_ASSERT(false);
                     return nullptr;
                 }
@@ -436,15 +435,15 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
     FILTER_PART(all_shared);
     FILTER_PART(none_shared);
 #undef FILTER_PART
-    auto buffer = (char*)arena.allocate(data_size(result->filter), alignof(sugoi_type_index_t));
-    result->filter = sugoi::clone(result->filter, buffer);
-    result->parameters.types = entry.data();
+    auto buffer                 = (char*)arena.allocate(data_size(result->filter), alignof(sugoi_type_index_t));
+    result->filter              = sugoi::clone(result->filter, buffer);
+    result->parameters.types    = entry.data();
     result->parameters.accesses = operations.data();
-    result->parameters.length = (SIndex)entry.size();
-    buffer = (char*)arena.allocate(data_size(result->parameters), alignof(sugoi_type_index_t));
-    result->parameters = sugoi::clone(result->parameters, buffer);
-    result->storage = this;
-    queriesBuilt = false;
+    result->parameters.length   = (SIndex)entry.size();
+    buffer                      = (char*)arena.allocate(data_size(result->parameters), alignof(sugoi_type_index_t));
+    result->parameters          = sugoi::clone(result->parameters, buffer);
+    result->storage             = this;
+    queriesBuilt                = false;
     ::memset(&result->meta, 0, sizeof(sugoi_meta_filter_t));
     queries.push_back(result);
     arena.forget();
@@ -466,16 +465,16 @@ void sugoi_storage_t::build_queries()
     using namespace sugoi;
     if (queriesBuilt)
         return;
-    
+
     SkrZoneScopedN("sugoi_storage_t::build_queries");
     struct phase_entry_builder {
-        sugoi_type_index_t type;
-        uint32_t phase;
+        sugoi_type_index_t                            type;
+        uint32_t                                      phase;
         llvm_vecsmall::SmallVector<sugoi_query_t*, 8> queries;
     };
-    if(phases != nullptr)
+    if (phases != nullptr)
     {
-        for(EIndex i = 0; i < phaseCount; ++i)
+        for (EIndex i = 0; i < phaseCount; ++i)
             phases[i]->~phase_entry();
     }
     phaseCount = 0;
@@ -501,7 +500,7 @@ void sugoi_storage_t::build_queries()
                 if (!found)
                 {
                     phase_entry_builder entry;
-                    entry.type = parameters.types[i];
+                    entry.type  = parameters.types[i];
                     entry.phase = parameters.accesses[i].phase;
                     entry.queries.push_back(query);
                     entries.emplace_back(std::move(entry));
@@ -509,7 +508,7 @@ void sugoi_storage_t::build_queries()
             }
         }
     }
-    phases = queryBuildArena.allocate<phase_entry*>(entries.size());
+    phases            = queryBuildArena.allocate<phase_entry*>(entries.size());
     auto phaseEntries = phases;
     for (auto query : queries)
     {
@@ -518,13 +517,13 @@ void sugoi_storage_t::build_queries()
         {
             if (entry.queries.size() < 2)
                 continue;
-            if(std::find(entry.queries.begin(), entry.queries.end(), query) != entry.queries.end())
+            if (std::find(entry.queries.begin(), entry.queries.end(), query) != entry.queries.end())
             {
                 count++;
             }
         }
         query->phaseCount = 0;
-        if(count == 0)
+        if (count == 0)
             continue;
         query->phases = queryBuildArena.allocate<phase_entry*>(count);
     }
@@ -532,68 +531,68 @@ void sugoi_storage_t::build_queries()
     {
         if (builder.queries.size() < 2)
             continue;
-        phaseCount ++;
-        auto entry = new (queryBuildArena.allocate<phase_entry>(1)) phase_entry(); 
+        phaseCount++;
+        auto entry        = new (queryBuildArena.allocate<phase_entry>(1)) phase_entry();
         (*phaseEntries++) = entry;
-        entry->type = builder.type;
-        entry->phase = builder.phase;
-        entry->queries = {queryBuildArena.allocate<sugoi_query_t*>(builder.queries.size()), builder.queries.size()};
+        entry->type       = builder.type;
+        entry->phase      = builder.phase;
+        entry->queries    = { queryBuildArena.allocate<sugoi_query_t*>(builder.queries.size()), builder.queries.size() };
         memcpy(entry->queries.data(), builder.queries.data(), sizeof(sugoi_query_t*) * builder.queries.size());
 
         // solve overloading
-        for(int i = 0; i < builder.queries.size(); ++i)
+        for (int i = 0; i < builder.queries.size(); ++i)
         {
-            for(int j = i+1; j < builder.queries.size(); ++j)
+            for (int j = i + 1; j < builder.queries.size(); ++j)
             {
                 fixed_stack_scope_t _(localStack);
-                auto a = builder.queries[i];
-                auto b = builder.queries[j];
+                auto                a = builder.queries[i];
+                auto                b = builder.queries[j];
                 // todo: is 256 enough?
                 const sugoi_type_index_t* buffer = localStack.allocate<sugoi_type_index_t>(256);
-                auto merged = set_utils<sugoi_type_index_t>::merge(a->filter.all, b->filter.all, (void*)buffer);
+                auto                      merged = set_utils<sugoi_type_index_t>::merge(a->filter.all, b->filter.all, (void*)buffer);
                 SKR_ASSERT(merged.length < 256);
                 auto excludeA = set_utils<sugoi_type_index_t>::substract(merged, a->filter.all, localStack.allocate<sugoi_type_index_t>(merged.length));
                 auto excludeB = set_utils<sugoi_type_index_t>::substract(merged, b->filter.all, localStack.allocate<sugoi_type_index_t>(merged.length));
-                if(excludeA.length != 0)
+                if (excludeA.length != 0)
                 {
                     char* data = (char*)queryBuildArena.allocate(data_size(excludeA), alignof(sugoi_type_index_t));
                     a->excludes.push_back(sugoi::clone(excludeA, data));
                 }
-                if(excludeB.length != 0)
+                if (excludeB.length != 0)
                 {
                     char* data = (char*)queryBuildArena.allocate(data_size(excludeB), alignof(sugoi_type_index_t));
                     b->excludes.push_back(sugoi::clone(excludeB, data));
                 }
             }
         }
-        for(auto query : builder.queries)
+        for (auto query : builder.queries)
         {
             query->phases[query->phaseCount++] = entry;
         }
     }
     // build query cache
-    for(auto& query : queries)
+    for (auto& query : queries)
     {
         build_query_cache(query);
     }
-    
+
     queriesBuilt = true;
 }
 
 void sugoi_storage_t::query(const sugoi_query_t* q, sugoi_view_callback_t callback, void* u)
 {
     bool mainThread = true;
-    if(scheduler)
+    if (scheduler)
     {
         mainThread = scheduler->is_main_thread(this);
     }
-    if(mainThread)
+    if (mainThread)
     {
         build_queries();
     }
     else
         SKR_ASSERT(queriesBuilt);
-    
+
     auto filterChunk = [&](sugoi_group_t* group) {
         query(group, q->filter, q->meta, q->customFilter, q->customFilterUserData, callback, u);
     };
@@ -603,17 +602,17 @@ void sugoi_storage_t::query(const sugoi_query_t* q, sugoi_view_callback_t callba
 void sugoi_storage_t::destroy(const sugoi_query_t* q)
 {
     bool mainThread = true;
-    if(scheduler)
+    if (scheduler)
     {
         mainThread = scheduler->is_main_thread(this);
     }
-    if(mainThread)
+    if (mainThread)
     {
         build_queries();
     }
     else
         SKR_ASSERT(queriesBuilt);
-    
+
     auto filterChunk = [&](sugoi_group_t* group) {
         group->clear();
     };
@@ -623,31 +622,31 @@ void sugoi_storage_t::destroy(const sugoi_query_t* q)
 void sugoi_storage_t::destroy(const sugoi_query_t* q, sugoi_destroy_callback_t callback, void* u)
 {
     bool mainThread = true;
-    if(scheduler)
+    if (scheduler)
     {
         mainThread = scheduler->is_main_thread(this);
     }
-    if(mainThread)
+    if (mainThread)
     {
         build_queries();
     }
     else
         SKR_ASSERT(queriesBuilt);
-    
+
     skr::InlineVector<sugoi_chunk_view_t, 16> viewsToDestroy;
-    auto callback3 = [&](sugoi_chunk_view_t* chunk) {
+    auto                                      callback3 = [&](sugoi_chunk_view_t* chunk) {
         viewsToDestroy.push_back(*chunk);
     };
     auto filterChunk = [&](sugoi_group_t* group) {
         auto callback2 = [&](sugoi_chunk_view_t* chunk) {
             viewsToDestroy.clear();
             callback(u, chunk, SUGOI_LAMBDA(callback3));
-            //perform destroy
-            if(viewsToDestroy.size() == 0)
+            // perform destroy
+            if (viewsToDestroy.size() == 0)
                 return;
 
-            //destroy in reverse order
-            for(int i = viewsToDestroy.size() - 1; i >= 0; --i)
+            // destroy in reverse order
+            for (int i = viewsToDestroy.size() - 1; i >= 0; --i)
             {
                 destroy(viewsToDestroy[i]);
             }
@@ -661,24 +660,24 @@ void sugoi_storage_t::query_groups(const sugoi_query_t* q, sugoi_group_callback_
 {
     using namespace sugoi;
     bool mainThread = true;
-    if(scheduler)
+    if (scheduler)
     {
         mainThread = scheduler->is_main_thread(this);
     }
-    if(mainThread)
+    if (mainThread)
     {
         build_queries();
     }
     else
         SKR_ASSERT(queriesBuilt);
-    
-    fixed_stack_scope_t _(localStack);
-    bool filterShared = (q->filter.all_shared.length + q->filter.none_shared.length) != 0;
+
+    fixed_stack_scope_t  _(localStack);
+    bool                 filterShared  = (q->filter.all_shared.length + q->filter.none_shared.length) != 0;
     sugoi_meta_filter_t* validatedMeta = nullptr;
     if (q->meta.all_meta.length > 0 || q->meta.any_meta.length > 0 || q->meta.none_meta.length > 0)
     {
-        validatedMeta = localStack.allocate<sugoi_meta_filter_t>();
-        auto data = (char*)localStack.allocate(data_size(q->meta));
+        validatedMeta  = localStack.allocate<sugoi_meta_filter_t>();
+        auto data      = (char*)localStack.allocate(data_size(q->meta));
         *validatedMeta = sugoi::clone(q->meta, data);
         validate(validatedMeta->all_meta);
         validate(validatedMeta->any_meta);
@@ -694,7 +693,7 @@ void sugoi_storage_t::query_groups(const sugoi_query_t* q, sugoi_group_callback_
         if (filterShared)
         {
             fixed_stack_scope_t _(localStack);
-            sugoi_type_set_t shared;
+            sugoi_type_set_t    shared;
             shared.length = 0;
             // todo: is 256 enough?
             shared.data = localStack.allocate<sugoi_type_index_t>(256);
@@ -715,13 +714,13 @@ void sugoi_storage_t::query_groups(const sugoi_query_t* q, sugoi_group_callback_
 void sugoi_storage_t::query_groups(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_group_callback_t callback, void* u)
 {
     using namespace sugoi;
-    fixed_stack_scope_t _(localStack);
-    bool filterShared = (filter.all_shared.length + filter.none_shared.length) != 0;
+    fixed_stack_scope_t  _(localStack);
+    bool                 filterShared  = (filter.all_shared.length + filter.none_shared.length) != 0;
     sugoi_meta_filter_t* validatedMeta = nullptr;
     if (meta.all_meta.length > 0 || meta.any_meta.length > 0 || meta.none_meta.length > 0)
     {
-        validatedMeta = localStack.allocate<sugoi_meta_filter_t>();
-        auto data = (char*)localStack.allocate(data_size(meta));
+        validatedMeta  = localStack.allocate<sugoi_meta_filter_t>();
+        auto data      = (char*)localStack.allocate(data_size(meta));
         *validatedMeta = sugoi::clone(meta, data);
         validate(validatedMeta->all_meta);
         validate(validatedMeta->any_meta);
@@ -731,8 +730,8 @@ void sugoi_storage_t::query_groups(const sugoi_filter_t& filter, const sugoi_met
     {
         validatedMeta = (sugoi_meta_filter_t*)&meta;
     }
-    bool filterMeta = (validatedMeta->all_meta.length + validatedMeta->any_meta.length + validatedMeta->none_meta.length) != 0;
-    bool includeDead = false;
+    bool filterMeta      = (validatedMeta->all_meta.length + validatedMeta->any_meta.length + validatedMeta->none_meta.length) != 0;
+    bool includeDead     = false;
     bool includeDisabled = false;
     {
         auto at = filter.all;
@@ -754,12 +753,12 @@ void sugoi_storage_t::query_groups(const sugoi_filter_t& filter, const sugoi_met
     for (auto& pair : groups)
     {
         auto group = pair.second;
-        if(!matchGroup(group))
+        if (!matchGroup(group))
             continue;
         if (filterShared)
         {
             fixed_stack_scope_t _(localStack);
-            sugoi_type_set_t shared;
+            sugoi_type_set_t    shared;
             shared.length = 0;
             // todo: is 256 enough?
             shared.data = localStack.allocate<sugoi_type_index_t>(256);
@@ -780,13 +779,13 @@ void sugoi_storage_t::query_groups(const sugoi_filter_t& filter, const sugoi_met
 bool sugoi_storage_t::match_group(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, const sugoi_group_t* group)
 {
     using namespace sugoi;
-    fixed_stack_scope_t _(localStack);
-    bool filterShared = (filter.all_shared.length + filter.none_shared.length) != 0;
+    fixed_stack_scope_t  _(localStack);
+    bool                 filterShared  = (filter.all_shared.length + filter.none_shared.length) != 0;
     sugoi_meta_filter_t* validatedMeta = nullptr;
     if (meta.all_meta.length > 0 || meta.any_meta.length > 0 || meta.none_meta.length > 0)
     {
-        validatedMeta = localStack.allocate<sugoi_meta_filter_t>();
-        auto data = (char*)localStack.allocate(data_size(meta));
+        validatedMeta  = localStack.allocate<sugoi_meta_filter_t>();
+        auto data      = (char*)localStack.allocate(data_size(meta));
         *validatedMeta = sugoi::clone(meta, data);
         validate(validatedMeta->all_meta);
         validate(validatedMeta->any_meta);
@@ -800,7 +799,7 @@ bool sugoi_storage_t::match_group(const sugoi_filter_t& filter, const sugoi_meta
     if (filterShared)
     {
         fixed_stack_scope_t _(localStack);
-        sugoi_type_set_t shared;
+        sugoi_type_set_t    shared;
         shared.length = 0;
         // todo: is 256 enough?
         shared.data = localStack.allocate<sugoi_type_index_t>(256);
@@ -823,12 +822,12 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
     bool withCustomFilter = customFilter != nullptr;
     if (!group->archetype->withMask)
     {
-        for(auto c : group->chunks)
+        for (auto c : group->chunks)
         {
             if (match_chunk_changed(c->type->type, c->timestamps(), meta))
             {
                 sugoi_chunk_view_t view{ c, (EIndex)0, c->count };
-                if(!withCustomFilter || customFilter(u1, &view))
+                if (!withCustomFilter || customFilter(u1, &view))
                     callback(u, &view);
             }
         }
@@ -836,23 +835,23 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
     else
     {
 
-        auto allmask = group->get_mask(filter.all);
+        auto allmask  = group->get_mask(filter.all);
         auto nonemask = group->get_mask(filter.none);
         // todo:benchmark this
 #if __SSE2__
         if (nonemask == 0) // fastpath
         {
             __m128i allmask_128 = _mm_set1_epi32(allmask);
-            for(auto c : group->chunks)
+            for (auto c : group->chunks)
             {
                 if (!match_chunk_changed(c->type->type, c->timestamps(), meta))
                 {
                     continue;
                 }
-                auto count = c->count;
-                sugoi_chunk_view_t view = { c, 0, c->count };
-                auto masks = (sugoi_mask_comp_t*)sugoiV_get_owned_ro(&view, kMaskComponent);
-                EIndex i = 0;
+                auto               count = c->count;
+                sugoi_chunk_view_t view  = { c, 0, c->count };
+                auto               masks = (sugoi_mask_comp_t*)sugoiV_get_owned_ro(&view, kMaskComponent);
+                EIndex             i     = 0;
                 while (i < count)
                 {
                     while (i < count && !((masks[i] & allmask) == allmask) && i % 4 != 0)
@@ -861,8 +860,8 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
                     {
                         while (i < count - 4)
                         {
-                            __m128i m = _mm_load_si128((__m128i*)(masks + i));
-                            m = _mm_and_si128(allmask_128, m);
+                            __m128i m    = _mm_load_si128((__m128i*)(masks + i));
+                            m            = _mm_and_si128(allmask_128, m);
                             uint16_t cmp = _mm_movemask_epi8(_mm_cmpeq_epi32(m, allmask_128));
                             if (cmp == 0)
                             {
@@ -888,8 +887,8 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
                     {
                         while (i < count - 4)
                         {
-                            __m128i m = _mm_load_si128((__m128i*)(masks + i));
-                            m = _mm_and_si128(allmask_128, m);
+                            __m128i m    = _mm_load_si128((__m128i*)(masks + i));
+                            m            = _mm_and_si128(allmask_128, m);
                             uint16_t cmp = _mm_movemask_epi8(_mm_cmpeq_epi32(m, allmask_128));
                             if (cmp == 0xFFFF)
                             {
@@ -909,7 +908,7 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
                     }
                     view.count = i - view.start;
                     if (view.count > 0)
-                        if(!withCustomFilter || customFilter(u1, &view))
+                        if (!withCustomFilter || customFilter(u1, &view))
                             callback(u, &view);
                 }
             }
@@ -920,16 +919,16 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
             auto match = [&](sugoi_mask_comp_t mask) {
                 return (mask & allmask) == allmask && (mask & nonemask) == 0;
             };
-            for(auto c : group->chunks)
+            for (auto c : group->chunks)
             {
                 if (!match_chunk_changed(c->type->type, c->timestamps(), meta))
                 {
                     continue;
                 }
-                auto count = c->count;
-                sugoi_chunk_view_t view = { c, 0, c->count };
-                auto masks = (sugoi_mask_comp_t*)sugoiV_get_owned_ro(&view, kMaskComponent);
-                EIndex i = 0;
+                auto               count = c->count;
+                sugoi_chunk_view_t view  = { c, 0, c->count };
+                auto               masks = (sugoi_mask_comp_t*)sugoiV_get_owned_ro(&view, kMaskComponent);
+                EIndex             i     = 0;
                 while (i < count)
                 {
                     while (i < count && !match(masks[i]))
@@ -939,7 +938,7 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
                         ++i;
                     view.count = i - view.start;
                     if (view.count > 0)
-                        if(!withCustomFilter || customFilter(u1, &view))
+                        if (!withCustomFilter || customFilter(u1, &view))
                             callback(u, &view);
                 }
             }

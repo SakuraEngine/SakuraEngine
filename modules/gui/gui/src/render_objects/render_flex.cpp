@@ -14,11 +14,12 @@ struct _FlexHelper {
             case EFlexDirection::Row:
             case EFlexDirection::RowReverse:
                 return horizontal();
-                break;
             case EFlexDirection::Column:
             case EFlexDirection::ColumnReverse:
                 return vertical();
-                break;
+            default:
+                SKR_UNREACHABLE_CODE()
+                return {};
         }
     }
     template <typename TH, typename TV>
@@ -29,11 +30,12 @@ struct _FlexHelper {
             case EFlexDirection::Row:
             case EFlexDirection::RowReverse:
                 return vertical();
-                break;
             case EFlexDirection::Column:
             case EFlexDirection::ColumnReverse:
                 return horizontal();
-                break;
+            default:
+                SKR_UNREACHABLE_CODE()
+                return {};
         }
     }
     inline static float _get_main_size(const RenderFlex& self, Sizef size) SKR_NOEXCEPT
@@ -74,6 +76,9 @@ struct _FlexHelper {
             case EFlexDirection::Column:
             case EFlexDirection::ColumnReverse:
                 return true;
+            default:
+                SKR_UNREACHABLE_CODE()
+                return false;
         }
     }
     inline static bool _is_coord_flipped(const RenderFlex& self) SKR_NOEXCEPT
@@ -90,6 +95,9 @@ struct _FlexHelper {
             case EFlexDirection::RowReverse:
             case EFlexDirection::ColumnReverse:
                 return true;
+            default:
+                SKR_UNREACHABLE_CODE()
+                return false;
         }
     }
     inline static bool _is_cross_axis_flipped(const RenderFlex& self) SKR_NOEXCEPT
@@ -158,7 +166,7 @@ struct _FlexHelper {
                 {
                     // solve child extent
                     const float max_child_extent = can_flex ? space_per_flex * slot.data.flex : std::numeric_limits<float>::infinity();
-                    float       min_child_extent;
+                    float       min_child_extent{};
                     switch (slot.data.flex_fit)
                     {
                         case EFlexFit::Tight:
@@ -254,7 +262,7 @@ struct _FlexHelper {
             for (const auto& slot : self.children())
             {
                 total_flex += slot.data.flex;
-                float main_size, cross_size;
+                float main_size{}, cross_size{};
                 if (slot.data.flex == 0)
                 {
                     switch (self._flex_direction)
@@ -390,7 +398,7 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
     cross_size = _FlexHelper::_get_cross_size(*this, size());
 
     // Step6. Place each child based on main axis alignment and cross axis alignment
-    float leading_space, between_space;
+    float leading_space{}, between_space{};
     {
         // calc slack & overflow
         float slack_space = main_size - allocated_size;
@@ -439,7 +447,7 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
         const float child_cross_size = _FlexHelper::_get_cross_size(*this, child_size);
 
         // cross axis offset
-        float child_cross_offset;
+        float child_cross_offset{};
         switch (_cross_axis_alignment)
         {
             case ECrossAxisAlignment::Start:

@@ -517,7 +517,7 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
 
     SUBCASE("cursor & iter")
     {
-        const auto kCapacity = clamp_capacity(114514);
+        const size_t kCapacity = clamp_capacity(114514);
 
         TestHashSet a(kCapacity);
         for (size_t i = 0; i < kCapacity; ++i)

@@ -208,7 +208,7 @@ void D3D12Util_EnumFormatSupports(CGPUAdapter_D3D12* D3DAdapter, ID3D12Device* p
         DXGI_FORMAT fmt = DXGIUtil_TranslatePixelFormat((ECGPUFormat)i);
         if (fmt == DXGI_FORMAT_UNKNOWN) continue;
 
-        D3D12_FEATURE_DATA_FORMAT_SUPPORT formatSupport = { fmt };
+        D3D12_FEATURE_DATA_FORMAT_SUPPORT formatSupport = { fmt, {}, {} };
         pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_FORMAT_SUPPORT, &formatSupport, sizeof(formatSupport));
 
         adapter_detail->format_supports[i].shader_read = (formatSupport.Support1 & D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE) != 0;

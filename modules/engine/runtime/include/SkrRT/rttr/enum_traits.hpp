@@ -7,7 +7,7 @@ namespace skr::rttr
 template <class T>
 struct EnumItem {
     StringView name  = {};
-    T           value = {};
+    T          value = {};
 };
 
 template <class T>

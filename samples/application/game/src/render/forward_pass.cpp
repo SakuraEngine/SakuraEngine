@@ -23,7 +23,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
 
     if (!anim_query)
     {
-        auto sig = u8"[in]skr::renderer::MeshComponent, [in]skr::anim::AnimComponent";
+        auto sig    = u8"[in]skr::renderer::MeshComponent, [in]skr::anim::AnimComponent";
         *anim_query = sugoiQ_from_literal(storage, sig);
     }
     // upload skin mesh data
@@ -190,9 +190,9 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
     renderGraph->add_copy_pass(
     [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassBuilder& builder) {
         builder.set_name(SKR_UTF8("BarrierSkinVertexBuffers"))
-            .can_be_lone();
+        .can_be_lone();
     },
-    [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context) {
+    [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context) {
         SkrZoneScopedN("BarrierSkinMeshes");
         CGPUResourceBarrierDescriptor      barrier_desc = {};
         skr::stl_vector<CGPUBufferBarrier> barriers;
@@ -238,7 +238,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
     if (!root_signature) return; // no drawcalls
 
     renderGraph->add_render_pass(
-    [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
+    [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
         const auto out_color    = renderGraph->get_texture(SKR_UTF8("backbuffer"));
         const auto depth_buffer = renderGraph->get_texture(SKR_UTF8("depth"));
         builder.set_name(SKR_UTF8("forward_pass"))
@@ -251,7 +251,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
             builder.set_depth_stencil(depth_buffer, CGPU_LOAD_ACTION_LOAD);
         need_clear = false;
     },
-    [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
+    [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
         auto cb = pass_context.resolve(cbuffer);
         SKR_ASSERT(cb && "cbuffer not found");
         ::memcpy(cb->info->cpu_mapped_address, &viewport->view_projection, sizeof(viewport->view_projection));
@@ -265,7 +265,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
 
         {
             SkrZoneScopedN("DrawCalls");
-            CGPURenderPipelineId                             old_pipeline = nullptr;
+            CGPURenderPipelineId                            old_pipeline = nullptr;
             skr::Map<CGPURootSignatureId, CGPUXBindTableId> bind_tables;
             for (uint32_t i = 0; i < drawcalls.size(); i++)
                 for (uint32_t j = 0; j < drawcalls[i].count; j++)

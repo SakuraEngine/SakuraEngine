@@ -9,3 +9,9 @@ target("SkrProfile")
     if (is_config("use_profile", "disable")) then
         add_defines("SKR_PROFILE_OVERRIDE_DISABLE", {public = true})
     end
+
+    -- warnings
+    add_cxxflags("-Wno-missing-field-initializers", {tools={"gcc", "clang", "clang_cl"}})
+    add_cxxflags("-Wno-format", {tools={"gcc", "clang", "clang_cl"}})
+    add_cxxflags("-Wno-unused-variable", {tools={"gcc", "clang", "clang_cl"}})
+    add_cxxflags("-Wno-unused-but-set-variable", {tools={"gcc", "clang", "clang_cl"}})

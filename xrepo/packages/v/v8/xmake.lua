@@ -38,17 +38,9 @@ package("v8")
         local base_url = opt.url
         local plat = package:plat()
         local arch = package:arch()
-        local toolchain = "unknown"
+        local toolchain = "msvc"
         local mode = "unknown"
-        if package:is_plat("windows") then
-            if package:toolchain("clang-cl") then
-                toolchain = "clang-cl"
-            elseif package:toolchain("msvc") then
-                toolchain = "msvc"
-            else
-                toolchain = "msvc"
-            end
-        end
+        
         -- if is_mode("debug") then
         --     mode = "debug"
         -- elseif is_mode("release") then
@@ -87,7 +79,7 @@ package("v8")
         -- download manifest file
         if not os.isfile(manifest_file) or sourcehash ~= hash.sha256(manifest_file) then
             -- attempt to remove manifest file first
-            print("downloading manifest file from \"%s\"\n", manifest_url)
+            -- print("downloading manifest file from \"%s\"\n", manifest_url)
             os.tryrm(manifest_file)
             http.download(manifest_url, manifest_file)
 
@@ -120,7 +112,7 @@ package("v8")
             cached = false
 
             -- attempt to remove package file first
-            print("downloading package file from \"%s\"\n", package_url)
+            -- print("downloading package file from \"%s\"\n", package_url)
             os.tryrm(package_file)
             http.download(package_url, package_file)
 
