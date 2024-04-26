@@ -29,7 +29,8 @@ jobs:
       - name: Install xmake
         uses: xmake-io/github-action-setup-xmake@v1
         with:
-          xmake-version: latest
+          # xmake-version: latest
+          xmake-version: branch@dev # FIXME. switch to dev branch to fix ci temporary
           actions-cache-folder: .xmake-cache-W${{ steps.cache_key.outputs.key }}
 
       # Update xmake repository (in order to have the file that will be cached)
@@ -47,11 +48,6 @@ jobs:
         with:
           path: ${{ env.XMAKE_GLOBALDIR }}/.xmake/packages
           key: macOS-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}-15
-
-      # FIXME. switch to dev branch to fix ci temporary
-      - name: Use xmake dev branch
-        run: xmake update -s dev
-
 
       # Run setup script
       - name: Set env
