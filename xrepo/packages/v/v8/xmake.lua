@@ -38,16 +38,11 @@ package("v8")
         local base_url = opt.url
         local plat = package:plat()
         local arch = package:arch()
-        local toolchain = "msvc"
+        local toolchain = "msvc" -- use msvc toolchain by default, for more stable
+        if package:has_tool("cxx", "clang_cl") then
+            toolchain = "clang-cl"
+        end
         local mode = "unknown"
-        
-        -- if is_mode("debug") then
-        --     mode = "debug"
-        -- elseif is_mode("release") then
-        --     mode = "release"
-        -- elseif is_mode("releasedbg") then
-        --     mode = "releasedbg"
-        -- end
         if package:is_debug() then
             mode = "debug"
         else
@@ -57,9 +52,14 @@ package("v8")
                 mode = "release"
             end
         end
+        
+        -- FIXME. v8 clang-cl use /Zc:dllexportInlines- flag, which cause symbol lost in dll
+        if mode == "debug" then 
+            toolchain = "msvc"
+        end
 
         -- print debug info
-        -- print("===============> begin debug info <===============")
+        -- print("\n===============> begin debug info <===============")
         -- print("base_url: %s", base_url)
         -- print("plat: %s", plat)
         -- print("arch: %s", arch)

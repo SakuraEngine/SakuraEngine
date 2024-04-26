@@ -5,9 +5,10 @@ target("SkrCompileFlags")
     set_warnings("all", "extra")
 
     -- uses utf-8 charset at runtime
-    if is_plat("windows") then
-        add_cxflags("/execution-charset:utf-8", "/source-charset:utf-8")
-    end
+    add_cxflags(
+        "/execution-charset:utf-8", 
+        "/source-charset:utf-8",
+        {public = true, tools = {"clang_cl", "cl"}})
 
     -- disable c++ warnings for gcc/clang
     add_cxflags(
@@ -53,7 +54,7 @@ target("SkrCompileFlags")
         "/wd4275", -- non dll-interface struct 'xxxx' used as base for dll-interface struct 'xxxx'
         "/wd4201", -- nonstandard extension used: nameless struct/union
         "/wd4624", -- destructor was implicitly defined as deleted
-        "/wd4819", -- The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+        -- "/wd4819", -- The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
         "/wd4456", -- declaration of 'xxxx' hides previous local declaration
         "/wd4457", -- declaration of 'xxxx' hides function parameter
         "/wd4459", -- declaration of 'xxxx' hides global declaration
@@ -80,8 +81,8 @@ target("SkrCompileFlags")
         "-Wno-microsoft-cast", -- microsoft cast extension
         "-Wno-microsoft-include", -- microsoft include extension
         "-Wno-microsoft-enum-forward-reference", -- microsoft enum forward declaration extension
-        "/Zc:dllexportInlines-", -- strip inline function from dll export
-        { public = true, tools = {"clang_cl"} }
+        -- "/Zc:dllexportInlines-", -- strip inline function from dll export
+        {public = true, tools = {"clang_cl"}}
     )
 
     -- cl link flags
