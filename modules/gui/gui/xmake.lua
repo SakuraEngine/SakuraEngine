@@ -35,6 +35,3 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     add_files("src/backend/text_server_adv/*.cpp", {unity_group  = "text_adv"})
     
     remove_files("src/dev/deprecated/**.cpp")
-    if (is_plat("windows")) then
-        add_cxflags("/wd4267", "/wd4244", "/wd4018","/source-charset:utf-8", {public=false})
-    end

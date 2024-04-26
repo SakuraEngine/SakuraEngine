@@ -11,7 +11,10 @@ target("SkrProfile")
     end
 
     -- warnings
-    add_cxxflags("-Wno-missing-field-initializers", {tools={"gcc", "clang", "clang_cl"}})
-    add_cxxflags("-Wno-format", {tools={"gcc", "clang", "clang_cl"}})
-    add_cxxflags("-Wno-unused-variable", {tools={"gcc", "clang", "clang_cl"}})
-    add_cxxflags("-Wno-unused-but-set-variable", {tools={"gcc", "clang", "clang_cl"}})
+    add_cxxflags(
+        "-Wno-missing-field-initializers", 
+        "-Wno-format",
+        "-Wno-unused-variable",
+        "-Wno-unused-but-set-variable",
+        {tools={"gcc", "clang", "clang_cl"}}
+    )

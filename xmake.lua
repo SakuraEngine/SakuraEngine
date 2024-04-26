@@ -6,46 +6,7 @@ default_unity_batch = 16
 
 add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" }) -- xmake 2.7.4 
 
--- setup warnings
-set_warnings("all", "extra")
-add_cxflags( -- GCC C/C++
-    "-Wno-unused-parameter", -- too much check nned to disable it
-    "-Wno-sign-compare", -- too much check nned to disable it
-    "-Wno-ignored-qualifiers", -- const int func()
-    "-Wno-deprecated-copy-with-user-provided-copy", -- usally trigger it manually
-    {tools={"gcc", "clang", "clang_cl"}})
-add_cxxflags( -- GCC C++
-    "-Wdeprecated-declarations", -- enable SKR_DEPRECATED
-    {tools={"gcc", "clang", "clang_cl"}})
-add_cflags( -- GCC C
-    "-Wno-unused-variable", -- we not care about unused variable in C
-    {tools={"gcc", "clang", "clang_cl"}})
-add_cxflags( -- MSVC C++
-    "/wd4100", -- Wno-unused-parameter
-    "/wd4018", -- Wno-sign-compare
-    "/wd4389", -- Wno-sign-compare ==
-    "/wd4245", -- = lost data for signed -> unsigned
-    "/wd4244", -- = lost data for bigger to smaller
-    "/wd4267", -- = lost data for bigger to smaller
-    "/wd4127", -- conditional expression is constant
-    "/wd4706", -- assignment within conditional expression
-    "/wd4458", -- declaration of 'xxxx' hides class member
-    "/wd4275", -- non dll-interface struct 'xxxx' used as base for dll-interface struct 'xxxx'
-    "/wd4201", -- nonstandard extension used: nameless struct/union
-    "/wd4624", -- destructor was implicitly defined as deleted
-    "/wd4819", -- The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
-    "/wd4456", -- declaration of 'xxxx' hides previous local declaration
-    "/wd4457", -- declaration of 'xxxx' hides function parameter
-    "/wd4459", -- declaration of 'xxxx' hides global declaration
-    "/wd4324", -- structure was padded due to alignment specifier
-    "/wd4702", -- unreachable code
-    {tools={"cl"}}
-)
-add_cflags( -- MSVC C
-    "/wd4189", -- local variable is initialized but not referenced
-    {tools={"cl"}}
-)
-
+set_warnings("all")
 set_policy("build.ccache", false)
 set_policy("check.auto_ignore_flags", false)
 set_policy("build.warning", true)
