@@ -983,7 +983,7 @@ CGPURenderPipelineId     cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, 
     if (desc->vertex_layout != nullptr)
     {
         cgpu::Map<cgpu::String, uint32_t> semanticIndexMap = {};
-        uint32_t                         fill_index       = 0;
+        uint32_t                          fill_index       = 0;
         for (uint32_t attrib_index = 0; attrib_index < desc->vertex_layout->attribute_count; ++attrib_index)
         {
             const CGPUVertexAttribute* attrib = &(desc->vertex_layout->attributes[attrib_index]);
@@ -1817,9 +1817,9 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
         clearStencil.DepthStencil.Stencil                       = desc->depth_stencil->clear_stencil;
         renderPassDepthStencilDesc.cpuDescriptor                = DTV->mDxRtvDsvDescriptorHandle;
         renderPassDepthStencilDesc.DepthBeginningAccess         = { dBeginingAccess, { clearDepth } };
-        renderPassDepthStencilDesc.DepthEndingAccess            = { dEndingAccess };
+        renderPassDepthStencilDesc.DepthEndingAccess            = { dEndingAccess, {} };
         renderPassDepthStencilDesc.StencilBeginningAccess       = { sBeginingAccess, { clearStencil } };
-        renderPassDepthStencilDesc.StencilEndingAccess          = { sEndingAccess };
+        renderPassDepthStencilDesc.StencilEndingAccess          = { sEndingAccess, {} };
         pRenderPassDepthStencilDesc                             = &renderPassDepthStencilDesc;
     }
     D3D12_RENDER_PASS_RENDER_TARGET_DESC* pRenderPassRenderTargetDesc = renderPassRenderTargetDescs;

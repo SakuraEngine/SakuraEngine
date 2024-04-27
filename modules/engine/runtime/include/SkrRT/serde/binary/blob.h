@@ -20,7 +20,7 @@ struct BlobTrait<skr::span<T>> {
 
         if constexpr (is_complete_v<BlobTrait<T>>)
         {
-            for (int i = 0; i < src.size(); ++i)
+            for (size_t i = 0; i < src.size(); ++i)
             {
                 T dstV{};
                 BlobTrait<T>::BuildArena(arena, dstV, src[i]);

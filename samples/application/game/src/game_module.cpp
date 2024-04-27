@@ -93,11 +93,11 @@ class SGameModule : public skr::IDynamicModule
     skr::resource::SLocalResourceRegistry* registry;
 
     struct sugoi_storage_t* game_world         = nullptr;
-    SRenderDeviceId        game_render_device = nullptr;
-    SRendererId            game_renderer      = nullptr;
-    CGPUSwapChainId        swapchain          = nullptr;
-    CGPUFenceId            present_fence      = nullptr;
-    SWindowHandle          main_window        = nullptr;
+    SRenderDeviceId         game_render_device = nullptr;
+    SRendererId             game_renderer      = nullptr;
+    CGPUSwapChainId         swapchain          = nullptr;
+    CGPUFenceId             present_fence      = nullptr;
+    SWindowHandle           main_window        = nullptr;
 
     skr::SPtr<skr::JobQueue> job_queue = nullptr;
 
@@ -597,21 +597,21 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
     // loop
     bool               quit = false;
     skr::task::event_t pSkinCounter(nullptr);
-    sugoi_query_t*      initAnimSkinQuery;
-    sugoi_query_t*      skinQuery;
-    sugoi_query_t*      moveQuery;
-    sugoi_query_t*      cameraQuery;
-    sugoi_query_t*      animQuery;
+    sugoi_query_t*     initAnimSkinQuery;
+    sugoi_query_t*     skinQuery;
+    sugoi_query_t*     moveQuery;
+    sugoi_query_t*     cameraQuery;
+    sugoi_query_t*     animQuery;
     moveQuery         = sugoiQ_from_literal(game_world,
-                                           u8"[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t,!skr_camera_comp_t");
+                                            u8"[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t,!skr_camera_comp_t");
     cameraQuery       = sugoiQ_from_literal(game_world,
-                                           u8"[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
+                                            u8"[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
     animQuery         = sugoiQ_from_literal(game_world,
-                                           u8"[in]skr_render_effect_t, [in]game::anim_state_t, [out]<unseq>skr::anim::AnimComponent, [in]<unseq>skr::anim::SkeletonComponent");
+                                            u8"[in]skr_render_effect_t, [in]game::anim_state_t, [out]<unseq>skr::anim::AnimComponent, [in]<unseq>skr::anim::SkeletonComponent");
     initAnimSkinQuery = sugoiQ_from_literal(game_world,
-                                           u8"[inout]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
+                                            u8"[inout]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
     skinQuery         = sugoiQ_from_literal(game_world,
-                                           u8"[in]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
+                                            u8"[in]skr::anim::AnimComponent, [inout]skr::anim::SkinComponent, [in]skr::renderer::MeshComponent, [in]skr::anim::SkeletonComponent");
 
     auto handler = skr_system_get_default_handler();
     handler->add_window_close_handler(

@@ -591,7 +591,7 @@ SKR_INLINE void Vector<Memory>::resize_zeroed(SizeType expect_size)
     // construct item or destruct item if need
     if (expect_size > size())
     {
-        std::memset((void*)(data() + size()), 0, (expect_size - size()) * sizeof(DataType));
+        std::memset(reinterpret_cast<void*>(data() + size()), 0, (expect_size - size()) * sizeof(DataType));
     }
     else if (expect_size < size())
     {

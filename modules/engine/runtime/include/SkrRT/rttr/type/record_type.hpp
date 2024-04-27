@@ -54,18 +54,18 @@ struct Method {
 };
 
 struct RecordBasicMethodTable {
-    void   (*ctor)(void* self)                   = nullptr;
-    void   (*dtor)(void* self)                   = nullptr;
-    void   (*copy)(void* dst, const void* src)   = nullptr;
-    void   (*move)(void* dst, void* src)         = nullptr;
-    void   (*assign)(void* dst, const void* src) = nullptr;
-    void   (*move_assign)(void* dst, void* src)  = nullptr;
-    size_t (*hash)(const void* ptr)              = nullptr;
+    void (*ctor)(void* self)                   = nullptr;
+    void (*dtor)(void* self)                   = nullptr;
+    void (*copy)(void* dst, const void* src)   = nullptr;
+    void (*move)(void* dst, void* src)         = nullptr;
+    void (*assign)(void* dst, const void* src) = nullptr;
+    void (*move_assign)(void* dst, void* src)  = nullptr;
+    size_t (*hash)(const void* ptr)            = nullptr;
 
-    int                   (*write_binary)(const void* dst, skr_binary_writer_t* writer) = nullptr;
-    int                   (*read_binary)(void* dst, skr_binary_reader_t* reader)        = nullptr;
-    void                  (*write_json)(const void* dst, skr_json_writer_t* writer)     = nullptr;
-    skr::json::error_code (*read_json)(void* dst, skr::json::value_t&& reader)          = nullptr;
+    int (*write_binary)(const void* dst, skr_binary_writer_t* writer)          = nullptr;
+    int (*read_binary)(void* dst, skr_binary_reader_t* reader)                 = nullptr;
+    void (*write_json)(const void* dst, skr_json_writer_t* writer)             = nullptr;
+    skr::json::error_code (*read_json)(void* dst, skr::json::value_t&& reader) = nullptr;
 };
 template <typename T>
 SKR_INLINE RecordBasicMethodTable make_record_basic_method_table()
@@ -180,6 +180,6 @@ private:
     Map<GUID, BaseInfo>           _base_types_map = {};
     MultiMap<skr::String, Field>  _fields_map     = {};
     MultiMap<skr::String, Method> _methods_map    = {};
-    RecordBasicMethodTable         _basic_methods  = {};
+    RecordBasicMethodTable        _basic_methods  = {};
 };
 } // namespace skr::rttr

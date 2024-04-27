@@ -38,24 +38,11 @@ package("v8")
         local base_url = opt.url
         local plat = package:plat()
         local arch = package:arch()
-        local toolchain = "unknown"
-        local mode = "unknown"
-        if package:is_plat("windows") then
-            if package:toolchain("clang-cl") then
-                toolchain = "clang-cl"
-            elseif package:toolchain("msvc") then
-                toolchain = "msvc"
-            else
-                toolchain = "msvc"
-            end
+        local toolchain = "msvc" -- use msvc toolchain by default, for more stable
+        if package:has_tool("cxx", "clang_cl") then
+            toolchain = "clang-cl"
         end
-        -- if is_mode("debug") then
-        --     mode = "debug"
-        -- elseif is_mode("release") then
-        --     mode = "release"
-        -- elseif is_mode("releasedbg") then
-        --     mode = "releasedbg"
-        -- end
+        local mode = "unknown"
         if package:is_debug() then
             mode = "debug"
         else
@@ -65,9 +52,14 @@ package("v8")
                 mode = "release"
             end
         end
+        
+        -- FIXME. v8 clang-cl use /Zc:dllexportInlines- flag, which cause symbol lost in dll
+        if mode == "debug" then 
+            toolchain = "msvc"
+        end
 
         -- print debug info
-        -- print("===============> begin debug info <===============")
+        -- print("\n===============> begin debug info <===============")
         -- print("base_url: %s", base_url)
         -- print("plat: %s", plat)
         -- print("arch: %s", arch)
@@ -87,7 +79,7 @@ package("v8")
         -- download manifest file
         if not os.isfile(manifest_file) or sourcehash ~= hash.sha256(manifest_file) then
             -- attempt to remove manifest file first
-            print("downloading manifest file from \"%s\"\n", manifest_url)
+            -- print("downloading manifest file from \"%s\"\n", manifest_url)
             os.tryrm(manifest_file)
             http.download(manifest_url, manifest_file)
 
@@ -120,7 +112,7 @@ package("v8")
             cached = false
 
             -- attempt to remove package file first
-            print("downloading package file from \"%s\"\n", package_url)
+            -- print("downloading package file from \"%s\"\n", package_url)
             os.tryrm(package_file)
             http.download(package_url, package_file)
 

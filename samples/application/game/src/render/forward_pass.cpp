@@ -23,7 +23,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
 
     if (!anim_query)
     {
-        auto sig = u8"[in]skr::renderer::MeshComponent, [in]skr::anim::AnimComponent";
+        auto sig    = u8"[in]skr::renderer::MeshComponent, [in]skr::anim::AnimComponent";
         *anim_query = sugoiQ_from_literal(storage, sig);
     }
     // upload skin mesh data
@@ -190,7 +190,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
     renderGraph->add_copy_pass(
     [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassBuilder& builder) {
         builder.set_name(SKR_UTF8("BarrierSkinVertexBuffers"))
-            .can_be_lone();
+        .can_be_lone();
     },
     [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context) {
         SkrZoneScopedN("BarrierSkinMeshes");
@@ -265,7 +265,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
 
         {
             SkrZoneScopedN("DrawCalls");
-            CGPURenderPipelineId                             old_pipeline = nullptr;
+            CGPURenderPipelineId                            old_pipeline = nullptr;
             skr::Map<CGPURootSignatureId, CGPUXBindTableId> bind_tables;
             for (uint32_t i = 0; i < drawcalls.size(); i++)
                 for (uint32_t j = 0; j < drawcalls[i].count; j++)

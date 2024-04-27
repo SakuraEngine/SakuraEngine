@@ -2,14 +2,25 @@
 #include "SkrBase/config.h"
 
 #ifdef __cplusplus
-#define SKR_DECLARE_VEC2_BODY(TT, NAME) \
-    TT x, y;\
-    SKR_FORCEINLINE bool operator == ( const NAME& vec ) const { return x==vec.x && y==vec.y; }\
-    SKR_FORCEINLINE bool operator != ( const NAME& vec ) const { return x!=vec.x || y!=vec.y; }\
-    SKR_FORCEINLINE NAME() = default;\
-    SKR_FORCEINLINE NAME(const NAME&) = default;\
-    SKR_FORCEINLINE NAME(TT X, TT Y) : x(X), y(Y) {} \
-    SKR_FORCEINLINE NAME(TT t) : x(t), y(t) {}
+    #define SKR_DECLARE_VEC2_BODY(TT, NAME)                                                          \
+        TT                    x, y;                                                                  \
+        SKR_FORCEINLINE bool  operator==(const NAME& vec) const { return x == vec.x && y == vec.y; } \
+        SKR_FORCEINLINE bool  operator!=(const NAME& vec) const { return x != vec.x || y != vec.y; } \
+        SKR_FORCEINLINE       NAME()                 = default;                                      \
+        SKR_FORCEINLINE       NAME(const NAME&)      = default;                                      \
+        SKR_FORCEINLINE       NAME(NAME&&)           = default;                                      \
+        SKR_FORCEINLINE NAME& operator=(const NAME&) = default;                                      \
+        SKR_FORCEINLINE NAME& operator=(NAME&&)      = default;                                      \
+        SKR_FORCEINLINE       NAME(TT X, TT Y)                                                       \
+            : x(X)                                                                                   \
+            , y(Y)                                                                                   \
+        {                                                                                            \
+        }                                                                                            \
+        SKR_FORCEINLINE NAME(TT t)                                                                   \
+            : x(t)                                                                                   \
+            , y(t)                                                                                   \
+        {                                                                                            \
+        }
 #else
     #define SKR_DECLARE_VEC2_BODY(TT, NAME) TT x, y;
 #endif
@@ -125,4 +136,3 @@ inline bool operator==(skr_md5_t a, skr_md5_t b)
     return result;
 }
 #endif
-

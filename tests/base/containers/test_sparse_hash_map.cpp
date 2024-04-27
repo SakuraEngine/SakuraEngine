@@ -592,7 +592,7 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
 
     SUBCASE("cursor & iter")
     {
-        const auto kCapacity = clamp_capacity(114514);
+        const size_t kCapacity = clamp_capacity(114514);
 
         TestHashMap a(kCapacity);
         for (size_t i = 0; i < kCapacity; ++i)

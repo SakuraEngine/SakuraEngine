@@ -21,7 +21,7 @@ inline static bool SDLEventHandler(const SDL_Event* event, SDL_Window* window)
         case SDL_WINDOWEVENT:
             if (event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
             {
-                const int32_t ResizeWidth = event->window.data1;
+                const int32_t ResizeWidth  = event->window.data1;
                 const int32_t ResizeHeight = event->window.data2;
                 (void)ResizeWidth;
                 (void)ResizeHeight;
@@ -31,7 +31,6 @@ inline static bool SDLEventHandler(const SDL_Event* event, SDL_Window* window)
         default:
             return true;
     }
-    return true;
 }
 
 inline static void read_bytes(const char8_t* file_name, uint32_t** bytes, uint32_t* length)
@@ -47,7 +46,7 @@ inline static void read_bytes(const char8_t* file_name, uint32_t** bytes, uint32
 
 inline static void read_shader_bytes(const char8_t* virtual_path, uint32_t** bytes, uint32_t* length, ECGPUBackend backend)
 {
-    char8_t shader_file[256];
+    char8_t        shader_file[256];
     const char8_t* shader_path = SKR_UTF8("./../resources/shaders/");
     strcpy((char*)shader_file, (const char*)shader_path);
     strcat((char*)shader_file, (const char*)virtual_path);
@@ -67,7 +66,7 @@ inline static void read_shader_bytes(const char8_t* virtual_path, uint32_t** byt
 }
 
 #ifdef __cplusplus
-#include <type_traits>
+    #include <type_traits>
 
 template <typename Pipeline>
 inline static void free_pipeline_and_signature(Pipeline* pipeline)

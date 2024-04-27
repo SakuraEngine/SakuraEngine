@@ -43,7 +43,8 @@ void MPGameWorld::Initialize()
         20,
         20,
         30,
-        10
+        10,
+        {},
     };
     sugoi::entity_spawner_T<CCollisionScene> sceneSpawner;
     sceneSpawner(storage, 1, [](auto){});

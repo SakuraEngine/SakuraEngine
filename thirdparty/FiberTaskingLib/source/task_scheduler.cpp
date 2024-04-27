@@ -539,7 +539,7 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, skr::shared_
     }
     auto threadIndex = GetCurrentThreadIndex();
     threadIndex = threadIndex == kInvalidIndex ? 0 : threadIndex;
-    TaskBundle bundle = { task, counter };
+    TaskBundle bundle = { task, counter, {} };
 #ifdef SKR_PROFILE_ENABLE
     if (name)
     {
@@ -589,7 +589,7 @@ void TaskScheduler::AddTasks(unsigned const numTasks, Task const* const tasks, T
     for (unsigned i = 0; i < numTasks; ++i)
     {
         FTL_ASSERT("Task given to TaskScheduler:AddTasks has a nullptr Function", tasks[i].Function != nullptr);
-        const TaskBundle bundle = { tasks[i], counter };
+        const TaskBundle bundle = { tasks[i], counter, {} };
         queue->Push(bundle);
     }
 

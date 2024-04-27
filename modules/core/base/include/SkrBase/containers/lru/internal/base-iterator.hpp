@@ -60,8 +60,15 @@ template <typename IteratorTag,
           typename Value,
           typename Cache,
           typename UnderlyingIterator>
-class BaseIterator : public std::iterator<IteratorTag, LRU::Entry<Key, Value>> {
+class BaseIterator {
  public:
+  // support std iterator
+  using iterator_category = IteratorTag;
+  using value_type        = LRU::Entry<Key, Value>;
+  using difference_type   = ptrdiff_t;
+  using pointer           = LRU::Entry<Key, Value>*;
+  using reference         = LRU::Entry<Key, Value>&;
+
   using KeyType = Key;
   using ValueType =
       std::conditional_t<std::is_const<Cache>::value, const Value, Value>;

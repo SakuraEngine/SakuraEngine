@@ -52,8 +52,8 @@ namespace math {
 // Not defined
 #endif
 
-#pragma message("Ozz libraries were built with " _OZZ_SIMD_IMPLEMENTATION \
-                " SIMD math implementation")
+// #pragma message("Ozz libraries were built with " _OZZ_SIMD_IMPLEMENTATION \
+//                 " SIMD math implementation")
 
 const char* SimdImplementationName() { return _OZZ_SIMD_IMPLEMENTATION; }
 }  // namespace math

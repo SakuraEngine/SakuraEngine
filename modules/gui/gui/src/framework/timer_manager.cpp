@@ -68,7 +68,8 @@ TimerHandle TimerManager::add(Timer timer)
 {
     return _timers.add({ std::move(timer),
                          _cur_time_stamp,
-                         -1 })
+                         -1,
+                         0 })
     .index();
 }
 void TimerManager::remove(TimerHandle handle)

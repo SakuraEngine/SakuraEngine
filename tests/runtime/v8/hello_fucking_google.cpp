@@ -8,6 +8,7 @@
 #include "v8-initialization.h"
 #include "v8-isolate.h"
 #include "v8-local-handle.h"
+#include "v8-microtask-queue.h"
 #include "v8-primitive.h"
 #include "v8-script.h"
 #include "v8-template.h"
@@ -27,6 +28,7 @@ struct MyData {
     }
 };
 static std::unordered_map<void*, v8::UniquePersistent<v8::Value>> my_data_instances;
+static v8::UniquePersistent<v8::Promise::Resolver>                global_resolver;
 
 int main(int argc, char* argv[])
 {
@@ -136,6 +138,17 @@ int main(int argc, char* argv[])
                                      v8::String::Utf8Value utf8(isolate, info[0]);
                                      printf("i say: %s\n", *utf8);
                                  }));
+            global_template->Set(isolate, "wait_call",
+                                 v8::FunctionTemplate::New(
+                                 isolate, +[](const v8::FunctionCallbackInfo<v8::Value>& info) {
+                                     v8::Isolate*    isolate = info.GetIsolate();
+                                     v8::HandleScope handle_scope(isolate);
+                                     using namespace v8;
+                                     Local<Promise::Resolver> resolve = Promise::Resolver::New(isolate->GetCurrentContext()).ToLocalChecked();
+                                     global_resolver.Reset(isolate, resolve);
+                                     printf("++++++++++ return promise\n");
+                                     info.GetReturnValue().Set(resolve->GetPromise());
+                                 }));
         }
 
         // Create a new context.
@@ -153,6 +166,12 @@ int main(int argc, char* argv[])
                 let obj = new Fuck()
                 my_print(`type: typeof(obj)`)
                 my_print(`constructor: ${obj.constructor}`)
+
+                async function test_async() {
+                    let call_value = await wait_call()
+                    my_print("+++++++++++++ wait call: call_value")
+                }
+                test_async()
 
                 let test = { content: "shit", times: 1, fuck_func: Fuck }
                 test.fuck_func()
@@ -189,6 +208,11 @@ int main(int argc, char* argv[])
             // Convert the result to an UTF8 string and print it.
             v8::String::Utf8Value utf8(isolate, result);
             printf("%s\n", *utf8);
+
+            [[maybe_unused]] bool done = global_resolver.Get(isolate)->Resolve(context, v8::String::NewFromUtf8Literal(isolate, "fuck u google")).ToChecked();
+            global_resolver.Reset();
+
+            // context->GetMicrotaskQueue()->PerformCheckpoint(isolate);
         }
 
         isolate->RequestGarbageCollectionForTesting(v8::Isolate::kFullGarbageCollection);

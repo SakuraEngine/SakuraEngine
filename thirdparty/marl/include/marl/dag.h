@@ -184,7 +184,7 @@ void DAGBase<T>::invoke(RunContext* ctx, NodeIndex nodeIdx, WaitGroup* wg) {
         // reference to a value. This ensures that the WaitGroup isn't dropped
         // while in use.
         schedule(
-            [=](WaitGroup wg) {
+            [=, this](WaitGroup wg) {
               invoke(ctx, toInvoke, &wg);
               wg.done();
             },
@@ -371,7 +371,7 @@ class DAG : public DAGBase<T> {
 
 template <typename T>
 void DAG<T>::run(T& arg, Allocator* allocator /* = Allocator::Default */) {
-  typename DAGBase<T>::RunContext ctx{arg};
+  typename DAGBase<T>::RunContext ctx{arg, {}};
   this->initCounters(&ctx, allocator);
   WaitGroup wg;
   this->invoke(&ctx, this->RootIndex, &wg);

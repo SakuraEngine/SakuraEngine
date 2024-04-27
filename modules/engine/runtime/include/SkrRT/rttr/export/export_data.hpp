@@ -2,10 +2,24 @@
 #include "SkrContainers/vector.hpp"
 #include "SkrGuid/guid.hpp"
 #include "SkrRT/rttr/rttr_traits.hpp"
+#include "SkrRT/rttr/enum_value.hpp"
 
-// TODO. copy/move ctor & operator
 namespace skr::rttr
 {
+struct EnumItem {
+    String    name;
+    EnumValue value;
+    // TODO. meta data
+};
+struct EnumData {
+    String           name;
+    Vector<String>   name_space;
+    GUID             type_id;
+    GUID             underlying_type_id;
+    Vector<EnumItem> items;
+    // TODO. meta data
+};
+
 struct TypeIdentifier {
     GUID type_id;
     bool is_const;
@@ -37,41 +51,59 @@ struct TypeIdentifier {
 
 enum class ParamModifier
 {
-    In,
-    Out,
-    Inout
+    In,   // default
+    Out,  // for reference or pointer
+    Inout // for reference or pointer
 };
 
 struct ParamData {
     using MakeDefaultFunc = void (*)(void*);
 
     // signature
-    String          name;
-    TypeIdentifier  type;
-    ParamModifier   modifier;
-    MakeDefaultFunc make_default;
+    String          name         = {};
+    TypeIdentifier  type         = {};
+    ParamModifier   modifier     = ParamModifier::In;
+    MakeDefaultFunc make_default = nullptr;
 
     // TODO. meta data
+
+    template <typename Arg>
+    inline static ParamData Make()
+    {
+        return {
+            {},
+            TypeIdentifier::Make<Arg>(),
+            ParamModifier::In,
+            nullptr
+        };
+    }
 };
 
 struct FunctionData {
     // signature
-    String                 name;
-    Vector<String>         name_space;
-    TypeIdentifier         ret_type;
-    Vector<TypeIdentifier> param_type;
+    String            name;
+    Vector<String>    name_space;
+    TypeIdentifier    ret_type;
+    Vector<ParamData> param_data;
     // TODO. meta data
 
     // [Provided by export platform]
     void* invoke;
+
+    template <typename Ret, typename... Args>
+    inline void fill_signature(Ret (*)(Args...))
+    {
+        ret_type   = TypeIdentifier::Make<Ret>();
+        param_data = { ParamData::Make<Args>()... };
+    }
 };
 
 struct MethodData {
     // signature
-    String                 name;
-    TypeIdentifier         ret_type;
-    Vector<TypeIdentifier> param_type;
-    bool                   is_const;
+    String            name;
+    TypeIdentifier    ret_type;
+    Vector<ParamData> param_data;
+    bool              is_const;
     // TODO. meta data
 
     // [Provided by export platform]
@@ -81,14 +113,14 @@ struct MethodData {
     inline void fill_signature(Ret (T::*)(Args...))
     {
         ret_type   = TypeIdentifier::Make<Ret>();
-        param_type = { TypeIdentifier::Make<Args>()... };
+        param_data = { ParamData::Make<Args>()... };
         is_const   = false;
     }
     template <class T, typename Ret, typename... Args>
     inline void fill_signature(Ret (T::*)(Args...) const)
     {
         ret_type   = TypeIdentifier::Make<Ret>();
-        param_type = { TypeIdentifier::Make<Args>()... };
+        param_data = { ParamData::Make<Args>()... };
         is_const   = true;
     }
 };
@@ -97,7 +129,7 @@ struct FieldData {
     // signature
     String         name;
     TypeIdentifier type;
-    uint32_t       offset;
+    size_t         offset;
     // TODO. meta data
 
     // [Provided by export platform]
@@ -108,15 +140,15 @@ struct FieldData {
     inline void fill_signature(Field T::*p_field)
     {
         type   = TypeIdentifier::Make<Field>();
-        offset = static_cast<uint32_t>(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*p_field)));
+        offset = reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*p_field));
     }
 };
 
 struct StaticMethodData {
     // signature
-    String                 name;
-    TypeIdentifier         ret_type;
-    Vector<TypeIdentifier> param_type;
+    String            name;
+    TypeIdentifier    ret_type;
+    Vector<ParamData> param_data;
     // TODO. meta data
 
     // [Provided by export platform]
@@ -126,7 +158,7 @@ struct StaticMethodData {
     inline void fill_signature(Ret (*)(Args...))
     {
         ret_type   = TypeIdentifier::Make<Ret>();
-        param_type = { TypeIdentifier::Make<Args>()... };
+        param_data = { ParamData::Make<Args>()... };
     }
 };
 
@@ -146,13 +178,60 @@ struct StaticFieldData {
     }
 };
 
+// TODO. copy/move ctor & operator, 增加限制，且实现固定，或者以 lambda 形式自定义
+enum class RecordOperator
+{
+    // cpp basic
+    CopyCtor,
+    MoveCtor,
+    CopyAssign,
+    MoveAssign,
+
+    // arithmetic
+    Add, // +
+    Sub, // -
+    Mul, // *
+    Div, // /
+    Unm, // 一元 -
+    Mod, // %
+
+    // compare
+    Eq, // ==
+    Lt, // <
+    Le, // <=
+};
+
+struct BaseData {
+    using CastFunc = void* (*)(void*);
+
+    GUID     type_id;
+    CastFunc cast;
+
+    template <typename T, typename Base>
+    inline static BaseData Make()
+    {
+        return {
+            RTTRTraits<Base>::get_guid(),
+            +[](void* p) -> void* {
+                return static_cast<Base*>(reinterpret_cast<T*>(p));
+            }
+        };
+    }
+};
+
 struct CtorData {
     // signature
-    Vector<TypeIdentifier> param_type;
+    Vector<ParamData> param_data;
     // TODO. meta data
 
     // [Provided by export platform]
     void* invoke;
+
+    template <typename... Args>
+    inline void fill_signature()
+    {
+        param_data = { ParamData::Make<Args>()... };
+    }
 };
 
 struct DtorData {
@@ -165,8 +244,7 @@ struct RecordData {
     String           name;
     Vector<String>   name_space;
     GUID             type_id;
-    GUID             base_id;
-    Vector<GUID>     interface_ids;
+    Vector<BaseData> bases_data;
     Vector<CtorData> ctor_data;
     DtorData         dtor_data;
 

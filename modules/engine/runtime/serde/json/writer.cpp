@@ -1,6 +1,6 @@
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/serde/json/writer.h"
-#include "SkrBase/misc/debug.h" 
+#include "SkrBase/misc/debug.h"
 #include "SkrContainers/string.hpp"
 #include "SkrProfile/profile.h"
 
