@@ -1,6 +1,6 @@
 #include "SkrModule/module_manager.hpp"
 #include "SkrRT/config.h"
-#include "SkrRT/platform/crash.h"
+#include "SkrCore/crash.h"
 #include "SkrRT/runtime_module.h"
 #include "SkrRT/ecs/sugoi.h"
 

@@ -13,7 +13,7 @@ jobs:
         toolchain: [ msvc, clang-cl ]
 
     name: ${{ matrix.toolchain }} + ${{ matrix.cxx }} + ${{ matrix.arch }}
-    runs-on: self-hosted
+    runs-on: [ self-hosted, windows, x64 ]
     steps:
       - name: Checkout code
         uses: nschloe/action-cached-lfs-checkout@v1

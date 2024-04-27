@@ -448,16 +448,14 @@ Scheduler::Worker::Worker(Scheduler* scheduler, Mode mode, uint32_t id)
 {
 }
 
-void Scheduler::Worker::start()
-{
-    switch (mode)
-    {
-        case Mode::MultiThreaded: {
-            auto  allocator      = scheduler->cfg.allocator;
-            auto& affinityPolicy = scheduler->cfg.workerThread.affinityPolicy;
-            auto  affinity       = affinityPolicy->get(id, allocator);
-            thread               = Thread(std::move(affinity), [=, this] {
-                Thread::setName("Thread<%.2d>", int(id));
+void Scheduler::Worker::start() {
+  switch (mode) {
+    case Mode::MultiThreaded: {
+      auto allocator = scheduler->cfg.allocator;
+      auto& affinityPolicy = scheduler->cfg.workerThread.affinityPolicy;
+      auto affinity = affinityPolicy->get(id, allocator);
+      thread = Thread(std::move(affinity), [=, this] {
+        Thread::setName("Thread<%.2d>", int(id));
 
                 if (auto const& initFunc = scheduler->cfg.workerThread.initializer)
                 {

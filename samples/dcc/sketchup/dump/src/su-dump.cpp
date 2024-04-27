@@ -129,7 +129,7 @@ void SUDumpModule::DumpTriangles(SUEntitiesRef entities) {
           if (numVertices > 0) { // sometimes a face has no vertices.
             // initialize meshData normalData uvData indexData : Ptr and their
             // size
-            [[maybe_unused]] size_t meshSize = 0, normalSize = 0, uvSize = 0, indexSize = 0;
+            size_t indexSize = 0;
 
             // indexSize is the num of triangles mlutiply 3
             indexSize = numTriangles * 3;

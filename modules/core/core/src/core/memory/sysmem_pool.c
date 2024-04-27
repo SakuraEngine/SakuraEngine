@@ -51,7 +51,7 @@ void* _sakura_sysmem_pool_malloc(SSysMemoryPoolId pool, size_t size)
 void* _sakura_sysmem_pool_free(SSysMemoryPoolId pool, void* ptr)
 {
     mi_free(ptr);
-    SSysMemoryPool* p = (SSysMemoryPool*)pool;
+    [[maybe_unused]] SSysMemoryPool* p = (SSysMemoryPool*)pool;
     SkrCFreeN(ptr, p->name);
     return NULL;
 }

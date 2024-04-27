@@ -1,4 +1,4 @@
-#include "SkrRT/platform/crash.h"
+#include "SkrCore/crash.h"
 #include "SkrCore/log.h"
 #include "SkrCore/async/async_service.h"
 #include "SkrCore/async/wait_timeout.hpp"

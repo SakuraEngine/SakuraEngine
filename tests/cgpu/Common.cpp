@@ -1,5 +1,5 @@
 #include "SkrCore/log.h"
-#include "SkrRT/platform/crash.h"
+#include "SkrCore/crash.h"
 #include "SkrTestFramework/framework.hpp"
 
 static struct ProcInitializer

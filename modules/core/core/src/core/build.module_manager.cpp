@@ -529,8 +529,8 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::String& entry)
         SkrDelete(subsystem);
     }
     this_module->on_reload_begin();
-    auto                  this_state = std::move(this_module->state);
-    [[maybe_unused]] auto old_lib    = std::move(this_module->sharedLib);
+    auto this_state = std::move(this_module->state);
+    [[maybe_unused]] auto old_lib = std::move(this_module->sharedLib);
     if (modulesMap[entry] != nullptr)
     {
         delete modulesMap[entry];
