@@ -69,7 +69,7 @@ SKR_INLINE Type* type_of() SKR_NOEXCEPT
 }
 } // namespace skr::rttr
 
-// remove cv
+// ignore cv
 namespace skr::rttr
 {
 template <typename T>
@@ -79,6 +79,25 @@ template <typename T>
 struct RTTRTraits<volatile T> : RTTRTraits<T> {
 };
 } // namespace skr::rttr
+
+// TODO. new register marcos
+// SKR_RTTR_RECORD(XXX, "6b51fd29-ea47-4ec4-9003-7f45d8d2deed")
+// {
+//    using namespace skr::rttr;
+//    Class_<XXX>()
+//        .method<&XXX::xxx>()
+//        .field<&XXX::xxx>();
+// }
+// SKR_RTTR_PRIMITIVE(int32_t, "3ca87da3-d240-4c45-8ce6-1dc0a6c443d6")
+// SKR_RTTR_ENUM(ETest, "bc49b336-49fa-452c-84b4-143831cf1a8c")
+// {
+//     ... 如果是手动注册，可以在这里写注册代码，否则这里永远不会被触达
+//     // code gen use skr::rttr::EnumTraits for fast enum reflection
+//     SKR_UNREACHABLE_CODE();
+// }
+#define SKR_RTTR_PRIMITIVE(__TYPE, __GUID)
+#define SKR_RTTR_RECORD(__TYPE, __GUID)
+#define SKR_RTTR_ENUM(__TYPE, __GUID)
 
 // help marcos
 #define SKR_RTTR_MAKE_U8(__VALUE) u8##__VALUE
