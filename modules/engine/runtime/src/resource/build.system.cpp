@@ -5,3 +5,4 @@
 #include "local_resource_registry.cpp"
 #include "resource_handle.cpp"
 #include "resource_header.cpp"
+#include "serde.cpp"

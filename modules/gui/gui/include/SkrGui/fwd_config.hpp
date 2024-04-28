@@ -11,13 +11,10 @@
 
 // reflection
 #include "SkrRT/config.h"
-#include "SkrRT/rttr/iobject.hpp"
+#include "SkrRTTR/iobject.hpp"
 
 // export macro
 #include "SkrBase/config.h"
-
-// skr types
-#include "SkrRT/misc/types.h"
 
 // skr containers
 #include "SkrContainers/vector.hpp"

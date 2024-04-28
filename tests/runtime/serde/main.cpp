@@ -2,8 +2,7 @@
 #include "SkrCore/log.h"
 #include "SkrTestFramework/framework.hpp"
 
-static struct ProcInitializer
-{
+static struct ProcInitializer {
     ProcInitializer()
     {
         ::skr_log_set_level(SKR_LOG_LEVEL_WARN);

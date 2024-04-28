@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
-#include "SkrRT/rttr/rttr_traits.hpp"
+#include "SkrRTTR/rttr_traits.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/math/matrix.hpp"

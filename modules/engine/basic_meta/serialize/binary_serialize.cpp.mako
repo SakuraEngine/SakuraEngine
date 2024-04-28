@@ -2,10 +2,11 @@
 #include "SkrBase/misc/hash.h"
 #include "SkrBase/misc/debug.h" 
 #include "SkrCore/log.h"
-#include "SkrRT/serde/binary/reader.h"
-#include "SkrRT/serde/binary/writer.h"
-#include "SkrRT/serde/binary/blob.h"
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
+#include "SkrSerde/binary/blob.h"
 #include "SkrProfile/profile.h"
+#include "SkrSerde/blob.h"
 
 [[maybe_unused]] static const char8_t* BinaryArrayBinaryFieldArchiveFailedFormat = u8"[SERDE/BIN] Failed to %s %s.%s[%d]: %d";
 [[maybe_unused]] static const char8_t* BinaryFieldArchiveFailedFormat = u8"[SERDE/BIN] Failed to %s %s.%s: %d";

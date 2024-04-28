@@ -1,7 +1,7 @@
 #include "SkrTestFramework/framework.hpp"
-#include "SkrRT/rttr/export/record_builder.hpp"
-#include "SkrRT/rttr/export/enum_builder.hpp"
-#include "SkrRT/rttr/rttr_traits.hpp"
+#include "SkrRTTR/export/record_builder.hpp"
+#include "SkrRTTR/export/enum_builder.hpp"
+#include "SkrRTTR/rttr_traits.hpp"
 
 struct A {
 };

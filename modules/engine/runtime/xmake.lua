@@ -2,12 +2,6 @@ if (is_os("macosx") or is_os("linux")) then
     add_requires("libsdl 2.28.5", {configs = {shared = true}})
 end
 -- add_requires("cpu_features v0.9.0")
-
-static_component("SkrSerde", "SkrRT")
-    set_optimize("fastest")
-    -- set_pcxxheader("serde/pch.hpp")
-    add_files("serde/build.*.cpp")
-    public_dependency("SkrCore", engine_version)
     
 shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     -- dependencies

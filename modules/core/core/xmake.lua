@@ -24,9 +24,17 @@ static_component("SkrSimpleAsync", "SkrCore")
     library_dependency("SkrBase", engine_version)
     add_files("src/async/build.*.cpp")
 
+static_component("SkrSerde", "SkrCore")
+    set_optimize("fastest")
+    -- set_pcxxheader("serde/pch.hpp")
+    library_dependency("SkrBase", engine_version)
+    -- TODO. remove it
+    add_packages("simdjson", {public = true, inherit = true})
+    add_packages("parallel-hashmap", {public = true, inherit = true})
+    add_files("src/serde/build.*.cpp")
+
 shared_module("SkrCore", "SKR_CORE", engine_version)
     -- add source files
-    add_packages("simdjson", {public = true, inherit = true})
     add_packages("parallel-hashmap", {public = true, inherit = true})
     add_deps("SkrProfile", {public = true, inherit = true})
     add_deps("mimalloc", {public = false})
@@ -34,3 +42,7 @@ shared_module("SkrCore", "SKR_CORE", engine_version)
     add_defines("SKR_MEMORY_IMPL", {public = false})
     set_pcxxheader("src/core/pch.hpp")
     add_files("src/core/build.*.c", "src/core/build.*.cpp")
+    -- rttr
+    add_files("src/rttr/build.*.cpp")
+    -- serde
+    add_files("src/serde/export.*.cpp")

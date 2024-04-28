@@ -1,7 +1,7 @@
 #include "SkrTestFramework/framework.hpp"
-#include "SkrRT/rttr/type_registry.hpp"
-#include "SkrRT/rttr/type/record_type.hpp"
-#include "SkrRT/rttr/optr.hpp"
+#include "SkrRTTR/type_registry.hpp"
+#include "SkrRTTR/type/record_type.hpp"
+#include "SkrRTTR/optr.hpp"
 #include "types.hpp"
 #include "rttr_test_types.hpp"
 

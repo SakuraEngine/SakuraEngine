@@ -1,6 +1,7 @@
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/SmallVector.h"
 #include "SkrRT/ecs/set.hpp"
+#include "SkrBase/misc/bit.hpp"
 
 #include "SkrRT/ecs/detail/type_registry.hpp"
 #include "SkrRT/ecs/detail/archetype.hpp"
@@ -15,7 +16,6 @@
 #include <SkrContainers/span.hpp>
 #include <SkrContainers/string.hpp>
 #include <SkrContainers/stl_string.hpp>
-#include "SkrRT/misc/bits.hpp"
 
 #if __SSE2__
     #include <emmintrin.h>
@@ -870,7 +870,7 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
                             }
                             else
                             {
-                                unsigned long index = skr::CountLeadingZeros64(cmp);
+                                unsigned long index = skr::countl_zero<uint64_t>(cmp);
                                 i += index / 4;
                                 break;
                             }
@@ -897,7 +897,7 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
                             }
                             else
                             {
-                                unsigned long index = skr::CountLeadingZeros64((~cmp) & 0xFFFF);
+                                unsigned long index = skr::countl_zero<uint64_t>((~cmp) & 0xFFFF);
                                 i += index / 4;
                                 break;
                             }

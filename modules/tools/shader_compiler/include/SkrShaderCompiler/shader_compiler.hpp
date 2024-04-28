@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrGraphics/flags.h"
 #include "SkrBase/config.h"
-#include "SkrRT/misc/types.h"
 #include "SkrContainers/sptr.hpp"
 #include "SkrContainers/span.hpp"
 #include "SkrContainers/string.hpp"

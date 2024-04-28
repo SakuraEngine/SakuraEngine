@@ -1,43 +1,42 @@
 #pragma once
 #ifdef _WIN32
 
-#ifndef NOMINMAX
-#define NOMINMAX
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
+
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+
+    #include <windows.h> // include API for expanding a gltf file path
 #endif
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-
-#include <windows.h>  // include API for expanding a gltf file path
-#endif
-
-#include "SkrMemory/memory.h" // IWYU pragma: export
-#include "SkrBase/misc/debug.h"  // IWYU pragma: export
-#include "SkrOS/thread.h" // IWYU pragma: export
-#include "SkrOS/filesystem.hpp" // IWYU pragma: export
+#include "SkrMemory/memory.h"           // IWYU pragma: export
+#include "SkrBase/misc/debug.h"         // IWYU pragma: export
+#include "SkrOS/thread.h"               // IWYU pragma: export
+#include "SkrOS/filesystem.hpp"         // IWYU pragma: export
 #include "SkrBase/misc/make_zeroed.hpp" // IWYU pragma: export
-#include "SkrRT/misc/types.h" // IWYU pragma: export
-#include "SkrCore/log.hpp" // IWYU pragma: export
-#include "SkrBase/misc/hash.h" // IWYU pragma: export
-#include "SkrBase/misc/defer.hpp" // IWYU pragma: export
+#include "SkrCore/log.hpp"              // IWYU pragma: export
+#include "SkrBase/misc/hash.h"          // IWYU pragma: export
+#include "SkrBase/misc/defer.hpp"       // IWYU pragma: export
 
-#include <SkrOS/filesystem.hpp> // IWYU pragma: export
-#include <SkrContainers/sptr.hpp> // IWYU pragma: export
-#include <SkrContainers/vector.hpp> // IWYU pragma: export
-#include <SkrContainers/string.hpp> // IWYU pragma: export
-#include <SkrContainers/hashmap.hpp> // IWYU pragma: export
-#include <SkrContainers/btree.hpp> // IWYU pragma: export
+#include <SkrOS/filesystem.hpp>               // IWYU pragma: export
+#include <SkrContainers/sptr.hpp>             // IWYU pragma: export
+#include <SkrContainers/vector.hpp>           // IWYU pragma: export
+#include <SkrContainers/string.hpp>           // IWYU pragma: export
+#include <SkrContainers/hashmap.hpp>          // IWYU pragma: export
+#include <SkrContainers/btree.hpp>            // IWYU pragma: export
 #include <SkrContainers/concurrent_queue.hpp> // IWYU pragma: export
-#include "SkrContainers/span.hpp" // IWYU pragma: export
-#include "SkrContainers/function_ref.hpp" // IWYU pragma: export
+#include "SkrContainers/span.hpp"             // IWYU pragma: export
+#include "SkrContainers/function_ref.hpp"     // IWYU pragma: export
 
-#include "SkrRT/io/ram_io.hpp" // IWYU pragma: export
+#include "SkrRT/io/ram_io.hpp"                // IWYU pragma: export
 #include "SkrRT/resource/resource_header.hpp" // IWYU pragma: export
-#include "SkrRT/serde/binary/reader.h" // IWYU pragma: export
-#include "SkrRT/serde/binary/writer.h" // IWYU pragma: export
-#include "SkrRT/serde/json/reader.h" // IWYU pragma: export
-#include "SkrRT/serde/json/writer.h" // IWYU pragma: export
+#include "SkrSerde/binary/reader.h"           // IWYU pragma: export
+#include "SkrSerde/binary/writer.h"           // IWYU pragma: export
+#include "SkrSerde/json/reader.h"             // IWYU pragma: export
+#include "SkrSerde/json/writer.h"             // IWYU pragma: export
 
 #include "SkrProfile/profile.h" // IWYU pragma: export
 

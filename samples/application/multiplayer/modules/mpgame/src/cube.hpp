@@ -1,4 +1,4 @@
-#include "SkrRT/misc/types.h"
+#pragma once
 
 struct CubeGeometry {
     const skr_float3_t g_Positions[24] = {

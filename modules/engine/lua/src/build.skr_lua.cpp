@@ -1,7 +1,6 @@
 #include "SkrContainers/hashmap.hpp"
 #include "SkrMemory/memory.h"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/misc/types.h"
 #include "SkrGuid/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"
 
@@ -12,8 +11,7 @@
 #include "SkrLua/skr_lua.h"
 #include "SkrLua/bind.hpp"
 
-extern "C"
-{
+extern "C" {
 #include "luacode.h"
 }
 
@@ -30,23 +28,24 @@ void bind_unknown(lua_State* L);
 void bind_ecs(lua_State* L);
 } // namespace skr::lua
 
-struct skr_lua_state_extra_t
-{
+struct skr_lua_state_extra_t {
     skr_vfs_t* vfs;
 };
 
-void replaceAll(skr::stl_u8string& str, const skr::stl_u8string_view& from, const skr::stl_u8string_view& to) {
-    if(from.empty())
+void replaceAll(skr::stl_u8string& str, const skr::stl_u8string_view& from, const skr::stl_u8string_view& to)
+{
+    if (from.empty())
         return;
     size_t start_pos = 0;
-    while((start_pos = skr::stl_u8string_view(str).find(from, start_pos)) != std::string::npos) {
+    while ((start_pos = skr::stl_u8string_view(str).find(from, start_pos)) != std::string::npos)
+    {
         str.replace(start_pos, from.length(), to.data(), to.length());
         start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
     }
 }
 
 static skr::FlatHashMap<lua_State*, void*> ExtraSpace;
-void** lua_getextraspace(lua_State* L)
+void**                                     lua_getextraspace(lua_State* L)
 {
     return &ExtraSpace[L];
 }
@@ -54,89 +53,96 @@ void** lua_getextraspace(lua_State* L)
 int skr_lua_loadfile(lua_State* L, const char* filename)
 {
     skr_lua_state_extra_t* extra = (skr_lua_state_extra_t*)*(void**)lua_getextraspace(L);
-    skr::stl_u8string path = (const char8_t*)filename;
+    skr::stl_u8string      path  = (const char8_t*)filename;
     replaceAll(path, u8".", u8"/");
     skr::stl_u8string_view exts[] = { u8".lua", u8".luac" };
-    skr_vfile_t* file = nullptr;
-    for(int i=0; i<2; ++i)
+    skr_vfile_t*           file   = nullptr;
+    for (int i = 0; i < 2; ++i)
     {
         skr::stl_u8string fullpath = path + exts[i].data();
-        file = skr_vfs_fopen(extra->vfs, (const char8_t*)fullpath.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-        if(file)
+        file                       = skr_vfs_fopen(extra->vfs, (const char8_t*)fullpath.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+        if (file)
             break;
     }
-    if(!file)
+    if (!file)
     {
         SKR_LOG_ERROR(u8"[lua] Failed to open file: %s", filename);
         return 0;
     }
     SKR_DEFER({ skr_vfs_fclose(file); });
-    auto size = skr_vfs_fsize(file);
+    auto              size = skr_vfs_fsize(file);
     skr::Vector<char> buffer(size);
     skr_vfs_fread(file, buffer.data(), 0, size);
-    auto name = skr::stl_u8string(u8"@") + (const char8_t*)filename;
+    auto   name         = skr::stl_u8string(u8"@") + (const char8_t*)filename;
     size_t bytecodeSize = 0;
-    char* bytecode = luau_compile(buffer.data(), size, NULL, &bytecodeSize);
+    char*  bytecode     = luau_compile(buffer.data(), size, NULL, &bytecodeSize);
     SKR_DEFER({ free(bytecode); });
-    if(luau_load(L, (char*)name.c_str(), bytecode, bytecodeSize, 0)==0) {
+    if (luau_load(L, (char*)name.c_str(), bytecode, bytecodeSize, 0) == 0)
+    {
         return 1;
     }
-    else {
-        const char* err = lua_tostring(L,-1);
+    else
+    {
+        const char* err = lua_tostring(L, -1);
         SKR_LOG_ERROR(u8"[lua] Failed to load file: %s", err);
-        lua_pop(L,1);
+        lua_pop(L, 1);
         lua_pushnil(L);
         return 1;
     }
 }
 
-int skr_load_file(lua_State* L) {
+int skr_load_file(lua_State* L)
+{
     const char* fn = luaL_checkstring(L, 1);
     return skr_lua_loadfile(L, fn);
 }
 
-#define LUA_QL(x)	"'" x "'"
-#define LUA_QS		LUA_QL("%s")
+#define LUA_QL(x) "'" x "'"
+#define LUA_QS LUA_QL("%s")
 static const int sentinel_ = 0;
-#define sentinel	((void *)&sentinel_)
-static int ll_require (lua_State *L) {
-  const char *name = luaL_checkstring(L, 1);
-  lua_settop(L, 1);  /* _LOADED table will be at index 2 */
-  lua_getfield(L, LUA_REGISTRYINDEX, "_LOADED");
-  lua_getfield(L, 2, name);
-  if (lua_toboolean(L, -1)) {  /* is it there? */
-    if (lua_touserdata(L, -1) == sentinel)  /* check loops */
-      luaL_error(L, "loop or previous error loading module " LUA_QS, name);
-    return 1;  /* package is already loaded */
-  }
-  skr_load_file(L);
-  lua_pushlightuserdata(L, sentinel);
-  lua_setfield(L, 2, name);  /* _LOADED[name] = sentinel */
-  lua_pushstring(L, name);  /* pass name as argument to module */
-  lua_call(L, 1, 1);  /* run loaded module */
-  if (!lua_isnil(L, -1))  /* non-nil return? */
-    lua_setfield(L, 2, name);  /* _LOADED[name] = returned value */
-  lua_getfield(L, 2, name);
-  if (lua_touserdata(L, -1) == sentinel) {   /* module did not set a value? */
-    lua_pushboolean(L, 1);  /* use true as result */
-    lua_pushvalue(L, -1);  /* extra copy to be returned */
-    lua_setfield(L, 2, name);  /* _LOADED[name] = true */
-  }
-  return 1;
+#define sentinel ((void*)&sentinel_)
+static int ll_require(lua_State* L)
+{
+    const char* name = luaL_checkstring(L, 1);
+    lua_settop(L, 1); /* _LOADED table will be at index 2 */
+    lua_getfield(L, LUA_REGISTRYINDEX, "_LOADED");
+    lua_getfield(L, 2, name);
+    if (lua_toboolean(L, -1))
+    {                                          /* is it there? */
+        if (lua_touserdata(L, -1) == sentinel) /* check loops */
+            luaL_error(L, "loop or previous error loading module " LUA_QS, name);
+        return 1; /* package is already loaded */
+    }
+    skr_load_file(L);
+    lua_pushlightuserdata(L, sentinel);
+    lua_setfield(L, 2, name);     /* _LOADED[name] = sentinel */
+    lua_pushstring(L, name);      /* pass name as argument to module */
+    lua_call(L, 1, 1);            /* run loaded module */
+    if (!lua_isnil(L, -1))        /* non-nil return? */
+        lua_setfield(L, 2, name); /* _LOADED[name] = returned value */
+    lua_getfield(L, 2, name);
+    if (lua_touserdata(L, -1) == sentinel)
+    {                             /* module did not set a value? */
+        lua_pushboolean(L, 1);    /* use true as result */
+        lua_pushvalue(L, -1);     /* extra copy to be returned */
+        lua_setfield(L, 2, name); /* _LOADED[name] = true */
+    }
+    return 1;
 }
 
 static const luaL_Reg ll_funcs[] = {
-  {"require", ll_require},
-  {NULL, NULL}
+    { "require", ll_require },
+    { NULL, NULL }
 };
 
-LUALIB_API int luaopen_package (lua_State *L) {
-  /* set field `loaded' */
-  luaL_findtable(L, LUA_REGISTRYINDEX, "_LOADED", 2);
-  lua_pop(L, 1);
-  lua_pushvalue(L, LUA_GLOBALSINDEX);
-  luaL_register(L, NULL, ll_funcs);  /* open lib into global table */
-  return 0;  /* return 'package' table */
+LUALIB_API int luaopen_package(lua_State* L)
+{
+    /* set field `loaded' */
+    luaL_findtable(L, LUA_REGISTRYINDEX, "_LOADED", 2);
+    lua_pop(L, 1);
+    lua_pushvalue(L, LUA_GLOBALSINDEX);
+    luaL_register(L, NULL, ll_funcs); /* open lib into global table */
+    return 0;                         /* return 'package' table */
 }
 
 lua_State* skr_lua_newstate(skr_vfs_t* vfs)
@@ -158,8 +164,8 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
         }
     },
     nullptr);
-    auto extra = SkrNew<skr_lua_state_extra_t>();
-    extra->vfs = vfs;
+    auto extra                    = SkrNew<skr_lua_state_extra_t>();
+    extra->vfs                    = vfs;
     *(void**)lua_getextraspace(L) = extra;
 
     // open standard libraries
@@ -174,7 +180,7 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
 
     // int loaderTable = lua_gettop(L);
 
-    // for(auto i = lua_objlen(L,loaderTable) + 1; i > 2u; i--) 
+    // for(auto i = lua_objlen(L,loaderTable) + 1; i > 2u; i--)
     // {
     //     lua_rawgeti(L,loaderTable,i-1);
     //     lua_rawseti(L,loaderTable,i);
@@ -194,8 +200,7 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
         auto asize = luaL_checkinteger(L, 1);
         auto nsize = luaL_checkinteger(L, 2);
         lua_createtable(L, (int)asize, (int)nsize);
-        return 1;
-    }, "newtable");
+        return 1; }, "newtable");
     lua_setglobal(L, "newtable");
 
     // bind skr types
@@ -206,7 +211,6 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
 
     // bind skr functions
     skr::lua::bind_skr_log(L);
-
 
     return L;
 }
@@ -235,11 +239,11 @@ void bind_unknown(lua_State* L)
 {
     luaL_Reg metamethods[] = {
         { "__eq", [](lua_State* L) -> int {
-            void* a = *(void**)lua_touserdata(L, 1);
-            void* b = *(void**)lua_touserdata(L, 2);
-            lua_pushboolean(L, a == b);
-            return 1;
-        } },
+             void* a = *(void**)lua_touserdata(L, 1);
+             void* b = *(void**)lua_touserdata(L, 2);
+             lua_pushboolean(L, a == b);
+             return 1;
+         } },
         { nullptr, nullptr }
     };
     luaL_newmetatable(L, "skr_opaque_t");
@@ -283,16 +287,16 @@ void bind_skr_guid(lua_State* L)
 {
     luaL_Reg metamethods[] = {
         { "__tostring", +[](lua_State* L) -> int {
-            auto guid = (skr_guid_t*)luaL_checkudata(L, 1, "skr_guid_t");
-            lua_pushstring(L, skr::format(u8"{}", *guid).c_str());
-            return 1;
-        } },
+             auto guid = (skr_guid_t*)luaL_checkudata(L, 1, "skr_guid_t");
+             lua_pushstring(L, skr::format(u8"{}", *guid).c_str());
+             return 1;
+         } },
         { "__eq", +[](lua_State* L) -> int {
-            auto guid1 = (skr_guid_t*)luaL_checkudata(L, 1, "skr_guid_t");
-            auto guid2 = (skr_guid_t*)luaL_checkudata(L, 2, "skr_guid_t");
-            lua_pushboolean(L, *guid1 == *guid2);
-            return 1;
-        } },
+             auto guid1 = (skr_guid_t*)luaL_checkudata(L, 1, "skr_guid_t");
+             auto guid2 = (skr_guid_t*)luaL_checkudata(L, 2, "skr_guid_t");
+             lua_pushboolean(L, *guid1 == *guid2);
+             return 1;
+         } },
         { nullptr, nullptr }
     };
     luaL_newmetatable(L, "skr_guid_t");
@@ -300,29 +304,33 @@ void bind_skr_guid(lua_State* L)
     lua_pop(L, 1);
 }
 
-void *luaL_testudata (lua_State *L, int i, const char *tname) {
-  void *p = lua_touserdata(L, i);
-  luaL_checkstack(L, 2, "not enough stack slots");
-  if (p == NULL || !lua_getmetatable(L, i))
-    return NULL;
-  else {
-    int res = 0;
+void* luaL_testudata(lua_State* L, int i, const char* tname)
+{
+    void* p = lua_touserdata(L, i);
+    luaL_checkstack(L, 2, "not enough stack slots");
+    if (p == NULL || !lua_getmetatable(L, i))
+        return NULL;
+    else
+    {
+        int res = 0;
+        luaL_getmetatable(L, tname);
+        res = lua_rawequal(L, -1, -2);
+        lua_pop(L, 2);
+        if (!res)
+            p = NULL;
+    }
+    return p;
+}
+
+void luaL_setmetatable(lua_State* L, const char* tname)
+{
+    luaL_checkstack(L, 1, "not enough stack slots");
     luaL_getmetatable(L, tname);
-    res = lua_rawequal(L, -1, -2);
-    lua_pop(L, 2);
-    if (!res)
-      p = NULL;
-  }
-  return p;
+    lua_setmetatable(L, -2);
 }
 
-void luaL_setmetatable (lua_State *L, const char *tname) {
-  luaL_checkstack(L, 1, "not enough stack slots");
-  luaL_getmetatable(L, tname);
-  lua_setmetatable(L, -2);
-}
-
-void dtor_resource_handle(void* p) {
+void dtor_resource_handle(void* p)
+{
     auto resource = (skr_resource_handle_t*)p;
     if (resource->is_resolved())
         resource->unload();
@@ -336,7 +344,7 @@ void bind_skr_resource_handle(lua_State* L)
     L, +[](lua_State* L) -> int {
         if (luaL_testudata(L, 1, "skr_guid_t"))
         {
-            const skr_guid_t* guid = skr::lua::check_guid(L, 1);
+            const skr_guid_t*      guid     = skr::lua::check_guid(L, 1);
             skr_resource_handle_t* resource = (skr_resource_handle_t*)lua_newuserdatadtor(L, sizeof(skr_resource_handle_t), dtor_resource_handle);
             new (resource) skr_resource_handle_t(*guid);
             luaL_setmetatable(L, "skr_resource_handle_t");
@@ -344,7 +352,7 @@ void bind_skr_resource_handle(lua_State* L)
         }
         else if (lua_isstring(L, 1))
         {
-            auto str = (const char8_t*)lua_tostring(L, 1);
+            auto                   str      = (const char8_t*)lua_tostring(L, 1);
             skr_resource_handle_t* resource = (skr_resource_handle_t*)lua_newuserdatadtor(L, sizeof(skr_resource_handle_t), dtor_resource_handle);
             new (resource) skr_resource_handle_t(skr::guid::make_guid_unsafe(str));
             luaL_setmetatable(L, "skr_resource_handle_t");
@@ -355,7 +363,8 @@ void bind_skr_resource_handle(lua_State* L)
             luaL_error(L, "invalid arguments for skr_resource_handle_t constructor");
             return 0;
         }
-    }, "resource_handle");
+    },
+    "resource_handle");
     lua_setfield(L, -2, "resource_handle");
     lua_pop(L, 1);
 
@@ -363,106 +372,109 @@ void bind_skr_resource_handle(lua_State* L)
 
     luaL_Reg metamethods[] = {
         { "__tostring", +[](lua_State* L) -> int {
-            auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-            lua_pushstring(L, skr::format(u8"resource {}", resource->get_serialized()).c_str());
-            return 1;
-        } },
+             auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+             lua_pushstring(L, skr::format(u8"resource {}", resource->get_serialized()).c_str());
+             return 1;
+         } },
         { "__eq", +[](lua_State* L) -> int {
-            auto resource1 = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-            auto resource2 = (skr_resource_handle_t*)luaL_checkudata(L, 2, "skr_resource_handle_t");
-            lua_pushboolean(L, resource1->get_serialized() == resource2->get_serialized());
-            return 1;
-        } },
+             auto resource1 = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+             auto resource2 = (skr_resource_handle_t*)luaL_checkudata(L, 2, "skr_resource_handle_t");
+             lua_pushboolean(L, resource1->get_serialized() == resource2->get_serialized());
+             return 1;
+         } },
         { "__index", +[](lua_State* L) -> int {
-            auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-            (void)resource;
-            const char* key = luaL_checkstring(L, 2);
-            switchname(key)
-            {
-                casestr("resolve")
-                {
-                    lua_pushcfunction(
-                    L, +[](lua_State* L) -> int {
-                        auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-                        bool requireInstall = lua_toboolean(L, 2);
-                        if (!resource->is_resolved())
-                            resource->resolve(requireInstall, (uint64_t)L, SKR_REQUESTER_SCRIPT);
-                        return 0;
-                    }, "resolve");
-                    return 1;
-                }
-                casestr("is_resolved")
-                {
-                    lua_pushcfunction(
-                    L, +[](lua_State* L) -> int {
-                        auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-                        lua_pushboolean(L, resource->is_resolved());
-                        return 1;
-                    }, "is_resolved");
-                    return 1;
-                }
-                casestr("get_resolved")
-                {
-                    lua_pushcfunction(
-                    L, +[](lua_State* L) -> int {
-                        auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-                        if (!resource->is_resolved())
-                        {
-                            return 0;
-                        }
-                        auto ptr = resource->get_resolved();
-                        if (!ptr)
-                        {
-                            return 0;
-                        }
-                        auto tid = resource->get_type();
-                        auto type = skr::rttr::get_type_from_guid(tid);
-                        lua_pushlightuserdata(L, ptr);
-                        luaL_getmetatable(L, (const char*)type->name().c_str());
-                        lua_setmetatable(L, -2);
-                        return 1;
-                    }, "get_resolved");
-                    return 1;
-                }
-                casestr("unload")
-                {
-                    lua_pushcfunction(
-                    L, +[](lua_State* L) -> int {
-                        auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-                        if (resource->is_resolved())
-                            resource->unload();
-                        else
-                            SKR_LOG_DEBUG(u8"skr_resource_handle_t::unload called on unresolved resource.");
-                        return 0;
-                    }, "unload");
-                    return 1;
-                }
-                default: {
-                    luaL_error(L, "skr_resource_handle_t does not have a member named '%s'", key);
-                    return 0;
-                }
-            }
-            SKR_UNREACHABLE_CODE()
-            return 0;
-        } },
+             auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+             (void)resource;
+             const char* key = luaL_checkstring(L, 2);
+             switchname(key)
+             {
+                 casestr("resolve")
+                 {
+                     lua_pushcfunction(
+                     L, +[](lua_State* L) -> int {
+                         auto resource       = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+                         bool requireInstall = lua_toboolean(L, 2);
+                         if (!resource->is_resolved())
+                             resource->resolve(requireInstall, (uint64_t)L, SKR_REQUESTER_SCRIPT);
+                         return 0;
+                     },
+                     "resolve");
+                     return 1;
+                 }
+                 casestr("is_resolved")
+                 {
+                     lua_pushcfunction(
+                     L, +[](lua_State* L) -> int {
+                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+                         lua_pushboolean(L, resource->is_resolved());
+                         return 1;
+                     },
+                     "is_resolved");
+                     return 1;
+                 }
+                 casestr("get_resolved")
+                 {
+                     lua_pushcfunction(
+                     L, +[](lua_State* L) -> int {
+                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+                         if (!resource->is_resolved())
+                         {
+                             return 0;
+                         }
+                         auto ptr = resource->get_resolved();
+                         if (!ptr)
+                         {
+                             return 0;
+                         }
+                         auto tid  = resource->get_type();
+                         auto type = skr::rttr::get_type_from_guid(tid);
+                         lua_pushlightuserdata(L, ptr);
+                         luaL_getmetatable(L, (const char*)type->name().c_str());
+                         lua_setmetatable(L, -2);
+                         return 1;
+                     },
+                     "get_resolved");
+                     return 1;
+                 }
+                 casestr("unload")
+                 {
+                     lua_pushcfunction(
+                     L, +[](lua_State* L) -> int {
+                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+                         if (resource->is_resolved())
+                             resource->unload();
+                         else
+                             SKR_LOG_DEBUG(u8"skr_resource_handle_t::unload called on unresolved resource.");
+                         return 0;
+                     },
+                     "unload");
+                     return 1;
+                 }
+                 default: {
+                     luaL_error(L, "skr_resource_handle_t does not have a member named '%s'", key);
+                     return 0;
+                 }
+             }
+             SKR_UNREACHABLE_CODE()
+             return 0;
+         } },
         { nullptr, nullptr }
     };
     luaL_register(L, nullptr, metamethods);
     lua_pop(L, 1);
 }
 
-
 inline void split(const skr::stl_u8string_view& s, skr::Vector<skr::stl_u8string_view>& tokens, const skr::stl_u8string_view& delimiters = u8" ")
 {
-    using namespace::skr;
+    using namespace ::skr;
     skr::stl_u8string::size_type lastPos = s.find_first_not_of(delimiters, 0);
-    skr::stl_u8string::size_type pos = s.find_first_of(delimiters, lastPos);
+    skr::stl_u8string::size_type pos     = s.find_first_of(delimiters, lastPos);
     while (skr::stl_u8string::npos != pos || skr::stl_u8string::npos != lastPos)
     {
         auto substr = s.substr(lastPos, pos - lastPos);
         tokens.add(substr); // use emplace_back after C++11
         lastPos = s.find_first_not_of(delimiters, pos);
-        pos = s.find_first_of(delimiters, lastPos);
+        pos     = s.find_first_of(delimiters, lastPos);
     }
 }
 
@@ -478,23 +490,24 @@ inline skr::stl_u8string join(const skr::Vector<skr::stl_u8string_view>& tokens,
     return s;
 }
 
-template<int level>
+template <int level>
 int skr_lua_log(lua_State* L)
 {
     lua_Debug ar;
     lua_getinfo(L, 1, "nSl", &ar);
     auto str = skr::format(u8"[{} : {}]:\t", (uint64_t)ar.what, (const char8_t*)ar.name);
-    int top = lua_gettop(L);
-    for(int n=1;n<=top;n++) {
-        size_t len;
+    int  top = lua_gettop(L);
+    for (int n = 1; n <= top; n++)
+    {
+        size_t         len;
         const char8_t* s = (const char8_t*)luaL_tolstring(L, n, &len);
         str += u8"\t";
-        //TODO: use string builder?
-        if(s) str += s;
+        // TODO: use string builder?
+        if (s) str += s;
     }
     const int line = ar.currentline;
-    auto src = (const char8_t*)ar.source;
-    if(line != -1)
+    auto      src  = (const char8_t*)ar.source;
+    if (line != -1)
     {
         skr::stl_u8string_view Source(src);
         if (Source.ends_with(u8".lua"))
@@ -503,12 +516,12 @@ int skr_lua_log(lua_State* L)
             Source = Source.substr(1);
         skr::Vector<skr::stl_u8string_view> tokens;
         split(Source, tokens, u8"/");
-        
+
         const auto modulename = join(tokens, u8".");
-        auto lstr = skr::format(u8"{}", line);
+        auto       lstr       = skr::format(u8"{}", line);
         skr_log_log(level, (const char*)modulename.c_str(), "unknown", lstr.c_str(), str.u8_str());
     }
-    else 
+    else
     {
         skr_log_log(level, "unknown", "unknown", 0, str.u8_str());
     }
@@ -517,10 +530,10 @@ int skr_lua_log(lua_State* L)
 
 void bind_skr_log(lua_State* L)
 {
-    //lua_atpanic(L, +[](lua_State* L) -> int {
-    //    SKR_LOG_FATAL(u8"Lua panic: %s", lua_tostring(L, -1));
-    //    return 0;
-    //});
+    // lua_atpanic(L, +[](lua_State* L) -> int {
+    //     SKR_LOG_FATAL(u8"Lua panic: %s", lua_tostring(L, -1));
+    //     return 0;
+    // });
     lua_getglobal(L, "skr");
     lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_INFO>, "print");
     lua_setfield(L, -2, "print");
@@ -543,7 +556,7 @@ namespace skr::lua
 int push_guid(lua_State* L, const skr_guid_t* guid)
 {
     auto ud = (skr_guid_t*)lua_newuserdata(L, sizeof(skr_guid_t));
-    *ud = *guid;
+    *ud     = *guid;
     luaL_getmetatable(L, "skr_guid_t");
     lua_setmetatable(L, -2);
     return 1;
@@ -561,18 +574,18 @@ const skr_guid_t* opt_guid(lua_State* L, int index, const skr_guid_t* def)
     return check_guid(L, index);
 }
 
-int push_enum(lua_State *L, long long v)
+int push_enum(lua_State* L, long long v)
 {
     lua_pushinteger(L, v);
     return 1;
 }
 
-long long check_enum(lua_State *L, int index)
+long long check_enum(lua_State* L, int index)
 {
     return luaL_checkinteger(L, index);
 }
 
-long long opt_enum(lua_State *L, int index, long long def)
+long long opt_enum(lua_State* L, int index, long long def)
 {
     return luaL_optinteger(L, index, def);
 }
@@ -620,7 +633,7 @@ const skr_resource_handle_t* opt_resource(lua_State* L, int index, const skr_res
     return check_resource(L, index);
 }
 
-int push_unknown(lua_State *L, void *value, std::string_view tid)
+int push_unknown(lua_State* L, void* value, std::string_view tid)
 {
     *(void**)lua_newuserdata(L, sizeof(void*)) = value;
     luaL_getmetatable(L, tid.data());
@@ -631,51 +644,53 @@ int push_unknown(lua_State *L, void *value, std::string_view tid)
         lua_setmetatable(L, -2);
         return 0;
     }
-    else 
+    else
     {
         lua_setmetatable(L, -2);
         return 1;
     }
 }
 
-void* skr_check_unknown(lua_State *L, int index, std::string_view tid, std::string_view unknown)
+void* skr_check_unknown(lua_State* L, int index, std::string_view tid, std::string_view unknown)
 {
-    void *p = lua_touserdata(L, index);
-    if (p != NULL) {  /* value is a userdata? */
-        if (lua_getmetatable(L, index)) {  /* does it have a metatable? */
-            luaL_getmetatable(L, tid.data());  /* get correct metatable */
-            if (!lua_rawequal(L, -1, -2))  /* not the same? */
+    void* p = lua_touserdata(L, index);
+    if (p != NULL)
+    { /* value is a userdata? */
+        if (lua_getmetatable(L, index))
+        {                                     /* does it have a metatable? */
+            luaL_getmetatable(L, tid.data()); /* get correct metatable */
+            if (!lua_rawequal(L, -1, -2))     /* not the same? */
             {
-                if(!unknown.empty()) /* check again */
+                if (!unknown.empty()) /* check again */
                 {
                     luaL_getmetatable(L, unknown.data());
-                    if (!lua_rawequal(L, -1, -3))  /* not the same? */
-                        p = NULL;  /* value is a userdata with wrong metatable */
+                    if (!lua_rawequal(L, -1, -3)) /* not the same? */
+                        p = NULL;                 /* value is a userdata with wrong metatable */
                     lua_pop(L, 1);
                 }
-                else if(!lua_isnil(L, -1))
+                else if (!lua_isnil(L, -1))
                 {
                     p = NULL;
                 }
             }
-            lua_pop(L, 2);  /* remove both metatables */
+            lua_pop(L, 2); /* remove both metatables */
         }
     }
     luaL_argexpected(L, p != 0, index, tid.data());
     return p;
 }
 
-void* check_unknown(lua_State *L, int index, std::string_view tid)
+void* check_unknown(lua_State* L, int index, std::string_view tid)
 {
     return *(void**)skr_check_unknown(L, index, tid, "");
-} 
+}
 
-int push_unknown_value(lua_State *L, const void *value, std::string_view tid, size_t size, copy_constructor_t copy_constructor, destructor_t destructor)
+int push_unknown_value(lua_State* L, const void* value, std::string_view tid, size_t size, copy_constructor_t copy_constructor, destructor_t destructor)
 {
-    void *p = lua_newuserdatadtor(L, sizeof(void*) * 2+ size, dtor_unique);
-    void *obj = (char*)p + sizeof(void*) * 2;
+    void* p   = lua_newuserdatadtor(L, sizeof(void*) * 2 + size, dtor_unique);
+    void* obj = (char*)p + sizeof(void*) * 2;
     copy_constructor(obj, value);
-    *(void**)p = obj;
+    *(void**)p                                 = obj;
     *(destructor_t*)((char*)p + sizeof(void*)) = destructor;
     luaL_getmetatable(L, tid.data());
     if (lua_isnil(L, -1))
@@ -686,18 +701,18 @@ int push_unknown_value(lua_State *L, const void *value, std::string_view tid, si
         lua_setmetatable(L, -2);
         return 0;
     }
-    else 
+    else
     {
         lua_setmetatable(L, -2);
         return 1;
     }
 }
 
-int push_sptr(lua_State *L, const skr::SPtr<void> &value, std::string_view tid)
+int push_sptr(lua_State* L, const skr::SPtr<void>& value, std::string_view tid)
 {
-    void* p = lua_newuserdatadtor(L, sizeof(void*) + sizeof(skr::SPtr<void>), dtor_shared);
-    void* obj = (char*)p + sizeof(void*);
-    auto ptr = new (obj) skr::SPtr<void>(value);
+    void* p    = lua_newuserdatadtor(L, sizeof(void*) + sizeof(skr::SPtr<void>), dtor_shared);
+    void* obj  = (char*)p + sizeof(void*);
+    auto  ptr  = new (obj) skr::SPtr<void>(value);
     *(void**)p = ptr->get();
     luaL_getmetatable(L, tid.data());
     if (lua_isnil(L, -1))
@@ -708,24 +723,24 @@ int push_sptr(lua_State *L, const skr::SPtr<void> &value, std::string_view tid)
         lua_setmetatable(L, -2);
         return 0;
     }
-    else 
+    else
     {
         lua_setmetatable(L, -2);
         return 1;
     }
 }
 
-skr::SPtr<void> check_sptr(lua_State *L, int index, std::string_view tid)
+skr::SPtr<void> check_sptr(lua_State* L, int index, std::string_view tid)
 {
-    void*  p = skr_check_unknown(L, index, tid, "[shared]skr_opaque_t");
+    void* p = skr_check_unknown(L, index, tid, "[shared]skr_opaque_t");
     return *(skr::SPtr<void>*)((char*)p + sizeof(void*));
 }
 
-int push_sobjectptr(lua_State *L, const skr::SObjectPtr<SInterface> &value, std::string_view tid)
+int push_sobjectptr(lua_State* L, const skr::SObjectPtr<SInterface>& value, std::string_view tid)
 {
-    void* p = lua_newuserdatadtor(L, sizeof(void*) + sizeof(skr::SObjectPtr<SInterface>), dtor_object);
-    void* obj = (char*)p + sizeof(void*);
-    auto ptr = new (obj) skr::SObjectPtr<SInterface>(value);
+    void* p    = lua_newuserdatadtor(L, sizeof(void*) + sizeof(skr::SObjectPtr<SInterface>), dtor_object);
+    void* obj  = (char*)p + sizeof(void*);
+    auto  ptr  = new (obj) skr::SObjectPtr<SInterface>(value);
     *(void**)p = ptr->get();
     luaL_getmetatable(L, tid.data());
     if (lua_isnil(L, -1))
@@ -736,18 +751,17 @@ int push_sobjectptr(lua_State *L, const skr::SObjectPtr<SInterface> &value, std:
         lua_setmetatable(L, -2);
         return 0;
     }
-    else 
+    else
     {
         lua_setmetatable(L, -2);
         return 1;
     }
 }
 
-skr::SObjectPtr<SInterface> check_sobjectptr(lua_State *L, int index, std::string_view tid)
+skr::SObjectPtr<SInterface> check_sobjectptr(lua_State* L, int index, std::string_view tid)
 {
-    void*  p = skr_check_unknown(L, index, tid, "[object]skr_opaque_t");
+    void* p = skr_check_unknown(L, index, tid, "[object]skr_opaque_t");
     return *(skr::SObjectPtr<SInterface>*)((char*)p + sizeof(void*));
-
 }
 
-}// namespace skr::lua
+} // namespace skr::lua

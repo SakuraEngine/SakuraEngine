@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/config.h"
-#include "SkrRT/rttr/iobject.hpp"
+#include "SkrRTTR/iobject.hpp"
 #if !defined(__meta__)
     #include "RTTRTest/rttr_test_types.generated.h"
 #endif

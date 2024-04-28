@@ -2,7 +2,6 @@
 #include "SkrBase/config.h"
 #include "SkrRT/platform/input.h"
 #include "SkrContainers/span.hpp"
-#include "SkrRT/misc/types.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::input, InputDevice, skr_input_device)
 SKR_DECLARE_TYPE_ID_FWD(skr::input, InputReading, skr_input_reading)

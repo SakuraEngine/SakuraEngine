@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrContainers/ring_buffer.hpp"
-#include "SkrRT/misc/types.h"
 #include "SkrCore/time.h"
 #include "SkrTask/fib_task.hpp"
 #include "SkrRT/ecs/sugoi.h"
@@ -100,7 +99,7 @@ sreflect_struct("guid": "0E7D9309-13EF-4EB8-9E8E-2DDE8D8F7BA0")
 sattr("blob" : true)
 sattr("debug" : true)
 MPWorldDeltaView {
-    sugoi_entity_t                   maxEntity;
+    sugoi_entity_t                  maxEntity;
     sattr("serialize_config" : "record.maxEntity")
     skr::span<packed_entity_t>      entities;
     sattr("serialize_config" : "(uint16_t)record.entities.size()")
@@ -124,8 +123,8 @@ MPWorldDelta {
 };
 
 struct MPWorldDeltaBuildContext {
-    uint32_t          connectionId;
-    uint32_t          totalConnections;
+    uint32_t           connectionId;
+    uint32_t           totalConnections;
     sugoi_type_index_t historyComponent;
 };
 
@@ -136,7 +135,7 @@ using component_delta_apply_callback_t = skr::task::event_t (*)(sugoi_type_index
 
 struct IWorldDeltaBuilder {
     virtual ~IWorldDeltaBuilder()                                             = default;
-    virtual void Initialize(sugoi_storage_t* storage)                          = 0;
+    virtual void Initialize(sugoi_storage_t* storage)                         = 0;
     virtual void GenerateDelta(skr::Vector<MPWorldDeltaViewBuilder>& builder) = 0;
 };
 
@@ -144,11 +143,11 @@ MP_SHARED_API IWorldDeltaBuilder* CreateWorldDeltaBuilder();
 void                              RegisterComponentDeltaBuilder(sugoi_type_index_t component, component_delta_build_callback_t inCallback, sugoi_type_index_t historyComponent = sugoi::kInvalidTypeIndex);
 
 struct IWorldDeltaApplier {
-    using SpawnPrefab_t                                                                                          = skr::stl_function<sugoi_entity_t(sugoi_storage_t*, sugoi_entity_t entity, skr_guid_t prefab, sugoi_entity_type_t* type)>;
-    using DestroyEntity_t                                                                                        = skr::stl_function<void(sugoi_storage_t*, sugoi_entity_t entity)>;
-    virtual ~IWorldDeltaApplier()                                                                                = default;
+    using SpawnPrefab_t                                                                                           = skr::stl_function<sugoi_entity_t(sugoi_storage_t*, sugoi_entity_t entity, skr_guid_t prefab, sugoi_entity_type_t* type)>;
+    using DestroyEntity_t                                                                                         = skr::stl_function<void(sugoi_storage_t*, sugoi_entity_t entity)>;
+    virtual ~IWorldDeltaApplier()                                                                                 = default;
     virtual void   Initialize(sugoi_storage_t* storage, SpawnPrefab_t spawnPrefab, DestroyEntity_t destroyPrefab) = 0;
-    virtual void   ApplyDelta(const MPWorldDeltaView& delta, entity_map_t& map)                                  = 0;
+    virtual void   ApplyDelta(const MPWorldDeltaView& delta, entity_map_t& map)                                   = 0;
     virtual double GetBandwidthOf(sugoi_type_index_t component)                                                   = 0;
 };
 

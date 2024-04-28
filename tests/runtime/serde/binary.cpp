@@ -1,5 +1,5 @@
-#include "SkrRT/serde/binary/writer.h"
-#include "SkrRT/serde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
+#include "SkrSerde/binary/reader.h"
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/span.hpp"
 #include "SkrContainers/vector.hpp"
@@ -7,14 +7,13 @@
 
 #include "SkrTestFramework/framework.hpp"
 
-struct BinarySerdeTests
-{
+struct BinarySerdeTests {
 protected:
-    skr::Vector<uint8_t> buffer;
+    skr::Vector<uint8_t>      buffer;
     skr::binary::VectorWriter writer;
-    skr::binary::SpanReader reader;
-    skr_binary_writer_t warchive{writer};
-    skr_binary_reader_t rarchive{reader};
+    skr::binary::SpanReader   reader;
+    skr_binary_writer_t       warchive{ writer };
+    skr_binary_reader_t       rarchive{ reader };
     BinarySerdeTests()
     {
         writer.buffer = &buffer;
@@ -27,14 +26,14 @@ protected:
 
 TEST_CASE_METHOD(BinarySerdeTests, "primitives")
 {
-    uint64_t value = 0x12345678;
+    uint64_t value  = 0x12345678;
     uint64_t value2 = 0x87654321;
     skr::binary::Archive(&warchive, value);
     skr::binary::Archive(&warchive, value2);
 
     reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
 
-    uint64_t readValue = 0;
+    uint64_t readValue  = 0;
     uint64_t readValue2 = 0;
     skr::binary::Archive(&rarchive, readValue);
     EXPECT_EQ(value, readValue);
@@ -44,8 +43,8 @@ TEST_CASE_METHOD(BinarySerdeTests, "primitives")
 
 TEST_CASE_METHOD(BinarySerdeTests, "vector")
 {
-    uint64_t value = 0x12345678;
-    uint64_t value2 = 0x87654321;
+    uint64_t              value  = 0x12345678;
+    uint64_t              value2 = 0x87654321;
     skr::Vector<uint64_t> arr;
     arr.add(value);
     arr.add(value2);
@@ -62,8 +61,8 @@ TEST_CASE_METHOD(BinarySerdeTests, "vector")
 
 TEST_CASE_METHOD(BinarySerdeTests, "arr")
 {
-    uint64_t value = 0x12345678;
-    uint64_t value2 = 0x87654321;
+    uint64_t              value  = 0x12345678;
+    uint64_t              value2 = 0x87654321;
     skr::Vector<uint64_t> arr;
     arr.add(value);
     arr.add(value2);

@@ -1,5 +1,6 @@
 #pragma once
-#include "SkrRT/misc/types.h"
+#include "SkrBase/types.h"
+#include "SkrRTTR/rttr_traits.hpp"
 
 enum ESkrLoadingStatus : uint32_t;
 struct skr_resource_record_t;
@@ -127,7 +128,7 @@ struct ReadTrait<skr::resource::TResourceHandle<T>> {
 };
 
 template <>
-struct SKR_STATIC_API ReadTrait<skr_resource_handle_t> {
+struct SKR_RUNTIME_API ReadTrait<skr_resource_handle_t> {
     static int Read(skr_binary_reader_t* reader, skr_resource_handle_t& handle);
 };
 } // namespace binary
@@ -150,9 +151,63 @@ struct WriteTrait<skr::resource::TResourceHandle<T>> {
 };
 
 template <>
-struct SKR_STATIC_API WriteTrait<skr_resource_handle_t> {
+struct SKR_RUNTIME_API WriteTrait<skr_resource_handle_t> {
     static int Write(skr_binary_writer_t* writer, const skr_resource_handle_t& handle);
 };
 
 } // namespace binary
 } // namespace skr
+
+SKR_RTTR_TYPE(skr_resource_handle_t, "A9E0CE3D-5E9B-45F1-AC28-B882885C63AB");
+namespace skr::rttr
+{
+template <typename T>
+struct RTTRTraits<skr::resource::TResourceHandle<T>> {
+    inline static constexpr size_t type_desc_size = 1;
+    inline static void             write_type_desc(TypeDesc* desc)
+    {
+    }
+
+    inline static skr::StringView get_name()
+    {
+        return u8"ResourceHandle";
+    }
+    inline static GUID get_guid()
+    {
+        return {};
+    }
+    inline static Type* get_type()
+    {
+        return nullptr;
+    }
+};
+} // namespace skr::rttr
+
+#include "SkrSerde/json/reader.h"
+#include "SkrSerde/json/writer.h"
+namespace skr::json
+{
+
+template <>
+struct SKR_RUNTIME_API WriteTrait<skr_resource_handle_t> {
+    static void Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle);
+};
+template <>
+struct SKR_RUNTIME_API ReadTrait<skr_resource_handle_t> {
+    static error_code Read(simdjson::ondemand::value&& json, skr_resource_handle_t& value);
+};
+template <class T>
+struct ReadTrait<skr::resource::TResourceHandle<T>> {
+    static error_code Read(simdjson::ondemand::value&& json, skr::resource::TResourceHandle<T>& handle)
+    {
+        return skr::json::Read<skr_resource_handle_t>(std::move(json), (skr_resource_handle_t&)handle);
+    }
+};
+template <class T>
+struct WriteTrait<skr::resource::TResourceHandle<T>> {
+    static void Write(skr_json_writer_t* json, const skr::resource::TResourceHandle<T>& handle)
+    {
+        skr::json::Write<skr_resource_handle_t>(json, (const skr_resource_handle_t&)handle);
+    }
+};
+} // namespace skr::json

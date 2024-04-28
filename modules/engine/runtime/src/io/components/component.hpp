@@ -1,17 +1,19 @@
 #pragma once
-#include "SkrRT/misc/types.h" // IWYU pragma: keep
 
-namespace skr {
-namespace io {
+namespace skr
+{
+namespace io
+{
 struct IIORequest;
 
 template <typename Component>
-struct CID { };
+struct CID {
+};
 
-struct SKR_RUNTIME_API IORequestComponent
-{
+struct SKR_RUNTIME_API IORequestComponent {
     IORequestComponent(IIORequest* const request) SKR_NOEXCEPT;
     virtual ~IORequestComponent() SKR_NOEXCEPT;
+
 protected:
     IIORequest* const request = nullptr;
 };
@@ -20,10 +22,13 @@ template <class... Args>
 class RequestComponents;
 
 template <>
-class RequestComponents<> {};
+class RequestComponents<>
+{
+};
 
 template <class T, class... Args>
-class RequestComponents<T, Args...>: public RequestComponents<Args...> {
+class RequestComponents<T, Args...> : public RequestComponents<Args...>
+{
     using Base = RequestComponents<Args...>;
     T Value_;
 
@@ -33,7 +38,8 @@ public:
         , Base(std::forward<Args>(args)...)
     {
     }
-    T& Value() {
+    T& Value()
+    {
         return Value_;
     }
 };

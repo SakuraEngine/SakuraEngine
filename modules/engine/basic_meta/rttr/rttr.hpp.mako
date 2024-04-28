@@ -1,6 +1,6 @@
 // BEGIN RTTR GENERATED
-#include "SkrRT/rttr/enum_traits.hpp"
-#include "SkrRT/rttr/rttr_traits.hpp"
+#include "SkrRTTR/enum_traits.hpp"
+#include "SkrRTTR/rttr_traits.hpp"
 namespace skr::rttr
 {
 // enum traits

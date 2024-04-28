@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrToolCore/fwd_types.hpp"
-#include "SkrRT/misc/types.h"
 #ifndef __meta__
     #include "SkrToolCore/asset/cooker.generated.h"
 #endif

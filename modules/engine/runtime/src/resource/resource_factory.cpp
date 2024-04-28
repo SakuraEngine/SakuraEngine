@@ -1,8 +1,8 @@
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_header.hpp"
-#include "SkrBase/misc/debug.h" 
-#include "SkrRT/rttr/type_registry.hpp"
-#include "SkrRT/rttr/type/type.hpp"
+#include "SkrBase/misc/debug.h"
+#include "SkrRTTR/type_registry.hpp"
+#include "SkrRTTR/type/type.hpp"
 #include "SkrCore/log.hpp"
 
 namespace skr

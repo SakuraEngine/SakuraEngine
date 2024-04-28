@@ -116,11 +116,11 @@ public:
     ~csmExpressionMap() SKR_NOEXCEPT;
     void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
 
-    skr::stl_vector<skr_io_future_t>         expressionFutures;
-    skr::stl_vector<skr::BlobId>             expressionBlobs;
+    skr::stl_vector<skr_io_future_t>        expressionFutures;
+    skr::stl_vector<skr::BlobId>            expressionBlobs;
     skr::Map<skr_io_future_t*, skr::String> expressionNames;
     skr::Map<skr_io_future_t*, skr::String> expressionPaths;
-    L2DRequestCallbackData*                  cbData;
+    L2DRequestCallbackData*                 cbData;
 };
 class csmMotionMap : public csmMap<csmString, csmVector<ACubismMotion*>>, public IAsyncL2DResourceInterface
 {
@@ -129,18 +129,17 @@ public:
     void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
     void on_finished() SKR_NOEXCEPT final;
 
-    skr::stl_vector<skr_io_future_t>                              motionFutures;
-    skr::stl_vector<skr::BlobId>                                  motionBlobs;
+    skr::stl_vector<skr_io_future_t>                             motionFutures;
+    skr::stl_vector<skr::BlobId>                                 motionBlobs;
     skr::Map<skr_io_future_t*, std::pair<skr::String, uint32_t>> motionEntries;
     skr::Map<skr_io_future_t*, skr::String>                      motionPaths;
-    L2DRequestCallbackData*                                       cbData;
+    L2DRequestCallbackData*                                      cbData;
 };
 } // namespace Framework
 } // namespace Cubism
 } // namespace Live2D
 
 #include "SkrGraphics/flags.h"
-#include "SkrRT/misc/types.h"
 #include "Framework/Math/CubismMatrix44.hpp"
 #include "Framework/Math/CubismViewMatrix.hpp"
 

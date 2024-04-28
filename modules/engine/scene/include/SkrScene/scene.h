@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrRT/misc/types.h"
 #include "SkrRT/ecs/sugoi_types.h"
 #ifndef __meta__
     #include "SkrScene/scene.generated.h" // IWYU pragma: export

@@ -1,8 +1,8 @@
 // BEGIN RTTR GENERATED
-#include "SkrRT/rttr/type_loader/type_loader.hpp"
-#include "SkrRT/rttr/type/record_type.hpp"
-#include "SkrRT/rttr/exec_static.hpp"
-#include "SkrRT/rttr/type_loader/enum_type_from_traits_loader.hpp"
+#include "SkrRTTR/type_loader/type_loader.hpp"
+#include "SkrRTTR/type/record_type.hpp"
+#include "SkrRTTR/exec_static.hpp"
+#include "SkrRTTR/type_loader/enum_type_from_traits_loader.hpp"
 #include "SkrContainers/tuple.hpp"
 
 namespace skr::rttr 

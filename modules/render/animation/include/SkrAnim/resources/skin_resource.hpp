@@ -16,7 +16,7 @@ sattr("blob" : true)
 SkinBlobView {
     skr::StringView            name;
     skr::span<skr::StringView> joint_remaps;
-    skr::span<skr_float4x4_t>   inverse_bind_poses;
+    skr::span<skr_float4x4_t>  inverse_bind_poses;
 };
 
 GENERATED_BLOB_BUILDER(SkinBlobView)

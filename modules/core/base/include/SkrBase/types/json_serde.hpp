@@ -1,3 +1,4 @@
+// TODO. ！！！！！！！！！！！ MOVE TO SKR_SERDE
 #pragma once
 #include "SkrBase/config.h"
 #include <type_traits>
@@ -24,7 +25,7 @@ namespace skr
 {
 namespace json
 {
-    using value_t = simdjson::SKR_SIMDJSON_PLAT::ondemand::value;
+using value_t = simdjson::SKR_SIMDJSON_PLAT::ondemand::value;
 enum error_code
 {
     SUCCESS = 0,                ///< No error
@@ -72,7 +73,7 @@ struct ReadTrait;
 
 struct skr_json_writer_t;
 typedef char8_t skr_json_writer_char_t;
-typedef size_t skr_json_writer_size_t;
+typedef size_t  skr_json_writer_size_t;
 
 namespace skr
 {

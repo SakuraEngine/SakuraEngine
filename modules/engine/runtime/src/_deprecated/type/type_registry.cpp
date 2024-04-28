@@ -1,10 +1,10 @@
 #include "SkrMemory/memory.h"
 #include "SkrGuid/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"
-#include "SkrRT/serde/binary/reader.h"
-#include "SkrRT/serde/binary/writer.h"
-#include "SkrRT/serde/json/reader.h"
-#include "SkrRT/serde/json/writer.h"
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
+#include "SkrSerde/json/reader.h"
+#include "SkrSerde/json/writer.h"
 #include "SkrRT/_deprecated/type/type.hpp"
 #include "SkrRT/_deprecated/type/type_serde.h"
 
@@ -674,16 +674,16 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
     case SKR_TYPE_CATEGORY_F64:      \
         dstV = (T) * (double*)src;   \
         break;
-#define STR_CONVERT                                \
-    case SKR_TYPE_CATEGORY_STR: {                  \
-        const auto& txt = *(skr::String*)src;      \
-        FromString(dst, txt.view(), policy);       \
-    }                                              \
-    break;                                         \
-    case SKR_TYPE_CATEGORY_STRV: {                 \
+#define STR_CONVERT                               \
+    case SKR_TYPE_CATEGORY_STR: {                 \
+        const auto& txt = *(skr::String*)src;     \
+        FromString(dst, txt.view(), policy);      \
+    }                                             \
+    break;                                        \
+    case SKR_TYPE_CATEGORY_STRV: {                \
         const auto& txt = *(skr::StringView*)src; \
-        FromString(dst, txt, policy);              \
-    }                                              \
+        FromString(dst, txt, policy);             \
+    }                                             \
     break;
 
 #define ENUM_CONVERT                                        \

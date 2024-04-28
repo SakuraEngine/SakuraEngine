@@ -1,6 +1,7 @@
-#include "SkrRT/misc/types.h"
+#pragma once
 
-namespace game {
+namespace game
+{
 
 struct CubeGeometry {
     const skr_float3_t g_Positions[24] = {

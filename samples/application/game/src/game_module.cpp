@@ -10,7 +10,7 @@
 #include "SkrRT/platform/window.h"
 
 #include "SkrRT/ecs/type_builder.hpp"
-#include "SkrRT/serde/json/writer.h"
+#include "SkrSerde/json/writer.h"
 
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
@@ -47,7 +47,6 @@
 #include "SkrCore/async/thread_job.hpp"
 
 #include "SkrProfile/profile.h"
-#include "SkrRT/misc/types.h"
 #include "SkrLua/skr_lua.h"
 // #include "SkrInspector/inspect_value.h" // FIXME. inspector
 

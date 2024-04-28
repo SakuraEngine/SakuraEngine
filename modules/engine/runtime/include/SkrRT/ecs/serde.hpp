@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/serde/binary/reader.h"
-#include "SkrRT/serde/binary/writer.h"
-#include "SkrRT/serde/json/reader.h"
-#include "SkrRT/serde/json/writer.h"
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
+#include "SkrSerde/json/reader.h"
+#include "SkrSerde/json/writer.h"
 namespace sugoi
 {
 template <class C>

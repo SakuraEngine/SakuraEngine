@@ -1,16 +1,14 @@
 #include "SkrGuid/guid.hpp"
-#include "SkrRT/misc/types.h"
-#include "SkrRT/serde/json/reader.h"
+#include "SkrSerde/json/reader.h"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 
 namespace skd::asset
 {
-struct SImporterRegistryImpl : public SImporterRegistry 
-{
+struct SImporterRegistryImpl : public SImporterRegistry {
     SImporter* LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object, skr_guid_t* pGuid = nullptr) override;
-    uint32_t GetImporterVersion(skr_guid_t type) override;
-    void RegisterImporter(skr_guid_t type, SImporterTypeInfo info) override;
+    uint32_t   GetImporterVersion(skr_guid_t type) override;
+    void       RegisterImporter(skr_guid_t type, SImporterTypeInfo info) override;
 
     skr::FlatHashMap<skr_guid_t, SImporterTypeInfo, skr::guid::hash> loaders;
 };
@@ -41,6 +39,6 @@ uint32_t SImporterRegistryImpl::GetImporterVersion(skr_guid_t type)
 
 void SImporterRegistryImpl::RegisterImporter(skr_guid_t type, SImporterTypeInfo info)
 {
-    loaders.insert({type, info});
+    loaders.insert({ type, info });
 }
 } // namespace skd::asset

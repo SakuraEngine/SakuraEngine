@@ -1,12 +1,12 @@
 #include "SkrRT/resource/config_resource.h"
-#include "SkrBase/misc/debug.h" 
+#include "SkrBase/misc/debug.h"
 #include "SkrGuid/guid.hpp"
 #include "SkrMemory/memory.h"
-#include "SkrRT/serde/binary/reader.h"
-#include "SkrRT/serde/binary/writer.h"
-#include "SkrRT/rttr/type_registry.hpp"
-#include "SkrRT/rttr/type/type.hpp"
-#include "SkrRT/rttr/rttr_traits.hpp"
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
+#include "SkrRTTR/type_registry.hpp"
+#include "SkrRTTR/type/type.hpp"
+#include "SkrRTTR/rttr_traits.hpp"
 
 skr_config_resource_t::~skr_config_resource_t()
 {

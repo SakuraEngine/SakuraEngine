@@ -4,7 +4,7 @@
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/sptr.hpp"
 #include "SkrRT/resource/resource_handle.h"
-#include "SkrRT/rttr/rttr_traits.hpp"
+#include "SkrRTTR/rttr_traits.hpp"
 #include "SkrBase/config.h"
 #include "SkrLua/bind_fwd.hpp"
 
@@ -28,13 +28,13 @@ SKR_LUA_API skr::String                  opt_string(lua_State* L, int index, con
 SKR_LUA_API int                          push_resource(lua_State* L, const skr_resource_handle_t* resource);
 SKR_LUA_API const skr_resource_handle_t* check_resource(lua_State* L, int index);
 SKR_LUA_API const skr_resource_handle_t* opt_resource(lua_State* L, int index, const skr_resource_handle_t* def);
-using copy_constructor_t = void              (*)(void* dst, const void* src);
-using constructor_t      = void                   (*)(void* dst);
-using destructor_t       = void                    (*)(void* dst);
-SKR_LUA_API int                          push_unknown(lua_State* L, void* value, std::string_view tid);
-SKR_LUA_API int                          push_unknown_value(lua_State* L, const void* value, std::string_view tid, size_t size, copy_constructor_t copy_constructor, destructor_t destructor);
-SKR_LUA_API void*                        check_unknown(lua_State* L, int index, std::string_view tid);
-SKR_LUA_API int                          push_sptr(lua_State* L, const skr::SPtr<void>& value, std::string_view tid);
+using copy_constructor_t = void (*)(void* dst, const void* src);
+using constructor_t      = void (*)(void* dst);
+using destructor_t       = void (*)(void* dst);
+SKR_LUA_API int   push_unknown(lua_State* L, void* value, std::string_view tid);
+SKR_LUA_API int   push_unknown_value(lua_State* L, const void* value, std::string_view tid, size_t size, copy_constructor_t copy_constructor, destructor_t destructor);
+SKR_LUA_API void* check_unknown(lua_State* L, int index, std::string_view tid);
+SKR_LUA_API int   push_sptr(lua_State* L, const skr::SPtr<void>& value, std::string_view tid);
 SKR_LUA_API skr::SPtr<void> check_sptr(lua_State* L, int index, std::string_view tid);
 SKR_LUA_API int             push_sobjectptr(lua_State* L, const skr::SObjectPtr<SInterface>& value, std::string_view tid);
 SKR_LUA_API skr::SObjectPtr<SInterface> check_sobjectptr(lua_State* L, int index, std::string_view tid);

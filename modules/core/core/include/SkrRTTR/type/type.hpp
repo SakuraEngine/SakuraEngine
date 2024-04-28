@@ -1,0 +1,71 @@
+#pragma once
+#include <cstdint>
+#include "SkrGuid/guid.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrBase/types.h"
+
+namespace skr::rttr
+{
+enum ETypeCategory
+{
+    SKR_TYPE_CATEGORY_INVALID,
+
+    SKR_TYPE_CATEGORY_PRIMITIVE,
+    SKR_TYPE_CATEGORY_ENUM,
+    SKR_TYPE_CATEGORY_RECORD,
+    SKR_TYPE_CATEGORY_GENERIC,
+};
+
+enum class ETypeFeature : uint32_t
+{
+    Constructor,
+    Destructor,
+    Copy,
+    Move,
+    Assign,
+    MoveAssign,
+    Hash,
+    WriteBinary,
+    ReadBinary,
+    WriteJson,
+    ReadJson
+};
+
+struct SKR_CORE_API Type {
+    Type(ETypeCategory type_category, skr::String name, GUID type_id, size_t size, size_t alignment);
+    virtual ~Type() = default;
+
+    // getter
+    SKR_INLINE ETypeCategory type_category() const { return _type_category; }
+    SKR_INLINE const skr::String& name() const { return _name; }
+    SKR_INLINE GUID               type_id() const { return _type_id; }
+    SKR_INLINE size_t             size() const { return _size; }
+    SKR_INLINE size_t             alignment() const { return _alignment; }
+
+    // feature query
+    virtual bool query_feature(ETypeFeature feature) const = 0;
+
+    // call functions
+    virtual void   call_ctor(void* ptr) const                    = 0;
+    virtual void   call_dtor(void* ptr) const                    = 0;
+    virtual void   call_copy(void* dst, const void* src) const   = 0;
+    virtual void   call_move(void* dst, void* src) const         = 0;
+    virtual void   call_assign(void* dst, const void* src) const = 0;
+    virtual void   call_move_assign(void* dst, void* src) const  = 0;
+    virtual size_t call_hash(const void* ptr) const              = 0;
+
+    // serialize
+    virtual int                   write_binary(const void* dst, skr_binary_writer_t* writer) const = 0;
+    virtual int                   read_binary(void* dst, skr_binary_reader_t* reader) const        = 0;
+    virtual void                  write_json(const void* dst, skr_json_writer_t* writer) const     = 0;
+    virtual skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const          = 0;
+
+private:
+    // basic data
+    ETypeCategory _type_category = ETypeCategory::SKR_TYPE_CATEGORY_INVALID;
+    skr::String   _name          = {};
+    GUID          _type_id       = {};
+    size_t        _size          = 0;
+    size_t        _alignment     = 0;
+};
+} // namespace skr::rttr
