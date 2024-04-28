@@ -224,7 +224,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - folly (Apache-2.0)
 - xxhash 0.8.1 (BSD)
 - fast_float v3.4.0
-- mimalloc v2.1.2 (MIT)
+- mimalloc v2.1.4 (MIT)
 - godot 5dccc940e7 (MIT)
 - OpenString 81926cc (MIT)
 - concurrentqueue d49fa2b (Simplified BSD)
