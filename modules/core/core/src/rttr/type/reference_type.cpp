@@ -5,7 +5,7 @@
 namespace skr::rttr
 {
 ReferenceType::ReferenceType(Type* target_type, skr::String name)
-    : GenericType(kReferenceGenericGUID, std::move(name), GUID::Create(), sizeof(size_t&), alignof(size_t&))
+    : GenericType({}, std::move(name), GUID::Create(), sizeof(size_t&), alignof(size_t&))
 {
 }
 

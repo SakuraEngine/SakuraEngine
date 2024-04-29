@@ -104,10 +104,10 @@ Type* get_type_from_type_desc(span<TypeDesc> type_desc)
     }
     else
     {
-        if (type_desc[0].type() == SKR_TYPE_DESC_TYPE_GUID)
+        if (type_desc[0].type() == SKR_TYPE_DESC_TYPE_TYPE_ID)
         {
             auto result = generic_type_loader().find(type_desc[0].value_guid());
-            // TODO. 类型查重
+            // TODO. generic 类型查重，最好让 GenericTypeLoader 自己进行查重以提高效率
             if (result)
             {
                 auto type = result.value()->load(type_desc);

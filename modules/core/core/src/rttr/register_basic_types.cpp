@@ -40,17 +40,17 @@ SKR_RTTR_EXEC_STATIC
     static PrimitiveTypeLoader<double> double_loader;
     register_type_loader(type_id<double>(), &double_loader);
 
-    // pointer
-    static PointerTypeLoader pointer_loader;
-    register_generic_type_loader(kPointerGenericGUID, &pointer_loader);
+    // // pointer
+    // static PointerTypeLoader pointer_loader;
+    // register_generic_type_loader(kPointerGenericGUID, &pointer_loader);
 
-    // reference
-    static ReferenceTypeLoader reference_loader;
-    register_generic_type_loader(kReferenceGenericGUID, &reference_loader);
+    // // reference
+    // static ReferenceTypeLoader reference_loader;
+    // register_generic_type_loader(kReferenceGenericGUID, &reference_loader);
 
-    // array
-    static VectorTypeLoader array_loader;
-    register_generic_type_loader(kArrayGenericGUID, &array_loader);
+    // // array
+    // static VectorTypeLoader array_loader;
+    // register_generic_type_loader(kArrayGenericGUID, &array_loader);
 
     // IObject
     static struct IObjectLoader : public TypeLoader {

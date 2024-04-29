@@ -6,8 +6,7 @@ namespace skr::rttr
 {
 Type* VectorTypeLoader::load(skr::span<TypeDesc> desc)
 {
-    SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_GUID);
-    SKR_ASSERT(desc[0].value_guid() == kArrayGenericGUID);
+    SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_TYPE_ID);
 
     // solve dimensions data
     uint64_t dim = desc[1].value_uint64();

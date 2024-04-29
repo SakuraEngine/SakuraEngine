@@ -20,6 +20,7 @@ struct EnumData {
     // TODO. meta data
 };
 
+// TODO. 使用 TypeDesc 代替
 struct TypeIdentifier {
     GUID type_id;
     bool is_const;

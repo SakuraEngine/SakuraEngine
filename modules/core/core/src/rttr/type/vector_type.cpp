@@ -17,7 +17,7 @@ inline static size_t _element_count_of(span<size_t> dimensions)
 }
 
 VectorType::VectorType(Type* target_type, span<size_t> dimensions, skr::String name)
-    : GenericType(kArrayGenericGUID, std::move(name), GUID::Create(), target_type->size() * _element_count_of(dimensions), target_type->alignment())
+    : GenericType({}, std::move(name), GUID::Create(), target_type->size() * _element_count_of(dimensions), target_type->alignment())
     , _size(_element_count_of(dimensions))
     , _dimensions(dimensions.data(), dimensions.size())
 {

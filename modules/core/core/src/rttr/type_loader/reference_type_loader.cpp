@@ -6,8 +6,7 @@ namespace skr::rttr
 {
 Type* ReferenceTypeLoader::load(span<TypeDesc> desc)
 {
-    SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_GUID);
-    SKR_ASSERT(desc[0].value_guid() == kReferenceGenericGUID);
+    SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_TYPE_ID);
 
     Type* target_type = get_type_from_type_desc(desc.subspan(1));
     return SkrNew<ReferenceType>(target_type, format(u8"{}&", target_type->name()));
