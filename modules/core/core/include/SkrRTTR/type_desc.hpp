@@ -168,3 +168,7 @@ private:
     };
 };
 } // namespace skr::rttr
+
+// TODO. TypeDescCompare, TypeDescNormalize
+
+// TODO. TypeDesc, FixedTypeDesc

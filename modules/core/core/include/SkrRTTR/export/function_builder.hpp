@@ -10,8 +10,24 @@ struct FunctionBuilder {
     template <auto func>
     inline FunctionBuilder& bind(String name)
     {
-        // TODO. parse namesapce
-        _data->name = std::move(name);
+        // split namespace
+        sequence<text_view> splitted;
+        auto                count = name.split(u8"::", splitted);
+
+        // last part is name
+        _data->name = splitted.access_at(splitted.size() - 1);
+
+        // fill namespace
+        if (count > 1)
+        {
+            _data->name_space.reserve(count - 1);
+            for (auto i = 0; i < count - 1; ++i)
+            {
+                _data->name_space.push_back(splitted.access_at(i));
+            }
+        }
+
+        // fill signature
         _data->fill_signature(func);
         return *this;
     }

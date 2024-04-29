@@ -50,11 +50,12 @@ SKR_INLINE GUID type_id() SKR_NOEXCEPT
 {
     return RTTRTraits<T>::get_guid();
 }
+// TODO. 删掉这玩意，直接返回 Vector 堆内存对象
 template <typename T>
 SKR_INLINE span<TypeDesc> type_desc() SKR_NOEXCEPT
 {
     static TypeDesc desc[RTTRTraits<T>::type_desc_size];
-    if (desc[0].type == ETypeDescType::SKR_TYPE_DESC_TYPE_VOID)
+    if (desc[0].type() == ETypeDescType::SKR_TYPE_DESC_TYPE_VOID)
     {
         RTTRTraits<T>::write_type_desc(desc);
     }
