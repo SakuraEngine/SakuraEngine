@@ -17,7 +17,9 @@ struct SKR_CORE_API IObject {
     template <typename TO>
     inline TO* type_cast()
     {
-        void* cast_p = get_record_type()->cast_to(RTTRTraits<TO>::get_type(), get_head_ptr());
+        auto  from_type = get_record_type();
+        auto  to_type   = get_type_from_guid(type_id<TO>());
+        void* cast_p    = from_type->cast_to(to_type, get_head_ptr());
         return reinterpret_cast<TO*>(cast_p);
     }
     template <typename TO>
@@ -36,7 +38,9 @@ struct SKR_CORE_API IObject {
     }
     inline bool type_is(const GUID& guid) const
     {
-        return get_record_type()->cast_to(skr::rttr::get_type_from_guid(guid), get_head_ptr()) != nullptr;
+        auto from_type = get_record_type();
+        auto to_type   = get_type_from_guid(guid);
+        return from_type->cast_to(to_type, get_head_ptr());
     }
     inline GUID type_id() const
     {
@@ -54,7 +58,7 @@ SKR_RTTR_TYPE(IObject, "19246699-65f8-4c0b-a82e-7886a0cb315d")
         {                                                                             \
             using namespace skr::rttr;                                                \
             using ThisType = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>; \
-            return static_cast<RecordType*>(RTTRTraits<ThisType>::get_type());        \
+            return static_cast<RecordType*>(type_of<ThisType>());                     \
         }                                                                             \
         void* get_head_ptr() const override { return const_cast<void*>((const void*)this); }
 #else

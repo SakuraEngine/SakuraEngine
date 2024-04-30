@@ -51,8 +51,8 @@ SKR_RTTR_EXEC_STATIC
     {
         Type* create() override {
             return SkrNew<RecordType>(
-                RTTRTraits<::${record.name}>::get_name(),
-                RTTRTraits<::${record.name}>::get_guid(),
+                type_name<${record.name}>(),
+                type_id<${record.name}>(),
                 sizeof(${record.name}),
                 alignof(${record.name}),
                 make_record_basic_method_table<${record.name}>()
@@ -69,7 +69,7 @@ SKR_RTTR_EXEC_STATIC
         %if record.bases:
             result->set_base_types({
             %for base in record.bases:
-                {RTTRTraits<${base}>::get_guid(), {RTTRTraits<${base}>::get_type(), +[](void* p) -> void* { return static_cast<${base}*>(reinterpret_cast<${record.name}*>(p)); }}},
+                {type_id<${base}>(), {type_of<${base}>(), +[](void* p) -> void* { return static_cast<${base}*>(reinterpret_cast<${record.name}*>(p)); }}},
             %endfor
             });
         %endif
@@ -77,7 +77,7 @@ SKR_RTTR_EXEC_STATIC
         %if record.fields:
             result->set_fields({
             %for name, field in record.fields:
-                {u8"${name}", {u8"${name}", RTTRTraits<${field.type}>::get_type(), ${field.offset}}},
+                {u8"${name}", {u8"${name}", type_of<${field.type}>(), ${field.offset}}},
             %endfor
             });
         %endif
@@ -89,10 +89,10 @@ SKR_RTTR_EXEC_STATIC
                     u8"${db.short_name(method.name)}",
                     {
                         u8"${db.short_name(method.name)}",
-                        RTTRTraits<${method.retType}>::get_type(),
+                        type_of<${method.retType}>(),
                         {
                         %for name, parameter in vars(method.parameters).items():
-                            {u8"${name}", RTTRTraits<${parameter.type}>::get_type()},
+                            {u8"${name}", type_of<${parameter.type}>()},
                         %endfor
                         },
                         +[](void* self, void* parameters, void* return_value)
@@ -136,12 +136,12 @@ SKR_RTTR_EXEC_STATIC
             SkrDelete(type);
         }
     } LOADER__${record.id};
-    register_type_loader(RTTRTraits<${record.name}>::get_guid(), &LOADER__${record.id});
+    register_type_loader(type_id<${record.name}>(), &LOADER__${record.id});
 %endfor
 
 %for enum in generator.enums:
     static EnumTypeFromTraitsLoader<${enum.name}> LOADER__${enum.id};
-    register_type_loader(RTTRTraits<${enum.name}>::get_guid(), &LOADER__${enum.id});
+    register_type_loader(type_id<${enum.name}>(), &LOADER__${enum.id});
 %endfor
 };
 // END RTTR GENERATED

@@ -19,20 +19,8 @@
 // 查询结果取决于是否静态注册该类型
 namespace skr::rttr
 {
-struct Type;
-
 template <typename T>
 struct RTTRTraits {
-    // TODO. type_desc_size 和 write_type_desc 是常驻选项
-    // TODO. get_guid 和 get_name 仅在非 GenericType 时有意义
-    // TODO. 不提供 get_type，对于具体行为应该由获取 type_desc 的一方自行实现
-
-    inline static constexpr size_t type_desc_size = 1;
-    static void                    write_type_desc(TypeDescValue* desc)
-    {
-        unimplemented_no_meta(T, "RTTRTraits<T>::write_type_desc() is not implemented");
-    }
-
     static skr::StringView get_name()
     {
         unimplemented_no_meta(T, "RTTRTraits<T>::get_name() is not implemented");
@@ -43,289 +31,45 @@ struct RTTRTraits {
         unimplemented_no_meta(T, "RTTRTraits<T>::get_guid() is not implemented");
         return {};
     }
-    static Type* get_type()
-    {
-        unimplemented_no_meta(T, "RTTRTraits<T>::get_type() is not implemented");
-        return {};
-    }
 };
 
 template <typename T>
-SKR_INLINE GUID type_id() SKR_NOEXCEPT
+GUID type_id()
 {
     return RTTRTraits<T>::get_guid();
 }
-// TODO. 删掉这玩意，直接返回 Vector 堆内存对象
-template <typename T>
-SKR_INLINE span<TypeDescValue> type_desc() SKR_NOEXCEPT
-{
-    static TypeDescValue desc[RTTRTraits<T>::type_desc_size];
-    if (desc[0].type() == ETypeDescType::SKR_TYPE_DESC_TYPE_VOID)
-    {
-        RTTRTraits<T>::write_type_desc(desc);
-    }
 
-    return { desc, RTTRTraits<T>::type_desc_size };
-}
 template <typename T>
-SKR_INLINE skr::StringView type_name() SKR_NOEXCEPT
+Type* type_of()
+{
+    return get_type_from_guid(type_id<T>());
+}
+
+template <typename T>
+skr::StringView type_name()
 {
     return RTTRTraits<T>::get_name();
 }
-template <typename T>
-SKR_INLINE Type* type_of() SKR_NOEXCEPT
-{
-    return RTTRTraits<T>::get_type();
-}
-} // namespace skr::rttr
-
-//======================================== modifier
-namespace skr::rttr
-{
-// ignore volatile
-template <typename T>
-struct RTTRTraits<volatile T> : RTTRTraits<T> {
-};
-
-template <typename T>
-struct RTTRTraits<const T> {
-    inline static constexpr size_t type_desc_size = RTTRTraits<T>::type_desc_size + 1;
-    inline static void             write_type_desc(TypeDescValue* desc)
-    {
-        desc[0].set_const();
-        RTTRTraits<T>::write_type_desc(desc + 1);
-    }
-
-    inline static skr::StringView get_name()
-    {
-        return u8"Const";
-    }
-    inline static GUID get_guid()
-    {
-        return get_type()->type_id();
-    }
-    inline static Type* get_type()
-    {
-        static Type* type = nullptr;
-        if (!type)
-        {
-            TypeDescValue desc[type_desc_size];
-            write_type_desc(desc);
-
-            type = get_type_from_type_desc({ desc, type_desc_size });
-        }
-        return type;
-    }
-};
-
-template <typename T>
-struct RTTRTraits<T*> {
-    inline static constexpr size_t type_desc_size = RTTRTraits<T>::type_desc_size + 1;
-    inline static void             write_type_desc(TypeDescValue* desc)
-    {
-        desc[0].set_pointer();
-        RTTRTraits<T>::write_type_desc(desc + 1);
-    }
-
-    inline static skr::StringView get_name()
-    {
-        return u8"Pointer";
-    }
-    inline static GUID get_guid()
-    {
-        return get_type()->type_id();
-    }
-    inline static Type* get_type()
-    {
-        static Type* type = nullptr;
-        if (!type)
-        {
-            TypeDescValue desc[type_desc_size];
-            write_type_desc(desc);
-
-            type = get_type_from_type_desc({ desc, type_desc_size });
-        }
-        return type;
-    }
-};
-
-template <typename T>
-struct RTTRTraits<T&> {
-    inline static constexpr size_t type_desc_size = RTTRTraits<T>::type_desc_size + 1;
-    inline static void             write_type_desc(TypeDescValue* desc)
-    {
-        desc[0].set_ref();
-        RTTRTraits<T>::write_type_desc(desc + 1);
-    }
-
-    inline static skr::StringView get_name()
-    {
-        return u8"Reference";
-    }
-    inline static GUID get_guid()
-    {
-        return get_type()->type_id();
-    }
-    inline static Type* get_type()
-    {
-        static Type* type = nullptr;
-        if (!type)
-        {
-            TypeDescValue desc[type_desc_size];
-            write_type_desc(desc);
-
-            type = get_type_from_type_desc({ desc, type_desc_size });
-        }
-        return type;
-    }
-};
-
-template <typename T>
-struct RTTRTraits<T&&> {
-    inline static constexpr size_t type_desc_size = RTTRTraits<T>::type_desc_size + 1;
-    inline static void             write_type_desc(TypeDescValue* desc)
-    {
-        desc[0].set_rvalue_ref();
-        RTTRTraits<T>::write_type_desc(desc + 1);
-    }
-
-    inline static skr::StringView get_name()
-    {
-        return u8"Reference";
-    }
-    inline static GUID get_guid()
-    {
-        return get_type()->type_id();
-    }
-    inline static Type* get_type()
-    {
-        static Type* type = nullptr;
-        if (!type)
-        {
-            TypeDescValue desc[type_desc_size];
-            write_type_desc(desc);
-
-            type = get_type_from_type_desc({ desc, type_desc_size });
-        }
-        return type;
-    }
-};
-
-template <typename T, size_t N>
-struct RTTRTraits<T[N]> {
-    inline static constexpr size_t type_desc_size = RTTRTraits<T>::type_desc_size + 1;
-    inline static void             write_type_desc(TypeDescValue* desc)
-    {
-        desc[0].set_array_dim(N);
-        RTTRTraits<std::remove_cv_t<T>>::write_type_desc(desc + 1);
-    }
-
-    inline static skr::StringView get_name()
-    {
-        return u8"Array";
-    }
-    inline static GUID get_guid()
-    {
-        return get_type()->type_id();
-    }
-    inline static Type* get_type()
-    {
-        static Type* type = nullptr;
-        if (!type)
-        {
-            TypeDescValue desc[type_desc_size];
-            write_type_desc(desc);
-
-            type = get_type_from_type_desc({ desc, type_desc_size });
-        }
-        return type;
-    }
-};
-
-template <typename T, size_t N>
-struct RTTRTraits<const T[N]> {
-    inline static constexpr size_t type_desc_size = RTTRTraits<T>::type_desc_size + 2;
-    inline static void             write_type_desc(TypeDescValue* desc)
-    {
-        desc[0].set_const();
-        desc[0].set_array_dim(N);
-        RTTRTraits<const T>::write_type_desc(desc + 1);
-    }
-
-    inline static skr::StringView get_name()
-    {
-        return u8"Array";
-    }
-    inline static GUID get_guid()
-    {
-        return get_type()->type_id();
-    }
-    inline static Type* get_type()
-    {
-        static Type* type = nullptr;
-        if (!type)
-        {
-            TypeDescValue desc[type_desc_size];
-            write_type_desc(desc);
-
-            type = get_type_from_type_desc({ desc, type_desc_size });
-        }
-        return type;
-    }
-};
 
 } // namespace skr::rttr
 
 //======================================== register marco
-// TODO. new register marcos
-// SKR_RTTR_RECORD(XXX, "6b51fd29-ea47-4ec4-9003-7f45d8d2deed")
-// {
-//    using namespace skr::rttr;
-//    Class_<XXX>()
-//        .method<&XXX::xxx>()
-//        .field<&XXX::xxx>();
-// }
-// SKR_RTTR_PRIMITIVE(int32_t, "3ca87da3-d240-4c45-8ce6-1dc0a6c443d6")
-// SKR_RTTR_ENUM(ETest, "bc49b336-49fa-452c-84b4-143831cf1a8c")
-// {
-//     ... 如果是手动注册，可以在这里写注册代码，否则这里永远不会被触达
-//     抛弃静态转换函数，在触及性能热点时再考虑
-//     // code gen use skr::rttr::EnumTraits for fast enum reflection
-//     SKR_UNREACHABLE_CODE();
-// }
-#define SKR_RTTR_PRIMITIVE(__TYPE, __GUID)
-#define SKR_RTTR_RECORD(__TYPE, __GUID)
-#define SKR_RTTR_ENUM(__TYPE, __GUID)
-
-// help marcos
 #define SKR_RTTR_MAKE_U8(__VALUE) u8##__VALUE
-#define SKR_RTTR_TYPE(__TYPE, __GUID)                                                  \
-    namespace skr::rttr                                                                \
-    {                                                                                  \
-    template <>                                                                        \
-    struct RTTRTraits<__TYPE> {                                                        \
-        inline static constexpr size_t type_desc_size = 1;                             \
-        inline static void             write_type_desc(TypeDescValue* desc)            \
-        {                                                                              \
-            desc[0].set_type_id(get_guid());                                           \
-        }                                                                              \
-                                                                                       \
-        inline static skr::StringView get_name() { return SKR_RTTR_MAKE_U8(#__TYPE); } \
-        inline static GUID            get_guid()                                       \
-        {                                                                              \
-            using namespace skr::guid::literals;                                       \
-            return u8##__GUID##_guid;                                                  \
-        }                                                                              \
-        inline static Type* get_type()                                                 \
-        {                                                                              \
-            static Type* type = nullptr;                                               \
-            if (!type)                                                                 \
-            {                                                                          \
-                type = get_type_from_guid(get_guid());                                 \
-            }                                                                          \
-            return type;                                                               \
-        }                                                                              \
-    };                                                                                 \
+#define SKR_RTTR_TYPE(__TYPE, __GUID)            \
+    namespace skr::rttr                          \
+    {                                            \
+    template <>                                  \
+    struct RTTRTraits<__TYPE> {                  \
+        inline static skr::StringView get_name() \
+        {                                        \
+            return SKR_RTTR_MAKE_U8(#__TYPE);    \
+        }                                        \
+        inline static GUID get_guid()            \
+        {                                        \
+            using namespace skr::guid::literals; \
+            return u8##__GUID##_guid;            \
+        }                                        \
+    };                                           \
     }
 
 //======================================== primitive types
@@ -355,109 +99,3 @@ SKR_RTTR_TYPE(skr_quaternion_t, "51977A88-7095-4FA7-8467-541698803936");
 SKR_RTTR_TYPE(::skr::String, "214ED643-54BD-4213-BE37-E336A77FDE84");
 SKR_RTTR_TYPE(::skr::StringView, "B799BA81-6009-405D-9131-E4B6101660DC");
 SKR_RTTR_TYPE(::skr::SInterface, "244617fe-5274-47bc-aa3d-acd76dbbeddd");
-
-//======================================== skr template types
-// TODO. 仅仅为了过编译, 后续实现具体类型
-namespace skr::rttr
-{
-template <typename T>
-struct RTTRTraits<skr::Vector<T>> {
-    inline static constexpr size_t type_desc_size = 1;
-    inline static void             write_type_desc(TypeDescValue* desc)
-    {
-    }
-
-    inline static skr::StringView get_name()
-    {
-        return u8"Vector";
-    }
-    inline static GUID get_guid()
-    {
-        return {};
-    }
-    inline static Type* get_type()
-    {
-        return nullptr;
-    }
-};
-template <typename T>
-struct RTTRTraits<skr::span<T>> {
-    inline static constexpr size_t type_desc_size = 1;
-    inline static void             write_type_desc(TypeDescValue* desc)
-    {
-    }
-
-    inline static skr::StringView get_name()
-    {
-        return u8"Span";
-    }
-    inline static GUID get_guid()
-    {
-        return {};
-    }
-    inline static Type* get_type()
-    {
-        return nullptr;
-    }
-};
-template <typename T>
-struct RTTRTraits<skr::SPtrHelper<T>> {
-    inline static constexpr size_t type_desc_size = 1;
-    inline static void             write_type_desc(TypeDescValue* desc)
-    {
-    }
-
-    inline static skr::StringView get_name()
-    {
-        return u8"SPtr";
-    }
-    inline static GUID get_guid()
-    {
-        return {};
-    }
-    inline static Type* get_type()
-    {
-        return nullptr;
-    }
-};
-template <typename T>
-struct RTTRTraits<skr::StronglyEnum<T>> {
-    inline static constexpr size_t type_desc_size = 1;
-    inline static void             write_type_desc(TypeDescValue* desc)
-    {
-    }
-
-    inline static skr::StringView get_name()
-    {
-        return u8"StronglyEnum";
-    }
-    inline static GUID get_guid()
-    {
-        return {};
-    }
-    inline static Type* get_type()
-    {
-        return nullptr;
-    }
-};
-template <typename... TS>
-struct RTTRTraits<skr::variant<TS...>> {
-    inline static constexpr size_t type_desc_size = 1;
-    inline static void             write_type_desc(TypeDescValue* desc)
-    {
-    }
-
-    inline static skr::StringView get_name()
-    {
-        return u8"Variant";
-    }
-    inline static GUID get_guid()
-    {
-        return {};
-    }
-    inline static Type* get_type()
-    {
-        return nullptr;
-    }
-};
-}; // namespace skr::rttr

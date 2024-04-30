@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include <cstdint>
+#include "SkrContainers/span.hpp"
 #include "SkrGuid/guid.hpp"
 #include "SkrBase/meta.h"
 
@@ -170,20 +171,101 @@ private:
 };
 } // namespace skr::rttr
 
-// TODO. TypeDescBuilder
-
 // TypeDescTraits
 // 提供静态构建 TypeDesc 的方法
 namespace skr::rttr
 {
 template <typename T>
+GUID type_id();
+template <typename T>
 struct TypeDescTraits {
     inline static constexpr size_t type_desc_size = 1;
     static void                    write_type_desc(TypeDescValue* desc)
     {
-        unimplemented_no_meta(T, "RTTRTraits<T>::write_type_desc() is not implemented");
+        desc[0].set_type_id(type_id<T>());
     }
 };
+
+// ignore volatile
+template <typename T>
+struct TypeDescTraits<T volatile> : TypeDescTraits<T> {
+};
+
+// [MODIFIER] const
+template <typename T>
+struct TypeDescTraits<const T> : TypeDescTraits<T> {
+    static constexpr size_t type_desc_size = TypeDescTraits<T>::type_desc_size + 1;
+    static void             write_type_desc(TypeDescValue* desc)
+    {
+        desc[0].set_const();
+        TypeDescTraits<T>::write_type_desc(desc + 1);
+    }
+};
+
+// [MODIFIER] pointer
+template <typename T>
+struct TypeDescTraits<T*> : TypeDescTraits<T> {
+    static constexpr size_t type_desc_size = TypeDescTraits<T>::type_desc_size + 1;
+    static void             write_type_desc(TypeDescValue* desc)
+    {
+        desc[0].set_pointer();
+        TypeDescTraits<T>::write_type_desc(desc + 1);
+    }
+};
+
+// [MODIFIER] reference
+template <typename T>
+struct TypeDescTraits<T&> : TypeDescTraits<T> {
+    static constexpr size_t type_desc_size = TypeDescTraits<T>::type_desc_size + 1;
+    static void             write_type_desc(TypeDescValue* desc)
+    {
+        desc[0].set_ref();
+        TypeDescTraits<T>::write_type_desc(desc + 1);
+    }
+};
+
+// [MODIFIER] rvalue reference
+template <typename T>
+struct TypeDescTraits<T&&> : TypeDescTraits<T> {
+    static constexpr size_t type_desc_size = TypeDescTraits<T>::type_desc_size + 1;
+    static void             write_type_desc(TypeDescValue* desc)
+    {
+        desc[0].set_rvalue_ref();
+        TypeDescTraits<T>::write_type_desc(desc + 1);
+    }
+};
+
+// [MODIFIER] array
+template <typename T, size_t N>
+struct TypeDescTraits<T[N]> : TypeDescTraits<T> {
+    static constexpr size_t type_desc_size = TypeDescTraits<T>::type_desc_size + 1;
+    static void             write_type_desc(TypeDescValue* desc)
+    {
+        desc[0].set_array_dim(N);
+        TypeDescTraits<T>::write_type_desc(desc + 1);
+    }
+};
+
+// [MODIFIER] const array
+template <typename T, size_t N>
+struct TypeDescTraits<const T[N]> : TypeDescTraits<T[N]> {
+    static constexpr size_t type_desc_size = TypeDescTraits<T>::type_desc_size + 2;
+    static void             write_type_desc(TypeDescValue* desc)
+    {
+        desc[0].set_const();
+        desc[1].set_array_dim(N);
+        TypeDescTraits<T>::write_type_desc(desc + 2);
+    }
+};
+
+// TODO. 分化为 type_desc, type_desc_fixed, type_desc_typed
+template <typename T>
+span<TypeDescValue> type_desc()
+{
+    static TypeDescValue desc[TypeDescTraits<T>::type_desc_size];
+    TypeDescTraits<T>::write_type_desc(desc);
+    return { desc, TypeDescTraits<T>::type_desc_size };
+}
 } // namespace skr::rttr
 
 // TypeDesc help functions
