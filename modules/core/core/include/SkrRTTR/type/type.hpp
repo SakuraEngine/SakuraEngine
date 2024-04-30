@@ -34,42 +34,42 @@ enum class ETypeFeature : uint32_t
 // TODO. 移动到新文件中，与模板匹配导出放在一起
 struct CPPExternMethods {
     // unary op
-    const char* Minus    = "__MINUS__";     // -
-    const char* BitNot   = "__BIT_NOT__";   // ~
-    const char* LogicNot = "__LOGIC_NOT__"; // !
+    inline static const char8_t* Minus    = u8"__MINUS__";     // -
+    inline static const char8_t* BitNot   = u8"__BIT_NOT__";   // ~
+    inline static const char8_t* LogicNot = u8"__LOGIC_NOT__"; // !
 
     // binary op
-    const char* Add      = "__ADD__";       // +
-    const char* Sub      = "__SUB__";       // -
-    const char* Mul      = "__MUL__";       // *
-    const char* Div      = "__DIV__";       // /
-    const char* Rem      = "__REM__";       // %
-    const char* Shl      = "__SHL__";       // <<
-    const char* Shr      = "__SHR__";       // >>
-    const char* BitAnd   = "__BIT_AND__";   // &
-    const char* BitXor   = "__BIT_XOR__";   // ^
-    const char* BitOr    = "__BIT_OR__";    // |
-    const char* Eq       = "__EQ__";        // ==
-    const char* Neq      = "__NEQ__";       // !=
-    const char* Lt       = "__LT__";        // <
-    const char* Leq      = "__LEQ__";       // <=
-    const char* Gt       = "__GT__";        // >
-    const char* Geq      = "__GEQ__";       // >=
-    const char* LogicAnd = "__LOGIC_AND__"; // &&
-    const char* LogicOr  = "__LOGIC_OR__";  // ||
+    inline static const char8_t* Add      = u8"__ADD__";       // +
+    inline static const char8_t* Sub      = u8"__SUB__";       // -
+    inline static const char8_t* Mul      = u8"__MUL__";       // *
+    inline static const char8_t* Div      = u8"__DIV__";       // /
+    inline static const char8_t* Rem      = u8"__REM__";       // %
+    inline static const char8_t* Shl      = u8"__SHL__";       // <<
+    inline static const char8_t* Shr      = u8"__SHR__";       // >>
+    inline static const char8_t* BitAnd   = u8"__BIT_AND__";   // &
+    inline static const char8_t* BitXor   = u8"__BIT_XOR__";   // ^
+    inline static const char8_t* BitOr    = u8"__BIT_OR__";    // |
+    inline static const char8_t* Eq       = u8"__EQ__";        // ==
+    inline static const char8_t* Neq      = u8"__NEQ__";       // !=
+    inline static const char8_t* Lt       = u8"__LT__";        // <
+    inline static const char8_t* Leq      = u8"__LEQ__";       // <=
+    inline static const char8_t* Gt       = u8"__GT__";        // >
+    inline static const char8_t* Geq      = u8"__GEQ__";       // >=
+    inline static const char8_t* LogicAnd = u8"__LOGIC_AND__"; // &&
+    inline static const char8_t* LogicOr  = u8"__LOGIC_OR__";  // ||
 
     // assign op
-    const char* Assign    = "__ASSIGN__";     // "=
-    const char* AddAssign = "__ADD_ASSIGN__"; // +=
-    const char* SubAssign = "__SUB_ASSIGN__"; // -=
-    const char* MulAssign = "__MUL_ASSIGN__"; // *=
-    const char* DivAssign = "__DIV_ASSIGN__"; // /=
-    const char* RemAssign = "__REM_ASSIGN__"; // %=
-    const char* ShlAssign = "__SHL_ASSIGN__"; // <<=
-    const char* ShrAssign = "__SHR_ASSIGN__"; // >>=
-    const char* AndAssign = "__AND_ASSIGN__"; // &=
-    const char* XorAssign = "__XOR_ASSIGN__"; // ^=
-    const char* OrAssign  = "__OR_ASSIGN__";  // |=
+    inline static const char8_t* Assign    = u8"__ASSIGN__";     // "=
+    inline static const char8_t* AddAssign = u8"__ADD_ASSIGN__"; // +=
+    inline static const char8_t* SubAssign = u8"__SUB_ASSIGN__"; // -=
+    inline static const char8_t* MulAssign = u8"__MUL_ASSIGN__"; // *=
+    inline static const char8_t* DivAssign = u8"__DIV_ASSIGN__"; // /=
+    inline static const char8_t* RemAssign = u8"__REM_ASSIGN__"; // %=
+    inline static const char8_t* ShlAssign = u8"__SHL_ASSIGN__"; // <<=
+    inline static const char8_t* ShrAssign = u8"__SHR_ASSIGN__"; // >>=
+    inline static const char8_t* AndAssign = u8"__AND_ASSIGN__"; // &=
+    inline static const char8_t* XorAssign = u8"__XOR_ASSIGN__"; // ^=
+    inline static const char8_t* OrAssign  = u8"__OR_ASSIGN__";  // |=
 };
 
 // TODO. PrimitiveType 也使用 RecordType 导出数据结构，可以方便进行扩展
