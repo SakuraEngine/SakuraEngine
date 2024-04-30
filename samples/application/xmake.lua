@@ -3,8 +3,8 @@ if build_part("gui") then
 end
 
 if build_part("render") then
-    includes("multiplayer/xmake.lua")
-    includes("game/xmake.lua")
+    -- includes("multiplayer/xmake.lua") -- FIXME. lua support
+    -- includes("game/xmake.lua") -- FIXME. lua support
 
     if os.host() == "windows" and false then
         includes("chat/xmake.lua")

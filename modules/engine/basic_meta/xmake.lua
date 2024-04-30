@@ -8,7 +8,7 @@ target("SkrBasicMeta")
             { file = "ecs/component.py" },
             { file = "ecs/query.py"},
             -- lua
-            { file = "lua/luabind.py" },
+            -- { file = "lua/luabind.py" }, -- FIXME. lua support
             -- rttr
             { file = "rttr/rttr.py" },
             -- serialize
