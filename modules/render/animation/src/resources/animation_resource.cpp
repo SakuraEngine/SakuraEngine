@@ -23,6 +23,6 @@ namespace skr::resource
 {
 skr_guid_t SAnimFactory::GetResourceType()
 {
-    return skr::rttr::type_id<anim::AnimResource>();
+    return skr::rttr::type_id_of<anim::AnimResource>();
 }
 } // namespace skr::resource

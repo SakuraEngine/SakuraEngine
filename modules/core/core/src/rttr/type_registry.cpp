@@ -93,33 +93,4 @@ Type* get_type_from_guid(const GUID& guid)
 
     return nullptr;
 }
-
-Type* get_type_from_type_desc(span<TypeDescValue> type_desc)
-{
-    std::lock_guard _lock(load_type_mutex());
-
-    if (type_desc.size() == 1)
-    {
-        return get_type_from_guid(type_desc[0].value_guid());
-    }
-    else
-    {
-        if (type_desc[0].type() == SKR_TYPE_DESC_TYPE_TYPE_ID)
-        {
-            auto result = generic_type_loader().find(type_desc[0].value_guid());
-            // TODO. generic 类型查重，最好让 GenericTypeLoader 自己进行查重以提高效率
-            if (result)
-            {
-                auto type = result.value()->load(type_desc);
-                loaded_types().add(type->type_id(), type);
-                return type;
-            }
-        }
-        else
-        {
-            SKR_LOG_ERROR(u8"invalid generic type desc, first type desc must be type guid.");
-        }
-        return nullptr;
-    }
-}
 } // namespace skr::rttr

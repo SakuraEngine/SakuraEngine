@@ -10,6 +10,7 @@
 
 #include "SkrLua/skr_lua.h"
 #include "SkrLua/bind.hpp"
+#include "SkrRTTR/type/type.hpp"
 
 extern "C" {
 #include "luacode.h"

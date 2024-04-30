@@ -179,7 +179,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
     }
 
     ~SMeshFactoryImpl() noexcept = default;
-    skr_guid_t     GetResourceType() override;
+    skr_guid_t        GetResourceType() override;
     bool              AsyncIO() override { return true; }
     bool              Unload(skr_resource_record_t* record) override;
     ESkrInstallStatus Install(skr_resource_record_t* record) override;
@@ -215,8 +215,8 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
         }
         ~UploadRequest() SKR_NOEXCEPT = default;
 
-        SMeshFactoryImpl*                      factory       = nullptr;
-        skr_mesh_resource_id                   mesh_resource = nullptr;
+        SMeshFactoryImpl*                    factory       = nullptr;
+        skr_mesh_resource_id                 mesh_resource = nullptr;
         skr::Vector<std::string>             resource_uris;
         skr::Vector<skr_io_future_t>         ram_futures;
         skr::Vector<skr::BlobId>             blobs;
@@ -226,8 +226,8 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory {
 
     ESkrInstallStatus InstallImpl(skr_resource_record_t* record);
 
-    skr::String                                                   dstorage_root;
-    Root                                                          root;
+    skr::String                                                 dstorage_root;
+    Root                                                        root;
     skr::FlatHashMap<skr_mesh_resource_id, InstallType>         mInstallTypes;
     skr::FlatHashMap<skr_mesh_resource_id, SPtr<BufferRequest>> mRequests;
 };
@@ -244,7 +244,7 @@ void SMeshFactory::Destroy(SMeshFactory* factory)
 
 skr_guid_t SMeshFactoryImpl::GetResourceType()
 {
-    const auto resource_type = ::skr::rttr::type_id<skr_mesh_resource_t>();
+    const auto resource_type = ::skr::rttr::type_id_of<skr_mesh_resource_t>();
     return resource_type;
 }
 

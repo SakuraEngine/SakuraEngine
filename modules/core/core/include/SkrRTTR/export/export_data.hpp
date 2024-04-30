@@ -2,6 +2,7 @@
 #include "SkrContainers/vector.hpp"
 #include "SkrGuid/guid.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
+#include "SkrRTTR/type_desc.hpp"
 #include "SkrRTTR/enum_value.hpp"
 
 namespace skr::rttr
@@ -20,16 +21,6 @@ struct EnumData {
     // TODO. meta data
 };
 
-struct TypeIdentifier {
-    Vector<TypeDescValue> desc;
-
-    template <typename T>
-    inline static TypeIdentifier Make()
-    {
-        return { { type_desc<T>() } };
-    }
-};
-
 enum class ParamModifier
 {
     In,   // default
@@ -42,7 +33,7 @@ struct ParamData {
 
     // signature
     String          name         = {};
-    TypeIdentifier  type         = {};
+    TypeDesc        type         = {};
     ParamModifier   modifier     = ParamModifier::In;
     MakeDefaultFunc make_default = nullptr;
 
@@ -53,7 +44,7 @@ struct ParamData {
     {
         return {
             {},
-            TypeIdentifier::Make<Arg>(),
+            type_desc_of<Arg>(),
             ParamModifier::In,
             nullptr
         };
@@ -64,7 +55,7 @@ struct FunctionData {
     // signature
     String            name;
     Vector<String>    name_space;
-    TypeIdentifier    ret_type;
+    TypeDesc          ret_type;
     Vector<ParamData> param_data;
     // TODO. meta data
 
@@ -74,7 +65,7 @@ struct FunctionData {
     template <typename Ret, typename... Args>
     inline void fill_signature(Ret (*)(Args...))
     {
-        ret_type   = TypeIdentifier::Make<Ret>();
+        ret_type   = type_desc_of<Ret>();
         param_data = { ParamData::Make<Args>()... };
     }
 };
@@ -82,7 +73,7 @@ struct FunctionData {
 struct MethodData {
     // signature
     String            name;
-    TypeIdentifier    ret_type;
+    TypeDesc          ret_type;
     Vector<ParamData> param_data;
     bool              is_const;
     // TODO. meta data
@@ -93,14 +84,14 @@ struct MethodData {
     template <class T, typename Ret, typename... Args>
     inline void fill_signature(Ret (T::*)(Args...))
     {
-        ret_type   = TypeIdentifier::Make<Ret>();
+        ret_type   = type_desc_of<Ret>();
         param_data = { ParamData::Make<Args>()... };
         is_const   = false;
     }
     template <class T, typename Ret, typename... Args>
     inline void fill_signature(Ret (T::*)(Args...) const)
     {
-        ret_type   = TypeIdentifier::Make<Ret>();
+        ret_type   = type_desc_of<Ret>();
         param_data = { ParamData::Make<Args>()... };
         is_const   = true;
     }
@@ -108,9 +99,9 @@ struct MethodData {
 
 struct FieldData {
     // signature
-    String         name;
-    TypeIdentifier type;
-    size_t         offset;
+    String   name;
+    TypeDesc type;
+    size_t   offset;
     // TODO. meta data
 
     // [Provided by export platform]
@@ -120,7 +111,7 @@ struct FieldData {
     template <class T, typename Field>
     inline void fill_signature(Field T::*p_field)
     {
-        type   = TypeIdentifier::Make<Field>();
+        type   = type_desc_of<Field>();
         offset = reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*p_field));
     }
 };
@@ -128,7 +119,7 @@ struct FieldData {
 struct StaticMethodData {
     // signature
     String            name;
-    TypeIdentifier    ret_type;
+    TypeDesc          ret_type;
     Vector<ParamData> param_data;
     // TODO. meta data
 
@@ -138,15 +129,15 @@ struct StaticMethodData {
     template <typename Ret, typename... Args>
     inline void fill_signature(Ret (*)(Args...))
     {
-        ret_type   = TypeIdentifier::Make<Ret>();
+        ret_type   = type_desc_of<Ret>();
         param_data = { ParamData::Make<Args>()... };
     }
 };
 
 struct StaticFieldData {
     // signature
-    String         name;
-    TypeIdentifier type;
+    String   name;
+    TypeDesc type;
 
     // [Provided by export platform]
     void* getter;
@@ -155,14 +146,14 @@ struct StaticFieldData {
     template <typename T>
     inline void fill_signature(T* p_field)
     {
-        type = TypeIdentifier::Make<T>();
+        type = type_desc_of<T>();
     }
 };
 
 struct ExternMethodData {
     // signature
     String            name;
-    TypeIdentifier    ret_type;
+    TypeDesc          ret_type;
     Vector<ParamData> param_data;
     // TODO. meta data
 
@@ -172,7 +163,7 @@ struct ExternMethodData {
     template <typename Ret, typename... Args>
     inline void fill_signature(Ret (*)(Args...))
     {
-        ret_type   = TypeIdentifier::Make<Ret>();
+        ret_type   = type_desc_of<Ret>();
         param_data = { ParamData::Make<Args>()... };
     }
 };

@@ -1,13 +1,6 @@
 #pragma once
-#include "SkrGuid/guid.hpp"
-#include "SkrBase/config.h"
-#include "SkrRTTR/type_desc.hpp"
 #include "SkrRTTR/type_registry.hpp"
-#include "SkrRTTR/type/type.hpp"
-#include "SkrContainers/sptr.hpp"
 #include "SkrContainers/string.hpp"
-#include "SkrContainers/variant.hpp"
-#include "SkrRTTR/strongly_enum.hpp"
 #include "SkrBase/meta.h"
 
 // RTTR traits
@@ -34,21 +27,21 @@ struct RTTRTraits {
 };
 
 template <typename T>
-GUID type_id()
+inline GUID type_id_of()
 {
     return RTTRTraits<T>::get_guid();
 }
 
 template <typename T>
-Type* type_of()
+inline skr::StringView type_name_of()
 {
-    return get_type_from_guid(type_id<T>());
+    return RTTRTraits<T>::get_name();
 }
 
 template <typename T>
-skr::StringView type_name()
+inline Type* type_of()
 {
-    return RTTRTraits<T>::get_name();
+    return get_type_from_guid(type_id_of<T>());
 }
 
 } // namespace skr::rttr

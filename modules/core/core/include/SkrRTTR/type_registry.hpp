@@ -1,6 +1,4 @@
 #pragma once
-#include "SkrContainers/span.hpp"
-#include "SkrRTTR/type_desc.hpp"
 #include "SkrGuid/guid.hpp"
 
 namespace skr::rttr
@@ -19,6 +17,5 @@ SKR_CORE_API void unregister_generic_type_loader(const GUID& generic_guid);
 
 // get type (after register)
 SKR_CORE_API Type* get_type_from_guid(const GUID& guid);
-SKR_CORE_API Type* get_type_from_type_desc(span<TypeDescValue> type_desc);
 
 } // namespace skr::rttr

@@ -182,7 +182,7 @@ struct ReadTrait<skr::variant<Ts...>> {
     template <class T>
     static error_code ReadByIndex(simdjson::ondemand::value&& json, skr::variant<Ts...>& value, skr_guid_t index)
     {
-        if (index == ::skr::rttr::type_id<T>())
+        if (index == ::skr::rttr::type_id_of<T>())
         {
             T          t;
             error_code ret = skr::json::Read(std::move(json), t);

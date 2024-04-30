@@ -16,6 +16,7 @@ typedef enum ESkrJsonType
     #include "SkrContainers/span.hpp"
     #include "SkrContainers/stl_vector.hpp"
     #include "SkrRTTR/rttr_traits.hpp"
+    #include "SkrContainers/variant.hpp"
 
 // json writer
 struct skr_json_format_t {
@@ -250,7 +251,7 @@ struct WriteTrait<skr::variant<Ts...>> {
             using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
             json->StartObject();
             json->Key(u8"type");
-            skr::json::Write<skr_guid_t>(json, ::skr::rttr::type_id<raw>());
+            skr::json::Write<skr_guid_t>(json, ::skr::rttr::type_id_of<raw>());
             json->Key(u8"value");
             skr::json::Write<decltype(value)>(json, value);
             json->EndObject();

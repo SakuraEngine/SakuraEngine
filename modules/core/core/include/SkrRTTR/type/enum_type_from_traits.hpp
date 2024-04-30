@@ -8,7 +8,7 @@ namespace skr::rttr
 template <typename T>
 struct EnumTypeFromTraits : public EnumType {
     EnumTypeFromTraits()
-        : EnumType(type_of<std::underlying_type_t<T>>(), type_id<T>(), type_name<T>())
+        : EnumType(type_of<std::underlying_type_t<T>>(), type_id_of<T>(), type_name_of<T>())
     {
     }
 

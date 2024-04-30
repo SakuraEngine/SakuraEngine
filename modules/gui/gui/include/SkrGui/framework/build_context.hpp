@@ -41,17 +41,17 @@ SKR_GUI_API IBuildContext : virtual public skr::rttr::IObject {
     template <typename T>
     T* find_ancestor_widget(bool exact_type = false) const SKR_NOEXCEPT
     {
-        return static_cast<T*>(find_ancestor_widget(rttr::type_id<T>(), exact_type));
+        return static_cast<T*>(find_ancestor_widget(rttr::type_id_of<T>(), exact_type));
     }
     template <typename T>
     T* find_ancestor_state(bool exact_type = false) const SKR_NOEXCEPT
     {
-        return static_cast<T*>(find_ancestor_state(rttr::type_id<T>(), exact_type));
+        return static_cast<T*>(find_ancestor_state(rttr::type_id_of<T>(), exact_type));
     }
     template <typename T>
     T* find_ancestor_render_object(bool exact_type = false) const SKR_NOEXCEPT
     {
-        return static_cast<T*>(find_ancestor_render_object(rttr::type_id<T>(), exact_type));
+        return static_cast<T*>(find_ancestor_render_object(rttr::type_id_of<T>(), exact_type));
     }
 
     // TODO. inherited element

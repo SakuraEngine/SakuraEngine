@@ -53,11 +53,11 @@ template <class T>
 struct DefaultBindTrait<T*, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::rttr::RTTRTraits<T>>>> {
     static int push(lua_State* L, T* value)
     {
-        return push_unknown(L, value, skr::rttr::type_name<T>());
+        return push_unknown(L, value, skr::rttr::type_name_of<T>());
     }
     static T* check(lua_State* L, int index)
     {
-        return (T*)check_unknown(L, index, skr::rttr::type_name<T>());
+        return (T*)check_unknown(L, index, skr::rttr::type_name_of<T>());
     }
 };
 
@@ -66,13 +66,13 @@ struct DefaultBindTrait<T, std::enable_if_t<!std::is_enum_v<T> && skr::is_comple
     static int push(lua_State* L, const T& value)
     {
         static constexpr std::string_view prefix = "[unique]";
-        static constexpr std::string_view tid    = skr::rttr::type_name<T>();
+        static constexpr std::string_view tid    = skr::rttr::type_name_of<T>();
         return push_unknown_value(
         L, value, constexpr_join_v<prefix, tid>, sizeof(T), +[](void* dst, const void* src) { new (dst) T(*(const T*)src); }, +[](void* dst) { ((T*)dst)->~T(); });
     }
     static T& check(lua_State* L, int index)
     {
-        ::skr::String type_name = skr::rttr::type_name<T>();
+        ::skr::String type_name = skr::rttr::type_name_of<T>();
         return *(T*)check_unknown(L, index, { type_name.c_str(), type_name.size() });
     }
 };
@@ -82,12 +82,12 @@ struct DefaultBindTrait<skr::SPtr<T>, std::enable_if_t<!std::is_enum_v<T> && skr
     static int push(lua_State* L, const skr::SPtr<T>& value)
     {
         static constexpr std::string_view prefix = "[shared]";
-        static constexpr std::string_view tid    = skr::rttr::type_name<T>();
+        static constexpr std::string_view tid    = skr::rttr::type_name_of<T>();
         return push_sptr(L, value, constexpr_join_v<prefix, tid>);
     }
     static skr::SPtr<T> check(lua_State* L, int index)
     {
-        return reinterpret_pointer_cast<T>(check_sptr(L, index, ::skr::rttr::type_id<T>()));
+        return reinterpret_pointer_cast<T>(check_sptr(L, index, ::skr::rttr::type_id_of<T>()));
     }
 };
 
@@ -96,12 +96,12 @@ struct DefaultBindTrait<skr::SObjectPtr<T>, std::enable_if_t<!std::is_enum_v<T> 
     static int push(lua_State* L, const skr::SObjectPtr<T>& value)
     {
         static constexpr std::string_view prefix = "[shared]";
-        static constexpr std::string_view tid    = skr::rttr::type_name<T>();
+        static constexpr std::string_view tid    = skr::rttr::type_name_of<T>();
         return push_sobjectptr(L, value, constexpr_join_v<prefix, tid>);
     }
     static skr::SObjectPtr<T> check(lua_State* L, int index)
     {
-        return reinterpret_pointer_cast<T>(check_sobjectptr(L, index, ::skr::rttr::type_id<T>()));
+        return reinterpret_pointer_cast<T>(check_sobjectptr(L, index, ::skr::rttr::type_id_of<T>()));
     }
 };
 

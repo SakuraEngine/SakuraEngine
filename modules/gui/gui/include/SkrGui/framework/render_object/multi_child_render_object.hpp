@@ -54,7 +54,7 @@ struct MultiChildRenderObjectMixin {
 
     inline GUID accept_child_type(const TSelf& self) const SKR_NOEXCEPT
     {
-        return ::skr::rttr::type_id<TChild>();
+        return ::skr::rttr::type_id_of<TChild>();
     }
     inline void add_child(TSelf& self, NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
     {

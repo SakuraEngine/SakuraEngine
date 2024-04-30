@@ -16,7 +16,7 @@ Type* VectorTypeLoader::load(skr::span<TypeDescValue> desc)
         dimensions_buffer[dim_idx] = desc[dim_idx + 2].value_uint64();
     }
 
-    Type*       target_type = get_type_from_type_desc(desc.subspan(2 + dim));
+    Type*       target_type = nullptr;
     skr::String type_name   = target_type->name();
     for (int dim_idx = 0; dim_idx < dim; ++dim_idx)
     {

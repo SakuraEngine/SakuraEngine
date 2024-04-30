@@ -159,29 +159,6 @@ struct SKR_RUNTIME_API WriteTrait<skr_resource_handle_t> {
 } // namespace skr
 
 SKR_RTTR_TYPE(skr_resource_handle_t, "A9E0CE3D-5E9B-45F1-AC28-B882885C63AB");
-namespace skr::rttr
-{
-template <typename T>
-struct RTTRTraits<skr::resource::TResourceHandle<T>> {
-    inline static constexpr size_t type_desc_size = 1;
-    inline static void             write_type_desc(TypeDescValue* desc)
-    {
-    }
-
-    inline static skr::StringView get_name()
-    {
-        return u8"ResourceHandle";
-    }
-    inline static GUID get_guid()
-    {
-        return {};
-    }
-    inline static Type* get_type()
-    {
-        return nullptr;
-    }
-};
-} // namespace skr::rttr
 
 #include "SkrSerde/json/reader.h"
 #include "SkrSerde/json/writer.h"

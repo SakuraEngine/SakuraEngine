@@ -1,15 +1,14 @@
 #pragma once
-#include "SkrBase/config.h"
-#include <cstdint>
 #include "SkrContainers/span.hpp"
 #include "SkrGuid/guid.hpp"
-#include "SkrBase/meta.h"
+#include "SkrRTTR/rttr_traits.hpp"
 
 namespace skr::rttr
 {
 enum ETypeDescType
 {
     // empty type, used to check if TypeDescValue is initialized
+    // also used to mark end of TypeDescValue array
     SKR_TYPE_DESC_TYPE_VOID,
 
     // type id
@@ -38,10 +37,239 @@ enum ETypeDescType
 };
 
 struct TypeDescValue {
-    // default
+    // ctor
     inline TypeDescValue()
         : _type(SKR_TYPE_DESC_TYPE_VOID)
     {
+    }
+
+    // copy & move
+    inline TypeDescValue(const TypeDescValue& other)
+        : _type(other._type)
+    {
+        switch (_type)
+        {
+            case SKR_TYPE_DESC_TYPE_TYPE_ID:
+            case SKR_TYPE_DESC_TYPE_GENERIC_TYPE_ID:
+                _guid = other._guid;
+                break;
+            case SKR_TYPE_DESC_TYPE_BOOL:
+                _bool = other._bool;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT8:
+                _i8 = other._i8;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT16:
+                _i16 = other._i16;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT32:
+                _i32 = other._i32;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT64:
+                _i64 = other._i64;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT8:
+                _u8 = other._u8;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT16:
+                _u16 = other._u16;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT32:
+                _u32 = other._u32;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT64:
+                _u64 = other._u64;
+                break;
+            case SKR_TYPE_DESC_TYPE_FLOAT:
+                _float = other._float;
+                break;
+            case SKR_TYPE_DESC_TYPE_DOUBLE:
+                _double = other._double;
+                break;
+        }
+    }
+    inline TypeDescValue(TypeDescValue&& other)
+        : _type(other._type)
+    {
+        switch (_type)
+        {
+            case SKR_TYPE_DESC_TYPE_TYPE_ID:
+            case SKR_TYPE_DESC_TYPE_GENERIC_TYPE_ID:
+                _guid = other._guid;
+                break;
+            case SKR_TYPE_DESC_TYPE_BOOL:
+                _bool = other._bool;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT8:
+                _i8 = other._i8;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT16:
+                _i16 = other._i16;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT32:
+                _i32 = other._i32;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT64:
+                _i64 = other._i64;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT8:
+                _u8 = other._u8;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT16:
+                _u16 = other._u16;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT32:
+                _u32 = other._u32;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT64:
+                _u64 = other._u64;
+                break;
+            case SKR_TYPE_DESC_TYPE_FLOAT:
+                _float = other._float;
+                break;
+            case SKR_TYPE_DESC_TYPE_DOUBLE:
+                _double = other._double;
+                break;
+        }
+    }
+    inline TypeDescValue& operator=(const TypeDescValue& other)
+    {
+        _type = other._type;
+        switch (_type)
+        {
+            case SKR_TYPE_DESC_TYPE_TYPE_ID:
+            case SKR_TYPE_DESC_TYPE_GENERIC_TYPE_ID:
+                _guid = other._guid;
+                break;
+            case SKR_TYPE_DESC_TYPE_BOOL:
+                _bool = other._bool;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT8:
+                _i8 = other._i8;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT16:
+                _i16 = other._i16;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT32:
+                _i32 = other._i32;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT64:
+                _i64 = other._i64;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT8:
+                _u8 = other._u8;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT16:
+                _u16 = other._u16;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT32:
+                _u32 = other._u32;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT64:
+                _u64 = other._u64;
+                break;
+            case SKR_TYPE_DESC_TYPE_FLOAT:
+                _float = other._float;
+                break;
+            case SKR_TYPE_DESC_TYPE_DOUBLE:
+                _double = other._double;
+                break;
+        }
+        return *this;
+    }
+    inline TypeDescValue& operator=(TypeDescValue&& other)
+    {
+        _type = other._type;
+        switch (_type)
+        {
+            case SKR_TYPE_DESC_TYPE_TYPE_ID:
+            case SKR_TYPE_DESC_TYPE_GENERIC_TYPE_ID:
+                _guid = other._guid;
+                break;
+            case SKR_TYPE_DESC_TYPE_BOOL:
+                _bool = other._bool;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT8:
+                _i8 = other._i8;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT16:
+                _i16 = other._i16;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT32:
+                _i32 = other._i32;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT64:
+                _i64 = other._i64;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT8:
+                _u8 = other._u8;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT16:
+                _u16 = other._u16;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT32:
+                _u32 = other._u32;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT64:
+                _u64 = other._u64;
+                break;
+            case SKR_TYPE_DESC_TYPE_FLOAT:
+                _float = other._float;
+                break;
+            case SKR_TYPE_DESC_TYPE_DOUBLE:
+                _double = other._double;
+                break;
+        }
+        return *this;
+    }
+
+    // assign with normalize config
+    inline void assign(const TypeDescValue& rhs, bool ref_as_pointer, bool rvalue_ref_as_pointer)
+    {
+        _type = rhs._type;
+        _type = (ref_as_pointer && _type == SKR_TYPE_DESC_TYPE_REF) ? SKR_TYPE_DESC_TYPE_POINTER : _type;
+        _type = (rvalue_ref_as_pointer && _type == SKR_TYPE_DESC_TYPE_RVALUE_REF) ? SKR_TYPE_DESC_TYPE_POINTER : _type;
+
+        switch (_type)
+        {
+            case SKR_TYPE_DESC_TYPE_TYPE_ID:
+            case SKR_TYPE_DESC_TYPE_GENERIC_TYPE_ID:
+                _guid = rhs._guid;
+                break;
+            case SKR_TYPE_DESC_TYPE_BOOL:
+                _bool = rhs._bool;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT8:
+                _i8 = rhs._i8;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT16:
+                _i16 = rhs._i16;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT32:
+                _i32 = rhs._i32;
+                break;
+            case SKR_TYPE_DESC_TYPE_INT64:
+                _i64 = rhs._i64;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT8:
+                _u8 = rhs._u8;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT16:
+                _u16 = rhs._u16;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT32:
+                _u32 = rhs._u32;
+                break;
+            case SKR_TYPE_DESC_TYPE_UINT64:
+                _u64 = rhs._u64;
+                break;
+            case SKR_TYPE_DESC_TYPE_FLOAT:
+                _float = rhs._float;
+                break;
+            case SKR_TYPE_DESC_TYPE_DOUBLE:
+                _double = rhs._double;
+                break;
+        }
     }
 
     // setter
@@ -151,6 +379,70 @@ struct TypeDescValue {
     inline float         value_float() const { return _float; }
     inline double        value_double() const { return _double; }
 
+    // compare
+    inline bool equal(const TypeDescValue& rhs, bool ref_as_pointer, bool rvalue_ref_as_pointer)
+    {
+        ETypeDescType self_type = _type;
+        ETypeDescType rhs_type  = rhs.type();
+
+        if (ref_as_pointer)
+        {
+            self_type = self_type == SKR_TYPE_DESC_TYPE_REF ? SKR_TYPE_DESC_TYPE_POINTER : self_type;
+            rhs_type  = rhs_type == SKR_TYPE_DESC_TYPE_REF ? SKR_TYPE_DESC_TYPE_POINTER : rhs_type;
+        }
+
+        if (rvalue_ref_as_pointer)
+        {
+            self_type = self_type == SKR_TYPE_DESC_TYPE_RVALUE_REF ? SKR_TYPE_DESC_TYPE_POINTER : self_type;
+            rhs_type  = rhs_type == SKR_TYPE_DESC_TYPE_RVALUE_REF ? SKR_TYPE_DESC_TYPE_POINTER : rhs_type;
+        }
+
+        if (self_type != rhs_type)
+        {
+            return false;
+        }
+        else
+        {
+            switch (self_type)
+            {
+                case SKR_TYPE_DESC_TYPE_VOID:
+                    return false;
+                case SKR_TYPE_DESC_TYPE_TYPE_ID:
+                case SKR_TYPE_DESC_TYPE_GENERIC_TYPE_ID:
+                    return _guid == rhs._guid;
+                case SKR_TYPE_DESC_TYPE_CONST:
+                case SKR_TYPE_DESC_TYPE_POINTER:
+                case SKR_TYPE_DESC_TYPE_REF:
+                case SKR_TYPE_DESC_TYPE_RVALUE_REF:
+                    return true;
+                case SKR_TYPE_DESC_TYPE_ARRAY_DIM:
+                    return _u32 == rhs._u32;
+                case SKR_TYPE_DESC_TYPE_BOOL:
+                    return _bool == rhs._bool;
+                case SKR_TYPE_DESC_TYPE_INT8:
+                    return _i8 == rhs._i8;
+                case SKR_TYPE_DESC_TYPE_INT16:
+                    return _i16 == rhs._i16;
+                case SKR_TYPE_DESC_TYPE_INT32:
+                    return _i32 == rhs._i32;
+                case SKR_TYPE_DESC_TYPE_INT64:
+                    return _i64 == rhs._i64;
+                case SKR_TYPE_DESC_TYPE_UINT8:
+                    return _u8 == rhs._u8;
+                case SKR_TYPE_DESC_TYPE_UINT16:
+                    return _u16 == rhs._u16;
+                case SKR_TYPE_DESC_TYPE_UINT32:
+                    return _u32 == rhs._u32;
+                case SKR_TYPE_DESC_TYPE_UINT64:
+                    return _u64 == rhs._u64;
+                case SKR_TYPE_DESC_TYPE_FLOAT:
+                    return _float == rhs._float;
+                case SKR_TYPE_DESC_TYPE_DOUBLE:
+                    return _double == rhs._double;
+            }
+        }
+    }
+
 private:
     ETypeDescType _type;
     union
@@ -176,13 +468,11 @@ private:
 namespace skr::rttr
 {
 template <typename T>
-GUID type_id();
-template <typename T>
 struct TypeDescTraits {
     inline static constexpr size_t type_desc_size = 1;
     static void                    write_type_desc(TypeDescValue* desc)
     {
-        desc[0].set_type_id(type_id<T>());
+        desc[0].set_type_id(skr::rttr::RTTRTraits<T>::get_guid());
     }
 };
 
@@ -257,36 +547,182 @@ struct TypeDescTraits<const T[N]> : TypeDescTraits<T[N]> {
         TypeDescTraits<T>::write_type_desc(desc + 2);
     }
 };
-
-// TODO. 分化为 type_desc, type_desc_fixed, type_desc_typed
-template <typename T>
-span<TypeDescValue> type_desc()
-{
-    static TypeDescValue desc[TypeDescTraits<T>::type_desc_size];
-    TypeDescTraits<T>::write_type_desc(desc);
-    return { desc, TypeDescTraits<T>::type_desc_size };
-}
 } // namespace skr::rttr
 
 // TypeDesc help functions
 namespace skr::rttr
 {
-// TODO. TypeDescCompare, TypeDescNormalize
+enum class ETypeDescNormalizeFlag : uint8_t
+{
+    IgnoreConst        = 1 << 0,
+    RefAsPointer       = 1 << 1,
+    RValueRefAsPointer = 1 << 2,
+    Full               = IgnoreConst | RefAsPointer | RValueRefAsPointer,
+};
 
+inline bool type_desc_equal(span<TypeDescValue> lhs, span<TypeDescValue> rhs, ETypeDescNormalizeFlag compare_flag)
+{
+    size_t lhs_idx = 0, rhs_idx = 0;
+
+    while (true)
+    {
+        // skip const
+        if (flag_all(compare_flag, ETypeDescNormalizeFlag::IgnoreConst))
+        {
+            while (lhs[lhs_idx].type() == SKR_TYPE_DESC_TYPE_CONST && lhs_idx < lhs.size())
+                ++lhs_idx;
+            while (rhs[rhs_idx].type() == SKR_TYPE_DESC_TYPE_CONST && rhs_idx < rhs.size())
+                ++rhs_idx;
+            if (lhs_idx >= lhs.size() || rhs_idx >= rhs.size())
+                break;
+        }
+
+        // compare
+        if (lhs[lhs_idx].equal(
+            rhs[lhs_idx],
+            flag_all(compare_flag, ETypeDescNormalizeFlag::RefAsPointer),
+            flag_all(compare_flag, ETypeDescNormalizeFlag::RValueRefAsPointer)))
+        {
+            ++lhs_idx;
+            ++rhs_idx;
+            if (lhs_idx >= lhs.size() || rhs_idx >= rhs.size())
+                break;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
+
+inline size_t type_desc_normalize(TypeDescValue* desc, size_t size, ETypeDescNormalizeFlag normalize_flag)
+{
+    size_t read_idx = 0, write_idx = 0;
+    while (read_idx < size)
+    {
+        // skip const
+        if (flag_all(normalize_flag, ETypeDescNormalizeFlag::IgnoreConst))
+        {
+            while (desc[read_idx].type() == SKR_TYPE_DESC_TYPE_CONST && read_idx < size)
+                ++read_idx;
+            if (read_idx >= size)
+                break;
+        }
+
+        // write
+        if (read_idx != write_idx)
+        {
+            desc[write_idx].assign(
+            desc[read_idx],
+            flag_all(normalize_flag, ETypeDescNormalizeFlag::RefAsPointer),
+            flag_all(normalize_flag, ETypeDescNormalizeFlag::RValueRefAsPointer));
+        }
+
+        ++read_idx;
+        ++write_idx;
+    }
+
+    size_t new_size = write_idx;
+    while (write_idx < size)
+    {
+        desc[write_idx].set_void();
+        ++write_idx;
+    }
+    return new_size;
+}
+} // namespace skr::rttr
 
 // TypeDesc
 namespace skr::rttr
 {
 struct TypeDesc {
-};
+    using TypeDescWriter = void (*)(TypeDescValue* desc);
 
-template <size_t N>
-struct FixedTypeDesc {
+    // ctor
+    inline TypeDesc() = default;
+    inline TypeDesc(span<TypeDescValue> desc)
+        : _desc(desc.begin(), desc.size())
+    {
+    }
+    inline TypeDesc(size_t size, TypeDescWriter writer)
+    {
+        _desc.resize_unsafe(size);
+        writer(_desc.data());
+    }
+
+    // copy & move
+    inline TypeDesc(const TypeDesc& other)            = default;
+    inline TypeDesc(TypeDesc&& other)                 = default;
+    inline TypeDesc& operator=(const TypeDesc& other) = default;
+    inline TypeDesc& operator=(TypeDesc&& other)      = default;
+
+    // to span
+    operator span<TypeDescValue>() const { return { const_cast<TypeDescValue*>(_desc.data()), _desc.size() }; }
+
+    // compare
+    inline bool equal(const TypeDesc& other, ETypeDescNormalizeFlag compare_flag) const
+    {
+        return type_desc_equal(*this, other, compare_flag);
+    }
+
+    // normalize
+    inline void normalize(ETypeDescNormalizeFlag normalize_flag)
+    {
+        _desc.resize_unsafe(type_desc_normalize(_desc.data(), _desc.size(), normalize_flag));
+    }
+
+    // TODO. invoke
+    // TODO. invoke_extern
+    // TODO. set_field
+    // TODO. get_field
+
+private:
+    Vector<TypeDescValue> _desc = {};
 };
 
 template <typename T>
 struct TypedTypeDesc {
+    // ctor
+    inline TypedTypeDesc() { TypeDescTraits<T>::write_type_desc(_desc); }
+
+    // copy & move
+    inline TypedTypeDesc(const TypedTypeDesc& other)            = default;
+    inline TypedTypeDesc(TypedTypeDesc&& other)                 = default;
+    inline TypedTypeDesc& operator=(const TypedTypeDesc& other) = default;
+    inline TypedTypeDesc& operator=(TypedTypeDesc&& other)      = default;
+
+    // compare
+    inline bool equal(const TypedTypeDesc& other, ETypeDescNormalizeFlag compare_flag) const
+    {
+        return type_desc_equal(*this, other, compare_flag);
+    }
+
+    // normalize
+    inline void normalize(ETypeDescNormalizeFlag normalize_flag)
+    {
+        _desc.resize_unsafe(type_desc_normalize(_desc.data(), _desc.size(), normalize_flag));
+    }
+
+    // TODO. invoke
+    // TODO. invoke_extern
+    // TODO. set_field
+    // TODO. get_field
+
+private:
+    TypeDescValue _desc[TypeDescTraits<T>::type_desc_size];
 };
 
+// make TypeDesc
+template <typename T>
+inline TypeDesc type_desc_of()
+{
+    return TypeDesc(TypeDescTraits<T>::type_desc_size, &TypeDescTraits<T>::write_type_desc);
+}
+template <typename T>
+inline TypedTypeDesc<T> typed_type_desc_of()
+{
+    return TypedTypeDesc<T>();
+}
 } // namespace skr::rttr

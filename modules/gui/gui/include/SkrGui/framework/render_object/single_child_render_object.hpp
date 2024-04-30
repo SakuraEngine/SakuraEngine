@@ -28,7 +28,7 @@ struct SingleChildRenderObjectMixin {
 
     inline GUID accept_child_type(const TSelf& self) const SKR_NOEXCEPT
     {
-        return ::skr::rttr::type_id<TChild>();
+        return ::skr::rttr::type_id_of<TChild>();
     }
     inline void set_child(TSelf& self, NotNull<RenderObject*> child) SKR_NOEXCEPT
     {

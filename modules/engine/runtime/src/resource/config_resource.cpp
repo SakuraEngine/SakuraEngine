@@ -60,6 +60,6 @@ namespace skr
 {
 namespace resource
 {
-skr_guid_t SConfigFactory::GetResourceType() { return skr::rttr::type_id<skr_config_resource_t>(); }
+skr_guid_t SConfigFactory::GetResourceType() { return skr::rttr::type_id_of<skr_config_resource_t>(); }
 } // namespace resource
 } // namespace skr

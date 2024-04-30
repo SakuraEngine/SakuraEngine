@@ -51,8 +51,8 @@ SKR_RTTR_EXEC_STATIC
     {
         Type* create() override {
             return SkrNew<RecordType>(
-                type_name<${record.name}>(),
-                type_id<${record.name}>(),
+                type_name_of<${record.name}>(),
+                type_id_of<${record.name}>(),
                 sizeof(${record.name}),
                 alignof(${record.name}),
                 make_record_basic_method_table<${record.name}>()
@@ -69,7 +69,7 @@ SKR_RTTR_EXEC_STATIC
         %if record.bases:
             result->set_base_types({
             %for base in record.bases:
-                {type_id<${base}>(), {type_of<${base}>(), +[](void* p) -> void* { return static_cast<${base}*>(reinterpret_cast<${record.name}*>(p)); }}},
+                {type_id_of<${base}>(), {type_of<${base}>(), +[](void* p) -> void* { return static_cast<${base}*>(reinterpret_cast<${record.name}*>(p)); }}},
             %endfor
             });
         %endif
@@ -136,12 +136,12 @@ SKR_RTTR_EXEC_STATIC
             SkrDelete(type);
         }
     } LOADER__${record.id};
-    register_type_loader(type_id<${record.name}>(), &LOADER__${record.id});
+    register_type_loader(type_id_of<${record.name}>(), &LOADER__${record.id});
 %endfor
 
 %for enum in generator.enums:
     static EnumTypeFromTraitsLoader<${enum.name}> LOADER__${enum.id};
-    register_type_loader(type_id<${enum.name}>(), &LOADER__${enum.id});
+    register_type_loader(type_id_of<${enum.name}>(), &LOADER__${enum.id});
 %endfor
 };
 // END RTTR GENERATED

@@ -8,7 +8,7 @@ Type* ReferenceTypeLoader::load(span<TypeDescValue> desc)
 {
     SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_TYPE_ID);
 
-    Type* target_type = get_type_from_type_desc(desc.subspan(1));
+    Type* target_type = nullptr;
     return SkrNew<ReferenceType>(target_type, format(u8"{}&", target_type->name()));
 }
 void ReferenceTypeLoader::destroy(Type* type)

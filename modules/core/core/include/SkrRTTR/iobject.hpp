@@ -18,7 +18,7 @@ struct SKR_CORE_API IObject {
     inline TO* type_cast()
     {
         auto  from_type = get_record_type();
-        auto  to_type   = get_type_from_guid(type_id<TO>());
+        auto  to_type   = get_type_from_guid(skr::rttr::type_id_of<TO>());
         void* cast_p    = from_type->cast_to(to_type, get_head_ptr());
         return reinterpret_cast<TO*>(cast_p);
     }
