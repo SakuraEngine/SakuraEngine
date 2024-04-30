@@ -726,3 +726,5 @@ inline TypedTypeDesc<T> typed_type_desc_of()
     return TypedTypeDesc<T>();
 }
 } // namespace skr::rttr
+
+// TODO. TypeDescView，代替 Span 进行轻量的 TypeDesc 传输

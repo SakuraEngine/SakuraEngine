@@ -3,6 +3,7 @@
 
 namespace skr::rttr
 {
+template <typename Backend>
 struct FunctionBuilder {
     FunctionBuilder(FunctionData* data);
 
@@ -29,6 +30,10 @@ struct FunctionBuilder {
 
         // fill signature
         _data->fill_signature(func);
+
+        // fill invoke
+        _data->invoke = Backend::template export_function<func>();
+
         return *this;
     }
 

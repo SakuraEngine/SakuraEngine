@@ -59,7 +59,7 @@ struct FunctionData {
     Vector<ParamData> param_data;
     // TODO. meta data
 
-    // [Provided by export platform]
+    // [Provided by export Backend]
     void* invoke;
 
     template <typename Ret, typename... Args>
@@ -78,7 +78,7 @@ struct MethodData {
     bool              is_const;
     // TODO. meta data
 
-    // [Provided by export platform]
+    // [Provided by export Backend]
     void* invoke;
 
     template <class T, typename Ret, typename... Args>
@@ -104,7 +104,7 @@ struct FieldData {
     size_t   offset;
     // TODO. meta data
 
-    // [Provided by export platform]
+    // [Provided by export Backend]
     void* getter;
     void* setter;
 
@@ -123,7 +123,7 @@ struct StaticMethodData {
     Vector<ParamData> param_data;
     // TODO. meta data
 
-    // [Provided by export platform]
+    // [Provided by export Backend]
     void* invoke;
 
     template <typename Ret, typename... Args>
@@ -138,8 +138,9 @@ struct StaticFieldData {
     // signature
     String   name;
     TypeDesc type;
+    void*    address;
 
-    // [Provided by export platform]
+    // [Provided by export Backend]
     void* getter;
     void* setter;
 
@@ -157,7 +158,7 @@ struct ExternMethodData {
     Vector<ParamData> param_data;
     // TODO. meta data
 
-    // [Provided by export platform]
+    // [Provided by export Backend]
     void* invoke;
 
     template <typename Ret, typename... Args>
@@ -191,7 +192,7 @@ struct CtorData {
     Vector<ParamData> param_data;
     // TODO. meta data
 
-    // [Provided by export platform]
+    // [Provided by export Backend]
     void* invoke;
 
     template <typename... Args>
@@ -202,7 +203,7 @@ struct CtorData {
 };
 
 struct DtorData {
-    // [Provided by export platform]
+    // [Provided by export Backend]
     void* invoke;
 };
 

@@ -11,6 +11,9 @@ struct SKR_CORE_API GenericType : public Type {
         return _generic_guid;
     }
 
+    // TODO. uniform invoke interface
+    // TODO. API 查找需要返回一个 Delegate 对象，此功能需要依赖 Delegate
+
 private:
     GUID _generic_guid;
 };

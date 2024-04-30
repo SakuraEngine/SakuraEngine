@@ -10,10 +10,10 @@ enum ETypeCategory
 {
     SKR_TYPE_CATEGORY_INVALID,
 
-    SKR_TYPE_CATEGORY_PRIMITIVE,
-    SKR_TYPE_CATEGORY_ENUM,
-    SKR_TYPE_CATEGORY_RECORD,
-    SKR_TYPE_CATEGORY_GENERIC,
+    SKR_TYPE_CATEGORY_PRIMITIVE, // PrimitiveType
+    SKR_TYPE_CATEGORY_ENUM,      // EnumType
+    SKR_TYPE_CATEGORY_RECORD,    // RecordType
+    SKR_TYPE_CATEGORY_GENERIC,   // TODO. remove it
 };
 
 enum class ETypeFeature : uint32_t
@@ -31,6 +31,7 @@ enum class ETypeFeature : uint32_t
     ReadJson
 };
 
+// TODO. 移动到新文件中，与模板匹配导出放在一起
 struct CPPExternMethods {
     // unary op
     const char* Minus    = "__MINUS__";     // -
@@ -71,6 +72,7 @@ struct CPPExternMethods {
     const char* OrAssign  = "__OR_ASSIGN__";  // |=
 };
 
+// TODO. PrimitiveType 也使用 RecordType 导出数据结构，可以方便进行扩展
 struct SKR_CORE_API Type {
     Type(ETypeCategory type_category, skr::String name, GUID type_id, size_t size, size_t alignment);
     virtual ~Type() = default;
@@ -99,6 +101,23 @@ struct SKR_CORE_API Type {
     virtual int                   read_binary(void* dst, skr_binary_reader_t* reader) const        = 0;
     virtual void                  write_json(const void* dst, skr_json_writer_t* writer) const     = 0;
     virtual skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const          = 0;
+
+    // TODO. uniform invoke interface
+    // TODO. API 查找直接返回函数指针，这一限制的理由是 type 都在 CPP 中生产，完全拥有制造函数指针的能力
+    //       不像 GenericType 一样，根据传入的 TypeDesc，还需要进行闭包封装
+    // ctor & dtor
+    // find_ctor(span<span<TypeDescValue>> params, EMethodInvokeFlag flag)
+    // find_dtor()
+    //
+    // method & field
+    // find_method(String name, span<TypeDescValue> ret, span<span<TypeDescValue>> params, EMethodInvokeFlag flag)
+    // find_static_method(String name, span<TypeDescValue> ret, span<span<TypeDescValue>> params, EMethodInvokeFlag flag)
+    // find_field(String name, TypeDescValue field_type)
+    // find_static_field(String name, TypeDescValue field_type)
+    //
+    // bit_field & extern_method
+    // find_bit_field(String name)
+    // find_extern_method(String name, span<TypeDescValue> ret, span<span<TypeDescValue>> params, EMethodInvokeFlag flag)
 
 private:
     // basic data

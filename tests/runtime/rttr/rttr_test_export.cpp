@@ -2,6 +2,7 @@
 #include "SkrRTTR/export/record_builder.hpp"
 #include "SkrRTTR/export/enum_builder.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
+#include "SkrRTTR/export/rttr_backend.hpp"
 
 struct A {
 };
@@ -54,7 +55,7 @@ TEST_CASE("test rttr export")
 
     // clang-format off
     RecordData                    record_data;
-    RecordBuilder<B, TestBackend> record_builder(&record_data);
+    RecordBuilder<B, RTTRBackend> record_builder(&record_data);
     record_builder
         // basic
         .basic_info()
