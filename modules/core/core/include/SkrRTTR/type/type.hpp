@@ -31,6 +31,46 @@ enum class ETypeFeature : uint32_t
     ReadJson
 };
 
+struct CPPExternMethods {
+    // unary op
+    const char* Minus    = "__MINUS__";     // -
+    const char* BitNot   = "__BIT_NOT__";   // ~
+    const char* LogicNot = "__LOGIC_NOT__"; // !
+
+    // binary op
+    const char* Add      = "__ADD__";       // +
+    const char* Sub      = "__SUB__";       // -
+    const char* Mul      = "__MUL__";       // *
+    const char* Div      = "__DIV__";       // /
+    const char* Rem      = "__REM__";       // %
+    const char* Shl      = "__SHL__";       // <<
+    const char* Shr      = "__SHR__";       // >>
+    const char* BitAnd   = "__BIT_AND__";   // &
+    const char* BitXor   = "__BIT_XOR__";   // ^
+    const char* BitOr    = "__BIT_OR__";    // |
+    const char* Eq       = "__EQ__";        // ==
+    const char* Neq      = "__NEQ__";       // !=
+    const char* Lt       = "__LT__";        // <
+    const char* Leq      = "__LEQ__";       // <=
+    const char* Gt       = "__GT__";        // >
+    const char* Geq      = "__GEQ__";       // >=
+    const char* LogicAnd = "__LOGIC_AND__"; // &&
+    const char* LogicOr  = "__LOGIC_OR__";  // ||
+
+    // assign op
+    const char* Assign    = "__ASSIGN__";     // "=
+    const char* AddAssign = "__ADD_ASSIGN__"; // +=
+    const char* SubAssign = "__SUB_ASSIGN__"; // -=
+    const char* MulAssign = "__MUL_ASSIGN__"; // *=
+    const char* DivAssign = "__DIV_ASSIGN__"; // /=
+    const char* RemAssign = "__REM_ASSIGN__"; // %=
+    const char* ShlAssign = "__SHL_ASSIGN__"; // <<=
+    const char* ShrAssign = "__SHR_ASSIGN__"; // >>=
+    const char* AndAssign = "__AND_ASSIGN__"; // &=
+    const char* XorAssign = "__XOR_ASSIGN__"; // ^=
+    const char* OrAssign  = "__OR_ASSIGN__";  // |=
+};
+
 struct SKR_CORE_API Type {
     Type(ETypeCategory type_category, skr::String name, GUID type_id, size_t size, size_t alignment);
     virtual ~Type() = default;
