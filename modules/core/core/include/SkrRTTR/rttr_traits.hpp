@@ -11,7 +11,12 @@
 #include "SkrBase/meta.h"
 
 // RTTR traits
-// 提供部分静态类型功能，从动态角度来说，实际上只是一层皮
+// 提供非 GenericType 的静态信息：
+//  GUID：用于标记此类型，在 TypeDesc 的构建中使用
+//  Name：一般为带命名空间的类型名，用于调试、显示等需要展示类型名的地方
+//
+// RTTRTraits 只提供完全静态的信息，如果需要拿到具体的 Type 对象，需要通过 type_registry 查询，
+// 查询结果取决于是否静态注册该类型
 namespace skr::rttr
 {
 struct Type;
@@ -23,7 +28,7 @@ struct RTTRTraits {
     // TODO. 不提供 get_type，对于具体行为应该由获取 type_desc 的一方自行实现
 
     inline static constexpr size_t type_desc_size = 1;
-    static void                    write_type_desc(TypeDesc* desc)
+    static void                    write_type_desc(TypeDescValue* desc)
     {
         unimplemented_no_meta(T, "RTTRTraits<T>::write_type_desc() is not implemented");
     }
@@ -52,9 +57,9 @@ SKR_INLINE GUID type_id() SKR_NOEXCEPT
 }
 // TODO. 删掉这玩意，直接返回 Vector 堆内存对象
 template <typename T>
-SKR_INLINE span<TypeDesc> type_desc() SKR_NOEXCEPT
+SKR_INLINE span<TypeDescValue> type_desc() SKR_NOEXCEPT
 {
-    static TypeDesc desc[RTTRTraits<T>::type_desc_size];
+    static TypeDescValue desc[RTTRTraits<T>::type_desc_size];
     if (desc[0].type() == ETypeDescType::SKR_TYPE_DESC_TYPE_VOID)
     {
         RTTRTraits<T>::write_type_desc(desc);
@@ -85,7 +90,7 @@ struct RTTRTraits<volatile T> : RTTRTraits<T> {
 template <typename T>
 struct RTTRTraits<const T> {
     inline static constexpr size_t type_desc_size = RTTRTraits<T>::type_desc_size + 1;
-    inline static void             write_type_desc(TypeDesc* desc)
+    inline static void             write_type_desc(TypeDescValue* desc)
     {
         desc[0].set_const();
         RTTRTraits<T>::write_type_desc(desc + 1);
@@ -104,7 +109,7 @@ struct RTTRTraits<const T> {
         static Type* type = nullptr;
         if (!type)
         {
-            TypeDesc desc[type_desc_size];
+            TypeDescValue desc[type_desc_size];
             write_type_desc(desc);
 
             type = get_type_from_type_desc({ desc, type_desc_size });
@@ -116,7 +121,7 @@ struct RTTRTraits<const T> {
 template <typename T>
 struct RTTRTraits<T*> {
     inline static constexpr size_t type_desc_size = RTTRTraits<T>::type_desc_size + 1;
-    inline static void             write_type_desc(TypeDesc* desc)
+    inline static void             write_type_desc(TypeDescValue* desc)
     {
         desc[0].set_pointer();
         RTTRTraits<T>::write_type_desc(desc + 1);
@@ -135,7 +140,7 @@ struct RTTRTraits<T*> {
         static Type* type = nullptr;
         if (!type)
         {
-            TypeDesc desc[type_desc_size];
+            TypeDescValue desc[type_desc_size];
             write_type_desc(desc);
 
             type = get_type_from_type_desc({ desc, type_desc_size });
@@ -147,7 +152,7 @@ struct RTTRTraits<T*> {
 template <typename T>
 struct RTTRTraits<T&> {
     inline static constexpr size_t type_desc_size = RTTRTraits<T>::type_desc_size + 1;
-    inline static void             write_type_desc(TypeDesc* desc)
+    inline static void             write_type_desc(TypeDescValue* desc)
     {
         desc[0].set_ref();
         RTTRTraits<T>::write_type_desc(desc + 1);
@@ -166,7 +171,7 @@ struct RTTRTraits<T&> {
         static Type* type = nullptr;
         if (!type)
         {
-            TypeDesc desc[type_desc_size];
+            TypeDescValue desc[type_desc_size];
             write_type_desc(desc);
 
             type = get_type_from_type_desc({ desc, type_desc_size });
@@ -178,7 +183,7 @@ struct RTTRTraits<T&> {
 template <typename T>
 struct RTTRTraits<T&&> {
     inline static constexpr size_t type_desc_size = RTTRTraits<T>::type_desc_size + 1;
-    inline static void             write_type_desc(TypeDesc* desc)
+    inline static void             write_type_desc(TypeDescValue* desc)
     {
         desc[0].set_rvalue_ref();
         RTTRTraits<T>::write_type_desc(desc + 1);
@@ -197,7 +202,7 @@ struct RTTRTraits<T&&> {
         static Type* type = nullptr;
         if (!type)
         {
-            TypeDesc desc[type_desc_size];
+            TypeDescValue desc[type_desc_size];
             write_type_desc(desc);
 
             type = get_type_from_type_desc({ desc, type_desc_size });
@@ -209,7 +214,7 @@ struct RTTRTraits<T&&> {
 template <typename T, size_t N>
 struct RTTRTraits<T[N]> {
     inline static constexpr size_t type_desc_size = RTTRTraits<T>::type_desc_size + 1;
-    inline static void             write_type_desc(TypeDesc* desc)
+    inline static void             write_type_desc(TypeDescValue* desc)
     {
         desc[0].set_array_dim(N);
         RTTRTraits<std::remove_cv_t<T>>::write_type_desc(desc + 1);
@@ -228,7 +233,7 @@ struct RTTRTraits<T[N]> {
         static Type* type = nullptr;
         if (!type)
         {
-            TypeDesc desc[type_desc_size];
+            TypeDescValue desc[type_desc_size];
             write_type_desc(desc);
 
             type = get_type_from_type_desc({ desc, type_desc_size });
@@ -240,7 +245,7 @@ struct RTTRTraits<T[N]> {
 template <typename T, size_t N>
 struct RTTRTraits<const T[N]> {
     inline static constexpr size_t type_desc_size = RTTRTraits<T>::type_desc_size + 2;
-    inline static void             write_type_desc(TypeDesc* desc)
+    inline static void             write_type_desc(TypeDescValue* desc)
     {
         desc[0].set_const();
         desc[0].set_array_dim(N);
@@ -260,7 +265,7 @@ struct RTTRTraits<const T[N]> {
         static Type* type = nullptr;
         if (!type)
         {
-            TypeDesc desc[type_desc_size];
+            TypeDescValue desc[type_desc_size];
             write_type_desc(desc);
 
             type = get_type_from_type_desc({ desc, type_desc_size });
@@ -300,7 +305,7 @@ struct RTTRTraits<const T[N]> {
     template <>                                                                        \
     struct RTTRTraits<__TYPE> {                                                        \
         inline static constexpr size_t type_desc_size = 1;                             \
-        inline static void             write_type_desc(TypeDesc* desc)                 \
+        inline static void             write_type_desc(TypeDescValue* desc)            \
         {                                                                              \
             desc[0].set_type_id(get_guid());                                           \
         }                                                                              \
@@ -358,7 +363,7 @@ namespace skr::rttr
 template <typename T>
 struct RTTRTraits<skr::Vector<T>> {
     inline static constexpr size_t type_desc_size = 1;
-    inline static void             write_type_desc(TypeDesc* desc)
+    inline static void             write_type_desc(TypeDescValue* desc)
     {
     }
 
@@ -378,7 +383,7 @@ struct RTTRTraits<skr::Vector<T>> {
 template <typename T>
 struct RTTRTraits<skr::span<T>> {
     inline static constexpr size_t type_desc_size = 1;
-    inline static void             write_type_desc(TypeDesc* desc)
+    inline static void             write_type_desc(TypeDescValue* desc)
     {
     }
 
@@ -398,7 +403,7 @@ struct RTTRTraits<skr::span<T>> {
 template <typename T>
 struct RTTRTraits<skr::SPtrHelper<T>> {
     inline static constexpr size_t type_desc_size = 1;
-    inline static void             write_type_desc(TypeDesc* desc)
+    inline static void             write_type_desc(TypeDescValue* desc)
     {
     }
 
@@ -418,7 +423,7 @@ struct RTTRTraits<skr::SPtrHelper<T>> {
 template <typename T>
 struct RTTRTraits<skr::StronglyEnum<T>> {
     inline static constexpr size_t type_desc_size = 1;
-    inline static void             write_type_desc(TypeDesc* desc)
+    inline static void             write_type_desc(TypeDescValue* desc)
     {
     }
 
@@ -438,7 +443,7 @@ struct RTTRTraits<skr::StronglyEnum<T>> {
 template <typename... TS>
 struct RTTRTraits<skr::variant<TS...>> {
     inline static constexpr size_t type_desc_size = 1;
-    inline static void             write_type_desc(TypeDesc* desc)
+    inline static void             write_type_desc(TypeDescValue* desc)
     {
     }
 

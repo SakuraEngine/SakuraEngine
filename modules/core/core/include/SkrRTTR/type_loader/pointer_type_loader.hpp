@@ -6,7 +6,7 @@
 namespace skr::rttr
 {
 struct SKR_CORE_API PointerTypeLoader final : public GenericTypeLoader {
-    Type* load(span<TypeDesc> desc) override;
+    Type* load(span<TypeDescValue> desc) override;
     void  destroy(Type* type) override;
 };
 } // namespace skr::rttr

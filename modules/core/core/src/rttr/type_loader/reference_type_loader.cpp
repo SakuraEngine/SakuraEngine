@@ -4,7 +4,7 @@
 
 namespace skr::rttr
 {
-Type* ReferenceTypeLoader::load(span<TypeDesc> desc)
+Type* ReferenceTypeLoader::load(span<TypeDescValue> desc)
 {
     SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_TYPE_ID);
 

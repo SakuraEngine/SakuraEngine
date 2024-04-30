@@ -2,12 +2,13 @@
 #include "SkrBase/config.h"
 #include <cstdint>
 #include "SkrGuid/guid.hpp"
+#include "SkrBase/meta.h"
 
 namespace skr::rttr
 {
 enum ETypeDescType
 {
-    // empty type, used to check if TypeDesc is initialized
+    // empty type, used to check if TypeDescValue is initialized
     SKR_TYPE_DESC_TYPE_VOID,
 
     // type id
@@ -35,9 +36,9 @@ enum ETypeDescType
     SKR_TYPE_DESC_TYPE_DOUBLE,
 };
 
-struct TypeDesc {
+struct TypeDescValue {
     // default
-    inline TypeDesc()
+    inline TypeDescValue()
         : _type(SKR_TYPE_DESC_TYPE_VOID)
     {
     }
@@ -169,6 +170,41 @@ private:
 };
 } // namespace skr::rttr
 
+// TODO. TypeDescBuilder
+
+// TypeDescTraits
+// 提供静态构建 TypeDesc 的方法
+namespace skr::rttr
+{
+template <typename T>
+struct TypeDescTraits {
+    inline static constexpr size_t type_desc_size = 1;
+    static void                    write_type_desc(TypeDescValue* desc)
+    {
+        unimplemented_no_meta(T, "RTTRTraits<T>::write_type_desc() is not implemented");
+    }
+};
+} // namespace skr::rttr
+
+// TypeDesc help functions
+namespace skr::rttr
+{
 // TODO. TypeDescCompare, TypeDescNormalize
 
-// TODO. TypeDesc, FixedTypeDesc
+}
+
+// TypeDesc
+namespace skr::rttr
+{
+struct TypeDesc {
+};
+
+template <size_t N>
+struct FixedTypeDesc {
+};
+
+template <typename T>
+struct TypedTypeDesc {
+};
+
+} // namespace skr::rttr

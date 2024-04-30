@@ -21,7 +21,7 @@ struct EnumData {
 };
 
 struct TypeIdentifier {
-    Vector<TypeDesc> desc;
+    Vector<TypeDescValue> desc;
 
     template <typename T>
     inline static TypeIdentifier Make()

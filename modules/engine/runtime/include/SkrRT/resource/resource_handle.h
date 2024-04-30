@@ -164,7 +164,7 @@ namespace skr::rttr
 template <typename T>
 struct RTTRTraits<skr::resource::TResourceHandle<T>> {
     inline static constexpr size_t type_desc_size = 1;
-    inline static void             write_type_desc(TypeDesc* desc)
+    inline static void             write_type_desc(TypeDescValue* desc)
     {
     }
 

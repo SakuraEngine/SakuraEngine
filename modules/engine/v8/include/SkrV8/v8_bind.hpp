@@ -30,7 +30,7 @@ namespace skr
 // Bind Traits:
 //  主要的运用场景为便利导出至 V8 的书写，尤其是 Class 导出的 Codegen，通过模板特化，最大限度的保障代码的整洁、复用、灵活
 //  1. 内存管理交叉问题需要一个以 Isolate 为单位的包装，在这个包装内用一张 map 存储 native 与 v8 对象的映射关系，同时
-//     还需要存储已经制造出来的 type<->FunctionTemplate 映射，因此必须依赖 RTTR（GUID/TypeDesc），如果不依赖就需要
+//     还需要存储已经制造出来的 type<->FunctionTemplate 映射，因此必须依赖 RTTR（GUID/TypeDescValue），如果不依赖就需要
 //     由 Bind Traits 提供一个用于 Bind 的 GUID
 //  2. 与 v8 的转换主要依赖 FunctionTemplate，因此 to_v8 和 from_v8 都需要依赖 Isolate/Context 抽象，
 //     更何况转换前需要验证 v8 对象是否存在，所以 Isolate/Context 抽象的指针为必要参数
