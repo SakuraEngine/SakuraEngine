@@ -106,18 +106,18 @@ struct SKR_CORE_API Type {
     // TODO. API 查找直接返回函数指针，这一限制的理由是 type 都在 CPP 中生产，完全拥有制造函数指针的能力
     //       不像 GenericType 一样，根据传入的 TypeDesc，还需要进行闭包封装
     // ctor & dtor
-    // find_ctor(span<span<TypeDescValue>> params, EMethodInvokeFlag flag)
+    // find_ctor(TypeDescView params, EMethodInvokeFlag flag)
     // find_dtor()
     //
     // method & field
-    // find_method(String name, span<TypeDescValue> ret, span<span<TypeDescValue>> params, EMethodInvokeFlag flag)
-    // find_static_method(String name, span<TypeDescValue> ret, span<span<TypeDescValue>> params, EMethodInvokeFlag flag)
+    // find_method(String name, TypeDescView ret, span<TypeDescView> params, EMethodInvokeFlag flag)
+    // find_static_method(String name, TypeDescView ret, span<TypeDescView> params, EMethodInvokeFlag flag)
     // find_field(String name, TypeDescValue field_type)
     // find_static_field(String name, TypeDescValue field_type)
     //
     // bit_field & extern_method
     // find_bit_field(String name)
-    // find_extern_method(String name, span<TypeDescValue> ret, span<span<TypeDescValue>> params, EMethodInvokeFlag flag)
+    // find_extern_method(String name, TypeDescView ret, span<TypeDescView> params, EMethodInvokeFlag flag)
 
 private:
     // basic data

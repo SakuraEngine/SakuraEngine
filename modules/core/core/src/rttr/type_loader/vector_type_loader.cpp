@@ -4,7 +4,7 @@
 
 namespace skr::rttr
 {
-Type* VectorTypeLoader::load(skr::span<TypeDescValue> desc)
+Type* VectorTypeLoader::load(TypeDescView desc)
 {
     SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_TYPE_ID);
 

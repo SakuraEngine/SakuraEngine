@@ -4,7 +4,7 @@
 
 namespace skr::rttr
 {
-Type* PointerTypeLoader::load(span<TypeDescValue> desc)
+Type* PointerTypeLoader::load(TypeDescView desc)
 {
     SKR_ASSERT(desc[0].type() == SKR_TYPE_DESC_TYPE_TYPE_ID);
 

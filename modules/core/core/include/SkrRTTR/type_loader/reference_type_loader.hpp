@@ -5,7 +5,7 @@
 namespace skr::rttr
 {
 struct SKR_CORE_API ReferenceTypeLoader final : public GenericTypeLoader {
-    Type* load(span<TypeDescValue> desc) override;
+    Type* load(TypeDescView desc) override;
     void  destroy(Type* type) override;
 };
 } // namespace skr::rttr

@@ -461,6 +461,9 @@ private:
         double   _double;
     };
 };
+
+// TODO. TypeDescView，代替 Span 进行轻量的 TypeDesc 传输
+using TypeDescView = span<TypeDescValue>;
 } // namespace skr::rttr
 
 // TypeDescTraits
@@ -560,7 +563,7 @@ enum class ETypeDescNormalizeFlag : uint8_t
     Full               = IgnoreConst | RefAsPointer | RValueRefAsPointer,
 };
 
-inline bool type_desc_equal(span<TypeDescValue> lhs, span<TypeDescValue> rhs, ETypeDescNormalizeFlag compare_flag)
+inline bool type_desc_equal(TypeDescView lhs, TypeDescView rhs, ETypeDescNormalizeFlag compare_flag)
 {
     size_t lhs_idx = 0, rhs_idx = 0;
 
@@ -642,8 +645,8 @@ struct TypeDesc {
 
     // ctor
     inline TypeDesc() = default;
-    inline TypeDesc(span<TypeDescValue> desc)
-        : _desc(desc.begin(), desc.size())
+    inline TypeDesc(TypeDescView desc_view)
+        : _desc(desc_view.begin(), desc_view.size())
     {
     }
     inline TypeDesc(size_t size, TypeDescWriter writer)
@@ -658,8 +661,8 @@ struct TypeDesc {
     inline TypeDesc& operator=(const TypeDesc& other) = default;
     inline TypeDesc& operator=(TypeDesc&& other)      = default;
 
-    // to span
-    operator span<TypeDescValue>() const { return { const_cast<TypeDescValue*>(_desc.data()), _desc.size() }; }
+    // to view
+    operator TypeDescView() const { return { const_cast<TypeDescValue*>(_desc.data()), _desc.size() }; }
 
     // compare
     inline bool equal(const TypeDesc& other, ETypeDescNormalizeFlag compare_flag) const
@@ -692,6 +695,9 @@ struct TypedTypeDesc {
     inline TypedTypeDesc(TypedTypeDesc&& other)                 = default;
     inline TypedTypeDesc& operator=(const TypedTypeDesc& other) = default;
     inline TypedTypeDesc& operator=(TypedTypeDesc&& other)      = default;
+
+    // to view
+    operator TypeDescView() const { return { const_cast<TypeDescValue*>(_desc), TypeDescTraits<T>::type_desc_size }; }
 
     // compare
     inline bool equal(const TypedTypeDesc& other, ETypeDescNormalizeFlag compare_flag) const
@@ -726,5 +732,3 @@ inline TypedTypeDesc<T> typed_type_desc_of()
     return TypedTypeDesc<T>();
 }
 } // namespace skr::rttr
-
-// TODO. TypeDescView，代替 Span 进行轻量的 TypeDesc 传输
