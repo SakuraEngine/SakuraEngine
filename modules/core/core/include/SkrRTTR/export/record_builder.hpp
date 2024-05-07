@@ -186,7 +186,7 @@ inline RecordBuilder<T, Backend>& RecordBuilder<T, Backend>::field(String name)
 {
     auto& field_data = _data->fields.emplace().ref();
     field_data.name  = std::move(name);
-    field_data.fill_signature(field);
+    field_data.fill_signature<field>(field);
     field_data.setter = Backend::template export_field_setter<field>();
     field_data.getter = Backend::template export_field_getter<field>();
     return *this;

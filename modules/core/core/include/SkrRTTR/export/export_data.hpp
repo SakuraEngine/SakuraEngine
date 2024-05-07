@@ -98,21 +98,25 @@ struct MethodData {
 };
 
 struct FieldData {
+    using GetAddressFunc = void* (*)(void*);
+
     // signature
-    String   name;
-    TypeDesc type;
-    size_t   offset;
+    String         name;
+    TypeDesc       type;
+    GetAddressFunc get_address;
     // TODO. meta data
 
     // [Provided by export Backend]
     void* getter;
     void* setter;
 
-    template <class T, typename Field>
-    inline void fill_signature(Field T::*p_field)
+    template <auto field, class T, typename Field>
+    inline void fill_signature(Field T::*)
     {
-        type   = type_desc_of<Field>();
-        offset = reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*p_field));
+        type        = type_desc_of<Field>();
+        get_address = +[](void* p) -> void* {
+            return &(reinterpret_cast<T*>(p)->*field);
+        };
     }
 };
 
@@ -228,6 +232,45 @@ struct RecordData {
     Vector<ExternMethodData> extern_methods;
 
     // TODO. meta data
+};
+
+struct FunctionSignature {
+};
+
+inline bool match_parameters(span<ParamData> param_data, span<TypeDescView> signature, ETypeDescNormalizeFlag match_flag)
+{
+    // match length
+    if (param_data.size() != signature.size())
+        return false;
+
+    // match per parameter
+    for (size_t i = 0; i < param_data.size(); ++i)
+    {
+        if (!param_data[i].type.equal(signature[i], match_flag))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+template <typename... Args>
+struct ParameterSignatureExporter {
+    inline ParameterSignatureExporter()
+    {
+        fill_signature(std::make_index_sequence<sizeof...(Args)>());
+    }
+
+    template <size_t... idx>
+    inline void fill_signature(std::index_sequence<idx...>)
+    {
+        int dummy[] = { (args_type_desc_view[idx] = std::get<idx>(args_tuple), 0)... };
+        (void)dummy;
+    }
+
+    std::tuple<TypedTypeDesc<Args>...> args_tuple = {};
+    TypeDescView                       args_type_desc_view[sizeof...(Args)];
 };
 
 } // namespace skr::rttr

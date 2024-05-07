@@ -557,6 +557,7 @@ namespace skr::rttr
 {
 enum class ETypeDescNormalizeFlag : uint8_t
 {
+    None               = 0,
     IgnoreConst        = 1 << 0,
     RefAsPointer       = 1 << 1,
     RValueRefAsPointer = 1 << 2,
