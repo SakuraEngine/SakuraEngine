@@ -19,4 +19,7 @@ TEST_CASE("test type signature")
     test.view().normalize();
 
     SKR_LOG_FMT_INFO(u8"ignore ref: {}", test.view().to_string());
+
+    TypeSignatureTyped<void (*)(int&, int*&, const int&)> test_function_pointer;
+    SKR_LOG_FMT_INFO(u8"function pointer: {}", test_function_pointer.view().to_string());
 }

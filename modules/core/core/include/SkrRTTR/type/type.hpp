@@ -71,7 +71,7 @@ struct SKR_CORE_API Type {
 
     // TODO. uniform invoke interface
     // TODO. API 查找直接返回函数指针，这一限制的理由是 type 都在 CPP 中生产，完全拥有制造函数指针的能力
-    //       不像 GenericType 一样，根据传入的 TypeDesc，还需要进行闭包封装
+    //       不像 GenericType 一样，根据传入的 TypeSignature，还需要进行闭包封装
     // ctor & dtor
     // find_ctor(TypeDescView params, EMethodInvokeFlag flag)
     // find_dtor()

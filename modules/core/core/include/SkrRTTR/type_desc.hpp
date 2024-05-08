@@ -583,9 +583,9 @@ inline bool type_desc_equal(TypeDescView lhs, TypeDescView rhs, ETypeDescNormali
 
         // compare
         if (lhs[lhs_idx].equal(
-            rhs[lhs_idx],
-            flag_all(compare_flag, ETypeDescNormalizeFlag::RefAsPointer),
-            flag_all(compare_flag, ETypeDescNormalizeFlag::RValueRefAsPointer)))
+                rhs[lhs_idx],
+                flag_all(compare_flag, ETypeDescNormalizeFlag::RefAsPointer),
+                flag_all(compare_flag, ETypeDescNormalizeFlag::RValueRefAsPointer)))
         {
             ++lhs_idx;
             ++rhs_idx;
@@ -619,9 +619,9 @@ inline size_t type_desc_normalize(TypeDescValue* desc, size_t size, ETypeDescNor
         if (read_idx != write_idx)
         {
             desc[write_idx].assign(
-            desc[read_idx],
-            flag_all(normalize_flag, ETypeDescNormalizeFlag::RefAsPointer),
-            flag_all(normalize_flag, ETypeDescNormalizeFlag::RValueRefAsPointer));
+                desc[read_idx],
+                flag_all(normalize_flag, ETypeDescNormalizeFlag::RefAsPointer),
+                flag_all(normalize_flag, ETypeDescNormalizeFlag::RValueRefAsPointer));
         }
 
         ++read_idx;

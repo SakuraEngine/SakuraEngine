@@ -5,7 +5,7 @@
 
 // RTTR traits
 // 提供非 GenericType 的静态信息：
-//  GUID：用于标记此类型，在 TypeDesc 的构建中使用
+//  GUID：用于标记此类型，在 TypeSignature 的构建中使用
 //  Name：一般为带命名空间的类型名，用于调试、显示等需要展示类型名的地方
 //
 // RTTRTraits 只提供完全静态的信息，如果需要拿到具体的 Type 对象，需要通过 type_registry 查询，

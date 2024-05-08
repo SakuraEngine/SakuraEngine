@@ -84,6 +84,4 @@ TEST_CASE("test rttr export record")
         .extern_method<&TestExternMethod>(u8"TestExternMethod")
         .extern_method<+[](const TestDerived& lhs, const TestDerived& rhs){ return lhs == rhs; }>(CPPExternMethods::Eq);
     // clang-format on
-
-    ParameterSignatureExporter<int, float, int&, int*, int&&, const float*, const float&> exporter;
 }
