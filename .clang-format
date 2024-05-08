@@ -3,7 +3,7 @@ TabWidth: 4
 AccessModifierOffset: -4
 IndentWidth: 4
 ObjCBlockIndentWidth: 4
-ContinuationIndentWidth: 0
+ContinuationIndentWidth: 4
 MaxEmptyLinesToKeep: 1
 
 AllowShortIfStatementsOnASingleLine: true
