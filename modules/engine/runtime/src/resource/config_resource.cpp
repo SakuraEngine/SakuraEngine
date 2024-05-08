@@ -13,7 +13,7 @@ skr_config_resource_t::~skr_config_resource_t()
     if (configType == skr_guid_t{})
         return;
     auto type = skr::rttr::get_type_from_guid(configType);
-    type->call_dtor(configData);
+    // type->call_dtor(configData); // TODO. resume rttr
     sakura_free_aligned(configData, type->alignment());
 }
 
@@ -23,13 +23,13 @@ void skr_config_resource_t::SetType(skr_guid_t type)
     {
         SKR_ASSERT(configData);
         auto oldType = skr::rttr::get_type_from_guid(configType);
-        oldType->call_dtor(configData);
+        // oldType->call_dtor(configData); // TODO. resume rttr
         sakura_free_aligned(configData, oldType->alignment());
     }
     configType   = type;
     auto newType = skr::rttr::get_type_from_guid(configType);
     configData   = sakura_malloc_aligned(newType->size(), newType->alignment());
-    newType->call_ctor(configData);
+    // newType->call_ctor(configData); // TODO. resume rttr
 }
 
 namespace skr::binary
@@ -41,7 +41,8 @@ int WriteTrait<skr_config_resource_t>::Write(skr_binary_writer_t* archive, const
     if (value.configType == skr_guid_t{})
         return 0;
     auto type = skr::rttr::get_type_from_guid(value.configType);
-    return type->write_binary(value.configData, archive);
+    // return type->write_binary(value.configData, archive); // TODO. resume rttr
+    return {};
 }
 
 int ReadTrait<skr_config_resource_t>::Read(skr_binary_reader_t* archive, skr_config_resource_t& value)
@@ -52,7 +53,8 @@ int ReadTrait<skr_config_resource_t>::Read(skr_binary_reader_t* archive, skr_con
         return 0;
     auto type        = skr::rttr::get_type_from_guid(value.configType);
     value.configData = sakura_malloc_aligned(type->size(), type->alignment());
-    return type->read_binary(value.configData, archive);
+    // return type->read_binary(value.configData, archive); // TODO. resume rttr
+    return {};
 }
 } // namespace skr::binary
 

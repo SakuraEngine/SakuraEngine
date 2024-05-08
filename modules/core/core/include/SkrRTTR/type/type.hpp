@@ -16,21 +16,6 @@ enum ETypeCategory
     SKR_TYPE_CATEGORY_GENERIC,   // TODO. remove it
 };
 
-enum class ETypeFeature : uint32_t
-{
-    Constructor,
-    Destructor,
-    Copy,
-    Move,
-    Assign,
-    MoveAssign,
-    Hash,
-    WriteBinary,
-    ReadBinary,
-    WriteJson,
-    ReadJson
-};
-
 // TODO. 移动到新文件中，与模板匹配导出放在一起
 struct CPPExternMethods {
     // unary op
@@ -83,24 +68,6 @@ struct SKR_CORE_API Type {
     SKR_INLINE GUID               type_id() const { return _type_id; }
     SKR_INLINE size_t             size() const { return _size; }
     SKR_INLINE size_t             alignment() const { return _alignment; }
-
-    // feature query
-    virtual bool query_feature(ETypeFeature feature) const = 0;
-
-    // call functions
-    virtual void   call_ctor(void* ptr) const                    = 0;
-    virtual void   call_dtor(void* ptr) const                    = 0;
-    virtual void   call_copy(void* dst, const void* src) const   = 0;
-    virtual void   call_move(void* dst, void* src) const         = 0;
-    virtual void   call_assign(void* dst, const void* src) const = 0;
-    virtual void   call_move_assign(void* dst, void* src) const  = 0;
-    virtual size_t call_hash(const void* ptr) const              = 0;
-
-    // serialize
-    virtual int                   write_binary(const void* dst, skr_binary_writer_t* writer) const = 0;
-    virtual int                   read_binary(void* dst, skr_binary_reader_t* reader) const        = 0;
-    virtual void                  write_json(const void* dst, skr_json_writer_t* writer) const     = 0;
-    virtual skr::json::error_code read_json(void* dst, skr::json::value_t&& reader) const          = 0;
 
     // TODO. uniform invoke interface
     // TODO. API 查找直接返回函数指针，这一限制的理由是 type 都在 CPP 中生产，完全拥有制造函数指针的能力

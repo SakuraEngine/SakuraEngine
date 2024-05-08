@@ -12,21 +12,22 @@ namespace resource
 
 int SResourceFactory::Deserialize(skr_resource_record_t* record, skr_binary_reader_t* reader)
 {
-    if (auto type = skr::rttr::get_type_from_guid(record->header.type))
-    {
-        auto p_obj = sakura_malloc_aligned(type->size(), type->alignment());
-        type->call_ctor(p_obj);
-        auto serde_result = type->read_binary(p_obj, reader);
-        if (serde_result != 0)
-        {
-            type->call_dtor(p_obj);
-            sakura_free_aligned(p_obj, type->alignment());
-            p_obj = nullptr;
-        }
+    // TODO. resume rttr
+    // if (auto type = skr::rttr::get_type_from_guid(record->header.type))
+    // {
+    //     auto p_obj = sakura_malloc_aligned(type->size(), type->alignment());
+    //     type->call_ctor(p_obj);
+    //     auto serde_result = type->read_binary(p_obj, reader);
+    //     if (serde_result != 0)
+    //     {
+    //         type->call_dtor(p_obj);
+    //         sakura_free_aligned(p_obj, type->alignment());
+    //         p_obj = nullptr;
+    //     }
 
-        record->resource = p_obj;
-        return serde_result;
-    }
+    //     record->resource = p_obj;
+    //     return serde_result;
+    // }
     SKR_LOG_FMT_ERROR(u8"Failed to deserialize resource of type {}", record->header.type);
     SKR_UNREACHABLE_CODE();
     return 0;
