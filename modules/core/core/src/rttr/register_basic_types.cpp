@@ -1,10 +1,7 @@
 #include "SkrRTTR/exec_static.hpp"
 #include "SkrRTTR/iobject.hpp"
 #include "SkrRTTR/type/record_type.hpp"
-#include "SkrRTTR/type_loader/array_type_loader.hpp"
-#include "SkrRTTR/type_loader/pointer_type_loader.hpp"
 #include "SkrRTTR/type_loader/primitive_type_loader.hpp"
-#include "SkrRTTR/type_loader/reference_type_loader.hpp"
 
 SKR_RTTR_EXEC_STATIC
 {
@@ -40,28 +37,16 @@ SKR_RTTR_EXEC_STATIC
     static PrimitiveTypeLoader<double> double_loader;
     register_type_loader(type_id_of<double>(), &double_loader);
 
-    // // pointer
-    // static PointerTypeLoader pointer_loader;
-    // register_generic_type_loader(kPointerGenericGUID, &pointer_loader);
-
-    // // reference
-    // static ReferenceTypeLoader reference_loader;
-    // register_generic_type_loader(kReferenceGenericGUID, &reference_loader);
-
-    // // array
-    // static VectorTypeLoader array_loader;
-    // register_generic_type_loader(kArrayGenericGUID, &array_loader);
-
     // IObject
     static struct IObjectLoader : public TypeLoader {
         Type* create() override
         {
             return SkrNew<RecordType>(
-            RTTRTraits<::skr::rttr::IObject>::get_name(),
-            RTTRTraits<::skr::rttr::IObject>::get_guid(),
-            sizeof(skr::rttr::IObject),
-            alignof(skr::rttr::IObject),
-            make_record_basic_method_table<skr::rttr::IObject>());
+                RTTRTraits<::skr::rttr::IObject>::get_name(),
+                RTTRTraits<::skr::rttr::IObject>::get_guid(),
+                sizeof(skr::rttr::IObject),
+                alignof(skr::rttr::IObject),
+                make_record_basic_method_table<skr::rttr::IObject>());
         }
         void load(Type* type) override
         {

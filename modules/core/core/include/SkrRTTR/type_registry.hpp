@@ -11,10 +11,6 @@ struct GenericTypeLoader;
 SKR_CORE_API void register_type_loader(const GUID& guid, TypeLoader* loader);
 SKR_CORE_API void unregister_type_loader(const GUID& guid);
 
-// generic type loader
-SKR_CORE_API void register_generic_type_loader(const GUID& generic_guid, GenericTypeLoader* loader);
-SKR_CORE_API void unregister_generic_type_loader(const GUID& generic_guid);
-
 // get type (after register)
 SKR_CORE_API Type* get_type_from_guid(const GUID& guid);
 

@@ -1,8 +1,7 @@
 #include "SkrRTTR/type_registry.hpp"
 #include "SkrContainers/map.hpp"
-#include "SkrCore/log.h"
+#include "SkrCore/log.hpp"
 #include "SkrRTTR/type_loader/type_loader.hpp"
-#include "SkrRTTR/type_loader/generic_type_loader.hpp"
 #include "SkrRTTR/type/type.hpp"
 
 namespace skr::rttr
@@ -17,11 +16,6 @@ static Map<GUID, Type*>& loaded_types()
     static Map<GUID, Type*> s_types;
     return s_types;
 }
-static Map<GUID, GenericTypeLoader*>& generic_type_loader()
-{
-    static Map<GUID, GenericTypeLoader*> s_generic_type_loaders;
-    return s_generic_type_loaders;
-}
 
 static auto& load_type_mutex()
 {
@@ -35,8 +29,7 @@ void register_type_loader(const GUID& guid, TypeLoader* loader)
     auto result = type_loaders().add(guid, loader);
     if (result.already_exist())
     {
-        // TODO. log
-        SKR_LOG_WARN(u8"type loader already exist.");
+        SKR_LOG_FMT_WARN(u8"\"{}\" type loader already exist.", guid);
     }
 }
 void unregister_type_loader(const GUID& guid)
@@ -44,28 +37,7 @@ void unregister_type_loader(const GUID& guid)
     auto result = type_loaders().remove(guid);
     if (!result)
     {
-        // TODO. log
-        SKR_LOG_WARN(u8"type loader not exist.");
-    }
-}
-
-// generic type loader
-void register_generic_type_loader(const GUID& generic_guid, GenericTypeLoader* loader)
-{
-    auto result = generic_type_loader().add(generic_guid, loader);
-    if (result.already_exist())
-    {
-        // TODO. log
-        SKR_LOG_WARN(u8"generic type loader already exist.");
-    }
-}
-void unregister_generic_type_loader(const GUID& generic_guid)
-{
-    auto result = generic_type_loader().remove(generic_guid);
-    if (!result)
-    {
-        // TODO. log
-        SKR_LOG_WARN(u8"generic type loader not exist.");
+        SKR_LOG_WARN(u8"\"{}\" type loader not exist.", guid);
     }
 }
 
