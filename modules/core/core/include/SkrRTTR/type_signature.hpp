@@ -44,7 +44,7 @@ enum class ETypeSignatureSignal : uint8_t
 };
 namespace __helper
 {
-constexpr size_t get_type_signature_size_of_signal(ETypeSignatureSignal signal)
+inline constexpr size_t get_type_signature_size_of_signal(ETypeSignatureSignal signal)
 {
     switch (signal)
     {
@@ -778,16 +778,36 @@ struct TypeSignatureHelper {
             auto move_size = __helper::get_type_signature_size_of_signal(signal);
 
             // write
-            if (read_pos != write_pos)
+            switch (signal)
             {
-                memmove(write_pos, read_pos, move_size);
+                case ETypeSignatureSignal::Ref: {
+                    write_buffer(write_pos, ref_as_pointer ? ETypeSignatureSignal::Pointer : signal);
+                    break;
+                }
+                case ETypeSignatureSignal::RValueRef: {
+                    write_buffer(write_pos, rvalue_ref_as_pointer ? ETypeSignatureSignal::Pointer : signal);
+                    break;
+                }
+                default: {
+                    if (read_pos != write_pos)
+                    {
+                        memmove(write_pos, read_pos, move_size);
+                    }
+                }
             }
 
             // move next
             read_pos += move_size;
             write_pos += move_size;
         }
+
+        // clean end space
+        if (write_pos < end)
+        {
+            memset(write_pos, 0, end - write_pos);
+        }
     }
+    SKR_CORE_API static String signal_to_string(const uint8_t* pos, const uint8_t* end);
 #pragma endregion
 };
 
@@ -868,6 +888,48 @@ struct TypeSignatureView {
             }
         }
         return false;
+    }
+    inline bool equal(
+        const TypeSignatureView& rhs,
+        bool                     ref_as_pointer        = true,
+        bool                     rvalue_ref_as_pointer = true,
+        bool                     ignore_const          = true) const
+    {
+        if (empty() && rhs.empty())
+        {
+            // both empty
+            return true;
+        }
+        else if (empty() || rhs.empty())
+        {
+            // one of them is empty
+            return false;
+        }
+
+        return TypeSignatureHelper::signature_equal(
+            _data,
+            _data + _size,
+            rhs._data,
+            rhs._data + rhs._size,
+            ref_as_pointer,
+            rvalue_ref_as_pointer,
+            ignore_const);
+    }
+    inline void normalize(
+        bool ref_as_pointer        = true,
+        bool rvalue_ref_as_pointer = true,
+        bool ignore_const          = true)
+    {
+        TypeSignatureHelper::normalize_signal(
+            _data,
+            _data + _size,
+            ref_as_pointer,
+            rvalue_ref_as_pointer,
+            ignore_const);
+    }
+    inline String to_string() const
+    {
+        return TypeSignatureHelper::signal_to_string(_data, _data + _size);
     }
 
     // getter
@@ -1203,7 +1265,7 @@ struct TypeSignatureTraits<volatile T> : TypeSignatureTraits<T> {
 // [MODIFIER] const
 template <typename T>
 struct TypeSignatureTraits<const T> : TypeSignatureTraits<T> {
-    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::Const>;
+    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::Const> + TypeSignatureTraits<T>::buffer_size;
     inline static void             write(uint8_t* pos, uint8_t* end)
     {
         pos = TypeSignatureHelper::write_const(pos, end);
@@ -1214,7 +1276,7 @@ struct TypeSignatureTraits<const T> : TypeSignatureTraits<T> {
 // [MODIFIER] pointer
 template <typename T>
 struct TypeSignatureTraits<T*> {
-    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::Pointer>;
+    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::Pointer> + TypeSignatureTraits<T>::buffer_size;
     inline static void             write(uint8_t* pos, uint8_t* end)
     {
         pos = TypeSignatureHelper::write_pointer(pos, end);
@@ -1225,7 +1287,7 @@ struct TypeSignatureTraits<T*> {
 // [MODIFIER] reference
 template <typename T>
 struct TypeSignatureTraits<T&> {
-    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::Ref>;
+    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::Ref> + TypeSignatureTraits<T>::buffer_size;
     inline static void             write(uint8_t* pos, uint8_t* end)
     {
         pos = TypeSignatureHelper::write_ref(pos, end);
@@ -1236,7 +1298,7 @@ struct TypeSignatureTraits<T&> {
 // [MODIFIER] rvalue reference
 template <typename T>
 struct TypeSignatureTraits<T&&> {
-    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::RValueRef>;
+    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::RValueRef> + TypeSignatureTraits<T>::buffer_size;
     inline static void             write(uint8_t* pos, uint8_t* end)
     {
         pos = TypeSignatureHelper::write_rvalue_ref(pos, end);
@@ -1247,7 +1309,7 @@ struct TypeSignatureTraits<T&&> {
 // [MODIFIER] no dim array
 template <typename T>
 struct TypeSignatureTraits<T[]> {
-    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::ArrayDim>;
+    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::ArrayDim> + TypeSignatureTraits<T>::buffer_size;
     inline static void             write(uint8_t* pos, uint8_t* end)
     {
         pos = TypeSignatureHelper::write_pointer(pos, end); // as pointer
@@ -1258,7 +1320,7 @@ struct TypeSignatureTraits<T[]> {
 // [MODIFIER] array
 template <typename T, size_t N>
 struct TypeSignatureTraits<T[N]> {
-    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::ArrayDim>;
+    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::ArrayDim> + TypeSignatureTraits<T>::buffer_size;
     inline static void             write(uint8_t* pos, uint8_t* end)
     {
         pos = TypeSignatureHelper::write_array_dim(pos, end, N);
@@ -1269,7 +1331,7 @@ struct TypeSignatureTraits<T[N]> {
 // [MODIFIER] const array
 template <typename T, size_t N>
 struct TypeSignatureTraits<const T[N]> {
-    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::ArrayDim>;
+    inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::ArrayDim> + TypeSignatureTraits<T>::buffer_size;
     inline static void             write(uint8_t* pos, uint8_t* end)
     {
         pos = TypeSignatureHelper::write_const(pos, end);
@@ -1362,48 +1424,6 @@ struct TypeSignature : private SkrAllocator {
     inline size_t   size() const { return _size; }
     inline bool     empty() const { return _size == 0; }
 
-    // compare
-    inline bool equal(
-        const TypeSignature& rhs,
-        bool                 ref_as_pointer        = true,
-        bool                 rvalue_ref_as_pointer = true,
-        bool                 ignore_const          = true) const
-    {
-        if (empty() && rhs.empty())
-        {
-            // both empty
-            return true;
-        }
-        else if (empty() || rhs.empty())
-        {
-            // one of them is empty
-            return false;
-        }
-
-        return TypeSignatureHelper::signature_equal(
-            _data,
-            _data + _size,
-            rhs._data,
-            rhs._data + rhs._size,
-            ref_as_pointer,
-            rvalue_ref_as_pointer,
-            ignore_const);
-    }
-
-    // normalize
-    inline void normalize(
-        bool ref_as_pointer        = true,
-        bool rvalue_ref_as_pointer = true,
-        bool ignore_const          = true)
-    {
-        TypeSignatureHelper::normalize_signal(
-            _data,
-            _data + _size,
-            ref_as_pointer,
-            rvalue_ref_as_pointer,
-            ignore_const);
-    }
-
 private:
     uint8_t* _data = nullptr;
     size_t   _size = 0;
@@ -1445,44 +1465,13 @@ struct TypeSignatureTyped {
     }
 
     // to view
-    inline                   operator TypeSignatureView() const { return { _data, TypeSignatureTraits<T>::buffer_size }; }
-    inline TypeSignatureView view() const { return { _data, TypeSignatureTraits<T>::buffer_size }; }
+    inline                   operator TypeSignatureView() const { return { data(), TypeSignatureTraits<T>::buffer_size }; }
+    inline TypeSignatureView view() const { return { data(), TypeSignatureTraits<T>::buffer_size }; }
 
     // getter
-    inline uint8_t* data() const { return _data; }
+    inline uint8_t* data() const { return const_cast<uint8_t*>(&_data[0]); }
     inline size_t   size() const { return TypeSignatureTraits<T>::buffer_size; }
     inline bool     empty() const { return TypeSignatureTraits<T>::buffer_size == 0; }
-
-    // compare
-    inline bool equal(
-        const TypeSignatureTyped& rhs,
-        bool                      ref_as_pointer        = true,
-        bool                      rvalue_ref_as_pointer = true,
-        bool                      ignore_const          = true) const
-    {
-        return TypeSignatureHelper::signature_equal(
-            _data,
-            _data + TypeSignatureTraits<T>::buffer_size,
-            rhs._data,
-            rhs._data + TypeSignatureTraits<T>::buffer_size,
-            ref_as_pointer,
-            rvalue_ref_as_pointer,
-            ignore_const);
-    }
-
-    // normalize
-    inline void normalize(
-        bool ref_as_pointer        = true,
-        bool rvalue_ref_as_pointer = true,
-        bool ignore_const          = true)
-    {
-        TypeSignatureHelper::normalize_signal(
-            _data,
-            _data + TypeSignatureTraits<T>::buffer_size,
-            ref_as_pointer,
-            rvalue_ref_as_pointer,
-            ignore_const);
-    }
 
 private:
     uint8_t _data[TypeSignatureTraits<T>::buffer_size];

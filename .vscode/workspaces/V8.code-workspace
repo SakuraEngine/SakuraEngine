@@ -15,8 +15,6 @@
             "--use_profile=enable",
             "--toolchain=clang-cl",
             "--cxx_version=cxx20",
-            "-m",
-            "release",
         ],
         "editor.formatOnSave": true,
         "xmake.customDebugConfig": {
