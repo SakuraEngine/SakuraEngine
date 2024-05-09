@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrBase/misc/integer_tools.hpp"
 #include "SkrContainers/skr_allocator.hpp"
 #include "SkrGuid/guid.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
@@ -90,6 +91,32 @@ inline constexpr size_t get_type_signature_size_of_signal(ETypeSignatureSignal s
     }
 }
 } // namespace __helper
+
+// 比较选项
+enum class ETypeSignatureCompareFlag
+{
+    IgnoreConst        = 1 << 0, // const xxx == xxx
+    IgnoreRValue       = 1 << 1, // && == &
+    RefAsPointer       = 1 << 2, // & == *1
+    RValueRefAsPointer = 1 << 3, // && == *1
+
+    Strict          = 0,
+    Relax           = IgnoreConst | IgnoreRValue | RefAsPointer | RValueRefAsPointer,
+    AllRefAsPointer = RefAsPointer | RValueRefAsPointer | IgnoreRValue, // assume all ref as pointer, sync to normalize
+};
+
+// 常规化选项
+enum class ETypeSignatureNormalizeFlag
+{
+    IgnoreConst        = 1 << 0, // remove const
+    IgnoreRvalue       = 1 << 1, // translate && to &, sync to compare
+    RefAsPointer       = 1 << 2, // translate & to *, sync to compare
+    RValueRefAsPointer = 1 << 3, // translate && to *, sync to compare
+
+    Strict          = 0,
+    Relax           = IgnoreConst | IgnoreRvalue | RefAsPointer | RValueRefAsPointer,
+    AllRefAsPointer = RefAsPointer | RValueRefAsPointer | IgnoreRvalue, // translate all ref to pointer, sync to compare
+};
 
 template <ETypeSignatureSignal... signals>
 constexpr size_t type_signature_size_v = (__helper::get_type_signature_size_of_signal(signals) + ...);
@@ -520,12 +547,11 @@ struct TypeSignatureHelper {
 
 #pragma region OPERATOR
     inline static bool signal_equal(
-        const uint8_t*& lhs,
-        const uint8_t*  lhs_end,
-        const uint8_t*& rhs,
-        const uint8_t*  rhs_end,
-        bool            ref_as_pointer,
-        bool            rvalue_ref_as_pointer)
+        const uint8_t*&           lhs,
+        const uint8_t*            lhs_end,
+        const uint8_t*&           rhs,
+        const uint8_t*            rhs_end,
+        ETypeSignatureCompareFlag compare_flag)
     {
         SKR_ASSERT(has_enough_buffer(lhs, lhs_end, peek_signal(lhs, lhs_end)));
         SKR_ASSERT(has_enough_buffer(rhs, rhs_end, peek_signal(rhs, rhs_end)));
@@ -533,16 +559,25 @@ struct TypeSignatureHelper {
         ETypeSignatureSignal lhs_signal = peek_signal(lhs, lhs_end);
         ETypeSignatureSignal rhs_signal = peek_signal(rhs, rhs_end);
 
-        if (ref_as_pointer)
+        // ref as pointer
+        if (flag_any(compare_flag, ETypeSignatureCompareFlag::RefAsPointer))
         {
             lhs_signal = (lhs_signal == ETypeSignatureSignal::Ref) ? ETypeSignatureSignal::Pointer : lhs_signal;
             rhs_signal = (rhs_signal == ETypeSignatureSignal::Ref) ? ETypeSignatureSignal::Pointer : rhs_signal;
         }
 
-        if (rvalue_ref_as_pointer)
+        // rvalue ref as pointer
+        if (flag_any(compare_flag, ETypeSignatureCompareFlag::RValueRefAsPointer))
         {
             lhs_signal = (lhs_signal == ETypeSignatureSignal::RValueRef) ? ETypeSignatureSignal::Pointer : lhs_signal;
             rhs_signal = (rhs_signal == ETypeSignatureSignal::RValueRef) ? ETypeSignatureSignal::Pointer : rhs_signal;
+        }
+
+        // remove rvalue ref
+        if (flag_any(compare_flag, ETypeSignatureCompareFlag::IgnoreRValue))
+        {
+            lhs_signal = (lhs_signal == ETypeSignatureSignal::RValueRef) ? ETypeSignatureSignal::Ref : lhs_signal;
+            rhs_signal = (rhs_signal == ETypeSignatureSignal::RValueRef) ? ETypeSignatureSignal::Ref : rhs_signal;
         }
 
         if (lhs_signal != rhs_signal)
@@ -667,20 +702,18 @@ struct TypeSignatureHelper {
         }
     }
     inline static bool signature_equal(
-        const uint8_t* lhs,
-        const uint8_t* lhs_end,
-        const uint8_t* rhs,
-        const uint8_t* rhs_end,
-        bool           ref_as_pointer,
-        bool           rvalue_ref_as_pointer,
-        bool           ignore_const)
+        const uint8_t*            lhs,
+        const uint8_t*            lhs_end,
+        const uint8_t*            rhs,
+        const uint8_t*            rhs_end,
+        ETypeSignatureCompareFlag compare_flag)
     {
         SKR_ASSERT(lhs < lhs_end && rhs < rhs_end && "invalid signature buffer");
 
         while (lhs < lhs_end && rhs < rhs_end)
         {
             // skip const
-            if (ignore_const)
+            if (flag_any(compare_flag, ETypeSignatureCompareFlag::IgnoreConst))
             {
                 while (peek_signal(lhs, lhs_end) == ETypeSignatureSignal::Const && lhs < lhs_end)
                     lhs = jump_signal(lhs, lhs_end);
@@ -694,7 +727,7 @@ struct TypeSignatureHelper {
             }
 
             // compare
-            if (!signal_equal(lhs, lhs_end, rhs, rhs_end, ref_as_pointer, rvalue_ref_as_pointer))
+            if (!signal_equal(lhs, lhs_end, rhs, rhs_end, compare_flag))
             {
                 return false;
             }
@@ -706,17 +739,15 @@ struct TypeSignatureHelper {
         return lhs_reach_end && rhs_reach_end;
     }
     inline static void normalize_signal(
-        uint8_t* pos,
-        uint8_t* end,
-        bool     ref_as_pointer,
-        bool     rvalue_ref_as_pointer,
-        bool     ignore_const)
+        uint8_t*                    pos,
+        uint8_t*                    end,
+        ETypeSignatureNormalizeFlag normalize_flag)
     {
         uint8_t *read_pos = pos, *write_pos = pos;
         while (read_pos < end)
         {
             // skip const
-            if (ignore_const)
+            if (flag_any(normalize_flag, ETypeSignatureNormalizeFlag::IgnoreConst))
             {
                 while (peek_signal(read_pos, end) == ETypeSignatureSignal::Const && read_pos < end)
                     read_pos = const_cast<uint8_t*>(jump_signal(read_pos, end));
@@ -732,11 +763,15 @@ struct TypeSignatureHelper {
             switch (signal)
             {
                 case ETypeSignatureSignal::Ref: {
-                    write_buffer(write_pos, ref_as_pointer ? ETypeSignatureSignal::Pointer : signal);
+                    write_buffer(write_pos, flag_any(normalize_flag, ETypeSignatureNormalizeFlag::RefAsPointer) ? ETypeSignatureSignal::Pointer : signal);
                     break;
                 }
                 case ETypeSignatureSignal::RValueRef: {
-                    write_buffer(write_pos, rvalue_ref_as_pointer ? ETypeSignatureSignal::Pointer : signal);
+                    write_buffer(write_pos, flag_any(normalize_flag, ETypeSignatureNormalizeFlag::RValueRefAsPointer) ?
+                                                ETypeSignatureSignal::Pointer :
+                                            flag_any(normalize_flag, ETypeSignatureNormalizeFlag::IgnoreRvalue) ?
+                                                ETypeSignatureSignal::Ref :
+                                                signal);
                     break;
                 }
                 default: {
@@ -820,10 +855,8 @@ struct TypeSignatureView {
         return pos < end && TypeSignatureHelper::peek_signal(pos, end) == ETypeSignatureSignal::FunctionSignature;
     }
     inline bool equal(
-        const TypeSignatureView& rhs,
-        bool                     ref_as_pointer        = true,
-        bool                     rvalue_ref_as_pointer = true,
-        bool                     ignore_const          = true) const
+        const TypeSignatureView&  rhs,
+        ETypeSignatureCompareFlag compare_flag = ETypeSignatureCompareFlag::Strict) const
     {
         if (empty() && rhs.empty())
         {
@@ -841,21 +874,14 @@ struct TypeSignatureView {
             _data + _size,
             rhs._data,
             rhs._data + rhs._size,
-            ref_as_pointer,
-            rvalue_ref_as_pointer,
-            ignore_const);
+            compare_flag);
     }
-    inline void normalize(
-        bool ref_as_pointer        = true,
-        bool rvalue_ref_as_pointer = true,
-        bool ignore_const          = true)
+    inline void normalize(ETypeSignatureNormalizeFlag normalize_flag = ETypeSignatureNormalizeFlag::Relax)
     {
         TypeSignatureHelper::normalize_signal(
             _data,
             _data + _size,
-            ref_as_pointer,
-            rvalue_ref_as_pointer,
-            ignore_const);
+            normalize_flag);
     }
     inline String to_string() const
     {
