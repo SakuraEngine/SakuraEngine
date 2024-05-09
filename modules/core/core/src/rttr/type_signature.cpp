@@ -114,7 +114,7 @@ inline static const uint8_t* _append_data(const uint8_t* pos, const uint8_t* end
 
 String TypeSignatureHelper::signal_to_string(const uint8_t* pos, const uint8_t* end)
 {
-    auto signature_type = validate_signature(pos, end);
+    auto signature_type = validate_complete_signature(pos, end);
     SKR_ASSERT(signature_type != ETypeSignatureSignal::None && "Invalid type signature");
 
     String result;
