@@ -6,7 +6,6 @@ TEST_CASE("test type signature")
 {
     using namespace skr::rttr;
 
-    // TODO. test compare
     SUBCASE("test compare")
     {
         TypeSignatureTyped<const int&>  a;
@@ -14,12 +13,42 @@ TEST_CASE("test type signature")
         TypeSignatureTyped<const int&&> c;
         TypeSignatureTyped<int&>        d;
 
+        // strict
         REQUIRE_FALSE(a.view().equal(b, ETypeSignatureCompareFlag::Strict));
         REQUIRE_FALSE(a.view().equal(c, ETypeSignatureCompareFlag::Strict));
         REQUIRE_FALSE(a.view().equal(d, ETypeSignatureCompareFlag::Strict));
         REQUIRE_FALSE(b.view().equal(c, ETypeSignatureCompareFlag::Strict));
         REQUIRE_FALSE(b.view().equal(d, ETypeSignatureCompareFlag::Strict));
         REQUIRE_FALSE(c.view().equal(d, ETypeSignatureCompareFlag::Strict));
+
+        // relax
+        REQUIRE(a.view().equal(b, ETypeSignatureCompareFlag::Relax));
+        REQUIRE(a.view().equal(c, ETypeSignatureCompareFlag::Relax));
+        REQUIRE(a.view().equal(d, ETypeSignatureCompareFlag::Relax));
+        REQUIRE(b.view().equal(c, ETypeSignatureCompareFlag::Relax));
+        REQUIRE(b.view().equal(d, ETypeSignatureCompareFlag::Relax));
+        REQUIRE(c.view().equal(d, ETypeSignatureCompareFlag::Relax));
+
+        // all ref as pointer
+        REQUIRE(a.view().equal(b, ETypeSignatureCompareFlag::AllRefAsPointer));
+        REQUIRE(a.view().equal(c, ETypeSignatureCompareFlag::AllRefAsPointer));
+        REQUIRE(b.view().equal(c, ETypeSignatureCompareFlag::AllRefAsPointer));
+
+        // ignore const
+        REQUIRE(a.view().equal(d, ETypeSignatureCompareFlag::IgnoreConst));
+
+        // ignore rvalue
+        REQUIRE(a.view().equal(c, ETypeSignatureCompareFlag::IgnoreRValue));
+
+        // ref as pointer
+        REQUIRE(b.view().equal(a, ETypeSignatureCompareFlag::RefAsPointer));
+
+        // rvalue ref as pointer
+        REQUIRE(b.view().equal(c, ETypeSignatureCompareFlag::RValueRefAsPointer));
+
+        // only ref as pointer
+        REQUIRE(b.view().equal(a, ETypeSignatureCompareFlag::RefAsPointer | ETypeSignatureCompareFlag::RValueRefAsPointer));
+        REQUIRE(b.view().equal(c, ETypeSignatureCompareFlag::RefAsPointer | ETypeSignatureCompareFlag::RValueRefAsPointer));
     }
 
     // TODO. test normalize

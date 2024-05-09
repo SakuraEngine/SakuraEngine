@@ -93,7 +93,7 @@ inline constexpr size_t get_type_signature_size_of_signal(ETypeSignatureSignal s
 } // namespace __helper
 
 // 比较选项
-enum class ETypeSignatureCompareFlag
+enum class ETypeSignatureCompareFlag : uint8_t
 {
     IgnoreConst        = 1 << 0, // const xxx == xxx
     IgnoreRValue       = 1 << 1, // && == &
@@ -106,7 +106,7 @@ enum class ETypeSignatureCompareFlag
 };
 
 // 常规化选项
-enum class ETypeSignatureNormalizeFlag
+enum class ETypeSignatureNormalizeFlag : uint8_t
 {
     IgnoreConst        = 1 << 0, // remove const
     IgnoreRvalue       = 1 << 1, // translate && to &, sync to compare
