@@ -230,7 +230,7 @@ struct EnumValue {
         }
         else
         {
-            SKR_UNREACHABLE_CODE()
+            SKR_UNREACHABLE_CODE();
             return false;
         }
     }

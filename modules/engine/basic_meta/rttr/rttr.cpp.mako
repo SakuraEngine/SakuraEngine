@@ -1,6 +1,6 @@
 // BEGIN RTTR GENERATED
 #include "SkrRTTR/type.hpp"
-#include "SkrRTTR/exec_static.hpp"
+#include "SkrCore/exec_static.hpp"
 #include "SkrContainers/tuple.hpp"
 
 namespace skr::rttr 
@@ -40,7 +40,7 @@ bool EnumTraits<${enum.name}>::from_string(skr::StringView str, ${enum.name}& va
 %endfor
 }
 
-SKR_RTTR_EXEC_STATIC
+SKR_EXEC_STATIC
 {
     using namespace ::skr::rttr;
 

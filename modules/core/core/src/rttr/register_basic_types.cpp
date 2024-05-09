@@ -1,4 +1,4 @@
-#include "SkrRTTR/exec_static.hpp"
+#include "SkrCore/exec_static.hpp"
 #include "SkrRTTR/iobject.hpp"
 #include "SkrRTTR/type.hpp"
 
@@ -35,7 +35,7 @@ struct PrimitiveTypeLoader final : public TypeLoader {
 };
 } // namespace skr::rttr
 
-SKR_RTTR_EXEC_STATIC
+SKR_EXEC_STATIC
 {
     using namespace skr::rttr;
 
