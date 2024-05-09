@@ -53,7 +53,14 @@ inline EnumBuilder<T, Backend>& EnumBuilder<T, Backend>::name(String name)
 template <typename T, typename Backend>
 inline EnumBuilder<T, Backend>& EnumBuilder<T, Backend>::basic_info()
 {
-    _data->type_id            = RTTRTraits<T>::get_guid();
+    // fill type id
+    _data->type_id = RTTRTraits<T>::get_guid();
+
+    // fill size & alignment
+    _data->size      = sizeof(T);
+    _data->alignment = alignof(T);
+
+    // fill underlying type id
     _data->underlying_type_id = RTTRTraits<std::underlying_type_t<T>>::get_guid();
     return *this;
 }

@@ -137,6 +137,10 @@ inline RecordBuilder<T, Backend>& RecordBuilder<T, Backend>::basic_info()
     // fill type id
     _data->type_id = RTTRTraits<T>::get_guid();
 
+    // fill size & alignment
+    _data->size      = sizeof(T);
+    _data->alignment = alignof(T);
+
     // fill dtor
     _data->dtor_data.invoke = Backend::template export_dtor<T>();
 
