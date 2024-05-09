@@ -1,6 +1,6 @@
 #include "SkrTestFramework/framework.hpp"
 #include "SkrRTTR/type_registry.hpp"
-#include "SkrRTTR/type/record_type.hpp"
+#include "SkrRTTR/type.hpp"
 #include "types.hpp"
 #include "rttr_test_types.hpp"
 

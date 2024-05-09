@@ -142,6 +142,7 @@ TEST_CASE("test type signature")
         TypeSignatureTyped<void(int, const int&, int*, int&&)>     func;
         TypeSignatureTyped<void (*)(int, const int&, int*, int&&)> func_pointer;
 
+        // basic test
         REQUIRE(func.view().is_complete());
         REQUIRE(func.view().is_function());
         REQUIRE(func_pointer.view().is_complete());
@@ -189,6 +190,32 @@ TEST_CASE("test type signature")
             REQUIRE(param3_view.equal(param3, ETypeSignatureCompareFlag::Strict));
             REQUIRE(param4_view.equal(param4, ETypeSignatureCompareFlag::Strict));
         }
+    }
+
+    // test function/method/field signature
+    SUBCASE("test function/method/field signature")
+    {
+        TypeSignatureTyped<void (*)(int, const int&, int*, int&&)> reference_func;
+        TypeSignatureTyped<float>                                  reference_type;
+
+        struct Test {
+            void        method(int, const int&, int*, int&&) {}
+            static void function(int, const int&, int*, int&&) {}
+
+            float field;
+        };
+
+        auto method = type_signature_of_method_typed<&Test::method>();
+        auto func   = type_signature_of_function_typed<&Test::function>();
+        auto field  = type_signature_of_field_typed<&Test::field>();
+
+        REQUIRE(method.view().is_complete());
+        REQUIRE(method.view().is_function());
+        REQUIRE(func.view().is_complete());
+
+        REQUIRE(method.view().equal(reference_func, ETypeSignatureCompareFlag::Strict));
+        REQUIRE(func.view().equal(reference_func, ETypeSignatureCompareFlag::Strict));
+        REQUIRE(field.view().equal(reference_type, ETypeSignatureCompareFlag::Strict));
     }
 
     // TODO. test generic type

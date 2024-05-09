@@ -1,5 +1,5 @@
 #include "SkrRTTR/type_signature.hpp"
-#include "SkrRTTR/type/type.hpp"
+#include "SkrRTTR/type.hpp"
 #include "SkrRTTR/type_registry.hpp"
 
 namespace skr::rttr

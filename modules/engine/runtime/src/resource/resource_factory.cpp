@@ -2,7 +2,7 @@
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrBase/misc/debug.h"
 #include "SkrRTTR/type_registry.hpp"
-#include "SkrRTTR/type/type.hpp"
+#include "SkrRTTR/type.hpp"
 #include "SkrCore/log.hpp"
 
 namespace skr

@@ -1359,4 +1359,54 @@ inline TypeSignature type_signature_of()
     SKR_ASSERT(pos == (result.data() + result.size()) && "type signature did not write enough data, please check the writer function");
     return result;
 }
+
+namespace __helper
+{
+template <typename T, typename Ret, typename... Args>
+inline Ret (*decay_method(Ret (T::*)(Args...)))(Args...)
+{
+}
+
+template <typename T, typename Field>
+inline Field decay_field(Field T::*)
+{
+}
+} // namespace __helper
+
+// make signature for function
+template <auto func>
+inline TypeSignature type_signature_of_function()
+{
+    return type_signature_of_function<decltype(func)>();
+}
+template <auto func>
+inline TypeSignatureTyped<decltype(func)> type_signature_of_function_typed()
+{
+    return {};
+}
+
+// make signature for method
+template <auto method>
+inline TypeSignature type_signature_of_method()
+{
+    return type_signature_of<decltype(__helper::decay_method(method))>();
+}
+template <auto method>
+inline TypeSignatureTyped<decltype(__helper::decay_method(method))> type_signature_of_method_typed()
+{
+    return {};
+}
+
+// make signature for field
+template <auto field>
+inline TypeSignature type_signature_of_field()
+{
+    return type_signature_of<decltype(__helper::decay_field(field))>();
+}
+template <auto field>
+inline TypeSignatureTyped<decltype(__helper::decay_field(field))> type_signature_of_field_typed()
+{
+    return {};
+}
+
 } // namespace skr::rttr

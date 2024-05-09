@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRTTR/rttr_traits.hpp"
-#include "SkrRTTR/type/record_type.hpp"
+#include "SkrRTTR/type.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
 
 namespace skr::rttr

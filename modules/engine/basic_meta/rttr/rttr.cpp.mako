@@ -1,8 +1,6 @@
 // BEGIN RTTR GENERATED
-#include "SkrRTTR/type_loader/type_loader.hpp"
-#include "SkrRTTR/type/record_type.hpp"
+#include "SkrRTTR/type.hpp"
 #include "SkrRTTR/exec_static.hpp"
-#include "SkrRTTR/type_loader/enum_type_from_traits_loader.hpp"
 #include "SkrContainers/tuple.hpp"
 
 namespace skr::rttr 
@@ -54,8 +52,7 @@ SKR_RTTR_EXEC_STATIC
                 type_name_of<${record.name}>(),
                 type_id_of<${record.name}>(),
                 sizeof(${record.name}),
-                alignof(${record.name}),
-                make_record_basic_method_table<${record.name}>()
+                alignof(${record.name})
             );
         }
 

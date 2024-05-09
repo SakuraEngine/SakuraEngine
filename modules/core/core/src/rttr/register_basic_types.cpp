@@ -1,7 +1,39 @@
 #include "SkrRTTR/exec_static.hpp"
 #include "SkrRTTR/iobject.hpp"
-#include "SkrRTTR/type/record_type.hpp"
-#include "SkrRTTR/type_loader/primitive_type_loader.hpp"
+#include "SkrRTTR/type.hpp"
+
+// primitive type helper
+namespace skr::rttr
+{
+template <typename T>
+struct PrimitiveType final : public Type {
+    PrimitiveType()
+        : Type(ETypeCategory::SKR_TYPE_CATEGORY_PRIMITIVE, RTTRTraits<T>::get_name(), RTTRTraits<T>::get_guid(), sizeof(T), alignof(T))
+    {
+    }
+};
+
+template <>
+struct PrimitiveType<void> final : public Type {
+    PrimitiveType()
+        : Type(ETypeCategory::SKR_TYPE_CATEGORY_PRIMITIVE, RTTRTraits<void>::get_name(), RTTRTraits<void>::get_guid(), 1, 1)
+    {
+    }
+};
+template <typename T>
+struct PrimitiveTypeLoader final : public TypeLoader {
+    Type* create() override
+    {
+        Type* type = SkrNew<PrimitiveType<T>>();
+        return type;
+    }
+    void load(Type* type) override {}
+    void destroy(Type* type) override
+    {
+        SkrDelete(type);
+    }
+};
+} // namespace skr::rttr
 
 SKR_RTTR_EXEC_STATIC
 {
@@ -45,8 +77,7 @@ SKR_RTTR_EXEC_STATIC
                 RTTRTraits<::skr::rttr::IObject>::get_name(),
                 RTTRTraits<::skr::rttr::IObject>::get_guid(),
                 sizeof(skr::rttr::IObject),
-                alignof(skr::rttr::IObject),
-                make_record_basic_method_table<skr::rttr::IObject>());
+                alignof(skr::rttr::IObject));
         }
         void load(Type* type) override
         {

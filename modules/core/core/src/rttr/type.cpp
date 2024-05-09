@@ -1,11 +1,22 @@
-#include "SkrRTTR/type/record_type.hpp"
+#include "SkrRTTR/type.hpp"
 #include "SkrCore/log.hpp"
 
 namespace skr::rttr
 {
-RecordType::RecordType(skr::String name, GUID type_id, size_t size, size_t alignment, RecordBasicMethodTable basic_methods)
+Type::Type(ETypeCategory type_category, skr::String name, GUID type_id, size_t size, size_t alignment)
+    : _type_category(type_category)
+    , _name(std::move(name))
+    , _type_id(type_id)
+    , _size(size)
+    , _alignment(alignment)
+{
+}
+} // namespace skr::rttr
+
+namespace skr::rttr
+{
+RecordType::RecordType(skr::String name, GUID type_id, size_t size, size_t alignment)
     : Type(ETypeCategory::SKR_TYPE_CATEGORY_RECORD, std::move(name), type_id, size, alignment)
-    , _basic_methods(basic_methods)
 {
 }
 
@@ -73,6 +84,16 @@ void RecordType::set_fields(MultiMap<skr::String, Field> fields)
 void RecordType::set_methods(MultiMap<skr::String, Method> methods)
 {
     _methods_map = std::move(methods);
+}
+
+} // namespace skr::rttr
+
+namespace skr::rttr
+{
+EnumType::EnumType(Type* underlying_type, GUID type_id, skr::String name)
+    : Type(ETypeCategory::SKR_TYPE_CATEGORY_ENUM, std::move(name), type_id, underlying_type->size(), underlying_type->alignment())
+    , _underlying_type(underlying_type)
+{
 }
 
 } // namespace skr::rttr

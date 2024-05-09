@@ -1,8 +1,7 @@
 #include "SkrRTTR/type_registry.hpp"
 #include "SkrContainers/map.hpp"
 #include "SkrCore/log.hpp"
-#include "SkrRTTR/type_loader/type_loader.hpp"
-#include "SkrRTTR/type/type.hpp"
+#include "SkrRTTR/type.hpp"
 
 namespace skr::rttr
 {

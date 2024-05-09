@@ -3,6 +3,13 @@
 #include "SkrGuid/guid.hpp"
 #include "SkrContainers/string.hpp"
 #include "SkrBase/types.h"
+#include "SkrContainers/multi_map.hpp"
+#include "SkrContainers/map.hpp"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/span.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrRTTR/enum_value.hpp"
+#include "SkrRTTR/enum_traits.hpp"
 
 namespace skr::rttr
 {
@@ -93,5 +100,135 @@ private:
     GUID          _type_id       = {};
     size_t        _size          = 0;
     size_t        _alignment     = 0;
+};
+
+struct SKR_CORE_API TypeLoader {
+    virtual ~TypeLoader() = default;
+
+    // 这里的二段式加载是为了解决 RecordType 对自身循环依赖的问题
+    virtual Type* create()            = 0;
+    virtual void  load(Type* type)    = 0;
+    virtual void  destroy(Type* type) = 0;
+};
+} // namespace skr::rttr
+
+// record type
+namespace skr::rttr
+{
+struct BaseInfo {
+    Type* type                     = nullptr;
+    void* (*cast_func)(void* self) = nullptr;
+};
+struct Field {
+    skr::String name   = {};
+    Type*       type   = nullptr;
+    size_t      offset = 0;
+};
+struct ParameterInfo {
+    skr::String name = {};
+    Type*       type = nullptr;
+};
+struct Method {
+    using ExecutableType = void (*)(void* self, void* parameters, void* return_value);
+
+    skr::String           name            = {};
+    Type*                 return_info     = nullptr;
+    Vector<ParameterInfo> parameters_info = {};
+    ExecutableType        executable      = {};
+};
+
+struct SKR_CORE_API RecordType : public Type {
+    RecordType(skr::String name, GUID type_id, size_t size, size_t alignment);
+
+    // setup
+    void set_base_types(Map<GUID, BaseInfo> base_types);
+    void set_fields(MultiMap<skr::String, Field> fields);
+    void set_methods(MultiMap<skr::String, Method> methods);
+
+    // getter
+    SKR_INLINE const Map<GUID, BaseInfo>& base_types() const { return _base_types_map; }
+    SKR_INLINE const MultiMap<skr::String, Field>& fields() const { return _fields_map; }
+    SKR_INLINE const MultiMap<skr::String, Method>& methods() const { return _methods_map; }
+
+    // find base
+    void* cast_to(const Type* target_type, void* p_self) const;
+
+    // find methods
+    // find fields
+
+private:
+    Map<GUID, BaseInfo>           _base_types_map = {};
+    MultiMap<skr::String, Field>  _fields_map     = {};
+    MultiMap<skr::String, Method> _methods_map    = {};
+};
+} // namespace skr::rttr
+
+// enum type
+namespace skr::rttr
+{
+struct SKR_CORE_API EnumType : public Type {
+    EnumType(Type* underlying_type, GUID type_id, String name);
+
+    SKR_INLINE Type* underlying_type() const { return _underlying_type; }
+
+    virtual EnumValue value_from_string(StringView str) const       = 0;
+    virtual String    value_to_string(const EnumValue& value) const = 0;
+
+private:
+    Type* _underlying_type;
+};
+} // namespace skr::rttr
+
+// enum type tools
+namespace skr::rttr
+{
+template <typename T>
+struct EnumTypeFromTraits : public EnumType {
+    EnumTypeFromTraits()
+        : EnumType(type_of<std::underlying_type_t<T>>(), type_id_of<T>(), type_name_of<T>())
+    {
+    }
+
+    EnumValue value_from_string(StringView str) const override
+    {
+        T result;
+        if (EnumTraits<T>::from_string(str, result))
+        {
+            return EnumValue(static_cast<std::underlying_type_t<T>>(result));
+        }
+        else
+        {
+            return {};
+        }
+    }
+    String value_to_string(const EnumValue& value) const override
+    {
+        T result;
+        if (value.cast_to(result))
+        {
+            return EnumTraits<T>::to_string(result);
+        }
+        else
+        {
+            return u8"";
+        }
+    }
+};
+} // namespace skr::rttr
+
+// enum type loader help
+namespace skr::rttr
+{
+template <typename T>
+struct EnumTypeFromTraitsLoader final : public TypeLoader {
+    Type* create() override
+    {
+        return SkrNew<EnumTypeFromTraits<T>>();
+    }
+    void load(Type* type) override {}
+    void destroy(Type* type) override
+    {
+        SkrDelete(type);
+    }
 };
 } // namespace skr::rttr

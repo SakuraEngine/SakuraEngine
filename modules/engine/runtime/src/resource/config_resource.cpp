@@ -5,7 +5,7 @@
 #include "SkrSerde/binary/reader.h"
 #include "SkrSerde/binary/writer.h"
 #include "SkrRTTR/type_registry.hpp"
-#include "SkrRTTR/type/type.hpp"
+#include "SkrRTTR/type.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
 
 skr_config_resource_t::~skr_config_resource_t()

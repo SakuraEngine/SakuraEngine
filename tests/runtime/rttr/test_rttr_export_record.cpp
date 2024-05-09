@@ -2,8 +2,8 @@
 #include "SkrRTTR/export/record_builder.hpp"
 #include "SkrRTTR/export/enum_builder.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
+#include "SkrRTTR/type.hpp"
 #include "SkrRTTR/export/rttr_backend.hpp"
-#include "SkrRTTR/type/type.hpp"
 
 struct TestBase {
 };
