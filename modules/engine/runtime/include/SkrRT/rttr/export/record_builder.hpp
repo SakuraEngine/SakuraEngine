@@ -31,7 +31,7 @@ struct RecordBuilder {
     MethodBuilder<T, Backend>& method(String name);
     template <typename Func, Func func>
     MethodBuilder<T, Backend>& method(String name);
-    template <auto field>
+    template <auto Field>
     RecordBuilder& field(String name);
 
     // static method & field
@@ -148,12 +148,12 @@ inline MethodBuilder<T, Backend>& RecordBuilder<T, Backend>::method(String name)
     return *reinterpret_cast<MethodBuilder<T, Backend>*>(this);
 }
 template <typename T, typename Backend>
-template <auto field>
+template <auto Field>
 inline RecordBuilder<T, Backend>& RecordBuilder<T, Backend>::field(String name)
 {
     auto& field_data = _data->fields.emplace().ref();
     field_data.name  = std::move(name);
-    field_data.fill_signature(field);
+    field_data.fill_signature(Field);
     return *this;
 }
 
