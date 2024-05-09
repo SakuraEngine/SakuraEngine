@@ -402,10 +402,7 @@ function main()
             if target:rule(_meta_rule_codegen_name) then
                 -- resume meta compile
                 scheduler.co_group_begin(target:name()..".cppgen.meta", function ()
-                    meta_target = target:clone()
-                    meta_target:set("pcxxheader", nil)
-                    meta_target:set("pcheader", nil)
-                    scheduler.co_start(_compile_task, _meta_compile, meta_target, opt)
+                    scheduler.co_start(_compile_task, _meta_compile, target, opt)
                 end)
             end
         end
