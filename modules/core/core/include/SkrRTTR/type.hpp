@@ -11,6 +11,8 @@
 #include "SkrRTTR/enum_value.hpp"
 #include "SkrRTTR/enum_traits.hpp"
 
+// TODO. 只留存 Type 和 EnumType，PrimitiveType 也使用 RecordType 的 ExportData 或者单独一个 ExportData
+// TODO. 如果不需要与脚本进行衔接, 就可以不使用虚函数抽象, 直接塞一个 RecordType 可以解决问题
 namespace skr::rttr
 {
 enum ETypeCategory
