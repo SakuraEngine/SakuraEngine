@@ -52,6 +52,14 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
     local using_msvc = target:toolchain("msvc")
     local using_clang_cl = target:toolchain("clang-cl")
 
+    -- fix macosx include solve bug
+    if is_plat("macosx") then
+        for _, dep_target in pairs(target:orderdeps()) do
+            local dirs = dep_target:get("includedirs")
+            target:add("includedirs", dirs)
+        end
+    end
+
     -- load compiler and get compilation command
     local sourcekind = opt.sourcekind
     if not sourcekind and type(sourcefile) == "string" then
@@ -402,7 +410,10 @@ function main()
             if target:rule(_meta_rule_codegen_name) then
                 -- resume meta compile
                 scheduler.co_group_begin(target:name()..".cppgen.meta", function ()
-                    scheduler.co_start(_compile_task, _meta_compile, target, opt)
+                    meta_target = target:clone()
+                    meta_target:set("pcxxheader", nil)
+                    meta_target:set("pcheader", nil)
+                    scheduler.co_start(_compile_task, _meta_compile, meta_target, opt)
                 end)
             end
         end
