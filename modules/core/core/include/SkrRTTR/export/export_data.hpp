@@ -227,7 +227,7 @@ struct BaseData {
     using CastFunc = void* (*)(void*);
 
     GUID         type_id;
-    CastFunc     cast;
+    CastFunc     cast_to_base; // cast_to_derived 正向转换在虚继承的情况下会报错，尽量避免这类需求
     EAccessLevel access_level;
 
     template <typename T, typename Base>
@@ -402,7 +402,7 @@ struct RecordData {
     }
 };
 
-struct EnumItemExport {
+struct EnumItemData {
     String    name;
     EnumValue value;
 
@@ -420,7 +420,7 @@ struct EnumData {
     GUID underlying_type_id;
 
     // items
-    Vector<EnumItemExport> items;
+    Vector<EnumItemData> items;
 
     // extern method
     Vector<ExternMethodData> extern_methods;

@@ -1,5 +1,6 @@
 #pragma once
 #include <type_traits>
+#include "SkrRTTR/export/export_data.hpp"
 
 namespace skr::rttr
 {
@@ -38,13 +39,14 @@ struct RTTRBackend {
     static void* export_function();
     //======> End Export Backend API
 
+    //======> Begin Invoker Extract API
     template <typename... Args>
     using CtorInvoker = void (*)(void*, Args...);
     using DtorInvoker = void (*)(void*);
-    template <typename T, typename Ret, typename... Args>
-    using MethodInvoker = Ret (*)(T*, Args...);
-    template <typename T, typename Ret, typename... Args>
-    using ConstMethodInvoker = Ret (*)(const T*, Args...);
+    template <typename Ret, typename... Args>
+    using MethodInvoker = Ret (*)(void*, Args...);
+    template <typename Ret, typename... Args>
+    using ConstMethodInvoker = Ret (*)(const void*, Args...);
     template <typename Ret, typename... Args>
     using FunctionInvoker = Ret (*)(Args...);
 
@@ -54,18 +56,23 @@ struct RTTRBackend {
     static DtorInvoker          load_dtor(void* invoker);
 
     // load methods
-    template <typename T, typename Ret, typename... Args>
-    static MethodInvoker<T, Ret, Args...> load_method(void* invoker);
-    template <typename T, typename Ret, typename... Args>
-    static ConstMethodInvoker<T, Ret, Args...> load_method_const(void* invoker);
+    template <typename Func>
+    static auto load_method(void* invoker);
+    template <typename Func>
+    static auto load_method_const(void* invoker);
+
+    // load static method
+    template <typename Func>
+    static auto load_static_method(void* invoker);
 
     // load extern methods
-    template <typename Ret, typename... Args>
-    static FunctionInvoker<Ret, Args...> load_extern_method(void* invoker);
+    template <typename Func>
+    static auto load_extern_method(void* invoker);
 
     // load function
-    template <typename Ret, typename... Args>
-    static FunctionInvoker<Ret, Args...> load_function(void* invoker);
+    template <typename Func>
+    static auto load_function(void* invoker);
+    //======> End Invoker Extract API
 
 private:
     // helpers
@@ -175,30 +182,51 @@ inline RTTRBackend::DtorInvoker RTTRBackend::load_dtor(void* invoker)
     return reinterpret_cast<DtorInvoker>(invoker);
 }
 
+namespace __helper
+{
+template <typename Func>
+struct RTTRBackendExportHelper {
+};
+
+template <typename Ret, typename... Args>
+struct RTTRBackendExportHelper<Ret (*)(Args...)> {
+    using MethodInvoker      = RTTRBackend::MethodInvoker<Ret, Args...>;
+    using ConstMethodInvoker = RTTRBackend::ConstMethodInvoker<Ret, Args...>;
+    using FunctionInvoker    = RTTRBackend::FunctionInvoker<Ret, Args...>;
+};
+} // namespace __helper
+
 // load methods
-template <typename T, typename Ret, typename... Args>
-inline RTTRBackend::MethodInvoker<T, Ret, Args...> RTTRBackend::load_method(void* invoker)
+template <typename Func>
+inline auto RTTRBackend::load_method(void* invoker)
 {
-    return reinterpret_cast<MethodInvoker<T, Ret, Args...>>(invoker);
+    return reinterpret_cast<__helper::RTTRBackendExportHelper<Func>::MethodInvoker>(invoker);
 }
-template <typename T, typename Ret, typename... Args>
-inline RTTRBackend::ConstMethodInvoker<T, Ret, Args...> RTTRBackend::load_method_const(void* invoker)
+template <typename Func>
+inline auto RTTRBackend::load_method_const(void* invoker)
 {
-    return reinterpret_cast<ConstMethodInvoker<T, Ret, Args...>>(invoker);
+    return reinterpret_cast<__helper::RTTRBackendExportHelper<Func>::ConstMethodInvoker>(invoker);
+}
+
+// load static method
+template <typename Func>
+inline auto RTTRBackend::load_static_method(void* invoker)
+{
+    return reinterpret_cast<__helper::RTTRBackendExportHelper<Func>::FunctionInvoker>(invoker);
 }
 
 // load extern methods
-template <typename Ret, typename... Args>
-inline RTTRBackend::FunctionInvoker<Ret, Args...> RTTRBackend::load_extern_method(void* invoker)
+template <typename Func>
+inline auto RTTRBackend::load_extern_method(void* invoker)
 {
-    return reinterpret_cast<FunctionInvoker<Ret, Args...>>(invoker);
+    return reinterpret_cast<__helper::RTTRBackendExportHelper<Func>::FunctionInvoker>(invoker);
 }
 
 // load function
-template <typename Ret, typename... Args>
-inline RTTRBackend::FunctionInvoker<Ret, Args...> RTTRBackend::load_function(void* invoker)
+template <typename Func>
+inline auto RTTRBackend::load_function(void* invoker)
 {
-    return reinterpret_cast<FunctionInvoker<Ret, Args...>>(invoker);
+    return reinterpret_cast<__helper::RTTRBackendExportHelper<Func>::FunctionInvoker>(invoker);
 }
 
 } // namespace skr::rttr

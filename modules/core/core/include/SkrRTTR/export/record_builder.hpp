@@ -18,7 +18,6 @@ struct RecordBuilder {
     RecordBuilder(RecordData* data);
 
     // basic info
-    RecordBuilder& name(String name);
     RecordBuilder& basic_info();
 
     // ctor
@@ -111,9 +110,10 @@ inline RecordBuilder<T, Backend>::RecordBuilder(RecordData* data)
 
 // basic info
 template <typename T, typename Backend>
-inline RecordBuilder<T, Backend>& RecordBuilder<T, Backend>::name(String name)
+inline RecordBuilder<T, Backend>& RecordBuilder<T, Backend>::basic_info()
 {
     // split namespace
+    String              name = RTTRTraits<T>::get_name();
     sequence<text_view> splitted;
     auto                count = name.split(u8"::", splitted);
 
@@ -130,11 +130,6 @@ inline RecordBuilder<T, Backend>& RecordBuilder<T, Backend>::name(String name)
         }
     }
 
-    return *this;
-}
-template <typename T, typename Backend>
-inline RecordBuilder<T, Backend>& RecordBuilder<T, Backend>::basic_info()
-{
     // fill type id
     _data->type_id = RTTRTraits<T>::get_guid();
 

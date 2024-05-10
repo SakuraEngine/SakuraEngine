@@ -3,97 +3,213 @@
 
 namespace skr::rttr
 {
-Type::Type(ETypeCategory type_category, skr::String name, GUID type_id, size_t size, size_t alignment)
-    : _type_category(type_category)
-    , _name(std::move(name))
-    , _type_id(type_id)
-    , _size(size)
-    , _alignment(alignment)
+// ctor & dtor
+Type::Type()
 {
 }
-} // namespace skr::rttr
-
-namespace skr::rttr
+Type::~Type()
 {
-RecordType::RecordType(skr::String name, GUID type_id, size_t size, size_t alignment)
-    : Type(ETypeCategory::Record, std::move(name), type_id, size, alignment)
-{
-}
-
-// find base
-void* RecordType::cast_to(const Type* target_type, void* p_self) const
-{
-    if (target_type == this)
+    switch (_type_category)
     {
-        return p_self;
+        case ETypeCategory::Invalid:
+            break;
+        case ETypeCategory::Primitive:
+            _primitive_data.~PrimitiveData();
+            break;
+        case ETypeCategory::Record:
+            _record_data.~RecordData();
+            break;
+        case ETypeCategory::Enum:
+            _enum_data.~EnumData();
+            break;
+        default:
+            SKR_UNREACHABLE_CODE()
+            break;
     }
-    else if (auto find_result = _base_types_map.find(target_type->type_id()))
+}
+
+// init
+void Type::init(ETypeCategory type_category)
+{
+    if (_type_category == ETypeCategory::Invalid)
     {
-        return find_result.value().cast_func(p_self);
+        switch (type_category)
+        {
+            case ETypeCategory::Primitive:
+                new (&_primitive_data) PrimitiveData();
+                break;
+            case ETypeCategory::Record:
+                new (&_record_data) RecordData();
+                break;
+            case ETypeCategory::Enum:
+                new (&_enum_data) EnumData();
+                break;
+            default:
+                SKR_UNREACHABLE_CODE()
+                break;
+        }
+        _type_category = type_category;
     }
     else
     {
-        for (const auto& pair : _base_types_map)
-        {
-            const Type* type = pair.value.type;
-            if (type->type_category() == ETypeCategory::Record)
+        SKR_ASSERT(type_category == this->_type_category && "Type category mismatch when init type data");
+    }
+}
+
+// data getter
+const PrimitiveData& Type::primitive_data() const
+{
+    SKR_ASSERT(_type_category == ETypeCategory::Primitive && "Type category mismatch when get primitive data");
+    return _primitive_data;
+}
+PrimitiveData& Type::primitive_data()
+{
+    SKR_ASSERT(_type_category == ETypeCategory::Primitive && "Type category mismatch when get primitive data");
+    return _primitive_data;
+}
+const RecordData& Type::record_data() const
+{
+    SKR_ASSERT(_type_category == ETypeCategory::Record && "Type category mismatch when get record data");
+    return _record_data;
+}
+RecordData& Type::record_data()
+{
+    SKR_ASSERT(_type_category == ETypeCategory::Record && "Type category mismatch when get record data");
+    return _record_data;
+}
+const EnumData& Type::enum_data() const
+{
+    SKR_ASSERT(_type_category == ETypeCategory::Enum && "Type category mismatch when get enum data");
+    return _enum_data;
+}
+EnumData& Type::enum_data()
+{
+    SKR_ASSERT(_type_category == ETypeCategory::Enum && "Type category mismatch when get enum data");
+    return _enum_data;
+}
+
+// basic getter
+ETypeCategory Type::type_category() const
+{
+    return _type_category;
+}
+const skr::String& Type::name() const
+{
+    switch (_type_category)
+    {
+        case ETypeCategory::Primitive:
+            return _primitive_data.name;
+        case ETypeCategory::Record:
+            return _record_data.name;
+        case ETypeCategory::Enum:
+            return _enum_data.name;
+        default:
+            SKR_UNREACHABLE_CODE()
+            return _primitive_data.name;
+    }
+}
+GUID Type::type_id() const
+{
+    switch (_type_category)
+    {
+        case ETypeCategory::Primitive:
+            return _primitive_data.type_id;
+        case ETypeCategory::Record:
+            return _record_data.type_id;
+        case ETypeCategory::Enum:
+            return _enum_data.type_id;
+        default:
+            SKR_UNREACHABLE_CODE()
+            return _primitive_data.type_id;
+    }
+}
+size_t Type::size() const
+{
+    switch (_type_category)
+    {
+        case ETypeCategory::Primitive:
+            return _primitive_data.size;
+        case ETypeCategory::Record:
+            return _record_data.size;
+        case ETypeCategory::Enum:
+            return _enum_data.size;
+        default:
+            SKR_UNREACHABLE_CODE()
+            return _primitive_data.size;
+    }
+}
+size_t Type::alignment() const
+{
+    switch (_type_category)
+    {
+        case ETypeCategory::Primitive:
+            return _primitive_data.alignment;
+        case ETypeCategory::Record:
+            return _record_data.alignment;
+        case ETypeCategory::Enum:
+            return _enum_data.alignment;
+        default:
+            SKR_UNREACHABLE_CODE()
+            return _primitive_data.alignment;
+    }
+}
+
+// build optimize data
+void Type::build_optimize_data()
+{
+    // TODO. build optimize data
+}
+
+// caster
+void* Type::cast_to(GUID type_id, void* p) const
+{
+    switch (_type_category)
+    {
+        case ETypeCategory::Primitive: {
+            return (type_id == _primitive_data.type_id) ? p : nullptr;
+        }
+        case ETypeCategory::Record: {
+            if (type_id == _record_data.type_id)
             {
-                if (auto cast_p = static_cast<const RecordType*>(type)->cast_to(target_type, pair.value.cast_func(p_self)))
-                {
-                    return cast_p;
-                }
+                return p;
             }
             else
             {
-                SKR_UNREACHABLE_CODE()
+                // find base and cast
+                for (const auto& base : _record_data.bases_data)
+                {
+                    if (type_id == base.type_id)
+                    {
+                        return base.cast_to_base(p);
+                    }
+                }
+
+                // get base type and continue cast
+                for (const auto& base : _record_data.bases_data)
+                {
+                    auto type = get_type_from_guid(base.type_id);
+                    if (type)
+                    {
+                        auto casted = type->cast_to(type_id, p);
+                        if (casted)
+                        {
+                            return casted;
+                        }
+                    }
+                    else
+                    {
+                        SKR_LOG_FMT_ERROR(u8"Type \"{}\" not found when doing cast from \"{}\"", type_id, _record_data.type_id);
+                    }
+                }
             }
         }
-    }
-    return nullptr;
-}
-
-// setup
-void RecordType::set_base_types(Map<GUID, BaseInfo> base_types)
-{
-    // validate
-    for (const auto& data : base_types)
-    {
-        if (data.value.type == nullptr)
-        {
-            skr::String guid_str = skr::format(u8"{}", data.key);
-            SKR_LOG_ERROR(u8"[RTTR] type %s has a null base type.\n GUID: {%s}", name().c_str(), guid_str.c_str());
+        case ETypeCategory::Enum: {
+            return (type_id == _enum_data.type_id || type_id == _enum_data.underlying_type_id) ? p : nullptr;
         }
+        default:
+            SKR_UNREACHABLE_CODE()
+            return nullptr;
     }
-
-    _base_types_map = std::move(base_types);
-}
-void RecordType::set_fields(MultiMap<skr::String, Field> fields)
-{
-    // validate
-    for (const auto& data : fields)
-    {
-        if (data.value.type == nullptr)
-        {
-            skr::String guid_str = skr::format(u8"{}", data.key);
-            SKR_LOG_ERROR(u8"[RTTR] type %s has a null field type.\n GUID: {%s}", name().c_str(), guid_str.c_str());
-        }
-    }
-
-    _fields_map = std::move(fields);
-}
-void RecordType::set_methods(MultiMap<skr::String, Method> methods)
-{
-    _methods_map = std::move(methods);
-}
-
-} // namespace skr::rttr
-
-namespace skr::rttr
-{
-EnumType::EnumType(Type* underlying_type, GUID type_id, skr::String name)
-    : Type(ETypeCategory::Enum, std::move(name), type_id, underlying_type->size(), underlying_type->alignment())
-    , _underlying_type(underlying_type)
-{
 }
 
 } // namespace skr::rttr

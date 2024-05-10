@@ -2,6 +2,8 @@
 #include "SkrRTTR/type.hpp"
 #include "SkrCore/exec_static.hpp"
 #include "SkrContainers/tuple.hpp"
+#include "SkrRTTR/export/enum_builder.hpp"
+#include "SkrRTTR/export/record_builder.hpp"
 
 namespace skr::rttr 
 {
@@ -40,105 +42,49 @@ bool EnumTraits<${enum.name}>::from_string(skr::StringView str, ${enum.name}& va
 %endfor
 }
 
-SKR_EXEC_STATIC
+SKR_EXEC_STATIC_CTOR
 {
     using namespace ::skr::rttr;
 
 %for record in generator.records:
-    static struct InternalTypeLoader_${record.id} : public TypeLoader
-    {
-        Type* create() override {
-            return SkrNew<RecordType>(
-                type_name_of<${record.name}>(),
-                type_id_of<${record.name}>(),
-                sizeof(${record.name}),
-                alignof(${record.name})
-            );
-        }
+    register_type_loader(type_id_of<${record.name}>(), +[](Type* type){
+        // init type
+        type->init(ETypeCategory::Record);
+        auto& record_data = type->record_data();
 
-        void load(Type* type) override 
-        {
-            using namespace skr;
-            using namespace skr::rttr;
-
-            [[maybe_unused]] RecordType* result = static_cast<RecordType*>(type);
-
+        // reserve
+        record_data.bases_data.reserve(${len(record.bases)});
+        record_data.methods.reserve(${len(record.methods)});
+        record_data.fields.reserve(${len(record.fields)});
+        
+        // build
+        RecordBuilder<${record.name}, RTTRBackend> builder(&record_data);
+        builder
+            .basic_info()
+            // bases
         %if record.bases:
-            result->set_base_types({
-            %for base in record.bases:
-                {type_id_of<${base}>(), {type_of<${base}>(), +[](void* p) -> void* { return static_cast<${base}*>(reinterpret_cast<${record.name}*>(p)); }}},
-            %endfor
-            });
+            .bases<${", ".join(record.bases)}>()
         %endif
-
+            // methods
         %if record.fields:
-            result->set_fields({
             %for name, field in record.fields:
-                {u8"${name}", {u8"${name}", type_of<${field.type}>(), ${field.offset}}},
+            .field<&${record.name}::${name}>(${name})
             %endfor
-            });
         %endif
-
+            // fields
         %if record.methods:
-            result->set_methods({
             %for method in record.methods:
-                {
-                    u8"${db.short_name(method.name)}",
-                    {
-                        u8"${db.short_name(method.name)}",
-                        type_of<${method.retType}>(),
-                        {
-                        %for name, parameter in vars(method.parameters).items():
-                            {u8"${name}", type_of<${parameter.type}>()},
-                        %endfor
-                        },
-                        +[](void* self, void* parameters, void* return_value)
-                        {
-                            <%  
-                                parameters_tuple = ""
-                                if len(vars(method.parameters)) == 1:
-                                    parameters_tuple = "tuple<%s>" % vars(method.parameters).items()[0].type
-                                elif len(vars(method.parameters)) > 1:
-                                    parameters_tuple = "tuple<%s>" % ", ".join([parameter.type for name, parameter in vars(method.parameters).items()]) 
-                                invoke_expr = "{obj}->{method}({args});".format(
-                                    obj = "reinterpret_cast<%s*>(self)" % record.name,
-                                    method = db.short_name(method.name),
-                                    args = ", ".join(["get<%d>(params)" % i for i in range(len(vars(method.parameters)))])
-                                )
-                            %>
-                        %if len(vars(method.parameters)) >= 1:
-                            ${parameters_tuple}& params = *reinterpret_cast<${parameters_tuple}*>(parameters);
-                        %endif
-                        %if method.retType == "void":
-                            ${invoke_expr}
-                        %else:
-                            if (return_value)
-                            {
-                                *((${method.retType}*)return_value) = ${invoke_expr}
-                            }
-                            else
-                            {
-                                ${invoke_expr}
-                            }
-                        %endif
-                        }
-                    }
-                },
+            .method<&${record.name}::${db.short_name(method.name)}>(${db.short_name(method.name)})
             %endfor
-            });
         %endif
-        }
-        void destroy(Type* type) override
-        {
-            SkrDelete(type);
-        }
-    } LOADER__${record.id};
-    register_type_loader(type_id_of<${record.name}>(), &LOADER__${record.id});
+            ;
+    });
 %endfor
 
+//============================> Begin Enum Export <============================
 %for enum in generator.enums:
-    static EnumTypeFromTraitsLoader<${enum.name}> LOADER__${enum.id};
-    register_type_loader(type_id_of<${enum.name}>(), &LOADER__${enum.id});
+    register_type_loader(type_id_of<${enum.name}>(), &enum_type_loader_from_traits<${enum.name}>);
 %endfor
 };
+//============================> End Enum Export <============================
 // END RTTR GENERATED

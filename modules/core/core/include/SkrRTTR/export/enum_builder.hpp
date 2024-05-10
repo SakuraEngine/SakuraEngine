@@ -8,7 +8,6 @@ struct EnumBuilder {
     EnumBuilder(EnumData* data);
 
     // basic info
-    EnumBuilder& name(String name);
     EnumBuilder& basic_info();
 
     // item
@@ -29,9 +28,10 @@ EnumBuilder<T, Backend>::EnumBuilder(EnumData* data)
 
 // basic info
 template <typename T, typename Backend>
-inline EnumBuilder<T, Backend>& EnumBuilder<T, Backend>::name(String name)
+inline EnumBuilder<T, Backend>& EnumBuilder<T, Backend>::basic_info()
 {
     // split namespace
+    String              name = RTTRTraits<T>::get_name();
     sequence<text_view> splitted;
     auto                count = name.split(u8"::", splitted);
 
@@ -48,11 +48,6 @@ inline EnumBuilder<T, Backend>& EnumBuilder<T, Backend>::name(String name)
         }
     }
 
-    return *this;
-}
-template <typename T, typename Backend>
-inline EnumBuilder<T, Backend>& EnumBuilder<T, Backend>::basic_info()
-{
     // fill type id
     _data->type_id = RTTRTraits<T>::get_guid();
 
