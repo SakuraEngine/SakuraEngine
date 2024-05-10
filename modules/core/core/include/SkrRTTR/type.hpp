@@ -12,17 +12,15 @@
 #include "SkrRTTR/enum_traits.hpp"
 
 // TODO. 只留存 Type 和 EnumType，PrimitiveType 也使用 RecordType 的 ExportData 或者单独一个 ExportData
+// TODO. Type 直接改成 Variant, Primitive 和 Record 就存导出 RecordData, Enum 就存 EnumData
 // !!!! RTTR 坚决不考虑动态类型建立，不考虑脚本接入，只为 C++ 服务，以此避免过于灵活的设计导致的问题 !!!!
 namespace skr::rttr
 {
-enum ETypeCategory
+enum class ETypeCategory
 {
-    SKR_TYPE_CATEGORY_INVALID,
-
-    SKR_TYPE_CATEGORY_PRIMITIVE, // PrimitiveType
-    SKR_TYPE_CATEGORY_ENUM,      // EnumType
-    SKR_TYPE_CATEGORY_RECORD,    // RecordType
-    SKR_TYPE_CATEGORY_GENERIC,   // TODO. remove it
+    Primitive,
+    Record,
+    Enum,
 };
 
 // TODO. PrimitiveType 也使用 RecordType 导出数据结构，可以方便进行扩展
@@ -56,7 +54,7 @@ struct SKR_CORE_API Type {
 
 private:
     // basic data
-    ETypeCategory _type_category = ETypeCategory::SKR_TYPE_CATEGORY_INVALID;
+    ETypeCategory _type_category = ETypeCategory::Primitive;
     skr::String   _name          = {};
     GUID          _type_id       = {};
     size_t        _size          = 0;

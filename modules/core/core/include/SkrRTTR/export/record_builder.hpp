@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrRTTR/export/export_data.hpp"
+#include "SkrRTTR/export/cpp_extern_methods.hpp"
 
 namespace skr::rttr
 {
@@ -141,7 +142,23 @@ inline RecordBuilder<T, Backend>& RecordBuilder<T, Backend>::basic_info()
     _data->size      = sizeof(T);
     _data->alignment = alignof(T);
 
-    // fill dtor
+    // TODO. fill default ctor
+    // std::is_default_constructible_v<T>
+
+    // TODO. fill copy ctor
+    // std::is_copy_constructible_v<T>
+
+    // TODO. fill move ctor
+    // std::is_move_constructible_v<T>
+
+    // TODO. fill assign operator
+    // std::is_copy_assignable_v<T>
+
+    // TODO. fill move assign operator
+    // std::is_move_assignable_v<T>
+
+    // TODO. fill dtor
+    // std::is_destructible_v<T>
     _data->dtor_data.invoke = Backend::template export_dtor<T>();
 
     return *this;
