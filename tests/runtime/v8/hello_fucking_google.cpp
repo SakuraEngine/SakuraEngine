@@ -54,101 +54,101 @@ int main(int argc, char* argv[])
 
             // bind user data template
             static auto my_data_ctor_template = v8::FunctionTemplate::New(
-            isolate, +[](const v8::FunctionCallbackInfo<v8::Value>& info) {
-                v8::Isolate*           Isolate = info.GetIsolate();
-                v8::Isolate::Scope     IsolateScope(Isolate);
-                v8::HandleScope        HandleScope(Isolate);
-                v8::Local<v8::Context> Context = Isolate->GetCurrentContext();
-                v8::Context::Scope     ContextScope(Context);
+                isolate, +[](const v8::FunctionCallbackInfo<v8::Value>& info) {
+                    v8::Isolate*           Isolate = info.GetIsolate();
+                    v8::Isolate::Scope     IsolateScope(Isolate);
+                    v8::HandleScope        HandleScope(Isolate);
+                    v8::Local<v8::Context> Context = Isolate->GetCurrentContext();
+                    v8::Context::Scope     ContextScope(Context);
 
-                if (info.IsConstructCall())
-                {
-                    auto self          = info.This();
-                    auto param_content = info[0];
-                    auto param_times   = info[1];
-                    auto new_data      = new MyData();
-                    if (!param_content->IsUndefined())
+                    if (info.IsConstructCall())
                     {
-                        new_data->content = *v8::String::Utf8Value(info.GetIsolate(), param_content);
+                        auto self          = info.This();
+                        auto param_content = info[0];
+                        auto param_times   = info[1];
+                        auto new_data      = new MyData();
+                        if (!param_content->IsUndefined())
+                        {
+                            new_data->content = *v8::String::Utf8Value(info.GetIsolate(), param_content);
+                        }
+                        if (!param_times->IsUndefined())
+                        {
+                            new_data->times = param_times->Uint32Value(Context).ToChecked();
+                        }
+                        self->SetInternalField(0, v8::External::New(info.GetIsolate(), new_data));
+                        my_data_instances.try_emplace(new_data);
+                        auto& ref = my_data_instances[new_data];
+                        ref.Reset(Isolate, self);
+                        ref.SetWeak<MyData>(
+                            new_data,
+                            +[](const v8::WeakCallbackInfo<MyData>& data) {
+                                auto ptr = data.GetParameter();
+                                printf("==========> call destruct <==========");
+                                delete ptr;
+                                my_data_instances.erase(my_data_instances.find(ptr));
+                            },
+                            v8::WeakCallbackType::kInternalFields);
                     }
-                    if (!param_times->IsUndefined())
+                    else
                     {
-                        new_data->times = param_times->Uint32Value(Context).ToChecked();
+                        Isolate->ThrowException(v8::Exception::Error(
+                            v8::String::NewFromUtf8Literal(Isolate, "only call as Construct is supported!")));
                     }
-                    self->SetInternalField(0, v8::External::New(info.GetIsolate(), new_data));
-                    my_data_instances.try_emplace(new_data);
-                    auto& ref = my_data_instances[new_data];
-                    ref.Reset(Isolate, self);
-                    ref.SetWeak<MyData>(
-                    new_data,
-                    +[](const v8::WeakCallbackInfo<MyData>& data) {
-                        auto ptr = data.GetParameter();
-                        printf("==========> call destruct <==========");
-                        delete ptr;
-                        my_data_instances.erase(my_data_instances.find(ptr));
-                    },
-                    v8::WeakCallbackType::kInternalFields);
-                }
-                else
-                {
-                    Isolate->ThrowException(v8::Exception::Error(
-                    v8::String::NewFromUtf8Literal(Isolate, "only call as Construct is supported!")));
-                }
-            });
+                });
             v8::Local<v8::ObjectTemplate> my_data_template = my_data_ctor_template->InstanceTemplate();
             my_data_template->SetInternalFieldCount(1);
             my_data_template->SetAccessor(
-            v8::String::NewFromUtf8Literal(isolate, "content"),
-            +[](v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& info) {
-                v8::Local<v8::Object>   self = info.Holder();
-                v8::Local<v8::External> wrap = v8::Local<v8::External>::Cast(self->GetInternalField(0));
-                MyData*                 ptr  = reinterpret_cast<MyData*>(wrap->Value());
-                info.GetReturnValue().Set(
-                v8::String::NewFromUtf8(info.GetIsolate(), ptr->content.c_str()).ToLocalChecked());
-            },
-            +[](v8::Local<v8::String> property, v8::Local<v8::Value> value,
-                const v8::PropertyCallbackInfo<void>& info) {
-                v8::Local<v8::Object>   self = info.Holder();
-                v8::Local<v8::External> wrap = v8::Local<v8::External>::Cast(self->GetInternalField(0));
-                MyData*                 ptr  = reinterpret_cast<MyData*>(wrap->Value());
-                ptr->content                 = *v8::String::Utf8Value(info.GetIsolate(), value);
-            });
+                v8::String::NewFromUtf8Literal(isolate, "content"),
+                +[](v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& info) {
+                    v8::Local<v8::Object>   self = info.Holder();
+                    v8::Local<v8::External> wrap = v8::Local<v8::External>::Cast(self->GetInternalField(0));
+                    MyData*                 ptr  = reinterpret_cast<MyData*>(wrap->Value());
+                    info.GetReturnValue().Set(
+                        v8::String::NewFromUtf8(info.GetIsolate(), ptr->content.c_str()).ToLocalChecked());
+                },
+                +[](v8::Local<v8::String> property, v8::Local<v8::Value> value,
+                    const v8::PropertyCallbackInfo<void>& info) {
+                    v8::Local<v8::Object>   self = info.Holder();
+                    v8::Local<v8::External> wrap = v8::Local<v8::External>::Cast(self->GetInternalField(0));
+                    MyData*                 ptr  = reinterpret_cast<MyData*>(wrap->Value());
+                    ptr->content                 = *v8::String::Utf8Value(info.GetIsolate(), value);
+                });
             my_data_template->SetAccessor(
-            v8::String::NewFromUtf8Literal(isolate, "times"),
-            +[](v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& info) {
-                v8::Local<v8::Object>   self = info.Holder();
-                v8::Local<v8::External> wrap = v8::Local<v8::External>::Cast(self->GetInternalField(0));
-                MyData*                 ptr  = reinterpret_cast<MyData*>(wrap->Value());
-                info.GetReturnValue().Set(v8::Number::New(info.GetIsolate(), ptr->times));
-            },
-            +[](v8::Local<v8::String> property, v8::Local<v8::Value> value,
-                const v8::PropertyCallbackInfo<void>& info) {
-                v8::Local<v8::Object>   self = info.Holder();
-                v8::Local<v8::External> wrap = v8::Local<v8::External>::Cast(self->GetInternalField(0));
-                MyData*                 ptr  = reinterpret_cast<MyData*>(wrap->Value());
-                ptr->times                   = value->Uint32Value(info.GetIsolate()->GetCurrentContext()).ToChecked();
-            });
+                v8::String::NewFromUtf8Literal(isolate, "times"),
+                +[](v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& info) {
+                    v8::Local<v8::Object>   self = info.Holder();
+                    v8::Local<v8::External> wrap = v8::Local<v8::External>::Cast(self->GetInternalField(0));
+                    MyData*                 ptr  = reinterpret_cast<MyData*>(wrap->Value());
+                    info.GetReturnValue().Set(v8::Number::New(info.GetIsolate(), ptr->times));
+                },
+                +[](v8::Local<v8::String> property, v8::Local<v8::Value> value,
+                    const v8::PropertyCallbackInfo<void>& info) {
+                    v8::Local<v8::Object>   self = info.Holder();
+                    v8::Local<v8::External> wrap = v8::Local<v8::External>::Cast(self->GetInternalField(0));
+                    MyData*                 ptr  = reinterpret_cast<MyData*>(wrap->Value());
+                    ptr->times                   = value->Uint32Value(info.GetIsolate()->GetCurrentContext()).ToChecked();
+                });
 
             global_template->Set(isolate, "MyData", my_data_ctor_template);
             global_template->Set(isolate, "my_print",
                                  v8::FunctionTemplate::New(
-                                 isolate, +[](const v8::FunctionCallbackInfo<v8::Value>& info) {
-                                     v8::Isolate*          isolate = info.GetIsolate();
-                                     v8::HandleScope       handle_scope(isolate);
-                                     v8::String::Utf8Value utf8(isolate, info[0]);
-                                     printf("i say: %s\n", *utf8);
-                                 }));
+                                     isolate, +[](const v8::FunctionCallbackInfo<v8::Value>& info) {
+                                         v8::Isolate*          isolate = info.GetIsolate();
+                                         v8::HandleScope       handle_scope(isolate);
+                                         v8::String::Utf8Value utf8(isolate, info[0]);
+                                         printf("i say: %s\n", *utf8);
+                                     }));
             global_template->Set(isolate, "wait_call",
                                  v8::FunctionTemplate::New(
-                                 isolate, +[](const v8::FunctionCallbackInfo<v8::Value>& info) {
-                                     v8::Isolate*    isolate = info.GetIsolate();
-                                     v8::HandleScope handle_scope(isolate);
-                                     using namespace v8;
-                                     Local<Promise::Resolver> resolve = Promise::Resolver::New(isolate->GetCurrentContext()).ToLocalChecked();
-                                     global_resolver.Reset(isolate, resolve);
-                                     printf("++++++++++ return promise\n");
-                                     info.GetReturnValue().Set(resolve->GetPromise());
-                                 }));
+                                     isolate, +[](const v8::FunctionCallbackInfo<v8::Value>& info) {
+                                         v8::Isolate*    isolate = info.GetIsolate();
+                                         v8::HandleScope handle_scope(isolate);
+                                         using namespace v8;
+                                         Local<Promise::Resolver> resolve = Promise::Resolver::New(isolate->GetCurrentContext()).ToLocalChecked();
+                                         global_resolver.Reset(isolate, resolve);
+                                         printf("++++++++++ return promise\n");
+                                         info.GetReturnValue().Set(resolve->GetPromise());
+                                     }));
         }
 
         // Create a new context.
