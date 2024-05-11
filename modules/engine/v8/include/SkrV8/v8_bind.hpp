@@ -99,6 +99,15 @@ namespace skr
 struct V8Isolate;
 struct V8Context;
 
+// TODO. 是否应该放到通用脚本导出模块中
+enum class EV8BindType
+{
+    Primitive, // export as primitive type, e.g. float -> Number; float3 -> {x: Number, y: Number, z: Number}
+    UserData,  // export as user data, use FunctionTemplate (constructor)
+    Handle,    // export as handle (uint64_t/BigInt)
+};
+
+// TODO. bind 的功能是提供导出 API，template 的注册可以在 UserData 导出中直接进行，Field 和 EmbeddedRC 的处理在外部进行
 template <typename T>
 struct V8Bind {
     enum class EOwnerShip

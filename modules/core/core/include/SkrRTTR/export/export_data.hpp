@@ -24,6 +24,10 @@ struct ParamData {
     ParamModifier   modifier     = ParamModifier::In;
     MakeDefaultFunc make_default = nullptr;
 
+    // meta flag
+    uint64_t meta_flag         = 0;
+    uint64_t runtime_meta_flag = 0;
+
     // TODO. meta data
 
     template <typename Arg>
@@ -73,6 +77,10 @@ struct FunctionData {
     // [Provided by export Backend]
     void* invoke;
 
+    // meta flag
+    uint64_t meta_flag         = 0;
+    uint64_t runtime_meta_flag = 0;
+
     // TODO. meta data
 
     template <typename Ret, typename... Args>
@@ -105,6 +113,10 @@ struct MethodData {
 
     // [Provided by export Backend]
     void* invoke;
+
+    // meta flag
+    uint64_t meta_flag         = 0;
+    uint64_t runtime_meta_flag = 0;
 
     // TODO. meta data
 
@@ -142,6 +154,10 @@ struct FieldData {
     void* getter;
     void* setter;
 
+    // meta flag
+    uint64_t meta_flag         = 0;
+    uint64_t runtime_meta_flag = 0;
+
     // TODO. meta data
 
     template <auto field, class T, typename Field>
@@ -163,6 +179,10 @@ struct StaticMethodData {
 
     // [Provided by export Backend]
     void* invoke;
+
+    // meta flag
+    uint64_t meta_flag         = 0;
+    uint64_t runtime_meta_flag = 0;
 
     // TODO. meta data
 
@@ -190,6 +210,10 @@ struct StaticFieldData {
     void* getter;
     void* setter;
 
+    // meta flag
+    uint64_t meta_flag         = 0;
+    uint64_t runtime_meta_flag = 0;
+
     // TODO. meta data
 
     template <typename T>
@@ -207,6 +231,10 @@ struct ExternMethodData {
 
     // [Provided by export Backend]
     void* invoke;
+
+    // meta flag
+    uint64_t meta_flag         = 0;
+    uint64_t runtime_meta_flag = 0;
 
     // TODO. meta data
 
@@ -249,6 +277,10 @@ struct CtorData {
 
     // [Provided by export Backend]
     void* invoke;
+
+    // meta flag
+    uint64_t meta_flag         = 0;
+    uint64_t runtime_meta_flag = 0;
 
     // TODO. meta data
 
@@ -316,6 +348,10 @@ struct RecordData {
 
     // extern method
     Vector<ExternMethodData> extern_methods;
+
+    // meta flag
+    uint64_t meta_flag         = 0;
+    uint64_t runtime_meta_flag = 0;
 
     // TODO. meta data
 
@@ -406,6 +442,10 @@ struct EnumItemData {
     String    name;
     EnumValue value;
 
+    // meta flag
+    uint64_t meta_flag         = 0;
+    uint64_t runtime_meta_flag = 0;
+
     // TODO. meta data
 };
 struct EnumData {
@@ -424,6 +464,10 @@ struct EnumData {
 
     // extern method
     Vector<ExternMethodData> extern_methods;
+
+    // meta flag
+    uint64_t meta_flag         = 0;
+    uint64_t runtime_meta_flag = 0;
 
     // TODO. meta data
 
@@ -454,6 +498,10 @@ struct PrimitiveData {
 
     // extern method
     Vector<ExternMethodData> extern_methods;
+
+    // meta flag
+    uint64_t meta_flag         = 0;
+    uint64_t runtime_meta_flag = 0;
 
     // TODO. meta data
 

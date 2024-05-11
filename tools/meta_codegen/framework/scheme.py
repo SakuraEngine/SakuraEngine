@@ -242,6 +242,9 @@ class Namespace(Scheme):
         return self.options.get(key)
 
 
+# TODO. functional 的 default enable 细化:
+#   1. 存在内部赋值时候的情况
+#   2. 默认的情况
 @dataclass
 class Functional(Scheme):
     # functional 规则，提供 enable 和简写服务

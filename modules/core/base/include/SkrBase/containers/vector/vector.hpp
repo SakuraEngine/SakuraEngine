@@ -9,6 +9,7 @@
 #include "SkrBase/containers/misc/span.hpp"
 
 // Vector def
+// TODO. 针对 NoneCopyable 成员 (典型的如 UniquePtr) 的支持，抑制默认实现 copy 的报错
 namespace skr::container
 {
 template <typename Memory>
