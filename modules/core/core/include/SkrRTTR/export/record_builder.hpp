@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRTTR/export/export_data.hpp"
-#include "SkrRTTR/export/cpp_extern_methods.hpp"
+#include "SkrRTTR/export/extern_methods.hpp"
 
 namespace skr::rttr
 {

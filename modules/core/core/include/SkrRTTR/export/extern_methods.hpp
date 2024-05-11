@@ -42,6 +42,14 @@ struct CPPExternMethods {
     static constexpr const char8_t* OrAssign  = u8"__OR_ASSIGN__";  // |=
 };
 
+struct SkrCoreExternMethods {
+    // serialize
+    static constexpr const char8_t* WriteJson = u8"__WRITE_JSON__";
+    static constexpr const char8_t* ReadJson  = u8"__READ_JSON__";
+    static constexpr const char8_t* WriteBin  = u8"__WRITE_BIN__";
+    static constexpr const char8_t* ReadBin   = u8"__READ_BIN__";
+};
+
 // TODO. count extern methods
 // TODO. load extern methods
 
