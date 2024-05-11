@@ -100,6 +100,7 @@ struct V8Isolate;
 struct V8Context;
 
 // TODO. 是否应该放到通用脚本导出模块中
+// TODO. V8Bind 可能不需要，Handle 导出就是直接一个指针，很容易，UserData 还是 Primitive 可以根据 ExportData 来进行
 enum class EV8BindType
 {
     Primitive, // export as primitive type, e.g. float -> Number; float3 -> {x: Number, y: Number, z: Number}

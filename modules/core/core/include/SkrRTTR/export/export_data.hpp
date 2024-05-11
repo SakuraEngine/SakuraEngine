@@ -73,6 +73,7 @@ struct FunctionData {
     Vector<String>    name_space;
     TypeSignature     ret_type;
     Vector<ParamData> param_data;
+    bool              has_side_effect;
 
     // [Provided by export Backend]
     void* invoke;
@@ -110,6 +111,8 @@ struct MethodData {
     Vector<ParamData> param_data;
     bool              is_const;
     EAccessLevel      access_level;
+    bool              has_side_effect;
+    bool              has_side_effect_to_object;
 
     // [Provided by export Backend]
     void* invoke;
@@ -176,6 +179,7 @@ struct StaticMethodData {
     TypeSignature     ret_type;
     Vector<ParamData> param_data;
     EAccessLevel      access_level;
+    bool              has_side_effect;
 
     // [Provided by export Backend]
     void* invoke;
@@ -228,6 +232,8 @@ struct ExternMethodData {
     String            name;
     TypeSignature     ret_type;
     Vector<ParamData> param_data;
+    bool              has_side_effect;
+    bool              has_side_effect_to_object;
 
     // [Provided by export Backend]
     void* invoke;
