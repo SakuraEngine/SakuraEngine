@@ -7,6 +7,7 @@
 
 namespace skr::rttr 
 {
+//============================> Begin Enum Traits <============================
 %for enum in generator.enums:
 span<EnumItem<${enum.name}>> EnumTraits<${enum.name}>::items()
 {
@@ -40,12 +41,14 @@ bool EnumTraits<${enum.name}>::from_string(skr::StringView str, ${enum.name}& va
     }
 }
 %endfor
+//============================> End Enum Traits <============================
 }
 
 SKR_EXEC_STATIC_CTOR
 {
     using namespace ::skr::rttr;
 
+    //============================> Begin Record Export <============================
 %for record in generator.records:
     register_type_loader(type_id_of<${record.name}>(), +[](Type* type){
         // init type
@@ -80,11 +83,12 @@ SKR_EXEC_STATIC_CTOR
             ;
     });
 %endfor
+    //============================> End Record Export <============================
 
-//============================> Begin Enum Export <============================
+    //============================> Begin Enum Export <============================
 %for enum in generator.enums:
     register_type_loader(type_id_of<${enum.name}>(), &enum_type_loader_from_traits<${enum.name}>);
 %endfor
+    //============================> End Enum Export <============================
 };
-//============================> End Enum Export <============================
 // END RTTR GENERATED

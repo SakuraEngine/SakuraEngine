@@ -4,7 +4,7 @@
 #include "SkrRTTR/rttr_traits.hpp"
 #include "SkrRTTR/type.hpp"
 #include "SkrRTTR/export/rttr_backend.hpp"
-#include "SkrRTTR/export/cpp_extern_methods.hpp"
+#include "SkrRTTR/export/extern_methods.hpp"
 
 struct TestBase {
 };

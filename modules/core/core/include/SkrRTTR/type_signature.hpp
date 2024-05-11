@@ -1072,7 +1072,7 @@ private:
 };
 #pragma endregion
 
-#pragma regin TYPE SIGNATURE TRAITS
+#pragma region TYPE SIGNATURE TRAITS
 // default as type_id
 template <typename T>
 struct TypeSignatureTraits {
@@ -1193,7 +1193,7 @@ struct TypeSignatureTraits<Ret(Args...)> {
 
 #pragma endregion
 
-#pragma regin TYPE SIGNATURE
+#pragma region TYPE SIGNATURE
 struct TypeSignature : private SkrAllocator {
 
     // ctor & dtor
@@ -1289,7 +1289,7 @@ private:
 };
 #pragma endregion
 
-#pragma regin TYPE SIGNATURE TYPED
+#pragma region TYPE SIGNATURE TYPED
 template <typename T>
 struct TypeSignatureTyped {
     // ctor
