@@ -23,9 +23,8 @@ namespace ${record.namespace} { struct ${record.short_name}; }
 struct ${record.short_name};
 %endif
 %endfor
-
 %for enum in header_db.get_enums():
-<% prefix = "class" if enum.is_scoped else ""  %>
+<% prefix = "class" if enum.is_scoped else ""  %>\
 %if enum.namespace:
 namespace ${enum.namespace} { enum ${prefix} ${enum.short_name} : ${enum.underlying_type}; }
 %else:

@@ -1,6 +1,7 @@
 // BEGIN RTTR GENERATED
 #include "SkrRTTR/enum_traits.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
+%if len(generator.enums) > 0:
 namespace skr::rttr
 {
 // enum traits
@@ -14,6 +15,7 @@ struct ${api} EnumTraits<${enum.name}>
 };
 %endfor
 }
+%endif
 
 // rttr traits
 %for record in generator.records:
