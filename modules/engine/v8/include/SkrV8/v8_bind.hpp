@@ -104,7 +104,7 @@ struct V8Context;
 enum class EV8BindType
 {
     Primitive, // export as primitive type, e.g. float -> Number; float3 -> {x: Number, y: Number, z: Number}
-    UserData,  // export as user data, use FunctionTemplate (constructor)
+    Userdata,  // export as user data, use FunctionTemplate (constructor)
     Handle,    // export as handle (uint64_t/BigInt)
 };
 

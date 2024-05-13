@@ -11,6 +11,10 @@ SKR_CORE_API void register_type_loader(const GUID& guid, TypeLoaderFunc load_fun
 SKR_CORE_API void unregister_type_loader(const GUID& guid, TypeLoaderFunc load_func);
 SKR_CORE_API void unregister_all_type_loader(const GUID& guid);
 
+// TODO. type extender
+
+// TODO. type convert for any support
+
 // generic type
 // SKR_CORE_API void register_generic_type_loader(const GUID& guid, GenericTypeLoader* type);
 // SKR_CORE_API void unregister_generic_type_loader(const GUID& guid);

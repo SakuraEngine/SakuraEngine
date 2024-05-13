@@ -8,11 +8,13 @@
 
 namespace skr::rttr
 {
-enum class ParamModifier
+enum class ParamFlag
 {
-    In,   // default
-    Out,  // for reference or pointer
-    Inout // for reference or pointer
+    None        = 0,      // default
+    In          = 1 << 0, // is input native pointer/reference
+    Out         = 1 << 1, // is output native pointer/reference
+    TakeLife    = 1 << 2, // 函数将接管生命周期, 一般与 In 联用, 在裸指针脚本导出中很有用
+    ExtractLife = 1 << 3, // 函数将提取生命周期, 一般与 Out 联用, 在裸指针脚本导出中很有用
 };
 
 struct ParamData {
@@ -21,7 +23,7 @@ struct ParamData {
     // signature
     String          name         = {};
     TypeSignature   type         = {};
-    ParamModifier   modifier     = ParamModifier::In;
+    ParamFlag       modifier     = ParamFlag::None;
     MakeDefaultFunc make_default = nullptr;
 
     // meta flag
@@ -36,7 +38,7 @@ struct ParamData {
         return {
             {},
             type_signature_of<Arg>(),
-            ParamModifier::In,
+            ParamFlag::In,
             nullptr
         };
     }

@@ -19,9 +19,9 @@ struct ${api} EnumTraits<${enum.name}>
 
 // rttr traits
 %for record in generator.records:
-SKR_RTTR_TYPE(::${record.name}, "${record.attrs.guid}")
+SKR_RTTR_TYPE(${record.name}, "${record.attrs.guid}")
 %endfor
 %for enum in generator.enums:
-SKR_RTTR_TYPE(::${enum.name}, "${enum.attrs.guid}")
+SKR_RTTR_TYPE(${enum.name}, "${enum.attrs.guid}")
 %endfor
 // END RTTR GENERATED

@@ -55,7 +55,7 @@ protected:
 };
 template <typename T, typename Backend>
 struct CtorBuilder : RecordBuilder<T, Backend> {
-    inline CtorBuilder& param(uint64_t index, String name, ParamModifier modifier = ParamModifier::In, ParamData::MakeDefaultFunc default_func = nullptr)
+    inline CtorBuilder& param(uint64_t index, String name, ParamFlag modifier = ParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
     {
         auto& param_data        = this->_data->ctor_data.back().param_data[index];
         param_data.name         = std::move(name);
@@ -66,7 +66,7 @@ struct CtorBuilder : RecordBuilder<T, Backend> {
 };
 template <typename T, typename Backend>
 struct MethodBuilder : RecordBuilder<T, Backend> {
-    inline MethodBuilder& param(uint64_t index, String name, ParamModifier modifier = ParamModifier::In, ParamData::MakeDefaultFunc default_func = nullptr)
+    inline MethodBuilder& param(uint64_t index, String name, ParamFlag modifier = ParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
     {
         auto& param_data        = this->_data->methods.back().param_data[index];
         param_data.name         = std::move(name);
@@ -77,7 +77,7 @@ struct MethodBuilder : RecordBuilder<T, Backend> {
 };
 template <typename T, typename Backend>
 struct StaticMethodBuilder : RecordBuilder<T, Backend> {
-    inline StaticMethodBuilder& param(uint64_t index, String name, ParamModifier modifier = ParamModifier::In, ParamData::MakeDefaultFunc default_func = nullptr)
+    inline StaticMethodBuilder& param(uint64_t index, String name, ParamFlag modifier = ParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
     {
         auto& param_data        = this->_data->static_methods.back().param_data[index];
         param_data.name         = std::move(name);
@@ -88,7 +88,7 @@ struct StaticMethodBuilder : RecordBuilder<T, Backend> {
 };
 template <typename T, typename Backend>
 struct ExternMethodBuilder : RecordBuilder<T, Backend> {
-    inline ExternMethodBuilder& param(uint64_t index, String name, ParamModifier modifier = ParamModifier::In, ParamData::MakeDefaultFunc default_func = nullptr)
+    inline ExternMethodBuilder& param(uint64_t index, String name, ParamFlag modifier = ParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
     {
         auto& param_data        = this->_data->extern_methods.back().param_data[index];
         param_data.name         = std::move(name);

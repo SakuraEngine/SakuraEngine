@@ -44,6 +44,9 @@ struct SKR_CORE_API Type final {
     const EnumData&      enum_data() const;
     EnumData&            enum_data();
 
+    // TODO. check phase
+    // void validate_export_data() const;
+
     // build optimize data
     //  1. fast base find table
     //  2. fast method/field table
