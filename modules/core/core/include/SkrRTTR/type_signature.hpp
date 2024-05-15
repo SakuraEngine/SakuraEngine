@@ -1350,6 +1350,8 @@ private:
 };
 #pragma endregion
 
+// TODO. type signature builder
+
 // make signature
 template <typename T>
 inline TypeSignature type_signature_of()

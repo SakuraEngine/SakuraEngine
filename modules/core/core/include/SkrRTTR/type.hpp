@@ -9,7 +9,7 @@
 #include "SkrRTTR/export/rttr_backend.hpp"
 #include "export/enum_builder.hpp"
 
-// !!!! RTTR 坚决不考虑动态类型建立，不考虑脚本接入，只为 C++ 服务，以此避免过于灵活的设计导致的问题 !!!!
+// !!!! RTTR 不考虑动态类型建立(从脚本建立), 一切类型都是 CPP 静态注册的 loader !!!!
 namespace skr::rttr
 {
 enum class ETypeCategory
@@ -57,6 +57,7 @@ struct SKR_CORE_API Type final {
 
     // TODO. signature extractor
     // TODO. template extractor (invoker 就不用了，分两步挺好的，妈的智障 CPP)
+    // TODO. 直接 invoke 的情形比较通用, 要不先实现了
 
     // ? finder 一个 MethodInvoker 的情况很少用到，用到了再说
 

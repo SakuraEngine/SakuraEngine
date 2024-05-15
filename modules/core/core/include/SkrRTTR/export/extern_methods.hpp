@@ -40,6 +40,9 @@ struct CPPExternMethods {
     static constexpr const char8_t* AndAssign = u8"__AND_ASSIGN__"; // &=
     static constexpr const char8_t* XorAssign = u8"__XOR_ASSIGN__"; // ^=
     static constexpr const char8_t* OrAssign  = u8"__OR_ASSIGN__";  // |=
+
+    // cast op
+    static constexpr const char8_t* Cast = u8"__CAST__"; // operator T()
 };
 
 struct SkrCoreExternMethods {

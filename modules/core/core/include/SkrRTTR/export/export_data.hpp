@@ -78,7 +78,8 @@ struct FunctionData {
     bool              has_side_effect;
 
     // [Provided by export Backend]
-    void* invoke;
+    void* native_invoke;
+    void* stack_proxy_invoke;
 
     // meta flag
     uint64_t meta_flag         = 0;
@@ -117,7 +118,8 @@ struct MethodData {
     bool              has_side_effect_to_object;
 
     // [Provided by export Backend]
-    void* invoke;
+    void* native_invoke;
+    void* stack_proxy_invoke;
 
     // meta flag
     uint64_t meta_flag         = 0;
@@ -184,7 +186,8 @@ struct StaticMethodData {
     bool              has_side_effect;
 
     // [Provided by export Backend]
-    void* invoke;
+    void* native_invoke;
+    void* stack_proxy_invoke;
 
     // meta flag
     uint64_t meta_flag         = 0;
@@ -238,7 +241,8 @@ struct ExternMethodData {
     bool              has_side_effect_to_object;
 
     // [Provided by export Backend]
-    void* invoke;
+    void* native_invoke;
+    void* stack_proxy_invoke;
 
     // meta flag
     uint64_t meta_flag         = 0;
@@ -284,7 +288,8 @@ struct CtorData {
     EAccessLevel      access_level;
 
     // [Provided by export Backend]
-    void* invoke;
+    void* native_invoke;
+    void* stack_proxy_invoke;
 
     // meta flag
     uint64_t meta_flag         = 0;
@@ -328,7 +333,8 @@ struct DtorData {
     EAccessLevel access_level;
 
     // [Provided by export Backend]
-    void* invoke;
+    void* native_invoke;
+    void* stack_proxy_invoke;
 };
 
 struct RecordData {

@@ -154,7 +154,7 @@ inline RecordBuilder<T, Backend>& RecordBuilder<T, Backend>::basic_info()
 
     // TODO. fill dtor
     // std::is_destructible_v<T>
-    _data->dtor_data.invoke = Backend::template export_dtor<T>();
+    _data->dtor_data.native_invoke = Backend::template export_dtor<T>();
 
     return *this;
 }
@@ -166,7 +166,7 @@ inline CtorBuilder<T, Backend>& RecordBuilder<T, Backend>::ctor()
 {
     auto& ctor_data = _data->ctor_data.emplace().ref();
     ctor_data.fill_signature<Args...>();
-    ctor_data.invoke = Backend::template export_ctor<T, Args...>();
+    ctor_data.native_invoke = Backend::template export_ctor<T, Args...>();
     return *reinterpret_cast<CtorBuilder<T, Backend>*>(this);
 }
 
@@ -187,7 +187,7 @@ inline MethodBuilder<T, Backend>& RecordBuilder<T, Backend>::method(String name)
     auto& method_data = _data->methods.emplace().ref();
     method_data.name  = std::move(name);
     method_data.fill_signature(func);
-    method_data.invoke = Backend::template export_method<func>();
+    method_data.native_invoke = Backend::template export_method<func>();
     return *reinterpret_cast<MethodBuilder<T, Backend>*>(this);
 }
 template <typename T, typename Backend>
@@ -216,7 +216,7 @@ inline StaticMethodBuilder<T, Backend>& RecordBuilder<T, Backend>::static_method
     auto& method_data = _data->static_methods.emplace().ref();
     method_data.name  = std::move(name);
     method_data.fill_signature(func);
-    method_data.invoke = Backend::template export_static_method<func>();
+    method_data.native_invoke = Backend::template export_static_method<func>();
     return *reinterpret_cast<StaticMethodBuilder<T, Backend>*>(this);
 }
 template <typename T, typename Backend>
@@ -246,7 +246,7 @@ inline ExternMethodBuilder<T, Backend>& RecordBuilder<T, Backend>::extern_method
     auto& method_data = _data->extern_methods.emplace().ref();
     method_data.name  = std::move(name);
     method_data.fill_signature(func);
-    method_data.invoke = Backend::template export_extern_method<func>();
+    method_data.native_invoke = Backend::template export_extern_method<func>();
     return *reinterpret_cast<ExternMethodBuilder<T, Backend>*>(this);
 }
 template <typename T, typename Backend>

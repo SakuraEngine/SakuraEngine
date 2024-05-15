@@ -32,7 +32,7 @@ struct FunctionBuilder {
         _data->fill_signature(func);
 
         // fill invoke
-        _data->invoke = Backend::template export_function<func>();
+        _data->native_invoke = Backend::template export_function<func>();
 
         return *this;
     }
