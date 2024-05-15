@@ -103,9 +103,10 @@ struct V8Context;
 // TODO. V8Bind 可能不需要，Handle 导出就是直接一个指针，很容易，UserData 还是 Primitive 可以根据 ExportData 来进行
 enum class EV8BindType
 {
-    Primitive, // export as primitive type, e.g. float -> Number; float3 -> {x: Number, y: Number, z: Number}
-    Userdata,  // export as user data, use FunctionTemplate (constructor)
-    Handle,    // export as handle (uint64_t/BigInt)
+    Primitive,      // export as primitive type, e.g. float -> Number; float3 -> {x: Number, y: Number, z: Number}
+    ClassUserdata,  // export as user data, use FunctionTemplate (constructor), type must implement IObject and IEmbeddedRC
+    StructUserdata, // export as struct user data, and never manage it's memory, similar to Handle, but has the same behavior with ClassUserdata
+    Handle,         // export as handle (uint64_t/BigInt)
 };
 
 // TODO. bind 的功能是提供导出 API，template 的注册可以在 UserData 导出中直接进行，Field 和 EmbeddedRC 的处理在外部进行

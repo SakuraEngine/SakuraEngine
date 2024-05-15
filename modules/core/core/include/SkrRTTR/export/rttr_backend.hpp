@@ -4,6 +4,7 @@
 
 namespace skr::rttr
 {
+// TODO. remove backend, script export use extender
 struct RTTRBackend {
     //======> Begin Export Backend API
     // ctor & dtor export
