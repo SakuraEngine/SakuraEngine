@@ -12,6 +12,7 @@
 #include "v8-primitive.h"
 #include "v8-script.h"
 #include "v8-template.h"
+#include "v8-function.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,8 +49,10 @@ int main(int argc, char* argv[])
         v8::Isolate::Scope isolate_scope(isolate);
         // Create a stack-allocated handle scope.
         v8::HandleScope handle_scope(isolate);
-        // Create global template
-        v8::Local<v8::ObjectTemplate> global_template = v8::ObjectTemplate::New(isolate);
+        // Create a new context.
+        v8::Local<v8::Context> context = v8::Context::New(isolate);
+        // setup global
+        auto global = context->Global();
         {
 
             // bind user data template
@@ -63,10 +66,11 @@ int main(int argc, char* argv[])
 
                     if (info.IsConstructCall())
                     {
-                        auto self          = info.This();
-                        auto param_content = info[0];
-                        auto param_times   = info[1];
-                        auto new_data      = new MyData();
+                        auto                  self          = info.This();
+                        [[maybe_unused]] auto holder        = info.Holder();
+                        auto                  param_content = info[0];
+                        auto                  param_times   = info[1];
+                        auto                  new_data      = new MyData();
                         if (!param_content->IsUndefined())
                         {
                             new_data->content = *v8::String::Utf8Value(info.GetIsolate(), param_content);
@@ -129,30 +133,35 @@ int main(int argc, char* argv[])
                     ptr->times                   = value->Uint32Value(info.GetIsolate()->GetCurrentContext()).ToChecked();
                 });
 
-            global_template->Set(isolate, "MyData", my_data_ctor_template);
-            global_template->Set(isolate, "my_print",
-                                 v8::FunctionTemplate::New(
-                                     isolate, +[](const v8::FunctionCallbackInfo<v8::Value>& info) {
-                                         v8::Isolate*          isolate = info.GetIsolate();
-                                         v8::HandleScope       handle_scope(isolate);
-                                         v8::String::Utf8Value utf8(isolate, info[0]);
-                                         printf("i say: %s\n", *utf8);
-                                     }));
-            global_template->Set(isolate, "wait_call",
-                                 v8::FunctionTemplate::New(
-                                     isolate, +[](const v8::FunctionCallbackInfo<v8::Value>& info) {
-                                         v8::Isolate*    isolate = info.GetIsolate();
-                                         v8::HandleScope handle_scope(isolate);
-                                         using namespace v8;
-                                         Local<Promise::Resolver> resolve = Promise::Resolver::New(isolate->GetCurrentContext()).ToLocalChecked();
-                                         global_resolver.Reset(isolate, resolve);
-                                         printf("++++++++++ return promise\n");
-                                         info.GetReturnValue().Set(resolve->GetPromise());
-                                     }));
+            global->Set(context, v8::String::NewFromUtf8Literal(isolate, "MyData"),
+                        my_data_ctor_template->GetFunction(context).ToLocalChecked())
+                .Check();
+            global->Set(context, v8::String::NewFromUtf8Literal(isolate, "my_print"),
+                        v8::FunctionTemplate::New(
+                            isolate, +[](const v8::FunctionCallbackInfo<v8::Value>& info) {
+                                v8::Isolate*          isolate = info.GetIsolate();
+                                v8::HandleScope       handle_scope(isolate);
+                                v8::String::Utf8Value utf8(isolate, info[0]);
+                                printf("i say: %s\n", *utf8);
+                            })
+                            ->GetFunction(context)
+                            .ToLocalChecked())
+                .Check();
+            global->Set(context, v8::String::NewFromUtf8Literal(isolate, "wait_call"),
+                        v8::FunctionTemplate::New(
+                            isolate, +[](const v8::FunctionCallbackInfo<v8::Value>& info) {
+                                v8::Isolate*    isolate = info.GetIsolate();
+                                v8::HandleScope handle_scope(isolate);
+                                using namespace v8;
+                                Local<Promise::Resolver> resolve = Promise::Resolver::New(isolate->GetCurrentContext()).ToLocalChecked();
+                                global_resolver.Reset(isolate, resolve);
+                                printf("++++++++++ return promise\n");
+                                info.GetReturnValue().Set(resolve->GetPromise());
+                            })
+                            ->GetFunction(context)
+                            .ToLocalChecked())
+                .Check();
         }
-
-        // Create a new context.
-        v8::Local<v8::Context> context = v8::Context::New(isolate, nullptr, global_template);
         // Enter the context for compiling and running the hello world script.
         v8::Context::Scope context_scope(context);
         {
