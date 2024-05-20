@@ -3,7 +3,7 @@
 
 namespace skr::rttr
 {
-template <typename T, typename Backend>
+template <typename T>
 struct PrimitiveBuilder {
     PrimitiveBuilder(PrimitiveData* data);
 
@@ -17,15 +17,15 @@ protected:
 
 namespace skr::rttr
 {
-template <typename T, typename Backend>
-PrimitiveBuilder<T, Backend>::PrimitiveBuilder(PrimitiveData* data)
+template <typename T>
+PrimitiveBuilder<T>::PrimitiveBuilder(PrimitiveData* data)
     : _data(data)
 {
 }
 
 // basic info
-template <typename T, typename Backend>
-inline PrimitiveBuilder<T, Backend>& PrimitiveBuilder<T, Backend>::basic_info()
+template <typename T>
+inline PrimitiveBuilder<T>& PrimitiveBuilder<T>::basic_info()
 {
     // split namespace
     _data->name = RTTRTraits<T>::get_name();

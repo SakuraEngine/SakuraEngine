@@ -15,7 +15,7 @@ void primitive_type_loader(Type* type)
     auto& primitive_data = type->primitive_data();
 
     // builder
-    PrimitiveBuilder<T, RTTRBackend> builder(&primitive_data);
+    PrimitiveBuilder<T> builder(&primitive_data);
     builder.basic_info();
 }
 
@@ -62,6 +62,6 @@ SKR_EXEC_STATIC_CTOR
         auto& record_data = type->record_data(); 
 
         // build
-        RecordBuilder<IObject, RTTRBackend> builder(&record_data);
+        RecordBuilder<IObject> builder(&record_data);
         builder.basic_info(); });
 };

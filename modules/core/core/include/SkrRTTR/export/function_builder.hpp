@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrRTTR/export/export_data.hpp"
+#include "SkrRTTR/export/export_helper.hpp"
 
 namespace skr::rttr
 {
-template <typename Backend>
 struct FunctionBuilder {
     FunctionBuilder(FunctionData* data);
 
@@ -32,13 +32,13 @@ struct FunctionBuilder {
         _data->fill_signature(func);
 
         // fill invoke
-        _data->native_invoke = Backend::template export_function<func>();
+        _data->native_invoke = ExportHelper::export_function<func>();
 
         return *this;
     }
 
     // param
-    inline FunctionBuilder& param(uint64_t index, String name, ParamModifier modifier = ParamModifier::In, ParamData::MakeDefaultFunc default_func = nullptr)
+    inline FunctionBuilder& param(uint64_t index, String name, ParamFlag modifier = ParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
     {
         auto& param_data        = _data->param_data[index];
         param_data.name         = std::move(name);

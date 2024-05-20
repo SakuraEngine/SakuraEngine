@@ -2,7 +2,6 @@
 #include "SkrRTTR/export/record_builder.hpp"
 #include "SkrRTTR/export/enum_builder.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
-#include "SkrRTTR/export/rttr_backend.hpp"
 
 enum class ETestEnum
 {
@@ -21,7 +20,7 @@ TEST_CASE("test rttr export")
 
     // clang-format off
     EnumData enum_data;
-    EnumBuilder<ETestEnum, RTTRBackend> enum_builder(&enum_data);
+    EnumBuilder<ETestEnum> enum_builder(&enum_data);
     enum_builder
         // basic
         .basic_info()

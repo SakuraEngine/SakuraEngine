@@ -28,12 +28,16 @@ private:
 
 private:
     // isolate data
-    std::unique_ptr<::v8::Platform> _platform;
-    ::v8::Isolate*                  _isolate;
-    ::v8::Isolate::CreateParams     _isolate_create_params;
-};
+    ::v8::Isolate*              _isolate;
+    ::v8::Isolate::CreateParams _isolate_create_params;
 
+    // export table
+};
+} // namespace skr::v8
+
+// global init
+namespace skr::v8
+{
 SKR_V8_API void init_v8();
 SKR_V8_API void shutdown_v8();
-
 } // namespace skr::v8

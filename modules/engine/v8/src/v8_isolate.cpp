@@ -1,7 +1,8 @@
 #include "SkrV8/v8_isolate.hpp"
 #include "libplatform/libplatform.h"
 #include "v8-initialization.h"
-#include <filesystem>
+#include "SkrRTTR/type.hpp"
+#include "v8-template.h"
 
 namespace skr::v8
 {
@@ -11,7 +12,6 @@ void V8Isolate::init()
     // TODO. custom allocator
     _isolate_create_params.array_buffer_allocator = ::v8::ArrayBuffer::Allocator::NewDefaultAllocator();
 }
-
 void V8Isolate::shutdown()
 {
     if (_isolate)
@@ -25,6 +25,15 @@ void V8Isolate::shutdown()
     }
 }
 
+void V8Isolate::_make_type_template(::skr::rttr::Type* type)
+{
+    // ctor template
+    auto ctor_template = ::v8::FunctionTemplate::New(_isolate, nullptr);
+}
+} // namespace skr::v8
+
+namespace skr::v8
+{
 static auto& _v8_platform()
 {
     static auto _platform = ::v8::platform::NewDefaultPlatform();

@@ -54,9 +54,9 @@ package("v8")
         end
         
         -- FIXME. v8 clang-cl use /Zc:dllexportInlines- flag, which cause symbol lost in dll
-        if mode == "debug" then 
-            toolchain = "msvc"
-        end
+        --if mode == "debug" then 
+             toolchain = "msvc"
+        -- end
 
         -- print debug info
         -- print("\n===============> begin debug info <===============")

@@ -61,7 +61,7 @@ SKR_EXEC_STATIC_CTOR
         record_data.fields.reserve(${len(record.fields)});
         
         // build
-        RecordBuilder<${record.name}, RTTRBackend> builder(&record_data);
+        RecordBuilder<${record.name}> builder(&record_data);
         builder
             .basic_info()
             // bases

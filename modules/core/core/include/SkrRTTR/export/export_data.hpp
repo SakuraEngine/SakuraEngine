@@ -157,10 +157,6 @@ struct FieldData {
     GetAddressFunc get_address;
     EAccessLevel   access_level;
 
-    // [Provided by export Backend]
-    void* getter;
-    void* setter;
-
     // meta flag
     uint64_t meta_flag         = 0;
     uint64_t runtime_meta_flag = 0;
@@ -214,10 +210,6 @@ struct StaticFieldData {
     TypeSignature type;
     void*         address;
     EAccessLevel  access_level;
-
-    // [Provided by export Backend]
-    void* getter;
-    void* setter;
 
     // meta flag
     uint64_t meta_flag         = 0;

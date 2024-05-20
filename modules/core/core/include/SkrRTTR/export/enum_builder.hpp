@@ -3,7 +3,7 @@
 
 namespace skr::rttr
 {
-template <typename T, typename Backend>
+template <typename T>
 struct EnumBuilder {
     EnumBuilder(EnumData* data);
 
@@ -20,15 +20,15 @@ protected:
 
 namespace skr::rttr
 {
-template <typename T, typename Backend>
-EnumBuilder<T, Backend>::EnumBuilder(EnumData* data)
+template <typename T>
+EnumBuilder<T>::EnumBuilder(EnumData* data)
     : _data(data)
 {
 }
 
 // basic info
-template <typename T, typename Backend>
-inline EnumBuilder<T, Backend>& EnumBuilder<T, Backend>::basic_info()
+template <typename T>
+inline EnumBuilder<T>& EnumBuilder<T>::basic_info()
 {
     // split namespace
     String              name = RTTRTraits<T>::get_name();
@@ -61,8 +61,8 @@ inline EnumBuilder<T, Backend>& EnumBuilder<T, Backend>::basic_info()
 }
 
 // item
-template <typename T, typename Backend>
-inline EnumBuilder<T, Backend>& EnumBuilder<T, Backend>::item(String name, T value)
+template <typename T>
+inline EnumBuilder<T>& EnumBuilder<T>::item(String name, T value)
 {
     _data->items.push_back({ std::move(name), EnumValue(static_cast<std::underlying_type_t<T>>(value)) });
     return *this;
