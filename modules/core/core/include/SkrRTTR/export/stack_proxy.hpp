@@ -12,12 +12,23 @@ enum class EParamHolderType
 };
 
 // param builder
-using BuildParamFunc    = EParamHolderType(void* data, uint64_t size, uint64_t align);
-using BuildParamFuncRef = FunctionRef<BuildParamFunc>;
+using ParamWriteFunc    = EParamHolderType(void* data, uint64_t size, uint64_t align);
+using ParamReadFunc     = void(void* data, uint64_t size, uint64_t align, EParamHolderType type);
+using RetReadFunc       = void(void* data, uint64_t size, uint64_t align);
+using ParamWriteFuncRef = FunctionRef<ParamWriteFunc>;
+using ParamReadFuncRef  = FunctionRef<ParamReadFunc>;
+using RetReadFuncRef    = FunctionRef<RetReadFunc>;
 
+// TODO. ret 导出
+// TODO. param 是 out 的时候怎么导出
+// param holder
+struct ParamProxy {
+    ParamWriteFuncRef writer;
+    ParamReadFuncRef  reader;
+};
 template <typename T>
 struct ParamHolder {
-    inline ParamHolder(BuildParamFuncRef builder)
+    inline ParamHolder(ParamWriteFuncRef builder)
     {
         auto type = builder(_holder.data(), sizeof(T), alignof(T));
         SKR_ASSERT(type == EParamHolderType::value && "type not reference cannot has xvalue");
@@ -33,14 +44,19 @@ struct ParamHolder {
         return *_holder.data_typed();
     }
 
+    inline void read(ParamReadFuncRef reader)
+    {
+        reader(_holder.data(), sizeof(T), alignof(T), EParamHolderType::value);
+    }
+
 private:
     Placeholder<T> _holder;
 };
 template <typename T>
 struct ParamHolder<T&> {
-    inline ParamHolder(BuildParamFuncRef builder)
+    inline ParamHolder(ParamWriteFuncRef writer)
     {
-        auto type = builder(_xvalue_holder.data(), sizeof(T), alignof(T));
+        auto type = writer(_xvalue_holder.data(), sizeof(T), alignof(T));
         SKR_ASSERT(type == EParamHolderType::value && "type not reference cannot has xvalue");
     }
 
@@ -66,6 +82,21 @@ struct ParamHolder<T&> {
         }
     }
 
+    inline void read(ParamReadFuncRef reader)
+    {
+        switch (_type)
+        {
+            case EParamHolderType::value:
+                reader(_value, sizeof(T), alignof(T), EParamHolderType::value);
+                break;
+            case EParamHolderType::xvalue:
+                reader(_xvalue_holder.data(), sizeof(T), alignof(T), EParamHolderType::xvalue);
+                break;
+            default:
+                SKR_UNREACHABLE_CODE()
+        }
+    }
+
 private:
     EParamHolderType _type;
     union
@@ -83,15 +114,27 @@ template <typename T>
 struct ParamHolder<volatile T> : ParamHolder<T> {
 };
 
-// stack proxy
-struct ReturnHolder {
-    void*    data;
-    uint64_t size;
-    uint64_t align;
+// return holder
+template <typename T>
+struct RetHolder {
+    inline RetHolder(T holder)
+        : _holder(holder)
+    {
+    }
+
+    inline void invoke(RetReadFuncRef reader)
+    {
+        reader(this, sizeof(T), alignof(T));
+    }
+
+private:
+    T _holder;
 };
+
+// stack proxy
 struct StackProxy {
-    ReturnHolder            return_holder;
-    span<BuildParamFuncRef> param_builders;
+    RetReadFuncRef   ret_reader;
+    span<ParamProxy> param_builders;
 };
 
 // proxy invoker

@@ -123,7 +123,7 @@ private:
     inline static MethodInvokerStackProxy _make_ctor_stack_proxy(std::index_sequence<Idx...>)
     {
         return +[](void* p, StackProxy proxy) {
-            std::tuple<ParamHolder<Args>...> tuples(proxy.param_builders[Idx]...);
+            std::tuple<ParamHolder<Args>...> tuples(proxy.param_builders[Idx].writer...);
             new (p) T(std::forward<Args>(std::get<Idx>(tuples).get())...);
         };
     }
@@ -136,8 +136,18 @@ private:
     inline static FuncInvokerStackProxy _make_function_stack_proxy_helper(std::index_sequence<Idx...>)
     {
         return +[](StackProxy proxy) {
-            std::tuple<ParamHolder<Args>...> tuples(proxy.param_builders[Idx]...);
-            func(std::forward<Args>(std::get<Idx>(tuples).get())...);
+            std::tuple<ParamHolder<Args>...> tuples(proxy.param_builders[Idx].writer...);
+            if constexpr (std::is_same_v<void, Ret>)
+            {
+                func(std::forward<Args>(std::get<Idx>(tuples).get())...);
+            }
+            else
+            {
+                RetHolder<Ret> ret_holder{ func(std::forward<Args>(std::get<Idx>(tuples).get())...) };
+                ret_holder.invoke(proxy.ret_reader);
+            }
+            int dummy[] = { (std::get<Idx>(tuples).read(proxy.param_builders[Idx].reader), 0)... };
+            (void)dummy;
         };
     }
     template <auto method, typename T, typename Ret, typename... Args>
@@ -154,16 +164,36 @@ private:
     inline static MethodInvokerStackProxy _make_method_stack_proxy_helper(std::index_sequence<Idx...>)
     {
         return +[](void* p, StackProxy proxy) {
-            std::tuple<ParamHolder<Args>...> tuples(proxy.param_builders[Idx]...);
-            (reinterpret_cast<T*>(p)->*method)(std::forward<Args>(std::get<Idx>(tuples).get())...);
+            std::tuple<ParamHolder<Args>...> tuples(proxy.param_builders[Idx].writer...);
+            if constexpr (std::is_same_v<void, Ret>)
+            {
+                (reinterpret_cast<T*>(p)->*method)(std::forward<Args>(std::get<Idx>(tuples).get())...);
+            }
+            else
+            {
+                RetHolder<Ret> ret_holder{ (reinterpret_cast<T*>(p)->*method)(std::forward<Args>(std::get<Idx>(tuples).get())...) };
+                ret_holder.invoke(proxy.ret_reader);
+            }
+            int dummy[] = { (std::get<Idx>(tuples).read(proxy.param_builders[Idx].reader), 0)... };
+            (void)dummy;
         };
     }
     template <auto method, typename T, typename Ret, typename... Args, size_t... Idx>
     inline static MethodInvokerStackProxy _make_method_stack_proxy_helper_const(std::index_sequence<Idx...>)
     {
         return +[](const void* p, StackProxy proxy) {
-            std::tuple<ParamHolder<Args>...> tuples(proxy.param_builders[Idx]...);
-            (reinterpret_cast<const T*>(p)->*method)(std::forward<Args>(std::get<Idx>(tuples).get())...);
+            std::tuple<ParamHolder<Args>...> tuples(proxy.param_builders[Idx].writer...);
+            if constexpr (std::is_same_v<void, Ret>)
+            {
+                (reinterpret_cast<const T*>(p)->*method)(std::forward<Args>(std::get<Idx>(tuples).get())...);
+            }
+            else
+            {
+                RetHolder<Ret> ret_holder{ (reinterpret_cast<const T*>(p)->*method)(std::forward<Args>(std::get<Idx>(tuples).get())...) };
+                ret_holder.invoke(proxy.ret_reader);
+            }
+            int dummy[] = { (std::get<Idx>(tuples).read(proxy.param_builders[Idx].reader), 0)... };
+            (void)dummy;
         };
     }
 };
