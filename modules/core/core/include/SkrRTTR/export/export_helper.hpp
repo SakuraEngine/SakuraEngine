@@ -1,6 +1,7 @@
 #pragma once
 #include <type_traits>
 #include "SkrRTTR/export/export_data.hpp"
+#include "SkrRTTR/export/stack_proxy.hpp"
 
 namespace skr::rttr
 {
@@ -14,13 +15,18 @@ struct ExportHelper {
         };
         return reinterpret_cast<void*>(result);
     }
+    template <typename T, typename... Args>
+    inline static MethodInvokerStackProxy export_ctor_stack_proxy()
+    {
+        return _make_ctor_stack_proxy<T, Args...>(std::make_index_sequence<sizeof...(Args)>());
+    }
     template <typename T>
-    inline static void* export_dtor()
+    inline static DtorInvoker export_dtor()
     {
         auto result = +[](void* p) {
             reinterpret_cast<T*>(p)->~T();
         };
-        return reinterpret_cast<void*>(result);
+        return result;
     }
 
     // method export
@@ -30,9 +36,19 @@ struct ExportHelper {
         return _make_method_proxy<method>(method);
     }
     template <auto method>
+    inline static MethodInvokerStackProxy export_method_stack_proxy()
+    {
+        return _make_method_stack_proxy<method>(method);
+    }
+    template <auto method>
     inline static void* export_static_method()
     {
         return reinterpret_cast<void*>(method);
+    }
+    template <auto method>
+    inline static FuncInvokerStackProxy export_static_method_stack_proxy()
+    {
+        return _make_function_stack_proxy<method>(method);
     }
 
     // extern method export
@@ -41,12 +57,22 @@ struct ExportHelper {
     {
         return reinterpret_cast<void*>(method);
     }
+    template <auto method>
+    inline static FuncInvokerStackProxy export_extern_method_stack_proxy()
+    {
+        return _make_function_stack_proxy<method>(method);
+    }
 
     // function export
     template <auto func>
     inline static void* export_function()
     {
         return reinterpret_cast<void*>(func);
+    }
+    template <auto func>
+    inline static FuncInvokerStackProxy export_function_stack_proxy()
+    {
+        return _make_function_stack_proxy<func>(func);
     }
 
     // invoker
@@ -92,6 +118,53 @@ private:
             return (reinterpret_cast<const T*>(obj)->*method)(std::forward<Args>(args)...);
         };
         return reinterpret_cast<void*>(proxy);
+    }
+    template <typename T, typename... Args, size_t... Idx>
+    inline static MethodInvokerStackProxy _make_ctor_stack_proxy(std::index_sequence<Idx...>)
+    {
+        return +[](void* p, StackProxy proxy) {
+            std::tuple<ParamHolder<Args>...> tuples(proxy.param_builders[Idx]...);
+            new (p) T(std::forward<Args>(std::get<Idx>(tuples).get())...);
+        };
+    }
+    template <auto func, typename Ret, typename... Args>
+    inline static FuncInvokerStackProxy _make_function_stack_proxy(Ret (*)(Args...))
+    {
+        return _make_function_stack_proxy_helper<func, Ret, Args...>(std::make_index_sequence<sizeof...(Args)>());
+    }
+    template <auto func, typename Ret, typename... Args, size_t... Idx>
+    inline static FuncInvokerStackProxy _make_function_stack_proxy_helper(std::index_sequence<Idx...>)
+    {
+        return +[](StackProxy proxy) {
+            std::tuple<ParamHolder<Args>...> tuples(proxy.param_builders[Idx]...);
+            func(std::forward<Args>(std::get<Idx>(tuples).get())...);
+        };
+    }
+    template <auto method, typename T, typename Ret, typename... Args>
+    inline static MethodInvokerStackProxy _make_method_stack_proxy(Ret (T::*)(Args...))
+    {
+        return _make_method_stack_proxy_helper<method, T, Ret, Args...>(std::make_index_sequence<sizeof...(Args)>());
+    }
+    template <auto method, typename T, typename Ret, typename... Args>
+    inline static MethodInvokerStackProxy _make_method_stack_proxy(Ret (T::*)(Args...) const)
+    {
+        return _make_method_stack_proxy_helper_const<method, T, Ret, Args...>(std::make_index_sequence<sizeof...(Args)>());
+    }
+    template <auto method, typename T, typename Ret, typename... Args, size_t... Idx>
+    inline static MethodInvokerStackProxy _make_method_stack_proxy_helper(std::index_sequence<Idx...>)
+    {
+        return +[](void* p, StackProxy proxy) {
+            std::tuple<ParamHolder<Args>...> tuples(proxy.param_builders[Idx]...);
+            (reinterpret_cast<T*>(p)->*method)(std::forward<Args>(std::get<Idx>(tuples).get())...);
+        };
+    }
+    template <auto method, typename T, typename Ret, typename... Args, size_t... Idx>
+    inline static MethodInvokerStackProxy _make_method_stack_proxy_helper_const(std::index_sequence<Idx...>)
+    {
+        return +[](const void* p, StackProxy proxy) {
+            std::tuple<ParamHolder<Args>...> tuples(proxy.param_builders[Idx]...);
+            (reinterpret_cast<const T*>(p)->*method)(std::forward<Args>(std::get<Idx>(tuples).get())...);
+        };
     }
 };
 } // namespace skr::rttr

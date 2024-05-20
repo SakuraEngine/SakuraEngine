@@ -5,9 +5,12 @@
 #include "SkrRTTR/rttr_traits.hpp"
 #include "SkrRTTR/type_signature.hpp"
 #include "SkrRTTR/enum_value.hpp"
+#include "SkrRTTR/export/stack_proxy.hpp"
 
 namespace skr::rttr
 {
+using DtorInvoker = void (*)(void*);
+
 enum class ParamFlag
 {
     None        = 0,      // default
@@ -26,11 +29,7 @@ struct ParamData {
     ParamFlag       modifier     = ParamFlag::None;
     MakeDefaultFunc make_default = nullptr;
 
-    // meta flag
-    uint64_t meta_flag         = 0;
-    uint64_t runtime_meta_flag = 0;
-
-    // TODO. meta data
+    // TODO. Attribute
 
     template <typename Arg>
     inline static ParamData Make()
@@ -78,14 +77,10 @@ struct FunctionData {
     bool              has_side_effect;
 
     // [Provided by export Backend]
-    void* native_invoke;
-    void* stack_proxy_invoke;
+    void*                 native_invoke;
+    FuncInvokerStackProxy stack_proxy_invoke;
 
-    // meta flag
-    uint64_t meta_flag         = 0;
-    uint64_t runtime_meta_flag = 0;
-
-    // TODO. meta data
+    // TODO. Attribute
 
     template <typename Ret, typename... Args>
     inline void fill_signature(Ret (*)(Args...))
@@ -118,14 +113,10 @@ struct MethodData {
     bool              has_side_effect_to_object;
 
     // [Provided by export Backend]
-    void* native_invoke;
-    void* stack_proxy_invoke;
+    void*                   native_invoke;
+    MethodInvokerStackProxy stack_proxy_invoke;
 
-    // meta flag
-    uint64_t meta_flag         = 0;
-    uint64_t runtime_meta_flag = 0;
-
-    // TODO. meta data
+    // TODO. Attribute
 
     template <class T, typename Ret, typename... Args>
     inline void fill_signature(Ret (T::*)(Args...))
@@ -157,11 +148,7 @@ struct FieldData {
     GetAddressFunc get_address;
     EAccessLevel   access_level;
 
-    // meta flag
-    uint64_t meta_flag         = 0;
-    uint64_t runtime_meta_flag = 0;
-
-    // TODO. meta data
+    // TODO. Attribute
 
     template <auto field, class T, typename Field>
     inline void fill_signature(Field T::*)
@@ -182,14 +169,10 @@ struct StaticMethodData {
     bool              has_side_effect;
 
     // [Provided by export Backend]
-    void* native_invoke;
-    void* stack_proxy_invoke;
+    void*                 native_invoke;
+    FuncInvokerStackProxy stack_proxy_invoke;
 
-    // meta flag
-    uint64_t meta_flag         = 0;
-    uint64_t runtime_meta_flag = 0;
-
-    // TODO. meta data
+    // TODO. Attribute
 
     template <typename Ret, typename... Args>
     inline void fill_signature(Ret (*)(Args...))
@@ -211,11 +194,7 @@ struct StaticFieldData {
     void*         address;
     EAccessLevel  access_level;
 
-    // meta flag
-    uint64_t meta_flag         = 0;
-    uint64_t runtime_meta_flag = 0;
-
-    // TODO. meta data
+    // TODO. Attribute
 
     template <typename T>
     inline void fill_signature(T* p_field)
@@ -233,14 +212,10 @@ struct ExternMethodData {
     bool              has_side_effect_to_object;
 
     // [Provided by export Backend]
-    void* native_invoke;
-    void* stack_proxy_invoke;
+    void*                 native_invoke;
+    FuncInvokerStackProxy stack_proxy_invoke;
 
-    // meta flag
-    uint64_t meta_flag         = 0;
-    uint64_t runtime_meta_flag = 0;
-
-    // TODO. meta data
+    // TODO. Attribute
 
     template <typename Ret, typename... Args>
     inline void fill_signature(Ret (*)(Args...))
@@ -280,14 +255,10 @@ struct CtorData {
     EAccessLevel      access_level;
 
     // [Provided by export Backend]
-    void* native_invoke;
-    void* stack_proxy_invoke;
+    void*                   native_invoke;
+    MethodInvokerStackProxy stack_proxy_invoke;
 
-    // meta flag
-    uint64_t meta_flag         = 0;
-    uint64_t runtime_meta_flag = 0;
-
-    // TODO. meta data
+    // TODO. Attribute
 
     template <typename... Args>
     inline void fill_signature()
@@ -325,8 +296,7 @@ struct DtorData {
     EAccessLevel access_level;
 
     // [Provided by export Backend]
-    void* native_invoke;
-    void* stack_proxy_invoke;
+    DtorInvoker native_invoke;
 };
 
 struct RecordData {
@@ -355,11 +325,7 @@ struct RecordData {
     // extern method
     Vector<ExternMethodData> extern_methods;
 
-    // meta flag
-    uint64_t meta_flag         = 0;
-    uint64_t runtime_meta_flag = 0;
-
-    // TODO. meta data
+    // TODO. Attribute
 
     // signature find
     inline const CtorData* find_ctor(TypeSignatureView signature, ETypeSignatureCompareFlag flag) const
@@ -448,11 +414,7 @@ struct EnumItemData {
     String    name;
     EnumValue value;
 
-    // meta flag
-    uint64_t meta_flag         = 0;
-    uint64_t runtime_meta_flag = 0;
-
-    // TODO. meta data
+    // TODO. Attribute
 };
 struct EnumData {
     // basic
@@ -471,11 +433,7 @@ struct EnumData {
     // extern method
     Vector<ExternMethodData> extern_methods;
 
-    // meta flag
-    uint64_t meta_flag         = 0;
-    uint64_t runtime_meta_flag = 0;
-
-    // TODO. meta data
+    // TODO. Attribute
 
     // signature find
     inline const ExternMethodData* find_extern_method(TypeSignatureView signature, StringView name, ETypeSignatureCompareFlag flag) const
@@ -505,11 +463,7 @@ struct PrimitiveData {
     // extern method
     Vector<ExternMethodData> extern_methods;
 
-    // meta flag
-    uint64_t meta_flag         = 0;
-    uint64_t runtime_meta_flag = 0;
-
-    // TODO. meta data
+    // TODO. Attribute
 
     // signature find
     inline const ExternMethodData* find_extern_method(TypeSignatureView signature, StringView name, ETypeSignatureCompareFlag flag) const

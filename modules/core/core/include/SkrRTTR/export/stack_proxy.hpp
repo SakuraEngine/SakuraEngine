@@ -17,15 +17,15 @@ using BuildParamFuncRef = FunctionRef<BuildParamFunc>;
 
 template <typename T>
 struct ParamHolder {
-    inline ~ParamHolder()
-    {
-        _holder.data_typed()->~T();
-    }
-
-    inline void build(BuildParamFuncRef builder)
+    inline ParamHolder(BuildParamFuncRef builder)
     {
         auto type = builder(_holder.data(), sizeof(T), alignof(T));
         SKR_ASSERT(type == EParamHolderType::value && "type not reference cannot has xvalue");
+    }
+
+    inline ~ParamHolder()
+    {
+        _holder.data_typed()->~T();
     }
 
     inline T& get()
@@ -38,18 +38,18 @@ private:
 };
 template <typename T>
 struct ParamHolder<T&> {
+    inline ParamHolder(BuildParamFuncRef builder)
+    {
+        auto type = builder(_xvalue_holder.data(), sizeof(T), alignof(T));
+        SKR_ASSERT(type == EParamHolderType::value && "type not reference cannot has xvalue");
+    }
+
     inline ~ParamHolder()
     {
         if (_type == EParamHolderType::xvalue)
         {
             _xvalue_holder.data_typed()->~T();
         }
-    }
-
-    inline void build(BuildParamFuncRef builder)
-    {
-        auto type = builder(_xvalue_holder.data(), sizeof(T), alignof(T));
-        SKR_ASSERT(type == EParamHolderType::value && "type not reference cannot has xvalue");
     }
 
     inline T& get()
@@ -93,4 +93,8 @@ struct StackProxy {
     ReturnHolder            return_holder;
     span<BuildParamFuncRef> param_builders;
 };
+
+// proxy invoker
+using MethodInvokerStackProxy = void (*)(void* p, StackProxy proxy);
+using FuncInvokerStackProxy   = void (*)(StackProxy proxy);
 } // namespace skr::rttr

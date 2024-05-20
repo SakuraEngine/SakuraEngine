@@ -167,7 +167,8 @@ inline CtorBuilder<T>& RecordBuilder<T>::ctor()
 {
     auto& ctor_data = _data->ctor_data.emplace().ref();
     ctor_data.fill_signature<Args...>();
-    ctor_data.native_invoke = ExportHelper::export_ctor<T, Args...>();
+    ctor_data.native_invoke      = ExportHelper::export_ctor<T, Args...>();
+    ctor_data.stack_proxy_invoke = ExportHelper::export_ctor_stack_proxy<T, Args...>();
     return *reinterpret_cast<CtorBuilder<T>*>(this);
 }
 
@@ -188,7 +189,8 @@ inline MethodBuilder<T>& RecordBuilder<T>::method(String name)
     auto& method_data = _data->methods.emplace().ref();
     method_data.name  = std::move(name);
     method_data.fill_signature(func);
-    method_data.native_invoke = ExportHelper::export_method<func>();
+    method_data.native_invoke      = ExportHelper::export_method<func>();
+    method_data.stack_proxy_invoke = ExportHelper::export_method_stack_proxy<func>();
     return *reinterpret_cast<MethodBuilder<T>*>(this);
 }
 template <typename T>
@@ -215,7 +217,8 @@ inline StaticMethodBuilder<T>& RecordBuilder<T>::static_method(String name)
     auto& method_data = _data->static_methods.emplace().ref();
     method_data.name  = std::move(name);
     method_data.fill_signature(func);
-    method_data.native_invoke = ExportHelper::export_static_method<func>();
+    method_data.native_invoke      = ExportHelper::export_static_method<func>();
+    method_data.stack_proxy_invoke = ExportHelper::export_static_method_stack_proxy<func>();
     return *reinterpret_cast<StaticMethodBuilder<T>*>(this);
 }
 template <typename T>
@@ -243,7 +246,8 @@ inline ExternMethodBuilder<T>& RecordBuilder<T>::extern_method(String name)
     auto& method_data = _data->extern_methods.emplace().ref();
     method_data.name  = std::move(name);
     method_data.fill_signature(func);
-    method_data.native_invoke = ExportHelper::export_extern_method<func>();
+    method_data.native_invoke      = ExportHelper::export_extern_method<func>();
+    method_data.stack_proxy_invoke = ExportHelper::export_extern_method_stack_proxy<func>();
     return *reinterpret_cast<ExternMethodBuilder<T>*>(this);
 }
 template <typename T>
