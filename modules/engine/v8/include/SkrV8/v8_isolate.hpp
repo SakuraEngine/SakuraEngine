@@ -8,6 +8,10 @@ namespace skr::rttr
 struct Type;
 }
 
+// 1. deserialize objects
+// 2. link deps
+// 3. install resource
+
 namespace skr::v8
 {
 // TODO. 内容物
@@ -23,7 +27,7 @@ struct SKR_V8_API V8Isolate {
     void shutdown();
 
 private:
-    void _make_type_template(::skr::rttr::Type* type);
+    void _make_record_template(::skr::rttr::Type* type);
     // TODO. 没法自定义 module 导出，默认全导
 
 private:

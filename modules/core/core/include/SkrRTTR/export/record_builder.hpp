@@ -138,24 +138,41 @@ inline RecordBuilder<T>& RecordBuilder<T>::basic_info()
     _data->size      = sizeof(T);
     _data->alignment = alignof(T);
 
-    // TODO. fill default ctor
-    // std::is_default_constructible_v<T>
+    // fill default ctor
+    if constexpr (std::is_default_constructible_v<T>)
+    {
+        ctor<>();
+    }
 
-    // TODO. fill copy ctor
-    // std::is_copy_constructible_v<T>
+    // fill copy ctor
+    if constexpr (std::is_copy_constructible_v<T>)
+    {
+        ctor<const T&>();
+    }
 
-    // TODO. fill move ctor
-    // std::is_move_constructible_v<T>
+    // fill move ctor
+    if constexpr (std::is_move_constructible_v<T>)
+    {
+        ctor<T&&>();
+    }
 
-    // TODO. fill assign operator
-    // std::is_copy_assignable_v<T>
+    // fill assign operator
+    if constexpr (std::is_copy_assignable_v<T>)
+    {
+        extern_method<+[](T& lhs, const T& rhs) { lhs.operator=(rhs); }>(CPPExternMethods::Assign);
+    }
 
-    // TODO. fill move assign operator
-    // std::is_move_assignable_v<T>
+    // fill move assign operator
+    if constexpr (std::is_move_assignable_v<T>)
+    {
+        extern_method<+[](T& lhs, T&& rhs) { lhs.operator=(std::move(rhs)); }>(CPPExternMethods::Assign);
+    }
 
-    // TODO. fill dtor
-    // std::is_destructible_v<T>
-    _data->dtor_data.native_invoke = ExportHelper::export_dtor<T>();
+    // fill dtor
+    if constexpr (std::is_destructible_v<T>)
+    {
+        _data->dtor_data.native_invoke = ExportHelper::export_dtor<T>();
+    }
 
     return *this;
 }

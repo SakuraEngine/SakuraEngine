@@ -144,7 +144,7 @@ private:
             else
             {
                 RetHolder<Ret> ret_holder{ func(std::forward<Args>(std::get<Idx>(tuples).get())...) };
-                ret_holder.invoke(proxy.ret_reader);
+                ret_holder.read(proxy.ret_reader);
             }
             int dummy[] = { (std::get<Idx>(tuples).read(proxy.param_builders[Idx].reader), 0)... };
             (void)dummy;
@@ -172,7 +172,7 @@ private:
             else
             {
                 RetHolder<Ret> ret_holder{ (reinterpret_cast<T*>(p)->*method)(std::forward<Args>(std::get<Idx>(tuples).get())...) };
-                ret_holder.invoke(proxy.ret_reader);
+                ret_holder.read(proxy.ret_reader);
             }
             int dummy[] = { (std::get<Idx>(tuples).read(proxy.param_builders[Idx].reader), 0)... };
             (void)dummy;
@@ -190,7 +190,7 @@ private:
             else
             {
                 RetHolder<Ret> ret_holder{ (reinterpret_cast<const T*>(p)->*method)(std::forward<Args>(std::get<Idx>(tuples).get())...) };
-                ret_holder.invoke(proxy.ret_reader);
+                ret_holder.read(proxy.ret_reader);
             }
             int dummy[] = { (std::get<Idx>(tuples).read(proxy.param_builders[Idx].reader), 0)... };
             (void)dummy;

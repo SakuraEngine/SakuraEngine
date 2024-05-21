@@ -105,6 +105,59 @@ private:
         Placeholder<T> _xvalue_holder;
     };
 };
+template <typename T>
+struct ParamHolder<T&&> {
+    inline ParamHolder(ParamWriteFuncRef writer)
+    {
+        auto type = writer(_xvalue_holder.data(), sizeof(T), alignof(T));
+        SKR_ASSERT(type == EParamHolderType::value && "type not reference cannot has xvalue");
+    }
+
+    inline ~ParamHolder()
+    {
+        if (_type == EParamHolderType::xvalue)
+        {
+            _xvalue_holder.data_typed()->~T();
+        }
+    }
+
+    inline T&& get()
+    {
+        switch (_type)
+        {
+            case EParamHolderType::value:
+                return std::move(*reinterpret_cast<T*>(_value));
+            case EParamHolderType::xvalue:
+                return std::move(*_xvalue_holder.data_typed());
+            default:
+                SKR_UNREACHABLE_CODE()
+                return std::move(*reinterpret_cast<T*>(_value));
+        }
+    }
+
+    inline void read(ParamReadFuncRef reader)
+    {
+        switch (_type)
+        {
+            case EParamHolderType::value:
+                reader(_value, sizeof(T), alignof(T), EParamHolderType::value);
+                break;
+            case EParamHolderType::xvalue:
+                reader(_xvalue_holder.data(), sizeof(T), alignof(T), EParamHolderType::xvalue);
+                break;
+            default:
+                SKR_UNREACHABLE_CODE()
+        }
+    }
+
+private:
+    EParamHolderType _type;
+    union
+    {
+        void*          _value;
+        Placeholder<T> _xvalue_holder;
+    };
+};
 
 // ignore cv
 template <typename T>
@@ -122,7 +175,7 @@ struct RetHolder {
     {
     }
 
-    inline void invoke(RetReadFuncRef reader)
+    inline void read(RetReadFuncRef reader)
     {
         reader(this, sizeof(T), alignof(T));
     }

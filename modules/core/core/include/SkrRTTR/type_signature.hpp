@@ -861,6 +861,55 @@ struct TypeSignatureView {
         auto jumped_pos = TypeSignatureHelper::jump_modifiers(pos, end);
         return jumped_pos < end && TypeSignatureHelper::peek_signal(jumped_pos, end) == ETypeSignatureSignal::FunctionSignature;
     }
+    inline bool has_modifier(ETypeSignatureSignal signal) const
+    {
+        SKR_ASSERT(TypeSignatureHelper::is_modifier(signal));
+        const uint8_t* pos         = _data;
+        const uint8_t* end         = _data + _size;
+        auto           peek_signal = TypeSignatureHelper::peek_signal(pos, end);
+        while (TypeSignatureHelper::is_modifier(peek_signal))
+        {
+            if (peek_signal == signal)
+            {
+                return true;
+            }
+            pos = TypeSignatureHelper::jump_signal(pos, end);
+        }
+        return false;
+    }
+    inline bool is_decayed_pointer() const
+    {
+        const uint8_t* pos         = _data;
+        const uint8_t* end         = _data + _size;
+        auto           peek_signal = TypeSignatureHelper::peek_signal(pos, end);
+        while (TypeSignatureHelper::is_modifier(peek_signal))
+        {
+            if (peek_signal == ETypeSignatureSignal::Pointer ||
+                peek_signal == ETypeSignatureSignal::Ref ||
+                peek_signal == ETypeSignatureSignal::RValueRef)
+            {
+                return true;
+            }
+            pos = TypeSignatureHelper::jump_signal(pos, end);
+        }
+        return false;
+    }
+    inline bool is_pointer() const
+    {
+        return has_modifier(ETypeSignatureSignal::Pointer);
+    }
+    inline bool is_ref() const
+    {
+        return has_modifier(ETypeSignatureSignal::Ref);
+    }
+    inline bool is_rvalue_ref() const
+    {
+        return has_modifier(ETypeSignatureSignal::RValueRef);
+    }
+    inline ETypeSignatureSignal validate_complete_signature() const
+    {
+        return TypeSignatureHelper::validate_complete_signature(_data, _data + _size);
+    }
     inline bool equal(
         const TypeSignatureView&  rhs,
         ETypeSignatureCompareFlag flag = ETypeSignatureCompareFlag::Strict) const
@@ -924,6 +973,10 @@ struct TypeSignatureView {
     {
         SKR_ASSERT(!empty() && "undefined behavior accessing empty view");
         return TypeSignatureHelper::peek_signal(_data, _data + _size);
+    }
+    inline bool peek_next_is_modifier() const
+    {
+        return TypeSignatureHelper::is_modifier(peek_signal());
     }
     inline TypeSignatureView read_none() const
     {

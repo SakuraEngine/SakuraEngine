@@ -1,8 +1,11 @@
 #include "SkrV8/v8_isolate.hpp"
+#include "SkrV8/v8_bind_tools.hpp"
+#include "SkrV8/v8_bind_data.hpp"
 #include "libplatform/libplatform.h"
 #include "v8-initialization.h"
 #include "SkrRTTR/type.hpp"
 #include "v8-template.h"
+#include "v8-external.h"
 
 namespace skr::v8
 {
@@ -18,6 +21,7 @@ void V8Isolate::shutdown()
     {
         // dispose isolate
         _isolate->Dispose();
+        _isolate->SetData(0, this);
 
         // delete array buffer allocator
         // TODO. custom allocator
@@ -25,10 +29,56 @@ void V8Isolate::shutdown()
     }
 }
 
-void V8Isolate::_make_type_template(::skr::rttr::Type* type)
+void V8Isolate::_make_record_template(::skr::rttr::Type* type)
 {
+    using namespace ::v8;
+    SKR_ASSERT(type->type_category() == ::skr::rttr::ETypeCategory::Record);
+
     // ctor template
-    auto ctor_template = ::v8::FunctionTemplate::New(_isolate, nullptr);
+    auto ctor_template = FunctionTemplate::New(
+        _isolate,
+        +[](const FunctionCallbackInfo<Value>& info) {
+            // get v8 basic info
+            Isolate*       Isolate = info.GetIsolate();
+            Isolate::Scope IsolateScope(Isolate);
+            HandleScope    HandleScope(Isolate);
+            Local<Context> Context = Isolate->GetCurrentContext();
+            Context::Scope ContextScope(Context);
+
+            // get type info
+            Local<External>  data = info.Data().As<External>();
+            skr::rttr::Type* type = reinterpret_cast<skr::rttr::Type*>(data->Value());
+
+            // match ctor
+            for (const auto& ctor_data : type->record_data().ctor_data)
+            {
+                if (V8BindTools::match_param(ctor_data, info))
+                {
+                    V8Isolate* skr_isolate = reinterpret_cast<V8Isolate*>(Isolate->GetData(0));
+
+                    // make bind data
+                    V8BindData* bind_data = SkrNew<V8BindData>();
+                    bind_data->type       = type;
+
+                    // make data memory
+                    bind_data->data = sakura_malloc_aligned(type->size(), type->alignment());
+
+                    // call ctor
+                    V8BindTools::call_ctor(bind_data->data, ctor_data, info);
+
+                    // TODO. add weakref for listen GC event
+                }
+            }
+        },
+        External::New(_isolate, type));
+
+    // bind field
+
+    // bind method
+
+    // bind static field
+
+    // bind static method
 }
 } // namespace skr::v8
 
