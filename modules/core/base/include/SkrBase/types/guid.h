@@ -44,17 +44,19 @@ typedef struct skr_guid_t {
 
     static skr_guid_t Create();
 
+    SKR_INLINE constexpr size_t get_hash() const
+    {
+        using namespace skr;
+        constexpr Hash<uint64_t> hasher{};
+
+        size_t result = hasher.operator()(static_cast<uint64_t>(Storage0) << 32 | Storage1);
+        return hash_combine(result, hasher.operator()(static_cast<uint64_t>(Storage2) << 32 | Storage3));
+    }
+
     // for skr::Hash
     SKR_INLINE static size_t _skr_hash(const skr_guid_t& guid)
     {
-        using namespace skr;
-        Hash<uint32_t> hasher;
-
-        size_t result = hasher(guid.Storage0);
-        result        = hash_combine(result, hasher(guid.Storage1));
-        result        = hash_combine(result, hasher(guid.Storage2));
-        result        = hash_combine(result, hasher(guid.Storage3));
-        return result;
+        return guid.get_hash();
     }
 
 #endif

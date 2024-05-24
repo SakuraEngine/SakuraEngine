@@ -23,8 +23,8 @@ using RetReadFuncRef    = FunctionRef<RetReadFunc>;
 // TODO. param 是 out 的时候怎么导出
 // param holder
 struct ParamProxy {
-    ParamWriteFuncRef writer;
-    ParamReadFuncRef  reader;
+    ParamWriteFuncRef writer = nullptr;
+    ParamReadFuncRef  reader = nullptr;
 };
 template <typename T>
 struct ParamHolder {
@@ -186,8 +186,8 @@ private:
 
 // stack proxy
 struct StackProxy {
-    RetReadFuncRef   ret_reader;
-    span<ParamProxy> param_builders;
+    RetReadFuncRef   ret_reader     = nullptr;
+    span<ParamProxy> param_builders = {};
 };
 
 // proxy invoker

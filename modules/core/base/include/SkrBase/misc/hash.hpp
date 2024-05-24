@@ -88,7 +88,7 @@ struct Hash : detail::HashSelector<T> {
 };
 
 // hash combine
-SKR_INLINE size_t hash_combine(size_t seed, size_t combine)
+SKR_INLINE constexpr size_t hash_combine(size_t seed, size_t combine)
 {
     return seed ^ (combine + 0x9e3779b9 + (seed << 6) + (seed >> 2));
 }
@@ -98,13 +98,14 @@ SKR_INLINE size_t hash_combine(size_t seed, size_t combine)
 // primitive type hash
 namespace skr
 {
-#define SKR_IMPL_HASH_CAST(type)                     \
-    template <>                                      \
-    struct Hash<type> {                              \
-        SKR_INLINE size_t operator()(type val) const \
-        {                                            \
-            return static_cast<size_t>(val);         \
-        }                                            \
+#define SKR_IMPL_HASH_CAST(type)                               \
+    template <>                                                \
+    struct Hash<type> {                                        \
+        SKR_INLINE constexpr Hash() {}                         \
+        SKR_INLINE constexpr size_t operator()(type val) const \
+        {                                                      \
+            return static_cast<size_t>(val);                   \
+        }                                                      \
     };
 
 // helper

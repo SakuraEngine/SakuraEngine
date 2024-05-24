@@ -1,8 +1,10 @@
 #pragma once
-#include <v8.h>
-#include "SkrGuid/guid.hpp"
+#include <v8-value.h>
+#include "SkrRTTR/type_signature.hpp"
+#include "v8-isolate.h"
+#include "v8-primitive.h"
 
-namespace skr
+namespace skr::v8
 {
 // 关于 V8 与 CPP 的内存管理交叉:
 //  1. 由导出至 V8 的构造函数创建，生命周期跟随 v8 或由 EmbeddedRC 管理
@@ -99,59 +101,318 @@ namespace skr
 struct V8Isolate;
 struct V8Context;
 
-// TODO. 是否应该放到通用脚本导出模块中
-// TODO. V8Bind 可能不需要，Handle 导出就是直接一个指针，很容易，UserData 还是 Primitive 可以根据 ExportData 来进行
-enum class EV8BindType
-{
-    Primitive,      // export as primitive type, e.g. float -> Number; float3 -> {x: Number, y: Number, z: Number}
-    ClassUserdata,  // export as user data, use FunctionTemplate (constructor), type must implement IObject and IEmbeddedRC
-    StructUserdata, // export as struct user data, and never manage it's memory, similar to Handle, but has the same behavior with ClassUserdata
-    Handle,         // export as handle (uint64_t/BigInt)
-};
-
-// TODO. bind 的功能是提供导出 API，template 的注册可以在 UserData 导出中直接进行，Field 和 EmbeddedRC 的处理在外部进行
+// 鉴于 v8 有提供 Template 的特性，Record 类型导出会依赖于 V8Isolate 的封装，因此这个 bind 更多的是针对于 PrimitiveType
 template <typename T>
 struct V8Bind {
-    enum class EOwnerShip
-    {
-        V8,         // release by v8, if native use it, will trigger SegmentFault
-        Native,     // release by native, if v8 use it, will trigger SegmentFault
-        Field,      // memory in parent object by field (or container member), if parent object released, will trigger SegmentFault or js exception
-        EmbeddedRC, // managed by EmbeddedRC, v8 object just increase reference count
-    };
-    enum class EOwnerShipOp
-    {
-        Init,               // if already exist, ignore
-        InitOrWarn,         // if already exist, warn and ignore
-        InitOrError,        // if already exist, error and ignore
-        ForceOverride,      // if already exist, force override
-        ForceOverrideWarn,  // if already exist, force override and warn
-        ForceOverrideError, // if already exist, force override and error
-    };
-    enum class EType
-    {
-        Primitive, // primitive type: integer, floating, boolean, string
-        Object,    // impl IObject，will solve inheritance automatically
-        Struct,    // other record types, require guid, will not solve inheritance
-    };
-
-    static constexpr EType export_type = EType::Primitive;
-
-    // primitive convert
-    static v8::Local<v8::Value> primitive_to_v8(V8Context* ctx, const T& value);
-    static T                    primitive_from_v8(V8Context* ctx, v8::Local<v8::Value> value);
-
-    // object/struct bind info
-    static v8::Local<v8::FunctionTemplate> make_template(V8Isolate* isolate);
-
-    // object convert
-    static v8::Local<v8::Value> obj_find_v8(V8Context* ctx, T* p_obj);
-    static v8::Local<v8::Value> obj_to_v8(V8Context* ctx, T* p_obj, EOwnerShip ownership, EOwnerShipOp ownership_op = EOwnerShipOp::InitOrWarn);
-    static T*                   obj_from_v8(V8Context* ctx, v8::Local<v8::Value> value);
-
-    // struct convert
-    static v8::Local<v8::Value> struct_find_v8(V8Context* ctx, T* p_struct);
-    static v8::Local<v8::Value> struct_to_v8(V8Context* ctx, T* p_struct, EOwnerShip ownership, EOwnerShipOp ownership_op = EOwnerShipOp::InitOrWarn);
-    static T*                   struct_from_v8(V8Context* ctx, v8::Local<v8::Value> value);
+    static ::v8::Local<::v8::Value> native_to_v8(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      native_data);
+    static void v8_to_native(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      out_native_data);
 };
-} // namespace skr
+} // namespace skr::v8
+
+// primitive type export
+namespace skr::v8
+{
+template <>
+struct V8Bind<int8_t> {
+    inline static ::v8::Local<::v8::Value> native_to_v8(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      native_data)
+    {
+        return ::v8::Integer::New(isolate, *reinterpret_cast<int8_t*>(native_data));
+    }
+    inline static bool v8_to_native(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        ::v8::Local<::v8::Value>   v8_value,
+        void*                      out_native_data)
+    {
+        if (v8_value->IsInt32())
+        {
+            *reinterpret_cast<int8_t*>(out_native_data) = v8_value->Int32Value(context).ToChecked();
+            return true;
+        }
+        else
+        {
+            isolate->ThrowError("[Native] cannot convert v8 value to int8_t");
+            return false;
+        }
+    }
+};
+template <>
+struct V8Bind<int16_t> {
+    inline static ::v8::Local<::v8::Value> native_to_v8(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      native_data)
+    {
+        return ::v8::Integer::New(isolate, *reinterpret_cast<int16_t*>(native_data));
+    }
+    inline static bool v8_to_native(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        ::v8::Local<::v8::Value>   v8_value,
+        void*                      out_native_data)
+    {
+        if (v8_value->IsInt32())
+        {
+            *reinterpret_cast<int16_t*>(out_native_data) = v8_value->Int32Value(context).ToChecked();
+            return true;
+        }
+        else
+        {
+            isolate->ThrowError("[Native] cannot convert v8 value to int16_t");
+            return false;
+        }
+    }
+};
+template <>
+struct V8Bind<int32_t> {
+    inline static ::v8::Local<::v8::Value> native_to_v8(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      native_data)
+    {
+        return ::v8::Integer::New(isolate, *reinterpret_cast<int32_t*>(native_data));
+    }
+    inline static bool v8_to_native(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        ::v8::Local<::v8::Value>   v8_value,
+        void*                      out_native_data)
+    {
+        if (v8_value->IsInt32())
+        {
+            *reinterpret_cast<int32_t*>(out_native_data) = v8_value->Int32Value(context).ToChecked();
+            return true;
+        }
+        else
+        {
+            isolate->ThrowError("[Native] cannot convert v8 value to int32_t");
+            return false;
+        }
+    }
+};
+template <>
+struct V8Bind<int64_t> {
+    inline static ::v8::Local<::v8::Value> native_to_v8(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      native_data)
+    {
+        return ::v8::BigInt::New(isolate, *reinterpret_cast<int64_t*>(native_data));
+    }
+    inline static bool v8_to_native(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        ::v8::Local<::v8::Value>   v8_value,
+        void*                      out_native_data)
+    {
+        if (v8_value->IsBigInt())
+        {
+            *reinterpret_cast<int64_t*>(out_native_data) = v8_value.As<::v8::BigInt>()->Int64Value();
+            return true;
+        }
+        else
+        {
+            isolate->ThrowError("[Native] cannot convert v8 value to int64_t");
+            return false;
+        }
+    }
+};
+template <>
+struct V8Bind<uint8_t> {
+    inline static ::v8::Local<::v8::Value> native_to_v8(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      native_data)
+    {
+        return ::v8::Integer::NewFromUnsigned(isolate, *reinterpret_cast<uint8_t*>(native_data));
+    }
+    inline static bool v8_to_native(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        ::v8::Local<::v8::Value>   v8_value,
+        void*                      out_native_data)
+    {
+        if (v8_value->IsUint32())
+        {
+            *reinterpret_cast<uint8_t*>(out_native_data) = v8_value->Uint32Value(context).ToChecked();
+            return true;
+        }
+        else
+        {
+            isolate->ThrowError("[Native] cannot convert v8 value to uint8_t");
+            return false;
+        }
+    }
+};
+template <>
+struct V8Bind<uint16_t> {
+    inline static ::v8::Local<::v8::Value> native_to_v8(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      native_data)
+    {
+        return ::v8::Integer::NewFromUnsigned(isolate, *reinterpret_cast<uint16_t*>(native_data));
+    }
+    inline static bool v8_to_native(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        ::v8::Local<::v8::Value>   v8_value,
+        void*                      out_native_data)
+    {
+        if (v8_value->IsUint32())
+        {
+            *reinterpret_cast<uint16_t*>(out_native_data) = v8_value->Uint32Value(context).ToChecked();
+            return true;
+        }
+        else
+        {
+            isolate->ThrowError("[Native] cannot convert v8 value to uint16_t");
+            return false;
+        }
+    }
+};
+template <>
+struct V8Bind<uint32_t> {
+    inline static ::v8::Local<::v8::Value> native_to_v8(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      native_data)
+    {
+        return ::v8::Integer::NewFromUnsigned(isolate, *reinterpret_cast<uint32_t*>(native_data));
+    }
+    inline static bool v8_to_native(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        ::v8::Local<::v8::Value>   v8_value,
+        void*                      out_native_data)
+    {
+        if (v8_value->IsUint32())
+        {
+            *reinterpret_cast<uint32_t*>(out_native_data) = v8_value->Uint32Value(context).ToChecked();
+            return true;
+        }
+        else
+        {
+            isolate->ThrowError("[Native] cannot convert v8 value to uint32_t");
+            return false;
+        }
+    }
+};
+template <>
+struct V8Bind<uint64_t> {
+    inline static ::v8::Local<::v8::Value> native_to_v8(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      native_data)
+    {
+        return ::v8::BigInt::NewFromUnsigned(isolate, *reinterpret_cast<uint64_t*>(native_data));
+    }
+    inline static bool v8_to_native(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        ::v8::Local<::v8::Value>   v8_value,
+        void*                      out_native_data)
+    {
+        if (v8_value->IsBigInt())
+        {
+            *reinterpret_cast<uint64_t*>(out_native_data) = v8_value.As<::v8::BigInt>()->Uint64Value();
+            return true;
+        }
+        else
+        {
+            isolate->ThrowError("[Native] cannot convert v8 value to uint64_t");
+            return false;
+        }
+    }
+};
+template <>
+struct V8Bind<float> {
+    inline static ::v8::Local<::v8::Value> native_to_v8(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      native_data)
+    {
+        return ::v8::Number::New(isolate, *reinterpret_cast<float*>(native_data));
+    }
+    inline static bool v8_to_native(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        ::v8::Local<::v8::Value>   v8_value,
+        void*                      out_native_data)
+    {
+        if (v8_value->IsNumber())
+        {
+            *reinterpret_cast<float*>(out_native_data) = v8_value->NumberValue(context).ToChecked();
+            return true;
+        }
+        else
+        {
+            isolate->ThrowError("[Native] cannot convert v8 value to float");
+            return false;
+        }
+    }
+};
+template <>
+struct V8Bind<double> {
+    inline static ::v8::Local<::v8::Value> native_to_v8(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      native_data)
+    {
+        return ::v8::Number::New(isolate, *reinterpret_cast<double*>(native_data));
+    }
+    inline static bool v8_to_native(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        ::v8::Local<::v8::Value>   v8_value,
+        void*                      out_native_data)
+    {
+        if (v8_value->IsNumber())
+        {
+            *reinterpret_cast<double*>(out_native_data) = v8_value->NumberValue(context).ToChecked();
+            return true;
+        }
+        else
+        {
+            isolate->ThrowError("[Native] cannot convert v8 value to double");
+            return false;
+        }
+    }
+};
+template <>
+struct V8Bind<bool> {
+    inline static ::v8::Local<::v8::Value> native_to_v8(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        void*                      native_data)
+    {
+        return ::v8::Boolean::New(isolate, *reinterpret_cast<bool*>(native_data));
+    }
+    inline static bool v8_to_native(
+        ::v8::Local<::v8::Context> context,
+        ::v8::Isolate*             isolate,
+        ::v8::Local<::v8::Value>   v8_value,
+        void*                      out_native_data)
+    {
+        if (v8_value->IsBoolean())
+        {
+            *reinterpret_cast<bool*>(out_native_data) = v8_value->BooleanValue(isolate);
+            return true;
+        }
+        else
+        {
+            isolate->ThrowError("[Native] cannot convert v8 value to bool");
+            return false;
+        }
+    }
+};
+} // namespace skr::v8

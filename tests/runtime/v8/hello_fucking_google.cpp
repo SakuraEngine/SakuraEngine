@@ -17,6 +17,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unordered_map>
+#include "SkrV8/v8_isolate.hpp"
+#include "SkrV8/v8_context.hpp"
+#include "SkrCore/exec_static.hpp"
+#include "SkrRTTR/export/record_builder.hpp"
+#include "SkrRTTR/rttr_traits.hpp"
+#include "SkrRTTR/type.hpp"
 
 // user data
 struct MyData {
@@ -31,7 +37,8 @@ struct MyData {
 static std::unordered_map<void*, v8::UniquePersistent<v8::Value>> my_data_instances;
 static v8::UniquePersistent<v8::Promise::Resolver>                global_resolver;
 
-int main(int argc, char* argv[])
+// old test function
+int old_main(int argc, char* argv[])
 {
     // Initialize V8.
     char Flags[] = "--expose-gc";
@@ -237,4 +244,47 @@ int main(int argc, char* argv[])
     v8::V8::DisposePlatform();
     delete create_params.array_buffer_allocator;
     return 0;
+}
+
+// test type
+struct TestType {
+    int32_t value;
+};
+SKR_RTTR_TYPE(TestType, "9f7696d7-4c20-4b11-84eb-7124b666c56e");
+SKR_EXEC_STATIC_CTOR
+{
+    using namespace skr::rttr;
+    register_type_loader(type_id_of<TestType>(), [](Type* type) {
+        // init type
+        type->init(ETypeCategory::Record);
+
+        // build type
+        RecordBuilder<TestType> builder{ &type->record_data() };
+        builder
+            .basic_info()
+            .field<&TestType::value>(u8"value");
+    });
+};
+
+int main(int argc, char* argv[])
+{
+    using namespace skr::v8;
+
+    V8Isolate isolate;
+    V8Context context(&isolate);
+
+    // init
+    init_v8();
+    isolate.init();
+    context.init();
+
+    // import types
+    isolate.make_record_template(skr::rttr::type_of<TestType>());
+
+    // TODO. exec code
+
+    // shutdown
+    context.shutdown();
+    isolate.shutdown();
+    shutdown_v8();
 }

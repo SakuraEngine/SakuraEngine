@@ -6,9 +6,17 @@
 #include "SkrRTTR/type.hpp"
 #include "v8-template.h"
 #include "v8-external.h"
+#include "v8-function.h"
 
 namespace skr::v8
 {
+V8Isolate::V8Isolate()
+{
+}
+V8Isolate::~V8Isolate()
+{
+}
+
 void V8Isolate::init()
 {
     // init isolate
@@ -19,6 +27,9 @@ void V8Isolate::shutdown()
 {
     if (_isolate)
     {
+        // clear templates
+        _record_templates.clear();
+
         // dispose isolate
         _isolate->Dispose();
         _isolate->SetData(0, this);
@@ -29,7 +40,7 @@ void V8Isolate::shutdown()
     }
 }
 
-void V8Isolate::_make_record_template(::skr::rttr::Type* type)
+void V8Isolate::make_record_template(::skr::rttr::Type* type)
 {
     using namespace ::v8;
     SKR_ASSERT(type->type_category() == ::skr::rttr::ETypeCategory::Record);
@@ -52,7 +63,7 @@ void V8Isolate::_make_record_template(::skr::rttr::Type* type)
             // match ctor
             for (const auto& ctor_data : type->record_data().ctor_data)
             {
-                if (V8BindTools::match_param(ctor_data, info))
+                if (V8BindTools::match_params(ctor_data, info))
                 {
                     V8Isolate* skr_isolate = reinterpret_cast<V8Isolate*>(Isolate->GetData(0));
 
@@ -64,21 +75,55 @@ void V8Isolate::_make_record_template(::skr::rttr::Type* type)
                     bind_data->data = sakura_malloc_aligned(type->size(), type->alignment());
 
                     // call ctor
-                    V8BindTools::call_ctor(bind_data->data, ctor_data, info);
+                    V8BindTools::call_ctor(bind_data->data, ctor_data, info, Context, Isolate);
 
                     // TODO. add weakref for listen GC event
                 }
             }
+
+            // no ctor matched
+            Isolate->ThrowError("no ctor matched");
         },
         External::New(_isolate, type));
 
+    auto proto_type_template = ctor_template->PrototypeTemplate();
+
     // bind field
+    // TODO. recursive bind field
+    for (const auto& field : type->record_data().fields)
+    {
+    }
 
     // bind method
+    // TODO. recursive bind field
 
     // bind static field
+    // TODO. recursive bind field
 
     // bind static method
+    // TODO. recursive bind field
+
+    // add to templates
+    auto& template_ref = _record_templates.try_add_default(type).value();
+    template_ref.Reset(_isolate, ctor_template);
+}
+void V8Isolate::inject_templates_into_context(::v8::Local<::v8::Context> context)
+{
+    for (const auto& pair : _record_templates)
+    {
+        const auto& type         = pair.key;
+        const auto& template_ref = pair.value;
+
+        // make function template
+        auto function = template_ref.Get(_isolate)->GetFunction(context).ToLocalChecked();
+
+        // set to context
+        context->Global()->Set(
+                             context,
+                             ::v8::String::NewFromUtf8(_isolate, type->name().c_str()).ToLocalChecked(),
+                             function)
+            .Check();
+    }
 }
 } // namespace skr::v8
 

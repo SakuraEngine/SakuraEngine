@@ -14,12 +14,12 @@ namespace skr::rttr
 {
 template <typename T>
 struct RTTRTraits {
-    static skr::StringView get_name()
+    inline static constexpr skr::StringView get_name()
     {
         unimplemented_no_meta(T, "RTTRTraits<T>::get_name() is not implemented");
         return {};
     }
-    static GUID get_guid()
+    inline static constexpr GUID get_guid()
     {
         unimplemented_no_meta(T, "RTTRTraits<T>::get_guid() is not implemented");
         return {};
@@ -27,13 +27,13 @@ struct RTTRTraits {
 };
 
 template <typename T>
-inline GUID type_id_of()
+inline constexpr GUID type_id_of()
 {
     return RTTRTraits<T>::get_guid();
 }
 
 template <typename T>
-inline skr::StringView type_name_of()
+inline constexpr skr::StringView type_name_of()
 {
     return RTTRTraits<T>::get_name();
 }
@@ -48,21 +48,21 @@ inline Type* type_of()
 
 //======================================== register marco
 #define SKR_RTTR_MAKE_U8(__VALUE) u8##__VALUE
-#define SKR_RTTR_TYPE(__TYPE, __GUID)            \
-    namespace skr::rttr                          \
-    {                                            \
-    template <>                                  \
-    struct RTTRTraits<__TYPE> {                  \
-        inline static skr::StringView get_name() \
-        {                                        \
-            return SKR_RTTR_MAKE_U8(#__TYPE);    \
-        }                                        \
-        inline static GUID get_guid()            \
-        {                                        \
-            using namespace skr::guid::literals; \
-            return u8##__GUID##_guid;            \
-        }                                        \
-    };                                           \
+#define SKR_RTTR_TYPE(__TYPE, __GUID)                      \
+    namespace skr::rttr                                    \
+    {                                                      \
+    template <>                                            \
+    struct RTTRTraits<__TYPE> {                            \
+        inline static constexpr skr::StringView get_name() \
+        {                                                  \
+            return SKR_RTTR_MAKE_U8(#__TYPE);              \
+        }                                                  \
+        inline static constexpr GUID get_guid()            \
+        {                                                  \
+            using namespace skr::guid::literals;           \
+            return u8##__GUID##_guid;                      \
+        }                                                  \
+    };                                                     \
     }
 
 //======================================== primitive types
