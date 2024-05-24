@@ -8,6 +8,52 @@
 #include "v8-external.h"
 #include "v8-function.h"
 
+// allocator
+namespace skr::v8
+{
+struct V8Allocator final : ::v8::ArrayBuffer::Allocator {
+    static constexpr const char* kV8DefaultPoolName = "v8-allocate";
+
+    void* AllocateUninitialized(size_t length) override
+    {
+#if defined(TRACY_TRACE_ALLOCATION)
+        SkrCZoneNCS(z, "v8::allocate", SKR_ALLOC_TRACY_MARKER_COLOR, 16, 1);
+        void* p = sakura_malloc_alignedN(length, alignof(size_t), kV8DefaultPoolName);
+        SkrCZoneEnd(z);
+        return p;
+#else
+        return reinterpret_cast<T*>(sakura_malloc_aligned(length, alignof(size_t)));
+#endif
+    }
+    void Free(void* data, size_t length) override
+    {
+        if (data)
+        {
+#if defined(TRACY_TRACE_ALLOCATION)
+            SkrCZoneNCS(z, "v8::free", SKR_DEALLOC_TRACY_MARKER_COLOR, 16, 1);
+            sakura_free_alignedN(data, alignof(size_t), kV8DefaultPoolName);
+            SkrCZoneEnd(z);
+#else
+            sakura_free_aligned(data, alignof(size_t));
+#endif
+        }
+    }
+    void* Reallocate(void* data, size_t old_length, size_t new_length) override
+    {
+        SkrCZoneNCS(z, "v8::realloc", SKR_DEALLOC_TRACY_MARKER_COLOR, 16, 1);
+        void* new_mem = sakura_realloc_alignedN(data, new_length, alignof(size_t), kV8DefaultPoolName);
+        SkrCZoneEnd(z);
+        return new_mem;
+    }
+    void* Allocate(size_t length) override
+    {
+        void* p = AllocateUninitialized(length);
+        memset(p, 0, length);
+        return p;
+    }
+};
+} // namespace skr::v8
+
 namespace skr::v8
 {
 V8Isolate::V8Isolate()
@@ -19,9 +65,12 @@ V8Isolate::~V8Isolate()
 
 void V8Isolate::init()
 {
+    using namespace ::v8;
+
     // init isolate
-    // TODO. custom allocator
-    _isolate_create_params.array_buffer_allocator = ::v8::ArrayBuffer::Allocator::NewDefaultAllocator();
+    _isolate_create_params.array_buffer_allocator = SkrNew<V8Allocator>();
+    _isolate                                      = Isolate::New(_isolate_create_params);
+    _isolate->SetData(0, this);
 }
 void V8Isolate::shutdown()
 {
@@ -32,11 +81,9 @@ void V8Isolate::shutdown()
 
         // dispose isolate
         _isolate->Dispose();
-        _isolate->SetData(0, this);
 
         // delete array buffer allocator
-        // TODO. custom allocator
-        delete _isolate_create_params.array_buffer_allocator;
+        SkrDelete(_isolate_create_params.array_buffer_allocator);
     }
 }
 
@@ -44,6 +91,8 @@ void V8Isolate::make_record_template(::skr::rttr::Type* type)
 {
     using namespace ::v8;
     SKR_ASSERT(type->type_category() == ::skr::rttr::ETypeCategory::Record);
+    Isolate::Scope isolate_scope(_isolate);
+    HandleScope    handle_scope(_isolate);
 
     // ctor template
     auto ctor_template = FunctionTemplate::New(
@@ -78,6 +127,8 @@ void V8Isolate::make_record_template(::skr::rttr::Type* type)
                     V8BindTools::call_ctor(bind_data->data, ctor_data, info, Context, Isolate);
 
                     // TODO. add weakref for listen GC event
+
+                    return;
                 }
             }
 
@@ -109,6 +160,9 @@ void V8Isolate::make_record_template(::skr::rttr::Type* type)
 }
 void V8Isolate::inject_templates_into_context(::v8::Local<::v8::Context> context)
 {
+    ::v8::Isolate::Scope isolate_scope(_isolate);
+    ::v8::HandleScope    handle_scope(_isolate);
+
     for (const auto& pair : _record_templates)
     {
         const auto& type         = pair.key;

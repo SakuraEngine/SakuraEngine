@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
+#include "SkrContainers/string.hpp"
 #include "v8-context.h"
 #include "v8-persistent-handle.h"
 
@@ -21,6 +22,12 @@ struct SKR_V8_API V8Context {
     // init & shutdown
     void init();
     void shutdown();
+
+    // take template
+    void install_templates();
+
+    // run script
+    void exec_script(StringView script);
 
 private:
     // owner

@@ -113,9 +113,9 @@ struct SKR_V8_API V8BindTools {
             local_reader.v8_value     = i < call_param_count ? info[i] : ::v8::Local<::v8::Value>{};
 
             // combine stack proxy
-            rttr::ParamProxy local_proxy = stack_proxies.emplace().ref();
-            local_proxy.reader           = local_reader;
-            local_proxy.writer           = local_writer;
+            rttr::ParamProxy& local_proxy = stack_proxies.emplace().ref();
+            local_proxy.reader            = local_reader;
+            local_proxy.writer            = local_writer;
         }
 
         // call
