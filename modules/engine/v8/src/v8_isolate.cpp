@@ -106,37 +106,53 @@ void V8Isolate::make_record_template(::skr::rttr::Type* type)
             Local<Context> Context = Isolate->GetCurrentContext();
             Context::Scope ContextScope(Context);
 
-            // get type info
-            Local<External>  data = info.Data().As<External>();
-            skr::rttr::Type* type = reinterpret_cast<skr::rttr::Type*>(data->Value());
-
-            // match ctor
-            for (const auto& ctor_data : type->record_data().ctor_data)
+            if (info.IsConstructCall())
             {
-                if (V8BindTools::match_params(ctor_data, info))
+                // get ctor info
+                Local<Object> self = info.This();
+
+                // get type info
+                Local<External>  data = info.Data().As<External>();
+                skr::rttr::Type* type = reinterpret_cast<skr::rttr::Type*>(data->Value());
+
+                // match ctor
+                for (const auto& ctor_data : type->record_data().ctor_data)
                 {
-                    V8Isolate* skr_isolate = reinterpret_cast<V8Isolate*>(Isolate->GetData(0));
+                    if (V8BindTools::match_params(ctor_data, info))
+                    {
+                        V8Isolate* skr_isolate = reinterpret_cast<V8Isolate*>(Isolate->GetData(0));
 
-                    // make bind data
-                    V8RecordBindData* bind_data = SkrNew<V8RecordBindData>();
-                    bind_data->type             = type;
+                        // make bind data
+                        V8RecordBindData* bind_data = SkrNew<V8RecordBindData>();
+                        bind_data->type             = type;
 
-                    // make data memory
-                    bind_data->data = sakura_malloc_aligned(type->size(), type->alignment());
+                        // make data memory
+                        bind_data->data = sakura_malloc_aligned(type->size(), type->alignment());
 
-                    // call ctor
-                    V8BindTools::call_ctor(bind_data->data, ctor_data, info, Context, Isolate);
+                        // call ctor
+                        V8BindTools::call_ctor(bind_data->data, ctor_data, info, Context, Isolate);
 
-                    // TODO. add weakref for listen GC event
+                        // add extern data
+                        self->SetInternalField(0, External::New(Isolate, bind_data));
 
-                    return;
+                        // TODO. add weakref for listen GC event
+
+                        return;
+                    }
                 }
-            }
 
-            // no ctor matched
-            Isolate->ThrowError("no ctor matched");
+                // no ctor matched
+                Isolate->ThrowError("no ctor matched");
+            }
+            else
+            {
+                Isolate->ThrowError("must be called with new");
+            }
         },
         External::New(_isolate, type));
+
+    // setup internal field count
+    ctor_template->InstanceTemplate()->SetInternalFieldCount(1);
 
     auto proto_type_template = ctor_template->PrototypeTemplate();
 
@@ -146,6 +162,75 @@ void V8Isolate::make_record_template(::skr::rttr::Type* type)
     // TODO. recursive bind field
     for (const auto& field : type->record_data().fields)
     {
+        proto_type_template->SetAccessor(
+            ::v8::String::NewFromUtf8(_isolate, field.name.c_str()).ToLocalChecked(),
+            +[](Local<::v8::String> property, const PropertyCallbackInfo<Value>& info) {
+                // get data
+                Isolate*          isolate = info.GetIsolate();
+                Local<Context>    context = isolate->GetCurrentContext();
+                Local<Object>     self    = info.This();
+                Local<External>   wrap    = Local<External>::Cast(self->GetInternalField(0));
+                V8RecordBindData* data    = reinterpret_cast<V8RecordBindData*>(wrap->Value());
+
+                // get field data
+                auto   name_len = property->Utf8Length(isolate);
+                String field_name;
+                field_name.raw().append('\0', name_len);
+                property->WriteUtf8(isolate, reinterpret_cast<char*>(field_name.raw().data()));
+                auto& field_data = data->type->record_data().fields.find_if([&](const auto& f) {
+                                                                       return f.name == field_name;
+                                                                   })
+                                       .ref();
+
+                // return field
+                Local<Value> result;
+                if (V8BindTools::native_to_v8_primitive(
+                        context,
+                        isolate,
+                        field_data.type,
+                        field_data.get_address(data->data),
+                        result))
+                {
+                    info.GetReturnValue().Set(result);
+                }
+                else
+                {
+                    isolate->ThrowError("field type not supported");
+                }
+            },
+            +[](Local<::v8::String> property, Local<Value> value, const PropertyCallbackInfo<void>& info) {
+                // get data
+                Isolate*          isolate = info.GetIsolate();
+                Local<Context>    context = isolate->GetCurrentContext();
+                Local<Object>     self    = info.This();
+                Local<External>   wrap    = Local<External>::Cast(self->GetInternalField(0));
+                V8RecordBindData* data    = reinterpret_cast<V8RecordBindData*>(wrap->Value());
+
+                // get field data
+                auto   name_len = property->Utf8Length(isolate);
+                String field_name;
+                field_name.raw().append('\0', name_len);
+                property->WriteUtf8(isolate, reinterpret_cast<char*>(field_name.raw().data()));
+                auto& field_data = data->type->record_data().fields.find_if([&](const auto& f) {
+                                                                       return f.name == field_name;
+                                                                   })
+                                       .ref();
+
+                // set field
+                if (V8BindTools::v8_to_native_primitive(
+                        context,
+                        isolate,
+                        field_data.type,
+                        value,
+                        field_data.get_address(data->data)))
+                {
+                    info.GetReturnValue().Set(value);
+                }
+                else
+                {
+                    isolate->ThrowError("field type not supported");
+                }
+            });
     }
 
     // bind method

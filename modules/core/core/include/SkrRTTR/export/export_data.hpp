@@ -101,7 +101,11 @@ enum class EAccessLevel : uint8_t
     Protected,
     Private
 };
-
+enum class EMethodFlag : uint32_t
+{
+    None          = 0,      // default
+    ScriptVisible = 1 << 0, // can script visit this method
+};
 struct MethodData {
     // signature
     String            name;
@@ -139,6 +143,11 @@ struct MethodData {
     }
 };
 
+enum class EFieldFlag : uint32_t
+{
+    None          = 0,      // default
+    ScriptVisible = 1 << 0, // can script visit this field
+};
 struct FieldData {
     using GetAddressFunc = void* (*)(void*);
 
@@ -233,9 +242,8 @@ struct ExternMethodData {
 struct BaseData {
     using CastFunc = void* (*)(void*);
 
-    GUID         type_id;
-    CastFunc     cast_to_base; // cast_to_derived 正向转换在虚继承的情况下会报错，尽量避免这类需求
-    EAccessLevel access_level;
+    GUID     type_id;
+    CastFunc cast_to_base; // cast_to_derived 正向转换在虚继承的情况下会报错，尽量避免这类需求
 
     template <typename T, typename Base>
     inline static BaseData Make()
@@ -249,6 +257,11 @@ struct BaseData {
     }
 };
 
+enum class ECtorFlag : uint32_t
+{
+    None          = 0,
+    ScriptVisible = 1 << 0, // can script visit this ctor
+};
 struct CtorData {
     // signature
     Vector<ParamData> param_data;
@@ -299,6 +312,12 @@ struct DtorData {
     DtorInvoker native_invoke;
 };
 
+enum class ERecordFlag : uint32_t
+{
+    None          = 0,      // default
+    ScriptVisible = 1 << 0, // can script visit this record
+    ScriptNewable = 1 << 1, // can script new this record
+};
 struct RecordData {
     // basic
     String         name;

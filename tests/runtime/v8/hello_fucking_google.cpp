@@ -296,6 +296,8 @@ int main(int argc, char* argv[])
     context.exec_script(u8R"__(
         let test = new TestType()
         let test_with_value_ctor = new TestType(114514);
+        test_with_value_ctor.value = 114;
+        let new_test = new TestType(test_with_value_ctor.value + 6); 
     )__");
 
     // shutdown

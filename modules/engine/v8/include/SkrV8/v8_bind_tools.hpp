@@ -112,6 +112,7 @@ struct SKR_V8_API V8BindTools {
         ::v8::Isolate*                                 v8_isolate;
     };
 
+    // TODO. 使用拷贝出来的数据进行调用，主要是为了重载决议等问题
     inline static void call_ctor(
         void*                                          obj,
         const rttr::CtorData&                          data,
