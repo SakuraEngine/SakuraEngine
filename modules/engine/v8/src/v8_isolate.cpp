@@ -1,4 +1,5 @@
 #include "SkrV8/v8_isolate.hpp"
+#include "SkrContainers/set.hpp"
 #include "SkrV8/v8_bind_tools.hpp"
 #include "SkrV8/v8_bind_data.hpp"
 #include "libplatform/libplatform.h"
@@ -117,8 +118,8 @@ void V8Isolate::make_record_template(::skr::rttr::Type* type)
                     V8Isolate* skr_isolate = reinterpret_cast<V8Isolate*>(Isolate->GetData(0));
 
                     // make bind data
-                    V8BindData* bind_data = SkrNew<V8BindData>();
-                    bind_data->type       = type;
+                    V8RecordBindData* bind_data = SkrNew<V8RecordBindData>();
+                    bind_data->type             = type;
 
                     // make data memory
                     bind_data->data = sakura_malloc_aligned(type->size(), type->alignment());
@@ -139,6 +140,8 @@ void V8Isolate::make_record_template(::skr::rttr::Type* type)
 
     auto proto_type_template = ctor_template->PrototypeTemplate();
 
+    // TODO. 收集某个类型的所有方法，生成绑定信息，然后再生成绑定代码, 数据通过 External 传递, 内存管理交给绑定数据
+
     // bind field
     // TODO. recursive bind field
     for (const auto& field : type->record_data().fields)
@@ -146,13 +149,16 @@ void V8Isolate::make_record_template(::skr::rttr::Type* type)
     }
 
     // bind method
-    // TODO. recursive bind field
+    // TODO. recursive bind method
+    for (const auto& method : type->record_data().methods)
+    {
+    }
 
     // bind static field
-    // TODO. recursive bind field
+    // TODO. recursive bind static field
 
     // bind static method
-    // TODO. recursive bind field
+    // TODO. recursive bind static method
 
     // add to templates
     auto& template_ref = _record_templates.try_add_default(type).value();

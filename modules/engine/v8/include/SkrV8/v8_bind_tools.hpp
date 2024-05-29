@@ -72,7 +72,6 @@ struct SKR_V8_API V8BindTools {
         ::v8::Isolate*             v8_isolate;
         const rttr::ParamData*     param_data;
     };
-
     struct ParamReader {
         inline void operator()(void* data, uint64_t size, uint64_t align, rttr::EParamHolderType type)
         {
@@ -81,6 +80,36 @@ struct SKR_V8_API V8BindTools {
 
         ::v8::Local<::v8::Value> v8_value;
         const rttr::ParamData*   param_data;
+    };
+    struct RetReader {
+        inline void operator()(void* data, uint64_t size, uint64_t align)
+        {
+            if (ret_type.is_type())
+            {
+                ::v8::Local<::v8::Value> out_value;
+
+                if (native_to_v8_primitive(
+                        v8_context,
+                        v8_isolate,
+                        ret_type,
+                        data,
+                        out_value))
+                {
+                    callback_info->GetReturnValue().Set(out_value);
+                }
+
+                // TODO. export record type
+            }
+            else
+            {
+                // TODO. export generic type
+            }
+        }
+
+        const ::v8::FunctionCallbackInfo<::v8::Value>* callback_info;
+        const rttr::TypeSignatureView                  ret_type;
+        ::v8::Local<::v8::Context>                     v8_context;
+        ::v8::Isolate*                                 v8_isolate;
     };
 
     inline static void call_ctor(
@@ -124,6 +153,101 @@ struct SKR_V8_API V8BindTools {
             stack_proxies
         };
         data.stack_proxy_invoke(obj, stack_proxy);
+    }
+    inline static void call_method(
+        void*                                          obj,
+        const rttr::MethodData&                        data,
+        const ::v8::FunctionCallbackInfo<::v8::Value>& info,
+        ::v8::Local<::v8::Context>                     context,
+        ::v8::Isolate*                                 isolate)
+    {
+        InlineVector<ParamWriter, 16>      writer;
+        InlineVector<ParamReader, 16>      reader;
+        InlineVector<rttr::ParamProxy, 16> stack_proxies;
+
+        // combine proxy
+        auto call_param_count = info.Length();
+        for (size_t i = 0; i < data.param_data.size(); ++i)
+        {
+            const auto& param_data = data.param_data[i];
+
+            // combine writer
+            ParamWriter& local_writer = writer.emplace().ref();
+            local_writer.param_data   = &param_data;
+            local_writer.v8_context   = context;
+            local_writer.v8_isolate   = isolate;
+            local_writer.v8_value     = i < call_param_count ? info[i] : ::v8::Local<::v8::Value>{};
+
+            // combine reader
+            ParamReader& local_reader = reader.emplace().ref();
+            local_reader.param_data   = &param_data;
+            local_reader.v8_value     = i < call_param_count ? info[i] : ::v8::Local<::v8::Value>{};
+
+            // combine stack proxy
+            rttr::ParamProxy local_proxy = stack_proxies.emplace().ref();
+            local_proxy.reader           = local_reader;
+            local_proxy.writer           = local_writer;
+        }
+
+        // call
+        RetReader ret_reader = {
+            &info,
+            data.ret_type,
+            context,
+            isolate
+        };
+        rttr::StackProxy stack_proxy{
+            ret_reader,
+            stack_proxies
+        };
+        data.stack_proxy_invoke(obj, stack_proxy);
+    }
+    inline static void call_static_method(
+        const rttr::StaticMethodData&                  data,
+        const ::v8::FunctionCallbackInfo<::v8::Value>& info,
+        ::v8::Local<::v8::Context>                     context,
+        ::v8::Isolate*                                 isolate)
+    {
+        InlineVector<ParamWriter, 16>      writer;
+        InlineVector<ParamReader, 16>      reader;
+        InlineVector<rttr::ParamProxy, 16> stack_proxies;
+
+        // combine proxy
+        auto call_param_count = info.Length();
+        for (size_t i = 0; i < data.param_data.size(); ++i)
+        {
+            const auto& param_data = data.param_data[i];
+
+            // combine writer
+            ParamWriter& local_writer = writer.emplace().ref();
+            local_writer.param_data   = &param_data;
+            local_writer.v8_context   = context;
+            local_writer.v8_isolate   = isolate;
+            local_writer.v8_value     = i < call_param_count ? info[i] : ::v8::Local<::v8::Value>{};
+
+            // combine reader
+            ParamReader& local_reader = reader.emplace().ref();
+            local_reader.param_data   = &param_data;
+            local_reader.v8_value     = i < call_param_count ? info[i] : ::v8::Local<::v8::Value>{};
+
+            // combine stack proxy
+            rttr::ParamProxy local_proxy = stack_proxies.emplace().ref();
+            local_proxy.reader           = local_reader;
+            local_proxy.writer           = local_writer;
+        }
+
+        // call
+        RetReader ret_reader = {
+            &info,
+            data.ret_type,
+            context,
+            isolate
+        };
+        rttr::StackProxy stack_proxy{
+            ret_reader,
+            stack_proxies
+        };
+        data.stack_proxy_invoke(stack_proxy);
     }
 };
 } // namespace skr::v8

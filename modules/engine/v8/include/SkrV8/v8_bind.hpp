@@ -4,6 +4,7 @@
 #include "v8-isolate.h"
 #include "v8-primitive.h"
 
+// TODO. 该文件用于 static bind
 namespace skr::v8
 {
 // 关于 V8 与 CPP 的内存管理交叉:
