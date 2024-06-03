@@ -7,6 +7,9 @@ import inspect
 
 # -------------------------- scheme --------------------------
 # TODO. 使用 json type 来进行 structure check
+# TODO. Namespace 新类别 MutexNamespace 用于择取 Namespace 下某个特定功能子集，这些子集不能同时出现
+#       或者可以在外部的 Check Attribute 阶段进行检查，好处是 Scheme 会变得简单
+# TODO. functional 的 enable 字段为自动增加，同时持有自动的填充规则（visit 即为 enable，以及默认值）
 
 
 class JsonType(Enum):
@@ -479,6 +482,11 @@ class JsonObject:
     # solve override phase
     passed_override_mark: JsonOverrideMark = None  # 在 solve override 时记录同级的 override 标记
     rewrite_by: 'JsonObject' = None  # 在 solve override 时最近的 rewrite 来源（'!!' 标记）同时也会从父节点向子节点传播
+
+    def escape_from_parent(self):
+        if self.parent:
+            self.parent.val.remove(self)
+            self.parent = None
 
     def dump_json(self, with_key=True) -> str:
         result = f'"{self.key}": ' if self.key and with_key else ""

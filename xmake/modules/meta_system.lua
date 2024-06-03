@@ -146,6 +146,8 @@ function _meta_codegen_command(target, scripts, metadir, gendir, opt)
             module_name = dep_target:name(),
             meta_dir = path.absolute(path.join(dep_target:autogendir({root = true}), dep_target:plat(), "reflection/meta")),
             api = dep_api and dep_api:upper() or dep_target:name():upper(),
+            -- TODO. generators 为逐 module 配置，需要动到 API 签名
+            -- generators = 
         })
     end
 
@@ -256,6 +258,7 @@ function _solve_generators(target)
     -- solve config
     local solved_config = {
         scripts = {},
+        self_scripts = {},
         dep_files = {}
     }
 
@@ -266,11 +269,19 @@ function _solve_generators(target)
         if script_config.import_dirs then
             for _, dir in ipairs(script_config.import_dirs) do
                 table.insert(import_dirs, path.join(target:scriptdir(), dir))
-            end 
+            end
         end
         
         -- save config
         table.insert(solved_config.scripts, {
+            file = path.join(target:scriptdir(), script_config.file),
+            private = script_config.private,
+            import_dirs = import_dirs,
+            use_new_framework = script_config.use_new_framework or false,
+        })
+
+        -- save self scripts
+        table.insert(solved_config.self_scripts, {
             file = path.join(target:scriptdir(), script_config.file),
             private = script_config.private,
             import_dirs = import_dirs,
@@ -330,7 +341,7 @@ function _meta_codegen(target, rootdir, metadir, gendir, sourcefile, headerfiles
     end
 
     -- collect target depend files
-    -- TODO. use config comapre
+    -- TODO. 对 xmake.lua 的依赖使用 config 比对代替
     table.insert(dep_files, path.join(target:scriptdir(), "xmake.lua"))
     for _, dep_target in ipairs(target:deps()) do
         target.insert(dep_files, path.join(dep_target:scriptdir(), "xmake.lua"))
