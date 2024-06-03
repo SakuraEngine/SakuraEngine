@@ -32,9 +32,9 @@ struct SKR_RUNTIME_API SResourceFactory {
         in between affect the number of jobs per frame, higher value means more jobs per frame
     */
     virtual float AsyncSerdeLoadFactor() { return 1.f; }
-    virtual int Deserialize(skr_resource_record_t* record, skr_binary_reader_t* reader);
+    virtual int Deserialize(skr_resource_record_t* record, SBinaryReader* reader);
 #ifdef SKR_RESOURCE_DEV_MODE
-    virtual int DerserializeArtifacts(skr_resource_record_t* record, skr_binary_reader_t* reader) { return 0; };
+    virtual int DerserializeArtifacts(skr_resource_record_t* record, SBinaryReader* reader) { return 0; };
 #endif
     virtual bool Unload(skr_resource_record_t* record);
     virtual ESkrInstallStatus Install(skr_resource_record_t* record) { return ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED; }

@@ -5,6 +5,7 @@
 #include "SkrSerde/json/reader.h"
 #include "SkrSerde/json/writer.h"
 #include "SkrProfile/profile.h"
+
 [[maybe_unused]] static const char8_t* JsonArrayJsonFieldArchiveFailedFormat = u8"[SERDE/JSON] Archive %s.%s[%d] failed: %s";
 [[maybe_unused]] static const char8_t* JsonArrayFieldArchiveWarnFormat = u8"[SERDE/JSON] %s.%s got too many elements (%d expected, given %d), ignoring overflowed elements";
 [[maybe_unused]] static const char8_t* JsonFieldArchiveFailedFormat = u8"[SERDE/JSON] Archive %s.%s failed: %s";
@@ -15,138 +16,131 @@
 [[maybe_unused]] static const char8_t* JsonArrayFieldNotEnoughWarnFormat = u8"[SERDE/JSON] %s.%s got too few elements (%d expected, given %d), using default value";
 [[maybe_unused]] static const char8_t* JsonBaseArchiveFailedFormat = u8"[SERDE/JSON] Archive %s base %s failed: %d";
 
+#define TRUE_OR_RETURN_FALSE(x) if (!(x)) return false;
+
 namespace skr::json {
 %for enum in generator.filter_types(db.enums):
-error_code ReadTrait<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
+bool ReadTrait<${enum.name}>::Read(SJsonReader* json, ${enum.name}& e)
 {
     SkrZoneScopedN("json::ReadTrait<${enum.name}>::Read");
-    auto value = json.get_string();
-    if (value.error() != simdjson::SUCCESS)
-        return (error_code)value.error();
-    const auto rawView = value.value_unsafe();
-    const auto enumStr = skr::StringView((const char8_t*)rawView.data(), (int32_t)rawView.size());
-    if(!skr::rttr::EnumTraits<${enum.name}>::from_string(enumStr, e))
+    skr::String enumStr;
+    if (json->String(enumStr))
     {
-        SKR_LOG_ERROR(u8"Unknown enumerator while reading enum ${enum.name}: %s", enumStr.raw().data());
-        return error_code::ENUMERATOR_ERROR;
+        if(!skr::rttr::EnumTraits<${enum.name}>::from_string(enumStr.view(), e))
+        {
+            SKR_LOG_ERROR(u8"Unknown enumerator while reading enum ${enum.name}: %s", enumStr.raw().data());
+            return false;
+        }
+        return true;
     }
-    return error_code::SUCCESS;
+    return false;
 } 
 
-void WriteTrait<${enum.name}>::Write(skr_json_writer_t* writer, ${enum.name} e)
+bool WriteTrait<${enum.name}>::Write(SJsonWriter* writer, ${enum.name} e)
 {
     SkrZoneScopedN("json::WriteTrait<${enum.name}>::Write");
-    writer->String(skr::rttr::EnumTraits<${enum.name}>::to_string(e));
+    return writer->String(skr::rttr::EnumTraits<${enum.name}>::to_string(e));
 } 
 %endfor
 
 %for record in generator.filter_types(db.records):
 %if not generator.filter_debug_type(record):
-error_code ReadTrait<${record.name}>::Read(value_t&& json, ${record.name}& record)
+bool ReadTrait<${record.name}>::Read(SJsonReader* json, ${record.name}& record)
 {
     SkrZoneScopedN("json::ReadTrait<${record.name}>::Read");
     %for base in record.bases:
     {
         auto baseJson = json;
-        skr::json::Read(std::move(baseJson), (${base}&)record);
+        skr::json::Read(baseJson, (${base}&)record);
     }
     %endfor
     %for name, field in generator.filter_fields(record.fields):
     {
-        auto field = json["${name}"];
-        if (field.error() == simdjson::NO_SUCH_FIELD)
-        {
-        %if hasattr(field.attrs, "no-default"):
-            SKR_LOG_ERROR(JsonFieldNotFoundErrorFormat, "${record.name}", "${name}");
-            return (error_code)simdjson::NO_SUCH_FIELD;
-        %else:
-            SKR_LOG_WARN(JsonFieldNotFoundFormat, "${record.name}", "${name}");
-        %endif
-        }
-        else if (field.error() != simdjson::SUCCESS)
-        {
-            SKR_LOG_ERROR(JsonFieldArchiveFailedFormat, "${record.name}", "${name}", error_message((error_code)field.error()));
-            return (error_code)field.error();
-        }
-        else
+        json->StartObject();
+
+        if (json->Key(u8"${name}"))
         {
             %if field.arraySize > 0:
             {
-                auto array = field.get_array();
-                if (array.error() != simdjson::SUCCESS)
-                {
-                    SKR_LOG_ERROR(JsonFieldArchiveFailedFormat, "${record.name}", "${name}", error_message((error_code)field.error()));
-                    return (error_code)array.error();
-                }
+                size_t count;
+                json->StartArray(count);
                 size_t i = 0;
-                for (auto element : array.value_unsafe())
+                for (i = 0; i < count; i++)
                 {
                     if(i > ${field.arraySize})
                     {
                         SKR_LOG_WARN(JsonArrayFieldArchiveWarnFormat, "${record.name}", "${name}", ${field.arraySize}, i);
                         break;
                     }
-                    if (element.error() != simdjson::SUCCESS)
+                    if(!skr::json::Read(json, record.${name}[i]))
                     {
-                        SKR_LOG_ERROR(JsonArrayJsonFieldArchiveFailedFormat, "${record.name}", "${name}", i, error_message((error_code)element.error()));
-                        return (error_code)element.error();
+                        SKR_LOG_ERROR(JsonArrayJsonFieldArchiveFailedFormat, "${record.name}", "${name}", i, "UNKNOWN ERROR"); // TODO: ERROR MESSAGE
+                        return false;
                     }
-                    error_code result = skr::json::Read(std::move(element).value_unsafe(), record.${name}[i]);
-                    if(result != error_code::SUCCESS)
-                    {
-                        SKR_LOG_ERROR(JsonArrayJsonFieldArchiveFailedFormat, "${record.name}", "${name}", i, error_message(result));
-                        return result;
-                    }
-                    ++i;
                 }
+                json->EndArray();    
+
                 if(i < ${field.arraySize})
                 {
                     %if hasattr(field.attrs, "no-default"):
                         SKR_LOG_ERROR(JsonArrayFieldNotEnoughErrorFormat, "${record.name}", "${name}", ${field.arraySize}, i);
-                        return (error_code)simdjson::NO_SUCH_FIELD;
+                        return false;
                     %else:
                         SKR_LOG_WARN(JsonArrayFieldNotEnoughWarnFormat, "${record.name}", "${name}", ${field.arraySize}, i);
                     %endif
                 }
             }
             %else:
-            error_code result = skr::json::Read(std::move(field).value_unsafe(), (${field.type}&)record.${name});
-            if(result != error_code::SUCCESS)
+            if(!skr::json::Read(json, (${field.type}&)record.${name}))
             {
-                SKR_LOG_ERROR(JsonFieldArchiveFailedFormat, "${record.name}", "${name}", error_message((error_code)field.error()));
-                return result;
+                SKR_LOG_ERROR(JsonFieldArchiveFailedFormat, "${record.name}", "${name}", "UNKNOWN ERROR");  // TODO: ERROR MESSAGE
+                return false;
             }
             %endif
         }
+
+        json->EndObject();
     }
     %endfor
-    return error_code::SUCCESS;
+    return true;
 } 
 %endif
-void WriteTrait<${record.name}>::WriteFields(skr_json_writer_t* writer, const ${record.name}& record)
+
+bool WriteTrait<${record.name}>::WriteFields(SJsonWriter* writer, const ${record.name}& record)
 {
     %for base in record.bases:
-    WriteTrait<${base}>::WriteFields(writer, record);
+    TRUE_OR_RETURN_FALSE(WriteTrait<${base}>::WriteFields(writer, record));
     %endfor
     %for name, field in generator.filter_fields(record.fields):
-    writer->Key(u8"${name}", ${len(name)});
+    TRUE_OR_RETURN_FALSE(writer->Key(u8"${name}"));
     %if field.arraySize > 0:
-    writer->StartArray();
+    TRUE_OR_RETURN_FALSE(writer->StartArray());
     for(int i = 0; i < ${field.arraySize}; ++i)
-        skr::json::Write<${field.type}>(writer, record.${name}[i]);
-    writer->EndArray();
+    {
+        bool _x = skr::json::Write<${field.type}>(writer, record.${name}[i]);
+        TRUE_OR_RETURN_FALSE(_x);
+    }
+    TRUE_OR_RETURN_FALSE(writer->EndArray());
     %else:
-    skr::json::Write<${field.type}>(writer, record.${name});
+    {
+        bool _x = skr::json::Write<${field.type}>(writer, record.${name});
+        TRUE_OR_RETURN_FALSE(_x);
+    }
     %endif
     %endfor
+    return true;
 } 
-void WriteTrait<${record.name}>::Write(skr_json_writer_t* writer, const ${record.name}& record)
+
+bool WriteTrait<${record.name}>::Write(SJsonWriter* writer, const ${record.name}& record)
 {
     SkrZoneScopedN("json::WriteTrait<${record.name}>::Write");
-    writer->StartObject();
-    WriteFields(writer, record);
-    writer->EndObject();
+    TRUE_OR_RETURN_FALSE(writer->StartObject());
+    TRUE_OR_RETURN_FALSE(WriteFields(writer, record));
+    TRUE_OR_RETURN_FALSE(writer->EndObject());
+    return true;
 } 
 %endfor
 }
 // END JSON IMPLEMENTATION
+
+#undef TRUE_OR_RETURN_FALSE

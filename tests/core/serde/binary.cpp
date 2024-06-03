@@ -12,8 +12,8 @@ protected:
     skr::Vector<uint8_t>      buffer;
     skr::binary::VectorWriter writer;
     skr::binary::SpanReader   reader;
-    skr_binary_writer_t       warchive{ writer };
-    skr_binary_reader_t       rarchive{ reader };
+    SBinaryWriter       warchive{ writer };
+    SBinaryReader       rarchive{ reader };
     BinarySerdeTests()
     {
         writer.buffer = &buffer;
@@ -48,12 +48,12 @@ TEST_CASE_METHOD(BinarySerdeTests, "vector")
     skr::Vector<uint64_t> arr;
     arr.add(value);
     arr.add(value2);
-    skr::binary::Archive(&warchive, arr);
+    EXPECT_TRUE(skr::binary::Archive(&warchive, arr));
 
     reader.data = skr::span<const uint8_t>(buffer.data(), buffer.size());
 
     skr::Vector<uint64_t> readArr;
-    skr::binary::Archive(&rarchive, readArr);
+    EXPECT_TRUE(skr::binary::Archive(&rarchive, readArr));
 
     EXPECT_EQ(value, readArr[0]);
     EXPECT_EQ(value2, readArr[1]);

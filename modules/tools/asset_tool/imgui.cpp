@@ -1,6 +1,6 @@
 
 #include "../../../../samples/common/common/utils.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrRT/platform/window.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/log.h"

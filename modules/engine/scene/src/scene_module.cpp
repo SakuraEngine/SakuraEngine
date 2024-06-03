@@ -1,5 +1,5 @@
 #include "SkrScene/skr_scene.h"
-#include "SkrModule/module_manager.hpp"
+#include "SkrCore/module/module_manager.hpp"
 #include "SkrCore/log.h"
 
 IMPLEMENT_DYNAMIC_MODULE(SkrSceneModule, SkrScene);

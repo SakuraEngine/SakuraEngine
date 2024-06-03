@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
+#include "SkrBase/types.h"
 #include "SkrRT/config.h"
 
 struct skr_vfs_t;

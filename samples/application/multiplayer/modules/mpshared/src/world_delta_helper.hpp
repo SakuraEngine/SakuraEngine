@@ -30,7 +30,7 @@ skr::task::event_t BuildDelta(sugoi_type_index_t type, sugoi_query_t* query, MPW
         history_t* lastHistory = nullptr;
         const CAuth* lastAuth = nullptr;
         writer_t writer{&comps.data};
-        skr_binary_writer_t archive(writer);
+        SBinaryWriter archive(writer);
 
         auto serde = [&](NetEntityId ent) -> bool
         {
@@ -98,7 +98,7 @@ skr::task::event_t ApplyDelta(sugoi_type_index_t type, sugoi_query_t* query, con
         const T* lastComp = nullptr;
         using reader_t = std::conditional_t<bitpacking, skr::binary::SpanReaderBitpacked, skr::binary::SpanReader>;
         reader_t reader{comps.data};
-        skr_binary_reader_t archive(reader);
+        SBinaryReader archive(reader);
         for(int i = 0; i < comps.entities.size(); ++i)
         {
             sugoi_chunk_view_t view;

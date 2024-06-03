@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/types.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "parallel_hashmap/btree.h"
 
 namespace skr
@@ -24,7 +24,7 @@ namespace binary
 {
 template <class K, class V, class Eq>
 struct ReadTrait<skr::BTreeMap<K, V, Eq>> {
-    static int Read(skr_binary_reader_t* archive, skr::BTreeMap<K, V, Eq>& map)
+    static bool Read(SBinaryReader* archive, skr::BTreeMap<K, V, Eq>& map)
     {
         skr::BTreeMap<K, V, Eq> temp;
         uint32_t                 size;
@@ -39,13 +39,13 @@ struct ReadTrait<skr::BTreeMap<K, V, Eq>> {
             temp.insert({ std::move(key), std::move(value) });
         }
         map = std::move(temp);
-        return 0;
+        return true;
     }
 };
 
 template <class K, class V, class Eq>
 struct WriteTrait<skr::BTreeMap<K, V, Eq>> {
-    static int Write(skr_binary_writer_t* archive, const skr::BTreeMap<K, V, Eq>& map)
+    static bool Write(SBinaryWriter* archive, const skr::BTreeMap<K, V, Eq>& map)
     {
         SKR_ARCHIVE((uint32_t)map.size());
         for (auto& pair : map)
@@ -53,7 +53,7 @@ struct WriteTrait<skr::BTreeMap<K, V, Eq>> {
             SKR_ARCHIVE(pair.first);
             SKR_ARCHIVE(pair.second);
         }
-        return 0;
+        return true;
     }
 };
 } // namespace binary

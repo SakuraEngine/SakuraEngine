@@ -3,7 +3,7 @@
 #include "SkrRenderer/render_device.h"
 #include "SkrBase/misc/hash.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/sptr.hpp"

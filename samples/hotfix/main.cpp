@@ -1,5 +1,5 @@
 
-#include "SkrModule/module_manager.hpp"
+#include "SkrCore/module/module_manager.hpp"
 #include "hotfix_module.hpp"
 #include <thread>
 #include <chrono>

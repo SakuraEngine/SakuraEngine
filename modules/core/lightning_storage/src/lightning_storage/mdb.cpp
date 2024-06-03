@@ -1,4 +1,4 @@
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include <SkrOS/filesystem.hpp>
 #include "SkrCore/log.h"
 #include "SkrContainers/string.hpp"

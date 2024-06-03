@@ -1,7 +1,7 @@
 #include "SkrRT/resource/config_resource.h"
 #include "SkrBase/misc/debug.h"
 #include "SkrGuid/guid.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrSerde/binary/reader.h"
 #include "SkrSerde/binary/writer.h"
 #include "SkrRTTR/type_registry.hpp"
@@ -34,26 +34,28 @@ void skr_config_resource_t::SetType(skr_guid_t type)
 
 namespace skr::binary
 {
-int WriteTrait<skr_config_resource_t>::Write(skr_binary_writer_t* archive, const skr_config_resource_t& value)
+bool WriteTrait<skr_config_resource_t>::Write(SBinaryWriter* archive, const skr_config_resource_t& value)
 {
-    if (auto result = skr::binary::Write(archive, value.configType); result != 0)
-        return result;
+    if (!skr::binary::Write(archive, value.configType))
+        return false;
     if (value.configType == skr_guid_t{})
-        return 0;
-    auto type = skr::rttr::get_type_from_guid(value.configType);
+        return true;
+    // auto type = skr::rttr::get_type_from_guid(value.configType);
     // return type->write_binary(value.configData, archive); // TODO. resume rttr
+    SKR_UNIMPLEMENTED_FUNCTION();
     return {};
 }
 
-int ReadTrait<skr_config_resource_t>::Read(skr_binary_reader_t* archive, skr_config_resource_t& value)
+bool ReadTrait<skr_config_resource_t>::Read(SBinaryReader* archive, skr_config_resource_t& value)
 {
-    if (auto result = skr::binary::Read(archive, value.configType); result != 0)
-        return result;
+    if (!skr::binary::Read(archive, value.configType))
+        return false;
     if (value.configType == skr_guid_t{})
-        return 0;
+        return true;
     auto type        = skr::rttr::get_type_from_guid(value.configType);
     value.configData = sakura_malloc_aligned(type->size(), type->alignment());
     // return type->read_binary(value.configData, archive); // TODO. resume rttr
+    SKR_UNIMPLEMENTED_FUNCTION();
     return {};
 }
 } // namespace skr::binary

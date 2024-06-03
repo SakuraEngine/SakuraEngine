@@ -15,18 +15,18 @@
 #include "SkrProfile/profile.h"
 
 template <class T>
-static void ArchiveBuffer(skr_binary_writer_t* writer, const T* buffer, uint32_t count)
+static void ArchiveBuffer(SBinaryWriter* writer, const T* buffer, uint32_t count)
 {
     skr::binary::WriteBytes(writer, (const void*)buffer, sizeof(T) * count);
 }
 
 template <class T>
-static void ArchiveBuffer(skr_binary_reader_t* reader, T* buffer, uint32_t count)
+static void ArchiveBuffer(SBinaryReader* reader, T* buffer, uint32_t count)
 {
     skr::binary::ReadBytes(reader, (void*)buffer, sizeof(T) * count);
 }
 
-static void serialize_impl(const sugoi_chunk_view_t& view, sugoi_type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, skr_binary_writer_t* s, skr_binary_reader_t* ds, void (*serialize)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer), void (*deserialize)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* writer))
+static void serialize_impl(const sugoi_chunk_view_t& view, sugoi_type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, SBinaryWriter* s, SBinaryReader* ds, void (*serialize)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryWriter* writer), void (*deserialize)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryReader* writer))
 {
     using namespace sugoi;
     namespace bin    = skr::binary;
@@ -95,7 +95,7 @@ static void serialize_impl(const sugoi_chunk_view_t& view, sugoi_type_index_t ty
     }
 }
 
-void sugoi_storage_t::serialize_view(sugoi_group_t* group, sugoi_chunk_view_t& view, skr_binary_writer_t* s, skr_binary_reader_t* ds, bool withEntities)
+void sugoi_storage_t::serialize_view(sugoi_group_t* group, sugoi_chunk_view_t& view, SBinaryWriter* s, SBinaryReader* ds, bool withEntities)
 {
     using namespace sugoi;
     namespace bin = skr::binary;
@@ -123,7 +123,7 @@ void sugoi_storage_t::serialize_view(sugoi_group_t* group, sugoi_chunk_view_t& v
         serialize_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], s, ds, type->callbacks[i].serialize, type->callbacks[i].deserialize);
 }
 
-void sugoi_storage_t::serialize_type(const sugoi_entity_type_t& type, skr_binary_writer_t* s, bool keepMeta)
+void sugoi_storage_t::serialize_type(const sugoi_entity_type_t& type, SBinaryWriter* s, bool keepMeta)
 {
     using namespace sugoi;
     namespace bin = skr::binary;
@@ -143,7 +143,7 @@ void sugoi_storage_t::serialize_type(const sugoi_entity_type_t& type, skr_binary
     }
 }
 
-sugoi_entity_type_t sugoi_storage_t::deserialize_type(sugoi::fixed_stack_t& stack, skr_binary_reader_t* s, bool keepMeta)
+sugoi_entity_type_t sugoi_storage_t::deserialize_type(sugoi::fixed_stack_t& stack, SBinaryReader* s, bool keepMeta)
 {
     using namespace sugoi;
     namespace bin = skr::binary;
@@ -171,7 +171,7 @@ sugoi_entity_type_t sugoi_storage_t::deserialize_type(sugoi::fixed_stack_t& stac
     return type;
 }
 
-void sugoi_storage_t::serialize_single(sugoi_entity_t e, skr_binary_writer_t* s)
+void sugoi_storage_t::serialize_single(sugoi_entity_t e, SBinaryWriter* s)
 {
     using namespace sugoi;
     auto view        = entity_view(e);
@@ -181,7 +181,7 @@ void sugoi_storage_t::serialize_single(sugoi_entity_t e, skr_binary_writer_t* s)
     serialize_view(view.chunk->group, view, s, nullptr, false);
 }
 
-sugoi_entity_t sugoi_storage_t::deserialize_single(skr_binary_reader_t* s)
+sugoi_entity_t sugoi_storage_t::deserialize_single(SBinaryReader* s)
 {
     using namespace sugoi;
     fixed_stack_scope_t _(localStack);
@@ -196,7 +196,7 @@ sugoi_entity_t sugoi_storage_t::deserialize_single(skr_binary_reader_t* s)
 }
 
 //[count] ([group] [slice])*
-void sugoi_storage_t::serialize_prefab(sugoi_entity_t e, skr_binary_writer_t* s)
+void sugoi_storage_t::serialize_prefab(sugoi_entity_t e, SBinaryWriter* s)
 {
     using namespace sugoi;
     namespace bin = skr::binary;
@@ -209,7 +209,7 @@ void sugoi_storage_t::serialize_prefab(sugoi_entity_t e, skr_binary_writer_t* s)
     serialize_single(e, s);
 }
 
-void sugoi_storage_t::serialize_prefab(sugoi_entity_t* es, EIndex n, skr_binary_writer_t* s)
+void sugoi_storage_t::serialize_prefab(sugoi_entity_t* es, EIndex n, SBinaryWriter* s)
 {
     using namespace sugoi;
     namespace bin = skr::binary;
@@ -226,7 +226,7 @@ void sugoi_storage_t::serialize_prefab(sugoi_entity_t* es, EIndex n, skr_binary_
     prefab_to_linked(es, n);
 }
 
-sugoi_entity_t sugoi_storage_t::deserialize_prefab(skr_binary_reader_t* s)
+sugoi_entity_t sugoi_storage_t::deserialize_prefab(SBinaryReader* s)
 {
     using namespace sugoi;
     namespace bin = skr::binary;
@@ -252,7 +252,7 @@ sugoi_entity_t sugoi_storage_t::deserialize_prefab(skr_binary_reader_t* s)
     return sugoi_entity_t();
 }
 
-void sugoi_storage_t::serialize(skr_binary_writer_t* s)
+void sugoi_storage_t::serialize(SBinaryWriter* s)
 {
     SkrZoneScopedN("sugoi_storage_t::serialize");
     using namespace sugoi;
@@ -284,7 +284,7 @@ void sugoi_storage_t::serialize(skr_binary_writer_t* s)
     }
 }
 
-void sugoi_storage_t::deserialize(skr_binary_reader_t* s)
+void sugoi_storage_t::deserialize(SBinaryReader* s)
 {
     using namespace sugoi;
     SkrZoneScopedN("sugoi_storage_t::deserialize");

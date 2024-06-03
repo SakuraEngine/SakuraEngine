@@ -28,7 +28,7 @@
 #ifndef OZZ_OZZ_BASE_CONTAINERS_DEQUE_H_
 #define OZZ_OZZ_BASE_CONTAINERS_DEQUE_H_
 
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include <deque>
 
 namespace ozz {

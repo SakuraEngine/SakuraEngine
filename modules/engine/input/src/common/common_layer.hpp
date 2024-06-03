@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrInput/input.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrOS/atomic.h"
 #include "SkrContainers/span.hpp"
 

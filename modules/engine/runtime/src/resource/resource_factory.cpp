@@ -10,7 +10,7 @@ namespace skr
 namespace resource
 {
 
-int SResourceFactory::Deserialize(skr_resource_record_t* record, skr_binary_reader_t* reader)
+int SResourceFactory::Deserialize(skr_resource_record_t* record, SBinaryReader* reader)
 {
     // TODO. resume rttr
     // if (auto type = skr::rttr::get_type_from_guid(record->header.type))

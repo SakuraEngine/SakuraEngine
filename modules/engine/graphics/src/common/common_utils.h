@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/misc/hash.h" // IWYU pragma: export
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrGraphics/api.h"
 
 #ifdef __cplusplus

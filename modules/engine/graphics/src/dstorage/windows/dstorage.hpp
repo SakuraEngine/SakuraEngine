@@ -7,7 +7,7 @@
 
 // #define TRACY_PROFILE_DIRECT_STORAGE
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
-    #include "SkrMemory/memory.h"
+    #include "SkrCore/memory/memory.h"
     #include "SkrOS/atomic.h"
     #include "SkrOS/thread.h"
 #endif

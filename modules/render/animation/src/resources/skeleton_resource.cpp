@@ -3,19 +3,19 @@
 
 namespace skr::binary
 {
-int ReadTrait<skr::anim::SkeletonResource>::Read(skr_binary_reader_t* reader, skr::anim::SkeletonResource& value)
+bool ReadTrait<skr::anim::SkeletonResource>::Read(SBinaryReader* reader, skr::anim::SkeletonResource& value)
 {
     ozz::io::SkrStream stream(reader, nullptr);
     ozz::io::IArchive  archive(&stream);
     archive >> value.skeleton;
-    return 0;
+    return true;
 }
-int WriteTrait<skr::anim::SkeletonResource>::Write(skr_binary_writer_t* writer, const skr::anim::SkeletonResource& value)
+bool WriteTrait<skr::anim::SkeletonResource>::Write(SBinaryWriter* writer, const skr::anim::SkeletonResource& value)
 {
     ozz::io::SkrStream stream(nullptr, writer);
     ozz::io::OArchive  archive(&stream);
     archive << value.skeleton;
-    return 0;
+    return true;
 }
 } // namespace skr::binary
 

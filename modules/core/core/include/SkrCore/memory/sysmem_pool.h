@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 
 typedef struct SSysMemoryPoolDesc {
     size_t size;

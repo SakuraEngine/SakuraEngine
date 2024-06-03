@@ -33,11 +33,11 @@ namespace binary
 {
 template <>
 struct WriteTrait<packed_entity_t> {
-    static int Write(skr_binary_writer_t* writer, const packed_entity_t& value, sugoi_entity_t maxEntity);
+    static bool Write(SBinaryWriter* writer, const packed_entity_t& value, sugoi_entity_t maxEntity);
 };
 template <>
 struct ReadTrait<packed_entity_t> {
-    static int Read(skr_binary_reader_t* reader, packed_entity_t& value, sugoi_entity_t maxEntity);
+    static bool Read(SBinaryReader* reader, packed_entity_t& value, sugoi_entity_t maxEntity);
 };
 BLOB_POD(packed_entity_t)
 } // namespace binary
@@ -49,7 +49,7 @@ namespace json
 {
 template <>
 struct WriteTrait<packed_entity_t> {
-    static void Write(skr_json_writer_t* writer, const packed_entity_t& value);
+    static bool Write(SJsonWriter* writer, const packed_entity_t& value);
 };
 } // namespace json
 } // namespace skr

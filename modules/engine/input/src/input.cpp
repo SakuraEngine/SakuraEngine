@@ -1,6 +1,6 @@
 #include "SkrBase/misc/debug.h"
 #include "SkrOS/shared_library.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include <SkrContainers/vector.hpp>
 #include "SkrContainers/span.hpp"
 #include "SkrInput/input.h"

@@ -39,6 +39,7 @@ if build_part("render") then
         add_files("live2d-viewer/**.json", "live2d-viewer/**.moc3", "live2d-viewer/**.png")
 end
 
+--[[
 if build_part("tools") then
     if(not has_config("shipping_one_archive")) then
 
@@ -64,4 +65,4 @@ if build_part("tools") then
 
     end
 end
-
+]]--

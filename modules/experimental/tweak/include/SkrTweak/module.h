@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrModule/module.hpp"
+#include "SkrCore/module/module.hpp"
 
 #ifdef __cplusplus
 struct skr_tweak_int_t;

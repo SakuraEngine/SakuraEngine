@@ -10,16 +10,17 @@ skr_guid_t SSceneFactory::GetResourceType()
 
 namespace skr::binary
 {
-int ReadTrait<skr_scene_resource_t>::Read(skr_binary_reader_t* reader, skr_scene_resource_t& value)
+bool ReadTrait<skr_scene_resource_t>::Read(SBinaryReader* reader, skr_scene_resource_t& value)
 {
     // TODO: error code?
     value.storage = sugoiS_create();
     sugoiS_deserialize(value.storage, reader);
-    return 0;
+    return true;
 }
-int WriteTrait<skr_scene_resource_t>::Write(skr_binary_writer_t* writer, const skr_scene_resource_t& value)
+
+bool WriteTrait<skr_scene_resource_t>::Write(SBinaryWriter* writer, const skr_scene_resource_t& value)
 {
     sugoiS_serialize(value.storage, writer);
-    return 0;
+    return true;
 }
 } // namespace skr::binary

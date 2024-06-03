@@ -43,6 +43,12 @@ constexpr static auto is_complete = SKR_VALIDATOR((auto t), sizeof(t));
 template <class T>
 constexpr bool is_complete_v = is_complete(SKR_TYPELIST(T));
 
+template <typename T>
+inline constexpr bool is_carray_v = false;
+
+template <typename T, std::size_t N>
+inline constexpr bool is_carray_v<T[N]> = true;
+
 template <typename T, template <typename...> typename Template>
 inline constexpr bool is_specialization_v = false; // true if and only if T is a specialization of Template
 

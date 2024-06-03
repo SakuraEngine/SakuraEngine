@@ -1,5 +1,5 @@
 #include "SkrBase/config.h"
-#include "SkrModule/module.hpp"
+#include "SkrCore/module/module.hpp"
 namespace hotfix
 {
     struct State

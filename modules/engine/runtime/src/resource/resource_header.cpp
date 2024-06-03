@@ -2,70 +2,61 @@
 #include "SkrSerde/binary/writer.h"
 #include "SkrSerde/binary/reader.h"
 
-int skr_resource_header_t::ReadWithoutDeps(skr_binary_reader_t* reader)
+bool skr_resource_header_t::ReadWithoutDeps(SBinaryReader* reader)
 {
     namespace bin     = skr::binary;
     uint32_t function = 1;
-    int      ret      = bin::Archive(reader, function);
-    if (ret != 0)
-        return ret;
-    ret = bin::Archive(reader, version);
-    if (ret != 0)
-        return ret;
-    ret = bin::Archive(reader, guid);
-    if (ret != 0)
-        return ret;
-    ret = bin::Archive(reader, type);
-    if (ret != 0)
-        return ret;
-    return 0;
+    if (!bin::Archive(reader, function))
+        return false;
+    if (!bin::Archive(reader, version))
+        return false;
+    if (!bin::Archive(reader, guid))
+        return false;
+    if (!bin::Archive(reader, type))
+        return false;
+    return true;
 }
 
 namespace skr::binary
 {
-int ReadTrait<skr_resource_header_t>::Read(skr_binary_reader_t* reader, skr_resource_header_t& header)
+bool ReadTrait<skr_resource_header_t>::Read(SBinaryReader* reader, skr_resource_header_t& header)
 {
     namespace bin = skr::binary;
-    int      ret  = header.ReadWithoutDeps(reader);
+    if (!header.ReadWithoutDeps(reader))
+        return false;
     uint32_t size = 0;
-    ret           = bin::Archive(reader, size);
-    if (ret != 0)
-        return ret;
+    if (!bin::Archive(reader, size))
+        return false;
     header.dependencies.resize_default(size);
     for (uint32_t i = 0; i < size; i++)
     {
-        ret = bin::Archive(reader, header.dependencies[i]);
-        if (ret != 0)
-            return ret;
+        if (!bin::Archive(reader, header.dependencies[i]))
+            return false;
     }
-    return ret;
+    return true;
 }
 
-int WriteTrait<skr_resource_header_t>::Write(skr_binary_writer_t* writer, const skr_resource_header_t& header)
+bool WriteTrait<skr_resource_header_t>::Write(SBinaryWriter* writer, const skr_resource_header_t& header)
 {
     namespace bin     = skr::binary;
     uint32_t function = 1;
-    int      ret      = bin::Archive(writer, function);
-    if (ret != 0)
-        return ret;
-    ret = bin::Archive(writer, header.version);
-    if (ret != 0)
-        return ret;
-    ret = bin::Archive(writer, header.guid);
-    if (ret != 0)
-        return ret;
-    ret = bin::Archive(writer, header.type);
-    if (ret != 0)
-        return ret;
+    if (!bin::Archive(writer, function))
+        return false;
+    if (!bin::Archive(writer, header.version))
+        return false;
+    if (!bin::Archive(writer, header.guid))
+        return false;
+    if (!bin::Archive(writer, header.type))
+        return false;
     const auto dependencies_size = (uint32_t)header.dependencies.size();
-    ret                          = bin::Archive(writer, dependencies_size);
+    if (!bin::Archive(writer, dependencies_size))
+        return false;
     for (auto& dep : header.dependencies)
     {
-        ret = bin::Archive(writer, dep);
-        if (ret != 0)
-            return ret;
+        if (!bin::Archive(writer, dep))
+            return false;
     }
-    return ret;
+    return true;
 }
 } // namespace skr::binary
 

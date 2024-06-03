@@ -1,7 +1,7 @@
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
 #include "SkrGuiRenderer/render/skr_render_window.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrGui/backend/canvas/canvas_types.hpp"
 
 // constants

@@ -31,10 +31,10 @@ namespace skr::binary
 {
 template <>
 struct SKR_SCENE_API ReadTrait<skr_scene_resource_t> {
-    static int Read(skr_binary_reader_t* reader, skr_scene_resource_t& value);
+    static bool Read(SBinaryReader* reader, skr_scene_resource_t& value);
 };
 template <>
 struct SKR_SCENE_API WriteTrait<skr_scene_resource_t> {
-    static int Write(skr_binary_writer_t* writer, const skr_scene_resource_t& value);
+    static bool Write(SBinaryWriter* writer, const skr_scene_resource_t& value);
 };
 } // namespace skr::binary

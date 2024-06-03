@@ -11,7 +11,7 @@
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
 #include "SkrCore/async/thread_job.hpp"
-#include "SkrModule/module_manager.hpp"
+#include "SkrCore/module/module_manager.hpp"
 #include "SkrRT/runtime_module.h"
 #include "SkrInput/input.h"
 #include "SkrImGui/skr_imgui.h"

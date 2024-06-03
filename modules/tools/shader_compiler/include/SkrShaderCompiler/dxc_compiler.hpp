@@ -1,6 +1,6 @@
 #pragma once
 #include "shader_compiler.hpp"
-#include "SkrModule/subsystem.hpp"
+#include "SkrCore/module/subsystem.hpp"
 #include "SkrOS/shared_library.hpp"
 #include "SkrContainers/stl_string.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"

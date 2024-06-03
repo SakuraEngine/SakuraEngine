@@ -28,7 +28,7 @@
 #ifndef OZZ_OZZ_BASE_CONTAINERS_VECTOR_H_
 #define OZZ_OZZ_BASE_CONTAINERS_VECTOR_H_
 
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include <vector>
 
 namespace ozz {

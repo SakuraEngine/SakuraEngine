@@ -6,7 +6,7 @@
 #include "SkrGuid/guid.hpp"
 #include "SkrCore/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrModule/module_manager.hpp"
+#include "SkrCore/module/module_manager.hpp"
 
 #include "SkrImGui/skr_imgui.h"
 #include "SkrRenderer/skr_renderer.h"

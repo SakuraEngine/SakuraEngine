@@ -67,7 +67,7 @@ void MPClientWorld::ReceiveWorldDelta(const void* data, size_t dataLength)
         span = { (uint8_t*)decompressedData.data(), size };
     }
     skr::binary::SpanReaderBitpacked reader{ span, 0 };
-    skr_binary_reader_t              archive(reader);
+    SBinaryReader              archive(reader);
     skr::binary::Read(&archive, worldDelta);
 
     auto forward = worldDelta.frame - verifiedFrame;
@@ -83,7 +83,7 @@ void MPClientWorld::ReceiveWorldDelta(const void* data, size_t dataLength)
     }
 
     // {
-    //     skr_json_writer_t jsonWriter(4);
+    //     SJsonWriter jsonWriter(4);
     //     skr::json::Write(&jsonWriter, worldDelta.blob);
     //     SKR_LOG_DEBUG(u8"Receiving delta %s : ", jsonWriter.Str().c_str());
     // }
@@ -151,7 +151,7 @@ void MPClientWorld::SendInput()
     buffer.resize_default(sizeof(uint32_t));
     *(uint32_t*)&buffer[0] = (uint32_t)MPEventType::Input;
     skr::binary::VectorWriter writer{ &buffer };
-    skr_binary_writer_t       archive(writer);
+    SBinaryWriter       archive(writer);
     skr::binary::Write(&archive, input);
     SteamNetworkingSockets()->SendMessageToConnection(serverConnection, buffer.data(), buffer.size(), k_nSteamNetworkingSend_Reliable, nullptr);
 }

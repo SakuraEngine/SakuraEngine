@@ -6,7 +6,7 @@
 #include "SkrTask/parallel_for.hpp"
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/stl_vector.hpp"
-#include "SkrModule/module_manager.hpp"
+#include "SkrCore/module/module_manager.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/resource/local_resource_registry.hpp"

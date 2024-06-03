@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrMemory/memory.h"
-#include "SkrModule/module_manager.hpp"
+#include "SkrCore/memory/memory.h"
+#include "SkrCore/module/module_manager.hpp"
 
 namespace skr 
 {

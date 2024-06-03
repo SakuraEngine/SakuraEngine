@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/stl_function.hpp"
 #include "SkrContainers/tuple.hpp"

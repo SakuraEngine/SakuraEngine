@@ -1,6 +1,6 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrGraphics/containers.hpp"
 #include "SkrGraphics/backend/d3d12/cgpu_d3d12.h"
 #include "SkrGraphics/drivers/cgpu_nvapi.h"

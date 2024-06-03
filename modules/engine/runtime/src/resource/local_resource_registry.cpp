@@ -36,7 +36,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
             return false;
         }
         skr::binary::SpanReader reader = { buffer, 0 };
-        skr_binary_reader_t     archive{ reader };
+        SBinaryReader     archive{ reader };
         if (skr::binary::Read(&archive, header) != 0)
             return false;
     }
@@ -50,7 +50,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
             return false;
         }
         skr::binary::SpanReader reader = { { buffer, _fs_length }, 0 };
-        skr_binary_reader_t     archive{ reader };
+        SBinaryReader     archive{ reader };
         if (skr::binary::Read(&archive, header) != 0)
             return false;
     }

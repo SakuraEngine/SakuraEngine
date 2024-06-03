@@ -6,7 +6,7 @@
 #pragma comment(lib, "Shlwapi")
 
 #include "SkrCore/process.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrContainers/string.hpp"
 #include "SkrOS/atomic.h"
 

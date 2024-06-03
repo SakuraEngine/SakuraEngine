@@ -12,11 +12,11 @@
 template <class T>
 void RegisterSimpleComponent()
 {
-    constexpr auto builder = +[](sugoi_chunk_view_t view, const T& comp, skr_binary_writer_t& archive) {
+    constexpr auto builder = +[](sugoi_chunk_view_t view, const T& comp, SBinaryWriter& archive) {
         skr::binary::Archive(&archive, comp);
     };
     RegisterComponentDeltaBuilder(sugoi_id_of<T>::get(), &BuildDelta<T, builder>);
-    constexpr auto applier = +[](sugoi_chunk_view_t view, T& comp, skr_binary_reader_t& archive) {
+    constexpr auto applier = +[](sugoi_chunk_view_t view, T& comp, SBinaryReader& archive) {
         skr::binary::Archive(&archive, comp);
     };
     RegisterComponentDeltaApplier(sugoi_id_of<T>::get(), &ApplyDelta<T, applier>);
@@ -51,7 +51,7 @@ void InitializeNetworkComponents()
 {
     {
         static skr::binary::VectorPackConfig<float> translationSerdeConfig = { 10000 };
-        constexpr auto                              builder                = +[](sugoi_chunk_view_t view, const skr_translation_comp_t& comp, skr_translation_comp_t_History& historyComp, bool initialMap, skr_binary_writer_t& archive) {
+        constexpr auto                              builder                = +[](sugoi_chunk_view_t view, const skr_translation_comp_t& comp, skr_translation_comp_t_History& historyComp, bool initialMap, SBinaryWriter& archive) {
             uint32_t     full = initialMap || historyComp.deltaAccumulated > 40.f;
             skr_float2_t delta;
             delta.x = comp.value.x - historyComp.position.x;
@@ -76,7 +76,7 @@ void InitializeNetworkComponents()
             return false;
         };
         RegisterComponentDeltaBuilder(sugoi_id_of<skr_translation_comp_t>::get(), &BuildDelta<skr_translation_comp_t, builder, skr_translation_comp_t_History, true>, sugoi_id_of<skr_translation_comp_t_History>::get());
-        constexpr auto applier = +[](sugoi_chunk_view_t view, skr_translation_comp_t& comp, skr_binary_reader_t& archive) {
+        constexpr auto applier = +[](sugoi_chunk_view_t view, skr_translation_comp_t& comp, SBinaryReader& archive) {
             uint32_t full = 0;
             archive.read_bits(&full, 1);
             if (full)
@@ -97,13 +97,13 @@ void InitializeNetworkComponents()
     {
         // optimize1: only send needed value (yaw)
         // optimize2: compress value
-        constexpr auto builder = +[](sugoi_chunk_view_t view, const skr_rotation_comp_t& comp, skr_binary_writer_t& archive) {
+        constexpr auto builder = +[](sugoi_chunk_view_t view, const skr_rotation_comp_t& comp, SBinaryWriter& archive) {
             float    rot   = comp.euler.yaw;
             uint16_t rot16 = static_cast<uint16_t>(rot * 65536.0f / 360.0f);
             skr::binary::Archive(&archive, rot16);
         };
         RegisterComponentDeltaBuilder(sugoi_id_of<skr_rotation_comp_t>::get(), &BuildDelta<skr_rotation_comp_t, builder>);
-        constexpr auto applier = +[](sugoi_chunk_view_t view, skr_rotation_comp_t& comp, skr_binary_reader_t& archive) {
+        constexpr auto applier = +[](sugoi_chunk_view_t view, skr_rotation_comp_t& comp, SBinaryReader& archive) {
             uint16_t rot16;
             skr::binary::Archive(&archive, rot16);
             comp.euler.yaw = rot16 * 360.0f / 65536.0f;
@@ -116,11 +116,11 @@ void InitializeNetworkComponents()
     RegisterSimpleComponent<CPlayer>();
     RegisterSimpleComponent<CZombie>();
     {
-        constexpr auto builder = +[](sugoi_chunk_view_t view, const CController& comp, skr_binary_writer_t& archive) {
+        constexpr auto builder = +[](sugoi_chunk_view_t view, const CController& comp, SBinaryWriter& archive) {
             skr::binary::Archive(&archive, comp);
         };
         RegisterComponentDeltaBuilder(sugoi_id_of<CController>::get(), &BuildDelta<CController, builder>);
-        constexpr auto applier = +[](sugoi_chunk_view_t view, CController& comp, skr_binary_reader_t& archive) {
+        constexpr auto applier = +[](sugoi_chunk_view_t view, CController& comp, SBinaryReader& archive) {
             skr::binary::Archive(&archive, comp);
             comp.playerId = comp.localPlayerId;
         };
@@ -128,11 +128,11 @@ void InitializeNetworkComponents()
     }
     {
         static auto    velocitySerdeConfig = skr::binary::VectorPackConfig<float>{ 100 };
-        constexpr auto builder             = +[](sugoi_chunk_view_t view, const CMovement& comp, skr_binary_writer_t& archive) {
+        constexpr auto builder             = +[](sugoi_chunk_view_t view, const CMovement& comp, SBinaryWriter& archive) {
             skr::binary::Archive(&archive, comp.velocity, velocitySerdeConfig);
         };
         RegisterComponentDeltaBuilder(sugoi_id_of<CMovement>::get(), &BuildDelta<CMovement, builder, void, true>);
-        constexpr auto applier = +[](sugoi_chunk_view_t view, CMovement& comp, skr_binary_reader_t& archive) {
+        constexpr auto applier = +[](sugoi_chunk_view_t view, CMovement& comp, SBinaryReader& archive) {
             skr::binary::Archive(&archive, comp.velocity, velocitySerdeConfig);
         };
         RegisterComponentDeltaApplier(sugoi_id_of<CMovement>::get(), &ApplyDelta<CMovement, applier, true>);

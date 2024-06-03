@@ -1,4 +1,4 @@
-#include "SkrModule/module_manager.hpp"
+#include "SkrCore/module/module_manager.hpp"
 #include "SkrOS/filesystem.hpp"
 #include "SkrCore/log.h"
 

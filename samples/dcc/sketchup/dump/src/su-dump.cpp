@@ -1,7 +1,7 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrContainers/hashmap.hpp"
 #include "SkrCore/log.h"
-#include "SkrModule/module.hpp"
+#include "SkrCore/module/module.hpp"
 #include "SkrOS/thread.h"
 #include "SkrTask/parallel_for.hpp"
 

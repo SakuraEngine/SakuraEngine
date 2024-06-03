@@ -108,8 +108,8 @@ struct skr_transform_system_t {
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_setup(sugoi_storage_t* world, skr_transform_system_t* system);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_update(skr_transform_system_t* query);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_propagate_transform(sugoi_storage_t* world, sugoi_entity_t* entities, uint32_t count);
-SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_save_scene(sugoi_storage_t* world, struct skr_json_writer_t* writer);
-SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(sugoi_storage_t* world, struct skr_json_reader_t* reader);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_save_scene(sugoi_storage_t* world, struct SJsonWriter* writer);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(sugoi_storage_t* world, struct SJsonReader* reader);
 
 #ifdef __cplusplus
 // FIXME. lua support
@@ -146,5 +146,32 @@ SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(sugoi_storage_t* world, str
 //     }
 // };
 // } // namespace skr::lua
+
+inline static SKR_CONSTEXPR bool operator==(skr_scale_comp_t l, skr_scale_comp_t r)
+{
+    return (l.value == r.value);
+}
+inline static SKR_CONSTEXPR bool operator!=(skr_scale_comp_t l, skr_scale_comp_t r)
+{
+    return (l.value != r.value);
+}
+
+inline static SKR_CONSTEXPR bool operator==(skr_translation_comp_t l, skr_translation_comp_t r)
+{
+    return (l.value == r.value);
+}
+inline static SKR_CONSTEXPR bool operator!=(skr_translation_comp_t l, skr_translation_comp_t r)
+{
+    return (l.value != r.value);
+}
+
+inline static SKR_CONSTEXPR bool operator==(skr_rotation_comp_t l, skr_rotation_comp_t r)
+{
+    return (l.euler == r.euler);
+}
+inline static SKR_CONSTEXPR bool operator!=(skr_rotation_comp_t l, skr_rotation_comp_t r)
+{
+    return (l.euler != r.euler);
+}
 
 #endif

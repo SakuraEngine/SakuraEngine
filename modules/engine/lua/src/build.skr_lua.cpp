@@ -1,5 +1,5 @@
 #include "SkrContainers/hashmap.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrGuid/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"

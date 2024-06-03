@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/types.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "parallel_hashmap/phmap.h"
 
 namespace skr
@@ -36,7 +36,7 @@ namespace binary
 {
 template <class K, class V, class Hash, class Eq>
 struct ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
-    static int Read(skr_binary_reader_t* archive, skr::FlatHashMap<K, V, Hash, Eq>& map)
+    static bool Read(SBinaryReader* archive, skr::FlatHashMap<K, V, Hash, Eq>& map)
     {
         skr::FlatHashMap<K, V, Hash, Eq> temp;
         uint32_t                           size;
@@ -51,13 +51,13 @@ struct ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
             temp.insert({ std::move(key), std::move(value) });
         }
         map = std::move(temp);
-        return 0;
+        return true;
     }
 };
 
 template <class K, class V, class Hash, class Eq>
 struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
-    static int Write(skr_binary_writer_t* archive, const skr::FlatHashMap<K, V, Hash, Eq>& map)
+    static bool Write(SBinaryWriter* archive, const skr::FlatHashMap<K, V, Hash, Eq>& map)
     {
         SKR_ARCHIVE((uint32_t)map.size());
         for (auto& pair : map)
@@ -65,7 +65,7 @@ struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
             SKR_ARCHIVE(pair.first);
             SKR_ARCHIVE(pair.second);
         }
-        return 0;
+        return true;
     }
 };
 } // namespace binary

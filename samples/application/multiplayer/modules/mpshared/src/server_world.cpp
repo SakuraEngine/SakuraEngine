@@ -150,7 +150,7 @@ skr::Vector<uint8_t> MPServerWorld::SerializeWorldDelta(const MPWorldDeltaViewBu
     delta.frame = gameFrame;
     skr::Vector<uint8_t> buffer;
     skr::binary::VectorWriterBitpacked writer{&buffer};
-    skr_binary_writer_t archive(writer);
+    SBinaryWriter archive(writer);
     skr::binary::Write(&archive, delta);
     return buffer;
 }
@@ -189,7 +189,7 @@ MPInputFrame ReceiveInput(const void* data, size_t dataLength)
     MPInputFrame result;
     skr::span<uint8_t> span{(uint8_t*)data, dataLength};
     skr::binary::SpanReader reader{span, 0};
-    skr_binary_reader_t archive(reader);
+    SBinaryReader archive(reader);
     skr::binary::Read(&archive, result);
     return result;
 }

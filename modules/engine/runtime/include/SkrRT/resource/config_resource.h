@@ -22,13 +22,13 @@ namespace skr::binary
 template <>
 struct SKR_RUNTIME_API ReadTrait<skr_config_resource_t> {
 public:
-    static int Read(skr_binary_reader_t* reader, skr_config_resource_t& config);
+    static bool Read(SBinaryReader* reader, skr_config_resource_t& config);
 };
 
 template <>
 struct SKR_RUNTIME_API WriteTrait<skr_config_resource_t> {
 public:
-    static int Write(skr_binary_writer_t* writer, const skr_config_resource_t& config);
+    static bool Write(SBinaryWriter* writer, const skr_config_resource_t& config);
 };
 } // namespace skr::binary
 

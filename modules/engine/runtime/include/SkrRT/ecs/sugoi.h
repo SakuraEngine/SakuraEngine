@@ -30,17 +30,17 @@ typedef struct sugoi_mapper_t {
     void* user SKR_IF_CPP(= nullptr);
 } sugoi_mapper_t;
 
-typedef struct skr_binary_writer_t skr_binary_writer_t;
-typedef struct skr_binary_reader_t skr_binary_reader_t;
-typedef struct skr_json_writer_t   skr_json_writer_t;
+typedef struct SBinaryWriter SBinaryWriter;
+typedef struct SBinaryReader SBinaryReader;
+typedef struct SJsonWriter   SJsonWriter;
 typedef struct sugoi_callback_v {
     void (*constructor)(sugoi_chunk_t* chunk, EIndex index, char* data) SKR_IF_CPP(= nullptr);
     void (*copy)(sugoi_chunk_t* chunk, EIndex index, char* dst, sugoi_chunk_t* schunk, EIndex sindex, const char* src) SKR_IF_CPP(= nullptr);
     void (*destructor)(sugoi_chunk_t* chunk, EIndex index, char* data) SKR_IF_CPP(= nullptr);
     void (*move)(sugoi_chunk_t* chunk, EIndex index, char* dst, sugoi_chunk_t* schunk, EIndex sindex, char* src) SKR_IF_CPP(= nullptr);
-    void (*serialize)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) SKR_IF_CPP(= nullptr);
-    void (*deserialize)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) SKR_IF_CPP(= nullptr);
-    void (*serialize_text)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_json_writer_t* writer) SKR_IF_CPP(= nullptr);
+    void (*serialize)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryWriter* writer) SKR_IF_CPP(= nullptr);
+    void (*deserialize)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryReader* reader) SKR_IF_CPP(= nullptr);
+    void (*serialize_text)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SJsonWriter* writer) SKR_IF_CPP(= nullptr);
     void (*deserialize_text)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, void* reader) SKR_IF_CPP(= nullptr);
     void (*map)(sugoi_chunk_t* chunk, EIndex index, char* data, sugoi_mapper_t* v) SKR_IF_CPP(= nullptr);
     int (*lua_push)(sugoi_chunk_t* chunk, EIndex index, char* data, struct lua_State* L) SKR_IF_CPP(= nullptr);
@@ -482,7 +482,7 @@ SKR_RUNTIME_API sugoi_storage_delta_t* sugoiS_diff(sugoi_storage_t* storage, sug
  * @param t serializer state
  * @see sugoi_serializer_v
  */
-SKR_RUNTIME_API void sugoiS_serialize(sugoi_storage_t* storage, skr_binary_writer_t* v);
+SKR_RUNTIME_API void sugoiS_serialize(sugoi_storage_t* storage, SBinaryWriter* v);
 /**
  * @brief deserialize the storage
  *
@@ -491,7 +491,7 @@ SKR_RUNTIME_API void sugoiS_serialize(sugoi_storage_t* storage, skr_binary_write
  * @param t serializer state
  * @see sugoi_serializer_v
  */
-SKR_RUNTIME_API void sugoiS_deserialize(sugoi_storage_t* storage, skr_binary_reader_t* v);
+SKR_RUNTIME_API void sugoiS_deserialize(sugoi_storage_t* storage, SBinaryReader* v);
 /**
  * @brief test if given entity exist in storage
  * entity can be invalid(id not exist) or be dead(version not match)
@@ -513,21 +513,21 @@ SKR_RUNTIME_API int sugoiS_components_enabled(sugoi_storage_t* storage, sugoi_en
  * @param storage
  * @param v serializer callback
  */
-SKR_RUNTIME_API sugoi_entity_t sugoiS_deserialize_entity(sugoi_storage_t* storage, skr_binary_reader_t* v);
+SKR_RUNTIME_API sugoi_entity_t sugoiS_deserialize_entity(sugoi_storage_t* storage, SBinaryReader* v);
 /**
  * @brief serialize entity
  * @param storage
  * @param ent
  * @param v
  */
-SKR_RUNTIME_API void sugoiS_serialize_entity(sugoi_storage_t* storage, sugoi_entity_t ent, skr_binary_writer_t* v);
+SKR_RUNTIME_API void sugoiS_serialize_entity(sugoi_storage_t* storage, sugoi_entity_t ent, SBinaryWriter* v);
 /**
  * @brief serialize entities, internal reference will be kept
  * @param storage
  * @param ent
  * @param v
  */
-SKR_RUNTIME_API void sugoiS_serialize_entities(sugoi_storage_t* storage, sugoi_entity_t* ents, EIndex n, skr_binary_writer_t* v);
+SKR_RUNTIME_API void sugoiS_serialize_entities(sugoi_storage_t* storage, sugoi_entity_t* ents, EIndex n, SBinaryWriter* v);
 /**
  * @brief reset the storage
  * release all entities and all queries

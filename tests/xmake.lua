@@ -8,7 +8,7 @@ target("SkrTestFramework")
 
 -- includes("daS/xmake.lua")
 if build_part("core") then
-    includes("base/xmake.lua")
+    includes("core/xmake.lua")
     includes("memory/xmake.lua")
     includes("meta_system/xmake.lua")
 end

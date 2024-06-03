@@ -4,7 +4,7 @@
 #include "math.h"
 #include "string.h"
 #include "SkrOS/thread.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 
 #define FLIGHT_FRAMES 3
 #define BACK_BUFFER_COUNT 3

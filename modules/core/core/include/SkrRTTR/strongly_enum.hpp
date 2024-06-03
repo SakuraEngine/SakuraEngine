@@ -63,7 +63,7 @@ namespace skr::binary
 {
 template <class T>
 struct ReadTrait<StronglyEnum<T>> {
-    static int Read(skr_binary_reader_t* reader, StronglyEnum<T>& value)
+    static bool Read(SBinaryReader* reader, StronglyEnum<T>& value)
     {
         return skr::binary::Archive(reader, value.underlying_value());
     }
@@ -71,7 +71,7 @@ struct ReadTrait<StronglyEnum<T>> {
 
 template <class T>
 struct WriteTrait<StronglyEnum<T>> {
-    static int Write(skr_binary_writer_t* writer, const StronglyEnum<T>& value)
+    static bool Write(SBinaryWriter* writer, const StronglyEnum<T>& value)
     {
         return skr::binary::Archive(writer, value.underlying_value());
     }
@@ -84,16 +84,16 @@ namespace skr::json
 {
 template <class T>
 struct WriteTrait<StronglyEnum<T>> {
-    static void Write(skr_json_writer_t* writer, const StronglyEnum<T>& value)
+    static bool Write(SJsonWriter* writer, const StronglyEnum<T>& value)
     {
-        skr::json::WriteTrait<typename StronglyEnum<T>::UnderlyingType>::Write(writer, value.underlying_value());
+        return skr::json::WriteTrait<typename StronglyEnum<T>::UnderlyingType>::Write(writer, value.underlying_value());
     }
 };
 template <class T>
 struct ReadTrait<StronglyEnum<T>> {
-    static error_code Read(skr::json::value_t&& json, StronglyEnum<T>& value)
+    static bool Read(SJsonReader* json, StronglyEnum<T>& value)
     {
-        return skr::json::ReadTrait<typename StronglyEnum<T>::UnderlyingType>::Read(std::move(json), value.underlying_value());
+        return skr::json::ReadTrait<typename StronglyEnum<T>::UnderlyingType>::Read(json, value.underlying_value());
     }
 };
 } // namespace skr::json

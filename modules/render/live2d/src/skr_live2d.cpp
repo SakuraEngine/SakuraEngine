@@ -1,5 +1,5 @@
 #include "SkrCore/log.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrLive2D/skr_live2d.h"
 #include "CubismFramework.hpp"
 

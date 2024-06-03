@@ -1,4 +1,4 @@
-#include "SkrModule/module_manager.hpp"
+#include "SkrCore/module/module_manager.hpp"
 #include "MPGame/mp_interface.h"
 #include "SkrOS/filesystem.hpp"
 int main(int argc, char** argv)

@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrBase/misc/demangle.hpp"
 #include "SkrCore/log/log_base.hpp"
 #include "SkrContainers/string.hpp"

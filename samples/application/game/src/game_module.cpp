@@ -4,7 +4,7 @@
 #include "SkrOS/filesystem.hpp"
 #include "SkrRT/platform/system.h"
 #include "SkrRT/config.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrCore/time.h"
 #include "SkrGuid/guid.hpp"
 #include "SkrRT/platform/window.h"
@@ -711,7 +711,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                 ImGui::Begin("Scene");
                 if (ImGui::Button("Save"))
                 {
-                    skr_json_writer_t writer(5);
+                    SJsonWriter writer(5);
                     skr_save_scene(game_renderer->get_sugoi_storage(), &writer);
                     auto file = skr_vfs_fopen(resource_vfs, u8"scene.json", SKR_FM_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
                     if (file)

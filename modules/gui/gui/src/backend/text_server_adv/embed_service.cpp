@@ -1,4 +1,4 @@
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrGui/_private/paragraph.hpp"
 #include "backend/text_server_adv/text_server_adv.h"
 

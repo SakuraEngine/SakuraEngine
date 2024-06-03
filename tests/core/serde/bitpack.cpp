@@ -72,8 +72,8 @@ TEST_CASE_METHOD(BinaryBitpackTests, "MultipleBytes")
 
 TEST_CASE_METHOD(BinaryBitpackTests, "ArchiveAPI")
 {
-    skr_binary_writer_t archiveWrite(writer);
-    skr_binary_reader_t archiveRead(reader);
+    SBinaryWriter archiveWrite(writer);
+    SBinaryReader archiveRead(reader);
 
     uint64_t value  = 0x03FFFFF00000FFFF;
     uint64_t value2 = 0x0000000000000300;
@@ -102,8 +102,8 @@ TEST_CASE_METHOD(BinaryBitpackTests, "ArchiveAPI")
 
 TEST_CASE_METHOD(BinaryBitpackTests, "VectorPack")
 {
-    skr_binary_writer_t archiveWrite(writer);
-    skr_binary_reader_t archiveRead(reader);
+    SBinaryWriter archiveWrite(writer);
+    SBinaryReader archiveRead(reader);
     skr_float3_t        value  = { 1.0f, 2.0f, 3.0f };
     skr_float3_t        value2 = { 3.12345f, 2.12345f, 1.12345f };
 

@@ -2,7 +2,7 @@
 #include "math.h"
 #include "lodepng.h"
 #include "SkrRT/config.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrGraphics/api.h"
 #include "stdio.h"
 #include <stdint.h>

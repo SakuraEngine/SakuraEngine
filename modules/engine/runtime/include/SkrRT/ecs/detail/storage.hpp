@@ -151,16 +151,16 @@ struct sugoi_storage_t {
     void build_query_cache(sugoi_query_t* query);
     void update_query_cache(sugoi_group_t* group, bool isAdd);
 
-    void serialize_single(sugoi_entity_t e, skr_binary_writer_t* s);
-    sugoi_entity_t deserialize_single(skr_binary_reader_t* s);
-    void serialize_type(const sugoi_entity_type_t& g, skr_binary_writer_t* s, bool keepMeta);
-    sugoi_entity_type_t deserialize_type(sugoi::fixed_stack_t& stack, skr_binary_reader_t* s, bool keepMeta);
-    void serialize_prefab(sugoi_entity_t e, skr_binary_writer_t* s);
-    void serialize_prefab(sugoi_entity_t* es, EIndex n, skr_binary_writer_t* s);
-    sugoi_entity_t deserialize_prefab(skr_binary_reader_t* s);
-    void serialize_view(sugoi_group_t* group, sugoi_chunk_view_t& v, skr_binary_writer_t* s, skr_binary_reader_t* ds, bool withEntities = true);
-    void serialize(skr_binary_writer_t* s);
-    void deserialize(skr_binary_reader_t* s);
+    void serialize_single(sugoi_entity_t e, SBinaryWriter* s);
+    sugoi_entity_t deserialize_single(SBinaryReader* s);
+    void serialize_type(const sugoi_entity_type_t& g, SBinaryWriter* s, bool keepMeta);
+    sugoi_entity_type_t deserialize_type(sugoi::fixed_stack_t& stack, SBinaryReader* s, bool keepMeta);
+    void serialize_prefab(sugoi_entity_t e, SBinaryWriter* s);
+    void serialize_prefab(sugoi_entity_t* es, EIndex n, SBinaryWriter* s);
+    sugoi_entity_t deserialize_prefab(SBinaryReader* s);
+    void serialize_view(sugoi_group_t* group, sugoi_chunk_view_t& v, SBinaryWriter* s, SBinaryReader* ds, bool withEntities = true);
+    void serialize(SBinaryWriter* s);
+    void deserialize(SBinaryReader* s);
 
     void merge(sugoi_storage_t& src);
     archetype_t* clone_archetype(archetype_t* src);

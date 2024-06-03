@@ -10,20 +10,20 @@ template <class C>
 void SetSerdeCallback(sugoi_type_description_t& desc)
 {
     if constexpr (skr::is_complete_serde_v<skr::binary::WriteTrait<C>>)
-        desc.callback.serialize = +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) {
+        desc.callback.serialize = +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryWriter* writer) {
             skr::binary::Write<C>(writer, *(C*)data);
         };
     if constexpr (skr::is_complete_serde_v<skr::binary::ReadTrait<C>>)
-        desc.callback.deserialize = +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) {
+        desc.callback.deserialize = +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryReader* reader) {
             skr::binary::Read(reader, *(C*)data);
         };
     if constexpr (skr::is_complete_serde_v<skr::json::WriteTrait<C>>)
-        desc.callback.serialize_text = +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_json_writer_t* writer) {
+        desc.callback.serialize_text = +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SJsonWriter* writer) {
             skr::json::Write<C>(writer, *(C*)data);
         };
     if constexpr (skr::is_complete_serde_v<skr::json::ReadTrait<C>>)
         desc.callback.deserialize_text = +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, void* reader) {
-            skr::json::Read(std::move(*(simdjson::ondemand::value*)reader), *(C*)data);
+            skr::json::Read((SJsonReader*)reader, *(C*)data);
         };
 }
 } // namespace sugoi

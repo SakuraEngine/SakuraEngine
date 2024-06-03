@@ -3,7 +3,7 @@
 #include "scene.h"
 
 #ifdef __cplusplus
-    #include "SkrModule/module.hpp"
+    #include "SkrCore/module/module.hpp"
     
 class SKR_SCENE_API SkrSceneModule : public skr::IDynamicModule
 {

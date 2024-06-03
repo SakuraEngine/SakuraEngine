@@ -10,7 +10,7 @@
 namespace skr::binary
 {
 template <class T>
-inline int WriteBitpacked(skr_binary_writer_t* writer, T value, IntegerPackConfig<T> config)
+inline bool WriteBitpacked(SBinaryWriter* writer, T value, IntegerPackConfig<T> config)
 {
     SKR_ASSERT(config.min <= config.max);
     bool valid = value >= config.min && value <= config.max;
@@ -33,7 +33,7 @@ inline int WriteBitpacked(skr_binary_writer_t* writer, T value, IntegerPackConfi
 }
 
 // template<class T>
-// int WriteBitpacked(skr_binary_writer_t* writer, T value, FloatingPackConfig<T> config)
+// bool WriteBitpacked(SBinaryWriter* writer, T value, FloatingPackConfig<T> config)
 // {
 //     T scaled = value * config.scale;
 //     bool valid = scaled < config.max;
@@ -60,7 +60,7 @@ inline int WriteBitpacked(skr_binary_writer_t* writer, T value, IntegerPackConfi
 // }
 
 template <class T, class ScalarType>
-inline int WriteBitpacked(skr_binary_writer_t* writer, T value, VectorPackConfig<ScalarType> config)
+inline bool WriteBitpacked(SBinaryWriter* writer, T value, VectorPackConfig<ScalarType> config)
 {
     ScalarType*             array = (ScalarType*)&value;
     static constexpr size_t size  = sizeof(T) / sizeof(ScalarType);
@@ -137,14 +137,12 @@ inline int WriteBitpacked(skr_binary_writer_t* writer, T value, VectorPackConfig
                 finalValue[i] |= (IntType(1) << componentBitCount);
         }
         uint8_t ComponentBitCountAndScaleInfo = (bUseScaledValue ? (1U << 6U) : 0U) | componentBitCount;
-        auto    ret                           = writer->write(&ComponentBitCountAndScaleInfo, 1);
-        if (ret != 0)
-            return ret;
+        if (!writer->write(&ComponentBitCountAndScaleInfo, 1))
+            return false;
         for (size_t i = 0; i < size; ++i)
         {
-            ret = writer->write_bits(&finalValue[i], componentBitCount);
-            if (ret != 0)
-                return ret;
+            if (!writer->write_bits(&finalValue[i], componentBitCount))
+                return false;
         }
     }
     else
@@ -152,225 +150,250 @@ inline int WriteBitpacked(skr_binary_writer_t* writer, T value, VectorPackConfig
         // A component bit count of 0 indicates full precision.
         constexpr uint32_t ComponentBitCount            = 0;
         uint8_t            ComponentBitCountAndTypeInfo = ComponentBitCount;
-        auto               ret                          = writer->write(&ComponentBitCountAndTypeInfo, 1);
-        if (ret != 0)
-            return ret;
-        ret = writer->write(array, sizeof(T));
-        if (ret != 0)
-            return ret;
+        if (!writer->write(&ComponentBitCountAndTypeInfo, 1))
+            return false;
+        if (!writer->write(array, sizeof(T)))
+            return false;
     }
-    return 0;
+    return true;
 }
 } // namespace skr::binary
 
 namespace skr::binary
 {
 // primitive types
-int WriteTrait<bool>::Write(skr_binary_writer_t* writer, bool value)
+bool WriteTrait<bool>::Write(SBinaryWriter* writer, bool value)
 {
     return WriteTrait<uint32_t>::Write(writer, (uint32_t)value);
 }
-int WriteTrait<int8_t>::Write(skr_binary_writer_t* writer, int8_t value)
+
+bool WriteTrait<int8_t>::Write(SBinaryWriter* writer, int8_t value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<int8_t>::Write(skr_binary_writer_t* writer, int8_t value, IntegerPackConfig<int8_t> config)
+
+bool WriteTrait<int8_t>::Write(SBinaryWriter* writer, int8_t value, IntegerPackConfig<int8_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<int16_t>::Write(skr_binary_writer_t* writer, int16_t value)
+
+bool WriteTrait<int16_t>::Write(SBinaryWriter* writer, int16_t value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<int16_t>::Write(skr_binary_writer_t* writer, int16_t value, IntegerPackConfig<int16_t> config)
+
+bool WriteTrait<int16_t>::Write(SBinaryWriter* writer, int16_t value, IntegerPackConfig<int16_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<int32_t>::Write(skr_binary_writer_t* writer, int32_t value)
+
+bool WriteTrait<int32_t>::Write(SBinaryWriter* writer, int32_t value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<int32_t>::Write(skr_binary_writer_t* writer, int32_t value, IntegerPackConfig<int32_t> config)
+
+bool WriteTrait<int32_t>::Write(SBinaryWriter* writer, int32_t value, IntegerPackConfig<int32_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<int64_t>::Write(skr_binary_writer_t* writer, int64_t value)
+
+bool WriteTrait<int64_t>::Write(SBinaryWriter* writer, int64_t value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<int64_t>::Write(skr_binary_writer_t* writer, int64_t value, IntegerPackConfig<int64_t> config)
+
+bool WriteTrait<int64_t>::Write(SBinaryWriter* writer, int64_t value, IntegerPackConfig<int64_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<uint8_t>::Write(skr_binary_writer_t* writer, uint8_t value)
+
+bool WriteTrait<uint8_t>::Write(SBinaryWriter* writer, uint8_t value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<uint8_t>::Write(skr_binary_writer_t* writer, uint8_t value, IntegerPackConfig<uint8_t> config)
+
+bool WriteTrait<uint8_t>::Write(SBinaryWriter* writer, uint8_t value, IntegerPackConfig<uint8_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<uint16_t>::Write(skr_binary_writer_t* writer, uint16_t value)
+
+bool WriteTrait<uint16_t>::Write(SBinaryWriter* writer, uint16_t value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<uint16_t>::Write(skr_binary_writer_t* writer, uint16_t value, IntegerPackConfig<uint16_t> config)
+
+bool WriteTrait<uint16_t>::Write(SBinaryWriter* writer, uint16_t value, IntegerPackConfig<uint16_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<uint32_t>::Write(skr_binary_writer_t* writer, uint32_t value)
+
+bool WriteTrait<uint32_t>::Write(SBinaryWriter* writer, uint32_t value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<uint32_t>::Write(skr_binary_writer_t* writer, uint32_t value, IntegerPackConfig<uint32_t> config)
+
+bool WriteTrait<uint32_t>::Write(SBinaryWriter* writer, uint32_t value, IntegerPackConfig<uint32_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<uint64_t>::Write(skr_binary_writer_t* writer, uint64_t value)
+
+bool WriteTrait<uint64_t>::Write(SBinaryWriter* writer, uint64_t value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<uint64_t>::Write(skr_binary_writer_t* writer, uint64_t value, IntegerPackConfig<uint64_t> config)
+
+bool WriteTrait<uint64_t>::Write(SBinaryWriter* writer, uint64_t value, IntegerPackConfig<uint64_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<float>::Write(skr_binary_writer_t* writer, float value)
+
+bool WriteTrait<float>::Write(SBinaryWriter* writer, float value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-// int WriteTrait<float>::Write(skr_binary_writer_t* writer, float value, FloatingPackConfig<float> config)
+
+// bool WriteTrait<float>::Write(SBinaryWriter* writer, float value, FloatingPackConfig<float> config)
 // {
 //     return WriteBitpacked(writer, value, config);
 // }
-int WriteTrait<double>::Write(skr_binary_writer_t* writer, double value)
+
+bool WriteTrait<double>::Write(SBinaryWriter* writer, double value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-// int WriteTrait<double>::Write(skr_binary_writer_t* writer, double value, FloatingPackConfig<double> config)
+
+// bool WriteTrait<double>::Write(SBinaryWriter* writer, double value, FloatingPackConfig<double> config)
 // {
 //     return WriteBitpacked(writer, value, config);
 // }
 
 // skr types
-int WriteTrait<skr_float2_t>::Write(skr_binary_writer_t* writer, const skr_float2_t& value)
+bool WriteTrait<skr_float2_t>::Write(SBinaryWriter* writer, const skr_float2_t& value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<skr_float2_t>::Write(skr_binary_writer_t* writer, const skr_float2_t& value, VectorPackConfig<float> config)
+
+bool WriteTrait<skr_float2_t>::Write(SBinaryWriter* writer, const skr_float2_t& value, VectorPackConfig<float> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<skr_float3_t>::Write(skr_binary_writer_t* writer, const skr_float3_t& value)
+
+bool WriteTrait<skr_float3_t>::Write(SBinaryWriter* writer, const skr_float3_t& value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<skr_float3_t>::Write(skr_binary_writer_t* writer, const skr_float3_t& value, VectorPackConfig<float> config)
+
+bool WriteTrait<skr_float3_t>::Write(SBinaryWriter* writer, const skr_float3_t& value, VectorPackConfig<float> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<skr_float4_t>::Write(skr_binary_writer_t* writer, const skr_float4_t& value)
+
+bool WriteTrait<skr_float4_t>::Write(SBinaryWriter* writer, const skr_float4_t& value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<skr_float4_t>::Write(skr_binary_writer_t* writer, const skr_float4_t& value, VectorPackConfig<float> config)
+
+bool WriteTrait<skr_float4_t>::Write(SBinaryWriter* writer, const skr_float4_t& value, VectorPackConfig<float> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<skr_float4x4_t>::Write(skr_binary_writer_t* writer, const skr_float4x4_t& value)
+
+bool WriteTrait<skr_float4x4_t>::Write(SBinaryWriter* writer, const skr_float4x4_t& value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<skr_float4x4_t>::Write(skr_binary_writer_t* writer, const skr_float4x4_t& value, VectorPackConfig<float> config)
+
+bool WriteTrait<skr_float4x4_t>::Write(SBinaryWriter* writer, const skr_float4x4_t& value, VectorPackConfig<float> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<skr_rotator_t>::Write(skr_binary_writer_t* writer, const skr_rotator_t& value)
+
+bool WriteTrait<skr_rotator_t>::Write(SBinaryWriter* writer, const skr_rotator_t& value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<skr_rotator_t>::Write(skr_binary_writer_t* writer, const skr_rotator_t& value, VectorPackConfig<float> config)
+
+bool WriteTrait<skr_rotator_t>::Write(SBinaryWriter* writer, const skr_rotator_t& value, VectorPackConfig<float> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<skr_quaternion_t>::Write(skr_binary_writer_t* writer, const skr_quaternion_t& value)
+
+bool WriteTrait<skr_quaternion_t>::Write(SBinaryWriter* writer, const skr_quaternion_t& value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-int WriteTrait<skr_quaternion_t>::Write(skr_binary_writer_t* writer, const skr_quaternion_t& value, VectorPackConfig<float> config)
+
+bool WriteTrait<skr_quaternion_t>::Write(SBinaryWriter* writer, const skr_quaternion_t& value, VectorPackConfig<float> config)
 {
     return WriteBitpacked(writer, value, config);
 }
-int WriteTrait<skr_guid_t>::Write(skr_binary_writer_t* writer, const skr_guid_t& guid)
+
+bool WriteTrait<skr_guid_t>::Write(SBinaryWriter* writer, const skr_guid_t& guid)
 {
     return WriteBytes(writer, &guid, sizeof(guid));
 }
-int WriteTrait<skr_md5_t>::Write(skr_binary_writer_t* writer, const skr_md5_t& md5)
+
+bool WriteTrait<skr_md5_t>::Write(SBinaryWriter* writer, const skr_md5_t& md5)
 {
     return WriteBytes(writer, &md5, sizeof(md5));
 }
-int WriteTrait<skr::IBlob*>::Write(skr_binary_writer_t* writer, const skr::IBlob*& blob)
+
+bool WriteTrait<skr::IBlob*>::Write(SBinaryWriter* writer, const skr::IBlob*& blob)
 {
-    int ret = WriteTrait<uint64_t>::Write(writer, (uint64_t)blob->get_size());
-    if (ret != 0)
-        return ret;
+    if (!WriteTrait<uint64_t>::Write(writer, (uint64_t)blob->get_size()))
+        return false;
     return WriteBytes(writer, blob->get_data(), (uint64_t)blob->get_size());
 }
 
-int WriteTrait<skr::BlobId>::Write(skr_binary_writer_t* writer, const skr::BlobId& blob)
+bool WriteTrait<skr::BlobId>::Write(SBinaryWriter* writer, const skr::BlobId& blob)
 {
-    int ret = WriteTrait<uint64_t>::Write(writer, (uint64_t)blob->get_size());
-    if (ret != 0)
-        return ret;
+    if (!WriteTrait<uint64_t>::Write(writer, (uint64_t)blob->get_size()))
+        return false;
     return WriteBytes(writer, blob->get_data(), (uint64_t)blob->get_size());
 }
-int WriteTrait<skr_blob_arena_t>::Write(skr_binary_writer_t* writer, const skr_blob_arena_t& blob)
+
+bool WriteTrait<skr_blob_arena_t>::Write(SBinaryWriter* writer, const skr_blob_arena_t& blob)
 {
-    int ret = WriteTrait<uint32_t>::Write(writer, (uint32_t)blob.get_size());
-    if (ret != 0)
-        return ret;
+    if (!WriteTrait<uint32_t>::Write(writer, (uint32_t)blob.get_size()))
+        return false;
     if (blob.get_size() == 0)
-        return 0;
-    ret = WriteTrait<uint32_t>::Write(writer, (uint32_t)blob.get_align());
-    if (ret != 0)
-        return ret;
-    return 0;
+        return true;
+    if (!WriteTrait<uint32_t>::Write(writer, (uint32_t)blob.get_align()))
+        return false;
+    return true;
 }
 
 // other skr types
-int WriteTrait<skr::String>::Write(skr_binary_writer_t* writer, const skr::String& str)
+bool WriteTrait<skr::String>::Write(SBinaryWriter* writer, const skr::String& str)
 {
-    int ret = WriteTrait<uint32_t>::Write(writer, (uint32_t)str.size());
-    if (ret != 0)
-        return ret;
+    if (!WriteTrait<uint32_t>::Write(writer, (uint32_t)str.size()))
+        return false;
     return WriteBytes(writer, str.u8_str(), str.size());
 }
 
-int WriteTrait<skr::StringView>::Write(skr_binary_writer_t* writer, const skr::StringView& str)
+bool WriteTrait<skr::StringView>::Write(SBinaryWriter* writer, const skr::StringView& str)
 {
-    int ret = WriteTrait<uint32_t>::Write(writer, (uint32_t)str.size());
-    if (ret != 0)
-        return ret;
+    if (!WriteTrait<uint32_t>::Write(writer, (uint32_t)str.size()))
+        return true;
     return WriteBytes(writer, str.raw().data(), str.size());
 }
 
-int WriteTrait<skr::StringView>::Write(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const skr::StringView& str)
+bool WriteTrait<skr::StringView>::Write(SBinaryWriter* writer, skr_blob_arena_t& arena, const skr::StringView& str)
 {
     auto ptr    = (ochar8_t*)str.raw().data();
     auto buffer = (ochar8_t*)arena.get_buffer();
     SKR_ASSERT(ptr >= buffer);
     auto offset = (uint32_t)(ptr - buffer);
     SKR_ASSERT(offset < arena.get_size());
-    int ret = skr::binary::Write(writer, (uint32_t)str.size());
-    if (ret != 0)
+    if (!skr::binary::Write(writer, (uint32_t)str.size()))
     {
-        return ret;
+        return false;
     }
     if (str.size() == 0)
-        return 0;
-    ret = skr::binary::Write(writer, offset);
-    if (ret != 0)
+        return true;
+    if (!skr::binary::Write(writer, offset))
     {
-        return ret;
+        return true;
     }
     return WriteBytes(writer, str.raw().data(), str.size());
 }

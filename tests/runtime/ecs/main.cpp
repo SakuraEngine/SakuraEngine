@@ -560,9 +560,9 @@ void register_managed_component()
         +[](sugoi_chunk_t* chunk, EIndex index, char* dst, sugoi_chunk_t* schunk, EIndex sindex, const char* src) { new (dst) managed(*(managed*)src); },
         +[](sugoi_chunk_t* chunk, EIndex index, char* data) { ((managed*)data)->~managed(); },
         +[](sugoi_chunk_t* chunk, EIndex index, char* dst, sugoi_chunk_t* schunk, EIndex sindex, char* src) { new (dst) managed(std::move(*(managed*)src)); },
-        +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* v) {
+        +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryWriter* v) {
         },
-        +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* v) {
+        +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryReader* v) {
         },
         nullptr
     };

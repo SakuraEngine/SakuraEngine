@@ -8,7 +8,7 @@
 #include "SkrBase/misc/debug.h"  // IWYU pragma: export
 #include "SkrGuid/guid.hpp" // IWYU pragma: export
 #include <SkrOS/filesystem.hpp> // IWYU pragma: export
-#include "SkrMemory/memory.h" // IWYU pragma: export
+#include "SkrCore/memory/memory.h" // IWYU pragma: export
 #include "SkrRT/platform/vfs.h" // IWYU pragma: export
 #include "SkrCore/time.h" // IWYU pragma: export
 #include "SkrGuid/guid.hpp" // IWYU pragma: export

@@ -924,12 +924,12 @@ void sugoiS_merge(sugoi_storage_t* storage, sugoi_storage_t* source)
     storage->merge(*source);
 }
 
-void sugoiS_serialize(sugoi_storage_t* storage, skr_binary_writer_t* v)
+void sugoiS_serialize(sugoi_storage_t* storage, SBinaryWriter* v)
 {
     storage->serialize(v);
 }
 
-void sugoiS_deserialize(sugoi_storage_t* storage, skr_binary_reader_t* v)
+void sugoiS_deserialize(sugoi_storage_t* storage, SBinaryReader* v)
 {
     storage->deserialize(v);
 }
@@ -945,17 +945,17 @@ int sugoiS_components_enabled(sugoi_storage_t* storage, sugoi_entity_t ent, cons
     return storage->components_enabled(ent, *types);
 }
 
-sugoi_entity_t sugoiS_deserialize_entity(sugoi_storage_t* storage, skr_binary_reader_t* v)
+sugoi_entity_t sugoiS_deserialize_entity(sugoi_storage_t* storage, SBinaryReader* v)
 {
     return storage->deserialize_prefab(v);
 }
 
-void sugoiS_serialize_entity(sugoi_storage_t* storage, sugoi_entity_t ent, skr_binary_writer_t* v)
+void sugoiS_serialize_entity(sugoi_storage_t* storage, sugoi_entity_t ent, SBinaryWriter* v)
 {
     storage->serialize_prefab(ent, v);
 }
 
-void sugoiS_serialize_entities(sugoi_storage_t* storage, sugoi_entity_t* ents, EIndex n, skr_binary_writer_t* v)
+void sugoiS_serialize_entities(sugoi_storage_t* storage, sugoi_entity_t* ents, EIndex n, SBinaryWriter* v)
 {
     storage->serialize_prefab(ents, n, v);
 }

@@ -254,7 +254,7 @@ bool MemoryStream::Resize(size_t _size)
 }
 
 // Starts SkrStream implementation.
-SkrStream::SkrStream(skr_binary_reader_t* _reader, skr_binary_writer_t* _writer)
+SkrStream::SkrStream(SBinaryReader* _reader, SBinaryWriter* _writer)
     : reader_(_reader)
     , writer_(_writer)
 {
@@ -267,7 +267,7 @@ bool SkrStream::opened() const { return reader_ != nullptr || writer_ != nullptr
 size_t SkrStream::Read(void* _buffer, size_t _size)
 {
     SKR_ASSERT(reader_);
-    if (auto ret = skr::binary::ReadBytes(reader_, _buffer, _size); ret != 0)
+    if (!skr::binary::ReadBytes(reader_, _buffer, _size))
     {
         return 0;
     }
@@ -277,7 +277,7 @@ size_t SkrStream::Read(void* _buffer, size_t _size)
 size_t SkrStream::Write(const void* _buffer, size_t _size)
 {
     SKR_ASSERT(writer_);
-    if (auto ret = skr::binary::WriteBytes(writer_, _buffer, _size); ret != 0)
+    if (!skr::binary::WriteBytes(writer_, _buffer, _size))
     {
         return 0;
     }

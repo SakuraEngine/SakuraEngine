@@ -9,7 +9,7 @@
 #include <signal.h>
 
 #include "SkrBase/misc/debug.h" 
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrCore/process.h"
 #include "SkrCore/log.h"
 

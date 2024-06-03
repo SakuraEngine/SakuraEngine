@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrMemory/memory.h"   // IWYU pragma: export
+#include "SkrCore/memory/memory.h"   // IWYU pragma: export
 #include "SkrBase/misc/debug.h" // IWYU pragma: export
 #include "SkrOS/thread.h"       // IWYU pragma: export
 

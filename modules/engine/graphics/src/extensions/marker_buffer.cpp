@@ -1,4 +1,4 @@
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrGraphics/extensions/cgpu_marker_buffer.h"
 
 #ifdef CGPU_USE_D3D12

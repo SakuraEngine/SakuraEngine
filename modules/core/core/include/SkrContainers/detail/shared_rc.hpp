@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrOS/atomic.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 
 namespace skr
 {

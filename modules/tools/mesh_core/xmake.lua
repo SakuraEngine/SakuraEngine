@@ -8,7 +8,7 @@ shared_module("SkrMeshCore", "MESH_CORE", engine_version)
         api = "MESH_CORE"
     })
     public_dependency("SkrToolCore", engine_version)
-    public_dependency("GameRuntime", engine_version)
+    public_dependency("SkrRenderer", engine_version)
     add_includedirs("include", {public=true})
     add_files("src/**.cpp")
     add_rules("c++.unity_build", {batchsize = default_unity_batch})

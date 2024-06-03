@@ -8,7 +8,7 @@
 #include "SkrBase/misc/defer.hpp"       // IWYU pragma: export
 #include "SkrTask/parallel_for.hpp"     // IWYU pragma: export
 
-#include "SkrModule/module.hpp"             // IWYU pragma: export
+#include "SkrCore/module/module.hpp"             // IWYU pragma: export
 #include "SkrRT/resource/config_resource.h" // IWYU pragma: export
 
 #include "SkrSerde/json/reader.h"   // IWYU pragma: export

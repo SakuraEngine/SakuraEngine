@@ -48,41 +48,29 @@ typedef struct skr_float3_t {
 } skr_float3_t;
 
 typedef struct SKR_ALIGNAS(16) skr_float4_t {
-    struct
-    {
-        float x SKR_IF_CPP(= 0.f);
-        float y SKR_IF_CPP(= 0.f);
-        float z SKR_IF_CPP(= 0.f);
-        float w SKR_IF_CPP(= 0.f);
-    };
+    float x SKR_IF_CPP(= 0.f);
+    float y SKR_IF_CPP(= 0.f);
+    float z SKR_IF_CPP(= 0.f);
+    float w SKR_IF_CPP(= 0.f);
 } skr_float4_t;
 
 typedef struct skr_rotator_t {
-    struct
-    {
-        float pitch SKR_IF_CPP(= 0.f);
-        float yaw   SKR_IF_CPP(= 0.f);
-        float roll  SKR_IF_CPP(= 0.f);
-    };
+    float pitch SKR_IF_CPP(= 0.f);
+    float yaw   SKR_IF_CPP(= 0.f);
+    float roll  SKR_IF_CPP(= 0.f);
 } skr_rotator_t;
 
 typedef struct SKR_ALIGNAS(16) skr_quaternion_t {
-    struct
-    {
-        float x SKR_IF_CPP(= 0.f);
-        float y SKR_IF_CPP(= 0.f);
-        float z SKR_IF_CPP(= 0.f);
-        float w SKR_IF_CPP(= 0.f);
-    };
+    float x SKR_IF_CPP(= 0.f);
+    float y SKR_IF_CPP(= 0.f);
+    float z SKR_IF_CPP(= 0.f);
+    float w SKR_IF_CPP(= 0.f);
 } skr_quaternion_t;
 
 typedef struct SKR_ALIGNAS(16) skr_transform_t {
-    struct
-    {
-        skr_rotator_t rotation   SKR_IF_CPP(= { 0.f, 0.f, 0.f });
-        skr_float3_t translation SKR_IF_CPP(= { 0.f, 0.f, 0.f });
-        skr_float3_t scale       SKR_IF_CPP(= { 1.f, 1.f, 1.f });
-    };
+    skr_rotator_t rotation   SKR_IF_CPP(= { 0.f, 0.f, 0.f });
+    skr_float3_t translation SKR_IF_CPP(= { 0.f, 0.f, 0.f });
+    skr_float3_t scale       SKR_IF_CPP(= { 1.f, 1.f, 1.f });
 } skr_transform_t;
 
 typedef struct SKR_ALIGNAS(16) skr_float4x4_t {
@@ -116,13 +104,29 @@ inline static SKR_CONSTEXPR bool operator!=(uint32_t l, skr_uint32x2_t r)
 {
     return (l != r.x) || (l != r.y);
 }
-inline static SKR_CONSTEXPR bool operator==(skr_float2_t l, skr_float2_t r)
+inline static SKR_CONSTEXPR bool operator==(skr_float3_t l, skr_float3_t r)
 {
-    return (l.x == r.x) && (l.y == r.y);
+    return (l.x == r.x) && (l.y == r.y) && (l.z == r.z);
 }
-inline static SKR_CONSTEXPR bool operator!=(skr_float2_t l, skr_float2_t r)
+inline static SKR_CONSTEXPR bool operator!=(skr_float3_t l, skr_float3_t r)
 {
-    return (l.x != r.x) || (l.y != r.y);
+    return (l.x != r.x) || (l.y != r.y) || (l.z != r.z);
+}
+inline static SKR_CONSTEXPR bool operator==(skr_float4_t l, skr_float4_t r)
+{
+    return (l.x == r.x) && (l.y == r.y) && (l.z == r.z) && (l.w == r.w);
+}
+inline static SKR_CONSTEXPR bool operator!=(skr_float4_t l, skr_float4_t r)
+{
+    return (l.x != r.x) || (l.y != r.y) || (l.z != r.z) || (l.w != r.w);
+}
+inline static SKR_CONSTEXPR bool operator==(skr_rotator_t l, skr_rotator_t r)
+{
+    return (l.pitch == r.pitch) && (l.yaw == r.yaw) && (l.roll == r.roll);
+}
+inline static SKR_CONSTEXPR bool operator!=(skr_rotator_t l, skr_rotator_t r)
+{
+    return (l.pitch != r.pitch) || (l.yaw != r.yaw) || (l.roll != r.roll);
 }
 inline bool operator==(skr_md5_t a, skr_md5_t b)
 {

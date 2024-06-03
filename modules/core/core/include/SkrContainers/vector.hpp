@@ -37,7 +37,7 @@ namespace binary
 template <class V>
 struct ReadTrait<Vector<V>> {
     template <class... Args>
-    static int Read(skr_binary_reader_t* archive, Vector<V>& vec, Args&&... args)
+    static bool Read(SBinaryReader* archive, Vector<V>& vec, Args&&... args)
     {
         Vector<V> temp;
         uint32_t  size;
@@ -47,15 +47,16 @@ struct ReadTrait<Vector<V>> {
         for (uint32_t i = 0; i < size; ++i)
         {
             V value;
-            if (auto ret = skr::binary::Archive(archive, value, std::forward<Args>(args)...); ret != 0) return ret;
+            if (!skr::binary::Archive(archive, value, std::forward<Args>(args)...))
+                return false;
             temp.add(std::move(value));
         }
         vec = std::move(temp);
-        return 0;
+        return true;
     }
 
     template <class... Args>
-    static int Read(skr_binary_reader_t* archive, Vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
+    static bool Read(SBinaryReader* archive, Vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
     {
         Vector<V> temp;
         uint32_t  size;
@@ -63,67 +64,70 @@ struct ReadTrait<Vector<V>> {
         if (size > cfg.max || size < cfg.min)
         {
             // SKR_LOG_ERROR(u8"Vector size %d is out of range [%d, %d]", size, cfg.min, cfg.max);
-            return -2;
+            return false;
         }
 
         temp.reserve(size);
         for (uint32_t i = 0; i < size; ++i)
         {
             V value;
-            if (auto ret = skr::binary::Archive(archive, value, std::forward<Args>(args)...); ret != 0) return ret;
+            if (!skr::binary::Archive(archive, value, std::forward<Args>(args)...))
+                return false;
             temp.push_back(std::move(value));
         }
         vec = std::move(temp);
-        return 0;
+        return true;
     }
 };
 template <class V>
 struct WriteTrait<Vector<V>> {
     template <class... Args>
-    static int Write(skr_binary_writer_t* archive, const Vector<V>& vec, Args&&... args)
+    static bool Write(SBinaryWriter* archive, const Vector<V>& vec, Args&&... args)
     {
         SKR_ARCHIVE((uint32_t)vec.size());
         for (auto& value : vec)
         {
-            if (auto ret = skr::binary::Archive(archive, value, std::forward<Args>(args)...); ret != 0) return ret;
+            if (!skr::binary::Archive(archive, value, std::forward<Args>(args)...)) 
+                return false;
         }
-        return 0;
+        return true;
     }
     template <class... Args>
-    static int Write(skr_binary_writer_t* archive, const Vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
+    static bool Write(SBinaryWriter* archive, const Vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
     {
         if (vec.size() > cfg.max || vec.size() < cfg.min)
         {
             // SKR_LOG_ERROR(u8"Vector size %d is out of range [%d, %d]", vec.size(), cfg.min, cfg.max);
-            return -2;
+            return false;
         }
         SKR_ARCHIVE((uint32_t)vec.size());
         for (auto& value : vec)
         {
-            if (auto ret = skr::binary::Archive(archive, value, std::forward<Args>(args)...); ret != 0) return ret;
+            if (!skr::binary::Archive(archive, value, std::forward<Args>(args)...))
+                return false;
         }
-        return 0;
+        return true;
     }
 };
 
 struct VectorWriter {
     Vector<uint8_t>* buffer;
 
-    int write(const void* data, size_t size)
+    bool write(const void* data, size_t size)
     {
         buffer->append((uint8_t*)data, size);
-        return 0;
+        return true;
     }
 };
 
 struct VectorWriterBitpacked {
     Vector<uint8_t>* buffer;
     uint8_t          bitOffset = 0;
-    int              write(const void* data, size_t size)
+    bool write(const void* data, size_t size)
     {
         return write_bits(data, size * 8);
     }
-    int write_bits(const void* data, size_t bitSize)
+    bool write_bits(const void* data, size_t bitSize)
     {
         uint8_t* dataPtr = (uint8_t*)data;
         if (bitOffset == 0)
@@ -149,7 +153,7 @@ struct VectorWriterBitpacked {
                 if (newBitOffset == 8)
                 {
                     bitOffset = 0;
-                    return 0;
+                    return true;
                 }
                 else if (newBitOffset > 8)
                 {
@@ -161,7 +165,7 @@ struct VectorWriterBitpacked {
                 bitOffset = (uint8_t)newBitOffset;
             }
         }
-        return 0;
+        return true;
     }
 };
 } // namespace binary

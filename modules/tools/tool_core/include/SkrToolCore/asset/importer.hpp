@@ -43,7 +43,7 @@ TOOL_CORE_API SImporterRegistry* GetImporterRegistry();
 namespace skr::json
 {
 template <class T>
-error_code Read(skr::json::value_t&& json, T& value);
+bool Read(skr::json::value_t&& json, T& value);
 } // namespace skr::json
 
 template <class T>

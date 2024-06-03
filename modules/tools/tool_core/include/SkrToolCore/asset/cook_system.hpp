@@ -83,7 +83,7 @@ public:
         //------write resource object
         skr::Vector<uint8_t>      buffer;
         skr::binary::VectorWriter writer{ &buffer };
-        skr_binary_writer_t       archive(writer);
+        SBinaryWriter       archive(writer);
         if (int result = skr::binary::Archive(&archive, resource); result != 0)
         {
             SKR_LOG_FMT_ERROR(u8"[SConfigCooker::Cook] failed to serialize resource {}! path: {}",

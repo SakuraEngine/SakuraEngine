@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrContainers/detail/concurrent_queue.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 
 namespace skr
 {

@@ -8,10 +8,10 @@
 #include "SkrBase/types.h"
 
 typedef struct skr_resource_header_t {
-    uint32_t                                      version;
-    skr_guid_t                                    guid;
-    skr_guid_t                                    type;
-    SKR_RUNTIME_API int                           ReadWithoutDeps(skr_binary_reader_t* archive);
+    uint32_t                                    version;
+    skr_guid_t                                  guid;
+    skr_guid_t                                  type;
+    SKR_RUNTIME_API bool                        ReadWithoutDeps(SBinaryReader* archive);
     skr::InlineVector<skr_resource_handle_t, 4> dependencies;
 } skr_resource_header_t;
 
@@ -19,12 +19,12 @@ namespace skr::binary
 {
 template <>
 struct SKR_RUNTIME_API ReadTrait<skr_resource_header_t> {
-    static int Read(skr_binary_reader_t* reader, skr_resource_header_t& header);
+    static bool Read(SBinaryReader* reader, skr_resource_header_t& header);
 };
 
 template <>
 struct SKR_RUNTIME_API WriteTrait<skr_resource_header_t> {
-    static int Write(skr_binary_writer_t* writer, const skr_resource_header_t& header);
+    static bool Write(SBinaryWriter* writer, const skr_resource_header_t& header);
 };
 } // namespace skr::binary
 

@@ -506,11 +506,11 @@ void SResourceRequestImpl::LoadTask()
 {
     auto                    data = GetData();
     skr::binary::SpanReader reader{ data };
-    skr_binary_reader_t     archive{ reader };
+    SBinaryReader     archive{ reader };
 #ifdef SKR_RESOURCE_DEV_MODE
     auto                    artifactsData   = GetArtifactsData();
     skr::binary::SpanReader artifacstReader = { artifactsData };
-    skr_binary_reader_t     artifactsArchive{ artifacstReader };
+    SBinaryReader     artifactsArchive{ artifacstReader };
 #endif
     serdeResult = factory->Deserialize(resourceRecord, &archive);
     if (serdeResult == 0)

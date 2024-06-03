@@ -3,7 +3,7 @@
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
 
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrBase/misc/debug.h" 
 #include "SkrRT/platform/vfs.h"
 

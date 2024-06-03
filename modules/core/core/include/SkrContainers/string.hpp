@@ -97,12 +97,12 @@ namespace binary
 {
 template <>
 struct SKR_STATIC_API ReadTrait<skr::String> {
-    static int Read(skr_binary_reader_t* reader, skr::String& str);
+    static bool Read(SBinaryReader* reader, skr::String& str);
 };
 
 template <>
 struct SKR_STATIC_API ReadTrait<skr::StringView> {
-    static int Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena, skr::StringView& str);
+    static bool Read(SBinaryReader* reader, skr_blob_arena_t& arena, skr::StringView& str);
 };
 } // namespace binary
 } // namespace skr
@@ -115,13 +115,13 @@ namespace binary
 
 template <>
 struct SKR_STATIC_API WriteTrait<skr::String> {
-    static int Write(skr_binary_writer_t* writer, const skr::String& str);
+    static bool Write(SBinaryWriter* writer, const skr::String& str);
 };
 
 template <>
 struct SKR_STATIC_API WriteTrait<skr::StringView> {
-    static int Write(skr_binary_writer_t* writer, const skr::StringView& str);
-    static int Write(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const skr::StringView& str);
+    static bool Write(SBinaryWriter* writer, const skr::StringView& str);
+    static bool Write(SBinaryWriter* writer, skr_blob_arena_t& arena, const skr::StringView& str);
 };
 
 } // namespace binary

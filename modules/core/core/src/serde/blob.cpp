@@ -1,5 +1,5 @@
 #include "SkrSerde/blob.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrOS/atomic.h"
 #include "SkrContainers/sptr.hpp"
 

@@ -118,18 +118,18 @@ namespace binary
 {
 template <class T>
 struct ReadTrait<skr::resource::TResourceHandle<T>> {
-    static int Read(skr_binary_reader_t* archive, skr::resource::TResourceHandle<T>& handle)
+    static bool Read(SBinaryReader* archive, skr::resource::TResourceHandle<T>& handle)
     {
         skr_guid_t guid;
         SKR_ARCHIVE(guid);
         handle.set_guid(guid);
-        return 0;
+        return true;
     }
 };
 
 template <>
 struct SKR_RUNTIME_API ReadTrait<skr_resource_handle_t> {
-    static int Read(skr_binary_reader_t* reader, skr_resource_handle_t& handle);
+    static bool Read(SBinaryReader* reader, skr_resource_handle_t& handle);
 };
 } // namespace binary
 } // namespace skr
@@ -143,7 +143,7 @@ namespace binary
 {
 template <class T>
 struct WriteTrait<skr::resource::TResourceHandle<T>> {
-    static int Write(skr_binary_writer_t* binary, const skr::resource::TResourceHandle<T>& handle)
+    static bool Write(SBinaryWriter* binary, const skr::resource::TResourceHandle<T>& handle)
     {
         const auto& hdl = static_cast<const skr_resource_handle_t&>(handle);
         return skr::binary::Archive(binary, hdl);
@@ -152,7 +152,7 @@ struct WriteTrait<skr::resource::TResourceHandle<T>> {
 
 template <>
 struct SKR_RUNTIME_API WriteTrait<skr_resource_handle_t> {
-    static int Write(skr_binary_writer_t* writer, const skr_resource_handle_t& handle);
+    static bool Write(SBinaryWriter* writer, const skr_resource_handle_t& handle);
 };
 
 } // namespace binary
@@ -167,24 +167,24 @@ namespace skr::json
 
 template <>
 struct SKR_RUNTIME_API WriteTrait<skr_resource_handle_t> {
-    static void Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle);
+    static bool Write(SJsonWriter* writer, const skr_resource_handle_t& handle);
 };
 template <>
 struct SKR_RUNTIME_API ReadTrait<skr_resource_handle_t> {
-    static error_code Read(simdjson::ondemand::value&& json, skr_resource_handle_t& value);
+    static bool Read(SJsonReader* json, skr_resource_handle_t& value);
 };
 template <class T>
 struct ReadTrait<skr::resource::TResourceHandle<T>> {
-    static error_code Read(simdjson::ondemand::value&& json, skr::resource::TResourceHandle<T>& handle)
+    static bool Read(SJsonReader* json, skr::resource::TResourceHandle<T>& handle)
     {
-        return skr::json::Read<skr_resource_handle_t>(std::move(json), (skr_resource_handle_t&)handle);
+        return skr::json::Read<skr_resource_handle_t>(json, (skr_resource_handle_t&)handle);
     }
 };
 template <class T>
 struct WriteTrait<skr::resource::TResourceHandle<T>> {
-    static void Write(skr_json_writer_t* json, const skr::resource::TResourceHandle<T>& handle)
+    static bool Write(SJsonWriter* json, const skr::resource::TResourceHandle<T>& handle)
     {
-        skr::json::Write<skr_resource_handle_t>(json, (const skr_resource_handle_t&)handle);
+        return skr::json::Write<skr_resource_handle_t>(json, (const skr_resource_handle_t&)handle);
     }
 };
 } // namespace skr::json

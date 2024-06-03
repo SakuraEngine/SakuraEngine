@@ -1,5 +1,5 @@
-#include "SkrMemory/memory.h"
-#include "SkrMemory/sysmem_pool.h"
+#include "SkrCore/memory/memory.h"
+#include "SkrCore/memory/sysmem_pool.h"
 #include "SkrTestFramework/framework.hpp"
 
 #include <iostream>

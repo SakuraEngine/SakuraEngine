@@ -38,7 +38,7 @@ typedef struct sugoi_entity_debug_proxy_t {
     #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
 #endif
 
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 
 SKR_RUNTIME_API extern const char* kDualMemoryName;
 #define sugoi_malloc(size) sakura_mallocN((size), kDualMemoryName)

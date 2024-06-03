@@ -1,5 +1,5 @@
 #include "SkrInput/input.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrOS/atomic.h"
 #include "SkrBase/misc/debug.h" 
 #include "SkrCore/log.h"

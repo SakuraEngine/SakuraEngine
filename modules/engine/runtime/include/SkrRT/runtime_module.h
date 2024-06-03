@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrModule/module.hpp"
+#include "SkrCore/module/module.hpp"
 #include "SkrOS/shared_library.hpp"
 #include "SkrGraphics/dstorage.h"
 

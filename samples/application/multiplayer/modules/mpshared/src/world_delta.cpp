@@ -595,7 +595,7 @@ void RegisterComponentDeltaApplier(sugoi_type_index_t component, component_delta
 {
     ComponentDeltaApplierRegistry::Get().appliers[component] = ComponentDeltaApplier{ component, inCallback, {}, {} };
 }
-int skr::binary::WriteTrait<packed_entity_t>::Write(skr_binary_writer_t* writer, const packed_entity_t& value, sugoi_entity_t maxEntity)
+int skr::binary::WriteTrait<packed_entity_t>::Write(SBinaryWriter* writer, const packed_entity_t& value, sugoi_entity_t maxEntity)
 {
     uint32_t id         = SUGOI_ENTITY_ID(value.entity);
     uint32_t version    = SUGOI_ENTITY_VERSION(value.entity);
@@ -608,7 +608,7 @@ int skr::binary::WriteTrait<packed_entity_t>::Write(skr_binary_writer_t* writer,
     ret = Archive(writer, version, IntegerPackConfig<uint32_t>{ 0, versionMax });
     return ret;
 }
-int skr::binary::ReadTrait<packed_entity_t>::Read(skr_binary_reader_t* reader, packed_entity_t& value, sugoi_entity_t maxEntity)
+int skr::binary::ReadTrait<packed_entity_t>::Read(SBinaryReader* reader, packed_entity_t& value, sugoi_entity_t maxEntity)
 {
     uint32_t id         = 0;
     uint32_t version    = 0;
@@ -625,7 +625,7 @@ int skr::binary::ReadTrait<packed_entity_t>::Read(skr_binary_reader_t* reader, p
 }
 
 #include "SkrSerde/json/writer.h"
-void skr::json::WriteTrait<packed_entity_t>::Write(skr_json_writer_t* writer, const packed_entity_t& value)
+void skr::json::WriteTrait<packed_entity_t>::Write(SJsonWriter* writer, const packed_entity_t& value)
 {
     writer->StartObject();
     writer->Key(u8"id");

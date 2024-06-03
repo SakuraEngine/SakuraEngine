@@ -1,7 +1,7 @@
 #include "SkrCore/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/log.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 
 #include "SkrGraphics/api.h"
 #include "SkrGraphics/cgpux.h"

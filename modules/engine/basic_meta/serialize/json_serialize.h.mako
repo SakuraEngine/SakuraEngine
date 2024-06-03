@@ -9,27 +9,27 @@ namespace skr::json
     template <>
     struct ${api} ReadTrait<${record.name}>
     {
-        static error_code Read(value_t&& json, ${record.name}& v);
+        static bool Read(SJsonReader* json, ${record.name}& v);
     };
 %endif
     template <>
     struct ${api} WriteTrait<${record.name}>
     {
-        static void Write(skr_json_writer_t* writer, const ${record.name}& v);
-        static void WriteFields(skr_json_writer_t* writer, const ${record.name}& v);
+        static bool Write(SJsonWriter* writer, const ${record.name}& v);
+        static bool WriteFields(SJsonWriter* writer, const ${record.name}& v);
     };
 %endfor
 %for enum in generator.filter_types(db.enums):
     template <>
     struct ${api} ReadTrait<${enum.name}>
     {
-        static error_code Read(value_t&& json, ${enum.name}& v);
+        static bool Read(SJsonReader* json, ${enum.name}& v);
     };
 
     template <>
     struct ${api} WriteTrait<${enum.name}>
     {
-        static void Write(skr_json_writer_t* writer, ${enum.name} v);
+        static bool Write(SJsonWriter* writer, ${enum.name} v);
     };
 %endfor
 }

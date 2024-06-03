@@ -52,6 +52,14 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
     local using_msvc = target:toolchain("msvc")
     local using_clang_cl = target:toolchain("clang-cl")
 
+    -- fix macosx include solve bug
+    if is_plat("macosx") then
+        for _, dep_target in pairs(target:orderdeps()) do
+            local dirs = dep_target:get("includedirs")
+            target:add("includedirs", dirs)
+        end
+    end
+
     -- load compiler and get compilation command
     local sourcekind = opt.sourcekind
     if not sourcekind and type(sourcefile) == "string" then

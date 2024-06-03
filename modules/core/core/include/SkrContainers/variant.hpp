@@ -26,32 +26,32 @@ namespace binary
 template <class... Ts>
 struct ReadTrait<skr::variant<Ts...>> {
     template <size_t I, class T>
-    static int ReadByIndex(skr_binary_reader_t* archive, skr::variant<Ts...>& value, size_t index)
+    static bool ReadByIndex(SBinaryReader* archive, skr::variant<Ts...>& value, size_t index)
     {
         if (index == I)
         {
             T t;
             SKR_ARCHIVE(t);
             value = std::move(t);
-            return 0;
+            return true;
         }
-        return -1;
+        return false;
     }
 
     template <size_t... Is>
-    static int ReadByIndexHelper(skr_binary_reader_t* archive, skr::variant<Ts...>& value, size_t index, std::index_sequence<Is...>)
+    static bool ReadByIndexHelper(SBinaryReader* archive, skr::variant<Ts...>& value, size_t index, std::index_sequence<Is...>)
     {
-        int result;
+        bool result;
         (void)(((result = ReadByIndex<Is, Ts>(archive, value, index)) != 0) && ...);
         return result;
     }
 
-    static int Read(skr_binary_reader_t* archive, skr::variant<Ts...>& value)
+    static bool Read(SBinaryReader* archive, skr::variant<Ts...>& value)
     {
         uint32_t index;
         SKR_ARCHIVE(index);
         if (index >= sizeof...(Ts))
-            return -1;
+            return false;
         return ReadByIndexHelper(archive, value, index, std::make_index_sequence<sizeof...(Ts)>());
     }
 };
@@ -70,10 +70,10 @@ namespace binary
 {
 template <class... Ts>
 struct WriteTrait<skr::variant<Ts...>> {
-    static int Write(skr_binary_writer_t* archive, const skr::variant<Ts...>& variant)
+    static int Write(SBinaryWriter* archive, const skr::variant<Ts...>& variant)
     {
         SKR_ARCHIVE((uint32_t)variant.index());
-        int ret;
+        bool ret;
         skr::visit([&](auto&& value) {
             ret = skr::binary::Archive(archive, value);
         },

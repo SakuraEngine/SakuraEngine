@@ -12,7 +12,7 @@
 #include "SkrTask/fib_task.hpp"     // IWYU pragma: export
 #include "SkrRT/io/ram_io.hpp"      // IWYU pragma: export
 
-#include "SkrModule/module.hpp"             // IWYU pragma: export
+#include "SkrCore/module/module.hpp"             // IWYU pragma: export
 #include "SkrRT/resource/config_resource.h" // IWYU pragma: export
 
 #include "SkrContainers/string.hpp"  // IWYU pragma: export

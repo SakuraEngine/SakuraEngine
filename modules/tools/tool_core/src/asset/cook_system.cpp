@@ -1,4 +1,4 @@
-#include "SkrModule/module.hpp"
+#include "SkrCore/module/module.hpp"
 #include "SkrGuid/guid.hpp"
 #include "SkrTask/parallel_for.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
@@ -245,7 +245,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 headerPath.replace_extension("rh");
                 skr::Vector<uint8_t>      buffer;
                 skr::binary::VectorWriter writer{ &buffer };
-                skr_binary_writer_t       archive(writer);
+                SBinaryWriter       archive(writer);
                 jobContext->WriteHeader(archive, cooker);
                 auto file = fopen(headerPath.string().c_str(), "wb");
                 if (!file)
@@ -262,7 +262,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 SKR_LOG_INFO(u8"[CookTask] resource %s cook finished! updating dependencies.", metaAsset->path.u8string().c_str());
                 // write dependencies
                 auto              dependencyPath = metaAsset->project->GetDependencyPath() / skr::format(u8"{}.d", metaAsset->guid).c_str();
-                skr_json_writer_t writer(2);
+                SJsonWriter writer(2);
                 writer.StartObject();
                 writer.Key(u8"importerVersion");
                 writer.UInt64(jobContext->GetImporterVersion());
@@ -412,7 +412,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
             fread(buffer, 0, sizeof(skr_resource_header_t), resourceFile);
             SKR_DEFER({ fclose(resourceFile); });
             skr::binary::SpanReader reader = { buffer };
-            skr_binary_reader_t     archive{ reader };
+            SBinaryReader     archive{ reader };
             skr_resource_header_t   header;
             if (header.ReadWithoutDeps(&archive) != 0)
             {

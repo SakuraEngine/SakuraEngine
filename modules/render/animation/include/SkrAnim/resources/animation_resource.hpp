@@ -23,11 +23,11 @@ namespace binary
 {
 template <>
 struct SKR_ANIM_API ReadTrait<anim::AnimResource> {
-    static int Read(skr_binary_reader_t* reader, anim::AnimResource& value);
+    static bool Read(SBinaryReader* reader, anim::AnimResource& value);
 };
 template <>
 struct SKR_ANIM_API WriteTrait<anim::AnimResource> {
-    static int Write(skr_binary_writer_t* writer, const anim::AnimResource& value);
+    static bool Write(SBinaryWriter* writer, const anim::AnimResource& value);
 };
 } // namespace binary
 

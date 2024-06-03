@@ -72,7 +72,7 @@ constexpr bool is_complete_serde_v = is_complete_serde<T>();
 
 #ifndef SKR_ARCHIVE
     #define SKR_ARCHIVE(...) \
-        if (auto ret = skr::binary::Archive(archive, (__VA_ARGS__)); ret != 0) return ret
+        if (!skr::binary::Archive(archive, (__VA_ARGS__))) return false
 #endif
 
 #pragma region BLOB
@@ -172,7 +172,7 @@ using binary::make_blob_builder;
 // FUCK MSVC COMPILER
 SKR_EXTERN_C SKR_STATIC_API void skr_debug_output(const char* msg);
 
-struct skr_binary_reader_t;
+struct SBinaryReader;
 
 namespace skr
 {
@@ -182,20 +182,20 @@ template <class T, class = void>
 struct ReadTrait;
 
 template <class T, class... Args>
-int Archive(skr_binary_reader_t* reader, T&& value, Args&&... args)
+bool Archive(SBinaryReader* reader, T&& value, Args&&... args)
 {
     return ReadTrait<std::decay_t<T>>::Read(reader, value, std::forward<Args>(args)...);
 }
 
 template <class T, class... Args>
-int ArchiveBlob(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value, Args&&... args)
+bool ArchiveBlob(SBinaryReader* reader, skr_blob_arena_t& arena, T&& value, Args&&... args)
 {
     if constexpr (is_complete_v<BlobTrait<std::decay_t<T>>>)
     {
         if (arena.get_buffer() == nullptr)
         {
             SKR_ASSERT(!arena.get_size());
-            return 0;
+            return true;
         }
         return ReadTrait<std::decay_t<T>>::Read(reader, arena, value, std::forward<Args>(args)...);
     }
@@ -209,7 +209,7 @@ int ArchiveBlob(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value,
 
 #pragma region WRITER TRAITS
 
-struct skr_binary_writer_t;
+struct SBinaryWriter;
 
 namespace skr::binary
 {
@@ -217,20 +217,20 @@ template <class T, class = void>
 struct WriteTrait;
 
 template <class T, class... Args>
-int Archive(skr_binary_writer_t* writer, const T& value, Args&&... args)
+bool Archive(SBinaryWriter* writer, const T& value, Args&&... args)
 {
     return WriteTrait<T>::Write(writer, value, std::forward<Args>(args)...);
 }
 
 template <class T, class... Args>
-int ArchiveBlob(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value, Args&&... args)
+bool ArchiveBlob(SBinaryWriter* writer, skr_blob_arena_t& arena, const T& value, Args&&... args)
 {
     if constexpr (is_complete_v<BlobTrait<T>>)
     {
         if (arena.get_buffer() == nullptr)
         {
             SKR_ASSERT(!arena.get_size());
-            return 0;
+            return true;
         }
         return WriteTrait<T>::Write(writer, arena, value, std::forward<Args>(args)...);
     }

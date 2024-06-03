@@ -3,19 +3,19 @@
 
 namespace skr::binary
 {
-int ReadTrait<anim::AnimResource>::Read(skr_binary_reader_t* reader, anim::AnimResource& value)
+bool ReadTrait<anim::AnimResource>::Read(SBinaryReader* reader, anim::AnimResource& value)
 {
     ozz::io::SkrStream stream(reader, nullptr);
     ozz::io::IArchive  archive(&stream);
     archive >> value.animation;
-    return 0;
+    return true;
 }
-int WriteTrait<anim::AnimResource>::Write(skr_binary_writer_t* writer, const anim::AnimResource& value)
+bool WriteTrait<anim::AnimResource>::Write(SBinaryWriter* writer, const anim::AnimResource& value)
 {
     ozz::io::SkrStream stream(nullptr, writer);
     ozz::io::OArchive  archive(&stream);
     archive << value.animation;
-    return 0;
+    return true;
 }
 } // namespace skr::binary
 

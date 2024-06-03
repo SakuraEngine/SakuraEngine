@@ -15,8 +15,8 @@
 #include <imgui/imgui.h>
 #include "SkrContainers/stl_string.hpp"
 #include "SkrContainers/stl_vector.hpp"
-#include "SkrModule/module_manager.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/module/module_manager.hpp"
+#include "SkrCore/memory/memory.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/window.h"
 #include <SDL2/SDL.h>

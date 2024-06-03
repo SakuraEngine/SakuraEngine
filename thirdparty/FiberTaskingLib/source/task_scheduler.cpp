@@ -32,7 +32,7 @@
 #include "SkrContainers/string.hpp"
 #include <memory>
 #include <mutex>
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrProfile/profile.h"
 #include "SkrCore/log.h"
 
