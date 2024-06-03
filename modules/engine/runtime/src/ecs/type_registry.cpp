@@ -1,5 +1,6 @@
 #include <string.h>
 #include "SkrBase/misc/make_zeroed.hpp"
+#include "SkrGUID/guid.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/detail/pool.hpp"
 #include "SkrRT/ecs/detail/type.hpp"
@@ -10,7 +11,6 @@
         #define WIN32_LEAN_AND_MEAN
     #endif
 #endif
-#include "sole.hpp"
 
 #if __SSE2__
     #include <emmintrin.h>
@@ -208,8 +208,7 @@ guid_t type_registry_t::make_guid()
     }
     {
         guid_t guid;
-        auto uuid = sole::uuid4();
-        memcpy(&guid, &uuid, sizeof(guid_t));
+        skr_make_guid(&guid);
         return guid;
     }
 }
