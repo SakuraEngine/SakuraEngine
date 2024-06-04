@@ -1,3 +1,7 @@
+codegen_component("SkrShaderCompiler", { api = "SKR_SHADER_COMPILER", rootdir = "include/SkrShaderCompiler" })
+    add_files("include/**.h")
+    add_files("include/**.hpp")
+
 shared_module("SkrShaderCompiler", "SKR_SHADER_COMPILER", engine_version)
     set_group("02.tools")
     add_includedirs("include", {public=true})
@@ -5,11 +9,6 @@ shared_module("SkrShaderCompiler", "SKR_SHADER_COMPILER", engine_version)
     public_dependency("SkrRenderer", engine_version)
     public_dependency("SkrToolCore", engine_version)
     add_files("src/**.cpp")
-    add_rules("c++.codegen", {
-        files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/SkrShaderCompiler",
-        api = "SKR_SHADER_COMPILER"
-    })
     set_pcxxheader("src/pch.hpp")
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
 
