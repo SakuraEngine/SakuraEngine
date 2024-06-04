@@ -91,6 +91,8 @@ inline constexpr size_t get_type_signature_size_of_signal(ETypeSignatureSignal s
         case ETypeSignatureSignal::Double:
             return sizeof(ETypeSignatureSignal) + sizeof(double);
     }
+    SKR_UNREACHABLE_CODE()
+    return SIZE_MAX;
 }
 } // namespace __helper
 
