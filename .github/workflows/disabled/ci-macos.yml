@@ -30,7 +30,7 @@ jobs:
         uses: xmake-io/github-action-setup-xmake@v1
         with:
           # xmake-version: latest
-          xmake-version: branch@dev # FIXME. switch to dev branch to fix ci temporary
+          xmake-version: '2.9.2' # FIXME. switch to dev branch to fix ci temporary
           actions-cache-folder: .xmake-cache-W${{ steps.cache_key.outputs.key }}
 
       # Update xmake repository (in order to have the file that will be cached)

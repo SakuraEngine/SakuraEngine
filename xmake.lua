@@ -1,4 +1,4 @@
-set_xmakever("2.8.1")
+set_xmakever("2.9.2")
 set_project("SakuraEngine")
 
 engine_version = "0.1.0"
