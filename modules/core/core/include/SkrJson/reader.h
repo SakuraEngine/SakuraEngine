@@ -126,11 +126,17 @@ struct SKR_STATIC_API _SJsonReader {
 
     struct Level {
         ValueType* _value = nullptr;
-        enum {
+        enum EType {
             kObject,
             kArray
         } _type = kObject;
         uint32_t _index = 0;
+
+        Level(ValueType* _value, EType _type) SKR_NOEXCEPT
+            : _value(_value), _type(_type) 
+        {
+
+        }
     };
 protected:
     friend struct _SJsonReaderHelper;

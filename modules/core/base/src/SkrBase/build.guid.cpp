@@ -1,7 +1,7 @@
 #include "SkrBase/config.h"
 #include "SkrBase/types/guid.h"
 
-#if defined(SKR_PLAT_WINDOWS)
+#if SKR_PLAT_WINDOWS
 
 #include <combaseapi.h>
 
@@ -12,7 +12,7 @@ void skr_make_guid(skr_guid_t* out_guid)
     memcpy(out_guid, &gidReference, sizeof(skr_guid_t));
 }
 
-#elif defined(SKR_PLAT_MACOSX)
+#elif SKR_PLAT_MACOSX
 
 #include <CoreFoundation/CFUUID.h>
 
