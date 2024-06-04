@@ -52,14 +52,6 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
     local using_msvc = target:toolchain("msvc")
     local using_clang_cl = target:toolchain("clang-cl")
 
-    -- fix macosx include solve bug
-    if is_plat("macosx") then
-        for _, dep_target in pairs(target:orderdeps()) do
-            local dirs = dep_target:get("includedirs")
-            target:add("includedirs", dirs)
-        end
-    end
-
     -- load compiler and get compilation command
     local sourcekind = opt.sourcekind
     if not sourcekind and type(sourcefile) == "string" then
@@ -69,11 +61,18 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
     local program, argv = compiler_inst:compargv(sourcefile, sourcefile..".o", opt)
     if using_msvc or using_clang_cl then
         table.insert(argv, "--driver-mode=cl")
-        --table.insert(argv, "/Tp")
-    else
-        --table.insert(argv, "-x c++")
     end
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
+
+    -- fix macosx include solve bug
+    if is_plat("macosx") then
+        for _, dep_target in pairs(target:orderdeps()) do
+            local dirs = dep_target:get("includedirs")
+            for _, dir in ipairs(dirs) do
+                table.insert(argv, "-I"..path.absolute(dir))
+            end
+        end
+    end
 
     -- hack: insert a placeholder to avoid the case where (#argv < limit) and (#argv + #argv2 > limit)
     local argv2 = {
@@ -111,6 +110,24 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
             , path.relative(outdir)
             -- , command
         )
+    end
+
+    -- temporal: debug macos
+    if is_plat("macosx") then
+        -- write argv to gendir
+        local modestring = ""
+        if (is_mode("release")) then
+            modestring = "release"
+        elseif (is_mode("debug")) then
+            modestring = "debug"
+        end
+        local argsfile = io.open("build/.gens/"..target:name().."."..modestring..".meta.argv", "w")
+        local args_string = ""
+        for _, arg in pairs(argv) do
+            args_string = args_string..arg.."\n"
+        end
+        argsfile:print(args_string)
+        argsfile:close()
     end
 
     -- compile meta source
@@ -398,7 +415,7 @@ function main()
 
         -- permission
         if (os.host() == "macosx") then
-            os.exec("chmod -R 777 ".._meta.program)
+            os.exec("chmod 777 ".._meta.program)
         end
 
         -- parameters
