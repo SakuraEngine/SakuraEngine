@@ -48,6 +48,7 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
     opt = opt or {}
     opt.target = target
     opt.rawargs = true
+    local meta_std_dir = os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include")
     local start_time = os.time()
     local using_msvc = target:toolchain("msvc")
     local using_clang_cl = target:toolchain("clang-cl")
@@ -59,20 +60,28 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
     end
     local compiler_inst = compiler.load(sourcekind, opt)
     local program, argv = compiler_inst:compargv(sourcefile, sourcefile..".o", opt)
+    
+    -- remove pch flags
     if using_msvc or using_clang_cl then
-        table.insert(argv, "--driver-mode=cl")
-    end
-    table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
-
-    -- fix macosx include solve bug
-    if is_plat("macosx") then
-        for _, dep_target in pairs(target:orderdeps()) do
-            local dirs = dep_target:get("includedirs")
-            for _, dir in ipairs(dirs) do
-                table.insert(argv, "-I"..path.absolute(dir))
+        for k, arg in pairs(argv) do 
+            if arg:startswith("-Yu") or arg:startswith("-FI") or arg:startswith("-Fp") then
+                argv[k] = "-I"..meta_std_dir
+            end
+        end
+    else
+        for i, arg in ipairs(argv) do 
+            if arg:startswith("-include-pch") then
+                argv[i] = "-I"..meta_std_dir
+                argv[i + 1] = "-I"..meta_std_dir
             end
         end
     end
+
+    -- setup tool flags
+    if using_msvc or using_clang_cl then
+        table.insert(argv, "--driver-mode=cl")
+    end
+    table.insert(argv, "-I"..meta_std_dir)
 
     -- hack: insert a placeholder to avoid the case where (#argv < limit) and (#argv + #argv2 > limit)
     local argv2 = {
@@ -438,10 +447,7 @@ function main()
             if target:rule(_meta_rule_codegen_name) then
                 -- resume meta compile
                 scheduler.co_group_begin(target:name()..".cppgen.meta", function ()
-                    meta_target = target:clone()
-                    meta_target:set("pcxxheader", nil)
-                    meta_target:set("pcheader", nil)
-                    scheduler.co_start(_compile_task, _meta_compile, meta_target, opt)
+                    scheduler.co_start(_compile_task, _meta_compile, target, opt)
                 end)
             end
         end

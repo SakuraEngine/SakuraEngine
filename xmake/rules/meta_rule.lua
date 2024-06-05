@@ -3,7 +3,7 @@ target("SkrMetaCodegenPolicy")
     set_group("00.utilities")
     set_policy("build.fence", true)
     -- dispatch codegen task
-    before_build(function(target)
+    on_build(function(target)
         import("meta_system")
         meta_system()
     end)
