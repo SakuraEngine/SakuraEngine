@@ -180,22 +180,24 @@ target("SharedPCH.Dispatcher")
 target_end()
 
 function shared_pch(owner_name)
-    target("SharedPCH.Dispatcher")
-        add_values("SharedPCH.Owners", owner_name)
-    target_end()
+    if (false) then
+        target("SharedPCH.Dispatcher")
+            add_values("SharedPCH.Owners", owner_name)
+        target_end()
 
-    target(owner_name)
-        add_deps("SharedPCH.Dispatcher", { public = true })
-        add_values("SharedPCH.Owner", true)
-    target_end()
+        target(owner_name)
+            add_deps("SharedPCH.Dispatcher", { public = true })
+            add_values("SharedPCH.Owner", true)
+        target_end()
 
-    pch_target(owner_name, owner_name..".SharedPCH")
-        -- public pch generate pch file and links to other targets
-        -- so it is a static target
-        set_kind("static") 
-        add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
-        add_deps(owner_name, {public = true})
-        add_values("SharedPCH", true)
+        pch_target(owner_name, owner_name..".SharedPCH")
+            -- public pch generate pch file and links to other targets
+            -- so it is a static target
+            set_kind("static") 
+            add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
+            add_deps(owner_name, {public = true})
+            add_values("SharedPCH", true)
+    end
 end
 
 ----------------------------------------------------------------------------------
