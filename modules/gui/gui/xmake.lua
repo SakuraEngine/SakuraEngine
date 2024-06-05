@@ -18,7 +18,6 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
 
     -- unity build & pch
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
-    set_pcxxheader("src/pch.hpp")
     add_includedirs("include", {public = true})
     add_includedirs("src", {public = false})
     add_files("src/*.cpp")
@@ -35,3 +34,6 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     add_files("src/backend/text_server_adv/*.cpp", {unity_group  = "text_adv"})
     
     remove_files("src/dev/deprecated/**.cpp")
+    
+private_pch("SkrGui")
+    add_files("src/pch.hpp")

@@ -69,10 +69,9 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
             end
         end
     else
-        for i, arg in ipairs(argv) do 
+        for k, arg in pairs(argv) do 
             if arg:startswith("-include-pch") then
-                argv[i] = "-I"..meta_std_dir
-                argv[i + 1] = "-I"..meta_std_dir
+                argv[k] = "-I"..meta_std_dir
             end
         end
     end

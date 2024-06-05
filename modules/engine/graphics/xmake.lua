@@ -3,7 +3,6 @@ shared_module("SkrGraphics", "SKR_GRAPHICS", engine_version)
     add_deps("vulkan", "SkrBase", {public = true})
     public_dependency("SkrCore", engine_version)
     add_includedirs("include", {public = true})
-    set_pcxxheader("src/pch.hpp")
     add_files("src/build.*.c", "src/build.*.cpp")
     if (is_os("macosx")) then 
         add_files("src/build.*.m", "src/build.*.mm")
@@ -27,3 +26,6 @@ shared_module("SkrGraphics", "SKR_GRAPHICS", engine_version)
         add_links("nvapi_x64", {public = true})
         add_links("WinPixEventRuntime", {public = true})
     end
+
+private_pch("SkrGraphics")
+    add_files("src/pch.hpp")

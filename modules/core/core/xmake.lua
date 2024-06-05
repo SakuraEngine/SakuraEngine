@@ -30,10 +30,12 @@ static_component("SkrJson", "SkrCore")
     add_packages("yyjson", {public = false})
 
 static_component("SkrSerde", "SkrCore")
-    -- set_pcxxheader("serde/pch.hpp")
     library_dependency("SkrJson", engine_version)
     add_packages("parallel-hashmap", {public = true, inherit = true})
     add_files("src/serde/build.*.cpp")
+
+private_pch("SkrCore")
+    add_files("src/core/pch.hpp")
 
 shared_module("SkrCore", "SKR_CORE", engine_version)
     -- add source files
@@ -42,7 +44,7 @@ shared_module("SkrCore", "SKR_CORE", engine_version)
     add_deps("mimalloc", {public = false})
     add_includedirs("include", {public = true})
     add_defines("SKR_MEMORY_IMPL", {public = false})
-    set_pcxxheader("src/core/pch.hpp")
+    -- core
     add_files("src/core/build.*.c", "src/core/build.*.cpp")
     -- rttr
     add_files("src/rttr/build.*.cpp")

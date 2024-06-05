@@ -18,7 +18,9 @@ shared_module("MPShared", "MP_SHARED", engine_version)
     add_deps("gamenetworkingsockets")
     add_packages("lz4")
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
-    set_pcxxheader("modules/mpshared/src/pch.hpp")
+        
+private_pch("MPShared")
+    add_files("modules/mpshared/src/pch.hpp")
 
 executable_module("MPGame", "MP_GAME", engine_version)
     set_group("04.examples/network")
