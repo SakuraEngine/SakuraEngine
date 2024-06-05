@@ -44,3 +44,7 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
 
 private_pch("SkrRT")
     add_files("src/pch.hpp")
+
+shared_pch("SkrRT")
+    add_files("include/SkrRT/**.hpp")
+    add_files("include/SkrRT/**.h")

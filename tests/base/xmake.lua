@@ -1,8 +1,6 @@
-target("AlgoTest")
-    set_kind("binary")
+test_target("AlgoTest")
     set_group("05.tests/base")
     library_dependency("SkrBase", engine_version)
-    add_deps("SkrTestFramework", {public = false})
     add_files("algo/*.cpp")
 
 target("ContainersTest")

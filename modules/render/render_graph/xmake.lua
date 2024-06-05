@@ -9,3 +9,6 @@ shared_module("SkrRenderGraph", "SKR_RENDER_GRAPH", engine_version)
 
 private_pch("SkrRenderGraph")
     add_files("src/pch.hpp")
+
+shared_pch("SkrRenderGraph")
+    add_files("include/**.hpp")

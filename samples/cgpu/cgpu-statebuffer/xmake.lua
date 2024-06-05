@@ -5,7 +5,7 @@ target("StateBufferTriangle")
         dxil_outdir = "/../resources/shaders/statebuffer-triangle"})
     set_kind("binary")
     -- file_watch.hpp needs exceptions
-    set_exceptions("cxx")
+    set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
     public_dependency("SkrRT", engine_version)
     add_includedirs("./../../common", {public = false})

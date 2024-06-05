@@ -1,11 +1,7 @@
 rule("sakura.pcxxheader")
     set_extensions(".pch", ".h", ".hpp")
-    before_build(function(target, opt)
-        import("core.project.depend")
+    after_load(function(target, opt)
         import("core.project.project")
-        import("core.language.language")
-        import("private.action.build.object")
-
         local buildtarget_name = target:extraconf("rules", "sakura.pcxxheader", "buildtarget")
         local is_shared = target:extraconf("rules", "sakura.pcxxheader", "shared")
         local buildtarget = project.target(buildtarget_name)
@@ -14,43 +10,9 @@ rule("sakura.pcxxheader")
         local using_clang = buildtarget:toolchain("clang")
         local using_xcode = buildtarget:toolchain("xcode")
 
-        -- extract files
-        local sourcebatches = target:sourcebatches()
-        local pchfiles = ""
-        if sourcebatches then
-            local sourcebatch = sourcebatches["sakura.pcxxheader"]
-            assert(#sourcebatch.sourcefiles >= 1)
-            pchfiles = sourcebatch.sourcefiles
-        end
-
-        -- generate proxy header
         local header_to_compile = buildtarget:autogenfile(target:name().."_pch.hpp")
-        depend.on_changed(function ()
-            local include_content = ""
-            for _, pchfile in pairs(pchfiles) do
-                include_content = include_content .. "#include \"" .. path.absolute(pchfile):gsub("\\", "/") .. "\"\n"
-            end
+        local pcoutputfile = buildtarget:autogenfile(target:name().."_pch.pch")
 
-            io.writefile(header_to_compile, ([[
-#pragma system_header
-#ifdef __cplusplus
-%s
-#endif // __cplusplus
-            ]]):format(include_content))
-        end, {dependfile = target:dependfile(target:name()..".sakura.pch"), files = pchfiles})
-
-        -- build pch
-        local pcoutputfile = ""
-        if header_to_compile then
-            local sourcefile = header_to_compile
-            pcoutputfile = buildtarget:autogenfile(target:name().."_pch.pch")
-            local dependfile = buildtarget:dependfile(pcoutputfile)
-            local sourcekind = language.langkinds()["cxx"]
-            local sourcebatch = {sourcekind = sourcekind, sourcefiles = {sourcefile}, objectfiles = {pcoutputfile}, dependfiles = {dependfile}}
-            object.build(buildtarget, sourcebatch, opt)
-        end
-
-        -- insert to owner
         local need_pc_obj = false
         if using_msvc then
             buildtarget:add("cxxflags", "-Yu"..path.absolute(header_to_compile), { public = is_shared })
@@ -71,8 +33,57 @@ rule("sakura.pcxxheader")
         else
             raise("PCH: unsupported toolchain!")
         end
+        target:data_set("pcoutputfile", pcoutputfile)
+        target:data_set("header_to_compile", header_to_compile)
+        target:data_set("need_pc_obj", need_pc_obj)
+    end)
+    before_build(function(target, opt)
+        import("core.project.depend")
+        import("core.project.project")
+        import("core.language.language")
+        import("private.action.build.object")
+
+        local buildtarget_name = target:extraconf("rules", "sakura.pcxxheader", "buildtarget")
+        local buildtarget = project.target(buildtarget_name)
+
+        -- extract files
+        local sourcebatches = target:sourcebatches()
+        local pchfiles = ""
+        if sourcebatches then
+            local sourcebatch = sourcebatches["sakura.pcxxheader"]
+            assert(#sourcebatch.sourcefiles >= 1)
+            pchfiles = sourcebatch.sourcefiles
+        end
+
+        -- generate proxy header
+        local header_to_compile = target:data("header_to_compile")
+        depend.on_changed(function ()
+            local include_content = ""
+            for _, pchfile in pairs(pchfiles) do
+                include_content = include_content .. "#include \"" .. path.absolute(pchfile):gsub("\\", "/") .. "\"\n"
+            end
+
+            io.writefile(header_to_compile, ([[
+#pragma system_header
+#ifdef __cplusplus
+%s
+#endif // __cplusplus
+            ]]):format(include_content))
+        end, {dependfile = target:dependfile(target:name()..".sakura.pch"), files = pchfiles})
+
+        -- build pch
+        local pcoutputfile = target:data("pcoutputfile")
+        if header_to_compile then
+            local sourcefile = header_to_compile
+            local dependfile = buildtarget:dependfile(pcoutputfile)
+            local sourcekind = language.langkinds()["cxx"]
+            local sourcebatch = {sourcekind = sourcekind, sourcefiles = {sourcefile}, objectfiles = {pcoutputfile}, dependfiles = {dependfile}}
+            object.build(buildtarget, sourcebatch, opt)
+            -- print(buildtarget:name().." pch compiled! "..header_to_compile)
+        end
 
         -- insert pc objects
+        local need_pc_obj = target:data("need_pc_obj")
         if need_pc_obj then
             local objectfiles = buildtarget:objectfiles()
             if objectfiles then
@@ -86,6 +97,8 @@ function pch_target(owner_name, pch_target_name)
     target(pch_target_name)
         set_group("01.modules/"..owner_name.."/components")
         set_policy("build.fence", true)
+        -- temporaly close the exception for pch target
+        set_exceptions("no-cxx")
 end
 
 ------------------------------------PRIVATE PCH------------------------------------
@@ -93,6 +106,7 @@ end
 function private_pch(owner_name)
     target(owner_name)
         add_deps(owner_name..".PrivatePCH", {public = false})
+        add_values("PrivatePCH.Owner", true)
     target_end()
 
     pch_target(owner_name, owner_name..".PrivatePCH")
@@ -100,6 +114,7 @@ function private_pch(owner_name)
         -- so it is a phony target
         set_kind("phony") 
         add_rules("sakura.pcxxheader", { buildtarget = owner_name, shared = false })
+        add_values("PrivatePCH", true)
 end
 
 ------------------------------------SHARED PCH------------------------------------
@@ -108,29 +123,58 @@ target("SharedPCH.Dispatcher")
     set_kind("phony")
     set_group("00.utilities")
     set_policy("build.fence", true)
-    on_build(function(target, opt)
+    on_config(function(dispatcher, opt)
         import("core.project.project")
 
         -- score owners
-        local owner_names = target:values("SharedPCH.Owners")
+        local owner_names = dispatcher:values("SharedPCH.Owners")
         local owner_scores = {}
         for _, owner_name in pairs(owner_names) do
             owner_scores[owner_name] = owner_scores[owner_name] or 1
-            for _, owner_dep in pairs(project.target(owner_name):deps()) do
+            for __, owner_dep in pairs(project.target(owner_name):deps()) do
                 if table.contains(owner_names, owner_dep:name()) then
                     owner_scores[owner_name] = owner_scores[owner_name] + 1
                 end
             end
         end
 
-        -- print owner scores
-        for owner_name, score in pairs(owner_scores) do
-            print("owner: " .. owner_name .. ", score: " .. score)
+        -- dispatch to downstream targets without private pch modules
+        local share_map = {}
+        local share_score_map = {}
+        for _, target in pairs(project.ordertargets()) do
+            local is_private = target:values("PrivatePCH.Owner")
+            local is_pch = target:values("PrivatePCH") or target:values("SharedPCH")
+            if not is_private and not is_pch then
+                -- print("have no private pch: "..target:name())
+                -- iterate all deps
+                for __, dep in pairs(target:deps()) do
+                    if owner_scores[dep:name()] then -- if is shared owner
+                        share_map[target:name()] = share_map[target:name()] or dep:name()
+                        share_score_map[target:name()] = share_score_map[target:name()] or owner_scores[dep:name()]
+                        -- compare and get the max score
+                        if owner_scores[dep:name()] > share_score_map[target:name()] then
+                            share_score_map[target:name()] = owner_scores[dep:name()]
+                            share_map[target:name()] = dep:name()
+                        end
+                    end
+                end
+            end
         end
 
-        -- dispatch to downstream targets without private pch modules
-        for _, target in pairs(project.ordertargets()) do
-            
+        -- print share map
+        for target_name, owner_name in pairs(share_map) do
+            local target = project.target(target_name)
+            local pch = project.target(owner_name..".SharedPCH")
+
+            local pch_exception = pch:get("exceptions")
+            local target_exception = target:get("exceptions")
+            if pch_exception ~= nil and pch_exception == target_exception then
+                target:add("cxxflags", pch:get("cxxflags"))
+                target:add("deps", pch:name())
+                -- print(target:name().." & "..pch:name()..": shared pch applied!")
+            else
+                -- print(target:name().." & "..pch:name()..": exception not match, pch discarded!")
+            end
         end
     end)
 target_end()
@@ -142,6 +186,7 @@ function shared_pch(owner_name)
 
     target(owner_name)
         add_deps("SharedPCH.Dispatcher", { public = true })
+        add_values("SharedPCH.Owner", true)
     target_end()
 
     pch_target(owner_name, owner_name..".SharedPCH")
@@ -149,7 +194,8 @@ function shared_pch(owner_name)
         -- so it is a static target
         set_kind("static") 
         add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
-        add_deps(owner_name, {public = false})
+        add_deps(owner_name, {public = true})
+        add_values("SharedPCH", true)
 end
 
 ----------------------------------------------------------------------------------
