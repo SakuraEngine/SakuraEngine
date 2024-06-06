@@ -169,6 +169,7 @@ function shared_pch(owner_name)
     pch_target(owner_name, owner_name..".SharedPCH")
         -- public pch generate pch file and links to other targets
         set_kind("phony") 
+        set_default(false) -- disable shared pch now
         add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
         add_values("Sakura.Attributes", "SharedPCH")
         add_deps(owner_name)
@@ -176,12 +177,14 @@ end
 
 rule("PickSharedPCH")
     on_load(function(target)
-        local tbl_path = "build/.gens/module_infos/"..target:name()..".table"
-        if os.exists(tbl_path) then
-            local tbl = io.load(tbl_path)
-            local share_from = tbl["SharedPCH.ShareFrom"]
-            if (share_from ~= "") then
-                target:add("deps", share_from..".SharedPCH", { inherit = false })
+        if (false) then -- disable shared pch now
+            local tbl_path = "build/.gens/module_infos/"..target:name()..".table"
+            if os.exists(tbl_path) then
+                local tbl = io.load(tbl_path)
+                local share_from = tbl["SharedPCH.ShareFrom"]
+                if (share_from ~= "") then
+                    target:add("deps", share_from..".SharedPCH", { inherit = false })
+                end
             end
         end
     end)

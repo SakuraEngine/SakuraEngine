@@ -39,3 +39,6 @@ shared_module("SkrLive2D", "SKR_LIVE2D", engine_version)
         spv_outdir = "/../resources/shaders", 
         dxil_outdir = "/../resources/shaders"})
     add_files("shaders/*.hlsl")
+
+private_pch("SkrLive2D")
+    add_files("src/pch.hpp")

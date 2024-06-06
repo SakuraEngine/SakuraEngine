@@ -42,6 +42,9 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     end
     add_rules("utils.install-libs", { libnames = libs_to_install })
 
+private_pch("SkrRT")
+    add_files("src/pch.hpp")
+
 shared_pch("SkrRT")
     add_files("include/SkrRT/**.h")
     add_files("include/SkrRT/**.hpp")

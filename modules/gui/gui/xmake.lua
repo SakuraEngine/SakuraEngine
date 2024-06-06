@@ -38,3 +38,6 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
 shared_pch("SkrGui")
     add_files("include/**.hpp")
     remove_files("include/SkrGui/_private/**.hpp")
+
+private_pch("SkrGui")
+    add_files("src/pch.hpp")
