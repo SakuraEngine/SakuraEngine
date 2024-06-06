@@ -169,14 +169,8 @@ function shared_pch(owner_name)
         -- public pch generate pch file and links to other targets
         set_kind("phony") 
         add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
-        add_deps(owner_name, { inherit = true })
         add_values("Sakura.Attributes", "SharedPCH")
-
-    if (false) then
-        target("SharedPCH.Dispatcher")
-            add_values("Sakura.Attributes", "SharedPCH.Owners")
-        target_end()
-    end
+        add_deps(owner_name)
 end
 
 rule("PickSharedPCH")
@@ -187,7 +181,6 @@ rule("PickSharedPCH")
             local share_from = tbl["SharedPCH.ShareFrom"]
             if (share_from ~= "") then
                 target:add("deps", share_from..".SharedPCH", { inherit = false })
-                print("PickSharedPCH: "..target:name().." pick "..share_from..".SharedPCH")
             end
         end
     end)
