@@ -202,6 +202,9 @@ function main()
         return remote_build_action()
     end
 
+    -- lock the whole project
+    project.lock()
+
     -- load config first
     config.load()
 
@@ -245,5 +248,8 @@ function main()
 
     -- leave project directory
     os.cd(oldir)
+
+    -- unlock the whole project
+    project.unlock()
 end
 

@@ -18,6 +18,7 @@ target("SkrMetaCodegenPolicy")
 rule("c++.codegen") -- TODO. use new name
     on_load(function (target, opt)
         -- add dependency
+        target:add("values", "Sakura.Attributes", "Codegen")
         target:add("deps", "SkrMetaCodegenPolicy")
 
         -- config

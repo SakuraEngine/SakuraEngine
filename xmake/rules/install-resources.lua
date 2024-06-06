@@ -25,22 +25,21 @@ rule("utils.install-resources")
     end)
 
 rule("utils.install-libs")
-    on_load(function (target)
+    before_build(function (target)
         import("find_sdk")
+        import("core.project.depend")
+        import("utils.archive")
+
         local libnames = target:extraconf("rules", "utils.install-libs", "libnames")
         for _, libname in pairs(libnames) do
             local zip = find_sdk.find_sdk_lib(libname)
             target:data_add("lib_zips", zip)
         end
+
         local tardir = target:targetdir()
         if not os.isdir(tardir) then
             os.mkdir(tardir)
         end
-    end)
-    on_config(function (target)
-        import("find_sdk")
-        import("core.project.depend")
-        import("utils.archive")
 
         local lib_zips = target:data("lib_zips")
         if not lib_zips or #lib_zips == 0 then

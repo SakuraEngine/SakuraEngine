@@ -18,12 +18,14 @@ rule("sakura.pcxxheader")
             buildtarget:add("cxxflags", "-Yu"..path.absolute(header_to_compile), { public = is_shared })
             buildtarget:add("cxxflags", "-FI"..path.absolute(header_to_compile), { public = is_shared })
             buildtarget:add("cxxflags", "-Fp"..path.absolute(pcoutputfile), { public = is_shared })
+            buildtarget:add("cxxflags", "-Fo"..path.absolute(pcoutputfile)..".obj", { public = is_shared })
             need_pc_obj = true
         elseif using_clang_cl then
             buildtarget:add("cxxflags", "-I"..path.directory(header_to_compile), { public = is_shared })
             buildtarget:add("cxxflags", "-Yu"..path.filename(header_to_compile), { public = is_shared })
             buildtarget:add("cxxflags", "-FI"..path.filename(header_to_compile), { public = is_shared })
             buildtarget:add("cxxflags", "-Fp"..path.absolute(pcoutputfile), { public = is_shared })
+            buildtarget:add("cxxflags", "-Fo"..path.absolute(pcoutputfile)..".obj", { public = is_shared })
             need_pc_obj = true
         elseif using_clang or using_xcode then
             buildtarget:add("cxxflags", "-include", { public = is_shared })
@@ -99,14 +101,16 @@ function pch_target(owner_name, pch_target_name)
         set_policy("build.fence", true)
         -- temporaly close the exception for pch target
         set_exceptions("no-cxx")
+        add_values("Sakura.Attributes", "PCH")
+        add_values("Sakura.Attributes", "Analyze.Ignore")
 end
 
 ------------------------------------PRIVATE PCH------------------------------------
 
 function private_pch(owner_name)
     target(owner_name)
-        add_deps(owner_name..".PrivatePCH", {public = false})
-        add_values("PrivatePCH.Owner", true)
+        add_deps(owner_name..".PrivatePCH", {inherit = false})
+        add_values("Sakura.Attributes", "PrivatePCH.Owner")
     target_end()
 
     pch_target(owner_name, owner_name..".PrivatePCH")
@@ -114,90 +118,79 @@ function private_pch(owner_name)
         -- so it is a phony target
         set_kind("phony") 
         add_rules("sakura.pcxxheader", { buildtarget = owner_name, shared = false })
-        add_values("PrivatePCH", true)
+        add_values("Sakura.Attributes", "PrivatePCH")
 end
 
 ------------------------------------SHARED PCH------------------------------------
 
-target("SharedPCH.Dispatcher")
-    set_kind("phony")
-    set_group("00.utilities")
-    set_policy("build.fence", true)
-    on_config(function(dispatcher, opt)
-        import("core.project.project")
+analyzer("SharedPCH.Score")
+    analyze(function(target, attributes, analyzing)
+        if not table.contains(attributes, "SharedPCH.Owner") then
+            return 0
+        end
 
-        -- score owners
-        local owner_names = dispatcher:values("SharedPCH.Owners")
-        local owner_scores = {}
-        for _, owner_name in pairs(owner_names) do
-            owner_scores[owner_name] = owner_scores[owner_name] or 1
-            for __, owner_dep in pairs(project.target(owner_name):deps()) do
-                if table.contains(owner_names, owner_dep:name()) then
-                    owner_scores[owner_name] = owner_scores[owner_name] + 1
+        local score = 1
+        for __, dep in pairs(target:deps()) do
+            local dep_attrs = analyzing.query_attributes(dep:name())
+            if table.contains(dep_attrs, "SharedPCH.Owner") then
+                score = score + 1
+            end
+        end
+        target:data_set("SharedPCH.Score", score)
+        return score
+    end)
+analyzer_end()
+
+analyzer("SharedPCH.ShareFrom")
+    add_deps("SharedPCH.Score")
+    analyze(function(target, attributes, analyzing)
+        local share_from = ""
+        local has_private_pch = target:values("PrivatePCH.Owner")
+        if not has_private_pch then
+            local last_score = 0
+            for __, dep in pairs(target:deps()) do
+                local score = dep:data("SharedPCH.Score") or 0
+                if score and score > last_score then
+                    last_score = score
+                    share_from = dep:name()
                 end
             end
         end
+        return share_from
+    end)
+analyzer_end()
 
-        -- dispatch to downstream targets without private pch modules
-        local share_map = {}
-        local share_score_map = {}
-        for _, target in pairs(project.ordertargets()) do
-            local is_private = target:values("PrivatePCH.Owner")
-            local is_pch = target:values("PrivatePCH") or target:values("SharedPCH")
-            if not is_private and not is_pch then
-                -- print("have no private pch: "..target:name())
-                -- iterate all deps
-                for __, dep in pairs(target:deps()) do
-                    if owner_scores[dep:name()] then -- if is shared owner
-                        share_map[target:name()] = share_map[target:name()] or dep:name()
-                        share_score_map[target:name()] = share_score_map[target:name()] or owner_scores[dep:name()]
-                        -- compare and get the max score
-                        if owner_scores[dep:name()] > share_score_map[target:name()] then
-                            share_score_map[target:name()] = owner_scores[dep:name()]
-                            share_map[target:name()] = dep:name()
-                        end
-                    end
-                end
-            end
-        end
+function shared_pch(owner_name)
+    target(owner_name)
+        add_values("Sakura.Attributes", "SharedPCH.Owner")
+    target_end()
 
-        -- print share map
-        for target_name, owner_name in pairs(share_map) do
-            local target = project.target(target_name)
-            local pch = project.target(owner_name..".SharedPCH")
+    pch_target(owner_name, owner_name..".SharedPCH")
+        -- public pch generate pch file and links to other targets
+        set_kind("phony") 
+        add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
+        add_deps(owner_name, { inherit = true })
+        add_values("Sakura.Attributes", "SharedPCH")
 
-            local pch_exception = pch:get("exceptions")
-            local target_exception = target:get("exceptions")
-            if pch_exception ~= nil and pch_exception == target_exception then
-                target:add("cxxflags", pch:get("cxxflags"))
-                target:add("deps", pch:name())
-                -- print(target:name().." & "..pch:name()..": shared pch applied!")
-            else
-                -- print(target:name().." & "..pch:name()..": exception not match, pch discarded!")
+    if (false) then
+        target("SharedPCH.Dispatcher")
+            add_values("Sakura.Attributes", "SharedPCH.Owners")
+        target_end()
+    end
+end
+
+rule("PickSharedPCH")
+    on_load(function(target)
+        local tbl_path = "build/.gens/module_infos/"..target:name()..".table"
+        if os.exists(tbl_path) then
+            local tbl = io.load(tbl_path)
+            local share_from = tbl["SharedPCH.ShareFrom"]
+            if (share_from ~= "") then
+                target:add("deps", share_from..".SharedPCH", { inherit = false })
+                print("PickSharedPCH: "..target:name().." pick "..share_from..".SharedPCH")
             end
         end
     end)
-target_end()
-
-function shared_pch(owner_name)
-    if (false) then
-        target("SharedPCH.Dispatcher")
-            add_values("SharedPCH.Owners", owner_name)
-        target_end()
-
-        target(owner_name)
-            add_deps("SharedPCH.Dispatcher", { public = true })
-            add_values("SharedPCH.Owner", true)
-        target_end()
-
-        pch_target(owner_name, owner_name..".SharedPCH")
-            -- public pch generate pch file and links to other targets
-            -- so it is a static target
-            set_kind("static") 
-            add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
-            add_deps(owner_name, {public = true})
-            add_values("SharedPCH", true)
-    end
-end
+rule_end()
 
 ----------------------------------------------------------------------------------

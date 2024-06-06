@@ -23,6 +23,9 @@ rule("skr.module")
 rule_end()
 
 rule("skr.component")
+    on_load(function(target)
+        target:add("values", "Sakura.Attributes", "Module.Component")
+    end)
     on_config(function (component, opt)
         import("core.project.project")
         local owner_name = component:extraconf("rules", "skr.component", "owner")
@@ -60,6 +63,7 @@ rule("skr.dyn_module")
     on_load(function (target, opt)
         local api = target:extraconf("rules", "skr.dyn_module", "api")
         local version = target:extraconf("rules", "skr.dyn_module", "version")
+        target:add("values", "Sakura.Attributes", "Module")
         target:add("values", "skr.module.version", version)
         target:add("defines", api.."_IMPL")
         target:add("defines", api.."_EXTERN_C=SKR_EXTERN_C", {public=true})
@@ -149,19 +153,6 @@ rule("skr.static_library")
     end)
 rule_end()
 
-rule("skr.static_module")
-    add_deps("skr.module")
-    add_deps("skr.static_library")
-    on_load(function (target, opt)
-        local api = target:extraconf("rules", "skr.static_module", "api")
-        if not has_config("shipping_one_archive") then
-            target:add("defines", api.."_API", {public=true})
-            target:add("defines", api.."_STATIC", {public=true})
-            target:add("defines", api.."_IMPL")
-        end
-    end)
-rule_end()
-
 function static_library(name, api, version, opt)
     target(name)
         set_group("01.libraries/"..name)
@@ -175,22 +166,10 @@ function static_library(name, api, version, opt)
         end
 end
 
-function static_module(name, api, version, opt)
-    target(name)
-        set_group("01.modules/"..name)
-        add_rules("skr.static_module", { api = api, version = version }) 
-        set_kind("static")
-        opt = opt or {}
-        if opt.exception and not opt.noexception then
-            set_exceptions("cxx")
-        else
-            set_exceptions("no-cxx")
-        end
-end
-
 function shared_module(name, api, version, opt)
     target(name)
         set_group("01.modules/"..name)
+        add_rules("PickSharedPCH")
         add_rules("skr.dyn_module", { api = api, version = version }) 
         if has_config("shipping_one_archive") then
             set_kind("static")
@@ -227,6 +206,7 @@ end
 function executable_module(name, api, version, opt)
     target(name)
         set_kind("binary")
+        add_rules("PickSharedPCH")
         add_rules("skr.dyn_module", { api = api, version = engine_version }) 
         opt = opt or {}
         if opt.exception and not opt.noexception then
