@@ -149,6 +149,7 @@ function _meta_compile_command(sourcefile, rootdir, outdir, target, opt)
         )
     end
 end
+
 function _meta_codegen_command(target, scripts, metadir, gendir, opt)
     -- get config
     local api = target:extraconf("rules", _meta_rule_codegen_name, "api")
@@ -284,6 +285,7 @@ function _collect_headers_batch(target)
     target:data_set(_meta_data_batch_name, meta_batch)
     target:data_set(_meta_data_headers_name, headerfiles)
 end
+
 function _solve_generators(target)
     -- get config
     local generator_config = target:extraconf("rules", _meta_rule_generators_name)
@@ -333,6 +335,7 @@ function _solve_generators(target)
     -- save config
     target:data_set(_meta_data_generators_name, solved_config)
 end
+
 function _meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
     -- generate headers dummy
     local headerfiles = target:data(_meta_data_headers_name)

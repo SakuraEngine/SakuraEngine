@@ -1,3 +1,6 @@
+codegen_component("MetaTest", { api = "METATEST", rootdir = "include/MetaTest" })
+    add_files("include/**.hpp")
+
 target("MetaTest")
     set_group("05.tests/meta")
     set_kind("binary")
@@ -6,11 +9,6 @@ target("MetaTest")
     add_files("src/**.cpp")
     
     add_deps("SkrBase")
-    
-    add_rules("c++.codegen", {
-        files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/MetaTest/",
-    })
 
     add_rules("c++.meta.generators", {
         scripts = {

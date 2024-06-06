@@ -12,17 +12,18 @@ private_pch("SkrOzz")
 
 shared_pch("SkrOzz")
     add_files("ozz/SkrAnim/ozz/*.h")
+    
+---------------------------------------------------------------------------------------
+
+codegen_component("SkrAnim", { api = "SKR_ANIM", rootdir = "include/SkrAnim" })
+    add_files("include/**.h")
+    add_files("include/**.hpp")
 
 shared_module("SkrAnim", "SKR_ANIM", engine_version)
     public_dependency("SkrOzz", engine_version)
     public_dependency("SkrRenderer", engine_version)
     add_includedirs("include", {public=true})
     add_includedirs("ozz", {public=true})
-    add_rules("c++.codegen", {
-        files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/SkrAnim",
-        api = "SKR_ANIM"
-    })
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_files("src/**.cpp")
 

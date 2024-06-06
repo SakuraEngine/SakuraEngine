@@ -1,9 +1,8 @@
+codegen_component("SkrRenderer", { api = "SKR_RENDERER", rootdir = "include/SkrRenderer" })
+    add_files("include/**.h")
+    add_files("include/**.hpp")
+
 shared_module("SkrRenderer", "SKR_RENDERER", engine_version)
-    add_rules("c++.codegen", {
-        files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/SkrRenderer",
-        api = "SKR_RENDERER"
-    })
     public_dependency("SkrScene", engine_version)
     public_dependency("SkrRenderGraph", engine_version)
     public_dependency("SkrImGui", engine_version)
