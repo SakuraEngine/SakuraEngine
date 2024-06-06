@@ -89,6 +89,11 @@ function solve_generators(target)
 
     -- save config
     target:data_set(_meta_data_generators_name, solved_config)
+
+    -- permission
+    if (os.host() == "macosx") then
+        os.exec("chmod 777 ".._meta.program)
+    end
 end
 
 function _meta_compile(target, proxy_target, opt)
@@ -131,9 +136,10 @@ function _meta_compile(target, proxy_target, opt)
             end
         end
     else
-        for k, arg in pairs(argv) do 
-            if arg:startswith("-include-pch") then
-                argv[k] = "-I"..meta_std_dir
+        for i, arg in pairs(argv) do 
+            if arg:find("_pch.hpp") or arg:find("_pch.pch") then
+                argv[i - 1] = "-I"..meta_std_dir
+                argv[i] = "-I"..meta_std_dir
             end
         end
     end

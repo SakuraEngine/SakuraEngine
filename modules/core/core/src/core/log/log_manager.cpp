@@ -29,7 +29,7 @@ void LogManager::Initialize() SKR_NOEXCEPT
     // register default console pattern & sink
     ret = RegisterPattern(LogConstants::kDefaultConsolePatternId, 
         skr::make_unique<LogPattern>(
-            u8"[%(timestamp)][%(thread_name)(tid:%(thread_id))] %(logger_name).%(level_name): %(message) "
+            u8"[%(timestamp)][%(process_name)@%(thread_name)(tid:%(thread_id))] %(logger_name).%(level_name): %(message) "
             u8"\n    \x1b[90mIn %(function_name) At %(file_name):%(file_line)\x1b[0m"
         ));
     SKR_ASSERT(ret && "Default log console pattern register failed!");

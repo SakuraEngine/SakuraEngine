@@ -247,7 +247,7 @@ skr::String format_NArgs(std::index_sequence<N...>, const skr::StringView& fmt, 
 }
 
 const static char8_t* main_thread_name = u8"main";
-const static char8_t* unknown_thread_name = u8"unknown";
+const static char8_t* unknown_thread_name = u8"unnamed";
 const static SThreadID main_thread_id = skr_current_thread_id();
 static skr::String timestring = u8"";
 skr::String const& LogPattern::pattern(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
@@ -326,7 +326,7 @@ skr::String const& LogPattern::pattern(const LogEvent& event, skr::StringView fo
 
     if (is_set_in_pattern_[(size_t)Attribute::process_name])
     {
-        const auto process_name = skr::StringView(LogConstants::kLogLevelNameLUT[level_id]); // TODO
+        const auto process_name = skr::StringView(skr_get_current_process_name());
         _set_arg_val<Attribute::process_name>(process_name);
     }
 
