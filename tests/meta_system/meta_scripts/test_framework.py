@@ -2,6 +2,11 @@ import framework.generator as gen
 import framework.scheme as sc
 
 
+class Test:
+    def __init__(self, dict) -> None:
+        pass
+
+
 class TestFrameworkGenerator(gen.GeneratorBase):
     def load_scheme(self):
         self.owner.add_record_scheme(

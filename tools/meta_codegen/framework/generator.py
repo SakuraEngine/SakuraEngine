@@ -16,6 +16,9 @@ import framework.log as log
 import framework.config as config
 
 # ------------------------------ generators ------------------------------
+# 如果要支持 cpp 以外的 Generator 类型，需要提供更高一层的自定义 GeneratorManager 的抽象，来支持不同类型的代码生成
+# 一般来说，很少会存在与 CPP 同等复杂的需求，因此暂时不提供这个抽象，而且如果有这类需求，在构建系统侧进行处理会更为合适
+# 比方说封装一个 rule，并在 codegen target 中增加这个 rule 以完成 codegen 工作
 
 
 class GeneratorBase:

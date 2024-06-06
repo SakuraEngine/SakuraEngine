@@ -37,6 +37,7 @@ Field json structure
     "arraySize": <array_size: int>,
     "attrs": <user attributes: Object>,
     "isFunctor": <is_functor: bool>,
+    
     "isAnonymous": <is_anonymous: bool>,
     "comment": <comment: str>,
     "offset": <offset: int>,
@@ -137,6 +138,7 @@ class EnumValue:
 
         self.raw_attrs: sc.JsonObject
         self.attrs: object
+        self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
@@ -147,6 +149,7 @@ class EnumValue:
 
         # load fields
         self.raw_attrs = unique_dict["attrs"]
+        self.raw_attrs.escape_from_parent()
 
     def make_log_stack(self) -> log.CppSourceStack:
         return log.CppSourceStack(self.parent.file_name, self.line)
@@ -168,6 +171,7 @@ class Enumeration:
 
         self.raw_attrs: sc.JsonObject
         self.attrs: object
+        self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
@@ -187,6 +191,7 @@ class Enumeration:
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
+        self.raw_attrs.escape_from_parent()
 
     def make_log_stack(self) -> log.CppSourceStack:
         return log.CppSourceStack(self.file_name, self.line)
@@ -207,6 +212,7 @@ class Record:
 
         self.raw_attrs: sc.JsonObject
         self.attrs: object
+        self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
@@ -232,6 +238,7 @@ class Record:
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
+        self.raw_attrs.escape_from_parent()
 
     def make_log_stack(self) -> log.CppSourceStack:
         return log.CppSourceStack(self.file_name, self.line)
@@ -254,6 +261,7 @@ class Field:
 
         self.raw_attrs: sc.JsonObject
         self.attrs: object
+        self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
@@ -269,6 +277,7 @@ class Field:
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
+        self.raw_attrs.escape_from_parent()
 
     def make_log_stack(self) -> log.CppSourceStack:
         return log.CppSourceStack(self.parent.file_name, self.line)
@@ -293,6 +302,7 @@ class Method:
 
         self.raw_attrs: sc.JsonObject
         self.attrs: object
+        self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
@@ -319,6 +329,7 @@ class Method:
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
+        self.raw_attrs.escape_from_parent()
 
     def make_log_stack(self) -> log.CppSourceStack:
         return log.CppSourceStack(self.parent.file_name, self.line)
@@ -342,6 +353,7 @@ class Parameter:
 
         self.raw_attrs: sc.JsonObject
         self.attrs: object
+        self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
@@ -359,6 +371,7 @@ class Parameter:
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
+        self.raw_attrs.escape_from_parent()
 
     def make_log_stack(self) -> log.CppSourceStack:
         if isinstance(self.parent, Method):
@@ -384,6 +397,7 @@ class Function:
 
         self.raw_attrs: sc.JsonObject
         self.attrs: object
+        self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
@@ -410,6 +424,7 @@ class Function:
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
+        self.raw_attrs.escape_from_parent()
 
     def make_log_stack(self) -> log.CppSourceStack:
         return log.CppSourceStack(self.file_name, self.line)
