@@ -68,6 +68,7 @@ rule("sakura.pcxxheader")
             io.writefile(header_to_compile, ([[
 #pragma system_header
 #ifdef __cplusplus
+#include <intrin.h>
 %s
 #endif // __cplusplus
             ]]):format(include_content))

@@ -34,13 +34,6 @@ static_component("SkrSerde", "SkrCore")
     add_packages("parallel-hashmap", {public = true, inherit = true})
     add_files("src/serde/build.*.cpp")
 
-private_pch("SkrCore")
-    add_files("src/core/pch.hpp")
-    add_files("include/SkrContainers/*.hpp")
-
-shared_pch("SkrCore")
-    add_files("include/SkrContainers/*.hpp")
-
 shared_module("SkrCore", "SKR_CORE", engine_version)
     -- add source files
     add_packages("parallel-hashmap", {public = true, inherit = true})

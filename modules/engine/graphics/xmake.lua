@@ -26,6 +26,3 @@ shared_module("SkrGraphics", "SKR_GRAPHICS", engine_version)
         add_links("nvapi_x64", {public = true})
         add_links("WinPixEventRuntime", {public = true})
     end
-
-private_pch("SkrGraphics")
-    add_files("src/pch.hpp")

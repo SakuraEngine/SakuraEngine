@@ -34,6 +34,7 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     add_files("src/backend/text_server_adv/*.cpp", {unity_group  = "text_adv"})
     
     remove_files("src/dev/deprecated/**.cpp")
-    
-private_pch("SkrGui")
-    add_files("src/pch.hpp")
+
+shared_pch("SkrGui")
+    add_files("include/**.hpp")
+    remove_files("include/SkrGui/_private/**.hpp")

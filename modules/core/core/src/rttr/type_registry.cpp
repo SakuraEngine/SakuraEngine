@@ -5,6 +5,8 @@
 #include "SkrCore/log.hpp"
 #include "SkrRTTR/type.hpp"
 
+#include <mutex>
+
 namespace skr::rttr
 {
 // static data

@@ -11,6 +11,3 @@ shared_module("SkrRenderer", "SKR_RENDERER", engine_version)
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_files("src/*.cpp")
     add_files("src/resources/*.cpp", {unity_group = "resources"})
-    
-private_pch("SkrRenderer")
-    add_files("src/pch.hpp")

@@ -1,3 +1,4 @@
+#include "winheaders.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrCore/memory/memory.h"
 #include "SkrCore/log.h"

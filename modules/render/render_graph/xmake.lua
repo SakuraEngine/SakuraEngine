@@ -7,8 +7,5 @@ shared_module("SkrRenderGraph", "SKR_RENDER_GRAPH", engine_version)
     add_files("src/backend/*.cpp", {unity_group = "backend"})
     add_files("src/phases/*.cpp", {unity_group = "backend"})    
 
-private_pch("SkrRenderGraph")
-    add_files("src/pch.hpp")
-
 shared_pch("SkrRenderGraph")
     add_files("include/**.hpp")

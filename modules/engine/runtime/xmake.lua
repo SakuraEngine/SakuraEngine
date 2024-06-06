@@ -42,9 +42,18 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     end
     add_rules("utils.install-libs", { libnames = libs_to_install })
 
-private_pch("SkrRT")
-    add_files("src/pch.hpp")
-
 shared_pch("SkrRT")
-    add_files("include/SkrRT/**.hpp")
     add_files("include/SkrRT/**.h")
+    add_files("include/SkrRT/**.hpp")
+    after_load(function (target)
+        import("core.project.project")
+        local base = project.target("SkrBase")
+        local base_dir = base:scriptdir()
+        target:add("files", base_dir .. "/include/SkrBase/*.h")
+        target:add("files", base_dir .. "/include/SkrBase/**.hpp")
+
+        local core = project.target("SkrCore")
+        local core_dir = core:scriptdir()
+        target:add("files", core_dir .. "/include/SkrCore/**.h")
+        target:add("files", core_dir .. "/include/SkrCore/**.hpp")
+    end)
