@@ -91,7 +91,7 @@ function solve_generators(target)
     target:data_set(_meta_data_generators_name, solved_config)
 end
 
-function _meta_compile(target, proxy_target, batchcmds, opt)
+function _meta_compile(target, proxy_target, opt)
     local headerfiles = target:data(_meta_data_headers_name)
     local batchinfo = target:data(_meta_data_batch_name)
     local sourcefile = batchinfo.sourcefile
@@ -102,6 +102,7 @@ function _meta_compile(target, proxy_target, batchcmds, opt)
     opt.target = target
     opt.rawargs = true
 
+    local meta_std_dir = os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include")
     local start_time = os.time()
     local using_msvc = target:toolchain("msvc")
     local using_clang_cl = target:toolchain("clang-cl")
@@ -121,6 +122,23 @@ function _meta_compile(target, proxy_target, batchcmds, opt)
     end
     local compiler_inst = compiler.load(sourcekind, opt)
     local program, argv = compiler_inst:compargv(sourcefile, sourcefile..".o", opt)
+    
+    -- remove pch flags
+    if using_msvc or using_clang_cl then
+        for k, arg in pairs(argv) do 
+            if arg:startswith("-Yu") or arg:startswith("-FI") or arg:startswith("-Fp") then
+                argv[k] = "-I"..meta_std_dir
+            end
+        end
+    else
+        for k, arg in pairs(argv) do 
+            if arg:startswith("-include-pch") then
+                argv[k] = "-I"..meta_std_dir
+            end
+        end
+    end
+
+    -- setup tool flags
     if using_msvc or using_clang_cl then
         table.insert(argv, "--driver-mode=cl")
     end
@@ -149,14 +167,14 @@ function _meta_compile(target, proxy_target, batchcmds, opt)
     -- print commands
     local command = program .. " " .. table.concat(argv, " ")
     if option.get("verbose") then
-        batchcmds:show(
+        cprint(
             "${green}[%s]: compiling.meta ${clear}%ss\n%s"
             , target:name()
             , path.relative(outdir)
             , command
         )
     elseif not opt.quiet then
-        batchcmds:show(
+        cprint(
             "${green}[%s]: compiling.meta ${clear}%ss"
             , target:name()
             , path.relative(outdir)
@@ -165,21 +183,22 @@ function _meta_compile(target, proxy_target, batchcmds, opt)
     end
 
     -- compile meta source
-    batchcmds:runv(_meta.program, argv)
+    local result = os.iorunv(_meta.program, argv)
+    if result and #result > 0 then
+        print(result)
+    end
+
     if not opt.quiet then
-        batchcmds:show(
+        cprint(
             "${green}[%s]: finish.meta ${clear}%s cost ${red}%d seconds"
             , target:name()
             , path.relative(outdir)
             , os.time() - start_time
         )
     end
-
-    -- add deps
-    batchcmds:add_depfiles(headerfiles)
 end
 
-function meta_compile(target, proxy_target, batchcmds, opt)
+function meta_compile(target, proxy_target, opt)
     local headerfiles = target:data(_meta_data_headers_name)
     local batchinfo = target:data(_meta_data_batch_name)
     local sourcefile = batchinfo.sourcefile
@@ -206,14 +225,14 @@ function meta_compile(target, proxy_target, batchcmds, opt)
             unity_cpp:close()
 
             -- build generated cpp to json
-            _meta_compile(target, proxy_target, batchcmds, opt)
+            _meta_compile(target, proxy_target, opt)
         end, {dependfile = sourcefile .. ".meta.d", files = headerfiles})
     end
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------------------
 
-function _mako_render(target, proxy_target, batchcmds, scripts, dep_files, opt)
+function _mako_render(target, proxy_target, scripts, dep_files, opt)
     -- get config
     local batchinfo = target:data(_meta_data_batch_name)
     local headerfiles = target:data(_meta_data_headers_name)
@@ -226,7 +245,7 @@ function _mako_render(target, proxy_target, batchcmds, scripts, dep_files, opt)
     local start_time = os.time()
 
     if not opt.quiet then
-        batchcmds:show("${cyan}[%s]: %s${clear} %s", target:name(), path.filename(generate_script), path.relative(metadir))
+        cprint("${cyan}[%s]: %s${clear} %s", target:name(), path.filename(generate_script), path.relative(metadir))
     end
 
     -- config
@@ -271,7 +290,7 @@ function _mako_render(target, proxy_target, batchcmds, scripts, dep_files, opt)
     }
 
     if verbos then
-        batchcmds:show(
+        cprint(
             "[%s] python %s"
             , target:name()
             , table.concat(command, " ")
@@ -279,30 +298,24 @@ function _mako_render(target, proxy_target, batchcmds, scripts, dep_files, opt)
     end
 
     -- call codegen script
-    batchcmds:execv(_python.program, command)
-
-    -- local result = os.iorunv(_python.program, command)
-    --if result and #result > 0 then
-        --print(result)
-    --end
+    local result = os.iorunv(_python.program, command)
+    -- os.execv(_python.program, command)
+    
+    if result and #result > 0 then
+        print(result)
+    end
 
     if not opt.quiet then
-        batchcmds:show(
+        cprint(
             "${cyan}[%s]: %s${clear} %s cost ${red}%d seconds"
             , target:name()
             , path.filename(generate_script)
             , path.relative(metadir)
             , os.time() - start_time)
     end
-
-    -- add deps
-    batchcmds:add_depfiles(dep_files)
-
-    batchcmds:set_depmtime(os.mtime(gendir))
-    batchcmds:set_depcache(target:dependfile(gendir))
 end
 
-function mako_render(target, proxy_target, batchcmds, opt)
+function mako_render(target, proxy_target, opt)
     -- collect framework depend files
     local dep_files = os.files(path.join(metadir, "**.meta"))
     do
@@ -355,5 +368,7 @@ function mako_render(target, proxy_target, batchcmds, opt)
     end
 
     -- call codegen scripts
-    _mako_render(target, proxy_target, batchcmds, scripts, dep_files, opt)
+    depend.on_changed(function ()
+        _mako_render(target, proxy_target, scripts, dep_files, opt)
+    end, {dependfile = target:dependfile(target:name()..".mako"), files = dep_files})
 end
