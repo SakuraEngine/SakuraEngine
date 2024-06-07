@@ -26,25 +26,33 @@ class GeneratorBase:
         self.name: str = ""
         self.owner: 'GenerateManager' = None
 
-    # ---- generator lifecycle
-
-    def require_include_dbs(self) -> bool:
-        return False
+    # BEGIN generator lifecycle
 
     def load_scheme(self):
+        # load scheme for parse attrs
         pass
 
-    def check_attrs(self):
+    def load_attrs(self):
+        # load attrs to self data
+        pass
+
+    def generate_body(self):
+        # inject SKR_GENERATE_BODY
         pass
 
     def pre_generate(self):
+        # generate file head
         pass
 
     def generate(self):
+        # generate file body
         pass
 
     def post_generate(self):
+        # generate file tail
         pass
+
+    # END generator lifecycle
 
 # ------------------------------ generate manager ------------------------------
 
@@ -196,16 +204,11 @@ class GenerateManager:
         self.__error_exit("load generators")
 
     def load_database(self) -> None:
-        # check if require include dbs
-        require_include_dbs = False
-        for generator in self.__generators.values():
-            require_include_dbs = require_include_dbs or generator.require_include_dbs()
-
         # load db
-        self.__database.load(require_include_dbs, self.__config)
+        self.__database.load(True, self.__config)
         self.__error_exit("load database")
 
-    def parse_attr(self) -> None:
+    def parse_attrs(self) -> None:
         # load scheme
         for generator in self.__generators.values():
             generator.load_scheme()
@@ -232,19 +235,19 @@ class GenerateManager:
         self.__database.each_cpp_types_with_attr(__check_structure)
         self.__error_exit("check structure")
 
-        # parse to object (with attr stack)
-        def __parse_to_object(cpp_type):
+        # solve override (with attr stack)
+        def __solve_override(cpp_type):
             scheme = self.__schemes.get(type(cpp_type), None)
             override_solve = sc.JsonOverrideSolver(cpp_type.raw_attrs)
             if scheme:
                 with self.__logger.stack_scope(cpp_type.make_log_stack()):
-                    cpp_type.attrs = scheme.dispatch_parse_to_object(override_solve, self.__logger)
-        self.__database.each_cpp_types_with_attr(__parse_to_object)
-        self.__error_exit("parse to object")
+                    cpp_type.attrs = scheme.dispatch_solve_override(override_solve, self.__logger)
+        self.__database.each_cpp_types_with_attr(__solve_override)
+        self.__error_exit("solve override")
 
-    def check_attr(self) -> None:
+    def load_attrs(self) -> None:
         for generator in self.__generators.values():
-            generator.check_attrs()
+            generator.load_attrs()
         self.__error_exit("check attribute")
 
     def pre_generate(self) -> None:

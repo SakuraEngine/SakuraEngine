@@ -137,7 +137,7 @@ class EnumValue:
         self.line: int
 
         self.raw_attrs: sc.JsonObject
-        self.attrs: object
+        self.attrs: sc.ParseResult
         self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
@@ -170,7 +170,7 @@ class Enumeration:
         self.line: int
 
         self.raw_attrs: sc.JsonObject
-        self.attrs: object
+        self.attrs: sc.ParseResult
         self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
@@ -211,7 +211,7 @@ class Record:
         self.line: int
 
         self.raw_attrs: sc.JsonObject
-        self.attrs: object
+        self.attrs: sc.ParseResult
         self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
@@ -260,7 +260,7 @@ class Field:
         self.line: int
 
         self.raw_attrs: sc.JsonObject
-        self.attrs: object
+        self.attrs: sc.ParseResult
         self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
@@ -301,7 +301,7 @@ class Method:
         self.line: int
 
         self.raw_attrs: sc.JsonObject
-        self.attrs: object
+        self.attrs: sc.ParseResult
         self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
@@ -352,7 +352,7 @@ class Parameter:
         self.line: int
 
         self.raw_attrs: sc.JsonObject
-        self.attrs: object
+        self.attrs: sc.ParseResult
         self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
@@ -396,7 +396,7 @@ class Function:
         self.line: int
 
         self.raw_attrs: sc.JsonObject
-        self.attrs: object
+        self.attrs: sc.ParseResult
         self.generator_data: Dict[str, object] = {}
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):

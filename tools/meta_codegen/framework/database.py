@@ -41,6 +41,12 @@ class HeaderDatabase:
     def get_functions(self):
         return self.functions
 
+    def find_record(self, name: str) -> cpp.Record:
+        return self.__name_to_record.get(name)
+
+    def find_enum(self, name: str) -> cpp.Enumeration:
+        return self.__name_to_enum.get(name)
+
     def load_header(self, meta_file_path: str, config: config.CodegenConfig):
         self.meta_path = os.path.normpath(meta_file_path).replace(os.sep, "/")
         self.relative_meta_path = os.path.relpath(self.meta_path, self.module_db.meta_dir).replace(os.sep, "/")
@@ -181,6 +187,12 @@ class ModuleDatabase:
     def get_functions(self):
         return itertools.chain.from_iterable([db.functions for db in self.header_dbs])
 
+    def find_record(self, name: str) -> cpp.Record:
+        return self.__name_to_record.get(name)
+
+    def find_enum(self, name: str) -> cpp.Enumeration:
+        return self.__name_to_enum.get(name)
+
 
 class CodegenDatabase:
     def __init__(self) -> None:
@@ -212,3 +224,23 @@ class CodegenDatabase:
 
     def get_functions(self):
         return itertools.chain(self.main_module.get_functions(), [module.get_functions() for module in self.include_modules])
+
+    def find_record(self, name: str) -> cpp.Record:
+        record = self.main_module.find_record(name)
+        if record:
+            return record
+        for module in self.include_modules:
+            record = module.find_record(name)
+            if record:
+                return record
+        return None
+
+    def find_enum(self, name: str) -> cpp.Enumeration:
+        enum = self.main_module.find_enum(name)
+        if enum:
+            return enum
+        for module in self.include_modules:
+            enum = module.find_enum(name)
+            if enum:
+                return enum
+        return None

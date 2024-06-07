@@ -2,102 +2,136 @@ import framework.generator as gen
 import framework.scheme as sc
 
 
-class Test:
-    def __init__(self, dict) -> None:
-        pass
-
-
-class TestFrameworkGenerator(gen.GeneratorBase):
+class TestPathExpandGenerator(gen.GeneratorBase):
     def load_scheme(self):
         self.owner.add_record_scheme(
-            sc.Namespace(
-                options={
-                    "test_expand_path": sc.Functional(
-                        options={
-                            "a": sc.Str(),
-                            "b": sc.Functional(
-                                options={
-                                    "b": sc.Str(),
-                                }
-                            ),
-                            "c": sc.Functional(
-                                options={
-                                    "c": sc.Functional(
-                                        options={
-                                            "c": sc.Str()
-                                        }
-                                    )
-                                }
-                            )
-                        }
-                    ),
-                    "test_check_override": sc.Functional(
-                        options={
-                            "test_override": sc.Str(),
-                            "test_rewrite": sc.Functional(
-                                options={
-                                    "a": sc.Str(),
-                                    "b": sc.Str(),
-                                    "c": sc.Str()
-                                }
-                            ),
-                            "test_append": sc.List()
-                        }
-                    ),
-                    "test_functional_shorthand": sc.Functional(
-                        shorthands=[
-                            sc.OptionShorthand(
-                                mappings={
-                                    "all": {
-                                        "assert_10": 10,
-                                        "assert_fuck": "fuck",
-                                        "assert_11.1": 11.1,
-                                        "assert_false": False,
-                                        "assert_1_1_2": [1, 1, 2]
-                                    },
-                                    "bad_type": {
-                                        "assert_10": [1, 1, 2],
-                                        "assert_fuck": "fuck",
-                                        "assert_11.1": False,
-                                        "assert_false": 114514,
-                                        "assert_1_1_2": "fuck"
-                                    }
-                                }
-                            )
-                        ],
-                        options={
-                            "assert_10": sc.Int(),
-                            "assert_fuck": sc.Str(),
-                            "assert_11.1": sc.Float(),
-                            "assert_false": sc.Bool(),
-                            "assert_1_1_2": sc.List(),
-                        }
-                    ),
-                    "test_check_structure": sc.Functional(
-                        options={
-                            "int": sc.Int(),
-                            "float": sc.Float(),
-                            "str": sc.Str(),
-                            "bool": sc.Bool(),
-                            "sub": sc.Functional(
-                                options={
-                                    "count": sc.Int()
-                                },
-                            )
-                        }
-                    ),
-                    "test_recognized_attr": sc.Functional(
-                        options={
-                            "a": sc.Str(),
-                            "b": sc.Str(),
-                            "sub": sc.Functional(
-                                options={
-                                    "sub_a": sc.Str(),
-                                    "sub_b": sc.Str(),
-                                }
-                            )
-                        }
-                    )
-                }
-            )
+            sc.Namespace({
+                "test_expand_path": sc.Functional({
+                    "a": sc.Str(),
+                    "b": sc.Functional({
+                        "b": sc.Str(),
+                    }),
+                    "c": sc.Functional({
+                        "c": sc.Functional({
+                            "c": sc.Str()
+                        })
+                    })
+                })
+            })
         )
+
+    def load_attrs(self):
+        def __check(record):
+            assert record is not None
+
+            # find functional
+            test_functional: sc.ParseResult = record.attrs["test_expand_path"]
+            assert test_functional.is_functional()
+
+            # check visited
+            assert test_functional.is_visited()
+            assert test_functional["a"].is_visited()
+            assert test_functional["b"].is_visited()
+            assert test_functional["b"]["b"].is_visited()
+            assert test_functional["c"].is_visited()
+            assert test_functional["c"]["c"].is_visited()
+            assert test_functional["c"]["c"]["c"].is_visited()
+
+            # check value
+            assert test_functional["a"].parsed_value == "expand_a"
+            assert test_functional["b"]["b"].parsed_value == "expand_b"
+            assert test_functional["c"]["c"]["c"].parsed_value == "expand_c"
+
+        def _check_if_exist(record):
+            if record:
+                __check(record)
+
+        __check(self.owner.database.find_record("test_path_shorthand::PassCheck"))
+        _check_if_exist(self.owner.database.find_record("test_path_shorthand::ErrorCase"))
+
+
+class TestFunctionalShorthand(gen.GeneratorBase):
+    def load_scheme(self):
+        self.owner.add_record_scheme(
+            sc.Namespace({
+                "test_functional_shorthand": sc.Functional({
+                    "test_enable": sc.Functional(),
+                    "test_usual": sc.Functional({
+                        "a": sc.Bool(),
+                        "b": sc.Bool(),
+                        "c": sc.Bool(),
+                    }, shorthands=[sc.OptionShorthand({
+                        "all": {
+                            "a": True,
+                            "b": True,
+                            "c": True
+                        }
+                    })]),
+                    "test_override": sc.Functional({
+                        "cat_a": sc.Bool(),
+                        "cat_b": sc.Bool(),
+                        "cat_c": sc.Bool(),
+                        "dog_a": sc.Bool(),
+                        "dog_b": sc.Bool(),
+                        "dog_c": sc.Bool(),
+                    }, shorthands=[sc.OptionShorthand({
+                        "all_cat": {
+                            "cat_a": True,
+                            "cat_b": True,
+                            "cat_c": True
+                        },
+                        "all_dog": {
+                            "dog_a": True,
+                            "dog_b": True,
+                            "dog_c": True
+                        },
+                        "except_c": {
+                            "cat_c": False,
+                            "dog_c": False
+                        }
+                    })])
+                })
+            })
+        )
+
+    def load_attrs(self):
+        def __check(record):
+            assert record is not None
+
+            # find functional
+            test_functional: sc.ParseResult = record.attrs["test_expand_path"]
+            assert test_functional.is_functional()
+
+            # check visited
+            assert test_functional.is_visited()
+            assert test_functional["test_enable"].is_visited()
+            assert test_functional["test_usual"].is_visited()
+            assert test_functional["test_usual"]["a"].is_visited()
+            assert test_functional["test_usual"]["b"].is_visited()
+            assert test_functional["test_usual"]["c"].is_visited()
+            assert test_functional["test_override"].is_visited()
+            assert test_functional["test_override"]["cat_a"].is_visited()
+            assert test_functional["test_override"]["cat_b"].is_visited()
+            assert test_functional["test_override"]["cat_c"].is_visited()
+            assert test_functional["test_override"]["dog_a"].is_visited()
+            assert test_functional["test_override"]["dog_b"].is_visited()
+            assert test_functional["test_override"]["dog_c"].is_visited()
+
+            # check value
+            assert test_functional["test_enable"].parsed_value is None
+            assert test_functional["test_usual"]["a"].parsed_value is True
+            assert test_functional["test_usual"]["b"].parsed_value is True
+            assert test_functional["test_usual"]["c"].parsed_value is True
+            assert test_functional["test_override"]["cat_a"].parsed_value is True
+            assert test_functional["test_override"]["cat_b"].parsed_value is True
+            assert test_functional["test_override"]["cat_c"].parsed_value is False
+            assert test_functional["test_override"]["dog_a"].parsed_value is True
+            assert test_functional["test_override"]["dog_b"].parsed_value is True
+            assert test_functional["test_override"]["dog_c"].parsed_value is True
+
+        def __check_if_exist(record):
+            if record:
+                __check(record)
+
+        __check(self.owner.database.find_record("test_functional_shorthand::PassCheck"))
+        __check_if_exist(self.owner.database.find_record("test_functional_shorthand::ErrorCase"))
