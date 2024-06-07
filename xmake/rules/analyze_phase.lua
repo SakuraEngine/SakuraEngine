@@ -1,10 +1,20 @@
 target("Analyze.Phase")
     set_kind("phony")
     set_policy("build.fence", true)
-    on_load(function(target)
+    on_load(function(phase)
+        import("core.project.depend")
         import("core.project.project")
+
+        local need_analyze = false
         if not project.__noscan then
-            os.exec("xmake analyze_project")
+            depend.on_changed(function ()
+                need_analyze = true
+                os.run("xmake analyze_project")
+            end, {dependfile = phase:dependfile("ANALYZE_PHASE"), files = project.allfiles()})
+        end
+        
+        if not need_analyze then
+            print("no need to analyze project!")
         end
     end)
 target_end()

@@ -69,24 +69,13 @@ function main()
     print("start analyze...")
     
     analyzing.load_targets()
+    analyzing.scan_attributes()
+    analyzing.run_analyzers()
 
-    local phase = project.target("Analyze.Phase")
-    local reanalyzed = false
-    depend.on_changed(function ()
-        analyzing.scan_attributes()
-        analyzing.run_analyzers()
-    
-        for target_name, info in pairs(target_infos) do
-            local config_file = path.join("build", ".gens", "module_infos", target_name)
-            io.save(config_file..".table", target_infos[target_name])
-        end
-
-        reanalyzed = true
-    end, {dependfile = phase:dependfile("ANALYZE_PHASE"), files = project.allfiles()})
-
-    if reanalyzed then
-        print("analyze ok!")
-    else
-        print("no need to analyze!")
+    for target_name, info in pairs(target_infos) do
+        local config_file = path.join("build", ".gens", "module_infos", target_name)
+        io.save(config_file..".table", target_infos[target_name])
     end
+
+    print("analyze ok!")
 end

@@ -118,8 +118,7 @@ function private_pch(owner_name)
 
     pch_target(owner_name, owner_name..".PrivatePCH")
         -- private pch generate pch file and inject it to owner
-        -- so it is a phony target
-        set_kind("phony") 
+        set_kind("headeronly") 
         add_rules("sakura.pcxxheader", { buildtarget = owner_name, shared = false })
         add_values("Sakura.Attributes", "PrivatePCH")
 end
@@ -169,8 +168,7 @@ function shared_pch(owner_name)
     target_end()
 
     pch_target(owner_name, owner_name..".SharedPCH")
-        -- public pch generate pch file and links to other targets
-        set_kind("phony") 
+        set_kind("headeronly") 
         set_default(false) -- disable shared pch now
         add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
         add_values("Sakura.Attributes", "SharedPCH")
