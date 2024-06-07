@@ -23,7 +23,7 @@ struct V8Allocator final : ::v8::ArrayBuffer::Allocator {
         SkrCZoneEnd(z);
         return p;
 #else
-        return reinterpret_cast<T*>(sakura_malloc_aligned(length, alignof(size_t)));
+        return sakura_malloc_aligned(length, alignof(size_t));
 #endif
     }
     void Free(void* data, size_t length) override
