@@ -14,30 +14,35 @@ rule("sakura.pcxxheader")
         local pcoutputfile = buildtarget:autogenfile(target:name().."_pch.pch")
 
         local need_pc_obj = false
+        local pch_flags = {}
         if using_msvc then
-            buildtarget:add("cxxflags", "-Yu"..path.absolute(header_to_compile), { interface = is_shared })
-            buildtarget:add("cxxflags", "-FI"..path.absolute(header_to_compile), { interface = is_shared })
-            buildtarget:add("cxxflags", "-Fp"..path.absolute(pcoutputfile), { interface = is_shared })
-            buildtarget:add("cxxflags", "-Fo"..path.absolute(pcoutputfile)..".obj", { interface = is_shared })
+            table.insert(pch_flags, "-Yu"..path.absolute(header_to_compile))
+            table.insert(pch_flags, "-FI"..path.absolute(header_to_compile))
+            table.insert(pch_flags, "-Fp"..path.absolute(pcoutputfile))
+            table.insert(pch_flags, "-Fo"..path.absolute(pcoutputfile)..".obj")
             need_pc_obj = true
         elseif using_clang_cl then
-            buildtarget:add("cxxflags", "-I"..path.directory(header_to_compile), { interface = is_shared })
-            buildtarget:add("cxxflags", "-Yu"..path.filename(header_to_compile), { interface = is_shared })
-            buildtarget:add("cxxflags", "-FI"..path.filename(header_to_compile), { interface = is_shared })
-            buildtarget:add("cxxflags", "-Fp"..path.absolute(pcoutputfile), { interface = is_shared })
-            buildtarget:add("cxxflags", "-Fo"..path.absolute(pcoutputfile)..".obj", { interface = is_shared })
+            table.insert(pch_flags, "-I"..path.directory(header_to_compile))
+            table.insert(pch_flags, "-Yu"..path.filename(header_to_compile))
+            table.insert(pch_flags, "-FI"..path.filename(header_to_compile))
+            table.insert(pch_flags, "-Fp"..path.absolute(pcoutputfile))
+            table.insert(pch_flags, "-Fo"..path.absolute(pcoutputfile)..".obj")
             need_pc_obj = true
         elseif using_clang or using_xcode then
-            buildtarget:add("cxxflags", "-include", { interface = is_shared })
-            buildtarget:add("cxxflags", header_to_compile, { interface = is_shared })
-            buildtarget:add("cxxflags", "-include-pch", { interface = is_shared })
-            buildtarget:add("cxxflags", pcoutputfile, { interface = is_shared })
+            table.insert(pch_flags, "-include")
+            table.insert(pch_flags, header_to_compile)
+            table.insert(pch_flags, "-include-pch")
+            table.insert(pch_flags, pcoutputfile)
         else
             raise("PCH: unsupported toolchain!")
         end
+        
+        buildtarget:add("cxxflags", pch_flags, { interface = is_shared })
+
         target:data_set("pcoutputfile", pcoutputfile)
         target:data_set("header_to_compile", header_to_compile)
         target:data_set("need_pc_obj", need_pc_obj)
+        target:data_set("pch_flags", pch_flags)
     end)
     before_build(function(target, opt)
         import("core.project.depend")
@@ -45,8 +50,18 @@ rule("sakura.pcxxheader")
         import("core.language.language")
         import("private.action.build.object")
 
+        -- clone buildtarget
         local buildtarget_name = target:extraconf("rules", "sakura.pcxxheader", "buildtarget")
         local buildtarget = project.target(buildtarget_name)
+        local args_target = buildtarget:clone()
+
+        -- remove pch flags when compiling pchs
+        local pch_flags = target:data("pch_flags")
+        local cxxflags = table.wrap(args_target:get("cxxflags"))
+        table.remove_if(cxxflags, function (i, cxxflag)
+            return table.contains(pch_flags, cxxflag)
+        end)
+        args_target:set("cxxflags", cxxflags)
 
         -- extract files
         local sourcebatches = target:sourcebatches()
@@ -83,8 +98,7 @@ rule("sakura.pcxxheader")
             local dependfile = buildtarget:dependfile(pcoutputfile)
             local sourcekind = language.langkinds()["cxx"]
             local sourcebatch = {sourcekind = sourcekind, sourcefiles = {sourcefile}, objectfiles = {pcoutputfile}, dependfiles = {dependfile}}
-            object.build(buildtarget, sourcebatch, opt)
-            -- print(buildtarget:name().." pch compiled! "..header_to_compile)
+            object.build(args_target, sourcebatch, opt)
         end
 
         -- insert pc objects
