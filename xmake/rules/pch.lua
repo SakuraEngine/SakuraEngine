@@ -13,37 +13,36 @@ rule("sakura.pcxxheader")
         local header_to_compile = buildtarget:autogenfile(target:name().."_pch.hpp")
         local pcoutputfile = buildtarget:autogenfile(target:name().."_pch.pch")
 
-        local pch_cxx_flags = {}
-        local pch_ld_flags = {}
+        local need_pc_obj = false
+        local pch_flags = {}
         if using_msvc then
-            table.insert(pch_cxx_flags, "-Yu"..path.absolute(header_to_compile))
-            table.insert(pch_cxx_flags, "-FI"..path.absolute(header_to_compile))
-            table.insert(pch_cxx_flags, "-Fp"..path.absolute(pcoutputfile))
-            table.insert(pch_cxx_flags, "-Fo"..path.absolute(pcoutputfile)..".obj")
-            table.insert(pch_ld_flags, "-L"..path.absolute(pcoutputfile)..".obj")
+            table.insert(pch_flags, "-Yu"..path.absolute(header_to_compile))
+            table.insert(pch_flags, "-FI"..path.absolute(header_to_compile))
+            table.insert(pch_flags, "-Fp"..path.absolute(pcoutputfile))
+            table.insert(pch_flags, "-Fo"..path.absolute(pcoutputfile)..".obj")
+            need_pc_obj = true
         elseif using_clang_cl then
-            table.insert(pch_cxx_flags, "-I"..path.directory(header_to_compile))
-            table.insert(pch_cxx_flags, "-Yu"..path.filename(header_to_compile))
-            table.insert(pch_cxx_flags, "-FI"..path.filename(header_to_compile))
-            table.insert(pch_cxx_flags, "-Fp"..path.absolute(pcoutputfile))
-            table.insert(pch_cxx_flags, "-Fo"..path.absolute(pcoutputfile)..".obj")
-            table.insert(pch_ld_flags, "-L"..path.absolute(pcoutputfile)..".obj")
+            table.insert(pch_flags, "-I"..path.directory(header_to_compile))
+            table.insert(pch_flags, "-Yu"..path.filename(header_to_compile))
+            table.insert(pch_flags, "-FI"..path.filename(header_to_compile))
+            table.insert(pch_flags, "-Fp"..path.absolute(pcoutputfile))
+            table.insert(pch_flags, "-Fo"..path.absolute(pcoutputfile)..".obj")
+            need_pc_obj = true
         elseif using_clang or using_xcode then
-            table.insert(pch_cxx_flags, "-include")
-            table.insert(pch_cxx_flags, header_to_compile)
-            table.insert(pch_cxx_flags, "-include-pch")
-            table.insert(pch_cxx_flags, pcoutputfile)
+            table.insert(pch_flags, "-include")
+            table.insert(pch_flags, header_to_compile)
+            table.insert(pch_flags, "-include-pch")
+            table.insert(pch_flags, pcoutputfile)
         else
             raise("PCH: unsupported toolchain!")
         end
         
-        buildtarget:add("cxxflags", pch_cxx_flags, { public = false })
-        buildtarget:add("ld_flags", pch_ld_flags, { public = false })
+        buildtarget:add("cxxflags", pch_flags, { public = false })
 
         target:data_set("pcoutputfile", pcoutputfile)
         target:data_set("header_to_compile", header_to_compile)
-        target:data_set("pch_cxx_flags", pch_cxx_flags)
-        target:data_set("pch_ld_flags", pch_ld_flags)
+        target:data_set("need_pc_obj", need_pc_obj)
+        target:data_set("pch_flags", pch_flags)
     end)
     before_build(function(target, opt)
         import("core.project.depend")
@@ -56,21 +55,13 @@ rule("sakura.pcxxheader")
         local buildtarget = project.target(buildtarget_name)
         local args_target = buildtarget:clone()
 
-        -- remove pch cxx flags when compiling pchs
-        local pch_cxx_flags = target:data("pch_cxx_flags")
+        -- remove pch flags when compiling pchs
+        local pch_flags = target:data("pch_flags")
         local cxxflags = table.wrap(args_target:get("cxxflags"))
         table.remove_if(cxxflags, function (i, cxxflag)
-            return table.contains(pch_cxx_flags, cxxflag)
+            return table.contains(pch_flags, cxxflag)
         end)
         args_target:set("cxxflags", cxxflags)
-        
-        -- remove pch ld flags when compiling pchs
-        local pch_ld_flags = target:data("pch_ld_flags")
-        local ldflags = table.wrap(args_target:get("ldflags"))
-        table.remove_if(ldflags, function (i, ldflag)
-            return table.contains(pch_ld_flags, ldflag)
-        end)
-        args_target:set("ldflags", ldflags)
 
         -- extract files
         local sourcebatches = target:sourcebatches()
@@ -108,6 +99,15 @@ rule("sakura.pcxxheader")
             local sourcekind = language.langkinds()["cxx"]
             local sourcebatch = {sourcekind = sourcekind, sourcefiles = {sourcefile}, objectfiles = {pcoutputfile}, dependfiles = {dependfile}}
             object.build(args_target, sourcebatch, opt)
+        end
+
+        -- insert pc objects
+        local need_pc_obj = target:data("need_pc_obj")
+        if need_pc_obj then
+            local objectfiles = buildtarget:objectfiles()
+            if objectfiles then
+                table.insert(objectfiles, path.absolute(pcoutputfile) .. ".obj")
+            end
         end
     end)
 rule_end()
@@ -182,7 +182,8 @@ function shared_pch(owner_name)
     target_end()
 
     pch_target(owner_name, owner_name..".SharedPCH")
-        set_kind("headeronly") 
+        -- shared pch generate pch/obj file and link them to others
+        set_kind("object") 
         add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
         add_values("Sakura.Attributes", "SharedPCH")
         add_deps(owner_name)
@@ -204,9 +205,17 @@ rule("PickSharedPCH")
         import("core.project.project")
         local share_from = target:data("SharedPCH.ShareFrom")
         if share_from then
-            local share_from_pch = project.target(share_from)
-            target:add("cxxflags", share_from_pch:get("cxxflags"), { public = false })
-            target:add("ldflags", share_from_pch:get("ldflags"), { public = false })
+            local pch_target = project.target(share_from)
+            -- add cxxflags
+            target:add("cxxflags", pch_target:get("cxxflags"), { public = false })
+            -- copy pdb
+            local using_msvc = target:toolchain("msvc")
+            if using_msvc and pch_target then
+                local pch_pdb = "build/$(os)/$(arch)/$(mode)/compile."..pch_target:name()..".pdb"
+                if os.exists(pch_pdb) then
+                    os.cp(pch_pdb, "build/$(os)/$(arch)/$(mode)/compile."..target:name()..".pdb")
+                end
+            end
         end
     end)
 rule_end()
