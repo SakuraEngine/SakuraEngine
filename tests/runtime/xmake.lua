@@ -24,7 +24,11 @@ test_target("SceneTest")
     public_dependency("SkrScene", engine_version)
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_files("scene/main.cpp")
-
+    
+test_target("ECSTest")
+    set_group("05.tests/runtime")
+    public_dependency("SkrRT", engine_version)
+    add_files("ecs/main.cpp")
 
 test_target("MDBTest")
     set_group("05.tests/runtime")

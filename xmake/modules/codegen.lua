@@ -238,7 +238,7 @@ end
 
 ----------------------------------------------------------------------------------------------------------------------------------------------
 
-function _mako_render(target, proxy_target, scripts, dep_files, opt)
+function _mako_render(target, scripts, dep_files, opt)
     -- get config
     local batchinfo = target:data(_meta_data_batch_name)
     local headerfiles = target:data(_meta_data_headers_name)
@@ -246,7 +246,7 @@ function _mako_render(target, proxy_target, scripts, dep_files, opt)
     local metadir = batchinfo.metadir
     local gendir = batchinfo.gendir
 
-    local api = proxy_target:data("meta.api")
+    local api = target:values("meta.api")
     local generate_script = os.projectdir()..vformat("/tools/meta_codegen/codegen.py")
     local start_time = os.time()
 
@@ -267,7 +267,7 @@ function _mako_render(target, proxy_target, scripts, dep_files, opt)
     -- collect include modules
     config.include_modules = {}
     for _, dep_target in pairs(target:deps()) do
-        local dep_api = dep_target:data("meta.api")
+        local dep_api = dep_target:values("meta.api")
         table.insert(config.include_modules, {
             module_name = dep_target:name(),
             meta_dir = path.absolute(path.join(dep_target:autogendir({root = true}), dep_target:plat(), "meta_database")),
@@ -321,7 +321,7 @@ function _mako_render(target, proxy_target, scripts, dep_files, opt)
     end
 end
 
-function mako_render(target, proxy_target, opt)
+function mako_render(target, opt)
     -- collect framework depend files
     local dep_files = os.files(path.join(metadir, "**.meta"))
     do
@@ -375,6 +375,6 @@ function mako_render(target, proxy_target, opt)
 
     -- call codegen scripts
     depend.on_changed(function ()
-        _mako_render(target, proxy_target, scripts, dep_files, opt)
+        _mako_render(target, scripts, dep_files, opt)
     end, {dependfile = target:dependfile(target:name()..".mako"), files = dep_files})
 end

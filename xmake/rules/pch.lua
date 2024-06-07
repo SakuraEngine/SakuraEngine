@@ -15,23 +15,23 @@ rule("sakura.pcxxheader")
 
         local need_pc_obj = false
         if using_msvc then
-            buildtarget:add("cxxflags", "-Yu"..path.absolute(header_to_compile), { public = is_shared })
-            buildtarget:add("cxxflags", "-FI"..path.absolute(header_to_compile), { public = is_shared })
-            buildtarget:add("cxxflags", "-Fp"..path.absolute(pcoutputfile), { public = is_shared })
-            buildtarget:add("cxxflags", "-Fo"..path.absolute(pcoutputfile)..".obj", { public = is_shared })
+            buildtarget:add("cxxflags", "-Yu"..path.absolute(header_to_compile), { interface = is_shared })
+            buildtarget:add("cxxflags", "-FI"..path.absolute(header_to_compile), { interface = is_shared })
+            buildtarget:add("cxxflags", "-Fp"..path.absolute(pcoutputfile), { interface = is_shared })
+            buildtarget:add("cxxflags", "-Fo"..path.absolute(pcoutputfile)..".obj", { interface = is_shared })
             need_pc_obj = true
         elseif using_clang_cl then
-            buildtarget:add("cxxflags", "-I"..path.directory(header_to_compile), { public = is_shared })
-            buildtarget:add("cxxflags", "-Yu"..path.filename(header_to_compile), { public = is_shared })
-            buildtarget:add("cxxflags", "-FI"..path.filename(header_to_compile), { public = is_shared })
-            buildtarget:add("cxxflags", "-Fp"..path.absolute(pcoutputfile), { public = is_shared })
-            buildtarget:add("cxxflags", "-Fo"..path.absolute(pcoutputfile)..".obj", { public = is_shared })
+            buildtarget:add("cxxflags", "-I"..path.directory(header_to_compile), { interface = is_shared })
+            buildtarget:add("cxxflags", "-Yu"..path.filename(header_to_compile), { interface = is_shared })
+            buildtarget:add("cxxflags", "-FI"..path.filename(header_to_compile), { interface = is_shared })
+            buildtarget:add("cxxflags", "-Fp"..path.absolute(pcoutputfile), { interface = is_shared })
+            buildtarget:add("cxxflags", "-Fo"..path.absolute(pcoutputfile)..".obj", { interface = is_shared })
             need_pc_obj = true
         elseif using_clang or using_xcode then
-            buildtarget:add("cxxflags", "-include", { public = is_shared })
-            buildtarget:add("cxxflags", header_to_compile, { public = is_shared })
-            buildtarget:add("cxxflags", "-include-pch", { public = is_shared })
-            buildtarget:add("cxxflags", pcoutputfile, { public = is_shared })
+            buildtarget:add("cxxflags", "-include", { interface = is_shared })
+            buildtarget:add("cxxflags", header_to_compile, { interface = is_shared })
+            buildtarget:add("cxxflags", "-include-pch", { interface = is_shared })
+            buildtarget:add("cxxflags", pcoutputfile, { interface = is_shared })
         else
             raise("PCH: unsupported toolchain!")
         end

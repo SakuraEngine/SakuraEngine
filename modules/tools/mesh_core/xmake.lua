@@ -1,7 +1,6 @@
 add_requires("meshoptimizer >=0.1.0-skr")
 
 codegen_component("SkrMeshCore", { api = "MESH_CORE", rootdir = "include/SkrMeshCore" })
-    add_files("include/**.h")
     add_files("include/**.hpp")
 
 shared_module("SkrMeshCore", "MESH_CORE", engine_version)

@@ -19,25 +19,31 @@ rule("c++.meta.generators")
     end)
 rule_end()
 
-rule("codegen.headers")
+rule("codegen.meta")
     set_extensions(".h", ".hpp")
     before_build(function (proxy_target, opt)
         import("core.project.project")
         import("codegen")
-
         local sourcebatches = proxy_target:sourcebatches()
         if sourcebatches then
             local owner_name = proxy_target:data("meta.owner")
             local owner = project.target(owner_name)
-            local files = sourcebatches["codegen.headers"].sourcefiles
+            local files = sourcebatches["codegen.meta"].sourcefiles
             codegen.collect_headers_batch(owner, files)
-
             -- compile meta file
             codegen.meta_compile(owner, proxy_target, opt)
-
-            -- render mako templates
-            codegen.mako_render(owner, proxy_target, opt)
         end
+    end)
+rule_end()
+
+rule("codegen.mako")
+    before_build(function (proxy_target, opt)
+        import("core.project.project")
+        import("codegen")
+        -- render mako templates
+        local owner_name = proxy_target:data("mako.owner")
+        local owner = project.target(owner_name)
+        codegen.mako_render(owner, opt)
     end)
 rule_end()
 
@@ -85,23 +91,37 @@ rule_end()
 
 function codegen_component(owner, opt)
     target(owner)
-        add_deps(owner..".Codegen", { public = opt and opt.public or true })
         add_rules("codegen.fetch")
+        add_deps(owner..".Mako", { public = opt and opt.public or true })
         add_values("Sakura.Attributes", "Codegen.Owner")
+        add_values("meta.api", opt.api or target:name():upper())
     target_end()
 
-    target(owner..".Codegen")
+    target(owner..".Mako")
         set_group("01.modules/"..owner.."/codegen")
+        add_rules("codegen.mako")
         set_kind("phony")
         set_policy("build.fence", true)
-        add_rules("codegen.headers")
+        add_values("Sakura.Attributes", "Analyze.Ignore")
+        add_deps(owner..".Meta", { public = true })
+        on_load(function (target)
+            target:data_set("mako.owner", owner)
+        end)
+
+    -- must be declared at the end of this helper function
+    target(owner..".Meta")
+        set_group("01.modules/"..owner.."/codegen")
+        set_policy("build.fence", true)
+        set_kind("phony")
+        add_rules("codegen.meta")
         add_values("Sakura.Attributes", "Analyze.Ignore")
         on_load(function (target)
             target:data_set("meta.owner", owner)
-            target:data_set("meta.api", opt.api or target:name():upper())
             if opt and opt.rootdir then
                 opt.rootdir = path.absolute(path.join(target:scriptdir(), opt.rootdir))
             end
             target:data_set("meta.rootdir", opt.rootdir)
+            -- TODO: add deps to depended meta targets
+            -- ...
         end)
 end
