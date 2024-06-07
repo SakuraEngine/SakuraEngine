@@ -14,35 +14,37 @@ rule("sakura.pcxxheader")
         local pcoutputfile = buildtarget:autogenfile(target:name().."_pch.pch")
 
         local need_pc_obj = false
+        local pch_owner_flags = {}
         local pch_flags = {}
         if using_msvc then
-            table.insert(pch_flags, "-Yu"..path.absolute(header_to_compile))
-            table.insert(pch_flags, "-FI"..path.absolute(header_to_compile))
-            table.insert(pch_flags, "-Fp"..path.absolute(pcoutputfile))
-            table.insert(pch_flags, "-Fo"..path.absolute(pcoutputfile)..".obj")
+            table.insert(pch_owner_flags, "-Yu"..path.absolute(header_to_compile)) --owner
+            table.insert(pch_owner_flags, "-FI"..path.absolute(header_to_compile)) --owner
+            
+            table.insert(pch_flags, "-Fp"..path.absolute(pcoutputfile))      --both
             need_pc_obj = true
         elseif using_clang_cl then
-            table.insert(pch_flags, "-I"..path.directory(header_to_compile))
-            table.insert(pch_flags, "-Yu"..path.filename(header_to_compile))
-            table.insert(pch_flags, "-FI"..path.filename(header_to_compile))
-            table.insert(pch_flags, "-Fp"..path.absolute(pcoutputfile))
-            table.insert(pch_flags, "-Fo"..path.absolute(pcoutputfile)..".obj")
+            table.insert(pch_owner_flags, "-Yu"..path.filename(header_to_compile)) --owner
+            table.insert(pch_owner_flags, "-FI"..path.filename(header_to_compile)) --owner
+
+            table.insert(pch_flags, "-I"..path.directory(header_to_compile)) --both
+            table.insert(pch_flags, "-Fp"..path.absolute(pcoutputfile))      --both
             need_pc_obj = true
         elseif using_clang or using_xcode then
-            table.insert(pch_flags, "-include")
-            table.insert(pch_flags, header_to_compile)
-            table.insert(pch_flags, "-include-pch")
-            table.insert(pch_flags, pcoutputfile)
+            table.insert(pch_owner_flags, "-include")
+            table.insert(pch_owner_flags, header_to_compile) --owner
+            table.insert(pch_owner_flags, "-include-pch")
+            table.insert(pch_owner_flags, pcoutputfile)      --owner
         else
             raise("PCH: unsupported toolchain!")
         end
         
         buildtarget:add("cxxflags", pch_flags, { public = false })
+        buildtarget:add("cxxflags", pch_owner_flags, { public = false })
 
         target:data_set("pcoutputfile", pcoutputfile)
         target:data_set("header_to_compile", header_to_compile)
         target:data_set("need_pc_obj", need_pc_obj)
-        target:data_set("pch_flags", pch_flags)
+        target:data_set("pch_owner_flags", pch_owner_flags)
     end)
     before_build(function(target, opt)
         import("core.project.depend")
@@ -56,10 +58,10 @@ rule("sakura.pcxxheader")
         local args_target = buildtarget:clone()
 
         -- remove pch flags when compiling pchs
-        local pch_flags = target:data("pch_flags")
+        local pch_owner_flags = target:data("pch_owner_flags")
         local cxxflags = table.wrap(args_target:get("cxxflags"))
         table.remove_if(cxxflags, function (i, cxxflag)
-            return table.contains(pch_flags, cxxflag)
+            return table.contains(pch_owner_flags, cxxflag)
         end)
         args_target:set("cxxflags", cxxflags)
 
