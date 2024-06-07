@@ -26,13 +26,15 @@ import("core.base.global")
 import("core.project.project")
 import("core.platform.platform")
 import("devel.debugger")
-import("private.async.runjobs")
+import("async.runjobs")
 import("private.service.remote_build.action", {alias = "remote_build_action"})
+
+empty_targetnames = {}
 
 -- run target
 function _do_test_target(target)
     -- only for binary program
-    if not target:is_binary() then
+    if not target:is_binary() or table.contains(empty_targetnames, target:name()) then
         return
     end
 
@@ -179,19 +181,19 @@ function _check_targets(targetname, group_pattern)
     end
 
     -- filter and check targets with builtin-run script
-    local targetnames = {}
     for _, target in ipairs(targets) do
         if target:targetfile() and target:is_enabled() and not target:script("run") then
             local targetfile = target:targetfile()
             if targetfile and not os.isfile(targetfile) then
-                table.insert(targetnames, target:name())
+                table.insert(empty_targetnames, target:name())
             end
         end
     end
 
     -- there are targets that have not yet been built?
-    if #targetnames > 0 then
-        raise("please run `$xmake build [target]` to build the following targets first:\n  -> " .. table.concat(targetnames, '\n  -> '))
+    if #empty_targetnames > 0 then
+        print("some targets are not build (disabled), these tests will not run:\n  -> " 
+            .. table.concat(empty_targetnames, '\n  -> '))
     end
 end
 

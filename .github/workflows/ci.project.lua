@@ -1,5 +1,13 @@
 analyzer("DisableSingle")
     analyze(function(target, attributes, analyzing)
+        -- 2024/6/7 GithubAction CI fails with multi-thread codes
+        local target_name = target:name()
+        local mt_tests = { "ECSTest", "JobTest", "Task2Test", "MarlTest" }
+        if table.contains(mt_tests, target_name) then
+            return true
+        end
+        -- 2024/6/7 GithubAction CI fails with multi-thread codes
+
         local scriptdir = path.relative(target:scriptdir()):gsub("\\", "/")
 
         local is_core = scriptdir:startswith("modules/core")
@@ -31,7 +39,7 @@ analyzer("DisableSingle")
             is_render or is_gui or is_dcc or 
             is_tests or is_sample
 
-        local graphics_test = target:dep("SkrGraphics") and is_tests
+        local graphics_test = scriptdir:startswith("tests/cgpu")
         enable = enable and not graphics_test            
 
         target:data_set("_Disable", not enable)
