@@ -12,10 +12,6 @@ target("Analyze.Phase")
                 os.run("xmake analyze_project")
             end, {dependfile = phase:dependfile("ANALYZE_PHASE"), files = project.allfiles()})
         end
-        
-        if not need_analyze then
-            print("no need to analyze project!")
-        end
     end)
 target_end()
 

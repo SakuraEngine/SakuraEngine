@@ -37,7 +37,7 @@ rule("sakura.pcxxheader")
             raise("PCH: unsupported toolchain!")
         end
         
-        buildtarget:add("cxxflags", pch_flags, { interface = is_shared })
+        buildtarget:add("cxxflags", pch_flags, { public = false })
 
         target:data_set("pcoutputfile", pcoutputfile)
         target:data_set("header_to_compile", header_to_compile)
@@ -161,7 +161,7 @@ analyzer("SharedPCH.ShareFrom")
     add_deps("SharedPCH.Score")
     analyze(function(target, attributes, analyzing)
         local share_from = ""
-        local has_private_pch = target:values("PrivatePCH.Owner")
+        local has_private_pch = table.contains(attributes, "PrivatePCH.Owner")
         if not has_private_pch then
             local last_score = 0
             for __, dep in pairs(target:deps()) do
@@ -183,7 +183,6 @@ function shared_pch(owner_name)
 
     pch_target(owner_name, owner_name..".SharedPCH")
         set_kind("headeronly") 
-        set_default(false) -- disable shared pch now
         add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
         add_values("Sakura.Attributes", "SharedPCH")
         add_deps(owner_name)
@@ -191,15 +190,22 @@ end
 
 rule("PickSharedPCH")
     on_load(function(target)
-        if (false) then -- disable shared pch now
-            local tbl_path = "build/.gens/module_infos/"..target:name()..".table"
-            if os.exists(tbl_path) then
-                local tbl = io.load(tbl_path)
-                local share_from = tbl["SharedPCH.ShareFrom"]
-                if (share_from ~= "") then
-                    target:add("deps", share_from..".SharedPCH", { inherit = false })
-                end
+        local tbl_path = "build/.gens/module_infos/"..target:name()..".table"
+        if os.exists(tbl_path) then
+            local tbl = io.load(tbl_path)
+            local share_from = tbl["SharedPCH.ShareFrom"]
+            if (share_from ~= "") then
+                target:add("deps", share_from..".SharedPCH", { inherit = false })
+                target:data_set("SharedPCH.ShareFrom", share_from..".SharedPCH")
             end
+        end
+    end)
+    before_build(function(target)
+        import("core.project.project")
+        local share_from = target:data("SharedPCH.ShareFrom")
+        if share_from then
+            local share_from_pch = project.target(share_from)
+            target:add("cxxflags", share_from_pch:get("cxxflags"), { public = false })
         end
     end)
 rule_end()

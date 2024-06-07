@@ -21,9 +21,6 @@ static_component("CubismFramework", "SkrLive2D", { public = false })
         add_links("Live2DCubismCore", {public=true})
     end
 
-shared_pch("CubismFramework")
-    add_files("CubismFramework/pch.hpp")
-
 private_pch("CubismFramework")
     add_files("CubismFramework/pch.hpp")
 

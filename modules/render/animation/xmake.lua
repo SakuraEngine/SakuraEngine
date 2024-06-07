@@ -9,9 +9,6 @@ shared_module("SkrOzz", "SKR_OZZ", engine_version)
         
 private_pch("SkrOzz")
     add_files("ozz/SkrAnim/ozz/*.h")
-
-shared_pch("SkrOzz")
-    add_files("ozz/SkrAnim/ozz/*.h")
     
 ---------------------------------------------------------------------------------------
 
@@ -29,7 +26,3 @@ shared_module("SkrAnim", "SKR_ANIM", engine_version)
 
 private_pch("SkrAnim")
     add_files("src/pch.hpp")
-
-shared_pch("SkrAnim")
-    add_files("include/**.h")
-    add_files("include/**.hpp")
