@@ -45,12 +45,14 @@ target_infos = {}
 function analyzing.run_analyzers()
     local phase = project.target("Analyze.Phase")
     local orderules = phase:orderules()
-    for _, rule in pairs(orderules) do
+    local idx = 1
+    for _, rule in ipairs(orderules) do
         if rule:name():startswith("__Analyzer.") then
-            table.insert(analyzers, rule)
+            analyzers[idx] = rule
+            idx = idx + 1
         end
     end
-    for idx, analyzer in ipairs(analyzers) do
+    for _, analyzer in ipairs(analyzers) do
         local analyzer_name = analyzer:name():split("__Analyzer.")[1]
         local analyze = analyzer:script("build")
         for _, target in pairs(project.ordertargets()) do

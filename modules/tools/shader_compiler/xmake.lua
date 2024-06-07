@@ -1,5 +1,4 @@
 codegen_component("SkrShaderCompiler", { api = "SKR_SHADER_COMPILER", rootdir = "include/SkrShaderCompiler" })
-    add_files("include/**.h")
     add_files("include/**.hpp")
 
 shared_module("SkrShaderCompiler", "SKR_SHADER_COMPILER", engine_version)

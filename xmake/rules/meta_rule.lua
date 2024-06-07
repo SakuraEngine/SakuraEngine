@@ -106,6 +106,16 @@ function codegen_component(owner, opt)
         add_deps(owner..".Meta", { public = true })
         on_load(function (target)
             target:data_set("mako.owner", owner)
+            target:set("default", false)
+        end)
+        -- TODO: 自动禁用派生目标
+        after_load(function (target)
+            import("core.project.project")
+            local owner_name = target:data("mako.owner")
+            local owner = project.target(owner_name)
+            if not owner:get("default") then
+                owner:set("default", false)
+            end
         end)
 
     -- must be declared at the end of this helper function
@@ -123,5 +133,15 @@ function codegen_component(owner, opt)
             target:data_set("meta.rootdir", opt.rootdir)
             -- TODO: add deps to depended meta targets
             -- ...
+            target:set("default", false)
+        end)
+        -- TODO: 自动禁用派生目标
+        after_load(function (target)
+            import("core.project.project")
+            local owner_name = target:data("meta.owner")
+            local owner = project.target(owner_name)
+            if not owner:get("default") then
+                owner:set("default", false)
+            end
         end)
 end

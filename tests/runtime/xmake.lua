@@ -62,14 +62,13 @@ executable_module("TraitTest", "TRAIT_TEST", engine_version, {exception = true})
 
 --------------------------------------------------------------------------------------
 
-if build_part("v8") then
+if (false) then
     executable_module("V8Test", "V8_TEST", engine_version)
         set_group("05.tests/runtime")
         public_dependency("SkrV8", engine_version)
         -- add_deps("SkrTestFramework", {public = false})
         add_files("v8/hello_fucking_google.cpp")
 end
-
 
 -- includes("module/xmake.lua")
 -- includes("wasm/xmake.lua")

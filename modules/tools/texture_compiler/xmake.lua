@@ -7,7 +7,6 @@ target("ISPCTextureCompressor")
     add_files("src/**.ispc")
 
 codegen_component("SkrTextureCompiler", { api = "SKR_TEXTURE_COMPILER", rootdir = "include/SkrTextureCompiler" })
-    add_files("include/**.h")
     add_files("include/**.hpp")
 
 shared_module("SkrTextureCompiler", "SKR_TEXTURE_COMPILER", engine_version)

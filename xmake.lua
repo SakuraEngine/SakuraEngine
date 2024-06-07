@@ -19,6 +19,10 @@ set_languages(get_config("cxx_version"), get_config("c_version"))
 add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
 
 includes("xmake/options.lua")
+includes("xmake/compile_flags.lua")
+includes("xmake/rules.lua")
+
+add_rules("DisableTargets")
 
 option("project_script")
     set_default("project.lua")
@@ -30,9 +34,6 @@ if get_config("project_script") and os.exists(get_config("project_script")) then
 else
     includes("./xmake/project.default.lua")
 end
-
-includes("xmake/compile_flags.lua")
-includes("xmake/rules.lua")
 
 if (is_os("windows")) then 
     add_defines("UNICODE", "NOMINMAX", "_WINDOWS")
@@ -49,15 +50,6 @@ end
 
 includes("xmake/thirdparty.lua")
 includes("modules/xmake.lua")
-
-if build_part("samples") then
-    includes("samples/xmake.lua")
-end
-
-if build_part("editors") then
-    includes("editors/xmake.lua")
-end
-
-if build_part("tests") then
-    includes("tests/xmake.lua")
-end
+includes("samples/xmake.lua")
+includes("editors/xmake.lua")
+includes("tests/xmake.lua")

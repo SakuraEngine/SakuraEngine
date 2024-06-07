@@ -3,7 +3,6 @@ add_requires("tinygltf >=2.8.14-skr", {system = false})
 
 codegen_component("SkrAnimTool", { api = "SKR_ANIMTOOL", rootdir = "include/SkrAnimTool" })
     add_files("include/**.h")
-    add_files("include/**.hpp")
 
 shared_module("SkrAnimTool", "SKR_ANIMTOOL", engine_version)
     set_group("02.tools")

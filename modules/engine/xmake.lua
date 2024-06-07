@@ -5,9 +5,8 @@ includes("scene/xmake.lua")
 includes("input/xmake.lua")
 includes("input_system/xmake.lua")
 includes("basic_meta/xmake.lua")
-
--- includes("lua/xmake.lua") -- FIXME. lua support
-
-if build_part("v8") then 
+if (false) then
     includes("v8/xmake.lua")
 end
+
+-- includes("lua/xmake.lua") -- FIXME. lua support

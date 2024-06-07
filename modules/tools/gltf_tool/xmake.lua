@@ -1,7 +1,6 @@
 add_requires("cgltf >=1.13.0-skr", {system = false})
 
 codegen_component("SkrGLTFTool", { api = "GLTFTOOL", rootdir = "include/SkrGLTFTool" })
-    add_files("include/**.h")
     add_files("include/**.hpp")
 
 shared_module("SkrGLTFTool", "GLTFTOOL", engine_version)

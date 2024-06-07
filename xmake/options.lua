@@ -18,15 +18,3 @@ option("c_version")
     set_values("c11")
     set_description("c version of project")
 option_end()
-
-build_parts = {}
-function build_part(name)
-    local revtable = {}
-    for k, v in pairs(build_parts) do
-        revtable[v] = true
-    end
-    if revtable[name] then
-        return true
-    end
-    return false
-end

@@ -18,15 +18,11 @@ function test_target(name)
 end
 
 -- includes("daS/xmake.lua")
-if build_part("core") then
-    includes("base/xmake.lua")
-    includes("core/xmake.lua")
-    includes("memory/xmake.lua")
-    includes("meta_system/xmake.lua")
-end
+includes("base/xmake.lua")
+includes("core/xmake.lua")
+includes("memory/xmake.lua")
+includes("meta_system/xmake.lua")
 
-if build_part("engine") then
-    includes("cgpu/xmake.lua")
-    includes("runtime/xmake.lua")
-    includes("async/xmake.lua")
-end
+includes("cgpu/xmake.lua")
+includes("runtime/xmake.lua")
+includes("async/xmake.lua")
