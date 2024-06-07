@@ -24,13 +24,8 @@ includes("xmake/rules.lua")
 
 add_rules("DisableTargets")
 
-option("project_script")
-    set_default("project.lua")
-    set_showmenu(true)
-option_end()
-
-if get_config("project_script") and os.exists(get_config("project_script")) then
-    includes(get_config("project_script"))
+if os.exists("project.lua") then
+    includes("project.lua")
 else
     includes("./xmake/project.default.lua")
 end

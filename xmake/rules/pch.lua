@@ -210,6 +210,9 @@ rule("PickSharedPCH")
             local pch_target = project.target(share_from)
             -- add cxxflags
             target:add("cxxflags", pch_target:get("cxxflags"), { public = false })
+            -- symbols
+            local pch_symbols = pch_target:get("symbols") or "none"
+            target:set("symbols", pch_symbols)
             -- copy pdb
             local using_msvc = target:toolchain("msvc")
             if using_msvc and pch_target then

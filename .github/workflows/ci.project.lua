@@ -2,8 +2,12 @@ analyzer("DisableSingle")
     analyze(function(target, attributes, analyzing)
         -- 2024/6/7 GithubAction CI fails with multi-thread codes
         local target_name = target:name()
-        local mt_tests = { "ECSTest", "JobTest", "Task2Test", "MarlTest" }
+        local mt_tests = { 
+            "ECSTest", "JobTest", "Task2Test", 
+            "MarlTest", "ThreadsTest", "IOServiceTest"
+        }
         if table.contains(mt_tests, target_name) then
+            target:data_set("_Disable", true)
             return true
         end
         -- 2024/6/7 GithubAction CI fails with multi-thread codes

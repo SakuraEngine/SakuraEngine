@@ -19,6 +19,11 @@ test_target("VFSTest")
     public_dependency("SkrRT", engine_version)
     add_files("vfs/main.cpp")
 
+test_target("IOServiceTest")
+    set_group("05.tests/runtime")
+    public_dependency("SkrRT", engine_version)
+    add_files("io_service/main.cpp")
+
 test_target("SceneTest")
     set_group("05.tests/runtime")
     public_dependency("SkrScene", engine_version)

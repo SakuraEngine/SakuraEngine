@@ -6,6 +6,12 @@ rule("DisableTargets")
             local disable = tbl["Disable"]
             if disable then
                 target:set("default", false)
+            else
+                local _default = target:get("default")
+                local _ = (_default == nil) or (_default == true)
+                if (_default == nil) or (_default == true) then
+                    target:set("default", true)
+                end
             end
         end
     end)

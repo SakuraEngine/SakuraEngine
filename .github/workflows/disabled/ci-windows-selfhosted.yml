@@ -54,7 +54,9 @@ jobs:
           xmake l setup.lua -v
 
       - name: ConfigureDebug
-        run: xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --project_script=./.github/workflows/ci.project.lua --use_profile=disable --policies=build.ccache:n
+        run: |
+          cp ./.github/workflows/ci.project.lua ./project.lua  
+          xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --use_profile=disable --policies=build.ccache:n
       
       - name: BuildDebug
         if: success() || failure()
@@ -71,7 +73,9 @@ jobs:
       - name: ConfigureRelease
         if: success() || failure()
         shell: cmd
-        run: xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --project_script=./.github/workflows/ci.project.lua --use_profile=disable --policies=build.ccache:n
+        run: |
+          cp ./.github/workflows/ci.project.lua ./project.lua  
+          xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --use_profile=disable --policies=build.ccache:n
       
       - name: BuildRelease
         if: success() || failure()
@@ -83,7 +87,7 @@ jobs:
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
-          xmake run -g 05.tests/* -vD ... -d yes
+          xmake test -g 05.tests/* -vD ... -d yes
       
       - name: RemoveBuildDir
         uses: JesseTG/rm@v1.0.3
@@ -94,5 +98,6 @@ jobs:
         if: success() || failure()
         shell: cmd
         run: |
-          xmake f -c -y -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --project_script=./.github/workflows/ci.project.lua --shipping_one_archive=y --use_profile=disable --policies=build.ccache:n
+          cp ./.github/workflows/ci.project.lua ./project.lua  
+          xmake f -c -y -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --shipping_one_archive=y --use_profile=disable --policies=build.ccache:n
           xmake -y -v
