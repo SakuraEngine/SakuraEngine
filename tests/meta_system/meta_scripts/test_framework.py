@@ -99,7 +99,7 @@ class TestFunctionalShorthand(gen.GeneratorBase):
             assert record is not None
 
             # find functional
-            test_functional: sc.ParseResult = record.attrs["test_expand_path"]
+            test_functional: sc.ParseResult = record.attrs["test_functional_shorthand"]
             assert test_functional.is_functional()
 
             # check visited
@@ -118,7 +118,7 @@ class TestFunctionalShorthand(gen.GeneratorBase):
             assert test_functional["test_override"]["dog_c"].is_visited()
 
             # check value
-            assert test_functional["test_enable"].parsed_value is None
+            assert test_functional["test_enable"]["enable"].parsed_value is True
             assert test_functional["test_usual"]["a"].parsed_value is True
             assert test_functional["test_usual"]["b"].parsed_value is True
             assert test_functional["test_usual"]["c"].parsed_value is True

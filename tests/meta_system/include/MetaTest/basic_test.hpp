@@ -31,7 +31,8 @@ namespace test_functional_shorthand sreflect
 {
 sreflect_struct(
     "test_functional_shorthand": {
-        "test_enable": true,
+        "test_enable": false,
+        "test_enable::enable!": true,
         "test_usual": "all",
         "test_override": ["all_cat", "all_dog"],
         "test_override!": "except_c",
