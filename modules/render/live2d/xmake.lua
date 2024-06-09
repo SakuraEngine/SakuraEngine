@@ -1,7 +1,7 @@
 static_component("CubismFramework", "SkrLive2D", { public = false })
     set_optimize("fastest")
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
-    library_dependency("SkrBase", engine_version)
+    add_deps("SkrBase")
     add_includedirs("CubismNativeCore/include", "CubismFramework", "CubismFramework/Framework", {public=false})
     add_files("CubismFramework/Renderer/**.cpp", "CubismFramework/Framework/**.cpp")
     -- link to cubism core

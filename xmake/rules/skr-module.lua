@@ -14,11 +14,6 @@ function public_dependency(dep, version, setting)
     add_values(dep..".version", version)
 end
 
-function library_dependency(dep, version, setting)
-    add_deps(dep, {public = true})
-    add_values(dep..".version", version)
-end
-
 rule("skr.module")
 rule_end()
 
@@ -147,25 +142,6 @@ rule("skr.dyn_module")
     end)
 rule_end()
 
-rule("skr.static_library")
-    on_load(function (target, opt)
-        target:set("kind", "static")
-    end)
-rule_end()
-
-function static_library(name, api, version, opt)
-    target(name)
-        set_group("01.libraries/"..name)
-        add_rules("skr.static_library", { api = api, version = version }) 
-        set_kind("static")
-        opt = opt or {}
-        if opt.exception and not opt.noexception then
-            set_exceptions("cxx")
-        else
-            set_exceptions("no-cxx")
-        end
-end
-
 function shared_module(name, api, version, opt)
     target(name)
         set_group("01.modules/"..name)
@@ -201,7 +177,6 @@ function static_component(name, owner, opt)
         add_rules("skr.component", { owner = owner })
         set_kind("static")
 end
-
 
 function executable_module(name, api, version, opt)
     target(name)
