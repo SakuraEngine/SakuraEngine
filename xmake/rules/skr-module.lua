@@ -8,13 +8,17 @@ if has_config("shipping_one_archive") then
     add_defines("SHIPPING_ONE_ARCHIVE")
 end
 
-function public_dependency(dep, version, setting)
-    add_deps(dep, {public = true})
-    add_values("skr.module.public_dependencies", dep)
-    add_values(dep..".version", version)
-end
-
 rule("skr.module")
+    on_load(function(target)
+        local tbl_path = "build/.gens/module_infos/"..target:name()..".table"
+        if os.exists(tbl_path) then
+            local tbl = io.load(tbl_path)
+            local meta_source = tbl["Module.MetaSourceFile"]
+            if (meta_source ~= "") then
+                target:add("files", meta_source)
+            end
+        end
+    end)
 rule_end()
 
 rule("skr.component")
@@ -31,15 +35,6 @@ rule("skr.component")
             owner:add("values", "skr.module.public_dependencies", pub_dep)
             owner:add("values", pub_dep..".version", component:values(pub_dep..".version"))
         end
-        --[[
-        -- import deps from owner
-        for _, owner_dep in pairs(owner:orderdeps()) do
-            local _owner_name = owner_dep:extraconf("rules", "skr.component", "owner") or ""
-            if _owner_name ~= owner_name then
-                component:add("deps", owner_dep:name(), {public = true})
-            end
-        end
-        ]]--
         -- insert owner's include dirs
         for _, owner_inc in pairs(owner:get("includedirs")) do
             component:add("includedirs", owner_inc, {public = true})
@@ -70,59 +65,8 @@ rule("skr.dyn_module")
             target:add("defines", api.."_API=SKR_IMPORT", {interface=true})
             target:add("defines", api.."_API=SKR_EXPORT", {public=false})
         end
-        -- add codegen headers to include dir
-        local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
-        if (not os.exists(gendir)) then
-            os.mkdir(gendir)
-        end
-        target:add("includedirs", gendir, {public = true})
-
-        local target_gendir = path.join(target:autogendir({root = true}), target:plat())
-        if (path.is_absolute(target_gendir)) then
-            print("Detect incorrect abs path: \""..target_gendir.."\", report this to xmake!")
-        end
-        target_gendir = path.absolute(target_gendir)
-        -- HACK: this absolute path may contains lower-case drive letter on windows
-        if (os.host() == "windows") then
-            target_gendir = target_gendir:gsub("^%l", string.upper)
-        end
-
-        local jsonfile = path.join(target_gendir, "module", "module.configure.json")
-        local embedfile = path.join(target_gendir, "module", "module.configure.cpp")
-
-        -- generate dummies
-        if (not os.exists(jsonfile)) then
-            io.writefile(jsonfile, "")
-        end
-        if (not os.exists(embedfile)) then
-            io.writefile(embedfile, "")
-        end
-        target:add("files", embedfile)
-
-        target:data_set("module.meta.cpp", embedfile)
-        target:data_set("module.meta.json", jsonfile)
-        target:data_set("module.meta.includedir", target_gendir)
-
-        if (target:rule("c++.unity_build")) then
-            local unity_build = target:rule("c++.unity_build"):clone()
-            unity_build:add("deps", "skr.dyn_module", {order = true})
-            target:rule_add(unity_build)
-        end
-        if (target:rule("c.unity_build")) then
-            local cunity_build = target:rule("c.unity_build"):clone()
-            cunity_build:add("deps", "skr.dyn_module", {order = true})
-            target:rule_add(cunity_build)
-        end
     end)
     on_config(function(target)
-        -- imports
-        import("core.base.option")
-        import("core.project.project")
-        import("core.project.depend")
-        import("module_codegen")
-        -- calculate deps
-        local api = target:extraconf("rules", "skr.dyn_module", "api")
-        local dep_modules = module_codegen.resolve_skr_module_dependencies(target)
         if has_config("shipping_one_archive") then
             if target:kind() == "binary" then
                 local output_dir = vformat("$(buildir)/$(os)/$(arch)/$(mode)")
@@ -137,8 +81,6 @@ rule("skr.dyn_module")
                 end
             end
         end
-        module_codegen.skr_module_gen_json(target, target:data("module.meta.json"), dep_modules)
-        module_codegen.skr_module_gen_cpp(target, target:data("module.meta.cpp"), dep_modules)
     end)
 rule_end()
 
@@ -173,9 +115,9 @@ function static_component(name, owner, opt)
     target_end()
     
     target(name)
+        set_kind("static")
         set_group("01.modules/"..owner.."/components")
         add_rules("skr.component", { owner = owner })
-        set_kind("static")
 end
 
 function executable_module(name, api, version, opt)
@@ -183,10 +125,77 @@ function executable_module(name, api, version, opt)
         set_kind("binary")
         add_rules("PickSharedPCH")
         add_rules("skr.dyn_module", { api = api, version = engine_version }) 
-        opt = opt or {}
+        local opt = opt or {}
         if opt.exception and not opt.noexception then
             set_exceptions("cxx")
         else
             set_exceptions("no-cxx")
         end
 end
+
+function public_dependency(dep, version, setting)
+    add_deps(dep, {public = true})
+    add_values("skr.module.public_dependencies", dep)
+    add_values(dep..".version", version)
+end
+
+analyzer("Module.MetaSourceFile")
+    analyze(function(target, attributes, analyzing)
+        if not target:rule("skr.dyn_module") then
+            return "NOT_A_MODULE"
+        end
+
+        import("core.project.depend")
+        import("core.project.project")
+
+        local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
+        local filename = path.join(gendir, "module", "module.configure.cpp") 
+        local dep_names = target:values("skr.module.public_dependencies")
+        depend.on_changed(function()
+            -- gather deps
+            local dep_modules = {}
+            for _, dep in ipairs(target:orderdeps()) do
+                if dep:rule("skr.dyn_module") then
+                    table.insert(dep_modules, dep:name())
+                end
+            end
+
+            -- start rebuild json
+            local self_version = target:values("skr.module.version")
+            local pub_deps = target:values("skr.module.public_dependencies")
+            assert(self_version, "module version not found: "..target:name())
+            local delim = "__de___l___im__("
+            local delim2 = ")__de___l___im__"
+            local cpp_content = "#include \"SkrCore/module/module.hpp\"\n\nSKR_MODULE_METADATA(u8R\""..delim.."\n{\n"
+            cpp_content = cpp_content.."\t\"api\": \"" .. self_version.."\",\n"
+            cpp_content = cpp_content.."\t\"name\": \"" .. target:name() .."\",\n"
+            cpp_content = cpp_content.."\t\"prettyname\": \"" .. target:name() .."\",\n"
+            cpp_content = cpp_content.."\t\"version\": \"".. self_version .."\",\n"
+            cpp_content = cpp_content.."\t\"linking\": \"".. target:kind() .."\",\n"
+            cpp_content = cpp_content.."\t\"author\": \"unknown\",\n"
+            cpp_content = cpp_content.."\t\"url\": \"https://github.com/SakuraEngine/SakuraEngine\",\n"
+            cpp_content = cpp_content.."\t\"license\": \"EngineDefault (MIT)\",\n"
+            cpp_content = cpp_content.."\t\"copyright\": \"EngineDefault\",\n"
+            -- dep body
+            cpp_content = cpp_content.."\t\"dependencies\": [\n "
+            for _, dep in pairs(pub_deps) do
+                local deptarget = project.target(dep)
+                assert(deptarget:rule("skr.module"), "public dependency must be a skr.module: "..deptarget:name())
+                local depversion = target:values(dep..".version")
+                local kind = deptarget:rule("skr.dyn_module") and "shared" or "static"
+                cpp_content = cpp_content.."\t\t{ \"name\":\""..dep.."\", \"version\": \""..depversion.."\", \"kind\": \""..kind.."\" },\n"
+            end
+            cpp_content = cpp_content.sub(cpp_content, 1, -3)
+            cpp_content = cpp_content.."\n\t]\n}\n"..delim2.."\", "..target:name()..")"
+            -- end dep body
+            -- write json & update files and values to the dependent file
+            io.writefile(filename, cpp_content)
+        end, {
+            dependfile = target:dependfile("Module.MetaSourceFile"), 
+            files = { target:scriptdir() },
+            values = dep_names
+        })
+
+        return filename
+    end)
+analyzer_end()

@@ -41,8 +41,10 @@ analyzer("Dependencies")
         end
         return dependencies
     end)
+analyzer_end()
 
 analyzer("Attributes")
     analyze(function(target, attributes, analyzing)
         return attributes
     end)
+analyzer_end()
