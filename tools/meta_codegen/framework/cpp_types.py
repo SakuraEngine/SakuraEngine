@@ -214,6 +214,9 @@ class Record:
         self.attrs: sc.ParseResult
         self.generator_data: Dict[str, object] = {}
 
+        # TODO. 内置的 generate body 支持, 还是说放在 generator_data 内
+        self.generated_body: str = ""
+
     def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
 
