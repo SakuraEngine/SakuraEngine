@@ -2,7 +2,7 @@ target("OpenGUI_DemoResources")
     set_kind("static")
     set_group("04.examples/application")
     add_includedirs("common", {public = true})
-    add_rules("utils.install-resources", {
+    add_rules("utils.install_resources", {
         extensions = {".png"},
         outdir = "/../resources/OpenGUI", 
         rootdir = os.curdir().."/common"})

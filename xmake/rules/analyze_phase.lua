@@ -4,11 +4,8 @@ target("Analyze.Phase")
     on_load(function(phase)
         import("core.project.depend")
         import("core.project.project")
-
-        local need_analyze = false
         if not project.__noscan then
             depend.on_changed(function ()
-                need_analyze = true
                 os.run("xmake analyze_project")
             end, {dependfile = phase:dependfile("ANALYZE_PHASE"), files = project.allfiles()})
         end

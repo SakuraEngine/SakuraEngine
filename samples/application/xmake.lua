@@ -20,7 +20,7 @@ executable_module("Live2DViewer", "LIVE2D_VIEWER", engine_version)
     set_group("04.examples/application")
     public_dependency("SkrLive2D", engine_version)
     public_dependency("SkrImGui", engine_version)
-    add_rules("utils.install-resources", {
+    add_rules("utils.install_resources", {
         extensions = {".json", ".moc3", ".png"},
         outdir = "/../resources/Live2DViewer", 
         rootdir = os.curdir().."/live2d-viewer/resources"})

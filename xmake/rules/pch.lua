@@ -137,6 +137,14 @@ function private_pch(owner_name)
         set_kind("headeronly") 
         add_rules("sakura.pcxxheader", { buildtarget = owner_name, shared = false })
         add_values("Sakura.Attributes", "PrivatePCH")
+        -- TODO: 自动禁用派生目标
+        after_load(function (target)
+            import("core.project.project")
+            local owner = project.target(owner_name)
+            if not owner:get("default") then
+                target:set("default", false)
+            end
+        end)
 end
 
 ------------------------------------SHARED PCH------------------------------------
@@ -189,6 +197,14 @@ function shared_pch(owner_name)
         add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
         add_values("Sakura.Attributes", "SharedPCH")
         add_deps(owner_name)
+        -- TODO: 自动禁用派生目标
+        after_load(function (target)
+            import("core.project.project")
+            local owner = project.target(owner_name)
+            if not owner:get("default") then
+                target:set("default", false)
+            end
+        end)
 end
 
 rule("PickSharedPCH")

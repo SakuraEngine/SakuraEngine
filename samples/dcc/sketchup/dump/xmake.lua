@@ -8,7 +8,7 @@ executable_module("SketchUpDump", "SKETCHUP_DUMP_API", engine_version)
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_files("src/**.cpp")
 
-    add_rules("utils.install-resources", {
+    add_rules("utils.install_resources", {
         extensions = {".skp"},
         outdir = "/../resources/SketchUp", 
         rootdir = os.curdir().."/src"})

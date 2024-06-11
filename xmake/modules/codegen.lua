@@ -10,13 +10,12 @@ local _meta = find_sdk.find_program("meta")
 local _python = find_sdk.find_embed_python() or find_sdk.find_program("python3")
 
 -- data cache names
-local _meta_data_batch_name = "meta.batch"
-local _meta_data_headers_name = "meta.headers"
-local _meta_data_generators_name = "meta.generators"
+local _codegen_data_batch_name = "c++.codegen.batch"
+local _codegen_data_headers_name = "c++.codegen.headers"
+local _codegen_data_generators_name = "c++.codegen.generators"
 
 -- rule names
-local _meta_rule_codegen_name = "c++.codegen" -- TODO. use new name
-local _meta_rule_generators_name = "c++.meta.generators"
+local _codegen_rule_generators_name = "c++.codegen.generators"
 
 -- steps
 --  1. collect header batch
@@ -46,13 +45,13 @@ function collect_headers_batch(target, headerfiles)
     end
 
     -- set data
-    target:data_set(_meta_data_batch_name, meta_batch)
-    target:data_set(_meta_data_headers_name, headerfiles)
+    target:data_set(_codegen_data_batch_name, meta_batch)
+    target:data_set(_codegen_data_headers_name, headerfiles)
 end
 
 function solve_generators(target)
     -- get config
-    local generator_config = target:extraconf("rules", _meta_rule_generators_name)
+    local generator_config = target:extraconf("rules", _codegen_rule_generators_name)
     
     -- solve config
     local solved_config = {
@@ -88,7 +87,7 @@ function solve_generators(target)
     end
 
     -- save config
-    target:data_set(_meta_data_generators_name, solved_config)
+    target:data_set(_codegen_data_generators_name, solved_config)
 
     -- permission
     if (os.host() == "macosx") then
@@ -96,9 +95,9 @@ function solve_generators(target)
     end
 end
 
-function _meta_compile(target, proxy_target, opt)
-    local headerfiles = target:data(_meta_data_headers_name)
-    local batchinfo = target:data(_meta_data_batch_name)
+function _codegen_compile(target, proxy_target, opt)
+    local headerfiles = target:data(_codegen_data_headers_name)
+    local batchinfo = target:data(_codegen_data_batch_name)
     local sourcefile = batchinfo.sourcefile
     local outdir = batchinfo.metadir
     local rootdir = path.absolute(proxy_target:data("meta.rootdir")) or path.absolute(target:scriptdir())
@@ -205,8 +204,8 @@ function _meta_compile(target, proxy_target, opt)
 end
 
 function meta_compile(target, proxy_target, opt)
-    local headerfiles = target:data(_meta_data_headers_name)
-    local batchinfo = target:data(_meta_data_batch_name)
+    local headerfiles = target:data(_codegen_data_headers_name)
+    local batchinfo = target:data(_codegen_data_batch_name)
     local sourcefile = batchinfo.sourcefile
 
     -- generate headers dummy
@@ -231,7 +230,7 @@ function meta_compile(target, proxy_target, opt)
             unity_cpp:close()
 
             -- build generated cpp to json
-            _meta_compile(target, proxy_target, opt)
+            _codegen_compile(target, proxy_target, opt)
         end, {dependfile = sourcefile .. ".meta.d", files = headerfiles})
     end
 end
@@ -240,13 +239,13 @@ end
 
 function _mako_render(target, scripts, dep_files, opt)
     -- get config
-    local batchinfo = target:data(_meta_data_batch_name)
-    local headerfiles = target:data(_meta_data_headers_name)
+    local batchinfo = target:data(_codegen_data_batch_name)
+    local headerfiles = target:data(_codegen_data_headers_name)
     local sourcefile = batchinfo.sourcefile
     local metadir = batchinfo.metadir
     local gendir = batchinfo.gendir
 
-    local api = target:values("meta.api")
+    local api = target:values("c++.codegen.api")
     local generate_script = os.projectdir()..vformat("/tools/meta_codegen/codegen.py")
     local start_time = os.time()
 
@@ -267,7 +266,7 @@ function _mako_render(target, scripts, dep_files, opt)
     -- collect include modules
     config.include_modules = {}
     for _, dep_target in pairs(target:deps()) do
-        local dep_api = dep_target:values("meta.api")
+        local dep_api = dep_target:values("c++.codegen.api")
         table.insert(config.include_modules, {
             module_name = dep_target:name(),
             meta_dir = path.absolute(path.join(dep_target:autogendir({root = true}), dep_target:plat(), "meta_database")),
@@ -345,8 +344,8 @@ function mako_render(target, opt)
     local scripts = {}
 
     -- extract self generator scripts and dep_files
-    if target:data(_meta_data_generators_name) then
-        local self_generator_config = target:data(_meta_data_generators_name)
+    if target:data(_codegen_data_generators_name) then
+        local self_generator_config = target:data(_codegen_data_generators_name)
         for _, script_config in ipairs(self_generator_config.scripts) do
             table.insert(scripts, script_config)
         end
@@ -357,7 +356,7 @@ function mako_render(target, opt)
 
     -- extract dep generator scripts and dep_files
     for _, dep in pairs(target:deps()) do
-        local dep_generator = dep:data(_meta_data_generators_name)
+        local dep_generator = dep:data(_codegen_data_generators_name)
         if dep_generator then
             -- extract scripts
             for __, script_config in ipairs(dep_generator.scripts) do

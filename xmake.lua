@@ -22,6 +22,7 @@ includes("xmake/options.lua")
 includes("xmake/compile_flags.lua")
 includes("xmake/rules.lua")
 
+-- add global rules to all targets
 add_rules("DisableTargets")
 
 if os.exists("project.lua") then

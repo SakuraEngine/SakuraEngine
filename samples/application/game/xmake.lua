@@ -19,7 +19,7 @@ executable_module("Game", "GAME", engine_version)
     set_group("04.examples/application")
     set_exceptions("no-cxx")
     public_dependency("GameRuntime", engine_version)
-    add_rules("utils.install-resources", {
+    add_rules("utils.install_resources", {
         extensions = {".lua"},
         outdir = "/../resources", 
         rootdir = os.curdir().."/script"})

@@ -19,7 +19,7 @@ shared_module("SkrGraphics", "SKR_GRAPHICS", engine_version)
         table.insert(libs_to_install, "nsight")
         table.insert(libs_to_install, "WinPixEventRuntime")
     end
-    add_rules("utils.install-libs", { libnames = libs_to_install })
+    add_rules("utils.install_libraries", { libnames = libs_to_install })
     
     if (is_os("windows")) then 
         add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public=true})

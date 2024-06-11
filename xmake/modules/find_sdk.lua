@@ -17,7 +17,7 @@ function binarydir()
 end
 
 -- use_lib_cache = true
-manifest_cache=nil
+manifest_cache = nil
 function fetch_github_manifest(force)
     if force or manifest_cache == nil then
         local sdkdir = sdkdir or os.projectdir().."/SDKs"
@@ -27,7 +27,6 @@ function fetch_github_manifest(force)
         http.download(url, manifest_path, {continue = false})
         manifest_cache = json.loadfile(manifest_path)
     end
-
     return manifest_cache
 end
 

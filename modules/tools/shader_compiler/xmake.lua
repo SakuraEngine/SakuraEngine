@@ -15,7 +15,7 @@ shared_module("SkrShaderCompiler", "SKR_SHADER_COMPILER", engine_version)
     end
     -- install dxc on non-windows platform
     if (not is_os("windows")) then 
-        add_rules("utils.install-libs", { libnames = {"dxc"} })
+        add_rules("utils.install_libraries", { libnames = {"dxc"} })
     end
             
 private_pch("SkrShaderCompiler")

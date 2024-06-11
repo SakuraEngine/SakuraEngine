@@ -40,7 +40,7 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
         table.insert(libs_to_install, "gns")
         table.insert(libs_to_install, "SDL2")
     end
-    add_rules("utils.install-libs", { libnames = libs_to_install })
+    add_rules("utils.install_libraries", { libnames = libs_to_install })
 
 --[[
 shared_pch("SkrRT")

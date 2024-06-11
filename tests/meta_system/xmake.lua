@@ -10,7 +10,7 @@ target("MetaTest")
     
     add_deps("SkrBase")
 
-    add_rules("c++.meta.generators", {
+    add_rules("c++.codegen.generators", {
         scripts = {
             -- test
             { 

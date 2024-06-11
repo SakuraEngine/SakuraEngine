@@ -12,23 +12,23 @@
     ...
 }
 ]]
-rule("c++.meta.generators")
+rule("c++.codegen.generators")
     after_load(function (target, opt)
         import("codegen")
         codegen.solve_generators(target)
     end)
 rule_end()
 
-rule("codegen.meta")
+rule("c++.codegen.meta")
     set_extensions(".h", ".hpp")
     before_build(function (proxy_target, opt)
         import("core.project.project")
         import("codegen")
         local sourcebatches = proxy_target:sourcebatches()
         if sourcebatches then
-            local owner_name = proxy_target:data("meta.owner")
+            local owner_name = proxy_target:data("c++.codegen.owner")
             local owner = project.target(owner_name)
-            local files = sourcebatches["codegen.meta"].sourcefiles
+            local files = sourcebatches["c++.codegen.meta"].sourcefiles
             codegen.collect_headers_batch(owner, files)
             -- compile meta file
             codegen.meta_compile(owner, proxy_target, opt)
@@ -36,7 +36,7 @@ rule("codegen.meta")
     end)
 rule_end()
 
-rule("codegen.mako")
+rule("c++.codegen.mako")
     before_build(function (proxy_target, opt)
         import("core.project.project")
         import("codegen")
@@ -47,20 +47,7 @@ rule("codegen.mako")
     end)
 rule_end()
 
-analyzer("Codegen.Deps")
-    analyze(function(target, attributes, analyzing)
-        local codegen_deps = {}
-        for __, dep in pairs(target:deps()) do
-            local dep_attrs = analyzing.query_attributes(dep:name())
-            if table.contains(dep_attrs, "Codegen.Owner") then
-                table.insert(codegen_deps, dep:name()..".Codegen")
-            end
-        end
-        return codegen_deps
-    end)
-analyzer_end()
-
-rule("codegen.fetch")
+rule("c++.codegen.load")
     on_load(function (target, opt)
         -- config
         local codegen_dir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
@@ -89,17 +76,30 @@ rule("codegen.fetch")
     end)
 rule_end()
 
+analyzer("Codegen.Deps")
+    analyze(function(target, attributes, analyzing)
+        local codegen_deps = {}
+        for __, dep in pairs(target:deps()) do
+            local dep_attrs = analyzing.query_attributes(dep:name())
+            if table.contains(dep_attrs, "Codegen.Owner") then
+                table.insert(codegen_deps, dep:name()..".Codegen")
+            end
+        end
+        return codegen_deps
+    end)
+analyzer_end()
+
 function codegen_component(owner, opt)
     target(owner)
-        add_rules("codegen.fetch")
+        add_rules("c++.codegen.load")
         add_deps(owner..".Mako", { public = opt and opt.public or true })
         add_values("Sakura.Attributes", "Codegen.Owner")
-        add_values("meta.api", opt.api or target:name():upper())
+        add_values("c++.codegen.api", opt.api or target:name():upper())
     target_end()
 
     target(owner..".Mako")
         set_group("01.modules/"..owner.."/codegen")
-        add_rules("codegen.mako")
+        add_rules("c++.codegen.mako")
         set_kind("headeronly")
         set_policy("build.fence", true)
         add_values("Sakura.Attributes", "Analyze.Ignore")
@@ -114,7 +114,7 @@ function codegen_component(owner, opt)
             local owner_name = target:data("mako.owner")
             local owner = project.target(owner_name)
             if not owner:get("default") then
-                owner:set("default", false)
+                target:set("default", false)
             end
         end)
 
@@ -123,10 +123,10 @@ function codegen_component(owner, opt)
         set_group("01.modules/"..owner.."/codegen")
         set_policy("build.fence", true)
         set_kind("headeronly")
-        add_rules("codegen.meta")
+        add_rules("c++.codegen.meta")
         add_values("Sakura.Attributes", "Analyze.Ignore")
         on_load(function (target)
-            target:data_set("meta.owner", owner)
+            target:data_set("c++.codegen.owner", owner)
             if opt and opt.rootdir then
                 opt.rootdir = path.absolute(path.join(target:scriptdir(), opt.rootdir))
             end
@@ -138,10 +138,10 @@ function codegen_component(owner, opt)
         -- TODO: 自动禁用派生目标
         after_load(function (target)
             import("core.project.project")
-            local owner_name = target:data("meta.owner")
+            local owner_name = target:data("c++.codegen.owner")
             local owner = project.target(owner_name)
             if not owner:get("default") then
-                owner:set("default", false)
+                target:set("default", false)
             end
         end)
 end
