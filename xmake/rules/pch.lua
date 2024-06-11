@@ -120,8 +120,8 @@ function pch_target(owner_name, pch_target_name)
         set_policy("build.fence", true)
         -- temporaly close the exception for pch target
         set_exceptions("no-cxx")
-        add_values("Sakura.Attributes", "PCH")
-        add_values("Sakura.Attributes", "Analyze.Ignore")
+        add_attribute("PCH")
+        add_attribute("Analyze.Ignore")
 end
 
 ------------------------------------PRIVATE PCH------------------------------------
@@ -129,14 +129,14 @@ end
 function private_pch(owner_name)
     target(owner_name)
         add_deps(owner_name..".PrivatePCH", {inherit = false})
-        add_values("Sakura.Attributes", "PrivatePCH.Owner")
+        add_attribute("PrivatePCH.Owner")
     target_end()
 
     pch_target(owner_name, owner_name..".PrivatePCH")
         -- private pch generate pch file and inject it to owner
         set_kind("headeronly") 
         add_rules("sakura.pcxxheader", { buildtarget = owner_name, shared = false })
-        add_values("Sakura.Attributes", "PrivatePCH")
+        add_attribute("PrivatePCH")
         -- TODO: 自动禁用派生目标
         after_load(function (target)
             import("core.project.project")
@@ -188,14 +188,14 @@ analyzer_end()
 
 function shared_pch(owner_name)
     target(owner_name)
-        add_values("Sakura.Attributes", "SharedPCH.Owner")
+        add_attribute("SharedPCH.Owner")
     target_end()
 
     pch_target(owner_name, owner_name..".SharedPCH")
         -- shared pch generate pch/obj file and link them to others
         set_kind("object") 
         add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
-        add_values("Sakura.Attributes", "SharedPCH")
+        add_attribute("SharedPCH")
         add_deps(owner_name)
         -- TODO: 自动禁用派生目标
         after_load(function (target)

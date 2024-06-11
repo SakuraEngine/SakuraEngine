@@ -27,6 +27,10 @@ function analyze(func, opt)
     on_build(func, opt)
 end
 
+function add_attribute(attribute)
+    add_values("Sakura.Attributes", attribute)
+end
+
 analyzer("Dependencies")
     analyze(function(target, attributes, analyzing)
         local dependencies = {}
