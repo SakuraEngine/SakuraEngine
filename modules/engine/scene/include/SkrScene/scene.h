@@ -109,7 +109,7 @@ SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_setup(sugoi_storage_t* world
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_update(skr_transform_system_t* query);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_propagate_transform(sugoi_storage_t* world, sugoi_entity_t* entities, uint32_t count);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_save_scene(sugoi_storage_t* world, struct SJsonWriter* writer);
-SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(sugoi_storage_t* world, struct SJsonReader* reader);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(sugoi_storage_t* world, struct skr::json::Reader* reader);
 
 #ifdef __cplusplus
 // FIXME. lua support

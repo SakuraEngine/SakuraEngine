@@ -87,9 +87,9 @@ struct _SJsonWriterHelper
             IS_TYPE(double)
                 return yyjson_mut_obj_add_real((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
             IS_TYPE(skr::String)
-                return yyjson_mut_obj_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value.c_str(), value.size());
+                return yyjson_mut_obj_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value.c_str(), value.raw().size());
             IS_TYPE(skr::StringView)
-                return yyjson_mut_obj_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, (const char*)value.raw().data(), value.size());
+                return yyjson_mut_obj_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, (const char*)value.raw().data(), value.raw().size());
         }
         else if (type == Level::kArray)
         {
@@ -111,9 +111,9 @@ struct _SJsonWriterHelper
             IS_TYPE(double)
                 return yyjson_mut_arr_add_real((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
             IS_TYPE(skr::String)
-                return yyjson_mut_arr_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value.c_str(), value.size());
+                return yyjson_mut_arr_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value.c_str(), value.raw().size());
             IS_TYPE(skr::StringView)
-                return yyjson_mut_arr_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, (const char*)value.raw().data(), value.size());
+                return yyjson_mut_arr_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, (const char*)value.raw().data(), value.raw().size());
         }
         return false;
     }

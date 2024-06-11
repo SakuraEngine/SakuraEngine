@@ -30,7 +30,7 @@ struct TestSceneType {
             auto json  = writer.Write();
             SKR_LOG_INFO(u8"SCENE TYPE JSON: %s", json.c_str());
 
-            SJsonReader reader(json.view());
+            skr::json::Reader reader(json.view());
             reader.StartObject();
             {
                 reader.Key(u8"key");

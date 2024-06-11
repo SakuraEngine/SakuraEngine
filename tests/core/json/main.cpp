@@ -1,5 +1,6 @@
 #include "SkrCore/crash.h"
 #include "SkrCore/log.h"
+#include "SkrCore/log.hpp"
 #include "SkrSerde/json/writer.h"
 #include "SkrSerde/json/reader.h"
 #include "SkrTestFramework/framework.hpp"
@@ -42,7 +43,7 @@ struct TestPrimitiveType {
 
             T _value;
 
-            _SJsonReader reader(json.view());
+            skr::json::_Reader reader(json.view());
             reader.StartObject(u8"");
             reader.ReadValue(u8"key", _value); // TODO: skr::json::Read
             reader.EndObject();
@@ -70,6 +71,7 @@ TEST_CASE_METHOD(JSONTests, "primitive")
     TestPrimitiveType<bool>(false);
     TestPrimitiveType<skr::String>(u8"12345");
     TestPrimitiveType<skr::String>(u8"SerdeTest");
+    TestPrimitiveType<skr::String>(u8"😀emoji");
 }
 
 template <typename T>
@@ -103,7 +105,7 @@ struct TestPrimitiveArray {
         {
             auto json  = writer.Write();
             SKR_LOG_INFO(u8"PRIMITIVE ARRAY JSON: %s", json.c_str());
-            _SJsonReader reader(json.view());
+            skr::json::_Reader reader(json.view());
 
             skr::Vector<T> _values;
             size_t count;
@@ -143,4 +145,25 @@ TEST_CASE_METHOD(JSONTests, "array")
     // TestPrimitiveArray<bool>(false, false, true, true);
     // TestPrimitiveArray<skr::String>(u8"12345", u8"😀emoji");
     // TestPrimitiveArray<skr::String>(u8"Text", u8"#@@!*&の");
+}
+
+TEST_CASE_METHOD(JSONTests, "errors")
+{
+    using namespace skr::json;
+    
+    _Reader(u8"{}").EndArray()
+        .error_then([](EReadError error) {
+            EXPECT_EQ(error, EReadError::NoOpenScope);
+        })
+        .and_then([]() {
+            EXPECT_EQ(true, false);
+        });
+
+    _Reader(u8"{}").EndObject()
+        .error_then([](EReadError error) {
+            EXPECT_EQ(error, EReadError::NoOpenScope);
+        })
+        .and_then([]() {
+            EXPECT_EQ(true, false);
+        });
 }

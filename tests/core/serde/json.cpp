@@ -31,7 +31,7 @@ struct TestTypeSerde {
         auto json = writer.Write();
         SKR_LOG_INFO(u8"TYPE SERDE JSON: %s", json.c_str());
         
-        SJsonReader reader(json.view());
+        skr::json::Reader reader(json.view());
         reader.StartObject();
         {
             reader.Key(key);

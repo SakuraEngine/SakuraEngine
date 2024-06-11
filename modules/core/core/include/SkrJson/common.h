@@ -1,15 +1,6 @@
 #pragma once
 #include "SkrBase/types.h"
 
-typedef enum ESkrJsonType
-{
-    SKR_JSONTYPE_BOOL,
-    SKR_JSONTYPE_NUMBER,
-    SKR_JSONTYPE_STRING,
-    SKR_JSONTYPE_OBJECT,
-    SKR_JSONTYPE_ARRAY,
-} ESkrJsonType;
-
 typedef struct SJsonDocument SJsoDocument;
 typedef struct SJsonMutableDocument SJsonMutableDocument;
 typedef struct SJsonValue SJsonValue;

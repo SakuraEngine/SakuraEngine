@@ -4,80 +4,111 @@
 #if defined(__cplusplus)
 #include "SkrContainers/vector.hpp"
 
-struct SKR_STATIC_API _SJsonReader {
+namespace skr::json {
+
+enum class EReadError : uint32_t 
+{
+    UnknownError,
+    NoOpenScope,
+    ScopeTypeMismatch,
+    KeyNotFound,
+
+    EmptyObjectFieldKey,
+    ArrayElementWithKey,
+    RootObjectWithKey,
+    
+    UnknownTypeToRead,
+    StartObjectInPrimitiveTypes,
+
+    PresetKeyNotConsumedYet,
+    PresetKeyIsEmpty
+};
+
+using ReadResult = skr::Expected<EReadError>;
+
+struct SKR_STATIC_API _Reader {
     using CharType = SJsonCharType;
     using SizeType = SJsonSizeType;
     using DocumentType = SJsonDocument;
     using ValueType = SJsonValue;
 
-    _SJsonReader(skr::StringView json);
-    ~_SJsonReader();
+    _Reader(skr::StringView json);
+    ~_Reader();
 
-    bool StartObject(skr::StringView key);
-    bool EndObject();
+    ReadResult StartObject(skr::StringView key);
+    ReadResult EndObject();
 
-    bool StartArray(skr::StringView key, SizeType& count);
-    bool EndArray();
+    ReadResult StartArray(skr::StringView key, SizeType& count);
+    ReadResult EndArray();
 
-    bool ReadBool(skr::StringView key, bool& value);
-    bool ReadInt32(skr::StringView key, int32_t& value);
-    bool ReadInt64(skr::StringView key, int64_t& value);
-    bool ReadUInt32(skr::StringView key, uint32_t& value);
-    bool ReadUInt64(skr::StringView key, uint64_t& value);
-    bool ReadFloat(skr::StringView key, float& value);
-    bool ReadDouble(skr::StringView key, double& value);
-    bool ReadString(skr::StringView key, skr::String& value);
+    ReadResult ReadBool(skr::StringView key, bool& value);
+    ReadResult ReadInt32(skr::StringView key, int32_t& value);
+    ReadResult ReadInt64(skr::StringView key, int64_t& value);
+    ReadResult ReadUInt32(skr::StringView key, uint32_t& value);
+    ReadResult ReadUInt64(skr::StringView key, uint64_t& value);
+    ReadResult ReadFloat(skr::StringView key, float& value);
+    ReadResult ReadDouble(skr::StringView key, double& value);
+    ReadResult ReadString(skr::StringView key, skr::String& value);
 
-    inline bool ReadInt(skr::StringView key, int& value) { return ReadInt32(key, value); }
-    inline bool ReadUInt(skr::StringView key, unsigned int& value) { return ReadUInt32(key, value); }
+    inline ReadResult ReadInt(skr::StringView key, int& value) { return ReadInt32(key, value); }
+    inline ReadResult ReadUInt(skr::StringView key, unsigned int& value) { return ReadUInt32(key, value); }
 
 #pragma region Helpers
 
     template <JsonPrimitiveReadableType Type>
-    bool ReadArray(Type* values, SizeType count)
+    ReadResult ReadArray(Type* values, SizeType count)
     {
         if (!_stack.empty() && _stack.back()._type == Level::kArray)
         {
             for (SizeType i = 0; i < count; i++)
             {
+                ReadResult result = {};
+
                 if constexpr (std::is_same_v<Type, bool>)
-                    ReadBool(u8"", values[i]);
+                    result = ReadBool(u8"", values[i]);
                 else if constexpr (std::is_same_v<Type, int32_t>)
-                    ReadInt32(u8"", values[i]);
+                    result = ReadInt32(u8"", values[i]);
                 else if constexpr (std::is_same_v<Type, int64_t>)
-                    ReadInt64(u8"", values[i]);
+                    result = ReadInt64(u8"", values[i]);
                 else if constexpr (std::is_same_v<Type, uint32_t>)
-                    ReadUInt32(u8"", values[i]);
+                    result = ReadUInt32(u8"", values[i]);
                 else if constexpr (std::is_same_v<Type, uint64_t>)
-                    ReadUInt64(u8"", values[i]);
+                    result = ReadUInt64(u8"", values[i]);
                 else if constexpr (std::is_same_v<Type, float>)
-                    ReadFloat(u8"", values[i]);
+                    result = ReadFloat(u8"", values[i]);
                 else if constexpr (std::is_same_v<Type, double>)
-                    ReadDouble(u8"", values[i]);
+                    result = ReadDouble(u8"", values[i]);
                 else if constexpr (std::is_same_v<Type, skr::String>)
-                    ReadString(u8"", values[i]);
+                    result = ReadString(u8"", values[i]);
+
+                if (result.has_error())
+                    return result;
             }
-            return true;
+            return {};
         }
-        return false;
+        if (_stack.empty())
+            return EReadError::NoOpenScope;
+        if (_stack.back()._type != Level::kArray)
+            return EReadError::ScopeTypeMismatch;
+        return EReadError::UnknownError;
     }
 
     template <JsonPrimitiveReadableType Type>
-    bool ReadValue(skr::StringView key, Type& value)
+    ReadResult ReadValue(skr::StringView key, Type& value)
     {
         if constexpr (std::is_same_v<Type, bool>)
             return ReadBool(key, value);
         else if constexpr (std::is_same_v<Type, int8_t>)
         {
             int32_t v;
-            bool success = ReadInt32(key, v);
+            auto success = ReadInt32(key, v);
             value = v;
             return success;
         }
         else if constexpr (std::is_same_v<Type, int16_t>)
         {
             int32_t v;
-            bool success = ReadInt32(key, v);
+            auto success = ReadInt32(key, v);
             value = v;
             return success;
         }
@@ -89,21 +120,21 @@ struct SKR_STATIC_API _SJsonReader {
         else if constexpr (std::is_same_v<Type, uint8_t>)
         {
             uint32_t v;
-            bool success = ReadUInt32(key, v);
+            auto success = ReadUInt32(key, v);
             value = v;
             return success;
         }
         else if constexpr (std::is_same_v<Type, uint16_t>)
         {
             uint32_t v;
-            bool success = ReadUInt32(key, v);
+            auto success = ReadUInt32(key, v);
             value = v;
             return success;
         }
         else if constexpr (std::is_same_v<Type, uint32_t>)
         {
             uint32_t v;
-            bool success = ReadUInt32(key, v);
+            auto success = ReadUInt32(key, v);
             value = v;
             return success;
         }
@@ -119,7 +150,7 @@ struct SKR_STATIC_API _SJsonReader {
             return ReadString(key, value);
 
         else
-            return false;
+            return EReadError::UnknownTypeToRead;
     }
 
 #pragma endregion
@@ -139,33 +170,35 @@ struct SKR_STATIC_API _SJsonReader {
         }
     };
 protected:
-    friend struct _SJsonReaderHelper;
+    friend struct _ReaderHelper;
     skr::Vector<Level> _stack;
     DocumentType* _document = nullptr;
 };
 
-struct SKR_STATIC_API SJsonReader : public _SJsonReader {
-    SJsonReader(skr::StringView json);
+struct SKR_STATIC_API Reader : public _Reader {
+    Reader(skr::StringView json);
 
     // TODO: REMOVE?
-    bool Key(skr::StringView key);
-    bool Bool(bool& value);
-    bool Int32(int32_t& value);
-    bool Int64(int64_t& value);
-    bool UInt32(uint32_t& value);
-    bool UInt64(uint64_t& value);
-    bool Float(float& value);
-    bool Double(double& value);
-    bool String(skr::String& value);
+    ReadResult Key(skr::StringView key);
+    ReadResult Bool(bool& value);
+    ReadResult Int32(int32_t& value);
+    ReadResult Int64(int64_t& value);
+    ReadResult UInt32(uint32_t& value);
+    ReadResult UInt64(uint64_t& value);
+    ReadResult Float(float& value);
+    ReadResult Double(double& value);
+    ReadResult String(skr::String& value);
 
-    bool StartArray(SizeType& count);
-    bool StartObject();
+    ReadResult StartArray(SizeType& count);
+    ReadResult StartObject();
 
-    inline bool Int(int value) { return Int32(value); }
-    inline bool UInt(unsigned int value) { return UInt32(value); }
+    inline ReadResult Int(int value) { return Int32(value); }
+    inline ReadResult UInt(unsigned int value) { return UInt32(value); }
 
 protected:
     skr::String _currentKey;
 };
+
+}
 
 #endif

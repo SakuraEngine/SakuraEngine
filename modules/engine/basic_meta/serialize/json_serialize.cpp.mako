@@ -20,11 +20,11 @@
 
 namespace skr::json {
 %for enum in generator.filter_types(db.enums):
-bool ReadTrait<${enum.name}>::Read(SJsonReader* json, ${enum.name}& e)
+bool ReadTrait<${enum.name}>::Read(skr::json::Reader* json, ${enum.name}& e)
 {
     SkrZoneScopedN("json::ReadTrait<${enum.name}>::Read");
     skr::String enumStr;
-    if (json->String(enumStr))
+    if (json->String(enumStr).has_value())
     {
         if(!skr::rttr::EnumTraits<${enum.name}>::from_string(enumStr.view(), e))
         {
@@ -45,7 +45,7 @@ bool WriteTrait<${enum.name}>::Write(SJsonWriter* writer, ${enum.name} e)
 
 %for record in generator.filter_types(db.records):
 %if not generator.filter_debug_type(record):
-bool ReadTrait<${record.name}>::Read(SJsonReader* json, ${record.name}& record)
+bool ReadTrait<${record.name}>::Read(skr::json::Reader* json, ${record.name}& record)
 {
     SkrZoneScopedN("json::ReadTrait<${record.name}>::Read");
     %for base in record.bases:
@@ -58,7 +58,7 @@ bool ReadTrait<${record.name}>::Read(SJsonReader* json, ${record.name}& record)
     {
         json->StartObject();
 
-        if (json->Key(u8"${name}"))
+        if (json->Key(u8"${name}").has_value())
         {
             %if field.arraySize > 0:
             {

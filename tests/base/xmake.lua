@@ -8,7 +8,7 @@ target_end()
 
 target("ContainersTest")
     set_kind("binary")
-    set_group("05.tests/basde")
+    set_group("05.tests/base")
     add_deps("SkrBase")
     add_deps("SkrTestFramework", {public = false})
     add_files("containers/*.cpp")

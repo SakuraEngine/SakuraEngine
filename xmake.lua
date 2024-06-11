@@ -8,8 +8,8 @@ add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" }) -- xm
 
 set_warnings("all")
 set_policy("build.ccache", false)
-set_policy("check.auto_ignore_flags", false)
 set_policy("build.warning", true)
+set_policy("check.auto_ignore_flags", false)
 
 add_moduledirs("xmake/modules")
 add_plugindirs("xmake/plugins")

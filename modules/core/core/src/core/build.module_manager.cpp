@@ -314,7 +314,7 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::String& name, bool hot
 ModuleInfo ModuleManagerImpl::parseMetaData(const char8_t* metadata)
 {
     ModuleInfo                 info;
-    _SJsonReader               reader(metadata); 
+    skr::json::_Reader         reader(metadata); 
     reader.StartObject(u8"");
     {
         reader.ReadString(u8"api", info.core_version);

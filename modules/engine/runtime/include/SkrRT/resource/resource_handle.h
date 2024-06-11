@@ -171,11 +171,11 @@ struct SKR_RUNTIME_API WriteTrait<skr_resource_handle_t> {
 };
 template <>
 struct SKR_RUNTIME_API ReadTrait<skr_resource_handle_t> {
-    static bool Read(SJsonReader* json, skr_resource_handle_t& value);
+    static bool Read(skr::json::Reader* json, skr_resource_handle_t& value);
 };
 template <class T>
 struct ReadTrait<skr::resource::TResourceHandle<T>> {
-    static bool Read(SJsonReader* json, skr::resource::TResourceHandle<T>& handle)
+    static bool Read(skr::json::Reader* json, skr::resource::TResourceHandle<T>& handle)
     {
         return skr::json::Read<skr_resource_handle_t>(json, (skr_resource_handle_t&)handle);
     }

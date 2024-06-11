@@ -72,17 +72,18 @@ public:
     }
 
     template <typename F>
-    void error_then(F&& f) SKR_NOEXCEPT
+    Expected& error_then(F&& f) SKR_NOEXCEPT
     {
         if (!_hasValue && _unhandled)
         {
             f(error());
             _unhandled = false;
         }
+        return *this;
     }
 
     template <typename F>
-    void and_then(F&& f) SKR_NOEXCEPT
+    Expected& and_then(F&& f) SKR_NOEXCEPT
     {
         if (_hasValue)
         {
@@ -91,6 +92,7 @@ public:
             else
                 f(value());
         }
+        return *this;
     }
 
 protected:

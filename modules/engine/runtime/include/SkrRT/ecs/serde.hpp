@@ -23,7 +23,7 @@ void SetSerdeCallback(sugoi_type_description_t& desc)
         };
     if constexpr (skr::is_complete_serde_v<skr::json::ReadTrait<C>>)
         desc.callback.deserialize_text = +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, void* reader) {
-            skr::json::Read((SJsonReader*)reader, *(C*)data);
+            skr::json::Read((skr::json::Reader*)reader, *(C*)data);
         };
 }
 } // namespace sugoi

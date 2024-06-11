@@ -9,7 +9,7 @@ namespace skr::json
     template <>
     struct ${api} ReadTrait<${record.name}>
     {
-        static bool Read(SJsonReader* json, ${record.name}& v);
+        static bool Read(skr::json::Reader* json, ${record.name}& v);
     };
 %endif
     template <>
@@ -23,7 +23,7 @@ namespace skr::json
     template <>
     struct ${api} ReadTrait<${enum.name}>
     {
-        static bool Read(SJsonReader* json, ${enum.name}& v);
+        static bool Read(skr::json::Reader* json, ${enum.name}& v);
     };
 
     template <>

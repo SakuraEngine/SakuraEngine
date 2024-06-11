@@ -1,18 +1,22 @@
+#include "SkrBase/misc/defer.hpp"
 #include "SkrJson/reader.h"
 #include "cstr_builder.hpp"
+#include "SkrCore/log.h"
 
-#define SKR_ASSERT_RET_FALSE(cond, what) { if (!(cond)) { SKR_ASSERT(false && what); return false; } }
+#define SKR_RET_JSON_READ_RESULT(cond, what) { if (!(cond)) { return what; } }
 
-struct _SJsonReaderHelper
+namespace skr::json {
+
+struct _ReaderHelper
 {
-    using CharType = _SJsonReader::CharType;
+    using CharType = _Reader::CharType;
 
 #define IS_TYPE(T) if constexpr (std::is_same_v<Type, T>)
 
     template <JsonPrimitiveReadableType T>
-    static bool ReadValue(_SJsonReader* r, skr::StringView key, T& value) 
+    static skr::json::ReadResult ReadValue(_Reader* r, skr::StringView key, T& value) 
     {
-        using Level = _SJsonReader::Level;
+        using Level = _Reader::Level;
         using Type = std::decay_t<T>;
         SKR_ASSERT(!r->_stack.empty() && "ReadValue() called without StartObject() or StartArray()");
 
@@ -23,19 +27,19 @@ struct _SJsonReaderHelper
         yyjson_val* found = nullptr;
         if (type == Level::kObject)
         {
-            SKR_ASSERT(!key.is_empty() && "ReadValue() must be called with key in object");
+            SKR_RET_JSON_READ_RESULT(!key.is_empty(), skr::json::EReadError::EmptyObjectFieldKey);
             found = yyjson_obj_get((yyjson_val*)parent, ckey);
-            SKR_ASSERT_RET_FALSE(found, "Value not found");
+            SKR_RET_JSON_READ_RESULT(found, skr::json::EReadError::KeyNotFound);
         }
         else if (type == Level::kArray)
         {
-            SKR_ASSERT(key.is_empty() && "ReadValue() must be called without key in array");
+            SKR_RET_JSON_READ_RESULT(key.is_empty(), skr::json::EReadError::ArrayElementWithKey);
             found = yyjson_arr_get((yyjson_val*)parent, r->_stack.back()._index++);
-            SKR_ASSERT_RET_FALSE(found, "Value not found");
+            SKR_RET_JSON_READ_RESULT(found, skr::json::EReadError::KeyNotFound);
         }
 
-        IS_TYPE(_SJsonReader::ValueType*)
-            value = (_SJsonReader::ValueType*)found;
+        IS_TYPE(_Reader::ValueType*)
+            value = (_Reader::ValueType*)found;
         else IS_TYPE(bool)
             value = yyjson_get_bool(found);
         else IS_TYPE(int32_t)
@@ -53,32 +57,39 @@ struct _SJsonReaderHelper
         else IS_TYPE(skr::String)
             value = skr::String((const char8_t*)yyjson_get_str(found));
         else
-            SKR_ASSERT_RET_FALSE(false, "ReadValue failed with unknown type");
+            return skr::json::EReadError::UnknownTypeToRead;
 
-        return true;
+        return {};
     }
 
 #undef IS_TYPE
 };
 
-_SJsonReader::_SJsonReader(skr::StringView json)
+_Reader::_Reader(skr::StringView json)
 {
-    _document = (DocumentType*)yyjson_read((const char*)json.raw().data(), json.size(), 0);
+    yyjson_read_err err = {};
+    _document = (DocumentType*)yyjson_read_opts(
+        (char*)json.raw().data(), json.raw().size(), 
+        0, nullptr, &err);
+    if (_document == nullptr)
+    {
+        SKR_LOG_ERROR(u8"Failed to parse JSON: %s, error: %s", json.raw().data(), err.msg);
+    }
 }
 
-_SJsonReader::~_SJsonReader()
+_Reader::~_Reader()
 {
     if (_document)
         yyjson_doc_free((yyjson_doc*)_document);
 }
 
-bool _SJsonReader::StartObject(skr::StringView key)
+ReadResult _Reader::StartObject(skr::StringView key)
 {
     if (_stack.empty())
     {
-        SKR_ASSERT_RET_FALSE(key.is_empty(), "Root object should not have a key");
+        SKR_RET_JSON_READ_RESULT(key.is_empty(), EReadError::RootObjectWithKey);
         auto obj = yyjson_doc_get_root((yyjson_doc*)_document);
-        SKR_ASSERT_RET_FALSE(yyjson_get_type(obj) == YYJSON_TYPE_OBJ, "Root object should be an object");
+        SKR_RET_JSON_READ_RESULT(yyjson_get_type(obj) == YYJSON_TYPE_OBJ, EReadError::ScopeTypeMismatch);
         _stack.emplace((ValueType*)obj, Level::kObject);
     }
     else
@@ -87,188 +98,180 @@ bool _SJsonReader::StartObject(skr::StringView key)
         auto parent_type = yyjson_get_type(parent);
         if (parent_type == YYJSON_TYPE_ARR)
         {
-            SKR_ASSERT_RET_FALSE(key.is_empty(), "Key should be empty when StartObject within array");
+            SKR_RET_JSON_READ_RESULT(key.is_empty(), EReadError::ArrayElementWithKey);
             auto obj = yyjson_arr_get(parent, _stack.back()._index++);
-            SKR_ASSERT_RET_FALSE(obj, "Object not found");
-            SKR_ASSERT_RET_FALSE(yyjson_get_type(obj) == YYJSON_TYPE_OBJ, "Object should be an object");
+            SKR_RET_JSON_READ_RESULT(obj, EReadError::KeyNotFound);
+            SKR_RET_JSON_READ_RESULT(yyjson_get_type(obj) == YYJSON_TYPE_OBJ, EReadError::ScopeTypeMismatch);
             _stack.emplace((ValueType*)obj, Level::kObject);
         }
         else if (parent_type == YYJSON_TYPE_OBJ)
         {
-            SKR_ASSERT_RET_FALSE(!key.is_empty(), "Key should not be empty when StartObject within object");
+            SKR_RET_JSON_READ_RESULT(!key.is_empty(), EReadError::EmptyObjectFieldKey);
             auto obj = yyjson_obj_get(parent, (const char*)key.raw().data());
-            SKR_ASSERT_RET_FALSE(obj, "Object not found");
-            SKR_ASSERT_RET_FALSE(yyjson_get_type(obj) == YYJSON_TYPE_OBJ, "Object should be an object");
+            SKR_RET_JSON_READ_RESULT(obj, EReadError::KeyNotFound);
+            SKR_RET_JSON_READ_RESULT(yyjson_get_type(obj) == YYJSON_TYPE_OBJ, EReadError::ScopeTypeMismatch);
             _stack.emplace((ValueType*)obj, Level::kObject);
         }
         else
-            SKR_ASSERT_RET_FALSE(false, "Can't start object within primitive types!");
+            SKR_RET_JSON_READ_RESULT(false, EReadError::StartObjectInPrimitiveTypes);
     }
-    return true;
+    return {};
 }
 
-bool _SJsonReader::EndObject()
+ReadResult _Reader::EndObject()
 {
-    SKR_ASSERT_RET_FALSE(!_stack.empty(), "No object to end");
-    SKR_ASSERT_RET_FALSE(_stack.back()._type == Level::kObject, "Not in an started object");
+    SKR_RET_JSON_READ_RESULT(!_stack.empty(), EReadError::NoOpenScope);
+    SKR_RET_JSON_READ_RESULT(_stack.back()._type == Level::kObject, EReadError::ScopeTypeMismatch);
     _stack.pop_back();
-    return true;
+    return {};
 }
 
-bool _SJsonReader::StartArray(skr::StringView key, SizeType& count)
+ReadResult _Reader::StartArray(skr::StringView key, SizeType& count)
 {
-    SKR_ASSERT_RET_FALSE(!_stack.empty(), "No object/array to start array");
+    SKR_RET_JSON_READ_RESULT(!_stack.empty(), EReadError::NoOpenScope);
     auto parent = (yyjson_val*)_stack.back()._value;
     if (_stack.back()._type == Level::kObject)
     {
-        SKR_ASSERT_RET_FALSE(!key.is_empty(), "Key should not be empty when StartArray within object");
+        SKR_RET_JSON_READ_RESULT(!key.is_empty(), EReadError::EmptyObjectFieldKey);
         auto arr = yyjson_obj_get(parent, (const char*)key.raw().data());
-        SKR_ASSERT_RET_FALSE(arr, "Array not found");
-        SKR_ASSERT_RET_FALSE(yyjson_get_type(arr) == YYJSON_TYPE_ARR, "Array should be an array");
+        SKR_RET_JSON_READ_RESULT(arr, EReadError::KeyNotFound);
+        SKR_RET_JSON_READ_RESULT(yyjson_get_type(arr) == YYJSON_TYPE_ARR, EReadError::ScopeTypeMismatch);
         count = yyjson_arr_size(arr);
         _stack.emplace((ValueType*)arr, Level::kArray);
     }
     else if (_stack.back()._type == Level::kArray)
     {
         auto arr = yyjson_arr_get(parent, _stack.back()._index++);
-        SKR_ASSERT_RET_FALSE(arr, "Array not found");
-        SKR_ASSERT_RET_FALSE(yyjson_get_type(arr) == YYJSON_TYPE_ARR, "Array should be an array");
+        SKR_RET_JSON_READ_RESULT(arr, EReadError::KeyNotFound);
+        SKR_RET_JSON_READ_RESULT(yyjson_get_type(arr) == YYJSON_TYPE_ARR, EReadError::ScopeTypeMismatch);
         count = yyjson_arr_size(arr);
         _stack.emplace((ValueType*)arr, Level::kArray);
     }
-    return true;
+    return {};
 }
 
-bool _SJsonReader::EndArray()
+ReadResult _Reader::EndArray()
 {
-    SKR_ASSERT_RET_FALSE(!_stack.empty(), "No array to end");
-    SKR_ASSERT_RET_FALSE(_stack.back()._type == Level::kArray, "Not in an started array");
+    SKR_RET_JSON_READ_RESULT(!_stack.empty(), EReadError::NoOpenScope);
+    SKR_RET_JSON_READ_RESULT(_stack.back()._type == Level::kArray, EReadError::ScopeTypeMismatch);
     _stack.pop_back();
-    return true;
+    return {};
 }
 
-bool _SJsonReader::ReadBool(skr::StringView key, bool& value)
+ReadResult _Reader::ReadBool(skr::StringView key, bool& value)
 {
-    return _SJsonReaderHelper::ReadValue(this, key, value);
+    return _ReaderHelper::ReadValue(this, key, value);
 }
 
-bool _SJsonReader::ReadInt32(skr::StringView key, int32_t& value)
+ReadResult _Reader::ReadInt32(skr::StringView key, int32_t& value)
 {
-    return _SJsonReaderHelper::ReadValue(this, key, value);
+    return _ReaderHelper::ReadValue(this, key, value);
 }
 
-bool _SJsonReader::ReadInt64(skr::StringView key, int64_t& value)
+ReadResult _Reader::ReadInt64(skr::StringView key, int64_t& value)
 {
-    return _SJsonReaderHelper::ReadValue(this, key, value);
+    return _ReaderHelper::ReadValue(this, key, value);
 }
 
-bool _SJsonReader::ReadUInt32(skr::StringView key, uint32_t& value)
+ReadResult _Reader::ReadUInt32(skr::StringView key, uint32_t& value)
 {
-    return _SJsonReaderHelper::ReadValue(this, key, value);
+    return _ReaderHelper::ReadValue(this, key, value);
 }
 
-bool _SJsonReader::ReadUInt64(skr::StringView key, uint64_t& value)
+ReadResult _Reader::ReadUInt64(skr::StringView key, uint64_t& value)
 {
-    return _SJsonReaderHelper::ReadValue(this, key, value);
+    return _ReaderHelper::ReadValue(this, key, value);
 }
 
-bool _SJsonReader::ReadFloat(skr::StringView key, float& value)
+ReadResult _Reader::ReadFloat(skr::StringView key, float& value)
 {
-    return _SJsonReaderHelper::ReadValue(this, key, value);
+    return _ReaderHelper::ReadValue(this, key, value);
 }
 
-bool _SJsonReader::ReadDouble(skr::StringView key, double& value)
+ReadResult _Reader::ReadDouble(skr::StringView key, double& value)
 {
-    return _SJsonReaderHelper::ReadValue(this, key, value);
+    return _ReaderHelper::ReadValue(this, key, value);
 }
 
-bool _SJsonReader::ReadString(skr::StringView key, skr::String& value)
+ReadResult _Reader::ReadString(skr::StringView key, skr::String& value)
 {
-    return _SJsonReaderHelper::ReadValue(this, key, value);
+    return _ReaderHelper::ReadValue(this, key, value);
 }
 
-SJsonReader::SJsonReader(skr::StringView json)
-    : _SJsonReader(json)
+Reader::Reader(skr::StringView json)
+    : _Reader(json)
 {
 
 }
 
-bool SJsonReader::Key(skr::StringView key)
+ReadResult Reader::Key(skr::StringView key)
 {
-    SKR_ASSERT_RET_FALSE(_currentKey.is_empty(), "Last key is not consumed yet!");
-    SKR_ASSERT_RET_FALSE(!key.is_empty(), "key must not be empty!");
+    SKR_RET_JSON_READ_RESULT(_currentKey.is_empty(), EReadError::PresetKeyNotConsumedYet);
+    SKR_RET_JSON_READ_RESULT(!key.is_empty(), EReadError::PresetKeyIsEmpty);
     _currentKey = key;
-    return true;
+    return {};
 }
 
-bool SJsonReader::Bool(bool& value)
+ReadResult Reader::Bool(bool& value)
 {
-    bool r = ReadBool(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER( { _currentKey.empty(); } );
+    return ReadBool(_currentKey.view(), value);
 }
 
-bool SJsonReader::Int32(int32_t& value)
+ReadResult Reader::Int32(int32_t& value)
 {
-    bool r = ReadInt32(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER( { _currentKey.empty(); } );
+    return ReadInt32(_currentKey.view(), value);
 }
 
-bool SJsonReader::Int64(int64_t& value)
+ReadResult Reader::Int64(int64_t& value)
 {
-    bool r = ReadInt64(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER( { _currentKey.empty(); } );
+    return ReadInt64(_currentKey.view(), value);
 }
 
-bool SJsonReader::UInt32(uint32_t& value)
+ReadResult Reader::UInt32(uint32_t& value)
 {
-    bool r = ReadUInt32(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER( { _currentKey.empty(); } );
+    return ReadUInt32(_currentKey.view(), value);
 }
 
-bool SJsonReader::UInt64(uint64_t& value)
+ReadResult Reader::UInt64(uint64_t& value)
 {
-    bool r = ReadUInt64(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER( { _currentKey.empty(); } );
+    return ReadUInt64(_currentKey.view(), value);
 }
 
-bool SJsonReader::Float(float& value)
+ReadResult Reader::Float(float& value)
 {
-    bool r = ReadFloat(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER( { _currentKey.empty(); } );
+    return ReadFloat(_currentKey.view(), value);
 }
 
-bool SJsonReader::Double(double& value)
+ReadResult Reader::Double(double& value)
 {
-    bool r = ReadDouble(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER( { _currentKey.empty(); } );
+    return ReadDouble(_currentKey.view(), value);
 }
 
-bool SJsonReader::String(skr::String& value)
+ReadResult Reader::String(skr::String& value)
 {
-    bool r = ReadString(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER( { _currentKey.empty(); } );
+    return ReadString(_currentKey.view(), value);
 }
 
-bool SJsonReader::StartArray(SizeType& count)
+ReadResult Reader::StartArray(SizeType& count)
 {
-    bool r = _SJsonReader::StartArray(_currentKey.view(), count);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER( { _currentKey.empty(); } );
+    return _Reader::StartArray(_currentKey.view(), count);
 }
 
-bool SJsonReader::StartObject()
+ReadResult Reader::StartObject()
 {
-    bool r = _SJsonReader::StartObject(_currentKey.view());
-    _currentKey.empty();
-    return r;
+    SKR_DEFER( { _currentKey.empty(); } );
+    return _Reader::StartObject(_currentKey.view());
 }
 
-#undef SKR_ASSERT_RET_FALSE
+}
+
+#undef SKR_RET_JSON_READ_RESULT

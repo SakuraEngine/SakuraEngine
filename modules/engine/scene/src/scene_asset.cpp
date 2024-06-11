@@ -80,7 +80,7 @@ void skr_save_scene(sugoi_storage_t* world, SJsonWriter* writer)
     writer->EndObject();
 }
 
-void skr_load_scene(sugoi_storage_t* world, SJsonReader* reader)
+void skr_load_scene(sugoi_storage_t* world, skr::json::Reader* reader)
 {
 
 }

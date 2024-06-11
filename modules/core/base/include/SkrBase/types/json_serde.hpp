@@ -4,12 +4,13 @@
 #include <type_traits>
 
 struct skr_arena_t;
-typedef struct SJsonReader SJsonReader;
 
 namespace skr
 {
 namespace json
 {
+struct Reader;
+
 template <class T, class = void>
 struct ReadTrait;
 } // namespace json

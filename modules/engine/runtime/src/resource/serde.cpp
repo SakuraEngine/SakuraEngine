@@ -11,7 +11,7 @@ bool WriteTrait<skr_resource_handle_t>::Write(SJsonWriter* writer, const skr_res
     return WriteTrait<skr_guid_t>::Write(writer, handle.get_serialized());
 }
 
-bool ReadTrait<skr_resource_handle_t>::Read(SJsonReader* json, skr_resource_handle_t& handle)
+bool ReadTrait<skr_resource_handle_t>::Read(skr::json::Reader* json, skr_resource_handle_t& handle)
 {
     SkrZoneScopedN("json::ReadTrait<skr_resource_handle_t>::Read");
     skr::String view;

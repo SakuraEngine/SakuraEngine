@@ -91,7 +91,7 @@ struct WriteTrait<StronglyEnum<T>> {
 };
 template <class T>
 struct ReadTrait<StronglyEnum<T>> {
-    static bool Read(SJsonReader* json, StronglyEnum<T>& value)
+    static bool Read(skr::json::Reader* json, StronglyEnum<T>& value)
     {
         return skr::json::ReadTrait<typename StronglyEnum<T>::UnderlyingType>::Read(json, value.underlying_value());
     }
