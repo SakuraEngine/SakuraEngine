@@ -3,7 +3,7 @@ TabWidth: 4
 AccessModifierOffset: -4
 IndentWidth: 4
 ObjCBlockIndentWidth: 4
-ContinuationIndentWidth: 4
+ContinuationIndentWidth: 0 # 禁用缩进是为了防止反射宏出问题, what can i say, Mamba Out!
 MaxEmptyLinesToKeep: 1
 
 AllowShortIfStatementsOnASingleLine: true
