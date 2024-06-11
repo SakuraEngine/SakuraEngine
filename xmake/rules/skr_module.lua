@@ -8,7 +8,7 @@ if has_config("shipping_one_archive") then
     add_defines("SHIPPING_ONE_ARCHIVE")
 end
 
-rule("skr.module")
+rule("sakura.module")
     on_load(function(target)
         local tbl_path = "build/.gens/module_infos/"..target:name()..".table"
         if os.exists(tbl_path) then
@@ -21,18 +21,18 @@ rule("skr.module")
     end)
 rule_end()
 
-rule("skr.component")
+rule("sakura.component")
     on_load(function(target)
         target:add("values", "Sakura.Attributes", "Module.Component")
     end)
     on_config(function (component, opt)
         import("core.project.project")
-        local owner_name = component:extraconf("rules", "skr.component", "owner")
+        local owner_name = component:extraconf("rules", "sakura.component", "owner")
         local owner = project.target(owner_name)
-        local owner_api = owner:extraconf("rules", "skr.dyn_module", "api") or owner:extraconf("rules", "skr.static_module", "api")
+        local owner_api = owner:extraconf("rules", "sakura.dyn_module", "api")
         -- add dep values to owner
-        for _, pub_dep in pairs(component:values("skr.module.public_dependencies")) do
-            owner:add("values", "skr.module.public_dependencies", pub_dep)
+        for _, pub_dep in pairs(component:values("sakura.module.public_dependencies")) do
+            owner:add("values", "sakura.module.public_dependencies", pub_dep)
             owner:add("values", pub_dep..".version", component:values(pub_dep..".version"))
         end
         -- insert owner's include dirs
@@ -48,13 +48,13 @@ rule("skr.component")
     end)
 rule_end()
 
-rule("skr.dyn_module")
-    add_deps("skr.module")
+rule("sakura.dyn_module")
+    add_deps("sakura.module")
     on_load(function (target, opt)
-        local api = target:extraconf("rules", "skr.dyn_module", "api")
-        local version = target:extraconf("rules", "skr.dyn_module", "version")
+        local api = target:extraconf("rules", "sakura.dyn_module", "api")
+        local version = target:extraconf("rules", "sakura.dyn_module", "version")
         target:add("values", "Sakura.Attributes", "Module")
-        target:add("values", "skr.module.version", version)
+        target:add("values", "sakura.module.version", version)
         target:add("defines", api.."_IMPL")
         target:add("defines", api.."_EXTERN_C=SKR_EXTERN_C", {public=true})
         if has_config("shipping_one_archive") then
@@ -84,11 +84,22 @@ rule("skr.dyn_module")
     end)
 rule_end()
 
+rule("sakura.derived_target")
+    after_load(function (target)
+        import("core.project.project")
+        local owner_name = target:extraconf("rules", "sakura.derived_target", "owner_name")
+        local owner = project.target(owner_name)
+        if owner:get("default") == false then
+            target:set("default", false)
+        end
+    end)
+rule_end()
+
 function shared_module(name, api, version, opt)
     target(name)
         set_group("01.modules/"..name)
         add_rules("PickSharedPCH")
-        add_rules("skr.dyn_module", { api = api, version = version }) 
+        add_rules("sakura.dyn_module", { api = api, version = version }) 
         if has_config("shipping_one_archive") then
             set_kind("static")
         else
@@ -117,14 +128,14 @@ function static_component(name, owner, opt)
     target(name)
         set_kind("static")
         set_group("01.modules/"..owner.."/components")
-        add_rules("skr.component", { owner = owner })
+        add_rules("sakura.component", { owner = owner })
 end
 
 function executable_module(name, api, version, opt)
     target(name)
         set_kind("binary")
         add_rules("PickSharedPCH")
-        add_rules("skr.dyn_module", { api = api, version = engine_version }) 
+        add_rules("sakura.dyn_module", { api = api, version = engine_version }) 
         local opt = opt or {}
         if opt.exception and not opt.noexception then
             set_exceptions("cxx")
@@ -135,13 +146,13 @@ end
 
 function public_dependency(dep, version, setting)
     add_deps(dep, {public = true})
-    add_values("skr.module.public_dependencies", dep)
+    add_values("sakura.module.public_dependencies", dep)
     add_values(dep..".version", version)
 end
 
 analyzer("Module.MetaSourceFile")
     analyze(function(target, attributes, analyzing)
-        if not target:rule("skr.dyn_module") then
+        if not target:rule("sakura.dyn_module") then
             return "NOT_A_MODULE"
         end
 
@@ -150,19 +161,19 @@ analyzer("Module.MetaSourceFile")
 
         local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
         local filename = path.join(gendir, "module", "module.configure.cpp") 
-        local dep_names = target:values("skr.module.public_dependencies")
+        local dep_names = target:values("sakura.module.public_dependencies")
         depend.on_changed(function()
             -- gather deps
             local dep_modules = {}
             for _, dep in ipairs(target:orderdeps()) do
-                if dep:rule("skr.dyn_module") then
+                if dep:rule("sakura.dyn_module") then
                     table.insert(dep_modules, dep:name())
                 end
             end
 
             -- start rebuild json
-            local self_version = target:values("skr.module.version")
-            local pub_deps = target:values("skr.module.public_dependencies")
+            local self_version = target:values("sakura.module.version")
+            local pub_deps = target:values("sakura.module.public_dependencies")
             assert(self_version, "module version not found: "..target:name())
             local delim = "__de___l___im__("
             local delim2 = ")__de___l___im__"
@@ -180,9 +191,9 @@ analyzer("Module.MetaSourceFile")
             cpp_content = cpp_content.."\t\"dependencies\": [\n "
             for _, dep in pairs(pub_deps) do
                 local deptarget = project.target(dep)
-                assert(deptarget:rule("skr.module"), "public dependency must be a skr.module: "..deptarget:name())
+                assert(deptarget:rule("sakura.module"), "public dependency must be a sakura.module: "..deptarget:name())
                 local depversion = target:values(dep..".version")
-                local kind = deptarget:rule("skr.dyn_module") and "shared" or "static"
+                local kind = deptarget:rule("sakura.dyn_module") and "shared" or "static"
                 cpp_content = cpp_content.."\t\t{ \"name\":\""..dep.."\", \"version\": \""..depversion.."\", \"kind\": \""..kind.."\" },\n"
             end
             cpp_content = cpp_content.sub(cpp_content, 1, -3)

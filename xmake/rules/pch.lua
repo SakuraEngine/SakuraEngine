@@ -134,17 +134,10 @@ function private_pch(owner_name)
 
     pch_target(owner_name, owner_name..".PrivatePCH")
         -- private pch generate pch file and inject it to owner
-        set_kind("headeronly") 
-        add_rules("sakura.pcxxheader", { buildtarget = owner_name, shared = false })
+        set_kind("headeronly")
         add_attribute("PrivatePCH")
-        -- TODO: 自动禁用派生目标
-        after_load(function (target)
-            import("core.project.project")
-            local owner = project.target(owner_name)
-            if not owner:get("default") then
-                target:set("default", false)
-            end
-        end)
+        add_rules("sakura.pcxxheader", { buildtarget = owner_name, shared = false })
+        add_rules("sakura.derived_target", { owner_name = owner_name })
 end
 
 ------------------------------------SHARED PCH------------------------------------
@@ -195,16 +188,9 @@ function shared_pch(owner_name)
         -- shared pch generate pch/obj file and link them to others
         set_kind("object") 
         add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
-        add_attribute("SharedPCH")
         add_deps(owner_name)
-        -- TODO: 自动禁用派生目标
-        after_load(function (target)
-            import("core.project.project")
-            local owner = project.target(owner_name)
-            if not owner:get("default") then
-                target:set("default", false)
-            end
-        end)
+        add_attribute("SharedPCH")
+        add_rules("sakura.derived_target", { owner_name = owner_name })
 end
 
 rule("PickSharedPCH")

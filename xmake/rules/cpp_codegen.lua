@@ -101,21 +101,12 @@ function codegen_component(owner, opt)
         set_group("01.modules/"..owner.."/codegen")
         set_kind("headeronly")
         add_rules("c++.codegen.mako")
+        add_rules("sakura.derived_target", { owner_name = owner })
         add_attribute("Analyze.Ignore")
         set_policy("build.fence", true)
         add_deps(owner..".Meta", { public = true })
         on_load(function (target)
             target:data_set("mako.owner", owner)
-            target:set("default", false)
-        end)
-        -- TODO: 自动禁用派生目标
-        after_load(function (target)
-            import("core.project.project")
-            local owner_name = target:data("mako.owner")
-            local owner = project.target(owner_name)
-            if not owner:get("default") then
-                target:set("default", false)
-            end
         end)
 
     -- must be declared at the end of this helper function
@@ -123,6 +114,7 @@ function codegen_component(owner, opt)
         set_group("01.modules/"..owner.."/codegen")
         set_kind("headeronly")
         add_rules("c++.codegen.meta")
+        add_rules("sakura.derived_target", { owner_name = owner })
         add_attribute("Analyze.Ignore")
         set_policy("build.fence", true)
         on_load(function (target)
@@ -133,15 +125,5 @@ function codegen_component(owner, opt)
             target:data_set("meta.rootdir", opt.rootdir)
             -- TODO: add deps to depended meta targets
             -- ...
-            target:set("default", false)
-        end)
-        -- TODO: 自动禁用派生目标
-        after_load(function (target)
-            import("core.project.project")
-            local owner_name = target:data("c++.codegen.owner")
-            local owner = project.target(owner_name)
-            if not owner:get("default") then
-                target:set("default", false)
-            end
         end)
 end
