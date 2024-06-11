@@ -32,3 +32,7 @@ enum ${prefix} ${enum.short_name} : ${enum.underlying_type};
 %endif
 %endfor
 // END forward declarations
+
+// BEGIN Generated Body
+
+// END Generated Body

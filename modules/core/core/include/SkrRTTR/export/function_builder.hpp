@@ -38,7 +38,7 @@ struct FunctionBuilder {
     }
 
     // param
-    inline FunctionBuilder& param(uint64_t index, String name, ParamFlag modifier = ParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
+    inline FunctionBuilder& param(uint64_t index, String name, EParamFlag modifier = EParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
     {
         auto& param_data        = _data->param_data[index];
         param_data.name         = std::move(name);

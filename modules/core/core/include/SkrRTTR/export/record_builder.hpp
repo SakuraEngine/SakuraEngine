@@ -56,7 +56,7 @@ protected:
 };
 template <typename T>
 struct CtorBuilder : RecordBuilder<T> {
-    inline CtorBuilder& param(uint64_t index, String name, ParamFlag modifier = ParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
+    inline CtorBuilder& param(uint64_t index, String name, EParamFlag modifier = EParamFlag ::In, ParamData::MakeDefaultFunc default_func = nullptr)
     {
         auto& param_data        = this->_data->ctor_data.back().param_data[index];
         param_data.name         = std::move(name);
@@ -67,7 +67,7 @@ struct CtorBuilder : RecordBuilder<T> {
 };
 template <typename T>
 struct MethodBuilder : RecordBuilder<T> {
-    inline MethodBuilder& param(uint64_t index, String name, ParamFlag modifier = ParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
+    inline MethodBuilder& param(uint64_t index, String name, EParamFlag modifier = EParamFlag ::In, ParamData::MakeDefaultFunc default_func = nullptr)
     {
         auto& param_data        = this->_data->methods.back().param_data[index];
         param_data.name         = std::move(name);
@@ -78,7 +78,7 @@ struct MethodBuilder : RecordBuilder<T> {
 };
 template <typename T>
 struct StaticMethodBuilder : RecordBuilder<T> {
-    inline StaticMethodBuilder& param(uint64_t index, String name, ParamFlag modifier = ParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
+    inline StaticMethodBuilder& param(uint64_t index, String name, EParamFlag modifier = EParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
     {
         auto& param_data        = this->_data->static_methods.back().param_data[index];
         param_data.name         = std::move(name);
@@ -89,7 +89,7 @@ struct StaticMethodBuilder : RecordBuilder<T> {
 };
 template <typename T>
 struct ExternMethodBuilder : RecordBuilder<T> {
-    inline ExternMethodBuilder& param(uint64_t index, String name, ParamFlag modifier = ParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
+    inline ExternMethodBuilder& param(uint64_t index, String name, EParamFlag modifier = EParamFlag::In, ParamData::MakeDefaultFunc default_func = nullptr)
     {
         auto& param_data        = this->_data->extern_methods.back().param_data[index];
         param_data.name         = std::move(name);
