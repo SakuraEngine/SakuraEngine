@@ -1,6 +1,6 @@
 #pragma once
 #define MPARK_NO_EXCEPTIONS
-#include "mpark/variant.hpp"
+#include "mpark/variant.inc"
 
 namespace skr::container
 {

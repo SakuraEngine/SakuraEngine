@@ -203,9 +203,9 @@ namespace std {
 #include <type_traits>
 #include <utility>
 
-#include "config.hpp"
-#include "in_place.hpp"
-#include "lib.hpp"
+#include "config.inc"
+#include "in_place.inc"
+#include "lib.inc"
 
 namespace mpark {
 

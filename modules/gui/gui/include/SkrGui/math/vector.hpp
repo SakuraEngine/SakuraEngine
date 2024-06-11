@@ -90,7 +90,7 @@ struct Vector3 {
     }
 
     // hash
-    inline static constexpr size_t _skr_hash(const Vector3& v) SKR_NOEXCEPT
+    inline static size_t _skr_hash(const Vector3& v) SKR_NOEXCEPT
     {
         auto hasher = ::skr::Hash<float>{};
         auto hash   = hasher(v.x);

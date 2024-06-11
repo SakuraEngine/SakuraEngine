@@ -41,16 +41,3 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
         table.insert(libs_to_install, "SDL2")
     end
     add_rules("utils.install_libraries", { libnames = libs_to_install })
-
---[[
-shared_pch("SkrRT")
-    add_files("include/SkrRT/**.h")
-    add_files("include/SkrRT/**.hpp")
-    add_files("$(projectdir)/modules/core/base/include/**.h")
-    add_files("$(projectdir)/modules/core/base/include/**.hpp")
-    add_files("$(projectdir)/modules/core/core/include/**.h")
-    add_files("$(projectdir)/modules/core/core/include/**.hpp")
-]]--
-
-private_pch("SkrRT")
-    add_files("src/pch.hpp")

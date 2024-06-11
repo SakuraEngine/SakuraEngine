@@ -10,7 +10,7 @@
 
 #include <cstddef>
 
-#include "config.hpp"
+#include "config.inc"
 
 namespace mpark {
 
