@@ -321,6 +321,10 @@ function _mako_render(target, scripts, dep_files, opt)
 end
 
 function mako_render(target, opt)
+    -- get config
+    local batchinfo = target:data(_codegen_data_batch_name)
+    local metadir = batchinfo.metadir
+
     -- collect framework depend files
     local dep_files = os.files(path.join(metadir, "**.meta"))
     do
