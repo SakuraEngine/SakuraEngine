@@ -18,7 +18,6 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     
     -- add source files
     add_includedirs("include", {public = true})
-    set_pcxxheader("src/pch.hpp")
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     if (is_os("macosx")) then 
         add_files("src/**/build.*.mm")
@@ -41,4 +40,17 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
         table.insert(libs_to_install, "gns")
         table.insert(libs_to_install, "SDL2")
     end
-    add_rules("utils.install-libs", { libnames = libs_to_install })
+    add_rules("utils.install_libraries", { libnames = libs_to_install })
+
+--[[
+shared_pch("SkrRT")
+    add_files("include/SkrRT/**.h")
+    add_files("include/SkrRT/**.hpp")
+    add_files("$(projectdir)/modules/core/base/include/**.h")
+    add_files("$(projectdir)/modules/core/base/include/**.hpp")
+    add_files("$(projectdir)/modules/core/core/include/**.h")
+    add_files("$(projectdir)/modules/core/core/include/**.hpp")
+]]--
+
+private_pch("SkrRT")
+    add_files("src/pch.hpp")

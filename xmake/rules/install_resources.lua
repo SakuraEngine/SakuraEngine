@@ -1,10 +1,10 @@
-rule("utils.install-resources")
+rule("utils.install_resources")
     before_buildcmd_file(function (target, batchcmds, sourcefile, opt)
         local raw_ext = path.extension(sourcefile)
         local ext = raw_ext:gsub('%.', '_')
-        local outdir = target:extraconf("rules", "utils.install-resources", "outdir") or "/../resources"
-        local rootdir = target:extraconf("rules", "utils.install-resources", "rootdir") or ""
-        local ext_outdir = target:extraconf("rules", "utils.install-resources", ext.."_outdir")
+        local outdir = target:extraconf("rules", "utils.install_resources", "outdir") or "/../resources"
+        local rootdir = target:extraconf("rules", "utils.install_resources", "rootdir") or ""
+        local ext_outdir = target:extraconf("rules", "utils.install_resources", ext.."_outdir")
         if(ext_outdir ~= nil) then
             outdir = ext_outdir
         end
@@ -24,23 +24,22 @@ rule("utils.install-resources")
         batchcmds:set_depcache(target:dependfile(abs_out))
     end)
 
-rule("utils.install-libs")
-    on_load(function (target)
+rule("utils.install_libraries")
+    before_build(function (target)
         import("find_sdk")
-        local libnames = target:extraconf("rules", "utils.install-libs", "libnames")
+        import("core.project.depend")
+        import("utils.archive")
+
+        local libnames = target:extraconf("rules", "utils.install_libraries", "libnames")
         for _, libname in pairs(libnames) do
             local zip = find_sdk.find_sdk_lib(libname)
             target:data_add("lib_zips", zip)
         end
+
         local tardir = target:targetdir()
         if not os.isdir(tardir) then
             os.mkdir(tardir)
         end
-    end)
-    on_config(function (target)
-        import("find_sdk")
-        import("core.project.depend")
-        import("utils.archive")
 
         local lib_zips = target:data("lib_zips")
         if not lib_zips or #lib_zips == 0 then

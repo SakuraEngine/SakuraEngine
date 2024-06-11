@@ -4,6 +4,7 @@
 #include "types/vec.h"
 
 #ifdef __cplusplus
+#include "types/expected.hpp"
 #include "types/binary_serde.hpp"
 #include "types/json_serde.hpp"
 

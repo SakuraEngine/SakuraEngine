@@ -34,9 +34,9 @@ SKR_EXTERN_C SKR_STATIC_API void skr_debug_output(const char* msg);
 // Platform Specific Configure
 #define SKR_HEADER_SCOPE_DEFINING_PLATFORM_DEBUG
 #ifdef __APPLE__
-    #include "apple/debug.h"
+    #include "apple/debug.inc"
 #endif
 #ifdef _WIN32
-    #include "win/debug.h"
+    #include "win/debug.inc"
 #endif
 #undef SKR_HEADER_SCOPE_DEFINING_PLATFORM_CONFIGURE

@@ -57,7 +57,9 @@ jobs:
           xmake l setup.lua -v
 
       - name: ConfigureDebug
-        run: xmake f --arch=${{ matrix.arch }} --cxx_version=${{ matrix.cxx }} --mode=debug --yes -v --project_script=./.github/workflows/ci.project.lua --policies=build.ccache:y -c
+        run: |
+          cp ./.github/workflows/ci.project.lua ./project.lua
+          xmake f --arch=${{ matrix.arch }} --cxx_version=${{ matrix.cxx }} --mode=debug --yes -v --policies=build.ccache:y -c
 
       - name: BuildDebug
         if: success() || failure()
@@ -72,7 +74,9 @@ jobs:
 
       - name: ConfigureRelease
         if: success() || failure()
-        run: xmake f --arch=${{ matrix.arch }} --cxx_version=${{ matrix.cxx }} --mode=release --yes -v --project_script=./.github/workflows/ci.project.lua --use_profile=disable -c --policies=build.ccache:y
+        run: |
+          cp ./.github/workflows/ci.project.lua ./project.lua
+          xmake f --arch=${{ matrix.arch }} --cxx_version=${{ matrix.cxx }} --mode=release --yes -v --use_profile=disable -c --policies=build.ccache:y
 
       - name: BuildRelease
         if: success() || failure()
@@ -83,7 +87,7 @@ jobs:
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
-          xmake run -g 05.tests/* -vD ... -d yes
+          xmake test -g 05.tests/* -vD ... -d yes
 
       - name: UploadGeneratedFiles
         if: success() || failure()
@@ -107,7 +111,8 @@ jobs:
       - name: Shipping
         if: success() || failure()
         run: |
-          xmake f -c -y --arch=${{ matrix.arch }} --cxx_version=${{ matrix.cxx }} --mode=release --project_script=./.github/workflows/ci.project.lua --shipping_one_archive=y --use_profile=disable --policies=build.ccache:y
+          cp ./.github/workflows/ci.project.lua ./project.lua
+          xmake f -c -y --arch=${{ matrix.arch }} --cxx_version=${{ matrix.cxx }} --mode=release --shipping_one_archive=y --use_profile=disable --policies=build.ccache:y
           xmake -y -v
 
       - name: UploadGeneratedFiles2

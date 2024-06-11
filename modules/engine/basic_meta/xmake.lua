@@ -1,6 +1,6 @@
 target("SkrBasicMeta")
     set_kind("headeronly")
-    add_rules("c++.meta.generators", {
+    add_rules("c++.codegen.generators", {
         scripts = {
             -- baisc
             { file = "basic/basic.py", use_new_framework = true },

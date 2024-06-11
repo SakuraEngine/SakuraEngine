@@ -84,10 +84,16 @@ struct SKR_STATIC_API _SJsonWriter {
 
     struct Level {
         ValueType* _value = nullptr;
-        enum {
+        enum EType {
             kObject,
             kArray
         } _type = kObject;
+
+        Level(ValueType* _value, EType _type) SKR_NOEXCEPT
+            : _value(_value), _type(_type) 
+        {
+
+        }
     };
 protected:
     friend struct _SJsonWriterHelper;

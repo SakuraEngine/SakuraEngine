@@ -1,3 +1,6 @@
+codegen_component("SkrGuiRenderer", { api = "SKR_GUI_RENDERER", rootdir = "include/SkrGuiRenderer" })
+    add_files("include/**.hpp")
+
 shared_module("SkrGuiRenderer", "SKR_GUI_RENDERER", engine_version)
     public_dependency("SkrGui", engine_version)
     public_dependency("SkrRenderGraph", engine_version)
@@ -10,11 +13,6 @@ shared_module("SkrGuiRenderer", "SKR_GUI_RENDERER", engine_version)
         spv_outdir = "/../resources/shaders/GUI", 
         dxil_outdir = "/../resources/shaders/GUI"}
     )
-    add_rules("c++.codegen", {
-        files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/SkrGuiRenderer/",
-        api = "SKR_GUI_RENDERER"
-    })
     add_files("shaders/*.hlsl")
     if (is_os("windows") or is_os("macosx")) then 
         public_dependency("SkrImageCoder", engine_version)

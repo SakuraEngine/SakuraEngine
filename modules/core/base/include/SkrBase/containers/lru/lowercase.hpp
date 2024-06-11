@@ -28,7 +28,6 @@ namespace skr::container::LRU {
 using namespace Lowercase;  // NOLINT(build/namespaces)
 }  // namespace skr::container::LRU
 
-namespace skr::container::LRU = LRU;
 
 
 #endif  // LRU_LOWERCASE_HPP

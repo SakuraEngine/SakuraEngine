@@ -1,10 +1,9 @@
+codegen_component("GameRuntime", { api = "GAME_RUNTIME", rootdir = "include/GameRuntime" })
+    add_files("include/**.h")
+    add_files("include/**.hpp")
+
 shared_module("GameRuntime", "GAME_RUNTIME", engine_version)
     set_group("04.examples/application")
-    add_rules("c++.codegen", {
-        files = {"modules/game_runtime/include/**.h", "modules/game_runtime/include/**.hpp"},
-        rootdir = "modules/game_runtime/include/GameRuntime",
-        api = "GAME_RUNTIME"
-    })
     public_dependency("SkrRenderer", engine_version)
     public_dependency("SkrImGui", engine_version)
     public_dependency("SkrInputSystem", engine_version)
@@ -20,7 +19,7 @@ executable_module("Game", "GAME", engine_version)
     set_group("04.examples/application")
     set_exceptions("no-cxx")
     public_dependency("GameRuntime", engine_version)
-    add_rules("utils.install-resources", {
+    add_rules("utils.install_resources", {
         extensions = {".lua"},
         outdir = "/../resources", 
         rootdir = os.curdir().."/script"})

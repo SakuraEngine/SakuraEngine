@@ -34,7 +34,7 @@ struct RecordBuilder {
     MethodBuilder<T>& method(String name);
     template <typename Func, Func func>
     MethodBuilder<T>& method(String name);
-    template <auto field>
+    template <auto _field>
     RecordBuilder& field(String name);
 
     // static method & field
@@ -42,7 +42,7 @@ struct RecordBuilder {
     StaticMethodBuilder<T>& static_method(String name);
     template <typename Func, Func func>
     StaticMethodBuilder<T>& static_method(String name);
-    template <auto field>
+    template <auto _field>
     RecordBuilder& static_field(String name);
 
     // extern method
@@ -217,12 +217,12 @@ inline MethodBuilder<T>& RecordBuilder<T>::method(String name)
     return method<func>(std::move(name));
 }
 template <typename T>
-template <auto field>
+template <auto _field>
 inline RecordBuilder<T>& RecordBuilder<T>::field(String name)
 {
     auto& field_data = _data->fields.emplace().ref();
     field_data.name  = std::move(name);
-    field_data.fill_signature<field>(field);
+    field_data.fill_signature<_field>(_field);
     return *this;
 }
 
@@ -245,13 +245,13 @@ inline StaticMethodBuilder<T>& RecordBuilder<T>::static_method(String name)
     return static_method<func>(std::move(name));
 }
 template <typename T>
-template <auto field>
+template <auto _field>
 inline RecordBuilder<T>& RecordBuilder<T>::static_field(String name)
 {
     auto& field_data   = _data->static_fields.emplace().ref();
     field_data.name    = std::move(name);
-    field_data.address = reinterpret_cast<void*>(field);
-    field_data.fill_signature(field);
+    field_data.address = reinterpret_cast<void*>(_field);
+    field_data.fill_signature(_field);
     return *this;
 }
 

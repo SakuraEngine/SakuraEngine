@@ -6,7 +6,6 @@ elseif is_mode("releasedbg") then
     add_requires("v8 11.2-skr", {configs={symbols=true}})
 end
 
-
 shared_module("SkrV8", "SKR_V8", engine_version)
     -- dependencies
     public_dependency("SkrRT", engine_version)

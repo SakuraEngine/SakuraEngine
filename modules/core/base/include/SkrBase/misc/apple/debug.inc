@@ -15,6 +15,11 @@
         #include <stdlib.h>
         #include <signal.h>
 
+        inline static void __signal(int sig, void (*handler)(int))
+        {
+            signal(sig, handler);
+        }
+
         #define SKR_TRACE_MSG(msg) \
             printf(msg);           \
             printf("\n");
@@ -25,7 +30,7 @@
                 if (!(cond))                                                          \
                 {                                                                     \
                     SKR_TRACE_MSG("Skr Assert fired: " #cond " (" SKR_FILE_LINE ")"); \
-                    signal(SIGSEGV, apple_assert_handler);                            \
+                    __signal(SIGSEGV, apple_assert_handler);                            \
                     assert((cond));                                                   \
                 }                                                                     \
             } while (0)

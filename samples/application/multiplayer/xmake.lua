@@ -1,13 +1,12 @@
 set_project("Multiplayer")
 add_requires("lz4")
 
+codegen_component("MPShared", { api = "MP_SHARED", rootdir = "include/MPShared" })
+    add_files("include/**.h")
+    add_files("include/**.hpp")
+
 shared_module("MPShared", "MP_SHARED", engine_version)
     set_group("04.examples/network")
-    add_rules("c++.codegen", {
-        files = {"modules/mpshared/include/MPShared/**.h", "modules/mpshared/include/MPShared/**.hpp"},
-        rootdir = "modules/mpshared/include/MPShared",
-        api = "MP_SHARED"
-    })
     add_includedirs("modules/mpshared/include/", { public=true })
     public_dependency("SkrRT", engine_version)
     public_dependency("SkrScene", engine_version)
@@ -18,7 +17,9 @@ shared_module("MPShared", "MP_SHARED", engine_version)
     add_deps("gamenetworkingsockets")
     add_packages("lz4")
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
-    set_pcxxheader("modules/mpshared/src/pch.hpp")
+        
+private_pch("MPShared")
+    add_files("modules/mpshared/src/pch.hpp")
 
 executable_module("MPGame", "MP_GAME", engine_version)
     set_group("04.examples/network")

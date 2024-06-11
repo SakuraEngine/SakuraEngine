@@ -5,7 +5,7 @@ target("gamenetworkingsockets")
     set_group("00.frameworks")
     add_includedirs(gns_include_dir, {public = true})
     if is_os("windows") or is_os("macosx") then 
-        add_rules("utils.install-libs", { libnames = {"gns"} })
+        add_rules("utils.install_libraries", { libnames = {"gns"} })
         set_kind("headeronly")
         add_links("gamenetworkingsockets", {public=true} )
     else
