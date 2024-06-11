@@ -7,26 +7,86 @@
 #include "SkrRTTR/enum_value.hpp"
 #include "SkrRTTR/export/stack_proxy.hpp"
 
+// utils
 namespace skr::rttr
 {
-using DtorInvoker = void (*)(void*);
-
-enum class ParamFlag
+// basic enums
+enum class EAccessLevel : uint8_t
 {
-    None        = 0,      // default
-    In          = 1 << 0, // is input native pointer/reference
-    Out         = 1 << 1, // is output native pointer/reference
-    TakeLife    = 1 << 2, // 函数将接管生命周期, 一般与 In 联用, 在裸指针脚本导出中很有用
-    ExtractLife = 1 << 3, // 函数将提取生命周期, 一般与 Out 联用, 在裸指针脚本导出中很有用
+    Public,
+    Protected,
+    Private
 };
 
+// flags
+enum class EParamFlag : uint32_t
+{
+    None = 0,      // default
+    In   = 1 << 0, // is input native pointer/reference
+    Out  = 1 << 1, // is output native pointer/reference
+};
+// TODO. 是否移除根部 function 的支持，function 必须包含在某个 record 内
+enum class EFunctionFlag : uint32_t
+{
+    None          = 0,      // default
+    ScriptVisible = 1 << 0, // can script visit this function
+};
+enum class EMethodFlag : uint32_t
+{
+    None          = 0,      // default
+    ScriptVisible = 1 << 0, // can script visit this method
+};
+enum class EStaticMethodFlag : uint32_t
+{
+    None          = 0,      // default
+    ScriptVisible = 1 << 0, // can script visit this static method
+};
+enum class EExternMethodFlag : uint32_t
+{
+    None          = 0,      // default
+    ScriptVisible = 1 << 0, // can script visit this static method
+};
+enum class EFieldFlag : uint32_t
+{
+    None          = 0,      // default
+    ScriptVisible = 1 << 0, // can script visit this field
+};
+enum class EStaticFieldFlag : uint32_t
+{
+    None          = 0,      // default
+    ScriptVisible = 1 << 0, // can script visit this static field
+};
+enum class ECtorFlag : uint32_t
+{
+    None          = 0,
+    ScriptVisible = 1 << 0, // can script visit this ctor
+};
+enum class ERecordFlag : uint32_t
+{
+    None          = 0,      // default
+    ScriptVisible = 1 << 0, // can script visit this record
+    ScriptNewable = 1 << 1, // can script new this record
+};
+enum class EEnumItemFlag : uint32_t
+{
+    None          = 0,      // default
+    ScriptVisible = 1 << 0, // can script visit this enum item
+};
+enum class EEnumFlag : uint32_t
+{
+    None          = 0,      // default
+    ScriptVisible = 1 << 0, // can script visit this enum
+    Flag          = 1 << 1, // is flag enum
+};
+
+// util data
 struct ParamData {
     using MakeDefaultFunc = void (*)(void*);
 
     // signature
     String          name         = {};
     TypeSignature   type         = {};
-    ParamFlag       modifier     = ParamFlag::None;
+    EParamFlag      modifier     = EParamFlag::None;
     MakeDefaultFunc make_default = nullptr;
 
     // TODO. Attribute
@@ -37,12 +97,13 @@ struct ParamData {
         return {
             {},
             type_signature_of<Arg>(),
-            ParamFlag::In,
+            EParamFlag::In,
             nullptr
         };
     }
 };
 
+// help functions
 template <typename Data>
 inline bool export_function_signature_equal(const Data& data, TypeSignature signature, ETypeSignatureCompareFlag flag)
 {
@@ -67,7 +128,12 @@ inline bool export_function_signature_equal(const Data& data, TypeSignature sign
 
     return true;
 }
+} // namespace skr::rttr
 
+// functions and methods
+namespace skr::rttr
+{
+// TODO. 是否移除根部 function 的支持，function 必须包含在某个 record 内
 struct FunctionData {
     // signature
     String            name;
@@ -93,18 +159,6 @@ struct FunctionData {
     {
         return export_function_signature_equal(*this, signature, flag);
     }
-};
-
-enum class EAccessLevel : uint8_t
-{
-    Public,
-    Protected,
-    Private
-};
-enum class EMethodFlag : uint32_t
-{
-    None          = 0,      // default
-    ScriptVisible = 1 << 0, // can script visit this method
 };
 struct MethodData {
     // signature
@@ -142,33 +196,6 @@ struct MethodData {
         return export_function_signature_equal(*this, signature, flag);
     }
 };
-
-enum class EFieldFlag : uint32_t
-{
-    None          = 0,      // default
-    ScriptVisible = 1 << 0, // can script visit this field
-};
-struct FieldData {
-    using GetAddressFunc = void* (*)(void*);
-
-    // signature
-    String         name;
-    TypeSignature  type;
-    GetAddressFunc get_address;
-    EAccessLevel   access_level;
-
-    // TODO. Attribute
-
-    template <auto field, class T, typename Field>
-    inline void fill_signature(Field T::*)
-    {
-        type        = type_signature_of<Field>();
-        get_address = +[](void* p) -> void* {
-            return &(reinterpret_cast<T*>(p)->*field);
-        };
-    }
-};
-
 struct StaticMethodData {
     // signature
     String            name;
@@ -195,23 +222,6 @@ struct StaticMethodData {
         return export_function_signature_equal(*this, signature, flag);
     }
 };
-
-struct StaticFieldData {
-    // signature
-    String        name;
-    TypeSignature type;
-    void*         address;
-    EAccessLevel  access_level;
-
-    // TODO. Attribute
-
-    template <typename T>
-    inline void fill_signature(T* p_field)
-    {
-        type = type_signature_of<T>();
-    }
-};
-
 struct ExternMethodData {
     // signature
     String            name;
@@ -237,30 +247,6 @@ struct ExternMethodData {
     {
         return export_function_signature_equal(*this, signature, flag);
     }
-};
-
-struct BaseData {
-    using CastFunc = void* (*)(void*);
-
-    GUID     type_id;
-    CastFunc cast_to_base; // cast_to_derived 正向转换在虚继承的情况下会报错，尽量避免这类需求
-
-    template <typename T, typename Base>
-    inline static BaseData Make()
-    {
-        return {
-            RTTRTraits<Base>::get_guid(),
-            +[](void* p) -> void* {
-                return static_cast<Base*>(reinterpret_cast<T*>(p));
-            }
-        };
-    }
-};
-
-enum class ECtorFlag : uint32_t
-{
-    None          = 0,
-    ScriptVisible = 1 << 0, // can script visit this ctor
 };
 struct CtorData {
     // signature
@@ -304,19 +290,74 @@ struct CtorData {
         return true;
     }
 };
+} // namespace skr::rttr
 
+// fields
+namespace skr::rttr
+{
+struct FieldData {
+    using GetAddressFunc = void* (*)(void*);
+
+    // signature
+    String         name;
+    TypeSignature  type;
+    GetAddressFunc get_address;
+    EAccessLevel   access_level;
+
+    // TODO. Attribute
+
+    template <auto field, class T, typename Field>
+    inline void fill_signature(Field T::*)
+    {
+        type        = type_signature_of<Field>();
+        get_address = +[](void* p) -> void* {
+            return &(reinterpret_cast<T*>(p)->*field);
+        };
+    }
+};
+struct StaticFieldData {
+    // signature
+    String        name;
+    TypeSignature type;
+    void*         address;
+    EAccessLevel  access_level;
+
+    // TODO. Attribute
+
+    template <typename T>
+    inline void fill_signature(T* p_field)
+    {
+        type = type_signature_of<T>();
+    }
+};
+} // namespace skr::rttr
+
+// record
+namespace skr::rttr
+{
+struct BaseData {
+    using CastFunc = void* (*)(void*);
+
+    GUID     type_id;
+    CastFunc cast_to_base; // cast_to_derived 正向转换在虚继承的情况下会报错，尽量避免这类需求
+
+    template <typename T, typename Base>
+    inline static BaseData Make()
+    {
+        return {
+            RTTRTraits<Base>::get_guid(),
+            +[](void* p) -> void* {
+                return static_cast<Base*>(reinterpret_cast<T*>(p));
+            }
+        };
+    }
+};
+using DtorInvoker = void (*)(void*);
 struct DtorData {
     EAccessLevel access_level;
 
     // [Provided by export Backend]
     DtorInvoker native_invoke;
-};
-
-enum class ERecordFlag : uint32_t
-{
-    None          = 0,      // default
-    ScriptVisible = 1 << 0, // can script visit this record
-    ScriptNewable = 1 << 1, // can script new this record
 };
 struct RecordData {
     // basic
@@ -428,7 +469,11 @@ struct RecordData {
         return find_extern_method(signature.view(), name, flag);
     }
 };
+} // namespace skr::rttr
 
+// enum
+namespace skr::rttr
+{
 struct EnumItemData {
     String    name;
     EnumValue value;
@@ -471,7 +516,11 @@ struct EnumData {
         return find_extern_method(signature.view(), name, flag);
     }
 };
+} // namespace skr::rttr
 
+// primitive data
+namespace skr::rttr
+{
 struct PrimitiveData {
     // basic
     String name;
@@ -501,5 +550,4 @@ struct PrimitiveData {
         return find_extern_method(signature.view(), name, flag);
     }
 };
-
 } // namespace skr::rttr

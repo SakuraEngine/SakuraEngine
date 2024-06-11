@@ -27,6 +27,8 @@ class RTTRGenerator(gen.GeneratorBase):
                     "exclude_bases": sc.List(),  # default: []
                     "reflect_fields": sc.Bool(),  # default: False
                     "reflect_methods": sc.Bool(),  # default: False
+                    # TODO. flag
+                    # TODO. attrs
                 }, shorthands=[sc.OptionShorthand({
                     "full": {
                         "reflect_bases": True,
@@ -118,6 +120,10 @@ class RTTRGenerator(gen.GeneratorBase):
             rttr_enable = rttr.is_function_enable(guid.is_visited(), guid.is_visited())
             if rttr_enable:
                 enum.generator_data["rttr"] = {}
+
+    def generate_body(self):
+        # TODO. body generate
+        pass
 
     def generate(self):
         # load template
