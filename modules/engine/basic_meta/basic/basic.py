@@ -6,18 +6,6 @@ import framework.scheme as sc
 class BasicCPPGenerator(gen.GeneratorBase):
     def load_scheme(self):
         # dummy scheme to prevent warning
-        # guid
-        self.owner.add_record_scheme(
-            sc.Namespace({
-                "guid": sc.Str()
-            })
-        )
-        self.owner.add_enum_scheme(
-            sc.Namespace({
-                "guid": sc.Str()
-            })
-        )
-
         # serialize
         serialize_parser = sc.Functional(
             {
@@ -109,31 +97,6 @@ class BasicCPPGenerator(gen.GeneratorBase):
             sc.Namespace({
                 "getter": sc.Str(),  # 作为某个 field 的 getter，将会自动绑定到该 field 上
                 "setter": sc.Str(),  # 作为某个 field 的 setter，将会自动绑定到该 field 上
-            })
-        )
-
-        # rttr
-        self.owner.add_record_scheme(
-            sc.Namespace({
-                "rttr": sc.Functional(
-                    options={
-                        "reflect_bases": sc.Bool(),
-                        "exclude_bases": sc.List(),
-                        "reflect_fields": sc.Bool(),
-                        "reflect_methods": sc.Bool(),
-                    },
-                    shorthands=[
-                        sc.OptionShorthand(
-                            mappings={
-                                "all": {
-                                    "reflect_bases": True,
-                                    "reflect_fields": True,
-                                    "reflect_methods": True,
-                                }
-                            }
-                        )
-                    ]
-                )
             })
         )
 

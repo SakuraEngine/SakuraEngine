@@ -11,8 +11,8 @@ namespace gui sreflect
 {
 struct ClickGestureRecognizer;
 
-sreflect_struct("guid": "a0f18066-235e-41f7-bb76-34acf44511a1",
-"rttr": { "reflect_fields": true })
+sreflect_struct("guid": "a0f18066-235e-41f7-bb76-34acf44511a1"
+)
 Fuck {
 
     Array<int> int_arr;

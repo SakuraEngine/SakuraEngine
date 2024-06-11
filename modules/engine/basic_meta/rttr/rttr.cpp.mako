@@ -8,12 +8,12 @@
 namespace skr::rttr 
 {
 //============================> Begin Enum Traits <============================
-%for enum in generator.enums:
+%for enum in enums:
 span<EnumItem<${enum.name}>> EnumTraits<${enum.name}>::items()
 {
     static EnumItem<${enum.name}> items[] = {
-    %for name, value in vars(enum.values).items():
-        {u8"${db.short_name(name)}", ${name}},
+    %for enum_value in enum.values.values():
+        {u8"${enum_value.short_name}", ${enum_value.name}},
     %endfor
     };
     return items;
@@ -22,8 +22,8 @@ skr::StringView EnumTraits<${enum.name}>::to_string(const ${enum.name}& value)
 {
     switch (value)
     {
-    %for name, value in vars(enum.values).items():
-    case ${enum.name}::${db.short_name(name)}: return u8"${db.short_name(name)}";
+    %for enum_value in enum.values.values():
+    case ${enum.name}::${enum_value.short_name}: return u8"${enum_value.short_name}";
     %endfor
     default: SKR_UNREACHABLE_CODE(); return u8"${enum.name}::INVALID_ENUMERATOR";
     }
@@ -33,8 +33,8 @@ bool EnumTraits<${enum.name}>::from_string(skr::StringView str, ${enum.name}& va
     const auto hash = skr_hash64(str.raw().data(), str.size(), 0);
     switch(hash)
     {
-    %for name, value in vars(enum.values).items():
-        case skr::consteval_hash(u8"${db.short_name(name)}"): if(str == u8"${db.short_name(name)}") value = ${name}; return true;
+    %for enum_value in enum.values.values():
+        case skr::consteval_hash(u8"${enum_value.short_name}"): if(str == u8"${enum_value.short_name}") value = ${enum_value.name}; return true;
     %endfor
         default:
             return false;
@@ -49,8 +49,12 @@ SKR_EXEC_STATIC_CTOR
     using namespace ::skr::rttr;
 
     //============================> Begin Record Export <============================
-%for record in generator.records:
+%for record in records:
     register_type_loader(type_id_of<${record.name}>(), +[](Type* type){
+<%
+    rttr_fields=record.generator_data["rttr"]["rttr_fields"]
+    rttr_methods=record.generator_data["rttr"]["rttr_methods"]
+%>\
         // init type
         type->init(ETypeCategory::Record);
         auto& record_data = type->record_data();
@@ -69,15 +73,15 @@ SKR_EXEC_STATIC_CTOR
             .bases<${", ".join(record.bases)}>()
         %endif
             // methods
-        %if record.fields:
-            %for name, field in record.fields:
-            .field<&${record.name}::${name}>(${name})
+        %if len(rttr_fields) > 0:
+            %for field in rttr_fields:
+            .field<<&${record.name}::${field.name}>(u8"${field.name}")
             %endfor
         %endif
             // fields
-        %if record.methods:
-            %for method in record.methods:
-            .method<&${record.name}::${db.short_name(method.name)}>(${db.short_name(method.name)})
+        %if len(rttr_methods) > 0:
+            %for method in rttr_methods:
+            .method<<&${record.name}::${method.short_name}>(u8"${method.short_name}")
             %endfor
         %endif
             ;
@@ -86,7 +90,7 @@ SKR_EXEC_STATIC_CTOR
     //============================> End Record Export <============================
 
     //============================> Begin Enum Export <============================
-%for enum in generator.enums:
+%for enum in enums:
     register_type_loader(type_id_of<${enum.name}>(), &enum_type_loader_from_traits<${enum.name}>);
 %endfor
     //============================> End Enum Export <============================

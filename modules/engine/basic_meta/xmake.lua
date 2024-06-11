@@ -10,7 +10,7 @@ target("SkrBasicMeta")
             -- lua
             -- { file = "lua/luabind.py" }, -- FIXME. lua support
             -- rttr
-            { file = "rttr/rttr.py" },
+            { file = "rttr/rttr.py", use_new_framework = true },
             -- serialize
             { file = "serialize/serialize.py" },
             { file = "serialize/serialize_json.py" },

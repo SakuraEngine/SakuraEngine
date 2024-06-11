@@ -217,13 +217,13 @@ class CodegenDatabase:
             include_module.each_cpp_types_with_attr(visitor)
 
     def get_records(self):
-        return itertools.chain(self.main_module.get_records(), [module.get_records() for module in self.include_modules])
+        return itertools.chain(self.main_module.get_records(), *[module.get_records() for module in self.include_modules])
 
     def get_enums(self):
-        return itertools.chain(self.main_module.get_enums(), [module.get_enums() for module in self.include_modules])
+        return itertools.chain(self.main_module.get_enums(), *[module.get_enums() for module in self.include_modules])
 
     def get_functions(self):
-        return itertools.chain(self.main_module.get_functions(), [module.get_functions() for module in self.include_modules])
+        return itertools.chain(self.main_module.get_functions(), *[module.get_functions() for module in self.include_modules])
 
     def find_record(self, name: str) -> cpp.Record:
         record = self.main_module.find_record(name)

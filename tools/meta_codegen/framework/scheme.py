@@ -21,6 +21,7 @@ class JsonType(Enum):
 class ParseResult:
     Value = str | int | float | bool | t.List['ParseResult.Value'] | t.Dict[str, 'ParseResult.Value']
 
+    # TODO. 是否允许追加 default value
     parsed_value: Value = None  # value, none means never appear or override by none
     override_stack: t.List['JsonObject'] = None  # override stack
 

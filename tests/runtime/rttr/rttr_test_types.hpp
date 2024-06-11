@@ -43,9 +43,10 @@ Maxwell : public Dog,
 
     void no_good(int a, bool b, Dog* c) {}
 
-private:
+    sattr("rttr": true)
     float  party_animals;
     int    luisa_compute;
+    sattr("rttr": true)
     double lian_quan_da_jiang_hu;
 };
 } // namespace skr_rttr_test sreflect
