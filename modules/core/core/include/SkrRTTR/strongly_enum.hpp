@@ -84,14 +84,14 @@ namespace skr::json
 {
 template <class T>
 struct WriteTrait<StronglyEnum<T>> {
-    static bool Write(skr::json::Writer* writer, const StronglyEnum<T>& value)
+    static bool Write(skr::archive::JsonWriter* writer, const StronglyEnum<T>& value)
     {
         return skr::json::WriteTrait<typename StronglyEnum<T>::UnderlyingType>::Write(writer, value.underlying_value());
     }
 };
 template <class T>
 struct ReadTrait<StronglyEnum<T>> {
-    static bool Read(skr::json::Reader* json, StronglyEnum<T>& value)
+    static bool Read(skr::archive::JsonReader* json, StronglyEnum<T>& value)
     {
         return skr::json::ReadTrait<typename StronglyEnum<T>::UnderlyingType>::Read(json, value.underlying_value());
     }

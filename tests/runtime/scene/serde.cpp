@@ -19,7 +19,7 @@ struct TestSceneType {
     TestSceneType(T value)
         : value(value)
     {
-        skr::json::Writer writer(1);
+        skr::archive::JsonWriter writer(1);
         {
             writer.StartObject();
             writer.Key(u8"key");
@@ -30,7 +30,7 @@ struct TestSceneType {
             auto json  = writer.Write();
             SKR_LOG_INFO(u8"SCENE TYPE JSON: %s", json.c_str());
 
-            skr::json::Reader reader(json.view());
+            skr::archive::JsonReader reader(json.view());
             reader.StartObject();
             {
                 reader.Key(u8"key");

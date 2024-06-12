@@ -39,8 +39,8 @@ typedef struct sugoi_callback_v {
     void (*move)(sugoi_chunk_t* chunk, EIndex index, char* dst, sugoi_chunk_t* schunk, EIndex sindex, char* src) SKR_IF_CPP(= nullptr);
     void (*serialize)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryWriter* writer) SKR_IF_CPP(= nullptr);
     void (*deserialize)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryReader* reader) SKR_IF_CPP(= nullptr);
-    void (*serialize_text)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr::json::Writer* writer) SKR_IF_CPP(= nullptr);
-    void (*deserialize_text)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr::json::Reader* reader) SKR_IF_CPP(= nullptr);
+    void (*serialize_text)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr::archive::JsonWriter* writer) SKR_IF_CPP(= nullptr);
+    void (*deserialize_text)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr::archive::JsonReader* reader) SKR_IF_CPP(= nullptr);
     void (*map)(sugoi_chunk_t* chunk, EIndex index, char* data, sugoi_mapper_t* v) SKR_IF_CPP(= nullptr);
     int (*lua_push)(sugoi_chunk_t* chunk, EIndex index, char* data, struct lua_State* L) SKR_IF_CPP(= nullptr);
     void (*lua_check)(sugoi_chunk_t* chunk, EIndex index, char* data, struct lua_State* L, int idx) SKR_IF_CPP(= nullptr);

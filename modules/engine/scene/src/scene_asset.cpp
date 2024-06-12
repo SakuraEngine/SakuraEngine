@@ -12,7 +12,7 @@
 #include <numeric> // std::iota
 #include <execution>
 
-void skr_save_scene(sugoi_storage_t* world, skr::json::Writer* writer)
+void skr_save_scene(sugoi_storage_t* world, skr::archive::JsonWriter* writer)
 {
     skr::Vector<sugoi_entity_t> entities;
     skr::Vector<skr_guid_t>     guids;
@@ -80,7 +80,7 @@ void skr_save_scene(sugoi_storage_t* world, skr::json::Writer* writer)
     writer->EndObject();
 }
 
-void skr_load_scene(sugoi_storage_t* world, skr::json::Reader* reader)
+void skr_load_scene(sugoi_storage_t* world, skr::archive::JsonReader* reader)
 {
 
 }

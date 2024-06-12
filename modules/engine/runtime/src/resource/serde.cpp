@@ -6,12 +6,12 @@
 
 namespace skr::json
 {
-bool WriteTrait<skr_resource_handle_t>::Write(skr::json::Writer* writer, const skr_resource_handle_t& handle)
+bool WriteTrait<skr_resource_handle_t>::Write(skr::archive::JsonWriter* writer, const skr_resource_handle_t& handle)
 {
     return WriteTrait<skr_guid_t>::Write(writer, handle.get_serialized());
 }
 
-bool ReadTrait<skr_resource_handle_t>::Read(skr::json::Reader* json, skr_resource_handle_t& handle)
+bool ReadTrait<skr_resource_handle_t>::Read(skr::archive::JsonReader* json, skr_resource_handle_t& handle)
 {
     SkrZoneScopedN("json::ReadTrait<skr_resource_handle_t>::Read");
     skr::String view;

@@ -167,22 +167,22 @@ namespace skr::json
 
 template <>
 struct SKR_RUNTIME_API WriteTrait<skr_resource_handle_t> {
-    static bool Write(skr::json::Writer* writer, const skr_resource_handle_t& handle);
+    static bool Write(skr::archive::JsonWriter* writer, const skr_resource_handle_t& handle);
 };
 template <>
 struct SKR_RUNTIME_API ReadTrait<skr_resource_handle_t> {
-    static bool Read(skr::json::Reader* json, skr_resource_handle_t& value);
+    static bool Read(skr::archive::JsonReader* json, skr_resource_handle_t& value);
 };
 template <class T>
 struct ReadTrait<skr::resource::TResourceHandle<T>> {
-    static bool Read(skr::json::Reader* json, skr::resource::TResourceHandle<T>& handle)
+    static bool Read(skr::archive::JsonReader* json, skr::resource::TResourceHandle<T>& handle)
     {
         return skr::json::Read<skr_resource_handle_t>(json, (skr_resource_handle_t&)handle);
     }
 };
 template <class T>
 struct WriteTrait<skr::resource::TResourceHandle<T>> {
-    static bool Write(skr::json::Writer* json, const skr::resource::TResourceHandle<T>& handle)
+    static bool Write(skr::archive::JsonWriter* json, const skr::resource::TResourceHandle<T>& handle)
     {
         return skr::json::Write<skr_resource_handle_t>(json, (const skr_resource_handle_t&)handle);
     }

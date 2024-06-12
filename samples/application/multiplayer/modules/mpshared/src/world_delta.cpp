@@ -624,7 +624,7 @@ int skr::binary::ReadTrait<packed_entity_t>::Read(SBinaryReader* reader, packed_
     return 0;
 }
 
-void skr::json::WriteTrait<packed_entity_t>::Write(skr::json::Writer* writer, const packed_entity_t& value)
+void skr::json::WriteTrait<packed_entity_t>::Write(skr::archive::JsonWriter* writer, const packed_entity_t& value)
 {
     writer->StartObject();
     writer->Key(u8"id");

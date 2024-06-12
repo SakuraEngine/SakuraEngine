@@ -4,14 +4,14 @@
 namespace skr::json
 {
 // primitive types
-bool ReadTrait<bool>::Read(skr::json::Reader* _json, bool& value)
+bool ReadTrait<bool>::Read(skr::archive::JsonReader* _json, bool& value)
 {
     if (_json->Bool(value).has_value())
         return true;
     return false;
 }
 
-bool ReadTrait<int8_t>::Read(skr::json::Reader* _json, int8_t& value)
+bool ReadTrait<int8_t>::Read(skr::archive::JsonReader* _json, int8_t& value)
 {
     int32_t _value;
     if (_json->Int32(_value).has_value())
@@ -22,7 +22,7 @@ bool ReadTrait<int8_t>::Read(skr::json::Reader* _json, int8_t& value)
     return false;
 }
 
-bool ReadTrait<int16_t>::Read(skr::json::Reader* _json, int16_t& value)
+bool ReadTrait<int16_t>::Read(skr::archive::JsonReader* _json, int16_t& value)
 {
     int32_t _value;
     if (_json->Int32(_value).has_value())
@@ -33,21 +33,21 @@ bool ReadTrait<int16_t>::Read(skr::json::Reader* _json, int16_t& value)
     return false;
 }
 
-bool ReadTrait<int32_t>::Read(skr::json::Reader* _json, int32_t& value)
+bool ReadTrait<int32_t>::Read(skr::archive::JsonReader* _json, int32_t& value)
 {
     if (_json->Int32(value).has_value())
         return true;
     return false;
 }
 
-bool ReadTrait<int64_t>::Read(skr::json::Reader* _json, int64_t& value)
+bool ReadTrait<int64_t>::Read(skr::archive::JsonReader* _json, int64_t& value)
 {
     if (_json->Int64(value).has_value())
         return true;
     return false;
 }
 
-bool ReadTrait<uint8_t>::Read(skr::json::Reader* _json, uint8_t& value)
+bool ReadTrait<uint8_t>::Read(skr::archive::JsonReader* _json, uint8_t& value)
 {
     uint32_t _value;
     if (_json->UInt32(_value).has_value())
@@ -58,7 +58,7 @@ bool ReadTrait<uint8_t>::Read(skr::json::Reader* _json, uint8_t& value)
     return false;
 }
 
-bool ReadTrait<uint16_t>::Read(skr::json::Reader* _json, uint16_t& value)
+bool ReadTrait<uint16_t>::Read(skr::archive::JsonReader* _json, uint16_t& value)
 {
     uint32_t _value;
     if (_json->UInt32(_value).has_value())
@@ -69,28 +69,28 @@ bool ReadTrait<uint16_t>::Read(skr::json::Reader* _json, uint16_t& value)
     return false;
 }
 
-bool ReadTrait<uint32_t>::Read(skr::json::Reader* _json, uint32_t& value)
+bool ReadTrait<uint32_t>::Read(skr::archive::JsonReader* _json, uint32_t& value)
 {
     if (_json->UInt32(value).has_value())
         return true;
     return false;
 }
 
-bool ReadTrait<uint64_t>::Read(skr::json::Reader* _json, uint64_t& value)
+bool ReadTrait<uint64_t>::Read(skr::archive::JsonReader* _json, uint64_t& value)
 {
     if (_json->UInt64(value).has_value())
         return true;
     return false;
 }
 
-bool ReadTrait<float>::Read(skr::json::Reader* _json, float& value)
+bool ReadTrait<float>::Read(skr::archive::JsonReader* _json, float& value)
 {
     if (_json->Float(value).has_value())
         return true;
     return false;
 }
 
-bool ReadTrait<double>::Read(skr::json::Reader* _json, double& value)
+bool ReadTrait<double>::Read(skr::archive::JsonReader* _json, double& value)
 {
     if (_json->Double(value).has_value())
         return true;
@@ -98,7 +98,7 @@ bool ReadTrait<double>::Read(skr::json::Reader* _json, double& value)
 }
 
 // skr types
-bool ReadTrait<skr_float2_t>::Read(skr::json::Reader* _json, skr_float2_t& value)
+bool ReadTrait<skr_float2_t>::Read(skr::archive::JsonReader* _json, skr_float2_t& value)
 {
     size_t count;
     _json->StartArray(count);
@@ -110,7 +110,7 @@ bool ReadTrait<skr_float2_t>::Read(skr::json::Reader* _json, skr_float2_t& value
     return true;
 }
 
-bool ReadTrait<skr_float3_t>::Read(skr::json::Reader* _json, skr_float3_t& value)
+bool ReadTrait<skr_float3_t>::Read(skr::archive::JsonReader* _json, skr_float3_t& value)
 {
     size_t count;
     _json->StartArray(count);
@@ -123,7 +123,7 @@ bool ReadTrait<skr_float3_t>::Read(skr::json::Reader* _json, skr_float3_t& value
     return true;
 }
 
-bool ReadTrait<skr_float4_t>::Read(skr::json::Reader* _json, skr_float4_t& value)
+bool ReadTrait<skr_float4_t>::Read(skr::archive::JsonReader* _json, skr_float4_t& value)
 {
     size_t count;
     _json->StartArray(count);
@@ -137,7 +137,7 @@ bool ReadTrait<skr_float4_t>::Read(skr::json::Reader* _json, skr_float4_t& value
     return true;
 }
 
-bool ReadTrait<skr_float4x4_t>::Read(skr::json::Reader* _json, skr_float4x4_t& v)
+bool ReadTrait<skr_float4x4_t>::Read(skr::archive::JsonReader* _json, skr_float4x4_t& v)
 {
     size_t count;
     _json->StartArray(count);
@@ -163,7 +163,7 @@ bool ReadTrait<skr_float4x4_t>::Read(skr::json::Reader* _json, skr_float4x4_t& v
     return true;
 }
 
-bool ReadTrait<skr_rotator_t>::Read(skr::json::Reader* _json, skr_rotator_t& value)
+bool ReadTrait<skr_rotator_t>::Read(skr::archive::JsonReader* _json, skr_rotator_t& value)
 {
     size_t count;
     _json->StartArray(count);
@@ -176,7 +176,7 @@ bool ReadTrait<skr_rotator_t>::Read(skr::json::Reader* _json, skr_rotator_t& val
     return true;
 }
 
-bool ReadTrait<skr_quaternion_t>::Read(skr::json::Reader* _json, skr_quaternion_t& value)
+bool ReadTrait<skr_quaternion_t>::Read(skr::archive::JsonReader* _json, skr_quaternion_t& value)
 {
     size_t count;
     _json->StartArray(count);
@@ -190,7 +190,7 @@ bool ReadTrait<skr_quaternion_t>::Read(skr::json::Reader* _json, skr_quaternion_
     return true;
 }
 
-bool ReadTrait<skr_md5_t>::Read(skr::json::Reader* _json, skr_md5_t& value)
+bool ReadTrait<skr_md5_t>::Read(skr::archive::JsonReader* _json, skr_md5_t& value)
 {
     skr::String str;
     if (_json->String(str).has_value())
@@ -202,7 +202,7 @@ bool ReadTrait<skr_md5_t>::Read(skr::json::Reader* _json, skr_md5_t& value)
     return false;
 }
 
-bool ReadTrait<skr_guid_t>::Read(skr::json::Reader* _json, skr_guid_t& value)
+bool ReadTrait<skr_guid_t>::Read(skr::archive::JsonReader* _json, skr_guid_t& value)
 {
     skr::String str;
     if (_json->String(str).has_value())
@@ -214,7 +214,7 @@ bool ReadTrait<skr_guid_t>::Read(skr::json::Reader* _json, skr_guid_t& value)
     return false;
 }
 
-bool ReadTrait<skr::String>::Read(skr::json::Reader* _json, skr::String& value)
+bool ReadTrait<skr::String>::Read(skr::archive::JsonReader* _json, skr::String& value)
 {
     SkrZoneScopedN("json::ReadTrait<skr::String>::Read");
 

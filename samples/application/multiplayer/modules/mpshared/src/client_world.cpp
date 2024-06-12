@@ -83,7 +83,7 @@ void MPClientWorld::ReceiveWorldDelta(const void* data, size_t dataLength)
     }
 
     // {
-    //     skr::json::Writer jsonWriter(4);
+    //     skr::archive::JsonWriter jsonWriter(4);
     //     skr::json::Write(&jsonWriter, worldDelta.blob);
     //     SKR_LOG_DEBUG(u8"Receiving delta %s : ", jsonWriter.Str().c_str());
     // }

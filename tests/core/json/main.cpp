@@ -25,24 +25,24 @@ struct JSONTests {
     }
 };
 
-void _EXPECT_OK(skr::json::ReadResult&& r)
+void _EXPECT_OK(skr::archive::JsonReadResult&& r)
 {
-    using namespace skr::json;
+    using namespace skr::archive;
     r.and_then([]() {
         EXPECT_EQ(true, true);
     })
-    .error_then([](ErrorCode error) {
+    .error_then([](JsonErrorCode error) {
         EXPECT_EQ(true, false);
     });
 }
 
-void _EXPECT_ERROR(skr::json::ReadResult&& r, skr::json::ErrorCode err)
+void _EXPECT_ERROR(skr::archive::JsonReadResult&& r, skr::archive::JsonErrorCode err)
 {
-    using namespace skr::json;
+    using namespace skr::archive;
     r.and_then([]() {
         EXPECT_EQ(true, false);
     })
-    .error_then([=](ErrorCode error) {
+    .error_then([=](JsonErrorCode error) {
         EXPECT_EQ(error, err);
     });
 }
@@ -56,7 +56,7 @@ struct TestPrimitiveType {
     TestPrimitiveType(T value)
         : value(value)
     {
-        skr::json::_Writer writer(1);
+        skr::archive::_JsonWriter writer(1);
         {
             const char8_t* key = u8"key";
             EXPECT_OK(writer.StartObject(u8""));
@@ -69,9 +69,9 @@ struct TestPrimitiveType {
 
             T _value;
 
-            skr::json::_Reader reader(json.view());
+            skr::archive::_JsonReader reader(json.view());
             EXPECT_OK(reader.StartObject(u8""));
-            EXPECT_OK(reader.ReadValue(u8"key", _value)); // TODO: skr::json::Read
+            EXPECT_OK(reader.ReadValue(u8"key", _value)); // TODO: skr::archive::Read
             EXPECT_OK(reader.EndObject());
 
             if constexpr (std::is_floating_point_v<T>)
@@ -120,7 +120,7 @@ struct TestPrimitiveArray {
     {
         push_args(std::forward<Args>(params)...);
         
-        skr::json::_Writer writer(1);
+        skr::archive::_JsonWriter writer(1);
         {
             const char8_t* key = u8"key";
             EXPECT_OK(writer.StartObject(u8""));
@@ -140,12 +140,12 @@ struct TestPrimitiveArray {
         {
             auto json  = writer.Write();
             SKR_LOG_INFO(u8"PRIMITIVE ARRAY JSON: %s", json.c_str());
-            skr::json::_Reader reader(json.view());
+            skr::archive::_JsonReader reader(json.view());
 
             skr::Vector<T> _values;
             size_t count;
             EXPECT_OK(reader.StartObject(u8""));
-            EXPECT_OK(reader.StartArray(u8"key", count)); // TODO: skr::json::Read
+            EXPECT_OK(reader.StartArray(u8"key", count)); // TODO: skr::archive::Read
             _values.resize_zeroed(count);
             if constexpr (std::is_same_v<T, skr::String>)
             {
@@ -194,68 +194,68 @@ TEST_CASE_METHOD(JSONTests, "array")
 
 TEST_CASE_METHOD(JSONTests, "ReadErrors")
 {
-    using namespace skr::json;
+    using namespace skr::archive;
     SUBCASE("NoOpenScope")
     {
-        EXPECT_ERROR(_Reader(u8"{}").EndArray(), ErrorCode::NoOpenScope);
-        EXPECT_ERROR(_Reader(u8"{}").EndObject(), ErrorCode::NoOpenScope);
+        EXPECT_ERROR(_JsonReader(u8"{}").EndArray(), JsonErrorCode::NoOpenScope);
+        EXPECT_ERROR(_JsonReader(u8"{}").EndObject(), JsonErrorCode::NoOpenScope);
     }
     SUBCASE("ScopeTypeMismatch(StartArray)")
     {
-        auto obj_reader = _Reader(u8"{ \"obj\": \"value\" }");
+        auto obj_reader = _JsonReader(u8"{ \"obj\": \"value\" }");
         EXPECT_OK(obj_reader.StartObject(u8""));
         size_t arr_len = 0;
-        EXPECT_ERROR(obj_reader.StartArray(u8"obj", arr_len), ErrorCode::ScopeTypeMismatch);
+        EXPECT_ERROR(obj_reader.StartArray(u8"obj", arr_len), JsonErrorCode::ScopeTypeMismatch);
     }
     SUBCASE("ScopeTypeMismatch(EndObjectAsArray)")
     {
-        auto obj_reader = _Reader(u8"{}");
+        auto obj_reader = _JsonReader(u8"{}");
         EXPECT_OK(obj_reader.StartObject(u8""));
-        EXPECT_ERROR(obj_reader.EndArray(), ErrorCode::ScopeTypeMismatch);
+        EXPECT_ERROR(obj_reader.EndArray(), JsonErrorCode::ScopeTypeMismatch);
     }
     SUBCASE("ScopeTypeMismatch(StartArrayAsObject)")
     {
-        auto arr_reader = _Reader(u8"{ \"arr\": [ 0, 1, 2, 3 ] }");
+        auto arr_reader = _JsonReader(u8"{ \"arr\": [ 0, 1, 2, 3 ] }");
         EXPECT_OK(arr_reader.StartObject(u8""));
-        EXPECT_ERROR(arr_reader.StartObject(u8"arr"), ErrorCode::ScopeTypeMismatch);
+        EXPECT_ERROR(arr_reader.StartObject(u8"arr"), JsonErrorCode::ScopeTypeMismatch);
     }
     SUBCASE("ScopeTypeMismatch(StartPrimitiveAsObject/Array)")
     {
         size_t arr_len = 0;
-        auto value_reader =  _Reader(u8"{ \"value\": 123 }");
+        auto value_reader =  _JsonReader(u8"{ \"value\": 123 }");
         EXPECT_OK(value_reader.StartObject(u8""));
-        EXPECT_ERROR(value_reader.StartObject(u8"value"), ErrorCode::ScopeTypeMismatch);
-        EXPECT_ERROR(value_reader.StartArray(u8"value", arr_len), ErrorCode::ScopeTypeMismatch);
+        EXPECT_ERROR(value_reader.StartObject(u8"value"), JsonErrorCode::ScopeTypeMismatch);
+        EXPECT_ERROR(value_reader.StartArray(u8"value", arr_len), JsonErrorCode::ScopeTypeMismatch);
             
-        auto arr_reader = _Reader(u8"{ \"arr\": [ 0, 1, 2, 3 ] }");
+        auto arr_reader = _JsonReader(u8"{ \"arr\": [ 0, 1, 2, 3 ] }");
         EXPECT_OK(arr_reader.StartObject(u8""));
         EXPECT_OK(arr_reader.StartArray(u8"arr", arr_len));
         EXPECT_EQ(arr_len, 4);
-        EXPECT_ERROR(arr_reader.StartObject(u8""), ErrorCode::ScopeTypeMismatch);
-        EXPECT_ERROR(arr_reader.StartArray(u8"", arr_len), ErrorCode::ScopeTypeMismatch);
+        EXPECT_ERROR(arr_reader.StartObject(u8""), JsonErrorCode::ScopeTypeMismatch);
+        EXPECT_ERROR(arr_reader.StartArray(u8"", arr_len), JsonErrorCode::ScopeTypeMismatch);
     }
     SUBCASE("ScopeTypeMismatch(EndArrayAsObject)")
     {
-        auto arr_reader = _Reader(u8"{ \"arr\": [ 0, 1, 2, 3 ] }");
+        auto arr_reader = _JsonReader(u8"{ \"arr\": [ 0, 1, 2, 3 ] }");
         EXPECT_OK(arr_reader.StartObject(u8""));
         size_t arr_len = 0;
         EXPECT_OK(arr_reader.StartArray(u8"arr", arr_len));
         EXPECT_EQ(arr_len, 4);
-        EXPECT_ERROR(arr_reader.EndObject(), ErrorCode::ScopeTypeMismatch);
+        EXPECT_ERROR(arr_reader.EndObject(), JsonErrorCode::ScopeTypeMismatch);
     }
     SUBCASE("KeyNotFound(ObjectField)")
     {
-        auto obj_reader = _Reader(u8"{ \"key\": \"value\" }");
+        auto obj_reader = _JsonReader(u8"{ \"key\": \"value\" }");
         EXPECT_OK(obj_reader.StartObject(u8""));
         skr::String out;
-        EXPECT_ERROR(obj_reader.ReadValue(u8"key_mismatch", out), ErrorCode::KeyNotFound);
+        EXPECT_ERROR(obj_reader.ReadValue(u8"key_mismatch", out), JsonErrorCode::KeyNotFound);
         size_t arr_len = 0;
-        EXPECT_ERROR(obj_reader.StartArray(u8"key_mismatch", arr_len), ErrorCode::KeyNotFound);
-        EXPECT_ERROR(obj_reader.StartObject(u8"key_mismatch"), ErrorCode::KeyNotFound);
+        EXPECT_ERROR(obj_reader.StartArray(u8"key_mismatch", arr_len), JsonErrorCode::KeyNotFound);
+        EXPECT_ERROR(obj_reader.StartObject(u8"key_mismatch"), JsonErrorCode::KeyNotFound);
     }
     SUBCASE("KeyNotFound(ArrayIndexOverflow)")
     {
-        auto arr_reader = _Reader(u8"{ \"arr\": [ 0 ] }");
+        auto arr_reader = _JsonReader(u8"{ \"arr\": [ 0 ] }");
         EXPECT_OK(arr_reader.StartObject(u8""));
         size_t arr_len = 0;
         EXPECT_OK(arr_reader.StartArray(u8"arr", arr_len));
@@ -263,129 +263,129 @@ TEST_CASE_METHOD(JSONTests, "ReadErrors")
         int32_t first_element = 222;
         EXPECT_OK(arr_reader.ReadInt32(u8"", first_element));
         EXPECT_EQ(first_element, 0);
-        EXPECT_ERROR(arr_reader.ReadInt32(u8"", first_element), ErrorCode::KeyNotFound);
+        EXPECT_ERROR(arr_reader.ReadInt32(u8"", first_element), JsonErrorCode::KeyNotFound);
     }
     SUBCASE("EmptyObjectFieldKey")
     {
         size_t arr_len = 0;
-        auto obj_reader = _Reader(u8"{ \"key\": \"value\" }");
+        auto obj_reader = _JsonReader(u8"{ \"key\": \"value\" }");
         EXPECT_OK(obj_reader.StartObject(u8""));
-        EXPECT_ERROR(obj_reader.StartObject(u8""), ErrorCode::EmptyObjectFieldKey);
-        EXPECT_ERROR(obj_reader.StartArray(u8"", arr_len), ErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_reader.StartObject(u8""), JsonErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_reader.StartArray(u8"", arr_len), JsonErrorCode::EmptyObjectFieldKey);
         
         bool b; int32_t i32; int64_t i64; float f; double d; skr::String s;
-        EXPECT_ERROR(obj_reader.ReadValue(u8"", b), ErrorCode::EmptyObjectFieldKey);
-        EXPECT_ERROR(obj_reader.ReadValue(u8"", i32), ErrorCode::EmptyObjectFieldKey);
-        EXPECT_ERROR(obj_reader.ReadValue(u8"", i64), ErrorCode::EmptyObjectFieldKey);
-        EXPECT_ERROR(obj_reader.ReadValue(u8"", f), ErrorCode::EmptyObjectFieldKey);
-        EXPECT_ERROR(obj_reader.ReadValue(u8"", d), ErrorCode::EmptyObjectFieldKey);
-        EXPECT_ERROR(obj_reader.ReadValue(u8"", s), ErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_reader.ReadValue(u8"", b), JsonErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_reader.ReadValue(u8"", i32), JsonErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_reader.ReadValue(u8"", i64), JsonErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_reader.ReadValue(u8"", f), JsonErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_reader.ReadValue(u8"", d), JsonErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_reader.ReadValue(u8"", s), JsonErrorCode::EmptyObjectFieldKey);
     }
     SUBCASE("ArrayElementWithKey")
     {
         size_t arr_len = 0;
-        auto arr_reader = _Reader(u8"{ \"arr\": [ 0 ] }");
+        auto arr_reader = _JsonReader(u8"{ \"arr\": [ 0 ] }");
         EXPECT_OK(arr_reader.StartObject(u8""));
         EXPECT_OK(arr_reader.StartArray(u8"arr", arr_len));
         EXPECT_EQ(arr_len, 1);
         
         bool b; int32_t i32; int64_t i64; float f; double d; skr::String s;
-        EXPECT_ERROR(arr_reader.ReadValue(u8"k", b), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_reader.ReadValue(u8"k", i32), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_reader.ReadValue(u8"k", i64), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_reader.ReadValue(u8"k", f), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_reader.ReadValue(u8"k", d), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_reader.ReadValue(u8"k", s), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_reader.StartObject(u8"k"), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_reader.StartArray(u8"k", arr_len), ErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_reader.ReadValue(u8"k", b), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_reader.ReadValue(u8"k", i32), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_reader.ReadValue(u8"k", i64), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_reader.ReadValue(u8"k", f), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_reader.ReadValue(u8"k", d), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_reader.ReadValue(u8"k", s), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_reader.StartObject(u8"k"), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_reader.StartArray(u8"k", arr_len), JsonErrorCode::ArrayElementWithKey);
     }
     SUBCASE("RootObjectWithKey")
     {
-        auto obj_reader = _Reader(u8"{ \"key\": \"value\" }");
-        EXPECT_ERROR(obj_reader.StartObject(u8"key"), ErrorCode::RootObjectWithKey);
+        auto obj_reader = _JsonReader(u8"{ \"key\": \"value\" }");
+        EXPECT_ERROR(obj_reader.StartObject(u8"key"), JsonErrorCode::RootObjectWithKey);
     }
     SUBCASE("PresetKeyIsEmpty")
     {
-        auto obj_reader = Reader(u8"{ \"key\": \"value\" }");
+        auto obj_reader = JsonReader(u8"{ \"key\": \"value\" }");
         EXPECT_OK(obj_reader.StartObject());
-        EXPECT_ERROR(obj_reader.Key(u8""), ErrorCode::PresetKeyIsEmpty);
+        EXPECT_ERROR(obj_reader.Key(u8""), JsonErrorCode::PresetKeyIsEmpty);
     }
     SUBCASE("PresetKeyNotConsumedYet")
     {
-        auto obj_reader = Reader(u8"{ \"key\": \"value\" }");
+        auto obj_reader = JsonReader(u8"{ \"key\": \"value\" }");
         EXPECT_OK(obj_reader.StartObject());
         EXPECT_OK(obj_reader.Key(u8"key"));
-        EXPECT_ERROR(obj_reader.Key(u8"key"), ErrorCode::PresetKeyNotConsumedYet);
+        EXPECT_ERROR(obj_reader.Key(u8"key"), JsonErrorCode::PresetKeyNotConsumedYet);
     }
 }
 
 TEST_CASE_METHOD(JSONTests, "WriteErrors")
 {
-    using namespace skr::json;
+    using namespace skr::archive;
     SUBCASE("NoOpenScope")
     {
-        EXPECT_ERROR(_Writer(1).EndArray(), ErrorCode::NoOpenScope);
-        EXPECT_ERROR(_Writer(1).EndObject(), ErrorCode::NoOpenScope);
+        EXPECT_ERROR(_JsonWriter(1).EndArray(), JsonErrorCode::NoOpenScope);
+        EXPECT_ERROR(_JsonWriter(1).EndObject(), JsonErrorCode::NoOpenScope);
     }
     SUBCASE("ScopeTypeMismatch")
     {
-        auto obj_writer = _Writer(3);
+        auto obj_writer = _JsonWriter(3);
         EXPECT_OK(obj_writer.StartObject(u8""));
         EXPECT_OK(obj_writer.StartObject(u8"obj"));
-        EXPECT_ERROR(obj_writer.EndArray(), ErrorCode::ScopeTypeMismatch);
+        EXPECT_ERROR(obj_writer.EndArray(), JsonErrorCode::ScopeTypeMismatch);
 
-        auto arr_writer = _Writer(3);
+        auto arr_writer = _JsonWriter(3);
         EXPECT_OK(arr_writer.StartObject(u8""));
         EXPECT_OK(arr_writer.StartArray(u8"arr"));
-        EXPECT_ERROR(arr_writer.EndObject(), ErrorCode::ScopeTypeMismatch);
+        EXPECT_ERROR(arr_writer.EndObject(), JsonErrorCode::ScopeTypeMismatch);
     }
     SUBCASE("EmptyObjectFieldKey")
     {
-        auto obj_writer = _Writer(3);
+        auto obj_writer = _JsonWriter(3);
         EXPECT_OK(obj_writer.StartObject(u8""));
-        EXPECT_ERROR(obj_writer.StartObject(u8""), ErrorCode::EmptyObjectFieldKey);
-        EXPECT_ERROR(obj_writer.StartArray(u8""), ErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_writer.StartObject(u8""), JsonErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_writer.StartArray(u8""), JsonErrorCode::EmptyObjectFieldKey);
         
         bool b = false; int32_t i32 = 0; int64_t i64 = 0; float f = 0.f; double d = 0.0; skr::String s = u8"";
-        EXPECT_ERROR(obj_writer.WriteValue(u8"", b), ErrorCode::EmptyObjectFieldKey);
-        EXPECT_ERROR(obj_writer.WriteValue(u8"", i32), ErrorCode::EmptyObjectFieldKey);
-        EXPECT_ERROR(obj_writer.WriteValue(u8"", i64), ErrorCode::EmptyObjectFieldKey);
-        EXPECT_ERROR(obj_writer.WriteValue(u8"", f), ErrorCode::EmptyObjectFieldKey);
-        EXPECT_ERROR(obj_writer.WriteValue(u8"", d), ErrorCode::EmptyObjectFieldKey);
-        EXPECT_ERROR(obj_writer.WriteValue(u8"", s), ErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_writer.WriteValue(u8"", b), JsonErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_writer.WriteValue(u8"", i32), JsonErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_writer.WriteValue(u8"", i64), JsonErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_writer.WriteValue(u8"", f), JsonErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_writer.WriteValue(u8"", d), JsonErrorCode::EmptyObjectFieldKey);
+        EXPECT_ERROR(obj_writer.WriteValue(u8"", s), JsonErrorCode::EmptyObjectFieldKey);
     }
     SUBCASE("ArrayElementWithKey")
     {
-        auto arr_writer = _Writer(3);
+        auto arr_writer = _JsonWriter(3);
         EXPECT_OK(arr_writer.StartObject(u8""));
         EXPECT_OK(arr_writer.StartArray(u8"arr"));
-        EXPECT_ERROR(arr_writer.StartObject(u8"k"), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_writer.StartArray(u8"k"), ErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_writer.StartObject(u8"k"), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_writer.StartArray(u8"k"), JsonErrorCode::ArrayElementWithKey);
 
         bool b = false; int32_t i32 = 0; int64_t i64 = 0; float f = 0.f; double d = 0.0; skr::String s = u8"";
-        EXPECT_ERROR(arr_writer.WriteValue(u8"k", b), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_writer.WriteValue(u8"k", i32), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_writer.WriteValue(u8"k", i64), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_writer.WriteValue(u8"k", f), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_writer.WriteValue(u8"k", d), ErrorCode::ArrayElementWithKey);
-        EXPECT_ERROR(arr_writer.WriteValue(u8"k", s), ErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_writer.WriteValue(u8"k", b), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_writer.WriteValue(u8"k", i32), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_writer.WriteValue(u8"k", i64), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_writer.WriteValue(u8"k", f), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_writer.WriteValue(u8"k", d), JsonErrorCode::ArrayElementWithKey);
+        EXPECT_ERROR(arr_writer.WriteValue(u8"k", s), JsonErrorCode::ArrayElementWithKey);
     }
     SUBCASE("RootObjectWithKey")
     {
-        auto obj_writer = _Writer(3);
-        EXPECT_ERROR(obj_writer.StartObject(u8"key"), ErrorCode::RootObjectWithKey);
+        auto obj_writer = _JsonWriter(3);
+        EXPECT_ERROR(obj_writer.StartObject(u8"key"), JsonErrorCode::RootObjectWithKey);
     }
     SUBCASE("PresetKeyIsEmpty")
     {
-        auto obj_writer = Writer(3);
+        auto obj_writer = JsonWriter(3);
         EXPECT_OK(obj_writer.StartObject());
-        EXPECT_ERROR(obj_writer.Key(u8""), ErrorCode::PresetKeyIsEmpty);
+        EXPECT_ERROR(obj_writer.Key(u8""), JsonErrorCode::PresetKeyIsEmpty);
     }
     SUBCASE("PresetKeyNotConsumedYet")
     {
-        auto obj_writer = Writer(3);
+        auto obj_writer = JsonWriter(3);
         EXPECT_OK(obj_writer.StartObject());
         EXPECT_OK(obj_writer.Key(u8"key"));
-        EXPECT_ERROR(obj_writer.Key(u8"key"), ErrorCode::PresetKeyNotConsumedYet);
+        EXPECT_ERROR(obj_writer.Key(u8"key"), JsonErrorCode::PresetKeyNotConsumedYet);
     }
 }

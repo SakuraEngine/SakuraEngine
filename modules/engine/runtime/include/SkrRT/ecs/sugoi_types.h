@@ -28,10 +28,12 @@ typedef skr_guid_t sugoi_guid_t;
 #if defined(__cplusplus)
     #include <limits>
 
-namespace skr::json
+namespace skr::archive
 {
-    struct Reader;
-    struct Writer;
+    struct BinaryReader;
+    struct BinaryWriter;
+    struct JsonReader;
+    struct JsonWriter;
 }
 
 namespace sugoi

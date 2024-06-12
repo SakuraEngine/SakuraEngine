@@ -13,13 +13,13 @@ protected:
     }
 };
 
-void _EXPECT_OK(skr::json::ReadResult&& r)
+void _EXPECT_OK(skr::archive::JsonReadResult&& r)
 {
-    using namespace skr::json;
+    using namespace skr::archive;
     r.and_then([]() {
         EXPECT_EQ(true, true);
     })
-    .error_then([](ErrorCode error) {
+    .error_then([](JsonErrorCode error) {
         EXPECT_EQ(true, false);
     });
 }
@@ -31,7 +31,7 @@ struct TestTypeSerde {
     TestTypeSerde(const char8_t* key, const T& v, EQ eq)
         : value(v)
     {
-        skr::json::Writer writer(2);
+        skr::archive::JsonWriter writer(2);
         {
             EXPECT_OK(writer.StartObject());
             writer.Key(key);
@@ -42,7 +42,7 @@ struct TestTypeSerde {
         auto json = writer.Write();
         SKR_LOG_INFO(u8"TYPE SERDE JSON: %s", json.c_str());
         
-        skr::json::Reader reader(json.view());
+        skr::archive::JsonReader reader(json.view());
         reader.StartObject();
         {
             reader.Key(key);

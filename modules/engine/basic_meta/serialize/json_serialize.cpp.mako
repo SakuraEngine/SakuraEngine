@@ -20,7 +20,7 @@
 
 namespace skr::json {
 %for enum in generator.filter_types(db.enums):
-bool ReadTrait<${enum.name}>::Read(skr::json::Reader* json, ${enum.name}& e)
+bool ReadTrait<${enum.name}>::Read(skr::archive::JsonReader* json, ${enum.name}& e)
 {
     SkrZoneScopedN("json::ReadTrait<${enum.name}>::Read");
     skr::String enumStr;
@@ -36,7 +36,7 @@ bool ReadTrait<${enum.name}>::Read(skr::json::Reader* json, ${enum.name}& e)
     return false;
 } 
 
-bool WriteTrait<${enum.name}>::Write(skr::json::Writer* writer, ${enum.name} e)
+bool WriteTrait<${enum.name}>::Write(skr::archive::JsonWriter* writer, ${enum.name} e)
 {
     SkrZoneScopedN("json::WriteTrait<${enum.name}>::Write");
     return writer->String(skr::rttr::EnumTraits<${enum.name}>::to_string(e)).has_value();
@@ -45,7 +45,7 @@ bool WriteTrait<${enum.name}>::Write(skr::json::Writer* writer, ${enum.name} e)
 
 %for record in generator.filter_types(db.records):
 %if not generator.filter_debug_type(record):
-bool ReadTrait<${record.name}>::Read(skr::json::Reader* json, ${record.name}& record)
+bool ReadTrait<${record.name}>::Read(skr::archive::JsonReader* json, ${record.name}& record)
 {
     SkrZoneScopedN("json::ReadTrait<${record.name}>::Read");
     %for base in record.bases:
@@ -106,7 +106,7 @@ bool ReadTrait<${record.name}>::Read(skr::json::Reader* json, ${record.name}& re
 } 
 %endif
 
-bool WriteTrait<${record.name}>::WriteFields(skr::json::Writer* writer, const ${record.name}& record)
+bool WriteTrait<${record.name}>::WriteFields(skr::archive::JsonWriter* writer, const ${record.name}& record)
 {
     %for base in record.bases:
     TRUE_OR_RETURN_FALSE(WriteTrait<${base}>::WriteFields(writer, record));
@@ -131,7 +131,7 @@ bool WriteTrait<${record.name}>::WriteFields(skr::json::Writer* writer, const ${
     return true;
 } 
 
-bool WriteTrait<${record.name}>::Write(skr::json::Writer* writer, const ${record.name}& record)
+bool WriteTrait<${record.name}>::Write(skr::archive::JsonWriter* writer, const ${record.name}& record)
 {
     SkrZoneScopedN("json::WriteTrait<${record.name}>::Write");
     TRUE_OR_RETURN_FALSE(writer->StartObject().has_value());

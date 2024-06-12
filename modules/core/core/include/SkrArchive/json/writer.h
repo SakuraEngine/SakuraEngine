@@ -4,50 +4,50 @@
 #if defined(__cplusplus)
 #include "SkrContainers/vector.hpp"
 
-namespace skr::json {
+namespace skr::archive {
 
-using EWriteError = ErrorCode;
-using WriteResult = JsonResult;
+using JsonWriteError = JsonErrorCode;
+using JsonWriteResult = JsonResult;
 
-struct SKR_STATIC_API _Writer {
+struct SKR_STATIC_API _JsonWriter {
     using CharType = char8_t;
     using SizeType = size_t;
     using DocumentType = SJsonMutableDocument;
     using ValueType = SJsonMutableValue;
 
-    _Writer(size_t levelDepth);
-    ~_Writer();
+    _JsonWriter(size_t levelDepth);
+    ~_JsonWriter();
 
-    WriteResult StartObject(skr::StringView key);
-    WriteResult EndObject();
+    JsonWriteResult StartObject(skr::StringView key);
+    JsonWriteResult EndObject();
 
-    WriteResult StartArray(skr::StringView key);
-    WriteResult StartArray(skr::StringView key, const float* values, SizeType count);
-    WriteResult StartArray(skr::StringView key, const double* values, SizeType count);
-    WriteResult StartArray(skr::StringView key, const int32_t* values, SizeType count);
-    WriteResult StartArray(skr::StringView key, const int64_t* values, SizeType count);
-    WriteResult StartArray(skr::StringView key, const uint32_t* values, SizeType count);
-    WriteResult StartArray(skr::StringView key, const uint64_t* values, SizeType count);
-    WriteResult EndArray();
+    JsonWriteResult StartArray(skr::StringView key);
+    JsonWriteResult StartArray(skr::StringView key, const float* values, SizeType count);
+    JsonWriteResult StartArray(skr::StringView key, const double* values, SizeType count);
+    JsonWriteResult StartArray(skr::StringView key, const int32_t* values, SizeType count);
+    JsonWriteResult StartArray(skr::StringView key, const int64_t* values, SizeType count);
+    JsonWriteResult StartArray(skr::StringView key, const uint32_t* values, SizeType count);
+    JsonWriteResult StartArray(skr::StringView key, const uint64_t* values, SizeType count);
+    JsonWriteResult EndArray();
 
     // bool WriteValue(skr::StringView key, ValueType* value);
-    WriteResult WriteBool(skr::StringView key, bool value);
-    WriteResult WriteInt32(skr::StringView key, int32_t value);
-    WriteResult WriteInt64(skr::StringView key, int64_t value);
-    WriteResult WriteUInt32(skr::StringView key, uint32_t value);
-    WriteResult WriteUInt64(skr::StringView key, uint64_t value);
-    WriteResult WriteFloat(skr::StringView key, float value);
-    WriteResult WriteDouble(skr::StringView key, double value);
-    WriteResult WriteString(skr::StringView key, skr::StringView value);
-    WriteResult WriteString(skr::StringView key, const skr::String& value);
+    JsonWriteResult WriteBool(skr::StringView key, bool value);
+    JsonWriteResult WriteInt32(skr::StringView key, int32_t value);
+    JsonWriteResult WriteInt64(skr::StringView key, int64_t value);
+    JsonWriteResult WriteUInt32(skr::StringView key, uint32_t value);
+    JsonWriteResult WriteUInt64(skr::StringView key, uint64_t value);
+    JsonWriteResult WriteFloat(skr::StringView key, float value);
+    JsonWriteResult WriteDouble(skr::StringView key, double value);
+    JsonWriteResult WriteString(skr::StringView key, skr::StringView value);
+    JsonWriteResult WriteString(skr::StringView key, const skr::String& value);
 
-    inline WriteResult WriteInt(skr::StringView key, int value) { return WriteInt32(key, value); }
-    inline WriteResult WriteUInt(skr::StringView key, unsigned int value) { return WriteUInt32(key, value); }
+    inline JsonWriteResult WriteInt(skr::StringView key, int value) { return WriteInt32(key, value); }
+    inline JsonWriteResult WriteUInt(skr::StringView key, unsigned int value) { return WriteUInt32(key, value); }
 
 #pragma region Helpers
 
     template <JsonPrimitiveWritableType Type>
-    WriteResult WriteValue(skr::StringView key, const Type& value) 
+    JsonWriteResult WriteValue(skr::StringView key, const Type& value) 
     {
         if constexpr (std::is_same_v<Type, bool>)
             return WriteBool(key, value);
@@ -80,7 +80,7 @@ struct SKR_STATIC_API _Writer {
             return WriteString(key, value);
 
         else
-            return EWriteError::UnknownError;
+            return JsonErrorCode::UnknownError;
     }
 
 #pragma endregion
@@ -106,25 +106,25 @@ protected:
     DocumentType* _document = nullptr;
 };
 
-struct SKR_STATIC_API Writer : public _Writer {
-    Writer(size_t levelDepth);
+struct SKR_STATIC_API JsonWriter : public _JsonWriter {
+    JsonWriter(size_t levelDepth);
 
     // TODO: REMOVE?
-    WriteResult Key(skr::StringView key);
-    WriteResult Bool(bool value);
-    WriteResult Int32(int32_t value);
-    WriteResult Int64(int64_t value);
-    WriteResult UInt32(uint32_t value);
-    WriteResult UInt64(uint64_t value);
-    WriteResult Float(float value);
-    WriteResult Double(double value);
-    WriteResult String(skr::StringView value);
-    WriteResult String(const skr::String& value);
-    WriteResult StartArray();
-    WriteResult StartObject();
+    JsonWriteResult Key(skr::StringView key);
+    JsonWriteResult Bool(bool value);
+    JsonWriteResult Int32(int32_t value);
+    JsonWriteResult Int64(int64_t value);
+    JsonWriteResult UInt32(uint32_t value);
+    JsonWriteResult UInt64(uint64_t value);
+    JsonWriteResult Float(float value);
+    JsonWriteResult Double(double value);
+    JsonWriteResult String(skr::StringView value);
+    JsonWriteResult String(const skr::String& value);
+    JsonWriteResult StartArray();
+    JsonWriteResult StartObject();
 
-    inline WriteResult Int(int value) { return Int32(value); }
-    inline WriteResult UInt(unsigned int value) { return UInt32(value); }
+    inline JsonWriteResult Int(int value) { return Int32(value); }
+    inline JsonWriteResult UInt(unsigned int value) { return UInt32(value); }
 
 protected:
     skr::String _currentKey;

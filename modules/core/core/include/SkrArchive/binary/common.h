@@ -4,10 +4,10 @@
 #if defined(__cplusplus)
 #include "SkrContainers/string.hpp"
 
-namespace skr::binary
+namespace skr::archive
 {
 
-enum class ErrorCode : uint32_t 
+enum class BinaryErrorCode : uint32_t 
 {
     UnknownError,       // RW
     NoOpenScope,        // RW
@@ -23,7 +23,7 @@ enum class ErrorCode : uint32_t
     PresetKeyNotConsumedYet, // RW
     PresetKeyIsEmpty         // RW
 };
-using BinaryResult = skr::Expected<ErrorCode>;
+using BinaryResult = skr::Expected<BinaryErrorCode>;
 
 template <typename T>
 inline static constexpr bool IsBinaryPrimitiveReadableType =
