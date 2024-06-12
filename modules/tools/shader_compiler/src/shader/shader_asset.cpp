@@ -325,7 +325,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         json_resource.option_values_sequence = options_blob.values;
 
         // make archive
-        SJsonWriter writer(2);
+        skr::json::Writer writer(2);
         skr::json::Write(&writer, json_resource);
         auto jPath = outputPath.string() + ".json";
         // write to file

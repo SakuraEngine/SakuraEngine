@@ -19,7 +19,7 @@ struct TestSceneType {
     TestSceneType(T value)
         : value(value)
     {
-        SJsonWriter writer(1);
+        skr::json::Writer writer(1);
         {
             writer.StartObject();
             writer.Key(u8"key");

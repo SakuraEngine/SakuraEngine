@@ -6,23 +6,8 @@
 
 namespace skr::json {
 
-enum class EReadError : uint32_t 
-{
-    UnknownError,
-    NoOpenScope,
-    ScopeTypeMismatch,
-    KeyNotFound,
-    UnknownTypeToRead,
-
-    EmptyObjectFieldKey,
-    ArrayElementWithKey,
-    RootObjectWithKey,
-
-    PresetKeyNotConsumedYet,
-    PresetKeyIsEmpty
-};
-
-using ReadResult = skr::Expected<EReadError>;
+using EReadError = ErrorCode;
+using ReadResult = JsonResult;
 
 struct SKR_STATIC_API _Reader {
     using CharType = SJsonCharType;

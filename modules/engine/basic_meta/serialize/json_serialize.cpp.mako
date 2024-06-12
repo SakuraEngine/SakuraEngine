@@ -36,10 +36,10 @@ bool ReadTrait<${enum.name}>::Read(skr::json::Reader* json, ${enum.name}& e)
     return false;
 } 
 
-bool WriteTrait<${enum.name}>::Write(SJsonWriter* writer, ${enum.name} e)
+bool WriteTrait<${enum.name}>::Write(skr::json::Writer* writer, ${enum.name} e)
 {
     SkrZoneScopedN("json::WriteTrait<${enum.name}>::Write");
-    return writer->String(skr::rttr::EnumTraits<${enum.name}>::to_string(e));
+    return writer->String(skr::rttr::EnumTraits<${enum.name}>::to_string(e)).has_value();
 } 
 %endfor
 
@@ -106,21 +106,21 @@ bool ReadTrait<${record.name}>::Read(skr::json::Reader* json, ${record.name}& re
 } 
 %endif
 
-bool WriteTrait<${record.name}>::WriteFields(SJsonWriter* writer, const ${record.name}& record)
+bool WriteTrait<${record.name}>::WriteFields(skr::json::Writer* writer, const ${record.name}& record)
 {
     %for base in record.bases:
     TRUE_OR_RETURN_FALSE(WriteTrait<${base}>::WriteFields(writer, record));
     %endfor
     %for name, field in generator.filter_fields(record.fields):
-    TRUE_OR_RETURN_FALSE(writer->Key(u8"${name}"));
+    TRUE_OR_RETURN_FALSE(writer->Key(u8"${name}").has_value());
     %if field.arraySize > 0:
-    TRUE_OR_RETURN_FALSE(writer->StartArray());
+    TRUE_OR_RETURN_FALSE(writer->StartArray().has_value());
     for(int i = 0; i < ${field.arraySize}; ++i)
     {
         bool _x = skr::json::Write<${field.type}>(writer, record.${name}[i]);
         TRUE_OR_RETURN_FALSE(_x);
     }
-    TRUE_OR_RETURN_FALSE(writer->EndArray());
+    TRUE_OR_RETURN_FALSE(writer->EndArray().has_value());
     %else:
     {
         bool _x = skr::json::Write<${field.type}>(writer, record.${name});
@@ -131,12 +131,12 @@ bool WriteTrait<${record.name}>::WriteFields(SJsonWriter* writer, const ${record
     return true;
 } 
 
-bool WriteTrait<${record.name}>::Write(SJsonWriter* writer, const ${record.name}& record)
+bool WriteTrait<${record.name}>::Write(skr::json::Writer* writer, const ${record.name}& record)
 {
     SkrZoneScopedN("json::WriteTrait<${record.name}>::Write");
-    TRUE_OR_RETURN_FALSE(writer->StartObject());
+    TRUE_OR_RETURN_FALSE(writer->StartObject().has_value());
     TRUE_OR_RETURN_FALSE(WriteFields(writer, record));
-    TRUE_OR_RETURN_FALSE(writer->EndObject());
+    TRUE_OR_RETURN_FALSE(writer->EndObject().has_value());
     return true;
 } 
 %endfor

@@ -15,8 +15,8 @@ namespace skr::json
     template <>
     struct ${api} WriteTrait<${record.name}>
     {
-        static bool Write(SJsonWriter* writer, const ${record.name}& v);
-        static bool WriteFields(SJsonWriter* writer, const ${record.name}& v);
+        static bool Write(skr::json::Writer* writer, const ${record.name}& v);
+        static bool WriteFields(skr::json::Writer* writer, const ${record.name}& v);
     };
 %endfor
 %for enum in generator.filter_types(db.enums):
@@ -29,7 +29,7 @@ namespace skr::json
     template <>
     struct ${api} WriteTrait<${enum.name}>
     {
-        static bool Write(SJsonWriter* writer, ${enum.name} v);
+        static bool Write(skr::json::Writer* writer, ${enum.name} v);
     };
 %endfor
 }

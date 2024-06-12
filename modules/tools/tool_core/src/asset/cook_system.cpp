@@ -262,7 +262,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 SKR_LOG_INFO(u8"[CookTask] resource %s cook finished! updating dependencies.", metaAsset->path.u8string().c_str());
                 // write dependencies
                 auto              dependencyPath = metaAsset->project->GetDependencyPath() / skr::format(u8"{}.d", metaAsset->guid).c_str();
-                SJsonWriter writer(2);
+                skr::json::Writer writer(2);
                 writer.StartObject();
                 writer.Key(u8"importerVersion");
                 writer.UInt64(jobContext->GetImporterVersion());

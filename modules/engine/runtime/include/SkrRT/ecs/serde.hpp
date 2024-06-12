@@ -18,12 +18,12 @@ void SetSerdeCallback(sugoi_type_description_t& desc)
             skr::binary::Read(reader, *(C*)data);
         };
     if constexpr (skr::is_complete_serde_v<skr::json::WriteTrait<C>>)
-        desc.callback.serialize_text = +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SJsonWriter* writer) {
+        desc.callback.serialize_text = +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr::json::Writer* writer) {
             skr::json::Write<C>(writer, *(C*)data);
         };
     if constexpr (skr::is_complete_serde_v<skr::json::ReadTrait<C>>)
-        desc.callback.deserialize_text = +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, void* reader) {
-            skr::json::Read((skr::json::Reader*)reader, *(C*)data);
+        desc.callback.deserialize_text = +[](sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, skr::json::Reader* reader) {
+            skr::json::Read(reader, *(C*)data);
         };
 }
 } // namespace sugoi

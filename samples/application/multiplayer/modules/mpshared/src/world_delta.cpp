@@ -5,7 +5,7 @@
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrContainers/vector.hpp"
 #include "SkrRT/ecs/set.hpp"
-
+#include "SkrSerde/json/writer.h"
 #include "SkrRT/ecs/array.hpp"
 #include "SkrCore/log.hpp"
 #include "SkrCore/time.h"
@@ -624,8 +624,7 @@ int skr::binary::ReadTrait<packed_entity_t>::Read(SBinaryReader* reader, packed_
     return 0;
 }
 
-#include "SkrSerde/json/writer.h"
-void skr::json::WriteTrait<packed_entity_t>::Write(SJsonWriter* writer, const packed_entity_t& value)
+void skr::json::WriteTrait<packed_entity_t>::Write(skr::json::Writer* writer, const packed_entity_t& value)
 {
     writer->StartObject();
     writer->Key(u8"id");

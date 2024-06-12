@@ -13,6 +13,17 @@ protected:
     }
 };
 
+void _EXPECT_OK(skr::json::ReadResult&& r)
+{
+    using namespace skr::json;
+    r.and_then([]() {
+        EXPECT_EQ(true, true);
+    })
+    .error_then([](ErrorCode error) {
+        EXPECT_EQ(true, false);
+    });
+}
+#define EXPECT_OK _EXPECT_OK
 #define DEFAULT_EQ nullptr
 
 template <typename T, typename EQ>
@@ -20,12 +31,12 @@ struct TestTypeSerde {
     TestTypeSerde(const char8_t* key, const T& v, EQ eq)
         : value(v)
     {
-        SJsonWriter writer(2);
+        skr::json::Writer writer(2);
         {
-            EXPECT_TRUE(writer.StartObject());
+            EXPECT_OK(writer.StartObject());
             writer.Key(key);
             skr::json::Write(&writer, value);
-            EXPECT_TRUE(writer.EndObject());
+            EXPECT_OK(writer.EndObject());
         }
 
         auto json = writer.Write();

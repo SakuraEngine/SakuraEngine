@@ -10,13 +10,13 @@ namespace skr
 namespace json
 {
 struct Reader;
+struct Writer;
 
 template <class T, class = void>
 struct ReadTrait;
 } // namespace json
 } // namespace skr
 
-struct SJsonWriter;
 typedef char8_t SJsonCharType;
 typedef size_t  SJsonSizeType;
 

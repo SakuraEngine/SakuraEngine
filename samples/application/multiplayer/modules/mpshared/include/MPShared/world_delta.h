@@ -49,7 +49,7 @@ namespace json
 {
 template <>
 struct WriteTrait<packed_entity_t> {
-    static bool Write(SJsonWriter* writer, const packed_entity_t& value);
+    static bool Write(skr::json::Writer* writer, const packed_entity_t& value);
 };
 } // namespace json
 } // namespace skr

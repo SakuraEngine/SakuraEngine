@@ -6,7 +6,7 @@
 
 namespace skr::json
 {
-bool WriteTrait<skr_resource_handle_t>::Write(SJsonWriter* writer, const skr_resource_handle_t& handle)
+bool WriteTrait<skr_resource_handle_t>::Write(skr::json::Writer* writer, const skr_resource_handle_t& handle)
 {
     return WriteTrait<skr_guid_t>::Write(writer, handle.get_serialized());
 }

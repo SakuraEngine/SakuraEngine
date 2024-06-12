@@ -84,7 +84,7 @@ namespace skr::json
 {
 template <class T>
 struct WriteTrait<StronglyEnum<T>> {
-    static bool Write(SJsonWriter* writer, const StronglyEnum<T>& value)
+    static bool Write(skr::json::Writer* writer, const StronglyEnum<T>& value)
     {
         return skr::json::WriteTrait<typename StronglyEnum<T>::UnderlyingType>::Write(writer, value.underlying_value());
     }

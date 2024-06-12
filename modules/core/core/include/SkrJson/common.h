@@ -9,6 +9,27 @@ typedef struct SJsonMutableValue SJsonMutableValue;
 #if defined(__cplusplus)
 #include "SkrContainers/string.hpp"
 
+namespace skr::json
+{
+
+enum class ErrorCode : uint32_t 
+{
+    UnknownError,       // RW
+    NoOpenScope,        // RW
+    ScopeTypeMismatch,  // RW
+
+    EmptyObjectFieldKey,// RW
+    ArrayElementWithKey,// RW
+    RootObjectWithKey,  // RW
+
+    KeyNotFound,        // R
+    UnknownTypeToRead,  // R
+
+    PresetKeyNotConsumedYet, // RW
+    PresetKeyIsEmpty         // RW
+};
+using JsonResult = skr::Expected<ErrorCode>;
+
 template <typename T>
 inline static constexpr bool IsJsonPrimitiveReadableType =
     std::is_same_v<T, bool> || std::is_integral_v<T> || std::is_floating_point_v<T> ||
@@ -25,4 +46,5 @@ concept JsonPrimitiveWritableType = IsJsonPrimitiveWritableType<T>;
 template <typename T>
 concept JsonPrimitiveReadableType = IsJsonPrimitiveReadableType<T>;
 
+}
 #endif

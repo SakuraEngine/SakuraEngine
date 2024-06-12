@@ -1,20 +1,24 @@
+#include "SkrBase/misc/defer.hpp"
 #include "SkrJson/writer.h"
 #include "cstr_builder.hpp"
 
-#define SKR_ASSERT_RET_FALSE(cond, what) { if (!(cond)) { SKR_ASSERT(false && what); return false; } }
+#define SKR_RET_JSON_WRITE_ERROR_IF(cond, what) { if (!(cond)) { return what; } }
+#define SKR_RET_WRITE_RESULT_WITH_BOOL(cond) { if (!(cond)) { return EWriteError::UnknownError; } return {}; }
 
-struct _SJsonWriterHelper
+namespace skr::json {
+
+struct _WriterHelper
 {
-    using CharType = _SJsonWriter::CharType;
+    using CharType = _Writer::CharType;
 
 #define IS_TYPE(T) if constexpr (std::is_same_v<Type, T>)
 
     template <JsonPrimitiveWritableType T>
-    static bool StartArray(_SJsonWriter* w, skr::StringView key, const T* values, _SJsonWriter::SizeType count)
+    static skr::json::WriteResult StartArray(_Writer* w, skr::StringView key, const T* values, _Writer::SizeType count)
     {
-        using Level = _SJsonWriter::Level;
+        using Level = _Writer::Level;
         using Type = std::decay_t<T>;
-        SKR_ASSERT_RET_FALSE(!w->_stack.empty(), "Root object should not be an array")
+        SKR_RET_JSON_WRITE_ERROR_IF(!w->_stack.empty(), EWriteError::NoOpenScope)
 
         yyjson_mut_val* arr = nullptr;
         if (count != 0)
@@ -40,234 +44,235 @@ struct _SJsonWriterHelper
 
         if (w->_stack.back()._type == Level::kArray)
         {
-            SKR_ASSERT_RET_FALSE(key.is_empty(), "StartArray() must not be called with key in array");
+            SKR_RET_JSON_WRITE_ERROR_IF(key.is_empty(), EWriteError::ArrayElementWithKey);
             yyjson_mut_arr_add_val((yyjson_mut_val*)w->_stack.back()._value, arr);
         }
         else if (w->_stack.back()._type == Level::kObject)
         {
-            SKR_ASSERT_RET_FALSE(!key.is_empty(), "StartArray() must be called with key in object");
+            SKR_RET_JSON_WRITE_ERROR_IF(!key.is_empty(), EWriteError::EmptyObjectFieldKey);
             CStringBuilder keyBuilder((yyjson_mut_doc*)w->_document, key);
             const char* ckey = keyBuilder.c_str();
             yyjson_mut_obj_add_val((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)w->_stack.back()._value, ckey, arr);
         }
 
-        w->_stack.emplace((_SJsonWriter::ValueType*)arr, Level::kArray);
-        return true;
+        w->_stack.emplace((_Writer::ValueType*)arr, Level::kArray);
+        return {};
     }
 
     template <JsonPrimitiveWritableType T>
-    static bool WriteValue(_SJsonWriter* w, skr::StringView key, const T& value)
+    static WriteResult WriteValue(_Writer* w, skr::StringView key, const T& value)
     {
-        using Level = _SJsonWriter::Level;
+        using Level = _Writer::Level;
         using Type = std::decay_t<T>;
-        SKR_ASSERT(!w->_stack.empty() && "WriteValue() called without StartObject() or StartArray()");
+        SKR_RET_JSON_WRITE_ERROR_IF(!w->_stack.empty(), EWriteError::NoOpenScope);
 
         auto type = w->_stack.back()._type;
         auto object = (yyjson_mut_val*)w->_stack.back()._value;
         if (type == Level::kObject)
         {
-            SKR_ASSERT(!key.is_empty() && "WriteValue() must be called with key in object");
+            SKR_RET_JSON_WRITE_ERROR_IF(!key.is_empty(), EWriteError::EmptyObjectFieldKey);
             CStringBuilder keyBuilder((yyjson_mut_doc*)w->_document, key);
             const char* ckey = keyBuilder.c_str();
+            bool success = false;
 
-            IS_TYPE(_SJsonWriter::ValueType*)
-                return yyjson_mut_obj_add_val((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, (yyjson_mut_val*)value);
+            IS_TYPE(_Writer::ValueType*)
+                success = yyjson_mut_obj_add_val((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, (yyjson_mut_val*)value);
             IS_TYPE(bool)
-                return yyjson_mut_obj_add_bool((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
+                success = yyjson_mut_obj_add_bool((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
             IS_TYPE(int32_t)
-                return yyjson_mut_obj_add_sint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
+                success = yyjson_mut_obj_add_sint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
             IS_TYPE(int64_t)
-                return yyjson_mut_obj_add_sint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
+                success = yyjson_mut_obj_add_sint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
             IS_TYPE(uint32_t)
-                return yyjson_mut_obj_add_uint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
+                success = yyjson_mut_obj_add_uint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
             IS_TYPE(uint64_t)
-                return yyjson_mut_obj_add_uint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
+                success = yyjson_mut_obj_add_uint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
             IS_TYPE(float)
-                return yyjson_mut_obj_add_real((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
+                success = yyjson_mut_obj_add_real((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
             IS_TYPE(double)
-                return yyjson_mut_obj_add_real((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
+                success = yyjson_mut_obj_add_real((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value);
             IS_TYPE(skr::String)
-                return yyjson_mut_obj_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value.c_str(), value.raw().size());
+                success = yyjson_mut_obj_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, value.c_str(), value.raw().size());
             IS_TYPE(skr::StringView)
-                return yyjson_mut_obj_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, (const char*)value.raw().data(), value.raw().size());
+                success = yyjson_mut_obj_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, ckey, (const char*)value.raw().data(), value.raw().size());
+            
+            SKR_RET_WRITE_RESULT_WITH_BOOL(success);
         }
         else if (type == Level::kArray)
         {
-            SKR_ASSERT(key.is_empty() && "WriteValue() must not be called with key in array");
-            IS_TYPE(_SJsonWriter::ValueType*)
-                return yyjson_mut_arr_add_val((yyjson_mut_val*)object, (yyjson_mut_val*)value);
+            bool success = false;
+
+            SKR_RET_JSON_WRITE_ERROR_IF(key.is_empty(), EWriteError::ArrayElementWithKey);
+            IS_TYPE(_Writer::ValueType*)
+                success = yyjson_mut_arr_add_val((yyjson_mut_val*)object, (yyjson_mut_val*)value);
             IS_TYPE(bool)
-                return yyjson_mut_arr_add_bool((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
+                success = yyjson_mut_arr_add_bool((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
             IS_TYPE(int32_t)
-                return yyjson_mut_arr_add_sint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
+                success = yyjson_mut_arr_add_sint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
             IS_TYPE(int64_t)
-                return yyjson_mut_arr_add_sint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
+                success = yyjson_mut_arr_add_sint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
             IS_TYPE(uint32_t)
-                return yyjson_mut_arr_add_uint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
+                success = yyjson_mut_arr_add_uint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
             IS_TYPE(uint64_t)
-                return yyjson_mut_arr_add_uint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
+                success = yyjson_mut_arr_add_uint((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
             IS_TYPE(float)
-                return yyjson_mut_arr_add_real((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
+                success = yyjson_mut_arr_add_real((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
             IS_TYPE(double)
-                return yyjson_mut_arr_add_real((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
+                success = yyjson_mut_arr_add_real((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value);
             IS_TYPE(skr::String)
-                return yyjson_mut_arr_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value.c_str(), value.raw().size());
+                success = yyjson_mut_arr_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, value.c_str(), value.raw().size());
             IS_TYPE(skr::StringView)
-                return yyjson_mut_arr_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, (const char*)value.raw().data(), value.raw().size());
+                success = yyjson_mut_arr_add_strncpy((yyjson_mut_doc*)w->_document, (yyjson_mut_val*)object, (const char*)value.raw().data(), value.raw().size());
+            
+            SKR_RET_WRITE_RESULT_WITH_BOOL(success);
         }
-        return false;
+        return EWriteError::UnknownError;
     }
 
 #undef IS_TYPE
 };
 
-_SJsonWriter::_SJsonWriter(size_t levelDepth)
+_Writer::_Writer(size_t levelDepth)
 {
     yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
     _document = (SJsonMutableDocument*)doc;
     _stack.reserve(levelDepth);
 }
 
-_SJsonWriter::~_SJsonWriter()
+_Writer::~_Writer()
 {
     yyjson_mut_doc_free((yyjson_mut_doc*)_document);
 }
 
-bool _SJsonWriter::StartObject(skr::StringView key)
+WriteResult _Writer::StartObject(skr::StringView key)
 {
     yyjson_mut_val *obj = yyjson_mut_obj((yyjson_mut_doc*)_document);
     if (_stack.empty())
     {
-        SKR_ASSERT_RET_FALSE(key.is_empty(), "Root object should not have a key");
+        SKR_RET_JSON_WRITE_ERROR_IF(key.is_empty(), EWriteError::RootObjectWithKey);
         yyjson_mut_doc_set_root((yyjson_mut_doc*)_document, obj);
     }
     else if (_stack.back()._type == Level::kArray)
     {
-        SKR_ASSERT_RET_FALSE(key.is_empty(), "StartObject() must be called without key in array");
+        SKR_RET_JSON_WRITE_ERROR_IF(key.is_empty(), EWriteError::ArrayElementWithKey);
         yyjson_mut_arr_add_val((yyjson_mut_val*)_stack.back()._value, obj);
     }
     else if (_stack.back()._type == Level::kObject)
     {
-        SKR_ASSERT_RET_FALSE(!key.is_empty(), "StartObject() must be called with key in object");
+        SKR_RET_JSON_WRITE_ERROR_IF(!key.is_empty(), EWriteError::EmptyObjectFieldKey);
         CStringBuilder keyBuilder((yyjson_mut_doc*)_document, key);
         const char* ckey = keyBuilder.c_str();
         yyjson_mut_obj_add_val((yyjson_mut_doc*)_document, (yyjson_mut_val*)_stack.back()._value, ckey, obj);
     }
     _stack.emplace((ValueType*)obj, Level::kObject);
-    return true;
+    return {};
 }
 
-bool _SJsonWriter::EndObject()
+WriteResult _Writer::EndObject()
 {
-    if (_stack.empty())
-        SKR_ASSERT_RET_FALSE(false, "EndObject() called without StartObject()")
-    else if (_stack.back()._type != Level::kObject)
-        SKR_ASSERT_RET_FALSE(false, "EndObject() should not called with StartArray()")
-
+    SKR_RET_JSON_WRITE_ERROR_IF(!_stack.empty(), EWriteError::NoOpenScope);
+    SKR_RET_JSON_WRITE_ERROR_IF(_stack.back()._type == Level::kObject, EWriteError::ScopeTypeMismatch);
     _stack.pop_back();
-    return true;
+    return {};
 }
 
-bool _SJsonWriter::StartArray(skr::StringView key, const float* values, _SJsonWriter::SizeType count)
+WriteResult _Writer::StartArray(skr::StringView key, const float* values, _Writer::SizeType count)
 {
-    return _SJsonWriterHelper::StartArray(this, key, values, count);
+    return _WriterHelper::StartArray(this, key, values, count);
 }
 
-bool _SJsonWriter::StartArray(skr::StringView key, const double* values, _SJsonWriter::SizeType count)
+WriteResult _Writer::StartArray(skr::StringView key, const double* values, _Writer::SizeType count)
 {
-    return _SJsonWriterHelper::StartArray(this, key, values, count);
+    return _WriterHelper::StartArray(this, key, values, count);
 }
 
-bool _SJsonWriter::StartArray(skr::StringView key)
+WriteResult _Writer::StartArray(skr::StringView key)
 {
     const char* dummy = nullptr;
-    return _SJsonWriterHelper::StartArray(this, key, dummy, 0);
+    return _WriterHelper::StartArray(this, key, dummy, 0);
 }
 
-bool _SJsonWriter::StartArray(skr::StringView key, const int32_t* values, _SJsonWriter::SizeType count)
+WriteResult _Writer::StartArray(skr::StringView key, const int32_t* values, _Writer::SizeType count)
 {
-    return _SJsonWriterHelper::StartArray(this, key, values, count);
+    return _WriterHelper::StartArray(this, key, values, count);
 }
 
-bool _SJsonWriter::StartArray(skr::StringView key, const int64_t* values, _SJsonWriter::SizeType count)
+WriteResult _Writer::StartArray(skr::StringView key, const int64_t* values, _Writer::SizeType count)
 {
-    return _SJsonWriterHelper::StartArray(this, key, values, count);
+    return _WriterHelper::StartArray(this, key, values, count);
 }
 
-bool _SJsonWriter::StartArray(skr::StringView key, const uint32_t* values, _SJsonWriter::SizeType count)
+WriteResult _Writer::StartArray(skr::StringView key, const uint32_t* values, _Writer::SizeType count)
 {
-    return _SJsonWriterHelper::StartArray(this, key, values, count);
+    return _WriterHelper::StartArray(this, key, values, count);
 }
 
-bool _SJsonWriter::StartArray(skr::StringView key, const uint64_t* values, _SJsonWriter::SizeType count)
+WriteResult _Writer::StartArray(skr::StringView key, const uint64_t* values, _Writer::SizeType count)
 {
-    return _SJsonWriterHelper::StartArray(this, key, values, count);
+    return _WriterHelper::StartArray(this, key, values, count);
 }
 
-bool _SJsonWriter::EndArray()
+WriteResult _Writer::EndArray()
 {
-    if (_stack.empty())
-        SKR_ASSERT_RET_FALSE(false, "EndArray() called without StartArray()")
-    else if (_stack.back()._type != Level::kArray)
-        SKR_ASSERT_RET_FALSE(false, "EndArray() should not called with StartObject()")
-
+    SKR_RET_JSON_WRITE_ERROR_IF(!_stack.empty(), EWriteError::NoOpenScope);
+    SKR_RET_JSON_WRITE_ERROR_IF(_stack.back()._type == Level::kArray, EWriteError::ScopeTypeMismatch);
     _stack.pop_back();
-    return true;
+    return {};
 }
 
 /*
-bool _SJsonWriter::WriteValue(skr::StringView key, ValueType* value)
+WriteResult _Writer::WriteValue(skr::StringView key, ValueType* value)
 {
-    return _SJsonWriterHelper::WriteValue(this, key, value);
+    return _WriterHelper::WriteValue(this, key, value);
 }
 */
 
-bool _SJsonWriter::WriteBool(skr::StringView key, bool value)
+WriteResult _Writer::WriteBool(skr::StringView key, bool value)
 {
-    return _SJsonWriterHelper::WriteValue(this, key, value);
+    return _WriterHelper::WriteValue(this, key, value);
 }
 
-bool _SJsonWriter::WriteInt32(skr::StringView key, int32_t value)
+WriteResult _Writer::WriteInt32(skr::StringView key, int32_t value)
 {
-    return _SJsonWriterHelper::WriteValue(this, key, value);
+    return _WriterHelper::WriteValue(this, key, value);
 }
 
-bool _SJsonWriter::WriteInt64(skr::StringView key, int64_t value)
+WriteResult _Writer::WriteInt64(skr::StringView key, int64_t value)
 {
-    return _SJsonWriterHelper::WriteValue(this, key, value);
+    return _WriterHelper::WriteValue(this, key, value);
 }
 
-bool _SJsonWriter::WriteUInt32(skr::StringView key, uint32_t value)
+WriteResult _Writer::WriteUInt32(skr::StringView key, uint32_t value)
 {
-    return _SJsonWriterHelper::WriteValue(this, key, value);
+    return _WriterHelper::WriteValue(this, key, value);
 }
 
-bool _SJsonWriter::WriteUInt64(skr::StringView key, uint64_t value)
+WriteResult _Writer::WriteUInt64(skr::StringView key, uint64_t value)
 {
-    return _SJsonWriterHelper::WriteValue(this, key, value);
+    return _WriterHelper::WriteValue(this, key, value);
 }
 
-bool _SJsonWriter::WriteFloat(skr::StringView key, float value)
+WriteResult _Writer::WriteFloat(skr::StringView key, float value)
 {
-    return _SJsonWriterHelper::WriteValue(this, key, value);
+    return _WriterHelper::WriteValue(this, key, value);
 }
 
-bool _SJsonWriter::WriteDouble(skr::StringView key, double value)
+WriteResult _Writer::WriteDouble(skr::StringView key, double value)
 {
-    return _SJsonWriterHelper::WriteValue(this, key, value);
+    return _WriterHelper::WriteValue(this, key, value);
 }
 
-bool _SJsonWriter::WriteString(skr::StringView key, skr::StringView value)
+WriteResult _Writer::WriteString(skr::StringView key, skr::StringView value)
 {
-    return _SJsonWriterHelper::WriteValue(this, key, value);
+    return _WriterHelper::WriteValue(this, key, value);
 }
 
-bool _SJsonWriter::WriteString(skr::StringView key, const skr::String& value)
+WriteResult _Writer::WriteString(skr::StringView key, const skr::String& value)
 {
-    return _SJsonWriterHelper::WriteValue(this, key, value);
+    return _WriterHelper::WriteValue(this, key, value);
 }
 
-skr::String _SJsonWriter::Write()
+skr::String _Writer::Write()
 {
     yyjson_mut_doc* doc = (yyjson_mut_doc*)_document;
     auto str = yyjson_mut_write(doc, 0, NULL);
@@ -276,95 +281,87 @@ skr::String _SJsonWriter::Write()
     return result;
 }
 
-SJsonWriter::SJsonWriter(size_t levelDepth)
-    : _SJsonWriter(levelDepth)
+Writer::Writer(size_t levelDepth)
+    : _Writer(levelDepth)
 {
 
 }
 
-bool SJsonWriter::Key(skr::StringView key)
+WriteResult Writer::Key(skr::StringView key)
 {
-    SKR_ASSERT_RET_FALSE(_currentKey.is_empty(), "Last key is not consumed yet!");
-    SKR_ASSERT_RET_FALSE(!key.is_empty(), "key must not be empty!");
+    SKR_RET_JSON_WRITE_ERROR_IF(_currentKey.is_empty(), EWriteError::PresetKeyNotConsumedYet);
+    SKR_RET_JSON_WRITE_ERROR_IF(!key.is_empty(), EWriteError::PresetKeyIsEmpty);
     _currentKey = key;
-    return true;
+    return {};
 }
 
-bool SJsonWriter::Bool(bool value)
+WriteResult Writer::Bool(bool value)
 {
-    bool r = WriteBool(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER({ _currentKey.empty(); });
+    return WriteBool(_currentKey.view(), value);
 }
 
-bool SJsonWriter::Int32(int32_t value)
+WriteResult Writer::Int32(int32_t value)
 {
-    bool r = WriteInt32(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER({ _currentKey.empty(); });
+    return WriteInt32(_currentKey.view(), value);
 }
 
-bool SJsonWriter::Int64(int64_t value)
+WriteResult Writer::Int64(int64_t value)
 {
-    bool r = WriteInt64(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER({ _currentKey.empty(); });
+    return WriteInt64(_currentKey.view(), value);
 }
 
-bool SJsonWriter::UInt32(uint32_t value)
+WriteResult Writer::UInt32(uint32_t value)
 {
-    bool r = WriteUInt32(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER({ _currentKey.empty(); });
+    return WriteUInt32(_currentKey.view(), value);
 }
 
-bool SJsonWriter::UInt64(uint64_t value)
+WriteResult Writer::UInt64(uint64_t value)
 {
-    bool r = WriteUInt64(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER({ _currentKey.empty(); });
+    return WriteUInt64(_currentKey.view(), value);
 }
 
-bool SJsonWriter::Float(float value)
+WriteResult Writer::Float(float value)
 {
-    bool r = WriteFloat(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER({ _currentKey.empty(); });
+    return WriteFloat(_currentKey.view(), value);
 }
 
-bool SJsonWriter::Double(double value)
+WriteResult Writer::Double(double value)
 {
-    bool r = WriteDouble(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER({ _currentKey.empty(); });
+    return WriteDouble(_currentKey.view(), value);
 }
 
-bool SJsonWriter::String(skr::StringView value)
+WriteResult Writer::String(skr::StringView value)
 {
-    bool r = WriteString(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER({ _currentKey.empty(); });
+    return WriteString(_currentKey.view(), value);
 }
 
-bool SJsonWriter::String(const skr::String& value)
+WriteResult Writer::String(const skr::String& value)
 {
-    bool r = WriteString(_currentKey.view(), value);
-    _currentKey.empty();
-    return r;
+    SKR_DEFER({ _currentKey.empty(); });
+    return WriteString(_currentKey.view(), value);
 }
 
-bool SJsonWriter::StartArray()
+WriteResult Writer::StartArray()
 {
-    bool r = _SJsonWriter::StartArray(_currentKey.view());
-    _currentKey.empty();
-    return r;
+    SKR_DEFER({ _currentKey.empty(); });
+    return _Writer::StartArray(_currentKey.view());
 }
 
-bool SJsonWriter::StartObject()
+WriteResult Writer::StartObject()
 {
-    bool r = _SJsonWriter::StartObject(_currentKey.view());
-    _currentKey.empty();
-    return r;
+    SKR_DEFER({ _currentKey.empty(); });
+    return _Writer::StartObject(_currentKey.view());
 }
 
-#undef SKR_ASSERT_RET_FALSE
+}
+
+#undef SKR_RET_WRITE_RESULT_WITH_BOOL
+#undef SKR_RET_JSON_WRITE_ERROR_IF

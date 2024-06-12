@@ -12,7 +12,7 @@
 namespace skr::json
 {
 template <class T>
-bool Write(SJsonWriter* writer, const T& value);
+bool Write(skr::json::Writer* writer, const T& value);
 }
 
 // primitive types
@@ -23,53 +23,53 @@ namespace skr::json
 {
 template <>
 struct SKR_STATIC_API WriteTrait<bool> {
-    static bool Write(SJsonWriter* writer, bool b);
+    static bool Write(skr::json::Writer* writer, bool b);
 };
 
 // int
 template <>
 struct SKR_STATIC_API WriteTrait<int8_t> {
-    static bool Write(SJsonWriter* writer, int8_t i);
+    static bool Write(skr::json::Writer* writer, int8_t i);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<int16_t> {
-    static bool Write(SJsonWriter* writer, int16_t i);
+    static bool Write(skr::json::Writer* writer, int16_t i);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<int32_t> {
-    static bool Write(SJsonWriter* writer, int32_t i);
+    static bool Write(skr::json::Writer* writer, int32_t i);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<int64_t> {
-    static bool Write(SJsonWriter* writer, int64_t i);
+    static bool Write(skr::json::Writer* writer, int64_t i);
 };
 
 // uint
 template <>
 struct SKR_STATIC_API WriteTrait<uint8_t> {
-    static bool Write(SJsonWriter* writer, uint8_t i);
+    static bool Write(skr::json::Writer* writer, uint8_t i);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<uint16_t> {
-    static bool Write(SJsonWriter* writer, uint16_t i);
+    static bool Write(skr::json::Writer* writer, uint16_t i);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<uint32_t> {
-    static bool Write(SJsonWriter* writer, uint32_t i);
+    static bool Write(skr::json::Writer* writer, uint32_t i);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<uint64_t> {
-    static bool Write(SJsonWriter* writer, uint64_t i);
+    static bool Write(skr::json::Writer* writer, uint64_t i);
 };
 
 // float
 template <>
 struct SKR_STATIC_API WriteTrait<float> {
-    static bool Write(SJsonWriter* writer, float f);
+    static bool Write(skr::json::Writer* writer, float f);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<double> {
-    static bool Write(SJsonWriter* writer, double d);
+    static bool Write(skr::json::Writer* writer, double d);
 };
 
 } // namespace skr::json
@@ -79,43 +79,43 @@ namespace skr::json
 {
 template <>
 struct SKR_STATIC_API WriteTrait<skr_float2_t> {
-    static bool Write(SJsonWriter* writer, const skr_float2_t& v);
+    static bool Write(skr::json::Writer* writer, const skr_float2_t& v);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<skr_float3_t> {
-    static bool Write(SJsonWriter* writer, const skr_float3_t& v);
+    static bool Write(skr::json::Writer* writer, const skr_float3_t& v);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<skr_float4_t> {
-    static bool Write(SJsonWriter* writer, const skr_float4_t& v);
+    static bool Write(skr::json::Writer* writer, const skr_float4_t& v);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<skr_float4x4_t> {
-    static bool Write(SJsonWriter* writer, const skr_float4x4_t& v);
+    static bool Write(skr::json::Writer* writer, const skr_float4x4_t& v);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<skr_rotator_t> {
-    static bool Write(SJsonWriter* writer, const skr_rotator_t& v);
+    static bool Write(skr::json::Writer* writer, const skr_rotator_t& v);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<skr_quaternion_t> {
-    static bool Write(SJsonWriter* writer, const skr_quaternion_t& v);
+    static bool Write(skr::json::Writer* writer, const skr_quaternion_t& v);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<skr_guid_t> {
-    static bool Write(SJsonWriter* writer, const skr_guid_t& guid);
+    static bool Write(skr::json::Writer* writer, const skr_guid_t& guid);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<skr_md5_t> {
-    static bool Write(SJsonWriter* writer, const skr_md5_t& md5);
+    static bool Write(skr::json::Writer* writer, const skr_md5_t& md5);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<skr::StringView> {
-    static bool Write(SJsonWriter* writer, const skr::StringView& str);
+    static bool Write(skr::json::Writer* writer, const skr::StringView& str);
 };
 template <>
 struct SKR_STATIC_API WriteTrait<skr::String> {
-    static bool Write(SJsonWriter* writer, const skr::String& str);
+    static bool Write(skr::json::Writer* writer, const skr::String& str);
 };
 } // namespace skr::json
 
@@ -124,7 +124,7 @@ namespace skr::json
 {
 template <class K, class V, class Hash, class Eq>
 struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
-    static bool Write(SJsonWriter* json, const skr::FlatHashMap<K, V, Hash, Eq>& map)
+    static bool Write(skr::json::Writer* json, const skr::FlatHashMap<K, V, Hash, Eq>& map)
     {
         json->StartArray();
         for (auto& pair : map)
@@ -138,7 +138,7 @@ struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
 };
 template <class V>
 struct WriteTrait<skr::Vector<V>> {
-    static bool Write(SJsonWriter* json, const skr::Vector<V>& vec)
+    static bool Write(skr::json::Writer* json, const skr::Vector<V>& vec)
     {
         json->StartArray();
         for (auto& v : vec)
@@ -151,7 +151,7 @@ struct WriteTrait<skr::Vector<V>> {
 };
 template <class V>
 struct WriteTrait<skr::span<V>> {
-    static bool Write(SJsonWriter* json, const skr::span<V>& vec)
+    static bool Write(skr::json::Writer* json, const skr::span<V>& vec)
     {
         json->StartArray();
         for (auto& v : vec)
@@ -164,7 +164,7 @@ struct WriteTrait<skr::span<V>> {
 };
 template <class... Ts>
 struct WriteTrait<skr::variant<Ts...>> {
-    static bool Write(SJsonWriter* json, const skr::variant<Ts...>& v)
+    static bool Write(skr::json::Writer* json, const skr::variant<Ts...>& v)
     {
         skr::visit([&](auto&& value) {
             using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
@@ -184,7 +184,7 @@ struct WriteTrait<skr::variant<Ts...>> {
 namespace skr::json
 {
 template <class T>
-bool Write(SJsonWriter* writer, const T& value)
+bool Write(skr::json::Writer* writer, const T& value)
 {
     return WriteTrait<T>::Write(writer, value);
 }
