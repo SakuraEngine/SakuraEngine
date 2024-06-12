@@ -1,12 +1,10 @@
 #pragma once
 #include "SkrBase/types.h"
 #if defined(__cplusplus)
-    #include "SkrJson/reader.h"
+    #include "SkrArchive/json/reader.h"
     #include "SkrContainers/hashmap.hpp"
     #include "SkrContainers/string.hpp"
     #include "SkrContainers/vector.hpp"
-    #include "SkrContainers/vector.hpp"
-    #include "SkrGuid/guid.hpp"
     #include "SkrContainers/variant.hpp"
     #include "SkrRTTR/rttr_traits.hpp"
 
@@ -15,14 +13,11 @@ namespace skr::json
 {
 template <class T>
 bool Read(skr::json::Reader* json, T& value);
-} // namespace skr::json
 
 // primitive types
 // bool
 // int/uint 8/16/32/64
 // float/double
-namespace skr::json
-{
 template <>
 struct SKR_STATIC_API ReadTrait<bool> {
     static bool Read(skr::json::Reader* json, bool& value);

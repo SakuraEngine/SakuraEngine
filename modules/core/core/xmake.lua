@@ -24,13 +24,13 @@ static_component("SkrSimpleAsync", "SkrCore")
     add_deps("SkrBase")
     add_files("src/async/build.*.cpp")
 
-static_component("SkrJson", "SkrCore")
+static_component("SkrArchive", "SkrCore")
     add_deps("SkrBase")
-    add_files("src/json/build.*.cpp")
+    add_files("src/archive/build.*.cpp")
     add_packages("yyjson", {public = false})
 
 static_component("SkrSerde", "SkrCore")
-    add_deps("SkrJson")
+    add_deps("SkrArchive")
     add_packages("parallel-hashmap", {public = true, inherit = true})
     add_files("src/serde/build.*.cpp")
 
