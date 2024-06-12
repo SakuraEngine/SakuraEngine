@@ -113,7 +113,7 @@ ReadResult _Reader::StartObject(skr::StringView key)
             _stack.emplace((ValueType*)obj, Level::kObject);
         }
         else
-            SKR_RET_JSON_READ_RESULT(false, EReadError::StartObjectInPrimitiveTypes);
+            SKR_RET_JSON_READ_RESULT(false, EReadError::UnknownError);
     }
     return {};
 }
@@ -130,7 +130,17 @@ ReadResult _Reader::StartArray(skr::StringView key, SizeType& count)
 {
     SKR_RET_JSON_READ_RESULT(!_stack.empty(), EReadError::NoOpenScope);
     auto parent = (yyjson_val*)_stack.back()._value;
-    if (_stack.back()._type == Level::kObject)
+    auto parent_type = yyjson_get_type(parent);
+    if (parent_type == YYJSON_TYPE_ARR)
+    {
+        SKR_RET_JSON_READ_RESULT(key.is_empty(), EReadError::ArrayElementWithKey);
+        auto arr = yyjson_arr_get(parent, _stack.back()._index++);
+        SKR_RET_JSON_READ_RESULT(arr, EReadError::KeyNotFound);
+        SKR_RET_JSON_READ_RESULT(yyjson_get_type(arr) == YYJSON_TYPE_ARR, EReadError::ScopeTypeMismatch);
+        count = yyjson_arr_size(arr);
+        _stack.emplace((ValueType*)arr, Level::kArray);
+    }
+    else if (parent_type == YYJSON_TYPE_OBJ)
     {
         SKR_RET_JSON_READ_RESULT(!key.is_empty(), EReadError::EmptyObjectFieldKey);
         auto arr = yyjson_obj_get(parent, (const char*)key.raw().data());
@@ -139,14 +149,9 @@ ReadResult _Reader::StartArray(skr::StringView key, SizeType& count)
         count = yyjson_arr_size(arr);
         _stack.emplace((ValueType*)arr, Level::kArray);
     }
-    else if (_stack.back()._type == Level::kArray)
-    {
-        auto arr = yyjson_arr_get(parent, _stack.back()._index++);
-        SKR_RET_JSON_READ_RESULT(arr, EReadError::KeyNotFound);
-        SKR_RET_JSON_READ_RESULT(yyjson_get_type(arr) == YYJSON_TYPE_ARR, EReadError::ScopeTypeMismatch);
-        count = yyjson_arr_size(arr);
-        _stack.emplace((ValueType*)arr, Level::kArray);
-    }
+    else
+        SKR_RET_JSON_READ_RESULT(false, EReadError::UnknownError);
+
     return {};
 }
 

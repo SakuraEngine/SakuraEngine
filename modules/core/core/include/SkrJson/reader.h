@@ -12,13 +12,11 @@ enum class EReadError : uint32_t
     NoOpenScope,
     ScopeTypeMismatch,
     KeyNotFound,
+    UnknownTypeToRead,
 
     EmptyObjectFieldKey,
     ArrayElementWithKey,
     RootObjectWithKey,
-    
-    UnknownTypeToRead,
-    StartObjectInPrimitiveTypes,
 
     PresetKeyNotConsumedYet,
     PresetKeyIsEmpty
