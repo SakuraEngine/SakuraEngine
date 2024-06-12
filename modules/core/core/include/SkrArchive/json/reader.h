@@ -10,8 +10,8 @@ using EReadError = ErrorCode;
 using ReadResult = JsonResult;
 
 struct SKR_STATIC_API _Reader {
-    using CharType = SJsonCharType;
-    using SizeType = SJsonSizeType;
+    using CharType = char8_t;
+    using SizeType = size_t;
     using DocumentType = SJsonDocument;
     using ValueType = SJsonValue;
 

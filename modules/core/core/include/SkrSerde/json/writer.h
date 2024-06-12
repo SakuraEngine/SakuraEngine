@@ -13,6 +13,9 @@ namespace skr::json
 {
 template <class T>
 bool Write(skr::json::Writer* writer, const T& value);
+
+template <class T, class = void>
+struct WriteTrait;
 }
 
 // primitive types

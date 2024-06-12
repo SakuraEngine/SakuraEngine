@@ -28,6 +28,12 @@ typedef skr_guid_t sugoi_guid_t;
 #if defined(__cplusplus)
     #include <limits>
 
+namespace skr::json
+{
+    struct Reader;
+    struct Writer;
+}
+
 namespace sugoi
 {
 [[maybe_unused]] static constexpr size_t kFastBinSize       = 64 * 1024;

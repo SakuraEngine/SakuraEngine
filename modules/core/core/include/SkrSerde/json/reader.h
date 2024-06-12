@@ -14,6 +14,12 @@ namespace skr::json
 template <class T>
 bool Read(skr::json::Reader* json, T& value);
 
+template <class T, class = void>
+struct ReadTrait;
+}
+
+namespace skr::json
+{
 // primitive types
 // bool
 // int/uint 8/16/32/64

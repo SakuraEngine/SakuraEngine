@@ -1,15 +1,10 @@
 #pragma once
 #include "SkrBase/types.h"
 
-typedef struct SJsonDocument SJsoDocument;
-typedef struct SJsonMutableDocument SJsonMutableDocument;
-typedef struct SJsonValue SJsonValue;
-typedef struct SJsonMutableValue SJsonMutableValue;
-
 #if defined(__cplusplus)
 #include "SkrContainers/string.hpp"
 
-namespace skr::json
+namespace skr::binary
 {
 
 enum class ErrorCode : uint32_t 
@@ -28,23 +23,23 @@ enum class ErrorCode : uint32_t
     PresetKeyNotConsumedYet, // RW
     PresetKeyIsEmpty         // RW
 };
-using JsonResult = skr::Expected<ErrorCode>;
+using BinaryResult = skr::Expected<ErrorCode>;
 
 template <typename T>
-inline static constexpr bool IsJsonPrimitiveReadableType =
+inline static constexpr bool IsBinaryPrimitiveReadableType =
     std::is_same_v<T, bool> || std::is_integral_v<T> || std::is_floating_point_v<T> ||
     std::is_same_v<T, char8_t*> || 
     std::is_same_v<T, skr::String>;
 
 template <typename T>
-inline static constexpr bool IsJsonPrimitiveWritableType =
-    IsJsonPrimitiveReadableType<T> || std::is_same_v<T, skr::StringView>;
+inline static constexpr bool IsBinaryPrimitiveWritableType =
+    IsBinaryPrimitiveReadableType<T> || std::is_same_v<T, skr::StringView>;
 
 template <typename T>
-concept JsonPrimitiveWritableType = IsJsonPrimitiveWritableType<T>;
+concept BinaryPrimitiveWritableType = IsBinaryPrimitiveWritableType<T>;
 
 template <typename T>
-concept JsonPrimitiveReadableType = IsJsonPrimitiveReadableType<T>;
+concept BinaryPrimitiveReadableType = IsBinaryPrimitiveReadableType<T>;
 
 }
 #endif

@@ -10,8 +10,8 @@ using EWriteError = ErrorCode;
 using WriteResult = JsonResult;
 
 struct SKR_STATIC_API _Writer {
-    using CharType = SJsonCharType;
-    using SizeType = SJsonSizeType;
+    using CharType = char8_t;
+    using SizeType = size_t;
     using DocumentType = SJsonMutableDocument;
     using ValueType = SJsonMutableValue;
 
