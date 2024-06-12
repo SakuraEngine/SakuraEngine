@@ -9,7 +9,7 @@ namespace skr::archive {
 using BinaryWriteError = BinaryErrorCode;
 using BinaryWriteResult = BinaryResult;
 
-struct SKR_STATIC_API _Writer {
+struct SKR_STATIC_API _BinaryWriter {
     using CharType = char8_t;
     using SizeType = size_t;
 

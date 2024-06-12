@@ -19,7 +19,7 @@ skr::task::event_t BuildDelta(sugoi_type_index_t type, sugoi_query_t* query, MPW
     skr::task::event_t counter;
     static sugoi_type_index_t historyComponent = ctx.historyComponent;
     static uint32_t historyComponentSize = withHistory ? sugoiT_get_desc(historyComponent)->size : 0;skr::task::event_t result{nullptr};
-    sugoi::schesugoi_custom(query, [=, &comps, &builder](sugoi::task_context_t tctx)
+    sugoi::schedual_custom(query, [=, &comps, &builder](sugoi::task_context_t tctx)
     {
         SkrZoneScopedN("BuildDelta");
         if(comps.entities.empty())
@@ -92,7 +92,7 @@ skr::task::event_t ApplyDelta(sugoi_type_index_t type, sugoi_query_t* query, con
         return skr::task::event_t(nullptr);
     auto& comps = *iter;
     skr::task::event_t result{nullptr};
-    sugoi::schesugoi_custom(query, [/*type, */&delta, &map, &comps](sugoi::task_context_t ctx)
+    sugoi::schedual_custom(query, [/*type, */&delta, &map, &comps](sugoi::task_context_t ctx)
     {
         sugoi_chunk_view_t lastView {nullptr, 0, 0};
         const T* lastComp = nullptr;

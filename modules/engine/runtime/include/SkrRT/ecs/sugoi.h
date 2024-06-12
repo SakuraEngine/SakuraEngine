@@ -1166,7 +1166,7 @@ auto schedule_task(sugoi_query_t* query, EIndex batchSize, F callback, skr::task
 }
 
 template <class T, class F>
-auto schesugoi_custom(T query, F callback, skr::task::event_t* counter)
+auto schedual_custom(T query, F callback, skr::task::event_t* counter)
 {
     static constexpr auto convertible_to_function_check = [](auto t) -> decltype(+t) { return +t; };
     using TaskContext                                   = typename T::TaskContext;
@@ -1199,9 +1199,9 @@ auto schesugoi_custom(T query, F callback, skr::task::event_t* counter)
 }
 
 template <class F>
-auto schesugoi_custom(sugoi_query_t* query, F callback, skr::task::event_t* counter)
+auto schedual_custom(sugoi_query_t* query, F callback, skr::task::event_t* counter)
 {
-    return schesugoi_custom<sugoi::QWildcard, F>(sugoi::QWildcard{ query }, std::move(callback), counter);
+    return schedual_custom<sugoi::QWildcard, F>(sugoi::QWildcard{ query }, std::move(callback), counter);
 }
 
 template <class T>

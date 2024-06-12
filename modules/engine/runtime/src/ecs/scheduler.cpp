@@ -561,7 +561,7 @@ skr::task::event_t sugoi::scheduler_t::schedule_job(sugoi_query_t* query, sugoi_
 
 skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies(sugoi_query_t* query, const skr::task::event_t& counter, sugoi_resource_operation_t* resources)
 {
-    SkrZoneScopedN("SchesugoiCustomJob");
+    SkrZoneScopedN("schedualCustomJob");
 
     llvm_vecsmall::SmallVector<sugoi_group_t*, 64> groups;
     auto add_group = [&](sugoi_group_t* group) {
