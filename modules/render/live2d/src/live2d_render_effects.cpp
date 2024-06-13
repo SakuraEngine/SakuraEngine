@@ -55,7 +55,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     live2d_render_view_t view_;
 
     sugoi_query_t*        effect_query = nullptr;
-    sugoi::type_builder_t type_builder;
+    sugoi::TypeSetBuilder type_builder;
     sugoi_type_index_t    identity_type = {};
 
     void initialize(SRendererId renderer, sugoi_storage_t* storage)

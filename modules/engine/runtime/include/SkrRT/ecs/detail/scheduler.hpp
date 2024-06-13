@@ -10,7 +10,7 @@
 
 namespace sugoi
 {
-struct job_dependency_entry_t {
+struct JobDependencyEntry {
     skr::stl_vector<skr::task::weak_event_t> owned;
     skr::stl_vector<skr::task::weak_event_t> shared;
 };
@@ -18,8 +18,8 @@ struct job_dependency_entry_t {
 struct scheduler_t {
     sugoi::entity_registry_t registry;
     skr::task::counter_t allCounter;
-    skr::stl_vector<sugoi::job_dependency_entry_t> allResources;
-    skr::FlatHashMap<sugoi::archetype_t*, skr::stl_vector<job_dependency_entry_t>> dependencyEntries;
+    skr::stl_vector<sugoi::JobDependencyEntry> allResources;
+    skr::FlatHashMap<sugoi::archetype_t*, skr::stl_vector<JobDependencyEntry>> dependencyEntries;
     SMutexObject entryMutex;
     SMutexObject resourceMutex;
     skr::stl_vector<sugoi_storage_t*> storages;

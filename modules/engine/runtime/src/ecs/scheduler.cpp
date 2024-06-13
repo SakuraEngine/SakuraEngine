@@ -1,15 +1,15 @@
+#include "SkrProfile/profile.h"
 #include "SkrContainers/sptr.hpp"
 #include "SkrRT/ecs/SmallVector.h"
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/ecs/entity.hpp"
 
 #include "SkrRT/ecs/detail/type.hpp"
 #include "SkrRT/ecs/detail/query.hpp"
 #include "SkrRT/ecs/detail/storage.hpp"
 #include "SkrRT/ecs/detail/scheduler.hpp"
-#include <bitset>
 
-#include "SkrProfile/profile.h"
+#include <bitset>
+#include "./utilities.hpp"
 
 sugoi::scheduler_t::scheduler_t()
 {
@@ -256,7 +256,7 @@ struct hash_shared_ptr {
     }
 };
 using DependencySet = skr::FlatHashSet<skr::task::event_t, hash_shared_ptr>;
-void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool readonly, bool atomic, DependencySet& dependencies)
+void update_entry(JobDependencyEntry& entry, skr::task::event_t job, bool readonly, bool atomic, DependencySet& dependencies)
 {
     SKR_ASSERT(job);
     if (readonly)
@@ -598,7 +598,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
             auto iter = dependencyEntries.find(at);
             if (iter == dependencyEntries.end())
             {
-                skr::stl_vector<job_dependency_entry_t> entries(at->type.length);
+                skr::stl_vector<JobDependencyEntry> entries(at->type.length);
                 iter = dependencyEntries.insert(std::make_pair(at, std::move(entries))).first;
             }
 

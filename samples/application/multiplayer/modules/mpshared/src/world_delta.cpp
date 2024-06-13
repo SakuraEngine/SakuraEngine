@@ -73,7 +73,7 @@ struct ComponentDeltaBuilder {
             SKR_ASSERT(SUGOI_IS_BUFFER(historyComponent));
             auto                  filter  = make_zeroed<sugoi_filter_t>();
             sugoi_type_index_t    types[] = { component, historyComponent, sugoi_id_of<CAuth>::get() };
-            sugoi::type_builder_t all;
+            sugoi::TypeSetBuilder all;
             all.with(types, 3);
             filter.all                    = all.build();
             sugoi_parameters_t params     = {};
@@ -90,7 +90,7 @@ struct ComponentDeltaBuilder {
         else
         {
             auto                  filter = make_zeroed<sugoi_filter_t>();
-            sugoi::type_builder_t all;
+            sugoi::TypeSetBuilder all;
             sugoi_type_index_t    types[] = { component, sugoi_id_of<CAuth>::get() };
             all.with(types, 2);
             filter.all                    = all.build();
@@ -182,7 +182,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
             return index;
         };
 
-        sugoi::type_builder_t history;
+        sugoi::TypeSetBuilder history;
         for (auto& component : components)
         {
             if (component.historyComponent != sugoi::kInvalidTypeIndex)
@@ -409,7 +409,7 @@ struct ComponentDeltaApplier {
     void Initialize(sugoi_storage_t* storage)
     {
         auto                  filter = make_zeroed<sugoi_filter_t>();
-        sugoi::type_builder_t all;
+        sugoi::TypeSetBuilder all;
         all.with(component).with<CNetwork>();
         filter.all                    = all.build();
         sugoi_parameters_t params     = {};

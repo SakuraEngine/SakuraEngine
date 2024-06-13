@@ -1,4 +1,4 @@
-#include "SkrRT/ecs/entity.hpp"
+#include "./utilities.hpp"
 #include "SkrRT/ecs/entities.hpp"
 #include "SkrRT/ecs/detail/chunk.hpp"
 

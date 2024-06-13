@@ -139,7 +139,7 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
     bool bUseCVV)
 {
     auto storage = renderer->get_sugoi_storage();
-    auto renderableT_builder = make_zeroed<sugoi::type_builder_t>();
+    auto renderableT_builder = make_zeroed<sugoi::TypeSetBuilder>();
     renderableT_builder
         .with<skr_render_effect_t>();
     // allocate renderable

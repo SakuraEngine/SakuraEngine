@@ -1,10 +1,7 @@
 #include "SkrOS/atomic.h"
-#include "SkrRT/ecs/SmallVector.h"
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/ecs/entity.hpp"
 #include "SkrRT/ecs/set.hpp"
 #include "SkrTask/parallel_for.hpp"
-
 #include "SkrRT/ecs/detail/query.hpp"
 #include "SkrRT/ecs/detail/storage.hpp"
 #include "SkrRT/ecs/detail/pool.hpp"
@@ -13,6 +10,7 @@
 #include "SkrRT/ecs/detail/scheduler.hpp"
 #include "SkrRT/ecs/detail/iterator_ref.hpp"
 #include "SkrRT/ecs/detail/type_registry.hpp"
+#include "./utilities.hpp"
 
 sugoi_storage_t::sugoi_storage_t()
     : archetypeArena(sugoi::get_default_pool())

@@ -186,7 +186,7 @@ void bind_ecs(lua_State* L)
             luaL_argexpected(L, lua_isfunction(L, 4), 4, "function");
             // iterate array
             auto                  count = lua_objlen(L, 2);
-            sugoi::type_builder_t builder;
+            sugoi::TypeSetBuilder builder;
             builder.reserve((uint32_t)count);
             for (auto i = 1; i <= count; ++i)
             {
@@ -257,8 +257,8 @@ void bind_ecs(lua_State* L)
             // iterate array
             auto                            count = lua_objlen(L, 2);
             skr::stl_vector<sugoi_entity_t> entities;
-            sugoi::type_builder_t           addBuilder;
-            sugoi::type_builder_t           removeBuilder;
+            sugoi::TypeSetBuilder           addBuilder;
+            sugoi::TypeSetBuilder           removeBuilder;
             entities.reserve(count);
             for (auto i = 1; i <= count; ++i)
             {

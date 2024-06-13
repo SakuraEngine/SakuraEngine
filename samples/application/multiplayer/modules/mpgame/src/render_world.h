@@ -31,5 +31,5 @@ struct MPRenderWorld
     void Update();
     void Render();
     void LoadScene();
-    sugoi::type_builder_t GetRenderEntityType(skr_resource_handle_t prefab, bool controller);
+    sugoi::TypeSetBuilder GetRenderEntityType(skr_resource_handle_t prefab, bool controller);
 };

@@ -92,7 +92,7 @@ void MPClientWorld::ReceiveWorldDelta(const void* data, size_t dataLength)
 sugoi_entity_t MPClientWorld::SpawnPrefab(skr_resource_handle_t prefab, sugoi_entity_t entity, sugoi_entity_type_t extension)
 {
     sugoi_entity_t        result;
-    sugoi::type_builder_t builder;
+    sugoi::TypeSetBuilder builder;
     builder.with<CPrefab, CNetwork, CGhost>();
     builder.with(extension.type.data, extension.type.length);
     sugoi_entity_type_t type = make_zeroed<sugoi_entity_type_t>();
@@ -209,7 +209,7 @@ void MPClientWorld::Snapshot()
     // then create a snapshot entity to store those data
     auto callback = [&](sugoi_group_t* group) {
         skr::FlatHashMap<sugoi_chunk_t*, skr::Vector<sugoi_chunk_view_t>> views;
-        sugoi::type_builder_t                                             predictedBuilder;
+        sugoi::TypeSetBuilder                                             predictedBuilder;
         for (auto query : { movementQuery.query, controlQuery.query })
         {
             bool match    = false;
@@ -239,7 +239,7 @@ void MPClientWorld::Snapshot()
         std::vector<sugoi_type_index_t> buffer;
         buffer.resize(std::max(predictedType.length, entType.type.length));
         auto                  predictedInView = sugoi::set_utils<sugoi_type_index_t>::intersect(entType.type, predictedType, buffer.data());
-        sugoi::type_builder_t builder;
+        sugoi::TypeSetBuilder builder;
         builder.with(predictedInView.data, predictedInView.length);
         builder.with<CSnapshot>();
         auto snapshotType = make_zeroed<sugoi_entity_type_t>();

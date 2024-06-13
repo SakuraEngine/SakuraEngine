@@ -249,7 +249,7 @@ void SGameModule::installResourceFactories()
     struct GameSceneFactory : public skr::resource::SSceneFactory {
         virtual ESkrInstallStatus Install(skr_resource_record_t* record) override
         {
-            auto renderableT_builder = make_zeroed<sugoi::type_builder_t>();
+            auto renderableT_builder = make_zeroed<sugoi::TypeSetBuilder>();
             renderableT_builder.with<skr_render_effect_t>();
             auto renderableT               = make_zeroed<sugoi_entity_type_t>();
             renderableT.type               = renderableT_builder.build();
@@ -338,7 +338,7 @@ void SGameModule::on_load(int argc, char8_t** argv)
 void create_test_scene(SRendererId renderer)
 {
     // allocate 100 movable cubes
-    auto renderableT_builder = make_zeroed<sugoi::type_builder_t>();
+    auto renderableT_builder = make_zeroed<sugoi::TypeSetBuilder>();
     renderableT_builder
     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
     .with<skr_index_comp_t, skr_movement_comp_t>()
@@ -393,7 +393,7 @@ void create_test_scene(SRendererId renderer)
     SKR_LOG_DEBUG(u8"Create Scene 0!");
 
     // allocate 1 player entity
-    auto playerT_builder = make_zeroed<sugoi::type_builder_t>();
+    auto playerT_builder = make_zeroed<sugoi::TypeSetBuilder>();
     playerT_builder
     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
     .with<skr_movement_comp_t>()
@@ -405,7 +405,7 @@ void create_test_scene(SRendererId renderer)
     SKR_LOG_DEBUG(u8"Create Scene 1!");
 
     // allocate 1 static(unmovable) gltf mesh
-    auto static_renderableT_builderT = make_zeroed<sugoi::type_builder_t>();
+    auto static_renderableT_builderT = make_zeroed<sugoi::TypeSetBuilder>();
     static_renderableT_builderT
     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
     .with<skr_render_effect_t, game::anim_state_t>();
@@ -422,13 +422,13 @@ void async_attach_skin_mesh(SRendererId renderer)
 
     auto filter          = make_zeroed<sugoi_filter_t>();
     auto meta            = make_zeroed<sugoi_meta_filter_t>();
-    auto renderable_type = make_zeroed<sugoi::type_builder_t>();
+    auto renderable_type = make_zeroed<sugoi::TypeSetBuilder>();
     renderable_type.with<skr_render_effect_t, skr_translation_comp_t>();
-    auto static_type = make_zeroed<sugoi::type_builder_t>();
+    auto static_type = make_zeroed<sugoi::TypeSetBuilder>();
     static_type.with<skr_movement_comp_t>();
     filter.all     = renderable_type.build();
     filter.none    = static_type.build();
-    auto skin_type = make_zeroed<sugoi::type_builder_t>();
+    auto skin_type = make_zeroed<sugoi::TypeSetBuilder>();
     auto filter2   = make_zeroed<sugoi_filter_t>();
     filter2.all    = skin_type.with<renderer::MeshComponent, anim::SkinComponent, anim::SkeletonComponent>().build();
     auto attchFunc = [=](sugoi_chunk_view_t* view) {
@@ -465,13 +465,13 @@ void async_attach_render_mesh(SRendererId renderer)
 {
     auto filter          = make_zeroed<sugoi_filter_t>();
     auto meta            = make_zeroed<sugoi_meta_filter_t>();
-    auto renderable_type = make_zeroed<sugoi::type_builder_t>();
+    auto renderable_type = make_zeroed<sugoi::TypeSetBuilder>();
     renderable_type.with<skr_render_effect_t, skr_translation_comp_t>();
-    auto static_type = make_zeroed<sugoi::type_builder_t>();
+    auto static_type = make_zeroed<sugoi::TypeSetBuilder>();
     static_type.with<skr_movement_comp_t>();
     filter.all     = renderable_type.build();
     filter.none    = static_type.build();
-    auto skin_type = make_zeroed<sugoi::type_builder_t>();
+    auto skin_type = make_zeroed<sugoi::TypeSetBuilder>();
     auto filter2   = make_zeroed<sugoi_filter_t>();
     filter2.all    = skin_type.with<skr::renderer::MeshComponent>().build();
     auto attchFunc = [=](sugoi_chunk_view_t* view) {

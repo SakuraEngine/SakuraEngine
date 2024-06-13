@@ -36,7 +36,7 @@ protected:
     void free_pipeline(SRendererId renderer);
     //
 
-    sugoi::type_builder_t type_builder;
+    sugoi::TypeSetBuilder type_builder;
     sugoi_type_set_t typeset;
     skr_vfs_t* resource_vfs;
 

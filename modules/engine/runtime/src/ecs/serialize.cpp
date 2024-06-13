@@ -1,9 +1,6 @@
+#include "SkrProfile/profile.h"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/array.hpp"
-#include "SkrRT/ecs/entity.hpp"
-#include "SkrSerde/binary/reader.h"
-#include "SkrSerde/binary/writer.h"
-
 #include "SkrRT/ecs/detail/chunk.hpp"
 #include "SkrRT/ecs/detail/storage.hpp"
 #include "SkrRT/ecs/detail/stack.hpp"
@@ -11,8 +8,9 @@
 #include "SkrRT/ecs/detail/archetype.hpp"
 #include "SkrRT/ecs/detail/scheduler.hpp"
 #include "SkrRT/ecs/detail/type_registry.hpp"
-
-#include "SkrProfile/profile.h"
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
+#include "./utilities.hpp"
 
 template <class T>
 static void ArchiveBuffer(SBinaryWriter* writer, const T* buffer, uint32_t count)

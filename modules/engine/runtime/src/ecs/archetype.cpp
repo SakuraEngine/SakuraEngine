@@ -1,5 +1,4 @@
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/ecs/entity.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/set.hpp"
 
@@ -12,6 +11,7 @@
 #include "SkrRT/ecs/detail/type_registry.hpp"
 
 #include <algorithm>
+#include "./utilities.hpp"
 
 namespace sugoi
 {
