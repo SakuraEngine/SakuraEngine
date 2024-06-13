@@ -69,7 +69,7 @@ struct SKR_RUNTIME_API TypeSetBuilder {
     sugoi_type_set_t build();
     bool empty() const { return indices.empty(); }
 protected:
-    sugoi::array_comp_T<sugoi_type_index_t, 8> indices;
+    sugoi::ArrayComponent<sugoi_type_index_t, 8> indices;
 };
 
 template<typename... T>

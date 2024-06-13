@@ -113,11 +113,7 @@ void MPGameWorld::ClearDeadBall()
             }
         };
         sugoiQ_get_views(killBallQuery.query, SUGOI_LAMBDA(collectBallsToKill));
-        auto killBalls = [&](sugoi_chunk_view_t* view)
-        {
-            sugoiS_destroy(storage, view);
-        };
-        sugoiS_batch(storage, ballsToKill.data(), ballsToKill.size(), SUGOI_LAMBDA(killBalls));
+        sugoiS_destroy_entities(storage, ballsToKill.data(), ballsToKill.size());
     }
 }
 
@@ -143,11 +139,7 @@ void MPGameWorld::ClearDeadZombie()
             }
         };
         sugoiQ_get_views(killZombieQuery.query, SUGOI_LAMBDA(collectBallsToKill));
-        auto killBalls = [&](sugoi_chunk_view_t* view)
-        {
-            sugoiS_destroy(storage, view);
-        };
-        sugoiS_batch(storage, zombiesToKill.data(), zombiesToKill.size(), SUGOI_LAMBDA(killBalls));
+        sugoiS_destroy_entities(storage, zombiesToKill.data(), zombiesToKill.size());
     }
 }
 

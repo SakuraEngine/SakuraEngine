@@ -8,7 +8,7 @@ struct sugoi_array_comp_t : llvm_vecsmall::SmallVectorBase {
 namespace sugoi
 {
 template <class T, size_t N>
-struct array_comp_T : public llvm_vecsmall::SmallVector<T, N>
+struct ArrayComponent : public llvm_vecsmall::SmallVector<T, N>
 {
 
 };

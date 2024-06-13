@@ -93,7 +93,7 @@ struct sugoi_storage_t {
     sugoi::block_arena_t archetypeArena;
     sugoi::block_arena_t queryBuildArena;
     sugoi::fixed_pool_t groupPool;
-    sugoi::entity_registry_t entities;
+    sugoi::EntityRegistry entities;
     uint32_t timestamp;
     std::unique_ptr<uint32_t[]> typeTimestamps;
     mutable sugoi::scheduler_t* scheduler;

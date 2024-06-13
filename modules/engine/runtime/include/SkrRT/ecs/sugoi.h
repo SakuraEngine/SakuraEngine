@@ -163,7 +163,7 @@ typedef struct sugoi_operation_t {
     int phase;    //-1 means any phase
     int readonly; // read or write
     int atomic;
-    int randomAccess; // random access
+    sugoi_operation_scope randomAccess; // random access
 } sugoi_operation_t;
 
 /**
@@ -338,14 +338,6 @@ SKR_RUNTIME_API void sugoiS_instantiate_delta(sugoi_storage_t* storage, sugoi_en
  * @param callback optional callback after allocating chunk view
  */
 SKR_RUNTIME_API void sugoiS_instantiate_entities(sugoi_storage_t* storage, sugoi_entity_t* ents, EIndex n, EIndex count, sugoi_view_callback_t callback, void* u);
-/**
- * @brief destroy entities in chunk view
- * destory all entities in target chunk view
- * @param storage
- * @param view
- */
-SKR_DEPRECATED("use other variants of sugoiS_destroy instead")
-SKR_RUNTIME_API void sugoiS_destroy(sugoi_storage_t* storage, const sugoi_chunk_view_t* view);
 /**
  * @brief destroy entities
  * destory given entities

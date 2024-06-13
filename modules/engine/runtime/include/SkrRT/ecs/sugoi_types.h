@@ -62,7 +62,7 @@ enum pool_type_t
 };
 
 template <class T, size_t N>
-struct array_comp_T;
-using link_array_t = array_comp_T<sugoi_entity_t, kLinkComponentSize>;
+struct ArrayComponent;
+using link_array_t = ArrayComponent<sugoi_entity_t, kLinkComponentSize>;
 } // namespace sugoi
 #endif

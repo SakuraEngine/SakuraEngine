@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrRT/ecs/sugoi.h"
-#include "hash.hpp"
-#include <algorithm>
+#include "SkrRT/ecs/hash.hpp"
 #include <bitset>
 
 namespace sugoi

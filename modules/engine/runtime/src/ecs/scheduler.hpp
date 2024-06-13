@@ -16,7 +16,7 @@ struct JobDependencyEntry {
 };
 
 struct scheduler_t {
-    sugoi::entity_registry_t registry;
+    sugoi::EntityRegistry registry;
     skr::task::counter_t allCounter;
     skr::stl_vector<sugoi::JobDependencyEntry> allResources;
     skr::FlatHashMap<sugoi::archetype_t*, skr::stl_vector<JobDependencyEntry>> dependencyEntries;

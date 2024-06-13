@@ -154,7 +154,7 @@ TEST_CASE_METHOD(ECSTest, "destroy_entity")
     REQUIRE(sugoiS_exist(storage, e1));
     sugoi_chunk_view_t view;
     sugoiS_access(storage, e1, &view);
-    sugoiS_destroy(storage, &view);
+    sugoiS_destroy_entities(storage, &e1, 1);
     EXPECT_FALSE(sugoiS_exist(storage, e1));
     {
         sugoi_entity_type_t entityType;
@@ -231,22 +231,18 @@ TEST_CASE_METHOD(ECSTest, "remove_component")
 TEST_CASE_METHOD(ECSTest, "pin")
 {
     sugoi_entity_t     e2;
-    sugoi_chunk_view_t view;
     {
         sugoi_entity_type_t entityType;
         sugoi_type_index_t  types[] = { type_test, type_pinned };
         entityType.type             = { types, 2 };
         entityType.meta             = { nullptr, 0 };
         auto callback               = [&](sugoi_chunk_view_t* inView) {
-            view                                              = *inView;
-            *(TestComp*)sugoiV_get_owned_rw(&view, type_test) = 123;
+            e2 = sugoiV_get_entities(inView)[0];
+            *(TestComp*)sugoiV_get_owned_rw(inView, type_test) = 123;
         };
         sugoiS_allocate_type(storage, &entityType, 1, SUGOI_LAMBDA(callback));
-
-        e2 = sugoiV_get_entities(&view)[0];
+        sugoiS_destroy_entities(storage, &e2, 1);
     }
-
-    sugoiS_destroy(storage, &view);
     {
         // entity with pinned component will only be marked as dead and keep existing
         REQUIRE(sugoiS_exist(storage, e2));
@@ -286,25 +282,23 @@ TEST_CASE_METHOD(ECSTest, "manage")
     std::weak_ptr<int> observer;
     sugoi_entity_t     e2;
     {
-        sugoi_chunk_view_t  view;
         sugoi_entity_type_t entityType;
         entityType.type = { &type_managed, 1 };
         entityType.meta = { nullptr, 0 };
         auto callback   = [&](sugoi_chunk_view_t* inView) {
-            view    = *inView;
-            auto& d = *(std::shared_ptr<int>*)sugoiV_get_owned_rw(&view, type_managed);
+            e2 = sugoiV_get_entities(inView)[0];
+            auto& d = *(std::shared_ptr<int>*)sugoiV_get_owned_rw(inView, type_managed);
             d.reset(new int(1));
             observer = d;
         };
         sugoiS_allocate_type(storage, &entityType, 1, SUGOI_LAMBDA(callback));
-        e2 = sugoiV_get_entities(&view)[0];
 
         EXPECT_EQ(observer.use_count(), 1);
         EXPECT_EQ(*observer.lock(), 1);
         sugoiS_instantiate(storage, e2, 3, nullptr, nullptr);
         EXPECT_EQ(observer.use_count(), 4);
 
-        sugoiS_destroy(storage, &view);
+        sugoiS_destroy_entities(storage, &e2, 1);
         EXPECT_EQ(observer.use_count(), 3);
     }
 }

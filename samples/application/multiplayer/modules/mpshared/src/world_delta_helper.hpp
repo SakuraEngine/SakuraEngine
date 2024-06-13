@@ -10,7 +10,7 @@ template<class T, auto F, class H = void, bool bitpacking = false>
 skr::task::event_t BuildDelta(sugoi_type_index_t type, sugoi_query_t* query, MPWorldDeltaBuildContext ctx, MPWorldDeltaViewBuilder& builder)
 {
     static constexpr bool withHistory = !std::is_same_v<H, void>;
-    using history_t = std::conditional_t<withHistory, sugoi::array_comp_T<H, 4>, void>;
+    using history_t = std::conditional_t<withHistory, sugoi::ArrayComponent<H, 4>, void>;
     using writer_t = std::conditional_t<bitpacking, skr::binary::VectorWriterBitpacked, skr::binary::VectorWriter>;
     MPComponentDeltaViewBuilder& comps = *std::find_if(builder.components.begin(),builder.components.end(), [&](const MPComponentDeltaViewBuilder& comp)
     {
@@ -131,7 +131,7 @@ sugoi_type_index_t RegisterHistoryComponent()
     skr::String name = skr::format(u8"{}_History", originDesc->name);
     skr::String* persistentName = new skr::String(name);
     desc.name = persistentName->u8_str();
-    using array_t = sugoi::array_comp_T<T, 4>;
+    using array_t = sugoi::ArrayComponent<T, 4>;
     desc.size = sizeof(array_t);
     desc.entityFieldsCount = originDesc->entityFieldsCount;
     desc.entityFields = originDesc->entityFields;

@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrRT/ecs/sugoi.h" // IWYU pragma: export
-#include "SkrRT/ecs/constants.hpp" // IWYU pragma: export
 
 namespace sugoi
 {

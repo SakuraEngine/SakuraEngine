@@ -111,9 +111,9 @@ void MPRenderWorld::UpdateStructuralChanges()
         };
         skr_render_effect_access(renderer, view, u8"ForwardEffect", SUGOI_LAMBDA(modelFree));
         skr_render_effect_detach(renderer, view, u8"ForwardEffect");
-        sugoiS_destroy(storage, view);
     };
     sugoiS_batch(storage, toDeleteRenderEntities.data(), toDeleteRenderEntities.size(), SUGOI_LAMBDA(deleteRenderEntity));
+    sugoiS_destroy_entities(storage, toDeleteRenderEntities.data(), (uint32_t)toDeleteRenderEntities.size());
     auto createRenderEntity = [&](sugoi_chunk_view_t* view)
     {
         auto entities = sugoiV_get_entities(view);

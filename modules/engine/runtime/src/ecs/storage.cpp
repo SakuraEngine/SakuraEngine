@@ -835,13 +835,11 @@ void sugoiS_instantiate_entities(sugoi_storage_t* storage, sugoi_entity_t* ents,
     storage->instantiate(ents, n, count, callback, u);
 }
 
-void sugoiS_destroy(sugoi_storage_t* storage, const sugoi_chunk_view_t* view)
-{
-    storage->destroy(*view);
-}
-
 void sugoiS_destroy_entities(sugoi_storage_t* storage, const sugoi_entity_t* ents, EIndex n)
 {
+    if (n == 0) SUGOI_UNLIKELY
+        return;
+
     auto destroy_callback = [storage](sugoi_chunk_view_t* view) {
         storage->destroy(*view);
     };

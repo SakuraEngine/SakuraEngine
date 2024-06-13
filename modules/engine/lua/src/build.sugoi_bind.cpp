@@ -236,10 +236,7 @@ void bind_ecs(lua_State* L)
                 entities.push_back(sugoi_entity_t(ent));
                 lua_pop(L, 1);
             }
-            sugoi_view_callback_t callback = +[](void* userdata, sugoi_chunk_view_t* view) -> void {
-                sugoiS_destroy((sugoi_storage_t*)userdata, view);
-            };
-            sugoiS_batch(storage, entities.data(), (uint32_t)entities.size(), callback, storage);
+            sugoiS_destroy_entities(storage, entities.data(), (uint32_t)entities.size());
             return 0;
         };
         lua_pushcfunction(L, trampoline, "destroy_entities");

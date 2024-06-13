@@ -181,8 +181,7 @@ bool sugoi::scheduler_t::sync_query(sugoi_query_t* query)
                     auto localType = group->archetype->index(params.types[i]);
                     if (localType == kInvalidTypeIndex)
                     {
-                        auto g = group->get_owner(params.types[i]);
-                        if (g)
+                        if (auto g = group->get_owner(params.types[i]))
                         {
                             result = sync_entry_once(g->archetype, g->archetype->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic) || result;
                         }
@@ -371,7 +370,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
                 job->randomAccess[groupIndex].set(idx, op.randomAccess != DOS_SEQ);
                 job->atomic[groupIndex].set(idx, op.atomic);
             }
-            job->hasRandomWrite |= op.randomAccess != DOS_SEQ;
+            job->hasRandomWrite |= (op.randomAccess != DOS_SEQ);
             job->hasWriteChunkComponent = t.is_chunk() && !op.readonly && !op.atomic;
         }
         ++groupIndex;

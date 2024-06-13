@@ -320,7 +320,7 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
             auto ents = sugoiV_get_entities(&view);
             forloop (k, 0, view.count)
             {
-                entity_registry_t::entry_t entry;
+                EntityRegistry::entry_t entry;
                 entry.chunk                     = view.chunk;
                 entry.indexInChunk              = k + view.start;
                 entry.version                   = e_version(ents[k]);

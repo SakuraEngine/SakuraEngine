@@ -66,7 +66,7 @@ protected:
     skr::stl_vector<SResourceRequest*> toUpdateRequests;
     skr::stl_vector<SResourceRequest*> serdeBatch;
 
-    sugoi::entity_registry_t resourceIds;
+    sugoi::EntityRegistry resourceIds;
     task::counter_t counter;
     bool quit = false;
     skr::ParallelFlatHashMap<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;

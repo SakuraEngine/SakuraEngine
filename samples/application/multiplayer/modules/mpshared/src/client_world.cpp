@@ -113,12 +113,7 @@ sugoi_entity_t MPClientWorld::SpawnPrefab(skr_resource_handle_t prefab, sugoi_en
 
 void MPClientWorld::DestroyEntity(sugoi_entity_t entity)
 {
-    auto freeFunc = [&](sugoi_chunk_view_t* view) {
-        sugoiS_destroy(storage, view);
-    };
-    sugoi_chunk_view_t view;
-    sugoiS_access(storage, entity, &view);
-    freeFunc(&view);
+    sugoiS_destroy_entities(storage, &entity, 1);
 }
 
 void MPClientWorld::ApplyWorldDelta()

@@ -3,7 +3,6 @@
 
 namespace sugoi
 {
-
     void construct_view(const sugoi_chunk_view_t& view) noexcept;
     void destruct_view(const sugoi_chunk_view_t& view) noexcept;
     void construct_chunk(sugoi_chunk_t* chunk) noexcept;
@@ -19,6 +18,6 @@ namespace sugoi
     void iterator_ref_chunk(sugoi_chunk_t* chunk, F&& iter) noexcept;
     bool full_view(const sugoi_chunk_view_t& view) noexcept;
     const sugoi_entity_t* get_entities(const sugoi_chunk_view_t& view);
-    void enable_components(const sugoi_chunk_view_t& view, const sugoi_type_set_t&  type);
-    void disable_components(const sugoi_chunk_view_t& view, const sugoi_type_set_t&  type);
+    void enable_components(const sugoi_chunk_view_t& view, const sugoi_type_set_t& type);
+    void disable_components(const sugoi_chunk_view_t& view, const sugoi_type_set_t& type);
 }

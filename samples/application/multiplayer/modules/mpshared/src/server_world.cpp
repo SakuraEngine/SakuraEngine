@@ -271,7 +271,7 @@ void MPServerWorld::Update()
             GenerateWorldDelta();
             SendWorldDelta();
             // remove dead entities after generate the delta
-            sugoi::array_comp_T<sugoi_group_t*, 16> deadGroups;
+            sugoi::ArrayComponent<sugoi_group_t*, 16> deadGroups;
             auto getDeadGroups = [&](sugoi_group_t* group)
             {
                 deadGroups.emplace_back(group);
