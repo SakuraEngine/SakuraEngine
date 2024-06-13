@@ -4,15 +4,15 @@
 #include "SkrRT/ecs/array.hpp"
 #include "SkrRT/resource/resource_handle.h"
 
-#include "SkrRT/ecs/detail/type.hpp"
-#include "SkrRT/ecs/detail/mask.hpp"
-#include "SkrRT/ecs/detail/type.hpp"
-#include "SkrRT/ecs/detail/chunk.hpp"
-#include "SkrRT/ecs/detail/chunk_view.hpp"
-#include "SkrRT/ecs/detail/archetype.hpp"
-#include "SkrRT/ecs/detail/storage.hpp"
-#include "SkrRT/ecs/detail/scheduler.hpp"
-#include "SkrRT/ecs/detail/type_registry.hpp"
+#include "./type.hpp"
+#include "./mask.hpp"
+#include "./type.hpp"
+#include "./chunk.hpp"
+#include "./chunk_view.hpp"
+#include "./archetype.hpp"
+#include "./storage.hpp"
+#include "./scheduler.hpp"
+#include "./type_registry.hpp"
 
 namespace sugoi
 {

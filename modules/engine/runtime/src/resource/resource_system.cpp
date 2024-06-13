@@ -1,14 +1,14 @@
 #include "resource_request_impl.hpp"
 #include "SkrTask/fib_task.hpp"
 #include "SkrGuid/guid.hpp"
-#include "SkrRT/ecs/entities.hpp"
 #include "SkrBase/misc/debug.h" 
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/stl_vector.hpp"
 #include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrContainers/concurrent_queue.hpp"
+
+#include "SkrRT/ecs/entity_registry.hpp"
 
 namespace skr::resource
 {

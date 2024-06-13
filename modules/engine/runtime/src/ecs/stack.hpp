@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrRT/ecs/sugoi.h"
 
 namespace sugoi
 {

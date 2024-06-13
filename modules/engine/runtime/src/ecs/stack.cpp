@@ -1,5 +1,5 @@
 #include "SkrRT/ecs/sugoi_config.h"
-#include "SkrRT/ecs/detail/stack.hpp"
+#include "./stack.hpp"
 
 namespace sugoi
 {

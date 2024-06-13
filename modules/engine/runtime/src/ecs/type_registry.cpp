@@ -1,10 +1,11 @@
-#include <string.h>
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrGuid/guid.hpp"
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/ecs/detail/pool.hpp"
-#include "SkrRT/ecs/detail/type.hpp"
-#include "SkrRT/ecs/detail/type_registry.hpp"
+
+#include "./pool.hpp"
+#include "./type.hpp"
+#include "./type_registry.hpp"
+#include <string.h>
 
 #if SKR_PLAT_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN

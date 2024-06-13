@@ -1,11 +1,11 @@
 #pragma once
-#include "sugoi.h"
 #include "SkrOS/thread.h"
 #include "SkrContainers/vector.hpp"
+#include "SkrRT/ecs/sugoi.h"
 
 namespace sugoi
 {
-struct entity_registry_t {
+struct SKR_RUNTIME_API entity_registry_t {
     struct entry_t {
         sugoi_chunk_t* chunk;
         uint32_t indexInChunk : 24;

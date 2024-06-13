@@ -1,12 +1,12 @@
 #include "SkrProfile/profile.h"
 #include "SkrContainers/sptr.hpp"
-#include "SkrRT/ecs/SmallVector.h"
+#include "SkrRT/ecs/array.hpp"
 #include "SkrRT/ecs/sugoi.h"
 
-#include "SkrRT/ecs/detail/type.hpp"
-#include "SkrRT/ecs/detail/query.hpp"
-#include "SkrRT/ecs/detail/storage.hpp"
-#include "SkrRT/ecs/detail/scheduler.hpp"
+#include "./type.hpp"
+#include "./query.hpp"
+#include "./storage.hpp"
+#include "./scheduler.hpp"
 
 #include <bitset>
 #include "./utilities.hpp"

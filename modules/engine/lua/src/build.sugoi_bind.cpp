@@ -1,15 +1,15 @@
+#include "SkrRT/ecs/array.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
+
 extern "C" {
 #include "lua.h"
 #include "lualib.h"
 }
-#include "SkrRT/ecs/detail/stack.hpp"
-#include "SkrRT/ecs/detail/query.hpp"
-#include "SkrRT/ecs/detail/chunk.hpp"
-#include "SkrRT/ecs/detail/archetype.hpp"
-#include "SkrRT/ecs/detail/type_registry.hpp"
-#include "SkrRT/ecs/type_builder.hpp"
-
-#include "SkrRT/ecs/array.hpp"
+#include "./stack.hpp"
+#include "./query.hpp"
+#include "./chunk.hpp"
+#include "./archetype.hpp"
+#include "./type_registry.hpp"
 
 namespace skr::lua
 {

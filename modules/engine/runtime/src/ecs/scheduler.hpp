@@ -1,12 +1,12 @@
 #pragma once
-#include "SkrRT/ecs/sugoi.h"
-#include "SkrTask/fib_task.hpp"
-#include "SkrRT/ecs/entities.hpp"
 #include "SkrOS/thread.h"
-#include "archetype.hpp"
-
+#include "SkrTask/fib_task.hpp"
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/stl_vector.hpp"
+#include "SkrRT/ecs/sugoi.h"
+#include "SkrRT/ecs/entity_registry.hpp"
+
+#include "./archetype.hpp"
 
 namespace sugoi
 {

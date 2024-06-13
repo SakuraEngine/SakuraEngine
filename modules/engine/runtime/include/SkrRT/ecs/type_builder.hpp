@@ -1,6 +1,6 @@
 #pragma once
-#include "sugoi.h"
-#include "SmallVector.h"
+#include "SkrRT/ecs/sugoi.h"
+#include "SkrRT/ecs/array.hpp"
 
 namespace sugoi
 {
@@ -69,7 +69,7 @@ struct SKR_RUNTIME_API TypeSetBuilder {
     sugoi_type_set_t build();
     bool empty() const { return indices.empty(); }
 protected:
-    llvm_vecsmall::SmallVector<sugoi_type_index_t, 8> indices;
+    sugoi::array_comp_T<sugoi_type_index_t, 8> indices;
 };
 
 template<typename... T>

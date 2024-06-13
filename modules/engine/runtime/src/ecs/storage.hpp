@@ -1,17 +1,17 @@
 #pragma once
+#include "SkrTask/fib_task.hpp"
+#include "SkrContainers/hashmap.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/set.hpp"
-#include "SkrRT/ecs/entities.hpp"
-#include "SkrContainers/hashmap.hpp"
-#include "SkrTask/fib_task.hpp"
+#include "SkrRT/ecs/entity_registry.hpp"
 
+#include "./stack.hpp"
+#include "./query.hpp"
+#include "./archetype.hpp"
+#include "./arena.hpp"
+#include "./pool.hpp"
+#include "./cache.hpp"
 #include <memory>
-#include "stack.hpp"
-#include "query.hpp"
-#include "archetype.hpp"
-#include "arena.hpp"
-#include "pool.hpp"
-#include "cache.hpp"
 
 namespace sugoi
 {

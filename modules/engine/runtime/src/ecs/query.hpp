@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/ecs/SmallVector.h"
+#include "SkrRT/ecs/array.hpp"
 
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/span.hpp"
