@@ -1,9 +1,9 @@
 #include "SkrProfile/profile.h"
 #include "SkrContainers/sptr.hpp"
-#include "SkrRT/ecs/array.hpp"
 #include "SkrRT/ecs/sugoi.h"
+#include "SkrRT/ecs/array.hpp"
+#include "SkrRT/ecs/type_index.hpp"
 
-#include "./type.hpp"
 #include "./query.hpp"
 #include "./storage.hpp"
 #include "./scheduler.hpp"

@@ -35,6 +35,7 @@ if (is_os("windows")) then
     add_defines("UNICODE", "NOMINMAX", "_WINDOWS")
     add_defines("_GAMING_DESKTOP")
     add_defines("_CRT_SECURE_NO_WARNINGS")
+    add_defines("_ENABLE_EXTENDED_ALIGNED_STORAGE")
     if (is_mode("release")) then
         set_runtimes("MD")
     elseif (is_mode("asan")) then

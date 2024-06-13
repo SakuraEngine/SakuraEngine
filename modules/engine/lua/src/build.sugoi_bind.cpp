@@ -114,7 +114,7 @@ static lua_chunk_view_t fill_chunk_view(sugoi_storage_t* storage, sugoi_chunk_vi
     luaView.readonly     = readonly;
 
     luaView.entities = sugoiV_get_entities(view);
-    auto& typeReg    = sugoi::type_registry_t::get();
+    auto& typeReg    = sugoi::TypeRegistry::get();
     forloop (i, 0, count)
     {
         auto& desc = typeReg.descriptions[sugoi::type_index_t(indices[i]).index()];
@@ -160,7 +160,7 @@ void bind_ecs(lua_State* L)
     {
         auto trampoline = +[](lua_State* L) -> int {
             auto name = (const char8_t*)luaL_checkstring(L, 1);
-            auto type = sugoi::type_registry_t::get().get_type(name);
+            auto type = sugoi::TypeRegistry::get().get_type(name);
             if (type == sugoi::kInvalidSIndex)
             {
                 lua_pushnil(L);

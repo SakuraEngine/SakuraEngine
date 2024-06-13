@@ -1,10 +1,10 @@
 #pragma once
-#include "type.hpp"
+#include "SkrRT/ecs/array.hpp"
+#include "SkrRT/ecs/type_registry.hpp"
+
 #include "archetype.hpp"
 #include "chunk.hpp"
 #include "chunk_view.hpp"
-#include "SkrRT/ecs/array.hpp"
-#include "type_registry.hpp"
 #include <type_traits>
 
 namespace sugoi
@@ -13,8 +13,8 @@ template <class F>
 static void iter_ref_impl(sugoi_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, F&& iter)
 {
     char* src = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
-    auto& reg = type_registry_t::get();
-    const auto& desc = reg.descriptions[type.index()];
+    auto& type_registry = TypeRegistry::get();
+    const auto& desc = *type_registry.get_type_desc(type.index());
     auto map = desc.callback.map;
     if (desc.entityFieldsCount == 0 && !map)
         return;
@@ -30,7 +30,8 @@ static void iter_ref_impl(sugoi_chunk_view_t view, type_index_t type, EIndex off
         {
             forloop (i, 0, desc.entityFieldsCount)
             {
-                auto field = reg.entityFields[desc.entityFields + i];
+                auto off = desc.entityFields + i;
+                auto field = type_registry.map_entity_field(off);
                 iter.map(*(sugoi_entity_t*)(curr + field));
             }
         }

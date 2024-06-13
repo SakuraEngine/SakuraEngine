@@ -1,21 +1,30 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/set.hpp"
+#include "SkrRT/ecs/type_index.hpp"
+#include "SkrRT/ecs/type_registry.hpp"
 
 #include "./utilities.hpp"
-#include "./type.hpp"
 #include "./stack.hpp"
 #include "./chunk.hpp"
 #include "./chunk_view.hpp"
 #include "./storage.hpp"
 #include "./archetype.hpp"
-#include "./type_registry.hpp"
 #include <algorithm>
+#include <array>
 
 namespace sugoi
 {
 
 thread_local fixed_stack_t localStack(4096 * 8);
+
+struct guid_compare_t {
+    bool operator()(const guid_t& a, const guid_t& b) const
+    {
+        using value_type = std::array<char, 16>;
+        return reinterpret_cast<const value_type&>(a) < reinterpret_cast<const value_type&>(b);
+    }
+};
 
 bool archetype_t::with_chunk_component() const noexcept
 {
@@ -61,10 +70,11 @@ sugoi::archetype_t* sugoi_storage_t::construct_archetype(const sugoi_type_set_t&
     proto.callbacks = archetypeArena.allocate<sugoi_callback_v>(proto.type.length);
     ::memset(proto.callbacks, 0, sizeof(sugoi_callback_v) * proto.type.length);
     proto.stableOrder = archetypeArena.allocate<SIndex>(proto.type.length);
-    auto& registry = type_registry_t::get();
+    auto& registry = TypeRegistry::get();
     forloop (i, 0, proto.type.length)
     {
-        const auto& desc = registry.descriptions[type_index_t(proto.type.data[i]).index()];
+        const auto tid = type_index_t(proto.type.data[i]).index();
+        const auto& desc = *registry.get_type_desc(tid);
         uint32_t callbackFlag = 0;
         if (desc.callback.constructor)
             callbackFlag |= SUGOI_CALLBACK_FLAG_CTOR;
@@ -89,7 +99,7 @@ sugoi::archetype_t* sugoi_storage_t::construct_archetype(const sugoi_type_set_t&
         if (t == kDirtyComponent)
             proto.withDirty = true;
         auto ti = type_index_t(t);
-        auto& desc = registry.descriptions[ti.index()];
+        auto& desc = *registry.get_type_desc(ti.index());
         proto.sizes[i] = desc.size;
         proto.elemSizes[i] = desc.elementSize;
         guids[i] = desc.guid;
@@ -436,7 +446,7 @@ void sugoi_group_t::clear()
     using namespace sugoi;
     for(auto chunk : chunks)
     {
-        archetype->storage->entities.free_entities({ chunk, 0, chunk->count });
+        archetype->storage->entity_registry.free_entities({ chunk, 0, chunk->count });
         destruct_view({ chunk, 0, chunk->count });
         destruct_chunk(chunk);
         sugoi_chunk_t::destroy(chunk);
@@ -463,7 +473,7 @@ bool sugoi_group_t::share(sugoi_type_index_t t) const noexcept
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
-        auto metaGroup = storage->entities.entries[e_id(type.meta.data[i])].chunk->group;
+        auto metaGroup = storage->entity_registry.entries[e_id(type.meta.data[i])].chunk->group;
         if (metaGroup->index(t) != kInvalidSIndex)
             return true;
         if (metaGroup->share(t))
@@ -483,7 +493,7 @@ bool sugoi_group_t::share(const sugoi_type_set_t& subtype) const noexcept
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
-        auto metaGroup = storage->entities.entries[e_id(type.meta.data[i])].chunk->group;
+        auto metaGroup = storage->entity_registry.entries[e_id(type.meta.data[i])].chunk->group;
         if (metaGroup->own(subtype))
             return true;
         if (metaGroup->share(subtype))
@@ -539,7 +549,7 @@ const sugoi_group_t* sugoi_group_t::get_owner(sugoi_type_index_t t) const noexce
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
-        auto metaGroup = storage->entities.entries[e_id(type.meta.data[i])].chunk->group;
+        auto metaGroup = storage->entity_registry.entries[e_id(type.meta.data[i])].chunk->group;
         if (auto g = metaGroup->get_owner(t))
             return g;
     }

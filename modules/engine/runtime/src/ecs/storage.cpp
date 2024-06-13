@@ -2,6 +2,7 @@
 #include "SkrTask/parallel_for.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/set.hpp"
+#include "SkrRT/ecs/type_registry.hpp"
 
 #include "./query.hpp"
 #include "./storage.hpp"
@@ -10,7 +11,6 @@
 #include "./chunk_view.hpp"
 #include "./scheduler.hpp"
 #include "./iterator_ref.hpp"
-#include "./type_registry.hpp"
 #include "./utilities.hpp"
 
 sugoi_storage_t::sugoi_storage_t()
@@ -48,7 +48,7 @@ void sugoi_storage_t::allocate(sugoi_group_t* group, EIndex count, sugoi_view_ca
     while (count != 0)
     {
         sugoi_chunk_view_t v = allocate_view(group, count);
-        entities.fill_entities(v);
+        entity_registry.fill_entities(v);
         construct_view(v);
         count -= v.count;
         if (callback)
@@ -103,7 +103,7 @@ void sugoi_storage_t::destroy(const sugoi_chunk_view_t& view)
         cast(view, dead, nullptr, nullptr);
     else
     {
-        entities.free_entities(view);
+        entity_registry.free_entities(view);
         destruct_view(view);
         free(view);
     }
@@ -119,7 +119,7 @@ void sugoi_storage_t::free(const sugoi_chunk_view_t& view)
     {
         sugoi_chunk_view_t dstView{ view.chunk, view.start, toMove };
         EIndex             srcIndex = view.chunk->count - toMove;
-        entities.move_entities(dstView, srcIndex);
+        entity_registry.move_entities(dstView, srcIndex);
         move_view(dstView, srcIndex);
     }
     group->resize_chunk(view.chunk, view.chunk->count - view.count);
@@ -186,7 +186,7 @@ void sugoi_storage_t::instantiate_prefab(const sugoi_entity_t* src, uint32_t siz
     using namespace sugoi;
     skr::stl_vector<sugoi_entity_t> ents;
     ents.resize(count * size);
-    entities.new_entities(ents.data(), (EIndex)ents.size());
+    entity_registry.new_entities(ents.data(), (EIndex)ents.size());
     struct mapper_t {
         sugoi_entity_t* base;
         sugoi_entity_t* curr;
@@ -213,7 +213,7 @@ void sugoi_storage_t::instantiate_prefab(const sugoi_entity_t* src, uint32_t siz
         while (localCount != count)
         {
             sugoi_chunk_view_t v = allocate_view(group, count - localCount);
-            entities.fill_entities(v, localEnts.data() + localCount);
+            entity_registry.fill_entities(v, localEnts.data() + localCount);
             duplicate_view(v, view.chunk, view.start);
             m.base = m.curr = ents.data() + localCount * size;
             localCount += v.count;
@@ -237,7 +237,7 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t src, uint32_t count, sugo
     while (count != 0)
     {
         sugoi_chunk_view_t v = allocate_view(group, count);
-        entities.fill_entities(v);
+        entity_registry.fill_entities(v);
         duplicate_view(v, view.chunk, view.start);
         count -= v.count;
         if (callback)
@@ -257,7 +257,7 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t src, uint32_t count, sugo
     while (count != 0)
     {
         sugoi_chunk_view_t v = allocate_view(group, count);
-        entities.fill_entities(v);
+        entity_registry.fill_entities(v);
         duplicate_view(v, view.chunk, view.start);
         count -= v.count;
         if (callback)
@@ -286,8 +286,8 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t* src, uint32_t n, uint32_
 sugoi_chunk_view_t sugoi_storage_t::entity_view(sugoi_entity_t e) const
 {
     using namespace sugoi;
-    SKR_ASSERT(e_id(e) < entities.entries.size());
-    auto& entry = entities.entries[e_id(e)];
+    SKR_ASSERT(e_id(e) < entity_registry.entries.size());
+    auto& entry = entity_registry.entries[e_id(e)];
     if (entry.version == e_version(e))
         return { entry.chunk, entry.indexInChunk, 1 };
     return { nullptr, 0, 1 };
@@ -309,7 +309,7 @@ bool sugoi_storage_t::components_enabled(const sugoi_entity_t src, const sugoi_t
 bool sugoi_storage_t::exist(sugoi_entity_t e) const noexcept
 {
     using namespace sugoi;
-    return entities.entries.size() > e_id(e) && entities.entries[e_id(e)].version == e_version(e);
+    return entity_registry.entries.size() > e_id(e) && entity_registry.entries[e_id(e)].version == e_version(e);
 }
 
 void sugoi_storage_t::validate_meta()
@@ -408,7 +408,7 @@ void sugoi_storage_t::defragment()
                 auto moveCount = chunk->get_capacity() - chunk->count;
                 moveCount      = std::min(source->count, moveCount);
                 move_view({ chunk, chunk->count, moveCount }, source, source->count - moveCount);
-                entities.move_entities({ chunk, chunk->count, moveCount }, source, source->count - moveCount);
+                entity_registry.move_entities({ chunk, chunk->count, moveCount }, source, source->count - moveCount);
                 source->count -= moveCount;
                 chunk->count += moveCount;
                 if (source->count == 0)
@@ -451,9 +451,9 @@ void sugoi_storage_t::pack_entities()
         scheduler->sync_storage(this);
     }
     skr::stl_vector<EIndex> map;
-    auto&                   entries = entities.entries;
+    auto&                   entries = entity_registry.entries;
     map.resize(entries.size());
-    entities.freeEntries.clear();
+    entity_registry.freeEntries.clear();
     EIndex j = 0;
     forloop (i, 0, entries.size())
     {
@@ -502,7 +502,7 @@ void sugoi_storage_t::cast_impl(const sugoi_chunk_view_t& view, sugoi_group_t* g
     while (k < view.count)
     {
         sugoi_chunk_view_t dst = allocate_view(group, view.count - k);
-        entities.move_entities(dst, view.chunk, view.start + k);
+        entity_registry.move_entities(dst, view.chunk, view.start + k);
         cast_view(dst, view.chunk, view.start + k);
         k += dst.count;
         if (callback)
@@ -524,7 +524,7 @@ void sugoi_storage_t::cast(const sugoi_chunk_view_t& view, sugoi_group_t* group,
     }
     if (!group)
     {
-        entities.free_entities(view);
+        entity_registry.free_entities(view);
         destruct_view(view);
         free(view);
         return;
@@ -648,7 +648,7 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
         SKR_ASSERT(scheduler->is_main_thread(this));
         scheduler->sync_storage(&src);
     }
-    auto&                           sents = src.entities;
+    auto&                           sents = src.entity_registry;
     skr::stl_vector<sugoi_entity_t> map;
     map.resize(sents.entries.size());
     EIndex moveCount = 0;
@@ -657,7 +657,7 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
             moveCount++;
     skr::stl_vector<sugoi_entity_t> newEnts;
     newEnts.resize(moveCount);
-    entities.new_entities(newEnts.data(), moveCount);
+    entity_registry.new_entities(newEnts.data(), moveCount);
     int j = 0;
     for (int i = 0; i < sents.entries.size(); ++i)
         if (sents.entries[i].chunk != nullptr)
@@ -727,7 +727,7 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
                                   forloop (k, 0, c->count)
                                   {
                                       i->m->map(ents[k]);
-                                      entities.entries[ents[k]] = { c, k, {} };
+                                      entity_registry.entries[ents[k]] = { c, k, {} };
                                   }
                                   iterator_ref_chunk(c, *(i->m));
                                   iterator_ref_view({ c, 0, c->count }, *(i->m));
@@ -754,8 +754,7 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
 sugoi_storage_t* sugoi_storage_t::clone()
 {
     sugoi_storage_t* dst = SkrNew<sugoi_storage_t>();
-    dst->entities        = entities;
-    dst->userdata        = userdata;
+    dst->entity_registry = entity_registry;
     dst->timestamp       = timestamp;
     for (auto group : groups)
     {
@@ -782,7 +781,7 @@ sugoi_storage_t* sugoi_storage_t::clone()
 
 void sugoi_storage_t::make_alias(skr::StringView name, skr::StringView aliasName)
 {
-    auto&               reg  = sugoi::type_registry_t::get();
+    auto&               reg  = sugoi::TypeRegistry::get();
     auto                type = reg.get_type(name);
     sugoi_phase_alias_t aliasPhase{ type, ++aliasCount };
     aliases.insert({ aliasName, aliasPhase });
@@ -797,16 +796,6 @@ sugoi_storage_t* sugoiS_create()
 void sugoiS_release(sugoi_storage_t* storage)
 {
     SkrDelete(storage);
-}
-
-void sugoiS_set_userdata(sugoi_storage_t* storage, void* u)
-{
-    storage->userdata = u;
-}
-
-void* sugoiS_get_userdata(sugoi_storage_t* storage)
-{
-    return storage->userdata;
 }
 
 void sugoiS_allocate_type(sugoi_storage_t* storage, const sugoi_entity_type_t* type, EIndex count, sugoi_view_callback_t callback, void* u)

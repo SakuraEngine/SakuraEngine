@@ -30,10 +30,15 @@ test_target("SceneTest")
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_files("scene/main.cpp")
 
-test_target("ECSTest")
+test_target("ECSTest-CStyle")
     set_group("05.tests/runtime")
     public_dependency("SkrRT", engine_version)
-    add_files("ecs/main.cpp")
+    add_files("ecs/c_style.cpp")
+
+test_target("ECSTest-CPPStyle")
+    set_group("05.tests/runtime")
+    public_dependency("SkrRT", engine_version)
+    add_files("ecs/cpp_style.cpp")
 
 test_target("MDBTest")
     set_group("05.tests/runtime")

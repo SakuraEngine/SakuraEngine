@@ -1,20 +1,19 @@
 #include "SkrProfile/profile.h"
 #include "SkrBase/misc/bit.hpp"
-#include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/ecs/array.hpp"
-#include "SkrRT/ecs/set.hpp"
 #include <SkrContainers/span.hpp>
 #include <SkrContainers/string.hpp>
 #include <SkrContainers/stl_string.hpp>
+#include "SkrRT/ecs/sugoi.h"
+#include "SkrRT/ecs/array.hpp"
+#include "SkrRT/ecs/set.hpp"
+#include "SkrRT/ecs/type_registry.hpp"
 
-#include "./type_registry.hpp"
 #include "./archetype.hpp"
 #include "./arena.hpp"
 #include "./chunk.hpp"
 #include "./query.hpp"
 #include "./stack.hpp"
 #include "./storage.hpp"
-#include "./type.hpp"
 #include "./scheduler.hpp"
 
 #if __SSE2__
@@ -196,7 +195,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
     auto&                                              error     = get_error();
     int                                                errorPos  = 0;
     int                                                partBegin = 0;
-    auto&                                              reg       = type_registry_t::get();
+    auto&                                              reg       = TypeRegistry::get();
     llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> all;
     llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> none;
     llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> all_shared;

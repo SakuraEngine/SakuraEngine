@@ -17,41 +17,6 @@ namespace sugoi
 {
 extern thread_local fixed_stack_t localStack;
 
-// template<class T>
-// struct blob_ref_T
-// {
-//     intptr_t offset;
-//     size_t count;
-//     T& resolve(void* store) { return *(T*)((char*)store + offset); }
-// };
-// struct storage_delta_t
-// {
-//     using array_delta = skr::stl_vector<blob_ref_T<char>>;
-//     struct vector_delta
-//     {
-//         size_t length;
-//         array_delta content;
-//     };
-//     using component_delta = std::unique_ptr<array_delta[]>;
-//     using buffer_delta = std::unique_ptr<skr::stl_vector<vector_delta>[]>;
-//     struct slice_delta
-//     {
-//         sugoi_entity_type_t type;
-//         blob_ref_T<guid_t> ents;
-//         component_delta diffs;
-//         buffer_delta bufferDiffs;
-//     };
-//     struct slice_data
-//     {
-//         sugoi_entity_type_t type;
-//         intptr_t offset;
-//     };
-//     skr::stl_vector<slice_delta> changed;
-//     skr::stl_vector<slice_data> created;
-//     skr::stl_vector<sugoi_entity_t> destroyed;
-//     skr::stl_vector<char> store;
-// };
-
 template <class T>
 struct hasher {
     size_t operator()(const T& value) const
@@ -82,24 +47,6 @@ struct sugoi_storage_t {
     using groups_t = skr::FlatHashMap<sugoi_entity_type_t, sugoi_group_t*, sugoi::hasher<sugoi_entity_type_t>, sugoi::equalto<sugoi_entity_type_t>>;
     using archetypes_t = skr::FlatHashMap<sugoi_type_set_t, archetype_t*, sugoi::hasher<sugoi_type_set_t>, sugoi::equalto<sugoi_type_set_t>>;
     using phase_alias_t = skr::FlatHashMap<skr::StringView, sugoi_phase_alias_t, skr::Hash<skr::StringView>>;
-    archetypes_t archetypes;
-    queries_t queries;
-    phase_alias_t aliases;
-    uint32_t aliasCount = 0;
-    sugoi::phase_entry** phases = nullptr;
-    uint32_t phaseCount = 0;
-    bool queriesBuilt = false;
-    groups_t groups;
-    sugoi::block_arena_t archetypeArena;
-    sugoi::block_arena_t queryBuildArena;
-    sugoi::fixed_pool_t groupPool;
-    sugoi::EntityRegistry entities;
-    uint32_t timestamp;
-    std::unique_ptr<uint32_t[]> typeTimestamps;
-    mutable sugoi::scheduler_t* scheduler;
-    mutable void* currentFiber;
-    skr::task::counter_t counter;
-    void* userdata;
 
     sugoi_storage_t();
     ~sugoi_storage_t();
@@ -177,4 +124,22 @@ struct sugoi_storage_t {
     void structural_change(sugoi_group_t* group, sugoi_chunk_t* chunk);
 
     void make_alias(skr::StringView name, skr::StringView alias);
+
+    archetypes_t archetypes;
+    queries_t queries;
+    phase_alias_t aliases;
+    uint32_t aliasCount = 0;
+    sugoi::phase_entry** phases = nullptr;
+    uint32_t phaseCount = 0;
+    bool queriesBuilt = false;
+    groups_t groups;
+    sugoi::block_arena_t archetypeArena;
+    sugoi::block_arena_t queryBuildArena;
+    sugoi::fixed_pool_t groupPool;
+    sugoi::EntityRegistry entity_registry;
+    uint32_t timestamp;
+    std::unique_ptr<uint32_t[]> typeTimestamps;
+    mutable sugoi::scheduler_t* scheduler;
+    mutable void* currentFiber;
+    skr::task::counter_t counter;
 };

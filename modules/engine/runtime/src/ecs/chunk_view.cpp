@@ -1,18 +1,15 @@
 #include <type_traits>
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/ecs/sugoi_config.h"
 #include "SkrRT/ecs/array.hpp"
+#include "SkrRT/ecs/type_registry.hpp"
 #include "SkrRT/resource/resource_handle.h"
 
-#include "./type.hpp"
 #include "./mask.hpp"
-#include "./type.hpp"
 #include "./chunk.hpp"
 #include "./chunk_view.hpp"
 #include "./archetype.hpp"
 #include "./storage.hpp"
 #include "./scheduler.hpp"
-#include "./type_registry.hpp"
 
 namespace sugoi
 {
@@ -52,7 +49,7 @@ static void construct_impl(sugoi_chunk_view_t view, type_index_t type, EIndex of
     // else if (type == kGuidComponent)
     // {
     //     auto guidDst = (guid_t*)dst;
-    //     auto& registry = type_registry_t::get();
+    //     auto& registry = TypeRegistry::get();
     //     forloop (j, 0, view.count)
     //         guidDst[j] = registry.make_guid();
     //     return;
@@ -258,7 +255,7 @@ static void duplicate_impl(sugoi_chunk_view_t dstV, const sugoi_chunk_t* srcC, u
     if (type == kGuidComponent)
     {
         auto guidDst = (guid_t*)dst;
-        auto& registry = type_registry_t::get();
+        auto& registry = TypeRegistry::get();
         forloop (j, 0, dstV.count)
             guidDst[j] = registry.make_guid();
         return;

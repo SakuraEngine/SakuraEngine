@@ -24,7 +24,6 @@ extern "C" {
  * @brief guid generation function
  *
  */
-typedef void (*guid_func_t)(sugoi_guid_t* guid);
 typedef struct sugoi_mapper_t {
     void (*map)(void* user, sugoi_entity_t* ent) SKR_IF_CPP(= nullptr);
     void* user SKR_IF_CPP(= nullptr);
@@ -253,12 +252,6 @@ SKR_RUNTIME_API sugoi_type_index_t sugoiT_get_type_by_name(const char8_t* name);
  */
 SKR_RUNTIME_API const sugoi_type_description_t* sugoiT_get_desc(sugoi_type_index_t idx);
 /**
- * @brief set guid generator function
- *
- * @param func
- */
-SKR_RUNTIME_API void sugoiT_set_guid_func(guid_func_t func);
-/**
  * @brief get all types registered to sugoi
  *
  * @param callback
@@ -277,21 +270,6 @@ SKR_RUNTIME_API sugoi_storage_t* sugoiS_create();
  * @param storage
  */
 SKR_RUNTIME_API void sugoiS_release(sugoi_storage_t* storage);
-/**
- * @brief set userdata for storage
- *
- * @param storage
- * @param u
- * @return void
- */
-SKR_RUNTIME_API void sugoiS_set_userdata(sugoi_storage_t* storage, void* u);
-/**
- * @brief get userdata of storage
- *
- * @param storage
- * @return void*
- */
-SKR_RUNTIME_API void* sugoiS_get_userdata(sugoi_storage_t* storage);
 /**
  * @brief allocate entities
  * batch allocate numbers of entities with entity type
@@ -747,15 +725,6 @@ SKR_RUNTIME_API void sugoiS_enable_components(const sugoi_chunk_view_t* view, co
  * @param types
  */
 SKR_RUNTIME_API void sugoiS_disable_components(const sugoi_chunk_view_t* view, const sugoi_type_set_t* types);
-
-/**
- * @brief set version of storage, useful when detecting changes
- *
- * @param storage
- * @param number
- */
-SKR_RUNTIME_API void sugoiS_set_version(sugoi_storage_t* storage, uint64_t number);
-
 /**
  * @brief get group of chunk
  *

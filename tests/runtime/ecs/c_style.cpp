@@ -1,11 +1,9 @@
-#include "guid.hpp" //for guid
-#include "SkrCore/crash.h"
-#include "SkrRT/ecs/sugoi.h"
 #include "SkrBase/misc/make_zeroed.hpp"
+#include "SkrGuid/guid.hpp"
 #include "SkrCore/log.h"
-
+#include "SkrRT/ecs/sugoi.h"
+#include "SkrRT/ecs/array.hpp"
 #include "SkrTestFramework/framework.hpp"
-
 #include <memory>
 #include <algorithm>
 
@@ -34,22 +32,24 @@ static struct ProcInitializer {
     ProcInitializer()
     {
         ::skr_log_set_level(SKR_LOG_LEVEL_WARN);
-        // ::skr_initialize_crash_handler();
         ::skr_log_initialize_async_worker();
+    }
+    ~ProcInitializer()
+    {
+        ::sugoi_shutdown();
+        ::skr_log_finalize_async_worker();
+    }
+} init;
 
+static struct ComponentRegister {
+    ComponentRegister()
+    {
         ::register_test_component();
         ::register_ref_component();
         ::register_managed_component();
         ::register_pinned_component();
     }
-    ~ProcInitializer()
-    {
-        ::sugoi_shutdown();
-
-        ::skr_log_finalize_async_worker();
-        // ::skr_finalize_crash_handler();
-    }
-} init;
+} _reg;
 
 class ECSTest
 {
@@ -74,7 +74,7 @@ public:
 
     ~ECSTest() SKR_NOEXCEPT
     {
-        sugoiS_release(storage);
+        ::sugoiS_release(storage);
     }
 
     sugoi_storage_t* storage;
@@ -459,7 +459,7 @@ TEST_CASE_METHOD(ECSTest, "query_overload")
 
 void register_test_component()
 {
-    using namespace guid_parse::literals;
+    using namespace skr::guid::literals;
     {
         sugoi_type_description_t desc = make_zeroed<sugoi_type_description_t>();
         desc.name                     = u8"test";
@@ -473,7 +473,7 @@ void register_test_component()
         desc.alignment                = alignof(TestComp);
         type_test                     = sugoiT_register_type(&desc);
         desc.elementSize              = desc.size;
-        desc.size                     = desc.size * 10;
+        desc.size                     = sizeof(sugoi::ArrayComponent<TestComp, 10>);
         desc.guid                     = u8"{82D170AE-6D06-406C-A451-F670103D7894}"_guid;
         desc.name                     = u8"test_arr";
         type_test_arr                 = sugoiT_register_type(&desc);
@@ -494,7 +494,7 @@ void register_test_component()
         type_test2                    = sugoiT_register_type(&desc);
         desc.guid                     = u8"{FD70F4BD-52FB-4911-8930-41A80C482DBF}"_guid;
         desc.elementSize              = desc.size;
-        desc.size                     = desc.size * 10;
+        desc.size                     = sizeof(sugoi::ArrayComponent<TestComp, 10>);
         desc.name                     = u8"test_arr";
         type_test2_arr                = sugoiT_register_type(&desc);
     }
@@ -517,7 +517,7 @@ void register_test_component()
 
 void register_ref_component()
 {
-    using namespace guid_parse::literals;
+    using namespace skr::guid::literals;
     sugoi_type_description_t desc = make_zeroed<sugoi_type_description_t>();
     desc.name                     = u8"ref";
     desc.size                     = sizeof(ref);
@@ -532,14 +532,14 @@ void register_ref_component()
     type_ref                      = sugoiT_register_type(&desc);
     desc.guid                     = u8"{F84BB5DE-DB21-4CEF-8DF1-8CD7AEEE766F}"_guid;
     desc.elementSize              = desc.size;
-    desc.size                     = desc.size * 10;
+    desc.size                     = sizeof(sugoi::ArrayComponent<ref, 10>);
     desc.name                     = u8"ref_arr";
     type_ref_arr                  = sugoiT_register_type(&desc);
 }
 
 void register_managed_component()
 {
-    using namespace guid_parse::literals;
+    using namespace skr::guid::literals;
     sugoi_type_description_t desc = make_zeroed<sugoi_type_description_t>();
     desc.name                     = u8"managed";
     desc.size                     = sizeof(managed);
@@ -563,14 +563,14 @@ void register_managed_component()
     type_managed     = sugoiT_register_type(&desc);
     desc.guid        = u8"{BCF22A9B-908C-4F84-89B4-C7BD803FC6C2}"_guid;
     desc.elementSize = desc.size;
-    desc.size        = desc.size * 10;
+    desc.size        = sizeof(sugoi::ArrayComponent<managed, 10>);
     desc.name        = u8"managed_arr";
     type_managed_arr = sugoiT_register_type(&desc);
 }
 
 void register_pinned_component()
 {
-    using namespace guid_parse::literals;
+    using namespace skr::guid::literals;
     sugoi_type_description_t desc = make_zeroed<sugoi_type_description_t>();
     desc.name                     = u8"pinned";
     desc.size                     = sizeof(pinned);
@@ -584,7 +584,7 @@ void register_pinned_component()
     type_pinned                   = sugoiT_register_type(&desc);
     desc.guid                     = u8"{673605E0-C52C-40F5-A3F0-736409617D15}"_guid;
     desc.elementSize              = desc.size;
-    desc.size                     = desc.size * 10;
+    desc.size                     = sizeof(sugoi::ArrayComponent<pinned, 10>);
     desc.name                     = u8"pinned_arr";
     type_pinned_arr               = sugoiT_register_type(&desc);
 }

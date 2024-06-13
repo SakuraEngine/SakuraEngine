@@ -61,8 +61,11 @@ enum pool_type_t
     PT_large
 };
 
+using guid_t = sugoi_guid_t;
+
 template <class T, size_t N>
 struct ArrayComponent;
+
 using link_array_t = ArrayComponent<sugoi_entity_t, kLinkComponentSize>;
 } // namespace sugoi
 #endif

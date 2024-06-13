@@ -1,16 +1,15 @@
 #include "SkrProfile/profile.h"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/array.hpp"
+#include "SkrRT/ecs/type_registry.hpp"
 #include "SkrSerde/binary/reader.h"
 #include "SkrSerde/binary/writer.h"
 
 #include "./chunk.hpp"
 #include "./storage.hpp"
 #include "./stack.hpp"
-#include "./type.hpp"
 #include "./archetype.hpp"
 #include "./scheduler.hpp"
-#include "./type_registry.hpp"
 #include "./utilities.hpp"
 
 template <class T>
@@ -129,11 +128,11 @@ void sugoi_storage_t::serialize_type(const sugoi_entity_type_t& type, SBinaryWri
     // group is define by entity_type, so we just serialize it's type
     // todo: assert(s.is_serialize());
     bin::Archive(s, type.type.length);
-    auto& reg = type_registry_t::get();
+    auto& reg = TypeRegistry::get();
     for (SIndex i = 0; i < type.type.length; i++)
     {
-        auto t = type.type.data[i];
-        bin::Archive(s, reg.descriptions[type_index_t(t).index()].guid);
+        auto tid = type_index_t(type.type.data[i]).index();
+        bin::Archive(s, reg.get_type_desc(tid)->guid);
     }
     if (keepMeta)
     {
@@ -152,9 +151,9 @@ sugoi_entity_type_t sugoi_storage_t::deserialize_type(sugoi::fixed_stack_t& stac
     auto guids = stack.allocate<guid_t>(type.type.length);
     ArchiveBuffer(s, guids, type.type.length);
     type.type.data = stack.allocate<sugoi_type_index_t>(type.type.length);
-    auto& reg      = type_registry_t::get();
+    auto& reg      = TypeRegistry::get();
     forloop (i, 0, type.type.length) // todo: check type existence
-        ((sugoi_type_index_t*)type.type.data)[i] = reg.guid2type[guids[i]];
+        ((sugoi_type_index_t*)type.type.data)[i] = reg.get_type(guids[i]);
     std::sort((sugoi_type_index_t*)type.type.data, (sugoi_type_index_t*)type.type.data + type.type.length);
     if (keepMeta)
     {
@@ -190,7 +189,7 @@ sugoi_entity_t sugoi_storage_t::deserialize_single(SBinaryReader* s)
         scheduler->sync_archetype(group->archetype);
     sugoi_chunk_view_t view;
     serialize_view(group, view, nullptr, s, false);
-    entities.fill_entities(view);
+    entity_registry.fill_entities(view);
     return view.chunk->get_entities()[view.start];
 }
 
@@ -263,9 +262,9 @@ void sugoi_storage_t::serialize(SBinaryWriter* s)
     }
     {
         SkrZoneScopedN("serialize entities");
-        bin::Archive(s, (uint32_t)entities.entries.size());
-        bin::Archive(s, (uint32_t)entities.freeEntries.size());
-        ArchiveBuffer(s, entities.freeEntries.data(), static_cast<uint32_t>(entities.freeEntries.size()));
+        bin::Archive(s, (uint32_t)entity_registry.entries.size());
+        bin::Archive(s, (uint32_t)entity_registry.freeEntries.size());
+        ArchiveBuffer(s, entity_registry.freeEntries.data(), static_cast<uint32_t>(entity_registry.freeEntries.size()));
     }
     bin::Archive(s, (uint32_t)groups.size());
     for (auto& pair : groups)
@@ -294,14 +293,14 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
         scheduler->sync_storage(this);
     }
     // empty storage expected
-    SKR_ASSERT(entities.entries.size() == 0);
+    SKR_ASSERT(entity_registry.entries.size() == 0);
     uint32_t size = 0;
     bin::Archive(s, size);
-    entities.entries.resize_default(size);
+    entity_registry.entries.resize_default(size);
     uint32_t freeSize = 0;
     bin::Archive(s, freeSize);
-    entities.freeEntries.resize_default(freeSize);
-    ArchiveBuffer(s, entities.freeEntries.data(), freeSize);
+    entity_registry.freeEntries.resize_default(freeSize);
+    ArchiveBuffer(s, entity_registry.freeEntries.data(), freeSize);
     uint32_t groupSize = 0;
     bin::Archive(s, groupSize);
     forloop (i, 0, groupSize)
@@ -324,7 +323,7 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
                 entry.chunk                     = view.chunk;
                 entry.indexInChunk              = k + view.start;
                 entry.version                   = e_version(ents[k]);
-                entities.entries[e_id(ents[k])] = entry;
+                entity_registry.entries[e_id(ents[k])] = entry;
             }
         }
     }
