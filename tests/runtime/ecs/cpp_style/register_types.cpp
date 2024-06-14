@@ -1,4 +1,5 @@
 #include "cpp_style.hpp"
+#include "SkrContainers/vector.hpp"
 
 struct RegisterTypes {
     RegisterTypes() SKR_NOEXCEPT
