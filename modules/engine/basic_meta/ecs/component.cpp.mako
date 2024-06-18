@@ -1,11 +1,15 @@
 <%
-    def filter_fileds(fields, pred, base=0):
+    def filter_fileds(record, fields, pred, base=None):
         result = []
+        base = base if base else []
         for name, field in vars(fields).items():
+            base.append(f"offsetof({record.name}, {name})")
             if pred(name, field):
-                result.append(str(field.offset + base))
+                result.append(" + ".join(base))
             elif field.type in db.name_to_record:
-                result = result + filter_fileds(db.name_to_record[field.type].fields, pred, field.offset)
+                record = db.name_to_record[field.type]
+                result = result + filter_fileds(record, record.fields, pred, base)
+            base.pop()
         return result
     records = generator.filter_records(db.records)
 %>
@@ -29,7 +33,7 @@ static struct RegisterComponent${type.id}Helper
         desc.size = std::is_empty_v<${type.name}> ? 0 : sizeof(${type.name});
     %endif
     <%
-        entityFields = filter_fileds(type.fields, lambda name, field: field.rawType == "sugoi_entity_t")
+        entityFields = filter_fileds(type, type.fields, lambda name, field: field.rawType == "sugoi_entity_t")
     %>
     %if entityFields:
         desc.entityFieldsCount = ${len(entityFields)};
@@ -40,7 +44,7 @@ static struct RegisterComponent${type.id}Helper
         desc.entityFields = 0;
     %endif
     <%
-        resourceFields = filter_fileds(type.fields, lambda name, field: field.type == "skr_resource_handle_t" or field.type.startswith("skr::resource::TResourceHandle"))
+        resourceFields = filter_fileds(type, type.fields, lambda name, field: field.type == "skr_resource_handle_t" or field.type.startswith("skr::resource::TResourceHandle"))
     %>
     %if resourceFields:
         desc.resourceFieldsCount = ${len(resourceFields)};

@@ -72,7 +72,7 @@ SKR_EXEC_STATIC_CTOR
         // methods
         %if record_rttr_data.reflect_methods:
         %for method in record_rttr_data.reflect_methods:
-        {
+        { // ${record.name}::${method.short_name}
             %if method.is_static:
             auto method_builder = builder.static_method<${tools.function_signature_of(method)}, <&${record.name}::${method.short_name}>(u8"${method.short_name}");
             %else:
@@ -89,8 +89,12 @@ SKR_EXEC_STATIC_CTOR
         // fields
         %if record_rttr_data.reflect_fields:
         %for field in record_rttr_data.reflect_fields:
-        {
+        { // ${record.name}::${field.name}
+            %if field.is_static:
+            auto field_builder = builder.static_field<<&${record.name}::${field.name}>(u8"${field.name}");
+            %else:
             auto field_builder = builder.field<<&${record.name}::${field.name}>(u8"${field.name}");
+            %endif
         }
         %endfor
 

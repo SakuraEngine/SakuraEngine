@@ -67,7 +67,10 @@ class CodegenTools:
         return " | ".join(f"{self.flag_enum_name_of(cpp_type)}::{flag}" for flag in flags)
 
     def function_signature_of(self, method) -> str:
-        return f"{method.ret_type}({method.parent.name}::*)({', '.join(f'{param.type}' for param in method.parameters.values())})"
+        if method.is_static:
+            return f"{method.ret_type}(*)({', '.join(f'{param.type}' for param in method.parameters.values())})"
+        else:
+            return f"{method.ret_type}({method.parent.name}::*)({', '.join(f'{param.type}' for param in method.parameters.values())})"
 
 
 class RTTRGenerator(gen.GeneratorBase):
