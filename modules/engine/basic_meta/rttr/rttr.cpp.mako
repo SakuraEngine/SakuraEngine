@@ -51,8 +51,7 @@ SKR_EXEC_STATIC_CTOR
 %for record in records:
     register_type_loader(type_id_of<${record.name}>(), +[](Type* type){
 <%
-    rttr_fields=record.generator_data["rttr"]["rttr_fields"]
-    rttr_methods=record.generator_data["rttr"]["rttr_methods"]
+    record_rttr_data=record.generator_data["rttr"]
 %>\
         // init type
         type->init(ETypeCategory::Record);
@@ -66,24 +65,41 @@ SKR_EXEC_STATIC_CTOR
         // basic
         RecordBuilder<${record.name}> builder(&record_data);
         builder.basic_info();
-        %if record.bases:
-        builder.bases<${", ".join(record.bases)}>();
+        %if record_rttr_data.reflect_bases:
+        builder.bases<${", ".join(record_rttr_data.reflect_bases)}>();
         %endif
         
         // methods
-        %if len(rttr_methods) > 0:
-        %for method in rttr_methods:
-        builder..method<<&${record.name}::${method.short_name}>(u8"${method.short_name}");
+        %if record_rttr_data.reflect_methods:
+        %for method in record_rttr_data.reflect_methods:
+        {
+            %if method.is_static:
+            auto method_builder = builder.static_method<${tools.function_signature_of(method)}, <&${record.name}::${method.short_name}>(u8"${method.short_name}");
+            %else:
+            auto method_builder = builder.method<${tools.function_signature_of(method)}, <&${record.name}::${method.short_name}>(u8"${method.short_name}");
+            %endif
+            %for (i, param) in enumerate(method.parameters.values()):
+            method_builder.param_at(${i})
+                .name(u8"${param.name}");
+            %endfor
+        }
         %endfor
         %endif
 
         // fields
-        %if len(rttr_fields) > 0:
-        %for field in rttr_fields:
-        builder.field<<&${record.name}::${field.name}>(u8"${field.name}");
+        %if record_rttr_data.reflect_fields:
+        %for field in record_rttr_data.reflect_fields:
+        {
+            auto field_builder = builder.field<<&${record.name}::${field.name}>(u8"${field.name}");
+        }
         %endfor
+
+        // flags & attributes
+        %if record_rttr_data.flags:
+        builder.flags(${tools.flags_expr(record, record_rttr_data.flags)});
         %endif
-            ;
+
+        %endif
     });
 %endfor
     //============================> End Record Export <============================

@@ -25,6 +25,9 @@ class ParseResult:
     parsed_value: Value = None  # value, none means never appear or override by none
     override_stack: t.List['JsonObject'] = None  # override stack
 
+    def visited_or(self, default):
+        return self if self.is_visited() else default
+
     def is_visited(self) -> bool:
         return self.override_stack and len(self.override_stack) > 0
 
@@ -39,7 +42,7 @@ class ParseResult:
     def __getitem__(self, key: str) -> 'ParseResult':
         return self.get_child(key)
 
-    def is_function_enable(self, enable_if_never_visited=False, enable_if_visited_child=False) -> bool:
+    def is_function_enable(self, enable_if_never_visited=False, enable_if_visited_child=True) -> bool:
         if not isinstance(self.parsed_value, dict) or "enable" not in self.parsed_value:
             raise ValueError("parsed value must be a functional")
         if not self.is_visited():

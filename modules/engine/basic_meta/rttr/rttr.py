@@ -1,6 +1,73 @@
+from dataclasses import dataclass
 import os
 import framework.generator as gen
 import framework.scheme as sc
+import framework.cpp_types as cpp
+import typing as t
+
+
+@dataclass
+class ParamData:
+    flags: t.List[str]
+    attrs: t.List[str]
+
+
+@dataclass
+class MethodData:
+    flags: t.List[str]
+    attrs: t.List[str]
+
+
+@dataclass
+class FieldData:
+    flags: t.List[str]
+    attrs: t.List[str]
+
+
+@dataclass
+class RecordData:
+    reflect_bases: t.List[str]
+    reflect_fields: t.List[cpp.Field]
+    reflect_methods: t.List[cpp.Method]
+
+    flags: t.List[str]
+    attrs: t.List[str]
+
+
+@dataclass
+class EnumItemData:
+    flags: t.List[str]
+    attrs: t.List[str]
+
+
+@dataclass
+class EnumData:
+    flags: t.List[str]
+    attrs: t.List[str]
+
+
+class CodegenTools:
+    def flag_enum_name_of(self, cpp_type) -> str:
+        if type(cpp_type) is cpp.EnumerationValue:
+            return "EEnumItemFlag"
+        elif type(cpp_type) is cpp.Enumeration:
+            return "EEnumFlag"
+        elif type(cpp_type) is cpp.Record:
+            return "ERecordFlag"
+        elif type(cpp_type) is cpp.Method:
+            return "EStaticMethodFlag" if cpp_type.is_static else "EMethodFlag"
+        elif type(cpp_type) is cpp.Field:
+            return "EStaticFieldFlag" if cpp_type.is_static else "EFieldFlag"
+        elif type(cpp_type) is cpp.Parameter:
+            return "EParamFlag"
+        else:
+            raise ValueError(f"Unknown cpp type: {cpp_type}")
+
+    def flags_expr(self, cpp_type, flags: t.List[str]) -> str:
+        return " | ".join(f"{self.flag_enum_name_of(cpp_type)}::{flag}" for flag in flags)
+
+    def function_signature_of(self, method) -> str:
+        return f"{method.ret_type}({method.parent.name}::*)({', '.join(f'{param.type}' for param in method.parameters.values())})"
 
 
 class RTTRGenerator(gen.GeneratorBase):
@@ -45,21 +112,50 @@ class RTTRGenerator(gen.GeneratorBase):
         # method rttr scheme
         self.owner.add_method_scheme(
             sc.Namespace({
-                "rttr": sc.Functional()
+                "rttr": sc.Functional({
+                    "flags": sc.List(),
+                    "attrs": sc.List(),
+                })
             })
         )
 
         # field rttr scheme
         self.owner.add_field_scheme(
             sc.Namespace({
-                "rttr": sc.Functional()
+                "rttr": sc.Functional({
+                    "flags": sc.List(),
+                    "attrs": sc.List(),
+                })
+            })
+        )
+
+        # param rttr scheme
+        self.owner.add_parameter_scheme(
+            sc.Namespace({
+                "rttr": sc.Functional({
+                    "flags": sc.List(),
+                    "attrs": sc.List(),
+                })
             })
         )
 
         # enum rttr scheme
         self.owner.add_enum_scheme(
             sc.Namespace({
-                "rttr": sc.Functional()
+                "rttr": sc.Functional({
+                    "flags": sc.List(),
+                    "attrs": sc.List(),
+                })
+            })
+        )
+
+        # enum value rttr scheme
+        self.owner.add_enum_value_scheme(
+            sc.Namespace({
+                "rttr": sc.Functional({
+                    "flags": sc.List(),
+                    "attrs": sc.List(),
+                })
             })
         )
 
@@ -70,64 +166,96 @@ class RTTRGenerator(gen.GeneratorBase):
         # parse record
         for record in records:
             # parse guid
-            guid = record.attrs["guid"]
-            if guid.is_visited():
-                record.generator_data["guid"] = guid.parsed_value
+            record_guid = record.attrs["guid"]
+            if record_guid.is_visited():
+                record.generator_data["guid"] = record_guid.parsed_value
 
             # parse rttr
-            rttr = record.attrs["rttr"]
-            rttr_enable = rttr.is_function_enable(guid.is_visited(), guid.is_visited())
-            if rttr_enable:
-                reflect_bases = rttr["reflect_bases"] if rttr["reflect_bases"].is_visited() else True
-                exclude_bases = rttr["exclude_bases"] if rttr["exclude_bases"].is_visited() else []
-                reflect_fields = rttr["reflect_fields"] if rttr["reflect_fields"].is_visited() else False
-                reflect_methods = rttr["reflect_methods"] if rttr["reflect_methods"].is_visited() else False
-                flags = rttr["flags"] if rttr["flags"].is_visited() else []
-                attrs = rttr["attrs"] if rttr["attrs"].is_visited() else []
+            record_rttr = record.attrs["rttr"]
+            record_rttr_enable = record_rttr.is_function_enable(record_guid.is_visited(), True)
+            if record_rttr_enable:
+                # append generator data
+                record_data = RecordData(
+                    reflect_bases=[],
+                    reflect_fields=[],
+                    reflect_methods=[],
+                    flags=record_rttr["flags"].visited_or([]),
+                    attrs=record_rttr["attrs"].visited_or([])
+                )
+                record.generator_data["rttr"] = record_data
 
-                # solve flags
+                # parse config
+                reflect_bases = record_rttr["reflect_bases"].visited_or(True)
+                exclude_bases = record_rttr["exclude_bases"].visited_or([])
+                default_reflect_fields = record_rttr["reflect_fields"].visited_or(False)
+                default_reflect_methods = record_rttr["reflect_methods"].visited_or(False)
 
-                # TODO. solve attrs
+                # parse bases
+                if reflect_bases:
+                    for base in record.bases:
+                        if base not in exclude_bases:
+                            record_data.reflect_bases.append(base)
 
                 # parse methods
-                rttr_methods = []
                 for method in record.methods:
                     method_rttr = method.attrs["rttr"]
-                    method_rttr_enable = method_rttr.is_function_enable(reflect_methods, reflect_methods)
+                    method_rttr_enable = method_rttr.is_function_enable(default_reflect_methods, True)
                     if method_rttr_enable:
-                        method.generator_data["rttr"] = {}
-                        rttr_methods.append(method)
+                        record_data.reflect_methods.append(method)
+
+                        # append generator data
+                        method.generator_data["rttr"] = MethodData(
+                            flags=method_rttr["flags"].visited_or([]),
+                            attrs=method_rttr["attrs"].visited_or([]),
+                        )
+
+                        # parse params
+                        for param in method.parameters.values():
+                            param_rttr = param.attrs["rttr"]
+                            method.generator_data["rttr"] = ParamData(
+                                flags=param_rttr["flags"].visited_or([]),
+                                attrs=param_rttr["attrs"].visited_or([]),
+                            )
 
                 # parse fields
-                rttr_fields = []
                 for field in record.fields:
                     field_rttr = field.attrs["rttr"]
-                    field_rttr_enable = field_rttr.is_function_enable(reflect_fields, reflect_fields)
+                    field_rttr_enable = field_rttr.is_function_enable(default_reflect_fields, True)
                     if field_rttr_enable:
-                        field.generator_data["rttr"] = {}
-                        rttr_fields.append(field)
+                        record_data.reflect_fields.append(field)
 
-                record.generator_data["rttr"] = {
-                    "reflect_bases": reflect_bases,
-                    "exclude_bases": exclude_bases,
-                    "reflect_fields": reflect_fields,
-                    "reflect_methods": reflect_methods,
-                    "rttr_methods": rttr_methods,
-                    "rttr_fields": rttr_fields
-                }
+                        # append generator data
+                        field.generator_data["rttr"] = FieldData(
+                            flags=field_rttr["flags"].visited_or([]),
+                            attrs=field_rttr["attrs"].visited_or([]),
+                        )
 
         # parse enum
         for enum in enums:
             # parse guid
-            guid = enum.attrs["guid"]
-            if guid.is_visited():
-                enum.generator_data["guid"] = guid.parsed_value
+            enum_guid = enum.attrs["guid"]
+            if enum_guid.is_visited():
+                enum.generator_data["guid"] = enum_guid.parsed_value
 
             # parse rttr
-            rttr = enum.attrs["rttr"]
-            rttr_enable = rttr.is_function_enable(guid.is_visited(), guid.is_visited())
-            if rttr_enable:
-                enum.generator_data["rttr"] = {}
+            enum_rttr = enum.attrs["rttr"]
+            enum_rttr_enable = enum_rttr.is_function_enable(enum_guid.is_visited(), True)
+            if enum_rttr_enable:
+                # append generator data
+                enum.generator_data["rttr"] = EnumData(
+                    flags=enum_rttr["flags"].visited_or([]),
+                    attrs=enum_rttr["attrs"].visited_or([]),
+                )
+
+                # parse items
+                for item in enum.values.values():
+                    item_rttr = item.attrs["rttr"]
+                    item_rttr_enable = item_rttr.is_function_enable(True, True)
+                    if item_rttr_enable:
+                        item.generator_data["rttr"] = EnumItemData(
+                            flags=item_rttr["flags"].visited_or([]),
+                            attrs=item_rttr["attrs"].visited_or([]),
+                        )
 
     def generate_body(self):
         # TODO. body generate
@@ -156,7 +284,7 @@ class RTTRGenerator(gen.GeneratorBase):
         records = [record for record in main_module.get_records() if "rttr" in record.generator_data]
         self.owner.append_content(
             "generated.cpp",
-            source_template.render(enums=enums, records=records)
+            source_template.render(enums=enums, records=records, tools=CodegenTools())
         )
 
 

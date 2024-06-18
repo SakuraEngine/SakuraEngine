@@ -123,7 +123,7 @@ import framework.scheme as sc
 import framework.log as log
 
 
-class EnumValue:
+class EnumerationValue:
     def __init__(self, name, parent) -> None:
         self.parent: 'Enumeration' = parent
 
@@ -162,7 +162,7 @@ class Enumeration:
         self.short_name: str = split_name[-1]
         self.namespace: str = split_name[0] if len(split_name) > 1 else ""
 
-        self.values: Dict[str, EnumValue]
+        self.values: Dict[str, EnumerationValue]
         self.is_scoped: bool
         self.underlying_type: str
         self.comment: str
@@ -185,7 +185,7 @@ class Enumeration:
         # load values
         self.values = {}
         for (enum_value_name, enum_value_data) in unique_dict["values"].unique_dict().items():
-            value = EnumValue(enum_value_name, self)
+            value = EnumerationValue(enum_value_name, self)
             value.load_from_raw_json(enum_value_data)
             self.values[enum_value_name] = value
 

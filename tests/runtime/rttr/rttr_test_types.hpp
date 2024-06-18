@@ -41,7 +41,8 @@ Maxwell : public Dog,
           public IWolf {
     SKR_RTTR_GENERATE_BODY()
 
-    void no_good(int a, bool b, Dog* c) {}
+    sattr("rttr": true)
+    void   no_good(int a, bool b, Dog* c) {}
 
     sattr("rttr": true)
     float  party_animals;
