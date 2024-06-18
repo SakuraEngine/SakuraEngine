@@ -2,8 +2,7 @@
 #include "SkrRTTR/type.hpp"
 #include "SkrCore/exec_static.hpp"
 #include "SkrContainers/tuple.hpp"
-#include "SkrRTTR/export/enum_builder.hpp"
-#include "SkrRTTR/export/record_builder.hpp"
+#include "SkrRTTR/export/export_builder.hpp"
 
 namespace skr::rttr 
 {
@@ -64,25 +63,25 @@ SKR_EXEC_STATIC_CTOR
         record_data.methods.reserve(${len(record.methods)});
         record_data.fields.reserve(${len(record.fields)});
         
-        // build
+        // basic
         RecordBuilder<${record.name}> builder(&record_data);
-        builder
-            .basic_info()
-            // bases
+        builder.basic_info();
         %if record.bases:
-            .bases<${", ".join(record.bases)}>()
+        builder.bases<${", ".join(record.bases)}>();
         %endif
-            // methods
-        %if len(rttr_fields) > 0:
-            %for field in rttr_fields:
-            .field<<&${record.name}::${field.name}>(u8"${field.name}")
-            %endfor
-        %endif
-            // fields
+        
+        // methods
         %if len(rttr_methods) > 0:
-            %for method in rttr_methods:
-            .method<<&${record.name}::${method.short_name}>(u8"${method.short_name}")
-            %endfor
+        %for method in rttr_methods:
+        builder..method<<&${record.name}::${method.short_name}>(u8"${method.short_name}");
+        %endfor
+        %endif
+
+        // fields
+        %if len(rttr_fields) > 0:
+        %for field in rttr_fields:
+        builder.field<<&${record.name}::${field.name}>(u8"${field.name}");
+        %endfor
         %endif
             ;
     });

@@ -6,7 +6,7 @@
 #include "SkrRTTR/enum_value.hpp"
 #include "SkrRTTR/enum_traits.hpp"
 #include "SkrRTTR/export/export_data.hpp"
-#include "export/enum_builder.hpp"
+#include "SkrRTTR/export/export_builder.hpp"
 
 // !!!! RTTR 不考虑动态类型建立(从脚本建立), 一切类型都是 CPP 静态注册的 loader !!!!
 namespace skr::rttr

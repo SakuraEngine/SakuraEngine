@@ -1,6 +1,5 @@
 #include "SkrTestFramework/framework.hpp"
-#include "SkrRTTR/export/record_builder.hpp"
-#include "SkrRTTR/export/enum_builder.hpp"
+#include "SkrRTTR/export/export_builder.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
 
 enum class ETestEnum
@@ -21,15 +20,12 @@ TEST_CASE("test rttr export")
     // clang-format off
     EnumData enum_data;
     EnumBuilder<ETestEnum> enum_builder(&enum_data);
-    enum_builder
-        // basic
-        .basic_info()
-        // items
-        .item(u8"A", ETestEnum::A)
-        .item(u8"B", ETestEnum::B)
-        .item(u8"C", ETestEnum::C)
-        .item(u8"D", ETestEnum::D)
-        .item(u8"E", ETestEnum::E)
-        .item(u8"F", ETestEnum::F);
+    enum_builder.basic_info();
+    enum_builder.item(u8"A", ETestEnum::A);
+    enum_builder.item(u8"B", ETestEnum::B);
+    enum_builder.item(u8"C", ETestEnum::C);
+    enum_builder.item(u8"D", ETestEnum::D);
+    enum_builder.item(u8"E", ETestEnum::E);
+    enum_builder.item(u8"F", ETestEnum::F);
     // clang-format on
 }

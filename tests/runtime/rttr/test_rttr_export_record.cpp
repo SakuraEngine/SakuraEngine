@@ -1,6 +1,5 @@
 #include "SkrTestFramework/framework.hpp"
-#include "SkrRTTR/export/record_builder.hpp"
-#include "SkrRTTR/export/enum_builder.hpp"
+#include "SkrRTTR/export/export_builder.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
 #include "SkrRTTR/type.hpp"
 #include "SkrRTTR/export/extern_methods.hpp"
@@ -53,35 +52,59 @@ TEST_CASE("test rttr export record")
     // clang-format off
     RecordData                    record_data;
     RecordBuilder<TestDerived> record_builder(&record_data);
-    record_builder
-        // basic
-        .basic_info()
-        .bases<TestBase, ITestInterface>()
-        // ctor
-        .ctor<>()
-        .ctor<int>()
-            .param(0, u8"a")
-        .ctor<int, float>()
-            .param(0, u8"a")
-            .param(1, u8"b")
-        // method
-        .method<void (TestDerived::*)(), &TestDerived::test>(u8"test")
-        .method<void (TestDerived::*)(int, float), &TestDerived::test>(u8"test")
-            .param(0, u8"a")
-            .param(1, u8"b")
-        // field
-        .field<&TestDerived::i32>(u8"i32")
-        .field<&TestDerived::i64>(u8"i64")
-        // static method
-        .static_method<void (*)(), &TestDerived::static_test>(u8"static_test")
-        .static_method<void (*)(int, float), &TestDerived::static_test>(u8"static_test")
-            .param(0, u8"a")
-            .param(1, u8"b")
-        // static field
-        .static_field<&TestDerived::static_i32>(u8"static_i32")
-        .static_field<&TestDerived::static_i64>(u8"static_i64")
-        // extern method
-        .extern_method<&TestExternMethod>(u8"TestExternMethod")
-        .extern_method<+[](const TestDerived& lhs, const TestDerived& rhs){ return lhs == rhs; }>(CPPExternMethods::Eq);
+    record_builder.basic_info();
+    // bases
+    record_builder.bases<TestBase, ITestInterface>();
+    
+    // ctor
+    record_builder.ctor<>();
+    {
+        auto ctor_builder = record_builder.ctor<int>();
+        ctor_builder.param_at(0)
+            .name(u8"a");
+    }
+    {
+        auto ctor_builder = record_builder.ctor<int, float>();
+        ctor_builder.param_at(0)
+            .name(u8"a");
+        ctor_builder.param_at(1)
+            .name(u8"b");
+    }
+
+    // methods
+    {
+        auto method_builder = record_builder.method<void (TestDerived::*)(), &TestDerived::test>(u8"test");
+    }
+    {
+        auto method_builder = record_builder.method<void (TestDerived::*)(int, float), &TestDerived::test>(u8"test");
+        method_builder.param_at(0)
+            .name(u8"a");
+        method_builder.param_at(1)
+            .name(u8"b");
+    }
+
+    // fields
+    record_builder.field<&TestDerived::i32>(u8"i32");
+    record_builder.field<&TestDerived::i64>(u8"i64");
+
+    // static methods
+    {
+        auto static_method_builder = record_builder.static_method<void (*)(), &TestDerived::static_test>(u8"static_test");
+    }
+    {
+        auto static_method_builder = record_builder.static_method<void (*)(int, float), &TestDerived::static_test>(u8"static_test");
+        static_method_builder.param_at(0)
+            .name(u8"a");
+        static_method_builder.param_at(1)
+            .name(u8"b");
+    }
+
+    // static fields
+    record_builder.static_field<&TestDerived::static_i32>(u8"static_i32");
+    record_builder.static_field<&TestDerived::static_i64>(u8"static_i64");
+
+    // extern methods
+    record_builder.extern_method<&TestExternMethod>(u8"TestExternMethod");
+    record_builder.extern_method<+[](const TestDerived& lhs, const TestDerived& rhs){ return lhs == rhs; }>(CPPExternMethods::Eq);
     // clang-format on
 }

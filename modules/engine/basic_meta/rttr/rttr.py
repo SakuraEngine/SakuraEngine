@@ -27,8 +27,8 @@ class RTTRGenerator(gen.GeneratorBase):
                     "exclude_bases": sc.List(),  # default: []
                     "reflect_fields": sc.Bool(),  # default: False
                     "reflect_methods": sc.Bool(),  # default: False
-                    # TODO. flag
-                    # TODO. attrs
+                    "flags": sc.List(),
+                    "attrs": sc.List(),
                 }, shorthands=[sc.OptionShorthand({
                     "full": {
                         "reflect_bases": True,
@@ -67,6 +67,7 @@ class RTTRGenerator(gen.GeneratorBase):
         records = self.owner.database.get_records()
         enums = self.owner.database.get_enums()
 
+        # parse record
         for record in records:
             # parse guid
             guid = record.attrs["guid"]
@@ -81,6 +82,12 @@ class RTTRGenerator(gen.GeneratorBase):
                 exclude_bases = rttr["exclude_bases"] if rttr["exclude_bases"].is_visited() else []
                 reflect_fields = rttr["reflect_fields"] if rttr["reflect_fields"].is_visited() else False
                 reflect_methods = rttr["reflect_methods"] if rttr["reflect_methods"].is_visited() else False
+                flags = rttr["flags"] if rttr["flags"].is_visited() else []
+                attrs = rttr["attrs"] if rttr["attrs"].is_visited() else []
+
+                # solve flags
+
+                # TODO. solve attrs
 
                 # parse methods
                 rttr_methods = []
@@ -109,6 +116,7 @@ class RTTRGenerator(gen.GeneratorBase):
                     "rttr_fields": rttr_fields
                 }
 
+        # parse enum
         for enum in enums:
             # parse guid
             guid = enum.attrs["guid"]
