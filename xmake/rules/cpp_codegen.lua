@@ -28,7 +28,8 @@ rule("c++.codegen.meta")
         if sourcebatches then
             local owner_name = proxy_target:data("c++.codegen.owner")
             local owner = project.target(owner_name)
-            local files = sourcebatches["c++.codegen.meta"].sourcefiles
+            local self_sourcebatch = sourcebatches["c++.codegen.meta"]
+            local files = self_sourcebatch and self_sourcebatch.sourcefiles or {}
             codegen.collect_headers_batch(owner, files)
             -- compile meta file
             codegen.meta_compile(owner, proxy_target, opt)
