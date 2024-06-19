@@ -19,6 +19,11 @@ struct ParamBuilder {
         _data->name = std::move(name);
         return *this;
     }
+    inline ParamBuilder& default_func(ParamData::MakeDefaultFunc func)
+    {
+        _data->make_default = func;
+        return *this;
+    }
 
     // flag & attribute
     inline ParamBuilder& flag(EParamFlag flag)

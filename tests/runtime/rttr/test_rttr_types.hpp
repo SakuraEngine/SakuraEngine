@@ -5,6 +5,23 @@
     #include "RTTRTest/test_rttr_types.generated.h"
 #endif
 
+// TODO. basic test
+//  1. reflect record
+//      a. bases
+//      b. fields
+//      c. static fields
+//      d. methods
+//      e. static methods
+//  2. reflect enum
+//  3. flags
+//  4. attrs
+
+// TODO. test reflect bases and exclude bases
+
+// TODO. test invoke & field visit
+
+// TODO. default value
+
 namespace test_rttr sreflect
 {
 sreflect_struct("guid" : "43e1909f-3da2-4030-8450-9eed6d1823eb")
