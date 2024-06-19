@@ -149,9 +149,9 @@ typedef struct sugoi_filter_t {
 
 enum sugoi_operation_scope
 {
-    DOS_PAR,
-    DOS_SEQ,
-    DOS_UNSEQ,
+    SOS_PAR,
+    SOS_SEQ,
+    SOS_UNSEQ,
 };
 
 /**

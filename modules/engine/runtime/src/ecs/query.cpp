@@ -209,7 +209,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
         sugoi_operation_t  operation;
         bool               shared     = false;
         bool               filterOnly = false;
-        operation.randomAccess        = DOS_PAR;
+        operation.randomAccess        = SOS_PAR;
         operation.readonly            = true;
         operation.atomic              = false;
         operation.phase               = -1;
@@ -279,13 +279,13 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
             auto attr = part.substr(j, i - j);
             errorPos  = partBegin + j;
             if (attr == u8"seq")
-                operation.randomAccess = DOS_SEQ;
+                operation.randomAccess = SOS_SEQ;
             else if (attr == u8"par")
-                operation.randomAccess = DOS_PAR;
+                operation.randomAccess = SOS_PAR;
             else if (attr == u8"unseq")
             {
                 selector               = OPT;
-                operation.randomAccess = DOS_UNSEQ;
+                operation.randomAccess = SOS_UNSEQ;
             }
             else
             {
@@ -313,11 +313,11 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
                     SKR_ASSERT(false);
                     return nullptr;
                 }
-                operation.randomAccess = DOS_SEQ;
+                operation.randomAccess = SOS_SEQ;
                 shared                 = true;
                 ++i;
             }
-            if (operation.randomAccess == DOS_UNSEQ && part[i] != u8'?')
+            if (operation.randomAccess == SOS_UNSEQ && part[i] != u8'?')
             {
                 errorPos = partBegin + i;
                 error    = skr::format(u8"unseq component must be optional, loc {}.", errorPos);

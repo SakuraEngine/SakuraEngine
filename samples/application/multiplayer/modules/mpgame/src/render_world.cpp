@@ -79,7 +79,7 @@ void MPRenderWorld::UpdateStructuralChanges()
     auto buildMap = [&](sugoi_chunk_view_t* view)
     {
         auto entities = sugoiV_get_entities(view);
-        auto ghosts = (CGhost*)sugoiV_get_owned_ro(view, sugoi_id_of<CGhost>::get());
+        auto ghosts = (const CGhost*)sugoiV_get_owned_ro(view, sugoi_id_of<CGhost>::get());
         for (int i = 0; i < view->count; ++i)
         {
             if(ghosts[i].mappedEntity != SUGOI_NULL_ENTITY)

@@ -169,7 +169,7 @@ bool sugoi::scheduler_t::sync_query(sugoi_query_t* query)
         {
             if (type_index_t(params.types[i]).is_tag())
                 continue;
-            if (params.accesses[i].randomAccess != DOS_SEQ)
+            if (params.accesses[i].randomAccess != SOS_SEQ)
             {
                 result = sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic) || result;
             }
@@ -360,17 +360,17 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
         job->entityCount += group->size;
         forloop (i, 0, params.length)
         {
-            auto t = type_index_t(params.types[i]);
-            auto idx = group->index(params.types[i]);
+            const auto t = type_index_t(params.types[i]);
+            const auto idx = group->index(params.types[i]);
             job->localTypes[groupIndex * params.length + i] = idx;
-            auto& op = params.accesses[i];
+            const auto& op = params.accesses[i];
             if(idx != kInvalidTypeIndex)
             {
                 job->readonly[groupIndex].set(idx, op.readonly);
-                job->randomAccess[groupIndex].set(idx, op.randomAccess != DOS_SEQ);
+                job->randomAccess[groupIndex].set(idx, op.randomAccess != SOS_SEQ);
                 job->atomic[groupIndex].set(idx, op.atomic);
             }
-            job->hasRandomWrite |= (op.randomAccess != DOS_SEQ);
+            job->hasRandomWrite |= (op.randomAccess != SOS_SEQ);
             job->hasWriteChunkComponent = t.is_chunk() && !op.readonly && !op.atomic;
         }
         ++groupIndex;
@@ -385,6 +385,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
         allCounter.add(1);
         query->storage->counter.add(1);
     }
+
     skr::task::schedule([dependencies = std::move(dependencies), sharedData, init, teardown, this, query, batchSize]()mutable
     {
         {
@@ -622,7 +623,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
         {
             if (type_index_t(params.types[i]).is_tag())
                 continue;
-            if (params.accesses[i].randomAccess != DOS_SEQ)
+            if (params.accesses[i].randomAccess != SOS_SEQ)
             {
                 sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic);
             }
@@ -659,7 +660,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
             {
                 if (type_index_t(subquery->parameters.types[i]).is_tag())
                     continue;
-                if (subquery->parameters.accesses[i].randomAccess != DOS_SEQ)
+                if (subquery->parameters.accesses[i].randomAccess != SOS_SEQ)
                 {
                     sync_type(subquery->parameters.types[i], subquery->parameters.accesses[i].readonly, subquery->parameters.accesses[i].atomic);
                 }
