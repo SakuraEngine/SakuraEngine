@@ -6,9 +6,7 @@
     #include "SkrGui/render_objects/render_stack.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 
 sreflect_struct(
@@ -59,5 +57,4 @@ private:
     // MIXIN
     MULTI_CHILD_RENDER_OBJECT_MIX_IN(RenderStack, RenderBox, SlotData)
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

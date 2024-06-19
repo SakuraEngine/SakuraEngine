@@ -4,9 +4,7 @@
     #include "SkrGui/widgets/text.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "ba805fb4-6b04-4a41-9c7d-605b61d194aa"
@@ -19,5 +17,4 @@ SKR_GUI_API Text : public LeafRenderObjectWidget {
 
     String text = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

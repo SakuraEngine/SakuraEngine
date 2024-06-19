@@ -12,9 +12,7 @@ struct ICanvas;
 struct Layer;
 } // namespace skr::gui
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 enum class EWindowFlag : uint32_t
 {
@@ -92,5 +90,4 @@ SKR_GUI_API INativeWindow : virtual public skr::rttr::IObject {
     virtual void set_title(const String& title) SKR_NOEXCEPT              = 0;
 };
 
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

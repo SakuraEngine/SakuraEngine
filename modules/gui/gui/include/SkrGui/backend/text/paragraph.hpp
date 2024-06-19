@@ -6,9 +6,7 @@
     #include "SkrGui/backend/text/paragraph.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct TextStyle;
 struct PaintingContext;
@@ -25,5 +23,4 @@ SKR_GUI_API IParagraph : virtual public skr::rttr::IObject {
     virtual Sizef layout(BoxConstraints constraints)                       = 0;
     virtual void  paint(NotNull<PaintingContext*> context, Offsetf offset) = 0;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

@@ -4,9 +4,7 @@
     #include "SkrGui/render_objects/render_grid_paper.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid" : "4207334c-617c-4f7c-bf3c-fd2f9e018a9c"
@@ -23,5 +21,4 @@ public:
     // hit test
     bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

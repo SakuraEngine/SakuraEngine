@@ -5,9 +5,7 @@
     #include "SkrGui/framework/element/proxy_element.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 
 sreflect_struct(
@@ -25,5 +23,4 @@ SKR_GUI_API ProxyElement : public ComponentElement {
 
     virtual void updated(NotNull<ProxyWidget*> old_widget) = 0;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

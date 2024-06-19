@@ -5,9 +5,7 @@
     #include "SkrGui/system/input/gesture/gesture_recognizer.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct InputManager;
 
@@ -64,5 +62,4 @@ private:
     InputManager* _input_manager = nullptr;
 };
 
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

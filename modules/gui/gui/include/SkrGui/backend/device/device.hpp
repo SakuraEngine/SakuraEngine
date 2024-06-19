@@ -5,9 +5,7 @@
     #include "SkrGui/backend/device/device.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct INativeWindow;
 struct ICanvas;
@@ -61,5 +59,4 @@ SKR_GUI_API INativeDevice : virtual public skr::rttr::IObject {
     virtual NotNull<IParagraph*> create_paragraph()                                = 0;
     virtual void                 destroy_paragraph(NotNull<IParagraph*> paragraph) = 0;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

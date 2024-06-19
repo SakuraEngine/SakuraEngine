@@ -4,9 +4,7 @@
     #include "SkrGui/framework/element/multi_child_render_object_element.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "794d783e-9772-4abd-a2bb-06528963e72b"
@@ -33,5 +31,4 @@ private:
     // TODO. 控件重用与 forgot_child
     // Array<Element*> _forgotten_children = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

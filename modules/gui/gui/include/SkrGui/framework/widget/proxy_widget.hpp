@@ -5,9 +5,7 @@
     #include "SkrGui/framework/widget/proxy_widget.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "3b3208fe-f5df-419d-840c-6621dc1661d2"
@@ -17,5 +15,4 @@ SKR_GUI_API ProxyWidget : public Widget {
 
     Widget* child = nullptr;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

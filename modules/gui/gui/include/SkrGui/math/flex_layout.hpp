@@ -4,9 +4,7 @@
     #include "SkrGui/math/flex_layout.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 // Defines the direction in which the flex container's children are laid out.
 sreflect_enum_class(
@@ -66,5 +64,4 @@ EFlexFit : uint8_t
     Tight, // min = max = max
     Loose, // min = 0.0f
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

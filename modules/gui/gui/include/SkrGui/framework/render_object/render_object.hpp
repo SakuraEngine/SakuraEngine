@@ -8,9 +8,7 @@
     #include "SkrGui/framework/render_object/render_object.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 
 enum class ERenderObjectLifecycle : uint8_t
@@ -149,5 +147,4 @@ private:
     Slot _slot = {};
 };
 
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

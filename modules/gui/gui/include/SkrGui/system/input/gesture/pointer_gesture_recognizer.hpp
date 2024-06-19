@@ -4,9 +4,7 @@
     #include "SkrGui/system/input/gesture/pointer_gesture_recognizer.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct GestureArena;
 
@@ -35,5 +33,4 @@ private:
     Map<CombinePointerId, GestureArena*> _tracing_pointers;
 };
 
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

@@ -4,9 +4,7 @@
     #include "SkrGui/framework/widget/render_native_window_widget.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "5d639330-f012-4e0e-aef7-86e96c95eb51"
@@ -20,5 +18,4 @@ SKR_GUI_API RenderNativeWindowWidget : public RenderWindowWidget {
 
     RenderNativeWindow* native_window_render_object = nullptr;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

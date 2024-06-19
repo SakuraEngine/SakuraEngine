@@ -6,9 +6,7 @@
     #include "SkrGui/widgets/colored_box.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "66b7a12f-520d-4591-a31d-100f12211b17"
@@ -22,5 +20,4 @@ SKR_GUI_API ColoredBox : public SingleChildRenderObjectWidget {
     Color            color              = {};
     EHitTestBehavior hit_test_behaviour = EHitTestBehavior::opaque;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

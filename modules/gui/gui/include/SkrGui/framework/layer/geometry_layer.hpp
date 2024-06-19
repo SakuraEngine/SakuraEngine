@@ -4,9 +4,7 @@
     #include "SkrGui/framework/layer/geometry_layer.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "1d1fbcab-eb50-4a22-99f6-59c5f4aca3e9"
@@ -25,5 +23,4 @@ GeometryLayer : public Layer {
 private:
     ICanvas* _canvas = nullptr;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

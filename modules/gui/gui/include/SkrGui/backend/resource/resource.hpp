@@ -13,9 +13,7 @@ struct IUpdatableImage;
 } // namespace skr::gui
 
 // resource service
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 enum class EPixelFormat
 {
@@ -90,5 +88,4 @@ SKR_GUI_API IUpdatableImage : virtual public IImage {
     virtual void                      update(const UpdatableImageDesc& desc) = 0;
     virtual const UpdatableImageDesc& desc() const SKR_NOEXCEPT              = 0;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

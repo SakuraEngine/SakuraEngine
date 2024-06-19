@@ -4,9 +4,7 @@
     #include "SkrGui/framework/element/leaf_render_object_element.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "4e452c55-c545-4602-a9d2-76232f561536"
@@ -23,5 +21,4 @@ LeafRenderObjectElement : public RenderObjectElement {
     void remove_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT override;
     void move_render_object_child(NotNull<RenderObject*> child, Slot old_slot, Slot new_slot) SKR_NOEXCEPT override;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

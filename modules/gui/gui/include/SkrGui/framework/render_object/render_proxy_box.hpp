@@ -5,9 +5,7 @@
     #include "SkrGui/framework/render_object/render_proxy_box.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 
 // 代理 Box，其渲染 Sizef 等属性严格由 child 决定，通常起到修饰作用
@@ -40,5 +38,4 @@ protected:
     // MIXIN
     SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(RenderProxyBox, RenderBox);
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

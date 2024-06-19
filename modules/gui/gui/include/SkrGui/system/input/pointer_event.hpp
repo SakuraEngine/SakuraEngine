@@ -4,9 +4,7 @@
     #include "SkrGui/system/input/pointer_event.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_enum_class("guid": "7223961b-5309-4fac-8207-8476bf7f3b05")
 EPointerDeviceType : uint32_t
@@ -118,5 +116,4 @@ PointerPanZoomEndEvent : public PointerEvent {
     SKR_RTTR_GENERATE_BODY()
 };
 
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

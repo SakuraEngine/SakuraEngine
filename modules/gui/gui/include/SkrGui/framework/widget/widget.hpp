@@ -6,9 +6,7 @@
     #include "SkrGui/framework/widget/widget.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "8cc86bf9-a351-4093-9bd4-f54789e72b10"
@@ -28,5 +26,4 @@ SKR_GUI_API Widget : virtual public skr::rttr::IObject {
 
     Key key = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

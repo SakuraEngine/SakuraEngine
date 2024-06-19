@@ -4,9 +4,7 @@
     #include "SkrGui/widgets/color_picker.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "6e295661-ef44-44a3-9701-e44902de82eb"
@@ -19,5 +17,4 @@ SKR_GUI_API ColorPicker : public LeafRenderObjectWidget {
 
     bool is_srgb = true;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

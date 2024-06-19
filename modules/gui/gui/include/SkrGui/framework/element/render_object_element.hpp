@@ -5,9 +5,7 @@
     #include "SkrGui/framework/element/render_object_element.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "df4199cc-0c92-4c46-9e74-e9851b1a67ce"
@@ -52,5 +50,4 @@ private:
     RenderObject*        _render_object                  = nullptr;
     RenderObjectElement* _ancestor_render_object_element = nullptr;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

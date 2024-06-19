@@ -5,9 +5,7 @@
     #include "SkrGui/framework/render_object/render_shifted_box.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 // 会对 child 施加布局偏移的 RenderBox
 sreflect_struct(
@@ -41,5 +39,4 @@ private:
 
     SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(RenderShiftedBox, RenderBox)
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

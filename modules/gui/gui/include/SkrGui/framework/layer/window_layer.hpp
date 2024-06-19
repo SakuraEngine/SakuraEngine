@@ -4,9 +4,7 @@
     #include "SkrGui/framework/layer/window_layer.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "4d352295-d5e8-4847-b621-9c098ed37289"
@@ -20,5 +18,4 @@ SKR_GUI_API WindowLayer : public OffsetLayer {
 private:
     INativeWindow* _window = nullptr;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

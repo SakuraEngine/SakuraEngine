@@ -6,9 +6,7 @@
     #include "SkrGui/framework/render_object/render_box.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "d4c45487-d696-42fb-bff1-f0a3f6adcea3"
@@ -71,5 +69,4 @@ private:
 
     // TODO. cached data
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

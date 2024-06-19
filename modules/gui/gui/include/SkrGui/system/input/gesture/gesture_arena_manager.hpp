@@ -4,9 +4,7 @@
     #include "SkrGui/system/input/gesture/gesture_arena_manager.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct("guid": "6b1d8469-6958-4800-affa-bf1e12cd5197")
 SKR_GUI_API GestureArenaManager {
@@ -23,5 +21,4 @@ SKR_GUI_API GestureArenaManager {
 private:
     Map<CombinePointerId, GestureArena*> _arenas = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

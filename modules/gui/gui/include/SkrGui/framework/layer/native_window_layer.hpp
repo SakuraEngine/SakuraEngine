@@ -4,9 +4,7 @@
     #include "SkrGui/framework/layer/native_window_layer.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct INativeWindow;
 sreflect_struct(
@@ -16,5 +14,4 @@ SKR_GUI_API NativeWindowLayer : public WindowLayer {
     SKR_RTTR_GENERATE_BODY()
     NativeWindowLayer(INativeWindow* native_window);
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

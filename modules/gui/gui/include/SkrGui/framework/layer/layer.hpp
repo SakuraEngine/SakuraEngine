@@ -5,9 +5,7 @@
     #include "SkrGui/framework/layer/layer.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "a40f7782-8b8f-4059-ab2a-3d8e4ac2fdd5"
@@ -44,5 +42,4 @@ private:
     // dirty
     bool _needs_composite = true;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

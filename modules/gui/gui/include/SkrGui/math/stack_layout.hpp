@@ -4,9 +4,7 @@
     #include "SkrGui/math/stack_layout.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 // 在父子 Constraints 传递的过程中，Positional 可以覆写 Constraints，但是无法对其 min-max 模式进行修改
 // 这里决定了如何处理 min-max
@@ -31,5 +29,4 @@ EStackSize : uint8_t
     Shrink, // size = max(child_size)
     Expand, // size = constraints.biggest()
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

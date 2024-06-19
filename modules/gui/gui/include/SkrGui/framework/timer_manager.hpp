@@ -5,9 +5,7 @@
     #include "SkrGui/framework/timer_manager.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct("guid": "f172b80f-a4b5-461c-9ac8-501e4dc732a4")
 TimerSignalData {
@@ -87,8 +85,7 @@ private:
         float    last_signal_time_stamp;
         uint64_t signal_count;
     };
-    float                  _cur_time_stamp = 0;
+    float                   _cur_time_stamp = 0;
     SparseVector<TimerData> _timers;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

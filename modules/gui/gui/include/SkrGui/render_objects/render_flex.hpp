@@ -6,9 +6,7 @@
     #include "SkrGui/render_objects/render_flex.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "1bc957ef-1203-489d-911d-94ba3fb81080"
@@ -67,5 +65,4 @@ private:
     // MIXIN
     MULTI_CHILD_RENDER_OBJECT_MIX_IN(RenderFlex, RenderBox, SlotData)
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

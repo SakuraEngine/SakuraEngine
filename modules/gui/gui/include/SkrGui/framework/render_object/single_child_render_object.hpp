@@ -6,9 +6,7 @@
     #include "SkrGui/framework/render_object/single_child_render_object.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "5349672b-bfc5-46a9-9a02-40ef563c196d"
@@ -46,8 +44,7 @@ struct SingleChildRenderObjectMixin {
         if (_child) visitor(_child);
     }
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui
 
 #define SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(__SELF, __CHILD)                \
     /*===============> Begin Single Child Render Object Mixin <===============*/ \

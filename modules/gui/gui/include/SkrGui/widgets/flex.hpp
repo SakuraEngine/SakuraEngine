@@ -5,9 +5,7 @@
     #include "SkrGui/widgets/flex.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "4a3df0ec-b346-4f5b-a1bd-a46763a7818d"
@@ -23,5 +21,4 @@ SKR_GUI_API Flex : public MultiChildRenderObjectWidget {
     ECrossAxisAlignment cross_axis_alignment = ECrossAxisAlignment::Start;
     EMainAxisSize       main_axis_size       = EMainAxisSize::Max;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

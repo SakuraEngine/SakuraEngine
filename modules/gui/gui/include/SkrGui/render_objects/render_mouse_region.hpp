@@ -4,9 +4,7 @@
     #include "SkrGui/render_objects/render_mouse_region.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct PointerEnterEvent;
 struct PointerExitEvent;
@@ -31,5 +29,4 @@ public:
     Function<bool(PointerDownEvent*)>  on_down  = {};
     Function<bool(PointerUpEvent*)>    on_up    = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

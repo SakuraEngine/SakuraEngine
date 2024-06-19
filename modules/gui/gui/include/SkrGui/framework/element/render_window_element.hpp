@@ -4,9 +4,7 @@
     #include "SkrGui/framework/element/render_window_element.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 
 sreflect_struct(
@@ -17,5 +15,4 @@ SKR_GUI_API RenderWindowElement : public RenderObjectElement {
     using Super = RenderObjectElement;
     using Super::Super;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

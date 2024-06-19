@@ -5,9 +5,7 @@
     #include "SkrGui/framework/widget/single_child_render_object_widget.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 
 sreflect_struct(
@@ -20,5 +18,4 @@ SKR_GUI_API SingleChildRenderObjectWidget : public RenderObjectWidget {
 
     Widget* child = nullptr;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

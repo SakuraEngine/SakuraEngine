@@ -4,9 +4,7 @@
     #include "SkrGui/framework/render_object/render_native_window.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct INativeWindow;
 sreflect_struct(
@@ -23,5 +21,4 @@ SKR_GUI_API RenderNativeWindow : public RenderWindow {
 
     bool hit_test(HitTestResult* result, Offsetf local_position);
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

@@ -7,9 +7,7 @@
     #include "SkrGui/framework/render_object/multi_child_render_object.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "409eaa24-5549-46e3-87c1-81649576d2cd"
@@ -132,8 +130,7 @@ struct MultiChildRenderObjectMixin {
         }
     }
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui
 
 #define MULTI_CHILD_RENDER_OBJECT_MIX_IN(__SELF, __CHILD, __SLOT_DATA)                      \
     /*===============> Begin Multi Child Render Object Mixin <===============*/             \

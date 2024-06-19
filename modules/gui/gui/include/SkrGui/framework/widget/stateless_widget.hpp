@@ -5,9 +5,7 @@
     #include "SkrGui/framework/widget/stateless_widget.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "8e344044-7b4b-4a69-b7f4-a41672f2c346"
@@ -19,5 +17,4 @@ SKR_GUI_API StatelessWidget : public Widget {
 
     virtual NotNull<Widget*> build(NotNull<IBuildContext*> context) SKR_NOEXCEPT = 0;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

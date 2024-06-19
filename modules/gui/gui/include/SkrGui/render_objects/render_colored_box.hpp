@@ -5,9 +5,7 @@
     #include "SkrGui/render_objects/render_colored_box.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "02cc61fb-9ca4-464b-95a5-2a5ad277abf8"
@@ -30,5 +28,4 @@ RenderColoredBox : public RenderProxyBoxWithHitTestBehavior {
 private:
     Color _color = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

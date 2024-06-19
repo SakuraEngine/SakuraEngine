@@ -4,9 +4,7 @@
     #include "SkrGui/system/input/gesture/gesture_detector.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct GestureRecognizer;
 
@@ -17,8 +15,7 @@ SKR_GUI_API RawGestureDetector : public StatefulWidget {
     using Super                    = StatefulWidget;
     using GestureRecognizerFactory = Function<GestureRecognizer*()>;
 
-    Widget*                              child    = nullptr;
+    Widget*                             child    = nullptr;
     Map<GUID, GestureRecognizerFactory> gestures = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

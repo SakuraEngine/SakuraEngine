@@ -4,9 +4,7 @@
     #include "SkrGui/render_objects/render_color_picker.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "f9de7eb7-9431-4dde-a06d-2fb9bc211bb9"
@@ -24,5 +22,4 @@ SKR_GUI_API RenderColorPicker : public RenderBox {
     bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
 };
 
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

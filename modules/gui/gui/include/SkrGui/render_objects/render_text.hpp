@@ -10,9 +10,7 @@
     #include "SkrGui/render_objects/render_text.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct RenderText;
 struct IParagraph;
@@ -58,5 +56,4 @@ private:
     IParagraph* _paragraph = nullptr;
     String      _text      = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

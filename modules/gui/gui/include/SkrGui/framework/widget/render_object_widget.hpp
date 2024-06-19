@@ -5,9 +5,7 @@
     #include "SkrGui/framework/widget/render_object_widget.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "e20ccde7-3f42-4224-aee3-9f54c9077194"
@@ -21,5 +19,4 @@ SKR_GUI_API RenderObjectWidget : public Widget {
     // call after render object detached from render object tree
     virtual void did_unmount_render_object(NotNull<RenderObject*> render_object) SKR_NOEXCEPT;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui
