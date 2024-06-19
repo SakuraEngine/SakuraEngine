@@ -22,7 +22,7 @@
 
 // TODO. default value
 
-namespace test_rttr sreflect
+namespace test_rttr
 {
 sreflect_struct("guid" : "43e1909f-3da2-4030-8450-9eed6d1823eb")
 Animal : virtual public ::skr::rttr::IObject {
@@ -75,4 +75,4 @@ Maxwell : public Dog,
     sattr("rttr": true)
     static float fuck;
 };
-} // namespace test_rttr sreflect
+} // namespace test_rttr

@@ -8,15 +8,15 @@ struct SkrToolCoreModule;
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service);
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IVRAMService, skr_io_vram_service);
 
-namespace skd sreflect
+namespace skd
 {
 struct SProject;
-namespace asset sreflect
+namespace asset
 {
 struct SImporter;
 struct SAssetRecord;
 struct SCookSystem;
 struct SCooker;
 struct SCookContext;
-}
-}
+} // namespace asset
+} // namespace skd

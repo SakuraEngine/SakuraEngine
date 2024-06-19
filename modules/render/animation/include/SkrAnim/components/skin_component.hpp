@@ -7,9 +7,7 @@
     #include "SkrAnim/components/skin_component.generated.h" // IWYU pragma: export
 #endif
 
-namespace skr sreflect
-{
-namespace anim sreflect
+namespace skr::anim
 {
 
 sreflect_managed_component("guid" : "05B43406-4BCF-4E59-B2D8-ACED7D37E776")
@@ -47,8 +45,7 @@ AnimComponent {
     skr::Vector<skr_vertex_buffer_view_t> views;
 };
 
-} // namespace anim sreflect
-} // namespace skr sreflect
+} // namespace skr::anim
 
 SKR_ANIM_API void skr_init_skin_component(skr::anim::SkinComponent* component, const skr::anim::SkeletonResource* skeleton);
 SKR_ANIM_API void skr_init_anim_component(skr::anim::AnimComponent* component, const skr_mesh_resource_t* mesh, skr::anim::SkeletonResource* skeleton);

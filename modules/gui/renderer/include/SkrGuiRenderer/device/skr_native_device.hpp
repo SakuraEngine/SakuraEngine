@@ -6,9 +6,7 @@
     #include "SkrGuiRenderer/device/skr_native_device.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct SkrRenderDevice;
 struct SkrResourceDevice;
@@ -57,5 +55,4 @@ private:
 
     Array<IUpdatableImage*> _all_updatable_images = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

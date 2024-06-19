@@ -64,9 +64,9 @@ skr_mesh_buffer_t {
 #ifdef __cplusplus
     #include "SkrRT/resource/resource_factory.h"
 
-namespace skr sreflect
+namespace skr
 {
-namespace renderer sreflect
+namespace renderer
 {
 using EVertexAttribute  = ESkrVertexAttribute;
 using VertexBufferEntry = skr_vertex_buffer_entry_t;
@@ -128,8 +128,8 @@ struct SKR_RENDERER_API SMeshFactory : public resource::SResourceFactory {
     [[nodiscard]] static SMeshFactory* Create(const Root& root);
     static void                        Destroy(SMeshFactory* factory);
 };
-} // namespace renderer sreflect
-} // namespace skr sreflect
+} // namespace renderer
+} // namespace skr
 #endif
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void

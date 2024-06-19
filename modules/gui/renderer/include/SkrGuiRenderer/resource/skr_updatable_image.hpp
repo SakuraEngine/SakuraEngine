@@ -7,9 +7,7 @@
     #include "SkrGuiRenderer/resource/skr_updatable_image.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct SkrRenderDevice;
 sreflect_struct(
@@ -47,5 +45,4 @@ private:
 
     EResourceState _state = EResourceState::Okey;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

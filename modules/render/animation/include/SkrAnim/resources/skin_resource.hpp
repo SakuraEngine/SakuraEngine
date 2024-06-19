@@ -6,9 +6,7 @@
     #include "SkrAnim/resources/skin_resource.generated.h" // IWYU pragma: export
 #endif
 
-namespace skr sreflect
-{
-namespace anim sreflect
+namespace skr::anim
 {
 
 sreflect_struct("guid": "C387FD0E-83BE-4617-9A79-589862F3F941") 
@@ -29,8 +27,7 @@ SkinResource {
     SkinBlobView     blob;
 };
 
-} // namespace anim sreflect
-} // namespace skr sreflect
+} // namespace skr::anim
 
 namespace skr::resource
 {

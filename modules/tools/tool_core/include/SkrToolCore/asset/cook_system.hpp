@@ -17,9 +17,9 @@ namespace task
 struct event_t;
 }
 } // namespace skr
-namespace skd sreflect
+namespace skd
 {
-namespace asset sreflect
+namespace asset
 {
 struct SAssetRecord {
     SProject*               project;
@@ -83,7 +83,7 @@ public:
         //------write resource object
         skr::Vector<uint8_t>      buffer;
         skr::binary::VectorWriter writer{ &buffer };
-        SBinaryWriter       archive(writer);
+        SBinaryWriter             archive(writer);
         if (int result = skr::binary::Archive(&archive, resource); result != 0)
         {
             SKR_LOG_FMT_ERROR(u8"[SConfigCooker::Cook] failed to serialize resource {}! path: {}",
@@ -124,12 +124,12 @@ protected:
 
     SAssetRecord* record = nullptr;
 };
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd
 
-namespace skd sreflect
+namespace skd
 {
-namespace asset sreflect
+namespace asset
 {
 struct TOOL_CORE_API SCookSystem { // system
 public:
@@ -158,5 +158,5 @@ public:
 
     static constexpr uint32_t ioServicesMaxCount = 1;
 };
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd

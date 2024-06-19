@@ -6,9 +6,9 @@
     #include "SkrToolCore/assets/config_asset.generated.h" // IWYU pragma: export
 #endif
 
-namespace skd sreflect
+namespace skd
 {
-namespace asset sreflect
+namespace asset
 {
 sreflect_struct("guid" : "D5970221-1A6B-42C4-B604-DA0559E048D6")
 TOOL_CORE_API SJsonConfigImporter final : public SImporter {
@@ -23,5 +23,5 @@ TOOL_CORE_API SConfigCooker final : public SCooker {
     bool     Cook(SCookContext* ctx) override;
     uint32_t Version() override;
 };
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd

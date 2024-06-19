@@ -2,7 +2,7 @@
 #include "SkrCore/memory/memory.h"
 #include "SkrCore/module/module_manager.hpp"
 
-namespace skr 
+namespace skr
 {
 struct SKR_CORE_API ModuleSubsystem : public ModuleSubsystemBase {
     virtual ~ModuleSubsystem() SKR_NOEXCEPT = default;
@@ -21,6 +21,6 @@ struct SKR_CORE_API ModuleSubsystem : public ModuleSubsystemBase {
         }
     };
 };
-} // namespace skr sreflect
+} // namespace skr
 
 #define SKR_MODULE_SUBSYSTEM(Subsystem, ModuleName) static skr::ModuleSubsystem::Registerer<Subsystem> subMod##__FILE__##__LINE__((const char8_t*)SKR_MAKE_STRING(__FILE__) SKR_MAKE_STRING(__LINE__), (const char8_t*)#ModuleName);

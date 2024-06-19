@@ -7,9 +7,9 @@
     #include "SkrGLTFTool/mesh_asset.generated.h" // IWYU pragma: export
 #endif
 
-namespace skd sreflect
+namespace skd
 {
-namespace asset sreflect
+namespace asset
 {
 sreflect_struct("guid" : "D72E2056-3C12-402A-A8B8-148CB8EAB922")
 sattr("serialize" : "json")
@@ -32,5 +32,5 @@ GLTFTOOL_API SMeshCooker final : public SCooker {
     bool     Cook(SCookContext* ctx) override;
     uint32_t Version() override;
 };
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd

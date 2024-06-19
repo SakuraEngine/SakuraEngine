@@ -10,9 +10,9 @@
 
 SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
 
-namespace skr sreflect
+namespace skr
 {
-namespace renderer sreflect
+namespace renderer
 {
 using MaterialPropertyNameView = skr::StringView;
 
@@ -159,5 +159,5 @@ struct SKR_RENDERER_API SMaterialFactory : public resource::SResourceFactory {
     [[nodiscard]] static SMaterialFactory* Create(const Root& root);
     static void                            Destroy(SMaterialFactory* factory);
 };
-} // namespace renderer sreflect
-} // namespace skr sreflect
+} // namespace renderer
+} // namespace skr

@@ -7,10 +7,10 @@
     #include "SkrToolCore/asset/importer.generated.h" // IWYU pragma: export
 #endif
 
-namespace skd sreflect
+namespace skd
 {
 using namespace skr;
-namespace asset sreflect
+namespace asset
 {
 template <class T>
 void          RegisterImporter(skr_guid_t guid);
@@ -37,8 +37,8 @@ struct SImporterRegistry {
 };
 
 TOOL_CORE_API SImporterRegistry* GetImporterRegistry();
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd
 
 namespace skr::json
 {

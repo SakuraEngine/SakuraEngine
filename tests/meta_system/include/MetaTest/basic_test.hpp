@@ -4,7 +4,7 @@
 //     #include "MetaTest/test_check_structure.generated.h"
 // #endif
 
-namespace test_path_shorthand sreflect
+namespace test_path_shorthand
 {
 sreflect_struct(
     "test_expand_path": {
@@ -25,9 +25,9 @@ sreflect_struct(
 //     }
 // ) ErrorCase {
 // };
-} // namespace test_path_shorthand sreflect
+} // namespace test_path_shorthand
 
-namespace test_functional_shorthand sreflect
+namespace test_functional_shorthand
 {
 sreflect_struct(
     "test_functional_shorthand": {
@@ -51,4 +51,4 @@ sreflect_struct(
 // ) ErrorCase {
 // };
 
-}; // namespace test_functional_shorthand sreflect
+}; // namespace test_functional_shorthand

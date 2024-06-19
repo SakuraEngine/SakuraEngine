@@ -5,9 +5,7 @@
     #include "OGUI_Sandbox/counter_state.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct ClickGestureRecognizer;
 
@@ -41,5 +39,4 @@ OGUI_SANDBOX_API Counter : public StatefulWidget {
     }
 };
 
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

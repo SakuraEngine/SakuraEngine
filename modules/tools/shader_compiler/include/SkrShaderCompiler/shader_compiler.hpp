@@ -13,9 +13,9 @@ SKR_DECLARE_TYPE_ID_FWD(skr::renderer, ShaderOptionTemplate, skr_shader_option_t
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_ram_service);
 struct skr_stable_shader_hash_t;
 
-namespace skd sreflect
+namespace skd
 {
-namespace asset sreflect
+namespace asset
 {
 struct SShaderImporter;
 
@@ -67,5 +67,5 @@ IShaderCompiler*  SkrShaderCompiler_CreateByType(EShaderSourceType type) SKR_NOE
 void              SkrShaderCompiler_Destroy(IShaderCompiler* compiler) SKR_NOEXCEPT;
 void              Util_ShaderCompilerRegister(EShaderSourceType type, IShaderCompiler* (*ctor)(), void (*dtor)(IShaderCompiler*)) SKR_NOEXCEPT;
 EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char8_t* ext) SKR_NOEXCEPT;
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd

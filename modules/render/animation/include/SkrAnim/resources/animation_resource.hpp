@@ -8,16 +8,16 @@
     #include "SkrAnim/resources/animation_resource.generated.h" // IWYU pragma: export
 #endif
 
-namespace skr sreflect
+namespace skr
 {
-namespace anim sreflect
+namespace anim
 {
 
 sreflect_struct("guid": "5D6DC46B-8696-4DD8-ADE4-C27D07CEDCCD")
 AnimResource {
     ozz::animation::Animation animation;
 };
-} // namespace anim sreflect
+} // namespace anim
 
 namespace binary
 {
@@ -31,7 +31,7 @@ struct SKR_ANIM_API WriteTrait<anim::AnimResource> {
 };
 } // namespace binary
 
-namespace resource sreflect
+namespace resource
 {
 class SKR_ANIM_API SAnimFactory : public SResourceFactory
 {
@@ -40,5 +40,5 @@ public:
     skr_guid_t GetResourceType() override;
     bool       AsyncIO() override { return true; }
 };
-} // namespace resource sreflect
-} // namespace skr sreflect
+} // namespace resource
+} // namespace skr

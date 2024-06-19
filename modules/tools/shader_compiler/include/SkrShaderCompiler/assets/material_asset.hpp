@@ -6,9 +6,9 @@
     #include "SkrShaderCompiler/assets/material_asset.generated.h" // IWYU pragma: export
 #endif
 
-namespace skd sreflect
+namespace skd
 {
-namespace asset sreflect
+namespace asset
 {
 
 sreflect_struct("guid" : "b38147b2-a5af-40c6-b2bd-185d16ca83ac")
@@ -51,5 +51,5 @@ SKR_SHADER_COMPILER_API SMaterialCooker final : public SCooker {
     uint32_t Version() override { return kDevelopmentVersion; }
 };
 
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd

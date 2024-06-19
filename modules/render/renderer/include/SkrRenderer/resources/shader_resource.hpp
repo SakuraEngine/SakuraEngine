@@ -10,9 +10,9 @@
     #include "SkrRenderer/resources/shader_resource.generated.h" // IWYU pragma: export
 #endif
 
-namespace skr sreflect
+namespace skr
 {
-namespace renderer sreflect
+namespace renderer
 {
 
 sreflect_struct("guid" : "6c07aa34-249f-45b8-8080-dd2462ad5312")
@@ -42,7 +42,7 @@ MultiShaderResource {
 sreflect_struct("guid": "8372f075-b4ce-400d-929f-fb0e57c1c887")
 sattr("blob" : true)
 ShaderOptionSequence {
-    skr::span<EShaderOptionType>           types;
+    skr::span<EShaderOptionType>          types;
     skr::span<skr::StringView>            keys;
     skr::span<skr::span<skr::StringView>> values;
 
@@ -137,8 +137,8 @@ struct SKR_RENDERER_API SShaderResourceFactory : public resource::SResourceFacto
 
     static ECGPUShaderBytecodeType GetRuntimeBytecodeType(ECGPUBackend backend);
 };
-} // namespace renderer sreflect
-} // namespace skr sreflect
+} // namespace renderer
+} // namespace skr
 namespace skr::binary
 {
 template <>

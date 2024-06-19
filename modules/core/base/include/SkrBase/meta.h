@@ -1,8 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
 
-#define sreflect
-
 // basic meta
 #ifdef __meta__
     #define sattr(...) __attribute__((annotate(SKR_MAKE_STRING(__VA_ARGS__))))

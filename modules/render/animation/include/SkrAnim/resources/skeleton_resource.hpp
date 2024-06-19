@@ -11,16 +11,16 @@
     #include "SkrBase/types.h"
     #include "SkrRT/resource/resource_factory.h"
 
-namespace skr sreflect
+namespace skr
 {
-namespace anim sreflect
+namespace anim
 {
 
 sreflect_struct("guid": "1876BF35-E4DC-450B-B9D4-09259397F4BA")
 SkeletonResource {
     ozz::animation::Skeleton skeleton;
 };
-} // namespace anim sreflect
+} // namespace anim
 
 namespace binary
 {
@@ -43,5 +43,5 @@ public:
     bool       AsyncIO() override { return true; }
 };
 } // namespace resource
-} // namespace skr sreflect
+} // namespace skr
 #endif

@@ -11,9 +11,9 @@ struct RawSkeleton;
 struct RawAnimation;
 } // namespace ozz::animation::offline
 
-namespace skd sreflect
+namespace skd
 {
-namespace asset sreflect
+namespace asset
 {
 using RawSkeleton = ozz::animation::offline::RawSkeleton;
 sreflect_struct("guid"
@@ -40,5 +40,5 @@ SKR_ANIMTOOL_API SSkelCooker final : public SCooker {
     bool     Cook(SCookContext* ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 };
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd

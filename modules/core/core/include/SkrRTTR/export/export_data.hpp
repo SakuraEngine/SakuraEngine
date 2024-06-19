@@ -14,9 +14,7 @@
 // #endif
 
 // utils
-namespace skr sreflect
-{
-namespace rttr sreflect
+namespace skr::rttr
 {
 // basic enums
 sreflect_enum_class("guid": "26ff0860-5d65-4ece-896e-225b3c083ecb")
@@ -145,8 +143,7 @@ inline bool export_function_signature_equal(const Data& data, TypeSignature sign
 
     return true;
 }
-} // namespace rttr sreflect
-} // namespace skr sreflect
+} // namespace skr::rttr
 
 // functions and methods
 namespace skr::rttr

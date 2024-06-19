@@ -97,9 +97,9 @@ using TextureResource    = ::skr_texture_resource_t;
 
     #include "SkrRT/resource/resource_factory.h"
 
-namespace skr sreflect
+namespace skr
 {
-namespace resource sreflect
+namespace resource
 {
 // - dstorage & bc: dstorage
 // - dstorage & bc & zlib: dstorage with custom decompress queue
@@ -133,6 +133,6 @@ struct SKR_RENDERER_API STextureSamplerFactory : public SResourceFactory {
     [[nodiscard]] static STextureSamplerFactory* Create(const Root& root);
     static void                                  Destroy(STextureSamplerFactory* factory);
 };
-} // namespace resource sreflect
-} // namespace skr sreflect
+} // namespace resource
+} // namespace skr
 #endif
