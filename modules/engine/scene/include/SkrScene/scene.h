@@ -70,7 +70,7 @@ skr_rotation_comp_t {
     skr_rotator_t euler;
 };
 
-struct sreflect sattr(
+sreflect_struct(
     "guid" : "A059A2A1-CC3B-43B0-88B6-ADA7822BA25D",
     "component" : true, 
     "serialize" : ["bin", "json"]
