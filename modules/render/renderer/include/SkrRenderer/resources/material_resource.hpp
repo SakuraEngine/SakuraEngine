@@ -128,7 +128,7 @@ MaterialResource {
 
     typedef struct installed_shader {
         skr_platform_shader_identifier_t identifier;
-        skr::StringView                 entry;
+        skr::StringView                  entry;
         ECGPUShaderStage                 stage;
     } installed_shader;
 
@@ -142,7 +142,7 @@ MaterialResource {
         CGPUXBindTableId              bind_table;
     } installed_pass;
 
-    spush_attr("transient": true)
+    sattr("transient": true)
     skr::Vector<installed_pass> installed_passes;
 };
 

@@ -25,7 +25,7 @@ sreflect_struct("guid" : "332C6133-7222-4B88-9B2F-E4336A46DF2C")
 sattr("serialize" : "bin")
 SkinResource {
     skr_blob_arena_t arena;
-    spush_attr("arena" : "arena")
+    sattr("arena" : "arena")
     SkinBlobView     blob;
 };
 

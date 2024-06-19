@@ -35,11 +35,15 @@ AnimComponent {
     ~AnimComponent();
     bool                                  use_dynamic_buffer = false;
 
-    spush_attr("transient": true)
+    sattr("transient": true)
     skr::Vector<ozz::math::Float4x4>      joint_matrices;
+    sattr("transient": true)
     skr::Vector<skr::anim::SkinPrimitive> primitives;
+    sattr("transient": true)
     skr::Vector<skr::IBlob*>              buffers;
+    sattr("transient": true)
     skr::Vector<CGPUBufferId>             vbs;
+    sattr("transient": true)
     skr::Vector<skr_vertex_buffer_view_t> views;
 };
 

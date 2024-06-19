@@ -118,7 +118,7 @@ sattr("serialize" : "bin")
 MPWorldDelta {
     uint64_t         frame;
     skr_blob_arena_t arena;
-    spush_attr("arena" : "arena")
+    sattr("arena" : "arena")
     MPWorldDeltaView blob;
 };
 

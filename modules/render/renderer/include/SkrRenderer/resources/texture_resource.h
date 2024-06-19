@@ -18,8 +18,9 @@ skr_texture_resource_t {
     uint32_t          height;
     uint32_t          depth;
 
-    spush_attr("transient": true)
+    sattr("transient": true)
     CGPUTextureId     texture;
+    sattr("transient": true)
     CGPUTextureViewId texture_view;
 };
 typedef struct skr_texture_resource_t  skr_texture_resource_t;
@@ -75,7 +76,7 @@ skr_texture_sampler_resource_t {
     float                         max_anisotropy;
     ESkrTextureSamplerCompareMode compare_func;
 
-    spush_attr("transient": true)
+    sattr("transient": true)
     CGPUSamplerId                 sampler;
 };
 
