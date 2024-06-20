@@ -274,7 +274,7 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t* src, uint32_t n, uint32_
         forloop (i, 0, n)
         {
             auto view = entity_view(src[i]);
-            scheduler->sync_archetype(view.chunk->type); // data is modified by linked to prefab
+            scheduler->sync_archetype(view.chunk->structure); // data is modified by linked to prefab
             scheduler->sync_archetype(view.chunk->group->cloned->archetype);
         }
     }
@@ -698,7 +698,7 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
         for (auto c : g->chunks)
         {
             chunks.push_back(c);
-            auto sizeToPatch = c->count * c->type->sizeToPatch;
+            auto sizeToPatch = c->count * c->structure->sizeToPatch;
             if (sizeRemain < sizeToPatch)
             {
                 payload.end = (uint32_t)chunks.size();

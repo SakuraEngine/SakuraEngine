@@ -70,19 +70,24 @@ bool match_group_shared(const sugoi_type_set_t& shared, const sugoi_filter_t& fi
     return match_filter_set<sugoi_type_index_t>(shared, filter.all_shared, filter.none_shared, false);
 }
 
-bool match_chunk_changed(const sugoi_type_set_t& type, uint32_t* timestamp, const sugoi_meta_filter_t& filter)
+bool match_chunk_changed(const sugoi_chunk_t& chunk, const sugoi_meta_filter_t& filter)
 {
+    const auto& typeset = chunk.structure->type;
+
     uint16_t i = 0, j = 0;
     auto&    changed = filter.changed;
     if (changed.length == 0)
         return true;
-    while (i < changed.length && j < type.length)
+    while (i < changed.length && j < typeset.length)
     {
-        if (changed.data[i] > type.data[j])
+        if (changed.data[i] > typeset.data[j])
             j++;
-        else if (changed.data[i] < type.data[j])
+        else if (changed.data[i] < typeset.data[j])
             i++;
-        else if (timestamp[j] - filter.timestamp > 0)
+        else if (
+            const auto timestamp = chunk.get_timestamp_at(j);
+            timestamp - filter.timestamp > 0
+        )
             return true;
         else
             (j++, i++);
@@ -821,7 +826,7 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
     {
         for (auto c : group->chunks)
         {
-            if (match_chunk_changed(c->type->type, c->timestamps(), meta))
+            if (match_chunk_changed(*c, meta))
             {
                 sugoi_chunk_view_t view{ c, (EIndex)0, c->count };
                 if (!withCustomFilter || customFilter(u1, &view))
@@ -841,7 +846,7 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
             __m128i allmask_128 = _mm_set1_epi32(allmask);
             for (auto c : group->chunks)
             {
-                if (!match_chunk_changed(c->type->type, c->timestamps(), meta))
+                if (!match_chunk_changed(*c, meta))
                 {
                     continue;
                 }
@@ -918,7 +923,7 @@ void sugoi_storage_t::query(const sugoi_group_t* group, const sugoi_filter_t& fi
             };
             for (auto c : group->chunks)
             {
-                if (!match_chunk_changed(c->type->type, c->timestamps(), meta))
+                if (!match_chunk_changed(*c, meta))
                 {
                     continue;
                 }

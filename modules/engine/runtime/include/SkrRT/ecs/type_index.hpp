@@ -3,7 +3,7 @@
 
 namespace sugoi
 {
-class type_index_t
+struct type_index_t
 {
     static_assert(sizeof(TIndex) * 8 == 32, "TIndex should be 32 bits");
     union

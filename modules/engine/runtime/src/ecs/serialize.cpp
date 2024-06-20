@@ -106,7 +106,7 @@ void sugoi_storage_t::serialize_view(sugoi_group_t* group, sugoi_chunk_view_t& v
         view = allocate_view_strict(group, view.count);
     }
 
-    archetype_t* type      = view.chunk->type;
+    archetype_t* type      = view.chunk->structure;
     EIndex*      offsets   = type->offsets[(int)view.chunk->pt];
     uint32_t*    sizes     = type->sizes;
     uint32_t*    elemSizes = type->elemSizes;
@@ -202,7 +202,7 @@ void sugoi_storage_t::serialize_prefab(sugoi_entity_t e, SBinaryWriter* s)
     if (scheduler)
     {
         SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_archetype(entity_view(e).chunk->type);
+        scheduler->sync_archetype(entity_view(e).chunk->structure);
     }
     serialize_single(e, s);
 }
@@ -216,7 +216,7 @@ void sugoi_storage_t::serialize_prefab(sugoi_entity_t* es, EIndex n, SBinaryWrit
     {
         SKR_ASSERT(scheduler->is_main_thread(this));
         forloop (i, 0, n)
-            scheduler->sync_archetype(entity_view(es[i]).chunk->type);
+            scheduler->sync_archetype(entity_view(es[i]).chunk->structure);
     }
     linked_to_prefab(es, n);
     forloop (i, 0, n)

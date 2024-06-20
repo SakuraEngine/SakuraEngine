@@ -46,14 +46,6 @@ static void construct_impl(sugoi_chunk_view_t view, type_index_t type, EIndex of
             ((mask_t*)dst)[j] = maskValue;
     else if (type == kDirtyComponent)
         memset(dst, 0xFFFFFFFF, (size_t)size * view.count);
-    // else if (type == kGuidComponent)
-    // {
-    //     auto guidDst = (guid_t*)dst;
-    //     auto& registry = TypeRegistry::get();
-    //     forloop (j, 0, view.count)
-    //         guidDst[j] = registry.make_guid();
-    //     return;
-    // }
     else if (constructor)
         forloop (j, 0, view.count)
             constructor(view.chunk, view.start + j, (size_t)j * size + dst);
@@ -154,7 +146,7 @@ static void clone_impl(sugoi_chunk_view_t dstV, const sugoi_chunk_t* srcC, uint3
     SKR_ASSERT(!type.is_chunk());
     char* dst = dstV.chunk->data() + (size_t)dstOffset + (size_t)size * dstV.start;
     char* src = srcC->data() + (size_t)srcOffset + (size_t)size * srcStart;
-    auto storage = dstV.chunk->type->storage;
+    auto storage = dstV.chunk->structure->storage;
     auto patchResources = [&](char* data)
     {
         forloop(k, 0, resourceFields.count)
@@ -260,7 +252,7 @@ static void duplicate_impl(sugoi_chunk_view_t dstV, const sugoi_chunk_t* srcC, u
             guidDst[j] = registry.make_guid();
         return;
     }
-    auto storage = dstV.chunk->type->storage;
+    auto storage = dstV.chunk->structure->storage;
     auto patchResources = [&](char* data)
     {
         forloop(k, 0, resourceFields.count)
@@ -343,7 +335,7 @@ static void duplicate_impl(sugoi_chunk_view_t dstV, const sugoi_chunk_t* srcC, u
 
 void construct_view(const sugoi_chunk_view_t& view) noexcept
 {
-    archetype_t* type = view.chunk->type;
+    archetype_t* type = view.chunk->structure;
     EIndex* offsets = type->offsets[(int)view.chunk->pt];
     uint32_t* sizes = type->sizes;
     uint32_t* aligns = type->aligns;
@@ -361,7 +353,7 @@ void construct_view(const sugoi_chunk_view_t& view) noexcept
 
 void destruct_view(const sugoi_chunk_view_t& view) noexcept
 {
-    archetype_t* type = view.chunk->type;
+    archetype_t* type = view.chunk->structure;
     EIndex* offsets = type->offsets[(int)view.chunk->pt];
     uint32_t* sizes = type->sizes;
     uint32_t* elemSizes = type->elemSizes;
@@ -377,7 +369,7 @@ void destruct_view(const sugoi_chunk_view_t& view) noexcept
 
 void construct_chunk(sugoi_chunk_t* chunk) noexcept
 {
-    archetype_t* type = chunk->type;
+    archetype_t* type = chunk->structure;
     EIndex* offsets = type->offsets[(int)chunk->pt];
     uint32_t* sizes = type->sizes;
     uint32_t* aligns = type->aligns;
@@ -396,7 +388,7 @@ void construct_chunk(sugoi_chunk_t* chunk) noexcept
 
 void destruct_chunk(sugoi_chunk_t* chunk) noexcept
 {
-    archetype_t* type = chunk->type;
+    archetype_t* type = chunk->structure;
     EIndex* offsets = type->offsets[(int)chunk->pt];
     uint32_t* sizes = type->sizes;
     uint32_t* elemSizes = type->elemSizes;
@@ -417,7 +409,7 @@ void move_view(const sugoi_chunk_view_t& view, EIndex srcStart) noexcept
 
 void move_view(const sugoi_chunk_view_t& dstV, const sugoi_chunk_t* srcC, uint32_t srcStart) noexcept
 {
-    archetype_t* type = dstV.chunk->type;
+    archetype_t* type = dstV.chunk->structure;
     EIndex* offsets = type->offsets[(int)dstV.chunk->pt];
     uint32_t* sizes = type->sizes;
     uint32_t* aligns = type->aligns;
@@ -434,8 +426,8 @@ void move_view(const sugoi_chunk_view_t& dstV, const sugoi_chunk_t* srcC, uint32
 
 void cast_view(const sugoi_chunk_view_t& dstV, sugoi_chunk_t* srcC, EIndex srcStart) noexcept
 {
-    archetype_t* srcType = srcC->type;
-    archetype_t* dstType = dstV.chunk->type;
+    archetype_t* srcType = srcC->structure;
+    archetype_t* dstType = dstV.chunk->structure;
     EIndex* srcOffsets = srcType->offsets[srcC->pt];
     EIndex* dstOffsets = dstType->offsets[dstV.chunk->pt];
     uint32_t* srcSizes = srcType->sizes;
@@ -566,8 +558,8 @@ void cast_view(const sugoi_chunk_view_t& dstV, sugoi_chunk_t* srcC, EIndex srcSt
 
 void duplicate_view(const sugoi_chunk_view_t& dstV, const sugoi_chunk_t* srcC, EIndex srcStart) noexcept
 {
-    archetype_t* srcType = srcC->type;
-    archetype_t* dstType = dstV.chunk->type;
+    archetype_t* srcType = srcC->structure;
+    archetype_t* dstType = dstV.chunk->structure;
     EIndex* srcOffsets = srcType->offsets[srcC->pt];
     EIndex* dstOffsets = dstType->offsets[dstV.chunk->pt];
     uint32_t* srcSizes = srcType->sizes;
@@ -658,8 +650,8 @@ void duplicate_view(const sugoi_chunk_view_t& dstV, const sugoi_chunk_t* srcC, E
 
 void clone_view(const sugoi_chunk_view_t& dstV, const sugoi_chunk_t* srcC, EIndex srcStart) noexcept
 {
-    archetype_t* srcType = srcC->type;
-    archetype_t* dstType = dstV.chunk->type;
+    archetype_t* srcType = srcC->structure;
+    archetype_t* dstType = dstV.chunk->structure;
     EIndex* srcOffsets = srcType->offsets[srcC->pt];
     EIndex* dstOffsets = dstType->offsets[dstV.chunk->pt];
     uint32_t* srcSizes = srcType->sizes;
@@ -725,7 +717,7 @@ auto sugoiV_get_owned(const sugoi_chunk_view_t* view, sugoi_type_index_t type)
     if (type_index_t(type).is_tag()) SUGOI_UNLIKELY
         return (return_type) nullptr;
     auto chunk = view->chunk;
-    auto structure = chunk->type;
+    auto structure = chunk->structure;
     SIndex id;
     if constexpr (local)
         id = type;
@@ -734,7 +726,7 @@ auto sugoiV_get_owned(const sugoi_chunk_view_t* view, sugoi_type_index_t type)
     if (id == kInvalidSIndex)
         return (return_type) nullptr;
     if constexpr (!readonly)
-        chunk->timestamps()[id] = structure->storage->timestamp;
+        chunk->set_timestamp_at(id, structure->storage->timestamp);
     auto scheduler = structure->storage->scheduler;
     if (scheduler && scheduler->is_main_thread(structure->storage))
         SKR_ASSERT(!scheduler->sync_entry(structure, id, readonly));

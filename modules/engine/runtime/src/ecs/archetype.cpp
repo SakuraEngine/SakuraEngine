@@ -115,13 +115,13 @@ sugoi::archetype_t* sugoi_storage_t::construct_archetype(const sugoi_type_set_t&
         return guid_compare_t{}(guids[lhs], guids[rhs]);
     });
     size_t caps[] = { kSmallBinSize - sizeof(sugoi_chunk_t), kFastBinSize - sizeof(sugoi_chunk_t), kLargeBinSize - sizeof(sugoi_chunk_t) };
-    const uint32_t versionSize = sizeof(uint32_t) * proto.type.length;
+    const uint32_t sliceDataSize = sizeof(sugoi::slice_data_t) * proto.type.length;
     forloop (i, 0, 3)
     {
         uint32_t* offsets = proto.offsets[i];
         uint32_t& capacity = proto.chunkCapacity[i];
-        proto.versionOffset[i] = static_cast<uint32_t>(caps[i] - versionSize);
-        uint32_t ccOffset = (uint32_t)(caps[i] - versionSize);
+        proto.sliceDataOffsets[i] = static_cast<sugoi_timestamp_t>(caps[i] - sliceDataSize);
+        uint32_t ccOffset = (uint32_t)(caps[i] - sliceDataSize);
         forloop (j, 0, proto.type.length)
         {
             SIndex id = proto.stableOrder[j];
@@ -188,9 +188,9 @@ sugoi::archetype_t* sugoi_storage_t::clone_archetype(archetype_t *src)
     proto.stableOrder = archetypeArena.allocate<SIndex>(proto.type.length);
     memcpy(proto.stableOrder, src->stableOrder, sizeof(SIndex) * proto.type.length);
     proto.entitySize = src->entitySize;
-    proto.versionOffset[0] = src->versionOffset[0];
-    proto.versionOffset[1] = src->versionOffset[1];
-    proto.versionOffset[2] = src->versionOffset[2];
+    proto.sliceDataOffsets[0] = src->sliceDataOffsets[0];
+    proto.sliceDataOffsets[1] = src->sliceDataOffsets[1];
+    proto.sliceDataOffsets[2] = src->sliceDataOffsets[2];
     proto.chunkCapacity[0] = src->chunkCapacity[0];
     proto.chunkCapacity[1] = src->chunkCapacity[1];
     proto.chunkCapacity[2] = src->chunkCapacity[2];
@@ -359,7 +359,7 @@ void sugoi_group_t::add_chunk(sugoi_chunk_t* chunk)
 {
     using namespace sugoi;
     size += chunk->count;
-    chunk->type = archetype;
+    chunk->structure = archetype;
     chunk->group = this;
     if(chunk->count < chunk->get_capacity())
     {

@@ -19,6 +19,7 @@ typedef uint32_t EIndex;
 typedef uint32_t TIndex;
 typedef uint32_t SIndex;
 typedef uint32_t sugoi_entity_t;
+typedef uint32_t sugoi_timestamp_t;
 
 typedef struct sugoi_entity_debug_proxy_t {
     sugoi_entity_t value;

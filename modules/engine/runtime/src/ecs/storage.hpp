@@ -137,8 +137,8 @@ struct sugoi_storage_t {
     sugoi::block_arena_t queryBuildArena;
     sugoi::fixed_pool_t groupPool;
     sugoi::EntityRegistry entity_registry;
-    uint32_t timestamp;
-    std::unique_ptr<uint32_t[]> typeTimestamps;
+    sugoi_timestamp_t timestamp;
+    std::unique_ptr<sugoi_timestamp_t[]> typeTimestamps;
     mutable sugoi::scheduler_t* scheduler;
     mutable void* currentFiber;
     skr::task::counter_t counter;

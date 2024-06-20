@@ -19,7 +19,7 @@ struct SKR_RUNTIME_API archetype_t {
     uint32_t* elemSizes;
     uint32_t* aligns;
 
-    uint32_t versionOffset[3];
+    uint32_t sliceDataOffsets[3];
     uint32_t* callbackFlags;
     uint32_t* stableOrder;
     sugoi_callback_v* callbacks;
