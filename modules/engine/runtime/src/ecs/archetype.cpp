@@ -230,7 +230,7 @@ sugoi_group_t* sugoi_storage_t::construct_group(const sugoi_entity_type_t& inTyp
         if(t > kDeadComponent)
             toClean[toCleanCount++] = kDeadComponent;
         toClean[toCleanCount++] = t;
-        if (!t.is_tracked())
+        if (!t.is_pinned())
             toClone[toCloneCount++] = t;
         else
             hasTracked = true;
@@ -307,17 +307,17 @@ sugoi::archetype_t* sugoi_storage_t::get_archetype(const sugoi_type_set_t& type)
 sugoi_group_t* sugoi_storage_t::get_group(const sugoi_entity_type_t& type)
 {
     using namespace sugoi;
-    bool withTracked = false;
+    bool withPinned = false;
     bool dead = false;
     for(SIndex i=0; i < type.type.length; ++i)
     {
         type_index_t t = type.type.data[i];
-        if(t.is_tracked())
-            withTracked = true;
+        if(t.is_pinned())
+            withPinned = true;
         if(t == kDeadComponent)
             dead = true;
     }
-    if(dead && !withTracked)
+    if(dead && !withPinned)
         return nullptr;
     sugoi_group_t* group = try_get_group(type);
     if (!group)

@@ -24,7 +24,7 @@ public:
     constexpr bool is_pod() const noexcept { return value == id; }
     constexpr bool is_buffer() const noexcept { return buffer; }
     constexpr bool is_tag() const noexcept { return tag; }
-    constexpr bool is_tracked() const noexcept { return pin; }
+    constexpr bool is_pinned() const noexcept { return pin; }
     constexpr bool is_chunk() const noexcept { return chunk; }
 
     constexpr type_index_t() noexcept

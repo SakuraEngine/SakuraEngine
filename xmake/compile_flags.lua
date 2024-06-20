@@ -78,6 +78,7 @@ target("SkrCompileFlags")
 
     -- util flag for clang-cl
     add_cxflags(
+        "-ftime-trace",
         "-Wno-clang-cl-pch",
         "-Wno-microsoft-cast", -- microsoft cast extension
         "-Wno-microsoft-include", -- microsoft include extension
