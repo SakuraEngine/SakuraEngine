@@ -33,7 +33,7 @@ SThreadID skrGetCurrentPthreadID()
 	// thread id wasn't set
 	if (id == 0) 
 	{
-		id = (SThreadID)skr_atomicu32_add_relaxed(&counter, 1);
+		id = (SThreadID)atomic_fetch_add_relaxed(&counter, 1);
 		// we store plain integers instead of pointers to data
 		ptr_id = (uintptr_t)id;
 		ptr = (void*)ptr_id;

@@ -108,12 +108,12 @@ struct InputDevice_SDL2Mouse : public CommonInputDeviceBase<InputReading_SDL2Mou
             for (int i = 0; i < count; i++)
             {
                 SDL_MouseWheelEvent const& e = events[i].wheel;
-                skr_atomic64_add_relaxed(&wheelXAccum, e.x * 120);
-                skr_atomic64_add_relaxed(&wheelYAccum, e.y * 120);
+                atomic_fetch_add_relaxed(&wheelXAccum, e.x * 120);
+                atomic_fetch_add_relaxed(&wheelYAccum, e.y * 120);
             }
         }
-        outState.wheelX = skr_atomic64_load_relaxed(&wheelXAccum);
-        outState.wheelY = skr_atomic64_load_relaxed(&wheelYAccum);
+        outState.wheelX = atomic_load_relaxed(&wheelXAccum);
+        outState.wheelY = atomic_load_relaxed(&wheelYAccum);
     }
 
     SAtomic64 wheelXAccum = 0;

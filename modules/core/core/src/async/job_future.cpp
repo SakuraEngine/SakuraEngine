@@ -18,7 +18,7 @@ bool ThreadedJobQueueFutureJob::valid() const SKR_NOEXCEPT { return true; }
 
 void ThreadedJobQueueFutureJob::wait() SKR_NOEXCEPT
 {
-    while (skr_atomic32_load_relaxed(&finished) == false)
+    while (atomic_load_relaxed(&finished) == false)
     {
         skr_thread_sleep(1);
     }
@@ -30,7 +30,7 @@ skr::FutureStatus ThreadedJobQueueFutureJob::wait_for(uint32_t ms) SKR_NOEXCEPT
     {
         skr_thread_sleep(ms);
     }
-    const auto f = skr_atomic32_load_relaxed(&finished);
+    const auto f = atomic_load_relaxed(&finished);
     if (f) return skr::FutureStatus::Ready;
     return skr::FutureStatus::Timeout;
 }
@@ -39,7 +39,7 @@ void ThreadedJobQueueFutureJob::finish(skr::JobResult result) SKR_NOEXCEPT
 {
     if (result == skr::ASYNC_RESULT_OK)
     {
-        skr_atomic32_store_relaxed(&finished, true);
+        atomic_store_relaxed(&finished, true);
     }
 }
 

@@ -44,12 +44,12 @@ protected:
 public:
     uint32_t add_refcount()
     {
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1);
+        return 1 + atomic_fetch_add_relaxed(&rc, 1);
     }
     uint32_t release()
     {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
+        atomic_fetch_add_relaxed(&rc, -1);
+        return atomic_load_acquire(&rc);
     }
 
 private:
@@ -85,12 +85,12 @@ protected:
 public:
     uint32_t add_refcount()
     {
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1);
+        return 1 + atomic_fetch_add_relaxed(&rc, 1);
     }
     uint32_t release()
     {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
+        atomic_fetch_add_relaxed(&rc, -1);
+        return atomic_load_acquire(&rc);
     }
 
 private:

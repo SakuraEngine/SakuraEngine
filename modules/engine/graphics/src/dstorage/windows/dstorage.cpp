@@ -444,7 +444,7 @@ void skr_dstorage_queue_trace_submit(SkrDStorageQueueId queue)
         SMutexLock profile_lock(Q->profile_mutex);
         for (auto&& _tracer : Q->profile_tracers) // find and use an existed & finished tracer
         {
-            if (skr_atomicu32_load_acquire(&_tracer->finished))
+            if (atomic_load_acquire(&_tracer->finished))
             {
                 tracer = _tracer;
                 skr_destroy_thread(tracer->thread_handle);
@@ -494,7 +494,7 @@ void skr_dstorage_queue_trace_submit(SkrDStorageQueueId queue)
         }
         SkrFiberLeave;
         CloseHandle(event_handle);
-        skr_atomicu32_store_release(&tracer->finished, 1);
+        atomic_store_release(&tracer->finished, 1);
     };
     tracer->desc.pData = tracer;
     skr_init_thread(&tracer->desc, &tracer->thread_handle);

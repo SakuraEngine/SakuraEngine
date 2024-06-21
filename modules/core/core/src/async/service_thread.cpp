@@ -32,12 +32,12 @@ ServiceThread::~ServiceThread() SKR_NOEXCEPT
 
 ServiceThread::Status ServiceThread::get_status() const SKR_NOEXCEPT
 {
-    return static_cast<Status>(skr_atomic32_load_acquire(&status_));
+    return static_cast<Status>(atomic_load_acquire(&status_));
 }
 
 ServiceThread::Action ServiceThread::get_action() const SKR_NOEXCEPT
 {
-    return static_cast<Action>(skr_atomic32_load_acquire(&action_));
+    return static_cast<Action>(atomic_load_acquire(&action_));
 }
 
 uint64_t ServiceThread::request(Action action) SKR_NOEXCEPT
@@ -45,14 +45,14 @@ uint64_t ServiceThread::request(Action action) SKR_NOEXCEPT
     // wait last event
     wait_timeout<u8"WaitLastAction">([&] { return get_action() == kActionNone; });
 
-    auto eid = skr_atomicu64_add_relaxed(&event_, 1) + 1;
+    auto eid = atomic_fetch_add_relaxed(&event_, 1) + 1;
     setAction(action);
     return eid;
 }
 
 void ServiceThread::wait(uint64_t event, uint32_t fatal_timeout) SKR_NOEXCEPT
 {
-    auto now = skr_atomicu64_load_acquire(&event_);
+    auto now = atomic_load_acquire(&event_);
     if (now == event)
         wait_timeout<u8"WaitLastEvent">([&]{ return get_action() == kActionNone; }, fatal_timeout);
     else if (now > event)
@@ -86,7 +86,7 @@ void ServiceThread::exit() SKR_NOEXCEPT
 
 void ServiceThread::setAction(Action target) SKR_NOEXCEPT
 {
-    skr_atomic32_store_release(&action_, target);
+    atomic_store_release(&action_, target);
     SKR_LOG_BACKTRACE(u8"service_thread: action set to: %d.", target);
 }
 
@@ -111,7 +111,7 @@ void ServiceThread::setStatus(Status target) SKR_NOEXCEPT
         SKR_LOG_FATAL(u8"service_thread: must exit from a stopped service! current status: %d", S);
         SKR_ASSERT(S == kStatusStopped);
     }
-    skr_atomic32_store_release(&status_, target);
+    atomic_store_release(&status_, target);
     SKR_LOG_BACKTRACE(u8"service_thread: status set to: %d.", target);
 }
 
@@ -197,7 +197,7 @@ AsyncResult ServiceThread::ServiceFunc::run() SKR_NOEXCEPT
 
 void AsyncService::sleep() SKR_NOEXCEPT
 {
-    const auto ms = skr_atomicu32_load_relaxed(&sleep_time);
+    const auto ms = atomic_load_relaxed(&sleep_time);
     SkrZoneScopedNC("asyncService(Cond)", tracy::Color::Gray55);
 
     condlock.lock();

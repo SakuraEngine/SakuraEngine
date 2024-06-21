@@ -16,12 +16,12 @@ ThreadToken::ThreadToken(LogQueue& q) SKR_NOEXCEPT
 
 int64_t ThreadToken::query_cnt() const SKR_NOEXCEPT
 {
-    return skr_atomic64_load_relaxed(&tls_cnt_);
+    return atomic_load_relaxed(&tls_cnt_);
 }
 
 EFlushStatus ThreadToken::query_status() const SKR_NOEXCEPT
 {
-    return static_cast<EFlushStatus>(skr_atomic32_load_relaxed(&flush_status_));
+    return static_cast<EFlushStatus>(atomic_load_relaxed(&flush_status_));
 }
 
 LogElement::LogElement(LogEvent ev, ThreadToken* ptok) SKR_NOEXCEPT
@@ -49,11 +49,12 @@ LogQueue::~LogQueue() SKR_NOEXCEPT
 
 void LogQueue::finish(const LogElement& e) SKR_NOEXCEPT
 {
-    skr_atomic64_add_relaxed(&total_cnt_, -1);
-    auto last = skr_atomic64_add_relaxed(&e.tok->tls_cnt_, -1);
+    atomic_fetch_add_relaxed(&total_cnt_, -1);
+    auto last = atomic_fetch_add_relaxed(&e.tok->tls_cnt_, -1);
     if (last == 1)
     {
-        skr_atomic32_cas_relaxed(&e.tok->flush_status_, kFlushing, kFlushed);
+        auto expected = kFlushing;
+        atomic_compare_exchange_strong(&e.tok->flush_status_, &expected, kFlushed);
     }
 }
 
@@ -93,10 +94,11 @@ void LogQueue::mark_flushing(SThreadID tid) SKR_NOEXCEPT
 {
     if (auto tok = query_token(tid))
     {
+        auto expected = kNoFlush;
         if (tok->query_cnt() != 0) // if there is no log in this thread, we don't need to flush
-            skr_atomic32_cas_relaxed(&tok->flush_status_, kNoFlush, kFlushing);
+            atomic_compare_exchange_strong(&tok->flush_status_, &expected, kFlushing);
         else
-            skr_atomic32_cas_relaxed(&tok->flush_status_, kNoFlush, kFlushed);
+            atomic_compare_exchange_strong(&tok->flush_status_, &expected, kFlushed);
     }
 }
 
@@ -137,7 +139,7 @@ ThreadToken* LogQueue::query_flushing() const SKR_NOEXCEPT
         auto iter = thread_id_map_.find(tid);
         if (iter != thread_id_map_.end())
         {
-            if (skr_atomic32_load_relaxed(&iter->second->flush_status_) == kFlushing)
+            if (atomic_load_relaxed(&iter->second->flush_status_) == kFlushing)
             {
                 return iter->second.get();
             }
@@ -148,7 +150,7 @@ ThreadToken* LogQueue::query_flushing() const SKR_NOEXCEPT
 
 int64_t LogQueue::query_cnt() const SKR_NOEXCEPT
 {
-    return skr_atomic64_load_relaxed(&total_cnt_);
+    return atomic_load_relaxed(&total_cnt_);
 }
 
 ThreadToken* LogQueue::on_push(const LogEvent& ev, bool backtrace) SKR_NOEXCEPT
@@ -168,8 +170,8 @@ ThreadToken* LogQueue::on_push(const LogEvent& ev, bool backtrace) SKR_NOEXCEPT
     {
         if (backtrace) 
             return token;
-        skr_atomic64_add_relaxed(&total_cnt_, 1);
-        skr_atomic64_add_relaxed(&token->tls_cnt_, 1);
+        atomic_fetch_add_relaxed(&total_cnt_, 1);
+        atomic_fetch_add_relaxed(&token->tls_cnt_, 1);
         return token;
     }
     else
@@ -228,7 +230,9 @@ void LogWorker::process_logs() SKR_NOEXCEPT
             patternAndSink(e);
         }
         SKR_ASSERT(flush_tok->query_cnt() == 0);
-        skr_atomic32_cas_relaxed(&flush_tok->flush_status_, kFlushing, kFlushed);
+
+        auto expected = kFlushing;
+        atomic_compare_exchange_strong(&flush_tok->flush_status_, &expected, kFlushed);
     }
 
     // normal polling    
@@ -252,16 +256,18 @@ void LogWorker::flush(SThreadID tid) SKR_NOEXCEPT
     this->awake();
     if (auto tok = queue_->query_token(tid))
     {
-        while (skr_atomic32_load_relaxed(&tok->flush_status_) != kFlushed)
+        while (atomic_load_relaxed(&tok->flush_status_) != kFlushed)
         {
             if (this->t.get_id() == tid) // flush self
                 process_logs();
             else
                 skr_thread_sleep(0);
         }
-        SKR_ASSERT(skr_atomic64_load_relaxed(&tok->tls_cnt_) == 0);
+        SKR_ASSERT(atomic_load_relaxed(&tok->tls_cnt_) == 0);
         LogManager::Get()->FlushAllSinks();
-        skr_atomic32_cas_relaxed(&tok->flush_status_, kFlushed, kNoFlush);
+        
+        auto expected = kFlushed;
+        atomic_compare_exchange_strong(&tok->flush_status_, &expected, kNoFlush);
     }
     else
         SKR_UNREACHABLE_CODE();

@@ -457,7 +457,7 @@ void SResourceRequestImpl::Update()
             if (!dataFuture.is_ready())
             {
                 // request cancle
-                if (!skr_atomicu32_load_acquire(&dataFuture.request_cancel))
+                if (!atomic_load_acquire(&dataFuture.request_cancel))
                 {
                     ioService->cancel(&dataFuture);
                 }

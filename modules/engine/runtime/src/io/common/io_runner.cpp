@@ -11,7 +11,7 @@ RunnerBase::RunnerBase(const ServiceThreadDesc& desc, skr::JobQueue* job_queue) 
 {
     for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
     {
-        skr_atomic64_store_relaxed(&processing_request_counts[i], 0);
+        atomic_store_relaxed(&processing_request_counts[i], 0);
     }
 }
 
@@ -54,14 +54,14 @@ uint64_t RunnerBase::processing_count(SkrAsyncServicePriority priority) const SK
 {
     if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
     {
-        return skr_atomic64_load_relaxed(&processing_request_counts[priority]);
+        return atomic_load_relaxed(&processing_request_counts[priority]);
     }
     else
     {
         uint64_t count = 0;
         for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
         {
-            count += skr_atomic64_load_relaxed(&processing_request_counts[i]);
+            count += atomic_load_relaxed(&processing_request_counts[i]);
         }
         return count;
     }
@@ -355,7 +355,7 @@ bool RunnerBase::cancel_(IIORequest* rq, SkrAsyncServicePriority priority) SKR_N
         {
             pComp->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
         }
-        skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
+        atomic_fetch_add_relaxed(&processing_request_counts[priority], -1);
     }
     return true;
 }
@@ -375,7 +375,7 @@ bool RunnerBase::complete_(IIORequest* rq, SkrAsyncServicePriority priority) SKR
         {
             pStatus->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
         }
-        skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
+        atomic_fetch_add_relaxed(&processing_request_counts[priority], -1);
     }
     return true;
 }

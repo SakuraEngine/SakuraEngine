@@ -39,7 +39,7 @@ struct SimpleThreadSafeRingBuffer {
         // resize
         length = length ? length : 32;
         _buffer.resize_zeroed(length);
-        skr_atomicu64_store_release(&_size, length);
+        atomic_store_release(&_size, length);
 
         skr_init_rw_mutex(&_rw_mutex);
     }
@@ -50,7 +50,7 @@ struct SimpleThreadSafeRingBuffer {
 
     inline void resize(uint64_t new_size)
     {
-        const auto cur_size = skr_atomicu64_load_acquire(&_size);
+        const auto cur_size = atomic_load_acquire(&_size);
         if (new_size == cur_size) return;
 
         skr_rw_mutex_acquire_w(&_rw_mutex);
@@ -64,7 +64,7 @@ struct SimpleThreadSafeRingBuffer {
             {
                 _buffer[i] = _buffer[i + offset];
             }
-            skr_atomicu64_store_release(&_head, new_size);
+            atomic_store_release(&_head, new_size);
         }
         else
         {
@@ -76,9 +76,9 @@ struct SimpleThreadSafeRingBuffer {
             {
                 _buffer[i] = _buffer[i - cur_size];
             }
-            skr_atomicu64_store_release(&_head, cur_size);
+            atomic_store_release(&_head, cur_size);
         }
-        skr_atomicu64_store_release(&_size, new_size);
+        atomic_store_release(&_size, new_size);
         skr_rw_mutex_release_w(&_rw_mutex);
     }
     inline void zero()
@@ -93,20 +93,20 @@ struct SimpleThreadSafeRingBuffer {
     inline T add(T value)
     {
         skr_rw_mutex_acquire_r(&_rw_mutex);
-        const auto cur_size = skr_atomicu64_load_acquire(&_size);
-        const auto cur_head = skr_atomicu64_load_acquire(&_head);
+        const auto cur_size = atomic_load_acquire(&_size);
+        const auto cur_head = atomic_load_acquire(&_head);
         const auto slot     = (cur_head + 1) % cur_size;
         const auto old      = _buffer[slot];
         _buffer[slot]       = value;
-        skr_atomicu64_store_release(&_head, slot);
+        atomic_store_release(&_head, slot);
         skr_rw_mutex_release_r(&_rw_mutex);
         return old;
     }
     inline T get(uint64_t index = 0)
     {
         skr_rw_mutex_acquire_r(&_rw_mutex);
-        const auto cur_size = skr_atomicu64_load_acquire(&_size);
-        const auto cur_head = skr_atomicu64_load_acquire(&_head);
+        const auto cur_size = atomic_load_acquire(&_size);
+        const auto cur_head = atomic_load_acquire(&_head);
         const auto slot     = (cur_head + index) % cur_size;
         auto       result   = _buffer[slot];
         skr_rw_mutex_release_r(&_rw_mutex);
@@ -115,7 +115,7 @@ struct SimpleThreadSafeRingBuffer {
     inline uint64_t get_size() const
     {
         skr_rw_mutex_acquire_r(&_rw_mutex);
-        const auto result = skr_atomicu64_load_acquire(&_size);
+        const auto result = atomic_load_acquire(&_size);
         skr_rw_mutex_release_r(&_rw_mutex);
         return result;
     }

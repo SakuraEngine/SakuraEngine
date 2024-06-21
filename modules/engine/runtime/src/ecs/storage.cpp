@@ -1129,7 +1129,7 @@ void sugoi_set_bit(uint32_t* mask, int32_t bit)
     // CAS
     uint32_t oldMask = *mask;
     uint32_t newMask = oldMask | (1 << bit);
-    while (!skr_atomicu32_cas_relaxed(mask, oldMask, newMask))
+    while (!atomic_compare_exchange_strong(mask, &oldMask, newMask))
     {
         oldMask = *mask;
         newMask = oldMask | (1 << bit);

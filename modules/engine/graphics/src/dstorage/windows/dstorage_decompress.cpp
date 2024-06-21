@@ -19,7 +19,7 @@ struct skr_win_dstorage_decompress_service_t
     skr_win_dstorage_decompress_service_t(IDStorageCustomDecompressionQueue* queue, const skr_win_dstorage_decompress_desc_t* desc)
         : decompress_queue(queue), job_queue(desc->job_queue)
     {
-        skr_atomicu32_store_release(&thread_running, 1);
+        atomic_store_release(&thread_running, 1);
         event_handle = queue->GetEvent();
         if (use_thread_pool)
         {
@@ -35,7 +35,7 @@ struct skr_win_dstorage_decompress_service_t
     }
     ~skr_win_dstorage_decompress_service_t() SKR_NOEXCEPT
     {
-        skr_atomicu32_store_release(&thread_running, 0);
+        atomic_store_release(&thread_running, 0);
         if (use_thread_pool)
         {
             CloseThreadpoolWait(thread_pool_wait);
@@ -73,7 +73,7 @@ using DSDecompressFutureLauncher = skr::FutureLauncher<bool>;
 
 static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_id service)
 {
-    auto running = skr_atomicu32_load_acquire(&service->thread_running);
+    auto running = atomic_load_acquire(&service->thread_running);
     while (running)
     {
         DSTORAGE_CUSTOM_DECOMPRESSION_REQUEST requests[64];
@@ -175,7 +175,7 @@ static void CALLBACK __decompressThreadTask_DirectStorage(void* data)
     tracy::SetThreadName("DirectStorageDecompressThread");
 #endif
     auto service = (skr_win_dstorage_decompress_service_id)data;
-    while (skr_atomicu32_load_acquire(&service->thread_running))
+    while (atomic_load_acquire(&service->thread_running))
     {
         {
             SkrZoneScopedNC("DirectStorageDecompressWait", tracy::Color::Gray43);

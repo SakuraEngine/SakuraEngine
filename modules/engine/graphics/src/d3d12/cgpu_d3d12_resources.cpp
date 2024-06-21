@@ -794,14 +794,17 @@ void cgpu_queue_map_packed_mips_d3d12(CGPUQueueId queue, const struct CGPUTiledT
         CGPUTiledTexture_D3D12* T        = (CGPUTiledTexture_D3D12*)regions->packed_mips[i].texture;
         uint32_t                layer    = regions->packed_mips[i].layer;
         auto*                   pMapping = T->getPackedMipMapping(layer);
-
-        const int32_t prev = skr_atomic32_cas_relaxed(&pMapping->status, D3D12_TILE_MAPPING_STATUS_UNMAPPED, D3D12_TILE_MAPPING_STATUS_PENDING);
-        if (prev != D3D12_TILE_MAPPING_STATUS_UNMAPPED) continue;
+        
+        int32_t expect_unmapped = D3D12_TILE_MAPPING_STATUS_MAPPED;
+        if (!atomic_compare_exchange_strong(&pMapping->status, 
+                &expect_unmapped, D3D12_TILE_MAPPING_STATUS_PENDING)) 
+            continue;
 
         D->pTiledMemoryPool->AllocateTiles(1, &pMapping->pAllocation, pMapping->N);
 
-        const int32_t prev2 = skr_atomic32_cas_relaxed(&pMapping->status, D3D12_TILE_MAPPING_STATUS_PENDING, D3D12_TILE_MAPPING_STATUS_MAPPING);
-        if (prev2 != D3D12_TILE_MAPPING_STATUS_PENDING) continue;
+        int32_t expect_pending = D3D12_TILE_MAPPING_STATUS_PENDING;
+        if (!atomic_compare_exchange_strong(&pMapping->status, 
+                &expect_pending, D3D12_TILE_MAPPING_STATUS_MAPPING)) continue;
 
         const auto                      HeapOffset       = (UINT32)pMapping->pAllocation->GetOffset();
         const auto                      firstSubresource = CALC_SUBRESOURCE_INDEX(T->super.tiled_resource->packed_mip_start, layer, 0, 1, 1);
@@ -819,7 +822,8 @@ void cgpu_queue_map_packed_mips_d3d12(CGPUQueueId queue, const struct CGPUTiledT
         nullptr,
         D3D12_TILE_MAPPING_FLAG_NONE);
 
-        skr_atomic32_cas_relaxed(&pMapping->status, D3D12_TILE_MAPPING_STATUS_MAPPING, D3D12_TILE_MAPPING_STATUS_MAPPED);
+        int32_t expect_mapping = D3D12_TILE_MAPPING_STATUS_MAPPING;
+        atomic_compare_exchange_strong(&pMapping->status, &expect_mapping, D3D12_TILE_MAPPING_STATUS_MAPPED);
     }
 }
 
@@ -857,8 +861,9 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
                     SKR_ASSERT(Region.mip_level < pTiledInfo->packed_mip_start &&
                                "cgpu_queue_map_tiled_texture_d3d12: Mip level must be less than packed mip start!");
                     auto&      Mapping = *Mappings.at(x, y, z);
-                    const auto prev    = skr_atomic32_cas_relaxed(&Mapping.status, D3D12_TILE_MAPPING_STATUS_UNMAPPED, D3D12_TILE_MAPPING_STATUS_PENDING);
-                    if (prev == D3D12_TILE_MAPPING_STATUS_UNMAPPED)
+                    int32_t expect_unmapped = D3D12_TILE_MAPPING_STATUS_MAPPED;
+                    if (atomic_compare_exchange_strong(&Mapping.status, 
+                        &expect_unmapped, D3D12_TILE_MAPPING_STATUS_PENDING))
                     {
                         RegionTileCount += 1;
                     }
@@ -899,8 +904,10 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
                 for (uint32_t z = Region.start.z; z < Region.end.z; z++)
                 {
                     auto&      Mapping = *Mappings.at(x, y, z);
-                    const auto status  = skr_atomic32_cas_relaxed(&Mapping.status, D3D12_TILE_MAPPING_STATUS_PENDING, D3D12_TILE_MAPPING_STATUS_MAPPING);
-                    if (status != D3D12_TILE_MAPPING_STATUS_PENDING) continue; // skip if already mapped
+                    int32_t expect_pending = D3D12_TILE_MAPPING_STATUS_PENDING;
+                    if (!atomic_compare_exchange_strong(&Mapping.status, 
+                        &expect_pending, D3D12_TILE_MAPPING_STATUS_MAPPING)) 
+                        continue; // skip if already mapped
 
                     // calc mapping args
                     Mapping.pDxAllocation                           = ppAllocations[AllocateTileCount];
@@ -933,8 +940,9 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
         {
             auto& TiledInfo = *const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
             auto& Mapping   = *ppMappings[Offset + i];
-            skr_atomic32_cas_relaxed(&Mapping.status, D3D12_TILE_MAPPING_STATUS_MAPPING, D3D12_TILE_MAPPING_STATUS_MAPPED);
-            skr_atomicu64_add_relaxed(&TiledInfo.alive_tiles_count, 1);
+            int32_t expect_mapping = D3D12_TILE_MAPPING_STATUS_MAPPING;
+            atomic_compare_exchange_strong(&Mapping.status, &expect_mapping, D3D12_TILE_MAPPING_STATUS_MAPPED);
+            atomic_fetch_add_relaxed(&TiledInfo.alive_tiles_count, 1);
         }
     };
     uint32_t TileIndex     = 0;
@@ -1763,7 +1771,7 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(D3D12Util_Descript
 
             uint32_t* rangeSizes = (uint32_t*)alloca(pHeap->mUsedDescriptors * sizeof(uint32_t));
 #ifdef CGPU_THREAD_SAFETY
-            uint32_t usedDescriptors = skr_atomicu32_load_relaxed(&pHeap->mUsedDescriptors);
+            uint32_t usedDescriptors = atomic_load_relaxed(&pHeap->mUsedDescriptors);
 #else
             uint32_t usedDescriptors = pHeap->mUsedDescriptors;
 #endif
@@ -1804,7 +1812,7 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(D3D12Util_Descript
         }
     }
 #ifdef CGPU_THREAD_SAFETY
-    uint32_t usedDescriptors = skr_atomicu32_add_relaxed(&pHeap->mUsedDescriptors, descriptorCount);
+    uint32_t usedDescriptors = atomic_fetch_add_relaxed(&pHeap->mUsedDescriptors, descriptorCount);
 #else
     uint32_t usedDescriptors = pHeap->mUsedDescriptors = pHeap->mUsedDescriptors + descriptorCount;
 #endif

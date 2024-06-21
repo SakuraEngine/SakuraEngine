@@ -55,7 +55,7 @@ struct DStorageQueueWindows : public SkrDStorageQueue {
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
         for (auto&& tracer : profile_tracers)
         {
-            if (!skr_atomicu32_load_acquire(&tracer->finished))
+            if (!atomic_load_acquire(&tracer->finished))
             {
                 skr_join_thread(tracer->thread_handle);
             }

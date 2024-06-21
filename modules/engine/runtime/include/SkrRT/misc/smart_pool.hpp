@@ -17,12 +17,12 @@ struct ISmartPool : public skr::SInterface
 public:
     inline uint32_t add_refcount() SKR_NOEXCEPT
     { 
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
+        return 1 + atomic_fetch_add_relaxed(&rc, 1); 
     }
     inline uint32_t release() SKR_NOEXCEPT
     {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
+        atomic_fetch_add_relaxed(&rc, -1);
+        return atomic_load_acquire(&rc);
     }
 private:
     SAtomicU32 rc = 0;
@@ -47,7 +47,7 @@ struct SmartPool : public ISmartPool<I>
 
     virtual ~SmartPool() SKR_NOEXCEPT
     {
-        const auto N = skr_atomic64_load_acquire(&objcnt);
+        const auto N = atomic_load_acquire(&objcnt);
         if (N != 0)
         {
             SKR_LOG_ERROR(u8"object leak detected!");
@@ -70,7 +70,7 @@ struct SmartPool : public ISmartPool<I>
         }
         new (ptr) T(this, std::forward<Args>(args)...);
 
-        skr_atomic64_add_relaxed(&objcnt, 1);
+        atomic_fetch_add_relaxed(&objcnt, 1);
         return skr::static_pointer_cast<I>(SObjectPtr<T>(ptr));
     }
 
@@ -80,7 +80,7 @@ struct SmartPool : public ISmartPool<I>
         {
             ptr->~T(); 
             blocks.enqueue(ptr);
-            skr_atomic64_add_relaxed(&objcnt, -1);
+            atomic_fetch_add_relaxed(&objcnt, -1);
         }
         if (recursive_deleting)
             SkrDelete(this);
@@ -92,7 +92,7 @@ struct SmartPool : public ISmartPool<I>
         return +[](SInterface* ptr) 
         { 
             auto* p = static_cast<SmartPool<T, I>*>(ptr);
-            const auto N = skr_atomic64_load_acquire(&p->objcnt);
+            const auto N = atomic_load_acquire(&p->objcnt);
             if (N)
                 p->recursive_deleting = true;
             else
@@ -114,10 +114,10 @@ private:\
 public:\
     uint32_t add_refcount() final\
     {\
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1);\
+        return 1 + atomic_fetch_add_relaxed(&rc, 1);\
     }\
     uint32_t release() final\
     {\
-        skr_atomicu32_add_relaxed(&rc, -1);\
-        return skr_atomicu32_load_acquire(&rc);\
+        atomic_fetch_add_relaxed(&rc, -1);\
+        return atomic_load_acquire(&rc);\
     }
