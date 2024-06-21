@@ -83,9 +83,9 @@ public:
 private:
     Status status = Status::PENDING;
     // Result handling
-    Result result{};
+    Result result = {};
     // Cancellation handling
-    SAtomic32 cancelled{};
+    SAtomic32 cancelled = ATOMIC_VAR_INIT(0);
     IFuture<Result>* future = nullptr;
 
 public:

@@ -1,10 +1,8 @@
 #pragma once
-#if _WIN32
-	#include "atomic/msvc.h"
-#elif defined(__cplusplus)
-	#include "atomic/cpp23.h"
+#if defined(__cplusplus)
+	#include "atomic/cpp23.inc"
 #else
-	#include "atomic/c11.h"
+	#include "atomic/c11.inc"
 #endif
 
 typedef _Atomic(uint32_t) SAtomicU32;
