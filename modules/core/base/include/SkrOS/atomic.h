@@ -1,6 +1,12 @@
 /* clang-format off */
 #pragma once
 #include "SkrBase/config.h"
+#if defined __STDC_NO_ATOMICS__ 
+FUCK
+#else
+// #inlcude <stdatomic.h>
+// typedef _Atomic(uint32_t) SAtomicU32;
+#endif
 
 typedef volatile SKR_ALIGNAS(4) uint32_t SAtomicU32;
 typedef volatile SKR_ALIGNAS(8) uint64_t SAtomicU64;
@@ -15,7 +21,6 @@ typedef volatile SKR_ALIGNAS(SKR_PTR_SIZE) intptr_t SAtomicPtr;
 #endif
 
 #if defined(_MSC_VER) && !defined(NX64)
-
 #include <intrin0.h>
 
 SKR_FORCEINLINE static void skr_memorybarrier_acquire() { _ReadWriteBarrier(); }
