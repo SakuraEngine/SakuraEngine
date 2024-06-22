@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrBase/atomic/atomic.h" // IWYU pragma: export
 #include "SkrGraphics/api.h"
 
 #if defined(_WIN32) || defined(_WIN64)

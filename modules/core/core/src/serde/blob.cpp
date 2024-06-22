@@ -1,4 +1,4 @@
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrSerde/blob.h"
 #include "SkrCore/memory/memory.h"
 #include "SkrContainers/sptr.hpp"

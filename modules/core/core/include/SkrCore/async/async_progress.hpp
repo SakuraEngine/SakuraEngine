@@ -2,7 +2,7 @@
 #include <atomic>
 #include <type_traits>
 #include "SkrBase/misc/defer.hpp"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrOS/thread.h"
 #include "SkrCore/memory/memory.h"
 #include "SkrContainers/stl_queue.hpp"

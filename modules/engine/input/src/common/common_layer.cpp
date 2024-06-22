@@ -1,5 +1,5 @@
 #include "SkrBase/misc/debug.h"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrCore/memory/memory.h"
 #include "SkrCore/log.h"
 #include "reading_pool.hpp"

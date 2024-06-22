@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrBase/config.h"
 #include "SkrBase/types.h"
 

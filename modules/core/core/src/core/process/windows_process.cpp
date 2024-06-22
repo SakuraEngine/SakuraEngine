@@ -8,7 +8,7 @@
 #include "SkrCore/process.h"
 #include "SkrCore/memory/memory.h"
 #include "SkrContainers/string.hpp"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 
 typedef struct SProcess
 {

@@ -103,7 +103,7 @@ TEST_CASE_METHOD(ThreadsTest, "RecursiveCondVar")
     skr_destroy_mutex(&sm);
 }
 
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 
 TEST_CASE_METHOD(ThreadsTest, "Atomic")
 {

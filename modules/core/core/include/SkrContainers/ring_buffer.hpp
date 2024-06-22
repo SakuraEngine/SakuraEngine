@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrOS/thread.h"
 #include <SkrContainers/vector.hpp>
 #include "SkrBase/containers/ring_buffer/ring_buffer.hpp"

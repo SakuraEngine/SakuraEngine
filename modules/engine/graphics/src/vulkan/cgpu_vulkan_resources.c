@@ -1,4 +1,4 @@
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrGraphics/api.h"
 #include "SkrGraphics/backend/vulkan/cgpu_vulkan.h"
 #include "../common/common_utils.h"

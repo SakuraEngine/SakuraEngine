@@ -1,6 +1,6 @@
 #include "SkrInput/input.h"
 #include "SkrCore/memory/memory.h"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrBase/misc/debug.h" 
 #include "SkrCore/log.h"
 #include "SkrBase/misc/defer.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderer/pso_map.h"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrContainers/vector.hpp"
 
 namespace skr {

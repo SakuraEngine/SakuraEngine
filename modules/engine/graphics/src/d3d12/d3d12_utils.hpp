@@ -6,7 +6,7 @@
 #endif
 #ifdef CGPU_THREAD_SAFETY
 #include "SkrOS/thread.h"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #endif
 #include "./../common/common_utils.h"
 

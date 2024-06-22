@@ -1,5 +1,5 @@
 #include "SkrGraphics/cgpux.hpp"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrCore/async/thread_job.hpp"
 #include "SkrContainers/sptr.hpp"
 #include "SkrContainers/hashmap.hpp"

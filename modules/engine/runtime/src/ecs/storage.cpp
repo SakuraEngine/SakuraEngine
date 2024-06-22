@@ -1,4 +1,4 @@
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrTask/parallel_for.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/set.hpp"

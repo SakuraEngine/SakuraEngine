@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrContainers/span.hpp"
 #include "SkrImageCoder/skr_image_coder.h"
 

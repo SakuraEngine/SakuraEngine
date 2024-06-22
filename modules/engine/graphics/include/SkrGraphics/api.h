@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrBase/atomic/atomic.h" // IWYU pragma: export
 #include "SkrGraphics/flags.h"
 #include "SkrGraphics/config.h"
 
@@ -1648,7 +1649,7 @@ typedef struct CGPUTiledSubresourceInfo {
 typedef struct CGPUTiledTextureInfo {
     uint64_t tile_size;
     uint64_t total_tiles_count;
-    volatile uint64_t alive_tiles_count;
+    _Atomic(uint64_t) alive_tiles_count;
 
     uint32_t tile_width_in_texels;
     uint32_t tile_height_in_texels;
@@ -1657,7 +1658,7 @@ typedef struct CGPUTiledTextureInfo {
 
     uint32_t packed_mip_start;
     uint32_t packed_mip_count;
-    volatile uint64_t alive_pack_count;
+    _Atomic(uint64_t) alive_pack_count;
 
     bool pack_unaligned;
 } CGPUTiledTextureInfo;

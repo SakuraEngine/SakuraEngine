@@ -1,5 +1,5 @@
 #include "SkrOS/thread.h"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include <pthread.h>
 
 static SCallOnceGuard gKeyInitGuard;

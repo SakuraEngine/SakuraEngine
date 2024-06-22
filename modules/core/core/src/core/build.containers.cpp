@@ -1,4 +1,4 @@
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrContainers/detail/shared_rc.hpp"
 #include <new>
 

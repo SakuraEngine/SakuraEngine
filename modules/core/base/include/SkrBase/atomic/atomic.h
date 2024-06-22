@@ -1,8 +1,8 @@
 #pragma once
 #if defined(__cplusplus)
-	#include "atomic/cpp23.inc"
+	#include "detail/cpp23.inc"
 #else
-	#include "atomic/c11.inc"
+	#include "detail/c11.inc"
 #endif
 
 typedef _Atomic(uint32_t) SAtomicU32;
