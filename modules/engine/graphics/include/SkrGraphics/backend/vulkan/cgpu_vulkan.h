@@ -334,7 +334,7 @@ typedef struct CGPUBuffer_Vulkan {
 typedef struct CGPUTileMapping_Vulkan
 {
     struct VmaAllocation_T* pVkAllocation;
-    volatile int32_t status;
+    _Atomic(int32_t) status;
 } CGPUTileMapping_Vulkan;
 
 typedef struct CGPUTileTextureSubresourceMapping_Vulkan {
@@ -347,7 +347,7 @@ typedef struct CGPUTileTextureSubresourceMapping_Vulkan {
 
 typedef struct CGPUTileTexturePackedMipMapping_Vulkan {
     struct VmaAllocation_T* pVkAllocation;
-    volatile int32_t status;
+    _Atomic(int32_t) status;
     uint64_t mVkSparseTailStride;
     uint64_t mVkSparseTailOffset;
     uint64_t mVkSparseTailSize;

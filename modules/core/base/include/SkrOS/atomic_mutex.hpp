@@ -96,7 +96,7 @@ namespace atomic_mutex
 
 				// If m_bitfield==oldval (there are no unique locks) then store newval in m_bitfield (add a shared lock).
 				// Otherwise update oldval with the latest value of m_bitfield and run the test loop again.
-			} while (!m_bitfield.compare_exchange_weak(oldval, newval, std::memory_order::memory_order_relaxed));
+			} while (!m_bitfield.compare_exchange_weak(oldval, newval, std::memory_order_relaxed));
 		}
 
 		// Unlock a shared lock.
@@ -138,7 +138,7 @@ namespace atomic_mutex
 
 				// If m_bitfield==oldval (there are no active shared locks and no thread has a unique lock) then store newval in m_bitfield (get the unique lock).
 				// Otherwise update oldval with the latest value of m_bitfield and run the test loop again.
-			} while (!m_bitfield.compare_exchange_weak(oldval, newval, std::memory_order::memory_order_relaxed));
+			} while (!m_bitfield.compare_exchange_weak(oldval, newval, std::memory_order_relaxed));
 		}
 
 		static const uint8_t num_shared_bitshift = 0;

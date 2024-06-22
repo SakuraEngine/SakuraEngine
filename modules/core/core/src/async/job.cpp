@@ -119,8 +119,8 @@ public:
         SKR_ASSERT(jobItem->status == kJobItemStatusWaiting || jobItem->status == kJobItemStatusFinishJob);
 
         // update the status of JobItem together with the state of the queue
-        ESkrJobItemStatus statusWaiting = kJobItemStatusWaiting; (void)statusWaiting;
-        atomic_compare_exchange_strong(&jobItem->status, &statusWaiting, kJobItemStatusRunning);
+        int32_t statusWaiting = kJobItemStatusWaiting; (void)statusWaiting;
+        atomic_compare_exchange_strong(&jobItem->status, &statusWaiting, (int32_t)kJobItemStatusRunning);
         // jobItem->status.compare_exchange_strong((int&)statusWaiting, kJobItemStatusRunning, std::memory_order_acq_rel, std::memory_order_acquire);
 
         cond->unlock();

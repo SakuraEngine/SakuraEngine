@@ -50,7 +50,7 @@ void skr::SRCBlock::release(uint32_t* pRC) SKR_NOEXCEPT
 
 skr::SRCBlock* skr::SRCBlock::lock() SKR_NOEXCEPT
 {
-    for (int32_t refCountTemp = refcount; refCountTemp != 0; refCountTemp = refcount)
+    for (auto refCountTemp = atomic_load(&refcount); refCountTemp != 0; refCountTemp = refcount)
     {
         if (bool cas = atomic_compare_exchange_strong(&refcount, &refCountTemp, refCountTemp + 1); cas)
         {

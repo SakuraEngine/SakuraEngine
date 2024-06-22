@@ -53,8 +53,8 @@ void LogQueue::finish(const LogElement& e) SKR_NOEXCEPT
     auto last = atomic_fetch_add_relaxed(&e.tok->tls_cnt_, -1);
     if (last == 1)
     {
-        auto expected = kFlushing;
-        atomic_compare_exchange_strong(&e.tok->flush_status_, &expected, kFlushed);
+        int32_t expected = kFlushing;
+        atomic_compare_exchange_strong(&e.tok->flush_status_, &expected, (int32_t)kFlushed);
     }
 }
 
@@ -94,11 +94,11 @@ void LogQueue::mark_flushing(SThreadID tid) SKR_NOEXCEPT
 {
     if (auto tok = query_token(tid))
     {
-        auto expected = kNoFlush;
+        int32_t expected = kNoFlush;
         if (tok->query_cnt() != 0) // if there is no log in this thread, we don't need to flush
-            atomic_compare_exchange_strong(&tok->flush_status_, &expected, kFlushing);
+            atomic_compare_exchange_strong(&tok->flush_status_, &expected, (int32_t)kFlushing);
         else
-            atomic_compare_exchange_strong(&tok->flush_status_, &expected, kFlushed);
+            atomic_compare_exchange_strong(&tok->flush_status_, &expected, (int32_t)kFlushed);
     }
 }
 
@@ -231,8 +231,8 @@ void LogWorker::process_logs() SKR_NOEXCEPT
         }
         SKR_ASSERT(flush_tok->query_cnt() == 0);
 
-        auto expected = kFlushing;
-        atomic_compare_exchange_strong(&flush_tok->flush_status_, &expected, kFlushed);
+        int32_t expected = kFlushing;
+        atomic_compare_exchange_strong(&flush_tok->flush_status_, &expected, (int32_t)kFlushed);
     }
 
     // normal polling    
@@ -266,8 +266,8 @@ void LogWorker::flush(SThreadID tid) SKR_NOEXCEPT
         SKR_ASSERT(atomic_load_relaxed(&tok->tls_cnt_) == 0);
         LogManager::Get()->FlushAllSinks();
         
-        auto expected = kFlushed;
-        atomic_compare_exchange_strong(&tok->flush_status_, &expected, kNoFlush);
+        int32_t expected = kFlushed;
+        atomic_compare_exchange_strong(&tok->flush_status_, &expected, (int32_t)kNoFlush);
     }
     else
         SKR_UNREACHABLE_CODE();
