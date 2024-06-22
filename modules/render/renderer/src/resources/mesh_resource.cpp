@@ -285,7 +285,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallImpl(skr_resource_record_t* record)
         {
             auto dRequest = SPtr<BufferRequest>::Create();
             dRequest->absPaths.resize_default(mesh_resource->bins.size());
-            dRequest->dFutures.resize_default(mesh_resource->bins.size());
+            dRequest->dFutures.resize_zeroed(mesh_resource->bins.size());
             dRequest->dBuffers.resize_zeroed(mesh_resource->bins.size());
             InstallType installType = { ECompressMethod::NONE };
             for (auto i = 0u; i < mesh_resource->bins.size(); i++)

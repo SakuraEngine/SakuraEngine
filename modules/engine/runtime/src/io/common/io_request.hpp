@@ -34,7 +34,7 @@ struct IORequestMixin : public Interface
     IO_RC_OBJECT_BODY
 public:
     IORequestMixin(ISmartPoolPtr<Interface> pool, IIOService* service) 
-        : service(service), components(std::make_tuple(Components(this)...)), pool(pool)
+        : service(service), components(std::make_tuple((sizeof(Components), this)...)), pool(pool)
     {
 
     }
