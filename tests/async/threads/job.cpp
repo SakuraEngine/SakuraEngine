@@ -69,7 +69,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
         {
             if (result == skr::ASYNC_RESULT_OK)
             {
-                atomic_store_relaxed(&finished, true);
+                skr_atomic_store_relaxed(&finished, true);
             }
         }
         skr::String result = u8"";
@@ -98,7 +98,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
     virtual bool valid() const SKR_NOEXCEPT { return true; }
     virtual void wait() SKR_NOEXCEPT
     {
-        while (atomic_load_relaxed(&jobItem->finished) == false)
+        while (skr_atomic_load_relaxed(&jobItem->finished) == false)
         {
             skr_thread_sleep(1);
         }
@@ -106,7 +106,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
     virtual skr::FutureStatus wait_for(uint32_t ms) SKR_NOEXCEPT
     {
         skr_thread_sleep(ms);
-        const auto f = atomic_load_relaxed(&jobItem->finished);
+        const auto f = skr_atomic_load_relaxed(&jobItem->finished);
         if (f) return skr::FutureStatus::Ready;
         return skr::FutureStatus::Timeout;
     }

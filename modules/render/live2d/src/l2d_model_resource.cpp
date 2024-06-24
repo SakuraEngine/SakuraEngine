@@ -12,18 +12,18 @@
 
 void L2DRequestCallbackData::partial_finished() SKR_NOEXCEPT
 {
-    auto _e = atomic_load_acquire(&finished_expressions);
-    auto _m = atomic_load_acquire(&finished_models);
-    auto _ph = atomic_load_acquire(&finished_physics);
-    auto _po = atomic_load_acquire(&finished_poses);
-    auto _ud = atomic_load_acquire(&finished_usr_data);
-    auto _mo = atomic_load_acquire(&finished_motions);
+    auto _e = skr_atomic_load_acquire(&finished_expressions);
+    auto _m = skr_atomic_load_acquire(&finished_models);
+    auto _ph = skr_atomic_load_acquire(&finished_physics);
+    auto _po = skr_atomic_load_acquire(&finished_poses);
+    auto _ud = skr_atomic_load_acquire(&finished_usr_data);
+    auto _mo = skr_atomic_load_acquire(&finished_motions);
     if (_e == expression_count && _m == model_count && _ph == phys_count &&
             _po == pose_count && _ud == usr_data_count && _mo == motion_count)
     {
         model_resource->on_finished();
         motions_resource->on_finished();
-        atomic_store_relaxed(&live2dRequest->liv2d_status, SKR_IO_STAGE_COMPLETED);
+        skr_atomic_store_relaxed(&live2dRequest->liv2d_status, SKR_IO_STAGE_COMPLETED);
         live2dRequest->finish_callback(live2dRequest, live2dRequest->callback_data);
         SkrDelete(this);
     }
@@ -80,7 +80,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             _this->LoadModel(blob->get_data(), (L2DF::csmSizeInt)blob->get_size());
             blob.reset();
             
-            atomic_fetch_add_relaxed(&_this->cbData->finished_models, 1);
+            skr_atomic_fetch_add_relaxed(&_this->cbData->finished_models, 1);
             _this->cbData->partial_finished();
         }, this);
         rq->use_async_complete();
@@ -110,7 +110,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             _this->LoadPhysics(blob->get_data(), (L2DF::csmSizeInt)blob->get_size());
             blob.reset();
             
-            atomic_fetch_add_relaxed(&_this->cbData->finished_physics, 1);
+            skr_atomic_fetch_add_relaxed(&_this->cbData->finished_physics, 1);
             _this->cbData->partial_finished();
         }, this);
         rq->use_async_complete();
@@ -140,7 +140,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             _this->LoadPose(blob->get_data(), (L2DF::csmSizeInt)blob->get_size());
             blob.reset();
             
-            atomic_fetch_add_relaxed(&_this->cbData->finished_poses, 1);
+            skr_atomic_fetch_add_relaxed(&_this->cbData->finished_poses, 1);
             _this->cbData->partial_finished();
         }, this);
         rq->use_async_complete();
@@ -170,7 +170,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             _this->LoadUserData(blob->get_data(), (L2DF::csmSizeInt)blob->get_size());
             blob.reset();
             
-            atomic_fetch_add_relaxed(&_this->cbData->finished_usr_data, 1);
+            skr_atomic_fetch_add_relaxed(&_this->cbData->finished_usr_data, 1);
             _this->cbData->partial_finished();
         }, this);
         rq->use_async_complete();
@@ -436,7 +436,7 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
             map[name.c_str()] = CubismExpressionMotion::Create(blob->get_data(), (L2DF::csmSizeInt)blob->get_size());
             blob.reset();
             
-            atomic_fetch_add_relaxed(&_this->cbData->finished_expressions, 1);
+            skr_atomic_fetch_add_relaxed(&_this->cbData->finished_expressions, 1);
             _this->cbData->partial_finished();
         }, this);
         rq->use_async_complete();
@@ -519,7 +519,7 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             map[entry.first.c_str()][entry.second] = L2DF::CubismMotion::Create(blob->get_data(), (L2DF::csmSizeInt)blob->get_size());
             blob.reset();
 
-            atomic_fetch_add_relaxed(&_this->cbData->finished_motions, 1);
+            skr_atomic_fetch_add_relaxed(&_this->cbData->finished_motions, 1);
             _this->cbData->partial_finished();
         }, this);
         rq->use_async_complete();

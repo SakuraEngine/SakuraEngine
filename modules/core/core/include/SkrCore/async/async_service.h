@@ -102,12 +102,12 @@ struct SKR_STATIC_API AsyncService : public skr::ServiceThread {
 
     SkrAsyncServiceStatus getServiceStatus() const SKR_NOEXCEPT
     {
-        return (SkrAsyncServiceStatus)atomic_load_acquire(&service_status);
+        return (SkrAsyncServiceStatus)skr_atomic_load_acquire(&service_status);
     }
 
     void set_sleep_time(uint32_t time) SKR_NOEXCEPT
     {
-        atomic_store_release(&sleep_time, time);
+        skr_atomic_store_release(&sleep_time, time);
     }
 
     void sleep() SKR_NOEXCEPT;
@@ -136,7 +136,7 @@ struct SKR_STATIC_API AsyncService : public skr::ServiceThread {
 protected:
     void setServiceStatus(SkrAsyncServiceStatus status) SKR_NOEXCEPT
     {
-        atomic_store_release(&service_status, status);
+        skr_atomic_store_release(&service_status, status);
     }
 
 private:

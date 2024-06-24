@@ -55,22 +55,22 @@ public:
 
     virtual ESkrIOStage getStatus() const SKR_NOEXCEPT
     {
-        return static_cast<ESkrIOStage>(atomic_load_relaxed(&future->status));
+        return static_cast<ESkrIOStage>(skr_atomic_load_relaxed(&future->status));
     }
 
     bool getCancelRequested() const SKR_NOEXCEPT
     {
-        return atomic_load_relaxed(&future->request_cancel);
+        return skr_atomic_load_relaxed(&future->request_cancel);
     }
 
     SkrAsyncIOFinishStep getFinishStep() const SKR_NOEXCEPT
     { 
-        return (SkrAsyncIOFinishStep)atomic_load_acquire(&finish_step); 
+        return (SkrAsyncIOFinishStep)skr_atomic_load_acquire(&finish_step); 
     }
 
     void setFinishStep(SkrAsyncIOFinishStep step) SKR_NOEXCEPT
     { 
-        atomic_store_release(&finish_step, step); 
+        skr_atomic_store_release(&finish_step, step); 
     }
 
     void tryPollFinish() SKR_NOEXCEPT
@@ -85,7 +85,7 @@ public:
             finish_callbacks[SKR_IO_FINISH_POINT_CANCEL](
                 future, request, finish_callback_datas[SKR_IO_FINISH_POINT_CANCEL]);
         }
-        atomic_store_relaxed(&finish_step, SKR_ASYNC_IO_FINISH_STEP_DONE);
+        skr_atomic_store_relaxed(&finish_step, SKR_ASYNC_IO_FINISH_STEP_DONE);
     }
 
     bool needPollFinish() SKR_NOEXCEPT
@@ -97,7 +97,7 @@ public:
 
     virtual void setStatus(ESkrIOStage status) SKR_NOEXCEPT
     {
-        atomic_store_release(&future->status, status);
+        skr_atomic_store_release(&future->status, status);
         if (const auto callback = callbacks[status])
         {
             SkrZoneScoped;

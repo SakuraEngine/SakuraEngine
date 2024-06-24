@@ -10,20 +10,20 @@ extern "C" {
 
 inline static bool atomic_is_lock_free() { return true; }
 
-typedef enum _plat_memory_order {
-  memory_order_relaxed,
-  memory_order_consume,
-  memory_order_acquire,
-  memory_order_release,
-  memory_order_acq_rel,
-  memory_order_seq_cst
-} _plat_memory_order;
+typedef enum skr_memory_order {
+  skr_memory_order_relaxed,
+  skr_memory_order_consume,
+  skr_memory_order_acquire,
+  skr_memory_order_release,
+  skr_memory_order_acq_rel,
+  skr_memory_order_seq_cst
+} skr_memory_order;
 
 #ifdef _WIN32
-    #define _Atomic(tp)         volatile tp
+    #define _SAtomic(tp)         volatile tp
 
-    #ifndef ATOMIC_VAR_INIT
-    #define ATOMIC_VAR_INIT(x)  x
+    #ifndef SATOMIC_VAR_INIT
+    #define SATOMIC_VAR_INIT(x)  x
     #endif
 #endif
 

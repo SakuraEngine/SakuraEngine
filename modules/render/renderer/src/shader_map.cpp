@@ -44,7 +44,7 @@ struct ShaderMapImpl : public skr_shader_map_t
     {
         for (auto iter : mShaderMap)
         {
-            if (atomic_load_relaxed(&iter.second->frame) != UINT64_MAX)
+            if (skr_atomic_load_relaxed(&iter.second->frame) != UINT64_MAX)
             {
                 cgpu_free_shader_library(iter.second->shader);
             }
@@ -83,7 +83,7 @@ bool ShaderProgress::do_in_background()
     auto device = factory->root.device;
     auto& shader = factory->mShaderMap[identifier];
 
-    atomic_store_relaxed(&shader->shader_status, SKR_SHADER_MAP_SHADER_STATUS_LOADED);
+    skr_atomic_store_relaxed(&shader->shader_status, SKR_SHADER_MAP_SHADER_STATUS_LOADED);
 
     auto desc = make_zeroed<CGPUShaderLibraryDescriptor>();
     desc.code = (const uint32_t*)blob->get_data();
@@ -94,15 +94,15 @@ bool ShaderProgress::do_in_background()
     blob.reset();
     if (!created_shader)
     {
-        atomic_store_relaxed(&shader->shader_status, SKR_SHADER_MAP_SHADER_STATUS_FAILED);
-        atomic_store_relaxed(&factory->mShaderMap[identifier]->frame, UINT64_MAX);
+        skr_atomic_store_relaxed(&shader->shader_status, SKR_SHADER_MAP_SHADER_STATUS_FAILED);
+        skr_atomic_store_relaxed(&factory->mShaderMap[identifier]->frame, UINT64_MAX);
         return false;
     }
     else
     {
         shader->shader = created_shader;
-        atomic_store_relaxed(&shader->shader_status, SKR_SHADER_MAP_SHADER_STATUS_INSTALLED);
-        atomic_store_relaxed(&factory->mShaderMap[identifier]->frame, factory->frame_index);
+        skr_atomic_store_relaxed(&shader->shader_status, SKR_SHADER_MAP_SHADER_STATUS_INSTALLED);
+        skr_atomic_store_relaxed(&factory->mShaderMap[identifier]->frame, factory->frame_index);
     }
     return true;
 }
@@ -112,7 +112,7 @@ CGPUShaderLibraryId ShaderMapImpl::find_shader(const skr_platform_shader_identif
     auto found = mShaderMap.find(identifier);
     if (found != mShaderMap.end())
     {
-        if (atomic_load_relaxed(&found->second->frame) != UINT64_MAX)
+        if (skr_atomic_load_relaxed(&found->second->frame) != UINT64_MAX)
         {
             return found->second->shader;
         }
@@ -126,10 +126,10 @@ bool ShaderMapImpl::free_shader(const skr_platform_shader_identifier_t& identifi
     if (found != mShaderMap.end())
     {
     #ifdef _DEBUG
-        const auto frame = atomic_load_relaxed(&found->second->frame);
+        const auto frame = skr_atomic_load_relaxed(&found->second->frame);
         SKR_ASSERT(frame != UINT64_MAX && "this shader is freed but never installed, check your code for errors!");
     #endif
-        atomic_fetch_add_relaxed(&found->second->rc, -1);
+        skr_atomic_fetch_add_relaxed(&found->second->rc, -1);
         return true;
     }
     return false;
@@ -142,11 +142,11 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader(const skr_platform_shade
     if (found != mShaderMap.end())
     {
         // 1.1 found alive shader request
-        auto status = atomic_load_relaxed(&found->second->shader_status);
+        auto status = skr_atomic_load_relaxed(&found->second->shader_status);
 
         // 1.2 request is done, add rc & record frame index
-        atomic_fetch_add_relaxed(&found->second->rc, 1);
-        atomic_store_relaxed(&found->second->frame, frame_index);
+        skr_atomic_fetch_add_relaxed(&found->second->rc, 1);
+        skr_atomic_store_relaxed(&found->second->frame, frame_index);
         return (ESkrShaderMapShaderStatus)status;
     }
     // 2. not found mapped shader
@@ -154,7 +154,7 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader(const skr_platform_shade
     {
         // fire request
         auto mapped_shader = SPtr<MappedShader>::Create();
-        atomic_fetch_add_relaxed(&mapped_shader->rc, 1);
+        skr_atomic_fetch_add_relaxed(&mapped_shader->rc, 1);
         // keep mapped_shader::frame at UINT64_MAX until shader is loaded
         mShaderMap.emplace(identifier, mapped_shader);
         return install_shader_from_vfs(identifier);
@@ -211,14 +211,14 @@ void ShaderMapImpl::garbage_collect(uint64_t critical_frame) SKR_NOEXCEPT
     // SKR_DEFER({factory->mShaderTasks.erase(identifier);});
     for (auto it = mShaderMap.begin(); it != mShaderMap.end();)
     {
-        auto status = atomic_load_relaxed(&it->second->shader_status);
+        auto status = skr_atomic_load_relaxed(&it->second->shader_status);
         if (status == SKR_SHADER_MAP_SHADER_STATUS_INSTALLED)
         {
             mShaderTasks.erase(it->first);
         }
 
-        if (atomic_load_relaxed(&it->second->rc) == 0 && 
-            atomic_load_relaxed(&it->second->frame) < critical_frame)
+        if (skr_atomic_load_relaxed(&it->second->rc) == 0 && 
+            skr_atomic_load_relaxed(&it->second->frame) < critical_frame)
         {
             if (mShaderTasks.find(it->first) != mShaderTasks.end())
             {

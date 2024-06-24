@@ -796,14 +796,14 @@ void cgpu_queue_map_packed_mips_d3d12(CGPUQueueId queue, const struct CGPUTiledT
         auto*                   pMapping = T->getPackedMipMapping(layer);
         
         int32_t expect_unmapped = D3D12_TILE_MAPPING_STATUS_MAPPED;
-        if (!atomic_compare_exchange_strong(&pMapping->status, 
+        if (!skr_atomic_compare_exchange_strong(&pMapping->status, 
                 &expect_unmapped, D3D12_TILE_MAPPING_STATUS_PENDING)) 
             continue;
 
         D->pTiledMemoryPool->AllocateTiles(1, &pMapping->pAllocation, pMapping->N);
 
         int32_t expect_pending = D3D12_TILE_MAPPING_STATUS_PENDING;
-        if (!atomic_compare_exchange_strong(&pMapping->status, 
+        if (!skr_atomic_compare_exchange_strong(&pMapping->status, 
                 &expect_pending, D3D12_TILE_MAPPING_STATUS_MAPPING)) continue;
 
         const auto                      HeapOffset       = (UINT32)pMapping->pAllocation->GetOffset();
@@ -823,7 +823,7 @@ void cgpu_queue_map_packed_mips_d3d12(CGPUQueueId queue, const struct CGPUTiledT
         D3D12_TILE_MAPPING_FLAG_NONE);
 
         int32_t expect_mapping = D3D12_TILE_MAPPING_STATUS_MAPPING;
-        atomic_compare_exchange_strong(&pMapping->status, &expect_mapping, D3D12_TILE_MAPPING_STATUS_MAPPED);
+        skr_atomic_compare_exchange_strong(&pMapping->status, &expect_mapping, D3D12_TILE_MAPPING_STATUS_MAPPED);
     }
 }
 
@@ -862,7 +862,7 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
                                "cgpu_queue_map_tiled_texture_d3d12: Mip level must be less than packed mip start!");
                     auto&      Mapping = *Mappings.at(x, y, z);
                     int32_t expect_unmapped = D3D12_TILE_MAPPING_STATUS_MAPPED;
-                    if (atomic_compare_exchange_strong(&Mapping.status, 
+                    if (skr_atomic_compare_exchange_strong(&Mapping.status, 
                         &expect_unmapped, D3D12_TILE_MAPPING_STATUS_PENDING))
                     {
                         RegionTileCount += 1;
@@ -905,7 +905,7 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
                 {
                     auto&      Mapping = *Mappings.at(x, y, z);
                     int32_t expect_pending = D3D12_TILE_MAPPING_STATUS_PENDING;
-                    if (!atomic_compare_exchange_strong(&Mapping.status, 
+                    if (!skr_atomic_compare_exchange_strong(&Mapping.status, 
                         &expect_pending, D3D12_TILE_MAPPING_STATUS_MAPPING)) 
                         continue; // skip if already mapped
 
@@ -941,8 +941,8 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
             auto& TiledInfo = *const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
             auto& Mapping   = *ppMappings[Offset + i];
             int32_t expect_mapping = D3D12_TILE_MAPPING_STATUS_MAPPING;
-            atomic_compare_exchange_strong(&Mapping.status, &expect_mapping, D3D12_TILE_MAPPING_STATUS_MAPPED);
-            atomic_fetch_add_relaxed(&TiledInfo.alive_tiles_count, 1);
+            skr_atomic_compare_exchange_strong(&Mapping.status, &expect_mapping, D3D12_TILE_MAPPING_STATUS_MAPPED);
+            skr_atomic_fetch_add_relaxed(&TiledInfo.alive_tiles_count, 1);
         }
     };
     uint32_t TileIndex     = 0;
@@ -1771,7 +1771,7 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(D3D12Util_Descript
 
             uint32_t* rangeSizes = (uint32_t*)alloca(pHeap->mUsedDescriptors * sizeof(uint32_t));
 #ifdef CGPU_THREAD_SAFETY
-            uint32_t usedDescriptors = atomic_load_relaxed(&pHeap->mUsedDescriptors);
+            uint32_t usedDescriptors = skr_atomic_load_relaxed(&pHeap->mUsedDescriptors);
 #else
             uint32_t usedDescriptors = pHeap->mUsedDescriptors;
 #endif
@@ -1812,7 +1812,7 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(D3D12Util_Descript
         }
     }
 #ifdef CGPU_THREAD_SAFETY
-    uint32_t usedDescriptors = atomic_fetch_add_relaxed(&pHeap->mUsedDescriptors, descriptorCount);
+    uint32_t usedDescriptors = skr_atomic_fetch_add_relaxed(&pHeap->mUsedDescriptors, descriptorCount);
 #else
     uint32_t usedDescriptors = pHeap->mUsedDescriptors = pHeap->mUsedDescriptors + descriptorCount;
 #endif

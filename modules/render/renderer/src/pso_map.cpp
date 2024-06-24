@@ -30,7 +30,7 @@ struct PSOProgress : public skr::AsyncProgress<PSOFutureLauncher, int, bool>
 
     bool progress_done() const
     {
-        const auto status = atomic_load_relaxed(&key->pso_status);
+        const auto status = skr_atomic_load_relaxed(&key->pso_status);
         return status != SKR_PSO_MAP_PSO_STATUS_REQUESTED;
     }
 
@@ -91,7 +91,7 @@ struct PSOMapImpl : public skr_pso_map_t
         if (found != sets.end())
         {
             skr_pso_map_key_id result = found->get();
-            atomic_fetch_add_relaxed(&result->rc, 1);
+            skr_atomic_fetch_add_relaxed(&result->rc, 1);
             result->frame = frame_index;
             return result;
         }
@@ -116,7 +116,7 @@ struct PSOMapImpl : public skr_pso_map_t
         if (found != sets.end())
         {
             // deref
-            atomic_fetch_add_relaxed(&key->rc, -1);
+            skr_atomic_fetch_add_relaxed(&key->rc, -1);
         }
         else
         {
@@ -129,7 +129,7 @@ struct PSOMapImpl : public skr_pso_map_t
         // 1. use async service install
         auto progress = SPtr<PSOProgress>::Create(this, key);
         mPSOProgresses.emplace(key, progress);
-        atomic_store_relaxed(&progress->key->pso_status, SKR_PSO_MAP_PSO_STATUS_REQUESTED);
+        skr_atomic_store_relaxed(&progress->key->pso_status, SKR_PSO_MAP_PSO_STATUS_REQUESTED);
         if (auto launcher = future_launcher.get()) // create shaders on aux thread
         {
             progress->execute(*launcher);
@@ -142,14 +142,14 @@ struct PSOMapImpl : public skr_pso_map_t
         if (!key) return SKR_PSO_MAP_PSO_STATUS_FAILED;
         
         auto found = sets.find(key->descriptor);
-        const auto pso_rc = atomic_load_relaxed(&key->pso_rc);
-        atomic_fetch_add_relaxed(&key->pso_rc, 1);
+        const auto pso_rc = skr_atomic_load_relaxed(&key->pso_rc);
+        skr_atomic_fetch_add_relaxed(&key->pso_rc, 1);
         // 1. found mapped pso
         if (found != sets.end())
         {
             // query status
             auto pFound = found->get();
-            const auto pso_status = atomic_load_relaxed(&pFound->pso_status);
+            const auto pso_status = skr_atomic_load_relaxed(&pFound->pso_status);
             // 1.0 install pso if pso has no rc
             if (pso_status == SKR_PSO_MAP_PSO_STATUS_UNINSTALLED)
             {
@@ -170,13 +170,13 @@ struct PSOMapImpl : public skr_pso_map_t
             // 1.2 request is done or failed
             else if (pso_status == SKR_PSO_MAP_PSO_STATUS_REQUESTED)
             {
-                atomic_store_relaxed(&pFound->frame, frame_index);
+                skr_atomic_store_relaxed(&pFound->frame, frame_index);
                 return SKR_PSO_MAP_PSO_STATUS_REQUESTED;
             }
             // 1.3 request is done, record frame index
             else if (pso_status == SKR_PSO_MAP_PSO_STATUS_INSTALLED)
             {
-                atomic_store_relaxed(&pFound->frame, frame_index);
+                skr_atomic_store_relaxed(&pFound->frame, frame_index);
                 return SKR_PSO_MAP_PSO_STATUS_INSTALLED;
             }
         }
@@ -193,7 +193,7 @@ struct PSOMapImpl : public skr_pso_map_t
     {
         if (!key) return nullptr;
 
-        const auto pso_status = atomic_load_relaxed(&key->pso_status);
+        const auto pso_status = skr_atomic_load_relaxed(&key->pso_status);
         if (pso_status == SKR_PSO_MAP_PSO_STATUS_INSTALLED)
         {
             // clearFinishedRequests();
@@ -210,10 +210,10 @@ struct PSOMapImpl : public skr_pso_map_t
         if (found != sets.end())
         {
         #ifdef _DEBUG
-            const auto pso_frame = atomic_load_relaxed(&found->get()->pso_frame);
+            const auto pso_frame = skr_atomic_load_relaxed(&found->get()->pso_frame);
             SKR_ASSERT(pso_frame != UINT64_MAX && "this shader is freed but never installed, check your code for errors!");
         #endif
-            atomic_fetch_add_relaxed(&found->get()->pso_rc, -1);
+            skr_atomic_fetch_add_relaxed(&found->get()->pso_rc, -1);
             return true;
         }
         return false;
@@ -239,7 +239,7 @@ struct PSOMapImpl : public skr_pso_map_t
         for (auto it = sets.begin(); it != sets.end();)
         {
             auto key = it->get();
-            if (atomic_load_relaxed(&key->rc) == 0 && atomic_load_relaxed(&key->frame) < critical_frame)
+            if (skr_atomic_load_relaxed(&key->rc) == 0 && skr_atomic_load_relaxed(&key->frame) < critical_frame)
             {
                 if (mPSOProgresses.find(key) != mPSOProgresses.end())
                 {
@@ -277,14 +277,14 @@ bool PSOProgress::do_in_background()
     key->pso = cgpu_create_render_pipeline(map->root.device, &key->descriptor);
     if (key->pso)
     {
-        atomic_store_relaxed(&key->pso_status, SKR_PSO_MAP_PSO_STATUS_INSTALLED);
-        atomic_store_relaxed(&key->pso_frame, map->frame_index); // store frame index to indicate pso is created
+        skr_atomic_store_relaxed(&key->pso_status, SKR_PSO_MAP_PSO_STATUS_INSTALLED);
+        skr_atomic_store_relaxed(&key->pso_frame, map->frame_index); // store frame index to indicate pso is created
         return true;
     }
     else
     {
-        atomic_store_relaxed(&key->pso_status, SKR_PSO_MAP_PSO_STATUS_FAILED);
-        atomic_store_relaxed(&key->pso_frame, UINT64_MAX); // store frame index to indicate pso is failed
+        skr_atomic_store_relaxed(&key->pso_status, SKR_PSO_MAP_PSO_STATUS_FAILED);
+        skr_atomic_store_relaxed(&key->pso_frame, UINT64_MAX); // store frame index to indicate pso is failed
         return false;
     }
 }

@@ -19,13 +19,13 @@ struct SKR_INPUT_API CommonInputReading {
 
     void add_ref()
     {
-        atomic_fetch_add_relaxed(&ref_count, 1);
+        skr_atomic_fetch_add_relaxed(&ref_count, 1);
     }
 
     int release()
     {
-        atomic_fetch_add_relaxed(&ref_count, -1);
-        const auto rc = atomic_load_acquire(&ref_count);
+        skr_atomic_fetch_add_relaxed(&ref_count, -1);
+        const auto rc = skr_atomic_load_acquire(&ref_count);
         if (rc == 0)
         {
             pool->release(this);

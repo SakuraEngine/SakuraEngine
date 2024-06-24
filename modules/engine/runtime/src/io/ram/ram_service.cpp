@@ -73,13 +73,13 @@ void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
 
 IOBatchId RAMService::open_batch(uint64_t n) SKR_NOEXCEPT
 {
-    uint64_t seq = (uint64_t)atomic_fetch_add_relaxed(&batch_sequence, 1);
+    uint64_t seq = (uint64_t)skr_atomic_fetch_add_relaxed(&batch_sequence, 1);
     return skr::static_pointer_cast<IIOBatch>(ram_batch_pool->allocate(this, seq, n));
 }
 
 BlocksRAMRequestId RAMService::open_request() SKR_NOEXCEPT
 {
-    uint64_t seq = (uint64_t)atomic_fetch_add_relaxed(&request_sequence, 1);
+    uint64_t seq = (uint64_t)skr_atomic_fetch_add_relaxed(&request_sequence, 1);
     return skr::static_pointer_cast<IBlocksRAMRequest>(request_pool->allocate(this, seq));
 }
 
@@ -168,7 +168,7 @@ void RAMService::Runner::enqueueBatch(const IOBatchId& batch) SKR_NOEXCEPT
         }
     }
     batch_buffer->fetch(priority, batch);
-    atomic_fetch_add_relaxed(&processing_request_counts[priority], 1);
+    skr_atomic_fetch_add_relaxed(&processing_request_counts[priority], 1);
 }
 
 void RAMService::Runner::set_resolvers() SKR_NOEXCEPT

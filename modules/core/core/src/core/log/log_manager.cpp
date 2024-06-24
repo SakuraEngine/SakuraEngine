@@ -61,7 +61,7 @@ LogManager* LogManager::Get() SKR_NOEXCEPT
 
 void LogManager::InitializeAsyncWorker() SKR_NOEXCEPT
 {
-    if (atomic_load_acquire(&available_) != 0)
+    if (skr_atomic_load_acquire(&available_) != 0)
         return;
 
     // start worker
@@ -71,23 +71,23 @@ void LogManager::InitializeAsyncWorker() SKR_NOEXCEPT
         worker_->run();
     }
     int64_t expected = 0;
-    atomic_compare_exchange_strong(&available_, &expected, 1ll);
+    skr_atomic_compare_exchange_strong(&available_, &expected, 1ll);
 }
 
 void LogManager::FinalizeAsyncWorker() SKR_NOEXCEPT
 {
     // skr::log::LogManager::logger_.reset();
-    if (atomic_load_acquire(&available_) != 0)
+    if (skr_atomic_load_acquire(&available_) != 0)
     {
         worker_.reset();
         int64_t expected = 1;
-        atomic_compare_exchange_strong(&available_, &expected, 0ll);
+        skr_atomic_compare_exchange_strong(&available_, &expected, 0ll);
     }
 }
 
 LogWorker* LogManager::TryGetWorker() SKR_NOEXCEPT
 {
-    if (atomic_load_acquire(&available_) == 0)
+    if (skr_atomic_load_acquire(&available_) == 0)
         return nullptr;
     return worker_.get();
 }

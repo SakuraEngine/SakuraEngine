@@ -1130,8 +1130,8 @@ void sugoi_set_bit(uint32_t* mask, int32_t bit)
     uint32_t oldMask = *mask;
     uint32_t newMask = oldMask | (1 << bit);
     // TODO: REMOVE THIS!
-    _Atomic(uint32_t)* pmask = (_Atomic(uint32_t)*)mask;
-    while (!atomic_compare_exchange_strong(pmask, &oldMask, newMask))
+    _SAtomic(uint32_t)* pmask = (_SAtomic(uint32_t)*)mask;
+    while (!skr_atomic_compare_exchange_strong(pmask, &oldMask, newMask))
     {
         oldMask = *mask;
         newMask = oldMask | (1 << bit);

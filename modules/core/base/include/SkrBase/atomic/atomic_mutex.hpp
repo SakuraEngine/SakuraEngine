@@ -56,6 +56,6 @@ private:
 	static void any_shared_no_unique(bitfield_t& bits) { bits &= num_shared_mask; }
 	static void no_shared_no_unique(bitfield_t& bits) { bits &= num_unique_mask; }
 
-	_Atomic(bitfield_t) _bitfield; // consists of [ 1 bit unique lock flag, 15 bits # of unique locks, 16 bits # of shared locks]
+	_SAtomic(bitfield_t) _bitfield; // consists of [ 1 bit unique lock flag, 15 bits # of unique locks, 16 bits # of shared locks]
 };
 }

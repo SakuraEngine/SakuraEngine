@@ -242,11 +242,11 @@ public:
     // Returns true if the task is canceled by the cancel()
     // It is usable to break process inside the do_in_background()
     // @MainThread and @Workerthread
-    bool is_cancelled() const SKR_NOEXCEPT { return atomic_load_relaxed(&cancelled); }
+    bool is_cancelled() const SKR_NOEXCEPT { return skr_atomic_load_relaxed(&cancelled); }
 
     // Cancel the task
     // @MainThread
-    void cancel() SKR_NOEXCEPT { atomic_store_relaxed(&cancelled, 1); }
+    void cancel() SKR_NOEXCEPT { skr_atomic_store_relaxed(&cancelled, 1); }
 
     // Get the result.
     // It could freeze the mainthread if it invoked before the task is finished. Exception from the do_in_background can be rethrown.

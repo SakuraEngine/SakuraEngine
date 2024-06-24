@@ -19,7 +19,7 @@ bool skr_io_future_t::is_loading() const SKR_NOEXCEPT
 }
 ESkrIOStage skr_io_future_t::get_status() const SKR_NOEXCEPT
 {
-    return (ESkrIOStage)atomic_load_acquire(&status);
+    return (ESkrIOStage)skr_atomic_load_acquire(&status);
 }
 
 namespace skr {

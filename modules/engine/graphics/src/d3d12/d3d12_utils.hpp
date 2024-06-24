@@ -174,15 +174,15 @@ struct SubresTileMappings_D3D12 {
         auto* mapping = at(x, y, z);
 
         int32_t expect_mapped = D3D12_TILE_MAPPING_STATUS_MAPPED;
-        if (atomic_compare_exchange_strong(&mapping->status,
+        if (skr_atomic_compare_exchange_strong(&mapping->status,
                                         &expect_mapped, D3D12_TILE_MAPPING_STATUS_UNMAPPING))
         {
             SAFE_RELEASE(mapping->pDxAllocation);
-            atomic_fetch_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
+            skr_atomic_fetch_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
         }
 
         int32_t expect_unmapping = D3D12_TILE_MAPPING_STATUS_UNMAPPING;
-        atomic_compare_exchange_strong(&mapping->status,
+        skr_atomic_compare_exchange_strong(&mapping->status,
                                  &expect_unmapping, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
     }
 
@@ -208,15 +208,15 @@ struct PackedMipMapping_D3D12 {
     {
         auto pTiledInfo = const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
         int32_t expect_mapped = D3D12_TILE_MAPPING_STATUS_MAPPED;
-        if (atomic_compare_exchange_strong(&status,
+        if (skr_atomic_compare_exchange_strong(&status,
                 &expect_mapped, D3D12_TILE_MAPPING_STATUS_UNMAPPING))
         {
             SAFE_RELEASE(pAllocation);
-            atomic_fetch_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
+            skr_atomic_fetch_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
         }
 
         int32_t expect_unmapping = D3D12_TILE_MAPPING_STATUS_UNMAPPING;
-        atomic_compare_exchange_strong(&status,
+        skr_atomic_compare_exchange_strong(&status,
                                  &expect_unmapping, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
     }
     D3D12MA::Allocation* pAllocation = nullptr;

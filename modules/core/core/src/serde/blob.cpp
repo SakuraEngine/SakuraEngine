@@ -39,12 +39,12 @@ public:
 public:
     uint32_t add_refcount()
     {
-        return 1 + atomic_fetch_add_relaxed(&rc, 1);
+        return 1 + skr_atomic_fetch_add_relaxed(&rc, 1);
     }
     uint32_t release()
     {
-        atomic_fetch_add_relaxed(&rc, -1);
-        return atomic_load_acquire(&rc);
+        skr_atomic_fetch_add_relaxed(&rc, -1);
+        return skr_atomic_load_acquire(&rc);
     }
 
 private:

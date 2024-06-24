@@ -71,7 +71,7 @@ typedef struct skr_live2d_ram_io_future_t {
     }
     ESkrIOStage get_status() const SKR_NOEXCEPT
     {
-        return (ESkrIOStage)atomic_load_acquire(&liv2d_status);
+        return (ESkrIOStage)skr_atomic_load_acquire(&liv2d_status);
     }
 #endif
 } skr_live2d_ram_io_future_t;

@@ -13,14 +13,14 @@ public:
     {
         for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
         {
-            atomic_store_relaxed(&counts[i], 0);
+            skr_atomic_store_relaxed(&counts[i], 0);
         }
     }
 
     bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
     {
         queues[priority].enqueue(batch);
-        atomic_fetch_add_relaxed(&counts[priority], 1);
+        skr_atomic_fetch_add_relaxed(&counts[priority], 1);
         return true;
     }
 
@@ -28,7 +28,7 @@ public:
     {
         if (queues[priority].try_dequeue(batch))
         {
-            atomic_fetch_add_relaxed(&counts[priority], -1);
+            skr_atomic_fetch_add_relaxed(&counts[priority], -1);
             return batch.get();
         }
         return false;
@@ -38,14 +38,14 @@ public:
     {
         if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
         {
-            return atomic_load_acquire(&counts[priority]);
+            return skr_atomic_load_acquire(&counts[priority]);
         }
         else
         {
             uint64_t count = 0;
             for (int i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
             {
-                count += atomic_load_acquire(&counts[i]);
+                count += skr_atomic_load_acquire(&counts[i]);
             }
             return count;
         }
@@ -67,13 +67,13 @@ using IOBatchBufferId = SObjectPtr<IOBatchBuffer>;
     uint64_t processing_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT\
     {\
         if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)\
-            return atomic_load_acquire(&processing_counts[priority]);\
+            return skr_atomic_load_acquire(&processing_counts[priority]);\
         else\
         {\
             uint64_t count = 0;\
             for (int i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)\
             {\
-                count += atomic_load_acquire(&processing_counts[i]);\
+                count += skr_atomic_load_acquire(&processing_counts[i]);\
             }\
             return count;\
         }\
@@ -81,12 +81,12 @@ using IOBatchBufferId = SObjectPtr<IOBatchBuffer>;
     uint64_t processed_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT\
     {\
         if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)\
-            return atomic_load_acquire(&processed_counts[priority]);\
+            return skr_atomic_load_acquire(&processed_counts[priority]);\
         else\
         {\
             uint64_t count = 0;\
             for (int i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)\
-                count += atomic_load_acquire(&processed_counts[i]);\
+                count += skr_atomic_load_acquire(&processed_counts[i]);\
             return count;\
         }\
     }\
@@ -94,14 +94,14 @@ using IOBatchBufferId = SObjectPtr<IOBatchBuffer>;
     { \
         for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)\
         {\
-            atomic_store_relaxed(&processing_counts[i], 0);\
-            atomic_store_relaxed(&processed_counts[i], 0);\
+            skr_atomic_store_relaxed(&processing_counts[i], 0);\
+            skr_atomic_store_relaxed(&processed_counts[i], 0);\
         }\
     }\
-    inline void inc_processing(SkrAsyncServicePriority priority, int64_t n = 1) { atomic_fetch_add_relaxed(&processing_counts[priority], (n)); }\
-    inline void dec_processing(SkrAsyncServicePriority priority, int64_t n = 1) { atomic_fetch_add_relaxed(&processing_counts[priority], -(n)); }\
-    inline void inc_processed(SkrAsyncServicePriority priority, int64_t n = 1) { atomic_fetch_add_relaxed(&processed_counts[priority], (n)); }\
-    inline void dec_processed(SkrAsyncServicePriority priority, int64_t n = 1) { atomic_fetch_add_relaxed(&processed_counts[priority], -(n)); }\
+    inline void inc_processing(SkrAsyncServicePriority priority, int64_t n = 1) { skr_atomic_fetch_add_relaxed(&processing_counts[priority], (n)); }\
+    inline void dec_processing(SkrAsyncServicePriority priority, int64_t n = 1) { skr_atomic_fetch_add_relaxed(&processing_counts[priority], -(n)); }\
+    inline void inc_processed(SkrAsyncServicePriority priority, int64_t n = 1) { skr_atomic_fetch_add_relaxed(&processed_counts[priority], (n)); }\
+    inline void dec_processed(SkrAsyncServicePriority priority, int64_t n = 1) { skr_atomic_fetch_add_relaxed(&processed_counts[priority], -(n)); }\
 private:\
     SAtomic64 processing_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT] = { 0, 0, 0 };\
     SAtomic64 processed_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT] = { 0, 0, 0 };

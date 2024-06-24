@@ -81,7 +81,7 @@ template <> struct SRCInst<true>
     template<typename T, typename Deleter = DefaultDeleter<T>>
     void allocate_block(T* ptr, Deleter deleter);
 
-    inline uint32_t use_count() const { return block ? atomic_load(&block->refcount) : 0; }
+    inline uint32_t use_count() const { return block ? skr_atomic_load(&block->refcount) : 0; }
     inline bool unique() const { return block ? (block->weak_refcount == 1) : false; }
     inline bool expired() const { return block ? (block->refcount == 0) : true; }
     inline bool equivalent_rc_ownership(const SRCInst<true>& lp) const
