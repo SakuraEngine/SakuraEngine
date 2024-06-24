@@ -88,7 +88,7 @@ void sugoi_chunk_t::x_unlock(const sugoi_type_index_t& type, const sugoi_chunk_v
     lck.unlock();
 }
 
-void sugoi_chunk_t::s_unlock(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view)
+void sugoi_chunk_t::s_unlock(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view) const
 {
     (void)view;
     auto& lck = getSliceLock(type);
@@ -98,22 +98,24 @@ void sugoi_chunk_t::s_unlock(const sugoi_type_index_t& type, const sugoi_chunk_v
 sugoi_chunk_t::RWSlice sugoi_chunk_t::get_unsafe(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view)
 {
     EIndex offset = 0;
+    const auto id = structure->index(type);
     if (!sugoi::type_index_t(type).is_chunk())
-        offset = structure->sizes[type] * view.start;
+        offset = structure->sizes[id] * view.start;
     return { 
-        data() + offset + structure->offsets[pt][type],
-        data() + offset + structure->offsets[pt][type] + structure->sizes[type] * view.count
+        data() + offset + structure->offsets[pt][id],
+        data() + offset + structure->offsets[pt][id] + structure->sizes[id] * view.count
     };
 }
 
 sugoi_chunk_t::RSlice sugoi_chunk_t::get_unsafe(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view) const
 {
     EIndex offset = 0;
+    const auto id = structure->index(type);
     if (!sugoi::type_index_t(type).is_chunk())
-        offset = structure->sizes[type] * view.start;
+        offset = structure->sizes[id] * view.start;
     return { 
-        data() + offset + structure->offsets[pt][type],
-        data() + offset + structure->offsets[pt][type] + structure->sizes[type] * view.count
+        data() + offset + structure->offsets[pt][id],
+        data() + offset + structure->offsets[pt][id] + structure->sizes[id] * view.count
     };
 }
 
@@ -149,4 +151,25 @@ uint32_t sugoiC_get_count(const sugoi_chunk_t* chunk)
 {
     return chunk->count;
 }
+
+void sugoiC_x_lock(sugoi_chunk_t* chunk, sugoi_type_index_t type)
+{
+    chunk->x_lock(type, sugoi_chunk_view_t{chunk, 0, chunk->count});
+}
+
+void sugoiC_x_unlock(sugoi_chunk_t* chunk, sugoi_type_index_t type)
+{
+    chunk->x_unlock(type, sugoi_chunk_view_t{chunk, 0, chunk->count});
+}
+
+void sugoiC_s_lock(const sugoi_chunk_t* chunk, sugoi_type_index_t type)
+{
+    chunk->s_lock(type, sugoi_chunk_view_t{(sugoi_chunk_t*)chunk, 0, chunk->count});
+}
+
+void sugoiC_s_unlock(const sugoi_chunk_t* chunk, sugoi_type_index_t type)
+{
+    chunk->s_unlock(type, sugoi_chunk_view_t{(sugoi_chunk_t*)chunk, 0, chunk->count});
+}
+
 }

@@ -1,6 +1,8 @@
 #include "SkrBase/misc/make_zeroed.hpp"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrGuid/guid.hpp"
 #include "SkrCore/log.h"
+#include "SkrTask/parallel_for.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/array.hpp"
 #include "SkrTestFramework/framework.hpp"
@@ -33,12 +35,18 @@ static struct ProcInitializer {
     {
         ::skr_log_set_level(SKR_LOG_LEVEL_WARN);
         ::skr_log_initialize_async_worker();
+
+        scheduler.initialize(skr::task::scheudler_config_t());
+        scheduler.bind();
     }
     ~ProcInitializer()
     {
+        scheduler.unbind();
+
         ::sugoi_shutdown();
         ::skr_log_finalize_async_worker();
     }
+    skr::task::scheduler_t scheduler;
 } init;
 
 static struct ComponentRegister {
@@ -385,6 +393,41 @@ TEST_CASE_METHOD(ECSTest, "filter")
     };
     sugoiS_query(storage, &filter, &meta, SUGOI_LAMBDA(callback));
     EXPECT_EQ(*sugoiV_get_entities(&view), e1);
+}
+
+TEST_CASE_METHOD(ECSTest, "lock")
+{
+    sugoi_chunk_view_t view;
+    auto               callback = [&](sugoi_chunk_view_t* inView) { view = *inView; };
+    sugoiS_instantiate(storage, e1, 10, SUGOI_LAMBDA(callback));
+
+    auto data = (TestComp*)sugoiV_get_owned_rw(&view, type_test);
+    _SAtomic(int32_t) counter = 0;
+    _SAtomic(int32_t) jid = 123;
+    skr::parallel_for(data, data + view.count, 1, 
+        [&view, &counter, &jid, data](TestComp* begin, TestComp* end){
+        sugoiC_x_lock(view.chunk, type_test);
+        const int32_t idx = begin - data;
+
+        // acquire single job
+        EXPECT_EQ(skr_atomic_load(&counter), 0);
+        skr_atomic_fetch_add(&counter, 1);
+        
+        // check last
+        for (uint32_t i = 0; i < view.count; i++)
+            EXPECT_EQ(data[i], skr_atomic_load(&jid));
+        
+        // rewrite
+        skr_atomic_store(&jid, idx);
+        for (uint32_t i = 0; i < view.count; i++)
+            data[i] = idx;
+
+        // release single job
+        EXPECT_EQ(skr_atomic_load(&counter), 1);
+        skr_atomic_fetch_add(&counter, -1);
+
+        sugoiC_x_unlock(view.chunk, type_test);
+    }, 1);
 }
 
 TEST_CASE_METHOD(ECSTest, "query")

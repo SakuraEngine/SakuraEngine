@@ -38,7 +38,6 @@ void shared_atomic_mutex::lock_shared() SKR_NOEXCEPT
     // Unlike the unique lock, don't immediately increment the shared count (wait until there are no unique lock requests before adding).
     bitfield_t oldval = skr_atomic_load(&_bitfield);
     bitfield_t newval = oldval;
-    bitfield_t expected = oldval;
     do
     {
         // Proceed if any number of shared locks and no unique locks are waiting or active.
@@ -49,8 +48,7 @@ void shared_atomic_mutex::lock_shared() SKR_NOEXCEPT
         // If _bitfield==oldval (there are no unique locks) then store newval in _bitfield (add a shared lock).
         // Otherwise update oldval with the latest value of _bitfield and run the test loop again.
     } while ((
-        expected = oldval, 
-        !skr_atomic_compare_exchange_weak_explicit(&_bitfield, &expected, newval, skr_memory_order_relaxed, skr_memory_order_relaxed)
+        !skr_atomic_compare_exchange_weak_explicit(&_bitfield, &oldval, newval, skr_memory_order_relaxed, skr_memory_order_relaxed)
     ));
 }
 
@@ -62,19 +60,19 @@ void shared_atomic_mutex::unlock_shared() SKR_NOEXCEPT
 
 shared_atomic_mutex::val_t shared_atomic_mutex::num_shared_locks() SKR_NOEXCEPT
 {
-    const auto mask = skr_atomic_fetch_and(&_bitfield, num_shared_mask);
+    const auto mask = skr_atomic_load(&_bitfield) & num_shared_mask;
     return val_t(mask >> num_shared_bitshift);
 }
 
 shared_atomic_mutex::val_t shared_atomic_mutex::num_unique_locks() SKR_NOEXCEPT
 {
-    const auto mask = skr_atomic_fetch_and(&_bitfield, num_unique_mask);
+    const auto mask = skr_atomic_load(&_bitfield) & num_unique_mask;
     return val_t(mask >> num_unique_bitshift);
 }
 
 bool shared_atomic_mutex::is_unique_locked() SKR_NOEXCEPT
 {
-    const auto mask = skr_atomic_fetch_and(&_bitfield, unique_flag_mask);
+    const auto mask = skr_atomic_load(&_bitfield) & unique_flag_mask;
     return (mask >> unique_flag_bitshift) != 0;
 }
 
@@ -82,7 +80,6 @@ void shared_atomic_mutex::acquire_unique() SKR_NOEXCEPT
 {
     bitfield_t oldval = _bitfield;
     bitfield_t newval = oldval;
-    bitfield_t expected = oldval;
     do
     {
         // Proceed if there are no shared locks and the unique lock is available (unique lock flag is 0).
@@ -93,8 +90,7 @@ void shared_atomic_mutex::acquire_unique() SKR_NOEXCEPT
         // If _bitfield==oldval (there are no active shared locks and no thread has a unique lock) then store newval in _bitfield (get the unique lock).
         // Otherwise update oldval with the latest value of _bitfield and run the test loop again.
     } while ((
-        expected = oldval, 
-        !skr_atomic_compare_exchange_weak_explicit(&_bitfield, &expected, newval, skr_memory_order_relaxed, skr_memory_order_relaxed)
+        !skr_atomic_compare_exchange_weak_explicit(&_bitfield, &oldval, newval, skr_memory_order_relaxed, skr_memory_order_relaxed)
     ));
 }
 

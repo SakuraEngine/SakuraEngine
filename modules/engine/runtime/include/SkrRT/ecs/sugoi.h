@@ -743,6 +743,34 @@ SKR_RUNTIME_API sugoi_storage_t* sugoiC_get_storage(const sugoi_chunk_t* chunk);
  * @param chunk
  */
 SKR_RUNTIME_API uint32_t sugoiC_get_count(const sugoi_chunk_t* chunk);
+/**
+ * @brief lock xlock component in chunk
+ *
+ * @param chunk
+ * @param type
+ */
+SKR_RUNTIME_API void sugoiC_x_lock(sugoi_chunk_t* chunk, sugoi_type_index_t type);
+/**
+ * @brief unlock xlock component in chunk
+ *
+ * @param chunk
+ * @param type
+ */
+SKR_RUNTIME_API void sugoiC_x_unlock(sugoi_chunk_t* chunk, sugoi_type_index_t type);
+/**
+ * @brief lock slock component in chunk
+ *
+ * @param chunk
+ * @param type
+ */
+SKR_RUNTIME_API void sugoiC_s_lock(const sugoi_chunk_t* chunk, sugoi_type_index_t type);
+/**
+ * @brief unlock slock component in chunk
+ *
+ * @param chunk
+ * @param type
+ */
+SKR_RUNTIME_API void sugoiC_s_unlock(const sugoi_chunk_t* chunk, sugoi_type_index_t type);
 
 SKR_RUNTIME_API void sugoi_set_bit(uint32_t* mask, int32_t bit);
 

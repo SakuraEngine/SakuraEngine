@@ -57,7 +57,7 @@ struct sugoi_chunk_t {
     RWSlice x_lock(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view);
     RSlice s_lock(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view) const;
     void x_unlock(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view);
-    void s_unlock(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view);
+    void s_unlock(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view) const;
 
     RWSlice get_unsafe(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view);
     RSlice get_unsafe(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view) const;

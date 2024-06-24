@@ -29,7 +29,7 @@ bool is_array_small(sugoi_array_comp_t* ptr)
 #define for_buffer(i, array, size) \
     for (char* i = (char*)array->BeginX; i != array->EndX; i += size)
 
-static void construct_impl(sugoi_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, uint32_t maskValue, void (*constructor)(sugoi_chunk_t* chunk, EIndex index, char* data))
+static void construct_impl(sugoi_chunk_view_t view, sugoi_chunk_t::RSlice& slice, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, uint32_t maskValue, void (*constructor)(sugoi_chunk_t* chunk, EIndex index, char* data))
 {
     char* dst = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
     if (type.is_buffer())
@@ -347,7 +347,10 @@ void construct_view(const sugoi_chunk_view_t& view) noexcept
         decltype(type->callbacks[i].constructor) callback = nullptr;
         if((callbackFlags[i] & SUGOI_CALLBACK_FLAG_CTOR) != 0) SUGOI_UNLIKELY
             callback = type->callbacks[i].constructor;
-        construct_impl(view, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], maskValue,  callback);
+
+        sugoi_chunk_t::RSlice ctorSlice = view.chunk->s_lock(type->type.data[i], view);
+        construct_impl(view, ctorSlice, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], maskValue,  callback);
+        view.chunk->s_unlock(type->type.data[i], view);
     }
 }
 
@@ -363,6 +366,7 @@ void destruct_view(const sugoi_chunk_view_t& view) noexcept
         decltype(type->callbacks[i].destructor) callback = nullptr;
         if((callbackFlags[i] & SUGOI_CALLBACK_FLAG_CTOR) != 0) SUGOI_UNLIKELY
             callback = type->callbacks[i].destructor;
+
         destruct_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->resourceFields[i], callback);
     }
 }
@@ -382,7 +386,11 @@ void construct_chunk(sugoi_chunk_t* chunk) noexcept
         decltype(type->callbacks[i].constructor) callback = nullptr;
         if((callbackFlags[i] & SUGOI_CALLBACK_FLAG_CTOR) != 0) SUGOI_UNLIKELY
             callback = type->callbacks[i].constructor;
-        construct_impl(sugoi_chunk_view_t{chunk, 0, 1}, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], maskValue, callback);
+
+        const auto ctorView = sugoi_chunk_view_t{chunk, 0, 1};
+        sugoi_chunk_t::RSlice ctorSlice = chunk->s_lock(type->type.data[i], ctorView);
+        construct_impl(ctorView, ctorSlice, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], maskValue, callback);
+        chunk->s_unlock(type->type.data[i], ctorView);
     }
 }
 
@@ -398,7 +406,9 @@ void destruct_chunk(sugoi_chunk_t* chunk) noexcept
         decltype(type->callbacks[i].destructor) callback = nullptr;
         if((callbackFlags[i] & SUGOI_CALLBACK_FLAG_CTOR) != 0) SUGOI_UNLIKELY
             callback = type->callbacks[i].destructor;
-        destruct_impl(sugoi_chunk_view_t{chunk, 0, 1}, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->resourceFields[i], callback);
+
+        const auto dtorView = sugoi_chunk_view_t{chunk, 0, 1};
+        destruct_impl(dtorView, type->type.data[i], offsets[i], sizes[i], elemSizes[i], type->resourceFields[i], callback);
     }
 }
 
@@ -473,7 +483,10 @@ void cast_view(const sugoi_chunk_view_t& dstV, sugoi_chunk_t* srcC, EIndex srcSt
             decltype(srcType->callbacks[srcI].destructor) callback = nullptr;
             if((srcCallbackFlags[srcI] & SUGOI_CALLBACK_FLAG_CTOR) != 0) SUGOI_UNLIKELY
                 callback = srcType->callbacks[srcI].destructor;
-            destruct_impl({ srcC, srcStart, dstV.count }, srcT, srcOffsets[srcI], srcSizes[srcI], srcElemSizes[srcI], srcType->resourceFields[srcI], callback);
+
+            sugoi_chunk_view_t dtorView = { srcC, srcStart, dstV.count };
+            destruct_impl(dtorView, srcT, srcOffsets[srcI], srcSizes[srcI], srcElemSizes[srcI], srcType->resourceFields[srcI], callback);
+
             ++srcI;
         }
         else if (srcT > dstT) // construct
@@ -481,7 +494,11 @@ void cast_view(const sugoi_chunk_view_t& dstV, sugoi_chunk_t* srcC, EIndex srcSt
             decltype(dstType->callbacks[dstI].constructor) callback = nullptr;
             if((dstCallbackFlags[dstI] & SUGOI_CALLBACK_FLAG_CTOR) != 0) SUGOI_UNLIKELY
                 callback = dstType->callbacks[dstI].constructor;
-            construct_impl(dstV, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, callback);
+
+            sugoi_chunk_t::RSlice ctorSlice = dstV.chunk->s_lock(dstT, dstV);
+            construct_impl(dstV, ctorSlice, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, callback);
+            dstV.chunk->s_unlock(dstT, dstV);
+
             if (dstMasks)
                 forloop (i, 0, dstV.count)
                     dstMasks[i]
@@ -533,7 +550,10 @@ void cast_view(const sugoi_chunk_view_t& dstV, sugoi_chunk_t* srcC, EIndex srcSt
         decltype(srcType->callbacks[srcI].destructor) callback = nullptr;
         if((srcCallbackFlags[srcI] & SUGOI_CALLBACK_FLAG_CTOR) != 0) SUGOI_UNLIKELY
             callback = srcType->callbacks[srcI].destructor;
-        destruct_impl({ srcC, srcStart, dstV.count }, srcT, srcOffsets[srcI], srcSizes[srcI], srcElemSizes[srcI], srcType->resourceFields[srcI], callback);
+
+        sugoi_chunk_view_t dtorView = { srcC, srcStart, dstV.count };
+        destruct_impl(dtorView, srcT, srcOffsets[srcI], srcSizes[srcI], srcElemSizes[srcI], srcType->resourceFields[srcI], callback);
+
         ++srcI;
     }
     while(dstI < dstType->firstChunkComponent)
@@ -542,7 +562,11 @@ void cast_view(const sugoi_chunk_view_t& dstV, sugoi_chunk_t* srcC, EIndex srcSt
         decltype(dstType->callbacks[dstI].constructor) callback = nullptr;
         if((dstCallbackFlags[dstI] & SUGOI_CALLBACK_FLAG_CTOR) != 0) SUGOI_UNLIKELY
             callback = dstType->callbacks[dstI].constructor;
-        construct_impl(dstV, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, callback);
+        
+        sugoi_chunk_t::RSlice ctorSlice = dstV.chunk->s_lock(dstT, dstV);
+        construct_impl(dstV, ctorSlice, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, callback);
+        dstV.chunk->s_unlock(dstT, dstV);
+
         if (dstMasks)
             forloop (i, 0, dstV.count)
                 dstMasks[i]
@@ -574,7 +598,7 @@ void duplicate_view(const sugoi_chunk_view_t& dstV, const sugoi_chunk_t* srcC, E
     uint32_t* dstCallbackFlags = dstType->callbackFlags;
     uint32_t maskValue = uint32_t(1 << dstTypes.length) - 1;
     
-    std::bitset<32>*srcMasks = nullptr, *dstMasks = nullptr;
+    std::bitset<32>* srcMasks = nullptr, *dstMasks = nullptr;
     if (srcType->withMask && dstType->withMask)
     {
         SIndex srcMaskId = srcType->index(kMaskComponent);
@@ -607,7 +631,11 @@ void duplicate_view(const sugoi_chunk_view_t& dstV, const sugoi_chunk_t* srcC, E
             decltype(dstType->callbacks[dstI].constructor) callback = nullptr;
             if((dstCallbackFlags[dstI] & SUGOI_CALLBACK_FLAG_CTOR) != 0) SUGOI_UNLIKELY
                 callback = dstType->callbacks[dstI].constructor;
-            construct_impl(dstV, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, callback);
+
+            sugoi_chunk_t::RSlice ctorSlice = dstV.chunk->s_lock(dstT, dstV);
+            construct_impl(dstV, ctorSlice, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, callback);
+            dstV.chunk->s_unlock(dstT, dstV);
+            
             if (dstMasks)
                 forloop (i, 0, dstV.count)
                     dstMasks[i]
@@ -718,22 +746,28 @@ auto sugoiV_get_owned(const sugoi_chunk_view_t* view, sugoi_type_index_t type)
         return (return_type) nullptr;
     auto chunk = view->chunk;
     auto structure = chunk->structure;
-    SIndex id;
+
+    SIndex tid = type;
+    SIndex slot;
     if constexpr (local)
-        id = type;
+    {
+        slot = type;
+        tid = structure->type.data[slot];
+    }
     else
-        id = structure->index(type);
-    if (id == kInvalidSIndex)
-        return (return_type) nullptr;
+    {
+        slot = structure->index(tid);
+        if (slot == kInvalidSIndex)
+            return (return_type) nullptr;
+    }
+
     if constexpr (!readonly)
-        chunk->set_timestamp_at(id, structure->storage->timestamp);
+        chunk->set_timestamp_at(slot, structure->storage->timestamp);
     auto scheduler = structure->storage->scheduler;
     if (scheduler && scheduler->is_main_thread(structure->storage))
-        SKR_ASSERT(!scheduler->sync_entry(structure, id, readonly));
-    EIndex offset = 0;
-    if (!type_index_t(type).is_chunk())
-        offset = structure->sizes[id] * view->start;
-    return (return_type)(chunk->data() + offset + structure->offsets[chunk->pt][id]);
+        SKR_ASSERT(!scheduler->sync_entry(structure, slot, readonly));
+
+    return (return_type)chunk->get_unsafe(tid, *view).start;
 }
 
 extern "C" {
