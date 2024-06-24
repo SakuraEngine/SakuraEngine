@@ -1,7 +1,11 @@
 #pragma once
 #ifdef _WIN32
-#include "plat/msvc32.inc"
-#include "plat/msvc64.inc"
+  #include "plat/msvc32.inc"
+  #include "plat/msvc64.inc"
+#else
+  #include "plat/gcc32.inc"
+  #include "plat/gcc64.inc"
+#endif
 
 // C11 Standard Macros
 
@@ -77,9 +81,3 @@
 
 #define skr_atomic_compare_exchange_weak(px, e, v) skr_atomic_compare_exchange_weak_explicit(px, e, v, skr_memory_order_seq_cst, skr_memory_order_seq_cst)
 #define skr_atomic_compare_exchange_strong(px, e, v) skr_atomic_compare_exchange_strong_explicit(px, e, v, skr_memory_order_seq_cst, skr_memory_order_seq_cst)
-
-#else
-
-#include <stdatomic.h> // IWYU pragma: export
-
-#endif

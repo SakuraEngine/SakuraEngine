@@ -27,6 +27,11 @@ inline static _plat_atom32 _plat32_atomic_fetch_or_explicit(_SAtomic(_plat_atom3
   return (_plat_atom32)_InterlockedOr((volatile _plat_atom32*)p, (_plat_atom32)x);
 }
 
+inline static _plat_atom32 _plat32_atomic_fetch_xor_explicit(_SAtomic(_plat_atom32)*p, _plat_atom32 x, skr_memory_order mo) {
+  (void)(mo);
+  return (_plat_atom32)_InterlockedXor((volatile _plat_atom32*)p, (_plat_atom32)x);
+}
+
 inline static bool _plat32_atomic_compare_exchange_strong_explicit(_SAtomic(_plat_atom32)*p, _plat_atom32* expected, _plat_atom32 desired, skr_memory_order mo1, skr_memory_order mo2) {
   (void)(mo1); (void)(mo2);
   _plat_atom32 read = (_plat_atom32)_InterlockedCompareExchange((volatile _plat_atom32*)p, (_plat_atom32)desired, (_plat_atom32)(*expected));
