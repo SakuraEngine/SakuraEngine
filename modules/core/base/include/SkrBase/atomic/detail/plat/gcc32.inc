@@ -47,7 +47,7 @@ inline static _plat_atom32 _plat32_atomic_fetch_xor_explicit(_SAtomic(_plat_atom
 
 inline static bool _plat32_atomic_compare_exchange_strong_explicit(_SAtomic(_plat_atom32)*p, _plat_atom32* expected, _plat_atom32 desired, skr_memory_order succ, skr_memory_order fail) {
   REL(succ);
-  _plat_atom32 read = (_plat_atom32)__sync_bool_compare_and_swap((volatile _plat_atom32*)p, (_plat_atom32)(*expected), (_plat_atom32)desired);
+  _plat_atom32 read = (_plat_atom32)__sync_val_compare_and_swap((volatile _plat_atom32*)p, (_plat_atom32)(*expected), (_plat_atom32)desired);
   if (read == *expected) {
     ACQ(succ);
     return true;
