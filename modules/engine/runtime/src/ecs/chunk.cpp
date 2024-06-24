@@ -1,4 +1,4 @@
-
+#include "SkrRT/ecs/type_index.hpp"
 #include "./chunk.hpp"
 #include "./pool.hpp"
 #include "./archetype.hpp"
@@ -65,6 +65,56 @@ sugoi_timestamp_t sugoi_chunk_t::set_timestamp(sugoi_type_index_t type, sugoi_ti
 {
     const auto idx = structure->index(type);
     return set_timestamp_at(idx, ts);
+}
+
+sugoi_chunk_t::RWSlice sugoi_chunk_t::x_lock(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view)
+{
+    auto& lck = getSliceLock(type);
+    lck.lock();
+    return get_unsafe(type, view);
+}
+
+sugoi_chunk_t::RSlice sugoi_chunk_t::s_lock(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view) const
+{
+    auto& lck = getSliceLock(type);
+    lck.lock_shared();
+    return get_unsafe(type, view);
+}
+
+void sugoi_chunk_t::x_unlock(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view)
+{
+    (void)view;
+    auto& lck = getSliceLock(type);
+    lck.unlock();
+}
+
+void sugoi_chunk_t::s_unlock(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view)
+{
+    (void)view;
+    auto& lck = getSliceLock(type);
+    lck.unlock_shared();
+}
+
+sugoi_chunk_t::RWSlice sugoi_chunk_t::get_unsafe(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view)
+{
+    EIndex offset = 0;
+    if (!sugoi::type_index_t(type).is_chunk())
+        offset = structure->sizes[type] * view.start;
+    return { 
+        data() + offset + structure->offsets[pt][type],
+        data() + offset + structure->offsets[pt][type] + structure->sizes[type] * view.count
+    };
+}
+
+sugoi_chunk_t::RSlice sugoi_chunk_t::get_unsafe(const sugoi_type_index_t& type, const sugoi_chunk_view_t& view) const
+{
+    EIndex offset = 0;
+    if (!sugoi::type_index_t(type).is_chunk())
+        offset = structure->sizes[type] * view.start;
+    return { 
+        data() + offset + structure->offsets[pt][type],
+        data() + offset + structure->offsets[pt][type] + structure->sizes[type] * view.count
+    };
 }
 
 sugoi::slice_data_t const* sugoi_chunk_t::getSliceData() const noexcept
