@@ -1,4 +1,3 @@
-#include "SkrGuid/guid.hpp"
 #include "SkrContainers/sptr.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/async/thread_job.hpp"
@@ -10,7 +9,6 @@
 #include "SkrRenderer/shader_map.h"
 
 #include "SkrRenderer/pso_map.h"
-#include "SkrGuid/guid.hpp"
 
 namespace skr
 {
@@ -483,7 +481,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
         skr::InlineVector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
     };
 
-    skr::FlatHashMap<skr_guid_t, SPtr<RootSignatureRequest>, skr::guid::hash> mRootSignatureRequests;
+    skr::FlatHashMap<skr_guid_t, SPtr<RootSignatureRequest>, skr::Hash<skr_guid_t>> mRootSignatureRequests;
     skr::SPtr<MaterialFutureLancher>                                          launcher = nullptr;
 
     skr_shader_map_id       shader_map = nullptr;

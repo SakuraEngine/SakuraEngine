@@ -16,7 +16,7 @@ struct RegisterTypes {
     sugoi::TypeRegistry& type_registry;
 };
 
-using namespace skr::guid::literals;
+using namespace skr::literals;
 
 TEST_CASE_METHOD(RegisterTypes, "PlainComponent")
 {

@@ -1,6 +1,5 @@
 #include "resource_request_impl.hpp"
 #include "SkrTask/fib_task.hpp"
-#include "SkrGuid/guid.hpp"
 #include "SkrBase/misc/debug.h" 
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/stl_vector.hpp"
@@ -69,9 +68,9 @@ protected:
     sugoi::EntityRegistry resourceIds;
     task::counter_t counter;
     bool quit = false;
-    skr::ParallelFlatHashMap<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
+    skr::ParallelFlatHashMap<skr_guid_t, skr_resource_record_t*, skr::Hash<skr_guid_t>> resourceRecords;
     skr::ParallelFlatHashMap<void*, skr_resource_record_t*> resourceToRecord;
-    skr::ParallelFlatHashMap<skr_guid_t, SResourceFactory*, skr::guid::hash> resourceFactories;
+    skr::ParallelFlatHashMap<skr_guid_t, SResourceFactory*, skr::Hash<skr_guid_t>> resourceFactories;
 };
 
 SResourceSystemImpl::SResourceSystemImpl()

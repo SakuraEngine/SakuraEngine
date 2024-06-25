@@ -1,6 +1,5 @@
 #include "SkrProfile/profile.h"
 #include "SkrContainers/hashmap.hpp"
-#include "SkrGuid/guid.hpp"
 #include "./log_manager.hpp"
 
 namespace skr {
@@ -148,7 +147,7 @@ LogSink* LogManager::QuerySink(skr_guid_t guid)
 
 void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
 {
-    static thread_local skr::FlatHashSet<skr_guid_t, skr::guid::hash> patterns_set_;
+    static thread_local skr::FlatHashSet<skr_guid_t, skr::Hash<skr_guid_t>> patterns_set_;
     patterns_set_.clear();
     {
         SkrZoneScopedN("PatternAll");

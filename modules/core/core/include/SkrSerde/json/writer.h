@@ -2,7 +2,6 @@
 #include "SkrArchive/json/writer.h"
 
 #if defined(__cplusplus)
-    #include "SkrGuid/guid.hpp"
 
 // helper functions
 namespace skr::json

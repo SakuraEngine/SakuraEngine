@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrGuid/guid.hpp"
 #include "SkrCore/log/log_sink.hpp"
 #include "SkrCore/log/log_pattern.hpp"
 #include "SkrContainers/hashmap.hpp"
@@ -11,8 +10,8 @@
 namespace skr {
 namespace log {
 
-using LogPatternMap = skr::ParallelFlatHashMap<skr_guid_t, skr::unique_ptr<LogPattern>, skr::guid::hash>;
-using LogSinkMap = skr::ParallelFlatHashMap<skr_guid_t, skr::unique_ptr<LogSink>, skr::guid::hash>;
+using LogPatternMap = skr::ParallelFlatHashMap<skr_guid_t, skr::unique_ptr<LogPattern>, skr::Hash<skr_guid_t>>;
+using LogSinkMap = skr::ParallelFlatHashMap<skr_guid_t, skr::unique_ptr<LogSink>, skr::Hash<skr_guid_t>>;
 
 struct SKR_CORE_API LogManager
 {

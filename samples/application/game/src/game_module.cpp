@@ -6,7 +6,6 @@
 #include "SkrRT/config.h"
 #include "SkrCore/memory/memory.h"
 #include "SkrCore/time.h"
-#include "SkrGuid/guid.hpp"
 #include "SkrRT/platform/window.h"
 
 #include "SkrRT/ecs/type_builder.hpp"
@@ -136,7 +135,7 @@ void SGameModule::installResourceFactories()
     skr::resource::GetResourceSystem()->Initialize(registry, ram_service);
     //
 
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     auto resource_system = skr::resource::GetResourceSystem();
 
     auto gameResourceRoot = resourceRoot / "game";
@@ -375,7 +374,7 @@ void create_test_scene(SRendererId renderer)
             }
             if (states)
             {
-                using namespace skr::guid::literals;
+                using namespace skr::literals;
                 states[i].animation_resource = u8"83c0db0b-08cd-4951-b1c3-65c2008d0113"_guid;
                 states[i].animation_resource.resolve(true, renderer->get_sugoi_storage());
             }
@@ -433,7 +432,7 @@ void async_attach_skin_mesh(SRendererId renderer)
     filter2.all    = skin_type.with<renderer::MeshComponent, anim::SkinComponent, anim::SkeletonComponent>().build();
     auto attchFunc = [=](sugoi_chunk_view_t* view) {
         auto requestSetup = [=](sugoi_chunk_view_t* view) {
-            using namespace skr::guid::literals;
+            using namespace skr::literals;
 
             auto mesh_comps = sugoi::get_owned_rw<renderer::MeshComponent>(view);
             auto skin_comps = sugoi::get_owned_rw<anim::SkinComponent>(view);
@@ -476,7 +475,7 @@ void async_attach_render_mesh(SRendererId renderer)
     filter2.all    = skin_type.with<skr::renderer::MeshComponent>().build();
     auto attchFunc = [=](sugoi_chunk_view_t* view) {
         auto requestSetup = [=](sugoi_chunk_view_t* view) {
-            using namespace skr::guid::literals;
+            using namespace skr::literals;
             auto mesh_comps = sugoi::get_owned_rw<skr::renderer::MeshComponent>(view);
 
             for (uint32_t i = 0; i < view->count; i++)
@@ -576,8 +575,9 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
         SKR_LOG_ERROR(u8"lua_pcall error: {}", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-    namespace res                                           = skr::resource;
-    res::TResourceHandle<skr_scene_resource_t> scene_handle = skr::guid::make_guid_unsafe(u8"FB84A5BD-2FD2-46A2-ABF4-2D2610CFDAD9");
+    namespace res = skr::resource;
+    using namespace skr::literals;
+    res::TResourceHandle<skr_scene_resource_t> scene_handle = u8"FB84A5BD-2FD2-46A2-ABF4-2D2610CFDAD9"_guid;
     scene_handle.resolve(true, 0, SKR_REQUESTER_SYSTEM);
 
     // Viewport

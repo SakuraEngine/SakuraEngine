@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrRT/io/io.h"
-#include "SkrGuid/guid.hpp"
 #include "../components/component.hpp"
 
 #include "SkrProfile/profile.h"
@@ -130,7 +129,7 @@ protected:
 
 constexpr skr_guid_t CID<struct IOStatusComponent>::Get()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     return u8"3db75617-8027-464b-b241-e4e59f83fd61"_guid;
 } 
 

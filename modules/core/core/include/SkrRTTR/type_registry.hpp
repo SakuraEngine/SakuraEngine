@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGuid/guid.hpp"
+#include "SkrBase/types.h"
 
 namespace skr::rttr
 {

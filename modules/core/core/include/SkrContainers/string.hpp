@@ -10,6 +10,8 @@ using namespace ostr;
 using String     = ostr::text;
 using StringView = ostr::text_view;
 
+SKR_STATIC_API bool guid_from_sv(const skr::StringView& str, skr_guid_t& value);
+
 template <>
 struct Hash<String> {
     inline size_t operator()(const String& x) const

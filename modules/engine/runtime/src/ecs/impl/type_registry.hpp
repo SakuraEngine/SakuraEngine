@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrRT/ecs/type_registry.hpp"
-#include "SkrGuid/guid.hpp"
 
 #include <SkrContainers/hashmap.hpp>
 #include <SkrContainers/vector.hpp>
@@ -27,6 +26,6 @@ struct TypeRegistry::Impl {
     skr::Vector<intptr_t> entityFields;
     block_arena_t nameArena;
     skr::FlatHashMap<skr::String, type_index_t, skr::Hash<skr::String>> name2type;
-    skr::FlatHashMap<guid_t, type_index_t, skr::guid::hash> guid2type;
+    skr::FlatHashMap<guid_t, type_index_t, skr::Hash<skr_guid_t>> guid2type;
 };
 } // namespace sugoi

@@ -1,7 +1,6 @@
 #include "SkrContainers/hashmap.hpp"
 #include "SkrCore/memory/memory.h"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrGuid/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"
 
 #include "SkrCore/log.h"
@@ -355,7 +354,9 @@ void bind_skr_resource_handle(lua_State* L)
         {
             auto                   str      = (const char8_t*)lua_tostring(L, 1);
             skr_resource_handle_t* resource = (skr_resource_handle_t*)lua_newuserdatadtor(L, sizeof(skr_resource_handle_t), dtor_resource_handle);
-            new (resource) skr_resource_handle_t(skr::guid::make_guid_unsafe(str));
+            skr_guid_t guid;
+            skr::guid_from_sv(skr::StringView(str), guid);
+            new (resource) skr_resource_handle_t(guid);
             luaL_setmetatable(L, "skr_resource_handle_t");
             return 1;
         }

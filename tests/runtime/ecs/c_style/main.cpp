@@ -1,6 +1,5 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrBase/atomic/atomic.h"
-#include "SkrGuid/guid.hpp"
 #include "SkrCore/log.h"
 #include "SkrTask/parallel_for.hpp"
 #include "SkrRT/ecs/sugoi.h"
@@ -502,7 +501,7 @@ TEST_CASE_METHOD(ECSTest, "query_overload")
 
 void register_test_component()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     {
         sugoi_type_description_t desc = make_zeroed<sugoi_type_description_t>();
         desc.name                     = u8"test";
@@ -560,7 +559,7 @@ void register_test_component()
 
 void register_ref_component()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     sugoi_type_description_t desc = make_zeroed<sugoi_type_description_t>();
     desc.name                     = u8"ref";
     desc.size                     = sizeof(ref);
@@ -582,7 +581,7 @@ void register_ref_component()
 
 void register_managed_component()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     sugoi_type_description_t desc = make_zeroed<sugoi_type_description_t>();
     desc.name                     = u8"managed";
     desc.size                     = sizeof(managed);
@@ -613,7 +612,7 @@ void register_managed_component()
 
 void register_pinned_component()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     sugoi_type_description_t desc = make_zeroed<sugoi_type_description_t>();
     desc.name                     = u8"pinned";
     desc.size                     = sizeof(pinned);

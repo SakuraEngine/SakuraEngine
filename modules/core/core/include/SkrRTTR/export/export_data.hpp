@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrContainers/optional.hpp"
 #include "SkrContainers/vector.hpp"
-#include "SkrGuid/guid.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
 #include "SkrRTTR/type_signature.hpp"
 #include "SkrRTTR/enum_value.hpp"

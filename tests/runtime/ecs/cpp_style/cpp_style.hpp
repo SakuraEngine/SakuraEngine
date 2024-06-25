@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrGuid/guid.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/array.hpp"
 #include "SkrRT/ecs/type_registry.hpp"

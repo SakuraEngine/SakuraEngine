@@ -5,7 +5,6 @@
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrCore/log.hpp"
 #include "SkrSerde/binary/reader.h"
-#include "SkrGuid/guid.hpp"
 
 namespace skr::resource
 {

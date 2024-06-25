@@ -4,7 +4,6 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrCore/time.h"
-#include "SkrGuid/guid.hpp"
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrContainers/map.hpp"
 #include "SkrRenderer/primitive_draw.h"
@@ -20,7 +19,7 @@
 static struct RegisterComponentskr_live2d_render_model_comp_tHelper {
     RegisterComponentskr_live2d_render_model_comp_tHelper()
     {
-        using namespace skr::guid::literals;
+        using namespace skr::literals;
 
         sugoi_type_description_t desc = make_zeroed<sugoi_type_description_t>();
         desc.name                     = u8"skr_live2d_render_model_comp_t";

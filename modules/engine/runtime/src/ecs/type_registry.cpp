@@ -1,5 +1,4 @@
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrGuid/guid.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/type_index.hpp"
 
@@ -25,10 +24,11 @@ namespace sugoi
 TypeRegistry::Impl::Impl(pool_t& pool)
     : nameArena(pool)
 {
+    using namespace skr::literals;
     {
         SKR_ASSERT(descriptions.size() == kDisableComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe(u8"{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
+        desc.guid = u8"{B68B1CAB-98FF-4298-A22E-68B404034B1B}"_guid;
         desc.name = u8"disable";
         desc.size = 0;
         desc.elementSize = 0;
@@ -42,7 +42,7 @@ TypeRegistry::Impl::Impl(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kDeadComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe(u8"{C0471B12-5462-48BB-B8C4-9983036ECC6C}");
+        desc.guid = u8"{C0471B12-5462-48BB-B8C4-9983036ECC6C}"_guid;
         desc.name = u8"dead";
         desc.size = 0;
         desc.elementSize = 0;
@@ -56,7 +56,7 @@ TypeRegistry::Impl::Impl(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kLinkComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe(u8"{54BD68D5-FD66-4DBE-85CF-70F535C27389}");
+        desc.guid = u8"{54BD68D5-FD66-4DBE-85CF-70F535C27389}"_guid;
         desc.name = u8"sugoi::link_comp_t";
         desc.size = sizeof(sugoi_entity_t) * kLinkComponentSize;
         desc.elementSize = sizeof(sugoi_entity_t);
@@ -72,7 +72,7 @@ TypeRegistry::Impl::Impl(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kMaskComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe(u8"{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
+        desc.guid = u8"{B68B1CAB-98FF-4298-A22E-68B404034B1B}"_guid;
         desc.name = u8"sugoi::mask_comp_t";
         desc.size = sizeof(sugoi_mask_comp_t);
         desc.elementSize = 0;
@@ -86,7 +86,7 @@ TypeRegistry::Impl::Impl(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kGuidComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe(u8"{565FBE87-6309-4DF7-9B3F-C61B67B38BB3}");
+        desc.guid = u8"{565FBE87-6309-4DF7-9B3F-C61B67B38BB3}"_guid;
         desc.name = u8"sugoi::guid_comp_t";
         desc.size = sizeof(sugoi_guid_t);
         desc.elementSize = 0;
@@ -100,7 +100,7 @@ TypeRegistry::Impl::Impl(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kDirtyComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe(u8"{A55D73D3-D41C-4683-89E1-8B211C115303}");
+        desc.guid = u8"{A55D73D3-D41C-4683-89E1-8B211C115303}"_guid;
         desc.name = u8"sugoi::dirty_comp_t";
         desc.size = sizeof(sugoi_dirty_comp_t);
         desc.elementSize = 0;
