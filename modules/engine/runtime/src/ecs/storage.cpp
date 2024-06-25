@@ -799,6 +799,21 @@ sugoi::block_arena_t& sugoi_storage_t::getArchetypeArena()
     return pimpl->archetypeArena;
 }
 
+EIndex sugoi_storage_t::count(bool includeDisabled, bool includeDead)
+{
+    EIndex result = 0;
+    for (auto& pair : pimpl->groups)
+    {
+        auto group = pair.second;
+        if (group->isDead && !includeDead)
+            continue;
+        if (group->disabled && !includeDisabled)
+            continue;
+        result += group->size;
+    }
+    return result;
+}
+
 extern "C" {
 sugoi_storage_t* sugoiS_create()
 {
@@ -809,7 +824,7 @@ sugoi_storage_t* sugoiS_create()
 
 void sugoiS_release(sugoi_storage_t* storage)
 {
-    auto pimpl = storage->pimpl;
+    auto pimpl = (sugoi_storage_t::Impl*)(storage + 1);
     pimpl->~Impl();
     storage->~sugoi_storage_t();
     sakura_free(storage);
@@ -897,29 +912,7 @@ void sugoiS_batch(sugoi_storage_t* storage, const sugoi_entity_t* ents, EIndex c
 
 void sugoiS_query(sugoi_storage_t* storage, const sugoi_filter_t* filter, const sugoi_meta_filter_t* meta, sugoi_view_callback_t callback, void* u)
 {
-    SKR_ASSERT(sugoi::ordered(*filter));
-    SKR_ASSERT(sugoi::ordered(*meta));
-
-    if (storage->pimpl->scheduler)
-    {
-        SKR_ASSERT(storage->pimpl->scheduler->is_main_thread(storage));
-        auto filterChunk = [&](sugoi_group_t* group) {
-            for (EIndex i = 0; i < filter->all.length; ++i)
-            {
-                int idx = group->index(filter->all.data[i]);
-                if (idx != sugoi::kInvalidTypeIndex)
-                    storage->pimpl->scheduler->sync_entry(group->archetype, idx, false);
-            }
-            if (callback)
-                storage->query(group, *filter, *meta, nullptr, nullptr, callback, u);
-        };
-        storage->query_groups(*filter, *meta, SUGOI_LAMBDA(filterChunk));
-    }
-    else
-    {
-        if (callback)
-            storage->query(*filter, *meta, callback, u);
-    }
+    storage->query(*filter, *meta, callback, u);
 }
 
 void sugoiS_merge(sugoi_storage_t* storage, sugoi_storage_t* source)
@@ -1064,7 +1057,7 @@ void sugoiQ_get_views_group(sugoi_query_t* query, sugoi_group_t* group, sugoi_vi
     query->storage->build_queries();
     if (!query->storage->match_group(query->filter, query->meta, group))
         return;
-    query->storage->query(group, query->filter, query->meta, query->customFilter, query->customFilterUserData, callback, u);
+    query->storage->query_unsafe(group, query->filter, query->meta, query->customFilter, query->customFilterUserData, callback, u);
 }
 
 const char8_t* sugoiQ_get_error()
@@ -1128,17 +1121,7 @@ void sugoiS_all(sugoi_storage_t* storage, bool includeDisabled, bool includeDead
 
 EIndex sugoiS_count(sugoi_storage_t* storage, bool includeDisabled, bool includeDead)
 {
-    EIndex result = 0;
-    for (auto& pair : storage->pimpl->groups)
-    {
-        auto group = pair.second;
-        if (group->isDead && !includeDead)
-            continue;
-        if (group->disabled && !includeDisabled)
-            continue;
-        result += group->size;
-    }
-    return result;
+    return storage->count(includeDisabled, includeDead);
 }
 
 void sugoi_set_bit(uint32_t* mask, int32_t bit)
