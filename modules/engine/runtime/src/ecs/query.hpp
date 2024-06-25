@@ -24,15 +24,15 @@ struct sugoi_query_t {
     sugoi_meta_filter_t meta;
     sugoi_parameters_t parameters;
     skr::Vector<uint8_t> data;
-    llvm_vecsmall::SmallVector<sugoi_query_t*, 2> subqueries;
+    skr::InlineVector<sugoi_query_t*, 2> subqueries;
     sugoi_custom_filter_callback_t customFilter = nullptr;
     void* customFilterUserData = nullptr;
 
     //cache
     sugoi::phase_entry** phases = nullptr;
     uint32_t phaseCount = 0;
-    llvm_vecsmall::SmallVector<sugoi_type_set_t, 4> excludes;
+    skr::InlineVector<sugoi_type_set_t, 4> excludes;
     bool includeDisabled = false;
     bool includeDead = false;
-    llvm_vecsmall::SmallVector<sugoi_group_t*, 32> groups;
+    skr::InlineVector<sugoi_group_t*, 32> groups;
 };

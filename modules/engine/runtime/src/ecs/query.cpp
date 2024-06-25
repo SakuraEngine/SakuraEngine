@@ -154,7 +154,7 @@ void sugoi_storage_t::update_query_cache(sugoi_group_t* group, bool isAdd)
     if (!isAdd)
     {
         for (auto& query : pimpl->queries)
-            query->groups.erase(std::remove(query->groups.begin(), query->groups.end(), group), query->groups.end());
+            query->groups.remove(group);
     }
     else
     {
@@ -201,12 +201,12 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
     int                                                errorPos  = 0;
     int                                                partBegin = 0;
     auto&                                              reg       = TypeRegistry::get();
-    llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> all;
-    llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> none;
-    llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> all_shared;
-    llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> none_shared;
-    llvm_vecsmall::SmallVector<sugoi_type_index_t, 20> entry;
-    llvm_vecsmall::SmallVector<sugoi_operation_t, 20>  operations;
+    skr::InlineVector<sugoi_type_index_t, 20> all;
+    skr::InlineVector<sugoi_type_index_t, 20> none;
+    skr::InlineVector<sugoi_type_index_t, 20> all_shared;
+    skr::InlineVector<sugoi_type_index_t, 20> none_shared;
+    skr::InlineVector<sugoi_type_index_t, 20> entry;
+    skr::InlineVector<sugoi_operation_t, 20> operations;
     for (auto part : parts)
     {
         int                i = 0;
@@ -472,7 +472,7 @@ void sugoi_storage_t::build_queries()
     struct phase_entry_builder {
         sugoi_type_index_t                            type;
         uint32_t                                      phase;
-        llvm_vecsmall::SmallVector<sugoi_query_t*, 8> queries;
+        skr::InlineVector<sugoi_query_t*, 8> queries;
     };
     if (pimpl->phases != nullptr)
     {

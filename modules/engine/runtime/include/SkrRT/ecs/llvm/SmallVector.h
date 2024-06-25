@@ -11,9 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_VECSMALL_ADT_SMALLVECTOR_H
-#define LLVM_VECSMALL_ADT_SMALLVECTOR_H
-
+#pragma once
 #include <memory>
 #include <algorithm>
 #include <cassert>
@@ -127,10 +125,6 @@ struct SmallVectorStorage<T, 0> : public SmallVectorBase {
 template <typename T, unsigned N, typename = void>
 class SmallVectorTemplateCommon : public SmallVectorStorage<T, N>
 {
-private:
-
-    
-    
 protected:
     SmallVectorTemplateCommon()
         : SmallVectorStorage<T, N>()
@@ -1117,5 +1111,3 @@ size_t TSize)
     this->CapacityX = (char*)this->BeginX + NewCapacityInBytes;
 }
 } // namespace llvm_vecsmall
-
-#endif

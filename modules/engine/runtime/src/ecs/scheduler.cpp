@@ -132,7 +132,7 @@ bool sugoi::scheduler_t::sync_query(sugoi_query_t* query)
     
     SkrZoneScopedN("SyncQuery");
     
-    llvm_vecsmall::SmallVector<sugoi_group_t*, 64> groups;
+    skr::InlineVector<sugoi_group_t*, 64> groups;
     auto add_group = [&](sugoi_group_t* group) {
         groups.push_back(group);
     };
@@ -296,7 +296,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
 
     SKR_ASSERT(is_main_thread(query->storage));
     SKR_ASSERT(query->parameters.length < 32);
-    llvm_vecsmall::SmallVector<sugoi_group_t*, 64> groups;
+    skr::InlineVector<sugoi_group_t*, 64> groups;
     auto add_group = [&](sugoi_group_t* group) {
         groups.push_back(group);
     };
@@ -563,7 +563,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
 {
     SkrZoneScopedN("schedualCustomJob");
 
-    llvm_vecsmall::SmallVector<sugoi_group_t*, 64> groups;
+    skr::InlineVector<sugoi_group_t*, 64> groups;
     auto add_group = [&](sugoi_group_t* group) {
         groups.push_back(group);
     };
@@ -651,7 +651,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
         }
         for(auto subquery : query->subqueries)
         {
-            llvm_vecsmall::SmallVector<sugoi_group_t*, 64> subgroups;
+            skr::InlineVector<sugoi_group_t*, 64> subgroups;
             auto add_subgroup = [&](sugoi_group_t* group) {
                 subgroups.push_back(group);
             };
