@@ -14,5 +14,5 @@ struct AllocateEntites {
 
 TEST_CASE_METHOD(AllocateEntites, "AllocateOne")
 {
-
+    
 }

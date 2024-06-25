@@ -5,7 +5,7 @@
 #include "SkrRT/ecs/type_index.hpp"
 
 #include "./query.hpp"
-#include "./storage.hpp"
+#include "./impl/storage.hpp"
 #include "./scheduler.hpp"
 
 #include <bitset>
@@ -35,30 +35,30 @@ void sugoi::scheduler_t::remove_resource(sugoi_entity_t id)
 
 bool sugoi::scheduler_t::is_main_thread(const sugoi_storage_t* storage)
 {
-    SKR_ASSERT(storage->scheduler == this);
-    return storage->currentFiber == skr::task::current_fiber();
+    SKR_ASSERT(storage->pimpl->scheduler == this);
+    return storage->pimpl->currentFiber == skr::task::current_fiber();
 }
 
 void sugoi::scheduler_t::set_main_thread(const sugoi_storage_t* storage)
 {
-    SKR_ASSERT(storage->scheduler == this);
-    storage->counter.wait(true);
-    storage->currentFiber = skr::task::current_fiber();
+    SKR_ASSERT(storage->pimpl->scheduler == this);
+    storage->pimpl->counter.wait(true);
+    storage->pimpl->currentFiber = skr::task::current_fiber();
 }
 
 void sugoi::scheduler_t::add_storage(sugoi_storage_t* storage)
 {
     SMutexLock lock(storageMutex.mMutex);
-    storage->scheduler = this;
-    storage->currentFiber = skr::task::current_fiber();
+    storage->pimpl->scheduler = this;
+    storage->pimpl->currentFiber = skr::task::current_fiber();
     storages.push_back(storage);
 }
 void sugoi::scheduler_t::remove_storage(const sugoi_storage_t* storage)
 {
     sync_storage(storage);
     SMutexLock lock(storageMutex.mMutex);
-    storage->scheduler = nullptr;
-    storage->currentFiber = nullptr;
+    storage->pimpl->scheduler = nullptr;
+    storage->pimpl->currentFiber = nullptr;
     storages.erase(std::remove(storages.begin(), storages.end(), storage), storages.end());
 }
 
@@ -153,7 +153,7 @@ bool sugoi::scheduler_t::sync_query(sugoi_query_t* query)
 
     auto sync_type = [&](sugoi_type_index_t type, bool readonly, bool atomic) {
         bool result = false;
-        for (auto& pair : query->storage->groups)
+        for (auto& pair : query->storage->pimpl->groups)
         {
             auto group = pair.second;
             auto idx = group->archetype->index(type);
@@ -230,9 +230,9 @@ void sugoi::scheduler_t::gc_entries()
 
 void sugoi::scheduler_t::sync_storage(const sugoi_storage_t* storage)
 {
-    if (!storage->scheduler)
+    if (!storage->pimpl->scheduler)
         return;
-    storage->counter.wait(true);
+    storage->pimpl->counter.wait(true);
     for(auto& pair : dependencyEntries)
     {
         if(pair.first->storage == storage)
@@ -383,7 +383,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
     {
         SkrZoneScopedN("AllocateCounter");
         allCounter.add(1);
-        query->storage->counter.add(1);
+        query->storage->pimpl->counter.add(1);
     }
 
     skr::task::schedule([dependencies = std::move(dependencies), sharedData, init, teardown, this, query, batchSize]()mutable
@@ -401,7 +401,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
         }
         SKR_DEFER({ 
             allCounter.decrement();
-            query->storage->counter.decrement();
+            query->storage->pimpl->counter.decrement();
         });
         fixed_stack_scope_t _(localStack);
         sugoi_meta_filter_t validatedMeta;
@@ -539,7 +539,7 @@ skr::task::event_t sugoi::scheduler_t::schedule_job(sugoi_query_t* query, sugoi_
     {
         SkrZoneScopedN("AllocateCounter");
         allCounter.add(1);
-        query->storage->counter.add(1);
+        query->storage->pimpl->counter.add(1);
     }
     skr::task::schedule([deps = std::move(deps), this, query, callback, u, init, teardown]()
     {
@@ -548,7 +548,7 @@ skr::task::event_t sugoi::scheduler_t::schedule_job(sugoi_query_t* query, sugoi_
                 d.wait(false);
         SKR_DEFER({ 
             allCounter.decrement();
-            query->storage->counter.decrement();
+            query->storage->pimpl->counter.decrement();
         });
         if(init)
             init(u, 0);
@@ -609,7 +609,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
     };
 
     auto sync_type = [&](sugoi_type_index_t type, bool readonly, bool atomic) {
-        for (auto& pair : query->storage->groups)
+        for (auto& pair : query->storage->pimpl->groups)
         {
             auto group = pair.second;
             auto idx = group->index(type);

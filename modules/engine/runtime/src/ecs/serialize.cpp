@@ -6,7 +6,7 @@
 #include "SkrSerde/binary/writer.h"
 
 #include "./chunk.hpp"
-#include "./storage.hpp"
+#include "./impl/storage.hpp"
 #include "./stack.hpp"
 #include "./archetype.hpp"
 #include "./scheduler.hpp"
@@ -185,11 +185,11 @@ sugoi_entity_t sugoi_storage_t::deserialize_single(SBinaryReader* s)
     fixed_stack_scope_t _(localStack);
     auto                type  = deserialize_type(localStack, s, false);
     auto                group = get_group(type);
-    if (scheduler)
-        scheduler->sync_archetype(group->archetype);
+    if (pimpl->scheduler)
+        pimpl->scheduler->sync_archetype(group->archetype);
     sugoi_chunk_view_t view;
     serialize_view(group, view, nullptr, s, false);
-    entity_registry.fill_entities(view);
+    pimpl->entity_registry.fill_entities(view);
     return view.chunk->get_entities()[view.start];
 }
 
@@ -199,10 +199,10 @@ void sugoi_storage_t::serialize_prefab(sugoi_entity_t e, SBinaryWriter* s)
     using namespace sugoi;
     namespace bin = skr::binary;
     bin::Archive(s, (EIndex)1);
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_archetype(entity_view(e).chunk->structure);
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_archetype(entity_view(e).chunk->structure);
     }
     serialize_single(e, s);
 }
@@ -212,11 +212,11 @@ void sugoi_storage_t::serialize_prefab(sugoi_entity_t* es, EIndex n, SBinaryWrit
     using namespace sugoi;
     namespace bin = skr::binary;
     bin::Archive(s, n);
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         forloop (i, 0, n)
-            scheduler->sync_archetype(entity_view(es[i]).chunk->structure);
+            pimpl->scheduler->sync_archetype(entity_view(es[i]).chunk->structure);
     }
     linked_to_prefab(es, n);
     forloop (i, 0, n)
@@ -228,8 +228,8 @@ sugoi_entity_t sugoi_storage_t::deserialize_prefab(SBinaryReader* s)
 {
     using namespace sugoi;
     namespace bin = skr::binary;
-    if (scheduler)
-        SKR_ASSERT(scheduler->is_main_thread(this));
+    if (pimpl->scheduler)
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
     EIndex count = 0;
     bin::Archive(s, count);
     // todo: assert(count > 0)
@@ -255,19 +255,19 @@ void sugoi_storage_t::serialize(SBinaryWriter* s)
     SkrZoneScopedN("sugoi_storage_t::serialize");
     using namespace sugoi;
     namespace bin = skr::binary;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_storage(this);
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_storage(this);
     }
     {
         SkrZoneScopedN("serialize entities");
-        bin::Archive(s, (uint32_t)entity_registry.entries.size());
-        bin::Archive(s, (uint32_t)entity_registry.freeEntries.size());
-        ArchiveBuffer(s, entity_registry.freeEntries.data(), static_cast<uint32_t>(entity_registry.freeEntries.size()));
+        bin::Archive(s, (uint32_t)pimpl->entity_registry.entries.size());
+        bin::Archive(s, (uint32_t)pimpl->entity_registry.freeEntries.size());
+        ArchiveBuffer(s, pimpl->entity_registry.freeEntries.data(), static_cast<uint32_t>(pimpl->entity_registry.freeEntries.size()));
     }
-    bin::Archive(s, (uint32_t)groups.size());
-    for (auto& pair : groups)
+    bin::Archive(s, (uint32_t)pimpl->groups.size());
+    for (auto& pair : pimpl->groups)
     {
         SkrZoneScopedN("serialize group");
         auto group = pair.second;
@@ -287,20 +287,20 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
     using namespace sugoi;
     SkrZoneScopedN("sugoi_storage_t::deserialize");
     namespace bin = skr::binary;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_storage(this);
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_storage(this);
     }
     // empty storage expected
-    SKR_ASSERT(entity_registry.entries.size() == 0);
+    SKR_ASSERT(pimpl->entity_registry.entries.size() == 0);
     uint32_t size = 0;
     bin::Archive(s, size);
-    entity_registry.entries.resize_default(size);
+    pimpl->entity_registry.entries.resize_default(size);
     uint32_t freeSize = 0;
     bin::Archive(s, freeSize);
-    entity_registry.freeEntries.resize_default(freeSize);
-    ArchiveBuffer(s, entity_registry.freeEntries.data(), freeSize);
+    pimpl->entity_registry.freeEntries.resize_default(freeSize);
+    ArchiveBuffer(s, pimpl->entity_registry.freeEntries.data(), freeSize);
     uint32_t groupSize = 0;
     bin::Archive(s, groupSize);
     forloop (i, 0, groupSize)
@@ -323,7 +323,7 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
                 entry.chunk                     = view.chunk;
                 entry.indexInChunk              = k + view.start;
                 entry.version                   = e_version(ents[k]);
-                entity_registry.entries[e_id(ents[k])] = entry;
+                pimpl->entity_registry.entries[e_id(ents[k])] = entry;
             }
         }
     }

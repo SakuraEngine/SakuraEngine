@@ -8,7 +8,7 @@
 #include "./chunk.hpp"
 #include "./chunk_view.hpp"
 #include "./archetype.hpp"
-#include "./storage.hpp"
+#include "./impl/storage.hpp"
 #include "./scheduler.hpp"
 
 namespace sugoi
@@ -762,8 +762,8 @@ auto sugoiV_get_owned(const sugoi_chunk_view_t* view, sugoi_type_index_t type)
     }
 
     if constexpr (!readonly)
-        chunk->set_timestamp_at(slot, structure->storage->timestamp);
-    auto scheduler = structure->storage->scheduler;
+        chunk->set_timestamp_at(slot, structure->storage->pimpl->timestamp);
+    auto scheduler = structure->storage->pimpl->scheduler;
     if (scheduler && scheduler->is_main_thread(structure->storage))
         SKR_ASSERT(!scheduler->sync_entry(structure, slot, readonly));
 

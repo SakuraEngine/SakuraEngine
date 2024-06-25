@@ -5,7 +5,7 @@
 #include "SkrRT/ecs/type_registry.hpp"
 
 #include "./query.hpp"
-#include "./storage.hpp"
+#include "./impl/storage.hpp"
 #include "./pool.hpp"
 #include "./mask.hpp"
 #include "./chunk_view.hpp"
@@ -13,7 +13,7 @@
 #include "./iterator_ref.hpp"
 #include "./utilities.hpp"
 
-sugoi_storage_t::sugoi_storage_t()
+sugoi_storage_t::Impl::Impl()
     : archetypeArena(sugoi::get_default_pool())
     , queryBuildArena(sugoi::get_default_pool())
     , groupPool(sugoi::kGroupBlockSize, sugoi::kGroupBlockCount)
@@ -21,34 +21,40 @@ sugoi_storage_t::sugoi_storage_t()
 {
 }
 
+sugoi_storage_t::sugoi_storage_t(sugoi_storage_t::Impl* pimpl)
+    : pimpl(pimpl)
+{
+
+}
+
 sugoi_storage_t::~sugoi_storage_t()
 {
-    if (scheduler)
-        scheduler->remove_storage(this);
-    scheduler = nullptr;
-    for (auto q : queries)
+    if (pimpl->scheduler)
+        pimpl->scheduler->remove_storage(this);
+    pimpl->scheduler = nullptr;
+    for (auto q : pimpl->queries)
         sakura_free((void*)q);
     reset();
 }
 
 void sugoi_storage_t::reset()
 {
-    for (auto iter : groups)
+    for (auto iter : pimpl->groups)
         iter.second->clear();
 }
 
 void sugoi_storage_t::allocate(sugoi_group_t* group, EIndex count, sugoi_view_callback_t callback, void* u)
 {
     using namespace sugoi;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_archetype(group->archetype);
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_archetype(group->archetype);
     }
     while (count != 0)
     {
         sugoi_chunk_view_t v = allocate_view(group, count);
-        entity_registry.fill_entities(v);
+        pimpl->entity_registry.fill_entities(v);
         construct_view(v);
         count -= v.count;
         if (callback)
@@ -92,10 +98,10 @@ void sugoi_storage_t::destroy(const sugoi_chunk_view_t& view)
 {
     using namespace sugoi;
     auto group = view.chunk->group;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_archetype(group->archetype);
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_archetype(group->archetype);
     }
     SKR_ASSERT(!group->isDead);
     auto dead = group->dead;
@@ -103,7 +109,7 @@ void sugoi_storage_t::destroy(const sugoi_chunk_view_t& view)
         cast(view, dead, nullptr, nullptr);
     else
     {
-        entity_registry.free_entities(view);
+        pimpl->entity_registry.free_entities(view);
         destruct_view(view);
         free(view);
     }
@@ -119,7 +125,7 @@ void sugoi_storage_t::free(const sugoi_chunk_view_t& view)
     {
         sugoi_chunk_view_t dstView{ view.chunk, view.start, toMove };
         EIndex             srcIndex = view.chunk->count - toMove;
-        entity_registry.move_entities(dstView, srcIndex);
+        pimpl->entity_registry.move_entities(dstView, srcIndex);
         move_view(dstView, srcIndex);
     }
     group->resize_chunk(view.chunk, view.chunk->count - view.count);
@@ -186,7 +192,7 @@ void sugoi_storage_t::instantiate_prefab(const sugoi_entity_t* src, uint32_t siz
     using namespace sugoi;
     skr::stl_vector<sugoi_entity_t> ents;
     ents.resize(count * size);
-    entity_registry.new_entities(ents.data(), (EIndex)ents.size());
+    pimpl->entity_registry.new_entities(ents.data(), (EIndex)ents.size());
     struct mapper_t {
         sugoi_entity_t* base;
         sugoi_entity_t* curr;
@@ -213,7 +219,7 @@ void sugoi_storage_t::instantiate_prefab(const sugoi_entity_t* src, uint32_t siz
         while (localCount != count)
         {
             sugoi_chunk_view_t v = allocate_view(group, count - localCount);
-            entity_registry.fill_entities(v, localEnts.data() + localCount);
+            pimpl->entity_registry.fill_entities(v, localEnts.data() + localCount);
             duplicate_view(v, view.chunk, view.start);
             m.base = m.curr = ents.data() + localCount * size;
             localCount += v.count;
@@ -229,15 +235,15 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t src, uint32_t count, sugo
     using namespace sugoi;
     auto view  = entity_view(src);
     auto group = view.chunk->group->cloned;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_archetype(group->archetype);
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_archetype(group->archetype);
     }
     while (count != 0)
     {
         sugoi_chunk_view_t v = allocate_view(group, count);
-        entity_registry.fill_entities(v);
+        pimpl->entity_registry.fill_entities(v);
         duplicate_view(v, view.chunk, view.start);
         count -= v.count;
         if (callback)
@@ -249,15 +255,15 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t src, uint32_t count, sugo
 {
     using namespace sugoi;
     auto view = entity_view(src);
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_archetype(group->archetype);
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_archetype(group->archetype);
     }
     while (count != 0)
     {
         sugoi_chunk_view_t v = allocate_view(group, count);
-        entity_registry.fill_entities(v);
+        pimpl->entity_registry.fill_entities(v);
         duplicate_view(v, view.chunk, view.start);
         count -= v.count;
         if (callback)
@@ -268,14 +274,14 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t src, uint32_t count, sugo
 void sugoi_storage_t::instantiate(const sugoi_entity_t* src, uint32_t n, uint32_t count, sugoi_view_callback_t callback, void* u)
 {
     using namespace sugoi;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         forloop (i, 0, n)
         {
             auto view = entity_view(src[i]);
-            scheduler->sync_archetype(view.chunk->structure); // data is modified by linked to prefab
-            scheduler->sync_archetype(view.chunk->group->cloned->archetype);
+            pimpl->scheduler->sync_archetype(view.chunk->structure); // data is modified by linked to prefab
+            pimpl->scheduler->sync_archetype(view.chunk->group->cloned->archetype);
         }
     }
     linked_to_prefab(src, n);
@@ -286,8 +292,8 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t* src, uint32_t n, uint32_
 sugoi_chunk_view_t sugoi_storage_t::entity_view(sugoi_entity_t e) const
 {
     using namespace sugoi;
-    SKR_ASSERT(e_id(e) < entity_registry.entries.size());
-    auto& entry = entity_registry.entries[e_id(e)];
+    SKR_ASSERT(e_id(e) < pimpl->entity_registry.entries.size());
+    auto& entry = pimpl->entity_registry.entries[e_id(e)];
     if (entry.version == e_version(e))
         return { entry.chunk, entry.indexInChunk, 1 };
     return { nullptr, 0, 1 };
@@ -309,13 +315,14 @@ bool sugoi_storage_t::components_enabled(const sugoi_entity_t src, const sugoi_t
 bool sugoi_storage_t::exist(sugoi_entity_t e) const noexcept
 {
     using namespace sugoi;
-    return entity_registry.entries.size() > e_id(e) && entity_registry.entries[e_id(e)].version == e_version(e);
+    return pimpl->entity_registry.entries.size() > e_id(e) && 
+        pimpl->entity_registry.entries[e_id(e)].version == e_version(e);
 }
 
 void sugoi_storage_t::validate_meta()
 {
     skr::stl_vector<sugoi_group_t*> groupsToFix;
-    for (auto i = groups.begin(); i != groups.end(); ++i)
+    for (auto i = pimpl->groups.begin(); i != pimpl->groups.end(); ++i)
     {
         auto g     = i->second;
         auto type  = g->type;
@@ -324,7 +331,7 @@ void sugoi_storage_t::validate_meta()
         });
         if (!valid)
         {
-            i = groups.erase(i);
+            i = pimpl->groups.erase(i);
             groupsToFix.push_back(g);
         }
     }
@@ -332,7 +339,7 @@ void sugoi_storage_t::validate_meta()
     {
         auto& type = g->type;
         validate(type.meta);
-        groups.insert({ type, g });
+        pimpl->groups.insert({ type, g });
     }
 }
 
@@ -349,12 +356,12 @@ void sugoi_storage_t::validate(sugoi_entity_set_t& meta)
 void sugoi_storage_t::defragment()
 {
     using namespace sugoi;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_storage(this);
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_storage(this);
     }
-    for (auto& pair : groups)
+    for (auto& pair : pimpl->groups)
     {
         auto g = pair.second;
         if (g->chunks.size() < 2)
@@ -408,7 +415,7 @@ void sugoi_storage_t::defragment()
                 auto moveCount = chunk->get_capacity() - chunk->count;
                 moveCount      = std::min(source->count, moveCount);
                 move_view({ chunk, chunk->count, moveCount }, source, source->count - moveCount);
-                entity_registry.move_entities({ chunk, chunk->count, moveCount }, source, source->count - moveCount);
+                pimpl->entity_registry.move_entities({ chunk, chunk->count, moveCount }, source, source->count - moveCount);
                 source->count -= moveCount;
                 chunk->count += moveCount;
                 if (source->count == 0)
@@ -445,15 +452,15 @@ void sugoi_storage_t::defragment()
 void sugoi_storage_t::pack_entities()
 {
     using namespace sugoi;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_storage(this);
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_storage(this);
     }
     skr::stl_vector<EIndex> map;
-    auto&                   entries = entity_registry.entries;
+    auto&                   entries = pimpl->entity_registry.entries;
     map.resize(entries.size());
-    entity_registry.freeEntries.clear();
+    pimpl->entity_registry.freeEntries.clear();
     EIndex j = 0;
     forloop (i, 0, entries.size())
     {
@@ -477,9 +484,9 @@ void sugoi_storage_t::pack_entities()
     } m;
     m.data = &map;
     skr::stl_vector<sugoi_group_t*> gs;
-    for (auto& pair : groups)
+    for (auto& pair : pimpl->groups)
         gs.push_back(pair.second);
-    groups.clear();
+    pimpl->groups.clear();
     for (auto g : gs)
     {
         for (auto c : g->chunks)
@@ -491,7 +498,7 @@ void sugoi_storage_t::pack_entities()
         forloop (i, 0, meta.length)
             m.map(((sugoi_entity_t*)meta.data)[i]);
         std::sort((sugoi_entity_t*)meta.data, (sugoi_entity_t*)meta.data + meta.length);
-        groups.insert({ g->type, g });
+        pimpl->groups.insert({ g->type, g });
     }
 }
 
@@ -502,7 +509,7 @@ void sugoi_storage_t::cast_impl(const sugoi_chunk_view_t& view, sugoi_group_t* g
     while (k < view.count)
     {
         sugoi_chunk_view_t dst = allocate_view(group, view.count - k);
-        entity_registry.move_entities(dst, view.chunk, view.start + k);
+        pimpl->entity_registry.move_entities(dst, view.chunk, view.start + k);
         cast_view(dst, view.chunk, view.start + k);
         k += dst.count;
         if (callback)
@@ -517,14 +524,14 @@ void sugoi_storage_t::cast(const sugoi_chunk_view_t& view, sugoi_group_t* group,
     auto srcGroup = view.chunk->group;
     if (srcGroup == group)
         return;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_archetype(srcGroup->archetype);
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_archetype(srcGroup->archetype);
     }
     if (!group)
     {
-        entity_registry.free_entities(view);
+        pimpl->entity_registry.free_entities(view);
         destruct_view(view);
         free(view);
         return;
@@ -535,10 +542,10 @@ void sugoi_storage_t::cast(const sugoi_chunk_view_t& view, sugoi_group_t* group,
         group->add_chunk(view.chunk);
         return;
     }
-    if (scheduler)
+    if (pimpl->scheduler)
     {
         if (srcGroup->archetype != group->archetype)
-            scheduler->sync_archetype(group->archetype);
+            pimpl->scheduler->sync_archetype(group->archetype);
     }
     cast_impl(view, group, callback, u);
 }
@@ -548,10 +555,10 @@ void sugoi_storage_t::cast(sugoi_group_t* srcGroup, sugoi_group_t* group, sugoi_
     using namespace sugoi;
     if (srcGroup == group)
         return;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_archetype(srcGroup->archetype);
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_archetype(srcGroup->archetype);
     }
     if (!group)
     {
@@ -566,9 +573,9 @@ void sugoi_storage_t::cast(sugoi_group_t* srcGroup, sugoi_group_t* group, sugoi_
         srcGroup->clear();
         return;
     }
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        scheduler->sync_archetype(group->archetype);
+        pimpl->scheduler->sync_archetype(group->archetype);
     }
     // NOTE srcGroup->chunks can be modified during cast_impl
     auto chunks = srcGroup->chunks;
@@ -643,12 +650,12 @@ void sugoi_storage_t::batch(const sugoi_entity_t* ents, EIndex count, sugoi_view
 void sugoi_storage_t::merge(sugoi_storage_t& src)
 {
     using namespace sugoi;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        SKR_ASSERT(scheduler->is_main_thread(this));
-        scheduler->sync_storage(&src);
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_storage(&src);
     }
-    auto&                           sents = src.entity_registry;
+    auto&                           sents = src.pimpl->entity_registry;
     skr::stl_vector<sugoi_entity_t> map;
     map.resize(sents.entries.size());
     EIndex moveCount = 0;
@@ -657,7 +664,7 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
             moveCount++;
     skr::stl_vector<sugoi_entity_t> newEnts;
     newEnts.resize(moveCount);
-    entity_registry.new_entities(newEnts.data(), moveCount);
+    pimpl->entity_registry.new_entities(newEnts.data(), moveCount);
     int j = 0;
     for (int i = 0; i < sents.entries.size(); ++i)
         if (sents.entries[i].chunk != nullptr)
@@ -692,7 +699,7 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
     payload.start = payload.end = 0;
     uint32_t sizePerBatch       = 1024 * 16;
     uint32_t sizeRemain         = sizePerBatch;
-    for (auto& i : src.groups)
+    for (auto& i : src.pimpl->groups)
     {
         sugoi_group_t* g = i.second;
         for (auto c : g->chunks)
@@ -727,14 +734,14 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
                                   forloop (k, 0, c->count)
                                   {
                                       i->m->map(ents[k]);
-                                      entity_registry.entries[ents[k]] = { c, k, {} };
+                                      pimpl->entity_registry.entries[ents[k]] = { c, k, {} };
                                   }
                                   iterator_ref_chunk(c, *(i->m));
                                   iterator_ref_view({ c, 0, c->count }, *(i->m));
                               }
                           }
                       });
-    for (auto& i : src.groups)
+    for (auto& i : src.pimpl->groups)
     {
         sugoi_group_t* g    = i.second;
         auto           type = g->type;
@@ -747,16 +754,16 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
         }
         src.destruct_group(g);
     }
-    src.groups.clear();
-    src.queries.clear();
+    src.pimpl->groups.clear();
+    src.pimpl->queries.clear();
 }
 
 sugoi_storage_t* sugoi_storage_t::clone()
 {
-    sugoi_storage_t* dst = SkrNew<sugoi_storage_t>();
-    dst->entity_registry = entity_registry;
-    dst->timestamp       = timestamp;
-    for (auto group : groups)
+    sugoi_storage_t* dst = sugoiS_create();
+    dst->pimpl->entity_registry = pimpl->entity_registry;
+    dst->pimpl->timestamp       = pimpl->timestamp;
+    for (auto group : pimpl->groups)
     {
         auto dstGroup = dst->clone_group(group.second);
         for (auto chunk : group.second->chunks)
@@ -772,7 +779,7 @@ sugoi_storage_t* sugoi_storage_t::clone()
             }
         }
     }
-    for (auto query : queries)
+    for (auto query : pimpl->queries)
     {
         dst->make_query(query->filter, query->parameters);
     }
@@ -783,19 +790,24 @@ void sugoi_storage_t::make_alias(skr::StringView name, skr::StringView aliasName
 {
     auto&               reg  = sugoi::TypeRegistry::get();
     auto                type = reg.get_type(name);
-    sugoi_phase_alias_t aliasPhase{ type, ++aliasCount };
-    aliases.insert({ aliasName, aliasPhase });
+    sugoi_phase_alias_t aliasPhase{ type, ++pimpl->aliasCount };
+    pimpl->aliases.insert({ aliasName, aliasPhase });
 }
 
 extern "C" {
 sugoi_storage_t* sugoiS_create()
 {
-    return SkrNew<sugoi_storage_t>();
+    auto pmem = (uint8_t*)sakura_malloc(sizeof(sugoi_storage_t) + sizeof(sugoi_storage_t::Impl));
+    auto pimpl = new (pmem + sizeof(sugoi_storage_t)) sugoi_storage_t::Impl();
+    return new (pmem) sugoi_storage_t(pimpl);
 }
 
 void sugoiS_release(sugoi_storage_t* storage)
 {
-    SkrDelete(storage);
+    auto pimpl = storage->pimpl;
+    pimpl->~Impl();
+    storage->~sugoi_storage_t();
+    sakura_free(storage);
 }
 
 void sugoiS_allocate_type(sugoi_storage_t* storage, const sugoi_entity_type_t* type, EIndex count, sugoi_view_callback_t callback, void* u)
@@ -883,15 +895,15 @@ void sugoiS_query(sugoi_storage_t* storage, const sugoi_filter_t* filter, const 
     SKR_ASSERT(sugoi::ordered(*filter));
     SKR_ASSERT(sugoi::ordered(*meta));
 
-    if (storage->scheduler)
+    if (storage->pimpl->scheduler)
     {
-        SKR_ASSERT(storage->scheduler->is_main_thread(storage));
+        SKR_ASSERT(storage->pimpl->scheduler->is_main_thread(storage));
         auto filterChunk = [&](sugoi_group_t* group) {
             for (EIndex i = 0; i < filter->all.length; ++i)
             {
                 int idx = group->index(filter->all.data[i]);
                 if (idx != sugoi::kInvalidTypeIndex)
-                    storage->scheduler->sync_entry(group->archetype, idx, false);
+                    storage->pimpl->scheduler->sync_entry(group->archetype, idx, false);
             }
             if (callback)
                 storage->query(group, *filter, *meta, nullptr, nullptr, callback, u);
@@ -1073,13 +1085,13 @@ EIndex sugoiQ_get_count(sugoi_query_t* query)
 
 void sugoiQ_sync(sugoi_query_t* query)
 {
-    if (query->storage->scheduler)
-        query->storage->scheduler->sync_query(query);
+    if (query->storage->pimpl->scheduler)
+        query->storage->pimpl->scheduler->sync_query(query);
 }
 
 void sugoiQ_get(sugoi_query_t* query, sugoi_filter_t* filter, sugoi_parameters_t* params)
 {
-    if (!query->storage->queriesBuilt)
+    if (!query->storage->pimpl->queriesBuilt)
         query->storage->build_queries();
     if (filter)
         *filter = query->filter;
@@ -1094,7 +1106,7 @@ sugoi_storage_t* sugoiQ_get_storage(sugoi_query_t* query)
 
 void sugoiS_all(sugoi_storage_t* storage, bool includeDisabled, bool includeDead, sugoi_view_callback_t callback, void* u)
 {
-    for (auto& pair : storage->groups)
+    for (auto& pair : storage->pimpl->groups)
     {
         auto group = pair.second;
         if (group->isDead && !includeDead)
@@ -1112,7 +1124,7 @@ void sugoiS_all(sugoi_storage_t* storage, bool includeDisabled, bool includeDead
 EIndex sugoiS_count(sugoi_storage_t* storage, bool includeDisabled, bool includeDead)
 {
     EIndex result = 0;
-    for (auto& pair : storage->groups)
+    for (auto& pair : storage->pimpl->groups)
     {
         auto group = pair.second;
         if (group->isDead && !includeDead)

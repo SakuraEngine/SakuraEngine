@@ -13,7 +13,7 @@
 #include "./chunk.hpp"
 #include "./query.hpp"
 #include "./stack.hpp"
-#include "./storage.hpp"
+#include "./impl/storage.hpp"
 #include "./scheduler.hpp"
 
 #if __SSE2__
@@ -137,7 +137,7 @@ void sugoi_storage_t::build_query_cache(sugoi_query_t* query)
                 query->includeDisabled = true;
         }
     }
-    for (auto i : groups)
+    for (auto i : pimpl->groups)
     {
         auto g     = i.second;
         bool match = sugoi::match_group(query, g);
@@ -153,12 +153,12 @@ void sugoi_storage_t::update_query_cache(sugoi_group_t* group, bool isAdd)
 
     if (!isAdd)
     {
-        for (auto& query : queries)
+        for (auto& query : pimpl->queries)
             query->groups.erase(std::remove(query->groups.begin(), query->groups.end(), group), query->groups.end());
     }
     else
     {
-        for (auto& query : queries)
+        for (auto& query : pimpl->queries)
         {
             if (sugoi::match_group(query, group))
                 query->groups.push_back(group);
@@ -175,10 +175,10 @@ sugoi_query_t* sugoi_storage_t::make_query(const sugoi_filter_t& filter, const s
     auto                 buffer = (char*)arena.allocate(data_size(filter) + data_size(params), alignof(sugoi_type_index_t));
     result->filter              = sugoi::clone(filter, buffer);
     result->parameters          = sugoi::clone(params, buffer);
-    queriesBuilt                = false;
+    pimpl->queriesBuilt                = false;
     result->storage             = this;
     arena.forget();
-    queries.push_back(result);
+    pimpl->queries.push_back(result);
     return result;
 }
 
@@ -362,8 +362,8 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
                 ++i;
             auto name      = part.substr(j, i - j);
             auto name_view = skr::StringView(name.data(), name.size());
-            auto iter      = aliases.find(name_view);
-            if (iter != aliases.end())
+            auto iter      = pimpl->aliases.find(name_view);
+            if (iter != pimpl->aliases.end())
             {
                 type = iter->second.type;
 
@@ -445,27 +445,27 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
     buffer                      = (char*)arena.allocate(data_size(result->parameters), alignof(sugoi_type_index_t));
     result->parameters          = sugoi::clone(result->parameters, buffer);
     result->storage             = this;
-    queriesBuilt                = false;
+    pimpl->queriesBuilt         = false;
     ::memset(&result->meta, 0, sizeof(sugoi_meta_filter_t));
-    queries.push_back(result);
+    pimpl->queries.push_back(result);
     arena.forget();
     return result;
 }
 
 void sugoi_storage_t::destroy_query(sugoi_query_t* query)
 {
-    auto iter = std::find(queries.begin(), queries.end(), query);
-    SKR_ASSERT(iter != queries.end());
+    auto iter = std::find(pimpl->queries.begin(), pimpl->queries.end(), query);
+    SKR_ASSERT(iter != pimpl->queries.end());
     query->~sugoi_query_t();
     sugoi_free(query);
-    queries.erase(iter);
-    queriesBuilt = false;
+    pimpl->queries.erase(iter);
+    pimpl->queriesBuilt = false;
 }
 
 void sugoi_storage_t::build_queries()
 {
     using namespace sugoi;
-    if (queriesBuilt)
+    if (pimpl->queriesBuilt)
         return;
 
     SkrZoneScopedN("sugoi_storage_t::build_queries");
@@ -474,15 +474,15 @@ void sugoi_storage_t::build_queries()
         uint32_t                                      phase;
         llvm_vecsmall::SmallVector<sugoi_query_t*, 8> queries;
     };
-    if (phases != nullptr)
+    if (pimpl->phases != nullptr)
     {
-        for (EIndex i = 0; i < phaseCount; ++i)
-            phases[i]->~phase_entry();
+        for (EIndex i = 0; i < pimpl->phaseCount; ++i)
+            pimpl->phases[i]->~phase_entry();
     }
-    phaseCount = 0;
-    queryBuildArena.reset();
+    pimpl->phaseCount = 0;
+    pimpl->queryBuildArena.reset();
     skr::stl_vector<phase_entry_builder> entries;
-    for (auto query : queries)
+    for (auto query : pimpl->queries)
     {
         auto parameters = query->parameters;
         forloop (i, 0, parameters.length)
@@ -510,9 +510,9 @@ void sugoi_storage_t::build_queries()
             }
         }
     }
-    phases            = queryBuildArena.allocate<phase_entry*>(entries.size());
-    auto phaseEntries = phases;
-    for (auto query : queries)
+    pimpl->phases           = pimpl->queryBuildArena.allocate<phase_entry*>(entries.size());
+    auto phaseEntries = pimpl->phases;
+    for (auto query : pimpl->queries)
     {
         uint32_t count = 0;
         for (auto& entry : entries)
@@ -527,18 +527,18 @@ void sugoi_storage_t::build_queries()
         query->phaseCount = 0;
         if (count == 0)
             continue;
-        query->phases = queryBuildArena.allocate<phase_entry*>(count);
+        query->phases = pimpl->queryBuildArena.allocate<phase_entry*>(count);
     }
     for (auto builder : entries)
     {
         if (builder.queries.size() < 2)
             continue;
-        phaseCount++;
-        auto entry        = new (queryBuildArena.allocate<phase_entry>(1)) phase_entry();
+        pimpl->phaseCount++;
+        auto entry        = new (pimpl->queryBuildArena.allocate<phase_entry>(1)) phase_entry();
         (*phaseEntries++) = entry;
         entry->type       = builder.type;
         entry->phase      = builder.phase;
-        entry->queries    = { queryBuildArena.allocate<sugoi_query_t*>(builder.queries.size()), builder.queries.size() };
+        entry->queries    = { pimpl->queryBuildArena.allocate<sugoi_query_t*>(builder.queries.size()), builder.queries.size() };
         memcpy(entry->queries.data(), builder.queries.data(), sizeof(sugoi_query_t*) * builder.queries.size());
 
         // solve overloading
@@ -557,12 +557,12 @@ void sugoi_storage_t::build_queries()
                 auto excludeB = set_utils<sugoi_type_index_t>::substract(merged, b->filter.all, localStack.allocate<sugoi_type_index_t>(merged.length));
                 if (excludeA.length != 0)
                 {
-                    char* data = (char*)queryBuildArena.allocate(data_size(excludeA), alignof(sugoi_type_index_t));
+                    char* data = (char*)pimpl->queryBuildArena.allocate(data_size(excludeA), alignof(sugoi_type_index_t));
                     a->excludes.push_back(sugoi::clone(excludeA, data));
                 }
                 if (excludeB.length != 0)
                 {
-                    char* data = (char*)queryBuildArena.allocate(data_size(excludeB), alignof(sugoi_type_index_t));
+                    char* data = (char*)pimpl->queryBuildArena.allocate(data_size(excludeB), alignof(sugoi_type_index_t));
                     b->excludes.push_back(sugoi::clone(excludeB, data));
                 }
             }
@@ -573,27 +573,27 @@ void sugoi_storage_t::build_queries()
         }
     }
     // build query cache
-    for (auto& query : queries)
+    for (auto& query : pimpl->queries)
     {
         build_query_cache(query);
     }
 
-    queriesBuilt = true;
+    pimpl->queriesBuilt = true;
 }
 
 void sugoi_storage_t::query(const sugoi_query_t* q, sugoi_view_callback_t callback, void* u)
 {
     bool mainThread = true;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        mainThread = scheduler->is_main_thread(this);
+        mainThread = pimpl->scheduler->is_main_thread(this);
     }
     if (mainThread)
     {
         build_queries();
     }
     else
-        SKR_ASSERT(queriesBuilt);
+        SKR_ASSERT(pimpl->queriesBuilt);
 
     auto filterChunk = [&](sugoi_group_t* group) {
         query(group, q->filter, q->meta, q->customFilter, q->customFilterUserData, callback, u);
@@ -604,16 +604,16 @@ void sugoi_storage_t::query(const sugoi_query_t* q, sugoi_view_callback_t callba
 void sugoi_storage_t::destroy(const sugoi_query_t* q)
 {
     bool mainThread = true;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        mainThread = scheduler->is_main_thread(this);
+        mainThread = pimpl->scheduler->is_main_thread(this);
     }
     if (mainThread)
     {
         build_queries();
     }
     else
-        SKR_ASSERT(queriesBuilt);
+        SKR_ASSERT(pimpl->queriesBuilt);
 
     auto filterChunk = [&](sugoi_group_t* group) {
         group->clear();
@@ -624,16 +624,16 @@ void sugoi_storage_t::destroy(const sugoi_query_t* q)
 void sugoi_storage_t::destroy(const sugoi_query_t* q, sugoi_destroy_callback_t callback, void* u)
 {
     bool mainThread = true;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        mainThread = scheduler->is_main_thread(this);
+        mainThread = pimpl->scheduler->is_main_thread(this);
     }
     if (mainThread)
     {
         build_queries();
     }
     else
-        SKR_ASSERT(queriesBuilt);
+        SKR_ASSERT(pimpl->queriesBuilt);
 
     skr::InlineVector<sugoi_chunk_view_t, 16> viewsToDestroy;
     auto                                      callback3 = [&](sugoi_chunk_view_t* chunk) {
@@ -662,16 +662,16 @@ void sugoi_storage_t::query_groups(const sugoi_query_t* q, sugoi_group_callback_
 {
     using namespace sugoi;
     bool mainThread = true;
-    if (scheduler)
+    if (pimpl->scheduler)
     {
-        mainThread = scheduler->is_main_thread(this);
+        mainThread = pimpl->scheduler->is_main_thread(this);
     }
     if (mainThread)
     {
         build_queries();
     }
     else
-        SKR_ASSERT(queriesBuilt);
+        SKR_ASSERT(pimpl->queriesBuilt);
 
     fixed_stack_scope_t  _(localStack);
     bool                 filterShared  = (q->filter.all_shared.length + q->filter.none_shared.length) != 0;
@@ -752,7 +752,7 @@ void sugoi_storage_t::query_groups(const sugoi_filter_t& filter, const sugoi_met
             return false;
         return match_group_type(g->type, filter, g->archetype->withMask);
     };
-    for (auto& pair : groups)
+    for (auto& pair : pimpl->groups)
     {
         auto group = pair.second;
         if (!matchGroup(group))
@@ -960,7 +960,7 @@ void sugoi_storage_t::query(const sugoi_filter_t& filter, const sugoi_meta_filte
 void sugoi_storage_t::destroy(const sugoi_meta_filter_t& meta)
 {
     using namespace sugoi;
-    for (auto& pair : groups)
+    for (auto& pair : pimpl->groups)
     {
         auto group = pair.second;
         if (!match_group_meta(group->type, meta))

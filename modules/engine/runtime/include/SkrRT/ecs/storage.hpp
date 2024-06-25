@@ -1,21 +1,17 @@
 #pragma once
 #include "SkrTask/fib_task.hpp"
 #include "SkrContainers/hashmap.hpp"
+#include "SkrContainers/stl_vector.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/set.hpp"
 #include "SkrRT/ecs/entity_registry.hpp"
 
-#include "./stack.hpp"
-#include "./query.hpp"
-#include "./archetype.hpp"
-#include "./arena.hpp"
-#include "./pool.hpp"
-#include "./cache.hpp"
-#include <memory>
-
 namespace sugoi
 {
-extern thread_local fixed_stack_t localStack;
+struct archetype_t;
+struct fixed_stack_t;
+template<class T>
+struct cache_t;
 
 template <class T>
 struct hasher {
@@ -42,13 +38,14 @@ struct sugoi_phase_alias_t {
 };
 
 struct sugoi_storage_t {
+    struct Impl;
     using archetype_t = sugoi::archetype_t;
     using queries_t = skr::stl_vector<sugoi_query_t*>;
     using groups_t = skr::FlatHashMap<sugoi_entity_type_t, sugoi_group_t*, sugoi::hasher<sugoi_entity_type_t>, sugoi::equalto<sugoi_entity_type_t>>;
     using archetypes_t = skr::FlatHashMap<sugoi_type_set_t, archetype_t*, sugoi::hasher<sugoi_type_set_t>, sugoi::equalto<sugoi_type_set_t>>;
     using phase_alias_t = skr::FlatHashMap<skr::StringView, sugoi_phase_alias_t, skr::Hash<skr::StringView>>;
 
-    sugoi_storage_t();
+    sugoi_storage_t(Impl* pimpl);
     ~sugoi_storage_t();
     sugoi_group_t* construct_group(const sugoi_entity_type_t& type);
     archetype_t* construct_archetype(const sugoi_type_set_t& type);
@@ -125,21 +122,5 @@ struct sugoi_storage_t {
 
     void make_alias(skr::StringView name, skr::StringView alias);
 
-    archetypes_t archetypes;
-    queries_t queries;
-    phase_alias_t aliases;
-    uint32_t aliasCount = 0;
-    sugoi::phase_entry** phases = nullptr;
-    uint32_t phaseCount = 0;
-    bool queriesBuilt = false;
-    groups_t groups;
-    sugoi::block_arena_t archetypeArena;
-    sugoi::block_arena_t queryBuildArena;
-    sugoi::fixed_pool_t groupPool;
-    sugoi::EntityRegistry entity_registry;
-    sugoi_timestamp_t timestamp;
-    std::unique_ptr<sugoi_timestamp_t[]> typeTimestamps;
-    mutable sugoi::scheduler_t* scheduler;
-    mutable void* currentFiber;
-    skr::task::counter_t counter;
+    Impl* pimpl = nullptr;
 };
