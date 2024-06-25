@@ -14,6 +14,13 @@ namespace skr::attr::test_rttr
 {
 sreflect_struct("guid": "37aad92c-09f5-4e18-96ab-eea67094ea42")
 AttrA : public skr::rttr::IAttribute {
+    inline AttrA() = default;
+    inline AttrA(String content)
+        : content(std::move(content))
+    {
+    }
+
+    String content = {};
 };
 } // namespace skr::attr::test_rttr
 
@@ -37,12 +44,12 @@ sreflect_struct(
     "guid": "65300b18-d043-41ad-a8e4-74c49d97f0d9",
     "rttr": "full",
     "rttr::flags": ["ScriptVisible", "ScriptNewable"],
-    "rttr::attrs": ["test_rttr::AttrA{}"]
+    "rttr::attrs": ["test_rttr::AttrA{u8\"fuck_u\"}"]
 )
 BasicRecord : public BasicBaseAB {
     // fields
     sattr("rttr::flags": ["ScriptVisible"])
-    sattr("rttr::attrs+": "test_rttr::AttrA{}")
+    sattr("rttr::attrs+": "test_rttr::AttrA{u8\"shit_field\"}")
     int32_t field_int32;
     bool    field_bool;
     float   field_float;
@@ -50,13 +57,13 @@ BasicRecord : public BasicBaseAB {
 
     // methods
     sattr("rttr::flags": ["ScriptVisible"])
-    sattr("rttr::attrs+": "test_rttr::AttrA{}")
+    sattr("rttr::attrs+": "test_rttr::AttrA{u8\"shit_method\"}")
     void    method_a() {}
     int32_t method_b(float param_a, double param_b) { return 0; }
 
     // static fields
     sattr("rttr::flags": ["ScriptVisible"])
-    sattr("rttr::attrs+": "test_rttr::AttrA{}")
+    sattr("rttr::attrs+": "test_rttr::AttrA{u8\"shit_static_field\"}")
     static int32_t static_field_int32;
     static bool    static_field_bool;
     static float   static_field_float;
@@ -64,7 +71,7 @@ BasicRecord : public BasicBaseAB {
 
     // static methods
     sattr("rttr::flags": ["ScriptVisible"])
-    sattr("rttr::attrs+": "test_rttr::AttrA{}")
+    sattr("rttr::attrs+": "test_rttr::AttrA{u8\"shit_static_method\"}")
     static void    static_method_a() {}
     static int32_t static_method_b(float param_a, double param_b) { return 0; }
 };
