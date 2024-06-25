@@ -79,7 +79,9 @@ struct WriteTrait<StronglyEnum<T>> {
 } // namespace skr::binary
 
 // json serde
-#include "SkrBase/types.h"
+#include "SkrSerde/json/reader.h"
+#include "SkrSerde/json/writer.h"
+
 namespace skr::json
 {
 template <class T>

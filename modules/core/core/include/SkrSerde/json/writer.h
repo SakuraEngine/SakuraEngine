@@ -3,10 +3,6 @@
 
 #if defined(__cplusplus)
     #include "SkrGuid/guid.hpp"
-    #include "SkrContainers/span.hpp"
-    #include "SkrContainers/variant.hpp"
-    #include "SkrContainers/hashmap.hpp"
-    #include "SkrRTTR/rttr_traits.hpp"
 
 // helper functions
 namespace skr::json
@@ -75,11 +71,6 @@ struct SKR_STATIC_API WriteTrait<double> {
     static bool Write(skr::archive::JsonWriter* writer, double d);
 };
 
-} // namespace skr::json
-
-// skr types
-namespace skr::json
-{
 template <>
 struct SKR_STATIC_API WriteTrait<skr_float2_t> {
     static bool Write(skr::archive::JsonWriter* writer, const skr_float2_t& v);
@@ -120,25 +111,7 @@ template <>
 struct SKR_STATIC_API WriteTrait<skr::String> {
     static bool Write(skr::archive::JsonWriter* writer, const skr::String& str);
 };
-} // namespace skr::json
 
-// container & template
-namespace skr::json
-{
-template <class K, class V, class Hash, class Eq>
-struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
-    static bool Write(skr::archive::JsonWriter* json, const skr::FlatHashMap<K, V, Hash, Eq>& map)
-    {
-        json->StartArray();
-        for (auto& pair : map)
-        {
-            skr::json::Write(json, pair.first);
-            skr::json::Write<V>(json, pair.second);
-        }
-        json->EndArray();
-        return true;
-    }
-};
 template <class V>
 struct WriteTrait<skr::Vector<V>> {
     static bool Write(skr::archive::JsonWriter* json, const skr::Vector<V>& vec)
@@ -152,35 +125,7 @@ struct WriteTrait<skr::Vector<V>> {
         return true;
     }
 };
-template <class V>
-struct WriteTrait<skr::span<V>> {
-    static bool Write(skr::archive::JsonWriter* json, const skr::span<V>& vec)
-    {
-        json->StartArray();
-        for (auto& v : vec)
-        {
-            skr::json::Write<V>(json, v);
-        }
-        json->EndArray();
-        return true;
-    }
-};
-template <class... Ts>
-struct WriteTrait<skr::variant<Ts...>> {
-    static bool Write(skr::archive::JsonWriter* json, const skr::variant<Ts...>& v)
-    {
-        skr::visit([&](auto&& value) {
-            using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
-            json->StartObject();
-            json->Key(u8"type");
-            skr::json::Write<skr_guid_t>(json, ::skr::rttr::type_id_of<raw>());
-            json->Key(u8"value");
-            skr::json::Write<decltype(value)>(json, value);
-            json->EndObject();
-        }, v);
-        return true;
-    }
-};
+
 } // namespace skr::json
 
 // help function impl
@@ -196,19 +141,9 @@ bool Write(skr::archive::JsonWriter* writer, const T& value)
 // serde complete check
 namespace skr
 {
-template <class K, class V, class Hash, class Eq>
-struct SerdeCompleteChecker<json::WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>>>
-    : std::bool_constant<is_complete_serde_v<json::WriteTrait<K>> && is_complete_serde_v<json::WriteTrait<V>>> {
-};
-
 template <class V>
 struct SerdeCompleteChecker<json::WriteTrait<skr::Vector<V>>>
     : std::bool_constant<is_complete_serde_v<json::WriteTrait<V>>> {
-};
-
-template <class... Ts>
-struct SerdeCompleteChecker<json::WriteTrait<skr::variant<Ts...>>>
-    : std::bool_constant<(is_complete_serde_v<json::WriteTrait<Ts>> && ...)> {
 };
 
 } // namespace skr

@@ -23,9 +23,7 @@ struct SpanSerdeConfig {
 } // namespace skr::binary
 
 // binary reader
-namespace skr
-{
-namespace binary
+namespace skr::binary
 {
 template <class T>
 struct ReadTrait<skr::span<T>> {
@@ -153,14 +151,7 @@ struct SpanReaderBitpacked {
         return true;
     }
 };
-} // namespace binary
-} // namespace skr
 
-// binary writer
-namespace skr
-{
-namespace binary
-{
 template <class T>
 struct WriteTrait<skr::span<T>> {
     template <class... Args>
@@ -219,5 +210,23 @@ struct WriteTrait<skr::span<T>> {
     }
 };
 
-} // namespace binary
-} // namespace skr
+} // namespace skr::binary
+
+#include "SkrSerde/json/reader.h"
+#include "SkrSerde/json/writer.h"
+namespace skr::json
+{
+template <class V>
+struct WriteTrait<skr::span<V>> {
+    static bool Write(skr::archive::JsonWriter* json, const skr::span<V>& vec)
+    {
+        json->StartArray();
+        for (auto& v : vec)
+        {
+            skr::json::Write<V>(json, v);
+        }
+        json->EndArray();
+        return true;
+    }
+};
+} // namespace skr::json

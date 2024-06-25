@@ -2,11 +2,8 @@
 #include "SkrBase/types.h"
 #if defined(__cplusplus)
     #include "SkrArchive/json/reader.h"
-    #include "SkrContainers/hashmap.hpp"
     #include "SkrContainers/string.hpp"
     #include "SkrContainers/vector.hpp"
-    #include "SkrContainers/variant.hpp"
-    #include "SkrRTTR/rttr_traits.hpp"
 
 // helper functions
 namespace skr::json
@@ -114,30 +111,6 @@ struct SKR_STATIC_API ReadTrait<skr::String> {
 // container & template
 namespace skr::json
 {
-template <class K, class V, class Hash, class Eq>
-struct ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
-    static bool Read(skr::archive::JsonReader* json, skr::FlatHashMap<K, V, Hash, Eq>& map)
-    {
-        size_t count = 0;
-        json->StartArray(count);
-        map.reserve(count);
-        for (size_t i = 0; i < count; i += 2)
-        {
-            K k;
-            V v;
-            if (!skr::json::Read<K>(json, k))
-                return false;
-            
-            if (!skr::json::Read<V>(json, v))
-                return false;
-
-            map.emplace(std::move(k), std::move(v));
-        }
-        json->EndArray();
-        return true;
-    }
-};
-
 template <class V>
 struct ReadTrait<skr::Vector<V>> {
     static bool Read(skr::archive::JsonReader* json, skr::Vector<V>& vec)
@@ -156,41 +129,6 @@ struct ReadTrait<skr::Vector<V>> {
         return true;
     }
 };
-
-template <class... Ts>
-struct ReadTrait<skr::variant<Ts...>> {
-    template <class T>
-    static bool ReadByIndex(skr::archive::JsonReader* json, skr::variant<Ts...>& value, skr_guid_t index)
-    {
-        if (index == ::skr::rttr::type_id_of<T>())
-        {
-            T          t;
-            if (!skr::json::Read(json, t))
-                return false;
-            value = std::move(t);
-            return true;
-        }
-        return false;
-    }
-
-    static bool Read(skr::archive::JsonReader* json, skr::variant<Ts...>& value)
-    {
-        json->StartObject();
-        
-        json->Key(u8"type");
-        skr_guid_t index;
-        if (!skr::json::Read<skr_guid_t>(json, index))
-            return false;
-
-        json->Key(u8"value");
-        (void)(((ReadByIndex<Ts>(json, value, index)) != true) && ...);
-        
-        json->EndObject();
-
-        return true;
-    }
-};
-
 } // namespace skr::json
 
 // helper functions impl
@@ -206,19 +144,9 @@ bool Read(skr::archive::JsonReader* json, T& value)
 // serde complete check
 namespace skr
 {
-template <class K, class V, class Hash, class Eq>
-struct SerdeCompleteChecker<json::ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>>>
-    : std::bool_constant<is_complete_serde_v<json::ReadTrait<K>> && is_complete_serde_v<json::ReadTrait<V>>> {
-};
-
 template <class V>
 struct SerdeCompleteChecker<json::ReadTrait<skr::Vector<V>>>
     : std::bool_constant<is_complete_serde_v<json::ReadTrait<V>>> {
-};
-
-template <class... Ts>
-struct SerdeCompleteChecker<json::ReadTrait<skr::variant<Ts...>>>
-    : std::bool_constant<(is_complete_serde_v<json::ReadTrait<Ts>> && ...)> {
 };
 } // namespace skr
 

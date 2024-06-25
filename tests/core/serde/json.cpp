@@ -2,6 +2,7 @@
 #include "SkrSerde/json/writer.h"
 #include "SkrSerde/json/reader.h"
 #include "SkrContainers/vector.hpp"
+#include "SkrContainers/hashmap.hpp"
 
 #include "SkrTestFramework/framework.hpp"
 
