@@ -78,14 +78,14 @@ struct sugoi_storage_t {
     void query_unsafe(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_custom_filter_callback_t customFilter, void* u1, sugoi_view_callback_t callback, void* u);
     void query_unsafe(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_view_callback_t callback, void* u);
     void query(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_view_callback_t callback, void* u);
+    void query(const sugoi_query_t* query, sugoi_view_callback_t callback, void* u);
+    void query_groups(const sugoi_query_t* query, sugoi_group_callback_t callback, void* u);
     void query_groups(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_group_callback_t callback, void* u);
     
     bool match_group(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, const sugoi_group_t* group);
     sugoi_query_t* make_query(const sugoi_filter_t& filter, const sugoi_parameters_t& parameters);
     sugoi_query_t* make_query(const char8_t* desc);
     void destroy_query(sugoi_query_t* query);
-    void query(const sugoi_query_t* query, sugoi_view_callback_t callback, void* u);
-    void query_groups(const sugoi_query_t* query, sugoi_group_callback_t callback, void* u);
     void build_queries();
     void build_query_cache(sugoi_query_t* query);
     void update_query_cache(sugoi_group_t* group, bool isAdd);
@@ -116,6 +116,8 @@ struct sugoi_storage_t {
     void structural_change(sugoi_group_t* group, sugoi_chunk_t* chunk);
 
     void make_alias(skr::StringView name, skr::StringView alias);
+    
+    // getters
     EIndex count(bool includeDisabled, bool includeDead);
 
     // TODO: HIDE THIS

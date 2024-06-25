@@ -9,6 +9,17 @@ template <typename T>
 std::remove_reference_t<T>& decl_lval(T&& t) {}
 template <typename T>
 std::remove_reference_t<T>&& decl_rval(T&& t) {}
+
+template <class From, class To>
+concept convertible_to =
+#ifdef __clang__
+    __is_convertible_to(From, To) &&
+#else
+    std::is_convertible_v<From, To> &&
+#endif
+    requires {
+        static_cast<To>(std::declval<From>());
+    };
 } // namespace detail
 
 template <typename T, typename... Args>
@@ -41,10 +52,10 @@ concept MoveConstructible = IsMoveConstructible<T>;
 
 template <typename T>
 inline constexpr bool IsComparable = requires(T const& a, T const& b) {
-    { a == b } -> std::convertible_to<bool>;
-    { a != b } -> std::convertible_to<bool>;
-    { b == a } -> std::convertible_to<bool>;
-    { b != a } -> std::convertible_to<bool>;
+    { a == b } -> detail::convertible_to<bool>;
+    { a != b } -> detail::convertible_to<bool>;
+    { b == a } -> detail::convertible_to<bool>;
+    { b != a } -> detail::convertible_to<bool>;
 };
 template <typename T>
 concept Comparable = IsComparable<T>;
