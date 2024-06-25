@@ -4,10 +4,13 @@
 
 namespace sugoi
 {
-struct archetype_t;
-struct fixed_stack_t;
 template<class T>
 struct cache_t;
+
+struct archetype_t;
+struct fixed_stack_t;
+struct block_arena_t;
+struct scheduler_t;
 
 template <class T>
 struct hasher {
@@ -24,8 +27,6 @@ struct equalto {
         return equal(a, b);
     }
 };
-
-struct scheduler_t;
 } // namespace sugoi
 
 struct sugoi_phase_alias_t {
@@ -113,5 +114,8 @@ struct sugoi_storage_t {
 
     void make_alias(skr::StringView name, skr::StringView alias);
 
+    // TODO: HIDE THIS
     Impl* pimpl = nullptr;
+protected:
+    sugoi::block_arena_t& getArchetypeArena();
 };

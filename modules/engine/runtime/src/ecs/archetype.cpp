@@ -45,9 +45,11 @@ SIndex archetype_t::index(sugoi_type_index_t inType) const noexcept
 sugoi::archetype_t* sugoi_storage_t::construct_archetype(const sugoi_type_set_t& inType)
 {
     using namespace sugoi;
+
     fixed_stack_scope_t _(localStack);
-    char* buffer = (char*)pimpl->archetypeArena.allocate(data_size(inType), 1);
-    archetype_t& proto = *pimpl->archetypeArena.allocate<archetype_t>();
+    auto& archetypeArena = getArchetypeArena();
+    char* buffer = (char*)archetypeArena.allocate(data_size(inType), 1);
+    archetype_t& proto = *archetypeArena.allocate<archetype_t>();
     proto.storage = this;
     proto.type = sugoi::clone(inType, buffer);
     proto.withMask = false;
@@ -61,15 +63,15 @@ sugoi::archetype_t* sugoi_storage_t::construct_archetype(const sugoi_type_set_t&
             break;
         }
     forloop (i, 0, 3)
-        proto.offsets[i] = pimpl->archetypeArena.allocate<uint32_t>(proto.type.length);
-    proto.elemSizes = pimpl->archetypeArena.allocate<uint32_t>(proto.type.length);
-    proto.callbackFlags = pimpl->archetypeArena.allocate<uint32_t>(proto.type.length);
-    proto.aligns = pimpl->archetypeArena.allocate<uint32_t>(proto.type.length);
-    proto.sizes = pimpl->archetypeArena.allocate<uint32_t>(proto.type.length);
-    proto.resourceFields = pimpl->archetypeArena.allocate<sugoi::resource_fields_t>(proto.type.length);
-    proto.callbacks = pimpl->archetypeArena.allocate<sugoi_callback_v>(proto.type.length);
+        proto.offsets[i] = archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.callbackFlags = archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.resourceFields = archetypeArena.allocate<sugoi::resource_fields_t>(proto.type.length);
+    proto.callbacks = archetypeArena.allocate<sugoi_callback_v>(proto.type.length);
     ::memset(proto.callbacks, 0, sizeof(sugoi_callback_v) * proto.type.length);
-    proto.stableOrder = pimpl->archetypeArena.allocate<SIndex>(proto.type.length);
+    proto.stableOrder = archetypeArena.allocate<SIndex>(proto.type.length);
     auto& registry = TypeRegistry::get();
     forloop (i, 0, proto.type.length)
     {
@@ -160,8 +162,10 @@ sugoi::archetype_t* sugoi_storage_t::clone_archetype(archetype_t *src)
     using namespace sugoi;
     if(auto a = try_get_archetype(src->type))
         return a;
-    char* buffer = (char*)pimpl->archetypeArena.allocate(data_size(src->type), 1);
-    archetype_t& proto = *pimpl->archetypeArena.allocate<archetype_t>();
+
+    auto& archetypeArena = getArchetypeArena();
+    char* buffer = (char*)archetypeArena.allocate(data_size(src->type), 1);
+    archetype_t& proto = *archetypeArena.allocate<archetype_t>();
     proto.storage = this;
     proto.type = sugoi::clone(src->type, buffer);
     proto.withMask = src->withMask;
@@ -170,22 +174,22 @@ sugoi::archetype_t* sugoi_storage_t::clone_archetype(archetype_t *src)
     proto.firstChunkComponent = src->withMask;
     forloop (i, 0, 3)
     {
-        proto.offsets[i] = pimpl->archetypeArena.allocate<uint32_t>(proto.type.length);
+        proto.offsets[i] = archetypeArena.allocate<uint32_t>(proto.type.length);
         memcpy(proto.offsets[i], src->offsets[i], sizeof(uint32_t) * proto.type.length);
     }
-    proto.elemSizes = pimpl->archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
     memcpy(proto.elemSizes, src->elemSizes, sizeof(uint32_t) * proto.type.length);
-    proto.callbackFlags = pimpl->archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.callbackFlags = archetypeArena.allocate<uint32_t>(proto.type.length);
     memcpy(proto.callbackFlags, src->callbackFlags, sizeof(uint32_t) * proto.type.length);
-    proto.aligns = pimpl->archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
     memcpy(proto.aligns, src->aligns, sizeof(uint32_t) * proto.type.length);
-    proto.sizes = pimpl->archetypeArena.allocate<uint32_t>(proto.type.length);
+    proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
     memcpy(proto.sizes, src->sizes, sizeof(uint32_t) * proto.type.length);
-    proto.resourceFields = pimpl->archetypeArena.allocate<sugoi::resource_fields_t>(proto.type.length);
+    proto.resourceFields = archetypeArena.allocate<sugoi::resource_fields_t>(proto.type.length);
     memcpy(proto.resourceFields, src->resourceFields, sizeof(sugoi::resource_fields_t) * proto.type.length);
-    proto.callbacks = pimpl->archetypeArena.allocate<sugoi_callback_v>(proto.type.length);
+    proto.callbacks = archetypeArena.allocate<sugoi_callback_v>(proto.type.length);
     memcpy(proto.callbacks, src->callbacks, sizeof(sugoi_callback_v) * proto.type.length);
-    proto.stableOrder = pimpl->archetypeArena.allocate<SIndex>(proto.type.length);
+    proto.stableOrder = archetypeArena.allocate<SIndex>(proto.type.length);
     memcpy(proto.stableOrder, src->stableOrder, sizeof(SIndex) * proto.type.length);
     proto.entitySize = src->entitySize;
     proto.sliceDataOffsets[0] = src->sliceDataOffsets[0];

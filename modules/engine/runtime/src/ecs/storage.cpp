@@ -794,6 +794,11 @@ void sugoi_storage_t::make_alias(skr::StringView name, skr::StringView aliasName
     pimpl->aliases.insert({ aliasName, aliasPhase });
 }
 
+sugoi::block_arena_t& sugoi_storage_t::getArchetypeArena()
+{
+    return pimpl->archetypeArena;
+}
+
 extern "C" {
 sugoi_storage_t* sugoiS_create()
 {
