@@ -2,6 +2,7 @@
 #include "SkrBase/containers/misc/placeholder.hpp"
 #include "SkrContainers/function_ref.hpp"
 #include "SkrContainers/span.hpp"
+// TODO. 使用开堆的方式实现，并且通过两个数组，一个存储参数的存储方式和偏移，一个存储参数的具体数据，这样可以保持冗余，比如 String -> StringView
 
 namespace skr::rttr
 {

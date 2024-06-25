@@ -69,27 +69,4 @@ private:
         EnumData      _enum_data;
     };
 };
-
-template <typename T>
-void enum_type_loader_from_traits(Type* type)
-{
-    // init type
-    type->init(ETypeCategory::Enum);
-    auto& enum_data = type->enum_data();
-
-    // get items and reserve
-    auto items = EnumTraits<T>::items();
-    enum_data.items.reserve(items.size());
-
-    // build items
-    EnumBuilder<T> builder(&enum_data);
-    builder.basic_info();
-
-    // build items
-    for (const auto& item : items)
-    {
-        builder.item(item.name, item.value);
-    }
-}
-
 } // namespace skr::rttr

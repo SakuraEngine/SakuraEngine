@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "SkrRTTR/rttr_traits.hpp"
 
 namespace skr::rttr
 {
@@ -27,3 +28,5 @@ struct IAttribute {
     virtual ~IAttribute() = default;
 };
 } // namespace skr::rttr
+
+SKR_RTTR_TYPE(skr::rttr::IAttribute, "4031a792-6f2c-48ed-90e9-9342fc87809e")

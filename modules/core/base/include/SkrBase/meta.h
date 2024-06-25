@@ -3,10 +3,10 @@
 
 // basic meta
 #ifdef __meta__
-    #define sattr(...) __attribute__((annotate(SKR_MAKE_STRING(__VA_ARGS__))))
-    #define sreflect_struct(...) struct __attribute__((annotate("__reflect__"))) sattr(__VA_ARGS__)
-    #define sreflect_enum(...) enum __attribute__((annotate("__reflect__"))) sattr(__VA_ARGS__)
-    #define sreflect_enum_class(...) enum class __attribute__((annotate("__reflect__"))) sattr(__VA_ARGS__)
+    #define sattr(...) [[clang::annotate(SKR_MAKE_STRING(__VA_ARGS__))]]
+    #define sreflect_struct(...) struct [[clang::annotate("__reflect__")]] sattr(__VA_ARGS__)
+    #define sreflect_enum(...) enum [[clang::annotate("__reflect__")]] sattr(__VA_ARGS__)
+    #define sreflect_enum_class(...) enum class [[clang::annotate("__reflect__")]] sattr(__VA_ARGS__)
 #else
     #define sattr(...)
     #define sreflect_struct(...) struct

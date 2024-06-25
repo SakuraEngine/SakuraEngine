@@ -24,11 +24,14 @@ struct ${record.short_name};
 %endif
 %endfor
 %for enum in header_db.get_enums():
-<% prefix = "class" if enum.is_scoped else ""  %>\
+<% 
+    prefix = "class" if enum.is_scoped else ""
+    underlying_type = f": {enum.underlying_type}" if enum.underlying_type != "unfixed" else ""
+%>\
 %if enum.namespace:
-namespace ${enum.namespace} { enum ${prefix} ${enum.short_name} : ${enum.underlying_type}; }
+namespace ${enum.namespace} { enum ${prefix} ${enum.short_name} ${underlying_type}; }
 %else:
-enum ${prefix} ${enum.short_name} : ${enum.underlying_type};
+enum ${prefix} ${enum.short_name} ${underlying_type};
 %endif
 %endfor
 // END forward declarations

@@ -25,7 +25,7 @@ struct ParamBuilder {
         return *this;
     }
 
-    // flag & attribute
+    // flag & attributes
     inline ParamBuilder& flag(EParamFlag flag)
     {
         _data->flag = flag_set(_data->flag, flag);
@@ -55,7 +55,7 @@ struct FunctionBuilder {
         return ParamBuilder(&_data->param_data[index]);
     }
 
-    // flag & attribute
+    // flag & attributes
     inline FunctionBuilder& flag(EFunctionFlag flag)
     {
         _data->flag = flag_set(_data->flag, flag);
@@ -85,7 +85,7 @@ struct MethodBuilder {
         return ParamBuilder(&_data->param_data[index]);
     }
 
-    // flag & attribute
+    // flag & attributes
     inline MethodBuilder& flag(EMethodFlag flag)
     {
         _data->flag = flag_set(_data->flag, flag);
@@ -115,7 +115,7 @@ struct StaticMethodBuilder {
         return ParamBuilder(&_data->param_data[index]);
     }
 
-    // flag & attribute
+    // flag & attributes
     inline StaticMethodBuilder& flag(EStaticMethodFlag flag)
     {
         _data->flag = flag_set(_data->flag, flag);
@@ -145,7 +145,7 @@ struct ExternMethodBuilder {
         return ParamBuilder(&_data->param_data[index]);
     }
 
-    // flag & attribute
+    // flag & attributes
     inline ExternMethodBuilder& flag(EExternMethodFlag flag)
     {
         _data->flag = flag_set(_data->flag, flag);
@@ -175,7 +175,7 @@ struct CtorBuilder {
         return ParamBuilder(&_data->param_data[index]);
     }
 
-    // flag & attribute
+    // flag & attributes
     inline CtorBuilder& flag(ECtorFlag flag)
     {
         _data->flag = flag_set(_data->flag, flag);
@@ -203,7 +203,7 @@ struct FieldBuilder {
     {
     }
 
-    // flag & attribute
+    // flag & attributes
     inline FieldBuilder& flag(EFieldFlag flag)
     {
         _data->flag = flag_set(_data->flag, flag);
@@ -227,7 +227,7 @@ struct StaticFieldBuilder {
     {
     }
 
-    // flag & attribute
+    // flag & attributes
     inline StaticFieldBuilder& flag(EStaticFieldFlag flag)
     {
         _data->flag = flag_set(_data->flag, flag);
@@ -330,18 +330,19 @@ struct RecordBuilder {
     template <typename... Args>
     inline CtorBuilder ctor()
     {
-        auto& ctor_data = _data->ctor_data.emplace().ref();
-        ctor_data.fill_signature<Args...>();
-        ctor_data.native_invoke      = ExportHelper::export_ctor<T, Args...>();
-        ctor_data.stack_proxy_invoke = ExportHelper::export_ctor_stack_proxy<T, Args...>();
-        return { &ctor_data };
+        auto ctor_data = SkrNew<CtorData>();
+        ctor_data->fill_signature<Args...>();
+        ctor_data->native_invoke      = ExportHelper::export_ctor<T, Args...>();
+        ctor_data->stack_proxy_invoke = ExportHelper::export_ctor_stack_proxy<T, Args...>();
+        _data->ctor_data.add(ctor_data);
+        return { ctor_data };
     }
 
     // bases
     template <typename... Bases>
     inline RecordBuilder& bases()
     {
-        _data->bases_data.append({ BaseData::Make<T, Bases>()... });
+        _data->bases_data.append({ BaseData::New<T, Bases>()... });
         return *this;
     }
 
@@ -349,13 +350,14 @@ struct RecordBuilder {
     template <auto func>
     inline MethodBuilder method(String name, EAccessLevel access_level = EAccessLevel::Public)
     {
-        auto& method_data        = _data->methods.emplace().ref();
-        method_data.name         = std::move(name);
-        method_data.access_level = access_level;
-        method_data.fill_signature(func);
-        method_data.native_invoke      = ExportHelper::export_method<func>();
-        method_data.stack_proxy_invoke = ExportHelper::export_method_stack_proxy<func>();
-        return { &method_data };
+        auto method_data          = SkrNew<MethodData>();
+        method_data->name         = std::move(name);
+        method_data->access_level = access_level;
+        method_data->fill_signature(func);
+        method_data->native_invoke      = ExportHelper::export_method<func>();
+        method_data->stack_proxy_invoke = ExportHelper::export_method_stack_proxy<func>();
+        _data->methods.add(method_data);
+        return { method_data };
     }
     template <typename Func, Func func>
     inline MethodBuilder method(String name, EAccessLevel access_level = EAccessLevel::Public)
@@ -365,13 +367,14 @@ struct RecordBuilder {
     template <auto func>
     inline StaticMethodBuilder static_method(String name, EAccessLevel access_level = EAccessLevel::Public)
     {
-        auto& method_data        = _data->static_methods.emplace().ref();
-        method_data.name         = std::move(name);
-        method_data.access_level = access_level;
-        method_data.fill_signature(func);
-        method_data.native_invoke      = ExportHelper::export_static_method<func>();
-        method_data.stack_proxy_invoke = ExportHelper::export_static_method_stack_proxy<func>();
-        return { &method_data };
+        auto method_data          = SkrNew<StaticMethodData>();
+        method_data->name         = std::move(name);
+        method_data->access_level = access_level;
+        method_data->fill_signature(func);
+        method_data->native_invoke      = ExportHelper::export_static_method<func>();
+        method_data->stack_proxy_invoke = ExportHelper::export_static_method_stack_proxy<func>();
+        _data->static_methods.add(method_data);
+        return { method_data };
     }
     template <typename Func, Func func>
     inline StaticMethodBuilder static_method(String name, EAccessLevel access_level = EAccessLevel::Public)
@@ -381,13 +384,14 @@ struct RecordBuilder {
     template <auto func>
     inline ExternMethodBuilder extern_method(String name, EAccessLevel access_level = EAccessLevel::Public)
     {
-        auto& method_data        = _data->extern_methods.emplace().ref();
-        method_data.name         = std::move(name);
-        method_data.access_level = access_level;
-        method_data.fill_signature(func);
-        method_data.native_invoke      = ExportHelper::export_extern_method<func>();
-        method_data.stack_proxy_invoke = ExportHelper::export_extern_method_stack_proxy<func>();
-        return { &method_data };
+        auto method_data          = SkrNew<ExternMethodData>();
+        method_data->name         = std::move(name);
+        method_data->access_level = access_level;
+        method_data->fill_signature(func);
+        method_data->native_invoke      = ExportHelper::export_extern_method<func>();
+        method_data->stack_proxy_invoke = ExportHelper::export_extern_method_stack_proxy<func>();
+        _data->extern_methods.add(method_data);
+        return { method_data };
     }
     template <typename Func, Func func>
     inline StaticMethodBuilder extern_method(String name, EAccessLevel access_level = EAccessLevel::Public)
@@ -399,21 +403,23 @@ struct RecordBuilder {
     template <auto _field>
     inline FieldBuilder field(String name, EAccessLevel access_level = EAccessLevel::Public)
     {
-        auto& field_data        = _data->fields.emplace().ref();
-        field_data.name         = std::move(name);
-        field_data.access_level = access_level;
-        field_data.fill_signature<_field>(_field);
-        return { &field_data };
+        auto field_data          = SkrNew<FieldData>();
+        field_data->name         = std::move(name);
+        field_data->access_level = access_level;
+        field_data->fill_signature<_field>(_field);
+        _data->fields.add(field_data);
+        return { field_data };
     }
     template <auto _field>
     inline StaticFieldBuilder static_field(String name, EAccessLevel access_level = EAccessLevel::Public)
     {
-        auto& field_data        = _data->static_fields.emplace().ref();
-        field_data.name         = std::move(name);
-        field_data.access_level = access_level;
-        field_data.address      = reinterpret_cast<void*>(_field);
-        field_data.fill_signature(_field);
-        return { &field_data };
+        auto field_data          = SkrNew<StaticFieldData>();
+        field_data->name         = std::move(name);
+        field_data->access_level = access_level;
+        field_data->address      = reinterpret_cast<void*>(_field);
+        field_data->fill_signature(_field);
+        _data->static_fields.add(field_data);
+        return { field_data };
     }
 
     // flags & attributes
@@ -444,7 +450,7 @@ struct EnumItemBuilder {
     {
     }
 
-    // flag & attribute
+    // flag & attributes
     inline EnumItemBuilder& flag(EEnumItemFlag flag)
     {
         _data->flag = flag_set(_data->flag, flag);
@@ -509,6 +515,20 @@ struct EnumBuilder {
         item_data.name  = std::move(name);
         item_data.value = static_cast<std::underlying_type_t<T>>(value);
         return { &item_data };
+    }
+
+    // flag & attributes
+    inline EnumBuilder& flag(EEnumFlag flag)
+    {
+        _data->flag = flag_set(_data->flag, flag);
+        return *this;
+    }
+    template <std::derived_from<IAttribute> Attr>
+    inline EnumBuilder& attribute(Attr attr)
+    {
+        IAttribute* copied_attr = new Attr(std::move(attr));
+        _data->attributes.add(type_id_of<Attr>(), copied_attr);
+        return *this;
     }
 
 private:

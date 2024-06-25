@@ -117,7 +117,10 @@ Function json structure
     }
 }
 '''
-
+# TODO. 需要一个签名器来直接描述一个类型的签名
+#       如果是 func 则需要递归 (需要 params 的 attr 和 params name) 否则对齐 cpp 的签名
+#       为了支持这个签名器, 还需要一个专门的 scheme 目标类型来解析
+#       https://stackoverflow.com/questions/53910964/how-to-get-function-pointer-arguments-names-using-clang-libtooling
 from typing import List, Dict
 import framework.scheme as sc
 import framework.log as log

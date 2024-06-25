@@ -9,7 +9,6 @@ using TypeLoaderFunc = void (*)(Type* type);
 // type register (loader)
 SKR_CORE_API void register_type_loader(const GUID& guid, TypeLoaderFunc load_func);
 SKR_CORE_API void unregister_type_loader(const GUID& guid, TypeLoaderFunc load_func);
-SKR_CORE_API void unregister_all_type_loader(const GUID& guid);
 
 // TODO. type extender
 

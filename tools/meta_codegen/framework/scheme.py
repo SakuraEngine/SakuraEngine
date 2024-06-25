@@ -26,7 +26,7 @@ class ParseResult:
     override_stack: t.List['JsonObject'] = None  # override stack
 
     def visited_or(self, default):
-        return self if self.is_visited() else default
+        return self.parsed_value if self.is_visited() else default
 
     def is_visited(self) -> bool:
         return self.override_stack and len(self.override_stack) > 0
@@ -134,7 +134,7 @@ class Scheme:
 
     def dispatch_expand_path(self, value: 'JsonObject', logger: log.Logger) -> None:
         if self.enable_path_shorthand and value.is_dict and type(value.val) is list:
-            def __recursive_make_path(cur_path: str, cur_scheme: 'Scheme', parent: 'JsonObject', source_val) -> 'JsonObject':
+            def __recursive_make_path(cur_path: str, cur_scheme: 'Scheme', parent: 'JsonObject', source_val: JsonObject.Value, source_obj: 'JsonObject') -> 'JsonObject':
                 found_path_token = cur_path.find("::")
                 result = JsonObject(
                     parent=parent,
@@ -145,6 +145,7 @@ class Scheme:
                     (key, mark) = parse_override(cur_path)
                     result.key = key
                     result.override_mark = mark
+                    result.is_dict = source_obj.is_dict
                     result.val = source_val
                 else:
                     (key, mark) = parse_override(cur_path[:found_path_token])
@@ -158,10 +159,12 @@ class Scheme:
                             cur_scheme=child_scheme,
                             parent=result,
                             source_val=source_val,
+                            source_obj=source_obj
                         )]
                     else:
                         result.key = cur_path
                         result.override_mark = JsonOverrideMark.NONE
+                        result.is_dict = source_obj.is_dict
                         result.val = source_val
                 return result
 
@@ -175,6 +178,7 @@ class Scheme:
                         cur_scheme=self,
                         parent=value,
                         source_val=child.val,
+                        source_obj=child
                     )
                     new_child.source = child
                     new_child.source_kind = JsonSourceKind.PATH
@@ -198,7 +202,10 @@ class Scheme:
         value.is_recognized = True
 
         # get json type
-        if type(value.val) is bool:
+        if value.override_mark == JsonOverrideMark.APPEND:
+            json_type = JsonType.LIST
+            json_type_name = "list"
+        elif type(value.val) is bool:
             json_type = JsonType.BOOL
             json_type_name = "bool"
         elif type(value.val) is str:
@@ -790,13 +797,13 @@ class JsonOverrideSolver:
                 logger.error(f"override value without '!' mark", object.make_log_stack())
             elif object.passed_override_mark == JsonOverrideMark.APPEND:  # append
                 merge_source = None if cur_rewrite_by else cur_value
-
-                # value type must be checked in above phase
-                if type(cur_value) is not list or type(object.val) is not list:
-                    raise Exception("append mark '+' only support for list")
+                merge_source = [] if merge_source is None else merge_source
 
                 # merge list
-                merge_source.extend(object.val)
+                if type(object.val) is list:
+                    merge_source.extend(object.val)
+                else:
+                    merge_source.append(object.val)
 
                 # update mark
                 cur_value = merge_source

@@ -178,16 +178,16 @@ void* Type::cast_to(GUID type_id, void* p) const
                 // find base and cast
                 for (const auto& base : _record_data.bases_data)
                 {
-                    if (type_id == base.type_id)
+                    if (type_id == base->type_id)
                     {
-                        return base.cast_to_base(p);
+                        return base->cast_to_base(p);
                     }
                 }
 
                 // get base type and continue cast
                 for (const auto& base : _record_data.bases_data)
                 {
-                    auto type = get_type_from_guid(base.type_id);
+                    auto type = get_type_from_guid(base->type_id);
                     if (type)
                     {
                         auto casted = type->cast_to(type_id, p);

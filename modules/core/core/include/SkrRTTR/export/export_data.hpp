@@ -101,9 +101,11 @@ struct ParamData {
     using MakeDefaultFunc = void (*)(void*);
 
     // signature
-    String          name         = {};
-    TypeSignature   type         = {};
-    MakeDefaultFunc make_default = nullptr; // TODO. 处理在 reference 的情况下 xvalue 的 case
+    String        name = {};
+    TypeSignature type = {};
+    // TODO. make default 需要处理 xvalue 的 case，以及判断是否是 InitListExpr
+    //       同时，需要通过是否是 ExprWithCleanups 来判断是否是 xvalue 类型的构造
+    MakeDefaultFunc make_default = nullptr;
 
     // TODO. flag & Attribute
     EParamFlag             flag = EParamFlag::None;
@@ -163,6 +165,15 @@ struct FunctionData {
     EFunctionFlag          flag       = EFunctionFlag::None;
     Map<GUID, IAttribute*> attributes = {};
 
+    inline ~FunctionData()
+    {
+        // delete attributes
+        for (const auto& it : attributes)
+        {
+            SkrDelete(it.value);
+        }
+    }
+
     template <typename Ret, typename... Args>
     inline void fill_signature(Ret (*)(Args...))
     {
@@ -190,6 +201,15 @@ struct MethodData {
     // flag & attributes
     EMethodFlag            flag       = EMethodFlag::None;
     Map<GUID, IAttribute*> attributes = {};
+
+    inline ~MethodData()
+    {
+        // delete attributes
+        for (const auto& it : attributes)
+        {
+            SkrDelete(it.value);
+        }
+    }
 
     template <class T, typename Ret, typename... Args>
     inline void fill_signature(Ret (T::*)(Args...))
@@ -222,9 +242,18 @@ struct StaticMethodData {
     void*                 native_invoke      = nullptr;
     FuncInvokerStackProxy stack_proxy_invoke = nullptr;
 
-    // flag & attribute
+    // flag & attributes
     EStaticMethodFlag      flag       = EStaticMethodFlag::None;
     Map<GUID, IAttribute*> attributes = {};
+
+    inline ~StaticMethodData()
+    {
+        // delete attributes
+        for (const auto& it : attributes)
+        {
+            SkrDelete(it.value);
+        }
+    }
 
     template <typename Ret, typename... Args>
     inline void fill_signature(Ret (*)(Args...))
@@ -249,9 +278,18 @@ struct ExternMethodData {
     void*                 native_invoke      = nullptr;
     FuncInvokerStackProxy stack_proxy_invoke = nullptr;
 
-    // flag & attribute
+    // flag & attributes
     EExternMethodFlag      flag       = EExternMethodFlag::None;
     Map<GUID, IAttribute*> attributes = {};
+
+    inline ~ExternMethodData()
+    {
+        // delete attributes
+        for (const auto& it : attributes)
+        {
+            SkrDelete(it.value);
+        }
+    }
 
     template <typename Ret, typename... Args>
     inline void fill_signature(Ret (*)(Args...))
@@ -274,9 +312,18 @@ struct CtorData {
     void*                   native_invoke      = nullptr;
     MethodInvokerStackProxy stack_proxy_invoke = nullptr;
 
-    // flag & attribute
+    // flag & attributes
     ECtorFlag              flag       = ECtorFlag::None;
     Map<GUID, IAttribute*> attributes = {};
+
+    inline ~CtorData()
+    {
+        // delete attributes
+        for (const auto& it : attributes)
+        {
+            SkrDelete(it.value);
+        }
+    }
 
     template <typename... Args>
     inline void fill_signature()
@@ -323,9 +370,18 @@ struct FieldData {
     GetAddressFunc get_address  = nullptr;
     EAccessLevel   access_level = EAccessLevel::Public;
 
-    // flag & attribute
+    // flag & attributes
     EFieldFlag             flag       = EFieldFlag::None;
     Map<GUID, IAttribute*> attributes = {};
+
+    inline ~FieldData()
+    {
+        // delete attributes
+        for (const auto& it : attributes)
+        {
+            SkrDelete(it.value);
+        }
+    }
 
     template <auto field, class T, typename Field>
     inline void fill_signature(Field T::*)
@@ -346,6 +402,15 @@ struct StaticFieldData {
     // flag & attributes
     EStaticFieldFlag       flag       = EStaticFieldFlag::None;
     Map<GUID, IAttribute*> attributes = {};
+
+    inline ~StaticFieldData()
+    {
+        // delete attributes
+        for (const auto& it : attributes)
+        {
+            SkrDelete(it.value);
+        }
+    }
 
     template <typename T>
     inline void fill_signature(T* p_field)
@@ -374,6 +439,15 @@ struct BaseData {
             }
         };
     }
+    template <typename T, typename Base>
+    inline static BaseData* New()
+    {
+        return SkrNew<BaseData>(
+        RTTRTraits<Base>::get_guid(),
+        +[](void* p) -> void* {
+            return static_cast<Base*>(reinterpret_cast<T*>(p));
+        });
+    }
 };
 using DtorInvoker = void (*)(void*);
 struct DtorData {
@@ -391,107 +465,154 @@ struct RecordData {
     size_t         alignment  = 0;
 
     // bases
-    Vector<BaseData> bases_data = {};
+    Vector<BaseData*> bases_data = {};
 
     // ctor & dtor
-    Vector<CtorData> ctor_data = {};
-    DtorData         dtor_data = {};
+    Vector<CtorData*> ctor_data = {};
+    DtorData          dtor_data = {};
 
     // method & fields
-    Vector<MethodData> methods = {};
-    Vector<FieldData>  fields  = {};
+    Vector<MethodData*> methods = {};
+    Vector<FieldData*>  fields  = {};
 
     // static method & static fields
-    Vector<StaticMethodData> static_methods = {};
-    Vector<StaticFieldData>  static_fields  = {};
+    Vector<StaticMethodData*> static_methods = {};
+    Vector<StaticFieldData*>  static_fields  = {};
 
     // extern method
-    Vector<ExternMethodData> extern_methods = {};
+    Vector<ExternMethodData*> extern_methods = {};
 
     // flag & attributes
     ERecordFlag            flag       = ERecordFlag::None;
     Map<GUID, IAttribute*> attributes = {};
 
+    inline ~RecordData()
+    {
+        // delete bases
+        for (auto base : bases_data)
+        {
+            SkrDelete(base);
+        }
+
+        // delete ctors
+        for (auto ctor : ctor_data)
+        {
+            SkrDelete(ctor);
+        }
+
+        // delete methods & fields
+        for (auto method : methods)
+        {
+            SkrDelete(method);
+        }
+        for (auto field : fields)
+        {
+            SkrDelete(field);
+        }
+
+        // delete static methods & static fields
+        for (auto method : static_methods)
+        {
+            SkrDelete(method);
+        }
+        for (auto field : static_fields)
+        {
+            SkrDelete(field);
+        }
+
+        // delete extern methods
+        for (auto method : extern_methods)
+        {
+            SkrDelete(method);
+        }
+
+        // delete attributes
+        for (const auto& it : attributes)
+        {
+            SkrDelete(it.value);
+        }
+    }
+
     // signature find
     inline const CtorData* find_ctor(TypeSignatureView signature, ETypeSignatureCompareFlag flag) const
     {
-        return ctor_data.find_if([&](const CtorData& ctor) {
-                            return ctor.signature_equal(signature, flag);
+        return ctor_data.find_if([&](CtorData* ctor) {
+                            return ctor->signature_equal(signature, flag);
                         })
-        .ptr();
+        .ref();
     }
     inline const MethodData* find_method(TypeSignatureView signature, StringView name, ETypeSignatureCompareFlag flag) const
     {
-        return methods.find_if([&](const MethodData& method) {
-                          return method.name == name && method.signature_equal(signature, flag);
+        return methods.find_if([&](MethodData* method) {
+                          return method->name == name && method->signature_equal(signature, flag);
                       })
-        .ptr();
+        .ref();
     }
     inline const FieldData* find_field(TypeSignatureView signature, StringView name, ETypeSignatureCompareFlag flag) const
     {
-        return fields.find_if([&](const FieldData& field) {
-                         return field.name == name && field.type.view().equal(signature, flag);
+        return fields.find_if([&](FieldData* field) {
+                         return field->name == name && field->type.view().equal(signature, flag);
                      })
-        .ptr();
+        .ref();
     }
     inline const StaticMethodData* find_static_method(TypeSignatureView signature, StringView name, ETypeSignatureCompareFlag flag) const
     {
-        return static_methods.find_if([&](const StaticMethodData& method) {
-                                 return method.name == name && method.signature_equal(signature, flag);
+        return static_methods.find_if([&](StaticMethodData* method) {
+                                 return method->name == name && method->signature_equal(signature, flag);
                              })
-        .ptr();
+        .ref();
     }
     inline const StaticFieldData* find_static_field(TypeSignatureView signature, StringView name, ETypeSignatureCompareFlag flag) const
     {
-        return static_fields.find_if([&](const StaticFieldData& field) {
-                                return field.name == name && field.type.view().equal(signature, flag);
+        return static_fields.find_if([&](StaticFieldData* field) {
+                                return field->name == name && field->type.view().equal(signature, flag);
                             })
-        .ptr();
+        .ref();
     }
     inline const ExternMethodData* find_extern_method(TypeSignatureView signature, StringView name, ETypeSignatureCompareFlag flag) const
     {
-        return extern_methods.find_if([&](const ExternMethodData& method) {
-                                 return method.name == name && method.signature_equal(signature, flag);
+        return extern_methods.find_if([&](ExternMethodData* method) {
+                                 return method->name == name && method->signature_equal(signature, flag);
                              })
-        .ptr();
+        .ref();
     }
 
     // template find
     template <typename Func>
-    inline Optional<const CtorData*> find_ctor(ETypeSignatureCompareFlag flag) const
+    inline const CtorData* find_ctor(ETypeSignatureCompareFlag flag) const
     {
         TypeSignatureTyped<Func> signature;
         return find_ctor(signature.view(), flag);
     }
     template <typename Func>
-    inline Optional<const MethodData*> find_method(StringView name, ETypeSignatureCompareFlag flag) const
+    inline const MethodData* find_method(StringView name, ETypeSignatureCompareFlag flag) const
     {
         TypeSignatureTyped<Func> signature;
         return find_method(signature.view(), name, flag);
     }
     template <typename Func>
-    inline Optional<const FieldData*> find_field(StringView name, ETypeSignatureCompareFlag flag) const
-    {
-        TypeSignatureTyped<Func> signature;
-        return find_field(signature.view(), name, flag);
-    }
-    template <typename Func>
-    inline Optional<const StaticMethodData*> find_static_method(StringView name, ETypeSignatureCompareFlag flag) const
+    inline const StaticMethodData* find_static_method(StringView name, ETypeSignatureCompareFlag flag) const
     {
         TypeSignatureTyped<Func> signature;
         return find_static_method(signature.view(), name, flag);
-    }
-    template <typename Func>
-    inline Optional<const StaticFieldData*> find_static_field(StringView name, ETypeSignatureCompareFlag flag) const
-    {
-        TypeSignatureTyped<Func> signature;
-        return find_static_field(signature.view(), name, flag);
     }
     template <typename Func>
     inline Optional<const ExternMethodData*> find_extern_method(StringView name, ETypeSignatureCompareFlag flag) const
     {
         TypeSignatureTyped<Func> signature;
         return find_extern_method(signature.view(), name, flag);
+    }
+    template <typename Field>
+    inline const FieldData* find_field(StringView name, ETypeSignatureCompareFlag flag) const
+    {
+        TypeSignatureTyped<Field> signature;
+        return find_field(signature.view(), name, flag);
+    }
+    template <typename Field>
+    inline const StaticFieldData* find_static_field(StringView name, ETypeSignatureCompareFlag flag) const
+    {
+        TypeSignatureTyped<Field> signature;
+        return find_static_field(signature.view(), name, flag);
     }
 };
 } // namespace skr::rttr
@@ -503,9 +624,18 @@ struct EnumItemData {
     String    name  = {};
     EnumValue value = {};
 
-    // flag & attribute
+    // flag & attributes
     EEnumItemFlag          flag       = EEnumItemFlag::None;
     Map<GUID, IAttribute*> attributes = {};
+
+    inline ~EnumItemData()
+    {
+        // delete attributes
+        for (const auto& it : attributes)
+        {
+            SkrDelete(it.value);
+        }
+    }
 };
 struct EnumData {
     // basic
@@ -527,6 +657,15 @@ struct EnumData {
     // flag & attributes
     EEnumFlag              flag       = EEnumFlag::None;
     Map<GUID, IAttribute*> attributes = {};
+
+    inline ~EnumData()
+    {
+        // delete attributes
+        for (const auto& it : attributes)
+        {
+            SkrDelete(it.value);
+        }
+    }
 
     // signature find
     inline const ExternMethodData* find_extern_method(TypeSignatureView signature, StringView name, ETypeSignatureCompareFlag flag) const
