@@ -299,6 +299,23 @@ sugoi_chunk_view_t sugoi_storage_t::entity_view(sugoi_entity_t e) const
     return { nullptr, 0, 1 };
 }
 
+void sugoi_storage_t::all(bool includeDisabled, bool includeDead, sugoi_view_callback_t callback, void* u)
+{
+    for (auto& pair : pimpl->groups)
+    {
+        auto group = pair.second;
+        if (group->isDead && !includeDead)
+            continue;
+        if (group->disabled && !includeDisabled)
+            continue;
+        for (auto c : group->chunks)
+        {
+            sugoi_chunk_view_t view{ c, 0, c->count };
+            callback(u, &view);
+        }
+    }
+}
+
 bool sugoi_storage_t::components_enabled(const sugoi_entity_t src, const sugoi_type_set_t& type)
 {
     using namespace sugoi;
@@ -794,6 +811,21 @@ void sugoi_storage_t::make_alias(skr::StringView name, skr::StringView aliasName
     pimpl->aliases.insert({ aliasName, aliasPhase });
 }
 
+sugoi_timestamp_t sugoi_storage_t::timestamp() const
+{
+    return pimpl->timestamp;
+}
+
+sugoi::EntityRegistry& sugoi_storage_t::getEntityRegistry()
+{
+    return pimpl->entity_registry;
+}
+
+sugoi::scheduler_t* sugoi_storage_t::getScheduler()
+{
+    return pimpl->scheduler;
+}
+
 sugoi::block_arena_t& sugoi_storage_t::getArchetypeArena()
 {
     return pimpl->archetypeArena;
@@ -1083,14 +1115,13 @@ EIndex sugoiQ_get_count(sugoi_query_t* query)
 
 void sugoiQ_sync(sugoi_query_t* query)
 {
-    if (query->storage->pimpl->scheduler)
-        query->storage->pimpl->scheduler->sync_query(query);
+    if (auto scheduler = query->storage->getScheduler())
+        scheduler->sync_query(query);
 }
 
 void sugoiQ_get(sugoi_query_t* query, sugoi_filter_t* filter, sugoi_parameters_t* params)
 {
-    if (!query->storage->pimpl->queriesBuilt)
-        query->storage->build_queries();
+    query->storage->build_queries();
     if (filter)
         *filter = query->filter;
     if (params)
@@ -1104,19 +1135,7 @@ sugoi_storage_t* sugoiQ_get_storage(sugoi_query_t* query)
 
 void sugoiS_all(sugoi_storage_t* storage, bool includeDisabled, bool includeDead, sugoi_view_callback_t callback, void* u)
 {
-    for (auto& pair : storage->pimpl->groups)
-    {
-        auto group = pair.second;
-        if (group->isDead && !includeDead)
-            continue;
-        if (group->disabled && !includeDisabled)
-            continue;
-        for (auto c : group->chunks)
-        {
-            sugoi_chunk_view_t view{ c, 0, c->count };
-            callback(u, &view);
-        }
-    }
+    storage->all(includeDisabled, includeDead, callback, u);
 }
 
 EIndex sugoiS_count(sugoi_storage_t* storage, bool includeDisabled, bool includeDead)

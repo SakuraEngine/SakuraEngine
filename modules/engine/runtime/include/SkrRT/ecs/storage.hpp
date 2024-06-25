@@ -11,6 +11,7 @@ struct archetype_t;
 struct fixed_stack_t;
 struct block_arena_t;
 struct scheduler_t;
+struct EntityRegistry;
 
 template <class T>
 struct hasher {
@@ -73,6 +74,7 @@ struct sugoi_storage_t {
     sugoi_group_t* cast(sugoi_group_t* group, const sugoi_delta_type_t& diff);
 
     sugoi_chunk_view_t entity_view(sugoi_entity_t e) const;
+    void all(bool includeDisabled, bool includeDead, sugoi_view_callback_t callback, void* u);
     void batch(const sugoi_entity_t* ents, EIndex count, sugoi_view_callback_t callback, void* u);
 
     void query_unsafe(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_custom_filter_callback_t customFilter, void* u1, sugoi_view_callback_t callback, void* u);
@@ -119,9 +121,13 @@ struct sugoi_storage_t {
     
     // getters
     EIndex count(bool includeDisabled, bool includeDead);
+    sugoi_timestamp_t timestamp() const;
+    sugoi::EntityRegistry& getEntityRegistry();
 
-    // TODO: HIDE THIS
-    Impl* pimpl = nullptr;
+    // TODO: REMOVE THIS
+    friend struct sugoi::scheduler_t;
+    sugoi::scheduler_t* getScheduler();
 protected:
     sugoi::block_arena_t& getArchetypeArena();
+    Impl* pimpl = nullptr;
 };

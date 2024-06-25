@@ -450,7 +450,7 @@ void sugoi_group_t::clear()
     using namespace sugoi;
     for(auto chunk : chunks)
     {
-        archetype->storage->pimpl->entity_registry.free_entities({ chunk, 0, chunk->count });
+        archetype->storage->getEntityRegistry().free_entities({ chunk, 0, chunk->count });
         destruct_view({ chunk, 0, chunk->count });
         destruct_chunk(chunk);
         sugoi_chunk_t::destroy(chunk);
@@ -477,7 +477,7 @@ bool sugoi_group_t::share(sugoi_type_index_t t) const noexcept
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
-        auto metaGroup = storage->pimpl->entity_registry.entries[e_id(type.meta.data[i])].chunk->group;
+        auto metaGroup = storage->getEntityRegistry().entries[e_id(type.meta.data[i])].chunk->group;
         if (metaGroup->index(t) != kInvalidSIndex)
             return true;
         if (metaGroup->share(t))
@@ -497,7 +497,7 @@ bool sugoi_group_t::share(const sugoi_type_set_t& subtype) const noexcept
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
-        auto metaGroup = storage->pimpl->entity_registry.entries[e_id(type.meta.data[i])].chunk->group;
+        auto metaGroup = storage->getEntityRegistry().entries[e_id(type.meta.data[i])].chunk->group;
         if (metaGroup->own(subtype))
             return true;
         if (metaGroup->share(subtype))
@@ -553,7 +553,7 @@ const sugoi_group_t* sugoi_group_t::get_owner(sugoi_type_index_t t) const noexce
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
-        auto metaGroup = storage->pimpl->entity_registry.entries[e_id(type.meta.data[i])].chunk->group;
+        auto metaGroup = storage->getEntityRegistry().entries[e_id(type.meta.data[i])].chunk->group;
         if (auto g = metaGroup->get_owner(t))
             return g;
     }
