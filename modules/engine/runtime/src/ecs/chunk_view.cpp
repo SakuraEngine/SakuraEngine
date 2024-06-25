@@ -452,23 +452,23 @@ void cast_view(const sugoi_chunk_view_t& dstV, sugoi_chunk_t* srcC, EIndex srcSt
     uint32_t* dstCallbackFlags = dstType->callbackFlags;
     uint32_t maskValue = uint32_t(1 << dstTypes.length) - 1;
     
-    std::bitset<32>*srcMasks = nullptr, *dstMasks = nullptr;
+    sugoi::bitset32* srcMasks = nullptr, *dstMasks = nullptr;
     if (srcType->withMask && dstType->withMask)
     {
         SIndex srcMaskId = srcType->index(kMaskComponent);
         SIndex dstMaskId = dstType->index(kMaskComponent);
-        dstMasks = (std::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
-        srcMasks = (std::bitset<32>*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
+        dstMasks = (sugoi::bitset32*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
+        srcMasks = (sugoi::bitset32*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
         std::memset(dstMasks, 0, sizeof(uint32_t) * dstV.count);
     }
 
-    std::bitset<32>*srcDirtys = nullptr, *dstDirtys = nullptr;
+    sugoi::bitset32*srcDirtys = nullptr, *dstDirtys = nullptr;
     if (srcType->withDirty && dstType->withDirty)
     {
         SIndex srcMaskId = srcType->index(kDirtyComponent);
         SIndex dstMaskId = dstType->index(kDirtyComponent);
-        dstDirtys = (std::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
-        srcDirtys = (std::bitset<32>*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
+        dstDirtys = (sugoi::bitset32*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
+        srcDirtys = (sugoi::bitset32*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
         std::memset(dstDirtys, 0, sizeof(uint32_t) * dstV.count);
     }
 
@@ -598,21 +598,21 @@ void duplicate_view(const sugoi_chunk_view_t& dstV, const sugoi_chunk_t* srcC, E
     uint32_t* dstCallbackFlags = dstType->callbackFlags;
     uint32_t maskValue = uint32_t(1 << dstTypes.length) - 1;
     
-    std::bitset<32>* srcMasks = nullptr, *dstMasks = nullptr;
+    sugoi::bitset32* srcMasks = nullptr, *dstMasks = nullptr;
     if (srcType->withMask && dstType->withMask)
     {
         SIndex srcMaskId = srcType->index(kMaskComponent);
         SIndex dstMaskId = dstType->index(kMaskComponent);
-        dstMasks = (std::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
-        srcMasks = (std::bitset<32>*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
+        dstMasks = (sugoi::bitset32*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
+        srcMasks = (sugoi::bitset32*)(srcC->data() + (size_t)srcOffsets[srcMaskId] + (size_t)srcSizes[srcMaskId] * srcStart);
         std::memset(dstMasks, 1, sizeof(uint32_t) * dstV.count);
     }
 
-    std::bitset<32>* dstDirtys = nullptr;
+    sugoi::bitset32* dstDirtys = nullptr;
     if (srcType->withDirty && dstType->withDirty)
     {
         SIndex dstMaskId = dstType->index(kDirtyComponent);
-        dstDirtys = (std::bitset<32>*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
+        dstDirtys = (sugoi::bitset32*)(dstV.chunk->data() + (size_t)dstOffsets[dstMaskId] + (size_t)dstSizes[dstMaskId] * dstV.start);
         std::memset(dstDirtys, 1, sizeof(uint32_t) * dstV.count);
     }
 

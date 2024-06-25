@@ -1,10 +1,6 @@
 #pragma once
-#include "SkrTask/fib_task.hpp"
-#include "SkrContainers/hashmap.hpp"
-#include "SkrContainers/stl_vector.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/set.hpp"
-#include "SkrRT/ecs/entity_registry.hpp"
 
 namespace sugoi
 {
@@ -40,10 +36,6 @@ struct sugoi_phase_alias_t {
 struct sugoi_storage_t {
     struct Impl;
     using archetype_t = sugoi::archetype_t;
-    using queries_t = skr::stl_vector<sugoi_query_t*>;
-    using groups_t = skr::FlatHashMap<sugoi_entity_type_t, sugoi_group_t*, sugoi::hasher<sugoi_entity_type_t>, sugoi::equalto<sugoi_entity_type_t>>;
-    using archetypes_t = skr::FlatHashMap<sugoi_type_set_t, archetype_t*, sugoi::hasher<sugoi_type_set_t>, sugoi::equalto<sugoi_type_set_t>>;
-    using phase_alias_t = skr::FlatHashMap<skr::StringView, sugoi_phase_alias_t, skr::Hash<skr::StringView>>;
 
     sugoi_storage_t(Impl* pimpl);
     ~sugoi_storage_t();
@@ -68,7 +60,6 @@ struct sugoi_storage_t {
     bool components_enabled(const sugoi_entity_t src, const sugoi_type_set_t& type);
     bool exist(sugoi_entity_t e) const noexcept;
 
-    using batchmap_t = skr::FlatHashMap<sugoi_chunk_t*, sugoi_chunk_view_t>;
     void destroy(const sugoi_chunk_view_t& view);
     void destroy(const sugoi_query_t* view);
     void destroy(const sugoi_query_t* view, sugoi_destroy_callback_t callback, void* u);

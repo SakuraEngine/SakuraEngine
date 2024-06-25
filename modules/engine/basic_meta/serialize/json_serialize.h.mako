@@ -1,6 +1,8 @@
 // BEGIN JSON GENERATED
 #ifdef __cplusplus
 #include "SkrBase/types.h"
+#include "SkrSerde/json/reader.h"
+#include "SkrSerde/json/writer.h"
 
 namespace skr::json
 {

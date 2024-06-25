@@ -505,16 +505,16 @@ bool sugoi_group_t::share(const sugoi_type_set_t& subtype) const noexcept
 sugoi_mask_comp_t sugoi_group_t::get_shared_mask(const sugoi_type_set_t& subtype) const noexcept
 {
     using namespace sugoi;
-    std::bitset<32> mask;
+    sugoi::bitset32 mask;
     for (SIndex i = 0; i < subtype.length; ++i)
     {
         if (share(subtype.data[i]))
         {
-            mask.set(i);
+            mask.set(i, true);
             break;
         }
     }
-    return mask.to_ulong();
+    return mask.to_uint32();
 }
 
 void sugoi_group_t::get_shared_type(sugoi_type_set_t& result, void* buffer) const noexcept
@@ -573,7 +573,7 @@ const void* sugoi_group_t::get_shared_ro(sugoi_type_index_t t) const noexcept
 sugoi_mask_comp_t sugoi_group_t::get_mask(const sugoi_type_set_t& subtype) const noexcept
 {
     using namespace sugoi;
-    std::bitset<32> mask;
+    sugoi::bitset32 mask;
     SIndex i = 0, j = 0;
     auto stype = type.type;
     while (i < stype.length && j < subtype.length)
@@ -584,12 +584,12 @@ sugoi_mask_comp_t sugoi_group_t::get_mask(const sugoi_type_set_t& subtype) const
             ++i;
         else
         {
-            mask.set(i);
+            mask.set(i, true);
             ++i;
             ++j;
         }
     }
-    return mask.to_ulong();
+    return mask.to_uint32();
 }
 
 extern "C" {

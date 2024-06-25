@@ -7,8 +7,10 @@ target("SkrTestFramework")
     add_includedirs("framework/include/SkrTestFramework", {public = false})
     add_files("framework/src/framework.cpp")
 
+--[[
 shared_pch("SkrTestFramework")
     add_files("framework/include/SkrTestFramework/framework.hpp")
+]]--
 
 function test_target(name)
     target(name)

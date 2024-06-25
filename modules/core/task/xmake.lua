@@ -28,9 +28,11 @@ shared_module("SkrTask", "SKR_TASK", engine_version)
         end
     end)
 
+--[[
 shared_pch("SkrTask")
     add_files("include/SkrTask/**.hpp")
     add_files("$(projectdir)/modules/core/base/include/**.h")
     add_files("$(projectdir)/modules/core/base/include/**.hpp")
     add_files("$(projectdir)/modules/core/core/include/**.h")
     add_files("$(projectdir)/modules/core/core/include/**.hpp")
+]]--
