@@ -188,9 +188,14 @@ function _codegen_compile(target, proxy_target, opt)
     end
 
     -- compile meta source
-    local result = os.iorunv(_meta.program, argv)
-    if result and #result > 0 then
-        print(result)
+    local out, err = os.iorunv(_meta.program, argv)
+    
+    -- dump output
+    if out and #out > 0 then
+        print(out)
+    end
+    if err and #err > 0 then
+        print(err)
     end
 
     if not opt.quiet then
@@ -303,11 +308,15 @@ function _mako_render(target, scripts, dep_files, opt)
     end
 
     -- call codegen script
-    local result = os.iorunv(_python.program, command)
+    local out, err = os.iorunv(_python.program, command)
     -- os.execv(_python.program, command)
     
-    if result and #result > 0 then
-        print(result)
+    -- dump output
+    if out and #out > 0 then
+        print(out)
+    end
+    if err and #err > 0 then
+        print(err)
     end
 
     if not opt.quiet then

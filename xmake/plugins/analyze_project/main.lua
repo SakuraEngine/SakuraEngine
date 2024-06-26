@@ -21,7 +21,6 @@ function analyzing.load_targets()
     -- load config
     config.load()
     -- load targets
-    project.__noscan = true
     project.load_targets()
 end
 
