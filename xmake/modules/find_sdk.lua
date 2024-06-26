@@ -208,11 +208,11 @@ end
 
 function find_embed_python()
     local embed = find_program("python", path.join(os.projectdir(), tooldir(), "python-embed"), false, true)
-    import("core.base.option")
-    local verbose = option.get("verbose")
-    if verbose then
-        print("found embed python:")
-        print(embed)
-    end
+    
+    -- import("core.base.option")
+    -- if option.get("verbose") then
+    --     print("found embed python:")
+    --     print(embed)
+    -- end
     return embed
 end
