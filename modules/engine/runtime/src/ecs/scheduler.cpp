@@ -290,7 +290,7 @@ void update_entry(JobDependencyEntry& entry, skr::task::event_t job, bool readon
 skr::task::event_t sugoi::scheduler_t::schedule_ecs_job(sugoi_query_t* query, EIndex batchSize, sugoi_system_callback_t callback, void* u,
 sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources)
 {
-    query->storage->build_queries();
+    query->storage->buildQueries();
     skr::task::event_t result;
     SkrZoneScopedN("SchedualECSJob");
 
@@ -412,7 +412,6 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
             auto data = (char*)localStack.allocate(data_size(meta));
             validatedMeta = clone(meta, data);
             query->storage->validate(validatedMeta.all_meta);
-            query->storage->validate(validatedMeta.any_meta);
             query->storage->validate(validatedMeta.none_meta);
         }
         //TODO: expose this as a parameter
@@ -428,7 +427,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
                     startIndex += view->count;
                 };
                 auto group = sharedData->groups[i];
-                query->storage->query_unsafe(group, query->filter, validatedMeta, query->customFilter, query->customFilterUserData, SUGOI_LAMBDA(processView));
+                query->storage->query_in_group_unsafe(group, query->filter, validatedMeta, query->customFilter, query->customFilterUserData, SUGOI_LAMBDA(processView));
             }
         }
         else
@@ -494,7 +493,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
                         }
                     };
                     auto group = sharedData->groups[i];
-                    query->storage->query_unsafe(group, query->filter, validatedMeta, query->customFilter, query->customFilterUserData, SUGOI_LAMBDA(scheduleView));
+                    query->storage->query_in_group_unsafe(group, query->filter, validatedMeta, query->customFilter, query->customFilterUserData, SUGOI_LAMBDA(scheduleView));
                 };
                 if (currBatch.endTask != tasks.size())
                 {
@@ -649,6 +648,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
                 }
             }
         }
+        // sync subqueries
         for(auto subquery : query->subqueries)
         {
             skr::InlineVector<sugoi_group_t*, 64> subgroups;
@@ -672,8 +672,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
                         auto localType = subgroup->index(subquery->parameters.types[i]);
                         if (localType == kInvalidTypeIndex)
                         {
-                            auto g = subgroup->get_owner(subquery->parameters.types[i]);
-                            if (g)
+                            if (auto g = subgroup->get_owner(subquery->parameters.types[i]))
                             {
                                 sync_entry(g, g->index(subquery->parameters.types[i]), subquery->parameters.accesses[i].readonly, subquery->parameters.accesses[i].atomic);
                             }

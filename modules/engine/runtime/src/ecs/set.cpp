@@ -53,7 +53,7 @@ namespace sugoi
     }
     bool ordered(const sugoi_meta_filter_t& value)
     {
-        return ordered(value.all_meta) && ordered(value.any_meta) && ordered(value.none_meta) &&
+        return ordered(value.all_meta) && ordered(value.none_meta) &&
             ordered(value.changed);
     }
     bool ordered(const sugoi_delta_type_t& value)
@@ -73,7 +73,6 @@ namespace sugoi
     size_t hash(const sugoi_meta_filter_t& value, size_t basis)
     {
         auto result = set_utils<sugoi_entity_t>::hash(value.all_meta, basis);
-        result = set_utils<sugoi_entity_t>::hash(value.any_meta, result);
         result = set_utils<sugoi_entity_t>::hash(value.none_meta, result);
         result = set_utils<sugoi_type_index_t>::hash(value.changed, result);
         result = hash_bytes(&value.timestamp, 1, result);
@@ -105,7 +104,7 @@ namespace sugoi
 
     size_t data_size(const sugoi_meta_filter_t& value)
     {
-        return data_size(value.all_meta) + data_size(value.any_meta) + data_size(value.none_meta) +
+        return data_size(value.all_meta) + data_size(value.none_meta) +
         data_size(value.changed);
     }
 
@@ -150,7 +149,6 @@ namespace sugoi
     {
         return {
             clone(value.all_meta, buffer),
-            clone(value.any_meta, buffer),
             clone(value.none_meta, buffer),
             clone(value.changed, buffer),
             value.timestamp

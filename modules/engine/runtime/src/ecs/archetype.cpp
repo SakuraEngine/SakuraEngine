@@ -42,7 +42,7 @@ SIndex archetype_t::index(sugoi_type_index_t inType) const noexcept
 }
 } // namespace sugoi
 
-sugoi::archetype_t* sugoi_storage_t::construct_archetype(const sugoi_type_set_t& inType)
+sugoi::archetype_t* sugoi_storage_t::constructArchetype(const sugoi_type_set_t& inType)
 {
     using namespace sugoi;
 
@@ -157,10 +157,10 @@ sugoi::archetype_t* sugoi_storage_t::construct_archetype(const sugoi_type_set_t&
     return pimpl->archetypes.insert({ proto.type, &proto }).first->second;
 }
 
-sugoi::archetype_t* sugoi_storage_t::clone_archetype(archetype_t *src)
+sugoi::archetype_t* sugoi_storage_t::cloneArchetype(archetype_t *src)
 {
     using namespace sugoi;
-    if(auto a = try_get_archetype(src->type))
+    if(auto a = tryGetArchetype(src->type))
         return a;
 
     auto& archetypeArena = getArchetypeArena();
@@ -202,7 +202,7 @@ sugoi::archetype_t* sugoi_storage_t::clone_archetype(archetype_t *src)
     return pimpl->archetypes.insert({ proto.type, &proto }).first->second;
 }
 
-sugoi_group_t* sugoi_storage_t::construct_group(const sugoi_entity_type_t& inType)
+sugoi_group_t* sugoi_storage_t::constructGroup(const sugoi_entity_type_t& inType)
 {
     using namespace sugoi;
     fixed_stack_scope_t _(localStack);
@@ -252,7 +252,7 @@ sugoi_group_t* sugoi_storage_t::construct_group(const sugoi_entity_type_t& inTyp
     proto.dead = nullptr;
     proto.cloned = proto.isDead ? nullptr : &proto;
     pimpl->groups.insert({ type, &proto });
-    update_query_cache(&proto, true);
+    updateQueryCache(&proto, true);
     if (hasTracked && !proto.isDead)
     {
         auto deadType = make_zeroed<sugoi_entity_type_t>();
@@ -265,35 +265,35 @@ sugoi_group_t* sugoi_storage_t::construct_group(const sugoi_entity_type_t& inTyp
     return &proto;
 }
 
-sugoi_group_t* sugoi_storage_t::clone_group(sugoi_group_t* srcG)
+sugoi_group_t* sugoi_storage_t::cloneGroup(sugoi_group_t* srcG)
 {
-    if(auto g = try_get_group(srcG->type))
+    if(auto g = tryGetGroup(srcG->type))
         return g;
     sugoi_group_t& proto = *new (pimpl->groupPool.allocate()) sugoi_group_t();
     std::memcpy(&proto, srcG, sizeof(sugoi_group_t));
     char* buffer = (char*)(&proto + 1);
     proto.type = sugoi::clone(srcG->type, buffer);
-    proto.archetype = clone_archetype(srcG->archetype);
+    proto.archetype = cloneArchetype(srcG->archetype);
     if (srcG->dead)
     {
-        proto.dead = clone_group(srcG->dead);
+        proto.dead = cloneGroup(srcG->dead);
     }
     if (srcG->cloned)
     {
-        proto.cloned = clone_group(srcG->cloned);
+        proto.cloned = cloneGroup(srcG->cloned);
     }
     pimpl->groups.insert({ proto.type, &proto });
     return &proto;
 }
 
-sugoi::archetype_t* sugoi_storage_t::try_get_archetype(const sugoi_type_set_t& type) const
+sugoi::archetype_t* sugoi_storage_t::tryGetArchetype(const sugoi_type_set_t& type) const
 {
     if (auto i = pimpl->archetypes.find(type); i != pimpl->archetypes.end())
         return i->second;
     return nullptr;
 }
 
-sugoi_group_t* sugoi_storage_t::try_get_group(const sugoi_entity_type_t& type) const
+sugoi_group_t* sugoi_storage_t::tryGetGroup(const sugoi_entity_type_t& type) const
 {
     if (auto i = pimpl->groups.find(type); i != pimpl->groups.end())
         return i->second;
@@ -302,9 +302,9 @@ sugoi_group_t* sugoi_storage_t::try_get_group(const sugoi_entity_type_t& type) c
 
 sugoi::archetype_t* sugoi_storage_t::get_archetype(const sugoi_type_set_t& type)
 {
-    archetype_t* archetype = try_get_archetype(type);
+    archetype_t* archetype = tryGetArchetype(type);
     if (!archetype)
-        archetype = construct_archetype(type);
+        archetype = constructArchetype(type);
     return archetype;
 }
 
@@ -323,15 +323,15 @@ sugoi_group_t* sugoi_storage_t::get_group(const sugoi_entity_type_t& type)
     }
     if(dead && !withPinned)
         return nullptr;
-    sugoi_group_t* group = try_get_group(type);
+    sugoi_group_t* group = tryGetGroup(type);
     if (!group)
-        group = construct_group(type);
+        group = constructGroup(type);
     return group;
 }
 
-void sugoi_storage_t::destruct_group(sugoi_group_t* group)
+void sugoi_storage_t::destructGroup(sugoi_group_t* group)
 {
-    update_query_cache(group, false);
+    updateQueryCache(group, false);
     pimpl->groups.erase(group->type);
     pimpl->groupPool.free(group);
 }

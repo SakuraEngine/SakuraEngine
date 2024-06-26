@@ -103,7 +103,7 @@ void sugoi_storage_t::serialize_view(sugoi_group_t* group, sugoi_chunk_view_t& v
     {
         bin::Archive(ds, view.count);
         SKR_ASSERT(view.count);
-        view = allocate_view_strict(group, view.count);
+        view = allocateViewStrict(group, view.count);
     }
 
     archetype_t* type      = view.chunk->structure;
@@ -308,7 +308,7 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
         SkrZoneScopedN("deserialize group");
         fixed_stack_scope_t _(localStack);
         auto                type       = deserialize_type(localStack, s, true);
-        auto                group      = construct_group(type);
+        auto                group      = constructGroup(type);
         uint32_t            chunkCount = 0;
         bin::Archive(s, chunkCount);
         forloop (j, 0, chunkCount)

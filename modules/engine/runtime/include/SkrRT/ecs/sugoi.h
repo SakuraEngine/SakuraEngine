@@ -178,7 +178,6 @@ typedef struct sugoi_parameters_t {
 // runtime type (context sensitive) filter
 typedef struct sugoi_meta_filter_t {
     sugoi_entity_set_t all_meta;
-    sugoi_entity_set_t any_meta;
     sugoi_entity_set_t none_meta;
     sugoi_type_set_t   changed;
     uint64_t           timestamp;
@@ -596,7 +595,7 @@ SKR_RUNTIME_API void sugoiQ_set_custom_filter(sugoi_query_t* query, sugoi_custom
  */
 SKR_RUNTIME_API void             sugoiQ_get_views(sugoi_query_t* query, sugoi_view_callback_t callback, void* u);
 SKR_RUNTIME_API void             sugoiQ_get_groups(sugoi_query_t* query, sugoi_group_callback_t callback, void* u);
-SKR_RUNTIME_API void             sugoiQ_get_views_group(sugoi_query_t* query, sugoi_group_t* group, sugoi_view_callback_t callback, void* u);
+SKR_RUNTIME_API void             sugoiQ_in_group(sugoi_query_t* query, sugoi_group_t* group, sugoi_view_callback_t callback, void* u);
 SKR_RUNTIME_API sugoi_storage_t* sugoiQ_get_storage(sugoi_query_t* query);
 
 /**

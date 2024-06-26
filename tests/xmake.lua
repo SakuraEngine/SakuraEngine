@@ -4,7 +4,7 @@ target("SkrTestFramework")
     add_deps("SkrCore")
     set_exceptions("no-cxx")
     add_includedirs("framework/include", {public = true})
-    add_includedirs("framework/include/SkrTestFramework", {public = false})
+    add_includedirs("framework/include/SkrTestFramework", {public = true})
     add_files("framework/src/framework.cpp")
 
 --[[

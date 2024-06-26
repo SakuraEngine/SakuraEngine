@@ -478,7 +478,6 @@ TEST_CASE_METHOD(ECSTest, "query_overload")
     auto            query1 = sugoiQ_from_literal(storage, u8"[inout]test:a");
     auto            query2 = sugoiQ_from_literal(storage, u8"[inout]test:a, [in]test2");
     SKR_UNUSED auto query3 = sugoiQ_from_literal(storage, u8"[inout]test:a, [in]test3");
-
     {
         sugoi_chunk_view_t view;
         auto               callback = [&](sugoi_chunk_view_t* inView) {

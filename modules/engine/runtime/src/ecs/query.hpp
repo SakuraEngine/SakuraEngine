@@ -21,7 +21,12 @@ skr::String& get_error();
 struct sugoi_query_t {
     sugoi_storage_t* storage = nullptr;
     sugoi_filter_t filter;
+    
     sugoi_meta_filter_t meta;
+    skr::InlineVector<sugoi_entity_t, 1> all_meta;
+    skr::InlineVector<sugoi_entity_t, 1> none_meta;
+    skr::InlineVector<sugoi_type_index_t, 1> changed;
+
     sugoi_parameters_t parameters;
     skr::Vector<uint8_t> data;
     skr::InlineVector<sugoi_query_t*, 2> subqueries;

@@ -43,17 +43,12 @@ void sugoi_storage_t::reset()
         iter.second->clear();
 }
 
-void sugoi_storage_t::allocate(sugoi_group_t* group, EIndex count, sugoi_view_callback_t callback, void* u)
+void sugoi_storage_t::allocate_unsafe(sugoi_group_t* group, EIndex count, sugoi_view_callback_t callback, void* u)
 {
     using namespace sugoi;
-    if (pimpl->scheduler)
-    {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
-        pimpl->scheduler->sync_archetype(group->archetype);
-    }
     while (count != 0)
     {
-        sugoi_chunk_view_t v = allocate_view(group, count);
+        sugoi_chunk_view_t v = allocateView(group, count);
         pimpl->entity_registry.fill_entities(v);
         construct_view(v);
         count -= v.count;
@@ -62,7 +57,18 @@ void sugoi_storage_t::allocate(sugoi_group_t* group, EIndex count, sugoi_view_ca
     }
 }
 
-sugoi_chunk_view_t sugoi_storage_t::allocate_view(sugoi_group_t* group, EIndex count)
+void sugoi_storage_t::allocate(sugoi_group_t* group, EIndex count, sugoi_view_callback_t callback, void* u)
+{
+    using namespace sugoi;
+    if (pimpl->scheduler)
+    {
+        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
+        pimpl->scheduler->sync_archetype(group->archetype);
+    }
+    allocate_unsafe(group, count, callback, u);
+}
+
+sugoi_chunk_view_t sugoi_storage_t::allocateView(sugoi_group_t* group, EIndex count)
 {
     sugoi_chunk_t* freeChunk = group->get_first_free_chunk();
     if (freeChunk == nullptr)
@@ -70,11 +76,11 @@ sugoi_chunk_view_t sugoi_storage_t::allocate_view(sugoi_group_t* group, EIndex c
     EIndex start     = freeChunk->count;
     EIndex allocated = std::min(count, freeChunk->get_capacity() - start);
     group->resize_chunk(freeChunk, start + allocated);
-    structural_change(group, freeChunk);
+    structuralChange(group, freeChunk);
     return { freeChunk, start, allocated };
 }
 
-sugoi_chunk_view_t sugoi_storage_t::allocate_view_strict(sugoi_group_t* group, EIndex count)
+sugoi_chunk_view_t sugoi_storage_t::allocateViewStrict(sugoi_group_t* group, EIndex count)
 {
     sugoi_chunk_t* freeChunk = nullptr;
     for (auto i = group->firstFree; i < (uint32_t)group->chunks.size(); ++i)
@@ -90,7 +96,7 @@ sugoi_chunk_view_t sugoi_storage_t::allocate_view_strict(sugoi_group_t* group, E
         freeChunk = group->new_chunk(count);
     EIndex start = freeChunk->count;
     group->resize_chunk(freeChunk, start + count);
-    structural_change(group, freeChunk);
+    structuralChange(group, freeChunk);
     return { freeChunk, start, count };
 }
 
@@ -111,27 +117,11 @@ void sugoi_storage_t::destroy(const sugoi_chunk_view_t& view)
     {
         pimpl->entity_registry.free_entities(view);
         destruct_view(view);
-        free(view);
+        freeView(view);
     }
 }
 
-void sugoi_storage_t::free(const sugoi_chunk_view_t& view)
-{
-    using namespace sugoi;
-    auto group = view.chunk->group;
-    structural_change(group, view.chunk);
-    uint32_t toMove = std::min(view.count, view.chunk->count - (view.start + view.count));
-    if (toMove > 0)
-    {
-        sugoi_chunk_view_t dstView{ view.chunk, view.start, toMove };
-        EIndex             srcIndex = view.chunk->count - toMove;
-        pimpl->entity_registry.move_entities(dstView, srcIndex);
-        move_view(dstView, srcIndex);
-    }
-    group->resize_chunk(view.chunk, view.chunk->count - view.count);
-}
-
-void sugoi_storage_t::structural_change(sugoi_group_t* group, sugoi_chunk_t* chunk)
+void sugoi_storage_t::structuralChange(sugoi_group_t* group, sugoi_chunk_t* chunk)
 {
     // todo: timestamp
 }
@@ -218,7 +208,7 @@ void sugoi_storage_t::instantiate_prefab(const sugoi_entity_t* src, uint32_t siz
         auto localCount = 0;
         while (localCount != count)
         {
-            sugoi_chunk_view_t v = allocate_view(group, count - localCount);
+            sugoi_chunk_view_t v = allocateView(group, count - localCount);
             pimpl->entity_registry.fill_entities(v, localEnts.data() + localCount);
             duplicate_view(v, view.chunk, view.start);
             m.base = m.curr = ents.data() + localCount * size;
@@ -242,7 +232,7 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t src, uint32_t count, sugo
     }
     while (count != 0)
     {
-        sugoi_chunk_view_t v = allocate_view(group, count);
+        sugoi_chunk_view_t v = allocateView(group, count);
         pimpl->entity_registry.fill_entities(v);
         duplicate_view(v, view.chunk, view.start);
         count -= v.count;
@@ -262,7 +252,7 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t src, uint32_t count, sugo
     }
     while (count != 0)
     {
-        sugoi_chunk_view_t v = allocate_view(group, count);
+        sugoi_chunk_view_t v = allocateView(group, count);
         pimpl->entity_registry.fill_entities(v);
         duplicate_view(v, view.chunk, view.start);
         count -= v.count;
@@ -519,20 +509,20 @@ void sugoi_storage_t::pack_entities()
     }
 }
 
-void sugoi_storage_t::cast_impl(const sugoi_chunk_view_t& view, sugoi_group_t* group, sugoi_cast_callback_t callback, void* u)
+void sugoi_storage_t::castImpl(const sugoi_chunk_view_t& view, sugoi_group_t* group, sugoi_cast_callback_t callback, void* u)
 {
     using namespace sugoi;
     uint32_t k = 0;
     while (k < view.count)
     {
-        sugoi_chunk_view_t dst = allocate_view(group, view.count - k);
+        sugoi_chunk_view_t dst = allocateView(group, view.count - k);
         pimpl->entity_registry.move_entities(dst, view.chunk, view.start + k);
         cast_view(dst, view.chunk, view.start + k);
         k += dst.count;
         if (callback)
             callback(u, &dst, (sugoi_chunk_view_t*)&view);
     }
-    free(view);
+    freeView(view);
 }
 
 void sugoi_storage_t::cast(const sugoi_chunk_view_t& view, sugoi_group_t* group, sugoi_cast_callback_t callback, void* u)
@@ -550,7 +540,7 @@ void sugoi_storage_t::cast(const sugoi_chunk_view_t& view, sugoi_group_t* group,
     {
         pimpl->entity_registry.free_entities(view);
         destruct_view(view);
-        free(view);
+        freeView(view);
         return;
     }
     if (full_view(view) && srcGroup->archetype == group->archetype)
@@ -564,7 +554,7 @@ void sugoi_storage_t::cast(const sugoi_chunk_view_t& view, sugoi_group_t* group,
         if (srcGroup->archetype != group->archetype)
             pimpl->scheduler->sync_archetype(group->archetype);
     }
-    cast_impl(view, group, callback, u);
+    castImpl(view, group, callback, u);
 }
 
 void sugoi_storage_t::cast(sugoi_group_t* srcGroup, sugoi_group_t* group, sugoi_cast_callback_t callback, void* u)
@@ -594,12 +584,12 @@ void sugoi_storage_t::cast(sugoi_group_t* srcGroup, sugoi_group_t* group, sugoi_
     {
         pimpl->scheduler->sync_archetype(group->archetype);
     }
-    // NOTE srcGroup->chunks can be modified during cast_impl
+    // NOTE srcGroup->chunks can be modified during castImpl
     auto chunks = srcGroup->chunks;
     for (auto chunk : chunks)
     {
         sugoi_chunk_view_t view = { chunk, 0, chunk->count };
-        cast_impl(view, group, callback, u);
+        castImpl(view, group, callback, u);
     }
 }
 
@@ -769,7 +759,7 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
         {
             dstG->add_chunk(c);
         }
-        src.destruct_group(g);
+        src.destructGroup(g);
     }
     src.pimpl->groups.clear();
     src.pimpl->queries.clear();
@@ -782,14 +772,14 @@ sugoi_storage_t* sugoi_storage_t::clone()
     dst->pimpl->timestamp       = pimpl->timestamp;
     for (auto group : pimpl->groups)
     {
-        auto dstGroup = dst->clone_group(group.second);
+        auto dstGroup = dst->cloneGroup(group.second);
         for (auto chunk : group.second->chunks)
         {
             auto count = chunk->count;
             auto view  = sugoi_chunk_view_t{ chunk, 0, count };
             while (count != 0)
             {
-                sugoi_chunk_view_t v = dst->allocate_view(dstGroup, count);
+                sugoi_chunk_view_t v = dst->allocateView(dstGroup, count);
                 sugoi::clone_view(v, view.chunk, view.start + (view.count - count));
                 std::memcpy((sugoi_entity_t*)v.chunk->get_entities() + v.start, view.chunk->get_entities() + view.start + (view.count - count), v.count * sizeof(sugoi_entity_t));
                 count -= v.count;
@@ -809,6 +799,21 @@ void sugoi_storage_t::make_alias(skr::StringView name, skr::StringView aliasName
     auto                type = reg.get_type(name);
     sugoi_phase_alias_t aliasPhase{ type, ++pimpl->aliasCount };
     pimpl->aliases.insert({ aliasName, aliasPhase });
+}
+
+EIndex sugoi_storage_t::count(bool includeDisabled, bool includeDead)
+{
+    EIndex result = 0;
+    for (auto& pair : pimpl->groups)
+    {
+        auto group = pair.second;
+        if (group->isDead && !includeDead)
+            continue;
+        if (group->disabled && !includeDisabled)
+            continue;
+        result += group->size;
+    }
+    return result;
 }
 
 sugoi_timestamp_t sugoi_storage_t::timestamp() const
@@ -831,19 +836,20 @@ sugoi::block_arena_t& sugoi_storage_t::getArchetypeArena()
     return pimpl->archetypeArena;
 }
 
-EIndex sugoi_storage_t::count(bool includeDisabled, bool includeDead)
+void sugoi_storage_t::freeView(const sugoi_chunk_view_t& view)
 {
-    EIndex result = 0;
-    for (auto& pair : pimpl->groups)
+    using namespace sugoi;
+    auto group = view.chunk->group;
+    structuralChange(group, view.chunk);
+    uint32_t toMove = std::min(view.count, view.chunk->count - (view.start + view.count));
+    if (toMove > 0)
     {
-        auto group = pair.second;
-        if (group->isDead && !includeDead)
-            continue;
-        if (group->disabled && !includeDisabled)
-            continue;
-        result += group->size;
+        sugoi_chunk_view_t dstView{ view.chunk, view.start, toMove };
+        EIndex             srcIndex = view.chunk->count - toMove;
+        pimpl->entity_registry.move_entities(dstView, srcIndex);
+        move_view(dstView, srcIndex);
     }
-    return result;
+    group->resize_chunk(view.chunk, view.chunk->count - view.count);
 }
 
 extern "C" {
@@ -1043,7 +1049,13 @@ void sugoiQ_set_meta(sugoi_query_t* query, const sugoi_meta_filter_t* meta)
     else
     {
         SKR_ASSERT(sugoi::ordered(*meta));
-        query->meta = *meta;
+        query->all_meta.append(meta->all_meta.data, meta->all_meta.length);
+        query->none_meta.append(meta->none_meta.data, meta->none_meta.length);
+        query->changed.append(meta->changed.data, meta->changed.length);
+        query->meta.all_meta = { query->all_meta.data(), (SIndex)query->all_meta.size() };
+        query->meta.none_meta = { query->none_meta.data(), (SIndex)query->none_meta.size() };
+        query->meta.changed = { query->changed.data(), (SIndex)query->changed.size() };
+        query->meta.timestamp = meta->timestamp;
     }
 }
 
@@ -1084,12 +1096,12 @@ void sugoiQ_get_groups(sugoi_query_t* query, sugoi_group_callback_t callback, vo
     return query->storage->query_groups(query, callback, u);
 }
 
-void sugoiQ_get_views_group(sugoi_query_t* query, sugoi_group_t* group, sugoi_view_callback_t callback, void* u)
+void sugoiQ_in_group(sugoi_query_t* query, sugoi_group_t* group, sugoi_view_callback_t callback, void* u)
 {
-    query->storage->build_queries();
+    query->storage->buildQueries();
     if (!query->storage->match_group(query->filter, query->meta, group))
         return;
-    query->storage->query_unsafe(group, query->filter, query->meta, query->customFilter, query->customFilterUserData, callback, u);
+    query->storage->query_in_group_unsafe(group, query->filter, query->meta, query->customFilter, query->customFilterUserData, callback, u);
 }
 
 const char8_t* sugoiQ_get_error()
@@ -1121,7 +1133,7 @@ void sugoiQ_sync(sugoi_query_t* query)
 
 void sugoiQ_get(sugoi_query_t* query, sugoi_filter_t* filter, sugoi_parameters_t* params)
 {
-    query->storage->build_queries();
+    query->storage->buildQueries();
     if (filter)
         *filter = query->filter;
     if (params)

@@ -1,7 +1,9 @@
 #pragma once
+#include "SkrContainers/vector.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/set.hpp"
 
+struct sugoi_storage_t;
 namespace sugoi
 {
 template<class T>
@@ -12,6 +14,7 @@ struct fixed_stack_t;
 struct block_arena_t;
 struct scheduler_t;
 struct EntityRegistry;
+using Storage = sugoi_storage_t;
 
 template <class T>
 struct hasher {
@@ -41,14 +44,10 @@ struct sugoi_storage_t {
 
     sugoi_storage_t(Impl* pimpl);
     ~sugoi_storage_t();
-    sugoi_group_t* construct_group(const sugoi_entity_type_t& type);
-    archetype_t* construct_archetype(const sugoi_type_set_t& type);
     sugoi_group_t* get_group(const sugoi_entity_type_t& type);
     archetype_t* get_archetype(const sugoi_type_set_t& type);
-    sugoi_group_t* try_get_group(const sugoi_entity_type_t& type) const;
-    archetype_t* try_get_archetype(const sugoi_type_set_t& type) const;
-    void destruct_group(sugoi_group_t* group);
 
+    void allocate_unsafe(sugoi_group_t* group, EIndex count, sugoi_view_callback_t callback, void* u);
     void allocate(sugoi_group_t* group, EIndex count, sugoi_view_callback_t callback, void* u);
 
     void get_linked_recursive(const sugoi_chunk_view_t& view, sugoi::cache_t<sugoi_entity_t>& result);
@@ -66,9 +65,7 @@ struct sugoi_storage_t {
     void destroy(const sugoi_query_t* view);
     void destroy(const sugoi_query_t* view, sugoi_destroy_callback_t callback, void* u);
     void destroy(const sugoi_meta_filter_t& meta);
-    void free(const sugoi_chunk_view_t& view);
 
-    void cast_impl(const sugoi_chunk_view_t& view, sugoi_group_t* group, sugoi_cast_callback_t callback, void* u);
     void cast(const sugoi_chunk_view_t& view, sugoi_group_t* group, sugoi_cast_callback_t callback, void* u);
     void cast(sugoi_group_t* srcGroup, sugoi_group_t* group, sugoi_cast_callback_t callback, void* u);
     sugoi_group_t* cast(sugoi_group_t* group, const sugoi_delta_type_t& diff);
@@ -77,7 +74,7 @@ struct sugoi_storage_t {
     void all(bool includeDisabled, bool includeDead, sugoi_view_callback_t callback, void* u);
     void batch(const sugoi_entity_t* ents, EIndex count, sugoi_view_callback_t callback, void* u);
 
-    void query_unsafe(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_custom_filter_callback_t customFilter, void* u1, sugoi_view_callback_t callback, void* u);
+    void query_in_group_unsafe(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_custom_filter_callback_t customFilter, void* u1, sugoi_view_callback_t callback, void* u);
     void query_unsafe(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_view_callback_t callback, void* u);
     void query(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_view_callback_t callback, void* u);
     void query(const sugoi_query_t* query, sugoi_view_callback_t callback, void* u);
@@ -85,12 +82,12 @@ struct sugoi_storage_t {
     void query_groups(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_group_callback_t callback, void* u);
     
     bool match_group(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, const sugoi_group_t* group);
+
     sugoi_query_t* make_query(const sugoi_filter_t& filter, const sugoi_parameters_t& parameters);
     sugoi_query_t* make_query(const char8_t* desc);
     void destroy_query(sugoi_query_t* query);
-    void build_queries();
-    void build_query_cache(sugoi_query_t* query);
-    void update_query_cache(sugoi_group_t* group, bool isAdd);
+    struct QueryBuilder;
+    QueryBuilder new_query();
 
     void serialize_single(sugoi_entity_t e, SBinaryWriter* s);
     sugoi_entity_t deserialize_single(SBinaryReader* s);
@@ -104,18 +101,12 @@ struct sugoi_storage_t {
     void deserialize(SBinaryReader* s);
 
     void merge(sugoi_storage_t& src);
-    archetype_t* clone_archetype(archetype_t* src);
-    sugoi_group_t* clone_group(sugoi_group_t* src);
     sugoi_storage_t* clone();
     void reset();
     void validate_meta();
     void validate(sugoi_entity_set_t& meta);
     void defragment();
     void pack_entities();
-
-    sugoi_chunk_view_t allocate_view(sugoi_group_t* group, EIndex count);
-    sugoi_chunk_view_t allocate_view_strict(sugoi_group_t* group, EIndex count);
-    void structural_change(sugoi_group_t* group, sugoi_chunk_t* chunk);
 
     void make_alias(skr::StringView name, skr::StringView alias);
     
@@ -124,10 +115,147 @@ struct sugoi_storage_t {
     sugoi_timestamp_t timestamp() const;
     sugoi::EntityRegistry& getEntityRegistry();
 
-    // TODO: REMOVE THIS
+    // TODO: REMOVE THESE
     friend struct sugoi::scheduler_t;
     sugoi::scheduler_t* getScheduler();
+    void buildQueries();
+
 protected:
     sugoi::block_arena_t& getArchetypeArena();
     Impl* pimpl = nullptr;
+
+private:
+    sugoi_chunk_view_t allocateView(sugoi_group_t* group, EIndex count);
+    sugoi_chunk_view_t allocateViewStrict(sugoi_group_t* group, EIndex count);
+
+    sugoi_group_t* constructGroup(const sugoi_entity_type_t& type);
+    sugoi_group_t* cloneGroup(sugoi_group_t* src);
+    sugoi_group_t* tryGetGroup(const sugoi_entity_type_t& type) const;
+    void destructGroup(sugoi_group_t* group);
+
+    archetype_t* constructArchetype(const sugoi_type_set_t& type);
+    archetype_t* cloneArchetype(archetype_t* src);
+    archetype_t* tryGetArchetype(const sugoi_type_set_t& type) const;
+
+    void buildQueryCache(sugoi_query_t* query);
+    void updateQueryCache(sugoi_group_t* group, bool isAdd);
+
+    void structuralChange(sugoi_group_t* group, sugoi_chunk_t* chunk);
+    void freeView(const sugoi_chunk_view_t& view);
+    void castImpl(const sugoi_chunk_view_t& view, sugoi_group_t* group, sugoi_cast_callback_t callback, void* u);
 };
+
+enum class QueryBuilderError
+{
+    UnknownError,
+};
+
+using QueryBuilderResult = skr::Expected<QueryBuilderError, sugoi_query_t*>;
+
+struct sugoi_storage_t::QueryBuilder
+{
+    QueryBuilder(sugoi_storage_t* storage)
+        : storage(storage)
+    {
+
+    }
+
+    template <typename...Ts, typename...Idxs>
+    QueryBuilder& ReadWriteAll(Idxs... idxs) { return All<false, Ts...>(idxs...); }
+    template <typename...Ts, typename...Idxs>
+    QueryBuilder& ReadAll(Idxs... idxs) { return All<true, Ts...>(idxs...); }
+    template <typename...Ts, typename...Idxs>
+    QueryBuilder& ReadWriteAny(Idxs... idxs) { return Any<false, Ts...>(idxs...); }
+    template <typename...Ts, typename...Idxs>
+    QueryBuilder& ReadAny(Idxs... idxs) { return Any<true, Ts...>(idxs...);  }
+
+    template <typename...Ts, typename...Idxs>
+    QueryBuilder& None(Idxs... idxs)
+    {
+        (none.push_back(sugoi_id_of<Ts>::get()), ...);
+        (types.push_back(sugoi_id_of<Ts>::get()), ...);
+        (ops.push_back({0 * (int)sugoi_id_of<Ts>::get(), true, false, SOS_SEQ}), ...);
+        return *this;
+    }
+
+    template <sugoi::EntityConcept...Ents>
+    QueryBuilder& WithMetaEntity(Ents... ents)
+    {
+        (all_meta.push_back(ents), ...);
+        return *this;
+    }
+
+    template <sugoi::EntityConcept...Ents>
+    QueryBuilder& WithoutMetaEntity(Ents... ents)
+    {
+        (none_meta.push_back(ents), ...);
+        return *this;
+    }
+
+    QueryBuilderResult commit() SKR_NOEXCEPT
+    {
+        sugoi_parameters_t parameters;
+        parameters.types = types.data();
+        parameters.accesses = ops.data();
+        parameters.length = types.size();    
+
+        SKR_DECLARE_ZERO(sugoi_filter_t, filter);
+        all.sort([](auto a, auto b) { return a < b; });
+        filter.all.data = all.data();
+        filter.all.length = all.size();
+        filter.none.data = none.data();
+        filter.none.length = none.size();
+
+        auto q = sugoiQ_create(storage, &filter, &parameters);
+        if (q)
+        {
+            SKR_DECLARE_ZERO(sugoi_meta_filter_t, meta_filter);
+            if (all_meta.size())
+            {
+                meta_filter.all_meta.data = all_meta.data();
+                meta_filter.all_meta.length = all_meta.size();
+            }
+            if (none_meta.size())
+            {
+                meta_filter.none_meta.data = none_meta.data();
+                meta_filter.none_meta.length = none_meta.size();
+            }
+            sugoiQ_set_meta(q, &meta_filter);
+        }
+        return q;
+    }
+
+private:
+    template <bool readonly, typename...Ts, typename...Idxs>
+    QueryBuilder& All(Idxs... idxs)
+    {
+        (all.push_back(sugoi_id_of<Ts>::get()), ...);
+        (types.push_back(sugoi_id_of<Ts>::get()), ...);
+        (ops.push_back({0 * (int)sugoi_id_of<Ts>::get(), readonly, false, SOS_SEQ}), ...);
+        return *this;
+    }
+    template <bool readonly, typename...Ts, typename...Idxs>
+    QueryBuilder& Any(Idxs... idxs)
+    {
+        (any.push_back(sugoi_id_of<Ts>::get()), ...);
+        (types.push_back(sugoi_id_of<Ts>::get()), ...);
+        (ops.push_back({0 * (int)sugoi_id_of<Ts>::get(), readonly, false, SOS_SEQ}), ...);
+        return *this;
+    }
+
+    sugoi_storage_t* storage = nullptr;
+
+    skr::InlineVector<sugoi_entity_t, 4> all_meta;
+    skr::InlineVector<sugoi_entity_t, 4> none_meta;
+
+    skr::InlineVector<sugoi_type_index_t, 8> all;
+    skr::InlineVector<sugoi_type_index_t, 4> any;
+    skr::InlineVector<sugoi_type_index_t, 4> none;
+    skr::InlineVector<sugoi_type_index_t, 8> types;
+    skr::InlineVector<sugoi_operation_t, 8> ops;
+};
+
+inline sugoi_storage_t::QueryBuilder sugoi_storage_t::new_query()
+{
+    return QueryBuilder(this);
+}

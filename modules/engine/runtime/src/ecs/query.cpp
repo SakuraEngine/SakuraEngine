@@ -121,7 +121,7 @@ bool match_group(sugoi_query_t* q, sugoi_group_t* g)
 }
 } // namespace sugoi
 
-void sugoi_storage_t::build_query_cache(sugoi_query_t* query)
+void sugoi_storage_t::buildQueryCache(sugoi_query_t* query)
 {
     using namespace sugoi;
     query->groups.clear();
@@ -147,7 +147,7 @@ void sugoi_storage_t::build_query_cache(sugoi_query_t* query)
     }
 }
 
-void sugoi_storage_t::update_query_cache(sugoi_group_t* group, bool isAdd)
+void sugoi_storage_t::updateQueryCache(sugoi_group_t* group, bool isAdd)
 {
     using namespace sugoi;
 
@@ -175,7 +175,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const sugoi_filter_t& filter, const s
     auto                 buffer = (char*)arena.allocate(data_size(filter) + data_size(params), alignof(sugoi_type_index_t));
     result->filter              = sugoi::clone(filter, buffer);
     result->parameters          = sugoi::clone(params, buffer);
-    pimpl->queriesBuilt                = false;
+    pimpl->queriesBuilt         = false;
     result->storage             = this;
     arena.forget();
     pimpl->queries.push_back(result);
@@ -437,7 +437,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
     FILTER_PART(all_shared);
     FILTER_PART(none_shared);
 #undef FILTER_PART
-    auto buffer                 = (char*)arena.allocate(data_size(result->filter), alignof(sugoi_type_index_t));
+    auto buffer         = (char*)arena.allocate(data_size(result->filter), alignof(sugoi_type_index_t));
     result->filter              = sugoi::clone(result->filter, buffer);
     result->parameters.types    = entry.data();
     result->parameters.accesses = operations.data();
@@ -462,13 +462,13 @@ void sugoi_storage_t::destroy_query(sugoi_query_t* query)
     pimpl->queriesBuilt = false;
 }
 
-void sugoi_storage_t::build_queries()
+void sugoi_storage_t::buildQueries()
 {
     using namespace sugoi;
     if (pimpl->queriesBuilt)
         return;
 
-    SkrZoneScopedN("sugoi_storage_t::build_queries");
+    SkrZoneScopedN("sugoi_storage_t::buildQueries");
     struct phase_entry_builder {
         sugoi_type_index_t                            type;
         uint32_t                                      phase;
@@ -575,7 +575,7 @@ void sugoi_storage_t::build_queries()
     // build query cache
     for (auto& query : pimpl->queries)
     {
-        build_query_cache(query);
+        buildQueryCache(query);
     }
 
     pimpl->queriesBuilt = true;
@@ -590,13 +590,13 @@ void sugoi_storage_t::query(const sugoi_query_t* q, sugoi_view_callback_t callba
     }
     if (mainThread)
     {
-        build_queries();
+        buildQueries();
     }
     else
         SKR_ASSERT(pimpl->queriesBuilt);
 
     auto filterChunk = [&](sugoi_group_t* group) {
-        query_unsafe(group, q->filter, q->meta, q->customFilter, q->customFilterUserData, callback, u);
+        query_in_group_unsafe(group, q->filter, q->meta, q->customFilter, q->customFilterUserData, callback, u);
     };
     query_groups(q, SUGOI_LAMBDA(filterChunk));
 }
@@ -610,7 +610,7 @@ void sugoi_storage_t::destroy(const sugoi_query_t* q)
     }
     if (mainThread)
     {
-        build_queries();
+        buildQueries();
     }
     else
         SKR_ASSERT(pimpl->queriesBuilt);
@@ -630,7 +630,7 @@ void sugoi_storage_t::destroy(const sugoi_query_t* q, sugoi_destroy_callback_t c
     }
     if (mainThread)
     {
-        build_queries();
+        buildQueries();
     }
     else
         SKR_ASSERT(pimpl->queriesBuilt);
@@ -653,7 +653,7 @@ void sugoi_storage_t::destroy(const sugoi_query_t* q, sugoi_destroy_callback_t c
                 destroy(viewsToDestroy[i]);
             }
         };
-        query_unsafe(group, q->filter, q->meta, q->customFilter, q->customFilterUserData, SUGOI_LAMBDA(callback2));
+        query_in_group_unsafe(group, q->filter, q->meta, q->customFilter, q->customFilterUserData, SUGOI_LAMBDA(callback2));
     };
     query_groups(q, SUGOI_LAMBDA(filterChunk));
 }
@@ -668,7 +668,7 @@ void sugoi_storage_t::query_groups(const sugoi_query_t* q, sugoi_group_callback_
     }
     if (mainThread)
     {
-        build_queries();
+        buildQueries();
     }
     else
         SKR_ASSERT(pimpl->queriesBuilt);
@@ -676,20 +676,19 @@ void sugoi_storage_t::query_groups(const sugoi_query_t* q, sugoi_group_callback_
     fixed_stack_scope_t  _(localStack);
     bool                 filterShared  = (q->filter.all_shared.length + q->filter.none_shared.length) != 0;
     sugoi_meta_filter_t* validatedMeta = nullptr;
-    if (q->meta.all_meta.length > 0 || q->meta.any_meta.length > 0 || q->meta.none_meta.length > 0)
+    if (q->meta.all_meta.length > 0 || q->meta.none_meta.length > 0)
     {
         validatedMeta  = localStack.allocate<sugoi_meta_filter_t>();
         auto data      = (char*)localStack.allocate(data_size(q->meta));
         *validatedMeta = sugoi::clone(q->meta, data);
         validate(validatedMeta->all_meta);
-        validate(validatedMeta->any_meta);
         validate(validatedMeta->none_meta);
     }
     else
     {
         validatedMeta = (sugoi_meta_filter_t*)&q->meta;
     }
-    bool filterMeta = (validatedMeta->all_meta.length + validatedMeta->any_meta.length + validatedMeta->none_meta.length) != 0;
+    bool filterMeta = (validatedMeta->all_meta.length + validatedMeta->none_meta.length) != 0;
     for (auto& group : q->groups)
     {
         if (filterShared)
@@ -719,20 +718,19 @@ void sugoi_storage_t::query_groups(const sugoi_filter_t& filter, const sugoi_met
     fixed_stack_scope_t  _(localStack);
     bool                 filterShared  = (filter.all_shared.length + filter.none_shared.length) != 0;
     sugoi_meta_filter_t* validatedMeta = nullptr;
-    if (meta.all_meta.length > 0 || meta.any_meta.length > 0 || meta.none_meta.length > 0)
+    if (meta.all_meta.length > 0 || meta.none_meta.length > 0)
     {
         validatedMeta  = localStack.allocate<sugoi_meta_filter_t>();
         auto data      = (char*)localStack.allocate(data_size(meta));
         *validatedMeta = sugoi::clone(meta, data);
         validate(validatedMeta->all_meta);
-        validate(validatedMeta->any_meta);
         validate(validatedMeta->none_meta);
     }
     else
     {
         validatedMeta = (sugoi_meta_filter_t*)&meta;
     }
-    bool filterMeta      = (validatedMeta->all_meta.length + validatedMeta->any_meta.length + validatedMeta->none_meta.length) != 0;
+    bool filterMeta      = (validatedMeta->all_meta.length + validatedMeta->none_meta.length) != 0;
     bool includeDead     = false;
     bool includeDisabled = false;
     {
@@ -784,20 +782,19 @@ bool sugoi_storage_t::match_group(const sugoi_filter_t& filter, const sugoi_meta
     fixed_stack_scope_t  _(localStack);
     bool                 filterShared  = (filter.all_shared.length + filter.none_shared.length) != 0;
     sugoi_meta_filter_t* validatedMeta = nullptr;
-    if (meta.all_meta.length > 0 || meta.any_meta.length > 0 || meta.none_meta.length > 0)
+    if (meta.all_meta.length > 0 || meta.none_meta.length > 0)
     {
         validatedMeta  = localStack.allocate<sugoi_meta_filter_t>();
         auto data      = (char*)localStack.allocate(data_size(meta));
         *validatedMeta = sugoi::clone(meta, data);
         validate(validatedMeta->all_meta);
-        validate(validatedMeta->any_meta);
         validate(validatedMeta->none_meta);
     }
     else
     {
         validatedMeta = (sugoi_meta_filter_t*)&meta;
     }
-    bool filterMeta = (validatedMeta->all_meta.length + validatedMeta->any_meta.length + validatedMeta->none_meta.length) != 0;
+    bool filterMeta = (validatedMeta->all_meta.length + validatedMeta->none_meta.length) != 0;
     if (filterShared)
     {
         fixed_stack_scope_t _(localStack);
@@ -818,7 +815,7 @@ bool sugoi_storage_t::match_group(const sugoi_filter_t& filter, const sugoi_meta
     return match_group_type(group->type, filter, group->archetype->withMask);
 }
 
-void sugoi_storage_t::query_unsafe(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_custom_filter_callback_t customFilter, void* u1, sugoi_view_callback_t callback, void* u)
+void sugoi_storage_t::query_in_group_unsafe(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_custom_filter_callback_t customFilter, void* u1, sugoi_view_callback_t callback, void* u)
 {
     using namespace sugoi;
     bool withCustomFilter = customFilter != nullptr;
@@ -952,7 +949,7 @@ void sugoi_storage_t::query_unsafe(const sugoi_filter_t& filter, const sugoi_met
 {
     using namespace sugoi;
     auto filterChunk = [&](sugoi_group_t* group) {
-        query_unsafe(group, filter, meta, nullptr, nullptr, callback, u);
+        query_in_group_unsafe(group, filter, meta, nullptr, nullptr, callback, u);
     };
     query_groups(filter, meta, SUGOI_LAMBDA(filterChunk));
 }
@@ -973,7 +970,7 @@ void sugoi_storage_t::query(const sugoi_filter_t& filter, const sugoi_meta_filte
                     pimpl->scheduler->sync_entry(group->archetype, idx, false);
             }
             if (callback)
-                query_unsafe(group, filter, meta, nullptr, nullptr, callback, u);
+                query_in_group_unsafe(group, filter, meta, nullptr, nullptr, callback, u);
         };
         query_groups(filter, meta, SUGOI_LAMBDA(filterChunk));
     }

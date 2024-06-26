@@ -54,6 +54,9 @@ namespace sugoi
 [[maybe_unused]] static constexpr size_t kStorageArenaSize  = 128 * 128;
 [[maybe_unused]] static constexpr size_t kLinkComponentSize = 8;
 
+template <typename T>
+concept EntityConcept = std::is_same_v<T, sugoi_entity_t>;
+
 enum pool_type_t
 {
     PT_small,

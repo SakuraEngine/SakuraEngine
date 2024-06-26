@@ -77,10 +77,18 @@ struct EntitySpawner
 {
     TypeSetBuilder builder;
     sugoi_entity_type_t type;
+    sugoi::ArrayComponent<sugoi_entity_t, 4> meta_entities; 
     EntitySpawner()
     {
         type.type = builder.with<T...>().build();
         type.meta = {nullptr, 0};
+    }
+    template <sugoi::EntityConcept... Es>
+    EntitySpawner(Es... es)
+    {
+        (meta_entities.emplace_back(es), ...);
+        type.type = builder.with<T...>().build();
+        type.meta = { meta_entities.data(), (SIndex)meta_entities.size() };
     }
     struct View
     {

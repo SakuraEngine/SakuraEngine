@@ -213,7 +213,7 @@ void MPClientWorld::Snapshot()
                 // match end point
                 views[view->chunk].add(*view);
             };
-            sugoiQ_get_views_group(query, group, SUGOI_LAMBDA(callback));
+            sugoiQ_in_group(query, group, SUGOI_LAMBDA(callback));
 
             if (match)
             {
