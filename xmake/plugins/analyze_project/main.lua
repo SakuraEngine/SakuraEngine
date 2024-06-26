@@ -67,7 +67,7 @@ function analyzing.run_analyzers()
 end
 
 function main()
-    print("start analyze...")
+    -- print("start analyze...")
     
     analyzing.load_targets()
     analyzing.scan_attributes()
@@ -78,5 +78,5 @@ function main()
         io.save(config_file..".table", target_infos[target_name])
     end
 
-    print("analyze ok!")
+    -- print("analyze ok!")
 end

@@ -27,7 +27,9 @@ target("Analyze.Phase")
         end
 
         -- write flag files
-        io.writefile("build/.gens/analyze_phase.flag", "flag to trigger analyze_phase")
+        if not os.exists("build/.gens/analyze_phase.flag") then
+            io.writefile("build/.gens/analyze_phase.flag", "flag to trigger analyze_phase")
+        end
 
         -- dispatch analyze
         depend.on_changed(function ()
