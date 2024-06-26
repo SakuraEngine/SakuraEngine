@@ -1,3 +1,4 @@
+-- target to trigger analyze when configure phase
 target("Analyze.Phase")
     set_kind("phony")
     set_policy("build.fence", true)
@@ -48,25 +49,24 @@ target("Analyze.Phase")
     end)
 target_end()
 
+-- analyze tool functions
 function analyzer(name)
     target("Analyze.Phase")
         add_rules("__Analyzer."..name)
     target_end()
     rule("__Analyzer."..name)
 end
-
-function analyzer_end()
-    rule_end()
-end
-
 function analyze(func, opt)
     on_build(func, opt)
 end
-
+function analyzer_end()
+    rule_end()
+end
 function add_attribute(attribute)
     add_values("Sakura.Attributes", attribute)
 end
 
+-- solve dependencies
 analyzer("Dependencies")
     analyze(function(target, attributes, analyzing)
         local dependencies = {}
@@ -80,6 +80,7 @@ analyzer("Dependencies")
     end)
 analyzer_end()
 
+-- solve attributes
 analyzer("Attributes")
     analyze(function(target, attributes, analyzing)
         return attributes
