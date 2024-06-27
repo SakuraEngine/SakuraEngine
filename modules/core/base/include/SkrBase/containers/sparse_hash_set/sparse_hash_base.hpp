@@ -495,7 +495,12 @@ template <typename Memory>
 template <typename DataRef, typename Pred>
 SKR_INLINE DataRef SparseHashBase<Memory>::_find(HashType hash, Pred&& pred) const
 {
-    if (!bucket()) return {};
+    if (!bucket()) return {
+        nullptr,
+        npos,
+        hash,
+        false
+    };
 
     SizeType search_index = bucket()[_bucket_index(hash)];
     while (search_index != npos)
@@ -523,7 +528,12 @@ template <typename Memory>
 template <typename DataRef, typename Pred>
 SKR_INLINE DataRef SparseHashBase<Memory>::_find_next(DataRef ref, Pred&& pred) const
 {
-    if (!bucket() || !ref.is_valid()) return {};
+    if (!bucket() || !ref.is_valid()) return {
+        nullptr,
+        npos,
+        ref.hash(),
+        false
+    };
 
     SizeType search_index = Super::at(ref.index())._sparse_hash_set_next;
     while (search_index != npos)
