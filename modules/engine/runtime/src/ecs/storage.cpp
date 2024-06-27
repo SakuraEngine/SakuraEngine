@@ -1101,7 +1101,7 @@ void sugoiQ_in_group(sugoi_query_t* query, sugoi_group_t* group, sugoi_view_call
     query->storage->buildQueries();
     if (!query->storage->match_group(query->filter, query->meta, group))
         return;
-    query->storage->query_in_group_unsafe(group, query->filter, query->meta, query->customFilter, query->customFilterUserData, callback, u);
+    query->storage->query_in_group_unsafe(&query->parameters, group, query->filter, query->meta, query->customFilter, query->customFilterUserData, callback, u);
 }
 
 const char8_t* sugoiQ_get_error()

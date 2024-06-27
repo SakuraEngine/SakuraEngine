@@ -74,7 +74,7 @@ struct sugoi_storage_t {
     void all(bool includeDisabled, bool includeDead, sugoi_view_callback_t callback, void* u);
     void batch(const sugoi_entity_t* ents, EIndex count, sugoi_view_callback_t callback, void* u);
 
-    void query_in_group_unsafe(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_custom_filter_callback_t customFilter, void* u1, sugoi_view_callback_t callback, void* u);
+    void query_in_group_unsafe(const sugoi_parameters_t* params, const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_custom_filter_callback_t customFilter, void* u1, sugoi_view_callback_t callback, void* u);
     void query_unsafe(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_view_callback_t callback, void* u);
     void query(const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_view_callback_t callback, void* u);
     void query(const sugoi_query_t* query, sugoi_view_callback_t callback, void* u);

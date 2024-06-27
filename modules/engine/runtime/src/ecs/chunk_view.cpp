@@ -746,7 +746,6 @@ auto sugoiV_get_owned(const sugoi_chunk_view_t* view, sugoi_type_index_t type)
         return (return_type) nullptr;
     auto chunk = view->chunk;
     auto structure = chunk->structure;
-
     SIndex tid = type;
     SIndex slot;
     if constexpr (local)
@@ -760,6 +759,22 @@ auto sugoiV_get_owned(const sugoi_chunk_view_t* view, sugoi_type_index_t type)
         if (slot == kInvalidSIndex)
             return (return_type) nullptr;
     }
+
+#if !SKR_SHIPPING
+    // check rw with parameters
+    if constexpr (!readonly)
+    {
+        for (uint32_t idx = 0; view->params && (idx < view->params->length); idx++)
+        {
+            if ((view->params->types[idx] == tid) && (view->params->accesses[idx].readonly == true))
+            {
+                SKR_LOG_WARN(u8"readwrite access to a component(tid: %d, name: %s) which is queried as readonly!", 
+                    tid, sugoiT_get_desc(tid)->name);
+                return (return_type) nullptr;
+            }
+        }
+    }
+#endif
 
     if constexpr (!readonly)
         chunk->set_timestamp_at(slot, structure->storage->timestamp());

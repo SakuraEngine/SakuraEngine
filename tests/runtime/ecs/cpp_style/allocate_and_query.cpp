@@ -83,6 +83,31 @@ TEST_CASE_METHOD(AllocateEntites, "AllocateAndQuery")
                 EXPECT_EQ(ints[i].v, i);
                 EXPECT_EQ(floats[i].v, i * 2.f);
             }          
+
+            // can't get writable comps with readonly query signature
+            EXPECT_EQ(sugoi::get_owned<IntComponent>(view), nullptr);
+            EXPECT_EQ(sugoi::get_owned<FloatComponent>(view), nullptr);
+        };
+        sugoiQ_get_views(q.value(), SUGOI_LAMBDA(callback));
+    }
+    // ReadWriteAll
+    {
+        auto q = storage->new_query()
+                .ReadWriteAll<FloatComponent, IntComponent>()
+                .commit();
+        EXPECT_OK(q);
+        auto callback = [&](sugoi_chunk_view_t* view) {
+            auto ints = sugoi::get_owned<const IntComponent>(view);
+            auto floats = sugoi::get_owned<const FloatComponent>(view);
+            for (auto i = 0; i < view->count; i++)
+            {
+                EXPECT_EQ(ints[i].v, i);
+                EXPECT_EQ(floats[i].v, i * 2.f);
+            }          
+
+            // can get writable comps with readwrite query signature
+            EXPECT_NE(sugoi::get_owned<IntComponent>(view), nullptr);
+            EXPECT_NE(sugoi::get_owned<FloatComponent>(view), nullptr);
         };
         sugoiQ_get_views(q.value(), SUGOI_LAMBDA(callback));
     }
@@ -107,6 +132,12 @@ TEST_CASE_METHOD(AllocateEntites, "AllocateAndQuery")
             auto floats = sugoi::get_owned<const FloatComponent>(view);
             EXPECT_NE(ints, nullptr);       
             EXPECT_NE(floats, nullptr);       
+
+            sugoi_chunk_view_t shared_view = {};
+            sugoiS_access(storage, shared_entity, &shared_view);
+            auto pshared = sugoi::get_owned<const SharedComponent>(&shared_view);
+            EXPECT_EQ(pshared->i, 114);
+            EXPECT_EQ(pshared->f, 514.f);
         };
         sugoiQ_get_views(q.value(), SUGOI_LAMBDA(callback));
         EXPECT_EQ(sugoiQ_get_count(q.value()), kIntEntityCount);
@@ -122,7 +153,7 @@ TEST_CASE_METHOD(AllocateEntites, "AllocateAndQuery")
             auto ints = sugoi::get_owned<const IntComponent>(view);
             auto floats = sugoi::get_owned<const FloatComponent>(view);
             EXPECT_NE(ints, nullptr);       
-            EXPECT_EQ(floats, nullptr);       
+            EXPECT_EQ(floats, nullptr);     
         };
         sugoiQ_get_views(q.value(), SUGOI_LAMBDA(callback));
         EXPECT_EQ(sugoiQ_get_count(q.value()), kBothEntityCount);

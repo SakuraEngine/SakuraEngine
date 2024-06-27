@@ -99,6 +99,7 @@ typedef struct sugoi_chunk_view_t {
     sugoi_chunk_t* chunk;
     EIndex         start;
     EIndex         count;
+    const struct sugoi_parameters_t* params;
 } sugoi_chunk_view_t;
 
 /**

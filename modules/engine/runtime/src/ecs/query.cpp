@@ -596,7 +596,7 @@ void sugoi_storage_t::query(const sugoi_query_t* q, sugoi_view_callback_t callba
         SKR_ASSERT(pimpl->queriesBuilt);
 
     auto filterChunk = [&](sugoi_group_t* group) {
-        query_in_group_unsafe(group, q->filter, q->meta, q->customFilter, q->customFilterUserData, callback, u);
+        query_in_group_unsafe(&q->parameters, group, q->filter, q->meta, q->customFilter, q->customFilterUserData, callback, u);
     };
     query_groups(q, SUGOI_LAMBDA(filterChunk));
 }
@@ -653,7 +653,7 @@ void sugoi_storage_t::destroy(const sugoi_query_t* q, sugoi_destroy_callback_t c
                 destroy(viewsToDestroy[i]);
             }
         };
-        query_in_group_unsafe(group, q->filter, q->meta, q->customFilter, q->customFilterUserData, SUGOI_LAMBDA(callback2));
+        query_in_group_unsafe(&q->parameters, group, q->filter, q->meta, q->customFilter, q->customFilterUserData, SUGOI_LAMBDA(callback2));
     };
     query_groups(q, SUGOI_LAMBDA(filterChunk));
 }
@@ -815,7 +815,7 @@ bool sugoi_storage_t::match_group(const sugoi_filter_t& filter, const sugoi_meta
     return match_group_type(group->type, filter, group->archetype->withMask);
 }
 
-void sugoi_storage_t::query_in_group_unsafe(const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_custom_filter_callback_t customFilter, void* u1, sugoi_view_callback_t callback, void* u)
+void sugoi_storage_t::query_in_group_unsafe(const sugoi_parameters_t* params, const sugoi_group_t* group, const sugoi_filter_t& filter, const sugoi_meta_filter_t& meta, sugoi_custom_filter_callback_t customFilter, void* u1, sugoi_view_callback_t callback, void* u)
 {
     using namespace sugoi;
     bool withCustomFilter = customFilter != nullptr;
@@ -825,7 +825,7 @@ void sugoi_storage_t::query_in_group_unsafe(const sugoi_group_t* group, const su
         {
             if (match_chunk_changed(*c, meta))
             {
-                sugoi_chunk_view_t view{ c, (EIndex)0, c->count };
+                sugoi_chunk_view_t view{ c, (EIndex)0, c->count, params };
                 if (!withCustomFilter || customFilter(u1, &view))
                     callback(u, &view);
             }
@@ -848,7 +848,7 @@ void sugoi_storage_t::query_in_group_unsafe(const sugoi_group_t* group, const su
                     continue;
                 }
                 auto               count = c->count;
-                sugoi_chunk_view_t view  = { c, 0, c->count };
+                sugoi_chunk_view_t view  = { c, 0, c->count, params };
                 auto               masks = (sugoi_mask_comp_t*)sugoiV_get_owned_ro(&view, kMaskComponent);
                 EIndex             i     = 0;
                 while (i < count)
@@ -925,7 +925,7 @@ void sugoi_storage_t::query_in_group_unsafe(const sugoi_group_t* group, const su
                     continue;
                 }
                 auto               count = c->count;
-                sugoi_chunk_view_t view  = { c, 0, c->count };
+                sugoi_chunk_view_t view  = { c, 0, c->count, params };
                 auto               masks = (sugoi_mask_comp_t*)sugoiV_get_owned_ro(&view, kMaskComponent);
                 EIndex             i     = 0;
                 while (i < count)
@@ -949,7 +949,7 @@ void sugoi_storage_t::query_unsafe(const sugoi_filter_t& filter, const sugoi_met
 {
     using namespace sugoi;
     auto filterChunk = [&](sugoi_group_t* group) {
-        query_in_group_unsafe(group, filter, meta, nullptr, nullptr, callback, u);
+        query_in_group_unsafe(nullptr, group, filter, meta, nullptr, nullptr, callback, u);
     };
     query_groups(filter, meta, SUGOI_LAMBDA(filterChunk));
 }
@@ -970,7 +970,7 @@ void sugoi_storage_t::query(const sugoi_filter_t& filter, const sugoi_meta_filte
                     pimpl->scheduler->sync_entry(group->archetype, idx, false);
             }
             if (callback)
-                query_in_group_unsafe(group, filter, meta, nullptr, nullptr, callback, u);
+                query_in_group_unsafe(nullptr, group, filter, meta, nullptr, nullptr, callback, u);
         };
         query_groups(filter, meta, SUGOI_LAMBDA(filterChunk));
     }
