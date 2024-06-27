@@ -5,19 +5,19 @@
 namespace skr
 {
 template <typename T, bool EmbedRC = true>
-struct SPtrHelper : public SPtrBase<T, EmbedRC>
-{
-    //static_assert(std::is_base_of_v<SInterface, T> || EmbedRC, 
-    //    "Such SPtrHelper is not allowed, EmbedRC should be true or type T must be derived from SInterface");
+struct SPtrHelper : public SPtrBase<T, EmbedRC> {
+    // static_assert(std::is_base_of_v<SInterface, T> || EmbedRC,
+    //     "Such SPtrHelper is not allowed, EmbedRC should be true or type T must be derived from SInterface");
     using this_type = SPtrHelper<T, EmbedRC>;
+
 public:
     SPtrHelper() SKR_NOEXCEPT = default;
     SPtrHelper(std::nullptr_t lp) SKR_NOEXCEPT;
-    
+
     SPtrHelper(T* lp) SKR_NOEXCEPT;
-    template<typename Deleter>
+    template <typename Deleter>
     SPtrHelper(T* lp, Deleter deleter) SKR_NOEXCEPT;
-    
+
     SPtrHelper(const this_type& lp) SKR_NOEXCEPT;
     template <typename U>
     SPtrHelper(const SPtrHelper<U, EmbedRC>& lp, T* pValue) SKR_NOEXCEPT;
@@ -28,17 +28,17 @@ public:
     SPtrHelper(SPtrHelper<U, EmbedRC>&& lp, typename std::enable_if<std::is_convertible<U*, T*>::value>::type* = 0) SKR_NOEXCEPT;
     ~SPtrHelper() SKR_NOEXCEPT;
 
-    template<typename...Args>
+    template <typename... Args>
     static SPtrHelper<T, EmbedRC> Create(Args&&... args) SKR_NOEXCEPT
     {
         return SPtrHelper<T, EmbedRC>(SkrNew<T>(std::forward<Args>(args)...));
     }
-    template<typename...Args>
+    template <typename... Args>
     static SPtrHelper<T, EmbedRC> CreateZeroed(Args&&... args) SKR_NOEXCEPT
     {
         return SPtrHelper<T, EmbedRC>(SkrNewZeroed<T>(std::forward<Args>(args)...));
     }
-    
+
     void swap(this_type& lp) SKR_NOEXCEPT;
     void release() SKR_NOEXCEPT;
 
@@ -57,7 +57,7 @@ public:
     this_type& operator=(const this_type& lp) SKR_NOEXCEPT;
     template <typename U>
     typename std::enable_if<std::is_convertible<U*, T*>::value, this_type&>::type
-    operator=(const SPtrHelper<U, EmbedRC>& lp) SKR_NOEXCEPT;
+               operator=(const SPtrHelper<U, EmbedRC>& lp) SKR_NOEXCEPT;
     this_type& operator=(this_type&& lp) SKR_NOEXCEPT;
     template <typename U>
     typename std::enable_if<std::is_convertible<U*, T*>::value, this_type&>::type
@@ -65,8 +65,10 @@ public:
 
     explicit operator bool() const SKR_NOEXCEPT;
 
-    template <typename U, bool B> friend struct SPtrHelper;
-    template <typename U> friend struct SWeakPtr;
+    template <typename U, bool B>
+    friend struct SPtrHelper;
+    template <typename U>
+    friend struct SWeakPtr;
 };
 
 template <typename T>
@@ -74,33 +76,32 @@ using SPtr = SPtrHelper<T, true>;
 
 template <typename T>
 using SObjectPtr = SPtrHelper<T, false>;
-}
+} // namespace skr
 
 // implement SPtrHelper
 
 // default ctors
 template <typename T, bool EmbedRC>
-skr::SPtrHelper<T, EmbedRC>::SPtrHelper(std::nullptr_t lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp) { }
+skr::SPtrHelper<T, EmbedRC>::SPtrHelper(std::nullptr_t lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp) {}
 
 template <typename T, bool EmbedRC>
-skr::SPtrHelper<T, EmbedRC>::SPtrHelper(T* lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp) { }
+skr::SPtrHelper<T, EmbedRC>::SPtrHelper(T* lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp) {}
 
 template <typename T, bool EmbedRC>
-template<typename Deleter>
-skr::SPtrHelper<T, EmbedRC>::SPtrHelper(T* lp, Deleter deleter) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp, deleter) 
+template <typename Deleter>
+skr::SPtrHelper<T, EmbedRC>::SPtrHelper(T* lp, Deleter deleter) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp, deleter)
 {
     static_assert(EmbedRC, "Intrusive ptr can not use custom deleter!");
 }
 
 template <typename T, bool EmbedRC>
-skr::SPtrHelper<T, EmbedRC>::SPtrHelper(const this_type& lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp) { }
+skr::SPtrHelper<T, EmbedRC>::SPtrHelper(const this_type& lp) SKR_NOEXCEPT : SPtrBase<T, EmbedRC>(lp) {}
 
 template <typename T, bool EmbedRC>
 template <typename U>
 skr::SPtrHelper<T, EmbedRC>::SPtrHelper(const SPtrHelper<U, EmbedRC>& lp, T* pValue) SKR_NOEXCEPT
     : SPtrBase<T, EmbedRC>(lp, pValue)
 {
-
 }
 
 template <typename T, bool EmbedRC>
@@ -108,14 +109,12 @@ template <typename U>
 skr::SPtrHelper<T, EmbedRC>::SPtrHelper(const SPtrHelper<U, EmbedRC>& lp, typename std::enable_if<std::is_convertible<U*, T*>::value>::type*) SKR_NOEXCEPT
     : SPtrBase<T, EmbedRC>(lp)
 {
-
 }
 
 template <typename T, bool EmbedRC>
-skr::SPtrHelper<T, EmbedRC>::SPtrHelper(this_type&& lp) SKR_NOEXCEPT  
-    : SPtrBase<T, EmbedRC>(std::move(lp)) 
+skr::SPtrHelper<T, EmbedRC>::SPtrHelper(this_type&& lp) SKR_NOEXCEPT
+    : SPtrBase<T, EmbedRC>(std::move(lp))
 {
-
 }
 
 template <typename T, bool EmbedRC>
@@ -123,13 +122,12 @@ template <typename U>
 skr::SPtrHelper<T, EmbedRC>::SPtrHelper(SPtrHelper<U, EmbedRC>&& lp, typename std::enable_if<std::is_convertible<U*, T*>::value>::type*) SKR_NOEXCEPT
     : SPtrBase<T, EmbedRC>(std::move(lp))
 {
-    
 }
 
 template <typename T, bool EmbedRC>
 skr::SPtrHelper<T, EmbedRC>::~SPtrHelper() SKR_NOEXCEPT
 {
-    if (this->p) 
+    if (this->p)
         release();
 }
 
@@ -149,7 +147,7 @@ void skr::SPtrHelper<T, EmbedRC>::release() SKR_NOEXCEPT
     {
         this->p = NULL;
 
-        if SKR_CONSTEXPR (EmbedRC) 
+        if SKR_CONSTEXPR (EmbedRC)
         {
             if (this->block)
             {
@@ -168,8 +166,8 @@ void skr::SPtrHelper<T, EmbedRC>::release() SKR_NOEXCEPT
         }
         else
         {
-            auto object = sobject_cast<SInterface*>(pTemp);
-            auto rc = object->release();
+            auto object = static_cast<SInterface*>(pTemp);
+            auto rc     = object->release();
             if (rc <= 0)
             {
                 this->ActualDelete(pTemp);
@@ -209,13 +207,12 @@ skr::SPtrHelper<T, EmbedRC>::reset(U* pValue, Deleter deleter) SKR_NOEXCEPT
 template <typename T, bool EmbedRC>
 skr::SPtrHelper<T, EmbedRC>& skr::SPtrHelper<T, EmbedRC>::operator=(T* lp) SKR_NOEXCEPT
 {
-    if(this->p != lp)
+    if (this->p != lp)
     {
         SPtrHelper(lp).Swap(*this);
     }
     return *this;
 }
-
 
 // with reference
 template <typename T, bool EmbedRC>
@@ -325,7 +322,7 @@ inline bool operator!=(std::nullptr_t, const skr::SPtrHelper<T, EmbedRC>& b) SKR
     return b;
 }
 
-}
+} // namespace skr
 
 // c++ STL functions equivalent
 namespace skr
@@ -337,11 +334,10 @@ inline SPtrHelper<T, EmbedRC> reinterpret_pointer_cast(SPtrHelper<U, EmbedRC> co
     return SPtrHelper<T, EmbedRC>(r, reinterpret_cast<T*>(r.get()));
 }
 
-template<typename T, typename U, bool EmbedRC> 
-SPtrHelper<T, EmbedRC> static_pointer_cast( const SPtrHelper<U, EmbedRC>& r ) SKR_NOEXCEPT
+template <typename T, typename U, bool EmbedRC>
+SPtrHelper<T, EmbedRC> static_pointer_cast(const SPtrHelper<U, EmbedRC>& r) SKR_NOEXCEPT
 {
     return SPtrHelper<T, EmbedRC>(r, static_cast<T*>(r.get()));
 }
 
-
-}
+} // namespace skr

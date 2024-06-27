@@ -2,6 +2,7 @@
 #include "SkrRTTR/type_registry.hpp"
 #include "SkrContainers/string.hpp"
 #include "SkrBase/meta.h"
+#include "SkrBase/sinterface.hpp"
 
 // RTTR traits
 // 提供非 GenericType 的静态信息：
