@@ -4,7 +4,8 @@ set_project("SakuraEngine")
 engine_version = "0.1.0"
 default_unity_batch = 16
 
-add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" }) -- xmake 2.7.4 
+-- will generate bad compile_commands.json
+-- add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" }) -- xmake 2.7.4 
 
 set_warnings("all")
 set_policy("build.ccache", false)

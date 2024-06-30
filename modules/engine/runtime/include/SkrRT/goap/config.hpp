@@ -22,7 +22,7 @@ using CostType     = int64_t;
 using PriorityType = float;
 using NodeId       = uint64_t;
 using NameType     = skr::String;
-using OffsetType   = decltype(offsetof(skr_guid_t, Storage0));
+using OffsetType   = decltype(offsetof(skr_guid_t, storage0));
 
 template <typename Identifier, typename Variable>
 using MapType = skr::Map<Identifier, Variable>;

@@ -9,7 +9,7 @@
 
 namespace skr::gui
 {
-sreflect_struct(
+sreflect_interface(
     "guid": "409eaa24-5549-46e3-87c1-81649576d2cd"
 )
 SKR_GUI_API IMultiChildRenderObject : virtual public skr::rttr::IObject {

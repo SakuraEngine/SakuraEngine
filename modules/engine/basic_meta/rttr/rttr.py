@@ -5,6 +5,8 @@ import framework.scheme as sc
 import framework.cpp_types as cpp
 import typing as t
 
+# TODO. based & method & field expand 功能，展平所有基类的方法和字段，加速反射和脚本接入的性能
+
 
 @dataclass
 class ParamData:

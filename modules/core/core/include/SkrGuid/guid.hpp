@@ -2,16 +2,16 @@
 #include <SkrContainers/string.hpp>
 #include "SkrBase/types/guid.h"
 #include "SkrBase/misc/hash.h"
-#include "SkrBase/misc/debug.h" 
+#include "SkrBase/misc/debug.h"
 #include "SkrBase/config.h"
 
 inline SKR_CONSTEXPR bool operator==(skr_guid_t a, skr_guid_t b)
 {
     int result = true;
-    result &= (a.Storage0 == b.Storage0);
-    result &= (a.Storage1 == b.Storage1);
-    result &= (a.Storage2 == b.Storage2);
-    result &= (a.Storage3 == b.Storage3);
+    result &= (a.storage0 == b.storage0);
+    result &= (a.storage1 == b.storage1);
+    result &= (a.storage2 == b.storage2);
+    result &= (a.storage3 == b.storage3);
     return result;
 }
 

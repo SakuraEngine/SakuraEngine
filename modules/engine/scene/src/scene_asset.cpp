@@ -40,7 +40,7 @@ void skr_save_scene(sugoi_storage_t* world, skr::archive::JsonWriter* writer)
     std::execution::par_unseq,
 #endif
     indices.begin(), indices.end(), [&](sugoi_entity_t a, sugoi_entity_t b) {
-        return std::lexicographical_compare(&guids[a].Storage0, &guids[a].Storage3, &guids[b].Storage0, &guids[b].Storage3);
+        return std::lexicographical_compare(&guids[a].storage0, &guids[a].storage3, &guids[b].storage0, &guids[b].storage3);
     });
     skr::Vector<sugoi_entity_t> sortedEntities;
     sortedEntities.resize_default(guids.size());
@@ -82,5 +82,4 @@ void skr_save_scene(sugoi_storage_t* world, skr::archive::JsonWriter* writer)
 
 void skr_load_scene(sugoi_storage_t* world, skr::archive::JsonReader* reader)
 {
-
 }
