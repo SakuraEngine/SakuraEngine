@@ -6,4 +6,4 @@
     #include "SkrBase/misc/integer_tools.hpp"
 #endif
 
-#define SKR_DEBUG_BREAK() debug_break
+#define SKR_DEBUG_BREAK() debug_break()

@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrBase/config.h"
 #include "SkrBase/config/platform.h"
 #include "SkrBase/misc/internal/debugbreak.h"
 
