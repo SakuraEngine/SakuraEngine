@@ -97,7 +97,7 @@ SkrImageDataTask::SkrImageDataTask(SkrResourceDevice* resource_service)
 
 SkrImageDataTask::EState SkrImageDataTask::state() const SKR_NOEXCEPT
 {
-    return (EState)skr_atomicu32_load_relaxed((uint32_t*)&_state);
+    return (EState)skr_atomic_load_relaxed((uint32_t*)&_state);
 }
 
 void SkrImageDataTask::from_file(StringView file_path, bool need_decode)
@@ -137,7 +137,7 @@ void SkrImageDataTask::from_data(Span<const uint8_t> data)
 
 void SkrImageDataTask::_async_trans_state(EState target)
 {
-    skr_atomicu32_store_release((uint32_t*)&_state, (uint32_t)target);
+    skr_atomic_store_release((uint32_t*)&_state, (uint32_t)target);
 }
 
 void SkrImageDataTask::_async_decode_data()
@@ -166,7 +166,7 @@ SkrImageUploadTask::SkrImageUploadTask(SkrRenderDevice* render_device)
 
 bool SkrImageUploadTask::is_okey()
 {
-    return skr_atomicu32_load_relaxed(&_async_is_okey);
+    return skr_atomic_load_relaxed(&_async_is_okey);
 }
 
 void SkrImageUploadTask::from_image(const SkrImageData& image)
@@ -219,7 +219,7 @@ void SkrImageUploadTask::from_image(const SkrImageData& image)
         data.textures                               = &task->_texture_view;
         cgpux_bind_table_update(task->_bind_table, &data, 1);
 
-        skr_atomicu32_store_release(&task->_async_is_okey, 1);
+        skr_atomic_store_release(&task->_async_is_okey, 1);
     }, this);
     _vram_destination = vram_service->request(request, &_ram_request);
 }

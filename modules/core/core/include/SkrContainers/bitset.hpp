@@ -4,7 +4,7 @@
 
 namespace skr
 {
-template <size_t N, typename TBlock = uint64_t>
+template <size_t N, typename TBlock = std::conditional_t<N <= 32, uint32_t, uint64_t>>
 using Bitset = container::Bitset<N, TBlock>;
 }
 

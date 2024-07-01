@@ -19,7 +19,7 @@ sreflect_struct(
 typedef struct skr_child_comp_t skr_child_comp_t;
 
 #ifdef __cplusplus
-using skr_children_t = sugoi::array_comp_T<skr_child_comp_t, 4>;
+using skr_children_t = sugoi::ArrayComponent<skr_child_comp_t, 4>;
 #endif
 
 sreflect_struct(

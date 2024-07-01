@@ -14,6 +14,12 @@ private:
     alignas(Align) uint8_t _storage[Size];
 };
 
+template <uint64_t Align>
+struct AlignedStorage<0, Align> {
+    inline void*       data() noexcept { return nullptr; }
+    inline const void* data() const noexcept { return nullptr; }
+};
+
 template <typename T, uint64_t N = 1>
 struct Placeholder : AlignedStorage<sizeof(T) * N, alignof(T)> {
     using Super = AlignedStorage<sizeof(T) * N, alignof(T)>;

@@ -72,10 +72,12 @@ end
 analyzer("Dependencies")
     analyze(function(target, attributes, analyzing)
         local dependencies = {}
-        for __, dep in pairs(target:orderdeps()) do
+        local idx = 1
+        for __, dep in ipairs(target:orderdeps()) do
             local dep_name = dep:name()
             if analyzing.filter_target(dep_name) then
-                table.insert(dependencies, dep_name)
+                dependencies[idx] = dep_name
+                idx = idx + 1
             end
         end
         return dependencies

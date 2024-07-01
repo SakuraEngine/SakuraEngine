@@ -59,7 +59,7 @@ void MPServerWorld::AddConnection(HSteamNetConnection connection)
 
 void MPServerWorld::SpawnGameModeEntity()
 {
-    using spawner_t = sugoi::entity_spawner_T<CMPGameModeState, CAuth, CAuthTypeData, sugoi::dirty_comp_t>;
+    using spawner_t = sugoi::EntitySpawner<CMPGameModeState, CAuth, CAuthTypeData, sugoi::dirty_comp_t>;
     spawner_t spawner;
     spawner(storage, 1, [&](spawner_t::View view)
     {
@@ -73,7 +73,7 @@ void MPServerWorld::SpawnGameModeEntity()
 void MPServerWorld::SpawnPlayerEntity(int player, int connectionId, int localPlayerId)
 {
     // allocate 1 movable cubes
-    using spawner_t = sugoi::entity_spawner_T<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t, 
+    using spawner_t = sugoi::EntitySpawner<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t, 
         CMovement, CSphereCollider2D, CWeapon, CHealth, CSkill, CPlayer,
         CController, CPrefab, CAuth, CAuthTypeData, CRelevance, sugoi::dirty_comp_t>;
     spawner_t spawner;
@@ -271,7 +271,7 @@ void MPServerWorld::Update()
             GenerateWorldDelta();
             SendWorldDelta();
             // remove dead entities after generate the delta
-            sugoi::array_comp_T<sugoi_group_t*, 16> deadGroups;
+            sugoi::ArrayComponent<sugoi_group_t*, 16> deadGroups;
             auto getDeadGroups = [&](sugoi_group_t* group)
             {
                 deadGroups.emplace_back(group);

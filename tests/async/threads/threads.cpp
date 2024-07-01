@@ -103,13 +103,13 @@ TEST_CASE_METHOD(ThreadsTest, "RecursiveCondVar")
     skr_destroy_mutex(&sm);
 }
 
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 
 TEST_CASE_METHOD(ThreadsTest, "Atomic")
 {
     SAtomicU32 a32 = 0;
     auto addF = [&]() {
-        skr_atomicu32_add_relaxed(&a32, 1);
+        skr_atomic_fetch_add_relaxed(&a32, 1);
     };
     std::thread st1(addF);
     std::thread st2(addF);

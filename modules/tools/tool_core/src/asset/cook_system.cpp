@@ -1,5 +1,4 @@
 #include "SkrCore/module/module.hpp"
-#include "SkrGuid/guid.hpp"
 #include "SkrTask/parallel_for.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrBase/misc/defer.hpp"
@@ -24,8 +23,8 @@ namespace skd::asset
 {
 struct SCookSystemImpl : public skd::asset::SCookSystem {
     friend struct ::SkrToolCoreModule;
-    using AssetMap   = skr::FlatHashMap<skr_guid_t, SAssetRecord*, skr::guid::hash>;
-    using CookingMap = skr::ParallelFlatHashMap<skr_guid_t, SCookContext*, skr::guid::hash>;
+    using AssetMap   = skr::FlatHashMap<skr_guid_t, SAssetRecord*>;
+    using CookingMap = skr::ParallelFlatHashMap<skr_guid_t, SCookContext*>;
 
     skr::task::event_t AddCookTask(skr_guid_t resource) override;
     skr::task::event_t EnsureCooked(skr_guid_t resource) override;
@@ -83,8 +82,8 @@ protected:
 
     skr::task::counter_t mainCounter;
 
-    skr::FlatHashMap<skr_guid_t, SCooker*, skr::guid::hash> defaultCookers;
-    skr::FlatHashMap<skr_guid_t, SCooker*, skr::guid::hash> cookers;
+    skr::FlatHashMap<skr_guid_t, SCooker*> defaultCookers;
+    skr::FlatHashMap<skr_guid_t, SCooker*> cookers;
     SMutex                                                  assetMutex;
     skr_io_ram_service_t*                                   ioServices[ioServicesMaxCount];
 };

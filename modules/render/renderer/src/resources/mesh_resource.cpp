@@ -1,7 +1,6 @@
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrCore/memory/memory.h"
 #include "SkrRT/platform/vfs.h"
-#include "SkrGuid/guid.hpp"
 #include "SkrGraphics/cgpux.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
@@ -34,7 +33,7 @@ static struct SkrMeshResourceUtil {
         uint64_t             hash;
     };
 
-    using VertexLayoutIdMap   = skr::FlatHashMap<skr_vertex_layout_id, skr::SPtr<RegisteredVertexLayout>, skr::guid::hash>;
+    using VertexLayoutIdMap   = skr::FlatHashMap<skr_vertex_layout_id, skr::SPtr<RegisteredVertexLayout>, skr::Hash<skr_guid_t>>;
     using VertexLayoutHashMap = skr::FlatHashMap<uint64_t, RegisteredVertexLayout*>;
 
     SkrMeshResourceUtil()
@@ -285,7 +284,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallImpl(skr_resource_record_t* record)
         {
             auto dRequest = SPtr<BufferRequest>::Create();
             dRequest->absPaths.resize_default(mesh_resource->bins.size());
-            dRequest->dFutures.resize_default(mesh_resource->bins.size());
+            dRequest->dFutures.resize_zeroed(mesh_resource->bins.size());
             dRequest->dBuffers.resize_zeroed(mesh_resource->bins.size());
             InstallType installType = { ECompressMethod::NONE };
             for (auto i = 0u; i < mesh_resource->bins.size(); i++)

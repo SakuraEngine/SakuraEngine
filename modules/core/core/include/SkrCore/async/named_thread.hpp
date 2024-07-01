@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrOS/thread.h"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrContainers/string.hpp"
 #include "SkrCore/async/result.hpp"
 

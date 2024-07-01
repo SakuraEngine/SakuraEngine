@@ -28,7 +28,7 @@ static struct RegisterComponent${type.id}Helper
         desc.name = u8"${type.name}";
         
     %if hasattr(type.attrs.component, "buffer"):
-        desc.size = sizeof(sugoi::array_comp_T<${type.name}, ${type.attrs.component.buffer}>);
+        desc.size = sizeof(sugoi::ArrayComponent<${type.name}, ${type.attrs.component.buffer}>);
     %else:
         desc.size = std::is_empty_v<${type.name}> ? 0 : sizeof(${type.name});
     %endif
@@ -69,7 +69,7 @@ static struct RegisterComponent${type.id}Helper
         desc.elementSize = 0;
     %endif
     %if hasattr(type.attrs.component, "buffer"):
-        desc.alignment = alignof(sugoi::array_comp_T<${type.name}, ${type.attrs.component.buffer}>);
+        desc.alignment = alignof(sugoi::ArrayComponent<${type.name}, ${type.attrs.component.buffer}>);
     %else:
         desc.alignment = alignof(${type.name});
     %endif

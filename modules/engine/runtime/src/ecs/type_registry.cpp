@@ -1,10 +1,10 @@
-#include <string.h>
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrGuid/guid.hpp"
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/ecs/detail/pool.hpp"
-#include "SkrRT/ecs/detail/type.hpp"
-#include "SkrRT/ecs/detail/type_registry.hpp"
+#include "SkrRT/ecs/type_index.hpp"
+
+#include "./pool.hpp"
+#include "./impl/type_registry.hpp"
+#include <string.h>
 
 #if SKR_PLAT_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN
@@ -21,13 +21,14 @@
 
 namespace sugoi
 {
-type_registry_t::type_registry_t(pool_t& pool)
+TypeRegistry::Impl::Impl(pool_t& pool)
     : nameArena(pool)
 {
+    using namespace skr::literals;
     {
         SKR_ASSERT(descriptions.size() == kDisableComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe(u8"{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
+        desc.guid = u8"{B68B1CAB-98FF-4298-A22E-68B404034B1B}"_guid;
         desc.name = u8"disable";
         desc.size = 0;
         desc.elementSize = 0;
@@ -41,7 +42,7 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kDeadComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe(u8"{C0471B12-5462-48BB-B8C4-9983036ECC6C}");
+        desc.guid = u8"{C0471B12-5462-48BB-B8C4-9983036ECC6C}"_guid;
         desc.name = u8"dead";
         desc.size = 0;
         desc.elementSize = 0;
@@ -55,7 +56,7 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kLinkComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe(u8"{54BD68D5-FD66-4DBE-85CF-70F535C27389}");
+        desc.guid = u8"{54BD68D5-FD66-4DBE-85CF-70F535C27389}"_guid;
         desc.name = u8"sugoi::link_comp_t";
         desc.size = sizeof(sugoi_entity_t) * kLinkComponentSize;
         desc.elementSize = sizeof(sugoi_entity_t);
@@ -71,7 +72,7 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kMaskComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe(u8"{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
+        desc.guid = u8"{B68B1CAB-98FF-4298-A22E-68B404034B1B}"_guid;
         desc.name = u8"sugoi::mask_comp_t";
         desc.size = sizeof(sugoi_mask_comp_t);
         desc.elementSize = 0;
@@ -85,7 +86,7 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kGuidComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe(u8"{565FBE87-6309-4DF7-9B3F-C61B67B38BB3}");
+        desc.guid = u8"{565FBE87-6309-4DF7-9B3F-C61B67B38BB3}"_guid;
         desc.name = u8"sugoi::guid_comp_t";
         desc.size = sizeof(sugoi_guid_t);
         desc.elementSize = 0;
@@ -99,7 +100,7 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kDirtyComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe(u8"{A55D73D3-D41C-4683-89E1-8B211C115303}");
+        desc.guid = u8"{A55D73D3-D41C-4683-89E1-8B211C115303}"_guid;
         desc.name = u8"sugoi::dirty_comp_t";
         desc.size = sizeof(sugoi_dirty_comp_t);
         desc.elementSize = 0;
@@ -112,12 +113,12 @@ type_registry_t::type_registry_t(pool_t& pool)
     }
 }
 
-type_index_t type_registry_t::register_type(const type_description_t& inDesc)
+type_index_t TypeRegistry::Impl::register_type(const type_description_t& inDesc)
 {
     type_description_t desc = inDesc;
     if (!desc.name)
     {
-        return kInvalidSIndex;
+        return kInvalidTypeIndex;
     }
     else
     {
@@ -182,7 +183,7 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
     return index;
 }
 
-type_index_t type_registry_t::get_type(const guid_t& guid)
+type_index_t TypeRegistry::Impl::get_type(const guid_t& guid)
 {
     auto i = guid2type.find(guid);
     if (i != guid2type.end())
@@ -190,7 +191,7 @@ type_index_t type_registry_t::get_type(const guid_t& guid)
     return kInvalidTypeIndex;
 }
 
-type_index_t type_registry_t::get_type(skr::StringView name)
+type_index_t TypeRegistry::Impl::get_type(skr::StringView name)
 {
     auto i = name2type.find(name);
     if (i != name2type.end())
@@ -198,57 +199,101 @@ type_index_t type_registry_t::get_type(skr::StringView name)
     return kInvalidTypeIndex;
 }
 
-guid_t type_registry_t::make_guid()
+const sugoi_type_description_t* TypeRegistry::Impl::get_type_desc(sugoi_type_index_t idx)
 {
-    if (guid_func)
-    {
-        sugoi_guid_t guid;
-        guid_func(&guid);
-        return guid;
-    }
-    {
-        guid_t guid;
-        skr_make_guid(&guid);
-        return guid;
-    }
+    return &descriptions[sugoi::type_index_t(idx).index()];
 }
+
+void TypeRegistry::Impl::foreach_types(sugoi_type_callback_t callback, void* u)
+{
+    for(auto& pair : name2type)
+        callback(u, pair.second);
+}
+
+intptr_t TypeRegistry::Impl::map_entity_field(intptr_t p)
+{
+    return entityFields[p];
+}
+
+guid_t TypeRegistry::Impl::make_guid()
+{
+    guid_t guid;
+    skr_make_guid(&guid);
+    return guid;
+}
+
+TypeRegistry::TypeRegistry(Impl& impl)
+    : impl(impl)
+{
+}
+
+
+type_index_t TypeRegistry::register_type(const sugoi_type_description_t& desc)
+{
+    return impl.register_type(desc);
+}
+
+type_index_t TypeRegistry::get_type(const guid_t& guid)
+{
+    return impl.get_type(guid);
+}
+
+type_index_t TypeRegistry::get_type(skr::StringView name)
+{
+    return impl.get_type(name);
+}
+
+const sugoi_type_description_t* TypeRegistry::get_type_desc(sugoi_type_index_t idx)
+{
+    return impl.get_type_desc(idx);
+}
+
+void TypeRegistry::foreach_types(sugoi_type_callback_t callback, void* u)
+{
+    impl.foreach_types(callback, u);
+}
+
+intptr_t TypeRegistry::map_entity_field(intptr_t p)
+{
+    return impl.map_entity_field(p);
+}
+
+guid_t TypeRegistry::make_guid()
+{
+    return impl.make_guid();
+}
+
 } // namespace sugoi
 
 extern "C" {
 
 void sugoi_make_guid(skr_guid_t* guid)
 {
-    *guid = sugoi::type_registry_t::get().make_guid();
+    *guid = sugoi::TypeRegistry::get().make_guid();
 }
 
 sugoi_type_index_t sugoiT_register_type(sugoi_type_description_t* description)
 {
-    return sugoi::type_registry_t::get().register_type(*description);
+    return sugoi::TypeRegistry::get().register_type(*description);
 }
 
 sugoi_type_index_t sugoiT_get_type(const sugoi_guid_t* guid)
 {
-    return sugoi::type_registry_t::get().get_type(*guid);
+    return sugoi::TypeRegistry::get().get_type(*guid);
 }
 
 sugoi_type_index_t sugoiT_get_type_by_name(const char8_t* name)
 {
-    return sugoi::type_registry_t::get().get_type(name);
+    return sugoi::TypeRegistry::get().get_type(name);
 }
 
 const sugoi_type_description_t* sugoiT_get_desc(sugoi_type_index_t idx)
 {
-    return &sugoi::type_registry_t::get().descriptions[sugoi::type_index_t(idx).index()];
-}
-
-void sugoiT_set_guid_func(guid_func_t func)
-{
-    sugoi::type_registry_t::get().guid_func = func;
+    return sugoi::TypeRegistry::get().get_type_desc(idx);
 }
 
 void sugoiT_get_types(sugoi_type_callback_t callback, void* u)
 {
-    for(auto& pair : sugoi::type_registry_t::get().name2type)
-        callback(u, pair.second);
+    sugoi::TypeRegistry::get().foreach_types(callback, u);
 }
 }

@@ -1,4 +1,4 @@
-#include "SkrRT/ecs/detail/cache.hpp"
+#include "./cache.hpp"
 
 sugoi::cache_base_t::cache_base_t(pool_t& pool)
     : pool(pool), first(nullptr), last(nullptr), curr(0), count(0) {}

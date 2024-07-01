@@ -69,6 +69,7 @@ struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
     }
 };
 } // namespace binary
+
 template <class K, class V, class Eq>
 struct SerdeCompleteChecker<binary::ReadTrait<skr::FlatHashMap<K, V, Eq>>>
     : std::bool_constant<is_complete_serde_v<binary::ReadTrait<K>> && is_complete_serde_v<binary::ReadTrait<V>>> {
@@ -79,4 +80,62 @@ struct SerdeCompleteChecker<binary::WriteTrait<skr::FlatHashMap<K, V, Eq>>>
     : std::bool_constant<is_complete_serde_v<binary::WriteTrait<K>> && is_complete_serde_v<binary::WriteTrait<V>>> {
 };
 
+} // namespace skr
+
+#include "SkrSerde/json/reader.h"
+#include "SkrSerde/json/writer.h"
+
+namespace skr::json
+{
+template <class K, class V, class Hash, class Eq>
+struct ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
+    static bool Read(skr::archive::JsonReader* json, skr::FlatHashMap<K, V, Hash, Eq>& map)
+    {
+        size_t count = 0;
+        json->StartArray(count);
+        map.reserve(count);
+        for (size_t i = 0; i < count; i += 2)
+        {
+            K k;
+            V v;
+            if (!skr::json::Read<K>(json, k))
+                return false;
+            
+            if (!skr::json::Read<V>(json, v))
+                return false;
+
+            map.emplace(std::move(k), std::move(v));
+        }
+        json->EndArray();
+        return true;
+    }
+};
+
+template <class K, class V, class Hash, class Eq>
+struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
+    static bool Write(skr::archive::JsonWriter* json, const skr::FlatHashMap<K, V, Hash, Eq>& map)
+    {
+        json->StartArray();
+        for (auto& pair : map)
+        {
+            skr::json::Write(json, pair.first);
+            skr::json::Write<V>(json, pair.second);
+        }
+        json->EndArray();
+        return true;
+    }
+};
+} // namespace skr::json
+
+namespace skr
+{
+template <class K, class V, class Hash, class Eq>
+struct SerdeCompleteChecker<json::ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>>>
+    : std::bool_constant<is_complete_serde_v<json::ReadTrait<K>> && is_complete_serde_v<json::ReadTrait<V>>> {
+};
+
+template <class K, class V, class Hash, class Eq>
+struct SerdeCompleteChecker<json::WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>>>
+    : std::bool_constant<is_complete_serde_v<json::WriteTrait<K>> && is_complete_serde_v<json::WriteTrait<V>>> {
+};
 } // namespace skr

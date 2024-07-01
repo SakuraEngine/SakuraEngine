@@ -24,7 +24,7 @@ void RegisterSimpleComponent()
 
 sugoi_type_set_t GetNetworkComponents()
 {
-    static sugoi::static_type_set_T<skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t,
+    static sugoi::StaticTypeSet<skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t,
                                     CController, CMovement, CSphereCollider2D, CBall, CHealth, CSkill, CPlayer, CZombie>
     set;
     return set.get();

@@ -73,7 +73,7 @@ struct ComponentDeltaBuilder {
             SKR_ASSERT(SUGOI_IS_BUFFER(historyComponent));
             auto                  filter  = make_zeroed<sugoi_filter_t>();
             sugoi_type_index_t    types[] = { component, historyComponent, sugoi_id_of<CAuth>::get() };
-            sugoi::type_builder_t all;
+            sugoi::TypeSetBuilder all;
             all.with(types, 3);
             filter.all                    = all.build();
             sugoi_parameters_t params     = {};
@@ -90,7 +90,7 @@ struct ComponentDeltaBuilder {
         else
         {
             auto                  filter = make_zeroed<sugoi_filter_t>();
-            sugoi::type_builder_t all;
+            sugoi::TypeSetBuilder all;
             sugoi_type_index_t    types[] = { component, sugoi_id_of<CAuth>::get() };
             all.with(types, 2);
             filter.all                    = all.build();
@@ -182,7 +182,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
             return index;
         };
 
-        sugoi::type_builder_t history;
+        sugoi::TypeSetBuilder history;
         for (auto& component : components)
         {
             if (component.historyComponent != sugoi::kInvalidTypeIndex)
@@ -193,7 +193,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
         sugoi_type_set_t historySet = history.build();
         auto             deltaType  = make_zeroed<sugoi_delta_type_t>();
         deltaType.added.type        = historySet;
-        sugoi::array_comp_T<sugoi_group_t*, 16> groupToCast;
+        sugoi::ArrayComponent<sugoi_group_t*, 16> groupToCast;
         auto                                    checkHistoryComponents = [&](sugoi_group_t* group) {
             sugoi_entity_type_t type;
             sugoiG_get_type(group, &type);
@@ -213,7 +213,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder {
             auto                auths        = (CAuth*)sugoiV_get_owned_rw_local(view, localTypes[1]);
             auto                relevances   = (CRelevance*)sugoiV_get_owned_ro(view, sugoi_id_of<CRelevance>::get());
             auto                dirtyMasks   = (uint32_t*)sugoiV_get_owned_ro_local(view, localTypes[2]);
-            auto                authTypes    = (sugoi::array_comp_T<sugoi_type_index_t, 8>*)sugoiV_get_owned_ro_local(view, localTypes[3]);
+            auto                authTypes    = (sugoi::ArrayComponent<sugoi_type_index_t, 8>*)sugoiV_get_owned_ro_local(view, localTypes[3]);
             auto                ControllerId = sugoi_id_of<CController>::get();
             auto                controller   = (CController*)sugoiV_get_owned_ro(view, ControllerId);
             auto                entities     = sugoiV_get_entities(view);
@@ -409,7 +409,7 @@ struct ComponentDeltaApplier {
     void Initialize(sugoi_storage_t* storage)
     {
         auto                  filter = make_zeroed<sugoi_filter_t>();
-        sugoi::type_builder_t all;
+        sugoi::TypeSetBuilder all;
         all.with(component).with<CNetwork>();
         filter.all                    = all.build();
         sugoi_parameters_t params     = {};

@@ -1,6 +1,5 @@
 #include "cgltf/cgltf.h"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrGuid/guid.hpp"
 #include "SkrCore/log.hpp"
 #include "SkrTask/parallel_for.hpp"
 #include "SkrContainers/stl_vector.hpp"

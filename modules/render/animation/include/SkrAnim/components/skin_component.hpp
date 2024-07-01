@@ -1,8 +1,8 @@
 #pragma once
-#include "SkrAnim/resources/skin_resource.hpp"
-#include "SkrRenderer/primitive_draw.h"
-#include "SkrAnim/ozz/base/maths/simd_math.h"
 #include "SkrRT/ecs/sugoi_meta.hpp"
+#include "SkrRenderer/primitive_draw.h"
+#include "SkrAnim/resources/skin_resource.hpp"
+#include "SkrAnim/ozz/base/maths/simd_math.h"
 #ifndef __meta__
     #include "SkrAnim/components/skin_component.generated.h" // IWYU pragma: export
 #endif

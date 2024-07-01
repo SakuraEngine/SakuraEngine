@@ -1,5 +1,5 @@
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/ecs/detail/context.hpp"
+#include "./context.hpp"
 
 sugoi_context_t* g_sugoi_ctx;
 
@@ -11,7 +11,7 @@ SKR_RUNTIME_API sugoi_context_t* sugoi_get_context()
 
 namespace sugoi
 {
-type_registry_t& type_registry_t::get()
+TypeRegistry& TypeRegistry::get()
 {
     return sugoi_get_context()->typeRegistry;
 }
@@ -41,7 +41,8 @@ sugoi_context_t::sugoi_context_t()
     : normalPool(sugoi::kFastBinSize, sugoi::kFastBinCapacity)
     , largePool(sugoi::kLargeBinSize, sugoi::kLargeBinCapacity)
     , smallPool(sugoi::kSmallBinSize, sugoi::kSmallBinCapacity)
-    , typeRegistry(smallPool)
+    , typeRegistryImpl(smallPool)
+    , typeRegistry(typeRegistryImpl)
     , scheduler()
 {
 }

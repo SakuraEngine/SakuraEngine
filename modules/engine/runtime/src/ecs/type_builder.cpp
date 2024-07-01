@@ -3,40 +3,40 @@
 
 namespace sugoi
 {
-type_builder_t::type_builder_t()
+TypeSetBuilder::TypeSetBuilder()
 {
 }
-type_builder_t::~type_builder_t()
+TypeSetBuilder::~TypeSetBuilder()
 {
 }
-type_builder_t::type_builder_t(const type_builder_t& other)
+TypeSetBuilder::TypeSetBuilder(const TypeSetBuilder& other)
 {
     indices = other.indices;
 }
-type_builder_t::type_builder_t(type_builder_t&& other)
+TypeSetBuilder::TypeSetBuilder(TypeSetBuilder&& other)
 {
     indices = std::move(other.indices);
 }
-type_builder_t& type_builder_t::operator=(const type_builder_t& other)
+TypeSetBuilder& TypeSetBuilder::operator=(const TypeSetBuilder& other)
 {
     indices = other.indices;
     return *this;
 }
-type_builder_t& type_builder_t::operator=(type_builder_t&& other)
+TypeSetBuilder& TypeSetBuilder::operator=(TypeSetBuilder&& other)
 {
     indices = std::move(other.indices);
     return *this;
 }
-type_builder_t& type_builder_t::with(const sugoi_type_index_t* types, uint32_t inLength)
+TypeSetBuilder& TypeSetBuilder::with(const sugoi_type_index_t* types, uint32_t inLength)
 {
     indices.append(types, types + inLength);
     return *this;
 }
-void type_builder_t::reserve(uint32_t size)
+void TypeSetBuilder::reserve(uint32_t size)
 {
     indices.reserve(size);
 }
-sugoi_type_set_t type_builder_t::build()
+sugoi_type_set_t TypeSetBuilder::build()
 {
     if(indices.empty())
         return {nullptr, 0};

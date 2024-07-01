@@ -292,7 +292,7 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
 //         auto iter = filter_map.find(update->texture);
 //         if (iter != filter_map.end())
 //         {
-//             skr_atomicu32_store_relaxed(&iter->second->state, (uint32_t)EGDIResourceState::Okay);
+//             atomic_store_relaxed(&iter->second->state, (uint32_t)EGDIResourceState::Okay);
 //         }
 //         filter_map[update->texture] = update;
 //     }
@@ -327,7 +327,7 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
 //             {
 //                 if (frame_index > update->execute_frame_index + RG_MAX_FRAME_IN_FLIGHT)
 //                 {
-//                     skr_atomicu32_store_relaxed(&update->state, (uint32_t)EGDIResourceState::Okay);
+//                     atomic_store_relaxed(&update->state, (uint32_t)EGDIResourceState::Okay);
 //                 }
 //             }
 //         }

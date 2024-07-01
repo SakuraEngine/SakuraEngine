@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrCore/async/async_service.h"
 #ifdef __cplusplus
     #include "SkrContainers/sptr.hpp"

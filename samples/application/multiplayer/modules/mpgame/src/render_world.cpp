@@ -47,7 +47,7 @@ void MPRenderWorld::LoadScene()
             }
         };          
         // allocate 1 player entity
-        auto playerT_builder = make_zeroed<sugoi::type_builder_t>();
+        auto playerT_builder = make_zeroed<sugoi::TypeSetBuilder>();
         playerT_builder
             .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
             .with<skr_camera_comp_t>();
@@ -58,9 +58,9 @@ void MPRenderWorld::LoadScene()
 }
 
 
-sugoi::type_builder_t MPRenderWorld::GetRenderEntityType(skr_resource_handle_t prefab, bool controller)
+sugoi::TypeSetBuilder MPRenderWorld::GetRenderEntityType(skr_resource_handle_t prefab, bool controller)
 {
-    sugoi::type_builder_t builder;
+    sugoi::TypeSetBuilder builder;
     builder.with<CGhost, skr_render_effect_t>();
     builder.with<skr_rotation_comp_t, skr_translation_comp_t, skr_scale_comp_t>();
     if (controller)
@@ -79,7 +79,7 @@ void MPRenderWorld::UpdateStructuralChanges()
     auto buildMap = [&](sugoi_chunk_view_t* view)
     {
         auto entities = sugoiV_get_entities(view);
-        auto ghosts = (CGhost*)sugoiV_get_owned_ro(view, sugoi_id_of<CGhost>::get());
+        auto ghosts = (const CGhost*)sugoiV_get_owned_ro(view, sugoi_id_of<CGhost>::get());
         for (int i = 0; i < view->count; ++i)
         {
             if(ghosts[i].mappedEntity != SUGOI_NULL_ENTITY)
@@ -111,9 +111,9 @@ void MPRenderWorld::UpdateStructuralChanges()
         };
         skr_render_effect_access(renderer, view, u8"ForwardEffect", SUGOI_LAMBDA(modelFree));
         skr_render_effect_detach(renderer, view, u8"ForwardEffect");
-        sugoiS_destroy(storage, view);
     };
     sugoiS_batch(storage, toDeleteRenderEntities.data(), toDeleteRenderEntities.size(), SUGOI_LAMBDA(deleteRenderEntity));
+    sugoiS_destroy_entities(storage, toDeleteRenderEntities.data(), (uint32_t)toDeleteRenderEntities.size());
     auto createRenderEntity = [&](sugoi_chunk_view_t* view)
     {
         auto entities = sugoiV_get_entities(view);
@@ -186,7 +186,7 @@ void MPRenderWorld::Update()
     //camera follow entity with CController
     {
         sugoi_filter_t filter = make_zeroed<sugoi_filter_t>();
-        sugoi::type_builder_t builder;
+        sugoi::TypeSetBuilder builder;
         builder.with<skr_translation_comp_t, CController>();
         filter.all = builder.build();
         sugoi_meta_filter_t metaFilter = make_zeroed<sugoi_meta_filter_t>();

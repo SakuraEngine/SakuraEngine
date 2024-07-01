@@ -8,7 +8,7 @@
 #include "SkrCore/process.h"
 #include "SkrCore/memory/memory.h"
 #include "SkrContainers/string.hpp"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 
 typedef struct SProcess
 {
@@ -86,8 +86,9 @@ const char8_t* skr_get_current_process_name()
 		kInitialized = 1,
 	};
 
-	static SAtomic32 once = -1;
-	if (skr_atomic32_cas_relaxed(&once, kNotInit, kInitializing) == kNotInit)
+	static SAtomic32 once = kNotInit;
+	int32_t init = kNotInit;
+	if (skr_atomic_compare_exchange_strong(&once, &init, (int32_t)kInitializing))
 	{
 		HANDLE handle = OpenProcess(
 #if _WIN32_WINNT >= 0x0600
@@ -121,9 +122,9 @@ const char8_t* skr_get_current_process_name()
 		{
 			printf("Error OpenProcess : %lu", GetLastError());
 		}
-		skr_atomic32_store_relaxed(&once, kInitialized);
+		skr_atomic_store_relaxed(&once, kInitialized);
 	}
-	while (skr_atomic32_load_relaxed(&once) != kInitialized) {}
+	while (skr_atomic_load_relaxed(&once) != kInitialized) {}
 	return pname ? pname : u8"unknown";
 }
 

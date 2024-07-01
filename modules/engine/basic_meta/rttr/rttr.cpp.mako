@@ -1,4 +1,5 @@
 // BEGIN RTTR GENERATED
+#include "SkrBase/misc/hash.h"
 #include "SkrRTTR/type.hpp"
 #include "SkrCore/exec_static.hpp"
 #include "SkrContainers/tuple.hpp"

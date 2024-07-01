@@ -1,15 +1,15 @@
+#include "SkrRT/ecs/array.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
+
 extern "C" {
 #include "lua.h"
 #include "lualib.h"
 }
-#include "SkrRT/ecs/detail/stack.hpp"
-#include "SkrRT/ecs/detail/query.hpp"
-#include "SkrRT/ecs/detail/chunk.hpp"
-#include "SkrRT/ecs/detail/archetype.hpp"
-#include "SkrRT/ecs/detail/type_registry.hpp"
-#include "SkrRT/ecs/type_builder.hpp"
-
-#include "SkrRT/ecs/array.hpp"
+#include "./stack.hpp"
+#include "./query.hpp"
+#include "./chunk.hpp"
+#include "./archetype.hpp"
+#include "./type_registry.hpp"
 
 namespace skr::lua
 {
@@ -114,7 +114,7 @@ static lua_chunk_view_t fill_chunk_view(sugoi_storage_t* storage, sugoi_chunk_vi
     luaView.readonly     = readonly;
 
     luaView.entities = sugoiV_get_entities(view);
-    auto& typeReg    = sugoi::type_registry_t::get();
+    auto& typeReg    = sugoi::TypeRegistry::get();
     forloop (i, 0, count)
     {
         auto& desc = typeReg.descriptions[sugoi::type_index_t(indices[i]).index()];
@@ -160,7 +160,7 @@ void bind_ecs(lua_State* L)
     {
         auto trampoline = +[](lua_State* L) -> int {
             auto name = (const char8_t*)luaL_checkstring(L, 1);
-            auto type = sugoi::type_registry_t::get().get_type(name);
+            auto type = sugoi::TypeRegistry::get().get_type(name);
             if (type == sugoi::kInvalidSIndex)
             {
                 lua_pushnil(L);
@@ -186,7 +186,7 @@ void bind_ecs(lua_State* L)
             luaL_argexpected(L, lua_isfunction(L, 4), 4, "function");
             // iterate array
             auto                  count = lua_objlen(L, 2);
-            sugoi::type_builder_t builder;
+            sugoi::TypeSetBuilder builder;
             builder.reserve((uint32_t)count);
             for (auto i = 1; i <= count; ++i)
             {
@@ -236,10 +236,7 @@ void bind_ecs(lua_State* L)
                 entities.push_back(sugoi_entity_t(ent));
                 lua_pop(L, 1);
             }
-            sugoi_view_callback_t callback = +[](void* userdata, sugoi_chunk_view_t* view) -> void {
-                sugoiS_destroy((sugoi_storage_t*)userdata, view);
-            };
-            sugoiS_batch(storage, entities.data(), (uint32_t)entities.size(), callback, storage);
+            sugoiS_destroy_entities(storage, entities.data(), (uint32_t)entities.size());
             return 0;
         };
         lua_pushcfunction(L, trampoline, "destroy_entities");
@@ -257,8 +254,8 @@ void bind_ecs(lua_State* L)
             // iterate array
             auto                            count = lua_objlen(L, 2);
             skr::stl_vector<sugoi_entity_t> entities;
-            sugoi::type_builder_t           addBuilder;
-            sugoi::type_builder_t           removeBuilder;
+            sugoi::TypeSetBuilder           addBuilder;
+            sugoi::TypeSetBuilder           removeBuilder;
             entities.reserve(count);
             for (auto i = 1; i <= count; ++i)
             {

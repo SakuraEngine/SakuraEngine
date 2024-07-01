@@ -207,7 +207,7 @@ bool ReadTrait<skr_guid_t>::Read(skr::archive::JsonReader* _json, skr_guid_t& va
     skr::String str;
     if (_json->String(str).has_value())
     {
-        if (!skr::guid::make_guid(str.u8_str(), value))
+        if (!skr::guid_from_sv(str.u8_str(), value))
             return false;
         return true;
     }

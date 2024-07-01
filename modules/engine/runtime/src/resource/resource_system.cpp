@@ -1,14 +1,13 @@
 #include "resource_request_impl.hpp"
 #include "SkrTask/fib_task.hpp"
-#include "SkrGuid/guid.hpp"
-#include "SkrRT/ecs/entities.hpp"
 #include "SkrBase/misc/debug.h" 
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/stl_vector.hpp"
 #include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrContainers/concurrent_queue.hpp"
+
+#include "SkrRT/ecs/entity_registry.hpp"
 
 namespace skr::resource
 {
@@ -66,12 +65,12 @@ protected:
     skr::stl_vector<SResourceRequest*> toUpdateRequests;
     skr::stl_vector<SResourceRequest*> serdeBatch;
 
-    sugoi::entity_registry_t resourceIds;
+    sugoi::EntityRegistry resourceIds;
     task::counter_t counter;
     bool quit = false;
-    skr::ParallelFlatHashMap<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
+    skr::ParallelFlatHashMap<skr_guid_t, skr_resource_record_t*, skr::Hash<skr_guid_t>> resourceRecords;
     skr::ParallelFlatHashMap<void*, skr_resource_record_t*> resourceToRecord;
-    skr::ParallelFlatHashMap<skr_guid_t, SResourceFactory*, skr::guid::hash> resourceFactories;
+    skr::ParallelFlatHashMap<skr_guid_t, SResourceFactory*, skr::Hash<skr_guid_t>> resourceFactories;
 };
 
 SResourceSystemImpl::SResourceSystemImpl()

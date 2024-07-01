@@ -18,7 +18,7 @@ bool ReadTrait<skr_resource_handle_t>::Read(skr::archive::JsonReader* json, skr_
     json->String(view);
     {
         skr_guid_t       guid;
-        if (!skr::guid::make_guid(view.u8_str(), guid))
+        if (!skr::guid_from_sv(view.u8_str(), guid))
             return false;
         handle.set_guid(guid);
     }

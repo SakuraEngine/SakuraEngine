@@ -1,18 +1,18 @@
-#include "SkrRT/ecs/entity.hpp"
-#include "SkrRT/ecs/entities.hpp"
-#include "SkrRT/ecs/detail/chunk.hpp"
+#include "SkrRT/ecs/entity_registry.hpp"
+#include "./utilities.hpp"
+#include "./chunk.hpp"
 
 sugoi_entity_debug_proxy_t dummy;
 namespace sugoi
 {
-void entity_registry_t::reset()
+void EntityRegistry::reset()
 {
     SMutexLock lock(mutex.mMutex);
     entries.clear();
     freeEntries.clear();
 }
 
-void entity_registry_t::shrink()
+void EntityRegistry::shrink()
 {
     SMutexLock lock(mutex.mMutex);
     if (entries.size() == 0)
@@ -32,7 +32,7 @@ void entity_registry_t::shrink()
     });
 }
 
-void entity_registry_t::new_entities(sugoi_entity_t* dst, EIndex count)
+void EntityRegistry::new_entities(sugoi_entity_t* dst, EIndex count)
 {
     SMutexLock lock(mutex.mMutex);
     EIndex i = 0;
@@ -60,7 +60,7 @@ void entity_registry_t::new_entities(sugoi_entity_t* dst, EIndex count)
     }
 }
 
-void entity_registry_t::free_entities(const sugoi_entity_t* dst, EIndex count)
+void EntityRegistry::free_entities(const sugoi_entity_t* dst, EIndex count)
 {
     SMutexLock lock(mutex.mMutex);
     // build freelist in input order
@@ -75,7 +75,7 @@ void entity_registry_t::free_entities(const sugoi_entity_t* dst, EIndex count)
     }
 }
 
-void entity_registry_t::fill_entities(const sugoi_chunk_view_t& view)
+void EntityRegistry::fill_entities(const sugoi_chunk_view_t& view)
 {
     auto ents = (sugoi_entity_t*)view.chunk->get_entities() + view.start;
     new_entities(ents, view.count);
@@ -87,7 +87,7 @@ void entity_registry_t::fill_entities(const sugoi_chunk_view_t& view)
     }
 }
 
-void entity_registry_t::fill_entities(const sugoi_chunk_view_t& view, const sugoi_entity_t* src)
+void EntityRegistry::fill_entities(const sugoi_chunk_view_t& view, const sugoi_entity_t* src)
 {
     auto ents = (sugoi_entity_t*)view.chunk->get_entities() + view.start;
     memcpy(ents, src, view.count * sizeof(sugoi_entity_t));
@@ -99,12 +99,12 @@ void entity_registry_t::fill_entities(const sugoi_chunk_view_t& view, const sugo
     }
 }
 
-void entity_registry_t::free_entities(const sugoi_chunk_view_t& view)
+void EntityRegistry::free_entities(const sugoi_chunk_view_t& view)
 {
     free_entities(view.chunk->get_entities() + view.start, view.count);
 }
 
-void entity_registry_t::move_entities(const sugoi_chunk_view_t& view, const sugoi_chunk_t* src, EIndex srcIndex)
+void EntityRegistry::move_entities(const sugoi_chunk_view_t& view, const sugoi_chunk_t* src, EIndex srcIndex)
 {
     SKR_ASSERT(src != view.chunk || (srcIndex >= view.start + view.count));
     const sugoi_entity_t* toMove = src->get_entities() + srcIndex;
@@ -117,7 +117,7 @@ void entity_registry_t::move_entities(const sugoi_chunk_view_t& view, const sugo
     std::memcpy((sugoi_entity_t*)view.chunk->get_entities() + view.start, toMove, view.count * sizeof(sugoi_entity_t));
 }
 
-void entity_registry_t::move_entities(const sugoi_chunk_view_t& view, EIndex srcIndex)
+void EntityRegistry::move_entities(const sugoi_chunk_view_t& view, EIndex srcIndex)
 {
     SKR_ASSERT(srcIndex >= view.start + view.count);
     const sugoi_entity_t* toMove = view.chunk->get_entities() + srcIndex;

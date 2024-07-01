@@ -2,7 +2,7 @@
 #include <atomic>
 #include <type_traits>
 #include "SkrBase/misc/defer.hpp"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrOS/thread.h"
 #include "SkrCore/memory/memory.h"
 #include "SkrContainers/stl_queue.hpp"
@@ -83,9 +83,9 @@ public:
 private:
     Status status = Status::PENDING;
     // Result handling
-    Result result{};
+    Result result = {};
     // Cancellation handling
-    SAtomic32 cancelled{};
+    SAtomic32 cancelled = ATOMIC_VAR_INIT(0);
     IFuture<Result>* future = nullptr;
 
 public:
@@ -242,11 +242,11 @@ public:
     // Returns true if the task is canceled by the cancel()
     // It is usable to break process inside the do_in_background()
     // @MainThread and @Workerthread
-    bool is_cancelled() const SKR_NOEXCEPT { return skr_atomic32_load_relaxed(&cancelled); }
+    bool is_cancelled() const SKR_NOEXCEPT { return skr_atomic_load_relaxed(&cancelled); }
 
     // Cancel the task
     // @MainThread
-    void cancel() SKR_NOEXCEPT { skr_atomic32_store_relaxed(&cancelled, 1); }
+    void cancel() SKR_NOEXCEPT { skr_atomic_store_relaxed(&cancelled, 1); }
 
     // Get the result.
     // It could freeze the mainthread if it invoked before the task is finished. Exception from the do_in_background can be rethrown.

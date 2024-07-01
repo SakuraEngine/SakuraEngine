@@ -4,7 +4,6 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrCore/time.h"
-#include "SkrGuid/guid.hpp"
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrContainers/map.hpp"
 #include "SkrRenderer/primitive_draw.h"
@@ -20,7 +19,7 @@
 static struct RegisterComponentskr_live2d_render_model_comp_tHelper {
     RegisterComponentskr_live2d_render_model_comp_tHelper()
     {
-        using namespace skr::guid::literals;
+        using namespace skr::literals;
 
         sugoi_type_description_t desc = make_zeroed<sugoi_type_description_t>();
         desc.name                     = u8"skr_live2d_render_model_comp_t";
@@ -55,7 +54,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     live2d_render_view_t view_;
 
     sugoi_query_t*        effect_query = nullptr;
-    sugoi::type_builder_t type_builder;
+    sugoi::TypeSetBuilder type_builder;
     sugoi_type_index_t    identity_type = {};
 
     void initialize(SRendererId renderer, sugoi_storage_t* storage)

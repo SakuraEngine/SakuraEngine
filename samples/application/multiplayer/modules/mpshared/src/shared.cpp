@@ -46,7 +46,7 @@ void MPGameWorld::Initialize()
         10,
         {},
     };
-    sugoi::entity_spawner_T<CCollisionScene> sceneSpawner;
+    sugoi::EntitySpawner<CCollisionScene> sceneSpawner;
     sceneSpawner(storage, 1, [](auto){});
 }
 
@@ -113,11 +113,7 @@ void MPGameWorld::ClearDeadBall()
             }
         };
         sugoiQ_get_views(killBallQuery.query, SUGOI_LAMBDA(collectBallsToKill));
-        auto killBalls = [&](sugoi_chunk_view_t* view)
-        {
-            sugoiS_destroy(storage, view);
-        };
-        sugoiS_batch(storage, ballsToKill.data(), ballsToKill.size(), SUGOI_LAMBDA(killBalls));
+        sugoiS_destroy_entities(storage, ballsToKill.data(), ballsToKill.size());
     }
 }
 
@@ -143,11 +139,7 @@ void MPGameWorld::ClearDeadZombie()
             }
         };
         sugoiQ_get_views(killZombieQuery.query, SUGOI_LAMBDA(collectBallsToKill));
-        auto killBalls = [&](sugoi_chunk_view_t* view)
-        {
-            sugoiS_destroy(storage, view);
-        };
-        sugoiS_batch(storage, zombiesToKill.data(), zombiesToKill.size(), SUGOI_LAMBDA(killBalls));
+        sugoiS_destroy_entities(storage, zombiesToKill.data(), zombiesToKill.size());
     }
 }
 
@@ -155,7 +147,7 @@ void MPGameWorld::SpawnZombie()
 {
     if(authoritative)
     {
-        using spawner_t = sugoi::entity_spawner_T<CZombie, CMovement, CHealth, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
+        using spawner_t = sugoi::EntitySpawner<CZombie, CMovement, CHealth, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
         CPrefab, CAuth, CAuthTypeData, CRelevance, sugoi::dirty_comp_t>;
         static spawner_t spawner;
         auto state= sugoi::get_singleton<CMPGameModeState>(gameStateQuery);
@@ -316,7 +308,7 @@ void MPGameWorld::PlayerShoot()
     //TODO: predict spawn
     if(authoritative)
     {
-        using spawner_t = sugoi::entity_spawner_T<CBall, CMovement, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
+        using spawner_t = sugoi::EntitySpawner<CBall, CMovement, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
         CPrefab, CAuth, CAuthTypeData, CRelevance, sugoi::dirty_comp_t>;
         static spawner_t spawner;
         auto fire = [&](sugoi_chunk_view_t* view)

@@ -29,11 +29,20 @@ test_target("SceneTest")
     public_dependency("SkrScene", engine_version)
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
     add_files("scene/main.cpp")
-    
-test_target("ECSTest")
+
+test_target("ECSTest_CStyle")
     set_group("05.tests/runtime")
     public_dependency("SkrRT", engine_version)
-    add_files("ecs/main.cpp")
+    add_files("ecs/c_style/*.cpp")
+
+codegen_component("ECSTest_CPPStyle", { api = "ECS_TEST", rootdir = "ecs/cpp_style" })
+    add_files("ecs/cpp_style/**.hpp")
+
+executable_module("ECSTest_CPPStyle", "ECS_TEST", engine_version)
+    set_group("05.tests/runtime")
+    public_dependency("SkrRT", engine_version)
+    add_deps("SkrTestFramework", {public = false})
+    add_files("ecs/cpp_style/*.cpp")
 
 test_target("MDBTest")
     set_group("05.tests/runtime")

@@ -13,7 +13,6 @@ target("SkrCompileFlags")
     -- disable c++ warnings for gcc/clang
     add_cxflags(
         "-Wno-unused-private-field", 
-        "-Wno-deprecated-builtins",
         "-Wno-pragma-system-header-outside-header",
         "-Wno-ambiguous-reversed-operator",
         "-Wno-unused-command-line-argument",
@@ -78,6 +77,7 @@ target("SkrCompileFlags")
 
     -- util flag for clang-cl
     add_cxflags(
+        "-ftime-trace",
         "-Wno-clang-cl-pch",
         "-Wno-microsoft-cast", -- microsoft cast extension
         "-Wno-microsoft-include", -- microsoft include extension

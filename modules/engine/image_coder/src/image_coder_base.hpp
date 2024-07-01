@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrContainers/span.hpp"
 #include "SkrImageCoder/skr_image_coder.h"
 
@@ -44,12 +44,12 @@ protected:
 public:
     uint32_t add_refcount()
     {
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1);
+        return 1 + skr_atomic_fetch_add_relaxed(&rc, 1);
     }
     uint32_t release()
     {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
+        skr_atomic_fetch_add_relaxed(&rc, -1);
+        return skr_atomic_load_acquire(&rc);
     }
 
 private:
@@ -85,12 +85,12 @@ protected:
 public:
     uint32_t add_refcount()
     {
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1);
+        return 1 + skr_atomic_fetch_add_relaxed(&rc, 1);
     }
     uint32_t release()
     {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
+        skr_atomic_fetch_add_relaxed(&rc, -1);
+        return skr_atomic_load_acquire(&rc);
     }
 
 private:

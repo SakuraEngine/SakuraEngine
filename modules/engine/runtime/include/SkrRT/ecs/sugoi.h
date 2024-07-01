@@ -24,7 +24,6 @@ extern "C" {
  * @brief guid generation function
  *
  */
-typedef void (*guid_func_t)(sugoi_guid_t* guid);
 typedef struct sugoi_mapper_t {
     void (*map)(void* user, sugoi_entity_t* ent) SKR_IF_CPP(= nullptr);
     void* user SKR_IF_CPP(= nullptr);
@@ -100,6 +99,7 @@ typedef struct sugoi_chunk_view_t {
     sugoi_chunk_t* chunk;
     EIndex         start;
     EIndex         count;
+    const struct sugoi_parameters_t* params;
 } sugoi_chunk_view_t;
 
 /**
@@ -150,9 +150,9 @@ typedef struct sugoi_filter_t {
 
 enum sugoi_operation_scope
 {
-    DOS_PAR,
-    DOS_SEQ,
-    DOS_UNSEQ,
+    SOS_PAR,
+    SOS_SEQ,
+    SOS_UNSEQ,
 };
 
 /**
@@ -163,7 +163,7 @@ typedef struct sugoi_operation_t {
     int phase;    //-1 means any phase
     int readonly; // read or write
     int atomic;
-    int randomAccess; // random access
+    sugoi_operation_scope randomAccess; // random access
 } sugoi_operation_t;
 
 /**
@@ -179,7 +179,6 @@ typedef struct sugoi_parameters_t {
 // runtime type (context sensitive) filter
 typedef struct sugoi_meta_filter_t {
     sugoi_entity_set_t all_meta;
-    sugoi_entity_set_t any_meta;
     sugoi_entity_set_t none_meta;
     sugoi_type_set_t   changed;
     uint64_t           timestamp;
@@ -253,12 +252,6 @@ SKR_RUNTIME_API sugoi_type_index_t sugoiT_get_type_by_name(const char8_t* name);
  */
 SKR_RUNTIME_API const sugoi_type_description_t* sugoiT_get_desc(sugoi_type_index_t idx);
 /**
- * @brief set guid generator function
- *
- * @param func
- */
-SKR_RUNTIME_API void sugoiT_set_guid_func(guid_func_t func);
-/**
  * @brief get all types registered to sugoi
  *
  * @param callback
@@ -277,21 +270,6 @@ SKR_RUNTIME_API sugoi_storage_t* sugoiS_create();
  * @param storage
  */
 SKR_RUNTIME_API void sugoiS_release(sugoi_storage_t* storage);
-/**
- * @brief set userdata for storage
- *
- * @param storage
- * @param u
- * @return void
- */
-SKR_RUNTIME_API void sugoiS_set_userdata(sugoi_storage_t* storage, void* u);
-/**
- * @brief get userdata of storage
- *
- * @param storage
- * @return void*
- */
-SKR_RUNTIME_API void* sugoiS_get_userdata(sugoi_storage_t* storage);
 /**
  * @brief allocate entities
  * batch allocate numbers of entities with entity type
@@ -338,14 +316,6 @@ SKR_RUNTIME_API void sugoiS_instantiate_delta(sugoi_storage_t* storage, sugoi_en
  * @param callback optional callback after allocating chunk view
  */
 SKR_RUNTIME_API void sugoiS_instantiate_entities(sugoi_storage_t* storage, sugoi_entity_t* ents, EIndex n, EIndex count, sugoi_view_callback_t callback, void* u);
-/**
- * @brief destroy entities in chunk view
- * destory all entities in target chunk view
- * @param storage
- * @param view
- */
-SKR_DEPRECATED("use other variants of sugoiS_destroy instead")
-SKR_RUNTIME_API void sugoiS_destroy(sugoi_storage_t* storage, const sugoi_chunk_view_t* view);
 /**
  * @brief destroy entities
  * destory given entities
@@ -626,7 +596,7 @@ SKR_RUNTIME_API void sugoiQ_set_custom_filter(sugoi_query_t* query, sugoi_custom
  */
 SKR_RUNTIME_API void             sugoiQ_get_views(sugoi_query_t* query, sugoi_view_callback_t callback, void* u);
 SKR_RUNTIME_API void             sugoiQ_get_groups(sugoi_query_t* query, sugoi_group_callback_t callback, void* u);
-SKR_RUNTIME_API void             sugoiQ_get_views_group(sugoi_query_t* query, sugoi_group_t* group, sugoi_view_callback_t callback, void* u);
+SKR_RUNTIME_API void             sugoiQ_in_group(sugoi_query_t* query, sugoi_group_t* group, sugoi_view_callback_t callback, void* u);
 SKR_RUNTIME_API sugoi_storage_t* sugoiQ_get_storage(sugoi_query_t* query);
 
 /**
@@ -755,15 +725,6 @@ SKR_RUNTIME_API void sugoiS_enable_components(const sugoi_chunk_view_t* view, co
  * @param types
  */
 SKR_RUNTIME_API void sugoiS_disable_components(const sugoi_chunk_view_t* view, const sugoi_type_set_t* types);
-
-/**
- * @brief set version of storage, useful when detecting changes
- *
- * @param storage
- * @param number
- */
-SKR_RUNTIME_API void sugoiS_set_version(sugoi_storage_t* storage, uint64_t number);
-
 /**
  * @brief get group of chunk
  *
@@ -782,6 +743,34 @@ SKR_RUNTIME_API sugoi_storage_t* sugoiC_get_storage(const sugoi_chunk_t* chunk);
  * @param chunk
  */
 SKR_RUNTIME_API uint32_t sugoiC_get_count(const sugoi_chunk_t* chunk);
+/**
+ * @brief lock xlock component in chunk
+ *
+ * @param chunk
+ * @param type
+ */
+SKR_RUNTIME_API void sugoiC_x_lock(sugoi_chunk_t* chunk, sugoi_type_index_t type);
+/**
+ * @brief unlock xlock component in chunk
+ *
+ * @param chunk
+ * @param type
+ */
+SKR_RUNTIME_API void sugoiC_x_unlock(sugoi_chunk_t* chunk, sugoi_type_index_t type);
+/**
+ * @brief lock slock component in chunk
+ *
+ * @param chunk
+ * @param type
+ */
+SKR_RUNTIME_API void sugoiC_s_lock(const sugoi_chunk_t* chunk, sugoi_type_index_t type);
+/**
+ * @brief unlock slock component in chunk
+ *
+ * @param chunk
+ * @param type
+ */
+SKR_RUNTIME_API void sugoiC_s_unlock(const sugoi_chunk_t* chunk, sugoi_type_index_t type);
 
 SKR_RUNTIME_API void sugoi_set_bit(uint32_t* mask, int32_t bit);
 

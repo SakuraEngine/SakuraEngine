@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrRT/io/io.h"
-#include "SkrGuid/guid.hpp"
 #include "../components/component.hpp"
 
 namespace skr {
@@ -58,13 +57,13 @@ struct CompressedBlocksComponent : public IORequestComponent
 
 constexpr skr_guid_t CID<struct BlocksComponent>::Get()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     return u8"5c630f52-ec5b-4e6d-8d52-6e7933bd588d"_guid;
 } 
 
 constexpr skr_guid_t CID<struct CompressedBlocksComponent>::Get()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     return u8"c4554100-4810-4372-817a-2c72eebcb377"_guid;
 } 
 

@@ -1,11 +1,12 @@
 #pragma once
+#include "SkrContainers/bitset.hpp"
 #include "SkrRT/ecs/sugoi.h"
-#include "hash.hpp"
-#include <algorithm>
-#include <bitset>
+#include "SkrRT/ecs/hash.hpp"
 
 namespace sugoi
 {
+    using bitset32 = skr::Bitset<32>;
+
     template<class T>
     struct set_utils
     {
@@ -37,7 +38,7 @@ namespace sugoi
         }
 
         template<class S>
-        static S merge_with_mask(const S& lhs, const S& rhs, std::bitset<32> mask, void* d)
+        static S merge_with_mask(const S& lhs, const S& rhs, sugoi::bitset32 mask, void* d)
         {
             SIndex i = 0, j = 0, k = 0;
             T* dst = (T*)d;
@@ -45,7 +46,7 @@ namespace sugoi
             {
                 if (lhs.data[i] > rhs.data[j])
                 {
-                    if(mask.test(i))
+                    if(mask[i])
                         dst[k++] = rhs.data[j++];
                     else
                         j++;
@@ -59,7 +60,7 @@ namespace sugoi
                 dst[k++] = lhs.data[i++];
             while (j < rhs.length)
             {
-                if(mask.test(i))
+                if(mask[i])
                     dst[k++] = rhs.data[j++];
                 else
                     j++;

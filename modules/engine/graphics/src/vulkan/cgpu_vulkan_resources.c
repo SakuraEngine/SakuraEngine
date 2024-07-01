@@ -1,4 +1,4 @@
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrGraphics/api.h"
 #include "SkrGraphics/backend/vulkan/cgpu_vulkan.h"
 #include "../common/common_utils.h"
@@ -987,16 +987,18 @@ void VkUtil_UnmapTileMappingAt(CGPUTexture_Vulkan* T, CGPUTileTextureSubresource
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)T->super.device;
     CGPUTiledTextureInfo* pTiledInfo = (CGPUTiledTextureInfo*)T->super.tiled_resource;
     CGPUTileMapping_Vulkan* Mapping = VkUtil_TileMappingAt(subres, x, y, z);
-    const int32_t status = skr_atomic32_cas_relaxed(&Mapping->status, 
-            VK_TILE_MAPPING_STATUS_MAPPED, VK_TILE_MAPPING_STATUS_UNMAPPING);
-    if (status == VK_TILE_MAPPING_STATUS_MAPPED)
+    int32_t expect_mapped = VK_TILE_MAPPING_STATUS_MAPPED;
+    if (skr_atomic_compare_exchange_strong(&Mapping->status, 
+            &expect_mapped, VK_TILE_MAPPING_STATUS_UNMAPPING))
     {
         vmaFreeMemory(D->pVmaAllocator, Mapping->pVkAllocation);
         Mapping->pVkAllocation = NULL;
-        skr_atomicu64_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
+        skr_atomic_fetch_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
     }
-    skr_atomic32_cas_relaxed(&Mapping->status, 
-        VK_TILE_MAPPING_STATUS_UNMAPPING, VK_TILE_MAPPING_STATUS_UNMAPPED);
+
+    int32_t expect_unmapping = VK_TILE_MAPPING_STATUS_UNMAPPING;
+    skr_atomic_compare_exchange_strong(&Mapping->status, 
+        &expect_unmapping, VK_TILE_MAPPING_STATUS_UNMAPPED);
 }
 
 void VkUtil_UnmapPackedMappingAt(CGPUTexture_Vulkan* T, uint32_t n)
@@ -1004,16 +1006,17 @@ void VkUtil_UnmapPackedMappingAt(CGPUTexture_Vulkan* T, uint32_t n)
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)T->super.device;
     CGPUTiledTextureInfo* pTiledInfo = (CGPUTiledTextureInfo*)T->super.tiled_resource;
     CGPUTileTexturePackedMipMapping_Vulkan* Mapping = &T->pVkPackedMappings[n];
-    const int32_t status = skr_atomic32_cas_relaxed(&Mapping->status, 
-            VK_TILE_MAPPING_STATUS_MAPPED, VK_TILE_MAPPING_STATUS_UNMAPPING);
-    if (status == VK_TILE_MAPPING_STATUS_MAPPED)
+    int32_t expect_mapped = VK_TILE_MAPPING_STATUS_MAPPED;
+    if (skr_atomic_compare_exchange_strong(&Mapping->status, 
+            &expect_mapped, VK_TILE_MAPPING_STATUS_UNMAPPING))
     {
         vmaFreeMemory(D->pVmaAllocator, Mapping->pVkAllocation);
         Mapping->pVkAllocation = NULL;
-        skr_atomicu64_add_relaxed(&pTiledInfo->alive_pack_count, -1);
+        skr_atomic_fetch_add_relaxed(&pTiledInfo->alive_pack_count, -1);
     }    
-    skr_atomic32_cas_relaxed(&Mapping->status, 
-        VK_TILE_MAPPING_STATUS_UNMAPPING, VK_TILE_MAPPING_STATUS_UNMAPPED);
+    int32_t expect_unmapping = VK_TILE_MAPPING_STATUS_UNMAPPING;
+    skr_atomic_compare_exchange_strong(&Mapping->status, 
+        &expect_unmapping, VK_TILE_MAPPING_STATUS_UNMAPPED);
 }
 
 void cgpu_queue_map_packed_mips_vulkan(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions)
@@ -1027,8 +1030,9 @@ void cgpu_queue_map_packed_mips_vulkan(CGPUQueueId queue, const struct CGPUTiled
         uint32_t layer = T->mSingleTail ? 0 : regions->packed_mips[i].layer;
         CGPUTileTexturePackedMipMapping_Vulkan* pMapping = &T->pVkPackedMappings[layer];
 
-        const int32_t prev = skr_atomic32_cas_relaxed(&pMapping->status, VK_TILE_MAPPING_STATUS_UNMAPPED, VK_TILE_MAPPING_STATUS_PENDING);
-        if (prev != VK_TILE_MAPPING_STATUS_UNMAPPED) continue;
+        int32_t expect_unmapped = VK_TILE_MAPPING_STATUS_UNMAPPING;
+        if (!skr_atomic_compare_exchange_strong(&pMapping->status, 
+            &expect_unmapped, VK_TILE_MAPPING_STATUS_PENDING)) continue;
 
         N++;
     }
@@ -1044,8 +1048,9 @@ void cgpu_queue_map_packed_mips_vulkan(CGPUQueueId queue, const struct CGPUTiled
         uint32_t layer = T->mSingleTail ? 0 : regions->packed_mips[i].layer;
         CGPUTileTexturePackedMipMapping_Vulkan* pMapping = &T->pVkPackedMappings[layer];
 
-        const int32_t prev = skr_atomic32_cas_relaxed(&pMapping->status, VK_TILE_MAPPING_STATUS_PENDING, VK_TILE_MAPPING_STATUS_MAPPING);
-        if (prev != VK_TILE_MAPPING_STATUS_PENDING) continue;
+        int32_t expect_pending = VK_TILE_MAPPING_STATUS_PENDING;
+        if (!skr_atomic_compare_exchange_strong(&pMapping->status, &expect_pending, VK_TILE_MAPPING_STATUS_MAPPING)) 
+            continue;
 
         const uint64_t kPageSize = T->pVkPackedMappings->mVkSparseTailSize;
         SKR_DECLARE_ZERO(VkMemoryRequirements, memReqs);
@@ -1089,8 +1094,10 @@ void cgpu_queue_map_packed_mips_vulkan(CGPUQueueId queue, const struct CGPUTiled
         uint32_t layer = T->mSingleTail ? 0 : regions->packed_mips[i].layer;
         CGPUTileTexturePackedMipMapping_Vulkan* pMapping = &T->pVkPackedMappings[layer];
         
-        skr_atomic32_cas_relaxed(&pMapping->status, VK_TILE_MAPPING_STATUS_MAPPING, VK_TILE_MAPPING_STATUS_MAPPED);
-        skr_atomicu64_add_relaxed(&pModTiledInfo->alive_pack_count, 1);
+        int32_t expect_mapping = VK_TILE_MAPPING_STATUS_MAPPING;
+        skr_atomic_compare_exchange_strong(&pMapping->status, 
+            &expect_mapping, VK_TILE_MAPPING_STATUS_MAPPED);
+        skr_atomic_fetch_add_relaxed(&pModTiledInfo->alive_pack_count, 1);
     }
 
     cgpu_free(opaqueBinds);
@@ -1131,8 +1138,10 @@ void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTil
                 uint32_t subres_index = Region.layer * T->super.info->mip_levels + Region.mip_level;
                 CGPUTileTextureSubresourceMapping_Vulkan* subres = T->pVkTileMappings + subres_index;
                 CGPUTileMapping_Vulkan* pMapping = VkUtil_TileMappingAt(subres, x, y, z);
-                const int32_t prev = skr_atomic32_cas_relaxed(&pMapping->status, VK_TILE_MAPPING_STATUS_UNMAPPED, VK_TILE_MAPPING_STATUS_PENDING);
-                if (prev == VK_TILE_MAPPING_STATUS_UNMAPPED)
+
+                int32_t expect_unmapped = VK_TILE_MAPPING_STATUS_MAPPING;
+                if (skr_atomic_compare_exchange_strong(&pMapping->status, 
+                    &expect_unmapped, VK_TILE_MAPPING_STATUS_PENDING))
                 {
                     RegionTileCount += 1;
                 }
@@ -1167,8 +1176,10 @@ void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTil
             {
                 CGPUTileTextureSubresourceMapping_Vulkan* subres = VkUtil_GetSubresTileMappings(T, Region.mip_level, Region.layer);
                 CGPUTileMapping_Vulkan* pMapping = VkUtil_TileMappingAt(subres, x, y, z);
-                const int32_t prev = skr_atomic32_cas_relaxed(&pMapping->status, VK_TILE_MAPPING_STATUS_PENDING, VK_TILE_MAPPING_STATUS_MAPPING);
-                if (prev != VK_TILE_MAPPING_STATUS_PENDING) continue; // skip if already mapped
+                int32_t expect_pending = VK_TILE_MAPPING_STATUS_PENDING;
+                if (!skr_atomic_compare_exchange_strong(&pMapping->status, 
+                    &expect_pending, VK_TILE_MAPPING_STATUS_MAPPING)) 
+                    continue; // skip if already mapped
 
                 struct VmaAllocation_T* const VkAllocation = pAllocations[AllocateTileCount];
                 struct VmaAllocationInfo const VkAllocationInfo = pAllocationInfos[AllocateTileCount];
@@ -1212,8 +1223,10 @@ void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTil
     CGPUTiledTextureInfo* pModTiledInfo = (CGPUTiledTextureInfo*)T->super.tiled_resource;
     for (uint32_t i = 0; i < AllocateTileCount; i++)
     {
-        skr_atomic32_cas_relaxed(&ppMappings[i]->status, VK_TILE_MAPPING_STATUS_MAPPING, VK_TILE_MAPPING_STATUS_MAPPED);
-        skr_atomicu64_add_relaxed(&pModTiledInfo->alive_tiles_count, 1);
+        int32_t expect_mapping = VK_TILE_MAPPING_STATUS_MAPPING;
+        skr_atomic_compare_exchange_strong(&ppMappings[i]->status, 
+            &expect_mapping, VK_TILE_MAPPING_STATUS_MAPPED);
+        skr_atomic_fetch_add_relaxed(&pModTiledInfo->alive_tiles_count, 1);
     }
 
     cgpu_free(ArgMemory);

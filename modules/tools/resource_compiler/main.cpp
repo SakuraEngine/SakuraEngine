@@ -42,7 +42,7 @@ skr::resource::SSkelFactory* skelFactory = nullptr;
 
 void InitializeResourceSystem(skd::SProject& proj)
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     auto resource_system = skr::resource::GetResourceSystem();
     registry = SkrNew<skr::resource::SLocalResourceRegistry>(proj.resource_vfs);
     resource_system->Initialize(registry, proj.ram_service);

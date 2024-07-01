@@ -157,25 +157,25 @@ struct VRAMTextureComponent final : public IORequestComponent {
 
 constexpr skr_guid_t CID<struct VRAMUploadComponent>::Get()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     return u8"15a2c517-fc77-4938-90df-2842a75b82a9"_guid;
 }
 
 constexpr skr_guid_t CID<struct VRAMDStorageComponent>::Get()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     return u8"5063c4b2-a197-496d-b058-b7a71656c8c1"_guid;
 }
 
 constexpr skr_guid_t CID<struct VRAMBufferComponent>::Get()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     return u8"78e4e3f0-5983-43b0-8567-f1a2653f8ea0"_guid;
 }
 
 constexpr skr_guid_t CID<struct VRAMTextureComponent>::Get()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     return u8"2d517d3b-3c08-4e6d-9b2b-189b0f591171"_guid;
 }
 

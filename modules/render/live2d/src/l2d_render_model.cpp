@@ -101,7 +101,7 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
             png_blob.reset();
         for (auto&& decoder : decoders)
             decoder.reset();
-        skr_atomicu32_store_relaxed(&request->io_status, SKR_IO_STAGE_COMPLETED);
+        skr_atomic_store_relaxed(&request->io_status, SKR_IO_STAGE_COMPLETED);
         request = nullptr;
     }
 
@@ -131,7 +131,7 @@ bool skr_live2d_render_model_future_t::is_ready() const SKR_NOEXCEPT
 
 ESkrIOStage skr_live2d_render_model_future_t::get_status() const SKR_NOEXCEPT
 {
-    return (ESkrIOStage)skr_atomicu32_load_acquire(&io_status);
+    return (ESkrIOStage)skr_atomic_load_acquire(&io_status);
 }
 
 #ifndef SKR_SERIALIZE_GURAD

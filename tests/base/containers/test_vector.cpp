@@ -929,3 +929,18 @@ TEST_CASE("test inline vector")
     [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
     [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); });
 }
+
+TEST_CASE("test inline vector2")
+{
+    using namespace skr;
+    static constexpr uint64_t kInlineCapacity = 0;
+
+    using TestVector = InlineVector<uint32_t, kInlineCapacity>;
+    
+    template_test_vector<TestVector>(
+    [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
+    [](auto capacity) { return capacity; },
+    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
+    [](auto&& vec) { REQUIRE_EQ(vec.data(), nullptr); },
+    [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); });
+}

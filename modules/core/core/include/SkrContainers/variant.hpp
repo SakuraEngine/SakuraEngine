@@ -87,3 +87,74 @@ struct SerdeCompleteChecker<binary::WriteTrait<skr::variant<Ts...>>>
     : std::bool_constant<(is_complete_serde_v<binary::WriteTrait<Ts>> && ...)> {
 };
 } // namespace skr
+
+#include "SkrRTTR/rttr_traits.hpp"
+#include "SkrSerde/json/reader.h"
+#include "SkrSerde/json/writer.h"
+
+namespace skr::json
+{
+template <class... Ts>
+struct ReadTrait<skr::variant<Ts...>> {
+    template <class T>
+    static bool ReadByIndex(skr::archive::JsonReader* json, skr::variant<Ts...>& value, skr_guid_t index)
+    {
+        if (index == ::skr::rttr::type_id_of<T>())
+        {
+            T          t;
+            if (!skr::json::Read(json, t))
+                return false;
+            value = std::move(t);
+            return true;
+        }
+        return false;
+    }
+
+    static bool Read(skr::archive::JsonReader* json, skr::variant<Ts...>& value)
+    {
+        json->StartObject();
+        
+        json->Key(u8"type");
+        skr_guid_t index;
+        if (!skr::json::Read<skr_guid_t>(json, index))
+            return false;
+
+        json->Key(u8"value");
+        (void)(((ReadByIndex<Ts>(json, value, index)) != true) && ...);
+        
+        json->EndObject();
+
+        return true;
+    }
+};
+
+template <class... Ts>
+struct WriteTrait<skr::variant<Ts...>> {
+    static bool Write(skr::archive::JsonWriter* json, const skr::variant<Ts...>& v)
+    {
+        skr::visit([&](auto&& value) {
+            using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
+            json->StartObject();
+            json->Key(u8"type");
+            skr::json::Write<skr_guid_t>(json, ::skr::rttr::type_id_of<raw>());
+            json->Key(u8"value");
+            skr::json::Write<decltype(value)>(json, value);
+            json->EndObject();
+        }, v);
+        return true;
+    }
+};
+} // namespace skr::json
+
+namespace skr
+{
+template <class... Ts>
+struct SerdeCompleteChecker<json::ReadTrait<skr::variant<Ts...>>>
+    : std::bool_constant<(is_complete_serde_v<json::ReadTrait<Ts>> && ...)> {
+};
+
+template <class... Ts>
+struct SerdeCompleteChecker<json::WriteTrait<skr::variant<Ts...>>>
+    : std::bool_constant<(is_complete_serde_v<json::WriteTrait<Ts>> && ...)> {
+};
+}

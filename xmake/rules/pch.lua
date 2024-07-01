@@ -166,12 +166,28 @@ analyzer("SharedPCH.ShareFrom")
         local share_from = ""
         local has_private_pch = table.contains(attributes, "PrivatePCH.Owner")
         if not has_private_pch then
-            local last_score = 0
-            for __, dep in pairs(target:deps()) do
+            local last_score = 1
+            local last_subscore = 0
+            local score_table = {}
+            for __, dep in ipairs(target:orderdeps()) do
                 local score = dep:data("SharedPCH.Score") or 0
-                if score and score > last_score then
+                local subscore = #dep:orderdeps() * #(dep:get("files") or {}) or -1
+                local cond0 = score > 0 and score > last_score
+                local cond1 = score > 0 and score == last_score and subscore > last_subscore
+                if cond0 or cond1 then
                     last_score = score
+                    last_subscore = subscore
                     share_from = dep:name()
+                end
+                score_table[dep:name()] = { score, subscore }
+            end
+            -- check collides
+            for name, scores in pairs(score_table) do
+                if name ~= share_from and scores[1] == last_score and scores[2] == last_subscore then
+                    print(score_table)
+                    print(name)
+                    print(share_from)
+                    raise("SharedPCH: collides between pickable SharedPCH targets!")
                 end
             end
         end

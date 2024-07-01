@@ -1,6 +1,5 @@
 #include "SkrProfile/profile.h"
 #include "SkrContainers/hashmap.hpp"
-#include "SkrGuid/guid.hpp"
 #include "./log_manager.hpp"
 
 namespace skr {
@@ -61,7 +60,7 @@ LogManager* LogManager::Get() SKR_NOEXCEPT
 
 void LogManager::InitializeAsyncWorker() SKR_NOEXCEPT
 {
-    if (skr_atomic64_load_acquire(&available_) != 0)
+    if (skr_atomic_load_acquire(&available_) != 0)
         return;
 
     // start worker
@@ -70,22 +69,24 @@ void LogManager::InitializeAsyncWorker() SKR_NOEXCEPT
         worker_ = skr::make_unique<LogWorker>(kLoggerWorkerThreadDesc);
         worker_->run();
     }
-    skr_atomic64_cas_relaxed(&available_, 0, 1);
+    int64_t expected = 0;
+    skr_atomic_compare_exchange_strong(&available_, &expected, 1ll);
 }
 
 void LogManager::FinalizeAsyncWorker() SKR_NOEXCEPT
 {
     // skr::log::LogManager::logger_.reset();
-    if (skr_atomic64_load_acquire(&available_) != 0)
+    if (skr_atomic_load_acquire(&available_) != 0)
     {
         worker_.reset();
-        skr_atomic64_cas_relaxed(&available_, 1, 0);
+        int64_t expected = 1;
+        skr_atomic_compare_exchange_strong(&available_, &expected, 0ll);
     }
 }
 
 LogWorker* LogManager::TryGetWorker() SKR_NOEXCEPT
 {
-    if (skr_atomic64_load_acquire(&available_) == 0)
+    if (skr_atomic_load_acquire(&available_) == 0)
         return nullptr;
     return worker_.get();
 }
@@ -146,7 +147,7 @@ LogSink* LogManager::QuerySink(skr_guid_t guid)
 
 void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
 {
-    static thread_local skr::FlatHashSet<skr_guid_t, skr::guid::hash> patterns_set_;
+    static thread_local skr::FlatHashSet<skr_guid_t, skr::Hash<skr_guid_t>> patterns_set_;
     patterns_set_.clear();
     {
         SkrZoneScopedN("PatternAll");

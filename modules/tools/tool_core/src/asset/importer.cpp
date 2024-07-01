@@ -1,4 +1,3 @@
-#include "SkrGuid/guid.hpp"
 #include "SkrSerde/json/reader.h"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
@@ -10,7 +9,7 @@ struct SImporterRegistryImpl : public SImporterRegistry {
     uint32_t   GetImporterVersion(skr_guid_t type) override;
     void       RegisterImporter(skr_guid_t type, SImporterTypeInfo info) override;
 
-    skr::FlatHashMap<skr_guid_t, SImporterTypeInfo, skr::guid::hash> loaders;
+    skr::FlatHashMap<skr_guid_t, SImporterTypeInfo> loaders;
 };
 
 SImporterRegistry* GetImporterRegistry()

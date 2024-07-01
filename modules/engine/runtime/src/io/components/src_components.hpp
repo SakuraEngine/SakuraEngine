@@ -2,7 +2,6 @@
 #include "SkrGraphics/dstorage.h"
 #include "SkrRT/io/io.h"
 #include "SkrRT/platform/vfs.h"
-#include "SkrGuid/guid.hpp"
 #include "../components/component.hpp"
 
 namespace skr {
@@ -62,19 +61,19 @@ struct FileComponent : public IORequestComponent
 
 constexpr skr_guid_t CID<struct PathSrcComponent>::Get()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     return u8"6bf19e92-7180-42d5-9bb7-19cae4e8716d"_guid;
 } 
 
 constexpr skr_guid_t CID<struct MemorySrcComponent>::Get()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     return u8"3fd925a5-8f53-427c-aa8b-c30c385d4cec"_guid;
 } 
 
 constexpr skr_guid_t CID<struct FileComponent>::Get()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     return u8"d91c35e3-30a6-4909-afaa-d0bd37bd7c2f"_guid;
 } 
 

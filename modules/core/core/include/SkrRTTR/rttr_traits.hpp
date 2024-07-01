@@ -60,7 +60,7 @@ inline Type* type_of()
         }                                                  \
         inline static constexpr GUID get_guid()            \
         {                                                  \
-            using namespace skr::guid::literals;           \
+            using namespace skr::literals;           \
             return u8##__GUID##_guid;                      \
         }                                                  \
     };                                                     \

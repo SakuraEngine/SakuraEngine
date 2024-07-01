@@ -624,7 +624,7 @@ void MPApplication::EnterGameState()
     stage = MP_STAGE_ENTERING_GAME;
 
     // // allocate 1 movable cubes
-    // auto renderableT_builder = make_zeroed<sugoi::type_builder_t>();
+    // auto renderableT_builder = make_zeroed<sugoi::TypeSetBuilder>();
     // renderableT_builder
     //     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t, CController, CMovement>()
     //     .with<skr_render_effect_t>();
