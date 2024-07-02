@@ -36,12 +36,16 @@ target("Analyze.Phase")
             print("[Analyze.Phase]: trigger analyze")
             local out, err = os.iorun("xmake analyze_project")
             
-            -- if out and #out > 0 then
-            --     print(out)
-            -- end
-            -- if err and #err > 0 then
-            --     print(err)
-            -- end
+            if out and #out > 0 then
+                print("===================[Analyze Output]===================")
+                printf(out)
+                print("===================[Analyze Output]===================")
+            end
+            if err and #err > 0 then
+                print("===================[Analyze Error]===================")
+                printf(err)
+                print("===================[Analyze Error]===================")
+            end
             
         end, {dependfile = phase:dependfile("ANALYZE_PHASE"), files = deps})
     end)
@@ -55,6 +59,7 @@ target_end()
 function analyzer(name)
     target("Analyze.Phase")
         add_rules("__Analyzer."..name)
+        set_default(false)
     target_end()
     rule("__Analyzer."..name)
 end
