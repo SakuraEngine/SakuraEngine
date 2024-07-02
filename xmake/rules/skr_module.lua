@@ -10,12 +10,14 @@ end
 
 rule("sakura.module")
     on_load(function(target)
-        local tbl_path = "build/.gens/module_infos/"..target:name()..".table"
-        if os.exists(tbl_path) then
-            local tbl = io.load(tbl_path)
-            local meta_source = tbl["Module.MetaSourceFile"]
-            if (meta_source ~= "") then
-                target:add("files", meta_source)
+        if xmake.argv()[1] ~= "analyze_project" then
+            local tbl_path = "build/.gens/module_infos/"..target:name()..".table"
+            if os.exists(tbl_path) then
+                local tbl = io.load(tbl_path)
+                local meta_source = tbl["Module.MetaSourceFile"]
+                if (meta_source ~= "") then
+                    target:add("files", meta_source)
+                end
             end
         end
     end)
@@ -160,7 +162,7 @@ analyzer("Module.MetaSourceFile")
         import("core.project.project")
 
         local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
-        local filename = path.join(gendir, "module", "module.configure.cpp") 
+        local filename = path.join(gendir, "module", "module.configure.cpp")
         local dep_names = target:values("sakura.module.public_dependencies")
         depend.on_changed(function()
             -- gather deps

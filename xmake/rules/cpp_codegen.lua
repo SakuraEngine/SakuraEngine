@@ -50,28 +50,30 @@ rule_end()
 
 rule("c++.codegen.load")
     on_load(function (target, opt)
-        -- config
-        local codegen_dir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
-        local source_file = path.join(codegen_dir, target:name(), "/generated.cpp")
+        if xmake.argv()[1] ~= "analyze_project" then
+            -- config
+            local codegen_dir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
+            local source_file = path.join(codegen_dir, target:name(), "/generated.cpp")
 
-        -- check generated files
-        if not os.exists(source_file) then
-            local gen_file = io.open(source_file, "w")
-            -- gen_file:print("static_assert(false, \"codegen of module "..target:name().." is not completed!\");")
-            gen_file:close()
-        end
+            -- check generated files
+            if not os.exists(source_file) then
+                local gen_file = io.open(source_file, "w")
+                -- gen_file:print("static_assert(false, \"codegen of module "..target:name().." is not completed!\");")
+                gen_file:close()
+            end
 
-        -- add to target configure
-        target:add("files", source_file, { unity_ignored = true })
-        target:add("includedirs", codegen_dir, {public = true})
+            -- add to target configure
+            target:add("files", source_file, { unity_ignored = true })
+            target:add("includedirs", codegen_dir, {public = true})
 
-        -- add deps
-        local tbl_path = "build/.gens/module_infos/"..target:name()..".table"
-        if os.exists(tbl_path) then
-            local tbl = io.load(tbl_path)
-            local codegen_deps = tbl["Codegen.Deps"]
-            for _, codegen_dep in ipairs(codegen_deps) do
-                target:add("deps", dep, { public = false })
+            -- add deps
+            local tbl_path = "build/.gens/module_infos/"..target:name()..".table"
+            if os.exists(tbl_path) then
+                local tbl = io.load(tbl_path)
+                local codegen_deps = tbl["Codegen.Deps"]
+                for _, codegen_dep in ipairs(codegen_deps) do
+                    target:add("deps", dep, { public = false })
+                end
             end
         end
     end)
