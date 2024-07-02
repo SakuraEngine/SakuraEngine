@@ -19,7 +19,7 @@ end
 
 function analyzing.load_targets()
     -- load config
-    config.load()
+    config.load("build/.gens/analyze.conf")
     -- load targets
     project.load_targets()
 end

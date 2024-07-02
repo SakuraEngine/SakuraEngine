@@ -4,6 +4,7 @@ target("Analyze.Phase")
     set_policy("build.fence", true)
     on_load(function(phase)
         import("core.base.option")
+        import("core.project.config")
         import("core.project.depend")
         import("core.project.project")
 
@@ -34,6 +35,7 @@ target("Analyze.Phase")
         -- dispatch analyze
         depend.on_changed(function ()
             print("[Analyze.Phase]: trigger analyze")
+            config.save("build/.gens/analyze.conf", {public=true})
             local out, err = os.iorun("xmake analyze_project")
             
             if out and #out > 0 then
