@@ -32,6 +32,9 @@ target("SkrCompileFlags")
         "-Wno-deprecated-copy-with-user-provided-copy", -- usally trigger it manually
         {public = true, tools = {"gcc", "clang_cl", "clang"}}
     )
+    add_cxflags(
+        "-no-pedantic", -- allow language extensions (for enum forwad declaration)
+    {public = true, tools = {"gcc", "clang"}})
     -- disable c warnings for gcc/clang
     add_cflags(
         "-Wno-unused-variable", -- we not care about unused variable in C
