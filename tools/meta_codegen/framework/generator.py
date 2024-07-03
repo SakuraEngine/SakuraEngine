@@ -32,7 +32,7 @@ class GeneratorBase:
         # load scheme for parse attrs
         pass
 
-    def load_attrs(self):
+    def solve_attrs(self):
         # load attrs to self data
         pass
 
@@ -203,11 +203,13 @@ class GenerateManager:
             module.load_generators(self)
         self.__error_exit("load generators")
 
+    # load .meta 文件
     def load_database(self) -> None:
         # load db
         self.__database.load(True, self.__config)
         self.__error_exit("load database")
 
+    # 解析 attr 的 json 字段
     def parse_attrs(self) -> None:
         # load scheme
         for generator in self.__generators.values():
@@ -245,26 +247,37 @@ class GenerateManager:
         self.__database.each_cpp_types_with_attr(__solve_override)
         self.__error_exit("solve override")
 
-    def load_attrs(self) -> None:
+    # 将 attr 解析为特定 data，并检查合法性
+    def solve_attrs(self) -> None:
         for generator in self.__generators.values():
-            generator.load_attrs()
-        self.__error_exit("check attribute")
+            generator.solve_attrs()
+        self.__error_exit("solve attribute")
 
+    # 生成 body
+    def generate_body(self) -> None:
+        for generator in self.__generators.values():
+            generator.generate_body()
+        self.__error_exit("generate body")
+
+    # 生成上段
     def pre_generate(self) -> None:
         for generator in self.__generators.values():
             generator.pre_generate()
         self.__error_exit("pre generate")
 
+    # 生成中段
     def generate(self) -> None:
         for generator in self.__generators.values():
             generator.generate()
         self.__error_exit("generate")
 
+    # 生成下段
     def post_generate(self) -> None:
         for generator in self.__generators.values():
             generator.post_generate()
         self.__error_exit("post generate")
 
+    # 输出到生成内容
     def output_content(self) -> None:
         for file, content in self.__file_content.items():
             directory = os.path.dirname(file)

@@ -20,7 +20,7 @@ class TestPathExpandGenerator(gen.GeneratorBase):
             })
         )
 
-    def load_attrs(self):
+    def solve_attrs(self):
         def __check(record):
             assert record is not None
 
@@ -94,7 +94,7 @@ class TestFunctionalShorthand(gen.GeneratorBase):
             })
         )
 
-    def load_attrs(self):
+    def solve_attrs(self):
         def __check(record):
             assert record is not None
 

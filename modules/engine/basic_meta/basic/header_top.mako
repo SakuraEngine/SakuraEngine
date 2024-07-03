@@ -15,6 +15,14 @@
 #endif
 #define SKR_FILE_ID ${header_db.file_id}
 
+// BEGIN Generated Body
+%for record in header_db.get_records():
+%if record.has_generate_body_flag:
+#define SKR_GENERATE_BODY_${header_db.file_id}_${record.generate_body_line} ${record.dump_generate_body_content()}
+%endif
+%endfor
+// END Generated Body
+
 // BEGIN forward declarations
 %for record in header_db.get_records():
 %if record.namespace:

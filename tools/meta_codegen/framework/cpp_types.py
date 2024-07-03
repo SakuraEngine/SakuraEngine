@@ -210,15 +210,15 @@ class Record:
         self.bases: List[str]
         self.fields: List[Field]
         self.methods: List[Method]
+        self.has_generate_body_flag: bool = False
+        self.generate_body_line: int = 0
+        self.generated_body_content: str = ""
         self.file_name: str
         self.line: int
 
         self.raw_attrs: sc.JsonObject
         self.attrs: sc.ParseResult
         self.generator_data: Dict[str, object] = {}
-
-        # TODO. 内置的 generate body 支持, 还是说放在 generator_data 内
-        self.generated_body: str = ""
 
     def load_from_raw_json(self, raw_json: sc.JsonObject):
         unique_dict = raw_json.unique_dict()
@@ -240,11 +240,22 @@ class Record:
         for method_data in unique_dict["methods"]:
             method = Method(self)
             method.load_from_raw_json(method_data)
-            self.methods.append(method)
+            if method.short_name == "_zz_skr_generate_body_flag":
+                self.has_generate_body_flag = True
+                self.generate_body_line = method.line
+            else:
+                self.methods.append(method)
 
         # load attrs
         self.raw_attrs = unique_dict["attrs"]
         self.raw_attrs.escape_from_parent()
+
+    def dump_generate_body_content(self):
+        result = ""
+        lines = self.generated_body_content.splitlines()
+        for line in lines:
+            result += f"{line} \\\n"
+        return result
 
     def make_log_stack(self) -> log.CppSourceStack:
         return log.CppSourceStack(self.file_name, self.line)

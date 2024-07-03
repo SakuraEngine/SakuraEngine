@@ -244,3 +244,11 @@ class CodegenDatabase:
             if enum:
                 return enum
         return None
+
+    def is_derived(self, record: cpp.Record, base: str):
+        for base_record_name in record.bases:
+            if base_record_name == base:
+                return True
+            base_record = self.find_record(base_record_name)
+            if record and self.is_derived(base_record, base):
+                return True

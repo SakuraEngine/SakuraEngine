@@ -28,9 +28,10 @@ if __name__ == '__main__':
 
     # parse and check attr
     generate_manager.parse_attrs()
-    generate_manager.load_attrs()
+    generate_manager.solve_attrs()
 
     # generate code
+    generate_manager.generate_body()
     generate_manager.pre_generate()
     generate_manager.generate()
     # mix in old framework generate

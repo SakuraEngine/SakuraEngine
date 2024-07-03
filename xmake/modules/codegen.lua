@@ -192,10 +192,14 @@ function _codegen_compile(target, proxy_target, opt)
     
     -- dump output
     if out and #out > 0 then
-        print(out)
+        print("=====================["..target:name().." meta output]=====================")
+        printf(out)
+        print("=====================["..target:name().." meta output]=====================")
     end
     if err and #err > 0 then
-        print(err)
+        print("=====================["..target:name().." meta error]=====================")
+        printf(err)
+        print("=====================["..target:name().." meta error]=====================")
     end
 
     if not opt.quiet then
@@ -313,10 +317,14 @@ function _mako_render(target, scripts, dep_files, opt)
     
     -- dump output
     if out and #out > 0 then
-        print(out)
+        print("=====================["..target:name().." mako output]=====================")
+        printf(out)
+        print("=====================["..target:name().." mako output]=====================")
     end
     if err and #err > 0 then
-        print(err)
+        print("=====================["..target:name().." mako error]=====================")
+        printf(err)
+        print("=====================["..target:name().." mako error]=====================")
     end
 
     if not opt.quiet then

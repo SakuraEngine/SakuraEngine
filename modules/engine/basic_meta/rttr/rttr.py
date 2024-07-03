@@ -164,7 +164,7 @@ class RTTRGenerator(gen.GeneratorBase):
             })
         )
 
-    def load_attrs(self):
+    def solve_attrs(self):
         records = self.owner.database.get_records()
         enums = self.owner.database.get_enums()
 
