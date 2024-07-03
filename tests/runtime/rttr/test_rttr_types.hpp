@@ -83,7 +83,7 @@ sreflect_enum_class(
     "rttr::flags+": "Flag",
     "rttr::attrs+": "test_rttr::AttrA{}"
 )
-BasicEnumClass
+BasicEnumClass : uint8_t
 {
     A sattr("rttr::flags": ["ScriptVisible"]) sattr("rttr::attrs+": "test_rttr::AttrA{}"),
     B,
@@ -95,7 +95,7 @@ sreflect_enum(
     "rttr::flags": ["ScriptVisible", "Flag"],
     "rttr::attrs+": "test_rttr::AttrA{}"
 )
-BasicEnum
+BasicEnum : uint8_t
 {
     BasicEnum_A sattr("rttr::flags": ["ScriptVisible"])  sattr("rttr::attrs+": "test_rttr::AttrA{}"),
     BasicEnum_B,
