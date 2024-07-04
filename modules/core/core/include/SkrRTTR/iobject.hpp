@@ -9,9 +9,6 @@ struct SKR_CORE_API IObject {
     virtual ~IObject() = default;
 
     //=> IObject API
-    virtual Type* get_record_type() const = 0;
-    virtual void* get_head_ptr() const    = 0;
-
     // TODO. 融合 RC 功能，去除虚继承，使用 IRC 模板来解决 Interface 无法回转 Cast 的问题
     // 之前使用虚继承的原因如下：
     //  1. interface 也需要继承 iobject 这样才能正确的向 iobject 回转
@@ -26,20 +23,22 @@ struct SKR_CORE_API IObject {
     //     解决方案为：
     //      a. 模板可以过滤掉一大部分接口约束的需求，典型案例为容器设计，通过 const + concept 能规避掉所有的接口抽象
     //      b. 公有特征通过 Proxy 抽取，尽量避免有交集的组合概念，多数情况下并不会发生冲突
-    // virtual GUID     iobject_get_guid() const      = 0;
-    // virtual void*    iobject_get_head_ptr() const  = 0;
+    // 带来的局限:
+    //  1. interface 无法进行 dynamic_cast，需要通过 IRC 进行，这就意味着纯 interface 指针无法进行回转
+    virtual GUID  iobject_get_typeid() const   = 0;
+    virtual void* iobject_get_head_ptr() const = 0;
     // virtual uint32_t embedded_rc_add_ref()         = 0;
     // virtual uint32_t embedded_rc_release_ref()     = 0;
     // virtual uint32_t embedded_rc_ref_count() const = 0;
-    // virtual void     embedded_rc_delete()          = 0;
+    // virtual void     embedded_rc_delete()          = 0; // TODO. pooling 的释放方式可以由具体实现控制，但是默认的释放方式就固定了，只能使用 skr 的内存管理
     //=> IObject API
 
     //=> Helper API
     template <typename TO>
     inline TO* type_cast()
     {
-        auto  from_type = get_record_type();
-        void* cast_p    = from_type->cast_to(skr::rttr::type_id_of<TO>(), get_head_ptr());
+        auto  from_type = get_type_from_guid(this->iobject_get_typeid());
+        void* cast_p    = from_type->cast_to(::skr::rttr::type_id_of<TO>(), this->iobject_get_head_ptr());
         return reinterpret_cast<TO*>(cast_p);
     }
     template <typename TO>
@@ -58,14 +57,15 @@ struct SKR_CORE_API IObject {
     }
     inline bool type_is(const GUID& guid) const
     {
-        auto from_type = get_record_type();
-        return from_type->cast_to(guid, get_head_ptr());
-    }
-    inline GUID type_id() const
-    {
-        return get_record_type()->type_id();
+        auto from_type = get_type_from_guid(this->iobject_get_typeid());
+        return from_type->cast_to(guid, this->iobject_get_head_ptr());
     }
     //=> Helper API
+
+    // disable default new/delete, please use SkrNewObj/SkrDeleteObj or RC<T> instead
+    inline static void* operator new(std::size_t, void* p) { return p; }
+    static void* operator new(size_t)   = delete;
+    static void* operator new[](size_t) = delete;
 };
 } // namespace skr::rttr
 
@@ -73,15 +73,15 @@ SKR_RTTR_TYPE(IObject, "19246699-65f8-4c0b-a82e-7886a0cb315d")
 
 #ifndef __meta__
     #define SKR_RTTR_GENERATE_BODY()                                                  \
-        ::skr::rttr::Type* get_record_type() const override                           \
+        GUID iobject_get_typeid() const override                                      \
         {                                                                             \
             using namespace skr::rttr;                                                \
             using ThisType = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>; \
-            return static_cast<Type*>(type_of<ThisType>());                           \
+            return type_id_of<ThisType>();                                            \
         }                                                                             \
-        void* get_head_ptr() const override { return const_cast<void*>((const void*)this); }
+        void* iobject_get_head_ptr() const override { return const_cast<void*>((const void*)this); }
 #else
-    #define SKR_RTTR_GENERATE_BODY()                                            \
-        ::skr::rttr::Type* get_record_type() const override { return nullptr; } \
-        void*              get_head_ptr() const override { return nullptr; }
+    #define SKR_RTTR_GENERATE_BODY()                                  \
+        GUID  iobject_get_typeid() const override { return nullptr; } \
+        void* iobject_get_head_ptr() const override { return nullptr; }
 #endif
