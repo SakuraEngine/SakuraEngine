@@ -12,7 +12,7 @@ sreflect_interface(
     "guid": "5349672b-bfc5-46a9-9a02-40ef563c196d"
 )
 SKR_GUI_API ISingleChildRenderObject : virtual public skr::rttr::IObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     virtual ~ISingleChildRenderObject() = default;
 
     virtual GUID accept_child_type() const SKR_NOEXCEPT               = 0;

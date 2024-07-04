@@ -11,7 +11,7 @@ sreflect_struct(
     "guid": "de275a65-9b5a-4267-bc6e-355c32ca6a22"
 )
 SKR_GUI_API StatefulElement : public ComponentElement {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = ComponentElement;
 
     StatefulElement(NotNull<StatefulWidget*> widget) SKR_NOEXCEPT;

@@ -10,7 +10,7 @@ sreflect_struct(
     "guid": "4d40a67a-1bd4-457a-bd23-b5be13e7d04d"
 )
 RenderConstrainedBox : public RenderProxyBox {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = RenderProxyBox;
 
     // getter setter

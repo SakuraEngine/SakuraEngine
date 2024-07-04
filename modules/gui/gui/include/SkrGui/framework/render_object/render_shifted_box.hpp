@@ -13,7 +13,7 @@ sreflect_struct(
 )
 RenderShiftedBox : public RenderBox,
                    public ISingleChildRenderObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     inline Offsetf offset() const SKR_NOEXCEPT { return _offset; }
     inline void    set_offset(Offsetf offset) SKR_NOEXCEPT { _offset = offset; }

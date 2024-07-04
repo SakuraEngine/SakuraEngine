@@ -10,7 +10,7 @@ struct GestureArena;
 
 sreflect_struct("guid": "e4db9750-96ba-4558-8a14-402d1f9a2c7a")
 SKR_GUI_API PointerGestureRecognizer : public GestureRecognizer {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = GestureRecognizer;
     using Super::Super;
 

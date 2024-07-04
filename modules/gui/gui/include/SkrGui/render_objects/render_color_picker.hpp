@@ -10,7 +10,7 @@ sreflect_struct(
     "guid": "f9de7eb7-9431-4dde-a06d-2fb9bc211bb9"
 )
 SKR_GUI_API RenderColorPicker : public RenderBox {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = RenderBox;
 
     void perform_layout() SKR_NOEXCEPT override;

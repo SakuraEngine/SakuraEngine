@@ -17,7 +17,7 @@ sreflect_struct(
     "guid": "f7ee023d-dcd0-4dfc-a095-793128ac0ad9"
 )
 SKR_GUI_API MouseRegin : public SingleChildRenderObjectWidget {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
     void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;

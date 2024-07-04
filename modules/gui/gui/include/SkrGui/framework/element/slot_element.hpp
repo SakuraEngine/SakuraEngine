@@ -10,7 +10,7 @@ sreflect_struct(
     "guid": "cddf8085-4ab4-46be-8de7-34bd1a2c290e"
 )
 SlotElement : public ProxyElement {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = ProxyElement;
     using Super::Super;
 

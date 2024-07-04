@@ -17,7 +17,7 @@ sreflect_struct(
 )
 SKR_GUI_API RenderMouseRegion : public RenderProxyBoxWithHitTestBehavior {
     using Super = RenderProxyBoxWithHitTestBehavior;
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
     bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) override;

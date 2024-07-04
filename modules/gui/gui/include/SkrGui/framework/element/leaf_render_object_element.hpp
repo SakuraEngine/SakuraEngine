@@ -10,7 +10,7 @@ sreflect_struct(
     "guid": "4e452c55-c545-4602-a9d2-76232f561536"
 )
 LeafRenderObjectElement : public RenderObjectElement {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = RenderObjectElement;
     using Super::Super;
 

@@ -10,7 +10,7 @@ sreflect_struct(
     "guid": "4d352295-d5e8-4847-b621-9c098ed37289"
 )
 SKR_GUI_API WindowLayer : public OffsetLayer {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     WindowLayer(INativeWindow* window);
 
     void update_window();

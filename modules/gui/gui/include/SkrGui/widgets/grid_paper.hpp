@@ -10,7 +10,7 @@ sreflect_struct(
     "guid": "e228c75e-890e-4724-94c9-21d0e7f01587"
 )
 SKR_GUI_API GridPaper : public LeafRenderObjectWidget {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
     void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;

@@ -22,7 +22,7 @@ sreflect_struct(
 )
 SKR_GUI_API Element : virtual public skr::rttr::IObject,
                       public IBuildContext {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     Element(Widget* widget) SKR_NOEXCEPT;
 

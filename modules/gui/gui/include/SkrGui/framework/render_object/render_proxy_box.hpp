@@ -14,7 +14,7 @@ sreflect_struct(
 )
 RenderProxyBox : public RenderBox,
                  public ISingleChildRenderObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     // hit test
     bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;

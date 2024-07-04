@@ -263,8 +263,18 @@ class RTTRGenerator(gen.GeneratorBase):
                         )
 
     def generate_body(self):
-        # TODO. body generate
-        pass
+        db = self.owner.database
+        for record in db.get_records():
+            if db.is_derived(record, "skr::rttr::IObject"):
+                record.generated_body_content += '''
+GUID iobject_get_typeid() const override
+{
+    using namespace skr::rttr;
+    using ThisType = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>;
+    return type_id_of<ThisType>();
+}
+void* iobject_get_head_ptr() const override { return const_cast<void*>((const void*)this); }
+'''
 
     def generate(self):
         # load template

@@ -117,6 +117,11 @@ class BasicCPPGenerator(gen.GeneratorBase):
         header_top_template = self.owner.load_template(os.path.join(script_dir, "header_top.mako"))
         source_top_template = self.owner.load_template(os.path.join(script_dir, "source_top.mako"))
 
+        # test generate body
+        for record in self.owner.database.get_records():
+            if record.generated_body_content and not record.has_generate_body_flag:
+                self.owner.logger.error(f"Record {record.name} has generated body content but lost SKR_GENERATE_BODY()", [record.make_log_stack()])
+
         # gen header
         for header_db in self.owner.database.main_module.header_dbs:
             self.owner.append_content(

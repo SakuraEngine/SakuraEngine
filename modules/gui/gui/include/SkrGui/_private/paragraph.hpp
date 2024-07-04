@@ -20,7 +20,7 @@ sreflect_struct(
 )
 _EmbeddedParagraph : public godot::TextParagraph,
                      public IParagraph {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     _EmbeddedParagraph();
 

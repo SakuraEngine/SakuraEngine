@@ -46,7 +46,7 @@ sreflect_interface(
     "guid": "1d4ba81f-09b7-4186-b35a-f380c49302e4"
 )
 SKR_GUI_API IResource : virtual skr::rttr::IObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     virtual ~IResource() = default;
 
     // resource state
@@ -60,21 +60,21 @@ sreflect_interface(
     "guid": "f0a63d5a-62ae-44fa-8f8f-6847af623cea"
 )
 SKR_GUI_API ISurface : virtual public IResource {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 };
 
 sreflect_interface(
     "guid": "41d08a49-c9fe-4ccb-a91d-fd16f946aca1"
 )
 SKR_GUI_API IMaterial : virtual public ISurface {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 };
 
 sreflect_interface(
     "guid": "6cc1395f-9660-4431-b998-df32d1d363eb"
 )
 SKR_GUI_API IImage : virtual public ISurface {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     virtual Sizei       size() const SKR_NOEXCEPT       = 0; // in image pixel
     virtual Rectf       uv_rect() const SKR_NOEXCEPT    = 0; // [0, 1]
     virtual EdgeInsetsf nine_inset() const SKR_NOEXCEPT = 0; // [0, size()]
@@ -84,7 +84,7 @@ sreflect_interface(
     "guid": "7ae28a98-10f2-44c4-b7aa-b50780435d03"
 )
 SKR_GUI_API IUpdatableImage : virtual public IImage {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     virtual void                      update(const UpdatableImageDesc& desc) = 0;
     virtual const UpdatableImageDesc& desc() const SKR_NOEXCEPT              = 0;
 };

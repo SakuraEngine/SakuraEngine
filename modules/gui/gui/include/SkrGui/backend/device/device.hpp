@@ -39,7 +39,7 @@ sreflect_interface(
     "guid": "8ba2ea3e-8a8e-4d88-a7d6-c98552219fc8"
 )
 SKR_GUI_API INativeDevice : virtual public skr::rttr::IObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     // window
     virtual NotNull<INativeWindow*> create_window()                              = 0;

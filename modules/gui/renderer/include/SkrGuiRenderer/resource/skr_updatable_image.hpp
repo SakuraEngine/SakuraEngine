@@ -14,7 +14,7 @@ sreflect_struct(
     "guid": "18382aad-21e7-4476-9554-6464cbc21a77"
 )
 SKR_GUI_RENDERER_API SkrUpdatableImage final : public IUpdatableImage {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     SkrUpdatableImage(SkrRenderDevice* render_device);
     ~SkrUpdatableImage();

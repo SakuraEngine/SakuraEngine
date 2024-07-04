@@ -11,7 +11,7 @@ sreflect_struct(
     "guid": "02cc61fb-9ca4-464b-95a5-2a5ad277abf8"
 )
 RenderColoredBox : public RenderProxyBoxWithHitTestBehavior {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 
     // getter setter

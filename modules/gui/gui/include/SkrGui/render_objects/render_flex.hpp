@@ -14,7 +14,7 @@ sreflect_struct(
 SKR_GUI_API RenderFlex : public RenderBox,
                          public IMultiChildRenderObject {
 public:
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = RenderBox;
 
     // intrinsic size

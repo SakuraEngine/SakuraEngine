@@ -13,7 +13,7 @@ sreflect_struct(
 )
 SKR_GUI_API RenderWindow : public RenderObject,
                            public ISingleChildRenderObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     RenderWindow(INativeWindow* window);
 

@@ -12,7 +12,7 @@ sreflect_struct(
     "guid": "d4c45487-d696-42fb-bff1-f0a3f6adcea3"
 )
 SKR_GUI_API RenderBox : public RenderObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     RenderBox();
     ~RenderBox();

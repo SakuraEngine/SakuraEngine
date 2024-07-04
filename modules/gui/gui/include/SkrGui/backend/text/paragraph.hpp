@@ -14,7 +14,7 @@ sreflect_interface(
     "guid": "fe659fa3-d171-4d41-a95a-849618c3765b"
 )
 SKR_GUI_API IParagraph : virtual public skr::rttr::IObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     virtual ~IParagraph() = default;
 
     virtual void  clear()                                                  = 0;

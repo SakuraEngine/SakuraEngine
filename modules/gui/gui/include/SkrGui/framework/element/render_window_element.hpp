@@ -11,7 +11,7 @@ sreflect_struct(
     "guid": "68cea8f8-f39c-41e3-90dc-615308fb8034"
 )
 SKR_GUI_API RenderWindowElement : public RenderObjectElement {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = RenderObjectElement;
     using Super::Super;
 };

@@ -10,7 +10,7 @@ sreflect_struct(
     "guid": "a3f51c75-2995-4f99-95c7-1166b3ba17a6"
 )
 SingleChildRenderObjectElement : public RenderObjectElement {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = RenderObjectElement;
     using Super::Super;
 

@@ -11,7 +11,7 @@ sreflect_struct(
 )
 SKR_GUI_API RenderGridPaper : public RenderBox {
 public:
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = RenderBox;
 
     void perform_layout() SKR_NOEXCEPT override;

@@ -72,21 +72,6 @@ struct SKR_CORE_API IObject {
 
 SKR_RTTR_TYPE(IObject, "19246699-65f8-4c0b-a82e-7886a0cb315d")
 
-#ifndef __meta__
-    #define SKR_RTTR_GENERATE_BODY()                                                  \
-        GUID iobject_get_typeid() const override                                      \
-        {                                                                             \
-            using namespace skr::rttr;                                                \
-            using ThisType = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>; \
-            return type_id_of<ThisType>();                                            \
-        }                                                                             \
-        void* iobject_get_head_ptr() const override { return const_cast<void*>((const void*)this); }
-#else
-    #define SKR_RTTR_GENERATE_BODY()                                  \
-        GUID  iobject_get_typeid() const override { return nullptr; } \
-        void* iobject_get_head_ptr() const override { return nullptr; }
-#endif
-
 // object
 namespace skr::rttr
 {

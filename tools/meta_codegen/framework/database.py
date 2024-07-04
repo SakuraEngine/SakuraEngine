@@ -250,5 +250,5 @@ class CodegenDatabase:
             if base_record_name == base:
                 return True
             base_record = self.find_record(base_record_name)
-            if record and self.is_derived(base_record, base):
+            if base_record and self.is_derived(base_record, base):
                 return True

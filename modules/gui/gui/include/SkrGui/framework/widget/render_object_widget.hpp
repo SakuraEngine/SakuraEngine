@@ -11,7 +11,7 @@ sreflect_struct(
     "guid": "e20ccde7-3f42-4224-aee3-9f54c9077194"
 )
 SKR_GUI_API RenderObjectWidget : public Widget {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     virtual NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT                                                                      = 0;
     virtual void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT = 0;
