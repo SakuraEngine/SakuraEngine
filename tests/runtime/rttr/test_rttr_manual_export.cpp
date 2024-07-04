@@ -107,10 +107,10 @@ TEST_CASE("test rttr export record")
 
     // methods
     {
-        auto method_builder = record_builder.method<void (TestDerived::*)(), &TestDerived::test>(u8"test");
+        [[maybe_unused]] auto method_builder = record_builder.method<void (TestDerived::*)(), &TestDerived::test>(u8"test");
     }
     {
-        auto method_builder = record_builder.method<void (TestDerived::*)(int, float), &TestDerived::test>(u8"test");
+        [[maybe_unused]] auto method_builder = record_builder.method<void (TestDerived::*)(int, float), &TestDerived::test>(u8"test");
         method_builder.param_at(0)
             .name(u8"a");
         method_builder.param_at(1)
@@ -123,7 +123,7 @@ TEST_CASE("test rttr export record")
 
     // static methods
     {
-        auto static_method_builder = record_builder.static_method<void (*)(), &TestDerived::static_test>(u8"static_test");
+        [[maybe_unused]] auto static_method_builder = record_builder.static_method<void (*)(), &TestDerived::static_test>(u8"static_test");
     }
     {
         auto static_method_builder = record_builder.static_method<void (*)(int, float), &TestDerived::static_test>(u8"static_test");

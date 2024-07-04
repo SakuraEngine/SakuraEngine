@@ -1,5 +1,5 @@
 // BEGIN RTTR GENERATED
-#include "SkrRTTR/enum_traits.hpp"
+#include "SkrRTTR/enum_tools.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
 %if len(enums) > 0:
 namespace skr::rttr

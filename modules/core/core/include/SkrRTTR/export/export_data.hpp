@@ -4,7 +4,7 @@
 #include "SkrContainers/vector.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
 #include "SkrRTTR/type_signature.hpp"
-#include "SkrRTTR/enum_value.hpp"
+#include "SkrRTTR/enum_tools.hpp"
 #include "SkrRTTR/export/stack_proxy.hpp"
 #include "SkrRTTR/export/attribute.hpp"
 // TODO. enable codegen for core

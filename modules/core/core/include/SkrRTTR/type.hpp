@@ -2,8 +2,7 @@
 #include <cstdint>
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/string.hpp"
-#include "SkrRTTR/enum_value.hpp"
-#include "SkrRTTR/enum_traits.hpp"
+#include "SkrRTTR/enum_tools.hpp"
 #include "SkrRTTR/export/export_data.hpp"
 #include "SkrRTTR/export/export_builder.hpp"
 
