@@ -6,6 +6,7 @@
 // iobject
 namespace skr::rttr
 {
+// TODO. 暂时只有 GUI 在用，修改考虑 GUI 重构即可
 struct SKR_CORE_API IObject {
     virtual ~IObject() = default;
 

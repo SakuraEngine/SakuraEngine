@@ -1,1 +1,1 @@
-#pragma once
+#include "SkrRTTR/iobject.hpp"
