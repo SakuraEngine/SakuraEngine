@@ -76,7 +76,7 @@ typedef enum {
 /**
  @enum LOAutoTextDefinitionSequenceType
  @brief An enumeration of the different types of auto-text sequencing.
- @since LayOut 2023.0, API 8.0
+ @since LayOut 2023.0, API 7.1
  */
 typedef enum {
   LOAutoTextDefinitionSequenceType_PerDocument = 0,
@@ -536,7 +536,7 @@ LO_RESULT LOAutoTextDefinitionSetStartIndex(LOAutoTextDefinitionRef autotext, in
 
 /**
 @brief Gets the sequence type of the specified sequence auto-text definition.
-@since LayOut 2023.0, API 8.0
+@since LayOut 2023.0, API 7.1
 @param[in]  autotext      The auto-text definition object.
 @param[out] sequence_type The sequencing behavior of this definition.
 @return
@@ -550,7 +550,7 @@ LO_RESULT LOAutoTextDefinitionGetSequenceType(
 
 /**
 @brief Sets the sequence type of the specified sequence auto-text definition.
-@since LayOut 2023.0, API 8.0
+@since LayOut 2023.0, API 7.1
 @param[in] autotext      The auto-text definition object.
 @param[in] sequence_type The sequencing behavior.
 @return

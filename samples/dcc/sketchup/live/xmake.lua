@@ -1,6 +1,0 @@
-shared_module("SketchUpLiveExt", "SKETCHUP_LIVE_EXT", engine_version)
-    set_group("04.examples/dcc/sketchup")
-    public_dependency("SkrSketchUpLive", engine_version)
-    set_exceptions("no-cxx")
-    add_includedirs("include", {public = false})
-    add_files("src/**.cpp")
