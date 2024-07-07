@@ -74,39 +74,6 @@ LO_RESULT LOEntityListGetNumberOfEntities(LOEntityListRef entity_list, size_t* n
 LO_RESULT LOEntityListGetEntityAtIndex(
     LOEntityListRef entity_list, size_t index, LOEntityRef* entity);
 
-/**
-@brief Moves a list of entities to the given layer.
-
-If the layer is non-shared and any entity is on a shared layer, pages must be valid and populated
-with the pages to move the entities to. In all other cases, pages may be an invalid object. The
-entities must belong to the same document as the layer and pages.
-
-@bug In LayOut versions prior to LayOut 2024.0 this method would fail to move entities from
-  non-shared layers.
-
-@param[in] entity_list The entity list object.
-@param[in] layer       The layer definition object.
-@param[in] pages       The page list object.
-@return
-- \ref SU_ERROR_NONE on success
-- \ref SU_ERROR_INVALID_INPUT if \p entity_list does not refer to a valid object
-- \ref SU_ERROR_INVALID_INPUT if \p entity_list is empty
-- \ref SU_ERROR_INVALID_INPUT if \p entity_list contains the same entity reference more
-  than once
-- \ref SU_ERROR_INVALID_INPUT if \p layer does not refer to a valid object
-- \ref SU_ERROR_INVALID_INPUT if \p pages does not refer to a valid object and
-  \p layer is non-shared
-- \ref SU_ERROR_INVALID_INPUT if \p pages is empty and \p layer is non-shared
-- \ref SU_ERROR_INVALID_INPUT if \p pages contains the same page reference more
-  than once and \p layer is non-shared
-- \ref SU_ERROR_GENERIC if any entity, \p layer, and \p pages are not all in the
-  same document
-- \ref SU_ERROR_LAYER_LOCKED if \p layer is locked or if any entity is currently
-  on a locked layer
-*/
-LO_RESULT LOEntityListMoveToLayer(
-    LOEntityListRef entity_list, LOLayerRef layer, LOPageListRef pages);
-
 #ifdef __cplusplus
 }  // end extern "C"
 #endif  // __cplusplus

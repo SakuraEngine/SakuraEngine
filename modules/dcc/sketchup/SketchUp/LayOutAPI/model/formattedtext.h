@@ -287,8 +287,8 @@ LO_RESULT LOFormattedTextSetTextWithStyle(
 
 /**
 @brief Appends the specified plain text to a formatted text object and apply
-       the given style to the appended text.
-@note This method does not support more than two different style runs in a single text string.
+       the given style to the appended text. NOTE: this method does not support
+       more than two different style runs in a single text string.
 @param[in] text       The formatted text object.
 @param[in] plain_text The plain text to append.
 @param[in] style      The style object.

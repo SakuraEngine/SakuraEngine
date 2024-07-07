@@ -22,14 +22,6 @@ const char* const LOExportOption_StartPage = "start_page";
 const char* const LOExportOption_EndPage = "end_page";
 
 /**
-@brief Dictionary key to use when specifying the page range option for
-       \ref LODocumentExportToPDF or \ref LODocumentExportToImageSet.
-       The value stored with this key takes precedent over `"start_page"` and `"end_page"`.
-@since LayOut 2024.0, API 9.0
-*/
-const char* const LOExportOption_PageRange = "page_range";
-
-/**
 @brief Dictionary key to use when specifying the output resolution option for
        \ref LODocumentExportToPDF.
 @deprecated This key is deprecated as of 2023.1. Set the output resolution of
