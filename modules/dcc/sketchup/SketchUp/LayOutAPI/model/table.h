@@ -9,8 +9,8 @@
 
 /**
  @struct LOTableRef
- @brief References a table. A table is a series of rows and columns that holds
-        data.
+ @brief References a table. A table is a series of rows and columns that holds data.
+ @since LayOut 2017, API 2.0
  */
 
 #ifdef __cplusplus
@@ -20,6 +20,7 @@ extern "C" {
 /**
 @enum LOTableCellRotation
 @brief Defines the rotation angle for table cells.
+@since LayOut 2017, API 2.0
 */
 typedef enum {
   LOTableCellRotation_0 = 0,  ///< No rotation.
@@ -31,6 +32,7 @@ typedef enum {
 /**
 @brief Creates a table with a specified size, and a specified number of rows and
 columns.
+@since LayOut 2017, API 2.0
 @param[out] table   The table object.
 @param[in]  bounds  The starting dimensions of the table.
 @param[in]  rows    The number of rows.

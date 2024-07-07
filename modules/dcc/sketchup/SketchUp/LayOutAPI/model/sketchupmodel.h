@@ -589,9 +589,9 @@ LO_RESULT LOSketchUpModelSetClipMask(LOSketchUpModelRef model, LOEntityRef clip_
        form and adds them to a \ref LOEntityListRef. It is NOT necessary to
        explicitly release these entities, since \ref LOEntityListRef itself
        adds a reference to the entities and will release them when they are
-       removed from the list or when the list is released. NOTE The behavior
-       of this method changed in API 3.0 - an exploded raster-rendered model
-       will now wrap the \ref LOImageRef in a \ref LOGroupRef.
+       removed from the list or when the list is released.
+@note Starting in LayOut 2018 M0, API 3.0 - an exploded raster-rendered model
+      will now wrap the \ref LOImageRef in a \ref LOGroupRef.
 @param[in] model       The SketchUp model object.
 @param[in] entity_list The entity list object to add the new entities to.
 @return

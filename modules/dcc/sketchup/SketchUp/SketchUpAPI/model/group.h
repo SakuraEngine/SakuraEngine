@@ -205,9 +205,7 @@ SU_RESULT SUGroupGetTransform(SUGroupRef group, struct SUTransformation* transfo
 */
 SU_RESULT SUGroupGetEntities(SUGroupRef group, SUEntitiesRef* entities);
 
-/* The cond/endcond block will ensure that any code or comment keywords will be
-ignored by the Doxygen parser and will not appear in any documentation */
-/**@cond
+/**
 @brief Retrieves the component definition of a group object.
 @since SketchUp 2014, API 2.0
 @param[in]  group     The group object.
@@ -221,7 +219,9 @@ ignored by the Doxygen parser and will not appear in any documentation */
 */
 SU_RESULT SUGroupGetDefinition(SUGroupRef group, SUComponentDefinitionRef* component);
 
-///**
+/* The cond/endcond block will ensure that any code or comment keywords will be
+ignored by the Doxygen parser and will not appear in any documentation */
+///**@cond
 //@brief Explodes a group into separate entities.
 //@since SketchUp 2016, API 4.0
 //@param[in]  group    The group object.
