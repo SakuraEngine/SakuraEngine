@@ -174,58 +174,34 @@ object
 LO_RESULT LOEntityGetLayerInstance(LOEntityRef entity, LOLayerInstanceRef* layer_instance);
 
 /**
-@brief Moves an entity to the given layer. If the layer is non-shared and the
-       entity is is currently on a shared layer, pages must be valid and
-       populated with the pages to move the entity to. In all other cases,
-       pages may be an invalid object. The entity must belong to the same
-       document as the the layer and the pages.
+@brief Moves an entity to the given layer.
+
+If the layer is non-shared and the entity is currently on a shared layer, pages must be valid and
+populated with the pages to move the entity to. In all other cases, pages may be an invalid object.
+The entity must belong to the same document as the the layer and the pages.
+
+@bug In LayOut versions prior to LayOut 2024.0 this method would fail to move entities from
+  non-shared layers.
+
 @param[in] entity The entity object.
 @param[in] layer  The layer definition object.
 @param[in] pages  The page list object.
 @return
 - \ref SU_ERROR_NONE on success
-- \ref SU_ERROR_INVALID_INPUT if entity does not refer to a valid object
-- \ref SU_ERROR_INVALID_INPUT if layer does not refer to a valid object
-- \ref SU_ERROR_INVALID_INPUT if pages does not refer to a valid object and
-  layer is non-shared
-- \ref SU_ERROR_INVALID_INPUT if pages is empty and layer is non-shared
-- \ref SU_ERROR_INVALID_INPUT if pages contains the same page reference more
-  than once and layer is non-shared
-- \ref SU_ERROR_GENERIC if entity, layer, and pages are not all in the same
+- \ref SU_ERROR_INVALID_INPUT if \p entity does not refer to a valid object
+- \ref SU_ERROR_INVALID_INPUT if \p layer does not refer to a valid object
+- \ref SU_ERROR_INVALID_INPUT if \p pages does not refer to a valid object and
+  \p layer is non-shared
+- \ref SU_ERROR_INVALID_INPUT if \p pages is empty and \p layer is non-shared
+- \ref SU_ERROR_INVALID_INPUT if \p pages contains the same page reference more
+  than once and \p layer is non-shared
+- \ref SU_ERROR_GENERIC if \p entity, \p layer, and \p pages are not all in the same
   document
-- \ref SU_ERROR_LAYER_LOCKED if layer is locked or if entity is currently on a
+- \ref SU_ERROR_LAYER_LOCKED if \p layer is locked or if \p entity is currently on a
   locked layer
-- \ref SU_ERROR_ENTITY_LOCKED if entity is locked
+- \ref SU_ERROR_ENTITY_LOCKED if \p entity is locked
 */
 LO_RESULT LOEntityMoveToLayer(LOEntityRef entity, LOLayerRef layer, LOPageListRef pages);
-
-/**
-@brief Moves a list of entities to the given layer. If the layer is non-shared
-       and any entity is on a shared layer, pages must be valid and populated
-       with the pages to move the entities to. In all other cases, pages may be
-       an invalid object. The entities must belong to the same document as the
-       layer and pages.
-@param[in] entities The entity object.
-@param[in] layer    The layer definition object.
-@param[in] pages    The page list object.
-@return
-- \ref SU_ERROR_NONE on success
-- \ref SU_ERROR_INVALID_INPUT if entities does not refer to a valid object
-- \ref SU_ERROR_INVALID_INPUT if entities is empty
-- \ref SU_ERROR_INVALID_INPUT if entities contains the same entity reference more
-  than once
-- \ref SU_ERROR_INVALID_INPUT if layer does not refer to a valid object
-- \ref SU_ERROR_INVALID_INPUT if pages does not refer to a valid object and
-  layer is non-shared
-- \ref SU_ERROR_INVALID_INPUT if pages is empty and layer is non-shared
-- \ref SU_ERROR_INVALID_INPUT if pages contains the same page reference more
-  than once and layer is non-shared
-- \ref SU_ERROR_GENERIC if the entities, layer, and pages are not all in the
-  same document
-- \ref SU_ERROR_LAYER_LOCKED if layer is locked or if any entity is currently
-  on a locked layer
-*/
-LO_RESULT LOEntityListMoveToLayer(LOEntityListRef entities, LOLayerRef layer, LOPageListRef pages);
 
 /**
 @brief Gets the page that an entity belongs to. This function will only
