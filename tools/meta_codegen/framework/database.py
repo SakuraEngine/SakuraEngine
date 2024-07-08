@@ -56,7 +56,10 @@ class HeaderDatabase:
         # load raw data
         raw_json: sc.JsonObject
         with open(meta_file_path, encoding="utf-8") as f:
-            raw_json = json.load(f, object_pairs_hook=sc.json_object_pairs_hook)
+            try:
+                raw_json = json.load(f, object_pairs_hook=sc.json_object_pairs_hook)
+            except json.JSONDecodeError as e:
+                raise Exception(f"Failed to load meta file: {meta_file_path}")
 
         # extract cpp types
         unique_dict = raw_json.unique_dict()
