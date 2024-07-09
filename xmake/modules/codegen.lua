@@ -149,6 +149,9 @@ function _codegen_compile(target, proxy_target, opt)
     end
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
 
+    -- setup disable warning flag
+    table.insert(argv, "-Wno-abstract-final-class")
+
     -- hack: insert a placeholder to avoid the case where (#argv < limit) and (#argv + #argv2 > limit)
     local argv2 = {
         sourcefile, 
