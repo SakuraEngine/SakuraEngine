@@ -1,11 +1,10 @@
-#include "simdjson.h"
-#include "SkrRT/io/ram_io.hpp"
+#include "SkrProfile/profile.h"
+#include "SkrRTTR/type.hpp"
 #include "SkrTask/fib_task.hpp"
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
-
-#include "SkrProfile/profile.h"
 
 namespace skd::asset
 {
@@ -102,13 +101,12 @@ void* SCookContextImpl::_Import()
 {
     SkrZoneScoped;
     //-----load importer
-    simdjson::ondemand::parser parser;
-    auto doc = parser.iterate(record->meta);
-    auto importerJson = doc["importer"]; // import from asset
-    if (importerJson.error() == simdjson::SUCCESS)
+    skr::archive::JsonReader reader(record->meta.view());
+    reader.StartObject();
+    if (auto jread_result = reader.Key(u8"importer"); jread_result.has_value())
     {
         skr_guid_t importerTypeGuid = {};
-        importer = GetImporterRegistry()->LoadImporter(record, std::move(importerJson).value_unsafe(), &importerTypeGuid);
+        importer = GetImporterRegistry()->LoadImporter(record, &reader, &importerTypeGuid);
         if(!importer)
         {
             SKR_LOG_ERROR(u8"[SCookContext::Cook] importer failed to load, asset: %s", record->path.u8string().c_str());
@@ -134,6 +132,8 @@ void* SCookContextImpl::_Import()
         SKR_LOG_INFO(u8"[SCookContext::Cook] asset imported for asset: %s", record->path.u8string().c_str());
         return rawData;
     }
+    reader.EndObject();
+
     // auto parentJson = doc["parent"]; // derived from resource
     // if (parentJson.error() == simdjson::SUCCESS)
     // {

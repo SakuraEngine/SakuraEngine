@@ -15,7 +15,7 @@ class Generator(object):
             return True
 
     def filter_fields(self, fields):
-        return [(f, v) for f, v in vars(fields).items() if not hasattr(v.attrs, "transient") and not hasattr(v.attrs, "no-text")]
+        return [(f, v) for f, v in vars(fields).items() if not v.isStatic and not hasattr(v.attrs, "transient") and not hasattr(v.attrs, "no-text")]
             
     def filter_types(self, records):
         return [record for record in records if self.filter_type(record) or self.filter_debug_type(record)]

@@ -7,7 +7,7 @@
 
 namespace skr
 {
-template <typename T, size_t Extent = container::kDynamicExtent>
+template <typename T, size_t Extent = skr::container::kDynamicExtent>
 using span = container::Span<T, size_t, Extent>;
 }
 
