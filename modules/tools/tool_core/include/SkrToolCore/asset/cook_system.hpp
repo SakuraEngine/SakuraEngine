@@ -1,25 +1,20 @@
 #pragma once
-#include "SkrContainers/span.hpp"
-#include "SkrRT/resource/resource_header.hpp"
-#include "SkrOS/filesystem.hpp"
-#include "SkrCore/log.hpp"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrSerde/binary/writer.h"
+#include "SkrOS/filesystem.hpp"
+#include "SkrContainers/span.hpp"
 #include "SkrContainers/function_ref.hpp"
+#include "SkrCore/log.hpp"
+#include "SkrSerde/binary/writer.h"
+#include "SkrRT/resource/resource_header.hpp"
 #include "SkrToolCore/asset/cooker.hpp"
-#include "simdjson/padded_string.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service);
-namespace skr
-{
-namespace task
+namespace skr::task
 {
 struct event_t;
-}
-} // namespace skr
-namespace skd
-{
-namespace asset
+} // namespace skr::task
+
+namespace skd::asset
 {
 struct SAssetRecord {
     SProject*               project;
@@ -27,7 +22,7 @@ struct SAssetRecord {
     skr_guid_t              type;
     skr_guid_t              cooker;
     skr::filesystem::path   path;
-    simdjson::padded_string meta;
+    skr::String             meta;
 };
 
 struct TOOL_CORE_API SCookContext { // context per job
@@ -84,7 +79,7 @@ public:
         skr::Vector<uint8_t>      buffer;
         skr::binary::VectorWriter writer{ &buffer };
         SBinaryWriter             archive(writer);
-        if (int result = skr::binary::Archive(&archive, resource); result != 0)
+        if (!skr::binary::Archive(&archive, resource))
         {
             SKR_LOG_FMT_ERROR(u8"[SConfigCooker::Cook] failed to serialize resource {}! path: {}",
                               record->guid, (const char*)record->path.u8string().c_str());
@@ -124,13 +119,7 @@ protected:
 
     SAssetRecord* record = nullptr;
 };
-} // namespace asset
-} // namespace skd
 
-namespace skd
-{
-namespace asset
-{
 struct TOOL_CORE_API SCookSystem { // system
 public:
     SCookSystem() SKR_NOEXCEPT          = default;
@@ -158,5 +147,4 @@ public:
 
     static constexpr uint32_t ioServicesMaxCount = 1;
 };
-} // namespace asset
-} // namespace skd
+} // namespace skd::asset

@@ -56,9 +56,11 @@ bool ReadTrait<${record.name}>::Read(skr::archive::JsonReader* json, ${record.na
     %endfor
     %for name, field in generator.filter_fields(record.fields):
     {
-        json->StartObject();
-
-        if (json->Key(u8"${name}").has_value())
+        auto jSlot = json->Key(u8"${name}");
+        jSlot.error_then([&](auto e){
+            SKR_ASSERT(e == skr::archive::JsonReadError::KeyNotFound);
+        });
+        if (jSlot.has_value())
         {
             %if field.arraySize > 0:
             {
@@ -98,8 +100,6 @@ bool ReadTrait<${record.name}>::Read(skr::archive::JsonReader* json, ${record.na
             }
             %endif
         }
-
-        json->EndObject();
     }
     %endfor
     return true;

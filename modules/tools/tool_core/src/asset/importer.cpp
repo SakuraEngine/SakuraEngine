@@ -5,11 +5,11 @@
 namespace skd::asset
 {
 struct SImporterRegistryImpl : public SImporterRegistry {
-    SImporter* LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object, skr_guid_t* pGuid = nullptr) override;
+    SImporter* LoadImporter(const SAssetRecord* record, skr::archive::JsonReader* object, skr_guid_t* pGuid = nullptr) override;
     uint32_t   GetImporterVersion(skr_guid_t type) override;
     void       RegisterImporter(skr_guid_t type, SImporterTypeInfo info) override;
 
-    skr::FlatHashMap<skr_guid_t, SImporterTypeInfo> loaders;
+    skr::FlatHashMap<skr_guid_t, SImporterTypeInfo, skr::Hash<skr_guid_t>> loaders;
 };
 
 SImporterRegistry* GetImporterRegistry()
@@ -18,10 +18,11 @@ SImporterRegistry* GetImporterRegistry()
     return &registry;
 }
 
-SImporter* SImporterRegistryImpl::LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object, skr_guid_t* pGuid)
+SImporter* SImporterRegistryImpl::LoadImporter(const SAssetRecord* record, skr::archive::JsonReader* object, skr_guid_t* pGuid)
 {
     skr_guid_t type;
-    skr::json::Read(object["importerType"].value_unsafe(), type);
+    object->Key(u8"importerType");
+    skr::json::Read(object, type);
     if (pGuid) *pGuid = type;
     auto iter = loaders.find(type);
     if (iter != loaders.end())

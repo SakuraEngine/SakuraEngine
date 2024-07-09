@@ -18,8 +18,6 @@ bool SSkelCooker::Cook(SCookContext* ctx)
     SkrZoneScopedNS("SSkelCooker::Cook", 4);
 
     using namespace ozz::animation::offline;
-    //-----load config
-    simdjson::ondemand::parser parser;
     //-----import resource object
     RawSkeleton* rawSkeleton = (RawSkeleton*)ctx->Import<RawSkeleton>();
     if (!rawSkeleton)

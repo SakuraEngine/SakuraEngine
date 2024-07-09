@@ -24,6 +24,7 @@ struct SKR_STATIC_API _JsonReader {
     JsonReadResult StartArray(skr::StringView key, SizeType& count);
     JsonReadResult EndArray();
 
+    bool HasKey(skr::StringView key);
     JsonReadResult ReadBool(skr::StringView key, bool& value);
     JsonReadResult ReadInt32(skr::StringView key, int32_t& value);
     JsonReadResult ReadInt64(skr::StringView key, int64_t& value);

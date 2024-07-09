@@ -162,6 +162,19 @@ JsonReadResult _JsonReader::EndArray()
     return {};
 }
 
+bool _JsonReader::HasKey(skr::StringView key)
+{
+    auto type = _stack.back()._type;
+    auto parent = (yyjson_val*)_stack.back()._value;
+    CStringBuilder keyBuilder((yyjson_doc*)_document, key);
+    const char* ckey = keyBuilder.c_str();
+    if (type == Level::kObject)
+    {
+        return yyjson_obj_get((yyjson_val*)parent, ckey);
+    }
+    return false;
+}
+
 JsonReadResult _JsonReader::ReadBool(skr::StringView key, bool& value)
 {
     return _ReaderHelper::ReadValue(this, key, value);
@@ -212,6 +225,8 @@ JsonReadResult JsonReader::Key(skr::StringView key)
 {
     SKR_RET_JSON_READ_ERROR_IF(_currentKey.is_empty(), JsonReadError::PresetKeyNotConsumedYet);
     SKR_RET_JSON_READ_ERROR_IF(!key.is_empty(), JsonReadError::PresetKeyIsEmpty);
+    if (!_JsonReader::HasKey(key))
+        return JsonReadError::KeyNotFound;
     _currentKey = key;
     return {};
 }

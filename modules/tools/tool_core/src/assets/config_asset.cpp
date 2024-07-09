@@ -1,7 +1,8 @@
-#include "SkrRT/resource/config_resource.h"
-#include "SkrCore/log.hpp"
 #include "SkrBase/misc/defer.hpp"
+#include "SkrCore/log.hpp"
+#include "SkrRTTR/type.hpp"
 #include "SkrRT/io/ram_io.hpp"
+#include "SkrRT/resource/config_resource.h"
 #include "SkrToolCore/assets/config_asset.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
@@ -24,21 +25,25 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
     skr::BlobId blob = nullptr;
     context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), blob);
     SKR_DEFER({blob.reset();});
-
-    auto jsonString = simdjson::padded_string((char*)blob->get_data(), blob->get_size());
-    simdjson::ondemand::parser parser;
-    auto doc = parser.iterate(jsonString);
-    if(doc.error())
+    /*
+    const auto assetRecord = context->GetAssetRecord();
     {
-        SKR_LOG_FMT_ERROR(u8"Import config asset {} from {} failed, json parse error {}", assetRecord->guid, assetPath, simdjson::error_message(doc.error()));
+        SKR_LOG_FMT_ERROR(u8"Import shader options asset {} from {} failed, json parse error {}", assetRecord->guid, jsonPath, ::error_message(doc.error()));
         return nullptr;
     }
-    
-    //skr::resource::SConfigFactory::NewConfig(configType);
-    skr_config_resource_t* resource = SkrNew<skr_config_resource_t>();
+    '*/
+    skr::String jString(skr::StringView((const char8_t*)blob->get_data(), blob->get_size()));
+    skr::archive::JsonReader jsonVal(jString.view());
+    jsonVal.StartObject();
+
+    auto resource = SkrNew<skr_config_resource_t>();
     resource->SetType(configType);
-    type->read_json(resource->configData, doc.get_value().value_unsafe());
-    return resource; //导入具体数据
+    SKR_UNIMPLEMENTED_FUNCTION();
+    // type->read_json(resource->configData, doc.get_value().value_unsafe());
+    // skr::json::Read(&jsonVal, *resource);
+    
+    jsonVal.EndObject();
+    return resource;
 }
 
 void SJsonConfigImporter::Destroy(void* resource)

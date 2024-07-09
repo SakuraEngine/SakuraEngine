@@ -13,7 +13,7 @@ void                         SProject::SetWorkspace(const skr::filesystem::path&
     Workspace = path;
 }
 
-SProject* SProject::OpenProject(const skr::filesystem::path& projectFile) noexcept
+SProject* SProject::OpenProject(const skr::filesystem::path& projectFilePath) noexcept
 {
     std::error_code ec          = {};
     auto            resolvePath = [&](skr::String& path) {
@@ -57,30 +57,42 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFile) noexce
         skr::filesystem::path result{ resolved.c_str() };
         if (result.is_relative())
         {
-            result = projectFile.parent_path() / result;
+            result = projectFilePath.parent_path() / result;
         }
         return result.lexically_normal();
     };
-
-    auto                       projectPath = projectFile.lexically_normal().string();
-    auto                       jsonstring  = simdjson::padded_string::load(projectPath);
-    simdjson::ondemand::parser parser;
-    auto                       doc = parser.iterate(jsonstring);
-    if (doc.error())
-    {
-        SKR_LOG_ERROR(u8"Failed to parse project file: %s, error: %s", projectPath.c_str(), simdjson::error_message(doc.error()));
-        return nullptr;
-    }
-    auto                json_value = doc.get_value().value_unsafe();
+    
+    auto projectPath = projectFilePath.lexically_normal().string();
     skd::SProjectConfig cfg;
-    if (skr::json::Read(std::move(json_value), cfg) != skr::json::SUCCESS)
+    // TODO: refactor this
     {
-        SKR_LOG_ERROR(u8"Failed to parse project file: %s", projectPath.c_str());
-        return nullptr;
+        auto projectFile = fopen(projectPath.c_str(), "rb");
+        if (!projectFile)
+        {
+            SKR_LOG_ERROR(u8"Failed to open project file: %s", projectPath.c_str());
+            return nullptr;
+        }
+        // read string from file with c <file>
+        fseek(projectFile, 0, SEEK_END);
+        auto fileSize = ftell(projectFile);
+        fseek(projectFile, 0, SEEK_SET);
+        skr::String projectFileContent;
+        projectFileContent.append(u8'0', fileSize);
+        fread(projectFileContent.raw().data(), 1, fileSize, projectFile);
+        fclose(projectFile);
+
+        skr::archive::JsonReader reader(projectFileContent.view());
+        reader.StartObject();
+        if (!skr::json::Read(&reader, cfg))
+        {
+            SKR_LOG_ERROR(u8"Failed to parse project file: %s", projectPath.c_str());
+            return nullptr;
+        }
+        reader.EndObject();
     }
 
     auto project  = SkrNew<skd::SProject>();
-    project->name = projectFile.filename().u8string().c_str();
+    project->name = projectFilePath.filename().u8string().c_str();
 
     project->assetPath      = toAbsolutePath(cfg.assetDirectory);
     project->outputPath     = toAbsolutePath(cfg.resourceDirectory);

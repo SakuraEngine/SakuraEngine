@@ -1,7 +1,7 @@
 #pragma once
+#include "SkrBase/types.h"
 #include "SkrRT/config.h"
 #include "SkrRT/resource/resource_factory.h"
-#include "SkrBase/types.h"
 #include "SkrRTTR/rttr_traits.hpp"
 
 typedef struct skr_config_resource_t skr_config_resource_t;

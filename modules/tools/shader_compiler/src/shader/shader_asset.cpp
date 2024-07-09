@@ -337,7 +337,8 @@ bool SShaderCooker::Cook(SCookContext* ctx)
             return false;
         }
         SKR_DEFER({ fclose(file); });
-        fwrite(writer.buffer.c_str(), writer.buffer.size(), 1, file);
+        auto jString = writer.Write();
+        fwrite(jString.raw().data(), jString.raw().size(), 1, file);
     }
     return true;
 }

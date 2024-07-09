@@ -105,6 +105,9 @@ void* SCookContextImpl::_Import()
     reader.StartObject();
     if (auto jread_result = reader.Key(u8"importer"); jread_result.has_value())
     {
+        reader.StartObject(); // start importer object
+        SKR_DEFER({ reader.EndObject(); });
+        
         skr_guid_t importerTypeGuid = {};
         importer = GetImporterRegistry()->LoadImporter(record, &reader, &importerTypeGuid);
         if(!importer)
@@ -135,7 +138,7 @@ void* SCookContextImpl::_Import()
     reader.EndObject();
 
     // auto parentJson = doc["parent"]; // derived from resource
-    // if (parentJson.error() == simdjson::SUCCESS)
+    // if (parentJson.error() == ::SUCCESS)
     // {
     //     skr_guid_t parentGuid;
     //     skr::json::Read(std::move(parentJson).value_unsafe(), parentGuid);
@@ -257,7 +260,10 @@ uint32_t SCookContextImpl::AddStaticDependency(skr_guid_t resource, bool install
         {
             auto record = handle.get_record();
             task::event_t event;
-            auto callback = [&]() { event.signal(); };
+            auto callback = [&]()
+            {
+                event.signal(); 
+            };
             record->AddCallback(SKR_LOADING_STATUS_ERROR, callback);
             record->AddCallback(install ? SKR_LOADING_STATUS_INSTALLED : SKR_LOADING_STATUS_LOADED, callback);
             if(!handle.get_resolved())

@@ -16,20 +16,21 @@ void* SShaderOptionsImporter::Import(skr_io_ram_service_t* ioService, SCookConte
     skr::BlobId ioBuffer = {};
     context->AddFileDependencyAndLoad(ioService, jsonPath.c_str(), ioBuffer);
     SKR_DEFER({ioBuffer.reset();});
-
-    auto jsonString = simdjson::padded_string((char*)ioBuffer->get_data(), ioBuffer->get_size());
-    simdjson::ondemand::parser parser;
-    auto doc = parser.iterate(jsonString);
-    if(doc.error())
+    /*
+    const auto assetRecord = context->GetAssetRecord();
     {
-        SKR_LOG_FMT_ERROR(u8"Import shader options asset {} from {} failed, json parse error {}", assetRecord->guid, jsonPath, simdjson::error_message(doc.error()));
+        SKR_LOG_FMT_ERROR(u8"Import shader options asset {} from {} failed, json parse error {}", assetRecord->guid, jsonPath, ::error_message(doc.error()));
         return nullptr;
     }
-    auto json_value = doc.get_value().value_unsafe();
+    '*/
+    skr::String jString(skr::StringView((const char8_t*)ioBuffer->get_data(), ioBuffer->get_size()));
+    skr::archive::JsonReader jsonVal(jString.view());
+    jsonVal.StartObject();
 
-    // create source code wrapper
     auto collection = SkrNew<skr_shader_options_resource_t>();
-    skr::json::Read(std::move(json_value), *collection);
+    skr::json::Read(&jsonVal, *collection);
+    
+    jsonVal.EndObject();
     return collection;
 }
 

@@ -7,12 +7,11 @@ namespace skd::asset
 template <class T>
 T LoadConfig(SCookContext* context)
 {
-    simdjson::ondemand::parser parser;
-    auto                       doc       = parser.iterate(context->GetAssetRecord()->meta);
-    auto                       doc_value = doc.get_value().value_unsafe();
-
+    skr::archive::JsonReader reader(context->GetAssetRecord()->meta.view());
+    reader.StartObject();
     T settings;
-    skr::json::Read(std::move(doc_value), settings);
+    skr::json::Read(&reader, settings);
+    reader.EndObject();
     return settings;
 }
 } // namespace skd::asset
