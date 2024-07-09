@@ -53,7 +53,7 @@ class BasicCPPGenerator(gen.GeneratorBase):
                     "custom": sc.Str(),  # 在注册期间插入自定义函数，目前用于插入（sugoi::managed_component）
                     "unsafe": sc.Bool(),  # 不检查是否 managed（sugoi::check_managed）
                 }),
-                "query": sc.Str(),  # 通过 query 表达式生产 query
+                # "query": sc.Str(),  # 通过 query 表达式生产 query
             })
         )
 
