@@ -63,6 +63,7 @@ WhitespaceSensitiveMacros:
   - "sreflect_struct"
   - "sreflect_enum_class"
   - "sreflect_interface"
+  - "sreflect_function"
 
 Macros:
   # attr
@@ -120,6 +121,17 @@ Macros:
   - sreflect_interface(x,y,z,w,a,b,c)=struct
   - sreflect_interface(x,y,z,w,a,b,c,d)=struct
   - sreflect_interface(x,y,z,w,a,b,c,d,e)=struct
+  # interface
+  - sreflect_function(x)=struct
+  - sreflect_function(x,y)=struct
+  - sreflect_function(x,y,z)=struct
+  - sreflect_function(x,y,z)=struct
+  - sreflect_function(x,y,z,w)=struct
+  - sreflect_function(x,y,z,w,a)=struct
+  - sreflect_function(x,y,z,w,a,b)=struct
+  - sreflect_function(x,y,z,w,a,b,c)=struct
+  - sreflect_function(x,y,z,w,a,b,c,d)=struct
+  - sreflect_function(x,y,z,w,a,b,c,d,e)=struct
   # struct
   - sreflect_managed_component(x)=struct
   - sreflect_managed_component(x,y)=struct
