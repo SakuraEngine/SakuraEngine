@@ -8,7 +8,7 @@
 namespace skd
 {
 static skr::filesystem::path Workspace;
-void                         SProject::SetWorkspace(const skr::filesystem::path& path) noexcept
+void SProject::SetWorkspace(const skr::filesystem::path& path) noexcept
 {
     Workspace = path;
 }
@@ -119,7 +119,32 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFilePath) no
     project->ram_service     = skr_io_ram_service_t::create(&ioServiceDesc);
     project->ram_service->run();
 
+    // Create output dir
+    skr::filesystem::create_directories(project->GetOutputPath(), ec);
+
     return project;
+}
+
+bool SProject::LoadAssetData(skr::StringView uri, skr::Vector<uint8_t>& content) noexcept
+{
+    skr::String path = uri;
+    auto asset_file = skr_vfs_fopen(asset_vfs, path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    const auto asset_size = skr_vfs_fsize(asset_file);
+    content.resize_unsafe(asset_size);
+    skr_vfs_fread(asset_file, content.data(), 0, asset_size);
+    skr_vfs_fclose(asset_file);
+    return true;
+}
+
+bool SProject::LoadAssetText(skr::StringView uri, skr::String& content) noexcept
+{
+    skr::String path = uri;
+    auto asset_file = skr_vfs_fopen(asset_vfs, path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    const auto asset_size = skr_vfs_fsize(asset_file);
+    content.append(u8'0', asset_size);
+    skr_vfs_fread(asset_file, content.raw().data(), 0, asset_size);
+    skr_vfs_fclose(asset_file);
+    return true;
 }
 
 SProject::~SProject() noexcept

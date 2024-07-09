@@ -36,7 +36,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
         }
         skr::binary::SpanReader reader = { buffer, 0 };
         SBinaryReader     archive{ reader };
-        if (skr::binary::Read(&archive, header) != 0)
+        if (!skr::binary::Read(&archive, header))
             return false;
     }
     else
@@ -50,7 +50,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
         }
         skr::binary::SpanReader reader = { { buffer, _fs_length }, 0 };
         SBinaryReader     archive{ reader };
-        if (skr::binary::Read(&archive, header) != 0)
+        if (!skr::binary::Read(&archive, header))
             return false;
     }
     SKR_ASSERT(header.guid == guid);

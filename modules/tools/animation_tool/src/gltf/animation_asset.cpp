@@ -19,7 +19,7 @@ void* SAnimGltfImporter::Import(skr_io_ram_service_t*, SCookContext* context)
     ozz::animation::offline::OzzImporter& impoter = impl;
     auto& skeletonResource = context->GetStaticDependency(0);
     ozz::animation::Skeleton& skeleton = *(ozz::animation::Skeleton*)skeletonResource.get_ptr();
-    auto path = context->AddFileDependency(assetPath.c_str());
+    auto path = context->AddSourceFile(assetPath.c_str());
     auto fullAssetPath = context->GetAssetRecord()->project->GetAssetPath() / path;
     if(!impoter.Load(fullAssetPath.string().c_str()))
     {

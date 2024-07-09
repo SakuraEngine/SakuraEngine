@@ -19,15 +19,15 @@ struct SCookContextImpl : public SCookContext
     const SAssetRecord* GetAssetRecord() const override;
     skr::String GetAssetPath() const override;
 
-    skr::filesystem::path AddFileDependency(const skr::filesystem::path& path) override;
-    skr::filesystem::path AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr::BlobId& destination) override;
+    skr::filesystem::path AddSourceFile(const skr::filesystem::path& path) override;
+    skr::filesystem::path AddSourceFileAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr::BlobId& destination) override;
+    skr::span<const skr::filesystem::path> GetSourceFiles() const override;
 
     void AddRuntimeDependency(skr_guid_t resource) override;
     void AddSoftRuntimeDependency(skr_guid_t resource) override;
     uint32_t AddStaticDependency(skr_guid_t resource, bool install) override;
     skr::span<const skr_guid_t> GetRuntimeDependencies() const override;
     skr::span<const skr_resource_handle_t> GetStaticDependencies() const override;
-    skr::span<const skr::filesystem::path> GetFileDependencies() const override;
     const skr_resource_handle_t& GetStaticDependency(uint32_t index) const override;
 
     const skr::task::event_t& GetCounter() override
@@ -103,6 +103,7 @@ void* SCookContextImpl::_Import()
     //-----load importer
     skr::archive::JsonReader reader(record->meta.view());
     reader.StartObject();
+    SKR_DEFER({ reader.EndObject(); });
     if (auto jread_result = reader.Key(u8"importer"); jread_result.has_value())
     {
         skr_guid_t importerTypeGuid = {};
@@ -132,15 +133,6 @@ void* SCookContextImpl::_Import()
         SKR_LOG_INFO(u8"[SCookContext::Cook] asset imported for asset: %s", record->path.u8string().c_str());
         return rawData;
     }
-    reader.EndObject();
-
-    // auto parentJson = doc["parent"]; // derived from resource
-    // if (parentJson.error() == ::SUCCESS)
-    // {
-    //     skr_guid_t parentGuid;
-    //     skr::json::Read(std::move(parentJson).value_unsafe(), parentGuid);
-    //     return AddStaticDependency(parentGuid);
-    // }
     return nullptr;
 }
 
@@ -179,7 +171,7 @@ skr::String SCookContextImpl::GetAssetPath() const
     return record->path.u8string().c_str();
 }
 
-skr::filesystem::path SCookContextImpl::AddFileDependency(const skr::filesystem::path &inPath)
+skr::filesystem::path SCookContextImpl::AddSourceFile(const skr::filesystem::path &inPath)
 {
     auto iter = std::find_if(fileDependencies.begin(), fileDependencies.end(), [&](const auto &dep) { return dep == inPath; });
     if (iter == fileDependencies.end())
@@ -187,10 +179,10 @@ skr::filesystem::path SCookContextImpl::AddFileDependency(const skr::filesystem:
     return record->path.parent_path() / inPath;
 }
 
-skr::filesystem::path SCookContextImpl::AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path,
+skr::filesystem::path SCookContextImpl::AddSourceFileAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path,
     skr::BlobId& destination)
 {
-    auto outPath = AddFileDependency(path.c_str());
+    auto outPath = AddSourceFile(path.c_str());
     auto u8Path = outPath.u8string();
     const auto assetRecord = GetAssetRecord();
     // load file
@@ -211,6 +203,11 @@ skr::filesystem::path SCookContextImpl::AddFileDependencyAndLoad(skr_io_ram_serv
     return outPath;
 }
 
+skr::span<const skr::filesystem::path> SCookContextImpl::GetSourceFiles() const
+{
+    return fileDependencies;
+}
+
 void SCookContextImpl::AddRuntimeDependency(skr_guid_t resource)
 {
     auto iter = std::find_if(runtimeDependencies.begin(), runtimeDependencies.end(), [&](const auto &dep) { return dep == resource; });
@@ -227,11 +224,6 @@ void SCookContextImpl::AddSoftRuntimeDependency(skr_guid_t resource)
 skr::span<const skr_guid_t> SCookContextImpl::GetRuntimeDependencies() const
 {
     return skr::span<const skr_guid_t>(runtimeDependencies.data(), runtimeDependencies.size());
-}
-
-skr::span<const skr::filesystem::path> SCookContextImpl::GetFileDependencies() const
-{
-    return fileDependencies;
 }
 
 skr::span<const skr_resource_handle_t> SCookContextImpl::GetStaticDependencies() const
@@ -268,6 +260,7 @@ uint32_t SCookContextImpl::AddStaticDependency(skr_guid_t resource, bool install
                 event.wait(false);
             }
         }
+        SKR_ASSERT(handle.is_resolved());
         staticDependencies.add(std::move(handle));
         return (uint32_t)(staticDependencies.size() - 1);
     }

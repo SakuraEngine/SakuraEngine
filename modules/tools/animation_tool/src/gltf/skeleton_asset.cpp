@@ -20,7 +20,7 @@ void* SSkelGltfImporter::Import(skr_io_ram_service_t*, SCookContext* context)
     ozz::animation::offline::OzzImporter& impoter = impl;
     OzzImporter::NodeType types = {};
     types.skeleton = true;
-    auto path = context->AddFileDependency(assetPath.c_str());
+    auto path = context->AddSourceFile(assetPath.c_str());
     auto fullAssetPath = context->GetAssetRecord()->project->GetAssetPath() / path;
     if(!impoter.Load(fullAssetPath.string().c_str()))
     {

@@ -175,6 +175,9 @@ namespace binary
 template <class T, class = void>
 struct ReadTrait;
 
+template <typename T>
+inline static constexpr bool HasReadTrait = requires(SBinaryReader* r, T& t){ ReadTrait<T>::Read(r, t); };
+
 template <class T, class... Args>
 bool Archive(SBinaryReader* reader, T&& value, Args&&... args)
 {

@@ -40,16 +40,17 @@ public:
     virtual const SAssetRecord* GetAssetRecord() const     = 0;
     virtual skr::String         GetAssetPath() const       = 0;
 
-    virtual skr::filesystem::path AddFileDependency(const skr::filesystem::path& path)                                                                   = 0;
-    virtual skr::filesystem::path AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr::BlobId& destination) = 0;
+    virtual skr::filesystem::path AddSourceFile(const skr::filesystem::path& path)                                                                   = 0;
+    virtual skr::filesystem::path AddSourceFileAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr::BlobId& destination) = 0;
+    virtual skr::span<const skr::filesystem::path> GetSourceFiles() const                                 = 0;
 
     virtual void                                   AddRuntimeDependency(skr_guid_t resource)              = 0;
     virtual void                                   AddSoftRuntimeDependency(skr_guid_t resource)          = 0;
     virtual uint32_t                               AddStaticDependency(skr_guid_t resource, bool install) = 0;
+
     virtual skr::span<const skr_guid_t>            GetRuntimeDependencies() const                         = 0;
     virtual skr::span<const skr_resource_handle_t> GetStaticDependencies() const                          = 0;
     virtual const skr_resource_handle_t&           GetStaticDependency(uint32_t index) const              = 0;
-    virtual skr::span<const skr::filesystem::path> GetFileDependencies() const                            = 0;
 
     virtual const skr::task::event_t& GetCounter() = 0;
 
@@ -67,7 +68,7 @@ public:
     {
         //------save resource to disk
         auto outputPath = GetOutputPath().u8string();
-        auto file       = fopen((const char*)outputPath.c_str(), "wb");
+        auto file   = fopen((const char*)outputPath.c_str(), "wb");
         if (!file)
         {
             SKR_LOG_FMT_ERROR(u8"[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}",
@@ -137,9 +138,7 @@ public:
     virtual void UnregisterCooker(skr_guid_t type)                                                     = 0;
 
     virtual SAssetRecord* GetAssetRecord(skr_guid_t type) const = 0;
-
-    virtual SAssetRecord* GetAssetRecord(const skr_guid_t& guid)                     = 0;
-    virtual SAssetRecord* ImportAsset(SProject* project, skr::filesystem::path path) = 0;
+    virtual SAssetRecord* LoadAssetMeta(SProject* project, const skr::String& uri)   = 0;
 
     virtual void ParallelForEachAsset(uint32_t batch, skr::FunctionRef<void(skr::span<SAssetRecord*>)> f) = 0;
 

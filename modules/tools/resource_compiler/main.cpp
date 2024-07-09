@@ -7,23 +7,16 @@
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/stl_vector.hpp"
 #include "SkrCore/module/module_manager.hpp"
-#include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/resource/local_resource_registry.hpp"
 
-#include "SkrRenderer/resources/texture_resource.h"
-#include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"
-#include "SkrRenderer/resources/material_resource.hpp"
 
 #include "SkrAnim/resources/skeleton_resource.hpp"
-#include "SkrAnim/resources/animation_resource.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
-#include "SkrToolCore/asset/importer.hpp"
-#include "SkrToolCore/assets/config_asset.hpp"
 
 #include "SkrProfile/profile.h"
 
@@ -93,7 +86,6 @@ skr::Vector<skd::SProject*> open_projects(int argc, char** argv)
         return {};
     }
     auto projectPath = parser.get_optional<skr::String>(u8"project");
-
     std::error_code ec = {};
     skr::filesystem::path workspace{parser.get<skr::String>(u8"workspace").u8_str()};
     skd::SProject::SetWorkspace(workspace);
@@ -107,7 +99,6 @@ skr::Vector<skd::SProject*> open_projects(int argc, char** argv)
         }
         iter.increment(ec);
     }
-    
     skr::Vector<skd::SProject*> result;
     for (auto& projectFile : projectFiles)
     {
@@ -135,14 +126,17 @@ int compile_project(skd::SProject* project)
         iter.increment(ec);
     }
     SKR_LOG_INFO(u8"Project dir scan finished.");
-    //----- import project assets (guid & type & path)
+    //----- load project asset meta data (guid & type & path)
     {
         using iter_t = typename decltype(paths)::iterator;
         skr::parallel_for(paths.begin(), paths.end(), 20,
         [&](iter_t begin, iter_t end) {
-            SkrZoneScopedN("Import");
+            SkrZoneScopedN("LoadMeta");
             for (auto i = begin; i != end; ++i)
-                system.ImportAsset(project, *i);
+            {
+                const auto relpath = skr::filesystem::relative(*i, project->GetAssetPath());
+                system.LoadAssetMeta(project, skr::String(relpath.u8string().c_str()));
+            }
         });
     }
     SKR_LOG_INFO(u8"Project asset import finished.");

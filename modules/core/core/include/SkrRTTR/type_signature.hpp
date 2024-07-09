@@ -434,7 +434,8 @@ struct TypeSignatureHelper {
     inline static const uint8_t* read_function_signature(const uint8_t* pos, const uint8_t* end, uint32_t& data_count)
     {
         SKR_ASSERT(has_enough_buffer(pos, end, ETypeSignatureSignal::FunctionSignature));
-        SKR_ASSERT(peek_signal(pos, end) == ETypeSignatureSignal::FunctionSignature);
+        auto signal = peek_signal(pos, end);
+        SKR_ASSERT(signal == ETypeSignatureSignal::FunctionSignature);
         pos = jump_signal(pos, end);
         return read_buffer(pos, data_count);
     }
@@ -1221,6 +1222,23 @@ struct TypeSignatureTraits<const T[N]> {
 };
 
 // function pointer
+template <typename Ret>
+struct TypeSignatureTraits<Ret(void)> {
+    inline static constexpr size_t buffer_size =
+        type_signature_size_v<ETypeSignatureSignal::FunctionSignature> +
+        TypeSignatureTraits<Ret>::buffer_size;
+    inline static uint8_t* write(uint8_t* pos, uint8_t* end)
+    {
+        // write function signature
+        pos = TypeSignatureHelper::write_function_signature(pos, end, 0);
+
+        // write return type
+        pos = TypeSignatureTraits<Ret>::write(pos, end);
+  
+        return pos;
+    }
+};
+
 template <typename Ret, typename... Args>
 struct TypeSignatureTraits<Ret(Args...)> {
     inline static constexpr size_t buffer_size =
