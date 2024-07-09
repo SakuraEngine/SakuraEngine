@@ -34,7 +34,6 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
     '*/
     skr::String jString(skr::StringView((const char8_t*)blob->get_data(), blob->get_size()));
     skr::archive::JsonReader jsonVal(jString.view());
-    jsonVal.StartObject();
 
     auto resource = SkrNew<skr_config_resource_t>();
     resource->SetType(configType);
@@ -42,7 +41,6 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
     // type->read_json(resource->configData, doc.get_value().value_unsafe());
     // skr::json::Read(&jsonVal, *resource);
     
-    jsonVal.EndObject();
     return resource;
 }
 

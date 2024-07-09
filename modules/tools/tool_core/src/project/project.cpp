@@ -82,13 +82,11 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFilePath) no
         fclose(projectFile);
 
         skr::archive::JsonReader reader(projectFileContent.view());
-        reader.StartObject();
         if (!skr::json::Read(&reader, cfg))
         {
             SKR_LOG_ERROR(u8"Failed to parse project file: %s", projectPath.c_str());
             return nullptr;
         }
-        reader.EndObject();
     }
 
     auto project  = SkrNew<skd::SProject>();

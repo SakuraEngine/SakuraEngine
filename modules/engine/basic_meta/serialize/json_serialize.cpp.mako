@@ -45,13 +45,13 @@ bool WriteTrait<${enum.name}>::Write(skr::archive::JsonWriter* writer, ${enum.na
 
 %for record in generator.filter_types(db.records):
 %if not generator.filter_debug_type(record):
-bool ReadTrait<${record.name}>::Read(skr::archive::JsonReader* json, ${record.name}& record)
+bool ReadTrait<${record.name}>::ReadFields(skr::archive::JsonReader* json, ${record.name}& record)
 {
     SkrZoneScopedN("json::ReadTrait<${record.name}>::Read");
     %for base in record.bases:
     {
         auto baseJson = json;
-        skr::json::Read(baseJson, (${base}&)record);
+        ReadTrait<${base}>::ReadFields(baseJson, (${base}&)record);
     }
     %endfor
     %for name, field in generator.filter_fields(record.fields):
@@ -102,6 +102,15 @@ bool ReadTrait<${record.name}>::Read(skr::archive::JsonReader* json, ${record.na
         }
     }
     %endfor
+    return true;
+} 
+
+bool ReadTrait<${record.name}>::Read(skr::archive::JsonReader* reader, ${record.name}& record)
+{
+    SkrZoneScopedN("json::WriteTrait<${record.name}>::Write");
+    TRUE_OR_RETURN_FALSE(reader->StartObject().has_value());
+    TRUE_OR_RETURN_FALSE(ReadFields(reader, record));
+    TRUE_OR_RETURN_FALSE(reader->EndObject().has_value());
     return true;
 } 
 %endif

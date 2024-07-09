@@ -22,12 +22,8 @@ void* SMaterialImporter::Import(skr_io_ram_service_t* ioService, SCookContext *c
     '*/
     skr::String jString(skr::StringView((const char8_t*)blob->get_data(), blob->get_size()));
     skr::archive::JsonReader jsonVal(jString.view());
-    jsonVal.StartObject();
-
     auto mat_asset = SkrNew<skr_material_asset_t>();
     skr::json::Read(&jsonVal, *mat_asset);
-    
-    jsonVal.EndObject();
     return mat_asset;
 }
 

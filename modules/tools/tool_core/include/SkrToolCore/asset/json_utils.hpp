@@ -10,6 +10,7 @@ T LoadConfig(SCookContext* context)
     skr::archive::JsonReader reader(context->GetAssetRecord()->meta.view());
     reader.StartObject();
     T settings;
+    reader.Key(u8"importer");
     skr::json::Read(&reader, settings);
     reader.EndObject();
     return settings;

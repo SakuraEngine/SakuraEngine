@@ -105,9 +105,6 @@ void* SCookContextImpl::_Import()
     reader.StartObject();
     if (auto jread_result = reader.Key(u8"importer"); jread_result.has_value())
     {
-        reader.StartObject(); // start importer object
-        SKR_DEFER({ reader.EndObject(); });
-        
         skr_guid_t importerTypeGuid = {};
         importer = GetImporterRegistry()->LoadImporter(record, &reader, &importerTypeGuid);
         if(!importer)

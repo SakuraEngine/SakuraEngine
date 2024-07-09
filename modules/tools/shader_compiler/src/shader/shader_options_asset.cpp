@@ -25,12 +25,8 @@ void* SShaderOptionsImporter::Import(skr_io_ram_service_t* ioService, SCookConte
     '*/
     skr::String jString(skr::StringView((const char8_t*)ioBuffer->get_data(), ioBuffer->get_size()));
     skr::archive::JsonReader jsonVal(jString.view());
-    jsonVal.StartObject();
-
     auto collection = SkrNew<skr_shader_options_resource_t>();
     skr::json::Read(&jsonVal, *collection);
-    
-    jsonVal.EndObject();
     return collection;
 }
 

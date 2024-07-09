@@ -24,12 +24,8 @@ void* STextureSamplerImporter::Import(skr_io_ram_service_t* ioService, SCookCont
     '*/
     skr::String jString(skr::StringView((const char8_t*)blob->get_data(), blob->get_size()));
     skr::archive::JsonReader jsonVal(jString.view());
-    jsonVal.StartObject();
-
     auto sampler_resource = SkrNew<skr_texture_sampler_resource_t>();
     skr::json::Read(&jsonVal, *sampler_resource);
-    
-    jsonVal.EndObject();
     return sampler_resource;
 }
 

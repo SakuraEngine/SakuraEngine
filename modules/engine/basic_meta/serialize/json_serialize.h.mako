@@ -12,6 +12,7 @@ namespace skr::json
     struct ${api} ReadTrait<${record.name}>
     {
         static bool Read(skr::archive::JsonReader* json, ${record.name}& v);
+        static bool ReadFields(skr::archive::JsonReader* json, ${record.name}& v);
     };
 %endif
     template <>

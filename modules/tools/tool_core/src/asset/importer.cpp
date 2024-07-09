@@ -21,12 +21,19 @@ SImporterRegistry* GetImporterRegistry()
 SImporter* SImporterRegistryImpl::LoadImporter(const SAssetRecord* record, skr::archive::JsonReader* object, skr_guid_t* pGuid)
 {
     skr_guid_t type;
-    object->Key(u8"importerType");
-    skr::json::Read(object, type);
+    {
+        object->StartObject(); // start importer object
+        object->Key(u8"importerType");
+        skr::json::Read(object, type);
+        object->EndObject();
+    }
     if (pGuid) *pGuid = type;
     auto iter = loaders.find(type);
     if (iter != loaders.end())
-        return iter->second.Load(record, std::move(object));
+    {
+        object->Key(u8"importer");
+        return iter->second.Load(record, object);
+    }
     return nullptr;
 }
 uint32_t SImporterRegistryImpl::GetImporterVersion(skr_guid_t type)
