@@ -83,59 +83,6 @@ protected:
 };
 } // namespace skd::asset
 
-struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule {
-    skr::JobQueue* io_job_queue          = nullptr;
-    skr::JobQueue* io_callback_job_queue = nullptr;
-    virtual void   on_load(int argc, char8_t** argv) override
-    {
-        auto cook_system = (skd::asset::SCookSystemImpl*)skd::asset::GetCookSystem();
-        skr_init_mutex(&cook_system->ioMutex);
-
-        auto jqDesc         = make_zeroed<skr::JobQueueDesc>();
-        jqDesc.thread_count = 1;
-        jqDesc.priority     = SKR_THREAD_ABOVE_NORMAL;
-        jqDesc.name         = u8"Tool-IOJobQueue";
-        io_job_queue        = SkrNew<skr::JobQueue>(jqDesc);
-
-        jqDesc.name           = u8"Tool-IOCallbackJobQueue";
-        io_callback_job_queue = SkrNew<skr::JobQueue>(jqDesc);
-
-        for (auto& ioService : cook_system->ioServices)
-        {
-            // all used up
-            if (ioService == nullptr)
-            {
-                skr_ram_io_service_desc_t desc = {};
-                desc.sleep_time                = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
-                desc.awake_at_request          = true;
-                desc.name                      = u8"Tool-IOService";
-                desc.io_job_queue              = io_job_queue;
-                desc.callback_job_queue        = io_callback_job_queue;
-                ioService                      = skr_io_ram_service_t::create(&desc);
-                ioService->run();
-            }
-        }
-    }
-
-    virtual void on_unload() override
-    {
-        auto cook_system = (skd::asset::SCookSystemImpl*)skd::asset::GetCookSystem();
-        skr_destroy_mutex(&cook_system->ioMutex);
-        for (auto ioService : cook_system->ioServices)
-        {
-            if (ioService)
-                skr_io_ram_service_t::destroy(ioService);
-        }
-
-        for (auto& pair : cook_system->assets)
-            SkrDelete(pair.second);
-
-        SkrDelete(io_callback_job_queue);
-        SkrDelete(io_job_queue);
-    }
-};
-IMPLEMENT_DYNAMIC_MODULE(SkrToolCoreModule, SkrToolCore);
-
 namespace skd::asset
 {
 SCookSystem* GetCookSystem()
@@ -516,3 +463,56 @@ SAssetRecord* SCookSystemImpl::LoadAssetMeta(SProject* project, const skr::Strin
 }
 
 } // namespace skd::asset
+
+struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule {
+    skr::JobQueue* io_job_queue          = nullptr;
+    skr::JobQueue* io_callback_job_queue = nullptr;
+    virtual void   on_load(int argc, char8_t** argv) override
+    {
+        auto cook_system = (skd::asset::SCookSystemImpl*)skd::asset::GetCookSystem();
+        skr_init_mutex(&cook_system->ioMutex);
+
+        auto jqDesc         = make_zeroed<skr::JobQueueDesc>();
+        jqDesc.thread_count = 1;
+        jqDesc.priority     = SKR_THREAD_ABOVE_NORMAL;
+        jqDesc.name         = u8"Tool-IOJobQueue";
+        io_job_queue        = SkrNew<skr::JobQueue>(jqDesc);
+
+        jqDesc.name           = u8"Tool-IOCallbackJobQueue";
+        io_callback_job_queue = SkrNew<skr::JobQueue>(jqDesc);
+
+        for (auto& ioService : cook_system->ioServices)
+        {
+            // all used up
+            if (ioService == nullptr)
+            {
+                skr_ram_io_service_desc_t desc = {};
+                desc.sleep_time                = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
+                desc.awake_at_request          = true;
+                desc.name                      = u8"Tool-IOService";
+                desc.io_job_queue              = io_job_queue;
+                desc.callback_job_queue        = io_callback_job_queue;
+                ioService                      = skr_io_ram_service_t::create(&desc);
+                ioService->run();
+            }
+        }
+    }
+
+    virtual void on_unload() override
+    {
+        auto cook_system = (skd::asset::SCookSystemImpl*)skd::asset::GetCookSystem();
+        skr_destroy_mutex(&cook_system->ioMutex);
+        for (auto ioService : cook_system->ioServices)
+        {
+            if (ioService)
+                skr_io_ram_service_t::destroy(ioService);
+        }
+
+        for (auto& pair : cook_system->assets)
+            SkrDelete(pair.second);
+
+        SkrDelete(io_callback_job_queue);
+        SkrDelete(io_job_queue);
+    }
+};
+IMPLEMENT_DYNAMIC_MODULE(SkrToolCoreModule, SkrToolCore);
