@@ -21,7 +21,7 @@ bool SResourceFactory::Deserialize(skr_resource_record_t* record, SBinaryReader*
             auto ctor_data = type->record_data().find_ctor<void()>(
                 skr::rttr::ETypeSignatureCompareFlag::Strict
             );
-            auto ctor = static_cast<void(*)(void*)>(ctor_data->native_invoke);
+            auto ctor = reinterpret_cast<void(*)(void*)>(ctor_data->native_invoke);
             ctor(p_obj);
         }
         {
@@ -30,7 +30,7 @@ bool SResourceFactory::Deserialize(skr_resource_record_t* record, SBinaryReader*
                 skr::rttr::SkrCoreExternMethods::ReadBin,
                 rttr::ETypeSignatureCompareFlag::Strict
             ).value();
-            auto read_bin = static_cast<ReadBinProc*>(read_bin_data->native_invoke);
+            auto read_bin = reinterpret_cast<ReadBinProc*>(read_bin_data->native_invoke);
             if (!read_bin(p_obj, reader))
             {
                 // TODO: CALL DTOR IF FAILED
