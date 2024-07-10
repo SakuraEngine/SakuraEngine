@@ -622,11 +622,12 @@ TEST_CASE_METHOD(GoapTests, "AssetCook")
         goal.set<&AssetPipelineAtoms::error>(EAssetPipelineError::None);
         PipelinePlanner planner;
         auto the_plan = planner.plan<true>(init, goal, actions);
+        uint32_t stage_cursor = 1;
         for (int64_t i = the_plan.size() - 1; i >= 0; --i)
         {
             auto& [action, state] = the_plan[i];
             EXPECT_TRUE(action.is_stage);
-            EXPECT_EQ(action.get_stage(), static_cast<EAssetPipelineStage>(i + 1));
+            EXPECT_EQ(action.get_stage(), static_cast<EAssetPipelineStage>(stage_cursor++));
         }
     }
 

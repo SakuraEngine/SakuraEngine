@@ -172,9 +172,15 @@ struct sugoi_storage_t::QueryBuilder
     template <typename...Ts, typename...Idxs>
     QueryBuilder& None(Idxs... idxs)
     {
-        (none.push_back(sugoi_id_of<Ts>::get()), ...);
-        (types.push_back(sugoi_id_of<Ts>::get()), ...);
-        (ops.push_back({0 * (int)sugoi_id_of<Ts>::get(), true, false, SOS_SEQ}), ...);
+        if constexpr (sizeof...(Ts) > 0)
+        {
+            (none.push_back(sugoi_id_of<Ts>::get()), ...);
+            (types.push_back(sugoi_id_of<Ts>::get()), ...);
+            (ops.push_back({0 * (int)sugoi_id_of<Ts>::get(), true, false, SOS_SEQ}), ...);
+        }
+        (none.push_back(idxs), ...);
+        (types.push_back(idxs), ...);
+        (ops.push_back({0 * (int)idxs, true, false, SOS_SEQ}), ...);
         return *this;
     }
 
@@ -229,14 +235,26 @@ private:
     template <bool readonly, typename...Ts, typename...Idxs>
     QueryBuilder& All(Idxs... idxs)
     {
-        (all.push_back(sugoi_id_of<Ts>::get()), ...);
-        (types.push_back(sugoi_id_of<Ts>::get()), ...);
-        (ops.push_back({0 * (int)sugoi_id_of<Ts>::get(), readonly, false, SOS_SEQ}), ...);
+        if constexpr (sizeof...(Ts) > 0)
+        {
+            (all.push_back(sugoi_id_of<Ts>::get()), ...);
+            (types.push_back(sugoi_id_of<Ts>::get()), ...);
+            (ops.push_back({0 * (int)sugoi_id_of<Ts>::get(), readonly, false, SOS_SEQ}), ...);
+        }
+        (all.push_back(idxs), ...);
+        (types.push_back(idxs), ...);
+        (ops.push_back({0 * (int)idxs, readonly, false, SOS_SEQ}), ...);
         return *this;
     }
     template <bool readonly, typename...Ts, typename...Idxs>
     QueryBuilder& Any(Idxs... idxs)
     {
+        if constexpr (sizeof...(Ts) > 0)
+        {
+            (any.push_back(idxs), ...);
+            (types.push_back(idxs), ...);
+            (ops.push_back({0 * (int)idxs, readonly, false, SOS_SEQ}), ...);
+        }
         (any.push_back(sugoi_id_of<Ts>::get()), ...);
         (types.push_back(sugoi_id_of<Ts>::get()), ...);
         (ops.push_back({0 * (int)sugoi_id_of<Ts>::get(), readonly, false, SOS_SEQ}), ...);
