@@ -5,7 +5,8 @@ target("SkrBasicMeta")
             -- baisc
             { file = "basic/basic.py", use_new_framework = true },
             -- ecs
-            { file = "ecs/component.py" },
+            -- { file = "ecs/component.py" },
+            { file = "ecs/ecs.py", use_new_framework = true },
             -- rttr
             { file = "rttr/rttr.py", use_new_framework = true },
             -- serialize

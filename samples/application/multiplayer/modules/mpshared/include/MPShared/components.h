@@ -48,7 +48,7 @@ MPGameModeConfig
 sreflect_struct(
     "guid" : "611902BB-0918-48F4-AE50-A4376C8F9A56",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 ) 
 CNetwork
 {
@@ -58,7 +58,7 @@ CNetwork
 sreflect_struct(
     "guid" : "727FDAD5-6882-4360-8A16-77F07CAEF2AE",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 )
 CPrefab
 {
@@ -68,7 +68,7 @@ CPrefab
 sreflect_struct(
     "guid" : "56F23FB1-E3FC-4A17-83B8-502A21EA2E2A",
     "serialize" : "bin",
-    "component": true
+    "ecs::comp": true
 )
 CPlayer
 {
@@ -79,7 +79,7 @@ CPlayer
 sreflect_struct(
     "guid" : "ACA8D906-ADCE-4662-8693-B2A7CEF0E0A2",
     "serialize" : "bin",
-    "component": true
+    "ecs::comp": true
 )
 CZombie
 {
@@ -90,7 +90,7 @@ CZombie
 sreflect_struct(
     "guid" : "2907B89B-A3D7-4750-A2B6-CD326483BF6C",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 )
 CGhost
 {
@@ -99,10 +99,7 @@ CGhost
 
 sreflect_struct(
     "guid" : "5A9B099D-4A7F-4053-97A0-A0B1AF400339",
-    "component" : 
-    {
-        "pin" : true
-    }
+    "ecs::comp::flags" : ["PIN"]
 )
 CAuth
 {
@@ -113,10 +110,7 @@ CAuth
 
 sreflect_struct(
     "guid" : "4027DE2C-A026-42AB-8BD2-06B29293DAB6",
-    "component" : 
-    {
-        "buffer" : 8
-    }
+    "ecs::comp::array" : 8 
 )
 CAuthTypeData
 {
@@ -126,7 +120,7 @@ CAuthTypeData
 sreflect_struct(
     "guid" : "BCBFD4DC-96F9-498E-B1FC-61A39CE8689B",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 )
 CRelevance
 {
@@ -136,7 +130,7 @@ CRelevance
 sreflect_struct(
     "guid" : "34BCF135-691A-41CD-B531-8A258AB35B39",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 )
 //接收输入的组件
 CController
@@ -150,7 +144,7 @@ CController
 sreflect_struct(
     "guid" : "CA09FC13-3299-40D8-8F23-D038DA4403F0",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 )
 CMovement
 {
@@ -161,7 +155,7 @@ CMovement
 sreflect_struct(
     "guid" : "8A148CAD-46BD-4895-9115-2CF05D2CD64B",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 )
 CWeapon
 {
@@ -173,7 +167,7 @@ CWeapon
 
 sreflect_struct(
     "guid" : "1521E0AC-88B2-49C7-A9ED-F8BF1D5583F6",
-    "component" : true
+    "ecs::comp" : true
 )
 CLoot
 {};
@@ -181,7 +175,7 @@ CLoot
 sreflect_struct(
     "guid" : "C3A2C8CB-E1C7-405D-B6F9-006D8D2B46EC",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 )
 CSkill
 {
@@ -195,7 +189,7 @@ CSkill
 sreflect_struct(
     "guid" : "36383FB4-8941-435F-B5FF-1F11438104EF",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 )
 CHealth 
 {
@@ -206,7 +200,7 @@ CHealth
 sreflect_struct(
     "guid" : "8B23F272-E6D5-4556-BD41-CF642F4BFC99",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 )
 CSnapshot
 {
@@ -216,7 +210,7 @@ CSnapshot
 sreflect_struct(
     "guid" : "7F90EF5D-2174-405A-8A38-9A42713F31A0",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 )
 CSphereCollider2D
 {
@@ -226,7 +220,7 @@ CSphereCollider2D
 sreflect_struct(
     "guid" : "824C95F6-C8D6-49B0-AB2D-2493802D2DE3",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 )
 CBall
 {
@@ -236,9 +230,7 @@ CBall
 
 sreflect_struct(
     "guid" : "CC207AB1-6D2B-46EA-AA32-CA761F775B13",
-    "component" : {
-        "buffer" : 8
-    }
+    "ecs::comp::array" : 8
 )
 skr_translation_comp_t_History
 {
@@ -249,7 +241,7 @@ skr_translation_comp_t_History
 sreflect_struct(
     "guid" : "1AC80991-63CD-4949-B2AE-62E152306D81",
     "serialize" : "bin",
-    "component" : true
+    "ecs::comp" : true
 )
 CMPGameModeState
 {

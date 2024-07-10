@@ -37,7 +37,7 @@ inline static void _EXPECT_ERROR(Result&& r, ErrorCode err_code)
 
 sreflect_struct(
     "guid" : "12d2301d-b741-4191-acf6-d4fa7c7f64d5",
-    "component" : true
+    "ecs::comp" : true
 )
 IntComponent {
     int v;
@@ -45,7 +45,7 @@ IntComponent {
 
 sreflect_struct(
     "guid" : "9bcb423f-aa5b-45dc-87b8-0f805686e777",
-    "component" : true
+    "ecs::comp" : true
 )
 FloatComponent {
     float v;
@@ -53,7 +53,7 @@ FloatComponent {
 
 sreflect_struct(
     "guid" : "a54016fa-a6b7-4224-87a7-cb1da8abe8ed",
-    "component" : true
+    "ecs::comp" : true
 )
 SharedComponent {
     int i;

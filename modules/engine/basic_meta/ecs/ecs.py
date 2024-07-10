@@ -37,7 +37,7 @@ class CodegenTools:
         return __recursive(record, field_stack)
 
     def filter_entity(field: cpp.Field):
-        return field.rawType == "sugoi_entity_t"
+        return field.raw_type == "sugoi_entity_t"
 
     def filter_resource_handle(field: cpp.Field):
         return field.type == "skr_resource_handle_t" or field.type.startswith("skr::resource::TResourceHandle")
@@ -56,15 +56,17 @@ class CodegenTools:
 class ECSGenerator(gen.GeneratorBase):
     def load_scheme(self):
         # record scheme
-        sc.Namespace({
-            "ecs": sc.Namespace({
-                "comp": sc.Functional({
-                    "flags": sc.List(),  # SUGOI_TYPE_FLAG_XXXX
-                    "array": sc.Int(),  # array component
-                    "custom": sc.Str(),  # custom logic when register component
+        self.owner.add_record_scheme(
+            sc.Namespace({
+                "ecs": sc.Namespace({
+                    "comp": sc.Functional({
+                        "flags": sc.List(),  # SUGOI_TYPE_FLAG_XXXX
+                        "array": sc.Int(),  # array component
+                        "custom": sc.Str(),  # custom logic when register component
+                    })
                 })
             })
-        })
+        )
 
     def solve_attrs(self):
         records = self.owner.database.get_records()
@@ -110,3 +112,7 @@ class ECSGenerator(gen.GeneratorBase):
             "generated.cpp",
             source_template.render(records=records, tools=CodegenTools, codegen_db=self.owner.database)
         )
+
+
+def load_generators(generate_manager: gen.GenerateManager):
+    generate_manager.add_generator("ecs", ECSGenerator())

@@ -149,10 +149,7 @@ inline constexpr skr_guid_t GetBulletPrefab()
 
 sreflect_struct(
     "guid" : "E8B8B447-4BBE-4A1E-A29E-FD28F046864E",
-    "component" :
-    {
-        "custom" : "::sugoi::managed_component"
-    }
+    "ecs::comp::custom" : "::sugoi::managed_component"
 )
 CCollisionScene
 {

@@ -1,5 +1,5 @@
 // BEGIN ECS GENERATED
-#include "SkrRT/ecs/sogoi.h"
+#include "SkrRT/ecs/sugoi.h"
 %for record in records:
 template<>
 struct sugoi_id_of<::${record.name}>

@@ -2,10 +2,11 @@
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/array.hpp"
 #include "SkrRT/ecs/serde.hpp"
+#include "SkrCore/exec_static.hpp"
 
 // impl sugoi_id_of
 %for record in records:
-sugoi_type_index_t _sugoi_id_${str.replace(record.name, "::", "_")} = SUGOI_NULL_TYPE
+sugoi_type_index_t _sugoi_id_${str.replace(record.name, "::", "_")} = SUGOI_NULL_TYPE;
 sugoi_type_index_t sugoi_id_of<::${record.name}>::get()
 {
     SKR_ASSERT(_sugoi_id_${str.replace(record.name, "::", "_")} != SUGOI_NULL_TYPE);
@@ -14,8 +15,11 @@ sugoi_type_index_t sugoi_id_of<::${record.name}>::get()
 %endfor
 
 // register component types
+%if records:
 SKR_EXEC_STATIC_CTOR
 {
+    using namespace skr::literals;
+
 %for record in records:
     // register ecs component type ${record.name}
     {
@@ -27,8 +31,8 @@ SKR_EXEC_STATIC_CTOR
         sugoi_type_description_t desc;
 
         // guid
-        desc.guid = {${db.guid_constant(type)}};
-        desc.guidStr = u8"${type.attrs.guid}";
+        desc.guid = u8"${record.generator_data["guid"]}"_guid;
+        desc.guidStr = u8"${record.generator_data["guid"]}";
 
         // size & alignment
     %if record_ecs_comp_data.array:
@@ -49,7 +53,7 @@ SKR_EXEC_STATIC_CTOR
     %endif
 
         // entity fields
-    %if entity_fields_offset
+    %if entity_fields_offset:
         desc.entityFieldsCount = ${len(entity_fields_offset)};
         static intptr_t entityFields[] = {${", ".join(entity_fields_offset)}};
         desc.entityFields = (intptr_t)entityFields;
@@ -59,7 +63,7 @@ SKR_EXEC_STATIC_CTOR
     %endif
 
         // resource fields
-    %if resource_fields_offset
+    %if resource_fields_offset:
         desc.resourceFieldsCount = ${len(resource_fields_offset)};
         static intptr_t resourceFields[] = {${", ".join(resource_fields_offset)}};
         desc.resourceFields = (intptr_t)resourceFields;
@@ -70,7 +74,7 @@ SKR_EXEC_STATIC_CTOR
 
         // custom logic
     %if record_ecs_comp_data.custom:
-        ${record_ecs_comp_data.custom}(desc, skr::type_t<%{record.name});
+        ${record_ecs_comp_data.custom}(desc, skr::type_t<${record.name}>{});
     %endif
 
         // check managed
@@ -79,5 +83,6 @@ SKR_EXEC_STATIC_CTOR
         _sugoi_id_${str.replace(record.name, "::", "_")} = sugoiT_register_type(&desc);
     }
 %endfor
-}
+};
+%endif
 // END ECS GENERATED
