@@ -27,15 +27,15 @@ struct ReadTrait<skr::BTreeMap<K, V, Eq>> {
     static bool Read(SBinaryReader* archive, skr::BTreeMap<K, V, Eq>& map)
     {
         skr::BTreeMap<K, V, Eq> temp;
-        uint32_t                 size;
-        SKR_ARCHIVE(size);
+        uint32_t                size;
+        if (!skr ::binary ::Archive(archive, (size))) return false;
 
         for (int i = 0; i < size; ++i)
         {
             K key;
-            SKR_ARCHIVE(key);
+            if (!skr ::binary ::Archive(archive, (key))) return false;
             V value;
-            SKR_ARCHIVE(value);
+            if (!skr ::binary ::Archive(archive, (value))) return false;
             temp.insert({ std::move(key), std::move(value) });
         }
         map = std::move(temp);
@@ -47,11 +47,11 @@ template <class K, class V, class Eq>
 struct WriteTrait<skr::BTreeMap<K, V, Eq>> {
     static bool Write(SBinaryWriter* archive, const skr::BTreeMap<K, V, Eq>& map)
     {
-        SKR_ARCHIVE((uint32_t)map.size());
+        if (!skr ::binary ::Archive(archive, ((uint32_t)map.size()))) return false;
         for (auto& pair : map)
         {
-            SKR_ARCHIVE(pair.first);
-            SKR_ARCHIVE(pair.second);
+            if (!skr ::binary ::Archive(archive, (pair.first))) return false;
+            if (!skr ::binary ::Archive(archive, (pair.second))) return false;
         }
         return true;
     }

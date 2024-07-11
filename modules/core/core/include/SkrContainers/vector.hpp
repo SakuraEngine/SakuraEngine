@@ -43,7 +43,7 @@ struct ReadTrait<Vector<V>> {
     {
         Vector<V> temp;
         uint32_t  size;
-        SKR_ARCHIVE(size);
+        if (!skr ::binary ::Archive(archive, (size))) return false;
 
         temp.reserve(size);
         for (uint32_t i = 0; i < size; ++i)
@@ -61,7 +61,7 @@ template <class V>
 struct WriteTrait<Vector<V>> {
     static bool Write(SBinaryWriter* archive, const Vector<V>& vec)
     {
-        SKR_ARCHIVE((uint32_t)vec.size());
+        if (!skr ::binary ::Archive(archive, ((uint32_t)vec.size()))) return false;
         for (auto& value : vec)
         {
             if (!skr::binary::Archive(archive, value))

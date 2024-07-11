@@ -31,7 +31,7 @@ struct ReadTrait<skr::variant<Ts...>> {
         if (index == I)
         {
             T t;
-            SKR_ARCHIVE(t);
+            if (!skr ::binary ::Archive(archive, (t))) return false;
             value = std::move(t);
             return true;
         }
@@ -49,7 +49,7 @@ struct ReadTrait<skr::variant<Ts...>> {
     static bool Read(SBinaryReader* archive, skr::variant<Ts...>& value)
     {
         uint32_t index;
-        SKR_ARCHIVE(index);
+        if (!skr ::binary ::Archive(archive, (index))) return false;
         if (index >= sizeof...(Ts))
             return false;
         return ReadByIndexHelper(archive, value, index, std::make_index_sequence<sizeof...(Ts)>());
@@ -72,12 +72,12 @@ template <class... Ts>
 struct WriteTrait<skr::variant<Ts...>> {
     static int Write(SBinaryWriter* archive, const skr::variant<Ts...>& variant)
     {
-        SKR_ARCHIVE((uint32_t)variant.index());
+        if (!skr ::binary ::Archive(archive, ((uint32_t)variant.index()))) return false;
         bool ret;
         skr::visit([&](auto&& value) {
             ret = skr::binary::Archive(archive, value);
         },
-                     variant);
+                   variant);
         return ret;
     }
 };
@@ -101,7 +101,7 @@ struct ReadTrait<skr::variant<Ts...>> {
     {
         if (index == ::skr::rttr::type_id_of<T>())
         {
-            T          t;
+            T t;
             if (!skr::json::Read(json, t))
                 return false;
             value = std::move(t);
@@ -113,7 +113,7 @@ struct ReadTrait<skr::variant<Ts...>> {
     static bool Read(skr::archive::JsonReader* json, skr::variant<Ts...>& value)
     {
         json->StartObject();
-        
+
         json->Key(u8"type");
         skr_guid_t index;
         if (!skr::json::Read<skr_guid_t>(json, index))
@@ -121,7 +121,7 @@ struct ReadTrait<skr::variant<Ts...>> {
 
         json->Key(u8"value");
         (void)(((ReadByIndex<Ts>(json, value, index)) != true) && ...);
-        
+
         json->EndObject();
 
         return true;
@@ -140,7 +140,8 @@ struct WriteTrait<skr::variant<Ts...>> {
             json->Key(u8"value");
             skr::json::Write<decltype(value)>(json, value);
             json->EndObject();
-        }, v);
+        },
+                   v);
         return true;
     }
 };
@@ -157,4 +158,4 @@ template <class... Ts>
 struct SerdeCompleteChecker<json::WriteTrait<skr::variant<Ts...>>>
     : std::bool_constant<(is_complete_serde_v<json::WriteTrait<Ts>> && ...)> {
 };
-}
+} // namespace skr

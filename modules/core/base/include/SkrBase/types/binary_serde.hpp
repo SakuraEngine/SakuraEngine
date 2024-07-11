@@ -25,11 +25,6 @@ template <class T>
 constexpr bool is_complete_serde_v = is_complete_serde<T>();
 } // namespace skr
 
-#ifndef SKR_ARCHIVE
-    #define SKR_ARCHIVE(...) \
-        if (!skr::binary::Archive(archive, (__VA_ARGS__))) return false
-#endif
-
 // FUCK MSVC COMPILER
 SKR_EXTERN_C SKR_STATIC_API void skr_debug_output(const char* msg);
 

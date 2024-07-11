@@ -121,7 +121,7 @@ struct ReadTrait<skr::resource::TResourceHandle<T>> {
     static bool Read(SBinaryReader* archive, skr::resource::TResourceHandle<T>& handle)
     {
         skr_guid_t guid;
-        SKR_ARCHIVE(guid);
+        if (!skr ::binary ::Archive(archive, (guid))) return false;
         handle.set_guid(guid);
         return true;
     }
