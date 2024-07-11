@@ -456,7 +456,24 @@ class OptionShorthand(Shorthand):
             return JsonObject.load_from_dict(final_map) if final_map else None
 
 
+class FunctionalOptionShorthand(Shorthand):
+    def __init__(self):
+        super().__init__()
+
+    def expand(self, object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
+        if type(object.val) is str:
+            return JsonObject.load_from_dict({object.val: {"enable": True}})
+        elif not object.is_dict and type(object.val) is list:
+            final_map = {}
+            for shorthand_object in object.val:
+                if type(shorthand_object.val) is str:
+                    final_map[shorthand_object.val] = {"enable": True}
+
+            return JsonObject.load_from_dict(final_map) if final_map else None
+
 # -------------------------- json tool --------------------------
+
+
 class JsonOverrideMark(Enum):
     NONE = 0  # no mark
     OVERRIDE = 1  # end with mark '!'
