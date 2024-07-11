@@ -7,7 +7,7 @@
 // json serde traits
 namespace skr::json
 {
-// json  record serde
+// record serde
 %for json_record in json_records:
 template <>
 struct ${api} ReadTrait<${json_record.name}>
@@ -45,20 +45,12 @@ namespace skr::binary
 template<>
 struct ${api} ReadTrait<${bin_record.name}>
 {
-%if generator.filter_blob_type(record):
-    static bool Read(SBinaryReader* archive, skr_blob_arena_t& arena, ${bin_record.name}& value);
-%else:
     static bool Read(SBinaryReader* archive, ${bin_record.name}& value);
-%endif
 };
 template<>
 struct ${api} WriteTrait<${bin_record.name}>
 {
-%if generator.filter_blob_type(record):
-    static bool Write(SBinaryWriter* archive, skr_blob_arena_t& arena, const ${bin_record.name}& value);
-%else:
     static bool Write(SBinaryWriter* archive, const ${bin_record.name}& value);
-%endif
 };
 %endfor
 }
