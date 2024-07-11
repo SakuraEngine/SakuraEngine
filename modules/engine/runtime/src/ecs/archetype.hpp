@@ -26,10 +26,10 @@ struct SKR_RUNTIME_API archetype_t {
     const resource_fields_t* const resourceFields;
     const uint32_t chunkCapacity[3];
     const uint32_t entitySize;
-    const uint32_t sizeToPatch = 0;
+    const uint32_t sizeToPatch;
     const uint32_t firstChunkComponent; //chunk component count
-    const bool withMask = false;
-    const bool withDirty = false;
+    const bool withMask;
+    const bool withDirty;
     /*
         uint32_t offsets[3][firstTag];
         uint32_t sizes[firstTag];

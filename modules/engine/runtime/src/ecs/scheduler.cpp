@@ -42,7 +42,7 @@ bool sugoi::scheduler_t::is_main_thread(const sugoi_storage_t* storage)
 void sugoi::scheduler_t::set_main_thread(const sugoi_storage_t* storage)
 {
     SKR_ASSERT(storage->pimpl->scheduler == this);
-    storage->pimpl->counter.wait(true);
+    storage->pimpl->fuck_counter.wait(true);
     storage->pimpl->currentFiber = skr::task::current_fiber();
 }
 
@@ -232,7 +232,7 @@ void sugoi::scheduler_t::sync_storage(const sugoi_storage_t* storage)
 {
     if (!storage->pimpl->scheduler)
         return;
-    storage->pimpl->counter.wait(true);
+    storage->pimpl->fuck_counter.wait(true);
     for(auto& pair : dependencyEntries)
     {
         if(pair.first->storage == storage)
@@ -379,13 +379,11 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
         return {nullptr};
 
     auto dependencies = update_dependencies(query, result, resources);
-    
     {
         SkrZoneScopedN("AllocateCounter");
         allCounter.add(1);
-        query->storage->pimpl->counter.add(1);
+        query->storage->pimpl->fuck_counter.add(1);
     }
-
     skr::task::schedule([dependencies = std::move(dependencies), sharedData, init, teardown, this, query, batchSize]()mutable
     {
         {
@@ -401,7 +399,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
         }
         SKR_DEFER({ 
             allCounter.decrement();
-            query->storage->pimpl->counter.decrement();
+            query->storage->pimpl->fuck_counter.decrement();
         });
         fixed_stack_scope_t _(localStack);
         sugoi_meta_filter_t validatedMeta;
@@ -538,7 +536,7 @@ skr::task::event_t sugoi::scheduler_t::schedule_job(sugoi_query_t* query, sugoi_
     {
         SkrZoneScopedN("AllocateCounter");
         allCounter.add(1);
-        query->storage->pimpl->counter.add(1);
+        query->storage->pimpl->fuck_counter.add(1);
     }
     skr::task::schedule([deps = std::move(deps), this, query, callback, u, init, teardown]()
     {
@@ -547,7 +545,7 @@ skr::task::event_t sugoi::scheduler_t::schedule_job(sugoi_query_t* query, sugoi_
                 d.wait(false);
         SKR_DEFER({ 
             allCounter.decrement();
-            query->storage->pimpl->counter.decrement();
+            query->storage->pimpl->fuck_counter.decrement();
         });
         if(init)
             init(u, 0);

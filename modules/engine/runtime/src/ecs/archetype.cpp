@@ -59,6 +59,9 @@ sugoi::archetype_t* sugoi_storage_t::constructArchetype(const sugoi_type_set_t& 
     archetype_t& archetype = *atypeArena.allocate<archetype_t>();
     write_const(archetype.storage, this);
     write_const(archetype.type, sugoi::clone(inType, buffer));
+    write_const(archetype.withMask, false);
+    write_const(archetype.withDirty, false);
+    write_const(archetype.sizeToPatch, 0);
     write_const(archetype.firstChunkComponent, archetype.type.length);
     forloop (i, 0, archetype.type.length)
         if(type_index_t(archetype.type.data[i]).is_chunk())

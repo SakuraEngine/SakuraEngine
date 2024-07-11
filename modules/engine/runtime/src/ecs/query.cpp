@@ -480,7 +480,7 @@ void sugoi_storage_t::buildQueries()
             pimpl->phases[i]->~phase_entry();
     }
     pimpl->phaseCount = 0;
-    pimpl->queryBuildArena.reset();
+    pimpl->queryPhaseArena.reset();
     skr::stl_vector<phase_entry_builder> entries;
     for (auto query : pimpl->queries)
     {
@@ -510,7 +510,7 @@ void sugoi_storage_t::buildQueries()
             }
         }
     }
-    pimpl->phases           = pimpl->queryBuildArena.allocate<phase_entry*>(entries.size());
+    pimpl->phases           = pimpl->queryPhaseArena.allocate<phase_entry*>(entries.size());
     auto phaseEntries = pimpl->phases;
     for (auto query : pimpl->queries)
     {
@@ -527,18 +527,18 @@ void sugoi_storage_t::buildQueries()
         query->phaseCount = 0;
         if (count == 0)
             continue;
-        query->phases = pimpl->queryBuildArena.allocate<phase_entry*>(count);
+        query->phases = pimpl->queryPhaseArena.allocate<phase_entry*>(count);
     }
     for (auto builder : entries)
     {
         if (builder.queries.size() < 2)
             continue;
         pimpl->phaseCount++;
-        auto entry        = new (pimpl->queryBuildArena.allocate<phase_entry>(1)) phase_entry();
+        auto entry        = new (pimpl->queryPhaseArena.allocate<phase_entry>(1)) phase_entry();
         (*phaseEntries++) = entry;
         entry->type       = builder.type;
         entry->phase      = builder.phase;
-        entry->queries    = { pimpl->queryBuildArena.allocate<sugoi_query_t*>(builder.queries.size()), builder.queries.size() };
+        entry->queries    = { pimpl->queryPhaseArena.allocate<sugoi_query_t*>(builder.queries.size()), builder.queries.size() };
         memcpy(entry->queries.data(), builder.queries.data(), sizeof(sugoi_query_t*) * builder.queries.size());
 
         // solve overloading
@@ -557,12 +557,12 @@ void sugoi_storage_t::buildQueries()
                 auto excludeB = set_utils<sugoi_type_index_t>::substract(merged, b->filter.all, localStack.allocate<sugoi_type_index_t>(merged.length));
                 if (excludeA.length != 0)
                 {
-                    char* data = (char*)pimpl->queryBuildArena.allocate(data_size(excludeA), alignof(sugoi_type_index_t));
+                    char* data = (char*)pimpl->queryPhaseArena.allocate(data_size(excludeA), alignof(sugoi_type_index_t));
                     a->excludes.push_back(sugoi::clone(excludeA, data));
                 }
                 if (excludeB.length != 0)
                 {
-                    char* data = (char*)pimpl->queryBuildArena.allocate(data_size(excludeB), alignof(sugoi_type_index_t));
+                    char* data = (char*)pimpl->queryPhaseArena.allocate(data_size(excludeB), alignof(sugoi_type_index_t));
                     b->excludes.push_back(sugoi::clone(excludeB, data));
                 }
             }

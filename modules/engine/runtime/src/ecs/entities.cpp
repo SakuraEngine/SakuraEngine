@@ -5,16 +5,21 @@
 sugoi_entity_debug_proxy_t dummy;
 namespace sugoi
 {
+
 void EntityRegistry::reset()
 {
-    SMutexLock lock(mutex.mMutex);
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
     entries.clear();
-    freeEntries.clear();
+    freeEntities.clear();
 }
 
 void EntityRegistry::shrink()
 {
-    SMutexLock lock(mutex.mMutex);
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
     if (entries.size() == 0)
         return;
     EIndex lastValid = (EIndex)(entries.size() - 1);
@@ -27,26 +32,28 @@ void EntityRegistry::shrink()
     }
     entries.resize_default(lastValid + 1);
     entries.shrink();
-    freeEntries.remove_all_if([&](EIndex i) {
+    freeEntities.remove_all_if([&](EIndex i) {
         return i > lastValid;
     });
 }
 
 void EntityRegistry::new_entities(sugoi_entity_t* dst, EIndex count)
 {
-    SMutexLock lock(mutex.mMutex);
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
     EIndex i = 0;
     // recycle entities
 
-    auto fn = (EIndex)freeEntries.size();
-    auto rn = std::min((EIndex)freeEntries.size(), count);
+    auto fn = (EIndex)freeEntities.size();
+    auto rn = std::min((EIndex)freeEntities.size(), count);
     forloop (j, 0, rn)
     {
-        auto id = freeEntries[fn - rn + j];
+        auto id = freeEntities[fn - rn + j];
         dst[i] = e_version(id, entries[id].version);
         i++;
     }
-    freeEntries.resize_default(fn - rn);
+    freeEntities.resize_default(fn - rn);
     if (i == count)
         return;
     // new entities
@@ -62,16 +69,18 @@ void EntityRegistry::new_entities(sugoi_entity_t* dst, EIndex count)
 
 void EntityRegistry::free_entities(const sugoi_entity_t* dst, EIndex count)
 {
-    SMutexLock lock(mutex.mMutex);
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
     // build freelist in input order
-    freeEntries.reserve(freeEntries.size() + count);
+    freeEntities.reserve(freeEntities.size() + count);
 
     forloop (i, 0, count)
     {
         auto id = e_id(dst[i]);
         entry_t& freeData = entries[id];
         freeData = { nullptr, 0, e_inc_version(freeData.version) };
-        freeEntries.add(id);
+        freeEntities.add(id);
     }
 }
 

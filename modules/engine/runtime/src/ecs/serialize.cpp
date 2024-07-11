@@ -262,9 +262,13 @@ void sugoi_storage_t::serialize(SBinaryWriter* s)
     }
     {
         SkrZoneScopedN("serialize entities");
-        bin::Write(s, (uint32_t)pimpl->entity_registry.entries.size());
-        bin::Write(s, (uint32_t)pimpl->entity_registry.freeEntries.size());
-        WriteBuffer(s, pimpl->entity_registry.freeEntries.data(), static_cast<uint32_t>(pimpl->entity_registry.freeEntries.size()));
+        pimpl->entity_registry.visit_entries([&](const auto& entriesView){
+            bin::Write(s, (uint32_t)entriesView.size());
+        });
+        pimpl->entity_registry.visit_free_entities([&](const auto& freeEntitiesView){
+            bin::Write(s, (uint32_t)freeEntitiesView.size());
+            WriteBuffer(s, freeEntitiesView.data(), static_cast<uint32_t>(freeEntitiesView.size()));
+        });
     }
     bin::Write(s, (uint32_t)pimpl->groups.size());
     for (auto& pair : pimpl->groups)
@@ -299,8 +303,8 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
     pimpl->entity_registry.entries.resize_default(size);
     uint32_t freeSize = 0;
     bin::Read(s, freeSize);
-    pimpl->entity_registry.freeEntries.resize_default(freeSize);
-    ReadBuffer(s, pimpl->entity_registry.freeEntries.data(), freeSize);
+    pimpl->entity_registry.freeEntities.resize_default(freeSize);
+    ReadBuffer(s, pimpl->entity_registry.freeEntities.data(), freeSize);
     uint32_t groupSize = 0;
     bin::Read(s, groupSize);
     forloop (i, 0, groupSize)

@@ -22,21 +22,27 @@ struct sugoi_storage_t::Impl {
 
     Impl();
 
+    sugoi::block_arena_t archetypeArena;
     archetypes_t archetypes;
+
     queries_t queries;
+
+    sugoi::fixed_pool_t groupPool;
+    groups_t groups;
+
+    sugoi::EntityRegistry entity_registry;
+    sugoi_timestamp_t timestamp;
+    
+    // job system
+    mutable sugoi::scheduler_t* scheduler;
+    mutable void* currentFiber;
+    skr::task::counter_t fuck_counter;
+
+    // overload
+    bool queriesBuilt = false;
+    sugoi::block_arena_t queryPhaseArena;
     phase_alias_t aliases;
     uint32_t aliasCount = 0;
     sugoi::phase_entry** phases = nullptr;
     uint32_t phaseCount = 0;
-    bool queriesBuilt = false;
-    groups_t groups;
-    sugoi::block_arena_t archetypeArena;
-    sugoi::block_arena_t queryBuildArena;
-    sugoi::fixed_pool_t groupPool;
-    sugoi::EntityRegistry entity_registry;
-    sugoi_timestamp_t timestamp;
-    std::unique_ptr<sugoi_timestamp_t[]> typeTimestamps;
-    mutable sugoi::scheduler_t* scheduler;
-    mutable void* currentFiber;
-    skr::task::counter_t counter;
 };

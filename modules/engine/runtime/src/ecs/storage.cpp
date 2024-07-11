@@ -15,9 +15,9 @@
 
 sugoi_storage_t::Impl::Impl()
     : archetypeArena(sugoi::get_default_pool())
-    , queryBuildArena(sugoi::get_default_pool())
     , groupPool(sugoi::kGroupBlockSize, sugoi::kGroupBlockCount)
     , scheduler(nullptr)
+    , queryPhaseArena(sugoi::get_default_pool())
 {
 }
 
@@ -467,7 +467,7 @@ void sugoi_storage_t::pack_entities()
     skr::stl_vector<EIndex> map;
     auto&                   entries = pimpl->entity_registry.entries;
     map.resize(entries.size());
-    pimpl->entity_registry.freeEntries.clear();
+    pimpl->entity_registry.freeEntities.clear();
     EIndex j = 0;
     forloop (i, 0, entries.size())
     {
