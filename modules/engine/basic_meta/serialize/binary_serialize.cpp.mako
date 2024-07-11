@@ -13,40 +13,13 @@
 [[maybe_unused]] static const char8_t* BinaryBaseArchiveFailedFormat = u8"[SERDE/BIN] Failed to %s %s's base %s: %d";
 
 namespace skr::binary {
-
 %for record in generator.filter_types(db.records):
-// archive for ${record.name}
-template<class S>
-bool __Archive(S* archive, ${record.name}& record)
-{
-    constexpr bool isWriter = std::is_same_v<S, SBinaryWriter>;
-    const char* action = isWriter ? "Write" : "Read";
-    
-%for name, field in generator.filter_fields(record.fields):
-%if field.arraySize > 0:
-    for(int i = 0; i < ${field.arraySize}; ++i)
-    {
-        if(!Archive(archive, record.${name}[i]))
-        {
-            SKR_LOG_ERROR(BinaryArrayBinaryFieldArchiveFailedFormat, action, "${record.name}", "${name}", i, -1);
-            return false;
-        }
-    }
-%else:
-    if(!Archive(archive, record.${name}))
-    {
-        SKR_LOG_ERROR(BinaryFieldArchiveFailedFormat, action, "${record.name}", "${name}", -1);
-        return false;
-    }
-%endif
-%endfor
-    return true;
-}
-
-// reader for ${record.name}
+// binary serialize for ${record.name}
 bool ReadTrait<${record.name}>::Read(SBinaryReader* archive, ${record.name}& record)
 {
     SkrZoneScopedN("binary::ReadTrait<${record.name}>::Read");
+
+    // serde bases
 %for base in record.bases:
     if(!skr::binary::Read(archive, (${base}&)record))
     {
@@ -54,13 +27,34 @@ bool ReadTrait<${record.name}>::Read(SBinaryReader* archive, ${record.name}& rec
         return false;
     }
 %endfor
-    return __Archive(archive, record);
-}
 
-// writter for ${record.name}
+    // serde self
+%for name, field in generator.filter_fields(record.fields):
+%if field.arraySize > 0:
+    for(int i = 0; i < ${field.arraySize}; ++i)
+    {
+        if(!ReadTrait<${field.type}>::Read(archive, record.${name}[i]))
+        {
+            SKR_LOG_ERROR(BinaryArrayBinaryFieldArchiveFailedFormat, "Read", "${record.name}", "${name}", i, -1);
+            return false;
+        }
+    }
+%else:
+    if(!ReadTrait<${field.type}>::Read(archive, record.${name}))
+    {
+        SKR_LOG_ERROR(BinaryFieldArchiveFailedFormat, "Read", "${record.name}", "${name}", -1);
+        return false;
+    }
+%endif
+%endfor
+
+    return false;
+}
 bool WriteTrait<${record.name}>::Write(SBinaryWriter* archive, const ${record.name}& record)
 {
     SkrZoneScopedN("binary::WriteTrait<${record.name}>::Write");
+
+    // serde bases
 %for base in record.bases:
     if(!skr::binary::Write<${base}>(archive, record))
     {
@@ -68,7 +62,28 @@ bool WriteTrait<${record.name}>::Write(SBinaryWriter* archive, const ${record.na
         return false;
     }
 %endfor
-    return __Archive(archive, (${record.name}&)record);
+
+    // serde self
+%for name, field in generator.filter_fields(record.fields):
+%if field.arraySize > 0:
+    for(int i = 0; i < ${field.arraySize}; ++i)
+    {
+        if(!WriteTrait<${field.type}>::Write(archive, record.${name}[i]))
+        {
+            SKR_LOG_ERROR(BinaryArrayBinaryFieldArchiveFailedFormat, "Write", "${record.name}", "${name}", i, -1);
+            return false;
+        }
+    }
+%else:
+    if(!WriteTrait<${field.type}>::Write(archive, record.${name}))
+    {
+        SKR_LOG_ERROR(BinaryFieldArchiveFailedFormat, "Write", "${record.name}", "${name}", -1);
+        return false;
+    }
+%endif
+%endfor
+
+    return true;
 }
 %endfor
 }
