@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrBase/types.h"
-#if defined(__cplusplus)
-    #include "SkrArchive/json/reader.h"
-    #include "SkrContainers/string.hpp"
-    #include "SkrContainers/vector.hpp"
+#include "SkrSerde/traits.hpp"
+#include "SkrArchive/json/reader.h"
+#include "SkrContainers/string.hpp"
+#include "SkrContainers/vector.hpp"
 
 // helper functions
 namespace skr::json
@@ -13,7 +13,7 @@ bool Read(skr::archive::JsonReader* json, T& value);
 
 template <class T, class = void>
 struct ReadTrait;
-}
+} // namespace skr::json
 
 namespace skr::json
 {
@@ -120,7 +120,7 @@ struct ReadTrait<skr::Vector<V>> {
         vec.reserve(count);
         for (size_t i = 0; i < count; i++)
         {
-            V          v;
+            V v;
             if (!skr::json::Read<V>(json, v))
                 return false;
             vec.emplace(std::move(v));
@@ -149,5 +149,3 @@ struct SerdeCompleteChecker<json::ReadTrait<skr::Vector<V>>>
     : std::bool_constant<is_complete_serde_v<json::ReadTrait<V>>> {
 };
 } // namespace skr
-
-#endif

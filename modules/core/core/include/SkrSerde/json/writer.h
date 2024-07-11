@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrSerde/traits.hpp"
 #include "SkrArchive/json/writer.h"
 
 #if defined(__cplusplus)
@@ -11,7 +12,7 @@ bool Write(skr::archive::JsonWriter* writer, const T& value);
 
 template <class T, class = void>
 struct WriteTrait;
-}
+} // namespace skr::json
 
 // primitive types
 // bool

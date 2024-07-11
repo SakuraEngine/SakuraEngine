@@ -35,6 +35,8 @@
 
 #include "SkrAnim/ozz/base/platform.h"
 #include "SkrBase/types.h"
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
 
 namespace ozz {
 namespace io {

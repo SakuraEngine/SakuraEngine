@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrSerde/traits.hpp"
 #include "SkrBase/misc/traits.hpp"
 #include "SkrBase/types.h"
 #include "SkrSerde/blob.h"
@@ -36,8 +37,15 @@ struct SBinaryWriter {
 // helper functions
 namespace skr::binary
 {
+template <class T, class = void>
+struct WriteTrait;
 template <class T>
-bool Write(SBinaryWriter* writer, const T& value);
+bool Write(SBinaryWriter* writer, const T& value)
+{
+    return WriteTrait<T>::Write(writer, value);
+}
+template <typename T>
+inline static constexpr bool HasWriteTrait = requires(SBinaryWriter* r, T& t) { WriteTrait<T>::Write(r, t); };
 }; // namespace skr::binary
 
 // primitive types

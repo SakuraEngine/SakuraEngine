@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrSerde/traits.hpp"
 #include "SkrBase/types.h"
 #include "SkrSerde/blob.h"
 
@@ -35,8 +36,15 @@ struct SBinaryReader {
 // help functions
 namespace skr::binary
 {
+template <class T, class = void>
+struct ReadTrait;
 template <class T>
-bool Read(SBinaryReader* reader, T&& value);
+bool Read(SBinaryReader* reader, T&& value)
+{
+    return ReadTrait<std::decay_t<T>>::Read(reader, value);
+}
+template <typename T>
+inline static constexpr bool HasReadTrait = requires(SBinaryReader* r, T& t) { ReadTrait<T>::Read(r, t); };
 } // namespace skr::binary
 
 // primitive types

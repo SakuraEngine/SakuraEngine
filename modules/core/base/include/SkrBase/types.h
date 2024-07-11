@@ -5,5 +5,4 @@
 
 #ifdef __cplusplus
     #include "types/expected.hpp"
-    #include "types/binary_serde.hpp"
 #endif

@@ -30,6 +30,8 @@ template <class K,
 using ParallelFlatHashSet = phmap::parallel_flat_hash_set<K, Hash, Eq, Allocator, 4, std::shared_mutex>;
 } // namespace skr
 
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
 namespace skr
 {
 namespace binary

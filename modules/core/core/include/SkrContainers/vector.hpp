@@ -33,6 +33,8 @@ using SerializeConstVector = Vector<T>;
 } // namespace skr
 
 // binary
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
 namespace skr
 {
 namespace binary

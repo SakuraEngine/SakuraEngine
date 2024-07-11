@@ -85,6 +85,9 @@ struct argument_formatter<skr_guid_t> {
 
 } // namespace ostr
 
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
+
 // binary reader
 namespace skr
 {
