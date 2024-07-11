@@ -7,8 +7,9 @@
 namespace skr
 {
 using namespace ostr;
-using String     = ostr::text;
-using StringView = ostr::text_view;
+using String               = ostr::text;
+using StringView           = ostr::text_view;
+using SerializeConstString = String;
 
 SKR_STATIC_API bool guid_from_sv(const skr::StringView& str, skr_guid_t& value);
 

@@ -27,6 +27,9 @@ uint64_t, /*size type*/
 kCount,   /*allocator*/
 Allocator /*allocator*/
 >>;
+
+template <typename T>
+using SerializeConstVector = Vector<T>;
 } // namespace skr
 
 // binary
@@ -87,7 +90,7 @@ struct WriteTrait<Vector<V>> {
         SKR_ARCHIVE((uint32_t)vec.size());
         for (auto& value : vec)
         {
-            if (!skr::binary::Archive(archive, value, std::forward<Args>(args)...)) 
+            if (!skr::binary::Archive(archive, value, std::forward<Args>(args)...))
                 return false;
         }
         return true;
@@ -123,7 +126,7 @@ struct VectorWriter {
 struct VectorWriterBitpacked {
     Vector<uint8_t>* buffer;
     uint8_t          bitOffset = 0;
-    bool write(const void* data, size_t size)
+    bool             write(const void* data, size_t size)
     {
         return write_bits(data, size * 8);
     }

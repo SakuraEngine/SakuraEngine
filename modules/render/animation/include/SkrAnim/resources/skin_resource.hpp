@@ -10,21 +10,17 @@ namespace skr::anim
 {
 
 sreflect_struct("guid": "C387FD0E-83BE-4617-9A79-589862F3F941") 
-sattr("blob" : true)
+sattr("serialize" : "bin")
 SkinBlobView {
-    skr::StringView            name;
-    skr::span<skr::StringView> joint_remaps;
-    skr::span<skr_float4x4_t>  inverse_bind_poses;
+    skr::SerializeConstString                            name;
+    skr::SerializeConstVector<skr::SerializeConstString> joint_remaps;
+    skr::SerializeConstVector<skr_float4x4_t>            inverse_bind_poses;
 };
-
-GENERATED_BLOB_BUILDER(SkinBlobView)
 
 sreflect_struct("guid" : "332C6133-7222-4B88-9B2F-E4336A46DF2C")
 sattr("serialize" : "bin")
 SkinResource {
-    skr_blob_arena_t arena;
-    sattr("arena" : "arena")
-    SkinBlobView     blob;
+    SkinBlobView blob;
 };
 
 } // namespace skr::anim
