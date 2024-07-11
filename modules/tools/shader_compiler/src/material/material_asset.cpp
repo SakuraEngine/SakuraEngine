@@ -11,7 +11,7 @@ namespace asset
 void* SMaterialImporter::Import(skr_io_ram_service_t* ioService, SCookContext *context)
 {
     skr::BlobId blob = nullptr;
-    context->AddFileDependencyAndLoad(ioService, jsonPath.c_str(), blob);
+    context->AddSourceFileAndLoad(ioService, jsonPath.c_str(), blob);
     SKR_DEFER({blob.reset();});
     /*
     const auto assetRecord = context->GetAssetRecord();
@@ -51,7 +51,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
 
     auto idx = ctx->AddStaticDependency(runtime_material.material_type.get_guid(), true);
     ctx->AddRuntimeDependency(runtime_material.material_type.get_guid());
-    auto rhandle = ctx->GetStaticDependency(idx);
+    const auto& rhandle = ctx->GetStaticDependency(idx);
     auto matType= static_cast<skr_material_type_resource_t*>(rhandle.get_ptr());
     auto blob = skr::make_blob_builder<skr_material_overrides_t>();
     

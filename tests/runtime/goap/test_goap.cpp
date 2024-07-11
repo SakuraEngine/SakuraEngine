@@ -552,3 +552,83 @@ TEST_CASE_METHOD(GoapTests, "I/O Dynamic")
         std::cout << "[DYNAMIC] PLAN END\n\n";
     }
 }
+
+TEST_CASE_METHOD(GoapTests, "AssetCook")
+{
+    enum class EAssetPipelineStage
+    {
+        None,
+        Import,
+        Cook,
+        Save,
+        Done
+    };
+    enum class EAssetPipelineError
+    {
+        None,
+        ImportError,
+        CookError,
+        SaveError
+    };
+    struct AssetPipelineAtoms
+    {
+        skr::goap::Atom<EAssetPipelineStage, u8"AssetPipelineStage"> stage;
+        skr::goap::Atom<EAssetPipelineError, u8"AssetPipelineError"> error;
+        skr::goap::Atom<bool, u8"ErrorHandled"> handled;
+    };
+    using AssetPipelineState = skr::goap::StaticWorldState<AssetPipelineAtoms, u8"AssetCookPipeline">;
+    
+    struct PipelineAction : public skr::goap::Action<AssetPipelineState>
+    {
+        PipelineAction(const char8_t* name, EAssetPipelineStage stage) SKR_NOEXCEPT
+            : skr::goap::Action<AssetPipelineState>(name, 0), is_stage(true), stage(stage)
+        {
+            const auto last_stage = static_cast<EAssetPipelineStage>(static_cast<uint32_t>(stage) - 1);
+            exist_and_equal<&AssetPipelineAtoms::stage>(last_stage);
+            exist_and_equal<&AssetPipelineAtoms::error>(EAssetPipelineError::None);
+            add_effect<&AssetPipelineAtoms::stage>(stage);
+        }
+        PipelineAction(const char8_t* name, EAssetPipelineError error) SKR_NOEXCEPT
+            : skr::goap::Action<AssetPipelineState>(name, 0), is_stage(false), error(error)
+        {
+            exist_and_equal<&AssetPipelineAtoms::error>(error);
+            add_effect<&AssetPipelineAtoms::handled>(true);
+        }
+        const bool is_stage = false;
+        EAssetPipelineStage get_stage() const { SKR_ASSERT(is_stage); return stage; }
+        EAssetPipelineError get_error() const { SKR_ASSERT(!is_stage); return error; }
+    private:
+        EAssetPipelineStage stage;
+        EAssetPipelineError error;
+    };
+    using PipelinePlanner = skr::goap::Planner<AssetPipelineState, PipelineAction>;
+
+    skr::Vector<PipelineAction> actions;
+    actions.emplace(u8"Import", EAssetPipelineStage::Import);
+    actions.emplace(u8"Cook", EAssetPipelineStage::Cook);
+    actions.emplace(u8"Save", EAssetPipelineStage::Save);
+    actions.emplace(u8"Done", EAssetPipelineStage::Done);
+    actions.emplace(u8"HandleImportError", EAssetPipelineError::ImportError);
+    actions.emplace(u8"HandleCookError", EAssetPipelineError::CookError);
+    actions.emplace(u8"HandleSaveError", EAssetPipelineError::SaveError);
+
+    // NORMAL COOK
+    {
+        auto init = AssetPipelineState();
+        init.set<&AssetPipelineAtoms::stage>(EAssetPipelineStage::None);
+        init.set<&AssetPipelineAtoms::error>(EAssetPipelineError::None);
+        auto goal = AssetPipelineState();
+        goal.set<&AssetPipelineAtoms::stage>(EAssetPipelineStage::Done);
+        goal.set<&AssetPipelineAtoms::error>(EAssetPipelineError::None);
+        PipelinePlanner planner;
+        auto the_plan = planner.plan<true>(init, goal, actions);
+        uint32_t stage_cursor = 1;
+        for (int64_t i = the_plan.size() - 1; i >= 0; --i)
+        {
+            auto& [action, state] = the_plan[i];
+            EXPECT_TRUE(action.is_stage);
+            EXPECT_EQ(action.get_stage(), static_cast<EAssetPipelineStage>(stage_cursor++));
+        }
+    }
+
+}

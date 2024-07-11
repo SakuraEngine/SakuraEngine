@@ -12,9 +12,8 @@ namespace asset
 {
 void* SShaderOptionsImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
-    const auto assetRecord = context->GetAssetRecord();
     skr::BlobId ioBuffer = {};
-    context->AddFileDependencyAndLoad(ioService, jsonPath.c_str(), ioBuffer);
+    context->AddSourceFileAndLoad(ioService, jsonPath.c_str(), ioBuffer);
     SKR_DEFER({ioBuffer.reset();});
     /*
     const auto assetRecord = context->GetAssetRecord();

@@ -13,7 +13,7 @@ namespace asset
 void* STextureSamplerImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
     skr::BlobId blob        = nullptr;
-    context->AddFileDependencyAndLoad(ioService, jsonPath.c_str(), blob);
+    context->AddSourceFileAndLoad(ioService, jsonPath.c_str(), blob);
     SKR_DEFER({ blob.reset(); });
     /*
     const auto assetRecord = context->GetAssetRecord();

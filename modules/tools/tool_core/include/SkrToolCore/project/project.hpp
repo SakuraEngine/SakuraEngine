@@ -17,7 +17,8 @@ SProjectConfig {
     skr::String artifactsDirectory;
 };
 
-struct TOOL_CORE_API SProject {
+struct TOOL_CORE_API SProject 
+{
 private:
     skr::filesystem::path assetPath;
     skr::filesystem::path outputPath;
@@ -29,6 +30,8 @@ public:
     skr::filesystem::path GetAssetPath() const noexcept { return assetPath; }
     skr::filesystem::path GetOutputPath() const noexcept { return outputPath; }
     skr::filesystem::path GetDependencyPath() const noexcept { return dependencyPath; }
+    bool LoadAssetData(skr::StringView uri, skr::Vector<uint8_t>& content) noexcept;
+    bool LoadAssetText(skr::StringView uri, skr::String& content) noexcept;
 
     static SProject* OpenProject(const skr::filesystem::path& path) noexcept;
     static void      SetWorkspace(const skr::filesystem::path& path) noexcept;

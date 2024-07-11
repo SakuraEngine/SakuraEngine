@@ -317,6 +317,14 @@ struct RecordBuilder {
             extern_method<+[](T& lhs, T&& rhs) { lhs.operator=(std::move(rhs)); }>(CPPExternMethods::Assign);
         }
 
+        if constexpr (skr::binary::HasReadTrait<T>)
+        {
+            extern_method<
+                +[](void* object, void* reader) -> bool { 
+                    return skr::binary::ReadTrait<T>::Read((SBinaryReader*)reader, *(T*)object); 
+                }>(SkrCoreExternMethods::ReadBin);
+        }
+
         // fill dtor
         if constexpr (std::is_destructible_v<T>)
         {

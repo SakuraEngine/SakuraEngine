@@ -512,8 +512,7 @@ void SResourceRequestImpl::LoadTask()
     skr::binary::SpanReader artifacstReader = { artifactsData };
     SBinaryReader     artifactsArchive{ artifacstReader };
 #endif
-    serdeResult = factory->Deserialize(resourceRecord, &archive);
-    if (serdeResult == 0)
+    if (factory->Deserialize(resourceRecord, &archive))
         factory->DerserializeArtifacts(resourceRecord, &artifactsArchive);
     serdeEvent.signal();
 }

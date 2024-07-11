@@ -23,7 +23,7 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
     }
 
     skr::BlobId blob = nullptr;
-    context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), blob);
+    context->AddSourceFileAndLoad(ioService, assetPath.c_str(), blob);
     SKR_DEFER({blob.reset();});
     /*
     const auto assetRecord = context->GetAssetRecord();

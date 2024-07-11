@@ -25,7 +25,7 @@ ShaderSourceCode::~ShaderSourceCode() SKR_NOEXCEPT
 void* SShaderImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
     skr::BlobId ioBlob = nullptr;
-    const auto  path   = context->AddFileDependencyAndLoad(ioService, sourcePath.c_str(), ioBlob);
+    const auto  path   = context->AddSourceFileAndLoad(ioService, sourcePath.c_str(), ioBlob);
 
     // create source code wrapper
     const auto extention   = path.extension().u8string();
