@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrBase/types.h"
-#include "SkrSerde/traits.hpp"
 #include "SkrArchive/json/reader.h"
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/vector.hpp"
@@ -13,6 +12,9 @@ bool Read(skr::archive::JsonReader* json, T& value);
 
 template <class T, class = void>
 struct ReadTrait;
+
+template <typename T>
+inline static constexpr bool HasReadTrait = requires(skr::archive::JsonReader* r, T& t) { ReadTrait<T>::Read(t, t); };
 } // namespace skr::json
 
 namespace skr::json
@@ -140,12 +142,3 @@ bool Read(skr::archive::JsonReader* json, T& value)
     return ReadTrait<T>::Read(json, value);
 }
 } // namespace skr::json
-
-// serde complete check
-namespace skr
-{
-template <class V>
-struct SerdeCompleteChecker<json::ReadTrait<skr::Vector<V>>>
-    : std::bool_constant<is_complete_serde_v<json::ReadTrait<V>>> {
-};
-} // namespace skr

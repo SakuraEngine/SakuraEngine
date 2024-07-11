@@ -1,17 +1,15 @@
 #pragma once
-#include "SkrSerde/traits.hpp"
 #include "SkrArchive/json/writer.h"
-
-#if defined(__cplusplus)
 
 // helper functions
 namespace skr::json
 {
 template <class T>
 bool Write(skr::archive::JsonWriter* writer, const T& value);
-
 template <class T, class = void>
 struct WriteTrait;
+template <typename T>
+inline static constexpr bool HasWriteTrait = requires(skr::archive::JsonWriter* w, T& t) { WriteTrait<T>::Write(w, t); };
 } // namespace skr::json
 
 // primitive types
@@ -137,14 +135,3 @@ bool Write(skr::archive::JsonWriter* writer, const T& value)
     return WriteTrait<T>::Write(writer, value);
 }
 } // namespace skr::json
-
-// serde complete check
-namespace skr
-{
-template <class V>
-struct SerdeCompleteChecker<json::WriteTrait<skr::Vector<V>>>
-    : std::bool_constant<is_complete_serde_v<json::WriteTrait<V>>> {
-};
-
-} // namespace skr
-#endif

@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrSerde/traits.hpp"
 #include "SkrBase/types.h"
 #include "SkrSerde/blob.h"
 

@@ -57,15 +57,4 @@ struct WriteTrait<skr::BTreeMap<K, V, Eq>> {
     }
 };
 } // namespace binary
-
-template <class K, class V, class Eq>
-struct SerdeCompleteChecker<binary::ReadTrait<skr::BTreeMap<K, V, Eq>>>
-    : std::bool_constant<is_complete_serde_v<binary::ReadTrait<K>> && is_complete_serde_v<binary::ReadTrait<V>>> {
-};
-
-template <class K, class V, class Eq>
-struct SerdeCompleteChecker<binary::WriteTrait<skr::BTreeMap<K, V, Eq>>>
-    : std::bool_constant<is_complete_serde_v<binary::WriteTrait<K>> && is_complete_serde_v<binary::WriteTrait<V>>> {
-};
-
 } // namespace skr

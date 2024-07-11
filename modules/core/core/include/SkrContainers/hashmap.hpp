@@ -72,16 +72,6 @@ struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
 };
 } // namespace binary
 
-template <class K, class V, class Eq>
-struct SerdeCompleteChecker<binary::ReadTrait<skr::FlatHashMap<K, V, Eq>>>
-    : std::bool_constant<is_complete_serde_v<binary::ReadTrait<K>> && is_complete_serde_v<binary::ReadTrait<V>>> {
-};
-
-template <class K, class V, class Eq>
-struct SerdeCompleteChecker<binary::WriteTrait<skr::FlatHashMap<K, V, Eq>>>
-    : std::bool_constant<is_complete_serde_v<binary::WriteTrait<K>> && is_complete_serde_v<binary::WriteTrait<V>>> {
-};
-
 } // namespace skr
 
 #include "SkrSerde/json/reader.h"
@@ -128,16 +118,3 @@ struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
     }
 };
 } // namespace skr::json
-
-namespace skr
-{
-template <class K, class V, class Hash, class Eq>
-struct SerdeCompleteChecker<json::ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>>>
-    : std::bool_constant<is_complete_serde_v<json::ReadTrait<K>> && is_complete_serde_v<json::ReadTrait<V>>> {
-};
-
-template <class K, class V, class Hash, class Eq>
-struct SerdeCompleteChecker<json::WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>>>
-    : std::bool_constant<is_complete_serde_v<json::WriteTrait<K>> && is_complete_serde_v<json::WriteTrait<V>>> {
-};
-} // namespace skr

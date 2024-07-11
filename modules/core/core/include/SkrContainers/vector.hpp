@@ -132,8 +132,4 @@ struct VectorWriterBitpacked {
     }
 };
 } // namespace binary
-template <typename V>
-struct SerdeCompleteChecker<binary::ReadTrait<Vector<V>>>
-    : std::bool_constant<is_complete_serde_v<binary::ReadTrait<V>>> {
-};
 } // namespace skr

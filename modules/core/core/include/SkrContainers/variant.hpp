@@ -57,11 +57,6 @@ struct ReadTrait<skr::variant<Ts...>> {
 };
 
 } // namespace binary
-
-template <class... Ts>
-struct SerdeCompleteChecker<binary::ReadTrait<skr::variant<Ts...>>>
-    : std::bool_constant<(is_complete_serde_v<binary::ReadTrait<Ts>> && ...)> {
-};
 } // namespace skr
 
 namespace skr
@@ -82,10 +77,6 @@ struct WriteTrait<skr::variant<Ts...>> {
     }
 };
 } // namespace binary
-template <class... Ts>
-struct SerdeCompleteChecker<binary::WriteTrait<skr::variant<Ts...>>>
-    : std::bool_constant<(is_complete_serde_v<binary::WriteTrait<Ts>> && ...)> {
-};
 } // namespace skr
 
 #include "SkrRTTR/rttr_traits.hpp"
@@ -146,16 +137,3 @@ struct WriteTrait<skr::variant<Ts...>> {
     }
 };
 } // namespace skr::json
-
-namespace skr
-{
-template <class... Ts>
-struct SerdeCompleteChecker<json::ReadTrait<skr::variant<Ts...>>>
-    : std::bool_constant<(is_complete_serde_v<json::ReadTrait<Ts>> && ...)> {
-};
-
-template <class... Ts>
-struct SerdeCompleteChecker<json::WriteTrait<skr::variant<Ts...>>>
-    : std::bool_constant<(is_complete_serde_v<json::WriteTrait<Ts>> && ...)> {
-};
-} // namespace skr
