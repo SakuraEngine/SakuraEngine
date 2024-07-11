@@ -11,7 +11,10 @@
 #include "./chunk_view.hpp"
 #include "./scheduler.hpp"
 #include "./iterator_ref.hpp"
-#include "./utilities.hpp"
+
+#ifndef forloop
+#define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+#endif
 
 sugoi_storage_t::Impl::Impl()
     : archetypeArena(sugoi::get_default_pool())
@@ -282,10 +285,10 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t* src, uint32_t n, uint32_
 sugoi_chunk_view_t sugoi_storage_t::entity_view(sugoi_entity_t e) const
 {
     using namespace sugoi;
-    SKR_ASSERT(e_id(e) < pimpl->entity_registry.entries.size());
-    auto& entry = pimpl->entity_registry.entries[e_id(e)];
-    if (entry.version == e_version(e))
-        return { entry.chunk, entry.indexInChunk, 1 };
+    auto entry = pimpl->entity_registry.try_get_entry(e);
+    SKR_ASSERT(entry.has_value());
+    if (entry.value().version == e_version(e))
+        return { entry.value().chunk, entry.value().indexInChunk, 1 };
     return { nullptr, 0, 1 };
 }
 
@@ -321,9 +324,8 @@ bool sugoi_storage_t::components_enabled(const sugoi_entity_t src, const sugoi_t
 
 bool sugoi_storage_t::exist(sugoi_entity_t e) const noexcept
 {
-    using namespace sugoi;
-    return pimpl->entity_registry.entries.size() > e_id(e) && 
-        pimpl->entity_registry.entries[e_id(e)].version == e_version(e);
+    auto entry = pimpl->entity_registry.try_get_entry(e);
+    return entry.has_value() && entry.value().version == sugoi::e_version(e);
 }
 
 void sugoi_storage_t::validate_meta()
@@ -464,26 +466,13 @@ void sugoi_storage_t::pack_entities()
         SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_storage(this);
     }
-    skr::stl_vector<EIndex> map;
-    auto&                   entries = pimpl->entity_registry.entries;
-    map.resize(entries.size());
-    pimpl->entity_registry.freeEntities.clear();
-    EIndex j = 0;
-    forloop (i, 0, entries.size())
-    {
-        if (entries[i].indexInChunk != 0)
-        {
-            map[i] = j;
-            if (i != j)
-                entries[j] = entries[i];
-            j++;
-        }
-    }
+    skr::Vector<EIndex> map;
+    pimpl->entity_registry.pack_entities(map);
     struct mapper {
-        skr::stl_vector<EIndex>* data;
-        void                     move() {}
-        void                     reset() {}
-        void                     map(sugoi_entity_t& e)
+        skr::Vector<EIndex>* data;
+        void                 move() {}
+        void                 reset() {}
+        void                 map(sugoi_entity_t& e)
         {
             if (e_id(e) < data->size())
                 e = e_id(e, (*data)[e_id(e)]);
@@ -664,18 +653,20 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
     }
     auto&                           sents = src.pimpl->entity_registry;
     skr::stl_vector<sugoi_entity_t> map;
-    map.resize(sents.entries.size());
-    EIndex moveCount = 0;
-    for (auto& e : sents.entries)
-        if (e.chunk != nullptr)
-            moveCount++;
-    skr::stl_vector<sugoi_entity_t> newEnts;
-    newEnts.resize(moveCount);
-    pimpl->entity_registry.new_entities(newEnts.data(), moveCount);
-    int j = 0;
-    for (int i = 0; i < sents.entries.size(); ++i)
-        if (sents.entries[i].chunk != nullptr)
-            map[i] = newEnts[j++];
+    sents.visit_entries([&](const auto& entries_view){
+        map.resize(entries_view.size());
+        EIndex moveCount = 0;
+        for (auto& e : entries_view)
+            if (e.chunk != nullptr)
+                moveCount++;
+        skr::stl_vector<sugoi_entity_t> newEnts;
+        newEnts.resize(moveCount);
+        pimpl->entity_registry.new_entities(newEnts.data(), moveCount);
+        int j = 0;
+        for (int i = 0; i < entries_view.size(); ++i)
+            if (entries_view[i].chunk != nullptr)
+                map[i] = newEnts[j++];
+    });
 
     sents.reset();
     struct mapper {
@@ -729,25 +720,30 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
         payload.end = (uint32_t)chunks.size();
         payloads.push_back(payload);
     }
-    using iter_t = decltype(payloads)::iterator;
-    skr::parallel_for(payloads.begin(), payloads.end(), 1,
-                      [this, &chunks](iter_t begin, iter_t end) {
-                          for (auto i = begin; i < end; ++i)
-                          {
-                              for (auto j = i->start; j < i->end; ++j)
-                              {
-                                  auto c    = chunks[j];
-                                  auto ents = (sugoi_entity_t*)c->get_entities();
-                                  forloop (k, 0, c->count)
-                                  {
-                                      i->m->map(ents[k]);
-                                      pimpl->entity_registry.entries[ents[k]] = { c, k, {} };
-                                  }
-                                  iterator_ref_chunk(c, *(i->m));
-                                  iterator_ref_view({ c, 0, c->count }, *(i->m));
-                              }
-                          }
-                      });
+    {
+        pimpl->entity_registry.mutex.lock();
+        SKR_DEFER({ pimpl->entity_registry.mutex.unlock(); });
+        
+        using iter_t = decltype(payloads)::iterator;
+        skr::parallel_for(payloads.begin(), payloads.end(), 1,
+            [this, &chunks](iter_t begin, iter_t end) {
+                for (auto i = begin; i < end; ++i)
+                {
+                    for (auto j = i->start; j < i->end; ++j)
+                    {
+                        auto c    = chunks[j];
+                        auto ents = (sugoi_entity_t*)c->get_entities();
+                        forloop (k, 0, c->count)
+                        {
+                            i->m->map(ents[k]);
+                            pimpl->entity_registry.entries[ents[k]] = { c, k, {} };
+                        }
+                        iterator_ref_chunk(c, *(i->m));
+                        iterator_ref_view({ c, 0, c->count }, *(i->m));
+                    }
+                }
+            });
+    }
     for (auto& i : src.pimpl->groups)
     {
         sugoi_group_t* g    = i.second;

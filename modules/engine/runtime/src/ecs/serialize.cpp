@@ -10,7 +10,10 @@
 #include "./stack.hpp"
 #include "./archetype.hpp"
 #include "./scheduler.hpp"
-#include "./utilities.hpp"
+
+#ifndef forloop
+#define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+#endif
 
 template <class T>
 static void WriteBuffer(SBinaryWriter* writer, const T* buffer, uint32_t count)
@@ -262,13 +265,7 @@ void sugoi_storage_t::serialize(SBinaryWriter* s)
     }
     {
         SkrZoneScopedN("serialize entities");
-        pimpl->entity_registry.visit_entries([&](const auto& entriesView){
-            bin::Write(s, (uint32_t)entriesView.size());
-        });
-        pimpl->entity_registry.visit_free_entities([&](const auto& freeEntitiesView){
-            bin::Write(s, (uint32_t)freeEntitiesView.size());
-            WriteBuffer(s, freeEntitiesView.data(), static_cast<uint32_t>(freeEntitiesView.size()));
-        });
+        pimpl->entity_registry.serialize(s);
     }
     bin::Write(s, (uint32_t)pimpl->groups.size());
     for (auto& pair : pimpl->groups)
@@ -296,39 +293,41 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
         SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_storage(this);
     }
-    // empty storage expected
-    SKR_ASSERT(pimpl->entity_registry.entries.size() == 0);
-    uint32_t size = 0;
-    bin::Read(s, size);
-    pimpl->entity_registry.entries.resize_default(size);
-    uint32_t freeSize = 0;
-    bin::Read(s, freeSize);
-    pimpl->entity_registry.freeEntities.resize_default(freeSize);
-    ReadBuffer(s, pimpl->entity_registry.freeEntities.data(), freeSize);
+    {
+        SkrZoneScopedN("deserialize entities");
+        pimpl->entity_registry.deserialize(s);
+    }
     uint32_t groupSize = 0;
     bin::Read(s, groupSize);
-    forloop (i, 0, groupSize)
+    // remap entries
     {
-        SkrZoneScopedN("deserialize group");
-        fixed_stack_scope_t _(localStack);
-        auto                type = deserialize_type(localStack, s, true);
-        auto                group = constructGroup(type);
-        uint32_t            chunkCount = 0;
-        bin::Read(s, chunkCount);
-        forloop (j, 0, chunkCount)
+        pimpl->entity_registry.mutex.lock();
+        SKR_DEFER({ pimpl->entity_registry.mutex.unlock(); });
+
+        forloop (i, 0, groupSize)
         {
-            SkrZoneScopedN("deserialize chunk");
-            sugoi_chunk_view_t view;
-            serialize_view(group, view, nullptr, s, true);
-            auto ents = sugoiV_get_entities(&view);
-            forloop (k, 0, view.count)
+            SkrZoneScopedN("deserialize group");
+            fixed_stack_scope_t _(localStack);
+            auto                type = deserialize_type(localStack, s, true);
+            auto                group = constructGroup(type);
+            uint32_t            chunkCount = 0;
+            bin::Read(s, chunkCount);
+            forloop (j, 0, chunkCount)
             {
-                EntityRegistry::entry_t entry;
-                entry.chunk                                   = view.chunk;
-                entry.indexInChunk                            = k + view.start;
-                entry.version                                 = e_version(ents[k]);
-                pimpl->entity_registry.entries[e_id(ents[k])] = entry;
+                SkrZoneScopedN("deserialize chunk");
+                sugoi_chunk_view_t view;
+                serialize_view(group, view, nullptr, s, true);
+                auto ents = sugoiV_get_entities(&view);
+                forloop (k, 0, view.count)
+                {
+                    EntityRegistry::entry_t entry;
+                    entry.chunk                                   = view.chunk;
+                    entry.indexInChunk                            = k + view.start;
+                    entry.version                                 = e_version(ents[k]);
+                    pimpl->entity_registry.entries[e_id(ents[k])] = entry;
+                }
             }
         }
     }
+
 }

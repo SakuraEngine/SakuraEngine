@@ -9,7 +9,10 @@
 #include "./scheduler.hpp"
 
 #include <bitset>
-#include "./utilities.hpp"
+
+#ifndef forloop
+#define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+#endif
 
 sugoi::scheduler_t::scheduler_t()
 {

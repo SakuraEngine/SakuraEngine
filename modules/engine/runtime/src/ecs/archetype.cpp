@@ -4,7 +4,6 @@
 #include "SkrRT/ecs/type_index.hpp"
 #include "SkrRT/ecs/type_registry.hpp"
 
-#include "./utilities.hpp"
 #include "./stack.hpp"
 #include "./chunk.hpp"
 #include "./chunk_view.hpp"
@@ -12,6 +11,10 @@
 #include "./archetype.hpp"
 #include <algorithm>
 #include <array>
+
+#ifndef forloop
+#define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+#endif
 
 namespace sugoi
 {
@@ -478,7 +481,9 @@ bool sugoi_group_t::share(sugoi_type_index_t t) const noexcept
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
-        auto metaGroup = storage->getEntityRegistry().entries[e_id(type.meta.data[i])].chunk->group;
+        auto entry = storage->getEntityRegistry().try_get_entry(type.meta.data[i]);
+        SKR_ASSERT(entry.has_value());
+        auto metaGroup = entry.value().chunk->group;
         if (metaGroup->index(t) != kInvalidSIndex)
             return true;
         if (metaGroup->share(t))
@@ -498,7 +503,9 @@ bool sugoi_group_t::share(const sugoi_type_set_t& subtype) const noexcept
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
-        auto metaGroup = storage->getEntityRegistry().entries[e_id(type.meta.data[i])].chunk->group;
+        auto entry = storage->getEntityRegistry().try_get_entry(type.meta.data[i]);
+        SKR_ASSERT(entry.has_value());
+        auto metaGroup = entry.value().chunk->group;
         if (metaGroup->own(subtype))
             return true;
         if (metaGroup->share(subtype))
@@ -554,7 +561,9 @@ const sugoi_group_t* sugoi_group_t::get_owner(sugoi_type_index_t t) const noexce
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
-        auto metaGroup = storage->getEntityRegistry().entries[e_id(type.meta.data[i])].chunk->group;
+        auto entry = storage->getEntityRegistry().try_get_entry(type.meta.data[i]);
+        SKR_ASSERT(entry.has_value());
+        auto metaGroup = entry.value().chunk->group;
         if (auto g = metaGroup->get_owner(t))
             return g;
     }
