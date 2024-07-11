@@ -144,10 +144,6 @@ struct SKR_STATIC_API ReadTrait<skr_md5_t> {
     static bool Read(SBinaryReader* reader, skr_md5_t& md5);
 };
 template <>
-struct SKR_STATIC_API ReadTrait<skr::IBlob*> {
-    static bool Read(SBinaryReader* reader, skr::IBlob*& blob);
-};
-template <>
 struct SKR_STATIC_API ReadTrait<skr::BlobId> {
     static bool Read(SBinaryReader* reader, BlobId& blob);
 };

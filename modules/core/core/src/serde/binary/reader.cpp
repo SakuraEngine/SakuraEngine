@@ -140,22 +140,6 @@ bool ReadBlob(SBinaryReader* reader, skr::BlobId& out_id)
     return true;
 }
 
-bool ReadTrait<skr::IBlob*>::Read(SBinaryReader* reader, skr::IBlob*& out_blob)
-{
-    skr::BlobId new_blob = nullptr;
-    bool        success  = ReadBlob(reader, new_blob);
-    if ((!success) || (new_blob == nullptr))
-    {
-        SKR_LOG_FATAL(u8"failed to create blob!");
-        return false;
-    }
-
-    out_blob = new_blob.get();
-    out_blob->add_refcount();
-
-    return true;
-}
-
 bool ReadTrait<skr::BlobId>::Read(SBinaryReader* reader, skr::BlobId& out_blob)
 {
     auto success = ReadBlob(reader, out_blob);

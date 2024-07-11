@@ -153,10 +153,6 @@ struct SKR_STATIC_API WriteTrait<skr_md5_t> {
     static bool Write(SBinaryWriter* writer, const skr_md5_t& MD5);
 };
 template <>
-struct SKR_STATIC_API WriteTrait<skr::IBlob*> {
-    static bool Write(SBinaryWriter* writer, const skr::IBlob*& blob);
-};
-template <>
 struct SKR_STATIC_API WriteTrait<skr::BlobId> {
     static bool Write(SBinaryWriter* writer, const skr::BlobId& blob);
 };
