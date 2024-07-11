@@ -6,45 +6,6 @@
 
 namespace skr
 {
-
-namespace binary
-{
-template <class T>
-struct FloatingPackConfig {
-    using type      = T;
-    bool asIntegers = false;
-    // scale before convert to integer
-    T scale       = 1.0f;
-    using Integer = std::conditional_t<std::is_same_v<T, float>, int32_t, int64_t>;
-    T max         = std::numeric_limits<Integer>::max();
-};
-
-template <class T>
-struct IntegerPackConfig {
-    using type = T;
-    T min      = std::numeric_limits<T>::min();
-    T max      = std::numeric_limits<T>::max();
-};
-
-template <class T>
-struct VectorPackConfig {
-    using type  = T;
-    float scale = 1.0f;
-};
-
-template <class T, class E>
-struct ContainerConfig {
-    using type    = T;
-    using element = E;
-};
-
-struct VectorCheckConfig {
-    uint64_t max = std::numeric_limits<uint64_t>::max();
-    uint64_t min = std::numeric_limits<uint64_t>::min();
-};
-
-} // namespace binary
-
 template <class T>
 struct SerdeCompleteChecker : std::true_type {
 };
@@ -176,16 +137,16 @@ template <class T, class = void>
 struct ReadTrait;
 
 template <typename T>
-inline static constexpr bool HasReadTrait = requires(SBinaryReader* r, T& t){ ReadTrait<T>::Read(r, t); };
+inline static constexpr bool HasReadTrait = requires(SBinaryReader* r, T& t) { ReadTrait<T>::Read(r, t); };
 
-template <class T, class... Args>
-bool Archive(SBinaryReader* reader, T&& value, Args&&... args)
+template <class T>
+bool Archive(SBinaryReader* reader, T&& value)
 {
-    return ReadTrait<std::decay_t<T>>::Read(reader, value, std::forward<Args>(args)...);
+    return ReadTrait<std::decay_t<T>>::Read(reader, value);
 }
 
-template <class T, class... Args>
-bool ArchiveBlob(SBinaryReader* reader, skr_blob_arena_t& arena, T&& value, Args&&... args)
+template <class T>
+bool ArchiveBlob(SBinaryReader* reader, skr_blob_arena_t& arena, T&& value)
 {
     if constexpr (is_complete_v<BlobTrait<std::decay_t<T>>>)
     {
@@ -194,10 +155,10 @@ bool ArchiveBlob(SBinaryReader* reader, skr_blob_arena_t& arena, T&& value, Args
             SKR_ASSERT(!arena.get_size());
             return true;
         }
-        return ReadTrait<std::decay_t<T>>::Read(reader, arena, value, std::forward<Args>(args)...);
+        return ReadTrait<std::decay_t<T>>::Read(reader, arena, value);
     }
     else
-        return ReadTrait<std::decay_t<T>>::Read(reader, value, std::forward<Args>(args)...);
+        return ReadTrait<std::decay_t<T>>::Read(reader, value);
 }
 } // namespace binary
 } // namespace skr

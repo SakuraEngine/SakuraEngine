@@ -18,4 +18,3 @@ static struct ProcInitializer {
 
 #include "binary.cpp"
 #include "json.cpp"
-#include "bitpack.cpp"

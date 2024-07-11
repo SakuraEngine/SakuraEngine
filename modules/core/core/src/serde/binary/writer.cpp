@@ -6,159 +6,6 @@
 #include "SkrBase/math/rtm/scalard.h"
 #include "SkrCore/log.h"
 
-// help functions
-namespace skr::binary
-{
-template <class T>
-inline bool WriteBitpacked(SBinaryWriter* writer, T value, IntegerPackConfig<T> config)
-{
-    SKR_ASSERT(config.min <= config.max);
-    bool valid = value >= config.min && value <= config.max;
-    SKR_ASSERT(valid);
-    SKR_ASSERT(writer->vwrite_bits);
-
-    if (!writer->vwrite_bits)
-    {
-        SKR_LOG_ERROR(u8"vwrite_bits is not implemented. falling back to vwrite");
-        return writer->write(&value, sizeof(T));
-    }
-    auto bits = 64 - skr::countl_zero<uint64_t>(config.max - config.min);
-    if (!valid)
-    {
-        SKR_LOG_ERROR(u8"value %d is not in range [%d, %d]", value, config.min, config.max);
-        value = std::clamp(value, config.min, config.max);
-    }
-    T compressed = (value - config.min) & ((1 << bits) - 1);
-    return writer->write_bits(&compressed, bits);
-}
-
-// template<class T>
-// bool WriteBitpacked(SBinaryWriter* writer, T value, FloatingPackConfig<T> config)
-// {
-//     T scaled = value * config.scale;
-//     bool valid = scaled < config.max;
-//     SKR_ASSERT(valid);
-//     SKR_ASSERT(writer->vwrite_bits);
-
-//     if(!writer->vwrite_bits)
-//     {
-//         SKR_LOG_ERROR(u8"vwrite_bits is not implemented. falling back to vwrite");
-//         return writer->write(&value, sizeof(T));
-//     }
-//     if(!valid)
-//     {
-//         SKR_LOG_ERROR(u8"Value %f is out of range for bitpacked serialization", value);
-//         scaled = config.max;
-//     }
-//     auto integer = (typename FloatingPackConfig<T>::Integer) rtm::scalar_round_bankers(scaled);
-//     bool sign = integer < 0;
-//     if(sign)
-//         integer = -integer;
-//     auto bits = 65 - skr::countl_zero<uint64_t>(config.max);
-//     auto compressed = integer | (sign ? 0 : (1 << bits));
-//     return writer->write_bits(&compressed, bits);
-// }
-
-template <class T, class ScalarType>
-inline bool WriteBitpacked(SBinaryWriter* writer, T value, VectorPackConfig<ScalarType> config)
-{
-    ScalarType*             array = (ScalarType*)&value;
-    static constexpr size_t size  = sizeof(T) / sizeof(ScalarType);
-    using IntType                 = std::conditional_t<sizeof(ScalarType) == 4, int32_t, int64_t>;
-    // Beyond 2^MaxExponentForScaling scaling cannot improve the precision as the next floating point value is at least 1.0 more.
-    constexpr uint32_t   MaxExponentForScaling = sizeof(ScalarType) == 4 ? 23U : 52U;
-    constexpr ScalarType MaxValueToScale       = ScalarType(IntType(1) << MaxExponentForScaling);
-
-    // Rounding of large values can introduce additional precision errors and the extra cost to serialize with full precision is small.
-    constexpr uint32_t   MaxExponentAfterScaling = sizeof(ScalarType) == 4 ? 30U : 62U;
-    constexpr ScalarType MaxScaledValue          = ScalarType(IntType(1) << MaxExponentAfterScaling);
-
-    // NaN values can be properly serialized using the full precision path, but they typically cause lots of errors
-    // for the typical engine use case.
-    bool containsNan = false;
-    for (size_t i = 0; i < size; ++i)
-    {
-        if (std::isnan(array[i]))
-        {
-            containsNan = true;
-            break;
-        }
-    }
-    SKR_ASSERT(!containsNan);
-    if (containsNan)
-    {
-        SKR_LOG_ERROR(u8"WriteBitpacked: Value isn't finite. Clearing for safety.");
-        for (size_t i = 0; i < size; ++i)
-        {
-            array[i] = 0;
-        }
-    }
-
-    const ScalarType Factor = config.scale;
-    ScalarType       ScaledValue[size];
-    for (size_t i = 0; i < size; ++i)
-    {
-        ScaledValue[i] = array[i] * Factor;
-    }
-    ScalarType absMax = 0;
-    ScalarType absMin = 0;
-    for (size_t i = 0; i < size; ++i)
-    {
-        absMax = std::max(absMax, std::abs(ScaledValue[i]));
-        absMin = std::min(absMin, std::abs(ScaledValue[i]));
-    }
-
-    // If the component values are within bounds then we optimize the bandwidth, otherwise we use full precision.
-    if (absMax < MaxScaledValue)
-    {
-        const bool bUseScaledValue = absMin < MaxValueToScale;
-
-        IntType finalValue[size];
-        for (size_t i = 0; i < size; ++i)
-        {
-            if (bUseScaledValue)
-            {
-                finalValue[i] = (IntType)rtm::scalar_round_bankers(ScaledValue[i]);
-            }
-            else
-            {
-                finalValue[i] = (IntType)rtm::scalar_round_bankers(array[i]);
-            }
-        }
-        uint8_t componentBitCount = 0;
-        for (size_t i = 0; i < size; ++i)
-        {
-            uint8_t bitsNeeded = 65 - skr::countl_zero<uint64_t>((uint64_t)std::abs(finalValue[i]));
-            componentBitCount  = std::max(componentBitCount, bitsNeeded);
-        }
-        for (size_t i = 0; i < size; ++i)
-        {
-            if (finalValue[i] < 0)
-                finalValue[i] |= (IntType(1) << componentBitCount);
-        }
-        uint8_t ComponentBitCountAndScaleInfo = (bUseScaledValue ? (1U << 6U) : 0U) | componentBitCount;
-        if (!writer->write(&ComponentBitCountAndScaleInfo, 1))
-            return false;
-        for (size_t i = 0; i < size; ++i)
-        {
-            if (!writer->write_bits(&finalValue[i], componentBitCount))
-                return false;
-        }
-    }
-    else
-    {
-        // A component bit count of 0 indicates full precision.
-        constexpr uint32_t ComponentBitCount            = 0;
-        uint8_t            ComponentBitCountAndTypeInfo = ComponentBitCount;
-        if (!writer->write(&ComponentBitCountAndTypeInfo, 1))
-            return false;
-        if (!writer->write(array, sizeof(T)))
-            return false;
-    }
-    return true;
-}
-} // namespace skr::binary
-
 namespace skr::binary
 {
 // primitive types
@@ -172,19 +19,9 @@ bool WriteTrait<int8_t>::Write(SBinaryWriter* writer, int8_t value)
     return WriteBytes(writer, &value, sizeof(value));
 }
 
-bool WriteTrait<int8_t>::Write(SBinaryWriter* writer, int8_t value, IntegerPackConfig<int8_t> config)
-{
-    return WriteBitpacked(writer, value, config);
-}
-
 bool WriteTrait<int16_t>::Write(SBinaryWriter* writer, int16_t value)
 {
     return WriteBytes(writer, &value, sizeof(value));
-}
-
-bool WriteTrait<int16_t>::Write(SBinaryWriter* writer, int16_t value, IntegerPackConfig<int16_t> config)
-{
-    return WriteBitpacked(writer, value, config);
 }
 
 bool WriteTrait<int32_t>::Write(SBinaryWriter* writer, int32_t value)
@@ -192,19 +29,9 @@ bool WriteTrait<int32_t>::Write(SBinaryWriter* writer, int32_t value)
     return WriteBytes(writer, &value, sizeof(value));
 }
 
-bool WriteTrait<int32_t>::Write(SBinaryWriter* writer, int32_t value, IntegerPackConfig<int32_t> config)
-{
-    return WriteBitpacked(writer, value, config);
-}
-
 bool WriteTrait<int64_t>::Write(SBinaryWriter* writer, int64_t value)
 {
     return WriteBytes(writer, &value, sizeof(value));
-}
-
-bool WriteTrait<int64_t>::Write(SBinaryWriter* writer, int64_t value, IntegerPackConfig<int64_t> config)
-{
-    return WriteBitpacked(writer, value, config);
 }
 
 bool WriteTrait<uint8_t>::Write(SBinaryWriter* writer, uint8_t value)
@@ -212,19 +39,9 @@ bool WriteTrait<uint8_t>::Write(SBinaryWriter* writer, uint8_t value)
     return WriteBytes(writer, &value, sizeof(value));
 }
 
-bool WriteTrait<uint8_t>::Write(SBinaryWriter* writer, uint8_t value, IntegerPackConfig<uint8_t> config)
-{
-    return WriteBitpacked(writer, value, config);
-}
-
 bool WriteTrait<uint16_t>::Write(SBinaryWriter* writer, uint16_t value)
 {
     return WriteBytes(writer, &value, sizeof(value));
-}
-
-bool WriteTrait<uint16_t>::Write(SBinaryWriter* writer, uint16_t value, IntegerPackConfig<uint16_t> config)
-{
-    return WriteBitpacked(writer, value, config);
 }
 
 bool WriteTrait<uint32_t>::Write(SBinaryWriter* writer, uint32_t value)
@@ -232,19 +49,9 @@ bool WriteTrait<uint32_t>::Write(SBinaryWriter* writer, uint32_t value)
     return WriteBytes(writer, &value, sizeof(value));
 }
 
-bool WriteTrait<uint32_t>::Write(SBinaryWriter* writer, uint32_t value, IntegerPackConfig<uint32_t> config)
-{
-    return WriteBitpacked(writer, value, config);
-}
-
 bool WriteTrait<uint64_t>::Write(SBinaryWriter* writer, uint64_t value)
 {
     return WriteBytes(writer, &value, sizeof(value));
-}
-
-bool WriteTrait<uint64_t>::Write(SBinaryWriter* writer, uint64_t value, IntegerPackConfig<uint64_t> config)
-{
-    return WriteBitpacked(writer, value, config);
 }
 
 bool WriteTrait<float>::Write(SBinaryWriter* writer, float value)
@@ -252,20 +59,10 @@ bool WriteTrait<float>::Write(SBinaryWriter* writer, float value)
     return WriteBytes(writer, &value, sizeof(value));
 }
 
-// bool WriteTrait<float>::Write(SBinaryWriter* writer, float value, FloatingPackConfig<float> config)
-// {
-//     return WriteBitpacked(writer, value, config);
-// }
-
 bool WriteTrait<double>::Write(SBinaryWriter* writer, double value)
 {
     return WriteBytes(writer, &value, sizeof(value));
 }
-
-// bool WriteTrait<double>::Write(SBinaryWriter* writer, double value, FloatingPackConfig<double> config)
-// {
-//     return WriteBitpacked(writer, value, config);
-// }
 
 // skr types
 bool WriteTrait<skr_float2_t>::Write(SBinaryWriter* writer, const skr_float2_t& value)
@@ -273,19 +70,9 @@ bool WriteTrait<skr_float2_t>::Write(SBinaryWriter* writer, const skr_float2_t& 
     return WriteBytes(writer, &value, sizeof(value));
 }
 
-bool WriteTrait<skr_float2_t>::Write(SBinaryWriter* writer, const skr_float2_t& value, VectorPackConfig<float> config)
-{
-    return WriteBitpacked(writer, value, config);
-}
-
 bool WriteTrait<skr_float3_t>::Write(SBinaryWriter* writer, const skr_float3_t& value)
 {
     return WriteBytes(writer, &value, sizeof(value));
-}
-
-bool WriteTrait<skr_float3_t>::Write(SBinaryWriter* writer, const skr_float3_t& value, VectorPackConfig<float> config)
-{
-    return WriteBitpacked(writer, value, config);
 }
 
 bool WriteTrait<skr_float4_t>::Write(SBinaryWriter* writer, const skr_float4_t& value)
@@ -293,19 +80,9 @@ bool WriteTrait<skr_float4_t>::Write(SBinaryWriter* writer, const skr_float4_t& 
     return WriteBytes(writer, &value, sizeof(value));
 }
 
-bool WriteTrait<skr_float4_t>::Write(SBinaryWriter* writer, const skr_float4_t& value, VectorPackConfig<float> config)
-{
-    return WriteBitpacked(writer, value, config);
-}
-
 bool WriteTrait<skr_float4x4_t>::Write(SBinaryWriter* writer, const skr_float4x4_t& value)
 {
     return WriteBytes(writer, &value, sizeof(value));
-}
-
-bool WriteTrait<skr_float4x4_t>::Write(SBinaryWriter* writer, const skr_float4x4_t& value, VectorPackConfig<float> config)
-{
-    return WriteBitpacked(writer, value, config);
 }
 
 bool WriteTrait<skr_rotator_t>::Write(SBinaryWriter* writer, const skr_rotator_t& value)
@@ -313,19 +90,9 @@ bool WriteTrait<skr_rotator_t>::Write(SBinaryWriter* writer, const skr_rotator_t
     return WriteBytes(writer, &value, sizeof(value));
 }
 
-bool WriteTrait<skr_rotator_t>::Write(SBinaryWriter* writer, const skr_rotator_t& value, VectorPackConfig<float> config)
-{
-    return WriteBitpacked(writer, value, config);
-}
-
 bool WriteTrait<skr_quaternion_t>::Write(SBinaryWriter* writer, const skr_quaternion_t& value)
 {
     return WriteBytes(writer, &value, sizeof(value));
-}
-
-bool WriteTrait<skr_quaternion_t>::Write(SBinaryWriter* writer, const skr_quaternion_t& value, VectorPackConfig<float> config)
-{
-    return WriteBitpacked(writer, value, config);
 }
 
 bool WriteTrait<skr_guid_t>::Write(SBinaryWriter* writer, const skr_guid_t& guid)

@@ -39,8 +39,7 @@ namespace binary
 {
 template <class V>
 struct ReadTrait<Vector<V>> {
-    template <class... Args>
-    static bool Read(SBinaryReader* archive, Vector<V>& vec, Args&&... args)
+    static bool Read(SBinaryReader* archive, Vector<V>& vec)
     {
         Vector<V> temp;
         uint32_t  size;
@@ -50,33 +49,9 @@ struct ReadTrait<Vector<V>> {
         for (uint32_t i = 0; i < size; ++i)
         {
             V value;
-            if (!skr::binary::Archive(archive, value, std::forward<Args>(args)...))
+            if (!skr::binary::Archive(archive, value))
                 return false;
             temp.add(std::move(value));
-        }
-        vec = std::move(temp);
-        return true;
-    }
-
-    template <class... Args>
-    static bool Read(SBinaryReader* archive, Vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
-    {
-        Vector<V> temp;
-        uint32_t  size;
-        SKR_ARCHIVE(size);
-        if (size > cfg.max || size < cfg.min)
-        {
-            // SKR_LOG_ERROR(u8"Vector size %d is out of range [%d, %d]", size, cfg.min, cfg.max);
-            return false;
-        }
-
-        temp.reserve(size);
-        for (uint32_t i = 0; i < size; ++i)
-        {
-            V value;
-            if (!skr::binary::Archive(archive, value, std::forward<Args>(args)...))
-                return false;
-            temp.push_back(std::move(value));
         }
         vec = std::move(temp);
         return true;
@@ -84,29 +59,12 @@ struct ReadTrait<Vector<V>> {
 };
 template <class V>
 struct WriteTrait<Vector<V>> {
-    template <class... Args>
-    static bool Write(SBinaryWriter* archive, const Vector<V>& vec, Args&&... args)
+    static bool Write(SBinaryWriter* archive, const Vector<V>& vec)
     {
         SKR_ARCHIVE((uint32_t)vec.size());
         for (auto& value : vec)
         {
-            if (!skr::binary::Archive(archive, value, std::forward<Args>(args)...))
-                return false;
-        }
-        return true;
-    }
-    template <class... Args>
-    static bool Write(SBinaryWriter* archive, const Vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
-    {
-        if (vec.size() > cfg.max || vec.size() < cfg.min)
-        {
-            // SKR_LOG_ERROR(u8"Vector size %d is out of range [%d, %d]", vec.size(), cfg.min, cfg.max);
-            return false;
-        }
-        SKR_ARCHIVE((uint32_t)vec.size());
-        for (auto& value : vec)
-        {
-            if (!skr::binary::Archive(archive, value, std::forward<Args>(args)...))
+            if (!skr::binary::Archive(archive, value))
                 return false;
         }
         return true;

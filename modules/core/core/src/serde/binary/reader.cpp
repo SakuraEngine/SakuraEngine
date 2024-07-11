@@ -116,108 +116,6 @@ size_t skr_blob_arena_builder_t::allocate(size_t size, size_t align)
     return retOffset;
 }
 
-// help functions
-namespace skr::binary
-{
-template <class T>
-inline bool ReadBitpacked(SBinaryReader* reader, T& value, IntegerPackConfig<T> config)
-{
-    SKR_ASSERT(config.min <= config.max);
-    SKR_ASSERT(reader->vread_bits);
-    if (!reader->vread_bits)
-    {
-        SKR_LOG_ERROR(u8"vread_bits is not implemented. falling back to vread");
-        return reader->read(&value, sizeof(T));
-    }
-    auto bits       = 64 - skr::countl_zero<uint64_t>(config.max - config.min);
-    T    compressed = 0;
-    if (!reader->read_bits(&compressed, bits))
-        return false;
-    value = compressed + config.min;
-    return true;
-}
-
-template <class T, class ScalarType>
-inline bool ReadBitpacked(SBinaryReader* reader, T& value, VectorPackConfig<ScalarType> config)
-{
-    ScalarType*             array = (ScalarType*)&value;
-    static constexpr size_t size  = sizeof(T) / sizeof(ScalarType);
-    // using IntType = std::conditional_t<sizeof(ScalarType) == 4, int32_t, int64_t>;
-
-    uint8_t        ComponentBitCountAndExtraInfo = 0;
-    if (!reader->read(&ComponentBitCountAndExtraInfo, 1))
-        return false;
-    const uint32_t ComponentBitCount             = ComponentBitCountAndExtraInfo & 63U;
-    const uint32_t ExtraInfo                     = ComponentBitCountAndExtraInfo >> 6U;
-
-    if (ComponentBitCount > 0U)
-    {
-        int64_t values[size]{ 0 };
-
-        for (size_t i = 0; i < size; ++i)
-        {
-            if (!reader->read_bits(&values[i], ComponentBitCount))
-            {
-                auto type = skr::demangle<T>();
-                SKR_LOG_FATAL(u8"failed to read packed bits of type %s!", type.c_str());
-                return false;
-            }
-        }
-
-        // Sign-extend the values. The most significant bit read indicates the sign.
-        const int64_t SignBit = (1ULL << (ComponentBitCount - 1U));
-        for (size_t i = 0; i < size; ++i)
-        {
-            values[i] = (values[i] ^ SignBit) - SignBit;
-        }
-
-        // Apply scaling if needed.
-        if (ExtraInfo)
-        {
-            for (size_t i = 0; i < size; ++i)
-            {
-                array[i] = ScalarType(values[i]) / config.scale;
-            }
-        }
-        else
-        {
-            for (size_t i = 0; i < size; ++i)
-            {
-                array[i] = ScalarType(values[i]);
-            }
-        }
-
-        return true;
-    }
-    else
-    {
-        if (!reader->read(array, sizeof(T)))
-            return false;
-        bool containsNan = false;
-        for (int i = 0; i < size; ++i)
-        {
-            if (std::isnan(array[i]))
-            {
-                containsNan = true;
-                break;
-            }
-        }
-        if (containsNan)
-        {
-            SKR_LOG_ERROR(u8"ReadBitpacked: Value isn't finite. Clearing for safety.");
-            for (int i = 0; i < size; ++i)
-            {
-                array[i] = 0;
-            }
-        }
-        return true;
-    }
-
-    // Should not get here so something is very wrong.
-    return false;
-}
-} // namespace skr::binary
-
 namespace skr::binary
 {
 // primitive types
@@ -238,19 +136,9 @@ bool ReadTrait<int8_t>::Read(SBinaryReader* reader, int8_t& value)
     return reader->read(&value, sizeof(value));
 }
 
-bool ReadTrait<int8_t>::Read(SBinaryReader* reader, int8_t& value, IntegerPackConfig<int8_t>)
-{
-    return ReadBitpacked(reader, value, IntegerPackConfig<int8_t>{});
-}
-
 bool ReadTrait<int16_t>::Read(SBinaryReader* reader, int16_t& value)
 {
     return reader->read(&value, sizeof(value));
-}
-
-bool ReadTrait<int16_t>::Read(SBinaryReader* reader, int16_t& value, IntegerPackConfig<int16_t>)
-{
-    return ReadBitpacked(reader, value, IntegerPackConfig<int16_t>{});
 }
 
 bool ReadTrait<int32_t>::Read(SBinaryReader* reader, int32_t& value)
@@ -258,19 +146,9 @@ bool ReadTrait<int32_t>::Read(SBinaryReader* reader, int32_t& value)
     return reader->read(&value, sizeof(value));
 }
 
-bool ReadTrait<int32_t>::Read(SBinaryReader* reader, int32_t& value, IntegerPackConfig<int32_t>)
-{
-    return ReadBitpacked(reader, value, IntegerPackConfig<int32_t>{});
-}
-
 bool ReadTrait<int64_t>::Read(SBinaryReader* reader, int64_t& value)
 {
     return reader->read(&value, sizeof(value));
-}
-
-bool ReadTrait<int64_t>::Read(SBinaryReader* reader, int64_t& value, IntegerPackConfig<int64_t>)
-{
-    return ReadBitpacked(reader, value, IntegerPackConfig<int64_t>{});
 }
 
 bool ReadTrait<uint8_t>::Read(SBinaryReader* reader, uint8_t& value)
@@ -278,19 +156,9 @@ bool ReadTrait<uint8_t>::Read(SBinaryReader* reader, uint8_t& value)
     return reader->read(&value, sizeof(value));
 }
 
-bool ReadTrait<uint8_t>::Read(SBinaryReader* reader, uint8_t& value, IntegerPackConfig<uint8_t>)
-{
-    return ReadBitpacked(reader, value, IntegerPackConfig<uint8_t>{});
-}
-
 bool ReadTrait<uint16_t>::Read(SBinaryReader* reader, uint16_t& value)
 {
     return reader->read(&value, sizeof(value));
-}
-
-bool ReadTrait<uint16_t>::Read(SBinaryReader* reader, uint16_t& value, IntegerPackConfig<uint16_t>)
-{
-    return ReadBitpacked(reader, value, IntegerPackConfig<uint16_t>{});
 }
 
 bool ReadTrait<uint32_t>::Read(SBinaryReader* reader, uint32_t& value)
@@ -298,19 +166,9 @@ bool ReadTrait<uint32_t>::Read(SBinaryReader* reader, uint32_t& value)
     return reader->read(&value, sizeof(value));
 }
 
-bool ReadTrait<uint32_t>::Read(SBinaryReader* reader, uint32_t& value, IntegerPackConfig<uint32_t>)
-{
-    return ReadBitpacked(reader, value, IntegerPackConfig<uint32_t>{});
-}
-
 bool ReadTrait<uint64_t>::Read(SBinaryReader* reader, uint64_t& value)
 {
     return reader->read(&value, sizeof(value));
-}
-
-bool ReadTrait<uint64_t>::Read(SBinaryReader* reader, uint64_t& value, IntegerPackConfig<uint64_t>)
-{
-    return ReadBitpacked(reader, value, IntegerPackConfig<uint64_t>{});
 }
 
 bool ReadTrait<float>::Read(SBinaryReader* reader, float& value)
@@ -318,20 +176,10 @@ bool ReadTrait<float>::Read(SBinaryReader* reader, float& value)
     return reader->read(&value, sizeof(value));
 }
 
-// bool ReadTrait<float>::Read(SBinaryReader* reader, float& value, FloatingPackConfig<float>)
-// {
-//     return ReadBitpacked(reader, value, FloatingPackConfig<float>{});
-// }
-
 bool ReadTrait<double>::Read(SBinaryReader* reader, double& value)
 {
     return reader->read(&value, sizeof(value));
 }
-
-// bool ReadTrait<double>::Read(SBinaryReader* reader, double& value, FloatingPackConfig<double>)
-// {
-//     return ReadBitpacked(reader, value, FloatingPackConfig<double>{});
-// }
 
 // skr types
 bool ReadTrait<skr_float2_t>::Read(SBinaryReader* reader, skr_float2_t& value)
@@ -339,19 +187,9 @@ bool ReadTrait<skr_float2_t>::Read(SBinaryReader* reader, skr_float2_t& value)
     return reader->read(&value, sizeof(value));
 }
 
-bool ReadTrait<skr_float2_t>::Read(SBinaryReader* reader, skr_float2_t& value, VectorPackConfig<float> cfg)
-{
-    return ReadBitpacked(reader, value, cfg);
-}
-
 bool ReadTrait<skr_float3_t>::Read(SBinaryReader* reader, skr_float3_t& value)
 {
     return reader->read(&value, sizeof(value));
-}
-
-bool ReadTrait<skr_float3_t>::Read(SBinaryReader* reader, skr_float3_t& value, VectorPackConfig<float> cfg)
-{
-    return ReadBitpacked(reader, value, cfg);
 }
 
 bool ReadTrait<skr_float4_t>::Read(SBinaryReader* reader, skr_float4_t& value)
@@ -359,19 +197,9 @@ bool ReadTrait<skr_float4_t>::Read(SBinaryReader* reader, skr_float4_t& value)
     return reader->read(&value, sizeof(value));
 }
 
-bool ReadTrait<skr_float4_t>::Read(SBinaryReader* reader, skr_float4_t& value, VectorPackConfig<float> cfg)
-{
-    return ReadBitpacked(reader, value, cfg);
-}
-
 bool ReadTrait<skr_float4x4_t>::Read(SBinaryReader* reader, skr_float4x4_t& value)
 {
     return reader->read(&value, sizeof(value));
-}
-
-bool ReadTrait<skr_float4x4_t>::Read(SBinaryReader* reader, skr_float4x4_t& value, VectorPackConfig<float> cfg)
-{
-    return ReadBitpacked(reader, value, cfg);
 }
 
 bool ReadTrait<skr_rotator_t>::Read(SBinaryReader* reader, skr_rotator_t& value)
@@ -379,19 +207,9 @@ bool ReadTrait<skr_rotator_t>::Read(SBinaryReader* reader, skr_rotator_t& value)
     return reader->read(&value, sizeof(value));
 }
 
-bool ReadTrait<skr_rotator_t>::Read(SBinaryReader* reader, skr_rotator_t& value, VectorPackConfig<float> cfg)
-{
-    return ReadBitpacked(reader, value, cfg);
-}
-
 bool ReadTrait<skr_quaternion_t>::Read(SBinaryReader* reader, skr_quaternion_t& value)
 {
     return reader->read(&value, sizeof(value));
-}
-
-bool ReadTrait<skr_quaternion_t>::Read(SBinaryReader* reader, skr_quaternion_t& value, VectorPackConfig<float> cfg)
-{
-    return ReadBitpacked(reader, value, cfg);
 }
 
 bool ReadTrait<skr_md5_t>::Read(SBinaryReader* reader, skr_md5_t& md5)
@@ -433,7 +251,7 @@ bool ReadBlob(SBinaryReader* reader, skr::BlobId& out_id)
 bool ReadTrait<skr::IBlob*>::Read(SBinaryReader* reader, skr::IBlob*& out_blob)
 {
     skr::BlobId new_blob = nullptr;
-    bool success = ReadBlob(reader, new_blob);
+    bool        success  = ReadBlob(reader, new_blob);
     if ((!success) || (new_blob == nullptr))
     {
         SKR_LOG_FATAL(u8"failed to create blob!");

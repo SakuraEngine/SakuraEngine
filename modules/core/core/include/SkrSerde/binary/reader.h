@@ -8,7 +8,7 @@ struct SBinaryReader {
     SBinaryReader(T& user)
     {
         user_data = &user;
-        vread = +[](void* user, void* data, size_t size) -> bool {
+        vread     = +[](void* user, void* data, size_t size) -> bool {
             return static_cast<T*>(user)->read(data, size);
         };
         auto SupportBitPacking = SKR_VALIDATOR((auto t), t.read_bits((void*)0, (size_t)0));
@@ -21,8 +21,8 @@ struct SBinaryReader {
     }
     bool (*vread)(void* user_data, void* data, size_t size)      = nullptr;
     bool (*vread_bits)(void* user_data, void* data, size_t size) = nullptr;
-    void* user_data                                             = nullptr;
-    bool read(void* data, size_t size)
+    void* user_data                                              = nullptr;
+    bool  read(void* data, size_t size)
     {
         return vread(user_data, data, size);
     }
@@ -62,52 +62,42 @@ struct SKR_STATIC_API ReadTrait<bool> {
 template <>
 struct SKR_STATIC_API ReadTrait<int8_t> {
     static bool Read(SBinaryReader* reader, int8_t& value);
-    static bool Read(SBinaryReader* reader, int8_t& value, IntegerPackConfig<int8_t>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<int16_t> {
     static bool Read(SBinaryReader* reader, int16_t& value);
-    static bool Read(SBinaryReader* reader, int16_t& value, IntegerPackConfig<int16_t>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<int32_t> {
     static bool Read(SBinaryReader* reader, int32_t& value);
-    static bool Read(SBinaryReader* reader, int32_t& value, IntegerPackConfig<int32_t>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<int64_t> {
     static bool Read(SBinaryReader* reader, int64_t& value);
-    static bool Read(SBinaryReader* reader, int64_t& value, IntegerPackConfig<int64_t>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<uint8_t> {
     static bool Read(SBinaryReader* reader, uint8_t& value);
-    static bool Read(SBinaryReader* reader, uint8_t& value, IntegerPackConfig<uint8_t>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<uint16_t> {
     static bool Read(SBinaryReader* reader, uint16_t& value);
-    static bool Read(SBinaryReader* reader, uint16_t& value, IntegerPackConfig<uint16_t>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<uint32_t> {
     static bool Read(SBinaryReader* reader, uint32_t& value);
-    static bool Read(SBinaryReader* reader, uint32_t& value, IntegerPackConfig<uint32_t>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<uint64_t> {
     static bool Read(SBinaryReader* reader, uint64_t& value);
-    static bool Read(SBinaryReader* reader, uint64_t& value, IntegerPackConfig<uint64_t>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<float> {
     static bool Read(SBinaryReader* reader, float& value);
-    static bool Read(SBinaryReader* reader, float& value, FloatingPackConfig<float>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<double> {
     static bool Read(SBinaryReader* reader, double& value);
-    static bool Read(SBinaryReader* reader, double& value, FloatingPackConfig<double>);
 };
 template <class T>
 struct ReadTrait<T, std::enable_if_t<std::is_enum_v<T>>> {
@@ -125,33 +115,27 @@ namespace skr::binary
 template <>
 struct SKR_STATIC_API ReadTrait<skr_float2_t> {
     static bool Read(SBinaryReader* reader, skr_float2_t& value);
-    static bool Read(SBinaryReader* reader, skr_float2_t& value, VectorPackConfig<float>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<skr_float3_t> {
     static bool Read(SBinaryReader* reader, skr_float3_t& value);
-    static bool Read(SBinaryReader* reader, skr_float3_t& value, VectorPackConfig<float>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<skr_float4_t> {
     static bool Read(SBinaryReader* reader, skr_float4_t& value);
-    static bool Read(SBinaryReader* reader, skr_float4_t& value, VectorPackConfig<float>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<skr_float4x4_t> {
     static bool Read(SBinaryReader* reader, skr_float4x4_t& value);
-    static bool Read(SBinaryReader* reader, skr_float4x4_t& value, VectorPackConfig<float>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<skr_rotator_t> {
     static bool Read(SBinaryReader* reader, skr_rotator_t& value);
-    static bool Read(SBinaryReader* reader, skr_rotator_t& value, VectorPackConfig<float>);
 };
 
 template <>
 struct SKR_STATIC_API ReadTrait<skr_quaternion_t> {
     static bool Read(SBinaryReader* reader, skr_quaternion_t& value);
-    static bool Read(SBinaryReader* reader, skr_quaternion_t& value, VectorPackConfig<float>);
 };
 template <>
 struct SKR_STATIC_API ReadTrait<skr_guid_t> {
