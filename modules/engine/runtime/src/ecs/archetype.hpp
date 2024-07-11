@@ -12,24 +12,24 @@ struct resource_fields_t
 
 // chunk data layout descriptor
 struct SKR_RUNTIME_API archetype_t {
-    sugoi_storage_t* storage;
-    sugoi_type_set_t type;
-    uint32_t* sizes;
-    uint32_t* offsets[3];
-    uint32_t* elemSizes;
-    uint32_t* aligns;
+    sugoi_storage_t* const storage;
+    const sugoi_type_set_t type;
+    const uint32_t* const sizes;
+    const uint32_t* const offsets[3];
+    const uint32_t* const elemSizes;
+    const uint32_t* const aligns;
 
-    uint32_t sliceDataOffsets[3];
-    uint32_t* callbackFlags;
-    uint32_t* stableOrder;
-    sugoi_callback_v* callbacks;
-    resource_fields_t* resourceFields;
-    uint32_t chunkCapacity[3];
-    uint32_t entitySize;
-    uint32_t sizeToPatch;
-    uint32_t firstChunkComponent; //chunk component count
-    bool withMask;
-    bool withDirty;
+    const uint32_t sliceDataOffsets[3];
+    const uint32_t* const callbackFlags;
+    const uint32_t* const stableOrder;
+    const sugoi_callback_v* const callbacks;
+    const resource_fields_t* const resourceFields;
+    const uint32_t chunkCapacity[3];
+    const uint32_t entitySize;
+    const uint32_t sizeToPatch = 0;
+    const uint32_t firstChunkComponent; //chunk component count
+    const bool withMask = false;
+    const bool withDirty = false;
     /*
         uint32_t offsets[3][firstTag];
         uint32_t sizes[firstTag];

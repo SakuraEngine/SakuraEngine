@@ -16,10 +16,9 @@ extern thread_local fixed_stack_t localStack;
 
 struct sugoi_storage_t::Impl {
     using queries_t = skr::stl_vector<sugoi_query_t*>;
-    using groups_t = skr::FlatHashMap<sugoi_entity_type_t, sugoi_group_t*, sugoi::hasher<sugoi_entity_type_t>, sugoi::equalto<sugoi_entity_type_t>>;
-    using archetypes_t = skr::FlatHashMap<sugoi_type_set_t, archetype_t*, sugoi::hasher<sugoi_type_set_t>, sugoi::equalto<sugoi_type_set_t>>;
+    using groups_t = skr::ParallelFlatHashMap<sugoi_entity_type_t, sugoi_group_t*, sugoi::hasher<sugoi_entity_type_t>, sugoi::equalto<sugoi_entity_type_t>>;
+    using archetypes_t = skr::ParallelFlatHashMap<sugoi_type_set_t, archetype_t*, sugoi::hasher<sugoi_type_set_t>, sugoi::equalto<sugoi_type_set_t>>;
     using phase_alias_t = skr::FlatHashMap<skr::StringView, sugoi_phase_alias_t, skr::Hash<skr::StringView>>;
-    using batchmap_t = skr::FlatHashMap<sugoi_chunk_t*, sugoi_chunk_view_t>;
 
     Impl();
 

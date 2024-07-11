@@ -107,9 +107,9 @@ void sugoi_storage_t::serialize_view(sugoi_group_t* group, sugoi_chunk_view_t& v
     }
 
     archetype_t* type      = view.chunk->structure;
-    EIndex*      offsets   = type->offsets[(int)view.chunk->pt];
-    uint32_t*    sizes     = type->sizes;
-    uint32_t*    elemSizes = type->elemSizes;
+    const auto*  offsets   = type->offsets[(int)view.chunk->pt];
+    const auto*  sizes     = type->sizes;
+    const auto*  elemSizes = type->elemSizes;
     if (withEntities)
     {
         if (s)
@@ -307,8 +307,8 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
     {
         SkrZoneScopedN("deserialize group");
         fixed_stack_scope_t _(localStack);
-        auto                type       = deserialize_type(localStack, s, true);
-        auto                group      = constructGroup(type);
+        auto                type = deserialize_type(localStack, s, true);
+        auto                group = constructGroup(type);
         uint32_t            chunkCount = 0;
         bin::Read(s, chunkCount);
         forloop (j, 0, chunkCount)

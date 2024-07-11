@@ -72,9 +72,9 @@ template <class F>
 void iterator_ref_view(const sugoi_chunk_view_t& view, F&& iter) noexcept
 {
     archetype_t* type = view.chunk->structure;
-    EIndex* offsets = type->offsets[(int)view.chunk->pt];
-    uint32_t* sizes = type->sizes;
-    uint32_t* elemSizes = type->elemSizes;
+    const auto* offsets = type->offsets[(int)view.chunk->pt];
+    const auto* sizes = type->sizes;
+    const auto* elemSizes = type->elemSizes;
     forloop (i, 0, type->firstChunkComponent)
         iter_ref_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], std::forward<F>(iter));
 }
@@ -82,9 +82,9 @@ template<class F>
 void iterator_ref_chunk(sugoi_chunk_t* chunk, F&& iter) noexcept
 {
     archetype_t* type = chunk->structure;
-    EIndex* offsets = type->offsets[(int)chunk->pt];
-    uint32_t* sizes = type->sizes;
-    uint32_t* elemSizes = type->elemSizes;
+    const auto* offsets = type->offsets[(int)chunk->pt];
+    const auto* sizes = type->sizes;
+    const auto* elemSizes = type->elemSizes;
     forloop (i, type->firstChunkComponent, type->type.length)
         iter_ref_impl({ chunk, 0, 1 }, type->type.data[i], offsets[i], sizes[i], elemSizes[i], std::forward<F>(iter));
 }

@@ -328,7 +328,7 @@ static void duplicate_impl(sugoi_chunk_view_t dstV, const sugoi_chunk_t* srcC, u
             {
                 forloop (j, 0, dstV.count)
                     patchResources((size_t)j * size + dst);
-            }
+            } 
         }
     }
 }
@@ -336,11 +336,11 @@ static void duplicate_impl(sugoi_chunk_view_t dstV, const sugoi_chunk_t* srcC, u
 void construct_view(const sugoi_chunk_view_t& view) noexcept
 {
     archetype_t* type = view.chunk->structure;
-    EIndex* offsets = type->offsets[(int)view.chunk->pt];
-    uint32_t* sizes = type->sizes;
-    uint32_t* aligns = type->aligns;
-    uint32_t* elemSizes = type->elemSizes;
-    uint32_t* callbackFlags = type->callbackFlags;
+    const auto* offsets = type->offsets[(int)view.chunk->pt];
+    const auto* sizes = type->sizes;
+    const auto* aligns = type->aligns;
+    const auto* elemSizes = type->elemSizes;
+    const auto* callbackFlags = type->callbackFlags;
     auto maskValue = uint32_t(1 << type->type.length) - 1;
     for (SIndex i = 0; i < type->firstChunkComponent; ++i)
     {
@@ -357,10 +357,10 @@ void construct_view(const sugoi_chunk_view_t& view) noexcept
 void destruct_view(const sugoi_chunk_view_t& view) noexcept
 {
     archetype_t* type = view.chunk->structure;
-    EIndex* offsets = type->offsets[(int)view.chunk->pt];
-    uint32_t* sizes = type->sizes;
-    uint32_t* elemSizes = type->elemSizes;
-    uint32_t* callbackFlags = type->callbackFlags;
+    const auto* offsets = type->offsets[(int)view.chunk->pt];
+    const auto* sizes = type->sizes;
+    const auto* elemSizes = type->elemSizes;
+    const auto* callbackFlags = type->callbackFlags;
     for (SIndex i = 0; i < type->firstChunkComponent; ++i)
     {
         decltype(type->callbacks[i].destructor) callback = nullptr;
@@ -374,11 +374,11 @@ void destruct_view(const sugoi_chunk_view_t& view) noexcept
 void construct_chunk(sugoi_chunk_t* chunk) noexcept
 {
     archetype_t* type = chunk->structure;
-    EIndex* offsets = type->offsets[(int)chunk->pt];
-    uint32_t* sizes = type->sizes;
-    uint32_t* aligns = type->aligns;
-    uint32_t* elemSizes = type->elemSizes;
-    uint32_t* callbackFlags = type->callbackFlags;
+    const auto* offsets = type->offsets[(int)chunk->pt];
+    const auto* sizes = type->sizes;
+    const auto* aligns = type->aligns;
+    const auto* elemSizes = type->elemSizes;
+    const auto* callbackFlags = type->callbackFlags;
     auto maskValue = uint32_t(1 << type->type.length) - 1;
 
     for (SIndex i = type->firstChunkComponent; i < type->type.length; ++i)
@@ -397,10 +397,10 @@ void construct_chunk(sugoi_chunk_t* chunk) noexcept
 void destruct_chunk(sugoi_chunk_t* chunk) noexcept
 {
     archetype_t* type = chunk->structure;
-    EIndex* offsets = type->offsets[(int)chunk->pt];
-    uint32_t* sizes = type->sizes;
-    uint32_t* elemSizes = type->elemSizes;
-    uint32_t* callbackFlags = type->callbackFlags;
+    const auto* offsets = type->offsets[(int)chunk->pt];
+    const auto* sizes = type->sizes;
+    const auto* elemSizes = type->elemSizes;
+    const auto* callbackFlags = type->callbackFlags;
     for (SIndex i = type->firstChunkComponent; i < type->type.length; ++i)
     {
         decltype(type->callbacks[i].destructor) callback = nullptr;
@@ -420,11 +420,11 @@ void move_view(const sugoi_chunk_view_t& view, EIndex srcStart) noexcept
 void move_view(const sugoi_chunk_view_t& dstV, const sugoi_chunk_t* srcC, uint32_t srcStart) noexcept
 {
     archetype_t* type = dstV.chunk->structure;
-    EIndex* offsets = type->offsets[(int)dstV.chunk->pt];
-    uint32_t* sizes = type->sizes;
-    uint32_t* aligns = type->aligns;
-    uint32_t* elemSizes = type->elemSizes;
-    uint32_t* callbackFlags = type->callbackFlags;
+    const auto* offsets = type->offsets[(int)dstV.chunk->pt];
+    const auto* sizes = type->sizes;
+    const auto* aligns = type->aligns;
+    const auto* elemSizes = type->elemSizes;
+    const auto* callbackFlags = type->callbackFlags;
     for (SIndex i = 0; i < type->firstChunkComponent; ++i)
     {
         decltype(type->callbacks[i].move) callback = nullptr;
@@ -438,18 +438,18 @@ void cast_view(const sugoi_chunk_view_t& dstV, sugoi_chunk_t* srcC, EIndex srcSt
 {
     archetype_t* srcType = srcC->structure;
     archetype_t* dstType = dstV.chunk->structure;
-    EIndex* srcOffsets = srcType->offsets[srcC->pt];
-    EIndex* dstOffsets = dstType->offsets[dstV.chunk->pt];
-    uint32_t* srcSizes = srcType->sizes;
-    uint32_t* srcAligns = srcType->aligns;
-    uint32_t* dstAligns = dstType->aligns;
-    uint32_t* dstSizes = dstType->sizes;
-    uint32_t* srcElemSizes = srcType->elemSizes;
-    uint32_t* dstElemSizes = dstType->elemSizes;
+    const auto* srcOffsets = srcType->offsets[srcC->pt];
+    const auto* dstOffsets = dstType->offsets[dstV.chunk->pt];
+    const auto* srcSizes = srcType->sizes;
+    const auto* srcAligns = srcType->aligns;
+    const auto* dstAligns = dstType->aligns;
+    const auto* dstSizes = dstType->sizes;
+    const auto* srcElemSizes = srcType->elemSizes;
+    const auto* dstElemSizes = dstType->elemSizes;
     sugoi_type_set_t srcTypes = srcType->type;
     sugoi_type_set_t dstTypes = dstType->type;
-    uint32_t* srcCallbackFlags = srcType->callbackFlags;
-    uint32_t* dstCallbackFlags = dstType->callbackFlags;
+    const auto* srcCallbackFlags = srcType->callbackFlags;
+    const auto* dstCallbackFlags = dstType->callbackFlags;
     uint32_t maskValue = uint32_t(1 << dstTypes.length) - 1;
     
     sugoi::bitset32* srcMasks = nullptr, *dstMasks = nullptr;
@@ -584,18 +584,18 @@ void duplicate_view(const sugoi_chunk_view_t& dstV, const sugoi_chunk_t* srcC, E
 {
     archetype_t* srcType = srcC->structure;
     archetype_t* dstType = dstV.chunk->structure;
-    EIndex* srcOffsets = srcType->offsets[srcC->pt];
-    EIndex* dstOffsets = dstType->offsets[dstV.chunk->pt];
-    uint32_t* srcSizes = srcType->sizes;
-    uint32_t* srcAligns = srcType->aligns;
-    uint32_t* dstAligns = dstType->aligns;
-    uint32_t* dstSizes = dstType->sizes;
-    uint32_t* srcElemSizes = srcType->elemSizes;
-    uint32_t* dstElemSizes = dstType->elemSizes;
+    const auto* srcOffsets = srcType->offsets[srcC->pt];
+    const auto* dstOffsets = dstType->offsets[dstV.chunk->pt];
+    const auto* srcSizes = srcType->sizes;
+    const auto* srcAligns = srcType->aligns;
+    const auto* dstAligns = dstType->aligns;
+    const auto* dstSizes = dstType->sizes;
+    const auto* srcElemSizes = srcType->elemSizes;
+    const auto* dstElemSizes = dstType->elemSizes;
     sugoi_type_set_t srcTypes = srcType->type;
     sugoi_type_set_t dstTypes = dstType->type;
-    uint32_t* srcCallbackFlags = srcType->callbackFlags;
-    uint32_t* dstCallbackFlags = dstType->callbackFlags;
+    const auto* srcCallbackFlags = srcType->callbackFlags;
+    const auto* dstCallbackFlags = dstType->callbackFlags;
     uint32_t maskValue = uint32_t(1 << dstTypes.length) - 1;
     
     sugoi::bitset32* srcMasks = nullptr, *dstMasks = nullptr;
@@ -680,13 +680,13 @@ void clone_view(const sugoi_chunk_view_t& dstV, const sugoi_chunk_t* srcC, EInde
 {
     archetype_t* srcType = srcC->structure;
     archetype_t* dstType = dstV.chunk->structure;
-    EIndex* srcOffsets = srcType->offsets[srcC->pt];
-    EIndex* dstOffsets = dstType->offsets[dstV.chunk->pt];
-    uint32_t* srcSizes = srcType->sizes;
-    uint32_t* srcAligns = srcType->aligns;
-    uint32_t* srcElemSizes = srcType->elemSizes;
+    const auto* srcOffsets = srcType->offsets[srcC->pt];
+    const auto* dstOffsets = dstType->offsets[dstV.chunk->pt];
+    const auto* srcSizes = srcType->sizes;
+    const auto* srcAligns = srcType->aligns;
+    const auto* srcElemSizes = srcType->elemSizes;
     sugoi_type_set_t srcTypes = srcType->type;
-    uint32_t* srcCallbackFlags = srcType->callbackFlags;
+    const auto* srcCallbackFlags = srcType->callbackFlags;
     
     for(uint32_t i = 0; i < srcType->firstChunkComponent; ++i)
     {
