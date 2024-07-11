@@ -9,18 +9,12 @@
 namespace skr::anim
 {
 
-sreflect_struct("guid": "C387FD0E-83BE-4617-9A79-589862F3F941") 
-sattr("serialize" : "bin")
-SkinBlobView {
-    skr::SerializeConstString                            name;
-    skr::SerializeConstVector<skr::SerializeConstString> joint_remaps;
-    skr::SerializeConstVector<skr_float4x4_t>            inverse_bind_poses;
-};
-
 sreflect_struct("guid" : "332C6133-7222-4B88-9B2F-E4336A46DF2C")
 sattr("serialize" : "bin")
 SkinResource {
-    SkinBlobView blob;
+    skr::SerializeConstString                            name;
+    skr::SerializeConstVector<skr::SerializeConstString> joint_remaps;
+    skr::SerializeConstVector<skr_float4x4_t>            inverse_bind_poses;
 };
 
 } // namespace skr::anim

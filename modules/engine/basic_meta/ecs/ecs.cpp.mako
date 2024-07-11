@@ -29,6 +29,7 @@ SKR_EXEC_STATIC_CTOR
     resource_fields_offset = tools.make_field_offset_list(record, tools.filter_resource_handle, codegen_db)
 %>\
         sugoi_type_description_t desc;
+        desc.name = u8"${record.name}";
 
         // guid
         desc.guid = u8"${record.generator_data["guid"]}"_guid;

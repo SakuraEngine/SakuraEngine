@@ -47,7 +47,7 @@ bool ReadTrait<${record.name}>::Read(SBinaryReader* archive, ${record.name}& rec
 %endif
 %endfor
 
-    return false;
+    return true;
 }
 bool WriteTrait<${record.name}>::Write(SBinaryWriter* archive, const ${record.name}& record)
 {

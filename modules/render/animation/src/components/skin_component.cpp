@@ -28,12 +28,12 @@ void skr_init_skin_component(skr::anim::SkinComponent* component, const skr::ani
     if(!skin)
         return;
     SKR_ASSERT(skeleton);
-    component->joint_remaps.resize_zeroed(skin->blob.joint_remaps.size());
-    for (size_t i = 0; i < skin->blob.joint_remaps.size(); ++i)
+    component->joint_remaps.resize_zeroed(skin->joint_remaps.size());
+    for (size_t i = 0; i < skin->joint_remaps.size(); ++i)
     {
         for (size_t j = 0; j < skeleton->skeleton.num_joints(); ++j)
         {
-            auto remap = (const char*)skin->blob.joint_remaps[i].raw().data();
+            auto remap = (const char*)skin->joint_remaps[i].raw().data();
             if (strcmp(skeleton->skeleton.joint_names()[j], remap) == 0)
             {
                 component->joint_remaps[i] = static_cast<uint32_t>(j);
@@ -209,7 +209,7 @@ void skr_cpu_skin(skr::anim::SkinComponent* skin, const skr::anim::AnimComponent
         skin->skin_matrices.resize_zeroed(anim->joint_matrices.size());
         for(size_t i = 0; i < skin->joint_remaps.size(); ++i)
         {
-            auto inverse = skin_resource->blob.inverse_bind_poses[i];
+            auto inverse = skin_resource->inverse_bind_poses[i];
             skin->skin_matrices[i] = anim->joint_matrices[skin->joint_remaps[i]] * (ozz::math::Float4x4&)inverse;
         }
         job.joint_matrices = { skin->skin_matrices.data(), skin->skin_matrices.size() };

@@ -111,7 +111,7 @@ MaterialResource {
     uint32_t                   material_type_version;
     skr_material_type_handle_t material_type;
 
-    skr_material_overrides_t overrides;
+    MaterialOverrides overrides;
 
     typedef struct installed_shader {
         skr_platform_shader_identifier_t identifier;

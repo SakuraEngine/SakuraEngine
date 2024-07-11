@@ -53,13 +53,11 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
     ctx->AddRuntimeDependency(runtime_material.material_type.get_guid());
     const auto& rhandle = ctx->GetStaticDependency(idx);
     auto matType= static_cast<skr_material_type_resource_t*>(rhandle.get_ptr());
-    auto blob = skr::make_blob_builder<skr_material_overrides_t>();
-    
     // calculate switch macros for material & place variants
     for (auto& pass : matType->passes)
     for (auto& shader_resource : pass.shader_resources)
     {
-        auto& variant = blob.switch_variants.add_default().ref(); 
+        auto& variant = runtime_material.overrides.switch_variants.add_default().ref(); 
 
         shader_resource.resolve(false, nullptr);
         // initiate static switches to a permutation in shader collection 
@@ -127,58 +125,65 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
         {
             case EMaterialPropertyType::BOOL:
             {
-                auto vblob = skr::make_blob_builder<skr_material_value_bool_t>();
-                vblob.slot_name = prop.slot_name;
-                vblob.value = (bool)prop.value;
-                blob.bools.add(vblob);
+                MaterialValueBool value = {
+                    .slot_name = prop.slot_name,
+                    .value = (bool)prop.value
+                };
+                runtime_material.overrides.bools.add(value);
             }
             break;
             case EMaterialPropertyType::FLOAT:
             {
-                auto vblob = skr::make_blob_builder<skr_material_value_float_t>();
-                vblob.slot_name = prop.slot_name;
-                vblob.value = (float)prop.value;
-                blob.floats.add(vblob);
+                MaterialValueFloat value = {
+                    .slot_name = prop.slot_name,
+                    .value = (float)prop.value
+                };
+                runtime_material.overrides.floats.add(value);
             }
             break;
             case EMaterialPropertyType::FLOAT2:
             {
-                auto vblob = skr::make_blob_builder<skr_material_value_float2_t>();
-                vblob.slot_name = prop.slot_name;
-                vblob.value = { (float)prop.vec.x, (float)prop.vec.y };
-                blob.float2s.add(vblob);
+                MaterialValueFloat2 value = {
+                    .slot_name = prop.slot_name,
+                    .value = { (float)prop.vec.x, (float)prop.vec.y }
+                };
+                runtime_material.overrides.float2s.add(value);
             }
             break;
             case EMaterialPropertyType::FLOAT3:
             {
-                auto vblob = skr::make_blob_builder<skr_material_value_float3_t>();
-                vblob.slot_name = prop.slot_name;
-                vblob.value = { (float)prop.vec.x, (float)prop.vec.y, (float)prop.vec.z };
-                blob.float3s.add(vblob);
+                MaterialValueFloat3 value = {
+                    .slot_name = prop.slot_name,
+                    .value = { (float)prop.vec.x, (float)prop.vec.y, (float)prop.vec.z }
+                };
+                runtime_material.overrides.float3s.add(value);
             }
             break;
             case EMaterialPropertyType::FLOAT4:
             {
-                auto vblob = skr::make_blob_builder<skr_material_value_float4_t>();
-                vblob.slot_name = prop.slot_name;
-                vblob.value = { (float)prop.vec.x, (float)prop.vec.y, (float)prop.vec.z, (float)prop.vec.w };
-                blob.float4s.add(vblob);
+                MaterialValueFloat4 value = {
+                    .slot_name = prop.slot_name,
+                    .value = { (float)prop.vec.x, (float)prop.vec.y, (float)prop.vec.z, (float)prop.vec.w }
+                };
+                runtime_material.overrides.float4s.add(value);
             }
             break;
             case EMaterialPropertyType::DOUBLE:
             {
-                auto vblob = skr::make_blob_builder<skr_material_value_double_t>();
-                vblob.slot_name = prop.slot_name;
-                vblob.value = prop.value;
-                blob.doubles.add(vblob);
+                MaterialValueDouble value = {
+                    .slot_name = prop.slot_name,
+                    .value = (double)prop.value
+                };
+                runtime_material.overrides.doubles.add(value);
             }
             break;
             case EMaterialPropertyType::TEXTURE:
             {
-                auto vblob = skr::make_blob_builder<skr_material_value_texture_t>();
-                vblob.slot_name = prop.slot_name;
-                vblob.value = prop.resource.get_guid();
-                blob.textures.add(vblob);
+                MaterialValueTexture value = {
+                    .slot_name = prop.slot_name,
+                    .value = prop.resource.get_guid()
+                };
+                runtime_material.overrides.textures.add(value);
 
                 // Add runtime resource dependency
                 ctx->AddRuntimeDependency(prop.resource.get_guid());
@@ -186,10 +191,11 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
             break;
             case EMaterialPropertyType::SAMPLER:
             {
-                auto vblob = skr::make_blob_builder<skr_material_value_sampler_t>();
-                vblob.slot_name = prop.slot_name;
-                vblob.value = prop.resource.get_guid();
-                blob.samplers.add(vblob);
+                MaterialValueSampler value = {
+                    .slot_name = prop.slot_name,
+                    .value = prop.resource.get_guid()
+                };
+                runtime_material.overrides.samplers.add(value);
 
                 // Add runtime resource dependency
                 ctx->AddRuntimeDependency(prop.resource.get_guid());
@@ -207,9 +213,6 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
             break;
         }
     }
-
-    runtime_material.arena = skr::binary::make_arena<skr_material_overrides_t>(runtime_material.overrides, blob);
-
     return ctx->Save(runtime_material);
 }
 }
