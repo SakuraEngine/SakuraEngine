@@ -8,114 +8,6 @@
 #include "SkrSerde/binary/reader.h"
 #include <cmath>
 
-// blob arena
-skr_blob_arena_t::skr_blob_arena_t()
-    : buffer(nullptr)
-    , _base(0)
-    , align(0)
-    , offset(0)
-    , capacity(0)
-{
-}
-
-skr_blob_arena_t::skr_blob_arena_t(void* buffer, uint64_t base, uint32_t size, uint32_t align)
-    : buffer(buffer)
-    , _base(base)
-    , align(align)
-    , offset(size)
-    , capacity(size)
-{
-}
-
-skr_blob_arena_t::skr_blob_arena_t(skr_blob_arena_t&& other)
-    : buffer(other.buffer)
-    , _base(other._base)
-    , align(other.align)
-    , offset(other.offset)
-    , capacity(other.capacity)
-{
-    other.buffer   = nullptr;
-    other._base    = 0;
-    other.offset   = 0;
-    other.capacity = 0;
-}
-
-skr_blob_arena_t& skr_blob_arena_t::operator=(skr_blob_arena_t&& other)
-{
-    buffer         = other.buffer;
-    _base          = other._base;
-    align          = other.align;
-    offset         = other.offset;
-    capacity       = other.capacity;
-    other.buffer   = nullptr;
-    other._base    = 0;
-    other.offset   = 0;
-    other.capacity = 0;
-    return *this;
-}
-
-skr_blob_arena_t::~skr_blob_arena_t()
-{
-#ifdef SKR_BLOB_ARENA_CHECK
-    SKR_ASSERT(size == 0);
-#endif
-    if (buffer)
-        sakura_free_aligned(buffer, align);
-}
-
-#ifdef SKR_BLOB_ARENA_CHECK
-void skr_blob_arena_t::release(size_t size) { this->size -= size; }
-#endif
-skr_blob_arena_builder_t::skr_blob_arena_builder_t(size_t align)
-    : buffer(nullptr)
-    , bufferAlign(align)
-    , offset(0)
-    , capacity(0)
-{
-}
-
-skr_blob_arena_builder_t::~skr_blob_arena_builder_t()
-{
-    if (buffer)
-    {
-        sakura_free_aligned(buffer, bufferAlign);
-    }
-}
-
-skr_blob_arena_t skr_blob_arena_builder_t::build()
-{
-    skr_blob_arena_t arena(buffer, 0, (uint32_t)offset, (uint32_t)bufferAlign);
-    buffer   = nullptr;
-    offset   = 0;
-    capacity = 0;
-    return arena;
-}
-
-size_t skr_blob_arena_builder_t::allocate(size_t size, size_t align)
-{
-    void* ptr = (char*)buffer + offset;
-    // alignup ptr
-    ptr                = (void*)(((size_t)ptr + align - 1) & ~(align - 1));
-    uint32_t retOffset = (uint32_t)((char*)ptr - (char*)buffer);
-    if (retOffset + size > capacity)
-    {
-        size_t new_capacity = capacity * 2;
-        if (new_capacity < retOffset + size)
-            new_capacity = retOffset + size;
-        SKR_ASSERT(align <= bufferAlign);
-        void* new_buffer = sakura_malloc_aligned(new_capacity, bufferAlign);
-        if (buffer)
-        {
-            memcpy(new_buffer, buffer, offset);
-            sakura_free_aligned(buffer, bufferAlign);
-        }
-        buffer   = new_buffer;
-        capacity = new_capacity;
-    }
-    offset = retOffset + size;
-    return retOffset;
-}
-
 namespace skr::binary
 {
 // primitive types
@@ -275,36 +167,6 @@ bool ReadTrait<skr::BlobId>::Read(SBinaryReader* reader, skr::BlobId& out_blob)
     return true;
 }
 
-bool ReadTrait<skr_blob_arena_t>::Read(SBinaryReader* reader, skr_blob_arena_t& arena)
-{
-    uint32_t size;
-    if (!ReadTrait<uint32_t>::Read(reader, size))
-    {
-        SKR_LOG_FATAL(u8"failed to read blob arena size!");
-        return false;
-    }
-    if (size == 0)
-    {
-        arena = skr_blob_arena_t(nullptr, 0, 0, 0);
-        return true;
-    }
-    uint32_t align;
-    if (!ReadTrait<uint32_t>::Read(reader, align))
-    {
-        SKR_LOG_FATAL(u8"failed to read blob arena alignment!");
-        return false;
-    }
-    else
-    {
-        // FIXME: fix 0 alignment during serialization
-        SKR_ASSERT(align != 0);
-        align        = (align == 0) ? 1u : align;
-        void* buffer = sakura_malloc_aligned(size, align);
-        arena        = skr_blob_arena_t(buffer, 0, size, align);
-        return true;
-    }
-}
-
 bool ReadTrait<skr::String>::Read(SBinaryReader* reader, skr::String& str)
 {
     uint32_t size;
@@ -324,33 +186,4 @@ bool ReadTrait<skr::String>::Read(SBinaryReader* reader, skr::String& str)
     return true;
 }
 
-bool ReadTrait<skr::StringView>::Read(SBinaryReader* reader, skr_blob_arena_t& arena, skr::StringView& str)
-{
-    uint32_t size;
-    uint32_t offset;
-    if (!ReadTrait<uint32_t>::Read(reader, size))
-        return false;
-    if (size == 0)
-    {
-        str = skr::StringView();
-        return true;
-    }
-    if (!ReadTrait<uint32_t>::Read(reader, offset))
-    {
-        SKR_LOG_FATAL(u8"failed to read string buffer size (inside arena)!");
-        return false;
-    }
-
-    auto strbuf_start = (char8_t*)arena.get_buffer() + offset;
-    if (!ReadBytes(reader, strbuf_start, size))
-    {
-        SKR_LOG_FATAL(u8"failed to read string buffer content (inside arena)!");
-        return false;
-    }
-
-    auto ptr = const_cast<char8_t*>(strbuf_start + size);
-    *ptr     = u8'\0';
-    str      = skr::StringView(strbuf_start, (int32_t)size);
-    return true;
-}
 } // namespace skr::binary

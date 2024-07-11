@@ -85,14 +85,6 @@ struct argument_formatter<skr_guid_t> {
 
 } // namespace ostr
 
-namespace skr::binary
-{
-template <>
-struct BlobBuilderType<skr::StringView> {
-    using type = skr::String;
-};
-} // namespace skr::binary
-
 // binary reader
 namespace skr
 {
@@ -101,11 +93,6 @@ namespace binary
 template <>
 struct SKR_STATIC_API ReadTrait<skr::String> {
     static bool Read(SBinaryReader* reader, skr::String& str);
-};
-
-template <>
-struct SKR_STATIC_API ReadTrait<skr::StringView> {
-    static bool Read(SBinaryReader* reader, skr_blob_arena_t& arena, skr::StringView& str);
 };
 } // namespace binary
 } // namespace skr
@@ -124,7 +111,6 @@ struct SKR_STATIC_API WriteTrait<skr::String> {
 template <>
 struct SKR_STATIC_API WriteTrait<skr::StringView> {
     static bool Write(SBinaryWriter* writer, const skr::StringView& str);
-    static bool Write(SBinaryWriter* writer, skr_blob_arena_t& arena, const skr::StringView& str);
 };
 
 } // namespace binary

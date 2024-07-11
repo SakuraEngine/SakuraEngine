@@ -46,8 +46,6 @@ template <class T, class... Args>
 bool Write(SBinaryWriter* writer, const T& value, Args&&... args);
 template <class T, class... Args>
 bool Archive(SBinaryWriter* writer, const T& value, Args&&... args);
-template <class T, class... Args>
-bool ArchiveBlob(SBinaryWriter* writer, skr_blob_arena_t& arena, const T& value, Args&&... args);
 
 }; // namespace skr::binary
 
@@ -163,10 +161,6 @@ struct SKR_STATIC_API WriteTrait<skr::IBlob*> {
 template <>
 struct SKR_STATIC_API WriteTrait<skr::BlobId> {
     static bool Write(SBinaryWriter* writer, const skr::BlobId& blob);
-};
-template <>
-struct SKR_STATIC_API WriteTrait<skr_blob_arena_t> {
-    static bool Write(SBinaryWriter* writer, const skr_blob_arena_t& blob);
 };
 } // namespace skr::binary
 

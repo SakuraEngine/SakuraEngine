@@ -11,17 +11,6 @@ template <typename T, size_t Extent = skr::container::kDynamicExtent>
 using span = container::Span<T, size_t, Extent>;
 }
 
-namespace skr::binary
-{
-template <class T>
-struct BlobBuilderType<skr::span<T>> {
-    using type = skr::Vector<typename BlobBuilderType<T>::type>;
-};
-struct SpanSerdeConfig {
-    uint32_t maxSize;
-};
-} // namespace skr::binary
-
 // binary reader
 namespace skr::binary
 {
@@ -32,27 +21,6 @@ struct ReadTrait<skr::span<T>> {
         for (auto& v : span)
         {
             if (!skr::binary::Archive(archive, v))
-                return false;
-        }
-        return true;
-    }
-
-    static bool Read(SBinaryReader* archive, skr_blob_arena_t& arena, skr::span<T>& span)
-    {
-        // static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
-        uint32_t count = 0;
-        SKR_ARCHIVE(count);
-        if (count == 0)
-        {
-            span = skr::span<T>();
-            return true;
-        }
-        uint32_t offset = 0;
-        SKR_ARCHIVE(offset);
-        span = skr::span<T>((T*)((char*)arena.get_buffer() + offset), count);
-        for (int i = 0; i < span.size(); ++i)
-        {
-            if (!skr::binary::ArchiveBlob(archive, arena, span[i]))
                 return false;
         }
         return true;
@@ -132,26 +100,6 @@ struct WriteTrait<skr::span<T>> {
         for (const T& value : span)
         {
             if (!skr::binary::Archive(writer, value))
-                return false;
-        }
-        return true;
-    }
-    static bool Write(SBinaryWriter* writer, skr_blob_arena_t& arena, const skr::span<T>& span)
-    {
-        auto ptr    = (char*)span.data();
-        auto buffer = (char*)arena.get_buffer();
-        SKR_ASSERT(ptr >= buffer);
-        uint32_t offset = (uint32_t)(ptr - buffer);
-        SKR_ASSERT(!arena.get_size() || (offset < arena.get_size()) || span.empty());
-        if (!skr::binary::Archive(writer, (uint32_t)span.size()))
-            return false;
-        if (span.empty())
-            return 0;
-        if (!skr::binary::Archive(writer, offset))
-            return false;
-        for (int i = 0; i < span.size(); ++i)
-        {
-            if (!skr::binary::ArchiveBlob(writer, arena, span[i]))
                 return false;
         }
         return true;

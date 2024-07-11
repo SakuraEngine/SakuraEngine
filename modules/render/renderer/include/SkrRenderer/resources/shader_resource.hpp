@@ -133,10 +133,3 @@ struct SKR_RENDERER_API SShaderResourceFactory : public resource::SResourceFacto
 };
 } // namespace renderer
 } // namespace skr
-namespace skr::binary
-{
-template <>
-struct BlobBuilderType<skr_stable_shader_hash_t> {
-    using type = skr_stable_shader_hash_t;
-};
-} // namespace skr::binary

@@ -4,7 +4,6 @@
 #include "SkrCore/log.h"
 #include "SkrSerde/binary/reader.h"
 #include "SkrSerde/binary/writer.h"
-#include "SkrSerde/binary/blob.h"
 #include "SkrProfile/profile.h"
 #include "SkrSerde/blob.h"
 

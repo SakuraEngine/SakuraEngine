@@ -44,8 +44,6 @@ template <class T, class... Args>
 bool Read(SBinaryReader* reader, T&& value, Args&&... args);
 template <class T, class... Args>
 bool Archive(SBinaryReader* reader, T&& value, Args&&... args);
-template <class T, class... Args>
-bool ArchiveBlob(SBinaryReader* reader, skr_blob_arena_t& arena, T&& value, Args&&... args);
 } // namespace skr::binary
 
 // primitive types
@@ -152,10 +150,6 @@ struct SKR_STATIC_API ReadTrait<skr::IBlob*> {
 template <>
 struct SKR_STATIC_API ReadTrait<skr::BlobId> {
     static bool Read(SBinaryReader* reader, BlobId& blob);
-};
-template <>
-struct SKR_STATIC_API ReadTrait<skr_blob_arena_t> {
-    static bool Read(SBinaryReader* reader, skr_blob_arena_t& blob);
 };
 } // namespace skr::binary
 
