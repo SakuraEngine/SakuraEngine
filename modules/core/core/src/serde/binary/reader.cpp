@@ -106,12 +106,12 @@ bool ReadTrait<skr_quaternion_t>::Read(SBinaryReader* reader, skr_quaternion_t& 
 
 bool ReadTrait<skr_md5_t>::Read(SBinaryReader* reader, skr_md5_t& md5)
 {
-    return ReadBytes(reader, &md5, sizeof(md5));
+    return reader->read(&md5, sizeof(md5));
 }
 
 bool ReadTrait<skr_guid_t>::Read(SBinaryReader* reader, skr_guid_t& guid)
 {
-    return ReadBytes(reader, &guid, sizeof(guid));
+    return reader->read(&guid, sizeof(guid));
 }
 
 bool ReadBlob(SBinaryReader* reader, skr::BlobId& out_id)
@@ -130,7 +130,7 @@ bool ReadBlob(SBinaryReader* reader, skr::BlobId& out_id)
         return false;
     }
 
-    if (!ReadBytes(reader, blob->get_data(), blob->get_size()))
+    if (!reader->read(blob->get_data(), blob->get_size()))
     {
         SKR_LOG_FATAL(u8"failed to read blob content!");
         return false;
@@ -177,7 +177,7 @@ bool ReadTrait<skr::String>::Read(SBinaryReader* reader, skr::String& str)
     }
     skr::InlineVector<char8_t, 64> temp;
     temp.resize_default(size);
-    if (!ReadBytes(reader, (void*)temp.data(), temp.size()))
+    if (!reader->read((void*)temp.data(), temp.size()))
     {
         SKR_LOG_FATAL(u8"failed to read string buffer size!");
         return false;

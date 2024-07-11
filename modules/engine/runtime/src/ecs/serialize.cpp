@@ -13,15 +13,15 @@
 #include "./utilities.hpp"
 
 template <class T>
-static void ArchiveBuffer(SBinaryWriter* writer, const T* buffer, uint32_t count)
+static void WriteBuffer(SBinaryWriter* writer, const T* buffer, uint32_t count)
 {
-    skr::binary::WriteBytes(writer, (const void*)buffer, sizeof(T) * count);
+    writer->write((const void*)buffer, sizeof(T) * count);
 }
 
 template <class T>
-static void ArchiveBuffer(SBinaryReader* reader, T* buffer, uint32_t count)
+static void ReadBuffer(SBinaryReader* reader, T* buffer, uint32_t count)
 {
-    skr::binary::ReadBytes(reader, (void*)buffer, sizeof(T) * count);
+    reader->read((void*)buffer, sizeof(T) * count);
 }
 
 static void serialize_impl(const sugoi_chunk_view_t& view, sugoi_type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, SBinaryWriter* s, SBinaryReader* ds, void (*serialize)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryWriter* writer), void (*deserialize)(sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryReader* writer))
@@ -45,7 +45,7 @@ static void serialize_impl(const sugoi_chunk_view_t& view, sugoi_type_index_t ty
                 if (serialize)
                     serialize(view.chunk, view.start + i, (char*)array->BeginX, (EIndex)(length / elemSize), s);
                 else
-                    ArchiveBuffer(s, (uint8_t*)array->BeginX, static_cast<uint32_t>(length));
+                    WriteBuffer(s, (uint8_t*)array->BeginX, static_cast<uint32_t>(length));
             }
         }
         else
@@ -70,7 +70,7 @@ static void serialize_impl(const sugoi_chunk_view_t& view, sugoi_type_index_t ty
                 if (deserialize)
                     deserialize(view.chunk, view.start + i, (char*)array->BeginX, (EIndex)length, ds);
                 else
-                    ArchiveBuffer(ds, (uint8_t*)array->BeginX, length);
+                    ReadBuffer(ds, (uint8_t*)array->BeginX, length);
             }
         }
     }
@@ -81,14 +81,14 @@ static void serialize_impl(const sugoi_chunk_view_t& view, sugoi_type_index_t ty
             if (serialize)
                 serialize(view.chunk, view.start, src, view.count, s);
             else
-                ArchiveBuffer(s, src, size * view.count);
+                WriteBuffer(s, src, size * view.count);
         }
         else
         {
             if (deserialize)
                 deserialize(view.chunk, view.start, src, view.count, ds);
             else
-                ArchiveBuffer(ds, src, size * view.count);
+                ReadBuffer(ds, src, size * view.count);
         }
     }
 }
@@ -113,9 +113,9 @@ void sugoi_storage_t::serialize_view(sugoi_group_t* group, sugoi_chunk_view_t& v
     if (withEntities)
     {
         if (s)
-            ArchiveBuffer(s, view.chunk->get_entities() + view.start, view.count);
+            WriteBuffer(s, view.chunk->get_entities() + view.start, view.count);
         else
-            ArchiveBuffer(ds, view.chunk->get_entities() + view.start, view.count);
+            ReadBuffer(ds, view.chunk->get_entities() + view.start, view.count);
     }
     for (SIndex i = 0; i < type->firstChunkComponent; ++i)
         serialize_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], s, ds, type->callbacks[i].serialize, type->callbacks[i].deserialize);
@@ -137,7 +137,7 @@ void sugoi_storage_t::serialize_type(const sugoi_entity_type_t& type, SBinaryWri
     if (keepMeta)
     {
         bin::Write(s, type.meta.length);
-        ArchiveBuffer(s, type.meta.data, type.meta.length);
+        WriteBuffer(s, type.meta.data, type.meta.length);
     }
 }
 
@@ -149,7 +149,7 @@ sugoi_entity_type_t sugoi_storage_t::deserialize_type(sugoi::fixed_stack_t& stac
     sugoi_entity_type_t type = {};
     bin::Read(s, type.type.length);
     auto guids = stack.allocate<guid_t>(type.type.length);
-    ArchiveBuffer(s, guids, type.type.length);
+    ReadBuffer(s, guids, type.type.length);
     type.type.data = stack.allocate<sugoi_type_index_t>(type.type.length);
     auto& reg      = TypeRegistry::get();
     forloop (i, 0, type.type.length) // todo: check type existence
@@ -162,7 +162,7 @@ sugoi_entity_type_t sugoi_storage_t::deserialize_type(sugoi::fixed_stack_t& stac
         {
             // todo: how to patch meta? guid?
             type.meta.data = stack.allocate<sugoi_entity_t>(type.meta.length);
-            ArchiveBuffer(s, type.meta.data, type.meta.length);
+            ReadBuffer(s, type.meta.data, type.meta.length);
             std::sort((sugoi_entity_t*)type.meta.data, (sugoi_entity_t*)type.meta.data + type.meta.length);
         }
     }
@@ -264,7 +264,7 @@ void sugoi_storage_t::serialize(SBinaryWriter* s)
         SkrZoneScopedN("serialize entities");
         bin::Write(s, (uint32_t)pimpl->entity_registry.entries.size());
         bin::Write(s, (uint32_t)pimpl->entity_registry.freeEntries.size());
-        ArchiveBuffer(s, pimpl->entity_registry.freeEntries.data(), static_cast<uint32_t>(pimpl->entity_registry.freeEntries.size()));
+        WriteBuffer(s, pimpl->entity_registry.freeEntries.data(), static_cast<uint32_t>(pimpl->entity_registry.freeEntries.size()));
     }
     bin::Write(s, (uint32_t)pimpl->groups.size());
     for (auto& pair : pimpl->groups)
@@ -300,7 +300,7 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
     uint32_t freeSize = 0;
     bin::Read(s, freeSize);
     pimpl->entity_registry.freeEntries.resize_default(freeSize);
-    ArchiveBuffer(s, pimpl->entity_registry.freeEntries.data(), freeSize);
+    ReadBuffer(s, pimpl->entity_registry.freeEntries.data(), freeSize);
     uint32_t groupSize = 0;
     bin::Read(s, groupSize);
     forloop (i, 0, groupSize)

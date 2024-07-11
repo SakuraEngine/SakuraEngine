@@ -35,10 +35,6 @@ struct SBinaryReader {
 // help functions
 namespace skr::binary
 {
-inline bool ReadBytes(SBinaryReader* reader, void* data, size_t size)
-{
-    return reader->read(data, size);
-}
 template <class T>
 bool Read(SBinaryReader* reader, T&& value);
 } // namespace skr::binary

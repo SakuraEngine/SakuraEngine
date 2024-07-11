@@ -36,10 +36,6 @@ struct SBinaryWriter {
 // helper functions
 namespace skr::binary
 {
-inline bool WriteBytes(SBinaryWriter* writer, const void* data, size_t size)
-{
-    return writer->write(data, size);
-}
 template <class T>
 bool Write(SBinaryWriter* writer, const T& value);
 }; // namespace skr::binary
