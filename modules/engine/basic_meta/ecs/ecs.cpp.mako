@@ -6,11 +6,11 @@
 
 // impl sugoi_id_of
 %for record in records:
-sugoi_type_index_t _sugoi_id_${str.replace(record.name, "::", "_")} = SUGOI_NULL_TYPE;
+static sugoi_type_index_t& _sugoi_id_${str.replace(record.name, "::", "_")}() { static sugoi_type_index_t val = SUGOI_NULL_TYPE; return val;  }
 sugoi_type_index_t sugoi_id_of<::${record.name}>::get()
 {
-    SKR_ASSERT(_sugoi_id_${str.replace(record.name, "::", "_")} != SUGOI_NULL_TYPE);
-    return _sugoi_id_${str.replace(record.name, "::", "_")};
+    SKR_ASSERT(_sugoi_id_${str.replace(record.name, "::", "_")}() != SUGOI_NULL_TYPE);
+    return _sugoi_id_${str.replace(record.name, "::", "_")}();
 }
 %endfor
 
@@ -81,7 +81,7 @@ SKR_EXEC_STATIC_CTOR
         // check managed
         ::sugoi::check_managed(desc, skr::type_t<${record.name}>{});
 
-        _sugoi_id_${str.replace(record.name, "::", "_")} = sugoiT_register_type(&desc);
+        _sugoi_id_${str.replace(record.name, "::", "_")}() = sugoiT_register_type(&desc);
     }
 %endfor
 };
