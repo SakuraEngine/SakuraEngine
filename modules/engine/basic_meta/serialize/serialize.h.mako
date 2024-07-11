@@ -1,6 +1,6 @@
 // BEGIN SERIALIZE GENERATED
 #include "SkrBase/types.h"
-#include "SkrSerde/blob.h"
+#include "SkrCore/blob.hpp"
 #include "SkrSerde/json/reader.h"
 #include "SkrSerde/json/writer.h"
 

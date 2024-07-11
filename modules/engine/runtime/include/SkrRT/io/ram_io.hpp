@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/io/io.h"
-#include "SkrSerde/blob.h"
+#include "SkrCore/blob.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service)
 

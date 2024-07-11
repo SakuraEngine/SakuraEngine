@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrBase/misc/traits.hpp"
 #include "SkrBase/types.h"
-#include "SkrSerde/blob.h"
+#include "SkrCore/blob.hpp"
 
 // writer
 struct SBinaryWriter {

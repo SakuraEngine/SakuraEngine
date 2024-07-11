@@ -5,7 +5,7 @@
 #include "SkrSerde/binary/reader.h"
 #include "SkrSerde/binary/writer.h"
 #include "SkrProfile/profile.h"
-#include "SkrSerde/blob.h"
+#include "SkrCore/blob.hpp"
 
 [[maybe_unused]] static const char8_t* BinaryArrayBinaryFieldArchiveFailedFormat = u8"[SERDE/BIN] Failed to %s %s.%s[%d]: %d";
 [[maybe_unused]] static const char8_t* BinaryFieldArchiveFailedFormat = u8"[SERDE/BIN] Failed to %s %s.%s: %d";

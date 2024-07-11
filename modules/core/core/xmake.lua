@@ -40,8 +40,6 @@ shared_module("SkrCore", "SKR_CORE", engine_version)
     add_files("src/core/build.*.c", "src/core/build.*.cpp")
     -- rttr
     add_files("src/rttr/build.*.cpp")
-    -- serde
-    add_files("src/serde/export.*.cpp")
     
 --[[
 shared_pch("SkrCore")

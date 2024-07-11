@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/config.h"
 #include "SkrBase/config.h"
-#include "SkrSerde/blob.h"
+#include "SkrCore/blob.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr, IImageInterface, skr_image_interface)
 SKR_DECLARE_TYPE_ID_FWD(skr, IImageEncoder, skr_image_encoder)

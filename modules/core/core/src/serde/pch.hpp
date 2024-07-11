@@ -14,7 +14,6 @@
 
 #include "SkrRT/resource/resource_handle.h" // IWYU pragma: export
 #include "SkrSerde/binary/writer.h"         // IWYU pragma: export
-#include "SkrSerde/binary/blob.h"           // IWYU pragma: export
 #include "SkrSerde/json/reader.h"           // IWYU pragma: export
 #include "SkrSerde/json/writer.h"           // IWYU pragma: export
 

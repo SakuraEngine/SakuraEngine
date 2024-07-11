@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/types.h"
-#include "SkrSerde/blob.h"
+#include "SkrCore/blob.hpp"
 
 // reader
 struct SBinaryReader {

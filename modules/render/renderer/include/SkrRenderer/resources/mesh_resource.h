@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrRenderer/fwd_types.h"
-#include "SkrSerde/blob.h"
+#include "SkrCore/blob.hpp"
 #include "SkrBase/meta.h"
 
 #include <SkrContainers/string.hpp>
