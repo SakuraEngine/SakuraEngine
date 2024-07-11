@@ -6,13 +6,13 @@ bool skr_resource_header_t::ReadWithoutDeps(SBinaryReader* reader)
 {
     namespace bin     = skr::binary;
     uint32_t function = 1;
-    if (!bin::Archive(reader, function))
+    if (!bin::Read(reader, function))
         return false;
-    if (!bin::Archive(reader, version))
+    if (!bin::Read(reader, version))
         return false;
-    if (!bin::Archive(reader, guid))
+    if (!bin::Read(reader, guid))
         return false;
-    if (!bin::Archive(reader, type))
+    if (!bin::Read(reader, type))
         return false;
     return true;
 }
@@ -25,12 +25,12 @@ bool ReadTrait<skr_resource_header_t>::Read(SBinaryReader* reader, skr_resource_
     if (!header.ReadWithoutDeps(reader))
         return false;
     uint32_t size = 0;
-    if (!bin::Archive(reader, size))
+    if (!bin::Read(reader, size))
         return false;
     header.dependencies.resize_default(size);
     for (uint32_t i = 0; i < size; i++)
     {
-        if (!bin::Archive(reader, header.dependencies[i]))
+        if (!bin::Read(reader, header.dependencies[i]))
             return false;
     }
     return true;
@@ -40,20 +40,20 @@ bool WriteTrait<skr_resource_header_t>::Write(SBinaryWriter* writer, const skr_r
 {
     namespace bin     = skr::binary;
     uint32_t function = 1;
-    if (!bin::Archive(writer, function))
+    if (!bin::Write(writer, function))
         return false;
-    if (!bin::Archive(writer, header.version))
+    if (!bin::Write(writer, header.version))
         return false;
-    if (!bin::Archive(writer, header.guid))
+    if (!bin::Write(writer, header.guid))
         return false;
-    if (!bin::Archive(writer, header.type))
+    if (!bin::Write(writer, header.type))
         return false;
     const auto dependencies_size = (uint32_t)header.dependencies.size();
-    if (!bin::Archive(writer, dependencies_size))
+    if (!bin::Write(writer, dependencies_size))
         return false;
     for (auto& dep : header.dependencies)
     {
-        if (!bin::Archive(writer, dep))
+        if (!bin::Write(writer, dep))
             return false;
     }
     return true;

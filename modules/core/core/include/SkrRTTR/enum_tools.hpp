@@ -351,7 +351,7 @@ template <class T>
 struct ReadTrait<StronglyEnum<T>> {
     static bool Read(SBinaryReader* reader, StronglyEnum<T>& value)
     {
-        return skr::binary::Archive(reader, value.underlying_value());
+        return skr::binary::Read(reader, value.underlying_value());
     }
 };
 
@@ -359,7 +359,7 @@ template <class T>
 struct WriteTrait<StronglyEnum<T>> {
     static bool Write(SBinaryWriter* writer, const StronglyEnum<T>& value)
     {
-        return skr::binary::Archive(writer, value.underlying_value());
+        return skr::binary::Write(writer, value.underlying_value());
     }
 };
 } // namespace skr::binary

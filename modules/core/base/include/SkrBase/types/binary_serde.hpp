@@ -25,36 +25,29 @@ template <class T>
 constexpr bool is_complete_serde_v = is_complete_serde<T>();
 } // namespace skr
 
-// FUCK MSVC COMPILER
-SKR_EXTERN_C SKR_STATIC_API void skr_debug_output(const char* msg);
-
 struct SBinaryReader;
-
-namespace skr::binary
-{
-template <class T, class = void>
-struct ReadTrait;
-
-template <typename T>
-inline static constexpr bool HasReadTrait = requires(SBinaryReader* r, T& t) { ReadTrait<T>::Read(r, t); };
-
-template <class T>
-bool Archive(SBinaryReader* reader, T&& value)
-{
-    return ReadTrait<std::decay_t<T>>::Read(reader, value);
-}
-} // namespace skr::binary
-
 struct SBinaryWriter;
 
 namespace skr::binary
 {
+// read
+template <class T, class = void>
+struct ReadTrait;
+template <class T>
+bool Read(SBinaryReader* reader, T&& value)
+{
+    return ReadTrait<std::decay_t<T>>::Read(reader, value);
+}
+template <typename T>
+inline static constexpr bool HasReadTrait = requires(SBinaryReader* r, T& t) { ReadTrait<T>::Read(r, t); };
+
+// write
 template <class T, class = void>
 struct WriteTrait;
-
-template <class T, class... Args>
-bool Archive(SBinaryWriter* writer, const T& value, Args&&... args)
+template <class T>
+bool Write(SBinaryWriter* writer, const T& value)
 {
-    return WriteTrait<T>::Write(writer, value, std::forward<Args>(args)...);
+    return WriteTrait<T>::Write(writer, value);
 }
+
 } // namespace skr::binary

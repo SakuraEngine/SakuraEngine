@@ -121,7 +121,7 @@ struct ReadTrait<skr::resource::TResourceHandle<T>> {
     static bool Read(SBinaryReader* archive, skr::resource::TResourceHandle<T>& handle)
     {
         skr_guid_t guid;
-        if (!skr ::binary ::Archive(archive, (guid))) return false;
+        if (!skr ::binary ::Read(archive, (guid))) return false;
         handle.set_guid(guid);
         return true;
     }
@@ -146,7 +146,7 @@ struct WriteTrait<skr::resource::TResourceHandle<T>> {
     static bool Write(SBinaryWriter* binary, const skr::resource::TResourceHandle<T>& handle)
     {
         const auto& hdl = static_cast<const skr_resource_handle_t&>(handle);
-        return skr::binary::Archive(binary, hdl);
+        return skr::binary::Write(binary, hdl);
     }
 };
 

@@ -40,14 +40,14 @@ struct ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
     {
         skr::FlatHashMap<K, V, Hash, Eq> temp;
         uint32_t                         size;
-        if (!skr ::binary ::Archive(archive, (size))) return false;
+        if (!skr::binary::Read(archive, (size))) return false;
 
         for (uint32_t i = 0; i < size; ++i)
         {
             K key;
-            if (!skr ::binary ::Archive(archive, (key))) return false;
+            if (!skr::binary::Read(archive, (key))) return false;
             V value;
-            if (!skr ::binary ::Archive(archive, (value))) return false;
+            if (!skr::binary::Read(archive, (value))) return false;
             temp.insert({ std::move(key), std::move(value) });
         }
         map = std::move(temp);
@@ -59,11 +59,11 @@ template <class K, class V, class Hash, class Eq>
 struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
     static bool Write(SBinaryWriter* archive, const skr::FlatHashMap<K, V, Hash, Eq>& map)
     {
-        if (!skr ::binary ::Archive(archive, ((uint32_t)map.size()))) return false;
+        if (!skr::binary::Write(archive, ((uint32_t)map.size()))) return false;
         for (auto& pair : map)
         {
-            if (!skr ::binary ::Archive(archive, (pair.first))) return false;
-            if (!skr ::binary ::Archive(archive, (pair.second))) return false;
+            if (!skr::binary::Write(archive, (pair.first))) return false;
+            if (!skr::binary::Write(archive, (pair.second))) return false;
         }
         return true;
     }

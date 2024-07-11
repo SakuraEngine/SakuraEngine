@@ -40,8 +40,8 @@ static void serialize_impl(const sugoi_chunk_view_t& view, sugoi_type_index_t ty
                 auto     array   = (sugoi_array_comp_t*)((size_t)i * size + src);
                 intptr_t padding = ((char*)array->BeginX - (char*)(array + 1));
                 intptr_t length  = ((char*)array->EndX - (char*)array->BeginX);
-                bin::Archive(s, (uint32_t)padding);
-                bin::Archive(s, (uint32_t)length);
+                bin::Write(s, (uint32_t)padding);
+                bin::Write(s, (uint32_t)length);
                 if (serialize)
                     serialize(view.chunk, view.start + i, (char*)array->BeginX, (EIndex)(length / elemSize), s);
                 else
@@ -54,8 +54,8 @@ static void serialize_impl(const sugoi_chunk_view_t& view, sugoi_type_index_t ty
             {
                 auto     array   = (sugoi_array_comp_t*)((size_t)i * size + src);
                 uint32_t padding = 0, length = 0;
-                bin::Archive(ds, padding);
-                bin::Archive(ds, length);
+                bin::Read(ds, padding);
+                bin::Read(ds, length);
                 if (padding > elemSize) // array on heap
                 {
                     array->BeginX    = llvm_vecsmall::SmallVectorBase::allocate(length);
@@ -98,10 +98,10 @@ void sugoi_storage_t::serialize_view(sugoi_group_t* group, sugoi_chunk_view_t& v
     using namespace sugoi;
     namespace bin = skr::binary;
     if (s)
-        bin::Archive(s, view.count);
+        bin::Write(s, view.count);
     else
     {
-        bin::Archive(ds, view.count);
+        bin::Read(ds, view.count);
         SKR_ASSERT(view.count);
         view = allocateViewStrict(group, view.count);
     }
@@ -127,16 +127,16 @@ void sugoi_storage_t::serialize_type(const sugoi_entity_type_t& type, SBinaryWri
     namespace bin = skr::binary;
     // group is define by entity_type, so we just serialize it's type
     // todo: assert(s.is_serialize());
-    bin::Archive(s, type.type.length);
+    bin::Write(s, type.type.length);
     auto& reg = TypeRegistry::get();
     for (SIndex i = 0; i < type.type.length; i++)
     {
         auto tid = type_index_t(type.type.data[i]).index();
-        bin::Archive(s, reg.get_type_desc(tid)->guid);
+        bin::Write(s, reg.get_type_desc(tid)->guid);
     }
     if (keepMeta)
     {
-        bin::Archive(s, type.meta.length);
+        bin::Write(s, type.meta.length);
         ArchiveBuffer(s, type.meta.data, type.meta.length);
     }
 }
@@ -147,7 +147,7 @@ sugoi_entity_type_t sugoi_storage_t::deserialize_type(sugoi::fixed_stack_t& stac
     namespace bin = skr::binary;
     // deserialize type, and get/create group from it
     sugoi_entity_type_t type = {};
-    bin::Archive(s, type.type.length);
+    bin::Read(s, type.type.length);
     auto guids = stack.allocate<guid_t>(type.type.length);
     ArchiveBuffer(s, guids, type.type.length);
     type.type.data = stack.allocate<sugoi_type_index_t>(type.type.length);
@@ -157,7 +157,7 @@ sugoi_entity_type_t sugoi_storage_t::deserialize_type(sugoi::fixed_stack_t& stac
     std::sort((sugoi_type_index_t*)type.type.data, (sugoi_type_index_t*)type.type.data + type.type.length);
     if (keepMeta)
     {
-        bin::Archive(s, type.meta.length);
+        bin::Read(s, type.meta.length);
         if (type.meta.length > 0)
         {
             // todo: how to patch meta? guid?
@@ -198,7 +198,7 @@ void sugoi_storage_t::serialize_prefab(sugoi_entity_t e, SBinaryWriter* s)
 {
     using namespace sugoi;
     namespace bin = skr::binary;
-    bin::Archive(s, (EIndex)1);
+    bin::Write(s, (EIndex)1);
     if (pimpl->scheduler)
     {
         SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
@@ -211,7 +211,7 @@ void sugoi_storage_t::serialize_prefab(sugoi_entity_t* es, EIndex n, SBinaryWrit
 {
     using namespace sugoi;
     namespace bin = skr::binary;
-    bin::Archive(s, n);
+    bin::Write(s, n);
     if (pimpl->scheduler)
     {
         SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
@@ -231,7 +231,7 @@ sugoi_entity_t sugoi_storage_t::deserialize_prefab(SBinaryReader* s)
     if (pimpl->scheduler)
         SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
     EIndex count = 0;
-    bin::Archive(s, count);
+    bin::Read(s, count);
     // todo: assert(count > 0)
     if (count == 1)
     {
@@ -262,17 +262,17 @@ void sugoi_storage_t::serialize(SBinaryWriter* s)
     }
     {
         SkrZoneScopedN("serialize entities");
-        bin::Archive(s, (uint32_t)pimpl->entity_registry.entries.size());
-        bin::Archive(s, (uint32_t)pimpl->entity_registry.freeEntries.size());
+        bin::Write(s, (uint32_t)pimpl->entity_registry.entries.size());
+        bin::Write(s, (uint32_t)pimpl->entity_registry.freeEntries.size());
         ArchiveBuffer(s, pimpl->entity_registry.freeEntries.data(), static_cast<uint32_t>(pimpl->entity_registry.freeEntries.size()));
     }
-    bin::Archive(s, (uint32_t)pimpl->groups.size());
+    bin::Write(s, (uint32_t)pimpl->groups.size());
     for (auto& pair : pimpl->groups)
     {
         SkrZoneScopedN("serialize group");
         auto group = pair.second;
         serialize_type(group->type, s, true);
-        bin::Archive(s, (uint32_t)group->chunks.size());
+        bin::Write(s, (uint32_t)group->chunks.size());
         for (auto c : group->chunks)
         {
             SkrZoneScopedN("serialize chunk");
@@ -295,14 +295,14 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
     // empty storage expected
     SKR_ASSERT(pimpl->entity_registry.entries.size() == 0);
     uint32_t size = 0;
-    bin::Archive(s, size);
+    bin::Read(s, size);
     pimpl->entity_registry.entries.resize_default(size);
     uint32_t freeSize = 0;
-    bin::Archive(s, freeSize);
+    bin::Read(s, freeSize);
     pimpl->entity_registry.freeEntries.resize_default(freeSize);
     ArchiveBuffer(s, pimpl->entity_registry.freeEntries.data(), freeSize);
     uint32_t groupSize = 0;
-    bin::Archive(s, groupSize);
+    bin::Read(s, groupSize);
     forloop (i, 0, groupSize)
     {
         SkrZoneScopedN("deserialize group");
@@ -310,7 +310,7 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
         auto                type       = deserialize_type(localStack, s, true);
         auto                group      = constructGroup(type);
         uint32_t            chunkCount = 0;
-        bin::Archive(s, chunkCount);
+        bin::Read(s, chunkCount);
         forloop (j, 0, chunkCount)
         {
             SkrZoneScopedN("deserialize chunk");
@@ -320,9 +320,9 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
             forloop (k, 0, view.count)
             {
                 EntityRegistry::entry_t entry;
-                entry.chunk                     = view.chunk;
-                entry.indexInChunk              = k + view.start;
-                entry.version                   = e_version(ents[k]);
+                entry.chunk                                   = view.chunk;
+                entry.indexInChunk                            = k + view.start;
+                entry.version                                 = e_version(ents[k]);
                 pimpl->entity_registry.entries[e_id(ents[k])] = entry;
             }
         }

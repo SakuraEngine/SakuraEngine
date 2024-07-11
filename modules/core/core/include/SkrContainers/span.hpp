@@ -20,7 +20,7 @@ struct ReadTrait<skr::span<T>> {
     {
         for (auto& v : span)
         {
-            if (!skr::binary::Archive(archive, v))
+            if (!skr::binary::Read(archive, v))
                 return false;
         }
         return true;
@@ -99,7 +99,7 @@ struct WriteTrait<skr::span<T>> {
     {
         for (const T& value : span)
         {
-            if (!skr::binary::Archive(writer, value))
+            if (!skr::binary::Write(writer, value))
                 return false;
         }
         return true;

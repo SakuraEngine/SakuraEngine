@@ -39,11 +39,8 @@ inline bool ReadBytes(SBinaryReader* reader, void* data, size_t size)
 {
     return reader->read(data, size);
 }
-
-template <class T, class... Args>
-bool Read(SBinaryReader* reader, T&& value, Args&&... args);
-template <class T, class... Args>
-bool Archive(SBinaryReader* reader, T&& value, Args&&... args);
+template <class T>
+bool Read(SBinaryReader* reader, T&& value);
 } // namespace skr::binary
 
 // primitive types

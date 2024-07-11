@@ -31,7 +31,7 @@ struct ReadTrait<skr::variant<Ts...>> {
         if (index == I)
         {
             T t;
-            if (!skr ::binary ::Archive(archive, (t))) return false;
+            if (!skr::binary::Read(archive, (t))) return false;
             value = std::move(t);
             return true;
         }
@@ -49,7 +49,7 @@ struct ReadTrait<skr::variant<Ts...>> {
     static bool Read(SBinaryReader* archive, skr::variant<Ts...>& value)
     {
         uint32_t index;
-        if (!skr ::binary ::Archive(archive, (index))) return false;
+        if (!skr::binary::Read(archive, (index))) return false;
         if (index >= sizeof...(Ts))
             return false;
         return ReadByIndexHelper(archive, value, index, std::make_index_sequence<sizeof...(Ts)>());
@@ -72,10 +72,10 @@ template <class... Ts>
 struct WriteTrait<skr::variant<Ts...>> {
     static int Write(SBinaryWriter* archive, const skr::variant<Ts...>& variant)
     {
-        if (!skr ::binary ::Archive(archive, ((uint32_t)variant.index()))) return false;
+        if (!skr::binary::Write(archive, ((uint32_t)variant.index()))) return false;
         bool ret;
         skr::visit([&](auto&& value) {
-            ret = skr::binary::Archive(archive, value);
+            ret = skr::binary::Write(archive, value);
         },
                    variant);
         return ret;

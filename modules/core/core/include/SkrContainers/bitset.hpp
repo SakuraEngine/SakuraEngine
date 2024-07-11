@@ -16,7 +16,7 @@ struct WriteTrait<skr::Bitset<N, TBlock>> {
     {
         for (int i = 0; i < Bitset<N, TBlock>::NumBlock; i++)
         {
-            if (!skr::binary::Archive(archive, (value.data()[i]))) return false;
+            if (!skr::binary::Write(archive, (value.data()[i]))) return false;
         }
         return true;
     }
@@ -28,7 +28,7 @@ struct ReadTrait<skr::Bitset<N, TBlock>> {
     {
         for (int i = 0; i < Bitset<N, TBlock>::NumBlock; i++)
         {
-            if (!skr::binary::Archive(archive, (value.data()[i]))) return false;
+            if (!skr::binary::Read(archive, (value.data()[i]))) return false;
         }
         return true;
     }
