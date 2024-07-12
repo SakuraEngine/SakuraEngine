@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrBase/types.h"
-#include "SkrCore/blob.hpp"
 
 // reader
 struct SBinaryReader {
@@ -43,7 +42,7 @@ bool Read(SBinaryReader* reader, T&& value)
     return ReadTrait<std::decay_t<T>>::Read(reader, value);
 }
 template <typename T>
-inline static constexpr bool HasReadTrait = requires(SBinaryReader* r, T& t) { ReadTrait<T>::Read(r, t); };
+concept HasReadTrait = requires(SBinaryReader* r, T& t) { ReadTrait<T>::Read(r, t); };
 } // namespace skr::binary
 
 // primitive types
@@ -142,10 +141,6 @@ struct SKR_STATIC_API ReadTrait<skr_guid_t> {
 template <>
 struct SKR_STATIC_API ReadTrait<skr_md5_t> {
     static bool Read(SBinaryReader* reader, skr_md5_t& md5);
-};
-template <>
-struct SKR_STATIC_API ReadTrait<skr::BlobId> {
-    static bool Read(SBinaryReader* reader, BlobId& blob);
 };
 } // namespace skr::binary
 

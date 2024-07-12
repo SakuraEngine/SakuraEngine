@@ -1,6 +1,5 @@
 //BEGIN BINARY GENERATED
 #include "SkrBase/types.h"
-#include "SkrCore/blob.hpp"
 
 namespace skr::binary
 {

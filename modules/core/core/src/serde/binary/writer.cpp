@@ -104,13 +104,6 @@ bool WriteTrait<skr_md5_t>::Write(SBinaryWriter* writer, const skr_md5_t& md5)
     return writer->write(&md5, sizeof(md5));
 }
 
-bool WriteTrait<skr::BlobId>::Write(SBinaryWriter* writer, const skr::BlobId& blob)
-{
-    if (!WriteTrait<uint64_t>::Write(writer, (uint64_t)blob->get_size()))
-        return false;
-    return writer->write(blob->get_data(), (uint64_t)blob->get_size());
-}
-
 // other skr types
 bool WriteTrait<skr::String>::Write(SBinaryWriter* writer, const skr::String& str)
 {

@@ -114,43 +114,6 @@ bool ReadTrait<skr_guid_t>::Read(SBinaryReader* reader, skr_guid_t& guid)
     return reader->read(&guid, sizeof(guid));
 }
 
-bool ReadBlob(SBinaryReader* reader, skr::BlobId& out_id)
-{
-    // TODO: blob 应该特别处理
-    uint64_t size;
-    if (!skr::binary::Read(reader, size))
-    {
-        SKR_LOG_FATAL(u8"failed to read blob size!");
-        return false;
-    }
-    auto blob = skr::IBlob::Create(nullptr, size, false);
-    if (blob == nullptr)
-    {
-        SKR_LOG_FATAL(u8"failed to create blob!");
-        return false;
-    }
-
-    if (!reader->read(blob->get_data(), blob->get_size()))
-    {
-        SKR_LOG_FATAL(u8"failed to read blob content!");
-        return false;
-    }
-
-    out_id = blob;
-    return true;
-}
-
-bool ReadTrait<skr::BlobId>::Read(SBinaryReader* reader, skr::BlobId& out_blob)
-{
-    auto success = ReadBlob(reader, out_blob);
-    if ((!success) || (out_blob == nullptr))
-    {
-        SKR_LOG_FATAL(u8"failed to create blob!");
-        return false;
-    }
-    return true;
-}
-
 bool ReadTrait<skr::String>::Read(SBinaryReader* reader, skr::String& str)
 {
     uint32_t size;

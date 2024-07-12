@@ -1,7 +1,5 @@
 #pragma once
 #include "SkrBase/misc/traits.hpp"
-#include "SkrBase/types.h"
-#include "SkrCore/blob.hpp"
 
 // writer
 struct SBinaryWriter {
@@ -151,10 +149,6 @@ struct SKR_STATIC_API WriteTrait<skr_guid_t> {
 template <>
 struct SKR_STATIC_API WriteTrait<skr_md5_t> {
     static bool Write(SBinaryWriter* writer, const skr_md5_t& MD5);
-};
-template <>
-struct SKR_STATIC_API WriteTrait<skr::BlobId> {
-    static bool Write(SBinaryWriter* writer, const skr::BlobId& blob);
 };
 } // namespace skr::binary
 
