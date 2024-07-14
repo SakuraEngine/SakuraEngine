@@ -164,7 +164,14 @@ sugoi::archetype_t* sugoi_storage_t::constructArchetype(const sugoi_type_set_t& 
             }
         }
     }
-    return pimpl->archetypes.insert({ archetype.type, &archetype }).first->second;
+    sugoi::archetype_t* new_type = nullptr;
+    {
+        pimpl->archetypes.update([&](auto& archetypes){
+            new_type = archetypes.insert({ archetype.type, &archetype }).first->second;
+        }, pimpl->groups_timestamp);
+        pimpl->archetype_timestamp += 1;
+    }
+    return new_type;
 }
 
 sugoi::archetype_t* sugoi_storage_t::cloneArchetype(archetype_t *src)
@@ -208,7 +215,14 @@ sugoi::archetype_t* sugoi_storage_t::cloneArchetype(archetype_t *src)
     write_const(archetype.chunkCapacity[0], src->chunkCapacity[0]);
     write_const(archetype.chunkCapacity[1], src->chunkCapacity[1]);
     write_const(archetype.chunkCapacity[2], src->chunkCapacity[2]);
-    return pimpl->archetypes.insert({ archetype.type, &archetype }).first->second;
+    sugoi::archetype_t* new_type = nullptr;
+    {
+        pimpl->archetypes.update([&](auto& archetypes){
+            new_type = archetypes.insert({ archetype.type, &archetype }).first->second;
+        }, pimpl->groups_timestamp);
+        pimpl->archetype_timestamp += 1;
+    }
+    return new_type;
 }
 
 sugoi_group_t* sugoi_storage_t::constructGroup(const sugoi_entity_type_t& inType)
@@ -260,7 +274,12 @@ sugoi_group_t* sugoi_storage_t::constructGroup(const sugoi_entity_type_t& inType
     group.timestamp = 0;
     group.dead = nullptr;
     group.cloned = group.isDead ? nullptr : &group;
-    pimpl->groups.insert({ type, &group });
+    {
+        pimpl->groups.update([&](auto& groups){
+            groups.insert({ type, &group });
+        }, pimpl->groups_timestamp);
+        pimpl->groups_timestamp += 1;
+    }
     updateQueryCache(&group, true);
     if (hasTracked && !group.isDead)
     {
@@ -291,22 +310,33 @@ sugoi_group_t* sugoi_storage_t::cloneGroup(sugoi_group_t* srcG)
     {
         group.cloned = cloneGroup(srcG->cloned);
     }
-    pimpl->groups.insert({ group.type, &group });
+    
+    pimpl->groups.update([&](auto& groups){
+        groups.insert({ group.type, &group });
+    }, pimpl->groups_timestamp);
+    pimpl->groups_timestamp += 1;
+
     return &group;
 }
 
 sugoi::archetype_t* sugoi_storage_t::tryGetArchetype(const sugoi_type_set_t& type) const
 {
-    if (auto i = pimpl->archetypes.find(type); i != pimpl->archetypes.end())
-        return i->second;
-    return nullptr;
+    sugoi::archetype_t* found = nullptr;
+    pimpl->archetypes.access([&](auto& archetypes){
+        if (auto i = archetypes.find(type); i != archetypes.end())
+            found = i->second;
+    }, pimpl->archetype_timestamp);
+    return found;
 }
 
 sugoi_group_t* sugoi_storage_t::tryGetGroup(const sugoi_entity_type_t& type) const
 {
-    if (auto i = pimpl->groups.find(type); i != pimpl->groups.end())
-        return i->second;
-    return nullptr;
+    sugoi_group_t* found = nullptr;
+    pimpl->groups.access([&](auto& groups){
+        if (auto i = groups.find(type); i != groups.end())
+            found = i->second;
+    }, pimpl->groups_timestamp);
+    return found;
 }
 
 sugoi::archetype_t* sugoi_storage_t::get_archetype(const sugoi_type_set_t& type)
@@ -336,8 +366,11 @@ sugoi_group_t* sugoi_storage_t::get_group(const sugoi_entity_type_t& type)
 void sugoi_storage_t::destructGroup(sugoi_group_t* group)
 {
     updateQueryCache(group, false);
-    pimpl->groups.erase(group->type);
-    pimpl->groupPool.free(group);
+    pimpl->groups.update([&](auto& groups){
+        groups.erase(group->type);
+        pimpl->groupPool.free(group);
+    }, pimpl->groups_timestamp);
+    pimpl->groups_timestamp += 1;
 }
 
 sugoi_chunk_t* sugoi_group_t::get_first_free_chunk() const noexcept

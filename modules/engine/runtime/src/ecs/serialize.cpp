@@ -267,20 +267,22 @@ void sugoi_storage_t::serialize(SBinaryWriter* s)
         SkrZoneScopedN("serialize entities");
         pimpl->entity_registry.serialize(s);
     }
-    bin::Write(s, (uint32_t)pimpl->groups.size());
-    for (auto& pair : pimpl->groups)
-    {
-        SkrZoneScopedN("serialize group");
-        auto group = pair.second;
-        serialize_type(group->type, s, true);
-        bin::Write(s, (uint32_t)group->chunks.size());
-        for (auto c : group->chunks)
+    pimpl->groups.access([&](auto& groups){
+        bin::Write(s, (uint32_t)groups.size());
+        for (auto& pair : groups)
         {
-            SkrZoneScopedN("serialize chunk");
-            sugoi_chunk_view_t view = { c, 0, c->count };
-            serialize_view(group, view, s, nullptr, true);
+            SkrZoneScopedN("serialize group");
+            auto group = pair.second;
+            serialize_type(group->type, s, true);
+            bin::Write(s, (uint32_t)group->chunks.size());
+            for (auto c : group->chunks)
+            {
+                SkrZoneScopedN("serialize chunk");
+                sugoi_chunk_view_t view = { c, 0, c->count };
+                serialize_view(group, view, s, nullptr, true);
+            }
         }
-    }
+    }, pimpl->groups_timestamp);
 }
 
 void sugoi_storage_t::deserialize(SBinaryReader* s)

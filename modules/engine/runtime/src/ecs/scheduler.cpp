@@ -45,7 +45,7 @@ bool sugoi::scheduler_t::is_main_thread(const sugoi_storage_t* storage)
 void sugoi::scheduler_t::set_main_thread(const sugoi_storage_t* storage)
 {
     SKR_ASSERT(storage->pimpl->scheduler == this);
-    storage->pimpl->fuck_counter.wait(true);
+    storage->pimpl->storage_counter.wait(true);
     storage->pimpl->currentFiber = skr::task::current_fiber();
 }
 
@@ -156,12 +156,13 @@ bool sugoi::scheduler_t::sync_query(sugoi_query_t* q)
 
     auto sync_type = [&](sugoi_type_index_t type, bool readonly, bool atomic) {
         bool result = false;
-        for (auto& pair : q->pimpl->storage->pimpl->groups)
-        {
-            auto group = pair.second;
-            auto idx = group->archetype->index(type);
-            result = sync_entry_once(group->archetype, idx, readonly, atomic) || result;
-        }
+        q->pimpl->storage->pimpl->groups.access([&](auto& groups) {
+            for (auto& [_, group] : groups)
+            {
+                const auto idx = group->archetype->index(type);
+                result = sync_entry_once(group->archetype, idx, readonly, atomic) || result;
+            }
+        }, q->pimpl->storage->pimpl->storage_timestamp);
         return result;
     };
 
@@ -235,7 +236,7 @@ void sugoi::scheduler_t::sync_storage(const sugoi_storage_t* storage)
 {
     if (!storage->pimpl->scheduler)
         return;
-    storage->pimpl->fuck_counter.wait(true);
+    storage->pimpl->storage_counter.wait(true);
     for(auto& pair : dependencyEntries)
     {
         if(pair.first->storage == storage)
@@ -385,7 +386,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
     {
         SkrZoneScopedN("AllocateCounter");
         allCounter.add(1);
-        q->pimpl->storage->pimpl->fuck_counter.add(1);
+        q->pimpl->storage->pimpl->storage_counter.add(1);
     }
     skr::task::schedule([dependencies = std::move(dependencies), sharedData, init, teardown, this, q, batchSize]()mutable
     {
@@ -402,7 +403,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
         }
         SKR_DEFER({ 
             allCounter.decrement();
-            q->pimpl->storage->pimpl->fuck_counter.decrement();
+            q->pimpl->storage->pimpl->storage_counter.decrement();
         });
         fixed_stack_scope_t _(localStack);
         sugoi_meta_filter_t validatedMeta;
@@ -541,7 +542,7 @@ skr::task::event_t sugoi::scheduler_t::schedule_job(sugoi_query_t* q, sugoi_sche
     {
         SkrZoneScopedN("AllocateCounter");
         allCounter.add(1);
-        q->pimpl->storage->pimpl->fuck_counter.add(1);
+        q->pimpl->storage->pimpl->storage_counter.add(1);
     }
     skr::task::schedule([deps = std::move(deps), this, q, callback, u, init, teardown]()
     {
@@ -550,7 +551,7 @@ skr::task::event_t sugoi::scheduler_t::schedule_job(sugoi_query_t* q, sugoi_sche
                 d.wait(false);
         SKR_DEFER({ 
             allCounter.decrement();
-            q->pimpl->storage->pimpl->fuck_counter.decrement();
+            q->pimpl->storage->pimpl->storage_counter.decrement();
         });
         if(init)
             init(u, 0);
@@ -611,12 +612,14 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
     };
 
     auto sync_type = [&](sugoi_type_index_t type, bool readonly, bool atomic) {
-        for (auto& pair : q->pimpl->storage->pimpl->groups)
-        {
-            auto group = pair.second;
-            auto idx = group->index(type);
-            sync_entry(group, idx, readonly, atomic);
-        }
+        q->pimpl->storage->pimpl->groups.access([&](auto& groups) {
+            for (auto& pair : groups)
+            {
+                auto group = pair.second;
+                auto idx = group->index(type);
+                sync_entry(group, idx, readonly, atomic);
+            }
+        }, q->pimpl->storage->pimpl->storage_timestamp);
     };
 
     {
