@@ -48,5 +48,5 @@ SKR_RUNTIME_API extern const char* kDualMemoryName;
 #define sugoi_calloc_aligned(count, size, alignment) sakura_calloc_alignedN((count), (size), (alignment), kDualMemoryName)
 #define sugoi_memalign sugoi_malloc_aligned
 #define sugoi_free(ptr) sakura_freeN((ptr), kDualMemoryName)
-#define sugoi_free_aligned(p, alignment) sakura_free_aligned((p), (alignment), kDualMemoryName)
+#define sugoi_free_aligned(p, alignment) sakura_free_alignedN((p), (alignment), kDualMemoryName)
 #define sugoi_realloc(p, newsize) sakura_reallocN((p), (newsize), kDualMemoryName)

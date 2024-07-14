@@ -4,7 +4,7 @@
 #include "SkrTask/fib_task.hpp"
 #include "SkrRT/ecs/storage.hpp"
 #include "SkrRT/ecs/entity_registry.hpp"
-#include "./../query.hpp"
+#include "./query.hpp"
 #include "./../arena.hpp"
 #include "./../pool.hpp"
 #include "./../stack.hpp"

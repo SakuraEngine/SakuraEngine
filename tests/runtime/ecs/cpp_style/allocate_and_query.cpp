@@ -74,6 +74,7 @@ TEST_CASE_METHOD(AllocateEntites, "AllocateAndQuery")
         auto q = storage->new_query()
                     .ReadAll<FloatComponent, IntComponent>()
                     .commit();
+        SKR_DEFER({ sugoiQ_release(q.value()); });
         EXPECT_OK(q);
         auto callback = [&](sugoi_chunk_view_t* view) {
             auto ints = sugoi::get_owned<const IntComponent>(view);
@@ -95,6 +96,7 @@ TEST_CASE_METHOD(AllocateEntites, "AllocateAndQuery")
         auto q = storage->new_query()
                 .ReadWriteAll<FloatComponent, IntComponent>()
                 .commit();
+        SKR_DEFER({ sugoiQ_release(q.value()); });
         EXPECT_OK(q);
         auto callback = [&](sugoi_chunk_view_t* view) {
             auto ints = sugoi::get_owned<const IntComponent>(view);
@@ -117,6 +119,7 @@ TEST_CASE_METHOD(AllocateEntites, "AllocateAndQuery")
                     .ReadAll<IntComponent>()
                     .None<FloatComponent>()
                     .commit();
+        SKR_DEFER({ sugoiQ_release(q.value()); });
         EXPECT_OK(q);
         EXPECT_EQ(sugoiQ_get_count(q.value()), kIntEntityCount);
     }
@@ -126,6 +129,7 @@ TEST_CASE_METHOD(AllocateEntites, "AllocateAndQuery")
                     .ReadAll<IntComponent>()
                     .WithMetaEntity(shared_entity)
                     .commit();
+        SKR_DEFER({ sugoiQ_release(q.value()); });
         EXPECT_OK(q);
         auto callback = [&](sugoi_chunk_view_t* view) {
             auto ints = sugoi::get_owned<const IntComponent>(view);
@@ -148,6 +152,7 @@ TEST_CASE_METHOD(AllocateEntites, "AllocateAndQuery")
                     .ReadAll<IntComponent>()
                     .WithoutMetaEntity(shared_entity)
                     .commit();
+        SKR_DEFER({ sugoiQ_release(q.value()); });
         EXPECT_OK(q);
         auto callback = [&](sugoi_chunk_view_t* view) {
             auto ints = sugoi::get_owned<const IntComponent>(view);

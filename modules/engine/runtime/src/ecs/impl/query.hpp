@@ -1,7 +1,5 @@
 #pragma once
-#include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/ecs/array.hpp"
-
+#include "SkrRT/ecs/query.hpp"
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/span.hpp"
 #include "SkrContainers/hashmap.hpp"
@@ -17,8 +15,7 @@ struct phase_entry {
 skr::String& get_error();
 } // namespace sugoi
 
-
-struct sugoi_query_t {
+struct sugoi_query_t::Impl {
     sugoi_storage_t* storage = nullptr;
     sugoi_filter_t filter;
     

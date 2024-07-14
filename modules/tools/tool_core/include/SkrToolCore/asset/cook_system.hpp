@@ -4,6 +4,7 @@
 #include "SkrContainers/span.hpp"
 #include "SkrContainers/function_ref.hpp"
 #include "SkrCore/log.hpp"
+#include "SkrCore/blob.hpp"
 #include "SkrSerde/binary/writer.h"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrToolCore/asset/cooker.hpp"
