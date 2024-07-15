@@ -43,50 +43,6 @@ class BasicCPPGenerator(gen.GeneratorBase):
             })
         )
 
-        # ecs
-        self.owner.add_record_scheme(
-            sc.Namespace({
-                "component": sc.Functional({
-                    "pin": sc.Bool(),    # SUGOI_TYPE_FLAG_PIN ==> "flag": ["PIN"]
-                    "chunk": sc.Bool(),  # SUGOI_TYPE_FLAG_CHUNK ==> "flag": ["CHUNK"]
-                    "buffer": sc.Int(),  # desc.elementSize
-                    "custom": sc.Str(),  # 在注册期间插入自定义函数，目前用于插入（sugoi::managed_component）
-                    "unsafe": sc.Bool(),  # 不检查是否 managed（sugoi::check_managed）
-                }),
-                # "query": sc.Str(),  # 通过 query 表达式生产 query
-            })
-        )
-
-        # lua
-        # self.owner.add_record_scheme(
-        #     sc.Namespace({
-        #         "scriptable": sc.Bool(),  # 是否生成 lua 绑定
-        #     })
-        # )
-        # self.owner.add_enum_scheme(
-        #     sc.Namespace({
-        #         "scriptable": sc.Bool(),  # 是否生成 lua 绑定
-        #     })
-        # )
-        # self.owner.add_method_scheme(
-        #     sc.Namespace({
-        #         "native": sc.Bool(),  # 方法是否生成 lua 绑定
-        #     })
-        # )
-        # self.owner.add_field_scheme(
-        #     sc.Namespace({
-        #         "native": sc.Bool(),  # 字段是否生成 lua 绑定
-        #     })
-        # )
-        # self.owner.add_parameter_scheme(
-        #     sc.Namespace({
-        #         "in": sc.Bool(),     # 参数作用标记
-        #         "out": sc.Bool(),    # 参数作用标记
-        #         "inout": sc.Bool(),  # 参数作用标记
-        #         "userdata": sc.Bool(),  # 接入自定义的 userdata 导入逻辑（通过模板）
-        #     })
-        # )
-
         # trait
         self.owner.add_record_scheme(
             sc.Namespace({
