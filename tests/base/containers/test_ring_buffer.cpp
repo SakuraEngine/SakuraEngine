@@ -1,11 +1,12 @@
-#include "SkrTestFramework/framework.hpp"
 #include "container_test_types.hpp"
+#include "SkrTestFramework/framework.hpp"
 #include <chrono>
 
 template <typename TestRingBuffer, typename ModifyCapacity, typename ClampCapacity, typename ShuffleRingBuffer>
 void template_test_ring_buffer(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_capacity, ShuffleRingBuffer&& shuffle_ring_buffer)
 {
-    using namespace skr;
+    using skr::Hash;
+    using namespace skr::test_container;
 
     SUBCASE("ctor")
     {
@@ -453,7 +454,7 @@ void template_test_ring_buffer(ModifyCapacity&& capacity_of, ClampCapacity&& cla
 
 TEST_CASE("test ring buffer")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     using TestRingBuffer = RingBuffer<uint32_t>;
 
     srand(std::chrono::system_clock::now().time_since_epoch().count());
@@ -507,7 +508,7 @@ TEST_CASE("test ring buffer")
 
 TEST_CASE("test fixed ring buffer")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     static constexpr uint64_t kFixedCapacity = 200;
 
     using TestRingBuffer = FixedRingBuffer<uint32_t, kFixedCapacity>;
@@ -519,7 +520,7 @@ TEST_CASE("test fixed ring buffer")
 
 TEST_CASE("test inline ring buffer")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     static constexpr uint64_t kInlineCapacity = 10;
 
     using TestRingBuffer = InlineRingBuffer<uint32_t, kInlineCapacity>;

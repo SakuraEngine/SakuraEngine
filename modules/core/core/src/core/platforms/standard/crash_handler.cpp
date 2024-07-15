@@ -1,8 +1,8 @@
 #include "SkrCore/log.h"
 #include "SkrCore/crash.h"
 #include "SkrOS/thread.h"
-#include "SkrContainers/hashmap.hpp"
-#include "SkrContainers/string.hpp"
+#include "SkrContainersDef/hashmap.hpp"
+#include "SkrContainersDef/string.hpp"
 
 #include <signal.h>
 
@@ -24,16 +24,16 @@ int SCrashHandler::crashSetErrorMsg(const char8_t* pszErrorMsg) SKR_NOEXCEPT
 bool SCrashHandler::Initialize() SKR_NOEXCEPT
 {
     prevSigABRT = NULL;
-    prevSigINT = NULL;
+    prevSigINT  = NULL;
     prevSigTERM = NULL;
-    prevSigFPE = NULL;
-    prevSigILL = NULL;
+    prevSigFPE  = NULL;
+    prevSigILL  = NULL;
     prevSigSEGV = NULL;
 
     skr_make_guid(&guid);
     skr_init_mutex_recursive(&crash_lock);
     skr_init_mutex_recursive(&callbacks_lock);
-    // set process exception handlers 
+    // set process exception handlers
     if (bool phdls = SetProcessSignalHandlers(); !phdls)
     {
         crashSetErrorMsg(u8"Failed to set process exception handlers.");
@@ -60,117 +60,117 @@ bool SCrashHandler::Finalize() SKR_NOEXCEPT
 
 void SCrashHandler::SigabrtHandler(int code)
 {
-    auto& this_ = *skr_crash_handler_get();
+    auto&      this_  = *skr_crash_handler_get();
     const auto reason = kCrashCodeAbort;
-	this_.handleFunction([&](){
-        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
-        {
+    this_.handleFunction([&]() {
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper) {
             auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, reason);
+    },
+                         reason);
 }
 
 void SCrashHandler::SigintHandler(int code)
 {
-    auto& this_ = *skr_crash_handler_get();
+    auto&      this_  = *skr_crash_handler_get();
     const auto reason = kCrashCodeInterrupt;
-	this_.handleFunction([&](){
-        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
-        {
+    this_.handleFunction([&]() {
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper) {
             auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, reason);
+    },
+                         reason);
 }
 
 void SCrashHandler::SigtermHandler(int code)
 {
-    auto& this_ = *skr_crash_handler_get();
+    auto&      this_  = *skr_crash_handler_get();
     const auto reason = kCrashCodeKill;
-	this_.handleFunction([&](){
-        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
-        {
+    this_.handleFunction([&]() {
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper) {
             auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, reason);
+    },
+                         reason);
 }
 
 void SCrashHandler::SigfpeHandler(int code, int subcode)
 {
-    auto& this_ = *skr_crash_handler_get();
+    auto&      this_  = *skr_crash_handler_get();
     const auto reason = kCrashCodeDividedByZero;
-	this_.handleFunction([&](){
-        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
-        {
+    this_.handleFunction([&]() {
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper) {
             auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, reason);
+    },
+                         reason);
 }
 
 void SCrashHandler::SigillHandler(int code)
 {
-    auto& this_ = *skr_crash_handler_get();
+    auto&      this_  = *skr_crash_handler_get();
     const auto reason = kCrashCodeIllInstruction;
-	this_.handleFunction([&](){
-        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
-        {
+    this_.handleFunction([&]() {
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper) {
             auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, reason);
+    },
+                         reason);
 }
 
 void SCrashHandler::SigsegvHandler(int code)
 {
-    auto& this_ = *skr_crash_handler_get();
+    auto&      this_  = *skr_crash_handler_get();
     const auto reason = kCrashCodeSegFault;
-	this_.handleFunction([&](){
-        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
-        {
+    this_.handleFunction([&]() {
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper) {
             auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, reason);
+    },
+                         reason);
 }
 
 bool SCrashHandler::SetProcessSignalHandlers() SKR_NOEXCEPT
 {
-    prevSigABRT = signal(SIGABRT, SigabrtHandler);// abort
-    prevSigINT = signal(SIGINT, SigintHandler);   // ctrl + c
-    prevSigTERM = signal(SIGTERM, SigtermHandler);// kill
+    prevSigABRT = signal(SIGABRT, SigabrtHandler); // abort
+    prevSigINT  = signal(SIGINT, SigintHandler);   // ctrl + c
+    prevSigTERM = signal(SIGTERM, SigtermHandler); // kill
     return true;
 }
 
 bool SCrashHandler::UnsetProcessSignalHandlers() SKR_NOEXCEPT
 {
-    if(prevSigABRT != NULL)
-        signal(SIGABRT, prevSigABRT);  
-    if(prevSigINT != NULL)
-        signal(SIGINT, prevSigINT);     
-    if(prevSigTERM != NULL)
-        signal(SIGTERM, prevSigTERM);   
+    if (prevSigABRT != NULL)
+        signal(SIGABRT, prevSigABRT);
+    if (prevSigINT != NULL)
+        signal(SIGINT, prevSigINT);
+    if (prevSigTERM != NULL)
+        signal(SIGTERM, prevSigTERM);
     return true;
 }
 
 bool SCrashHandler::SetThreadSignalHandlers() SKR_NOEXCEPT
 {
     typedef void (*sigh)(int);
-    prevSigFPE = signal(SIGFPE, (sigh)SigfpeHandler); // divide by zero
-    prevSigILL = signal(SIGILL, SigillHandler);       // illegal instruction
-    prevSigSEGV = signal(SIGSEGV, SigsegvHandler);    // segmentation fault
+    prevSigFPE  = signal(SIGFPE, (sigh)SigfpeHandler); // divide by zero
+    prevSigILL  = signal(SIGILL, SigillHandler);       // illegal instruction
+    prevSigSEGV = signal(SIGSEGV, SigsegvHandler);     // segmentation fault
     return true;
 }
 
 bool SCrashHandler::UnsetThreadSignalHandlers() SKR_NOEXCEPT
 {
-    if(prevSigFPE != NULL)
+    if (prevSigFPE != NULL)
         signal(SIGFPE, prevSigFPE);
-    if(prevSigILL != NULL)
+    if (prevSigILL != NULL)
         signal(SIGILL, prevSigILL);
-    if(prevSigSEGV != NULL)
+    if (prevSigSEGV != NULL)
         signal(SIGSEGV, prevSigSEGV);
     return true;
 }
@@ -187,13 +187,14 @@ void SCrashHandler::add_callback(SCrashHandler::CallbackWrapper callback) SKR_NO
     callbacks.add(callback);
 }
 
-extern "C"
-{
+extern "C" {
 
 SKR_CORE_API const char8_t* skr_crash_code_string(CrashTerminateCode code) SKR_NOEXCEPT
 {
-#define SKR_CCODE_TRANS(code) case kCrashCode##code: return (const char8_t*)#code;
-    switch (code) 
+#define SKR_CCODE_TRANS(code) \
+    case kCrashCode##code:    \
+        return (const char8_t*)#code;
+    switch (code)
     {
         SKR_CCODE_TRANS(Abort);
         SKR_CCODE_TRANS(Interrupt);
@@ -217,5 +218,4 @@ SKR_CORE_API void skr_crash_handler_add_callback(SCrashHandlerId handler, SProcC
 {
     return handler->add_callback({ callback, usr_data });
 }
-
 }

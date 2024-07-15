@@ -1,43 +1,10 @@
 #pragma once
-#include "SkrBase/types.h"
-#include "SkrBase/containers/vector/vector_memory.hpp"
-#include "SkrBase/containers/vector/vector.hpp"
-#include "SkrContainers/skr_allocator.hpp"
+#include "SkrContainersDef/vector.hpp"
 
-namespace skr
-{
-template <typename T, typename Allocator = SkrAllocator>
-using Vector = container::Vector<container::VectorMemory<
-T,        /*type*/
-uint64_t, /*size type*/
-Allocator /*allocator*/
->>;
-
-template <typename T, uint64_t kCount>
-using FixedVector = container::Vector<container::FixedVectorMemory<
-T,        /*type*/
-uint64_t, /*size type*/
-kCount    /*allocator*/
->>;
-
-template <typename T, uint64_t kCount, typename Allocator = SkrAllocator>
-using InlineVector = container::Vector<container::InlineVectorMemory<
-T,        /*type*/
-uint64_t, /*size type*/
-kCount,   /*allocator*/
-Allocator /*allocator*/
->>;
-
-template <typename T>
-using SerializeConstVector = Vector<T>;
-} // namespace skr
-
-// binary
+// bin serde
 #include "SkrSerde/binary/reader.h"
 #include "SkrSerde/binary/writer.h"
-namespace skr
-{
-namespace binary
+namespace skr::binary
 {
 template <class V>
 struct ReadTrait<Vector<V>> {
@@ -82,7 +49,6 @@ struct VectorWriter {
         return true;
     }
 };
-
 struct VectorWriterBitpacked {
     Vector<uint8_t>* buffer;
     uint8_t          bitOffset = 0;
@@ -131,5 +97,42 @@ struct VectorWriterBitpacked {
         return true;
     }
 };
-} // namespace binary
-} // namespace skr
+} // namespace skr::binary
+
+// json serde
+#include "SkrSerde/json/reader.h"
+#include "SkrSerde/json/writer.h"
+namespace skr::json
+{
+template <class V>
+struct WriteTrait<skr::Vector<V>> {
+    static bool Write(skr::archive::JsonWriter* json, const skr::Vector<V>& vec)
+    {
+        json->StartArray();
+        for (auto& v : vec)
+        {
+            skr::json::Write<V>(json, v);
+        }
+        json->EndArray();
+        return true;
+    }
+};
+template <class V>
+struct ReadTrait<skr::Vector<V>> {
+    static bool Read(skr::archive::JsonReader* json, skr::Vector<V>& vec)
+    {
+        size_t count;
+        json->StartArray(count);
+        vec.reserve(count);
+        for (size_t i = 0; i < count; i++)
+        {
+            V v;
+            if (!skr::json::Read<V>(json, v))
+                return false;
+            vec.emplace(std::move(v));
+        }
+        json->EndArray();
+        return true;
+    }
+};
+} // namespace skr::json

@@ -1,3 +1,4 @@
+#include "container_test_types.hpp"
 #include "SkrTestFramework/framework.hpp"
 
 #include "SkrBase/containers/vector/vector.hpp"
@@ -6,6 +7,5 @@
 
 TEST_CASE("test optional")
 {
-    using namespace skr;
     using namespace skr::container;
 }

@@ -1,13 +1,9 @@
 #pragma once
-#include "SkrBase/types.h"
-#include "SkrBase/containers/bit_set/bit_set.hpp"
+#include "SkrContainersDef/bitset.hpp"
 
-namespace skr
-{
-template <size_t N, typename TBlock = std::conditional_t<N <= 32, uint32_t, uint64_t>>
-using Bitset = container::Bitset<N, TBlock>;
-}
-
+// bin serde
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
 namespace skr::binary
 {
 template <size_t N, typename TBlock>

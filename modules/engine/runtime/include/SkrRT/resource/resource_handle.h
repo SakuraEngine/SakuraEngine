@@ -111,7 +111,8 @@ SKR_RUNTIME_API void skr_get_resource(skr_resource_handle_t* handle, void** guid
 
 // binary reader
 #include "SkrBase/types.h"
-
+#include "SkrSerde/binary/writer.h"
+#include "SkrSerde/binary/reader.h"
 namespace skr
 {
 namespace binary

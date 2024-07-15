@@ -1,12 +1,12 @@
 #include "SkrBase/atomic/atomic.h"
-#include "SkrContainers/detail/shared_rc.hpp"
+#include "SkrContainersDef/detail/shared_rc.hpp"
 #include <new>
 
 namespace skr
 {
-    SKR_CORE_API const char* kConcurrentQueueMemoryName = "ConcurrentQueues";
-    SKR_CORE_API const char8_t* kOpenStringMemory = u8"OpenString";
-}
+SKR_CORE_API const char*    kConcurrentQueueMemoryName = "ConcurrentQueues";
+SKR_CORE_API const char8_t* kOpenStringMemory          = u8"OpenString";
+} // namespace skr
 
 void skr::SRCBlock::add_refcount() SKR_NOEXCEPT
 {

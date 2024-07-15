@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/misc/integer_tools.hpp"
-#include "SkrContainers/skr_allocator.hpp"
+#include "SkrContainersDef/skr_allocator.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
 
 namespace skr::rttr
@@ -551,11 +551,11 @@ struct TypeSignatureHelper {
 
 #pragma region OPERATOR
     inline static bool signal_equal(
-        const uint8_t*&           lhs,
-        const uint8_t*            lhs_end,
-        const uint8_t*&           rhs,
-        const uint8_t*            rhs_end,
-        ETypeSignatureCompareFlag flag)
+    const uint8_t*&           lhs,
+    const uint8_t*            lhs_end,
+    const uint8_t*&           rhs,
+    const uint8_t*            rhs_end,
+    ETypeSignatureCompareFlag flag)
     {
         SKR_ASSERT(has_enough_buffer(lhs, lhs_end, peek_signal(lhs, lhs_end)));
         SKR_ASSERT(has_enough_buffer(rhs, rhs_end, peek_signal(rhs, rhs_end)));
@@ -706,11 +706,11 @@ struct TypeSignatureHelper {
         }
     }
     inline static bool signature_equal(
-        const uint8_t*            lhs,
-        const uint8_t*            lhs_end,
-        const uint8_t*            rhs,
-        const uint8_t*            rhs_end,
-        ETypeSignatureCompareFlag flag)
+    const uint8_t*            lhs,
+    const uint8_t*            lhs_end,
+    const uint8_t*            rhs,
+    const uint8_t*            rhs_end,
+    ETypeSignatureCompareFlag flag)
     {
         SKR_ASSERT(lhs < lhs_end && rhs < rhs_end && "invalid signature buffer");
 
@@ -743,9 +743,9 @@ struct TypeSignatureHelper {
         return lhs_reach_end && rhs_reach_end;
     }
     inline static void decay_signature(
-        uint8_t*                pos,
-        uint8_t*                end,
-        ETypeSignatureDecayFlag flag)
+    uint8_t*                pos,
+    uint8_t*                end,
+    ETypeSignatureDecayFlag flag)
     {
         uint8_t *read_pos = pos, *write_pos = pos;
         while (read_pos < end)
@@ -772,10 +772,10 @@ struct TypeSignatureHelper {
                 }
                 case ETypeSignatureSignal::RValueRef: {
                     write_buffer(write_pos, flag_any(flag, ETypeSignatureDecayFlag::RValueRefAsPointer) ?
-                                                ETypeSignatureSignal::Pointer :
+                                            ETypeSignatureSignal::Pointer :
                                             flag_any(flag, ETypeSignatureDecayFlag::IgnoreRvalue) ?
-                                                ETypeSignatureSignal::Ref :
-                                                signal);
+                                            ETypeSignatureSignal::Ref :
+                                            signal);
                     break;
                 }
                 default: {
@@ -913,8 +913,8 @@ struct TypeSignatureView {
         return TypeSignatureHelper::validate_complete_signature(_data, _data + _size);
     }
     inline bool equal(
-        const TypeSignatureView&  rhs,
-        ETypeSignatureCompareFlag flag = ETypeSignatureCompareFlag::Strict) const
+    const TypeSignatureView&  rhs,
+    ETypeSignatureCompareFlag flag = ETypeSignatureCompareFlag::Strict) const
     {
         if (empty() && rhs.empty())
         {
@@ -928,11 +928,11 @@ struct TypeSignatureView {
         }
 
         return TypeSignatureHelper::signature_equal(
-            _data,
-            _data + _size,
-            rhs._data,
-            rhs._data + rhs._size,
-            flag);
+        _data,
+        _data + _size,
+        rhs._data,
+        rhs._data + rhs._size,
+        flag);
     }
     inline String to_string() const
     {
@@ -1225,8 +1225,8 @@ struct TypeSignatureTraits<const T[N]> {
 template <typename Ret>
 struct TypeSignatureTraits<Ret(void)> {
     inline static constexpr size_t buffer_size =
-        type_signature_size_v<ETypeSignatureSignal::FunctionSignature> +
-        TypeSignatureTraits<Ret>::buffer_size;
+    type_signature_size_v<ETypeSignatureSignal::FunctionSignature> +
+    TypeSignatureTraits<Ret>::buffer_size;
     inline static uint8_t* write(uint8_t* pos, uint8_t* end)
     {
         // write function signature
@@ -1234,7 +1234,7 @@ struct TypeSignatureTraits<Ret(void)> {
 
         // write return type
         pos = TypeSignatureTraits<Ret>::write(pos, end);
-  
+
         return pos;
     }
 };
@@ -1242,9 +1242,9 @@ struct TypeSignatureTraits<Ret(void)> {
 template <typename Ret, typename... Args>
 struct TypeSignatureTraits<Ret(Args...)> {
     inline static constexpr size_t buffer_size =
-        type_signature_size_v<ETypeSignatureSignal::FunctionSignature> +
-        TypeSignatureTraits<Ret>::buffer_size +
-        (TypeSignatureTraits<Args>::buffer_size + ...);
+    type_signature_size_v<ETypeSignatureSignal::FunctionSignature> +
+    TypeSignatureTraits<Ret>::buffer_size +
+    (TypeSignatureTraits<Args>::buffer_size + ...);
     inline static uint8_t* write(uint8_t* pos, uint8_t* end)
     {
         // write function signature
@@ -1350,9 +1350,9 @@ struct TypeSignature : private SkrAllocator {
     inline void decay(ETypeSignatureDecayFlag flag = ETypeSignatureDecayFlag::Relax)
     {
         TypeSignatureHelper::decay_signature(
-            data(),
-            data() + size(),
-            flag);
+        data(),
+        data() + size(),
+        flag);
     }
 
 private:
@@ -1412,9 +1412,9 @@ struct TypeSignatureTyped {
     inline void decay(ETypeSignatureDecayFlag flag = ETypeSignatureDecayFlag::Relax)
     {
         TypeSignatureHelper::decay_signature(
-            data(),
-            data() + size(),
-            flag);
+        data(),
+        data() + size(),
+        flag);
     }
 
 private:

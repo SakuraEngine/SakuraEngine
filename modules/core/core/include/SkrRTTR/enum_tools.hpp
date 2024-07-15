@@ -1,6 +1,6 @@
 #pragma once
-#include <SkrContainers/string.hpp>
-#include <SkrContainers/span.hpp>
+#include <SkrContainersDef/string.hpp>
+#include <SkrContainersDef/span.hpp>
 #include "SkrBase/meta.h"
 
 // enum traits
@@ -345,6 +345,8 @@ private:
 
 // strongly enum binary serde
 #include "SkrBase/types.h"
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
 namespace skr::binary
 {
 template <class T>

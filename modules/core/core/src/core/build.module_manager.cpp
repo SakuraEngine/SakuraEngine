@@ -3,7 +3,7 @@
 #include "SkrOS/shared_library.hpp"
 #include "SkrOS/filesystem.hpp"
 #include "SkrCore/memory/memory.h"
-#include "SkrContainers/hashmap.hpp"
+#include "SkrContainersDef/hashmap.hpp"
 #include "SkrCore/module/module_manager.hpp"
 #include "SkrCore/module/subsystem.hpp"
 #include "SkrCore/log.h"
@@ -313,8 +313,8 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::String& name, bool hot
 
 ModuleInfo ModuleManagerImpl::parseMetaData(const char8_t* metadata)
 {
-    ModuleInfo                 info;
-    skr::archive::_JsonReader         reader(metadata); 
+    ModuleInfo                info;
+    skr::archive::_JsonReader reader(metadata);
     reader.StartObject(u8"");
     {
         reader.ReadString(u8"api", info.core_version);
@@ -325,7 +325,7 @@ ModuleInfo ModuleManagerImpl::parseMetaData(const char8_t* metadata)
         reader.ReadString(u8"url", info.url);
         reader.ReadString(u8"license", info.license);
         reader.ReadString(u8"copyright", info.copyright);
-        
+
         size_t dep_count;
         reader.StartArray(u8"dependencies", dep_count);
         for (size_t i = 0; i < dep_count; i++)
@@ -517,8 +517,8 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::String& entry)
         SkrDelete(subsystem);
     }
     this_module->on_reload_begin();
-    auto this_state = std::move(this_module->state);
-    [[maybe_unused]] auto old_lib = std::move(this_module->sharedLib);
+    auto                  this_state = std::move(this_module->state);
+    [[maybe_unused]] auto old_lib    = std::move(this_module->sharedLib);
     if (modulesMap[entry] != nullptr)
     {
         delete modulesMap[entry];

@@ -101,29 +101,6 @@ template <>
 struct SKR_STATIC_API WriteTrait<skr_md5_t> {
     static bool Write(skr::archive::JsonWriter* writer, const skr_md5_t& md5);
 };
-template <>
-struct SKR_STATIC_API WriteTrait<skr::StringView> {
-    static bool Write(skr::archive::JsonWriter* writer, const skr::StringView& str);
-};
-template <>
-struct SKR_STATIC_API WriteTrait<skr::String> {
-    static bool Write(skr::archive::JsonWriter* writer, const skr::String& str);
-};
-
-template <class V>
-struct WriteTrait<skr::Vector<V>> {
-    static bool Write(skr::archive::JsonWriter* json, const skr::Vector<V>& vec)
-    {
-        json->StartArray();
-        for (auto& v : vec)
-        {
-            skr::json::Write<V>(json, v);
-        }
-        json->EndArray();
-        return true;
-    }
-};
-
 } // namespace skr::json
 
 // help function impl

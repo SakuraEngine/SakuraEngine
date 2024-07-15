@@ -1,31 +1,28 @@
 #pragma once
 #include "SkrOS/thread.h"
 #include "SkrBase/atomic/atomic.h"
-#include "SkrContainers/string.hpp"
+#include "SkrContainersDef/string.hpp"
 #include "SkrCore/async/result.hpp"
 
 namespace skr
 {
 
-struct NamedThreadDesc
-{
-    const char8_t *name;
-    int32_t priority = SKR_THREAD_NORMAL;
-    uint32_t stack_size = 16 * 1024;
+struct NamedThreadDesc {
+    const char8_t* name;
+    int32_t        priority   = SKR_THREAD_NORMAL;
+    uint32_t       stack_size = 16 * 1024;
 };
 
-struct NamedThreadFunction
-{
+struct NamedThreadFunction {
     virtual ~NamedThreadFunction() SKR_NOEXCEPT;
     virtual AsyncResult run() SKR_NOEXCEPT = 0;
 };
 
-struct SKR_STATIC_API NamedThread
-{
+struct SKR_STATIC_API NamedThread {
 public:
     NamedThread() SKR_NOEXCEPT;
     virtual ~NamedThread() SKR_NOEXCEPT;
-	
+
     // start the thread.
     // @retval ASYNC_RESULT_OK if success
     AsyncResult start(NamedThreadFunction* pFunc) SKR_NOEXCEPT;
@@ -52,23 +49,23 @@ public:
     // initlaize thread.
     // @retval ASYNC_RESULT_OK if success
     AsyncResult initialize(const NamedThreadDesc& desc = {}) SKR_NOEXCEPT;
-    
+
     // finalize thread.
     // @retval ASYNC_RESULT_OK if success
     AsyncResult finalize() SKR_NOEXCEPT;
 
 private:
-    skr::String tname;
+    skr::String     tname;
     NamedThreadDesc desc = {};
 
-    static void threadFunc(void* args);
-    SThreadDesc tDesc;
-    SThreadID tID;
-    SThreadHandle tHandle;
-    SAtomic32 started = false;
-    SAtomic32 alive = false;
-    SAtomic32 priority = false;
-    NamedThreadFunction* func = nullptr;
+    static void          threadFunc(void* args);
+    SThreadDesc          tDesc;
+    SThreadID            tID;
+    SThreadHandle        tHandle;
+    SAtomic32            started  = false;
+    SAtomic32            alive    = false;
+    SAtomic32            priority = false;
+    NamedThreadFunction* func     = nullptr;
 };
 
-}
+} // namespace skr

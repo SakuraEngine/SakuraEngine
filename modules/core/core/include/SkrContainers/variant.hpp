@@ -1,27 +1,10 @@
 #pragma once
-#include "SkrBase/types.h"
-#include "SkrBase/containers/variant/variant.hpp"
+#include "SkrContainersDef/variant.hpp"
 
-namespace skr
-{
-template <class... Ts>
-using variant = skr::container::variant<Ts...>;
-template <class... Ts>
-struct overload : Ts... {
-    using Ts::operator()...;
-};
-template <class... Ts>
-overload(Ts...) -> overload<Ts...>;
-using skr::container::get_if;
-using skr::container::get;
-using skr::container::visit;
-using skr::container::variant_size_v;
-using skr::container::variant_npos;
-} // namespace skr
-
-namespace skr
-{
-namespace binary
+// bin serde
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
+namespace skr::binary
 {
 template <class... Ts>
 struct ReadTrait<skr::variant<Ts...>> {
@@ -55,14 +38,6 @@ struct ReadTrait<skr::variant<Ts...>> {
         return ReadByIndexHelper(archive, value, index, std::make_index_sequence<sizeof...(Ts)>());
     }
 };
-
-} // namespace binary
-} // namespace skr
-
-namespace skr
-{
-namespace binary
-{
 template <class... Ts>
 struct WriteTrait<skr::variant<Ts...>> {
     static int Write(SBinaryWriter* archive, const skr::variant<Ts...>& variant)
@@ -76,13 +51,11 @@ struct WriteTrait<skr::variant<Ts...>> {
         return ret;
     }
 };
-} // namespace binary
-} // namespace skr
+} // namespace skr::binary
 
-#include "SkrRTTR/rttr_traits.hpp"
+// json serde
 #include "SkrSerde/json/reader.h"
 #include "SkrSerde/json/writer.h"
-
 namespace skr::json
 {
 template <class... Ts>
@@ -118,7 +91,6 @@ struct ReadTrait<skr::variant<Ts...>> {
         return true;
     }
 };
-
 template <class... Ts>
 struct WriteTrait<skr::variant<Ts...>> {
     static bool Write(skr::archive::JsonWriter* json, const skr::variant<Ts...>& v)

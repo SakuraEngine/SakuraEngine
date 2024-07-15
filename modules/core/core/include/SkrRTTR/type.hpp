@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
-#include "SkrContainers/string.hpp"
-#include "SkrContainers/string.hpp"
+#include "SkrContainersDef/string.hpp"
+#include "SkrContainersDef/string.hpp"
 #include "SkrRTTR/enum_tools.hpp"
 #include "SkrRTTR/export/export_data.hpp"
 #include "SkrRTTR/export/export_builder.hpp"

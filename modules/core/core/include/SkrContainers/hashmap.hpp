@@ -1,40 +1,10 @@
 #pragma once
-#include "SkrBase/types.h"
-#include "SkrCore/memory/memory.h"
-#include "parallel_hashmap/phmap.h"
+#include "SkrContainersDef/hashmap.hpp"
 
-namespace skr
-{
-template <class K, class V,
-          class Hash      = phmap::priv::hash_default_hash<K>,
-          class Eq        = phmap::priv::hash_default_eq<K>,
-          class Allocator = skr_stl_allocator<phmap::priv::Pair<const K, V>>>
-using FlatHashMap = phmap::flat_hash_map<K, V, Hash, Eq, Allocator>;
-
-template <class K, class V,
-          class Hash      = phmap::priv::hash_default_hash<K>,
-          class Eq        = phmap::priv::hash_default_eq<K>,
-          class Allocator = skr_stl_allocator<phmap::priv::Pair<const K, V>>>
-using ParallelFlatHashMap = phmap::parallel_flat_hash_map<K, V, Hash, Eq, Allocator, 4, std::shared_mutex>;
-
-template <class K,
-          class Hash      = phmap::priv::hash_default_hash<K>,
-          class Eq        = phmap::priv::hash_default_eq<K>,
-          class Allocator = skr_stl_allocator<K>>
-using FlatHashSet = phmap::flat_hash_set<K, Hash, Eq, Allocator>;
-
-template <class K,
-          class Hash      = phmap::priv::hash_default_hash<K>,
-          class Eq        = phmap::priv::hash_default_eq<K>,
-          class Allocator = skr_stl_allocator<K>>
-using ParallelFlatHashSet = phmap::parallel_flat_hash_set<K, Hash, Eq, Allocator, 4, std::shared_mutex>;
-} // namespace skr
-
+// bin serde
 #include "SkrSerde/binary/reader.h"
 #include "SkrSerde/binary/writer.h"
-namespace skr
-{
-namespace binary
+namespace skr::binary
 {
 template <class K, class V, class Hash, class Eq>
 struct ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
@@ -56,7 +26,6 @@ struct ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
         return true;
     }
 };
-
 template <class K, class V, class Hash, class Eq>
 struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
     static bool Write(SBinaryWriter* archive, const skr::FlatHashMap<K, V, Hash, Eq>& map)
@@ -70,13 +39,11 @@ struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
         return true;
     }
 };
-} // namespace binary
+} // namespace skr::binary
 
-} // namespace skr
-
+// json serde
 #include "SkrSerde/json/reader.h"
 #include "SkrSerde/json/writer.h"
-
 namespace skr::json
 {
 template <class K, class V, class Hash, class Eq>

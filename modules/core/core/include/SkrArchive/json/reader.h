@@ -2,18 +2,19 @@
 #include "SkrArchive/json/common.h"
 
 #if defined(__cplusplus)
-#include "SkrContainers/vector.hpp"
+    #include "SkrContainersDef/vector.hpp"
 
-namespace skr::archive {
+namespace skr::archive
+{
 
-using JsonReadError = JsonErrorCode;
+using JsonReadError  = JsonErrorCode;
 using JsonReadResult = JsonResult;
 
 struct SKR_STATIC_API _JsonReader {
-    using CharType = char8_t;
-    using SizeType = size_t;
+    using CharType     = char8_t;
+    using SizeType     = size_t;
     using DocumentType = SJsonDocument;
-    using ValueType = SJsonValue;
+    using ValueType    = SJsonValue;
 
     _JsonReader(skr::StringView json);
     ~_JsonReader();
@@ -24,7 +25,7 @@ struct SKR_STATIC_API _JsonReader {
     JsonReadResult StartArray(skr::StringView key, SizeType& count);
     JsonReadResult EndArray();
 
-    bool HasKey(skr::StringView key);
+    bool           HasKey(skr::StringView key);
     JsonReadResult ReadBool(skr::StringView key, bool& value);
     JsonReadResult ReadInt32(skr::StringView key, int32_t& value);
     JsonReadResult ReadInt64(skr::StringView key, int64_t& value);
@@ -37,7 +38,7 @@ struct SKR_STATIC_API _JsonReader {
     inline JsonReadResult ReadInt(skr::StringView key, int& value) { return ReadInt32(key, value); }
     inline JsonReadResult ReadUInt(skr::StringView key, unsigned int& value) { return ReadUInt32(key, value); }
 
-#pragma region Helpers
+    #pragma region Helpers
 
     template <JsonPrimitiveReadableType Type>
     JsonReadResult ReadArray(Type* values, SizeType count)
@@ -85,15 +86,15 @@ struct SKR_STATIC_API _JsonReader {
         else if constexpr (std::is_same_v<Type, int8_t>)
         {
             int32_t v;
-            auto success = ReadInt32(key, v);
-            value = v;
+            auto    success = ReadInt32(key, v);
+            value           = v;
             return success;
         }
         else if constexpr (std::is_same_v<Type, int16_t>)
         {
             int32_t v;
-            auto success = ReadInt32(key, v);
-            value = v;
+            auto    success = ReadInt32(key, v);
+            value           = v;
             return success;
         }
         else if constexpr (std::is_same_v<Type, int32_t>)
@@ -104,22 +105,22 @@ struct SKR_STATIC_API _JsonReader {
         else if constexpr (std::is_same_v<Type, uint8_t>)
         {
             uint32_t v;
-            auto success = ReadUInt32(key, v);
-            value = v;
+            auto     success = ReadUInt32(key, v);
+            value            = v;
             return success;
         }
         else if constexpr (std::is_same_v<Type, uint16_t>)
         {
             uint32_t v;
-            auto success = ReadUInt32(key, v);
-            value = v;
+            auto     success = ReadUInt32(key, v);
+            value            = v;
             return success;
         }
         else if constexpr (std::is_same_v<Type, uint32_t>)
         {
             uint32_t v;
-            auto success = ReadUInt32(key, v);
-            value = v;
+            auto     success = ReadUInt32(key, v);
+            value            = v;
             return success;
         }
         else if constexpr (std::is_same_v<Type, uint64_t>)
@@ -129,7 +130,7 @@ struct SKR_STATIC_API _JsonReader {
             return ReadFloat(key, value);
         else if constexpr (std::is_same_v<Type, double>)
             return ReadDouble(key, value);
-            
+
         else if constexpr (std::is_same_v<Type, skr::String>)
             return ReadString(key, value);
 
@@ -137,26 +138,28 @@ struct SKR_STATIC_API _JsonReader {
             return JsonReadError::UnknownTypeToRead;
     }
 
-#pragma endregion
+    #pragma endregion
 
     struct Level {
         ValueType* _value = nullptr;
-        enum EType {
+        enum EType
+        {
             kObject,
             kArray
-        } _type = kObject;
+        } _type         = kObject;
         uint32_t _index = 0;
 
         Level(ValueType* _value, EType _type) SKR_NOEXCEPT
-            : _value(_value), _type(_type) 
+            : _value(_value),
+              _type(_type)
         {
-
         }
     };
+
 protected:
     friend struct _ReaderHelper;
     skr::Vector<Level> _stack;
-    DocumentType* _document = nullptr;
+    DocumentType*      _document = nullptr;
 };
 
 struct SKR_STATIC_API JsonReader : public _JsonReader {
@@ -183,6 +186,6 @@ protected:
     skr::String _currentKey;
 };
 
-}
+} // namespace skr::archive
 
 #endif

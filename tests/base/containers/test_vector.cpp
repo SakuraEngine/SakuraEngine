@@ -1,10 +1,11 @@
-#include "SkrTestFramework/framework.hpp"
 #include "container_test_types.hpp"
+#include "SkrTestFramework/framework.hpp"
 
 template <typename TestVector, typename ModifyCapacity, typename ClampCapacity, typename CheckData, typename CheckNoData, typename CheckDataEQ>
 void template_test_vector(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_capacity, CheckData&& check_data, CheckNoData&& check_no_data, CheckDataEQ&& check_data_eq)
 {
-    using namespace skr;
+    using skr::Greater;
+    using namespace skr::test_container;
 
     SUBCASE("ctor")
     {
@@ -888,7 +889,7 @@ void template_test_vector(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_ca
 
 TEST_CASE("test vector")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     using TestVector = Vector<uint32_t>;
 
     template_test_vector<TestVector>(
@@ -901,7 +902,7 @@ TEST_CASE("test vector")
 
 TEST_CASE("test fixed vector")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     using namespace skr::container;
     static constexpr uint64_t kFixedCapacity = 200;
 
@@ -917,7 +918,7 @@ TEST_CASE("test fixed vector")
 
 TEST_CASE("test inline vector")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     static constexpr uint64_t kInlineCapacity = 10;
 
     using TestVector = InlineVector<uint32_t, kInlineCapacity>;
@@ -932,11 +933,11 @@ TEST_CASE("test inline vector")
 
 TEST_CASE("test inline vector2")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     static constexpr uint64_t kInlineCapacity = 0;
 
     using TestVector = InlineVector<uint32_t, kInlineCapacity>;
-    
+
     template_test_vector<TestVector>(
     [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
     [](auto capacity) { return capacity; },

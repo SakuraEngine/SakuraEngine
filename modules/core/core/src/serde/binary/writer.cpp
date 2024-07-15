@@ -1,5 +1,5 @@
 #include "SkrBase/misc/bit.hpp"
-#include "SkrContainers/sptr.hpp"
+#include "SkrContainersDef/sptr.hpp"
 #include "SkrSerde/binary/writer.h"
 #include "SkrBase/math/rtm/scalarf.h"
 #include "SkrBase/math/rtm/scalard.h"
@@ -102,20 +102,5 @@ bool WriteTrait<skr_guid_t>::Write(SBinaryWriter* writer, const skr_guid_t& guid
 bool WriteTrait<skr_md5_t>::Write(SBinaryWriter* writer, const skr_md5_t& md5)
 {
     return writer->write(&md5, sizeof(md5));
-}
-
-// other skr types
-bool WriteTrait<skr::String>::Write(SBinaryWriter* writer, const skr::String& str)
-{
-    if (!WriteTrait<uint32_t>::Write(writer, (uint32_t)str.size()))
-        return false;
-    return writer->write(str.u8_str(), str.size());
-}
-
-bool WriteTrait<skr::StringView>::Write(SBinaryWriter* writer, const skr::StringView& str)
-{
-    if (!WriteTrait<uint32_t>::Write(writer, (uint32_t)str.size()))
-        return true;
-    return writer->write(str.raw().data(), str.size());
 }
 } // namespace skr::binary

@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
+#include "SkrBase/misc/debug.h"
 #include "SkrBase/memory.hpp"
 #include "utils.hpp"
 #include <type_traits>

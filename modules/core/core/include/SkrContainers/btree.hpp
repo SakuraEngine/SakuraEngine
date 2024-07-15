@@ -1,26 +1,10 @@
 #pragma once
-#include "SkrBase/types.h"
-#include "SkrCore/memory/memory.h"
-#include "parallel_hashmap/btree.h"
+#include "SkrContainersDef/btree.hpp"
 
-namespace skr
-{
-template <class K, class V, class Eq = phmap::Less<K>, class Allocator = skr_stl_allocator<phmap::priv::Pair<const K, V>>>
-using BTreeMap = phmap::btree_map<K, V, Eq, Allocator>;
-
-template <class K, class V, class Eq = phmap::Less<K>, class Allocator = skr_stl_allocator<phmap::priv::Pair<const K, V>>>
-using BTreeMultiMap = phmap::btree_multimap<K, V, Eq, Allocator>;
-
-template <class K, class Eq = phmap::Less<K>, class Allocator = skr_stl_allocator<K>>
-using BTreeSet = phmap::btree_set<K, Eq, Allocator>;
-
-template <class K, class Eq = phmap::Less<K>, class Allocator = skr_stl_allocator<K>>
-using BTreeMultiSet = phmap::btree_multiset<K, Eq, Allocator>;
-} // namespace skr
-
-namespace skr
-{
-namespace binary
+// bin serde
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
+namespace skr::binary
 {
 template <class K, class V, class Eq>
 struct ReadTrait<skr::BTreeMap<K, V, Eq>> {
@@ -56,5 +40,4 @@ struct WriteTrait<skr::BTreeMap<K, V, Eq>> {
         return true;
     }
 };
-} // namespace binary
-} // namespace skr
+} // namespace skr::binary

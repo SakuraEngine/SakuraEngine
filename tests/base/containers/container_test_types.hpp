@@ -2,6 +2,7 @@
 // !! FUCK U MSVC
 #include "SkrBase/containers/sparse_vector/sparse_vector_def.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_def.hpp"
+#include "SkrBase/containers/sparse_hash_map/kvpair.hpp"
 
 // allocator
 #include "skr_test_allocator.hpp"
@@ -38,7 +39,7 @@
 #include "SkrBase/containers/ring_buffer/ring_buffer.hpp"
 #include "SkrBase/containers/ring_buffer/ring_buffer_memory.hpp"
 
-namespace skr
+namespace skr::test_container
 {
 using TestSizeType      = uint64_t;
 using TestHashType      = uint64_t;
@@ -225,4 +226,4 @@ TestSizeType,
 kInlineCount,
 TestAllocatorType>>;
 
-} // namespace skr
+} // namespace skr::test_container

@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRTTR/type_registry.hpp"
-#include "SkrContainers/string.hpp"
+#include "SkrContainersDef/string.hpp"
 #include "SkrBase/meta.h"
 #include "SkrBase/sinterface.hpp"
 
@@ -60,7 +60,7 @@ inline Type* type_of()
         }                                                  \
         inline static constexpr GUID get_guid()            \
         {                                                  \
-            using namespace skr::literals;           \
+            using namespace skr::literals;                 \
             return u8##__GUID##_guid;                      \
         }                                                  \
     };                                                     \

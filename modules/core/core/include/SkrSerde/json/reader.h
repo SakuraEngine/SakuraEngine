@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrBase/types.h"
 #include "SkrArchive/json/reader.h"
-#include "SkrContainers/string.hpp"
-#include "SkrContainers/vector.hpp"
+#include "SkrContainersDef/string.hpp"
+#include "SkrContainersDef/vector.hpp"
 
 // helper functions
 namespace skr::json
@@ -103,33 +103,6 @@ struct SKR_STATIC_API ReadTrait<skr_guid_t> {
 template <>
 struct SKR_STATIC_API ReadTrait<skr_md5_t> {
     static bool Read(skr::archive::JsonReader* json, skr_md5_t& md5);
-};
-template <>
-struct SKR_STATIC_API ReadTrait<skr::String> {
-    static bool Read(skr::archive::JsonReader* json, skr::String& value);
-};
-} // namespace skr::json
-
-// container & template
-namespace skr::json
-{
-template <class V>
-struct ReadTrait<skr::Vector<V>> {
-    static bool Read(skr::archive::JsonReader* json, skr::Vector<V>& vec)
-    {
-        size_t count;
-        json->StartArray(count);
-        vec.reserve(count);
-        for (size_t i = 0; i < count; i++)
-        {
-            V v;
-            if (!skr::json::Read<V>(json, v))
-                return false;
-            vec.emplace(std::move(v));
-        }
-        json->EndArray();
-        return true;
-    }
 };
 } // namespace skr::json
 

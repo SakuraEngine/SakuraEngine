@@ -213,13 +213,4 @@ bool ReadTrait<skr_guid_t>::Read(skr::archive::JsonReader* _json, skr_guid_t& va
     }
     return false;
 }
-
-bool ReadTrait<skr::String>::Read(skr::archive::JsonReader* _json, skr::String& value)
-{
-    SkrZoneScopedN("json::ReadTrait<skr::String>::Read");
-
-    if (_json->String(value).has_value())
-        return true;
-    return false;
-}
 } // namespace skr::json

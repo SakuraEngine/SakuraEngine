@@ -1,17 +1,9 @@
 #pragma once
-#include "SkrBase/types.h"
-#include "SkrBase/misc/traits.hpp"
-#include "SkrBase/misc/debug.h"
-#include "SkrBase/containers/misc/span.hpp"
-#include "SkrContainers/vector.hpp"
+#include "SkrContainersDef/span.hpp"
 
-namespace skr
-{
-template <typename T, size_t Extent = skr::container::kDynamicExtent>
-using span = container::Span<T, size_t, Extent>;
-}
-
-// binary reader
+// bin serde
+#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/binary/writer.h"
 namespace skr::binary
 {
 template <class T>
@@ -21,6 +13,18 @@ struct ReadTrait<skr::span<T>> {
         for (auto& v : span)
         {
             if (!skr::binary::Read(archive, v))
+                return false;
+        }
+        return true;
+    }
+};
+template <class T>
+struct WriteTrait<skr::span<T>> {
+    static bool Write(SBinaryWriter* writer, const skr::span<T>& span)
+    {
+        for (const T& value : span)
+        {
+            if (!skr::binary::Write(writer, value))
                 return false;
         }
         return true;
@@ -39,7 +43,6 @@ struct SpanReader {
         return true;
     }
 };
-
 struct SpanReaderBitpacked {
     skr::span<const uint8_t> data;
     size_t                   offset    = 0;
@@ -92,22 +95,9 @@ struct SpanReaderBitpacked {
         return true;
     }
 };
-
-template <class T>
-struct WriteTrait<skr::span<T>> {
-    static bool Write(SBinaryWriter* writer, const skr::span<T>& span)
-    {
-        for (const T& value : span)
-        {
-            if (!skr::binary::Write(writer, value))
-                return false;
-        }
-        return true;
-    }
-};
-
 } // namespace skr::binary
 
+// json serde
 #include "SkrSerde/json/reader.h"
 #include "SkrSerde/json/writer.h"
 namespace skr::json

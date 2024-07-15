@@ -1,6 +1,6 @@
 #include "SkrBase/misc/debug.h"
 #include "SkrProfile/profile.h"
-#include "SkrContainers/string.hpp"
+#include "SkrContainersDef/string.hpp"
 #include "SkrSerde/json/writer.h"
 
 namespace skr::json
@@ -61,7 +61,8 @@ bool WriteTrait<double>::Write(skr::archive::JsonWriter* writer, double d)
     return writer->Double(d).has_value();
 }
 
-#define TRUE_OR_RETURN_FALSE(x) if (!(x).has_value()) return false;
+#define TRUE_OR_RETURN_FALSE(x) \
+    if (!(x).has_value()) return false;
 
 // skr types
 bool WriteTrait<skr_float2_t>::Write(skr::archive::JsonWriter* writer, const skr_float2_t& v)
@@ -151,20 +152,6 @@ bool WriteTrait<skr_md5_t>::Write(skr::archive::JsonWriter* writer, const skr_md
     TRUE_OR_RETURN_FALSE(writer->String(str));
     return true;
 }
-
-// string types
-bool WriteTrait<skr::StringView>::Write(skr::archive::JsonWriter* writer, const skr::StringView& str)
-{
-    TRUE_OR_RETURN_FALSE(writer->String(str));
-    return true;
-}
-
-bool WriteTrait<skr::String>::Write(skr::archive::JsonWriter* writer, const skr::String& str)
-{
-    TRUE_OR_RETURN_FALSE(writer->String(str.view()));
-    return true;
-}
-
 } // namespace skr::json
 
 #undef TRUE_OR_RETURN_FALSE

@@ -1,5 +1,5 @@
-#include "SkrTestFramework/framework.hpp"
 #include "SkrBase/containers/bit_set/bit_set.hpp"
+#include "SkrTestFramework/framework.hpp"
 
 template <size_t N>
 using TestBitset = skr::container::Bitset<N, uint64_t>;

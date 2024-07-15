@@ -233,8 +233,8 @@ struct BinSerde<skr_md5_t> : BinSerdePOD<skr_md5_t> {
 
 // 解环
 //  string/vector
-#include "SkrContainers/string.hpp"
-#include "SkrContainers/vector.hpp"
+#include "SkrContainersDef/string.hpp"
+#include "SkrContainersDef/vector.hpp"
 namespace skr
 {
 template <>

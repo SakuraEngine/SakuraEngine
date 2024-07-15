@@ -1,11 +1,12 @@
-#include "SkrTestFramework/framework.hpp"
 #include "container_test_types.hpp"
+#include "SkrTestFramework/framework.hpp"
 #include <chrono>
 
 template <typename KeyType, typename PairType, typename TestHashMap, typename ModifyCapacity, typename ClampCapacity>
 void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_capacity)
 {
-    using namespace skr;
+    using skr::Hash;
+    using namespace skr::test_container;
 
     SUBCASE("ctor & dtor")
     {
@@ -797,10 +798,10 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
 
 TEST_CASE("test sparse hash map")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     using KeyType   = int32_t;
     using ValueType = int32_t;
-    using PairType  = container::KVPair<KeyType, ValueType>;
+    using PairType  = skr::container::KVPair<KeyType, ValueType>;
 
     using TestHashMap = SparseHashMap<KeyType, ValueType>;
 
@@ -811,10 +812,10 @@ TEST_CASE("test sparse hash map")
 
 TEST_CASE("test fixed sparse hash map")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     using KeyType   = int32_t;
     using ValueType = int32_t;
-    using PairType  = container::KVPair<KeyType, ValueType>;
+    using PairType  = skr::container::KVPair<KeyType, ValueType>;
 
     static constexpr size_t kFixedCapacity = 200;
     using TestHashMap                      = FixedSparseHashMap<KeyType, ValueType, kFixedCapacity>;
@@ -826,10 +827,10 @@ TEST_CASE("test fixed sparse hash map")
 
 TEST_CASE("test inline sparse hash map")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     using KeyType   = int32_t;
     using ValueType = int32_t;
-    using PairType  = container::KVPair<KeyType, ValueType>;
+    using PairType  = skr::container::KVPair<KeyType, ValueType>;
 
     static constexpr uint64_t kInlineCapacity = 10;
 

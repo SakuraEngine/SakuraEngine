@@ -4,9 +4,10 @@
 #include "OpenString/wide_text.cpp"
 #include "OpenString/format.cpp"
 #include "SkrCore/log.h"
-#include "SkrContainers/string.hpp"
+#include "SkrContainersDef/string.hpp"
 
-namespace skr {
+namespace skr
+{
 
 constexpr int parse_hex_digit(const char8_t c)
 {
@@ -25,7 +26,7 @@ template <class T>
 bool parse_hex(const char8_t* ptr, T& value)
 {
     constexpr size_t digits = sizeof(T) * 2;
-    value = 0;
+    value                   = 0;
     for (size_t i = 0; i < digits; ++i)
     {
         int result = parse_hex_digit(ptr[i]);
@@ -38,10 +39,10 @@ bool parse_hex(const char8_t* ptr, T& value)
 
 bool make_guid_helper(const char8_t* begin, skr_guid_t& value)
 {
-    uint32_t Data1 = 0;
-    uint16_t Data2 = 0;
-    uint16_t Data3 = 0;
-    uint8_t Data4[8] = {};
+    uint32_t Data1    = 0;
+    uint16_t Data2    = 0;
+    uint16_t Data3    = 0;
+    uint8_t  Data4[8] = {};
     if (!parse_hex(begin, Data1))
         return false;
     begin += 8 + 1;
@@ -68,7 +69,7 @@ bool guid_from_sv(const skr::StringView& str, skr_guid_t& value)
 {
     using namespace skr::StringLiterals;
     constexpr size_t short_guid_form_length = 36;
-    constexpr size_t long_guid_form_length = 38;
+    constexpr size_t long_guid_form_length  = 38;
 
     if (str.size() != long_guid_form_length && str.size() != short_guid_form_length)
     {

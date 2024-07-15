@@ -1,9 +1,10 @@
-#include "SkrTestFramework/framework.hpp"
 #include "container_test_types.hpp"
+#include "SkrTestFramework/framework.hpp"
 
 TEST_CASE("test bit vector")
 {
-    using namespace skr;
+    using skr::npos_of;
+    using namespace skr::test_container;
     using BitVector = BitVector<uint64_t>;
 
     SUBCASE("test ctor")

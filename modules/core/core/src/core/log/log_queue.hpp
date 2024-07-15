@@ -1,14 +1,14 @@
 #pragma once
-#include "SkrContainers/hashmap.hpp"
+#include "SkrContainersDef/hashmap.hpp"
 #include "SkrBase/atomic/atomic.h"
 #include "SkrOS/thread.h"
 #include "SkrCore/log/log_base.hpp"
 #include "SkrCore/log/log_formatter.hpp"
 
-#include "SkrContainers/concurrent_queue.hpp"
-#include "SkrContainers/vector.hpp"
-#include "SkrContainers/sptr.hpp"
-#include "SkrContainers/ring_buffer.hpp"
+#include "SkrContainersDef/concurrent_queue.hpp"
+#include "SkrContainersDef/vector.hpp"
+#include "SkrContainersDef/sptr.hpp"
+#include "SkrContainersDef/ring_buffer.hpp"
 
 namespace skr
 {

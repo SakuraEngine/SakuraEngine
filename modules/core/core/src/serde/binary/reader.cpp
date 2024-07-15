@@ -1,9 +1,9 @@
 #include "SkrBase/misc/bit.hpp"
 #include "SkrBase/misc/demangle.hpp"
 #include "SkrCore/memory/memory.h"
-#include "SkrContainers/sptr.hpp"
-#include "SkrContainers/string.hpp"
-#include "SkrContainers/vector.hpp"
+#include "SkrContainersDef/sptr.hpp"
+#include "SkrContainersDef/string.hpp"
+#include "SkrContainersDef/vector.hpp"
 #include "SkrCore/log.h"
 #include "SkrSerde/binary/reader.h"
 #include <cmath>
@@ -113,24 +113,4 @@ bool ReadTrait<skr_guid_t>::Read(SBinaryReader* reader, skr_guid_t& guid)
 {
     return reader->read(&guid, sizeof(guid));
 }
-
-bool ReadTrait<skr::String>::Read(SBinaryReader* reader, skr::String& str)
-{
-    uint32_t size;
-    if (!ReadTrait<uint32_t>::Read(reader, size))
-    {
-        SKR_LOG_FATAL(u8"failed to read string buffer size!");
-        return false;
-    }
-    skr::InlineVector<char8_t, 64> temp;
-    temp.resize_default(size);
-    if (!reader->read((void*)temp.data(), temp.size()))
-    {
-        SKR_LOG_FATAL(u8"failed to read string buffer size!");
-        return false;
-    }
-    str = skr::String(skr::StringView((const char8_t*)temp.data(), (int32_t)temp.size()));
-    return true;
-}
-
 } // namespace skr::binary

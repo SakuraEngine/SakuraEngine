@@ -1,7 +1,7 @@
 #pragma once
-#include "SkrContainers/map.hpp"
-#include "SkrContainers/optional.hpp"
-#include "SkrContainers/vector.hpp"
+#include "SkrContainersDef/map.hpp"
+#include "SkrContainersDef/optional.hpp"
+#include "SkrContainersDef/vector.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
 #include "SkrRTTR/type_signature.hpp"
 #include "SkrRTTR/enum_tools.hpp"

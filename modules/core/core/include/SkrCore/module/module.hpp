@@ -29,10 +29,10 @@
 #include "SkrBase/types.h"
 #include "SkrBase/config.h"
 #ifdef __cplusplus
-#include "SkrOS/shared_library.hpp"
-#include <SkrContainers/string.hpp>
-#include <SkrContainers/sptr.hpp>
-#include <SkrContainers/vector.hpp>
+    #include "SkrOS/shared_library.hpp"
+    #include <SkrContainersDef/string.hpp>
+    #include <SkrContainersDef/sptr.hpp>
+    #include <SkrContainersDef/vector.hpp>
 
 namespace skr
 {
@@ -70,12 +70,11 @@ struct ModuleInfo {
     skr::Vector<ModuleDependency> dependencies;
 };
 
-struct SKR_CORE_API ModuleSubsystemBase
-{
-    using CreatePFN = ModuleSubsystemBase*(*)();
+struct SKR_CORE_API ModuleSubsystemBase {
+    using CreatePFN                             = ModuleSubsystemBase* (*)();
     virtual ~ModuleSubsystemBase() SKR_NOEXCEPT = default;
-    virtual void Initialize() = 0;
-    virtual void Finalize() = 0;
+    virtual void Initialize()                   = 0;
+    virtual void Finalize()                     = 0;
     virtual void BeginReload() {}
     virtual void EndReload() {}
 };
@@ -88,22 +87,22 @@ struct SKR_CORE_API IModule {
     friend class ModuleManagerImpl;
 
 public:
-    IModule() = default;
-    IModule(const IModule& rhs) = delete;
+    IModule()                              = default;
+    IModule(const IModule& rhs)            = delete;
     IModule& operator=(const IModule& rhs) = delete;
     virtual ~IModule(){};
-    virtual void on_load(int argc, char8_t** argv) = 0;
-    virtual void on_unload() = 0;
-    virtual int main_module_exec(int argc, char8_t** argv) { return 0; }
-    virtual const char8_t* get_meta_data(void) = 0;
-    virtual bool reloadable() { return false; }
+    virtual void              on_load(int argc, char8_t** argv) = 0;
+    virtual void              on_unload()                       = 0;
+    virtual int               main_module_exec(int argc, char8_t** argv) { return 0; }
+    virtual const char8_t*    get_meta_data(void) = 0;
+    virtual bool              reloadable() { return false; }
     virtual const ModuleInfo* get_module_info()
     {
         return &information;
     }
 
 protected:
-    ModuleInfo information;
+    ModuleInfo                        information;
     skr::Vector<ModuleSubsystemBase*> subsystems;
 };
 
@@ -127,8 +126,8 @@ struct SKR_CORE_API IDynamicModule : public IModule {
 struct IStaticModule : public IModule {
 };
 struct SKR_CORE_API IHotfixModule : public IDynamicModule {
-    void* state = nullptr;
-    virtual void on_reload_begin() = 0;
+    void*        state              = nullptr;
+    virtual void on_reload_begin()  = 0;
     virtual void on_reload_finish() = 0;
     virtual bool reloadable() override final
     {
@@ -137,14 +136,14 @@ struct SKR_CORE_API IHotfixModule : public IDynamicModule {
 };
 } // namespace skr
 
-#define IMPLEMENT_STATIC_MODULE(ModuleImplClass, ModuleName) \
-    inline static const skr::SStaticallyLinkedModuleRegistrant<ModuleImplClass> ModuleRegistrant##ModuleName((const char8_t*)#ModuleName);
+    #define IMPLEMENT_STATIC_MODULE(ModuleImplClass, ModuleName) \
+        inline static const skr::SStaticallyLinkedModuleRegistrant<ModuleImplClass> ModuleRegistrant##ModuleName((const char8_t*)#ModuleName);
 
-#define IMPLEMENT_DYNAMIC_MODULE(ModuleImplClass, ModuleName)                \
-    extern "C" SKR_EXPORT skr::IModule* __initializeModule##ModuleName() \
-    {                                                                        \
-        return new ModuleImplClass();                                        \
-    }
+    #define IMPLEMENT_DYNAMIC_MODULE(ModuleImplClass, ModuleName)            \
+        extern "C" SKR_EXPORT skr::IModule* __initializeModule##ModuleName() \
+        {                                                                    \
+            return new ModuleImplClass();                                    \
+        }
 #endif // #ifdef __cplusplus
 
 #define SKR_MODULE_METADATA(stringdec, ModuleName) SKR_EXTERN_C SKR_EXPORT const char8_t* __skr_module_meta__##ModuleName = stringdec;

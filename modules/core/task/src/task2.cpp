@@ -5,7 +5,7 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrContainers/function_ref.hpp"
 #include "SkrContainers/stl_deque.hpp"
-#include "SkrContainers/atomic_queue/atomic_queue.h"
+#include "SkrContainersDef/atomic_queue/atomic_queue.h"
 #include "SkrContainers/concurrent_queue.hpp"
 #include "SkrTask/co_task.hpp"
 
