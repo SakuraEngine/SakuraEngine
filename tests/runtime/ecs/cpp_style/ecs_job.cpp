@@ -6,18 +6,11 @@
 struct ECSJobs {
     ECSJobs() SKR_NOEXCEPT
     {
-        // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         
         storage = sugoiS_create();
 
-        int_read_query = storage->new_query()
-                .ReadAll<IntComponent>()
-                .commit().value();
-
-        int_write_query = storage->new_query()
-                .ReadWriteAll<IntComponent>()
-                .commit().value();
-
+        createQueries();
         spawnIntEntities();
 
         scheduler.initialize(skr::task::scheudler_config_t());
@@ -31,7 +24,19 @@ struct ECSJobs {
         ::sugoiS_release(storage);
         scheduler.unbind();
 
-        // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+
+    void createQueries()
+    {
+        SkrZoneScopedN("createQueries");
+        int_read_query = storage->new_query()
+                .ReadAll<IntComponent>()
+                .commit().value();
+
+        int_write_query = storage->new_query()
+                .ReadWriteAll<IntComponent>()
+                .commit().value();
     }
 
     void spawnIntEntities()

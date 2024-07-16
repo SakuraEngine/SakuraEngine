@@ -124,28 +124,33 @@ bool match_group(sugoi_query_t* q, sugoi_group_t* g)
 void sugoi_storage_t::buildQueryCache(sugoi_query_t* q)
 {
     using namespace sugoi;
-    q->pimpl->groups_cache.write([&](auto& cache){
-        cache.clear();
-        pimpl->groups.read_versioned([&](auto& groups){
-            for (auto i : groups)
-            {
-                auto g     = i.second;
-                bool match = sugoi::match_group(q, g);
-                if (!match)
-                    continue;
-                cache.push_back(g);
-            }
-        }, 
-        [&](){
-            return pimpl->groups_timestamp;
-        });
+    SkrZoneScopedN("BuildQueryCache");
+    q->pimpl->groups_cache.write([&](auto& cache) {
+        if (q->pimpl->groups_cache.group_timestamp != pimpl->groups_timestamp)
+        {
+            cache.clear();
+            pimpl->groups.read_versioned([&](auto& groups){
+                for (auto i : groups)
+                {
+                    auto g     = i.second;
+                    bool match = sugoi::match_group(q, g);
+                    if (!match)
+                        continue;
+                    cache.push_back(g);
+                }
+            }, 
+            [&](){
+                return pimpl->groups_timestamp;
+            });
+            q->pimpl->groups_cache.group_timestamp = pimpl->groups_timestamp;
+        }
     });
 }
 
 void sugoi_storage_t::updateQueryCache(sugoi_group_t* group, bool isAdd)
 {
     using namespace sugoi;
-    
+    SkrZoneScopedN("UpdateQueryCache");
     if (!isAdd)
     {
         pimpl->queries.read_versioned([&](auto& queries){
@@ -439,7 +444,6 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
     auto newQuery = sugoiQ_create(this, &filter, &params);
     const_cast<bool&>(newQuery->pimpl->includeAlias) = hasAlias;
     {
-        buildQueryCache(newQuery);
         if (newQuery->pimpl->includeAlias)
             buildQueryOverloads();
     }
@@ -478,6 +482,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const sugoi_filter_t& filter, const s
     [&](){
         return pimpl->queries_timestamp;
     });
+    buildQueryCache(q);
     return q;
 }
 
@@ -624,16 +629,6 @@ void sugoi_storage_t::buildQueryOverloads()
             query->pimpl->overload_cache.phases[query->pimpl->overload_cache.phaseCount++] = entry;
         }
     }
-    // build query cache
-    pimpl->queries.read_versioned([&](auto& queries){
-        for (auto& query : queries)
-        {
-            buildQueryCache(query);
-        }
-    }, 
-    [&](){
-        return pimpl->queries_timestamp;
-    });
 }
 
 void sugoi_storage_t::query(const sugoi_query_t* q, sugoi_view_callback_t callback, void* u)

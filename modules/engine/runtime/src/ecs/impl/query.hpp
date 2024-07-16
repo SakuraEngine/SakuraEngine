@@ -53,6 +53,8 @@ struct sugoi_query_t::Impl {
             mtx.unlock();
         }
     private:
+        friend struct sugoi_storage_t;
+        sugoi_timestamp_t group_timestamp = 0;
         mutable skr::shared_atomic_mutex mtx;
         GroupsCacheVector groups;
     } groups_cache;
