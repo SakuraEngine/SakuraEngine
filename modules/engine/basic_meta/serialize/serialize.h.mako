@@ -38,21 +38,4 @@ struct ${api} WriteTrait<${json_enum.name}>
 %endfor
 }
 
-// binary serde traits
-namespace skr::binary
-{
-%for bin_record in bin_records:
-template<>
-struct ${api} ReadTrait<${bin_record.name}>
-{
-    static bool Read(SBinaryReader* archive, ${bin_record.name}& value);
-};
-template<>
-struct ${api} WriteTrait<${bin_record.name}>
-{
-    static bool Write(SBinaryWriter* archive, const ${bin_record.name}& value);
-};
-%endfor
-}
-
 // END SERIALIZE GENERATED

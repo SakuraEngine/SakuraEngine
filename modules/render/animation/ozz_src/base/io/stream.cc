@@ -33,8 +33,7 @@
 
 #include "SkrAnim/ozz/base/maths/math_ex.h"
 #include "SkrAnim/ozz/base/memory/allocator.h"
-#include "SkrSerde/binary/reader.h"
-#include "SkrSerde/binary/writer.h"
+#include "SkrSerde/bin_serde.hpp"
 
 namespace ozz
 {

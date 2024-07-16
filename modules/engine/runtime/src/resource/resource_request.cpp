@@ -5,7 +5,6 @@
 #include "SkrCore/log.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
-#include "SkrSerde/binary/reader.h"
 
 namespace skr
 {
@@ -504,13 +503,13 @@ void SResourceRequestImpl::Update()
 
 void SResourceRequestImpl::LoadTask()
 {
-    auto                    data = GetData();
-    skr::binary::SpanReader reader{ data };
-    SBinaryReader     archive{ reader };
+    auto                        data = GetData();
+    skr::archive::BinSpanReader reader{ data };
+    SBinaryReader               archive{ reader };
 #ifdef SKR_RESOURCE_DEV_MODE
-    auto                    artifactsData   = GetArtifactsData();
-    skr::binary::SpanReader artifacstReader = { artifactsData };
-    SBinaryReader     artifactsArchive{ artifacstReader };
+    auto                        artifactsData   = GetArtifactsData();
+    skr::archive::BinSpanReader artifacstReader = { artifactsData };
+    SBinaryReader               artifactsArchive{ artifacstReader };
 #endif
     if (factory->Deserialize(resourceRecord, &archive))
         factory->DerserializeArtifacts(resourceRecord, &artifactsArchive);

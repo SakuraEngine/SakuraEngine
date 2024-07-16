@@ -22,17 +22,11 @@ SkeletonResource {
 };
 } // namespace anim
 
-namespace binary
-{
 template <>
-struct SKR_ANIM_API ReadTrait<skr::anim::SkeletonResource> {
-    static bool Read(SBinaryReader* reader, skr::anim::SkeletonResource& value);
+struct SKR_ANIM_API BinSerde<skr::anim::SkeletonResource> {
+    static bool read(SBinaryReader* r, skr::anim::SkeletonResource& v);
+    static bool write(SBinaryWriter* w, const skr::anim::SkeletonResource& v);
 };
-template <>
-struct SKR_ANIM_API WriteTrait<skr::anim::SkeletonResource> {
-    static bool Write(SBinaryWriter* writer, const skr::anim::SkeletonResource& value);
-};
-} // namespace binary
 
 namespace resource
 {

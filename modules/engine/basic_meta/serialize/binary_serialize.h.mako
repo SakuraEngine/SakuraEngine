@@ -1,18 +1,14 @@
 //BEGIN BINARY GENERATED
-#include "SkrBase/types.h"
+#include "SkrSerde/bin_serde.hpp"
 
-namespace skr::binary
+namespace skr
 {
 %for record in generator.filter_types(db.records):
 template<>
-struct ${api} ReadTrait<${record.name}>
+struct ${api} BinSerde<${record.name}>
 {
-    static bool Read(SBinaryReader* archive, ${record.name}& value);
-};
-template<>
-struct ${api} WriteTrait<${record.name}>
-{
-    static bool Write(SBinaryWriter* archive, const ${record.name}& value);
+    static bool read(SBinaryReader* r, ${record.name}& v);
+    static bool write(SBinaryWriter* w, const ${record.name}& v);
 };
 %endfor
 }

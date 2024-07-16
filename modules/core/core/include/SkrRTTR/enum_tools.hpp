@@ -344,27 +344,21 @@ private:
 } // namespace skr
 
 // strongly enum binary serde
-#include "SkrBase/types.h"
-#include "SkrSerde/binary/reader.h"
-#include "SkrSerde/binary/writer.h"
-namespace skr::binary
+#include "SkrSerde/bin_serde.hpp"
+namespace skr
 {
 template <class T>
-struct ReadTrait<StronglyEnum<T>> {
-    static bool Read(SBinaryReader* reader, StronglyEnum<T>& value)
+struct BinSerde<StronglyEnum<T>> {
+    inline static bool read(SBinaryReader* r, StronglyEnum<T>& v)
     {
-        return skr::binary::Read(reader, value.underlying_value());
+        return bin_read(r, v.underlying_value());
+    }
+    inline static bool write(SBinaryWriter* w, const StronglyEnum<T>& v)
+    {
+        return bin_write(w, v.underlying_value());
     }
 };
-
-template <class T>
-struct WriteTrait<StronglyEnum<T>> {
-    static bool Write(SBinaryWriter* writer, const StronglyEnum<T>& value)
-    {
-        return skr::binary::Write(writer, value.underlying_value());
-    }
-};
-} // namespace skr::binary
+} // namespace skr
 
 // strongly enum json serde
 #include "SkrSerde/json/reader.h"

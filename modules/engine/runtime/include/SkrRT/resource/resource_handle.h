@@ -69,6 +69,7 @@ typedef struct skr_resource_handle_t {
     SKR_RUNTIME_API void                   set_resolved(skr_resource_record_t* record, uint32_t requesterId, ESkrRequesterType requesterType);
 #endif
 } skr_resource_handle_t;
+SKR_RTTR_TYPE(skr_resource_handle_t, "A9E0CE3D-5E9B-45F1-AC28-B882885C63AB");
 
 #if defined(__cplusplus)
 namespace skr::resource
@@ -110,56 +111,44 @@ SKR_RUNTIME_API void skr_get_resource_guid(skr_resource_handle_t* handle, skr_gu
 SKR_RUNTIME_API void skr_get_resource(skr_resource_handle_t* handle, void** guid);
 
 // binary reader
-#include "SkrBase/types.h"
-#include "SkrSerde/binary/writer.h"
-#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/bin_serde.hpp"
 namespace skr
 {
-namespace binary
-{
-template <class T>
-struct ReadTrait<skr::resource::TResourceHandle<T>> {
-    static bool Read(SBinaryReader* archive, skr::resource::TResourceHandle<T>& handle)
+template <>
+struct BinSerde<skr_resource_handle_t> {
+    inline static bool read(SBinaryReader* r, skr_resource_handle_t& v)
     {
         skr_guid_t guid;
-        if (!skr ::binary ::Read(archive, (guid))) return false;
+        if (!bin_read(r, guid))
+        {
+            SKR_LOG_FATAL(u8"failed to read resource handle guid! ret code: %d", -1);
+            return false;
+        }
+        v.set_guid(guid);
+        return true;
+    }
+    inline static bool write(SBinaryWriter* w, const skr_resource_handle_t& v)
+    {
+        return bin_write(w, v.get_serialized());
+    }
+};
+
+template <class T>
+struct BinSerde<skr::resource::TResourceHandle<T>> {
+    inline static bool read(SBinaryReader* archive, skr::resource::TResourceHandle<T>& handle)
+    {
+        skr_guid_t guid;
+        if (!bin_read(archive, (guid))) return false;
         handle.set_guid(guid);
         return true;
     }
-};
-
-template <>
-struct SKR_RUNTIME_API ReadTrait<skr_resource_handle_t> {
-    static bool Read(SBinaryReader* reader, skr_resource_handle_t& handle);
-};
-} // namespace binary
-} // namespace skr
-
-// binary writer
-#include "SkrBase/types.h"
-
-namespace skr
-{
-namespace binary
-{
-template <class T>
-struct WriteTrait<skr::resource::TResourceHandle<T>> {
-    static bool Write(SBinaryWriter* binary, const skr::resource::TResourceHandle<T>& handle)
+    inline static bool write(SBinaryWriter* binary, const skr::resource::TResourceHandle<T>& handle)
     {
         const auto& hdl = static_cast<const skr_resource_handle_t&>(handle);
-        return skr::binary::Write(binary, hdl);
+        return bin_write(binary, hdl);
     }
 };
-
-template <>
-struct SKR_RUNTIME_API WriteTrait<skr_resource_handle_t> {
-    static bool Write(SBinaryWriter* writer, const skr_resource_handle_t& handle);
-};
-
-} // namespace binary
 } // namespace skr
-
-SKR_RTTR_TYPE(skr_resource_handle_t, "A9E0CE3D-5E9B-45F1-AC28-B882885C63AB");
 
 #include "SkrSerde/json/reader.h"
 #include "SkrSerde/json/writer.h"

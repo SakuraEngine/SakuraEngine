@@ -8,19 +8,19 @@ skr_guid_t SSceneFactory::GetResourceType()
 }
 } // namespace skr::resource
 
-namespace skr::binary
+namespace skr
 {
-bool ReadTrait<skr_scene_resource_t>::Read(SBinaryReader* reader, skr_scene_resource_t& value)
+bool BinSerde<skr_scene_resource_t>::read(SBinaryReader* r, skr_scene_resource_t& v)
 {
     // TODO: error code?
-    value.storage = sugoiS_create();
-    sugoiS_deserialize(value.storage, reader);
+    v.storage = sugoiS_create();
+    sugoiS_deserialize(v.storage, r);
     return true;
 }
 
-bool WriteTrait<skr_scene_resource_t>::Write(SBinaryWriter* writer, const skr_scene_resource_t& value)
+bool BinSerde<skr_scene_resource_t>::write(SBinaryWriter* w, const skr_scene_resource_t& v)
 {
-    sugoiS_serialize(value.storage, writer);
+    sugoiS_serialize(v.storage, w);
     return true;
 }
-} // namespace skr::binary
+} // namespace skr

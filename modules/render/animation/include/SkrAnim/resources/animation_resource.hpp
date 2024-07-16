@@ -19,17 +19,11 @@ AnimResource {
 };
 } // namespace anim
 
-namespace binary
-{
 template <>
-struct SKR_ANIM_API ReadTrait<anim::AnimResource> {
-    static bool Read(SBinaryReader* reader, anim::AnimResource& value);
+struct SKR_ANIM_API BinSerde<anim::AnimResource> {
+    static bool read(SBinaryReader* r, anim::AnimResource& v);
+    static bool write(SBinaryWriter* w, const anim::AnimResource& v);
 };
-template <>
-struct SKR_ANIM_API WriteTrait<anim::AnimResource> {
-    static bool Write(SBinaryWriter* writer, const anim::AnimResource& value);
-};
-} // namespace binary
 
 namespace resource
 {

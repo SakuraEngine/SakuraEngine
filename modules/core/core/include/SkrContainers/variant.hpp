@@ -2,56 +2,61 @@
 #include "SkrContainersDef/variant.hpp"
 
 // bin serde
-#include "SkrSerde/binary/reader.h"
-#include "SkrSerde/binary/writer.h"
-namespace skr::binary
+#include "SkrSerde/bin_serde.hpp"
+namespace skr
 {
 template <class... Ts>
-struct ReadTrait<skr::variant<Ts...>> {
+struct BinSerde<skr::variant<Ts...>> {
     template <size_t I, class T>
-    static bool ReadByIndex(SBinaryReader* archive, skr::variant<Ts...>& value, size_t index)
+    inline static bool _read_by_index(SBinaryReader* r, skr::variant<Ts...>& v, size_t index)
     {
         if (index == I)
         {
-            T t;
-            if (!skr::binary::Read(archive, (t))) return false;
-            value = std::move(t);
+            T tmp;
+            if (!bin_read(r, (tmp))) return false;
+            v = std::move(tmp);
             return true;
         }
         return false;
     }
-
     template <size_t... Is>
-    static bool ReadByIndexHelper(SBinaryReader* archive, skr::variant<Ts...>& value, size_t index, std::index_sequence<Is...>)
+    inline static bool _read_by_index_helper(SBinaryReader* r, skr::variant<Ts...>& v, size_t index, std::index_sequence<Is...>)
     {
         bool result;
-        (void)(((result = ReadByIndex<Is, Ts>(archive, value, index)) != 0) && ...);
+        (void)(((result = _read_by_index<Is, Ts>(r, v, index)) != 0) && ...);
         return result;
     }
 
-    static bool Read(SBinaryReader* archive, skr::variant<Ts...>& value)
+    inline static bool read(SBinaryReader* r, skr::variant<Ts...>& v)
     {
-        uint32_t index;
-        if (!skr::binary::Read(archive, (index))) return false;
+        using SizeType = decltype(v.index());
+
+        // read index
+        SizeType index;
+        if (!bin_read(r, index)) return false;
         if (index >= sizeof...(Ts))
             return false;
-        return ReadByIndexHelper(archive, value, index, std::make_index_sequence<sizeof...(Ts)>());
+
+        // read content
+        return _read_by_index(r, v, index, std::make_index_sequence<sizeof...(Ts)>());
     }
-};
-template <class... Ts>
-struct WriteTrait<skr::variant<Ts...>> {
-    static int Write(SBinaryWriter* archive, const skr::variant<Ts...>& variant)
+
+    inline static int write(SBinaryWriter* r, const skr::variant<Ts...>& v)
     {
-        if (!skr::binary::Write(archive, ((uint32_t)variant.index()))) return false;
+        // write index
+        if (!bin_write(r, v.index())) return false;
+
+        // write content
         bool ret;
         skr::visit([&](auto&& value) {
-            ret = skr::binary::Write(archive, value);
+            ret = bin_write(r, value);
         },
-                   variant);
+                   v);
+
         return ret;
     }
 };
-} // namespace skr::binary
+} // namespace skr
 
 // json serde
 #include "SkrSerde/json/reader.h"

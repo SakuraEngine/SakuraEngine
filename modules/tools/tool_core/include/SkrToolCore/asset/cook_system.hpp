@@ -5,7 +5,6 @@
 #include "SkrContainers/function_ref.hpp"
 #include "SkrCore/log.hpp"
 #include "SkrCore/blob.hpp"
-#include "SkrSerde/binary/writer.h"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrToolCore/asset/cooker.hpp"
 
@@ -78,10 +77,10 @@ public:
         }
         SKR_DEFER({ fclose(file); });
         //------write resource object
-        skr::Vector<uint8_t>      buffer;
-        skr::binary::VectorWriter writer{ &buffer };
-        SBinaryWriter             archive(writer);
-        if (!skr::binary::Write(&archive, resource))
+        skr::Vector<uint8_t>          buffer;
+        skr::archive::BinVectorWriter writer{ &buffer };
+        SBinaryWriter                 archive(writer);
+        if (!skr::bin_write(&archive, resource))
         {
             SKR_LOG_FMT_ERROR(u8"[SConfigCooker::Cook] failed to serialize resource {}! path: {}",
                               record->guid, (const char*)record->path.u8string().c_str());
@@ -116,7 +115,7 @@ protected:
         header.version    = cooker->Version();
         auto runtime_deps = GetRuntimeDependencies();
         header.dependencies.append(runtime_deps.data(), runtime_deps.size());
-        skr::binary::Write(&s, header);
+        skr::bin_write(&s, header);
     }
 
     SAssetRecord* record = nullptr;

@@ -12,7 +12,7 @@
     #include <windows.h> // include API for expanding a gltf file path
 #endif
 
-#include "SkrCore/memory/memory.h"           // IWYU pragma: export
+#include "SkrCore/memory/memory.h"      // IWYU pragma: export
 #include "SkrBase/misc/debug.h"         // IWYU pragma: export
 #include "SkrOS/thread.h"               // IWYU pragma: export
 #include "SkrOS/filesystem.hpp"         // IWYU pragma: export
@@ -33,8 +33,6 @@
 
 #include "SkrRT/io/ram_io.hpp"                // IWYU pragma: export
 #include "SkrRT/resource/resource_header.hpp" // IWYU pragma: export
-#include "SkrSerde/binary/reader.h"           // IWYU pragma: export
-#include "SkrSerde/binary/writer.h"           // IWYU pragma: export
 #include "SkrSerde/json/reader.h"             // IWYU pragma: export
 #include "SkrSerde/json/writer.h"             // IWYU pragma: export
 

@@ -1,23 +1,23 @@
 #include "SkrAnim/resources/animation_resource.hpp"
 #include "SkrAnim/ozz/base/io/archive.h"
 
-namespace skr::binary
+namespace skr
 {
-bool ReadTrait<anim::AnimResource>::Read(SBinaryReader* reader, anim::AnimResource& value)
+bool BinSerde<anim::AnimResource>::read(SBinaryReader* r, anim::AnimResource& v)
 {
-    ozz::io::SkrStream stream(reader, nullptr);
+    ozz::io::SkrStream stream(r, nullptr);
     ozz::io::IArchive  archive(&stream);
-    archive >> value.animation;
+    archive >> v.animation;
     return true;
 }
-bool WriteTrait<anim::AnimResource>::Write(SBinaryWriter* writer, const anim::AnimResource& value)
+bool BinSerde<anim::AnimResource>::write(SBinaryWriter* w, const anim::AnimResource& v)
 {
-    ozz::io::SkrStream stream(nullptr, writer);
+    ozz::io::SkrStream stream(nullptr, w);
     ozz::io::OArchive  archive(&stream);
-    archive << value.animation;
+    archive << v.animation;
     return true;
 }
-} // namespace skr::binary
+} // namespace skr
 
 namespace skr::resource
 {

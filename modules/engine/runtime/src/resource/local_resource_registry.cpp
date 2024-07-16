@@ -4,7 +4,7 @@
 #include "SkrRT/resource/local_resource_registry.hpp"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrCore/log.hpp"
-#include "SkrSerde/binary/reader.h"
+#include "SkrSerde/bin_serde.hpp"
 
 namespace skr::resource
 {
@@ -34,9 +34,9 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
             SKR_LOG_FMT_ERROR(u8"[SLocalResourceRegistry::RequestResourceFile] failed to read resource header! guid: {}", guid);
             return false;
         }
-        skr::binary::SpanReader reader = { buffer, 0 };
-        SBinaryReader     archive{ reader };
-        if (!skr::binary::Read(&archive, header))
+        skr::archive::BinSpanReader reader = { buffer, 0 };
+        SBinaryReader               archive{ reader };
+        if (!bin_read(&archive, header))
             return false;
     }
     else
@@ -48,9 +48,9 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
             SKR_LOG_FMT_ERROR(u8"[SLocalResourceRegistry::RequestResourceFile] failed to read resource header! guid: {}", guid);
             return false;
         }
-        skr::binary::SpanReader reader = { { buffer, _fs_length }, 0 };
-        SBinaryReader     archive{ reader };
-        if (!skr::binary::Read(&archive, header))
+        skr::archive::BinSpanReader reader = { { buffer, _fs_length }, 0 };
+        SBinaryReader               archive{ reader };
+        if (!bin_read(&archive, header))
             return false;
     }
     SKR_ASSERT(header.guid == guid);

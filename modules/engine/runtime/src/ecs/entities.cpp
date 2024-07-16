@@ -174,10 +174,10 @@ void EntityRegistry::move_entities(const sugoi_chunk_view_t& view, EIndex srcInd
 void EntityRegistry::serialize(SBinaryWriter* writer)
 {
     visit_entries([&](const auto& entriesView){
-        skr::binary::Write(writer, (uint32_t)entriesView.size());
+        skr::bin_write(writer, (uint32_t)entriesView.size());
     });
     visit_free_entries([&](const auto& freeEntriesView){
-        skr::binary::Write(writer, (uint32_t)freeEntriesView.size());
+        skr::bin_write(writer, (uint32_t)freeEntriesView.size());
         writer->write(freeEntriesView.data(), sizeof(EIndex) * static_cast<uint32_t>(freeEntriesView.size()));
     });
 }
@@ -190,10 +190,10 @@ void EntityRegistry::deserialize(SBinaryReader* reader)
     // empty storage expected
     SKR_ASSERT(entries.size() == 0);
     uint32_t size = 0;
-    skr::binary::Read(reader, size);
+    skr::bin_read(reader, size);
     entries.resize_default(size);
     uint32_t freeSize = 0;
-    skr::binary::Read(reader, freeSize);
+    skr::bin_read(reader, freeSize);
     freeEntries.resize_default(freeSize);
     reader->read((void*)freeEntries.data(), sizeof(EIndex) * freeSize);
 }

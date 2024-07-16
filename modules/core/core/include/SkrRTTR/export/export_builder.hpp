@@ -317,11 +317,11 @@ struct RecordBuilder {
             extern_method<+[](T& lhs, T&& rhs) { lhs.operator=(std::move(rhs)); }>(CPPExternMethods::Assign);
         }
 
-        if constexpr (skr::binary::HasReadTrait<T>)
+        if constexpr (skr::HasBinRead<T>)
         {
             extern_method<
                 +[](void* object, void* reader) -> bool { 
-                    return skr::binary::ReadTrait<T>::Read((SBinaryReader*)reader, *(T*)object); 
+                    return skr::bin_read<T>((SBinaryReader*)reader, *(T*)object); 
                 }>(SkrCoreExternMethods::ReadBin);
         }
 

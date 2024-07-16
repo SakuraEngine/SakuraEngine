@@ -1,8 +1,6 @@
 #include "SkrRT/resource/config_resource.h"
 #include "SkrBase/misc/debug.h"
 #include "SkrCore/memory/memory.h"
-#include "SkrSerde/binary/reader.h"
-#include "SkrSerde/binary/writer.h"
 #include "SkrRTTR/type_registry.hpp"
 #include "SkrRTTR/type.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
@@ -31,33 +29,32 @@ void skr_config_resource_t::SetType(skr_guid_t type)
     // newType->call_ctor(configData); // TODO. resume rttr
 }
 
-namespace skr::binary
+namespace skr
 {
-bool WriteTrait<skr_config_resource_t>::Write(SBinaryWriter* archive, const skr_config_resource_t& value)
+bool BinSerde<skr_config_resource_t>::read(SBinaryReader* r, skr_config_resource_t& v)
 {
-    if (!skr::binary::Write(archive, value.configType))
+    if (!bin_read(r, v.configType))
         return false;
-    if (value.configType == skr_guid_t{})
+    if (v.configType == skr_guid_t{})
+        return true;
+    auto type    = skr::rttr::get_type_from_guid(v.configType);
+    v.configData = sakura_malloc_aligned(type->size(), type->alignment());
+    // return type->read_binary(value.configData, archive); // TODO. resume rttr
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return {};
+}
+bool BinSerde<skr_config_resource_t>::write(SBinaryWriter* w, const skr_config_resource_t& v)
+{
+    if (!bin_write(w, v.configType))
+        return false;
+    if (v.configType == skr_guid_t{})
         return true;
     // auto type = skr::rttr::get_type_from_guid(value.configType);
     // return type->write_binary(value.configData, archive); // TODO. resume rttr
     SKR_UNIMPLEMENTED_FUNCTION();
     return {};
 }
-
-bool ReadTrait<skr_config_resource_t>::Read(SBinaryReader* archive, skr_config_resource_t& value)
-{
-    if (!skr::binary::Read(archive, value.configType))
-        return false;
-    if (value.configType == skr_guid_t{})
-        return true;
-    auto type        = skr::rttr::get_type_from_guid(value.configType);
-    value.configData = sakura_malloc_aligned(type->size(), type->alignment());
-    // return type->read_binary(value.configData, archive); // TODO. resume rttr
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return {};
-}
-} // namespace skr::binary
+} // namespace skr
 
 namespace skr
 {

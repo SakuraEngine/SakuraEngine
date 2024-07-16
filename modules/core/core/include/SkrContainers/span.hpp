@@ -2,36 +2,36 @@
 #include "SkrContainersDef/span.hpp"
 
 // bin serde
-#include "SkrSerde/binary/reader.h"
-#include "SkrSerde/binary/writer.h"
-namespace skr::binary
+#include "SkrSerde/bin_serde.hpp"
+namespace skr
 {
 template <class T>
-struct ReadTrait<skr::span<T>> {
-    static bool Read(SBinaryReader* archive, skr::span<T> span)
+struct BinSerde<skr::span<T>> {
+    inline static bool read(SBinaryReader* r, skr::span<T> v)
     {
-        for (auto& v : span)
+        for (auto& v : v)
         {
-            if (!skr::binary::Read(archive, v))
+            if (!bin_read(r, v))
+                return false;
+        }
+        return true;
+    }
+    inline static bool write(SBinaryWriter* w, const skr::span<T>& v)
+    {
+        for (const T& value : v)
+        {
+            if (!bin_write(w, value))
                 return false;
         }
         return true;
     }
 };
-template <class T>
-struct WriteTrait<skr::span<T>> {
-    static bool Write(SBinaryWriter* writer, const skr::span<T>& span)
-    {
-        for (const T& value : span)
-        {
-            if (!skr::binary::Write(writer, value))
-                return false;
-        }
-        return true;
-    }
-};
+} // namespace skr
 
-struct SpanReader {
+// bin reader & writer
+namespace skr::archive
+{
+struct BinSpanReader {
     skr::span<const uint8_t> data;
     size_t                   offset = 0;
     bool                     read(void* dst, size_t size)
@@ -43,7 +43,7 @@ struct SpanReader {
         return true;
     }
 };
-struct SpanReaderBitpacked {
+struct BinSpanReaderBitpacked {
     skr::span<const uint8_t> data;
     size_t                   offset    = 0;
     uint8_t                  bitOffset = 0;
@@ -95,7 +95,7 @@ struct SpanReaderBitpacked {
         return true;
     }
 };
-} // namespace skr::binary
+} // namespace skr::archive
 
 // json serde
 #include "SkrSerde/json/reader.h"

@@ -1,64 +1,59 @@
 #include "SkrRT/resource/resource_header.hpp"
-#include "SkrSerde/binary/writer.h"
-#include "SkrSerde/binary/reader.h"
 
 bool skr_resource_header_t::ReadWithoutDeps(SBinaryReader* reader)
 {
-    namespace bin     = skr::binary;
     uint32_t function = 1;
-    if (!bin::Read(reader, function))
+    if (!skr::bin_read(reader, function))
         return false;
-    if (!bin::Read(reader, version))
+    if (!skr::bin_read(reader, version))
         return false;
-    if (!bin::Read(reader, guid))
+    if (!skr::bin_read(reader, guid))
         return false;
-    if (!bin::Read(reader, type))
+    if (!skr::bin_read(reader, type))
         return false;
     return true;
 }
 
-namespace skr::binary
+namespace skr
 {
-bool ReadTrait<skr_resource_header_t>::Read(SBinaryReader* reader, skr_resource_header_t& header)
+bool BinSerde<skr_resource_header_t>::read(SBinaryReader* r, skr_resource_header_t& v)
 {
-    namespace bin = skr::binary;
-    if (!header.ReadWithoutDeps(reader))
+    if (!v.ReadWithoutDeps(r))
         return false;
     uint32_t size = 0;
-    if (!bin::Read(reader, size))
+    if (!bin_read(r, size))
         return false;
-    header.dependencies.resize_default(size);
+    v.dependencies.resize_default(size);
     for (uint32_t i = 0; i < size; i++)
     {
-        if (!bin::Read(reader, header.dependencies[i]))
+        if (!bin_read(r, v.dependencies[i]))
             return false;
     }
     return true;
 }
 
-bool WriteTrait<skr_resource_header_t>::Write(SBinaryWriter* writer, const skr_resource_header_t& header)
+bool BinSerde<skr_resource_header_t>::write(SBinaryWriter* w, const skr_resource_header_t& v)
 {
-    namespace bin     = skr::binary;
     uint32_t function = 1;
-    if (!bin::Write(writer, function))
+    if (!bin_write(w, function))
         return false;
-    if (!bin::Write(writer, header.version))
+    if (!bin_write(w, v.version))
         return false;
-    if (!bin::Write(writer, header.guid))
+    if (!bin_write(w, v.guid))
         return false;
-    if (!bin::Write(writer, header.type))
+    if (!bin_write(w, v.type))
         return false;
-    const auto dependencies_size = (uint32_t)header.dependencies.size();
-    if (!bin::Write(writer, dependencies_size))
+    const auto dependencies_size = (uint32_t)v.dependencies.size();
+    if (!bin_write(w, dependencies_size))
         return false;
-    for (auto& dep : header.dependencies)
+    for (auto& dep : v.dependencies)
     {
-        if (!bin::Write(writer, dep))
+        if (!bin_write(w, dep))
             return false;
     }
     return true;
 }
-} // namespace skr::binary
+} // namespace skr
 
 uint32_t skr_resource_record_t::AddReference(uint64_t requester, ESkrRequesterType requesterType)
 {

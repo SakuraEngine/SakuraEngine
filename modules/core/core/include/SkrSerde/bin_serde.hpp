@@ -88,7 +88,7 @@ concept HasBinWrite = requires(SBinaryWriter* w, const T& t) { BinSerde<T>::writ
 
 // helper
 template <HasBinRead T>
-inline bool bin_read(SBinaryReader* r, T&& v) { return BinSerde<T>::read(r, v); }
+inline bool bin_read(SBinaryReader* r, T& v) { return BinSerde<T>::read(r, v); }
 template <HasBinWrite T>
 inline bool bin_write(SBinaryWriter* w, const T& v) { return BinSerde<T>::write(w, v); }
 
@@ -175,7 +175,7 @@ struct BinSerde<T[N]> {
         {
             if (!BinSerde<T>::read(r, v[i]))
             {
-                SKR_LOG_ERROR("[SERDE/BIN] read array failed, index: %d", i);
+                SKR_LOG_ERROR(u8"[SERDE/BIN] read array failed, index: %d", i);
                 return false;
             }
         }
@@ -188,7 +188,7 @@ struct BinSerde<T[N]> {
         {
             if (!BinSerde<T>::write(w, v[i]))
             {
-                SKR_LOG_ERROR("[SERDE/BIN] write array failed, index: %d", i);
+                SKR_LOG_ERROR(u8"[SERDE/BIN] write array failed, index: %d", i);
                 return false;
             }
         }

@@ -2,45 +2,52 @@
 #include "SkrContainersDef/vector.hpp"
 
 // bin serde
-#include "SkrSerde/binary/reader.h"
-#include "SkrSerde/binary/writer.h"
-namespace skr::binary
+#include "SkrSerde/bin_serde.hpp"
+namespace skr
 {
-template <class V>
-struct ReadTrait<Vector<V>> {
-    static bool Read(SBinaryReader* archive, Vector<V>& vec)
+template <typename V>
+struct BinSerde<Vector<V>> {
+    inline static bool read(SBinaryReader* r, Vector<V>& v)
     {
-        Vector<V> temp;
-        uint32_t  size;
-        if (!skr::binary::Read(archive, (size))) return false;
+        // read bin
+        uint32_t size;
+        if (!bin_read(r, (size))) return false;
 
+        // read content
+        Vector<V> temp;
         temp.reserve(size);
         for (uint32_t i = 0; i < size; ++i)
         {
             V value;
-            if (!skr::binary::Read(archive, value))
+            if (!bin_read(r, value))
                 return false;
             temp.add(std::move(value));
         }
-        vec = std::move(temp);
+
+        // move to target
+        v = std::move(temp);
         return true;
     }
-};
-template <class V>
-struct WriteTrait<Vector<V>> {
-    static bool Write(SBinaryWriter* archive, const Vector<V>& vec)
+    inline static bool write(SBinaryWriter* r, const Vector<V>& v)
     {
-        if (!skr::binary::Write(archive, ((uint32_t)vec.size()))) return false;
-        for (auto& value : vec)
+        // write bin
+        if (!bin_write(r, ((uint32_t)v.size()))) return false;
+
+        // write content
+        for (auto& value : v)
         {
-            if (!skr::binary::Write(archive, value))
+            if (!bin_write(r, value))
                 return false;
         }
         return true;
     }
 };
+} // namespace skr
 
-struct VectorWriter {
+// vector bin reader writer
+namespace skr::archive
+{
+struct BinVectorWriter {
     Vector<uint8_t>* buffer;
 
     bool write(const void* data, size_t size)
@@ -49,7 +56,7 @@ struct VectorWriter {
         return true;
     }
 };
-struct VectorWriterBitpacked {
+struct BinVectorWriterBitpacked {
     Vector<uint8_t>* buffer;
     uint8_t          bitOffset = 0;
     bool             write(const void* data, size_t size)
@@ -97,7 +104,8 @@ struct VectorWriterBitpacked {
         return true;
     }
 };
-} // namespace skr::binary
+
+}; // namespace skr::archive
 
 // json serde
 #include "SkrSerde/json/reader.h"
