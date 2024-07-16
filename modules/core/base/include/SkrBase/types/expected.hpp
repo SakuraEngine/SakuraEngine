@@ -2,25 +2,23 @@
 #include "SkrBase/misc/traits.hpp"
 #include "SkrBase/misc/debug.h"
 
-namespace skr {
+namespace skr
+{
 
 template <typename T>
-struct ExpectedValue 
-{ 
-    using type = T; 
+struct ExpectedValue {
+    using type                    = T;
     static constexpr auto is_void = false;
 };
 
 template <>
-struct ExpectedValue<void> 
-{ 
-    using type = bool;
+struct ExpectedValue<void> {
+    using type                    = bool;
     static constexpr auto is_void = true;
 };
 
 template <typename E, typename T = void>
-struct SKR_STATIC_API Expected
-{
+struct SKR_STATIC_API Expected {
 public:
     using ValueType = typename ExpectedValue<T>::type;
     static_assert(!std::is_same_v<E, T>, "E and T cannot be the same type");
@@ -46,10 +44,10 @@ public:
     bool has_error() const SKR_NOEXCEPT { return !_hasValue; }
 
     const ValueType& value() const SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void);
-    ValueType& value() SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void);
-    void value() const SKR_NOEXCEPT requires(ExpectedValue<T>::is_void);
-    void value() SKR_NOEXCEPT requires(ExpectedValue<T>::is_void);
-    const E& error() const SKR_NOEXCEPT;
+    ValueType&       value() SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void);
+    void             value() const SKR_NOEXCEPT requires(ExpectedValue<T>::is_void);
+    void             value() SKR_NOEXCEPT requires(ExpectedValue<T>::is_void);
+    const E&         error() const SKR_NOEXCEPT;
 
     template <typename V>
     bool operator==(const V& v) const SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
@@ -104,8 +102,9 @@ protected:
     };
     void CondPanic(PanicReasion reason) const;
 
-    union {
-        E _error;
+    union
+    {
+        E         _error;
         ValueType _value;
     };
     bool _hasValue;
@@ -114,41 +113,47 @@ protected:
 
 template <typename E, typename T>
 Expected<E, T>::Expected() SKR_NOEXCEPT requires(ExpectedValue<T>::is_void)
-    : _value(true), _hasValue(true), _unhandled(false)
+    : _value(true)
+    , _hasValue(true)
+    , _unhandled(false)
 {
-
 }
 
 template <typename E, typename T>
 Expected<E, T>::Expected(const ValueType& value) SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
-    : _value(value), _hasValue(true), _unhandled(false)
+    : _value(value)
+    , _hasValue(true)
+    , _unhandled(false)
 {
-
 }
 
 template <typename E, typename T>
 Expected<E, T>::Expected(ValueType&& value) SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
-    : _value(std::move(value)), _hasValue(true), _unhandled(false)
+    : _value(std::move(value))
+    , _hasValue(true)
+    , _unhandled(false)
 {
-
 }
 
 template <typename E, typename T>
-Expected<E, T>::Expected(const E& error) SKR_NOEXCEPT 
-    : _error(error), _hasValue(false), _unhandled(true)
+Expected<E, T>::Expected(const E& error) SKR_NOEXCEPT
+    : _error(error),
+      _hasValue(false),
+      _unhandled(true)
 {
-
 }
 
 template <typename E, typename T>
-Expected<E, T>::Expected(E&& error) SKR_NOEXCEPT 
-    : _error(std::move(error)), _hasValue(false), _unhandled(true)
+Expected<E, T>::Expected(E&& error) SKR_NOEXCEPT
+    : _error(std::move(error)),
+      _hasValue(false),
+      _unhandled(true)
 {
-
 }
 template <typename E, typename T>
 Expected<E, T>::Expected(Expected&& other) SKR_NOEXCEPT
-    : _hasValue(other._hasValue), _unhandled(other._unhandled)
+    : _hasValue(other._hasValue),
+      _unhandled(other._unhandled)
 {
     other._unhandled = false;
     if (_hasValue)
@@ -160,36 +165,36 @@ Expected<E, T>::Expected(Expected&& other) SKR_NOEXCEPT
 template <typename E, typename T>
 Expected<E, T>& Expected<E, T>::operator=(const ValueType& value) SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
 {
-    _hasValue = true;
+    _hasValue  = true;
     _unhandled = false;
-    _value = value;
+    _value     = value;
     return *this;
 }
 
 template <typename E, typename T>
 Expected<E, T>& Expected<E, T>::operator=(ValueType&& value) SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
 {
-    _hasValue = true;
+    _hasValue  = true;
     _unhandled = false;
-    _value = std::move(value);
+    _value     = std::move(value);
     return *this;
 }
 
 template <typename E, typename T>
 Expected<E, T>& Expected<E, T>::operator=(const E& error) SKR_NOEXCEPT
 {
-    _hasValue = false;
+    _hasValue  = false;
     _unhandled = true;
-    _error = error;
+    _error     = error;
     return *this;
 }
 
 template <typename E, typename T>
 Expected<E, T>& Expected<E, T>::operator=(E&& error) SKR_NOEXCEPT
 {
-    _hasValue = false;
+    _hasValue  = false;
     _unhandled = true;
-    _error = std::move(error);
+    _error     = std::move(error);
     return *this;
 }
 
@@ -202,7 +207,7 @@ Expected<E, T>& Expected<E, T>::operator=(Expected&& other) SKR_NOEXCEPT
         _error.~E();
 
     other._unhandled = false;
-    _hasValue = other._hasValue;
+    _hasValue        = other._hasValue;
     if (_hasValue)
         new (&_value) ValueType(std::move(other._value));
     else
@@ -260,19 +265,28 @@ void Expected<E, T>::CondPanic(PanicReasion reason) const
 {
     switch (reason)
     {
-    case ErrorButNotValue:
-        SKR_ASSERT(_hasValue && "Expect<E, T> contains an error but not value!");
-        break;
-    case ValueButNotError:
-        SKR_ASSERT(!_hasValue && "Expect<E, T> contains a value but not error!");
-        break;
-    case ErrorNotHandled:
-        SKR_ASSERT((_hasValue || !_unhandled) && "Expect<E, T> contains an error but not handled!");
-        break;
-    default:
-        SKR_ASSERT(false && "Unknown panic reason!");
-        break;
+        case ErrorButNotValue:
+            SKR_ASSERT(_hasValue && "Expect<E, T> contains an error but not value!");
+            break;
+        case ValueButNotError:
+            SKR_ASSERT(!_hasValue && "Expect<E, T> contains a value but not error!");
+            break;
+        case ErrorNotHandled:
+            SKR_ASSERT((_hasValue || !_unhandled) && "Expect<E, T> contains an error but not handled!");
+            break;
+        default:
+            SKR_ASSERT(false && "Unknown panic reason!");
+            break;
     }
 }
 
-}
+} // namespace skr
+
+#define SKR_EXPECTED_THROW(__E) \
+    if (!__E.has_value()) return std::move(__E);
+
+#define SKR_EXPECTED_THROW_EXPR(__EXPR) \
+    if (auto _e = (__EXPR); !_e.has_value()) return std::move(_e);
+
+#define SKR_EXPECTED_CHECK(__EXPR, __RET) \
+    if (!(__EXPR).has_value()) return __RET;
