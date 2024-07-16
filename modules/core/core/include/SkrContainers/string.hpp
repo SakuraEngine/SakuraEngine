@@ -57,7 +57,7 @@ struct JsonSerde<skr::String> {
         SkrZoneScopedN("json::JsonSerde<skr::String>::read");
 
         SKR_EXPECTED_CHECK(r->String(v), false);
-        return false;
+        return true;
     }
     inline static bool write(skr::archive::JsonWriter* w, const skr::String& v)
     {

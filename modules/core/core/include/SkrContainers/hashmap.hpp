@@ -54,7 +54,7 @@ struct JsonSerde<skr::FlatHashMap<K, V, Hash, Eq>> {
     {
         size_t count = 0;
         SKR_EXPECTED_CHECK(r->StartArray(count), false);
-        v.reserve(count);
+        v.reserve(count / 2);
         for (size_t i = 0; i < count; i += 2)
         {
             K key;
@@ -72,7 +72,7 @@ struct JsonSerde<skr::FlatHashMap<K, V, Hash, Eq>> {
     inline static bool write(skr::archive::JsonWriter* w, const skr::FlatHashMap<K, V, Hash, Eq>& v)
     {
         SKR_EXPECTED_CHECK(w->StartArray(), false);
-        for (auto& pair : v)
+        for (const auto& pair : v)
         {
             if (!json_write<K>(w, pair.first)) return false;
             if (!json_write<V>(w, pair.second)) return false;
