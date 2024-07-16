@@ -10,7 +10,7 @@ T LoadConfig(SCookContext* context)
     // TODO: now it parses twice, add cursor to reader to avoid this
     skr::archive::JsonReader reader(context->GetAssetRecord()->meta.view());
     T                        settings;
-    json_read(&reader, settings);
+    skr::json_read(&reader, settings);
     return settings;
 }
 } // namespace skd::asset
