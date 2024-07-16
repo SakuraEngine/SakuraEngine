@@ -1,4 +1,5 @@
 #include "cpp_style.hpp"
+#include "SkrTask/parallel_for.hpp"
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/ecs/storage.hpp"
 
@@ -163,4 +164,32 @@ TEST_CASE_METHOD(AllocateEntites, "AllocateAndQuery")
         sugoiQ_get_views(q.value(), SUGOI_LAMBDA(callback));
         EXPECT_EQ(sugoiQ_get_count(q.value()), kBothEntityCount);
     }
+}
+
+TEST_CASE_METHOD(AllocateEntites, "ParallelQueryCreate")
+{
+    skr::task::scheduler_t scheduler;
+    scheduler.initialize(skr::task::scheudler_config_t());
+    scheduler.bind();
+
+    for (uint32_t i = 0; i < 128; i++)
+    {
+        skr::Vector<sugoi_query_t*> quries;
+        quries.add_zeroed(i);  
+        skr::parallel_for(quries.data(), quries.data() + quries.size(), 1, 
+            [&](auto pbegin, auto pend){
+                const auto i = pbegin - quries.data();
+                quries[i] = storage->new_query()
+                                .ReadAll<IntComponent>()
+                                .commit().value();
+                EXPECT_NE(quries[i], nullptr);
+            });
+        skr::parallel_for(quries.data(), quries.data() + quries.size(), 1, 
+            [&](auto pbegin, auto pend){
+                const auto i = pbegin - quries.data();
+                sugoiQ_release(quries[i]);
+            });
+    }
+
+    scheduler.unbind();
 }

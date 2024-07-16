@@ -401,7 +401,7 @@ SKR_RUNTIME_API void sugoiS_batch(sugoi_storage_t* storage, const sugoi_entity_t
  * @param meta
  * @param callback callback for filtered chunk view
  */
-SKR_RUNTIME_API void sugoiS_query(sugoi_storage_t* storage, const sugoi_filter_t* filter, const sugoi_meta_filter_t* meta, sugoi_view_callback_t callback, void* u);
+SKR_RUNTIME_API void sugoiS_filter(sugoi_storage_t* storage, const sugoi_filter_t* filter, const sugoi_meta_filter_t* meta, sugoi_view_callback_t callback, void* u);
 /**
  * @brief get all chunk view
  *
@@ -425,7 +425,7 @@ SKR_RUNTIME_API EIndex sugoiS_count(sugoi_storage_t* storage, bool includeDisabl
  * @param meta
  * @param callback callback for filtered chunk view
  */
-SKR_RUNTIME_API void sugoiS_query_groups(sugoi_storage_t* storage, const sugoi_filter_t* filter, const sugoi_meta_filter_t* meta, sugoi_group_callback_t callback, void* u);
+SKR_RUNTIME_API void sugoiS_filter_groups(sugoi_storage_t* storage, const sugoi_filter_t* filter, const sugoi_meta_filter_t* meta, sugoi_group_callback_t callback, void* u);
 /**
  * @brief merge two storage
  * after merge, the source storage will be empty

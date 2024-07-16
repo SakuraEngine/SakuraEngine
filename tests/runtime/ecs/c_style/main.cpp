@@ -390,7 +390,7 @@ TEST_CASE_METHOD(ECSTest, "filter")
     auto               callback = [&](sugoi_chunk_view_t* inView) {
         view = *inView;
     };
-    sugoiS_query(storage, &filter, &meta, SUGOI_LAMBDA(callback));
+    sugoiS_filter(storage, &filter, &meta, SUGOI_LAMBDA(callback));
     EXPECT_EQ(*sugoiV_get_entities(&view), e1);
 }
 

@@ -169,7 +169,7 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
             auto pents = sugoiV_get_entities(gview);
             to_destroy.append(pents, gview->count);
         };
-        sugoiS_query(storage, &filter, &meta, SUGOI_LAMBDA(freeFunc));
+        sugoiS_filter(storage, &filter, &meta, SUGOI_LAMBDA(freeFunc));
         sugoiS_destroy_entities(storage, to_destroy.data(), to_destroy.size());
     }
 

@@ -18,7 +18,7 @@ struct OverloadData
 {
     using phase_alias_t = skr::FlatHashMap<skr::StringView, sugoi_phase_alias_t, skr::Hash<skr::StringView>>;
 
-    bool queriesBuilt = false;
+    skr::shared_atomic_mutex self_mtx;
     sugoi::block_arena_t queryPhaseArena = sugoi::get_default_pool();
     phase_alias_t aliases;
     uint32_t aliasCount = 0;
@@ -36,21 +36,24 @@ struct Versioned
         return version == v;
     }
 
-    template <typename F>
-    void read_versioned(const F& func, sugoi_timestamp_t v) const
+    template <typename F, typename VersionGetter>
+    void read_versioned(const F& func, const VersionGetter& getter) const
     {
         mtx.lock_shared();
+        SKR_DEFER({ mtx.unlock_shared(); });
+        
+        const sugoi_timestamp_t v = getter();
         check_version(v);
         func(value);
-        mtx.unlock_shared();
     }
 
-    template <typename F>
-    bool update_versioned(const F& func, sugoi_timestamp_t v)
+    template <typename F, typename VersionGetter>
+    bool update_versioned(const F& func, const VersionGetter& getter)
     {
         mtx.lock();
         SKR_DEFER({ mtx.unlock(); });
 
+        const sugoi_timestamp_t v = getter();
         if (!check_version(v))
             return false;
 

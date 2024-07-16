@@ -456,8 +456,8 @@ void async_attach_skin_mesh(SRendererId renderer)
         skr_render_effect_access(renderer, view, u8"ForwardEffectSkin", SUGOI_LAMBDA(requestSetup));
     };
     // 手动 sync skin mesh
-    sugoiS_query(renderer->get_sugoi_storage(), &filter2, &meta, nullptr, nullptr);
-    sugoiS_query(renderer->get_sugoi_storage(), &filter, &meta, SUGOI_LAMBDA(attchFunc));
+    sugoiS_filter(renderer->get_sugoi_storage(), &filter2, &meta, nullptr, nullptr);
+    sugoiS_filter(renderer->get_sugoi_storage(), &filter, &meta, SUGOI_LAMBDA(attchFunc));
 }
 
 void async_attach_render_mesh(SRendererId renderer)
@@ -488,8 +488,8 @@ void async_attach_render_mesh(SRendererId renderer)
         skr_render_effect_access(renderer, view, u8"ForwardEffectSkin", SUGOI_LAMBDA(requestSetup));
     };
     // 手动 sync mesh
-    sugoiS_query(renderer->get_sugoi_storage(), &filter2, &meta, nullptr, nullptr);
-    sugoiS_query(renderer->get_sugoi_storage(), &filter, &meta, SUGOI_LAMBDA(attchFunc));
+    sugoiS_filter(renderer->get_sugoi_storage(), &filter2, &meta, nullptr, nullptr);
+    sugoiS_filter(renderer->get_sugoi_storage(), &filter, &meta, SUGOI_LAMBDA(attchFunc));
 }
 
 void imgui_button_spawn_girl(SRendererId renderer)

@@ -38,7 +38,10 @@ sugoi_storage_t::~sugoi_storage_t()
     pimpl->queries.read_versioned([&](auto& queries){
         for (auto q : queries)
             sugoiQ_release(q);
-    }, pimpl->queries_timestamp);
+    }, 
+    [&](){
+        return pimpl->queries_timestamp;
+    });
     reset();
 }
 
@@ -47,7 +50,10 @@ void sugoi_storage_t::reset()
     pimpl->groups.read_versioned([&](auto& groups){
         for (auto iter : groups)
             iter.second->clear();
-    }, pimpl->groups_timestamp);
+    }, 
+    [&](){
+        return pimpl->groups_timestamp;
+    });
 }
 
 void sugoi_storage_t::allocate_unsafe(sugoi_group_t* group, EIndex count, sugoi_view_callback_t callback, void* u)
@@ -313,7 +319,10 @@ void sugoi_storage_t::all(bool includeDisabled, bool includeDead, sugoi_view_cal
                 callback(u, &view);
             }
         }
-    }, pimpl->groups_timestamp);
+    }, 
+    [&](){
+        return pimpl->groups_timestamp;
+    });
 }
 
 bool sugoi_storage_t::components_enabled(const sugoi_entity_t src, const sugoi_type_set_t& type)
@@ -359,8 +368,11 @@ void sugoi_storage_t::validate_meta()
             validate(type.meta);
             groups.insert({ type, g });
         }
-    }, pimpl->groups_timestamp);
-    pimpl->groups_timestamp += 1;
+        pimpl->groups_timestamp += 1;
+    }, 
+    [&](){
+        return pimpl->groups_timestamp;
+    });
 }
 
 void sugoi_storage_t::validate(sugoi_entity_set_t& meta)
@@ -470,7 +482,10 @@ void sugoi_storage_t::defragment()
             for (auto chunk : newChunks)
                 g->add_chunk(chunk);
         }
-    }, pimpl->groups_timestamp);
+    }, 
+    [&](){
+        return pimpl->groups_timestamp;
+    });
 }
 
 void sugoi_storage_t::pack_entities()
@@ -513,8 +528,11 @@ void sugoi_storage_t::pack_entities()
             std::sort((sugoi_entity_t*)meta.data, (sugoi_entity_t*)meta.data + meta.length);
             groups.insert({ g->type, g });
         }
-    }, pimpl->groups_timestamp);
-    pimpl->groups_timestamp += 1;
+        pimpl->groups_timestamp += 1;
+    }, 
+    [&](){
+        return pimpl->groups_timestamp;
+    });
 }
 
 void sugoi_storage_t::castImpl(const sugoi_chunk_view_t& view, sugoi_group_t* group, sugoi_cast_callback_t callback, void* u)
@@ -735,7 +753,10 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
                     sizeRemain -= sizeToPatch;
             }
         }
-    }, src.pimpl->groups_timestamp);
+    }, 
+    [&](){
+        return src.pimpl->groups_timestamp;
+    });
     if (payload.end != chunks.size())
     {
         payload.end = (uint32_t)chunks.size();
@@ -779,17 +800,26 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
             }
             src.destructGroup(g);
         }
-    }, src.pimpl->groups_timestamp);
+    }, 
+    [&](){
+        return src.pimpl->groups_timestamp;
+    });
     
     src.pimpl->groups.update_versioned([&](auto& groups) {
         groups.clear();
-    }, src.pimpl->groups_timestamp);
-    src.pimpl->groups_timestamp += 1;
+        src.pimpl->groups_timestamp += 1;
+    }, 
+    [&](){
+        return src.pimpl->groups_timestamp;
+    });
 
     src.pimpl->queries.update_versioned([&](auto& queries) {
         queries.clear();
-    }, src.pimpl->queries_timestamp);
-    src.pimpl->queries_timestamp += 1;
+        src.pimpl->queries_timestamp += 1;
+    }, 
+    [&](){
+        return src.pimpl->queries_timestamp;
+    });
 }
 
 sugoi_storage_t* sugoi_storage_t::clone()
@@ -814,14 +844,20 @@ sugoi_storage_t* sugoi_storage_t::clone()
                 }
             }
         }
-    }, pimpl->groups_timestamp);
+    }, 
+    [&](){
+        return pimpl->groups_timestamp;
+    });
 
     pimpl->queries.read_versioned([&](auto& queries) {
         for (auto q : queries)
         {
             dst->make_query(q->pimpl->filter, q->pimpl->parameters);
         }
-    }, pimpl->queries_timestamp);
+    }, 
+    [&](){
+        return pimpl->queries_timestamp;
+    });
 
     return dst;
 }
@@ -847,7 +883,10 @@ EIndex sugoi_storage_t::count(bool includeDisabled, bool includeDead)
                 continue;
             result += group->size;
         }
-    }, pimpl->groups_timestamp);
+    }, 
+    [&](){
+        return pimpl->groups_timestamp;
+    });
     return result;
 }
 
@@ -983,9 +1022,9 @@ void sugoiS_batch(sugoi_storage_t* storage, const sugoi_entity_t* ents, EIndex c
     storage->batch(ents, count, callback, u);
 }
 
-void sugoiS_query(sugoi_storage_t* storage, const sugoi_filter_t* filter, const sugoi_meta_filter_t* meta, sugoi_view_callback_t callback, void* u)
+void sugoiS_filter(sugoi_storage_t* storage, const sugoi_filter_t* filter, const sugoi_meta_filter_t* meta, sugoi_view_callback_t callback, void* u)
 {
-    storage->query(*filter, *meta, callback, u);
+    storage->filter_safe(*filter, *meta, callback, u);
 }
 
 void sugoiS_merge(sugoi_storage_t* storage, sugoi_storage_t* source)
@@ -1133,10 +1172,9 @@ void sugoiQ_get_groups(sugoi_query_t* q, sugoi_group_callback_t callback, void* 
 
 void sugoiQ_in_group(sugoi_query_t* q, sugoi_group_t* group, sugoi_view_callback_t callback, void* u)
 {
-    q->pimpl->storage->buildQueries();
     if (!q->pimpl->storage->match_group(q->pimpl->filter, q->pimpl->meta, group))
         return;
-    q->pimpl->storage->query_in_group_unsafe(
+    q->pimpl->storage->filter_in_single_group(
         &q->pimpl->parameters, group, q->pimpl->filter, q->pimpl->meta, 
         q->pimpl->customFilter, q->pimpl->customFilterUserData, callback, u);
 }
@@ -1170,7 +1208,6 @@ void sugoiQ_sync(sugoi_query_t* q)
 
 void sugoiQ_get(sugoi_query_t* q, sugoi_filter_t* filter, sugoi_parameters_t* params)
 {
-    q->pimpl->storage->buildQueries();
     if (filter)
         *filter = q->pimpl->filter;
     if (params)

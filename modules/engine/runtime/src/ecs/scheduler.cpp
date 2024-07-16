@@ -139,7 +139,7 @@ bool sugoi::scheduler_t::sync_query(sugoi_query_t* q)
     auto add_group = [&](sugoi_group_t* group) {
         groups.push_back(group);
     };
-    q->pimpl->storage->query_groups(q->pimpl->filter, q->pimpl->meta, SUGOI_LAMBDA(add_group));
+    q->pimpl->storage->filter_groups(q->pimpl->filter, q->pimpl->meta, SUGOI_LAMBDA(add_group));
     skr::FlatHashSet<std::pair<sugoi::archetype_t*, sugoi_type_index_t>> syncedEntry;
 
     auto sync_entry_once = [&](sugoi::archetype_t* type, sugoi_type_index_t i, bool readonly, bool atomic) -> bool
@@ -162,7 +162,10 @@ bool sugoi::scheduler_t::sync_query(sugoi_query_t* q)
                 const auto idx = group->archetype->index(type);
                 result = sync_entry_once(group->archetype, idx, readonly, atomic) || result;
             }
-        }, q->pimpl->storage->pimpl->storage_timestamp);
+        }, 
+        [&](){
+            return q->pimpl->storage->pimpl->storage_timestamp;
+        });
         return result;
     };
 
@@ -294,7 +297,6 @@ void update_entry(JobDependencyEntry& entry, skr::task::event_t job, bool readon
 skr::task::event_t sugoi::scheduler_t::schedule_ecs_job(sugoi_query_t* q, EIndex batchSize, sugoi_system_callback_t callback, void* u,
 sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources)
 {
-    q->pimpl->storage->buildQueries();
     skr::task::event_t result;
     SkrZoneScopedN("SchedualECSJob");
 
@@ -305,7 +307,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
         groups.push_back(group);
     };
     auto& params = q->pimpl->parameters;
-    q->pimpl->storage->query_groups(q->pimpl->filter, q->pimpl->meta, SUGOI_LAMBDA(add_group));
+    q->pimpl->storage->filter_groups(q->pimpl->filter, q->pimpl->meta, SUGOI_LAMBDA(add_group));
     struct task_t {
         uint32_t groupIndex;
         uint32_t startIndex;
@@ -429,7 +431,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
                     startIndex += view->count;
                 };
                 auto group = sharedData->groups[i];
-                q->pimpl->storage->query_in_group_unsafe(&q->pimpl->parameters, group, q->pimpl->filter, validatedMeta, q->pimpl->customFilter, q->pimpl->customFilterUserData, SUGOI_LAMBDA(processView));
+                q->pimpl->storage->filter_in_single_group(&q->pimpl->parameters, group, q->pimpl->filter, validatedMeta, q->pimpl->customFilter, q->pimpl->customFilterUserData, SUGOI_LAMBDA(processView));
             }
         }
         else
@@ -495,7 +497,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
                         }
                     };
                     auto group = sharedData->groups[i];
-                    q->pimpl->storage->query_in_group_unsafe(
+                    q->pimpl->storage->filter_in_single_group(
                         &q->pimpl->parameters, group, q->pimpl->filter, validatedMeta, 
                         q->pimpl->customFilter, q->pimpl->customFilterUserData, SUGOI_LAMBDA(scheduleView));
                 };
@@ -570,7 +572,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
     auto add_group = [&](sugoi_group_t* group) {
         groups.push_back(group);
     };
-    q->pimpl->storage->query_groups(q->pimpl->filter, q->pimpl->meta, SUGOI_LAMBDA(add_group));
+    q->pimpl->storage->filter_groups(q->pimpl->filter, q->pimpl->meta, SUGOI_LAMBDA(add_group));
     auto& params = q->pimpl->parameters;
     DependencySet dependencies;
 
@@ -619,7 +621,10 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
                 auto idx = group->index(type);
                 sync_entry(group, idx, readonly, atomic);
             }
-        }, q->pimpl->storage->pimpl->storage_timestamp);
+        }, 
+        [&](){
+            return q->pimpl->storage->pimpl->storage_timestamp;
+        });
     };
 
     {
@@ -661,7 +666,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
             auto add_subgroup = [&](sugoi_group_t* group) {
                 subgroups.push_back(group);
             };
-            q->pimpl->storage->query_groups(q->pimpl->filter, q->pimpl->meta, SUGOI_LAMBDA(add_subgroup));
+            q->pimpl->storage->filter_groups(q->pimpl->filter, q->pimpl->meta, SUGOI_LAMBDA(add_subgroup));
             forloop (i, 0, subquery->pimpl->parameters.length)
             {
                 if (type_index_t(subquery->pimpl->parameters.types[i]).is_tag())
