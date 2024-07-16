@@ -37,7 +37,7 @@ struct Versioned
     }
 
     template <typename F>
-    void access(const F& func, sugoi_timestamp_t v) const
+    void read_versioned(const F& func, sugoi_timestamp_t v) const
     {
         mtx.lock_shared();
         check_version(v);
@@ -46,14 +46,14 @@ struct Versioned
     }
 
     template <typename F>
-    bool update(const F& func, sugoi_timestamp_t v)
+    bool update_versioned(const F& func, sugoi_timestamp_t v)
     {
         mtx.lock();
         SKR_DEFER({ mtx.unlock(); });
 
         if (!check_version(v))
             return false;
-        
+
         func(value);
         skr_atomic_fetch_add_acquire(&version, 1);
         return true;
@@ -66,24 +66,26 @@ private:
 };
 
 struct sugoi_storage_t::Impl {
+public:
     using queries_t = skr::stl_vector<sugoi_query_t*>;
     using groups_t = skr::ParallelFlatHashMap<sugoi_entity_type_t, sugoi_group_t*, sugoi::hasher<sugoi_entity_type_t>, sugoi::equalto<sugoi_entity_type_t>>;
     using archetypes_t = skr::ParallelFlatHashMap<sugoi_type_set_t, archetype_t*, sugoi::hasher<sugoi_type_set_t>, sugoi::equalto<sugoi_type_set_t>>;
-
     Impl();
 
     sugoi::block_arena_t archetypeArena;
     sugoi::fixed_pool_t groupPool;
 
     Versioned<archetypes_t> archetypes;
-    sugoi_timestamp_t archetype_timestamp = 0;
-
     Versioned<groups_t> groups;
-    sugoi_timestamp_t groups_timestamp = 0;
-
     Versioned<queries_t> queries;
+
+private:
+    friend struct sugoi_storage_t;
+    sugoi_timestamp_t groups_timestamp = 0;
+    sugoi_timestamp_t archetype_timestamp = 0;
     sugoi_timestamp_t queries_timestamp = 0;
 
+public:
     sugoi::EntityRegistry entity_registry;
     sugoi_timestamp_t storage_timestamp;
     

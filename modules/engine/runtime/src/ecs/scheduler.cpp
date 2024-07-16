@@ -156,7 +156,7 @@ bool sugoi::scheduler_t::sync_query(sugoi_query_t* q)
 
     auto sync_type = [&](sugoi_type_index_t type, bool readonly, bool atomic) {
         bool result = false;
-        q->pimpl->storage->pimpl->groups.access([&](auto& groups) {
+        q->pimpl->storage->pimpl->groups.read_versioned([&](auto& groups) {
             for (auto& [_, group] : groups)
             {
                 const auto idx = group->archetype->index(type);
@@ -612,7 +612,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
     };
 
     auto sync_type = [&](sugoi_type_index_t type, bool readonly, bool atomic) {
-        q->pimpl->storage->pimpl->groups.access([&](auto& groups) {
+        q->pimpl->storage->pimpl->groups.read_versioned([&](auto& groups) {
             for (auto& pair : groups)
             {
                 auto group = pair.second;

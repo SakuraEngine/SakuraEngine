@@ -35,7 +35,7 @@ sugoi_storage_t::~sugoi_storage_t()
     if (pimpl->scheduler)
         pimpl->scheduler->remove_storage(this);
     pimpl->scheduler = nullptr;
-    pimpl->queries.access([&](auto& queries){
+    pimpl->queries.read_versioned([&](auto& queries){
         for (auto q : queries)
             sugoiQ_release(q);
     }, pimpl->queries_timestamp);
@@ -44,7 +44,7 @@ sugoi_storage_t::~sugoi_storage_t()
 
 void sugoi_storage_t::reset()
 {
-    pimpl->groups.access([&](auto& groups){
+    pimpl->groups.read_versioned([&](auto& groups){
         for (auto iter : groups)
             iter.second->clear();
     }, pimpl->groups_timestamp);
@@ -298,7 +298,7 @@ sugoi_chunk_view_t sugoi_storage_t::entity_view(sugoi_entity_t e) const
 
 void sugoi_storage_t::all(bool includeDisabled, bool includeDead, sugoi_view_callback_t callback, void* u)
 {
-    pimpl->groups.access([&](auto& groups)
+    pimpl->groups.read_versioned([&](auto& groups)
     {
         for (auto& pair : groups)
         {
@@ -338,7 +338,7 @@ bool sugoi_storage_t::exist(sugoi_entity_t e) const noexcept
 void sugoi_storage_t::validate_meta()
 {
     skr::stl_vector<sugoi_group_t*> groupsToFix;
-    pimpl->groups.update([&](auto& groups)
+    pimpl->groups.update_versioned([&](auto& groups)
     {
         for (auto i = groups.begin(); i != groups.end(); ++i)
         {
@@ -383,7 +383,7 @@ void sugoi_storage_t::defragment()
         SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_storage(this);
     }
-    pimpl->groups.access([&](auto& groups){
+    pimpl->groups.read_versioned([&](auto& groups){
         for (auto& pair : groups)
         {
             auto g = pair.second;
@@ -495,7 +495,7 @@ void sugoi_storage_t::pack_entities()
     } m;
     m.data = &map;
 
-    pimpl->groups.update([&](auto& groups){
+    pimpl->groups.update_versioned([&](auto& groups){
         skr::stl_vector<sugoi_group_t*> gs;
         for (auto& pair : groups)
             gs.push_back(pair.second);
@@ -716,7 +716,7 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
     payload.start = payload.end = 0;
     uint32_t sizePerBatch       = 1024 * 16;
     uint32_t sizeRemain         = sizePerBatch;
-    src.pimpl->groups.access([&](auto& groups) {
+    src.pimpl->groups.read_versioned([&](auto& groups) {
         for (auto& i : groups)
         {
             sugoi_group_t* g = i.second;
@@ -765,7 +765,7 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
                 }
             });
     }
-    src.pimpl->groups.access([&](auto& groups) {
+    src.pimpl->groups.read_versioned([&](auto& groups) {
         for (auto& i : groups)
         {
             sugoi_group_t* g    = i.second;
@@ -781,12 +781,12 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
         }
     }, src.pimpl->groups_timestamp);
     
-    src.pimpl->groups.update([&](auto& groups) {
+    src.pimpl->groups.update_versioned([&](auto& groups) {
         groups.clear();
     }, src.pimpl->groups_timestamp);
     src.pimpl->groups_timestamp += 1;
 
-    src.pimpl->queries.update([&](auto& queries) {
+    src.pimpl->queries.update_versioned([&](auto& queries) {
         queries.clear();
     }, src.pimpl->queries_timestamp);
     src.pimpl->queries_timestamp += 1;
@@ -797,7 +797,7 @@ sugoi_storage_t* sugoi_storage_t::clone()
     sugoi_storage_t* dst = sugoiS_create();
     dst->pimpl->entity_registry   = pimpl->entity_registry;
     dst->pimpl->storage_timestamp = pimpl->storage_timestamp;
-    pimpl->groups.access([&](auto& groups) {
+    pimpl->groups.read_versioned([&](auto& groups) {
         for (auto group : groups)
         {
             auto dstGroup = dst->cloneGroup(group.second);
@@ -816,7 +816,7 @@ sugoi_storage_t* sugoi_storage_t::clone()
         }
     }, pimpl->groups_timestamp);
 
-    pimpl->queries.access([&](auto& queries) {
+    pimpl->queries.read_versioned([&](auto& queries) {
         for (auto q : queries)
         {
             dst->make_query(q->pimpl->filter, q->pimpl->parameters);
@@ -837,7 +837,7 @@ void sugoi_storage_t::make_alias(skr::StringView name, skr::StringView aliasName
 EIndex sugoi_storage_t::count(bool includeDisabled, bool includeDead)
 {
     EIndex result = 0;
-    pimpl->groups.access([&](auto& groups) {
+    pimpl->groups.read_versioned([&](auto& groups) {
         for (auto& pair : groups)
         {
             auto group = pair.second;

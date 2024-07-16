@@ -126,7 +126,7 @@ void sugoi_storage_t::buildQueryCache(sugoi_query_t* q)
     using namespace sugoi;
     q->pimpl->groups_cache.write([&](auto& cache){
         cache.clear();
-        pimpl->groups.access([&](auto& groups){
+        pimpl->groups.read_versioned([&](auto& groups){
             for (auto i : groups)
             {
                 auto g     = i.second;
@@ -145,7 +145,7 @@ void sugoi_storage_t::updateQueryCache(sugoi_group_t* group, bool isAdd)
     
     if (!isAdd)
     {
-        pimpl->queries.access([&](auto& queries){
+        pimpl->queries.read_versioned([&](auto& queries){
             for (auto& q : queries)
             {
                 q->pimpl->groups_cache.write([&](auto& groups){
@@ -156,7 +156,7 @@ void sugoi_storage_t::updateQueryCache(sugoi_group_t* group, bool isAdd)
     }
     else
     {
-        pimpl->queries.access([&](auto& queries){
+        pimpl->queries.read_versioned([&](auto& queries){
             for (auto& q : queries)
             {
                 if (sugoi::match_group(q, group))
@@ -196,7 +196,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const sugoi_filter_t& filter, const s
         else if (at.data[i] == kDisableComponent)
             *const_cast<bool*>(&q->pimpl->includeDisabled) = true;
     }
-    pimpl->queries.update([&](auto& queries){
+    pimpl->queries.update_versioned([&](auto& queries){
         queries.push_back(q);
     }, pimpl->queries_timestamp);
     pimpl->queries_timestamp += 1;
@@ -464,7 +464,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
 
 void sugoi_storage_t::destroy_query(sugoi_query_t* query)
 {
-    pimpl->queries.update([&](auto& queries){
+    pimpl->queries.update_versioned([&](auto& queries){
         auto iter = std::find(queries.begin(), queries.end(), query);
         SKR_ASSERT(iter != queries.end());
         query->~sugoi_query_t();
@@ -495,7 +495,7 @@ void sugoi_storage_t::buildQueries()
     pimpl->overload_data.phaseCount = 0;
     pimpl->overload_data.queryPhaseArena.reset();
     skr::stl_vector<phase_entry_builder> entries;
-    pimpl->queries.access([&](auto& queries){
+    pimpl->queries.read_versioned([&](auto& queries){
         for (auto q : queries)
         {
             auto parameters = q->pimpl->parameters;
@@ -528,7 +528,7 @@ void sugoi_storage_t::buildQueries()
 
     pimpl->overload_data.phases = pimpl->overload_data.queryPhaseArena.allocate<phase_entry*>(entries.size());
     auto phaseEntries = pimpl->overload_data.phases;
-    pimpl->queries.access([&](auto& queries){
+    pimpl->queries.read_versioned([&](auto& queries){
         for (auto q : queries)
         {
             uint32_t count = 0;
@@ -592,7 +592,7 @@ void sugoi_storage_t::buildQueries()
         }
     }
     // build query cache
-    pimpl->queries.access([&](auto& queries){
+    pimpl->queries.read_versioned([&](auto& queries){
         for (auto& query : queries)
         {
             buildQueryCache(query);
@@ -774,7 +774,7 @@ void sugoi_storage_t::query_groups(const sugoi_filter_t& filter, const sugoi_met
         return match_group_type(g->type, filter, g->archetype->withMask);
     };
     
-    pimpl->groups.access([&](auto& groups){
+    pimpl->groups.read_versioned([&](auto& groups){
         for (auto& pair : groups)
         {
             auto group = pair.second;
@@ -1010,7 +1010,7 @@ void sugoi_storage_t::query(const sugoi_filter_t& filter, const sugoi_meta_filte
 void sugoi_storage_t::destroy(const sugoi_meta_filter_t& meta)
 {
     using namespace sugoi;
-    pimpl->groups.access([&](auto& groups){
+    pimpl->groups.read_versioned([&](auto& groups){
         for (auto& [type, group] : groups)
         {
             if (!match_group_meta(group->type, meta))

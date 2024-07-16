@@ -267,7 +267,7 @@ void sugoi_storage_t::serialize(SBinaryWriter* s)
         SkrZoneScopedN("serialize entities");
         pimpl->entity_registry.serialize(s);
     }
-    pimpl->groups.access([&](auto& groups){
+    pimpl->groups.read_versioned([&](auto& groups){
         bin::Write(s, (uint32_t)groups.size());
         for (auto& pair : groups)
         {
