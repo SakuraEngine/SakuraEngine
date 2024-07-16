@@ -775,7 +775,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
         // sync all jobs here ?
         {
             // SkrZoneScopedN("sugoiJSync");
-            // sugoiJ_wait_all();
+            // sugoiJ_wait_all_jobs();
         }
 
         // [inout]skr::anim::AnimComponent, [in]game::anim_state_t, [in]skr::anim::SkeletonComponent

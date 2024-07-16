@@ -27,12 +27,14 @@ struct scheduler_t {
 
     scheduler_t();
     ~scheduler_t();
+
     static scheduler_t& get();
     bool is_main_thread(const sugoi_storage_t* storage);
     void set_main_thread(const sugoi_storage_t* storage);
-    
+
     void add_storage(sugoi_storage_t* storage);
     void remove_storage(const sugoi_storage_t* storage);
+    
     sugoi_entity_t add_resource();
     void remove_resource(sugoi_entity_t id);
     void gc_entries();
@@ -40,7 +42,7 @@ struct scheduler_t {
     bool sync_archetype(sugoi::archetype_t* type);
     bool sync_entry(sugoi::archetype_t* type, sugoi_type_index_t entry, bool readonly);
     bool sync_query(sugoi_query_t* query);
-    void sync_all();
+    void sync_all_jobs();
     void sync_storage(const sugoi_storage_t* storage);
     skr::stl_vector<skr::task::event_t> sync_resources(const skr::task::event_t& counter, sugoi_resource_operation_t* resources);
 

@@ -24,6 +24,8 @@ struct sugoi_query_t::Impl {
     skr::InlineVector<sugoi_entity_t, 1> none_meta;
     skr::InlineVector<sugoi_type_index_t, 1> changed;
     sugoi_parameters_t parameters;
+
+    const bool includeAlias = false;
     const bool includeDisabled = false;
     const bool includeDead = false;
 

@@ -335,6 +335,8 @@ static void duplicate_impl(sugoi_chunk_view_t dstV, const sugoi_chunk_t* srcC, u
 
 void construct_view(const sugoi_chunk_view_t& view) noexcept
 {
+    SkrZoneScopedN("sugoi_storage_t::construct_view");
+
     archetype_t* type = view.chunk->structure;
     const auto* offsets = type->offsets[(int)view.chunk->pt];
     const auto* sizes = type->sizes;
@@ -778,9 +780,13 @@ auto sugoiV_get_owned(const sugoi_chunk_view_t* view, sugoi_type_index_t type)
 
     if constexpr (!readonly)
         chunk->set_timestamp_at(slot, structure->storage->timestamp());
+
     auto scheduler = structure->storage->getScheduler();
     if (scheduler && scheduler->is_main_thread(structure->storage))
+    {
+        SkrZoneScopedN("CheckEntrySync");
         SKR_ASSERT(!scheduler->sync_entry(structure, slot, readonly));
+    }
 
     return (return_type)chunk->get_unsafe(tid, *view).start;
 }

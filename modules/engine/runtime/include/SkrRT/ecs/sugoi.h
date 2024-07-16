@@ -830,7 +830,7 @@ SKR_RUNTIME_API void sugoiJ_schedule_custom(sugoi_query_t* query, sugoi_schedule
  * @brief wait for all jobs are done
  *
  */
-SKR_RUNTIME_API void sugoiJ_wait_all();
+SKR_RUNTIME_API void sugoiJ_wait_all_jobs();
 /**
  * @brief clear all expired entry handles
  *

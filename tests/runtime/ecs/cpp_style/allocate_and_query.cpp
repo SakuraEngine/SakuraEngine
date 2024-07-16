@@ -22,6 +22,7 @@ sugoi_entity_t shared_entity = ~0;
 
 TEST_CASE_METHOD(AllocateEntites, "AllocateAndQuery")
 {
+    SkrZoneScopedN("AllocateEntites::AllocateAndQuery");
     {
         sugoi::EntitySpawner<SharedComponent> spawner;
         spawner(storage, 1, 
@@ -168,6 +169,8 @@ TEST_CASE_METHOD(AllocateEntites, "AllocateAndQuery")
 
 TEST_CASE_METHOD(AllocateEntites, "ParallelQueryCreate")
 {
+    SkrZoneScopedN("AllocateEntites::ParallelQueryCreate");
+
     skr::task::scheduler_t scheduler;
     scheduler.initialize(skr::task::scheudler_config_t());
     scheduler.bind();

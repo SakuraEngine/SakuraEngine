@@ -59,6 +59,9 @@ void sugoi_storage_t::reset()
 void sugoi_storage_t::allocate_unsafe(sugoi_group_t* group, EIndex count, sugoi_view_callback_t callback, void* u)
 {
     using namespace sugoi;
+    if (count != 0)
+        pimpl->entity_registry.reserve(count);
+    
     while (count != 0)
     {
         sugoi_chunk_view_t v = allocateView(group, count);
@@ -73,6 +76,7 @@ void sugoi_storage_t::allocate_unsafe(sugoi_group_t* group, EIndex count, sugoi_
 void sugoi_storage_t::allocate(sugoi_group_t* group, EIndex count, sugoi_view_callback_t callback, void* u)
 {
     using namespace sugoi;
+    SkrZoneScopedN("sugoi_storage_t::allocate");
     if (pimpl->scheduler)
     {
         pimpl->scheduler->sync_archetype(group->archetype);
@@ -82,6 +86,8 @@ void sugoi_storage_t::allocate(sugoi_group_t* group, EIndex count, sugoi_view_ca
 
 sugoi_chunk_view_t sugoi_storage_t::allocateView(sugoi_group_t* group, EIndex count)
 {
+    SkrZoneScopedN("sugoi_storage_t::allocateView");
+    
     sugoi_chunk_t* freeChunk = group->get_first_free_chunk();
     if (freeChunk == nullptr)
         freeChunk = group->new_chunk(count);

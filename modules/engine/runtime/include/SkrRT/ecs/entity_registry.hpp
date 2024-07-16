@@ -13,6 +13,7 @@ struct SKR_RUNTIME_API EntityRegistry {
     EntityRegistry(const EntityRegistry& rhs);
     EntityRegistry& operator=(const EntityRegistry& rhs);
 
+    void reserve(size_t size);
     void reset();
     void shrink();
     void pack_entities(skr::Vector<EIndex>& out_map);
@@ -27,7 +28,7 @@ struct SKR_RUNTIME_API EntityRegistry {
     void serialize(SBinaryWriter* s);
     void deserialize(SBinaryReader* s);
 
-    struct entry_t {
+    struct Entry {
         sugoi_chunk_t* chunk;
         uint32_t indexInChunk : 24;
         uint32_t version : 8;
@@ -37,7 +38,7 @@ struct SKR_RUNTIME_API EntityRegistry {
     void visit_entries(const F& f) const
     {
         mutex.lock_shared();
-        skr::span<const entry_t> entries_view = entries;
+        skr::span<const Entry> entries_view = entries;
         f(entries_view);
         mutex.unlock_shared();
     }
@@ -51,7 +52,7 @@ struct SKR_RUNTIME_API EntityRegistry {
         mutex.unlock_shared();
     }
 
-    skr::Optional<entry_t> try_get_entry(sugoi_entity_t e) const
+    skr::Optional<Entry> try_get_entry(sugoi_entity_t e) const
     {
         mutex.lock_shared();
         SKR_DEFER({ mutex.unlock_shared(); });
@@ -64,7 +65,7 @@ struct SKR_RUNTIME_API EntityRegistry {
 
 private:
     friend struct ::sugoi_storage_t;
-    skr::Vector<entry_t> entries;
+    skr::Vector<Entry> entries;
     skr::Vector<EIndex> freeEntries;
     mutable skr::shared_atomic_mutex mutex;
 };

@@ -437,9 +437,10 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
     params.length = (SIndex)entry.size();
 
     auto newQuery = sugoiQ_create(this, &filter, &params);
+    const_cast<bool&>(newQuery->pimpl->includeAlias) = hasAlias;
     {
         buildQueryCache(newQuery);
-        if (hasAlias)
+        if (newQuery->pimpl->includeAlias)
             buildQueryOverloads();
     }
     return newQuery;    
@@ -482,6 +483,7 @@ sugoi_query_t* sugoi_storage_t::make_query(const sugoi_filter_t& filter, const s
 
 void sugoi_storage_t::destroy_query(sugoi_query_t* query)
 {
+    const bool includeAlias = query->pimpl->includeAlias;
     pimpl->queries.update_versioned(
     [&](auto& queries){
         auto iter = std::find(queries.begin(), queries.end(), query);
@@ -495,7 +497,8 @@ void sugoi_storage_t::destroy_query(sugoi_query_t* query)
     [&](){
         return pimpl->queries_timestamp;
     });
-    buildQueryOverloads();
+    if (includeAlias)
+        buildQueryOverloads();
 }
 
 void sugoi_storage_t::buildQueryOverloads()
@@ -976,7 +979,6 @@ void sugoi_storage_t::filter_safe(const sugoi_filter_t& filter, const sugoi_meta
 
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         auto filterChunk = [&](sugoi_group_t* group) {
             for (EIndex i = 0; i < filter.all.length; ++i)
             {

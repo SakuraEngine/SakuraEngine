@@ -203,7 +203,6 @@ void sugoi_storage_t::serialize_prefab(sugoi_entity_t e, SBinaryWriter* s)
     skr::bin_write(s, (EIndex)1);
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_archetype(entity_view(e).chunk->structure);
     }
     serialize_single(e, s);
@@ -216,7 +215,6 @@ void sugoi_storage_t::serialize_prefab(sugoi_entity_t* es, EIndex n, SBinaryWrit
     skr::bin_write(s, n);
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         forloop (i, 0, n)
             pimpl->scheduler->sync_archetype(entity_view(es[i]).chunk->structure);
     }
@@ -259,7 +257,6 @@ void sugoi_storage_t::serialize(SBinaryWriter* s)
 
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_storage(this);
     }
     {
@@ -293,7 +290,6 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
 
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_storage(this);
     }
     {
@@ -323,7 +319,7 @@ void sugoi_storage_t::deserialize(SBinaryReader* s)
                 auto ents = sugoiV_get_entities(&view);
                 forloop (k, 0, view.count)
                 {
-                    EntityRegistry::entry_t entry;
+                    EntityRegistry::Entry entry;
                     entry.chunk                                   = view.chunk;
                     entry.indexInChunk                            = k + view.start;
                     entry.version                                 = e_version(ents[k]);
