@@ -108,39 +108,36 @@ struct BinVectorWriterBitpacked {
 }; // namespace skr::archive
 
 // json serde
-#include "SkrSerde/json/reader.h"
-#include "SkrSerde/json/writer.h"
-namespace skr::json
+#include "SkrSerde/json_serde.hpp"
+namespace skr
 {
 template <class V>
-struct WriteTrait<skr::Vector<V>> {
-    static bool Write(skr::archive::JsonWriter* json, const skr::Vector<V>& vec)
-    {
-        json->StartArray();
-        for (auto& v : vec)
-        {
-            skr::json::Write<V>(json, v);
-        }
-        json->EndArray();
-        return true;
-    }
-};
-template <class V>
-struct ReadTrait<skr::Vector<V>> {
-    static bool Read(skr::archive::JsonReader* json, skr::Vector<V>& vec)
+struct JsonSerde<skr::Vector<V>> {
+    inline static bool read(skr::archive::JsonReader* r, skr::Vector<V>& v)
     {
         size_t count;
-        json->StartArray(count);
-        vec.reserve(count);
+        SKR_EXPECTED_CHECK(r->StartArray(count), false);
+        v.reserve(count);
         for (size_t i = 0; i < count; i++)
         {
-            V v;
-            if (!skr::json::Read<V>(json, v))
+            V value;
+            if (!json_read<V>(r, value))
                 return false;
-            vec.emplace(std::move(v));
+            v.emplace(std::move(value));
         }
-        json->EndArray();
+        SKR_EXPECTED_CHECK(r->EndArray(), false);
+        return true;
+    }
+    inline static bool write(skr::archive::JsonWriter* w, const skr::Vector<V>& v)
+    {
+        SKR_EXPECTED_CHECK(w->StartArray(), false);
+        for (auto& value : v)
+        {
+            if (!json_write<V>(w, value))
+                return false;
+        }
+        SKR_EXPECTED_CHECK(w->EndArray(), false);
         return true;
     }
 };
-} // namespace skr::json
+} // namespace skr

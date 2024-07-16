@@ -15,7 +15,7 @@ namespace asset
 void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
     const auto assetRecord = context->GetAssetRecord();
-    auto type = skr::rttr::get_type_from_guid(configType);
+    auto       type        = skr::rttr::get_type_from_guid(configType);
     if (type == nullptr)
     {
         SKR_LOG_ERROR(u8"import resource %s failed, rtti is not load", assetRecord->path.u8string().c_str());
@@ -24,7 +24,7 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
 
     skr::BlobId blob = nullptr;
     context->AddSourceFileAndLoad(ioService, assetPath.c_str(), blob);
-    SKR_DEFER({blob.reset();});
+    SKR_DEFER({ blob.reset(); });
     /*
     const auto assetRecord = context->GetAssetRecord();
     {
@@ -32,15 +32,15 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
         return nullptr;
     }
     '*/
-    skr::String jString(skr::StringView((const char8_t*)blob->get_data(), blob->get_size()));
+    skr::String              jString(skr::StringView((const char8_t*)blob->get_data(), blob->get_size()));
     skr::archive::JsonReader jsonVal(jString.view());
 
     auto resource = SkrNew<skr_config_resource_t>();
     resource->SetType(configType);
     SKR_UNIMPLEMENTED_FUNCTION();
     // type->read_json(resource->configData, doc.get_value().value_unsafe());
-    // skr::json::Read(&jsonVal, *resource);
-    
+    // skr::json_read(&jsonVal, *resource);
+
     return resource;
 }
 
@@ -63,7 +63,7 @@ bool SConfigCooker::Cook(SCookContext* ctx)
     // no cook config for config, skipping
     //-----import resource object
     auto resource = ctx->Import<skr_config_resource_t>();
-    if(!resource)
+    if (!resource)
         return false;
     SKR_DEFER({ ctx->Destroy(resource); });
     //-----emit dependencies

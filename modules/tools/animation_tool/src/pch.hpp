@@ -33,8 +33,6 @@
 
 #include "SkrRT/io/ram_io.hpp"                // IWYU pragma: export
 #include "SkrRT/resource/resource_header.hpp" // IWYU pragma: export
-#include "SkrSerde/json/reader.h"             // IWYU pragma: export
-#include "SkrSerde/json/writer.h"             // IWYU pragma: export
 
 #include "SkrProfile/profile.h" // IWYU pragma: export
 

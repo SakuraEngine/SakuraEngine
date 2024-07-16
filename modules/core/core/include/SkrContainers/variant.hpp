@@ -59,58 +59,79 @@ struct BinSerde<skr::variant<Ts...>> {
 } // namespace skr
 
 // json serde
-#include "SkrSerde/json/reader.h"
-#include "SkrSerde/json/writer.h"
-namespace skr::json
+#include "SkrSerde/json_serde.hpp"
+#include "SkrRTTR/rttr_traits.hpp"
+namespace skr
 {
 template <class... Ts>
-struct ReadTrait<skr::variant<Ts...>> {
+struct JsonSerde<skr::variant<Ts...>> {
     template <class T>
-    static bool ReadByIndex(skr::archive::JsonReader* json, skr::variant<Ts...>& value, skr_guid_t index)
+    inline static bool _read_by_index(skr::archive::JsonReader* r, skr::variant<Ts...>& v, skr_guid_t index)
     {
         if (index == ::skr::rttr::type_id_of<T>())
         {
             T t;
-            if (!skr::json::Read(json, t))
+            if (!json_read(r, t))
                 return false;
-            value = std::move(t);
+            v = std::move(t);
             return true;
         }
         return false;
     }
-
-    static bool Read(skr::archive::JsonReader* json, skr::variant<Ts...>& value)
+    inline static bool Read(skr::archive::JsonReader* r, skr::variant<Ts...>& v)
     {
-        json->StartObject();
+        SKR_EXPECTED_CHECK(r->StartObject(), false);
 
-        json->Key(u8"type");
+        SKR_EXPECTED_CHECK(r->Key(u8"type"), false);
         skr_guid_t index;
-        if (!skr::json::Read<skr_guid_t>(json, index))
+        if (!json_read<skr_guid_t>(r, index))
             return false;
 
-        json->Key(u8"value");
-        (void)(((ReadByIndex<Ts>(json, value, index)) != true) && ...);
+        SKR_EXPECTED_CHECK(r->Key(u8"value"), false);
+        (void)(((ReadByIndex<Ts>(r, v, index)) != true) && ...);
 
-        json->EndObject();
+        SKR_EXPECTED_CHECK(r->EndObject(), false);
 
         return true;
     }
-};
-template <class... Ts>
-struct WriteTrait<skr::variant<Ts...>> {
-    static bool Write(skr::archive::JsonWriter* json, const skr::variant<Ts...>& v)
+    inline static bool Write(skr::archive::JsonWriter* json, const skr::variant<Ts...>& v)
     {
+        bool success = true;
         skr::visit([&](auto&& value) {
             using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
-            json->StartObject();
-            json->Key(u8"type");
-            skr::json::Write<skr_guid_t>(json, ::skr::rttr::type_id_of<raw>());
-            json->Key(u8"value");
-            skr::json::Write<decltype(value)>(json, value);
-            json->EndObject();
+            if (!json->StartObject().has_value())
+            {
+                success = false;
+                return;
+            }
+            if (!json->Key(u8"type").has_value())
+            {
+                success = false;
+                return;
+            }
+            if (!json_write<skr_guid_t>(json, ::skr::rttr::type_id_of<raw>()))
+            {
+                success = false;
+                return;
+            }
+            if (!json->Key(u8"value").has_value())
+            {
+                success = false;
+                return;
+            }
+            if (!json_write<decltype(value)>(json, value))
+            {
+                success = false;
+                return;
+            }
+            if (!json->EndObject().has_value())
+            {
+                success = false;
+                return;
+            }
         },
                    v);
-        return true;
+        return success;
     }
 };
-} // namespace skr::json
+} // namespace skr

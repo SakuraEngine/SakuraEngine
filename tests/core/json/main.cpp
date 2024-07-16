@@ -1,8 +1,6 @@
 #include "SkrCore/crash.h"
 #include "SkrCore/log.h"
 #include "SkrCore/log.hpp"
-#include "SkrSerde/json/writer.h"
-#include "SkrSerde/json/reader.h"
 #include "SkrTestFramework/framework.hpp"
 
 static struct ProcInitializer {
@@ -29,8 +27,8 @@ void _EXPECT_OK(skr::archive::JsonReadResult&& r)
 {
     using namespace skr::archive;
     r.and_then([]() {
-        EXPECT_EQ(true, true);
-    })
+         EXPECT_EQ(true, true);
+     })
     .error_then([](JsonErrorCode error) {
         EXPECT_EQ(true, false);
     });
@@ -40,8 +38,8 @@ void _EXPECT_ERROR(skr::archive::JsonReadResult&& r, skr::archive::JsonErrorCode
 {
     using namespace skr::archive;
     r.and_then([]() {
-        EXPECT_EQ(true, false);
-    })
+         EXPECT_EQ(true, false);
+     })
     .error_then([=](JsonErrorCode error) {
         EXPECT_EQ(error, err);
     });
@@ -64,7 +62,7 @@ struct TestPrimitiveType {
             EXPECT_OK(writer.EndObject());
         }
         {
-            auto json  = writer.Write();
+            auto json = writer.Write();
             SKR_LOG_INFO(u8"PRIMITIVE JSON: %s", json.c_str());
 
             T _value;
@@ -119,7 +117,7 @@ struct TestPrimitiveArray {
     TestPrimitiveArray(Args... params)
     {
         push_args(std::forward<Args>(params)...);
-        
+
         skr::archive::_JsonWriter writer(1);
         {
             const char8_t* key = u8"key";
@@ -138,12 +136,12 @@ struct TestPrimitiveArray {
             EXPECT_OK(writer.EndObject());
         }
         {
-            auto json  = writer.Write();
+            auto json = writer.Write();
             SKR_LOG_INFO(u8"PRIMITIVE ARRAY JSON: %s", json.c_str());
             skr::archive::_JsonReader reader(json.view());
 
             skr::Vector<T> _values;
-            size_t count;
+            size_t         count;
             EXPECT_OK(reader.StartObject(u8""));
             EXPECT_OK(reader.StartArray(u8"key", count)); // TODO: skr::archive::Read
             _values.resize_zeroed(count);
@@ -163,7 +161,7 @@ struct TestPrimitiveArray {
 
             for (size_t i = 0; i < values.size(); i++)
             {
-                T value = values[i];
+                T value  = values[i];
                 T _value = _values[i];
                 if constexpr (std::is_floating_point_v<T>)
                     EXPECT_NEAR(value, _value, 0.0001);
@@ -221,12 +219,12 @@ TEST_CASE_METHOD(JSONTests, "ReadErrors")
     }
     SUBCASE("ScopeTypeMismatch(StartPrimitiveAsObject/Array)")
     {
-        size_t arr_len = 0;
-        auto value_reader =  _JsonReader(u8"{ \"value\": 123 }");
+        size_t arr_len      = 0;
+        auto   value_reader = _JsonReader(u8"{ \"value\": 123 }");
         EXPECT_OK(value_reader.StartObject(u8""));
         EXPECT_ERROR(value_reader.StartObject(u8"value"), JsonErrorCode::ScopeTypeMismatch);
         EXPECT_ERROR(value_reader.StartArray(u8"value", arr_len), JsonErrorCode::ScopeTypeMismatch);
-            
+
         auto arr_reader = _JsonReader(u8"{ \"arr\": [ 0, 1, 2, 3 ] }");
         EXPECT_OK(arr_reader.StartObject(u8""));
         EXPECT_OK(arr_reader.StartArray(u8"arr", arr_len));
@@ -267,13 +265,18 @@ TEST_CASE_METHOD(JSONTests, "ReadErrors")
     }
     SUBCASE("EmptyObjectFieldKey")
     {
-        size_t arr_len = 0;
-        auto obj_reader = _JsonReader(u8"{ \"key\": \"value\" }");
+        size_t arr_len    = 0;
+        auto   obj_reader = _JsonReader(u8"{ \"key\": \"value\" }");
         EXPECT_OK(obj_reader.StartObject(u8""));
         EXPECT_ERROR(obj_reader.StartObject(u8""), JsonErrorCode::EmptyObjectFieldKey);
         EXPECT_ERROR(obj_reader.StartArray(u8"", arr_len), JsonErrorCode::EmptyObjectFieldKey);
-        
-        bool b; int32_t i32; int64_t i64; float f; double d; skr::String s;
+
+        bool        b;
+        int32_t     i32;
+        int64_t     i64;
+        float       f;
+        double      d;
+        skr::String s;
         EXPECT_ERROR(obj_reader.ReadValue(u8"", b), JsonErrorCode::EmptyObjectFieldKey);
         EXPECT_ERROR(obj_reader.ReadValue(u8"", i32), JsonErrorCode::EmptyObjectFieldKey);
         EXPECT_ERROR(obj_reader.ReadValue(u8"", i64), JsonErrorCode::EmptyObjectFieldKey);
@@ -283,13 +286,18 @@ TEST_CASE_METHOD(JSONTests, "ReadErrors")
     }
     SUBCASE("ArrayElementWithKey")
     {
-        size_t arr_len = 0;
-        auto arr_reader = _JsonReader(u8"{ \"arr\": [ 0 ] }");
+        size_t arr_len    = 0;
+        auto   arr_reader = _JsonReader(u8"{ \"arr\": [ 0 ] }");
         EXPECT_OK(arr_reader.StartObject(u8""));
         EXPECT_OK(arr_reader.StartArray(u8"arr", arr_len));
         EXPECT_EQ(arr_len, 1);
-        
-        bool b; int32_t i32; int64_t i64; float f; double d; skr::String s;
+
+        bool        b;
+        int32_t     i32;
+        int64_t     i64;
+        float       f;
+        double      d;
+        skr::String s;
         EXPECT_ERROR(arr_reader.ReadValue(u8"k", b), JsonErrorCode::ArrayElementWithKey);
         EXPECT_ERROR(arr_reader.ReadValue(u8"k", i32), JsonErrorCode::ArrayElementWithKey);
         EXPECT_ERROR(arr_reader.ReadValue(u8"k", i64), JsonErrorCode::ArrayElementWithKey);
@@ -345,8 +353,13 @@ TEST_CASE_METHOD(JSONTests, "WriteErrors")
         EXPECT_OK(obj_writer.StartObject(u8""));
         EXPECT_ERROR(obj_writer.StartObject(u8""), JsonErrorCode::EmptyObjectFieldKey);
         EXPECT_ERROR(obj_writer.StartArray(u8""), JsonErrorCode::EmptyObjectFieldKey);
-        
-        bool b = false; int32_t i32 = 0; int64_t i64 = 0; float f = 0.f; double d = 0.0; skr::String s = u8"";
+
+        bool        b   = false;
+        int32_t     i32 = 0;
+        int64_t     i64 = 0;
+        float       f   = 0.f;
+        double      d   = 0.0;
+        skr::String s   = u8"";
         EXPECT_ERROR(obj_writer.WriteValue(u8"", b), JsonErrorCode::EmptyObjectFieldKey);
         EXPECT_ERROR(obj_writer.WriteValue(u8"", i32), JsonErrorCode::EmptyObjectFieldKey);
         EXPECT_ERROR(obj_writer.WriteValue(u8"", i64), JsonErrorCode::EmptyObjectFieldKey);
@@ -362,7 +375,12 @@ TEST_CASE_METHOD(JSONTests, "WriteErrors")
         EXPECT_ERROR(arr_writer.StartObject(u8"k"), JsonErrorCode::ArrayElementWithKey);
         EXPECT_ERROR(arr_writer.StartArray(u8"k"), JsonErrorCode::ArrayElementWithKey);
 
-        bool b = false; int32_t i32 = 0; int64_t i64 = 0; float f = 0.f; double d = 0.0; skr::String s = u8"";
+        bool        b   = false;
+        int32_t     i32 = 0;
+        int64_t     i64 = 0;
+        float       f   = 0.f;
+        double      d   = 0.0;
+        skr::String s   = u8"";
         EXPECT_ERROR(arr_writer.WriteValue(u8"k", b), JsonErrorCode::ArrayElementWithKey);
         EXPECT_ERROR(arr_writer.WriteValue(u8"k", i32), JsonErrorCode::ArrayElementWithKey);
         EXPECT_ERROR(arr_writer.WriteValue(u8"k", i64), JsonErrorCode::ArrayElementWithKey);

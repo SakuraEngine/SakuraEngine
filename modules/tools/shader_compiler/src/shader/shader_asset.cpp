@@ -1,12 +1,12 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrTask/parallel_for.hpp"
 #include "SkrRT/misc/cartesian_product.hpp"
-#include "SkrSerde/json/writer.h"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #include "SkrShaderCompiler/shader_compiler.hpp"
+#include "SkrSerde/json_serde.hpp"
 
 #include <errno.h>
 #include <stdio.h>
@@ -323,7 +323,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
 
         // make archive
         skr::archive::JsonWriter writer(2);
-        skr::json::Write(&writer, json_resource);
+        skr::json_write(&writer, json_resource);
         auto jPath = outputPath.string() + ".json";
         // write to file
         auto file = fopen(jPath.c_str(), "wb");

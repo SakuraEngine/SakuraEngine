@@ -216,13 +216,14 @@ struct JsonSerde<T[N]> {
     }
     inline static bool write(skr::archive::JsonWriter* w, const T (&v)[N])
     {
-        if (w->StartArray().has_value()) return false;
+        SKR_EXPECTED_CHECK(w->StartArray(), false)
         for (int i = 0; i < N; ++i)
         {
             bool _x = JsonSerde<T>::write(w, v[i]);
             if (!_x) return false;
         }
-        if (!w->EndArray().has_value()) return false;
+        SKR_EXPECTED_CHECK(w->EndArray(), false)
+        return true;
     }
 };
 } // namespace skr

@@ -6,9 +6,8 @@
 #include "SkrContainers/string.hpp"
 #include "SkrCore/module/module.hpp"
 #include "SkrCore/async/thread_job.hpp"
-#include "SkrSerde/json/reader.h"
-#include "SkrSerde/json/writer.h"
 #include "SkrSerde/bin_serde.hpp"
+#include "SkrSerde/json_serde.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
@@ -200,13 +199,13 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 for (auto& source_path : cookContext->GetSourceFiles())
                 {
                     const auto source_file = source_path.string();
-                    skr::json::Write<skr::StringView>(&writer, { (const char8_t*)source_file.data(), source_file.size() });
+                    skr::json_write<skr::StringView>(&writer, { (const char8_t*)source_file.data(), source_file.size() });
                 }
                 writer.EndArray();
                 writer.Key(u8"dependencies");
                 writer.StartArray();
                 for (auto& dep : cookContext->GetStaticDependencies())
-                    skr::json::Write<skr_resource_handle_t>(&writer, dep);
+                    skr::json_write<skr_resource_handle_t>(&writer, dep);
                 writer.EndArray();
                 writer.EndObject();
                 auto file = fopen(dependencyPath.string().c_str(), "w");
@@ -319,7 +318,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
             metaReader.Key(u8"importer");
             metaReader.StartObject();
             metaReader.Key(u8"importerType");
-            if (!skr::json::Read(&metaReader, importerTypeGuid))
+            if (!skr::json_read(&metaReader, importerTypeGuid))
             {
                 SKR_LOG_INFO(u8"[SCookSystemImpl::EnsureCooked] meta file parse failed! asset path: %s", metaAsset->path.u8string().c_str());
                 return false;
@@ -374,7 +373,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
             for (size_t i = 0; i < filesSize; i++)
             {
                 skr::String pathStr;
-                skr::json::Read(&depReader, pathStr);
+                skr::json_read(&depReader, pathStr);
                 skr::filesystem::path path(pathStr.c_str());
                 path               = metaAsset->path.parent_path() / (path);
                 std::error_code ec = {};
@@ -399,7 +398,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
             for (size_t i = 0; i < depsSize; i++)
             {
                 skr_guid_t depGuid;
-                skr::json::Read(&depReader, depGuid);
+                skr::json_read(&depReader, depGuid);
                 auto record = GetAssetRecord(depGuid);
                 if (!record)
                 {
@@ -442,13 +441,13 @@ SAssetRecord* SCookSystemImpl::LoadAssetMeta(SProject* project, const skr::Strin
         {
             std::memset(&record->guid, 0, sizeof(skr_guid_t));
             reader.Key(u8"guid");
-            skr::json::Read(&reader, record->guid);
+            skr::json_read(&reader, record->guid);
         }
         // read type
         {
             std::memset(&record->type, 0, sizeof(skr_guid_t));
             reader.Key(u8"type");
-            skr::json::Read(&reader, record->type);
+            skr::json_read(&reader, record->type);
         }
         record->path    = skr::filesystem::path(uri.c_str());
         record->project = project;

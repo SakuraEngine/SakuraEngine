@@ -11,7 +11,7 @@ namespace skd::asset
 {
 using namespace skr;
 template <class T>
-void RegisterImporter(skr_guid_t guid);
+void          RegisterImporter(skr_guid_t guid);
 
 sreflect_struct("guid" : "76044661-E2C9-43A7-A4DE-AEDD8FB5C847", "serialize" : "json")
 TOOL_CORE_API SImporter {
@@ -30,18 +30,12 @@ struct TOOL_CORE_API SImporterTypeInfo {
 
 struct SImporterRegistry {
     virtual SImporter* LoadImporter(const SAssetRecord* record, skr::archive::JsonReader* object, skr_guid_t* pGuid = nullptr) = 0;
-    virtual uint32_t   GetImporterVersion(skr_guid_t type)                                                                = 0;
-    virtual void       RegisterImporter(skr_guid_t type, SImporterTypeInfo info)                                          = 0;
+    virtual uint32_t   GetImporterVersion(skr_guid_t type)                                                                     = 0;
+    virtual void       RegisterImporter(skr_guid_t type, SImporterTypeInfo info)                                               = 0;
 };
 
 TOOL_CORE_API SImporterRegistry* GetImporterRegistry();
 } // namespace skd::asset
-
-namespace skr::json
-{
-template <class T>
-bool Read(skr::archive::JsonReader* object, T& value);
-} // namespace skr::json
 
 template <class T>
 void skd::asset::RegisterImporter(skr_guid_t guid)
@@ -50,7 +44,7 @@ void skd::asset::RegisterImporter(skr_guid_t guid)
     auto loader =
     +[](const SAssetRecord* record, skr::archive::JsonReader* object) -> SImporter* {
         auto importer = SkrNew<T>();
-        skr::json::Read(object, *importer);
+        skr::json_read(object, *importer);
         return importer;
     };
     SImporterTypeInfo info{ loader, T::Version };

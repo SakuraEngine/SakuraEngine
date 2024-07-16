@@ -110,7 +110,7 @@ SKR_RUNTIME_API int  skr_is_resource_resolved(skr_resource_handle_t* handle);
 SKR_RUNTIME_API void skr_get_resource_guid(skr_resource_handle_t* handle, skr_guid_t* guid);
 SKR_RUNTIME_API void skr_get_resource(skr_resource_handle_t* handle, void** guid);
 
-// binary reader
+// bin serde
 #include "SkrSerde/bin_serde.hpp"
 namespace skr
 {
@@ -150,31 +150,39 @@ struct BinSerde<skr::resource::TResourceHandle<T>> {
 };
 } // namespace skr
 
-#include "SkrSerde/json/reader.h"
-#include "SkrSerde/json/writer.h"
-namespace skr::json
+// json serde
+#include "SkrSerde/json_serde.hpp"
+namespace skr
 {
-
 template <>
-struct SKR_RUNTIME_API WriteTrait<skr_resource_handle_t> {
-    static bool Write(skr::archive::JsonWriter* writer, const skr_resource_handle_t& handle);
-};
-template <>
-struct SKR_RUNTIME_API ReadTrait<skr_resource_handle_t> {
-    static bool Read(skr::archive::JsonReader* json, skr_resource_handle_t& value);
-};
-template <class T>
-struct ReadTrait<skr::resource::TResourceHandle<T>> {
-    static bool Read(skr::archive::JsonReader* json, skr::resource::TResourceHandle<T>& handle)
+struct JsonSerde<skr_resource_handle_t> {
+    inline static bool read(skr::archive::JsonReader* r, skr_resource_handle_t& v)
     {
-        return skr::json::Read<skr_resource_handle_t>(json, (skr_resource_handle_t&)handle);
+        SkrZoneScopedN("JsonSerde<skr_resource_handle_t>::read");
+        skr::String view;
+        SKR_EXPECTED_CHECK(r->String(view), false);
+        {
+            skr_guid_t guid;
+            if (!skr::guid_from_sv(view.u8_str(), guid))
+                return false;
+            v.set_guid(guid);
+        }
+        return true;
+    }
+    inline static bool write(skr::archive::JsonWriter* w, const skr_resource_handle_t& v)
+    {
+        return json_write<skr_guid_t>(w, v.get_serialized());
     }
 };
 template <class T>
-struct WriteTrait<skr::resource::TResourceHandle<T>> {
-    static bool Write(skr::archive::JsonWriter* json, const skr::resource::TResourceHandle<T>& handle)
+struct JsonSerde<skr::resource::TResourceHandle<T>> {
+    inline static bool read(skr::archive::JsonReader* r, skr::resource::TResourceHandle<T>& v)
     {
-        return skr::json::Write<skr_resource_handle_t>(json, (const skr_resource_handle_t&)handle);
+        return json_read<skr_resource_handle_t>(r, (skr_resource_handle_t&)v);
+    }
+    inline static bool write(skr::archive::JsonWriter* w, const skr::resource::TResourceHandle<T>& v)
+    {
+        return json_write<skr_resource_handle_t>(w, (const skr_resource_handle_t&)v);
     }
 };
-} // namespace skr::json
+} // namespace skr

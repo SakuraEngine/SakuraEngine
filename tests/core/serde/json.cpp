@@ -1,6 +1,4 @@
 #include "SkrCore/log.h"
-#include "SkrSerde/json/writer.h"
-#include "SkrSerde/json/reader.h"
 #include "SkrContainers/vector.hpp"
 #include "SkrContainers/hashmap.hpp"
 
@@ -18,8 +16,8 @@ void _EXPECT_OK(skr::archive::JsonReadResult&& r)
 {
     using namespace skr::archive;
     r.and_then([]() {
-        EXPECT_EQ(true, true);
-    })
+         EXPECT_EQ(true, true);
+     })
     .error_then([](JsonErrorCode error) {
         EXPECT_EQ(true, false);
     });
@@ -36,20 +34,20 @@ struct TestTypeSerde {
         {
             EXPECT_OK(writer.StartObject());
             writer.Key(key);
-            skr::json::Write(&writer, value);
+            skr::json_write(&writer, value);
             EXPECT_OK(writer.EndObject());
         }
 
         auto json = writer.Write();
         SKR_LOG_INFO(u8"TYPE SERDE JSON: %s", json.c_str());
-        
+
         skr::archive::JsonReader reader(json.view());
         reader.StartObject();
         {
             reader.Key(key);
 
             T _value;
-            skr::json::Read(&reader, _value);
+            skr::json_read(&reader, _value);
             if constexpr (std::is_same_v<EQ, nullptr_t>)
                 EXPECT_EQ(value, _value);
             else
@@ -105,14 +103,12 @@ TEST_CASE_METHOD(JSONSerdeTests, "containers")
 {
     // vector
     {
-        skr::Vector<uint64_t> values  = { 0x12345678, 0x87654321 };
-        TestTypeSerde(u8"vec<u64>", values, 
-            [](const auto& v1, const auto& v2) 
-            {
-                EXPECT_EQ(v1[0], v2[0]);
-                EXPECT_EQ(v1[1], v2[1]);
-            }
-        );
+        skr::Vector<uint64_t> values = { 0x12345678, 0x87654321 };
+        TestTypeSerde(u8"vec<u64>", values,
+                      [](const auto& v1, const auto& v2) {
+                          EXPECT_EQ(v1[0], v2[0]);
+                          EXPECT_EQ(v1[1], v2[1]);
+                      });
     }
     // vec-vec
     {
@@ -120,15 +116,13 @@ TEST_CASE_METHOD(JSONSerdeTests, "containers")
             { 0x12345678, 0x87654321 },
             { 0x87654321, 0x12345678 }
         };
-        TestTypeSerde(u8"vec<vec<u64>>", values, 
-            [](const auto& v1, const auto& v2) 
-            {
-                EXPECT_EQ(v1[0][0], v2[0][0]);
-                EXPECT_EQ(v1[0][1], v2[0][1]);
-                EXPECT_EQ(v1[1][0], v2[1][0]);
-                EXPECT_EQ(v1[1][1], v2[1][1]);
-            }
-        );
+        TestTypeSerde(u8"vec<vec<u64>>", values,
+                      [](const auto& v1, const auto& v2) {
+                          EXPECT_EQ(v1[0][0], v2[0][0]);
+                          EXPECT_EQ(v1[0][1], v2[0][1]);
+                          EXPECT_EQ(v1[1][0], v2[1][0]);
+                          EXPECT_EQ(v1[1][1], v2[1][1]);
+                      });
     }
     // string-hashmap
     {
@@ -137,19 +131,17 @@ TEST_CASE_METHOD(JSONSerdeTests, "containers")
         stringMap.emplace(u8"key2", 234);
         stringMap.emplace(u8"key3", 456);
 
-        TestTypeSerde(u8"hashmap<string, i32>", stringMap, 
-            [](auto& v1, auto& v2) 
-            {
-                EXPECT_EQ(v1[u8"key1"], v2[u8"key1"]);
-                EXPECT_EQ(v1[u8"key2"], v2[u8"key2"]);
-                EXPECT_EQ(v1[u8"key3"], v2[u8"key3"]);
-            }
-        );
+        TestTypeSerde(u8"hashmap<string, i32>", stringMap,
+                      [](auto& v1, auto& v2) {
+                          EXPECT_EQ(v1[u8"key1"], v2[u8"key1"]);
+                          EXPECT_EQ(v1[u8"key2"], v2[u8"key2"]);
+                          EXPECT_EQ(v1[u8"key3"], v2[u8"key3"]);
+                      });
     }
     // id-hashmap
     {
         skr::FlatHashMap<skr_guid_t, int32_t, skr::Hash<skr_guid_t>> idMap;
-        skr::Vector<skr_guid_t> guids;
+        skr::Vector<skr_guid_t>                                      guids;
         guids.resize_zeroed(3);
         for (uint32_t i = 0; i < 3; i++)
         {
@@ -157,13 +149,11 @@ TEST_CASE_METHOD(JSONSerdeTests, "containers")
             idMap.emplace(guids[i], i);
         }
 
-        TestTypeSerde(u8"hashmap<guid, i32>", idMap, 
-            [&](auto& v1, auto& v2) 
-            {
-                EXPECT_EQ(v1[guids[0]], v2[guids[0]]);
-                EXPECT_EQ(v1[guids[1]], v2[guids[1]]);
-                EXPECT_EQ(v1[guids[2]], v2[guids[2]]);
-            }
-        );
+        TestTypeSerde(u8"hashmap<guid, i32>", idMap,
+                      [&](auto& v1, auto& v2) {
+                          EXPECT_EQ(v1[guids[0]], v2[guids[0]]);
+                          EXPECT_EQ(v1[guids[1]], v2[guids[1]]);
+                          EXPECT_EQ(v1[guids[2]], v2[guids[2]]);
+                      });
     }
 }

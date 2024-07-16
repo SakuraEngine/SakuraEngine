@@ -361,22 +361,20 @@ struct BinSerde<StronglyEnum<T>> {
 } // namespace skr
 
 // strongly enum json serde
-#include "SkrSerde/json/reader.h"
-#include "SkrSerde/json/writer.h"
-namespace skr::json
+#include "SkrSerde/json_serde.hpp"
+namespace skr
 {
 template <class T>
-struct WriteTrait<StronglyEnum<T>> {
-    static bool Write(skr::archive::JsonWriter* writer, const StronglyEnum<T>& value)
+struct JsonSerde<StronglyEnum<T>> {
+    inline static bool read(skr::archive::JsonReader* r, StronglyEnum<T>& v)
     {
-        return skr::json::WriteTrait<typename StronglyEnum<T>::UnderlyingType>::Write(writer, value.underlying_value());
+        using UT = typename StronglyEnum<T>::UnderlyingType;
+        return json_read<UT>(r, v.underlying_value());
+    }
+    inline static bool write(skr::archive::JsonWriter* w, const StronglyEnum<T>& v)
+    {
+        using UT = typename StronglyEnum<T>::UnderlyingType;
+        return json_write<UT>(w, v.underlying_value());
     }
 };
-template <class T>
-struct ReadTrait<StronglyEnum<T>> {
-    static bool Read(skr::archive::JsonReader* json, StronglyEnum<T>& value)
-    {
-        return skr::json::ReadTrait<typename StronglyEnum<T>::UnderlyingType>::Read(json, value.underlying_value());
-    }
-};
-} // namespace skr::json
+} // namespace skr

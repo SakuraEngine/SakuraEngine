@@ -47,35 +47,30 @@ struct BinSerde<skr::String> {
 } // namespace skr
 
 // json serde
-#include "SkrSerde/json/reader.h"
-#include "SkrSerde/json/writer.h"
-namespace skr::json
+#include "SkrSerde/json_serde.hpp"
+namespace skr
 {
 template <>
-struct SKR_STATIC_API ReadTrait<skr::String> {
-    inline static bool Read(skr::archive::JsonReader* json, skr::String& value)
+struct JsonSerde<skr::String> {
+    inline static bool read(skr::archive::JsonReader* r, skr::String& v)
     {
-        SkrZoneScopedN("json::ReadTrait<skr::String>::Read");
+        SkrZoneScopedN("json::JsonSerde<skr::String>::read");
 
-        if (json->String(value).has_value())
-            return true;
+        SKR_EXPECTED_CHECK(r->String(v), false);
         return false;
     }
-};
-template <>
-struct SKR_STATIC_API WriteTrait<skr::StringView> {
-    inline static bool Write(skr::archive::JsonWriter* writer, const skr::StringView& str)
+    inline static bool write(skr::archive::JsonWriter* w, const skr::String& v)
     {
-        if (!(writer->String(str)).has_value()) return false;
+        SKR_EXPECTED_CHECK(w->String(v.view()), false);
         return true;
     }
 };
 template <>
-struct SKR_STATIC_API WriteTrait<skr::String> {
-    inline static bool Write(skr::archive::JsonWriter* writer, const skr::String& str)
+struct JsonSerde<skr::StringView> {
+    inline static bool write(skr::archive::JsonWriter* w, const skr::StringView& v)
     {
-        if (!(writer->String(str.view())).has_value()) return false;
+        SKR_EXPECTED_CHECK(w->String(v), false);
         return true;
     }
 };
-} // namespace skr::json
+} // namespace skr

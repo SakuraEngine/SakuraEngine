@@ -98,21 +98,20 @@ struct BinSpanReaderBitpacked {
 } // namespace skr::archive
 
 // json serde
-#include "SkrSerde/json/reader.h"
-#include "SkrSerde/json/writer.h"
-namespace skr::json
+#include "SkrSerde/json_serde.hpp"
+namespace skr
 {
 template <class V>
-struct WriteTrait<skr::span<V>> {
-    static bool Write(skr::archive::JsonWriter* json, const skr::span<V>& vec)
+struct JsonSerde<skr::span<V>> {
+    inline static bool write(skr::archive::JsonWriter* w, const skr::span<V>& v)
     {
-        json->StartArray();
-        for (auto& v : vec)
+        SKR_EXPECTED_CHECK(w->StartArray(), false);
+        for (auto& value : v)
         {
-            skr::json::Write<V>(json, v);
+            json_write<V>(w, value);
         }
-        json->EndArray();
+        SKR_EXPECTED_CHECK(w->EndArray(), false);
         return true;
     }
 };
-} // namespace skr::json
+} // namespace skr

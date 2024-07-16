@@ -9,7 +9,6 @@
 #include "SkrRT/platform/window.h"
 
 #include "SkrRT/ecs/type_builder.hpp"
-#include "SkrSerde/json/writer.h"
 
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"

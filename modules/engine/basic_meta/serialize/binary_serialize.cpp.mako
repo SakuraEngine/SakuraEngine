@@ -38,7 +38,7 @@ bool BinSerde<${record.name}>::read(SBinaryReader* r, ${record.name}& v)
 }
 bool BinSerde<${record.name}>::write(SBinaryWriter* w, const ${record.name}& v)
 {
-    SkrZoneScopedN("binary::WriteTrait<${record.name}>::Write");
+    SkrZoneScopedN("BinSerde<${record.name}>::write");
 
     // serde bases
 %for base in record.bases:

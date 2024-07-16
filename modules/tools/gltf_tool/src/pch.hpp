@@ -18,7 +18,4 @@
 #include "SkrContainers/vector.hpp"  // IWYU pragma: export
 #include "SkrContainers/hashmap.hpp" // IWYU pragma: export
 
-#include "SkrSerde/json/reader.h" // IWYU pragma: export
-#include "SkrSerde/json/writer.h" // IWYU pragma: export
-
 #include "SkrProfile/profile.h" // IWYU pragma: export

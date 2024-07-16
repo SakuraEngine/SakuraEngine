@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrSerde/json/reader.h"
+#include "SkrSerde/json_serde.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 
 namespace skd::asset
@@ -9,8 +9,8 @@ T LoadConfig(SCookContext* context)
 {
     // TODO: now it parses twice, add cursor to reader to avoid this
     skr::archive::JsonReader reader(context->GetAssetRecord()->meta.view());
-    T settings;
-    skr::json::Read(&reader, settings);
+    T                        settings;
+    json_read(&reader, settings);
     return settings;
 }
 } // namespace skd::asset

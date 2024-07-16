@@ -24,10 +24,10 @@ static_component("SkrArchive", "SkrCore")
     add_files("src/archive/build.*.cpp")
     add_packages("yyjson", {public = false})
 
-static_component("SkrSerde", "SkrCore")
-    add_deps("SkrArchive")
-    add_packages("parallel-hashmap", {public = true, inherit = true})
-    add_files("src/serde/build.*.cpp")
+-- static_component("SkrSerde", "SkrCore")
+--     add_deps("SkrArchive")
+--     add_packages("parallel-hashmap", {public = true, inherit = true})
+--     add_files("src/serde/build.*.cpp")
 
 shared_module("SkrCore", "SKR_CORE", engine_version)
     -- add source files

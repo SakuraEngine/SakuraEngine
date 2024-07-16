@@ -2,13 +2,13 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/io/ram_io.hpp"
-#include "SkrSerde/json/reader.h"
 #include "SkrToolCore/project/project.hpp"
+#include "SkrSerde/json_serde.hpp"
 
 namespace skd
 {
 static skr::filesystem::path Workspace;
-void SProject::SetWorkspace(const skr::filesystem::path& path) noexcept
+void                         SProject::SetWorkspace(const skr::filesystem::path& path) noexcept
 {
     Workspace = path;
 }
@@ -61,8 +61,8 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFilePath) no
         }
         return result.lexically_normal();
     };
-    
-    auto projectPath = projectFilePath.lexically_normal().string();
+
+    auto                projectPath = projectFilePath.lexically_normal().string();
     skd::SProjectConfig cfg;
     // TODO: refactor this
     {
@@ -82,7 +82,7 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFilePath) no
         fclose(projectFile);
 
         skr::archive::JsonReader reader(projectFileContent.view());
-        if (!skr::json::Read(&reader, cfg))
+        if (!skr::json_read(&reader, cfg))
         {
             SKR_LOG_ERROR(u8"Failed to parse project file: %s", projectPath.c_str());
             return nullptr;
@@ -127,9 +127,9 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFilePath) no
 
 bool SProject::LoadAssetData(skr::StringView uri, skr::Vector<uint8_t>& content) noexcept
 {
-    skr::String path = uri;
-    auto asset_file = skr_vfs_fopen(asset_vfs, path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-    const auto asset_size = skr_vfs_fsize(asset_file);
+    skr::String path       = uri;
+    auto        asset_file = skr_vfs_fopen(asset_vfs, path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    const auto  asset_size = skr_vfs_fsize(asset_file);
     content.resize_unsafe(asset_size);
     skr_vfs_fread(asset_file, content.data(), 0, asset_size);
     skr_vfs_fclose(asset_file);
@@ -138,9 +138,9 @@ bool SProject::LoadAssetData(skr::StringView uri, skr::Vector<uint8_t>& content)
 
 bool SProject::LoadAssetText(skr::StringView uri, skr::String& content) noexcept
 {
-    skr::String path = uri;
-    auto asset_file = skr_vfs_fopen(asset_vfs, path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-    const auto asset_size = skr_vfs_fsize(asset_file);
+    skr::String path       = uri;
+    auto        asset_file = skr_vfs_fopen(asset_vfs, path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    const auto  asset_size = skr_vfs_fsize(asset_file);
     content.append(u8'0', asset_size);
     skr_vfs_fread(asset_file, content.raw().data(), 0, asset_size);
     skr_vfs_fclose(asset_file);

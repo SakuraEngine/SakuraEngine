@@ -45,46 +45,40 @@ struct BinSerde<skr::FlatHashMap<K, V, Hash, Eq>> {
 } // namespace skr
 
 // json serde
-#include "SkrSerde/json/reader.h"
-#include "SkrSerde/json/writer.h"
-namespace skr::json
+#include "SkrSerde/json_serde.hpp"
+namespace skr
 {
 template <class K, class V, class Hash, class Eq>
-struct ReadTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
-    static bool Read(skr::archive::JsonReader* json, skr::FlatHashMap<K, V, Hash, Eq>& map)
+struct JsonSerde<skr::FlatHashMap<K, V, Hash, Eq>> {
+    inline static bool read(skr::archive::JsonReader* r, skr::FlatHashMap<K, V, Hash, Eq>& v)
     {
         size_t count = 0;
-        json->StartArray(count);
-        map.reserve(count);
+        SKR_EXPECTED_CHECK(r->StartArray(count), false);
+        v.reserve(count);
         for (size_t i = 0; i < count; i += 2)
         {
-            K k;
-            V v;
-            if (!skr::json::Read<K>(json, k))
-                return false;
+            K key;
+            V value;
 
-            if (!skr::json::Read<V>(json, v))
+            if (!json_read<K>(r, key))
                 return false;
-
-            map.emplace(std::move(k), std::move(v));
+            if (!json_read<V>(r, value))
+                return false;
+            v.emplace(std::move(key), std::move(value));
         }
-        json->EndArray();
+        SKR_EXPECTED_CHECK(r->EndArray(), false);
         return true;
     }
-};
-
-template <class K, class V, class Hash, class Eq>
-struct WriteTrait<skr::FlatHashMap<K, V, Hash, Eq>> {
-    static bool Write(skr::archive::JsonWriter* json, const skr::FlatHashMap<K, V, Hash, Eq>& map)
+    inline static bool write(skr::archive::JsonWriter* w, const skr::FlatHashMap<K, V, Hash, Eq>& v)
     {
-        json->StartArray();
-        for (auto& pair : map)
+        SKR_EXPECTED_CHECK(w->StartArray(), false);
+        for (auto& pair : v)
         {
-            skr::json::Write(json, pair.first);
-            skr::json::Write<V>(json, pair.second);
+            if (!json_write<K>(w, pair.first)) return false;
+            if (!json_write<V>(w, pair.second)) return false;
         }
-        json->EndArray();
+        SKR_EXPECTED_CHECK(w->EndArray(), false);
         return true;
     }
 };
-} // namespace skr::json
+} // namespace skr
