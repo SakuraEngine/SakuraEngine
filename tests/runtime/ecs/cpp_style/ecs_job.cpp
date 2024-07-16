@@ -5,23 +5,11 @@
 #include "SkrRT/ecs/job.hpp"
 #include "SkrCore/log.h"
 
-struct ProcInitializer
-{
-    ProcInitializer() SKR_NOEXCEPT
-    {
-        skr_log_initialize_async_worker();
-    }
-    ~ProcInitializer() SKR_NOEXCEPT
-    {
-        skr_log_finalize_async_worker();
-    }
-
-} _;
 
 struct ECSJobs {
     ECSJobs() SKR_NOEXCEPT
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         
         storage = sugoiS_create();
 
@@ -38,7 +26,7 @@ struct ECSJobs {
         ::sugoiS_release(storage);
         scheduler.unbind();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
     void spawnIntEntities()
