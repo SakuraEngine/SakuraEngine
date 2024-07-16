@@ -1,0 +1,11 @@
+test_target("JsonTest")
+    set_group("05.tests/core")
+    public_dependency("SkrCore", engine_version)
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
+    add_files("json/main.cpp")
+
+test_target("SerdeTest")
+    set_group("05.tests/core")
+    public_dependency("SkrCore", engine_version)
+    add_rules("c++.unity_build", {batchsize = default_unity_batch})
+    add_files("serde/main.cpp")

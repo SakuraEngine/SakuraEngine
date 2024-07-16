@@ -12,7 +12,7 @@
 namespace skr {
 namespace log {
     
-using namespace skr::guid::literals;
+using namespace skr::literals;
 const char* kLogMemoryName = "sakura::log";
 skr::log::LogLevel LogConstants::gLogLevel = skr::log::LogLevel::kTrace;
 skr::log::LogFlushBehavior LogConstants::gFlushBehavior = skr::log::LogFlushBehavior::kAuto;

@@ -1,11 +1,12 @@
-#include "SkrTestFramework/framework.hpp"
 #include "container_test_types.hpp"
+#include "SkrTestFramework/framework.hpp"
 #include <chrono>
 
 template <typename ValueType, typename TestHashSet, typename ModifyCapacity, typename ClampCapacity>
 void template_test_multi_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_capacity)
 {
-    using namespace skr;
+    using skr::Hash;
+    using namespace skr::test_container;
 
     SUBCASE("ctor & dtor")
     {
@@ -461,7 +462,7 @@ void template_test_multi_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapa
 
 TEST_CASE("test sparse hash set (multi)")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     using ValueType   = int32_t;
     using TestHashSet = MultiSparseHashSet<ValueType>;
 
@@ -472,7 +473,7 @@ TEST_CASE("test sparse hash set (multi)")
 
 TEST_CASE("test fixed sparse hash set (multi)")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     using ValueType                          = int32_t;
     static constexpr uint64_t kFixedCapacity = 200;
     using TestHashSet                        = FixedMultiSparseHashSet<ValueType, kFixedCapacity>;
@@ -484,7 +485,7 @@ TEST_CASE("test fixed sparse hash set (multi)")
 
 TEST_CASE("test inline sparse hash set (multi)")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     using ValueType = int32_t;
 
     static constexpr uint64_t kInlineCapacity = 10;

@@ -2,7 +2,7 @@
 #ifdef __cplusplus
     #include "rg_config.h"
     #include "SkrRenderGraph/frontend/render_graph.hpp"
-    #include "SkrModule/module.hpp"
+    #include "SkrCore/module/module.hpp"
 
     class SKR_RENDER_GRAPH_API SkrRenderGraphModule : public skr::IDynamicModule
     {

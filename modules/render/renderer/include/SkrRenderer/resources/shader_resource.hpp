@@ -10,9 +10,9 @@
     #include "SkrRenderer/resources/shader_resource.generated.h" // IWYU pragma: export
 #endif
 
-namespace skr sreflect
+namespace skr
 {
-namespace renderer sreflect
+namespace renderer
 {
 
 sreflect_struct("guid" : "6c07aa34-249f-45b8-8080-dd2462ad5312")
@@ -40,11 +40,11 @@ MultiShaderResource {
 };
 
 sreflect_struct("guid": "8372f075-b4ce-400d-929f-fb0e57c1c887")
-sattr("blob" : true)
+sattr("serialize" : "bin")
 ShaderOptionSequence {
-    skr::span<EShaderOptionType>           types;
-    skr::span<skr::StringView>            keys;
-    skr::span<skr::span<skr::StringView>> values;
+    skr::SerializeConstVector<EShaderOptionType>                                    types;
+    skr::SerializeConstVector<skr::SerializeConstString>                            keys;
+    skr::SerializeConstVector<skr::SerializeConstVector<skr::SerializeConstString>> values;
 
     SKR_RENDERER_API
     uint32_t find_key_index(skr::StringView key) const SKR_NOEXCEPT;
@@ -58,7 +58,6 @@ ShaderOptionSequence {
     SKR_RENDERER_API
     static skr_stable_shader_hash_t calculate_stable_hash(const ShaderOptionSequence& seq, skr::span<uint32_t> indices);
 };
-GENERATED_BLOB_BUILDER(ShaderOptionSequence)
 
 sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
 sattr("serialize" : "bin")
@@ -83,12 +82,7 @@ ShaderCollectionResource {
     // hash=0 -> root_variant;
     skr::FlatHashMap<stable_hash_t, MultiShaderResource, stable_hasher_t> switch_variants;
 
-    skr_blob_arena_t             switch_arena;
-    skr_blob_arena_t             option_arena;
-
-    sattr("arena" : "switch_arena")
     skr_shader_option_sequence_t switch_sequence;
-    sattr("arena" : "option_arena")
     skr_shader_option_sequence_t option_sequence;
 };
 
@@ -137,12 +131,5 @@ struct SKR_RENDERER_API SShaderResourceFactory : public resource::SResourceFacto
 
     static ECGPUShaderBytecodeType GetRuntimeBytecodeType(ECGPUBackend backend);
 };
-} // namespace renderer sreflect
-} // namespace skr sreflect
-namespace skr::binary
-{
-template <>
-struct BlobBuilderType<skr_stable_shader_hash_t> {
-    using type = skr_stable_shader_hash_t;
-};
-} // namespace skr::binary
+} // namespace renderer
+} // namespace skr

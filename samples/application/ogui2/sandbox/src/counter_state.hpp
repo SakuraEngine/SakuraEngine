@@ -5,14 +5,12 @@
     #include "OGUI_Sandbox/counter_state.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct ClickGestureRecognizer;
 
-sreflect_struct("guid": "a0f18066-235e-41f7-bb76-34acf44511a1",
-"rttr": { "reflect_fields": true })
+sreflect_struct("guid": "a0f18066-235e-41f7-bb76-34acf44511a1"
+)
 Fuck {
 
     Array<int> int_arr;
@@ -20,7 +18,7 @@ Fuck {
 
 sreflect_struct("guid": "d7968418-6b0b-4261-b27e-256074a6f83b")
 OGUI_SANDBOX_API CounterState : public State {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     int32_t count = 0;
 
@@ -32,7 +30,7 @@ private:
 
 sreflect_struct("guid": "aa98a7a6-2d8b-447c-bc6d-eb24d633cfb3")
 OGUI_SANDBOX_API Counter : public StatefulWidget {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     ~Counter() = default;
 
     NotNull<State*> create_state() SKR_NOEXCEPT override
@@ -41,5 +39,4 @@ OGUI_SANDBOX_API Counter : public StatefulWidget {
     }
 };
 
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

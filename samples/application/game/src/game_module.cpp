@@ -4,13 +4,11 @@
 #include "SkrOS/filesystem.hpp"
 #include "SkrRT/platform/system.h"
 #include "SkrRT/config.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrCore/time.h"
-#include "SkrGuid/guid.hpp"
 #include "SkrRT/platform/window.h"
 
 #include "SkrRT/ecs/type_builder.hpp"
-#include "SkrRT/serde/json/writer.h"
 
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
@@ -47,7 +45,6 @@
 #include "SkrCore/async/thread_job.hpp"
 
 #include "SkrProfile/profile.h"
-#include "SkrRT/misc/types.h"
 #include "SkrLua/skr_lua.h"
 // #include "SkrInspector/inspect_value.h" // FIXME. inspector
 
@@ -137,7 +134,7 @@ void SGameModule::installResourceFactories()
     skr::resource::GetResourceSystem()->Initialize(registry, ram_service);
     //
 
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     auto resource_system = skr::resource::GetResourceSystem();
 
     auto gameResourceRoot = resourceRoot / "game";
@@ -250,7 +247,7 @@ void SGameModule::installResourceFactories()
     struct GameSceneFactory : public skr::resource::SSceneFactory {
         virtual ESkrInstallStatus Install(skr_resource_record_t* record) override
         {
-            auto renderableT_builder = make_zeroed<sugoi::type_builder_t>();
+            auto renderableT_builder = make_zeroed<sugoi::TypeSetBuilder>();
             renderableT_builder.with<skr_render_effect_t>();
             auto renderableT               = make_zeroed<sugoi_entity_type_t>();
             renderableT.type               = renderableT_builder.build();
@@ -339,7 +336,7 @@ void SGameModule::on_load(int argc, char8_t** argv)
 void create_test_scene(SRendererId renderer)
 {
     // allocate 100 movable cubes
-    auto renderableT_builder = make_zeroed<sugoi::type_builder_t>();
+    auto renderableT_builder = make_zeroed<sugoi::TypeSetBuilder>();
     renderableT_builder
     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
     .with<skr_index_comp_t, skr_movement_comp_t>()
@@ -376,7 +373,7 @@ void create_test_scene(SRendererId renderer)
             }
             if (states)
             {
-                using namespace skr::guid::literals;
+                using namespace skr::literals;
                 states[i].animation_resource = u8"83c0db0b-08cd-4951-b1c3-65c2008d0113"_guid;
                 states[i].animation_resource.resolve(true, renderer->get_sugoi_storage());
             }
@@ -394,7 +391,7 @@ void create_test_scene(SRendererId renderer)
     SKR_LOG_DEBUG(u8"Create Scene 0!");
 
     // allocate 1 player entity
-    auto playerT_builder = make_zeroed<sugoi::type_builder_t>();
+    auto playerT_builder = make_zeroed<sugoi::TypeSetBuilder>();
     playerT_builder
     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
     .with<skr_movement_comp_t>()
@@ -406,7 +403,7 @@ void create_test_scene(SRendererId renderer)
     SKR_LOG_DEBUG(u8"Create Scene 1!");
 
     // allocate 1 static(unmovable) gltf mesh
-    auto static_renderableT_builderT = make_zeroed<sugoi::type_builder_t>();
+    auto static_renderableT_builderT = make_zeroed<sugoi::TypeSetBuilder>();
     static_renderableT_builderT
     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
     .with<skr_render_effect_t, game::anim_state_t>();
@@ -423,18 +420,18 @@ void async_attach_skin_mesh(SRendererId renderer)
 
     auto filter          = make_zeroed<sugoi_filter_t>();
     auto meta            = make_zeroed<sugoi_meta_filter_t>();
-    auto renderable_type = make_zeroed<sugoi::type_builder_t>();
+    auto renderable_type = make_zeroed<sugoi::TypeSetBuilder>();
     renderable_type.with<skr_render_effect_t, skr_translation_comp_t>();
-    auto static_type = make_zeroed<sugoi::type_builder_t>();
+    auto static_type = make_zeroed<sugoi::TypeSetBuilder>();
     static_type.with<skr_movement_comp_t>();
     filter.all     = renderable_type.build();
     filter.none    = static_type.build();
-    auto skin_type = make_zeroed<sugoi::type_builder_t>();
+    auto skin_type = make_zeroed<sugoi::TypeSetBuilder>();
     auto filter2   = make_zeroed<sugoi_filter_t>();
     filter2.all    = skin_type.with<renderer::MeshComponent, anim::SkinComponent, anim::SkeletonComponent>().build();
     auto attchFunc = [=](sugoi_chunk_view_t* view) {
         auto requestSetup = [=](sugoi_chunk_view_t* view) {
-            using namespace skr::guid::literals;
+            using namespace skr::literals;
 
             auto mesh_comps = sugoi::get_owned_rw<renderer::MeshComponent>(view);
             auto skin_comps = sugoi::get_owned_rw<anim::SkinComponent>(view);
@@ -458,26 +455,26 @@ void async_attach_skin_mesh(SRendererId renderer)
         skr_render_effect_access(renderer, view, u8"ForwardEffectSkin", SUGOI_LAMBDA(requestSetup));
     };
     // 手动 sync skin mesh
-    sugoiS_query(renderer->get_sugoi_storage(), &filter2, &meta, nullptr, nullptr);
-    sugoiS_query(renderer->get_sugoi_storage(), &filter, &meta, SUGOI_LAMBDA(attchFunc));
+    sugoiS_filter(renderer->get_sugoi_storage(), &filter2, &meta, nullptr, nullptr);
+    sugoiS_filter(renderer->get_sugoi_storage(), &filter, &meta, SUGOI_LAMBDA(attchFunc));
 }
 
 void async_attach_render_mesh(SRendererId renderer)
 {
     auto filter          = make_zeroed<sugoi_filter_t>();
     auto meta            = make_zeroed<sugoi_meta_filter_t>();
-    auto renderable_type = make_zeroed<sugoi::type_builder_t>();
+    auto renderable_type = make_zeroed<sugoi::TypeSetBuilder>();
     renderable_type.with<skr_render_effect_t, skr_translation_comp_t>();
-    auto static_type = make_zeroed<sugoi::type_builder_t>();
+    auto static_type = make_zeroed<sugoi::TypeSetBuilder>();
     static_type.with<skr_movement_comp_t>();
     filter.all     = renderable_type.build();
     filter.none    = static_type.build();
-    auto skin_type = make_zeroed<sugoi::type_builder_t>();
+    auto skin_type = make_zeroed<sugoi::TypeSetBuilder>();
     auto filter2   = make_zeroed<sugoi_filter_t>();
     filter2.all    = skin_type.with<skr::renderer::MeshComponent>().build();
     auto attchFunc = [=](sugoi_chunk_view_t* view) {
         auto requestSetup = [=](sugoi_chunk_view_t* view) {
-            using namespace skr::guid::literals;
+            using namespace skr::literals;
             auto mesh_comps = sugoi::get_owned_rw<skr::renderer::MeshComponent>(view);
 
             for (uint32_t i = 0; i < view->count; i++)
@@ -490,8 +487,8 @@ void async_attach_render_mesh(SRendererId renderer)
         skr_render_effect_access(renderer, view, u8"ForwardEffectSkin", SUGOI_LAMBDA(requestSetup));
     };
     // 手动 sync mesh
-    sugoiS_query(renderer->get_sugoi_storage(), &filter2, &meta, nullptr, nullptr);
-    sugoiS_query(renderer->get_sugoi_storage(), &filter, &meta, SUGOI_LAMBDA(attchFunc));
+    sugoiS_filter(renderer->get_sugoi_storage(), &filter2, &meta, nullptr, nullptr);
+    sugoiS_filter(renderer->get_sugoi_storage(), &filter, &meta, SUGOI_LAMBDA(attchFunc));
 }
 
 void imgui_button_spawn_girl(SRendererId renderer)
@@ -577,8 +574,9 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
         SKR_LOG_ERROR(u8"lua_pcall error: {}", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-    namespace res                                           = skr::resource;
-    res::TResourceHandle<skr_scene_resource_t> scene_handle = skr::guid::make_guid_unsafe(u8"FB84A5BD-2FD2-46A2-ABF4-2D2610CFDAD9");
+    namespace res = skr::resource;
+    using namespace skr::literals;
+    res::TResourceHandle<skr_scene_resource_t> scene_handle = u8"FB84A5BD-2FD2-46A2-ABF4-2D2610CFDAD9"_guid;
     scene_handle.resolve(true, 0, SKR_REQUESTER_SYSTEM);
 
     // Viewport
@@ -712,7 +710,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                 ImGui::Begin("Scene");
                 if (ImGui::Button("Save"))
                 {
-                    skr_json_writer_t writer(5);
+                    skr::archive::JsonWriter writer(5);
                     skr_save_scene(game_renderer->get_sugoi_storage(), &writer);
                     auto file = skr_vfs_fopen(resource_vfs, u8"scene.json", SKR_FM_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
                     if (file)
@@ -776,7 +774,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
         // sync all jobs here ?
         {
             // SkrZoneScopedN("sugoiJSync");
-            // sugoiJ_wait_all();
+            // sugoiJ_wait_all_jobs();
         }
 
         // [inout]skr::anim::AnimComponent, [in]game::anim_state_t, [in]skr::anim::SkeletonComponent

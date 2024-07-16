@@ -135,7 +135,7 @@ void CookGLTFMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mes
     skr_guid_t shuffle_layout_id = cfg->vertexType;
     CGPUVertexLayout shuffle_layout = {};
     const char* shuffle_layout_name = nullptr;
-    if (!shuffle_layout_id.isZero()) 
+    if (!shuffle_layout_id.is_zero()) 
     {
         shuffle_layout_name = skr_mesh_resource_query_vertex_layout(shuffle_layout_id, &shuffle_layout);
     }
@@ -189,7 +189,7 @@ void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, SMeshCookConfig* cf
     skr_guid_t shuffle_layout_id = cfg->vertexType;
     CGPUVertexLayout shuffle_layout = {};
     const char* shuffle_layout_name = nullptr;
-    if (!shuffle_layout_id.isZero()) 
+    if (!shuffle_layout_id.is_zero()) 
     {
         shuffle_layout_name = skr_mesh_resource_query_vertex_layout(shuffle_layout_id, &shuffle_layout);
     }

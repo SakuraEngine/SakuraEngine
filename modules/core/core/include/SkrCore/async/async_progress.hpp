@@ -2,10 +2,10 @@
 #include <atomic>
 #include <type_traits>
 #include "SkrBase/misc/defer.hpp"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #include "SkrOS/thread.h"
-#include "SkrMemory/memory.h"
-#include "SkrContainers/stl_queue.hpp"
+#include "SkrCore/memory/memory.h"
+#include "SkrContainersDef/stl_queue.hpp"
 
 namespace skr
 {
@@ -34,32 +34,30 @@ enum class FutureStatus : uint32_t
 };
 
 template <typename Artifact>
-struct IFuture 
-{
-    virtual ~IFuture() SKR_NOEXCEPT = default;
-    virtual bool valid() const SKR_NOEXCEPT = 0;
-    virtual void wait() SKR_NOEXCEPT = 0;
+struct IFuture {
+    virtual ~IFuture() SKR_NOEXCEPT                         = default;
+    virtual bool         valid() const SKR_NOEXCEPT         = 0;
+    virtual void         wait() SKR_NOEXCEPT                = 0;
     virtual FutureStatus wait_for(uint32_t ms) SKR_NOEXCEPT = 0;
-    virtual Artifact get() SKR_NOEXCEPT = 0;
+    virtual Artifact     get() SKR_NOEXCEPT                 = 0;
 };
 
 template <typename Artifact>
-struct SerialFuture : public IFuture<Artifact>
-{
-    template<typename F, typename... Args>
+struct SerialFuture : public IFuture<Artifact> {
+    template <typename F, typename... Args>
     SerialFuture(F&& _f, Args&&... args)
     {
-        const auto runner = [=, This = this]() { 
-            This->artifact = _f(args...); 
+        const auto runner = [=, This = this]() {
+            This->artifact = _f(args...);
         };
         runner();
     }
     virtual ~SerialFuture() SKR_NOEXCEPT {}
-    Artifact get() SKR_NOEXCEPT override { return artifact; }
-    bool valid() const SKR_NOEXCEPT override { return true; }
-    void wait() SKR_NOEXCEPT override { }
+    Artifact          get() SKR_NOEXCEPT override { return artifact; }
+    bool              valid() const SKR_NOEXCEPT override { return true; }
+    void              wait() SKR_NOEXCEPT override {}
     skr::FutureStatus wait_for(uint32_t ms) SKR_NOEXCEPT override { return FutureStatus::Ready; }
-    Artifact artifact;
+    Artifact          artifact;
 };
 
 // AsyncProgress
@@ -83,19 +81,19 @@ public:
 private:
     Status status = Status::PENDING;
     // Result handling
-    Result result{};
+    Result result = {};
     // Cancellation handling
-    SAtomic32 cancelled{};
-    IFuture<Result>* future = nullptr;
+    SAtomic32        cancelled = ATOMIC_VAR_INIT(0);
+    IFuture<Result>* future    = nullptr;
 
 public:
     AsyncProgressBase() = default;
 
 protected:
-    AsyncProgressBase(AsyncProgressBase const&) = delete;
-    AsyncProgressBase(AsyncProgressBase&&) = delete;
+    AsyncProgressBase(AsyncProgressBase const&)            = delete;
+    AsyncProgressBase(AsyncProgressBase&&)                 = delete;
     AsyncProgressBase& operator=(AsyncProgressBase const&) = delete;
-    AsyncProgressBase& operator=(AsyncProgressBase&&) = delete;
+    AsyncProgressBase& operator=(AsyncProgressBase&&)      = delete;
     virtual ~AsyncProgressBase() SKR_NOEXCEPT
     {
         // TODO: recycler
@@ -139,17 +137,16 @@ public:
         this->status = Status::RUNNING;
         this->on_pre_execute();
         this->future = launcher.async(
-            [this](Params const&... params) -> Result 
+        [this](Params const&... params) -> Result {
+            if (is_cancelled())
             {
-                if (is_cancelled())
-                {
-                    return {}; // Protect against undefined behavoiur, if Dtor is invoked before the - pure virtual function represented - task would be started
-                }
-                auto&& r = this->do_in_background(params...);
-                return this->post_result(std::move(r));
-            },
+                return {}; // Protect against undefined behavoiur, if Dtor is invoked before the - pure virtual function represented - task would be started
+            }
+            auto&& r = this->do_in_background(params...);
+            return this->post_result(std::move(r));
+        },
         params...);
-        
+
         return *this;
     }
 
@@ -174,14 +171,13 @@ public:
         this->status = Status::RUNNING;
         this->on_pre_execute();
         this->future = Launcher::async(
-            [this](Params const&... params) -> Result 
+        [this](Params const&... params) -> Result {
+            if (is_cancelled())
             {
-                if (is_cancelled())
-                {
-                    return {}; // Protect against undefined behavoiur, if Dtor is invoked before the - pure virtual function represented - task would be started
-                }
-                return this->post_result(this->do_in_background(params...));
-            },
+                return {}; // Protect against undefined behavoiur, if Dtor is invoked before the - pure virtual function represented - task would be started
+            }
+            return this->post_result(this->do_in_background(params...));
+        },
         params...);
 
         return *this;
@@ -242,11 +238,11 @@ public:
     // Returns true if the task is canceled by the cancel()
     // It is usable to break process inside the do_in_background()
     // @MainThread and @Workerthread
-    bool is_cancelled() const SKR_NOEXCEPT { return skr_atomic32_load_relaxed(&cancelled); }
+    bool is_cancelled() const SKR_NOEXCEPT { return skr_atomic_load_relaxed(&cancelled); }
 
     // Cancel the task
     // @MainThread
-    void cancel() SKR_NOEXCEPT { skr_atomic32_store_relaxed(&cancelled, 1); }
+    void cancel() SKR_NOEXCEPT { skr_atomic_store_relaxed(&cancelled, 1); }
 
     // Get the result.
     // It could freeze the mainthread if it invoked before the task is finished. Exception from the do_in_background can be rethrown.
@@ -317,7 +313,7 @@ private:
     template <typename Data>
     struct ThreadSafeContainer {
     private:
-        Data mData{};
+        Data             mData{};
         mutable SRWMutex mMutex{};
 
     public:
@@ -329,10 +325,10 @@ private:
         {
             skr_destroy_rw_mutex(&mMutex);
         }
-        ThreadSafeContainer(ThreadSafeContainer const&) = delete;
-        ThreadSafeContainer(ThreadSafeContainer&&) = delete;
+        ThreadSafeContainer(ThreadSafeContainer const&)            = delete;
+        ThreadSafeContainer(ThreadSafeContainer&&)                 = delete;
         ThreadSafeContainer& operator=(ThreadSafeContainer const&) = delete;
-        ThreadSafeContainer& operator=(ThreadSafeContainer&&) = delete;
+        ThreadSafeContainer& operator=(ThreadSafeContainer&&)      = delete;
 
         void store(Data const& data)
         {
@@ -351,10 +347,10 @@ private:
     };
 
     static bool constexpr isProgressAtomicCompatible =
-        std::is_trivially_copyable_v<Progress> && std::is_copy_constructible_v<Progress> && std::is_move_constructible_v<Progress> && std::is_copy_assignable_v<Progress> && std::is_move_assignable_v<Progress>;
+    std::is_trivially_copyable_v<Progress> && std::is_copy_constructible_v<Progress> && std::is_move_constructible_v<Progress> && std::is_copy_assignable_v<Progress> && std::is_move_assignable_v<Progress>;
 
-    using ProgressContainer = 
-        typename std::conditional<isProgressAtomicCompatible, std::atomic<Progress>, ThreadSafeContainer<Progress>>::type;
+    using ProgressContainer =
+    typename std::conditional<isProgressAtomicCompatible, std::atomic<Progress>, ThreadSafeContainer<Progress>>::type;
 
     ProgressContainer mProgress;
 
@@ -392,11 +388,11 @@ private:
         mutable SRWMutex mMutex{};
 
     public:
-        ThreadSafeQueue() = default;
-        ThreadSafeQueue(ThreadSafeQueue const&) = delete;
-        ThreadSafeQueue(ThreadSafeQueue&&) = delete;
+        ThreadSafeQueue()                                  = default;
+        ThreadSafeQueue(ThreadSafeQueue const&)            = delete;
+        ThreadSafeQueue(ThreadSafeQueue&&)                 = delete;
         ThreadSafeQueue& operator=(ThreadSafeQueue const&) = delete;
-        ThreadSafeQueue& operator=(ThreadSafeQueue&&) = delete;
+        ThreadSafeQueue& operator=(ThreadSafeQueue&&)      = delete;
 
         template <typename BinaryOp>
         void store(Data const& data, BinaryOp fnLastShouldBeOverride)

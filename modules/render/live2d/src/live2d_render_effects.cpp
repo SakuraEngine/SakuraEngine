@@ -1,17 +1,18 @@
 #include "SkrProfile/profile.h"
 #include "SkrBase/math/rtm/matrix4x4f.h"
-#include "SkrMemory/memory.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/platform/vfs.h"
 #include "SkrCore/time.h"
-#include "SkrGuid/guid.hpp"
+#include "SkrCore/memory/memory.h"
+#include "SkrRT/platform/vfs.h"
 #include "SkrRT/ecs/type_builder.hpp"
+#include "SkrRT/ecs/storage.hpp"
 #include "SkrContainers/map.hpp"
 #include "SkrRenderer/primitive_draw.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrLive2D/l2d_render_effect.h"
 #include "SkrLive2D/l2d_render_model.h"
+
 #include "Framework/Math/CubismMatrix44.hpp"
 #include "live2d_model_pass.hpp"
 #include "live2d_mask_pass.hpp"
@@ -20,7 +21,7 @@
 static struct RegisterComponentskr_live2d_render_model_comp_tHelper {
     RegisterComponentskr_live2d_render_model_comp_tHelper()
     {
-        using namespace skr::guid::literals;
+        using namespace skr::literals;
 
         sugoi_type_description_t desc = make_zeroed<sugoi_type_description_t>();
         desc.name                     = u8"skr_live2d_render_model_comp_t";
@@ -55,7 +56,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     live2d_render_view_t view_;
 
     sugoi_query_t*        effect_query = nullptr;
-    sugoi::type_builder_t type_builder;
+    sugoi::TypeSetBuilder type_builder;
     sugoi_type_index_t    identity_type = {};
 
     void initialize(SRendererId renderer, sugoi_storage_t* storage)
@@ -74,7 +75,9 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         type_builder
             .with(identity_type)
             .with<skr_live2d_render_model_comp_t>();
-        effect_query = sugoiQ_from_literal(storage, u8"[in]live2d_identity");
+        effect_query = storage->new_query()
+                        .ReadAll(identity_type)
+                        .commit().value();
         // prepare render resources
         prepare_pipeline_settings();
         prepare_pipeline(renderer);

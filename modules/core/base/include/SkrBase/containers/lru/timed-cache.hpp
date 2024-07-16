@@ -34,6 +34,7 @@
 #include <utility>
 
 #include <SkrBase/misc/debug.h>
+#include <SkrBase/containers/lru/cache-tags.hpp>
 #include <SkrBase/containers/lru/error.hpp>
 #include <SkrBase/containers/lru/internal/base-cache.hpp>
 #include <SkrBase/containers/lru/internal/last-accessed.hpp>

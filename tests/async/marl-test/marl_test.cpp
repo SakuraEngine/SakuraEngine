@@ -19,10 +19,10 @@ static struct ProcInitializer
 {
     ProcInitializer()
     {
-        ::skr_initialize_crash_handler();
+        // ::skr_initialize_crash_handler();
     }
     ~ProcInitializer()
     {
-        ::skr_finalize_crash_handler();
+        // ::skr_finalize_crash_handler();
     }
 } init;

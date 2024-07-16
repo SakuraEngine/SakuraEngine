@@ -7,9 +7,7 @@
     #include "SkrGui/framework/element/element.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 enum class EElementLifecycle : uint8_t
 {
@@ -24,7 +22,7 @@ sreflect_struct(
 )
 SKR_GUI_API Element : virtual public skr::rttr::IObject,
                       public IBuildContext {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     Element(Widget* widget) SKR_NOEXCEPT;
 
@@ -105,5 +103,4 @@ private:
     Slot    _slot;
     Widget* _widget = nullptr;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

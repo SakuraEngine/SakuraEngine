@@ -2,7 +2,7 @@
 #include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 
 #include "SkrProfile/profile.h"
 

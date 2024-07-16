@@ -2,187 +2,65 @@
 #include "SkrBase/misc/hash.h"
 #include "SkrBase/misc/debug.h" 
 #include "SkrCore/log.h"
-#include "SkrRT/serde/binary/reader.h"
-#include "SkrRT/serde/binary/writer.h"
-#include "SkrRT/serde/binary/blob.h"
 #include "SkrProfile/profile.h"
 
 [[maybe_unused]] static const char8_t* BinaryArrayBinaryFieldArchiveFailedFormat = u8"[SERDE/BIN] Failed to %s %s.%s[%d]: %d";
 [[maybe_unused]] static const char8_t* BinaryFieldArchiveFailedFormat = u8"[SERDE/BIN] Failed to %s %s.%s: %d";
 [[maybe_unused]] static const char8_t* BinaryBaseArchiveFailedFormat = u8"[SERDE/BIN] Failed to %s %s's base %s: %d";
 
-<%def name="archive_field(name, field, array, cfg)">
-%if hasattr(field.attrs, "arena"):
-    ret = ArchiveBlob(archive, arena_${field.attrs.arena}, record.${name}${array}${cfg});
-%else:
-    ret = Archive(archive, record.${name}${array}${cfg});
-%endif
-</%def>
-
-namespace skr::binary {
-
+namespace skr {
 %for record in generator.filter_types(db.records):
-<% configParam = ", " + record.attrs.serialize_config if hasattr(record.attrs, "serialize_config") else ""%>
-<% configArg = ", " + record.attrs.serialize_config.split(" ")[1] if hasattr(record.attrs, "serialize_config") else ""%>
-%if generator.filter_blob_type(record):
-template<class S>
-int __Archive(S* archive, skr_blob_arena_t& arena, ${record.name}& record${configParam})
+// binary serialize for ${record.name}
+bool BinSerde<${record.name}>::read(SBinaryReader* r, ${record.name}& v)
 {
-    constexpr bool isWriter = std::is_same_v<S, skr_binary_writer_t>;
-    const char* action = isWriter ? "Write" : "Read";
-    int ret = 0;
-    %for name, field in generator.filter_fields(record.fields):
-    <% fieldConfigArg = ", " + field.attrs.serialize_config if hasattr(field.attrs, "serialize_config") else ""%>
-    %if field.arraySize > 0:
-    for(int i = 0; i < ${field.arraySize}; ++i)
-    {
-        ret = ArchiveBlob(archive, arena, record.${name}[i]${fieldConfigArg});
-        if(ret != 0)
-        {
-            SKR_LOG_ERROR(BinaryArrayBinaryFieldArchiveFailedFormat, action, "${record.name}", "${name}", i, ret);
-            return ret;
-        }
-    }
-    %else:
-    ret = ArchiveBlob(archive, arena, record.${name}${fieldConfigArg});
-    if(ret != 0)
-    {
-        SKR_LOG_ERROR(BinaryFieldArchiveFailedFormat, action, "${record.name}", "${name}", ret);
-        return ret;
-    }
-    %endif
-    %endfor
-    return ret;
-}
-%else:
-template<class S>
-int __Archive(S* archive, ${record.name}& record${configParam})
-{
-    constexpr bool isWriter = std::is_same_v<S, skr_binary_writer_t>;
-    const char* action = isWriter ? "Write" : "Read";
-    int ret = 0;
-    %for name, field in generator.filter_fields(record.fields):
-    <% fieldConfigArg = ", " + field.attrs.serialize_config if hasattr(field.attrs, "serialize_config") else ""%>
-    %if field.type == "skr_blob_arena_t":
-    auto& arena_${name} = record.${name};
-    ret = Archive(archive, arena_${name});
-    if(ret != 0)
-    {
-        SKR_LOG_ERROR(BinaryFieldArchiveFailedFormat, action, "${record.name}", "${name}", ret);
-        return ret;
-    }
-    %elif field.arraySize > 0:
-    for(int i = 0; i < ${field.arraySize}; ++i)
-    {
-        ${archive_field(name, field, "[i]", fieldConfigArg)}
-        if(ret != 0)
-        {
-            SKR_LOG_ERROR(BinaryArrayBinaryFieldArchiveFailedFormat, action, "${record.name}", "${name}", i, ret);
-            return ret;
-        }
-    }
-    %else:
-    ${archive_field(name, field, "", fieldConfigArg)}
-    if(ret != 0)
-    {
-        SKR_LOG_ERROR(BinaryFieldArchiveFailedFormat, action, "${record.name}", "${name}", ret);
-        return ret;
-    }
-    %endif
-    %endfor
-    return ret;
-}
-%endif
+    SkrZoneScopedN("binary::BinSerde<${record.name}>::read");
 
-%if generator.filter_blob_type(record):
-void BlobTrait<${record.name}>::BuildArena(skr_blob_arena_builder_t& arena, ${record.name}& dst, const ${record.name}Builder& src)
-{
-    SkrZoneScopedN("binary::BlobTrait<${record.name}>::BuildArena");
+    // serde bases
 %for base in record.bases:
-    BlobTrait<${base}>::BuildArena(arena, (${base}&)dst, (${base}Builder&) src);
+    if(!bin_read<${base}>(r, v))
+    {
+        SKR_LOG_ERROR(BinaryBaseArchiveFailedFormat, "Read", "${record.name}", "${base}", -1);
+        return false;
+    }
 %endfor
+
+    // serde self
 %for name, field in generator.filter_fields(record.fields):
-%if field.arraySize > 0:
-    for(int i = 0; i < ${field.arraySize}; ++i)
+<% field_type = f"{field.type}[{field.arraySize}]" if field.arraySize else field.type %>\
+    if(!bin_read<${field_type}>(r, v.${name}))
     {
-        ::skr::binary::BuildArena<${field.type}>(arena, dst.${name}[i], src.${name}[i]);
+        SKR_LOG_ERROR(BinaryFieldArchiveFailedFormat, "Read", "${record.name}", "${name}", -1);
+        return false;
     }
-%else:
-    ::skr::binary::BuildArena<${field.type}>(arena, dst.${name}, src.${name});
-%endif
 %endfor
+
+    return true;
 }
-void BlobTrait<${record.name}>::Remap(skr_blob_arena_t& arena, ${record.name}& dst)
+bool BinSerde<${record.name}>::write(SBinaryWriter* w, const ${record.name}& v)
 {
-    SkrZoneScopedN("binary::BlobTrait<${record.name}>::Remap");
+    SkrZoneScopedN("BinSerde<${record.name}>::write");
+
+    // serde bases
 %for base in record.bases:
-    BlobTrait<${base}>::Remap(arena, (${base}&)dst);
+    if(!bin_write<${base}>(w, v))
+    {
+        SKR_LOG_ERROR(BinaryBaseArchiveFailedFormat, "Write", "${record.name}", "${base}", -1);
+        return false;
+    }
 %endfor
+
+    // serde self
 %for name, field in generator.filter_fields(record.fields):
-%if field.arraySize > 0:
-    for(int i = 0; i < ${field.arraySize}; ++i)
+<% field_type = f"{field.type}[{field.arraySize}]" if field.arraySize else field.type %>\
+    if(!bin_write<${field_type}>(w, v.${name}))
     {
-        ::skr::binary::Remap<${field.type}>(arena, dst.${name}[i]);
+        SKR_LOG_ERROR(BinaryFieldArchiveFailedFormat, "Write", "${record.name}", "${name}", -1);
+        return false;
     }
-%else:
-    ::skr::binary::Remap<${field.type}>(arena, dst.${name});
-%endif
 %endfor
+
+    return true;
 }
-int ReadTrait<${record.name}>::Read(skr_binary_reader_t* archive, skr_blob_arena_t& arena, ${record.name}& record${configParam})
-{
-    SkrZoneScopedN("binary::ReadTrait<${record.name}>::Read");
-%for base in record.bases:
-    int ret = ReadTrait<const ${base}&>::Read(archive, arena, (${base}&)record);
-    if(ret != 0)
-    {
-        SKR_LOG_ERROR(BinaryBaseArchiveFailedFormat, "Read", "${record.name}", "${base}", ret);
-        return ret;
-    }
-%endfor
-    return __Archive(archive, arena, record${configArg});
-}
-int WriteTrait<${record.name}>::Write(skr_binary_writer_t* archive, skr_blob_arena_t& arena, const ${record.name}& record${configParam})
-{
-    SkrZoneScopedN("binary::WriteTrait<${record.name}>::Write");
-%for base in record.bases:
-    int ret = WriteTrait<${base}>::Write(archive, arena, (${base}&)record);
-    if(ret != 0)
-    {
-        SKR_LOG_ERROR(BinaryBaseArchiveFailedFormat, "Write", "${record.name}", "${base}", ret);
-        return ret;
-    }
-%endfor
-    return __Archive(archive, arena, (${record.name}&)record${configArg});
-} 
-%else:
-int ReadTrait<${record.name}>::Read(skr_binary_reader_t* archive, ${record.name}& record${configParam})
-{
-    SkrZoneScopedN("binary::ReadTrait<${record.name}>::Read");
-%for base in record.bases:
-    int ret = skr::binary::Read(archive, (${base}&)record);
-    if(ret != 0)
-    {
-        SKR_LOG_ERROR(BinaryBaseArchiveFailedFormat, "Read", "${record.name}", "${base}", ret);
-        return ret;
-    }
-%endfor
-    return __Archive(archive, record${configArg});
-}
-int WriteTrait<${record.name}>::Write(skr_binary_writer_t* archive, const ${record.name}& record${configParam})
-{
-    SkrZoneScopedN("binary::WriteTrait<${record.name}>::Write");
-%for base in record.bases:
-    int ret = skr::binary::Write<${base}>(archive, record);
-    if(ret != 0)
-    {
-        SKR_LOG_ERROR(BinaryBaseArchiveFailedFormat, "Write", "${record.name}", "${base}", ret);
-        return ret;
-    }
-%endfor
-    return __Archive(archive, (${record.name}&)record${configArg});
-} 
-%endif
 %endfor
 }
 //END BINARY GENERATED

@@ -5,20 +5,17 @@
     #include "SkrGui/framework/widget/single_child_render_object_widget.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 
 sreflect_struct(
     "guid": "57df4e45-aefa-49e8-9d5b-0f03b468d0b1"
 )
 SKR_GUI_API SingleChildRenderObjectWidget : public RenderObjectWidget {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     NotNull<Element*> create_element() SKR_NOEXCEPT override;
 
     Widget* child = nullptr;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

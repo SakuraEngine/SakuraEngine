@@ -2,6 +2,7 @@
 #include "SkrBase/config.h"
 #include "SkrBase/containers/vector/vector_def.hpp"
 #include "SkrBase/memory/memory_traits.hpp"
+#include "SkrBase/misc/swap.hpp"
 
 // SparseVector structs
 namespace skr::container
@@ -38,12 +39,13 @@ struct MemoryTraits<skr::container::SparseVectorStorage<T, TS>, skr::container::
 };
 } // namespace skr::memory
 
-// TODO. skr swap
-namespace std
+namespace skr
 {
 template <typename T, typename TS>
-SKR_INLINE void swap(::skr::container::SparseVectorStorage<T, TS>& a, ::skr::container::SparseVectorStorage<T, TS>& b)
-{
-    ::std::swap(a._sparse_vector_data, b._sparse_vector_data);
-}
-} // namespace std
+struct Swap<::skr::container::SparseVectorStorage<T, TS>> {
+    static void call(::skr::container::SparseVectorStorage<T, TS>& a, ::skr::container::SparseVectorStorage<T, TS>& b)
+    {
+        Swap<T>::call(a._sparse_vector_data, b._sparse_vector_data);
+    }
+};
+} // namespace skr

@@ -1,11 +1,10 @@
 #include "resource_request_impl.hpp"
-#include "SkrBase/misc/debug.h" 
+#include "SkrBase/misc/debug.h"
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrCore/log.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
-#include "SkrRT/serde/binary/reader.h"
 
 namespace skr
 {
@@ -170,18 +169,18 @@ void SResourceRequestImpl::OnRequestFileFinished()
     else
     {
         currentPhase = SKR_LOADING_PHASE_IO;
-        factory = system->FindFactory(resourceRecord->header.type);
+        factory      = system->FindFactory(resourceRecord->header.type);
         if (factory == nullptr)
         {
             SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, factory of type {} not found.",
-            resourceRecord->header.guid, resourceRecord->header.type);
+                              resourceRecord->header.guid, resourceRecord->header.type);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
             resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
             return;
         }
     }
     // schedule loading for all runtime dependencies
-    if(requestInstall)
+    if (requestInstall)
     {
         _LoadDependencies();
     }
@@ -189,12 +188,11 @@ void SResourceRequestImpl::OnRequestFileFinished()
 
 void SResourceRequestImpl::OnRequestLoadFinished()
 {
-    
 }
 
 void SResourceRequestImpl::_LoadDependencies()
 {
-    if(dependenciesLoaded)
+    if (dependenciesLoaded)
         return;
     dependenciesLoaded = true;
     auto& dependencies = resourceRecord->header.dependencies;
@@ -204,11 +202,11 @@ void SResourceRequestImpl::_LoadDependencies()
 
 void SResourceRequestImpl::_UnloadDependencies()
 {
-    if(!dependenciesLoaded)
+    if (!dependenciesLoaded)
         return;
     dependenciesLoaded = false;
     auto& dependencies = resourceRecord->header.dependencies;
-    for(auto& dep : dependencies)
+    for (auto& dep : dependencies)
         dep.unload();
 }
 
@@ -241,7 +239,6 @@ void SResourceRequestImpl::_InstallFinished()
 
 void SResourceRequestImpl::_UnloadResource()
 {
-
 }
 
 void SResourceRequestImpl::Update()
@@ -255,7 +252,7 @@ void SResourceRequestImpl::Update()
             UpdateUnload();
     }
     auto resourceRegistry = system->GetRegistry();
-    auto ioService = system->GetRAMService();
+    auto ioService        = system->GetRAMService();
     SKR_LOG_BACKTRACE(u8"Current reosurce loading phase: %d!", (int32_t)currentPhase);
     switch (currentPhase)
     {
@@ -304,7 +301,7 @@ void SResourceRequestImpl::Update()
                     auto file = skr_vfs_fopen(vfs, (const char8_t*)resourceUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
                     SKR_DEFER({ skr_vfs_fclose(file); });
                     auto fsize = skr_vfs_fsize(file);
-                    dataBlob = skr::IBlob::Create(nullptr, fsize, false);
+                    dataBlob   = skr::IBlob::Create(nullptr, fsize, false);
                     skr_vfs_fread(file, dataBlob->get_data(), 0, fsize);
                 }
 #ifdef SKR_RESOURCE_DEV_MODE
@@ -312,7 +309,7 @@ void SResourceRequestImpl::Update()
                 {
                     auto file = skr_vfs_fopen(vfs, (const char8_t*)artifactsUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
                     SKR_DEFER({ skr_vfs_fclose(file); });
-                    auto fsize = skr_vfs_fsize(file);
+                    auto fsize    = skr_vfs_fsize(file);
                     artifactsBlob = skr::IBlob::Create(nullptr, fsize, false);
                     skr_vfs_fread(file, artifactsBlob->get_data(), 0, fsize);
                 }
@@ -320,8 +317,7 @@ void SResourceRequestImpl::Update()
                 currentPhase = SKR_LOADING_PHASE_DESER_RESOURCE;
             }
             break;
-        case SKR_LOADING_PHASE_WAITFOR_IO:
-        {
+        case SKR_LOADING_PHASE_WAITFOR_IO: {
             if (factory->AsyncIO())
             {
                 const bool dataReady = dataFuture.is_ready();
@@ -356,7 +352,7 @@ void SResourceRequestImpl::Update()
                 if (serdeResult != 0)
                 {
                     SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, serde failed with error code {}.",
-                    resourceRecord->header.guid, serdeResult);
+                                      resourceRecord->header.guid, serdeResult);
                     currentPhase = SKR_LOADING_PHASE_FINISHED;
                     resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
                 }
@@ -372,7 +368,7 @@ void SResourceRequestImpl::Update()
                 if (serdeResult != 0)
                 {
                     SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, serde failed with error code {}.",
-                    resourceRecord->header.guid, serdeResult);
+                                      resourceRecord->header.guid, serdeResult);
                     currentPhase = SKR_LOADING_PHASE_FINISHED;
                     resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
                 }
@@ -460,11 +456,11 @@ void SResourceRequestImpl::Update()
             if (!dataFuture.is_ready())
             {
                 // request cancle
-                if (!skr_atomicu32_load_acquire(&dataFuture.request_cancel))
+                if (!skr_atomic_load_acquire(&dataFuture.request_cancel))
                 {
                     ioService->cancel(&dataFuture);
                 }
-                else if (!dataFuture.is_cancelled()) 
+                else if (!dataFuture.is_cancelled())
                 {
                     break; // continue to wait for cancel
                 }
@@ -507,16 +503,15 @@ void SResourceRequestImpl::Update()
 
 void SResourceRequestImpl::LoadTask()
 {
-    auto data = GetData();
-    skr::binary::SpanReader reader{ data };
-    skr_binary_reader_t archive{ reader };
+    auto                        data = GetData();
+    skr::archive::BinSpanReader reader{ data };
+    SBinaryReader               archive{ reader };
 #ifdef SKR_RESOURCE_DEV_MODE
-    auto artifactsData = GetArtifactsData();
-    skr::binary::SpanReader artifacstReader = { artifactsData };
-    skr_binary_reader_t artifactsArchive{ artifacstReader };
+    auto                        artifactsData   = GetArtifactsData();
+    skr::archive::BinSpanReader artifacstReader = { artifactsData };
+    SBinaryReader               artifactsArchive{ artifacstReader };
 #endif
-    serdeResult = factory->Deserialize(resourceRecord, &archive);
-    if (serdeResult == 0)
+    if (factory->Deserialize(resourceRecord, &archive))
         factory->DerserializeArtifacts(resourceRecord, &artifactsArchive);
     serdeEvent.signal();
 }
@@ -557,11 +552,11 @@ void SResourceRegistry::FillRequest(SResourceRequest* r, skr_resource_header_t h
     auto request = static_cast<SResourceRequestImpl*>(r);
     if (request)
     {
-        request->resourceRecord->header.type = header.type;
-        request->resourceRecord->header.version = header.version;
+        request->resourceRecord->header.type         = header.type;
+        request->resourceRecord->header.version      = header.version;
         request->resourceRecord->header.dependencies = header.dependencies;
-        request->vfs = vfs;
-        request->resourceUrl = uri;
+        request->vfs                                 = vfs;
+        request->resourceUrl                         = uri;
     }
 }
 

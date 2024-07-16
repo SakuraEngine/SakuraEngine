@@ -165,14 +165,14 @@ class AttrStack(LogStack):
 @dataclass
 class AttrPathStack(AttrStack):
     def __str__(self) -> str:
-        return f"in path shorthand: [{' > '.join(self.path)}: {self.val}]"
+        return f"in path shorthand: [{' > '.join(reversed(self.path))}: {self.val}]"
 
 
 @dataclass
 class AttrShorthandStack(AttrStack):
 
     def __str__(self) -> str:
-        return f"in shorthand: [{' > '.join(self.path): {self.val}}]"
+        return f"in shorthand: [{' > '.join(reversed(self.path))}: {self.val}]"
 
 
 @dataclass

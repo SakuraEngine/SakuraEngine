@@ -13,16 +13,14 @@ class TextParagraph;
 // 为了过编
 SKR_RTTR_TYPE(godot::TextParagraph, "c15eb17d-0444-42c3-a753-240de4a1443c")
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "4863f5b6-c952-468d-9460-1a5841f2d8f5"
 )
 _EmbeddedParagraph : public godot::TextParagraph,
                      public IParagraph {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     _EmbeddedParagraph();
 
@@ -39,5 +37,4 @@ private:
     Array<String> _texts = {}; // TODO. inline
     bool          _dirty = false;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

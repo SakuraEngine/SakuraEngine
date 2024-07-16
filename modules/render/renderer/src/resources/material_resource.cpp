@@ -1,4 +1,3 @@
-#include "SkrGuid/guid.hpp"
 #include "SkrContainers/sptr.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/async/thread_job.hpp"
@@ -10,7 +9,6 @@
 #include "SkrRenderer/shader_map.h"
 
 #include "SkrRenderer/pso_map.h"
-#include "SkrGuid/guid.hpp"
 
 namespace skr
 {
@@ -50,7 +48,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
 
     skr_guid_t GetResourceType() override
     {
-        return ::skr::rttr::type_id<skr_material_resource_t>();
+        return ::skr::rttr::type_id_of<skr_material_resource_t>();
     }
 
     bool AsyncIO() override { return true; }
@@ -475,16 +473,16 @@ struct SMaterialFactoryImpl : public SMaterialFactory {
             return root_signature;
         }
 
-        const skr_material_resource_t*                                    material = nullptr;
-        skr_material_resource_t::installed_pass&                          installed_pass;
-        SMaterialFactoryImpl*                                             factory        = nullptr;
-        CGPURootSignatureId                                               root_signature = nullptr;
-        CGPUXBindTableId                                                  bind_table     = nullptr;
+        const skr_material_resource_t*                                  material = nullptr;
+        skr_material_resource_t::installed_pass&                        installed_pass;
+        SMaterialFactoryImpl*                                           factory        = nullptr;
+        CGPURootSignatureId                                             root_signature = nullptr;
+        CGPUXBindTableId                                                bind_table     = nullptr;
         skr::InlineVector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
     };
 
-    skr::FlatHashMap<skr_guid_t, SPtr<RootSignatureRequest>, skr::guid::hash> mRootSignatureRequests;
-    skr::SPtr<MaterialFutureLancher>                                            launcher = nullptr;
+    skr::FlatHashMap<skr_guid_t, SPtr<RootSignatureRequest>, skr::Hash<skr_guid_t>> mRootSignatureRequests;
+    skr::SPtr<MaterialFutureLancher>                                          launcher = nullptr;
 
     skr_shader_map_id       shader_map = nullptr;
     skr_pso_map_id          pso_map    = nullptr;

@@ -47,7 +47,7 @@ public:
     JobResult push(JobItem* jobItem, bool isEndJob = false)
     {
         cond->lock();
-        const auto endJobEnqueud = skr_atomic32_load_acquire(&is_end_job_queued);
+        const auto endJobEnqueud = skr_atomic_load_acquire(&is_end_job_queued);
         if (endJobEnqueud && !isEndJob)
         {
             cond->unlock();
@@ -55,13 +55,13 @@ public:
         }
 
         // update the status of JobItem together with the state of the queue
-        skr_atomic32_store_release(&jobItem->status, isEndJob ? kJobItemStatusFinishJob : kJobItemStatusWaiting);
+        skr_atomic_store_release(&jobItem->status, isEndJob ? kJobItemStatusFinishJob : kJobItemStatusWaiting);
         list_runnable.emplace_back(jobItem);
 
         // end job is queued, only end job is accepted
-        skr_atomic32_store_release(&is_end_job_queued, isEndJob);
+        skr_atomic_store_release(&is_end_job_queued, isEndJob);
 
-        const auto c = skr_atomic32_load_acquire(&waiting_workers_count);
+        const auto c = skr_atomic_load_acquire(&waiting_workers_count);
         if (c) 
         {
             cond->signal();
@@ -85,7 +85,7 @@ public:
             {
                 // update the status of JobItem together with the state of the queue
                 list_consumed.erase(i);
-                skr_atomic32_store_release(&jobItem->status, kJobItemStatusNone);
+                skr_atomic_store_release(&jobItem->status, kJobItemStatusNone);
                 isFound = true;
                 break;
             }
@@ -102,11 +102,11 @@ public:
         // wait until the notification is queued
         while (list_runnable.size() == 0) 
         {
-            skr_atomic32_add_relaxed(&waiting_workers_count, 1);
+            skr_atomic_fetch_add_relaxed(&waiting_workers_count, 1);
 
             cond->wait();
 
-            skr_atomic32_add_relaxed(&waiting_workers_count, -1);
+            skr_atomic_fetch_add_relaxed(&waiting_workers_count, -1);
         }
 
         JobItem* jobItem = nullptr;
@@ -119,8 +119,8 @@ public:
         SKR_ASSERT(jobItem->status == kJobItemStatusWaiting || jobItem->status == kJobItemStatusFinishJob);
 
         // update the status of JobItem together with the state of the queue
-        ESkrJobItemStatus statusWaiting = kJobItemStatusWaiting; (void)statusWaiting;
-        skr_atomic32_cas_relaxed(&jobItem->status, statusWaiting, kJobItemStatusRunning);
+        int32_t statusWaiting = kJobItemStatusWaiting; (void)statusWaiting;
+        skr_atomic_compare_exchange_strong(&jobItem->status, &statusWaiting, (int32_t)kJobItemStatusRunning);
         // jobItem->status.compare_exchange_strong((int&)statusWaiting, kJobItemStatusRunning, std::memory_order_acq_rel, std::memory_order_acquire);
 
         cond->unlock();
@@ -155,7 +155,7 @@ JobResult JobThreadFunctionImpl::run() SKR_NOEXCEPT
 
         if (m_item)
         {
-            const auto itemStatus = skr_atomic32_load_acquire(&m_item->status);
+            const auto itemStatus = skr_atomic_load_acquire(&m_item->status);
             SKR_ASSERT((itemStatus == kJobItemStatusRunning) || (itemStatus == kJobItemStatusFinishJob));
 
             // exit the loop when the end job is arrived
@@ -190,7 +190,7 @@ JobItem::~JobItem() SKR_NOEXCEPT
 
 bool JobItem::is_none() SKR_NOEXCEPT
 {
-    return (skr_atomic32_load_acquire(&status) == kJobItemStatusNone);
+    return (skr_atomic_load_acquire(&status) == kJobItemStatusNone);
 }
 
 int JobItem::get_result() SKR_NOEXCEPT
@@ -328,7 +328,7 @@ JobResult JobQueue::check() SKR_NOEXCEPT
     SKR_DEFER({skr_rw_mutex_release_w(&pending_queue_mutex);});
 
     auto need_cancel = false;
-    need_cancel = skr_atomic32_load_acquire(&cancel_requested);
+    need_cancel = skr_atomic_load_acquire(&cancel_requested);
     if (need_cancel)
     {
         std::for_each(pending_queue.begin(), pending_queue.end(), 
@@ -338,7 +338,7 @@ JobResult JobQueue::check() SKR_NOEXCEPT
                 ptr->cancel();
             }
         });
-        skr_atomic32_store_release(&cancel_requested, false);
+        skr_atomic_store_release(&cancel_requested, false);
     }
 
     auto it = pending_queue.begin();
@@ -377,7 +377,7 @@ int JobQueue::enqueueCore(JobItem* jobItem, bool isEndJob) SKR_NOEXCEPT
 {
     SKR_ASSERT(jobItem->status == kJobItemStatusNone);
 
-    if (skr_atomic32_load_acquire(&jobItem->status) != kJobItemStatusNone)
+    if (skr_atomic_load_acquire(&jobItem->status) != kJobItemStatusNone)
     {
         return ASYNC_RESULT_ERROR_INVALID_PARAM;
     }
@@ -415,7 +415,7 @@ JobResult JobQueue::cancel_all_items() SKR_NOEXCEPT
 {
     skr_rw_mutex_acquire_w(&pending_queue_mutex);
     SKR_DEFER({skr_rw_mutex_release_w(&pending_queue_mutex);});
-    skr_atomic32_store_release(&cancel_requested, true);
+    skr_atomic_store_release(&cancel_requested, true);
     return ASYNC_RESULT_OK;
 }
 

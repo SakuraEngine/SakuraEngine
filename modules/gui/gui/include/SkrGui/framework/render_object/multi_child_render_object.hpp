@@ -7,15 +7,13 @@
     #include "SkrGui/framework/render_object/multi_child_render_object.generated.h"
 #endif
 
-namespace skr sreflect
+namespace skr::gui
 {
-namespace gui sreflect
-{
-sreflect_struct(
+sreflect_interface(
     "guid": "409eaa24-5549-46e3-87c1-81649576d2cd"
 )
 SKR_GUI_API IMultiChildRenderObject : virtual public skr::rttr::IObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     virtual ~IMultiChildRenderObject() = default;
 
     virtual GUID accept_child_type() const SKR_NOEXCEPT                                    = 0;
@@ -54,7 +52,7 @@ struct MultiChildRenderObjectMixin {
 
     inline GUID accept_child_type(const TSelf& self) const SKR_NOEXCEPT
     {
-        return ::skr::rttr::type_id<TChild>();
+        return ::skr::rttr::type_id_of<TChild>();
     }
     inline void add_child(TSelf& self, NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
     {
@@ -132,8 +130,7 @@ struct MultiChildRenderObjectMixin {
         }
     }
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui
 
 #define MULTI_CHILD_RENDER_OBJECT_MIX_IN(__SELF, __CHILD, __SLOT_DATA)                      \
     /*===============> Begin Multi Child Render Object Mixin <===============*/             \

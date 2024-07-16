@@ -311,7 +311,7 @@ namespace ostr
 	template <class T, u64 I>
 	T& sequence<T, I>::access_at(const u64 index) noexcept
 	{
-		OPEN_STRING_CHECK(index < this->size_, "index out of range");
+		OPEN_STRING_CHECK(index < this->size_, u8"index out of range");
 		return *(this->data_at(index));
 	}
 

@@ -6,15 +6,13 @@
     #include "SkrGui/framework/render_object/single_child_render_object.generated.h"
 #endif
 
-namespace skr sreflect
+namespace skr::gui
 {
-namespace gui sreflect
-{
-sreflect_struct(
+sreflect_interface(
     "guid": "5349672b-bfc5-46a9-9a02-40ef563c196d"
 )
 SKR_GUI_API ISingleChildRenderObject : virtual public skr::rttr::IObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     virtual ~ISingleChildRenderObject() = default;
 
     virtual GUID accept_child_type() const SKR_NOEXCEPT               = 0;
@@ -28,7 +26,7 @@ struct SingleChildRenderObjectMixin {
 
     inline GUID accept_child_type(const TSelf& self) const SKR_NOEXCEPT
     {
-        return ::skr::rttr::type_id<TChild>();
+        return ::skr::rttr::type_id_of<TChild>();
     }
     inline void set_child(TSelf& self, NotNull<RenderObject*> child) SKR_NOEXCEPT
     {
@@ -46,8 +44,7 @@ struct SingleChildRenderObjectMixin {
         if (_child) visitor(_child);
     }
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui
 
 #define SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(__SELF, __CHILD)                \
     /*===============> Begin Single Child Render Object Mixin <===============*/ \

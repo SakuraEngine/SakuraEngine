@@ -6,15 +6,13 @@
     #include "SkrGui/framework/build_context.generated.h"
 #endif
 
-namespace skr sreflect
+namespace skr::gui
 {
-namespace gui sreflect
-{
-sreflect_struct(
+sreflect_interface(
     "guid": "0ff4a42c-7195-48c5-a979-263dab05ac2d"
 )
 SKR_GUI_API IBuildContext : virtual public skr::rttr::IObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     virtual ~IBuildContext() = default;
     using VisitFuncRef       = FunctionRef<bool(NotNull<Element*>)>;
 
@@ -41,17 +39,17 @@ SKR_GUI_API IBuildContext : virtual public skr::rttr::IObject {
     template <typename T>
     T* find_ancestor_widget(bool exact_type = false) const SKR_NOEXCEPT
     {
-        return static_cast<T*>(find_ancestor_widget(rttr::type_id<T>(), exact_type));
+        return static_cast<T*>(find_ancestor_widget(rttr::type_id_of<T>(), exact_type));
     }
     template <typename T>
     T* find_ancestor_state(bool exact_type = false) const SKR_NOEXCEPT
     {
-        return static_cast<T*>(find_ancestor_state(rttr::type_id<T>(), exact_type));
+        return static_cast<T*>(find_ancestor_state(rttr::type_id_of<T>(), exact_type));
     }
     template <typename T>
     T* find_ancestor_render_object(bool exact_type = false) const SKR_NOEXCEPT
     {
-        return static_cast<T*>(find_ancestor_render_object(rttr::type_id<T>(), exact_type));
+        return static_cast<T*>(find_ancestor_render_object(rttr::type_id_of<T>(), exact_type));
     }
 
     // TODO. inherited element
@@ -67,5 +65,4 @@ SKR_GUI_API IBuildContext : virtual public skr::rttr::IObject {
     // TODO. notification
     // virtual void dispatch_notification(NotNull<Notification*> notification) SKR_NOEXCEPT = 0;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

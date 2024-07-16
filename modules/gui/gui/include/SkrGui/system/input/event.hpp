@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
-#include "SkrRT/rttr/rttr_traits.hpp"
+#include "SkrRTTR/rttr_traits.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/math/matrix.hpp"
@@ -8,9 +8,7 @@
     #include "SkrGui/system/input/event.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 // Event Route 的作用被其它机制所替代，是否可以直接干掉 Route 概念
 // 干不掉，根本干不掉，在移动端场景，手势处理需要跨越多个层级收集，而后竞争，这代表单纯的靠可阻断的 Bubble 无法达成功能
@@ -43,9 +41,8 @@ sreflect_struct(
     "guid": "06ecf250-43e8-44a3-b1e9-b52b1ab53e05"
 )
 Event : virtual public skr::rttr::IObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     EEventRoutePhase phase  = EEventRoutePhase::None;
     EEventSource     source = EEventSource::None;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

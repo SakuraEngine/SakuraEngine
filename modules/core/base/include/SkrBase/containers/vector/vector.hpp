@@ -6,8 +6,10 @@
 #include "SkrBase/containers/vector/vector_def.hpp"
 #include "SkrBase/containers/vector/vector_iterator.hpp"
 #include "SkrBase/containers/misc/container_traits.hpp"
+#include "SkrBase/containers/misc/span.hpp"
 
 // Vector def
+// TODO. 针对 NoneCopyable 成员 (典型的如 UniquePtr) 的支持，抑制默认实现 copy 的报错
 namespace skr::container
 {
 template <typename Memory>
@@ -39,6 +41,7 @@ struct Vector : protected Memory {
     Vector(SizeType size, const DataType& v, AllocatorCtorParam param = {}) noexcept;
     Vector(const DataType* p, SizeType n, AllocatorCtorParam param = {}) noexcept;
     Vector(std::initializer_list<DataType> init_list, AllocatorCtorParam param = {}) noexcept;
+    Vector(Span<DataType, SizeType> span, AllocatorCtorParam param = {}) noexcept;
     ~Vector();
 
     // copy & move
@@ -333,6 +336,13 @@ SKR_INLINE Vector<Memory>::Vector(std::initializer_list<DataType> init_list, All
 {
     resize_unsafe(init_list.size());
     memory::copy(data(), init_list.begin(), init_list.size());
+}
+template <typename Memory>
+SKR_INLINE Vector<Memory>::Vector(Span<DataType, SizeType> span, AllocatorCtorParam param) noexcept
+    : Memory(std::move(param))
+{
+    resize_unsafe(span.size());
+    memory::copy(data(), span.data(), span.size());
 }
 template <typename Memory>
 SKR_INLINE Vector<Memory>::~Vector()

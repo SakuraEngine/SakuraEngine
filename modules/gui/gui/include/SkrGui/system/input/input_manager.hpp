@@ -10,9 +10,7 @@
     #include "SkrGui/system/input/input_manager.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct RenderInputContext;
 struct PointerMoveEvent;
@@ -59,5 +57,4 @@ private:
 
     HitTestResult _last_hover_path = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

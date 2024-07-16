@@ -3,7 +3,7 @@
 #include "SkrRenderer/render_device.h"
 #include "SkrBase/misc/hash.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/sptr.hpp"
@@ -112,7 +112,7 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
     }
 
     ~SShaderResourceFactoryImpl() noexcept = default;
-    skr_guid_t     GetResourceType() override;
+    skr_guid_t        GetResourceType() override;
     bool              AsyncIO() override { return true; }
     bool              Unload(skr_resource_record_t* record) override;
     ESkrInstallStatus Install(skr_resource_record_t* record) override;
@@ -149,7 +149,7 @@ ECGPUShaderBytecodeType SShaderResourceFactory::GetRuntimeBytecodeType(ECGPUBack
 
 skr_guid_t SShaderResourceFactoryImpl::GetResourceType()
 {
-    const auto resource_type = ::skr::rttr::type_id<skr_shader_collection_resource_t>();
+    const auto resource_type = ::skr::rttr::type_id_of<skr_shader_collection_resource_t>();
     return resource_type;
 }
 

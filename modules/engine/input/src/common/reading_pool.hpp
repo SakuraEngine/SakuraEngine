@@ -1,6 +1,6 @@
 #pragma once
 #include "common_layer.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrCore/log.h"
 #include <SkrContainers/concurrent_queue.hpp>
 

@@ -1,5 +1,5 @@
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrContainers/vector.hpp"
 #include "SkrContainers/map.hpp"
 #include "SkrGraphics/dstorage.h"

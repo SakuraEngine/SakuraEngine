@@ -4,9 +4,7 @@
     #include "SkrGui/render_objects/render_mouse_region.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct PointerEnterEvent;
 struct PointerExitEvent;
@@ -19,7 +17,7 @@ sreflect_struct(
 )
 SKR_GUI_API RenderMouseRegion : public RenderProxyBoxWithHitTestBehavior {
     using Super = RenderProxyBoxWithHitTestBehavior;
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;
     bool handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry) override;
@@ -31,5 +29,4 @@ public:
     Function<bool(PointerDownEvent*)>  on_down  = {};
     Function<bool(PointerUpEvent*)>    on_up    = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

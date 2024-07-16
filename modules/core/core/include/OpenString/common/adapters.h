@@ -1,7 +1,7 @@
 #pragma once
 #include <cstddef>
 #include "OpenString/common/definitions.h"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 
 namespace skr
 {

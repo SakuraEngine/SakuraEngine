@@ -27,14 +27,11 @@ public:
 };
 } // namespace skr::resource
 
-namespace skr::binary
+namespace skr
 {
 template <>
-struct SKR_SCENE_API ReadTrait<skr_scene_resource_t> {
-    static int Read(skr_binary_reader_t* reader, skr_scene_resource_t& value);
+struct SKR_SCENE_API BinSerde<skr_scene_resource_t> {
+    static bool read(SBinaryReader* r, skr_scene_resource_t& v);
+    static bool write(SBinaryWriter* w, const skr_scene_resource_t& v);
 };
-template <>
-struct SKR_SCENE_API WriteTrait<skr_scene_resource_t> {
-    static int Write(skr_binary_writer_t* writer, const skr_scene_resource_t& value);
-};
-} // namespace skr::binary
+} // namespace skr

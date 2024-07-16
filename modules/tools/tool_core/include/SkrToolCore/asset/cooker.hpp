@@ -1,13 +1,12 @@
 #pragma once
 #include "SkrToolCore/fwd_types.hpp"
-#include "SkrRT/misc/types.h"
 #ifndef __meta__
     #include "SkrToolCore/asset/cooker.generated.h"
 #endif
 
-namespace skd sreflect
+namespace skd
 {
-namespace asset sreflect
+namespace asset
 {
 sreflect_struct("guid": "ff344604-b522-411c-b9a5-1ec4b5970c02")
 TOOL_CORE_API SCooker {
@@ -27,5 +26,5 @@ void RegisterCooker(bool isDefault, skr_guid_t cookerGuid, skr_guid_t resGuid)
     static T instance;
     skd::asset::RegisterCookerToSystem(GetCookSystem(), isDefault, cookerGuid, resGuid, &instance);
 }
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd

@@ -1,6 +1,5 @@
 #include "cgltf/cgltf.h"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrGuid/guid.hpp"
 #include "SkrCore/log.hpp"
 #include "SkrTask/parallel_for.hpp"
 #include "SkrContainers/stl_vector.hpp"
@@ -22,7 +21,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr_io_ram_service_t* ioService, SCo
         return nullptr;
     }
     const auto assetRecord = context->GetAssetRecord();
-    auto path = context->AddFileDependency(relPath).u8string();
+    auto path = context->AddSourceFile(relPath).u8string();
     auto vfs = assetRecord->project->asset_vfs;
     return ImportGLTFWithData(path.c_str(), ioService, vfs);
 }

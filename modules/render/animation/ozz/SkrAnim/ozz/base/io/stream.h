@@ -35,6 +35,7 @@
 
 #include "SkrAnim/ozz/base/platform.h"
 #include "SkrBase/types.h"
+#include "SkrSerde/bin_serde.hpp"
 
 namespace ozz {
 namespace io {
@@ -190,7 +191,7 @@ class OZZ_BASE_DLL MemoryStream : public Stream {
 class OZZ_BASE_DLL SkrStream : public Stream {
 public:
   // Construct a stream from skr binary reader and writer.
-  SkrStream(skr_binary_reader_t* _reader, skr_binary_writer_t* _writer);
+  SkrStream(SBinaryReader* _reader, SBinaryWriter* _writer);
 
   // Closes the stream and deallocates memory buffer.
   virtual ~SkrStream();
@@ -214,9 +215,9 @@ public:
   virtual size_t Size() const;
 private:
   // The skr binary reader.
-  skr_binary_reader_t* reader_;
+  SBinaryReader* reader_;
   // The skr binary writer.
-  skr_binary_writer_t* writer_;
+  SBinaryWriter* writer_;
 };
 }  // namespace io
 }  // namespace ozz

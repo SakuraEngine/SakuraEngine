@@ -17,7 +17,7 @@ function binarydir()
 end
 
 -- use_lib_cache = true
-manifest_cache=nil
+manifest_cache = nil
 function fetch_github_manifest(force)
     if force or manifest_cache == nil then
         local sdkdir = sdkdir or os.projectdir().."/SDKs"
@@ -27,7 +27,6 @@ function fetch_github_manifest(force)
         http.download(url, manifest_path, {continue = false})
         manifest_cache = json.loadfile(manifest_path)
     end
-
     return manifest_cache
 end
 
@@ -209,11 +208,11 @@ end
 
 function find_embed_python()
     local embed = find_program("python", path.join(os.projectdir(), tooldir(), "python-embed"), false, true)
-    import("core.base.option")
-    local verbose = option.get("verbose")
-    if verbose then
-        print("found embed python:")
-        print(embed)
-    end
+    
+    -- import("core.base.option")
+    -- if option.get("verbose") then
+    --     print("found embed python:")
+    --     print(embed)
+    -- end
     return embed
 end

@@ -274,7 +274,7 @@ void skr_renderer_remove_render_effect(SRendererId r, skr_render_effect_name_t n
     }
 }
 
-using render_effects_t = sugoi::array_comp_T<skr_render_effect_t, 4>;
+using render_effects_t = sugoi::ArrayComponent<skr_render_effect_t, 4>;
 
 void skr_render_effect_attach(SRendererId r, sugoi_chunk_view_t* g_cv, skr_render_effect_name_t effect_name)
 {
@@ -364,10 +364,7 @@ void skr_render_effect_detach(SRendererId r, sugoi_chunk_view_t* cv, skr_render_
             }
         }
         auto storage = sugoiC_get_storage(cv->chunk);
-        auto callback = [&](sugoi_chunk_view_t* view) {
-            sugoiS_destroy(storage, view);
-        };
-        sugoiS_batch(r->get_sugoi_storage(), render_effects.data(), (EIndex)render_effects.size(), SUGOI_LAMBDA(callback));
+        sugoiS_destroy_entities(storage, render_effects.data(), (EIndex)render_effects.size());
     }
 }
 

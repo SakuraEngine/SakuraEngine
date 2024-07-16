@@ -7,16 +7,14 @@
     #include "SkrGuiRenderer/resource/skr_updatable_image.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct SkrRenderDevice;
 sreflect_struct(
     "guid": "18382aad-21e7-4476-9554-6464cbc21a77"
 )
 SKR_GUI_RENDERER_API SkrUpdatableImage final : public IUpdatableImage {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     SkrUpdatableImage(SkrRenderDevice* render_device);
     ~SkrUpdatableImage();
@@ -47,5 +45,4 @@ private:
 
     EResourceState _state = EResourceState::Okey;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

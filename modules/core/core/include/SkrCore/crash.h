@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrBase/types.h"
 #ifdef __cplusplus
-#include "SkrOS/thread.h"
-#include <SkrContainers/span.hpp>
-#include <SkrContainers/vector.hpp>
+    #include "SkrOS/thread.h"
+    #include <SkrContainersDef/span.hpp>
+    #include <SkrContainersDef/vector.hpp>
 
 extern "C" {
 #endif
@@ -17,7 +17,7 @@ enum
     kCrashCodeDividedByZero  = 4, // divide by zero
     kCrashCodeIllInstruction = 5, // illegal instruction
     kCrashCodeSegFault       = 6, // segmentation fault
-                            // System Exceptions
+                                  // System Exceptions
     kCrashCodeStackOverflow = 7,  // Windows
     kCrashCodeTerminate     = 8,  //  (not catch) Windows/C++
     kCrashCodeUnexpected    = 9,  // (throw mismatch) Windows/C++
@@ -27,7 +27,7 @@ enum
     kCrashCodeInvalidParam  = 14, // (invalid parameter) Windows
     kCrashCodeCount
 };
-typedef int32_t                CrashTerminateCode;
+typedef int32_t             CrashTerminateCode;
 SKR_CORE_API const char8_t* skr_crash_code_string(CrashTerminateCode code) SKR_NOEXCEPT;
 
 typedef struct SCrashHandler SCrashHandler;

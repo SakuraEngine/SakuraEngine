@@ -4,18 +4,15 @@
     #include "SkrGui/framework/element/render_window_element.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 
 sreflect_struct(
     "guid": "68cea8f8-f39c-41e3-90dc-615308fb8034"
 )
 SKR_GUI_API RenderWindowElement : public RenderObjectElement {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = RenderObjectElement;
     using Super::Super;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

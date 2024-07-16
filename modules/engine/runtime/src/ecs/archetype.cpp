@@ -1,22 +1,33 @@
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/ecs/entity.hpp"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/set.hpp"
+#include "SkrRT/ecs/type_index.hpp"
+#include "SkrRT/ecs/type_registry.hpp"
 
-#include "SkrRT/ecs/detail/type.hpp"
-#include "SkrRT/ecs/detail/stack.hpp"
-#include "SkrRT/ecs/detail/chunk.hpp"
-#include "SkrRT/ecs/detail/chunk_view.hpp"
-#include "SkrRT/ecs/detail/storage.hpp"
-#include "SkrRT/ecs/detail/archetype.hpp"
-#include "SkrRT/ecs/detail/type_registry.hpp"
-
+#include "./stack.hpp"
+#include "./chunk.hpp"
+#include "./chunk_view.hpp"
+#include "./impl/storage.hpp"
+#include "./archetype.hpp"
 #include <algorithm>
+#include <array>
+
+#ifndef forloop
+#define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+#endif
 
 namespace sugoi
 {
 
 thread_local fixed_stack_t localStack(4096 * 8);
+
+struct guid_compare_t {
+    bool operator()(const guid_t& a, const guid_t& b) const
+    {
+        using value_type = std::array<char, 16>;
+        return reinterpret_cast<const value_type&>(a) < reinterpret_cast<const value_type&>(b);
+    }
+};
 
 bool archetype_t::with_chunk_component() const noexcept
 {
@@ -34,38 +45,48 @@ SIndex archetype_t::index(sugoi_type_index_t inType) const noexcept
 }
 } // namespace sugoi
 
-sugoi::archetype_t* sugoi_storage_t::construct_archetype(const sugoi_type_set_t& inType)
+template <typename Field, typename ValueType>
+void write_const(const Field& cref, ValueType v)
+{
+    Field& ref = const_cast<Field&>(cref);
+    ref = v;
+}
+
+sugoi::archetype_t* sugoi_storage_t::constructArchetype(const sugoi_type_set_t& inType)
 {
     using namespace sugoi;
+
     fixed_stack_scope_t _(localStack);
-    char* buffer = (char*)archetypeArena.allocate(data_size(inType), 1);
-    archetype_t& proto = *archetypeArena.allocate<archetype_t>();
-    proto.storage = this;
-    proto.type = sugoi::clone(inType, buffer);
-    proto.withMask = false;
-    proto.withDirty = false;
-    proto.sizeToPatch = 0;
-    proto.firstChunkComponent = proto.type.length;
-    forloop (i, 0, proto.type.length)
-        if(type_index_t(proto.type.data[i]).is_chunk())
+    auto& atypeArena = getArchetypeArena();
+    char* buffer = (char*)atypeArena.allocate(data_size(inType), 1);
+    archetype_t& archetype = *atypeArena.allocate<archetype_t>();
+    write_const(archetype.storage, this);
+    write_const(archetype.type, sugoi::clone(inType, buffer));
+    write_const(archetype.withMask, false);
+    write_const(archetype.withDirty, false);
+    write_const(archetype.sizeToPatch, 0);
+    write_const(archetype.firstChunkComponent, archetype.type.length);
+    forloop (i, 0, archetype.type.length)
+        if(type_index_t(archetype.type.data[i]).is_chunk())
         {
-            proto.firstChunkComponent = i;
+            write_const(archetype.firstChunkComponent, i);
             break;
         }
     forloop (i, 0, 3)
-        proto.offsets[i] = archetypeArena.allocate<uint32_t>(proto.type.length);
-    proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
-    proto.callbackFlags = archetypeArena.allocate<uint32_t>(proto.type.length);
-    proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
-    proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
-    proto.resourceFields = archetypeArena.allocate<sugoi::resource_fields_t>(proto.type.length);
-    proto.callbacks = archetypeArena.allocate<sugoi_callback_v>(proto.type.length);
-    ::memset(proto.callbacks, 0, sizeof(sugoi_callback_v) * proto.type.length);
-    proto.stableOrder = archetypeArena.allocate<SIndex>(proto.type.length);
-    auto& registry = type_registry_t::get();
-    forloop (i, 0, proto.type.length)
+        write_const(archetype.offsets[i], atypeArena.allocate<uint32_t>(archetype.type.length));
+    write_const(archetype.elemSizes, atypeArena.allocate<uint32_t>(archetype.type.length));
+    write_const(archetype.callbackFlags, atypeArena.allocate<uint32_t>(archetype.type.length));
+    write_const(archetype.aligns, atypeArena.allocate<uint32_t>(archetype.type.length));
+    write_const(archetype.sizes, atypeArena.allocate<uint32_t>(archetype.type.length));
+    write_const(archetype.resourceFields, atypeArena.allocate<sugoi::resource_fields_t>(archetype.type.length));
+    write_const(archetype.callbacks, atypeArena.allocate<sugoi_callback_v>(archetype.type.length));
+    ::memset((void*)archetype.callbacks, 0, sizeof(sugoi_callback_v) * archetype.type.length);
+    write_const(archetype.stableOrder, atypeArena.allocate<SIndex>(archetype.type.length));
+    auto& registry = TypeRegistry::get();
+    forloop (i, 0, archetype.type.length)
     {
-        const auto& desc = registry.descriptions[type_index_t(proto.type.data[i]).index()];
+        const auto tid = type_index_t(archetype.type.data[i]).index();
+        const auto& desc = *registry.get_type_desc(tid);
         uint32_t callbackFlag = 0;
         if (desc.callback.constructor)
             callbackFlag |= SUGOI_CALLBACK_FLAG_CTOR;
@@ -75,121 +96,142 @@ sugoi::archetype_t* sugoi_storage_t::construct_archetype(const sugoi_type_set_t&
             callbackFlag |= SUGOI_CALLBACK_FLAG_COPY;
         if (desc.callback.move)
             callbackFlag |= SUGOI_CALLBACK_FLAG_MOVE;
-        proto.callbackFlags[i] = callbackFlag;
-        proto.callbacks[i] = desc.callback;
-        proto.resourceFields[i] = { desc.resourceFields, desc.resourceFieldsCount };
+        write_const(archetype.callbackFlags[i], callbackFlag);
+        write_const(archetype.callbacks[i], desc.callback);
+        write_const(archetype.resourceFields[i], resource_fields_t{ desc.resourceFields, desc.resourceFieldsCount });
     }
-    auto guids = localStack.allocate<guid_t>(proto.type.length);
-    proto.entitySize = sizeof(sugoi_entity_t);
+    auto guids = localStack.allocate<guid_t>(archetype.type.length);
+    write_const(archetype.entitySize,sizeof(sugoi_entity_t));
     uint32_t padding = 0;
-    forloop (i, 0, proto.type.length)
+    forloop (i, 0, archetype.type.length)
     {
-        auto t = proto.type.data[i];
+        auto t = archetype.type.data[i];
         if (t == kMaskComponent)
-            proto.withMask = true;
+            write_const(archetype.withMask, true);
         if (t == kDirtyComponent)
-            proto.withDirty = true;
+            write_const(archetype.withDirty, true);
         auto ti = type_index_t(t);
-        auto& desc = registry.descriptions[ti.index()];
-        proto.sizes[i] = desc.size;
-        proto.elemSizes[i] = desc.elementSize;
+        auto& desc = *registry.get_type_desc(ti.index());
+        write_const(archetype.sizes[i], desc.size);
+        write_const(archetype.elemSizes[i], desc.elementSize);
         guids[i] = desc.guid;
-        proto.aligns[i] = desc.alignment;
-        proto.stableOrder[i] = i;
-        proto.entitySize += desc.size;
+        write_const(archetype.aligns[i], desc.alignment);
+        write_const(archetype.stableOrder[i], i);
+        write_const(archetype.entitySize, archetype.entitySize + desc.size);
         if(!ti.is_chunk())
             padding += desc.alignment;
         if (!ti.is_chunk() && desc.entityFieldsCount != 0)
-            proto.sizeToPatch += desc.size;
+            write_const(archetype.sizeToPatch, archetype.sizeToPatch + desc.size);
     }
-    std::sort(proto.stableOrder, proto.stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
-        return guid_compare_t{}(guids[lhs], guids[rhs]);
-    });
+    std::sort(const_cast<uint32_t*>(archetype.stableOrder), const_cast<uint32_t*>(archetype.stableOrder) + archetype.type.length, 
+        [&](SIndex lhs, SIndex rhs) {
+            return guid_compare_t{}(guids[lhs], guids[rhs]);
+        });
     size_t caps[] = { kSmallBinSize - sizeof(sugoi_chunk_t), kFastBinSize - sizeof(sugoi_chunk_t), kLargeBinSize - sizeof(sugoi_chunk_t) };
-    const uint32_t versionSize = sizeof(uint32_t) * proto.type.length;
+    const uint32_t sliceDataSize = sizeof(sugoi::slice_data_t) * archetype.type.length;
     forloop (i, 0, 3)
     {
-        uint32_t* offsets = proto.offsets[i];
-        uint32_t& capacity = proto.chunkCapacity[i];
-        proto.versionOffset[i] = static_cast<uint32_t>(caps[i] - versionSize);
-        uint32_t ccOffset = (uint32_t)(caps[i] - versionSize);
-        forloop (j, 0, proto.type.length)
+        uint32_t* offsets = const_cast<uint32_t*>(archetype.offsets[i]);
+        uint32_t& capacity = const_cast<uint32_t&>(archetype.chunkCapacity[i]);
+        write_const(archetype.sliceDataOffsets[i], static_cast<sugoi_timestamp_t>(caps[i] - sliceDataSize));
+        uint32_t ccOffset = (uint32_t)(caps[i] - sliceDataSize);
+        forloop (j, 0, archetype.type.length)
         {
-            SIndex id = proto.stableOrder[j];
-            TIndex t = proto.type.data[id];
+            SIndex id = archetype.stableOrder[j];
+            TIndex t = archetype.type.data[id];
             auto ti = type_index_t(t);
             if(ti.is_chunk())
             {
-                ccOffset -= proto.sizes[id] * capacity;
-                ccOffset = (uint32_t)(proto.aligns[id] * (ccOffset / proto.aligns[id]));
+                ccOffset -= archetype.sizes[id] * capacity;
+                ccOffset = (uint32_t)(archetype.aligns[id] * (ccOffset / archetype.aligns[id]));
                 offsets[id] = ccOffset;
             }
         }
-        capacity = (uint32_t)(ccOffset - padding) / proto.entitySize;
+        capacity = (uint32_t)(ccOffset - padding) / archetype.entitySize;
         if (capacity == 0)
             continue;
         uint32_t offset = sizeof(sugoi_entity_t) * capacity;
-        forloop (j, 0, proto.type.length)
+        forloop (j, 0, archetype.type.length)
         {
-            SIndex id = proto.stableOrder[j];
-            TIndex t = proto.type.data[id];
+            SIndex id = archetype.stableOrder[j];
+            TIndex t = archetype.type.data[id];
             auto ti = type_index_t(t);
             if(!ti.is_chunk())
             {
-                offset = (uint32_t)(proto.aligns[id] * ((offset + proto.aligns[id] - 1) / proto.aligns[id]));
+                offset = (uint32_t)(archetype.aligns[id] * ((offset + archetype.aligns[id] - 1) / archetype.aligns[id]));
                 offsets[id] = offset;
-                offset += proto.sizes[id] * capacity;
+                offset += archetype.sizes[id] * capacity;
             }
         }
     }
-
-    return archetypes.insert({ proto.type, &proto }).first->second;
+    sugoi::archetype_t* new_type = nullptr;
+    {
+        pimpl->archetypes.update_versioned([&](auto& archetypes){
+            new_type = archetypes.insert({ archetype.type, &archetype }).first->second;
+            pimpl->archetype_timestamp += 1;
+        }, 
+        [&](){
+            return pimpl->groups_timestamp;
+        });
+    }
+    return new_type;
 }
 
-sugoi::archetype_t* sugoi_storage_t::clone_archetype(archetype_t *src)
+sugoi::archetype_t* sugoi_storage_t::cloneArchetype(archetype_t *src)
 {
     using namespace sugoi;
-    if(auto a = try_get_archetype(src->type))
+    if(auto a = tryGetArchetype(src->type))
         return a;
+
+    auto& archetypeArena = getArchetypeArena();
     char* buffer = (char*)archetypeArena.allocate(data_size(src->type), 1);
-    archetype_t& proto = *archetypeArena.allocate<archetype_t>();
-    proto.storage = this;
-    proto.type = sugoi::clone(src->type, buffer);
-    proto.withMask = src->withMask;
-    proto.withDirty = src->withMask;
-    proto.sizeToPatch = src->sizeToPatch;
-    proto.firstChunkComponent = src->withMask;
+    archetype_t& archetype = *archetypeArena.allocate<archetype_t>();
+    write_const(archetype.storage, this);
+    write_const(archetype.type, sugoi::clone(src->type, buffer));
+    write_const(archetype.withMask, src->withMask);
+    write_const(archetype.withDirty, src->withMask);
+    write_const(archetype.sizeToPatch, src->sizeToPatch);
+    write_const(archetype.firstChunkComponent, src->withMask);
     forloop (i, 0, 3)
     {
-        proto.offsets[i] = archetypeArena.allocate<uint32_t>(proto.type.length);
-        memcpy(proto.offsets[i], src->offsets[i], sizeof(uint32_t) * proto.type.length);
+        write_const(archetype.offsets[i], archetypeArena.allocate<uint32_t>(archetype.type.length));
+        memcpy((void*)archetype.offsets[i], src->offsets[i], sizeof(uint32_t) * archetype.type.length);
     }
-    proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
-    memcpy(proto.elemSizes, src->elemSizes, sizeof(uint32_t) * proto.type.length);
-    proto.callbackFlags = archetypeArena.allocate<uint32_t>(proto.type.length);
-    memcpy(proto.callbackFlags, src->callbackFlags, sizeof(uint32_t) * proto.type.length);
-    proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
-    memcpy(proto.aligns, src->aligns, sizeof(uint32_t) * proto.type.length);
-    proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
-    memcpy(proto.sizes, src->sizes, sizeof(uint32_t) * proto.type.length);
-    proto.resourceFields = archetypeArena.allocate<sugoi::resource_fields_t>(proto.type.length);
-    memcpy(proto.resourceFields, src->resourceFields, sizeof(sugoi::resource_fields_t) * proto.type.length);
-    proto.callbacks = archetypeArena.allocate<sugoi_callback_v>(proto.type.length);
-    memcpy(proto.callbacks, src->callbacks, sizeof(sugoi_callback_v) * proto.type.length);
-    proto.stableOrder = archetypeArena.allocate<SIndex>(proto.type.length);
-    memcpy(proto.stableOrder, src->stableOrder, sizeof(SIndex) * proto.type.length);
-    proto.entitySize = src->entitySize;
-    proto.versionOffset[0] = src->versionOffset[0];
-    proto.versionOffset[1] = src->versionOffset[1];
-    proto.versionOffset[2] = src->versionOffset[2];
-    proto.chunkCapacity[0] = src->chunkCapacity[0];
-    proto.chunkCapacity[1] = src->chunkCapacity[1];
-    proto.chunkCapacity[2] = src->chunkCapacity[2];
-
-    return archetypes.insert({ proto.type, &proto }).first->second;
+    write_const(archetype.elemSizes, archetypeArena.allocate<uint32_t>(archetype.type.length));
+    memcpy((void*)archetype.elemSizes, src->elemSizes, sizeof(uint32_t) * archetype.type.length);
+    write_const(archetype.callbackFlags, archetypeArena.allocate<uint32_t>(archetype.type.length));
+    memcpy((void*)archetype.callbackFlags, src->callbackFlags, sizeof(uint32_t) * archetype.type.length);
+    write_const(archetype.aligns, archetypeArena.allocate<uint32_t>(archetype.type.length));
+    memcpy((void*)archetype.aligns, src->aligns, sizeof(uint32_t) * archetype.type.length);
+    write_const(archetype.sizes, archetypeArena.allocate<uint32_t>(archetype.type.length));
+    memcpy((void*)archetype.sizes, src->sizes, sizeof(uint32_t) * archetype.type.length);
+    write_const(archetype.resourceFields, archetypeArena.allocate<sugoi::resource_fields_t>(archetype.type.length));
+    memcpy((void*)archetype.resourceFields, src->resourceFields, sizeof(sugoi::resource_fields_t) * archetype.type.length);
+    write_const(archetype.callbacks, archetypeArena.allocate<sugoi_callback_v>(archetype.type.length));
+    memcpy((void*)archetype.callbacks, src->callbacks, sizeof(sugoi_callback_v) * archetype.type.length);
+    write_const(archetype.stableOrder, archetypeArena.allocate<SIndex>(archetype.type.length));
+    memcpy((void*)archetype.stableOrder, src->stableOrder, sizeof(SIndex) * archetype.type.length);
+    write_const(archetype.entitySize, src->entitySize);
+    write_const(archetype.sliceDataOffsets[0], src->sliceDataOffsets[0]);
+    write_const(archetype.sliceDataOffsets[1], src->sliceDataOffsets[1]);
+    write_const(archetype.sliceDataOffsets[2], src->sliceDataOffsets[2]);
+    write_const(archetype.chunkCapacity[0], src->chunkCapacity[0]);
+    write_const(archetype.chunkCapacity[1], src->chunkCapacity[1]);
+    write_const(archetype.chunkCapacity[2], src->chunkCapacity[2]);
+    sugoi::archetype_t* new_type = nullptr;
+    {
+        pimpl->archetypes.update_versioned([&](auto& archetypes){
+            new_type = archetypes.insert({ archetype.type, &archetype }).first->second;
+            pimpl->archetype_timestamp += 1;
+        }, 
+        [&](){
+            return pimpl->groups_timestamp;
+        });
+    }
+    return new_type;
 }
 
-sugoi_group_t* sugoi_storage_t::construct_group(const sugoi_entity_type_t& inType)
+sugoi_group_t* sugoi_storage_t::constructGroup(const sugoi_entity_type_t& inType)
 {
     using namespace sugoi;
     fixed_stack_scope_t _(localStack);
@@ -203,124 +245,153 @@ sugoi_group_t* sugoi_storage_t::construct_group(const sugoi_entity_type_t& inTyp
     archetype_t* archetype = get_archetype(structure);
     const auto typeSize = static_cast<uint32_t>(data_size(inType));
     SKR_ASSERT((sizeof(sugoi_group_t) + typeSize) < kGroupBlockSize);(void)typeSize;
-    sugoi_group_t& proto = *new (groupPool.allocate()) sugoi_group_t();
-    char* buffer = (char*)(&proto + 1);
-    proto.firstFree = 0;
+    sugoi_group_t& group = *new (pimpl->groupPool.allocate()) sugoi_group_t();
+    char* buffer = (char*)(&group + 1);
+    group.firstFree = 0;
     sugoi_entity_type_t type = sugoi::clone(inType, buffer);
-    proto.type = type;
-    auto toClean = localStack.allocate<TIndex>(proto.type.type.length + 1);
+    group.type = type;
+    auto toClean = localStack.allocate<TIndex>(group.type.type.length + 1);
     SIndex toCleanCount = 0;
-    auto toClone = localStack.allocate<TIndex>(proto.type.type.length + 1);
+    auto toClone = localStack.allocate<TIndex>(group.type.type.length + 1);
     SIndex toCloneCount = 0;
-    proto.isDead = false;
-    proto.disabled = false;
+    group.isDead = false;
+    group.disabled = false;
     bool hasTracked = false;
-    forloop (i, 0, proto.type.type.length)
+    forloop (i, 0, group.type.type.length)
     {
-        type_index_t t = proto.type.type.data[i];
+        type_index_t t = group.type.type.data[i];
         if(t > kDeadComponent)
             toClean[toCleanCount++] = kDeadComponent;
         toClean[toCleanCount++] = t;
-        if (!t.is_tracked())
+        if (!t.is_pinned())
             toClone[toCloneCount++] = t;
         else
             hasTracked = true;
         if (t == kDeadComponent)
-            proto.isDead = true;
+            group.isDead = true;
         if (t == kDisableComponent)
-            proto.disabled = true;
+            group.disabled = true;
     }
-    if(toCleanCount == proto.type.type.length)
+    if(toCleanCount == group.type.type.length)
         toClean[toCleanCount++] = kDeadComponent;
     // std::sort(&toClean[0], &toClean[toCleanCount]); dead is always smaller
-    proto.archetype = archetype;
-    proto.size = 0;
-    proto.timestamp = 0;
-    proto.dead = nullptr;
-    proto.cloned = proto.isDead ? nullptr : &proto;
-    groups.insert({ type, &proto });
-    update_query_cache(&proto, true);
-    if (hasTracked && !proto.isDead)
+    group.archetype = archetype;
+    group.size = 0;
+    group.timestamp = 0;
+    group.dead = nullptr;
+    group.cloned = group.isDead ? nullptr : &group;
+    {
+        pimpl->groups.update_versioned([&](auto& groups){
+            groups.insert({ type, &group });
+            pimpl->groups_timestamp += 1;
+        }, 
+        [&](){
+            return pimpl->groups_timestamp;
+        });
+    }
+    updateQueryCache(&group, true);
+    if (hasTracked && !group.isDead)
     {
         auto deadType = make_zeroed<sugoi_entity_type_t>();
         deadType.type = { toClean, toCleanCount };
-        proto.dead = get_group(deadType);
+        group.dead = get_group(deadType);
         sugoi_entity_type_t cloneType = make_zeroed<sugoi_entity_type_t>();
         cloneType.type = { toClone, toCloneCount };
-        proto.cloned = get_group(cloneType);
+        group.cloned = get_group(cloneType);
     }
-    return &proto;
+    return &group;
 }
 
-sugoi_group_t* sugoi_storage_t::clone_group(sugoi_group_t* srcG)
+sugoi_group_t* sugoi_storage_t::cloneGroup(sugoi_group_t* srcG)
 {
-    if(auto g = try_get_group(srcG->type))
+    if(auto g = tryGetGroup(srcG->type))
         return g;
-    sugoi_group_t& proto = *new (groupPool.allocate()) sugoi_group_t();
-    std::memcpy(&proto, srcG, sizeof(sugoi_group_t));
-    char* buffer = (char*)(&proto + 1);
-    proto.type = sugoi::clone(srcG->type, buffer);
-    proto.archetype = clone_archetype(srcG->archetype);
+    sugoi_group_t& group = *new (pimpl->groupPool.allocate()) sugoi_group_t();
+    std::memcpy(&group, srcG, sizeof(sugoi_group_t));
+    char* buffer = (char*)(&group + 1);
+    group.type = sugoi::clone(srcG->type, buffer);
+    group.archetype = cloneArchetype(srcG->archetype);
     if (srcG->dead)
     {
-        proto.dead = clone_group(srcG->dead);
+        group.dead = cloneGroup(srcG->dead);
     }
     if (srcG->cloned)
     {
-        proto.cloned = clone_group(srcG->cloned);
+        group.cloned = cloneGroup(srcG->cloned);
     }
-    groups.insert({ proto.type, &proto });
-    return &proto;
+    
+    pimpl->groups.update_versioned([&](auto& groups){
+        groups.insert({ group.type, &group });
+        pimpl->groups_timestamp += 1;
+    }, 
+    [&](){
+        return pimpl->groups_timestamp;
+    });
+
+    return &group;
 }
 
-sugoi::archetype_t* sugoi_storage_t::try_get_archetype(const sugoi_type_set_t& type) const
+sugoi::archetype_t* sugoi_storage_t::tryGetArchetype(const sugoi_type_set_t& type) const
 {
-    if (auto i = archetypes.find(type); i != archetypes.end())
-        return i->second;
-    return nullptr;
+    sugoi::archetype_t* found = nullptr;
+    pimpl->archetypes.read_versioned([&](auto& archetypes){
+        if (auto i = archetypes.find(type); i != archetypes.end())
+            found = i->second;
+    }, 
+    [&](){
+        return pimpl->archetype_timestamp;
+    });
+    return found;
 }
 
-sugoi_group_t* sugoi_storage_t::try_get_group(const sugoi_entity_type_t& type) const
+sugoi_group_t* sugoi_storage_t::tryGetGroup(const sugoi_entity_type_t& type) const
 {
-    if (auto i = groups.find(type); i != groups.end())
-        return i->second;
-    return nullptr;
+    sugoi_group_t* found = nullptr;
+    pimpl->groups.read_versioned([&](auto& groups){
+        if (auto i = groups.find(type); i != groups.end())
+            found = i->second;
+    }, 
+    [&](){
+        return pimpl->groups_timestamp;
+    });
+    return found;
 }
 
 sugoi::archetype_t* sugoi_storage_t::get_archetype(const sugoi_type_set_t& type)
 {
-    archetype_t* archetype = try_get_archetype(type);
-    if (!archetype)
-        archetype = construct_archetype(type);
-    return archetype;
+    archetype_t* archetype = tryGetArchetype(type);
+    return archetype ? archetype : constructArchetype(type);
 }
 
 sugoi_group_t* sugoi_storage_t::get_group(const sugoi_entity_type_t& type)
 {
-    using namespace sugoi;
-    bool withTracked = false;
+    bool withPinned = false;
     bool dead = false;
-    for(SIndex i=0; i < type.type.length; ++i)
+    for(SIndex i = 0; i < type.type.length; ++i)
     {
-        type_index_t t = type.type.data[i];
-        if(t.is_tracked())
-            withTracked = true;
-        if(t == kDeadComponent)
+        sugoi::type_index_t t = type.type.data[i];
+        if(t.is_pinned())
+            withPinned = true;
+        if(t == sugoi::kDeadComponent)
             dead = true;
     }
-    if(dead && !withTracked)
+    if(dead && !withPinned)
         return nullptr;
-    sugoi_group_t* group = try_get_group(type);
-    if (!group)
-        group = construct_group(type);
-    return group;
+    sugoi_group_t* existed_group = tryGetGroup(type);
+    return existed_group ? existed_group : constructGroup(type);
 }
 
-void sugoi_storage_t::destruct_group(sugoi_group_t* group)
+void sugoi_storage_t::destructGroup(sugoi_group_t* group)
 {
-    update_query_cache(group, false);
-    groups.erase(group->type);
-    groupPool.free(group);
+    updateQueryCache(group, false);
+    pimpl->groups.update_versioned([&](auto& groups){
+        groups.erase(group->type);
+        pimpl->groupPool.free(group);
+        pimpl->groups_timestamp += 1;
+    }, 
+    [&](){
+        return pimpl->groups_timestamp;
+    });
 }
 
 sugoi_chunk_t* sugoi_group_t::get_first_free_chunk() const noexcept
@@ -350,7 +421,7 @@ void sugoi_group_t::add_chunk(sugoi_chunk_t* chunk)
 {
     using namespace sugoi;
     size += chunk->count;
-    chunk->type = archetype;
+    chunk->structure = archetype;
     chunk->group = this;
     if(chunk->count < chunk->get_capacity())
     {
@@ -435,9 +506,19 @@ void sugoi_group_t::mark_full(sugoi_chunk_t* chunk)
 void sugoi_group_t::clear()
 {
     using namespace sugoi;
-    for(auto chunk : chunks)
+    SkrZoneScopedN("sugoi_group_t::clear");
+
+    auto& entity_registry = archetype->storage->getEntityRegistry();
+    size_t freeCount = 0;
+    for (auto chunk : chunks)
     {
-        archetype->storage->entities.free_entities({ chunk, 0, chunk->count });
+        freeCount += chunk->count;
+    }
+    entity_registry.reserve_free_entries(freeCount);
+
+    for (auto chunk : chunks)
+    {
+        entity_registry.free_entities({ chunk, 0, chunk->count });
         destruct_view({ chunk, 0, chunk->count });
         destruct_chunk(chunk);
         sugoi_chunk_t::destroy(chunk);
@@ -464,7 +545,9 @@ bool sugoi_group_t::share(sugoi_type_index_t t) const noexcept
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
-        auto metaGroup = storage->entities.entries[e_id(type.meta.data[i])].chunk->group;
+        auto entry = storage->getEntityRegistry().try_get_entry(type.meta.data[i]);
+        SKR_ASSERT(entry.has_value());
+        auto metaGroup = entry.value().chunk->group;
         if (metaGroup->index(t) != kInvalidSIndex)
             return true;
         if (metaGroup->share(t))
@@ -484,7 +567,9 @@ bool sugoi_group_t::share(const sugoi_type_set_t& subtype) const noexcept
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
-        auto metaGroup = storage->entities.entries[e_id(type.meta.data[i])].chunk->group;
+        auto entry = storage->getEntityRegistry().try_get_entry(type.meta.data[i]);
+        SKR_ASSERT(entry.has_value());
+        auto metaGroup = entry.value().chunk->group;
         if (metaGroup->own(subtype))
             return true;
         if (metaGroup->share(subtype))
@@ -496,16 +581,16 @@ bool sugoi_group_t::share(const sugoi_type_set_t& subtype) const noexcept
 sugoi_mask_comp_t sugoi_group_t::get_shared_mask(const sugoi_type_set_t& subtype) const noexcept
 {
     using namespace sugoi;
-    std::bitset<32> mask;
+    sugoi::bitset32 mask;
     for (SIndex i = 0; i < subtype.length; ++i)
     {
         if (share(subtype.data[i]))
         {
-            mask.set(i);
+            mask.set(i, true);
             break;
         }
     }
-    return mask.to_ulong();
+    return mask.to_uint32();
 }
 
 void sugoi_group_t::get_shared_type(sugoi_type_set_t& result, void* buffer) const noexcept
@@ -540,7 +625,9 @@ const sugoi_group_t* sugoi_group_t::get_owner(sugoi_type_index_t t) const noexce
     auto storage = archetype->storage;
     for (EIndex i = 0; i < type.meta.length; ++i)
     {
-        auto metaGroup = storage->entities.entries[e_id(type.meta.data[i])].chunk->group;
+        auto entry = storage->getEntityRegistry().try_get_entry(type.meta.data[i]);
+        SKR_ASSERT(entry.has_value());
+        auto metaGroup = entry.value().chunk->group;
         if (auto g = metaGroup->get_owner(t))
             return g;
     }
@@ -564,7 +651,7 @@ const void* sugoi_group_t::get_shared_ro(sugoi_type_index_t t) const noexcept
 sugoi_mask_comp_t sugoi_group_t::get_mask(const sugoi_type_set_t& subtype) const noexcept
 {
     using namespace sugoi;
-    std::bitset<32> mask;
+    sugoi::bitset32 mask;
     SIndex i = 0, j = 0;
     auto stype = type.type;
     while (i < stype.length && j < subtype.length)
@@ -575,12 +662,12 @@ sugoi_mask_comp_t sugoi_group_t::get_mask(const sugoi_type_set_t& subtype) const
             ++i;
         else
         {
-            mask.set(i);
+            mask.set(i, true);
             ++i;
             ++j;
         }
     }
-    return mask.to_ulong();
+    return mask.to_uint32();
 }
 
 extern "C" {

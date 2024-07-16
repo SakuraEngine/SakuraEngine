@@ -1,129 +1,69 @@
 #pragma once
-#include "SkrBase/types.h"
-#include "SkrBase/containers/vector/vector_memory.hpp"
-#include "SkrBase/containers/vector/vector.hpp"
-#include "SkrContainers/skr_allocator.hpp"
+#include "SkrContainersDef/vector.hpp"
 
+// bin serde
+#include "SkrSerde/bin_serde.hpp"
 namespace skr
 {
-template <typename T, typename Allocator = SkrAllocator>
-using Vector = container::Vector<container::VectorMemory<
-T,        /*type*/
-uint64_t, /*size type*/
-Allocator /*allocator*/
->>;
-
-template <typename T, uint64_t kCount>
-using FixedVector = container::Vector<container::FixedVectorMemory<
-T,        /*type*/
-uint64_t, /*size type*/
-kCount    /*allocator*/
->>;
-
-template <typename T, uint64_t kCount, typename Allocator = SkrAllocator>
-using InlineVector = container::Vector<container::InlineVectorMemory<
-T,        /*type*/
-uint64_t, /*size type*/
-kCount,   /*allocator*/
-Allocator /*allocator*/
->>;
-} // namespace skr
-
-// binary
-namespace skr
-{
-namespace binary
-{
-template <class V>
-struct ReadTrait<Vector<V>> {
-    template <class... Args>
-    static int Read(skr_binary_reader_t* archive, Vector<V>& vec, Args&&... args)
+template <typename V>
+struct BinSerde<Vector<V>> {
+    inline static bool read(SBinaryReader* r, Vector<V>& v)
     {
-        Vector<V> temp;
-        uint32_t  size;
-        SKR_ARCHIVE(size);
+        // read bin
+        uint32_t size;
+        if (!bin_read(r, (size))) return false;
 
+        // read content
+        Vector<V> temp;
         temp.reserve(size);
         for (uint32_t i = 0; i < size; ++i)
         {
             V value;
-            if (auto ret = skr::binary::Archive(archive, value, std::forward<Args>(args)...); ret != 0) return ret;
+            if (!bin_read(r, value))
+                return false;
             temp.add(std::move(value));
         }
-        vec = std::move(temp);
-        return 0;
+
+        // move to target
+        v = std::move(temp);
+        return true;
     }
-
-    template <class... Args>
-    static int Read(skr_binary_reader_t* archive, Vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
+    inline static bool write(SBinaryWriter* r, const Vector<V>& v)
     {
-        Vector<V> temp;
-        uint32_t  size;
-        SKR_ARCHIVE(size);
-        if (size > cfg.max || size < cfg.min)
-        {
-            // SKR_LOG_ERROR(u8"Vector size %d is out of range [%d, %d]", size, cfg.min, cfg.max);
-            return -2;
-        }
+        // write bin
+        if (!bin_write(r, ((uint32_t)v.size()))) return false;
 
-        temp.reserve(size);
-        for (uint32_t i = 0; i < size; ++i)
+        // write content
+        for (auto& value : v)
         {
-            V value;
-            if (auto ret = skr::binary::Archive(archive, value, std::forward<Args>(args)...); ret != 0) return ret;
-            temp.push_back(std::move(value));
+            if (!bin_write(r, value))
+                return false;
         }
-        vec = std::move(temp);
-        return 0;
+        return true;
     }
 };
-template <class V>
-struct WriteTrait<Vector<V>> {
-    template <class... Args>
-    static int Write(skr_binary_writer_t* archive, const Vector<V>& vec, Args&&... args)
-    {
-        SKR_ARCHIVE((uint32_t)vec.size());
-        for (auto& value : vec)
-        {
-            if (auto ret = skr::binary::Archive(archive, value, std::forward<Args>(args)...); ret != 0) return ret;
-        }
-        return 0;
-    }
-    template <class... Args>
-    static int Write(skr_binary_writer_t* archive, const Vector<V>& vec, VectorCheckConfig cfg, Args&&... args)
-    {
-        if (vec.size() > cfg.max || vec.size() < cfg.min)
-        {
-            // SKR_LOG_ERROR(u8"Vector size %d is out of range [%d, %d]", vec.size(), cfg.min, cfg.max);
-            return -2;
-        }
-        SKR_ARCHIVE((uint32_t)vec.size());
-        for (auto& value : vec)
-        {
-            if (auto ret = skr::binary::Archive(archive, value, std::forward<Args>(args)...); ret != 0) return ret;
-        }
-        return 0;
-    }
-};
+} // namespace skr
 
-struct VectorWriter {
+// vector bin reader writer
+namespace skr::archive
+{
+struct BinVectorWriter {
     Vector<uint8_t>* buffer;
 
-    int write(const void* data, size_t size)
+    bool write(const void* data, size_t size)
     {
         buffer->append((uint8_t*)data, size);
-        return 0;
+        return true;
     }
 };
-
-struct VectorWriterBitpacked {
+struct BinVectorWriterBitpacked {
     Vector<uint8_t>* buffer;
     uint8_t          bitOffset = 0;
-    int              write(const void* data, size_t size)
+    bool             write(const void* data, size_t size)
     {
         return write_bits(data, size * 8);
     }
-    int write_bits(const void* data, size_t bitSize)
+    bool write_bits(const void* data, size_t bitSize)
     {
         uint8_t* dataPtr = (uint8_t*)data;
         if (bitOffset == 0)
@@ -149,7 +89,7 @@ struct VectorWriterBitpacked {
                 if (newBitOffset == 8)
                 {
                     bitOffset = 0;
-                    return 0;
+                    return true;
                 }
                 else if (newBitOffset > 8)
                 {
@@ -161,12 +101,43 @@ struct VectorWriterBitpacked {
                 bitOffset = (uint8_t)newBitOffset;
             }
         }
-        return 0;
+        return true;
     }
 };
-} // namespace binary
-template <typename V>
-struct SerdeCompleteChecker<binary::ReadTrait<Vector<V>>>
-    : std::bool_constant<is_complete_serde_v<binary::ReadTrait<V>>> {
+
+}; // namespace skr::archive
+
+// json serde
+#include "SkrSerde/json_serde.hpp"
+namespace skr
+{
+template <class V>
+struct JsonSerde<skr::Vector<V>> {
+    inline static bool read(skr::archive::JsonReader* r, skr::Vector<V>& v)
+    {
+        size_t count;
+        SKR_EXPECTED_CHECK(r->StartArray(count), false);
+        v.reserve(count);
+        for (size_t i = 0; i < count; i++)
+        {
+            V value;
+            if (!json_read<V>(r, value))
+                return false;
+            v.emplace(std::move(value));
+        }
+        SKR_EXPECTED_CHECK(r->EndArray(), false);
+        return true;
+    }
+    inline static bool write(skr::archive::JsonWriter* w, const skr::Vector<V>& v)
+    {
+        SKR_EXPECTED_CHECK(w->StartArray(), false);
+        for (auto& value : v)
+        {
+            if (!json_write<V>(w, value))
+                return false;
+        }
+        SKR_EXPECTED_CHECK(w->EndArray(), false);
+        return true;
+    }
 };
 } // namespace skr

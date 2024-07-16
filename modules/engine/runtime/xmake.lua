@@ -2,12 +2,6 @@ if (is_os("macosx") or is_os("linux")) then
     add_requires("libsdl 2.28.5", {configs = {shared = true}})
 end
 -- add_requires("cpu_features v0.9.0")
-
-static_component("SkrSerde", "SkrRT")
-    set_optimize("fastest")
-    -- set_pcxxheader("serde/pch.hpp")
-    add_files("serde/build.*.cpp")
-    public_dependency("SkrCore", engine_version)
     
 shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     -- dependencies
@@ -24,7 +18,6 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     
     -- add source files
     add_includedirs("include", {public = true})
-    set_pcxxheader("src/pch.hpp")
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     if (is_os("macosx")) then 
         add_files("src/**/build.*.mm")
@@ -47,4 +40,4 @@ shared_module("SkrRT", "SKR_RUNTIME", engine_version)
         table.insert(libs_to_install, "gns")
         table.insert(libs_to_install, "SDL2")
     end
-    add_rules("utils.install-libs", { libnames = libs_to_install })
+    add_rules("utils.install_libraries", { libnames = libs_to_install })

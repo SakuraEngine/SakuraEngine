@@ -185,7 +185,7 @@ SKR_FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t
     }
     #endif
 #else
-    #include "SkrMemory/memory.h"
+    #include "SkrCore/memory/memory.h"
 
     #define cgpu_malloc sakura_malloc
     #define cgpu_malloc_aligned sakura_malloc_aligned

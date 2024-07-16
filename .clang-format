@@ -3,7 +3,7 @@ TabWidth: 4
 AccessModifierOffset: -4
 IndentWidth: 4
 ObjCBlockIndentWidth: 4
-ContinuationIndentWidth: 0
+ContinuationIndentWidth: 0 # 禁用缩进是为了防止反射宏出问题, what can i say, Mamba Out!
 MaxEmptyLinesToKeep: 1
 
 AllowShortIfStatementsOnASingleLine: true
@@ -62,6 +62,8 @@ WhitespaceSensitiveMacros:
   - "sreflect_enum"
   - "sreflect_struct"
   - "sreflect_enum_class"
+  - "sreflect_interface"
+  - "sreflect_function"
 
 Macros:
   # attr
@@ -75,28 +77,6 @@ Macros:
   - sattr(x,y,z,w,a,b,c)=/* x */
   - sattr(x,y,z,w,a,b,c,d)=/* x */
   - sattr(x,y,z,w,a,b,c,d,e)=/* x */
-  # push attr
-  - spush_attr(x)=/* x */
-  - spush_attr(x,y)=/* x */
-  - spush_attr(x,y,z)=/* x */
-  - spush_attr(x,y,z)=/* x */
-  - spush_attr(x,y,z,w)=/* x */
-  - spush_attr(x,y,z,w,a)=/* x */
-  - spush_attr(x,y,z,w,a,b)=/* x */
-  - spush_attr(x,y,z,w,a,b,c)=/* x */
-  - spush_attr(x,y,z,w,a,b,c,d)=/* x */
-  - spush_attr(x,y,z,w,a,b,c,d,e)=/* x */
-    # pop attr
-  - spop_attr(x)=/* x */
-  - spop_attr(x,y)=/* x */
-  - spop_attr(x,y,z)=/* x */
-  - spop_attr(x,y,z)=/* x */
-  - spop_attr(x,y,z,w)=/* x */
-  - spop_attr(x,y,z,w,a)=/* x */
-  - spop_attr(x,y,z,w,a,b)=/* x */
-  - spop_attr(x,y,z,w,a,b,c)=/* x */
-  - spop_attr(x,y,z,w,a,b,c,d)=/* x */
-  - spop_attr(x,y,z,w,a,b,c,d,e)=/* x */
   # enum
   - sreflect_enum(x)=enum class
   - sreflect_enum(x,y)=enum class
@@ -130,6 +110,28 @@ Macros:
   - sreflect_struct(x,y,z,w,a,b,c)=struct
   - sreflect_struct(x,y,z,w,a,b,c,d)=struct
   - sreflect_struct(x,y,z,w,a,b,c,d,e)=struct
+  # interface
+  - sreflect_interface(x)=struct
+  - sreflect_interface(x,y)=struct
+  - sreflect_interface(x,y,z)=struct
+  - sreflect_interface(x,y,z)=struct
+  - sreflect_interface(x,y,z,w)=struct
+  - sreflect_interface(x,y,z,w,a)=struct
+  - sreflect_interface(x,y,z,w,a,b)=struct
+  - sreflect_interface(x,y,z,w,a,b,c)=struct
+  - sreflect_interface(x,y,z,w,a,b,c,d)=struct
+  - sreflect_interface(x,y,z,w,a,b,c,d,e)=struct
+  # interface
+  - sreflect_function(x)=struct
+  - sreflect_function(x,y)=struct
+  - sreflect_function(x,y,z)=struct
+  - sreflect_function(x,y,z)=struct
+  - sreflect_function(x,y,z,w)=struct
+  - sreflect_function(x,y,z,w,a)=struct
+  - sreflect_function(x,y,z,w,a,b)=struct
+  - sreflect_function(x,y,z,w,a,b,c)=struct
+  - sreflect_function(x,y,z,w,a,b,c,d)=struct
+  - sreflect_function(x,y,z,w,a,b,c,d,e)=struct
   # struct
   - sreflect_managed_component(x)=struct
   - sreflect_managed_component(x,y)=struct

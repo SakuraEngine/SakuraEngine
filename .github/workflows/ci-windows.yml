@@ -15,6 +15,9 @@ jobs:
     name: ${{ matrix.toolchain }} + ${{ matrix.cxx }} + ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Upgrade LLVM
+        run: choco upgrade llvm
+        
       - name: Checkout code
         uses: nschloe/action-cached-lfs-checkout@v1
         
@@ -34,7 +37,7 @@ jobs:
         uses: xmake-io/github-action-setup-xmake@v1
         with:
           # xmake-version: latest
-          xmake-version: branch@dev # FIXME. switch to dev branch to fix ci temporary
+          xmake-version: '2.9.2'
           actions-cache-folder: .xmake-cache-W${{ steps.cache_key.outputs.key }}
 
       # Update xmake repository (in order to have the file that will be cached)
@@ -57,11 +60,14 @@ jobs:
       - name: Set env
         id: env
         run: |
+          $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -ne 'C:\Program Files\LLVM\bin' }) -join ';'
           xmake g -c -v
           xmake l setup.lua -v
 
       - name: ConfigureDebug
-        run: xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --project_script=./.github/workflows/ci.project.lua --policies=build.ccache:n
+        run: |
+          cp ./.github/workflows/ci.project.lua ./project.lua  
+          xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --policies=build.ccache:n
       
       - name: BuildDebug
         if: success() || failure()
@@ -78,7 +84,9 @@ jobs:
       - name: ConfigureRelease
         if: success() || failure()
         shell: cmd
-        run: xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --project_script=./.github/workflows/ci.project.lua --use_profile=disable --policies=build.ccache:n
+        run: |
+          cp ./.github/workflows/ci.project.lua ./project.lua  
+          xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --use_profile=disable --policies=build.ccache:n
       
       - name: BuildRelease
         if: success() || failure()
@@ -90,7 +98,7 @@ jobs:
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
-          xmake run -g 05.tests/* -vD ... -d yes
+          xmake test -g 05.tests/* -vD ... -d yes
 
       - name: UploadGeneratedFiles
         if: success() || failure()
@@ -115,7 +123,8 @@ jobs:
         if: success() || failure()
         shell: cmd
         run: |
-          xmake f -c -y -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --project_script=./.github/workflows/ci.project.lua --shipping_one_archive=y --use_profile=disable --policies=build.ccache:n
+          cp ./.github/workflows/ci.project.lua ./project.lua  
+          xmake f -c -y -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --shipping_one_archive=y --use_profile=disable --policies=build.ccache:n
           xmake -y -v
       
       - name: UploadGeneratedFiles2

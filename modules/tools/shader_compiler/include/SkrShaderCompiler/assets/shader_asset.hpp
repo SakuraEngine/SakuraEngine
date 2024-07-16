@@ -2,15 +2,14 @@
 #include "SkrBase/config.h"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrRT/config.h"
-#include "SkrGuid/guid.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #ifndef __meta__
     #include "SkrShaderCompiler/assets/shader_asset.generated.h" // IWYU pragma: export
 #endif
 
-namespace skd sreflect
+namespace skd
 {
-namespace asset sreflect
+namespace asset
 {
 sreflect_struct("guid" : "067d4b86-f888-4bd7-841c-bc831043e50c")
 sattr("serialize" : "json")
@@ -48,5 +47,5 @@ SKR_SHADER_COMPILER_API SShaderCooker final : public SCooker {
     bool     Cook(SCookContext* ctx) override;
     uint32_t Version() override;
 };
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd

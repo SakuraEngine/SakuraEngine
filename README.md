@@ -239,9 +239,9 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 ## 在自定义包管理引入的开源库和版本
 - LEMON v1.3.1 (Boost Software License)
 - LMDB v0.9.29 (BSD)
-- simdjson v3.0.0 (Apache-2.0)
 - zlib v1.2.8
 - cgltf v1.13 (MIT)
+- yyjson v0.9.0 (MIT)
 - cpu_features v0.9.0 (Apache-2.0)
 - freetype 2.13.0 (GNU)
 - icu 72.1 ([LICENSE](https://github.com/unicode-org/icu/blob/main/icu4c/LICENSE))

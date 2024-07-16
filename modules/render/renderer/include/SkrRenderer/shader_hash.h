@@ -3,7 +3,7 @@
 #include "SkrGraphics/flags.h"
 #ifdef __cplusplus
     #include "SkrContainers/string.hpp"
-    #include "SkrRT/rttr/strongly_enum.hpp"
+    #include "SkrRTTR/enum_tools.hpp"
 #endif
 
 #ifndef __meta__

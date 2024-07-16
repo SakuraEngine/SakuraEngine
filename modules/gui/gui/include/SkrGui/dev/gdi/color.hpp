@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrRT/misc/types.h"
 #include <cmath>
 
 namespace skr::gui
@@ -27,10 +26,10 @@ inline static skr_float4_t hsla_to_rgbaf(float h, float s, float l, uint8_t a)
     skr_float4_t col;
     h = modf(h, 1.0f);
     if (h < 0.0f) h += 1.0f;
-    s = clampf(s, 0.0f, 1.0f);
-    l = clampf(l, 0.0f, 1.0f);
-    m2 = l <= 0.5f ? (l * (1 + s)) : (l + s - l * s);
-    m1 = 2 * l - m2;
+    s     = clampf(s, 0.0f, 1.0f);
+    l     = clampf(l, 0.0f, 1.0f);
+    m2    = l <= 0.5f ? (l * (1 + s)) : (l + s - l * s);
+    m1    = 2 * l - m2;
     col.x = clampf(hue(h + 1.0f / 3.0f, m1, m2), 0.0f, 1.0f);
     col.y = clampf(hue(h, m1, m2), 0.0f, 1.0f);
     col.z = clampf(hue(h - 1.0f / 3.0f, m1, m2), 0.0f, 1.0f);

@@ -1,36 +1,27 @@
 #pragma once
-#include "SkrBase/types.h"
-#include "SkrBase/containers/bit_set/bit_set.hpp"
+#include "SkrContainersDef/bitset.hpp"
 
+// bin serde
+#include "SkrSerde/bin_serde.hpp"
 namespace skr
 {
-template <size_t N, typename TBlock = uint64_t>
-using Bitset = container::Bitset<N, TBlock>;
-}
-
-namespace skr::binary
-{
 template <size_t N, typename TBlock>
-struct WriteTrait<skr::Bitset<N, TBlock>> {
-    static int Write(skr_binary_writer_t* archive, const skr::Bitset<N, TBlock>& value)
+struct BinSerde<skr::Bitset<N, TBlock>> {
+    inline static bool read(SBinaryReader* r, skr::Bitset<N, TBlock>& v)
     {
         for (int i = 0; i < Bitset<N, TBlock>::NumBlock; i++)
         {
-            SKR_ARCHIVE(value.data()[i]);
+            if (!bin_read(r, v.data()[i])) return false;
         }
-        return 0;
+        return true;
     }
-};
-
-template <size_t N, typename TBlock>
-struct ReadTrait<skr::Bitset<N, TBlock>> {
-    static int Read(skr_binary_reader_t* archive, skr::Bitset<N, TBlock>& value)
+    inline static bool write(SBinaryWriter* w, const skr::Bitset<N, TBlock>& v)
     {
         for (int i = 0; i < Bitset<N, TBlock>::NumBlock; i++)
         {
-            SKR_ARCHIVE(value.data()[i]);
+            if (!bin_write(w, v.data()[i])) return false;
         }
-        return 0;
+        return true;
     }
 };
-} // namespace skr::binary
+} // namespace skr

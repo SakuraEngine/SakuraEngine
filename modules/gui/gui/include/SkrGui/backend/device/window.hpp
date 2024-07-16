@@ -12,9 +12,7 @@ struct ICanvas;
 struct Layer;
 } // namespace skr::gui
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 enum class EWindowFlag : uint32_t
 {
@@ -38,11 +36,11 @@ struct WindowDesc {
 };
 
 // 设备视口，某颗 UI 树（或子树）的渲染目标，可能是物理上的窗口、RenderTarget、物理窗口的某一部分、Overlay 等等
-sreflect_struct(
+sreflect_interface(
     "guid": "e46f6067-1fbe-41bf-8361-14399bc7054b"
 )
 SKR_GUI_API INativeWindow : virtual public skr::rttr::IObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     // init view
     virtual void init_normal(const WindowDesc& desc)  = 0;
@@ -92,5 +90,4 @@ SKR_GUI_API INativeWindow : virtual public skr::rttr::IObject {
     virtual void set_title(const String& title) SKR_NOEXCEPT              = 0;
 };
 
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

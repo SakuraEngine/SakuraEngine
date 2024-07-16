@@ -5,7 +5,7 @@
     #include "SkrRenderer/render_viewport.generated.h" // IWYU pragma: export
 #endif
 
-sreflect_struct("guid": "96fd4826-cb03-4286-8d14-8a86c9f96ee4", "component" : true)
+sreflect_struct("guid": "96fd4826-cb03-4286-8d14-8a86c9f96ee4", "ecs::comp" : true)
 skr_render_viewport_t
 {
     // index registered in renderer

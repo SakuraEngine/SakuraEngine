@@ -1,45 +1,41 @@
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrToolCore/project/project.hpp"
-#include "SkrRT/serde/json/reader.h"
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrTextureCompiler/texture_sampler_asset.hpp"
+#include "SkrSerde/json_serde.hpp"
 
 namespace skd
 {
 namespace asset
 {
 
-void* STextureSamplerImporter::Import(skr_io_ram_service_t* ioService, SCookContext *context)
+void* STextureSamplerImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
-    const auto assetRecord = context->GetAssetRecord();
     skr::BlobId blob = nullptr;
-    context->AddFileDependencyAndLoad(ioService, jsonPath.c_str(), blob);
-    SKR_DEFER({blob.reset();});
-
-    auto jsonString = simdjson::padded_string((char*)blob->get_data(), blob->get_size());
-    simdjson::ondemand::parser parser;
-    auto doc = parser.iterate(jsonString);
-    if(doc.error())
+    context->AddSourceFileAndLoad(ioService, jsonPath.c_str(), blob);
+    SKR_DEFER({ blob.reset(); });
+    /*
+    const auto assetRecord = context->GetAssetRecord();
     {
-        SKR_LOG_FMT_ERROR(u8"Import shader options asset {} from {} failed, json parse error {}", assetRecord->guid, jsonPath, simdjson::error_message(doc.error()));
+        SKR_LOG_FMT_ERROR(u8"Import shader options asset {} from {} failed, json parse error {}", assetRecord->guid, jsonPath, ::error_message(doc.error()));
         return nullptr;
     }
-    auto json_value = doc.get_value().value_unsafe();
-
-    // create source code wrapper
-    auto sampler_resource = SkrNew<skr_texture_sampler_resource_t>();
-    skr::json::Read(std::move(json_value), *sampler_resource);
+    '*/
+    skr::String              jString(skr::StringView((const char8_t*)blob->get_data(), blob->get_size()));
+    skr::archive::JsonReader jsonVal(jString.view());
+    auto                     sampler_resource = SkrNew<skr_texture_sampler_resource_t>();
+    skr::json_read(&jsonVal, *sampler_resource);
     return sampler_resource;
 }
 
-void STextureSamplerImporter::Destroy(void *resource)
+void STextureSamplerImporter::Destroy(void* resource)
 {
     auto sampler_resource = (skr_texture_sampler_resource_t*)resource;
     SkrDelete(sampler_resource);
 }
 
-bool STextureSamplerCooker::Cook(SCookContext *ctx)
+bool STextureSamplerCooker::Cook(SCookContext* ctx)
 {
     const auto outputPath = ctx->GetOutputPath();
     //-----load config
@@ -47,7 +43,7 @@ bool STextureSamplerCooker::Cook(SCookContext *ctx)
 
     //-----import resource object
     auto sampler_resource = ctx->Import<skr_texture_sampler_resource_t>();
-    if(!sampler_resource) return false;
+    if (!sampler_resource) return false;
     SKR_DEFER({ ctx->Destroy(sampler_resource); });
 
     // write runtime resource to disk

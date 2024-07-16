@@ -2,11 +2,10 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/config.h"
 #include "SkrOS/filesystem.hpp"
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/runtime_module.h"
-#include "SkrGuid/guid.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRuntime);
 

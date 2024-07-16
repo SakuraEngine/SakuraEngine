@@ -3,10 +3,9 @@
 #ifdef _WIN32
 #include "SkrGraphics/extensions/cgpu_d3d12_exts.h"
 #endif
-#include "SkrGuid/guid.hpp"
 #include "SkrCore/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrModule/module_manager.hpp"
+#include "SkrCore/module/module_manager.hpp"
 
 #include "SkrImGui/skr_imgui.h"
 #include "SkrRenderer/skr_renderer.h"
@@ -16,7 +15,7 @@ IMPLEMENT_DYNAMIC_MODULE(SkrRendererModule, SkrRenderer);
 
 namespace 
 {
-using namespace skr::guid::literals;
+using namespace skr::literals;
 const auto kGLTFVertexLayoutWithoutTangentId = u8"1b357a40-83ff-471c-8903-23e99d95b273"_guid;
 const auto kGLTFVertexLayoutWithTangentId = u8"1b11e007-7cc2-4941-bc91-82d992c4b489"_guid;
 const auto kGLTFVertexLayoutWithJointId = u8"C35BD99A-B0A8-4602-AFCC-6BBEACC90321"_guid;

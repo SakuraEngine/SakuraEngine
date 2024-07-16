@@ -1,89 +1,137 @@
 #pragma once
-#include "SkrBase/types.h"
-#include "SkrBase/containers/variant/variant.hpp"
+#include "SkrContainersDef/variant.hpp"
 
+// bin serde
+#include "SkrSerde/bin_serde.hpp"
 namespace skr
 {
 template <class... Ts>
-using variant = skr::container::variant<Ts...>;
-template <class... Ts>
-struct overload : Ts... {
-    using Ts::operator()...;
-};
-template <class... Ts>
-overload(Ts...) -> overload<Ts...>;
-using skr::container::get_if;
-using skr::container::get;
-using skr::container::visit;
-using skr::container::variant_size_v;
-using skr::container::variant_npos;
-} // namespace skr
-
-namespace skr
-{
-namespace binary
-{
-template <class... Ts>
-struct ReadTrait<skr::variant<Ts...>> {
+struct BinSerde<skr::variant<Ts...>> {
     template <size_t I, class T>
-    static int ReadByIndex(skr_binary_reader_t* archive, skr::variant<Ts...>& value, size_t index)
+    inline static bool _read_by_index(SBinaryReader* r, skr::variant<Ts...>& v, size_t index)
     {
         if (index == I)
         {
-            T t;
-            SKR_ARCHIVE(t);
-            value = std::move(t);
-            return 0;
+            T tmp;
+            if (!bin_read(r, (tmp))) return false;
+            v = std::move(tmp);
+            return true;
         }
-        return -1;
+        return false;
     }
-
     template <size_t... Is>
-    static int ReadByIndexHelper(skr_binary_reader_t* archive, skr::variant<Ts...>& value, size_t index, std::index_sequence<Is...>)
+    inline static bool _read_by_index_helper(SBinaryReader* r, skr::variant<Ts...>& v, size_t index, std::index_sequence<Is...>)
     {
-        int result;
-        (void)(((result = ReadByIndex<Is, Ts>(archive, value, index)) != 0) && ...);
+        bool result;
+        (void)(((result = _read_by_index<Is, Ts>(r, v, index)) != 0) && ...);
         return result;
     }
 
-    static int Read(skr_binary_reader_t* archive, skr::variant<Ts...>& value)
+    inline static bool read(SBinaryReader* r, skr::variant<Ts...>& v)
     {
-        uint32_t index;
-        SKR_ARCHIVE(index);
+        using SizeType = decltype(v.index());
+
+        // read index
+        SizeType index;
+        if (!bin_read(r, index)) return false;
         if (index >= sizeof...(Ts))
-            return -1;
-        return ReadByIndexHelper(archive, value, index, std::make_index_sequence<sizeof...(Ts)>());
+            return false;
+
+        // read content
+        return _read_by_index(r, v, index, std::make_index_sequence<sizeof...(Ts)>());
     }
-};
 
-} // namespace binary
-
-template <class... Ts>
-struct SerdeCompleteChecker<binary::ReadTrait<skr::variant<Ts...>>>
-    : std::bool_constant<(is_complete_serde_v<binary::ReadTrait<Ts>> && ...)> {
-};
-} // namespace skr
-
-namespace skr
-{
-namespace binary
-{
-template <class... Ts>
-struct WriteTrait<skr::variant<Ts...>> {
-    static int Write(skr_binary_writer_t* archive, const skr::variant<Ts...>& variant)
+    inline static int write(SBinaryWriter* r, const skr::variant<Ts...>& v)
     {
-        SKR_ARCHIVE((uint32_t)variant.index());
-        int ret;
+        // write index
+        if (!bin_write(r, v.index())) return false;
+
+        // write content
+        bool ret;
         skr::visit([&](auto&& value) {
-            ret = skr::binary::Archive(archive, value);
+            ret = bin_write(r, value);
         },
-                     variant);
+                   v);
+
         return ret;
     }
 };
-} // namespace binary
+} // namespace skr
+
+// json serde
+#include "SkrSerde/json_serde.hpp"
+#include "SkrRTTR/rttr_traits.hpp"
+namespace skr
+{
 template <class... Ts>
-struct SerdeCompleteChecker<binary::WriteTrait<skr::variant<Ts...>>>
-    : std::bool_constant<(is_complete_serde_v<binary::WriteTrait<Ts>> && ...)> {
+struct JsonSerde<skr::variant<Ts...>> {
+    template <class T>
+    inline static bool _read_by_index(skr::archive::JsonReader* r, skr::variant<Ts...>& v, skr_guid_t index)
+    {
+        if (index == ::skr::rttr::type_id_of<T>())
+        {
+            T t;
+            if (!json_read(r, t))
+                return false;
+            v = std::move(t);
+            return true;
+        }
+        return false;
+    }
+    inline static bool Read(skr::archive::JsonReader* r, skr::variant<Ts...>& v)
+    {
+        SKR_EXPECTED_CHECK(r->StartObject(), false);
+
+        SKR_EXPECTED_CHECK(r->Key(u8"type"), false);
+        skr_guid_t index;
+        if (!json_read<skr_guid_t>(r, index))
+            return false;
+
+        SKR_EXPECTED_CHECK(r->Key(u8"value"), false);
+        (void)(((ReadByIndex<Ts>(r, v, index)) != true) && ...);
+
+        SKR_EXPECTED_CHECK(r->EndObject(), false);
+
+        return true;
+    }
+    inline static bool Write(skr::archive::JsonWriter* json, const skr::variant<Ts...>& v)
+    {
+        bool success = true;
+        skr::visit([&](auto&& value) {
+            using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
+            if (!json->StartObject().has_value())
+            {
+                success = false;
+                return;
+            }
+            if (!json->Key(u8"type").has_value())
+            {
+                success = false;
+                return;
+            }
+            if (!json_write<skr_guid_t>(json, ::skr::rttr::type_id_of<raw>()))
+            {
+                success = false;
+                return;
+            }
+            if (!json->Key(u8"value").has_value())
+            {
+                success = false;
+                return;
+            }
+            if (!json_write<decltype(value)>(json, value))
+            {
+                success = false;
+                return;
+            }
+            if (!json->EndObject().has_value())
+            {
+                success = false;
+                return;
+            }
+        },
+                   v);
+        return success;
+    }
 };
 } // namespace skr

@@ -6,7 +6,6 @@ import framework.log as log
 import inspect
 
 # -------------------------- scheme --------------------------
-# TODO. 使用 json type 来进行 structure check
 
 
 class JsonType(Enum):
@@ -19,28 +18,72 @@ class JsonType(Enum):
 
 
 @dataclass
-class Scheme:
-    owner: 'framework.generator.GeneratorBase' = None
-    parent: 'Scheme' = None
-    description: str = None
-    enable_path_shorthand: bool = True
-    # enable_override: bool = True # TODO. override 解析也应当根据 scheme 来，这样，对 json 特性的扩展就可以完全由 scheme 控制
-    supported_json_types: t.List[JsonType] = None
+class ParseResult:
+    Value = str | int | float | bool | t.List['ParseResult.Value'] | t.Dict[str, 'ParseResult.Value']
 
-    def __post_init__(self):
+    # TODO. 是否允许追加 default value
+    parsed_value: Value = None  # value, none means never appear or override by none
+    override_stack: t.List['JsonObject'] = None  # override stack
+
+    def visited_or(self, default):
+        return self.parsed_value if self.is_visited() else default
+
+    def is_visited(self) -> bool:
+        return self.override_stack and len(self.override_stack) > 0
+
+    def is_functional(self) -> bool:
+        return isinstance(self.parsed_value, dict) and "enable" in self.parsed_value
+
+    def get_child(self, key: str) -> 'ParseResult':
+        if isinstance(self.parsed_value, dict):
+            return self.parsed_value.get(key)
+        return None
+
+    def __getitem__(self, key: str) -> 'ParseResult':
+        return self.get_child(key)
+
+    def is_function_enable(self, enable_if_never_visited=False, enable_if_visited_child=True) -> bool:
+        if not isinstance(self.parsed_value, dict) or "enable" not in self.parsed_value:
+            raise ValueError("parsed value must be a functional")
+        if not self.is_visited():
+            return enable_if_never_visited
+        elif self.parsed_value["enable"].is_visited():
+            return self.parsed_value["enable"].parsed_value
+        else:
+            return enable_if_visited_child
+
+
+class Scheme:
+    def __init__(self) -> None:
+        # owner & parent
+        self.owner: 'framework.generator.GeneratorBase' = None
+        self.parent: 'Scheme' = None
+
+        # scheme data
+        self.description: str = None
+        self.enable_path_shorthand: bool = True
+        self.supported_json_types: t.List[JsonType] = None
+        self.is_leaf: bool = False
+
+        # call location
+        self.construct_file: str
+        self.construct_line: int
+        self.construct_function: str
+
         # get init call location
-        frame = inspect.currentframe().f_back
+        frame = inspect.currentframe()
+        found_frame = None
         while frame:
             if frame.f_code.co_name == "__init__":
-                break
+                found_frame = frame
             frame = frame.f_back
-        frame = frame.f_back
+        found_frame = found_frame.f_back
 
         # record call location
-        if frame:
-            self.construct_file = frame.f_code.co_filename
-            self.construct_line = frame.f_lineno
-            self.construct_function = frame.f_code.co_name
+        if found_frame:
+            self.construct_file = found_frame.f_code.co_filename
+            self.construct_line = found_frame.f_lineno
+            self.construct_function = found_frame.f_code.co_name
         else:
             self.construct_file = 'Unknown'
             self.construct_line = 0
@@ -73,14 +116,25 @@ class Scheme:
                     else:  # expand case
                         new_child = child_scheme.expand_shorthand(child, logger)
                         if new_child:
+                            # copy shorthand object data
+                            new_child.key = child.key
+                            new_child.override_mark = child.override_mark
+                            new_child.parent = child.parent
+
+                            # indicate source
+                            new_child.source = child
+                            new_child.source_kind = JsonSourceKind.SHORTHAND
+
+                            # replace child
                             value.val[index] = new_child
+
                             # dispatch solve for new child part
                             child_scheme.dispatch_expand_shorthand(new_child, logger)
                             child_scheme.dispatch_expand_path(new_child, logger)
 
     def dispatch_expand_path(self, value: 'JsonObject', logger: log.Logger) -> None:
         if self.enable_path_shorthand and value.is_dict and type(value.val) is list:
-            def __recursive_make_path(cur_path: str, cur_scheme: 'Scheme', parent: 'JsonObject', source_val) -> 'JsonObject':
+            def __recursive_make_path(cur_path: str, cur_scheme: 'Scheme', parent: 'JsonObject', source_val: JsonObject.Value, source_obj: 'JsonObject') -> 'JsonObject':
                 found_path_token = cur_path.find("::")
                 result = JsonObject(
                     parent=parent,
@@ -91,6 +145,7 @@ class Scheme:
                     (key, mark) = parse_override(cur_path)
                     result.key = key
                     result.override_mark = mark
+                    result.is_dict = source_obj.is_dict
                     result.val = source_val
                 else:
                     (key, mark) = parse_override(cur_path[:found_path_token])
@@ -104,10 +159,12 @@ class Scheme:
                             cur_scheme=child_scheme,
                             parent=result,
                             source_val=source_val,
+                            source_obj=source_obj
                         )]
                     else:
                         result.key = cur_path
                         result.override_mark = JsonOverrideMark.NONE
+                        result.is_dict = source_obj.is_dict
                         result.val = source_val
                 return result
 
@@ -121,6 +178,7 @@ class Scheme:
                         cur_scheme=self,
                         parent=value,
                         source_val=child.val,
+                        source_obj=child
                     )
                     new_child.source = child
                     new_child.source_kind = JsonSourceKind.PATH
@@ -140,8 +198,37 @@ class Scheme:
                     child_scheme.dispatch_expand_path(child, logger)
 
     def dispatch_check_structure(self, value: 'JsonObject', logger: log.Logger) -> None:
-        # check structure for self
-        self.check_structure(value, logger)
+        # mark self is recognized
+        value.is_recognized = True
+
+        # get json type
+        if value.override_mark == JsonOverrideMark.APPEND:
+            json_type = JsonType.LIST
+            json_type_name = "list"
+        elif type(value.val) is bool:
+            json_type = JsonType.BOOL
+            json_type_name = "bool"
+        elif type(value.val) is str:
+            json_type = JsonType.STR
+            json_type_name = "str"
+        elif type(value.val) is int:
+            json_type = JsonType.INT
+            json_type_name = "int"
+        elif type(value.val) is float:
+            json_type = JsonType.FLOAT
+            json_type_name = "float"
+        elif type(value.val) is list and value.is_dict:
+            json_type = JsonType.DICT
+            json_type_name = "dict"
+        else:
+            json_type = JsonType.LIST
+            json_type_name = "list"
+
+        # check type
+        if self.supported_json_types is None:
+            raise Exception("must support at least one json type")
+        if json_type not in self.supported_json_types:
+            logger.error(f"value must be [{', '.join([str(item) for item in self.supported_json_types])}]", stack=self.make_log_stack(value))
 
         # dispatch check structure
         if value.is_dict and type(value.val) is list:
@@ -150,17 +237,23 @@ class Scheme:
                 if child_scheme:
                     child_scheme.dispatch_check_structure(child, logger)
 
-    def dispatch_parse_to_object(self, override_solve: 'JsonOverrideSolver', logger: log.Logger) -> t.Any:
-        # parse child dict
-        child_dict = {}
+    def dispatch_solve_override(self, override_solve: 'JsonOverrideSolver', logger: log.Logger) -> ParseResult:
+        # create result
+        result = ParseResult()
+        result.override_stack = override_solve.get_current_override_stack().copy()
 
-        def __visitor(key: str, scheme: 'Scheme'):
-            with override_solve.key_scope(key, logger):
-                child_dict[key] = scheme.dispatch_parse_to_object(override_solve, logger)
-        self.visit_children(__visitor)
+        # parse value
+        if self.is_leaf:
+            result.parsed_value = override_solve.solve(logger)
+        else:
+            result.parsed_value = {}
 
-        value = child_dict if child_dict else override_solve.solve(logger)
-        return self.parse_to_object(value, logger)
+            def __visitor(key: str, scheme: 'Scheme'):
+                with override_solve.key_scope(key, logger):
+                    result.parsed_value[key] = scheme.dispatch_solve_override(override_solve, logger)
+            self.visit_children(__visitor)
+
+        return result
 
     def merge_scheme(self, scheme: 'Scheme') -> 'Scheme':
         pass
@@ -175,51 +268,22 @@ class Scheme:
     def expand_shorthand(self, shorthand_object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
         return None
 
-    # TODO. check structure 与 parse_to_object 不应该被继承，scheme 最好只作为单独的 Json -> Object 转译器
-    def check_structure(self, object: 'JsonObject', logger: log.Logger) -> None:
-        object.is_recognized = True
 
-        # get json type
-        if type(object.val) is bool:
-            json_type = JsonType.BOOL
-            json_type_name = "bool"
-        elif type(object.val) is str:
-            json_type = JsonType.STR
-            json_type_name = "str"
-        elif type(object.val) is int:
-            json_type = JsonType.INT
-            json_type_name = "int"
-        elif type(object.val) is float:
-            json_type = JsonType.FLOAT
-            json_type_name = "float"
-        elif type(object.val) is list and object.is_dict:
-            json_type = JsonType.DICT
-            json_type_name = "dict"
-        else:
-            json_type = JsonType.LIST
-            json_type_name = "list"
-
-        # check type
-        if self.supported_json_types is None:
-            raise Exception("must support at least one json type")
-        if json_type not in self.supported_json_types:
-            logger.error(f"value must be {json_type_name}", stack=self.make_log_stack(object))
-
-    def parse_to_object(self, value: t.Any, logger: log.Logger) -> object:
-        return value
-
-
-@dataclass
 class Namespace(Scheme):
     # 命名空间，单纯的用来构建 json 的层级结构
-    options: t.Dict[str, 'Scheme'] = field(default_factory=lambda: {})
-    supported_json_types: t.List[JsonType] = field(default_factory=lambda: [JsonType.DICT])
+    def __init__(self, options: t.Dict[str, 'Scheme'] = None) -> None:
+        super().__init__()
 
-    def __post_init__(self):
-        super().__post_init__()
+        # namespace data
+        self.options = options if options else {}
+
+        # scheme config
+        self.supported_json_types = [JsonType.DICT]
+
+        # check options
         for scheme in self.options.values():
             if not isinstance(scheme, Scheme):
-                raise ValueError("options must be Scheme object")
+                raise ValueError("options must be Scheme object" + str(options))
             scheme.parent = self
 
     def merge_scheme(self, scheme: 'Scheme') -> 'Scheme':
@@ -242,21 +306,25 @@ class Namespace(Scheme):
         return self.options.get(key)
 
 
-@dataclass
 class Functional(Scheme):
     # functional 规则，提供 enable 和简写服务
-    # TODO. enable shorthand 可以在 post init 中自动添加，并使用一个标记来控制这个行为
-    options: t.Dict[str, 'Scheme'] = field(default_factory=lambda: {})
-    shorthands: t.List['Shorthand'] = field(default_factory=lambda: [])
-    supported_json_types: t.List[JsonType] = field(default_factory=lambda: [JsonType.DICT])
+    def __init__(self, options: t.Dict[str, 'Scheme'] = None, shorthands: t.List['Shorthand'] = None):
+        super().__init__()
 
-    def __post_init__(self):
-        super().__post_init__()
+        # functional data
+        self.options = options if options else {}
+        self.shorthands = shorthands if shorthands else []
+
+        # scheme config
+        self.supported_json_types = [JsonType.DICT]
+
+        # check options
         for scheme in self.options.values():
             if not isinstance(scheme, Scheme):
                 raise ValueError("options must be Scheme object")
             scheme.parent = self
 
+        # check shorthand
         has_enable_shorthand = False
         for shorthand in self.shorthands:
             if not isinstance(shorthand, Shorthand):
@@ -266,9 +334,15 @@ class Functional(Scheme):
 
         # append enable option if not exist
         if "enable" not in self.options:
-            self.options["enable"] = Bool()
+            enable_option = Bool()
+            enable_option.parent = self
+            self.options["enable"] = enable_option
+
+        # append enable shorthand if not exist
         if not has_enable_shorthand:
-            self.shorthands.append(EnableShorthand(owner=self))
+            enable_shorthand = EnableShorthand()
+            enable_shorthand.owner = self
+            self.shorthands.append(enable_shorthand)
 
     def merge_scheme(self, scheme: Scheme) -> Scheme:
         if not isinstance(scheme, Functional):
@@ -302,97 +376,104 @@ class Functional(Scheme):
         return self.options.get(key)
 
 
-@dataclass
 class LeafValue(Scheme):
-    enable_path_shorthand: bool = False
-    default_value: t.Any = None
+    def __init__(self) -> None:
+        super().__init__()
+
+        # scheme config
+        self.enable_path_shorthand = False
+        self.is_leaf = True
 
 
-@dataclass
 class Bool(LeafValue):
-    supported_json_types: t.List[JsonType] = field(default_factory=lambda: [JsonType.BOOL])
+    def __init__(self) -> None:
+        super().__init__()
+        self.supported_json_types = [JsonType.BOOL]
 
 
-@dataclass
 class Str(LeafValue):
-    supported_json_types: t.List[JsonType] = field(default_factory=lambda: [JsonType.STR])
+    def __init__(self) -> None:
+        super().__init__()
+        self.supported_json_types = [JsonType.STR]
 
 
-@dataclass
 class Int(LeafValue):
-    supported_json_types: t.List[JsonType] = field(default_factory=lambda: [JsonType.INT])
+    def __init__(self) -> None:
+        super().__init__()
+        self.supported_json_types = [JsonType.INT]
 
 
-@dataclass
 class Float(LeafValue):
-    supported_json_types: t.List[JsonType] = field(default_factory=lambda: [JsonType.FLOAT])
+    def __init__(self) -> None:
+        super().__init__()
+        self.supported_json_types = [JsonType.FLOAT]
 
 
-@dataclass
 class List(LeafValue):
-    supported_json_types: t.List[JsonType] = field(default_factory=lambda: [JsonType.LIST])
+    def __init__(self) -> None:
+        super().__init__()
+        self.supported_json_types = [JsonType.LIST]
 
 
-@dataclass
 class Dict(LeafValue):
-    supported_json_types: t.List[JsonType] = field(default_factory=lambda: [JsonType.DICT])
+    def __init__(self) -> None:
+        super().__init__()
+        self.supported_json_types = [JsonType.DICT]
 
 
 # -------------------------- shorthand --------------------------
-
-@dataclass
 class Shorthand:
-    owner: Functional = None
+    def __init__(self) -> None:
+        self.owner: Functional = None
 
     def expand(self, object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
         pass
 
 
-@dataclass
 class EnableShorthand(Shorthand):
     def expand(self, object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
         if type(object.val) is bool:
-            result = JsonObject.load_from_dict(
-                {
-                    "enable": object.val
-                },
-                key=object.key,
-            )
-            result.source = object
-            result.source_kind = JsonSourceKind.SHORTHAND
-            return result
+            return JsonObject.load_from_dict({
+                "enable": object.val
+            })
 
 
-@dataclass
 class OptionShorthand(Shorthand):
-    mappings: t.Dict[str, Dict] = field(default_factory=lambda: {})
+    def __init__(self, mappings: t.Dict[str, Dict]):
+        super().__init__()
+        self.mappings = mappings
 
     def expand(self, object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
         if type(object.val) is str:
             if object.val in self.mappings:
-                result = JsonObject.load_from_dict(
-                    self.mappings[object.val],
-                    key=object.key,
-                )
-                result.source = object
-                result.source_kind = JsonSourceKind.SHORTHAND
-                return result
+                return JsonObject.load_from_dict(self.mappings[object.val])
         elif not object.is_dict and type(object.val) is list:
             final_map = {}
             for shorthand_object in object.val:
                 if type(shorthand_object.val) is str and shorthand_object.val in self.mappings:
                     final_map.update(self.mappings[shorthand_object.val])
-            if final_map:
-                result = JsonObject.load_from_dict(
-                    final_map,
-                    key=object.key,
-                )
-                result.source = object
-                result.source_kind = JsonSourceKind.SHORTHAND
-                return result
 
+            return JsonObject.load_from_dict(final_map) if final_map else None
+
+
+class FunctionalOptionShorthand(Shorthand):
+    def __init__(self):
+        super().__init__()
+
+    def expand(self, object: 'JsonObject', logger: log.Logger) -> 'JsonObject':
+        if type(object.val) is str:
+            return JsonObject.load_from_dict({object.val: {"enable": True}})
+        elif not object.is_dict and type(object.val) is list:
+            final_map = {}
+            for shorthand_object in object.val:
+                if type(shorthand_object.val) is str:
+                    final_map[shorthand_object.val] = {"enable": True}
+
+            return JsonObject.load_from_dict(final_map) if final_map else None
 
 # -------------------------- json tool --------------------------
+
+
 class JsonOverrideMark(Enum):
     NONE = 0  # no mark
     OVERRIDE = 1  # end with mark '!'
@@ -477,6 +558,11 @@ class JsonObject:
     passed_override_mark: JsonOverrideMark = None  # 在 solve override 时记录同级的 override 标记
     rewrite_by: 'JsonObject' = None  # 在 solve override 时最近的 rewrite 来源（'!!' 标记）同时也会从父节点向子节点传播
 
+    def escape_from_parent(self):
+        if self.parent:
+            self.parent.val.remove(self)
+            self.parent = None
+
     def dump_json(self, with_key=True) -> str:
         result = f'"{self.key}": ' if self.key and with_key else ""
 
@@ -498,9 +584,11 @@ class JsonObject:
         attr_val = self.dump_json(with_key=False)
         attr_stack = log.AttrStack(val=attr_val)
         cur_object = self
-        while cur_object.parent:
+        while True:
             # end key
-            if end_key and cur_object.key == end_key:
+            if cur_object.parent is None and not cur_object.source:
+                if cur_object.key != "attrs":
+                    raise ValueError(f"root object must have key 'attrs', but got '{cur_object.key}'")
                 break
 
             # append path
@@ -509,13 +597,19 @@ class JsonObject:
 
             # switch stack
             if cur_object.source:
+                # end current stack
                 result.append(attr_stack)
+
+                # update state
+                cur_source = cur_object.source
                 source_kind = cur_object.source_kind
                 cur_object = cur_object.source
+
+                # start new stack
                 if source_kind == JsonSourceKind.PATH:
                     attr_stack = log.AttrPathStack(val=attr_val)
                 elif source_kind == JsonSourceKind.SHORTHAND:
-                    attr_stack = log.AttrStack(val=cur_object.source.dump_json(with_key=False))
+                    attr_stack = log.AttrStack(val=cur_source.dump_json(with_key=False))
             else:
                 cur_object = cur_object.parent
         result.append(attr_stack)
@@ -590,6 +684,8 @@ class JsonObject:
             for child in self.val:
                 if child.key is None:
                     raise ValueError("empty key in dict")
+                if child.key in result:
+                    raise ValueError(f"duplicate key '{child.key}' in dict")
 
                 def __expand_child(child: 'JsonObject'):
                     if type(child.val) is list and child.is_dict:  # dict case
@@ -603,6 +699,22 @@ class JsonObject:
             return result
         else:
             raise ValueError("unique_dict() only works for dict")
+
+    def solve_value_as_default_json(self) -> Value:
+        if type(self.val) is list and self.is_dict:  # dict case
+            result = {}
+            for child in self.val:
+                if child.key is None:
+                    raise ValueError("empty key in dict")
+                result[child.key] = child.solve_value_as_default_json()
+            return result
+        elif type(self.val) is list:  # list case
+            result = []
+            for child in self.val:
+                result.append(child.solve_value_as_default_json())
+            return result
+        else:  # value case
+            return self.val
 
 
 def json_object_pairs_hook(data: t.List[t.Tuple[str, object]]) -> JsonObject:
@@ -699,37 +811,29 @@ class JsonOverrideSolver:
         cur_rewrite_by = None
         for object in self.__node_stack[-1].objects:
             if object.passed_override_mark == JsonOverrideMark.NONE and cur_value:  # illegal override
-                logger.error(f"override value without '!' mark")
+                logger.error(f"override value without '!' mark", object.make_log_stack())
             elif object.passed_override_mark == JsonOverrideMark.APPEND:  # append
                 merge_source = None if cur_rewrite_by else cur_value
-
-                # value type must be checked in above phase
-                if type(cur_value) is not list or type(object.val) is not list:
-                    raise Exception("append mark '+' only support for list")
+                merge_source = [] if merge_source is None else merge_source
 
                 # merge list
-                merge_source.extend(object.val)
+                if type(object.val) is list:
+                    merge_source.extend(object.val)
+                else:
+                    merge_source.append(object.val)
 
                 # update mark
                 cur_value = merge_source
                 cur_rewrite_by = object.rewrite_by
-            else:  # normal case, update current value
-                if object.is_dict and type(object.val) is list:  # dict case
-                    # TODO. 递归解析 dict
-                    cur_value = {}
-                    for child in object.val:
-                        cur_value[child.key] = child.val
-                elif not object.is_dict and type(object.val) is list:  # list case
-                    # TODO. 递归解析 list
-                    cur_value = []
-                    for child in object.val:
-                        cur_value.append(child.val)
-                else:
-                    cur_value = object.val
+            else:  # normal case, update current value, type conflict will be checked in above phase
+                # 走到 solve 的必定是叶子节点，当前的路径简写和 override 功能只提供给拥有 scheme 的部分
+                cur_value = object.solve_value_as_default_json()
                 cur_rewrite_by = object.rewrite_by
 
         return None if cur_rewrite_by else cur_value
 
+    def get_current_override_stack(self) -> t.List[JsonObject]:
+        return self.__node_stack[-1].objects if len(self.__node_stack) > 0 else [self.root_object]
 
 # -------------------------- dict <=> obj tool --------------------------
 

@@ -2,16 +2,14 @@
 #include "SkrCore/process.h"
 #include "SkrCore/crash.h"
 
-#include "SkrContainers/string.hpp"
+#include "SkrContainersDef/string.hpp"
 
-namespace 
+namespace
 {
-struct MacCrashHandler : public SUnixCrashHandler
-{
+struct MacCrashHandler : public SUnixCrashHandler {
     MacCrashHandler() SKR_NOEXCEPT
         : SUnixCrashHandler()
     {
-
     }
 
     bool Initialize() SKR_NOEXCEPT
@@ -23,10 +21,9 @@ struct MacCrashHandler : public SUnixCrashHandler
     skr::String app_name;
 };
 MacCrashHandler mac_crash_handler;
-}
+} // namespace
 
-extern "C"
-{
+extern "C" {
 SKR_CORE_API SCrashHandlerId skr_initialize_crash_handler() SKR_NOEXCEPT
 {
     auto& this_ = ::mac_crash_handler;

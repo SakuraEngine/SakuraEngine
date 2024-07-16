@@ -16,18 +16,16 @@ struct AnimResource;
 struct AnimComponent;
 } // namespace skr::anim
 
-namespace game sreflect
+namespace game
 {
-sreflect_managed_component("guid" : "E06E11F7-6F3A-4BFF-93D8-37310EF0FB87", "scriptable" : true)
+sreflect_managed_component("guid" : "E06E11F7-6F3A-4BFF-93D8-37310EF0FB87")
 anim_state_t {
     SKR_RESOURCE_FIELD(skr::anim::AnimResource, animation_resource);
-    sattr("native" : true)
     skr::Vector<ozz::math::SoaTransform> local_transforms;
-    sattr("native" : true)
     ozz::animation::SamplingJob::Context sampling_context;
     float                                currtime = 0.f;
 };
 
 GAME_RUNTIME_API void InitializeAnimState(anim_state_t* state, skr::anim::SkeletonResource* skeleton);
 GAME_RUNTIME_API void UpdateAnimState(anim_state_t* state, skr::anim::SkeletonResource* skeleton, float dt, skr::anim::AnimComponent* output);
-} // namespace game sreflect
+} // namespace game

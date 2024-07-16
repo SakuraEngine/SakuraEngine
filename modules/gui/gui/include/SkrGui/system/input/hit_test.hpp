@@ -7,9 +7,7 @@
     #include "SkrGui/system/input/hit_test.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct PointerEvent;
 struct HitTestEntry;
@@ -155,5 +153,4 @@ private:
     Array<Matrix4>      _local_transforms; // global->local
 };
 
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

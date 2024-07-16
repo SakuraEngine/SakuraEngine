@@ -1,8 +1,7 @@
 #pragma once
-#include "SkrBase/containers/allocator/allocator.hpp"
 #include <new>
 
-namespace skr
+namespace skr::test_container
 {
 struct SkrTestAllocator {
     struct DummyParam {
@@ -31,4 +30,4 @@ struct SkrTestAllocator {
         ::operator delete(reinterpret_cast<void*>(p), std::align_val_t(alignof(T)));
     }
 };
-} // namespace skr
+} // namespace skr::test_container

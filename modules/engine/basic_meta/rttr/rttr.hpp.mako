@@ -1,10 +1,11 @@
 // BEGIN RTTR GENERATED
-#include "SkrRT/rttr/enum_traits.hpp"
-#include "SkrRT/rttr/rttr_traits.hpp"
+#include "SkrRTTR/enum_tools.hpp"
+#include "SkrRTTR/rttr_traits.hpp"
+%if len(enums) > 0:
 namespace skr::rttr
 {
 // enum traits
-%for enum in generator.enums:
+%for enum in enums:
 template <>
 struct ${api} EnumTraits<${enum.name}>
 {
@@ -14,12 +15,13 @@ struct ${api} EnumTraits<${enum.name}>
 };
 %endfor
 }
+%endif
 
 // rttr traits
-%for record in generator.records:
-SKR_RTTR_TYPE(::${record.name}, "${record.attrs.guid}")
+%for record in records:
+SKR_RTTR_TYPE(${record.name}, "${record.generator_data["guid"]}")
 %endfor
-%for enum in generator.enums:
-SKR_RTTR_TYPE(::${enum.name}, "${enum.attrs.guid}")
+%for enum in enums:
+SKR_RTTR_TYPE(${enum.name}, "${enum.generator_data["guid"]}")
 %endfor
 // END RTTR GENERATED

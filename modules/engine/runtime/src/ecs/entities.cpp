@@ -1,20 +1,42 @@
-#include "SkrRT/ecs/entity.hpp"
-#include "SkrRT/ecs/entities.hpp"
-#include "SkrRT/ecs/detail/chunk.hpp"
+#include "SkrRT/ecs/entity_registry.hpp"
+#include "./chunk.hpp"
+
+#ifndef forloop
+#define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+#endif
 
 sugoi_entity_debug_proxy_t dummy;
 namespace sugoi
 {
-void entity_registry_t::reset()
+
+void EntityRegistry::reserve(size_t size)
 {
-    SMutexLock lock(mutex.mMutex);
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+    entries.reserve(size);
+}
+
+void EntityRegistry::reserve_free_entries(size_t size)
+{
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+    freeEntries.reserve(size);
+}
+
+void EntityRegistry::reset()
+{
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
     entries.clear();
     freeEntries.clear();
 }
 
-void entity_registry_t::shrink()
+void EntityRegistry::shrink()
 {
-    SMutexLock lock(mutex.mMutex);
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
     if (entries.size() == 0)
         return;
     EIndex lastValid = (EIndex)(entries.size() - 1);
@@ -25,19 +47,42 @@ void entity_registry_t::shrink()
         entries.clear();
         return;
     }
-    entries.resize_default(lastValid + 1);
+    entries.resize_unsafe(lastValid + 1);
     entries.shrink();
     freeEntries.remove_all_if([&](EIndex i) {
         return i > lastValid;
     });
 }
 
-void entity_registry_t::new_entities(sugoi_entity_t* dst, EIndex count)
+void EntityRegistry::pack_entities(skr::Vector<EIndex>& out_map)
 {
-    SMutexLock lock(mutex.mMutex);
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
+    out_map.resize_unsafe(entries.size());
+    freeEntries.clear();
+    EIndex j = 0;
+    forloop (i, 0, entries.size())
+    {
+        if (entries[i].indexInChunk != 0)
+        {
+            out_map[i] = j;
+            if (i != j)
+                entries[j] = entries[i];
+            j++;
+        }
+    }
+}
+
+void EntityRegistry::new_entities(sugoi_entity_t* dst, EIndex count)
+{
+    SkrZoneScopedN("sugoi_storage_t::new_entities");
+    
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
     EIndex i = 0;
     // recycle entities
-
     auto fn = (EIndex)freeEntries.size();
     auto rn = std::min((EIndex)freeEntries.size(), count);
     forloop (j, 0, rn)
@@ -46,84 +91,142 @@ void entity_registry_t::new_entities(sugoi_entity_t* dst, EIndex count)
         dst[i] = e_version(id, entries[id].version);
         i++;
     }
-    freeEntries.resize_default(fn - rn);
+    {
+        SkrZoneScopedN("ResizeFreeEntries");
+        freeEntries.resize_unsafe(fn - rn);
+    }
     if (i == count)
         return;
+
     // new entities
     EIndex newId = static_cast<EIndex>(entries.size());
-    entries.resize_default(entries.size() + count - i);
-    while (i < count)
     {
-        dst[i] = e_version(newId, entries[newId].version);
-        i++;
-        newId++;
+        SkrZoneScopedN("ResizeEntries");
+        entries.resize_unsafe(entries.size() + count - i);
+    }
+    {
+        SkrZoneScopedN("InitializeEntryValues");
+        while (i < count)
+        {
+            dst[i] = e_version(newId, entries[newId].version);
+            i++;
+            newId++;
+        }
     }
 }
 
-void entity_registry_t::free_entities(const sugoi_entity_t* dst, EIndex count)
+void EntityRegistry::free_entities(const sugoi_entity_t* dst, EIndex count)
 {
-    SMutexLock lock(mutex.mMutex);
+    SkrZoneScopedN("sugoi_storage_t::free_entities");
+    
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
     // build freelist in input order
     freeEntries.reserve(freeEntries.size() + count);
 
     forloop (i, 0, count)
     {
         auto id = e_id(dst[i]);
-        entry_t& freeData = entries[id];
+        Entry& freeData = entries[id];
         freeData = { nullptr, 0, e_inc_version(freeData.version) };
         freeEntries.add(id);
     }
 }
 
-void entity_registry_t::fill_entities(const sugoi_chunk_view_t& view)
+void EntityRegistry::fill_entities(const sugoi_chunk_view_t& view)
 {
+    SkrZoneScopedN("sugoi_storage_t::fill_entities");
+
     auto ents = (sugoi_entity_t*)view.chunk->get_entities() + view.start;
     new_entities(ents, view.count);
-    forloop (i, 0, view.count)
     {
-        entry_t& e = entries[e_id(ents[i])];
-        e.indexInChunk = view.start + i;
-        e.chunk = view.chunk;
+        mutex.lock();
+        SKR_DEFER({ mutex.unlock(); });
+        forloop (i, 0, view.count)
+        {
+            Entry& e = entries[e_id(ents[i])];
+            e.indexInChunk = view.start + i;
+            e.chunk = view.chunk;
+        }
     }
 }
 
-void entity_registry_t::fill_entities(const sugoi_chunk_view_t& view, const sugoi_entity_t* src)
+void EntityRegistry::fill_entities(const sugoi_chunk_view_t& view, const sugoi_entity_t* src)
 {
+    SkrZoneScopedN("sugoi_storage_t::fill_entities");
+    
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
     auto ents = (sugoi_entity_t*)view.chunk->get_entities() + view.start;
     memcpy(ents, src, view.count * sizeof(sugoi_entity_t));
     forloop (i, 0, view.count)
     {
-        entry_t& e = entries[e_id(src[i])];
+        Entry& e = entries[e_id(src[i])];
         e.indexInChunk = view.start + i;
         e.chunk = view.chunk;
     }
 }
 
-void entity_registry_t::free_entities(const sugoi_chunk_view_t& view)
+void EntityRegistry::free_entities(const sugoi_chunk_view_t& view)
 {
     free_entities(view.chunk->get_entities() + view.start, view.count);
 }
 
-void entity_registry_t::move_entities(const sugoi_chunk_view_t& view, const sugoi_chunk_t* src, EIndex srcIndex)
+void EntityRegistry::move_entities(const sugoi_chunk_view_t& view, const sugoi_chunk_t* src, EIndex srcIndex)
 {
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
     SKR_ASSERT(src != view.chunk || (srcIndex >= view.start + view.count));
     const sugoi_entity_t* toMove = src->get_entities() + srcIndex;
     forloop (i, 0, view.count)
     {
-        entry_t& e = entries[e_id(toMove[i])];
+        Entry& e = entries[e_id(toMove[i])];
         e.indexInChunk = view.start + i;
         e.chunk = view.chunk;
     }
     std::memcpy((sugoi_entity_t*)view.chunk->get_entities() + view.start, toMove, view.count * sizeof(sugoi_entity_t));
 }
 
-void entity_registry_t::move_entities(const sugoi_chunk_view_t& view, EIndex srcIndex)
+void EntityRegistry::move_entities(const sugoi_chunk_view_t& view, EIndex srcIndex)
 {
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
     SKR_ASSERT(srcIndex >= view.start + view.count);
     const sugoi_entity_t* toMove = view.chunk->get_entities() + srcIndex;
     forloop (i, 0, view.count)
-        entries[e_id(toMove[i])]
-        .indexInChunk = view.start + i;
+        entries[e_id(toMove[i])].indexInChunk = view.start + i;
     std::memcpy((sugoi_entity_t*)view.chunk->get_entities() + view.start, toMove, view.count * sizeof(sugoi_entity_t));
 }
+
+void EntityRegistry::serialize(SBinaryWriter* writer)
+{
+    visit_entries([&](const auto& entriesView){
+        skr::bin_write(writer, (uint32_t)entriesView.size());
+    });
+    visit_free_entries([&](const auto& freeEntriesView){
+        skr::bin_write(writer, (uint32_t)freeEntriesView.size());
+        writer->write(freeEntriesView.data(), sizeof(EIndex) * static_cast<uint32_t>(freeEntriesView.size()));
+    });
+}
+
+void EntityRegistry::deserialize(SBinaryReader* reader)
+{
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+
+    // empty storage expected
+    SKR_ASSERT(entries.size() == 0);
+    uint32_t size = 0;
+    skr::bin_read(reader, size);
+    entries.resize_unsafe(size);
+    uint32_t freeSize = 0;
+    skr::bin_read(reader, freeSize);
+    freeEntries.resize_unsafe(freeSize);
+    reader->read((void*)freeEntries.data(), sizeof(EIndex) * freeSize);
+}
+
 } // namespace sugoi

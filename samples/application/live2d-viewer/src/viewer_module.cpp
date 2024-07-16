@@ -11,7 +11,7 @@
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
 #include "SkrCore/async/thread_job.hpp"
-#include "SkrModule/module_manager.hpp"
+#include "SkrCore/module/module_manager.hpp"
 #include "SkrRT/runtime_module.h"
 #include "SkrInput/input.h"
 #include "SkrImGui/skr_imgui.h"
@@ -139,7 +139,7 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
     bool bUseCVV)
 {
     auto storage = renderer->get_sugoi_storage();
-    auto renderableT_builder = make_zeroed<sugoi::type_builder_t>();
+    auto renderableT_builder = make_zeroed<sugoi::TypeSetBuilder>();
     renderableT_builder
         .with<skr_render_effect_t>();
     // allocate renderable
@@ -151,11 +151,11 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
         auto filter = make_zeroed<sugoi_filter_t>();
         filter.all = renderableT.type;
         auto meta = make_zeroed<sugoi_meta_filter_t>();
-        sugoi_chunk_view_t* to_destroy = nullptr;
-        auto freeFunc = [&](sugoi_chunk_view_t* view) {
-            auto modelFree = [=](sugoi_chunk_view_t* view) {
-                auto mesh_comps = sugoi::get_owned_rw<skr_live2d_render_model_comp_t>(view);
-                for (uint32_t i = 0; i < view->count; i++)
+        skr::Vector<sugoi_entity_t> to_destroy;
+        auto freeFunc = [&](sugoi_chunk_view_t* gview) {
+            auto modelFree = [=](sugoi_chunk_view_t* rview) {
+                auto mesh_comps = sugoi::get_owned_rw<skr_live2d_render_model_comp_t>(rview);
+                for (uint32_t i = 0; i < rview->count; i++)
                 {
                     while (!mesh_comps[i].vram_future.is_ready()) {}
                     skr_live2d_render_model_free(mesh_comps[i].vram_future.render_model);
@@ -163,14 +163,14 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
                     skr_live2d_model_free(mesh_comps[i].ram_future.model_resource);
                 }
             };
-            skr_render_effect_access(renderer, view, u8"Live2DEffect", SUGOI_LAMBDA(modelFree));
-            skr_render_effect_detach(renderer, view, u8"Live2DEffect");
+            skr_render_effect_access(renderer, gview, u8"Live2DEffect", SUGOI_LAMBDA(modelFree));
+            skr_render_effect_detach(renderer, gview, u8"Live2DEffect");
 
-            to_destroy = view;
+            auto pents = sugoiV_get_entities(gview);
+            to_destroy.append(pents, gview->count);
         };
-        sugoiS_query(storage, &filter, &meta, SUGOI_LAMBDA(freeFunc));
-        if (to_destroy)
-            sugoiS_destroy(storage, to_destroy);
+        sugoiS_filter(storage, &filter, &meta, SUGOI_LAMBDA(freeFunc));
+        sugoiS_destroy_entities(storage, to_destroy.data(), to_destroy.size());
     }
 
     // allocate new

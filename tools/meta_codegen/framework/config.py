@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 from typing import Dict, List
 import json
 
+# TODO. Generator 跟着 Module 走，访问性在 Python 中进行解析
+
 
 def _get_list_or_empty(dict: Dict, key: str) -> list:
     return dict[key] if key in dict and type(dict[key]) is list else []
@@ -13,6 +15,7 @@ class ModuleConfig:
     module_name: str = ""
     meta_dir: str = ""
     api: str = ""
+    generators: List['GeneratorConfig'] = field(default_factory=lambda: [])
 
     def load(self, json_data: Dict):
         self.module_name = json_data["module_name"]

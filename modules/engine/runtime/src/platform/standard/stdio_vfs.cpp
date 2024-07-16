@@ -2,7 +2,7 @@
 #include "SkrCore/log.h"
 #include <string.h>
 #include <SkrOS/filesystem.hpp>
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 
 #include "SkrProfile/profile.h"
 

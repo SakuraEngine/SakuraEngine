@@ -1,6 +1,6 @@
 #include "SkrBase/misc/debug.h"
-#include "SkrOS/atomic.h"
-#include "SkrMemory/memory.h"
+#include "SkrBase/atomic/atomic.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrCore/log.h"
 #include "reading_pool.hpp"
 #include "common_layer.hpp"
@@ -90,13 +90,13 @@ struct Input_Common : public CommonInputLayer {
 
     bool SetEnabled(bool _enabled) SKR_NOEXCEPT final
     {
-        skr_atomicu32_store_release(&enabled, _enabled ? 1 : 0);
+        skr_atomic_store_release(&enabled, _enabled ? 1 : 0);
         return true;
     }
 
     bool IsEnabled() const SKR_NOEXCEPT final
     {
-        auto enabled_val = skr_atomicu32_load_acquire(&enabled);
+        auto enabled_val = skr_atomic_load_acquire(&enabled);
         return enabled_val;
     }
 

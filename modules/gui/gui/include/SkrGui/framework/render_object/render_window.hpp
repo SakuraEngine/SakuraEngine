@@ -5,9 +5,7 @@
     #include "SkrGui/framework/render_object/render_window.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 // 概念性的 Window，并不一定是 Root，Root 通常是 RenderNativeWindow
 sreflect_struct(
@@ -15,7 +13,7 @@ sreflect_struct(
 )
 SKR_GUI_API RenderWindow : public RenderObject,
                            public ISingleChildRenderObject {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     RenderWindow(INativeWindow* window);
 
@@ -33,5 +31,4 @@ private:
 
     SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(RenderWindow, RenderBox)
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

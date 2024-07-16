@@ -1,8 +1,8 @@
-#include "SkrRT/ecs/sugoi_config.h"
-#include "SkrRT/ecs/detail/arena.hpp"
-#include "SkrRT/ecs/detail/pool.hpp"
-
 #include "SkrProfile/profile.h"
+#include "SkrRT/ecs/sugoi_config.h"
+
+#include "./arena.hpp"
+#include "./pool.hpp"
 
 namespace sugoi
 {
@@ -42,12 +42,14 @@ void* struct_arena_base_t::allocate(size_t s, size_t a)
     size += s;
     return (char*)buffer + size - s;
 }
+
 void struct_arena_base_t::initialize(size_t a)
 {
     SkrZoneScopedN("DualArenaAllocation");
 
     buffer = sugoi_calloc_aligned(1, capacity, a);
 }
+
 void struct_arena_base_t::record(size_t s, size_t a)
 {
     capacity = ((capacity + a - 1) / a) * a;
@@ -61,10 +63,12 @@ block_arena_t::block_arena_t(pool_t& pool)
     , curr(0)
 {
 }
+
 block_arena_t::~block_arena_t()
 {
     reset();
 }
+
 void block_arena_t::reset()
 {
     auto iter = first;
@@ -77,6 +81,7 @@ void block_arena_t::reset()
     curr = 0;
     last = first = nullptr;
 }
+
 void* block_arena_t::allocate(size_t s, size_t a)
 {
     if (s > pool.blockSize)

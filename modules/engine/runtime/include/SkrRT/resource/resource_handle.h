@@ -1,5 +1,6 @@
 #pragma once
-#include "SkrRT/misc/types.h"
+#include "SkrBase/types.h"
+#include "SkrRTTR/rttr_traits.hpp"
 
 enum ESkrLoadingStatus : uint32_t;
 struct skr_resource_record_t;
@@ -68,6 +69,7 @@ typedef struct skr_resource_handle_t {
     SKR_RUNTIME_API void                   set_resolved(skr_resource_record_t* record, uint32_t requesterId, ESkrRequesterType requesterType);
 #endif
 } skr_resource_handle_t;
+SKR_RTTR_TYPE(skr_resource_handle_t, "A9E0CE3D-5E9B-45F1-AC28-B882885C63AB");
 
 #if defined(__cplusplus)
 namespace skr::resource
@@ -108,51 +110,79 @@ SKR_RUNTIME_API int  skr_is_resource_resolved(skr_resource_handle_t* handle);
 SKR_RUNTIME_API void skr_get_resource_guid(skr_resource_handle_t* handle, skr_guid_t* guid);
 SKR_RUNTIME_API void skr_get_resource(skr_resource_handle_t* handle, void** guid);
 
-// binary reader
-#include "SkrBase/types.h"
-
+// bin serde
+#include "SkrSerde/bin_serde.hpp"
 namespace skr
 {
-namespace binary
-{
-template <class T>
-struct ReadTrait<skr::resource::TResourceHandle<T>> {
-    static int Read(skr_binary_reader_t* archive, skr::resource::TResourceHandle<T>& handle)
+template <>
+struct BinSerde<skr_resource_handle_t> {
+    inline static bool read(SBinaryReader* r, skr_resource_handle_t& v)
     {
         skr_guid_t guid;
-        SKR_ARCHIVE(guid);
-        handle.set_guid(guid);
-        return 0;
+        if (!bin_read(r, guid))
+        {
+            SKR_LOG_FATAL(u8"failed to read resource handle guid! ret code: %d", -1);
+            return false;
+        }
+        v.set_guid(guid);
+        return true;
+    }
+    inline static bool write(SBinaryWriter* w, const skr_resource_handle_t& v)
+    {
+        return bin_write(w, v.get_serialized());
     }
 };
 
-template <>
-struct SKR_STATIC_API ReadTrait<skr_resource_handle_t> {
-    static int Read(skr_binary_reader_t* reader, skr_resource_handle_t& handle);
-};
-} // namespace binary
-} // namespace skr
-
-// binary writer
-#include "SkrBase/types.h"
-
-namespace skr
-{
-namespace binary
-{
 template <class T>
-struct WriteTrait<skr::resource::TResourceHandle<T>> {
-    static int Write(skr_binary_writer_t* binary, const skr::resource::TResourceHandle<T>& handle)
+struct BinSerde<skr::resource::TResourceHandle<T>> {
+    inline static bool read(SBinaryReader* archive, skr::resource::TResourceHandle<T>& handle)
+    {
+        skr_guid_t guid;
+        if (!bin_read(archive, (guid))) return false;
+        handle.set_guid(guid);
+        return true;
+    }
+    inline static bool write(SBinaryWriter* binary, const skr::resource::TResourceHandle<T>& handle)
     {
         const auto& hdl = static_cast<const skr_resource_handle_t&>(handle);
-        return skr::binary::Archive(binary, hdl);
+        return bin_write(binary, hdl);
     }
 };
+} // namespace skr
 
+// json serde
+#include "SkrSerde/json_serde.hpp"
+namespace skr
+{
 template <>
-struct SKR_STATIC_API WriteTrait<skr_resource_handle_t> {
-    static int Write(skr_binary_writer_t* writer, const skr_resource_handle_t& handle);
+struct JsonSerde<skr_resource_handle_t> {
+    inline static bool read(skr::archive::JsonReader* r, skr_resource_handle_t& v)
+    {
+        SkrZoneScopedN("JsonSerde<skr_resource_handle_t>::read");
+        skr::String view;
+        SKR_EXPECTED_CHECK(r->String(view), false);
+        {
+            skr_guid_t guid;
+            if (!skr::guid_from_sv(view.u8_str(), guid))
+                return false;
+            v.set_guid(guid);
+        }
+        return true;
+    }
+    inline static bool write(skr::archive::JsonWriter* w, const skr_resource_handle_t& v)
+    {
+        return json_write<skr_guid_t>(w, v.get_serialized());
+    }
 };
-
-} // namespace binary
+template <class T>
+struct JsonSerde<skr::resource::TResourceHandle<T>> {
+    inline static bool read(skr::archive::JsonReader* r, skr::resource::TResourceHandle<T>& v)
+    {
+        return json_read<skr_resource_handle_t>(r, (skr_resource_handle_t&)v);
+    }
+    inline static bool write(skr::archive::JsonWriter* w, const skr::resource::TResourceHandle<T>& v)
+    {
+        return json_write<skr_resource_handle_t>(w, (const skr_resource_handle_t&)v);
+    }
+};
 } // namespace skr

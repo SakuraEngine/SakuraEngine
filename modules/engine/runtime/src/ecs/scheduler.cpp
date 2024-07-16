@@ -1,76 +1,85 @@
+#include "SkrProfile/profile.h"
 #include "SkrContainers/sptr.hpp"
-#include "SkrRT/ecs/SmallVector.h"
 #include "SkrRT/ecs/sugoi.h"
-#include "SkrRT/ecs/entity.hpp"
+#include "SkrRT/ecs/array.hpp"
+#include "SkrRT/ecs/type_index.hpp"
 
-#include "SkrRT/ecs/detail/type.hpp"
-#include "SkrRT/ecs/detail/query.hpp"
-#include "SkrRT/ecs/detail/storage.hpp"
-#include "SkrRT/ecs/detail/scheduler.hpp"
+#include "./impl/query.hpp"
+#include "./impl/storage.hpp"
+#include "./impl/job.hpp"
+
 #include <bitset>
 
-#include "SkrProfile/profile.h"
+#ifndef forloop
+#define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+#endif
 
-sugoi::scheduler_t::scheduler_t()
+sugoi::JobScheduler::JobScheduler(Impl& impl)
+    : job_impl(impl)
 {
 
 }
 
-sugoi::scheduler_t::~scheduler_t()
-{
-
-}
-
-sugoi_entity_t sugoi::scheduler_t::add_resource()
+sugoi_entity_t sugoi::JobScheduler::add_resource()
 {
     sugoi_entity_t result;
-    registry.new_entities(&result, 1);
+    job_impl.registry.write([&](auto& v){
+        v.new_entities(&result, 1);
+    });
     return result;
 }
 
-void sugoi::scheduler_t::remove_resource(sugoi_entity_t id)
+void sugoi::JobScheduler::remove_resource(sugoi_entity_t id)
 {
-    registry.free_entities(&id, 1);
+    job_impl.registry.write([&](auto& v){
+        v.free_entities(&id, 1);
+    });
 }
 
-bool sugoi::scheduler_t::is_main_thread(const sugoi_storage_t* storage)
+bool sugoi::JobScheduler::is_main_thread(const sugoi_storage_t* storage)
 {
-    SKR_ASSERT(storage->scheduler == this);
-    return storage->currentFiber == skr::task::current_fiber();
+    SKR_ASSERT(storage->pimpl->scheduler == this);
+    return storage->pimpl->currentFiber == skr::task::current_fiber();
 }
 
-void sugoi::scheduler_t::set_main_thread(const sugoi_storage_t* storage)
+void sugoi::JobScheduler::set_main_thread(const sugoi_storage_t* storage)
 {
-    SKR_ASSERT(storage->scheduler == this);
-    storage->counter.wait(true);
-    storage->currentFiber = skr::task::current_fiber();
+    SKR_ASSERT(storage->pimpl->scheduler == this);
+    storage->pimpl->storage_counter.wait(true);
+    storage->pimpl->currentFiber = skr::task::current_fiber();
 }
 
-void sugoi::scheduler_t::add_storage(sugoi_storage_t* storage)
+void sugoi::JobScheduler::add_storage(sugoi_storage_t* storage)
 {
-    SMutexLock lock(storageMutex.mMutex);
-    storage->scheduler = this;
-    storage->currentFiber = skr::task::current_fiber();
-    storages.push_back(storage);
+    job_impl.storages.write([&](auto& v)
+    {
+        storage->pimpl->scheduler = this;
+        storage->pimpl->currentFiber = skr::task::current_fiber();
+        v.push_back(storage);
+    });
 }
-void sugoi::scheduler_t::remove_storage(const sugoi_storage_t* storage)
+
+void sugoi::JobScheduler::remove_storage(const sugoi_storage_t* storage)
 {
     sync_storage(storage);
-    SMutexLock lock(storageMutex.mMutex);
-    storage->scheduler = nullptr;
-    storage->currentFiber = nullptr;
-    storages.erase(std::remove(storages.begin(), storages.end(), storage), storages.end());
+
+    job_impl.storages.write([&](auto& v)
+    {
+        storage->pimpl->scheduler = nullptr;
+        storage->pimpl->currentFiber = nullptr;
+        v.erase(std::remove(v.begin(), v.end(), storage), v.end());
+    });
 }
 
-bool sugoi::scheduler_t::sync_archetype(sugoi::archetype_t* type)
+bool sugoi::JobScheduler::sync_archetype(sugoi::archetype_t* type)
 {
     SKR_ASSERT(is_main_thread(type->storage));
+    SkrZoneScopedN("SyncArchetype");
     // TODO: performance optimization
     skr::stl_vector<skr::task::event_t> deps;
     {
-        SMutexLock entryLock(entryMutex.mMutex);
-        auto pair = dependencyEntries.find(type);
-        if (pair == dependencyEntries.end())
+        auto pair = job_impl.dependencyEntries.find(type);
+        if (pair == job_impl.dependencyEntries.end())
         {
             return false;
         }
@@ -89,23 +98,22 @@ bool sugoi::scheduler_t::sync_archetype(sugoi::archetype_t* type)
             entries[i].shared.clear();
             entries[i].owned.clear();
         }
-        dependencyEntries.erase(pair);
+        job_impl.dependencyEntries.erase(pair);
     }
     for (auto dep : deps)
         dep.wait(true);
     return !deps.empty();
 }
 
-bool sugoi::scheduler_t::sync_entry(sugoi::archetype_t* type, sugoi_type_index_t i, bool readonly)
+bool sugoi::JobScheduler::sync_entry(sugoi::archetype_t* type, sugoi_type_index_t i, bool readonly)
 {
     SKR_ASSERT(is_main_thread(type->storage));
+    SkrZoneScopedN("SyncEntry");
     // TODO: performance optimization
     skr::stl_vector<skr::task::event_t> deps;
-    
     {
-        SMutexLock entryLock(entryMutex.mMutex);
-        auto pair = dependencyEntries.find(type);
-        if (pair == dependencyEntries.end()) 
+        auto pair = job_impl.dependencyEntries.find(type);
+        if (pair == job_impl.dependencyEntries.end()) 
             return false;
         auto entries = pair->second.data();
         for (auto dep : entries[i].owned)
@@ -120,23 +128,21 @@ bool sugoi::scheduler_t::sync_entry(sugoi::archetype_t* type, sugoi_type_index_t
         }
         entries[i].owned.clear();
     }
-            
     for (auto dep : deps)
         dep.wait(true);
     return !deps.empty();
 }
 
-bool sugoi::scheduler_t::sync_query(sugoi_query_t* query)
+bool sugoi::JobScheduler::sync_query(sugoi_query_t* q)
 {
-    SKR_ASSERT(is_main_thread(query->storage));
-    
+    SKR_ASSERT(is_main_thread(q->pimpl->storage));
     SkrZoneScopedN("SyncQuery");
     
-    llvm_vecsmall::SmallVector<sugoi_group_t*, 64> groups;
+    skr::InlineVector<sugoi_group_t*, 64> groups;
     auto add_group = [&](sugoi_group_t* group) {
         groups.push_back(group);
     };
-    query->storage->query_groups(query->filter, query->meta, SUGOI_LAMBDA(add_group));
+    q->pimpl->storage->filter_groups(q->pimpl->filter, q->pimpl->meta, SUGOI_LAMBDA(add_group));
     skr::FlatHashSet<std::pair<sugoi::archetype_t*, sugoi_type_index_t>> syncedEntry;
 
     auto sync_entry_once = [&](sugoi::archetype_t* type, sugoi_type_index_t i, bool readonly, bool atomic) -> bool
@@ -153,23 +159,27 @@ bool sugoi::scheduler_t::sync_query(sugoi_query_t* query)
 
     auto sync_type = [&](sugoi_type_index_t type, bool readonly, bool atomic) {
         bool result = false;
-        for (auto& pair : query->storage->groups)
-        {
-            auto group = pair.second;
-            auto idx = group->archetype->index(type);
-            result = sync_entry_once(group->archetype, idx, readonly, atomic) || result;
-        }
+        q->pimpl->storage->pimpl->groups.read_versioned([&](auto& groups) {
+            for (auto& [_, group] : groups)
+            {
+                const auto idx = group->archetype->index(type);
+                result = sync_entry_once(group->archetype, idx, readonly, atomic) || result;
+            }
+        }, 
+        [&](){
+            return q->pimpl->storage->pimpl->storage_timestamp;
+        });
         return result;
     };
 
     bool result = false;
     {
-        auto params = query->parameters;
+        auto params = q->pimpl->parameters;
         forloop (i, 0, params.length)
         {
             if (type_index_t(params.types[i]).is_tag())
                 continue;
-            if (params.accesses[i].randomAccess != DOS_SEQ)
+            if (params.accesses[i].randomAccess != SOS_SEQ)
             {
                 result = sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic) || result;
             }
@@ -181,8 +191,7 @@ bool sugoi::scheduler_t::sync_query(sugoi_query_t* query)
                     auto localType = group->archetype->index(params.types[i]);
                     if (localType == kInvalidTypeIndex)
                     {
-                        auto g = group->get_owner(params.types[i]);
-                        if (g)
+                        if (auto g = group->get_owner(params.types[i]))
                         {
                             result = sync_entry_once(g->archetype, g->archetype->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic) || result;
                         }
@@ -197,17 +206,19 @@ bool sugoi::scheduler_t::sync_query(sugoi_query_t* query)
         }
     }
     
-    for(auto subquery : query->subqueries)
+    for(auto subquery : q->pimpl->subqueries)
     {
         result = sync_query(subquery) || result;
     }
     return result;
 }
 
-void sugoi::scheduler_t::sync_all()
+void sugoi::JobScheduler::sync_all_jobs()
 {
-    allCounter.wait(true);
-    for(auto& pair : dependencyEntries)
+    SkrZoneScopedN("SyncAllJobs");
+
+    job_impl.allCounter.wait(true);
+    for(auto& pair : job_impl.dependencyEntries)
     {
         for(auto& entry : pair.second)
         {
@@ -217,9 +228,9 @@ void sugoi::scheduler_t::sync_all()
     }
 }
 
-void sugoi::scheduler_t::gc_entries()
+void sugoi::JobScheduler::collect_garbage()
 {
-    for(auto& pair : dependencyEntries)
+    for(auto& pair : job_impl.dependencyEntries)
     {
         for(auto& entry : pair.second)
         {
@@ -229,12 +240,14 @@ void sugoi::scheduler_t::gc_entries()
     }
 }
 
-void sugoi::scheduler_t::sync_storage(const sugoi_storage_t* storage)
+void sugoi::JobScheduler::sync_storage(const sugoi_storage_t* storage)
 {
-    if (!storage->scheduler)
+    SkrZoneScopedN("SyncStorage");
+
+    if (!storage->pimpl->scheduler)
         return;
-    storage->counter.wait(true);
-    for(auto& pair : dependencyEntries)
+    storage->pimpl->storage_counter.wait(true);
+    for(auto& pair : job_impl.dependencyEntries)
     {
         if(pair.first->storage == storage)
         {
@@ -256,7 +269,7 @@ struct hash_shared_ptr {
     }
 };
 using DependencySet = skr::FlatHashSet<skr::task::event_t, hash_shared_ptr>;
-void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool readonly, bool atomic, DependencySet& dependencies)
+void update_entry(JobDependencyEntry& entry, skr::task::event_t job, bool readonly, bool atomic, DependencySet& dependencies)
 {
     SKR_ASSERT(job);
     if (readonly)
@@ -288,21 +301,33 @@ void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool re
 }
 } // namespace sugoi
 
-skr::task::event_t sugoi::scheduler_t::schedule_ecs_job(sugoi_query_t* query, EIndex batchSize, sugoi_system_callback_t callback, void* u,
+/*
+inline static int64_t rdtsc()
+{
+#ifdef _MSC_VER
+    return __rdtsc();
+#elif defined(__i386__) || defined(__x86_64__) || defined(__amd64__)
+    return __builtin_ia32_rdtsc();
+#else
+    return rdsysns();
+#endif
+}
+*/
+
+skr::task::event_t sugoi::JobScheduler::schedule_ecs_job(sugoi_query_t* q, EIndex batchSize, sugoi_system_callback_t callback, void* u,
 sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources)
 {
-    query->storage->build_queries();
     skr::task::event_t result;
     SkrZoneScopedN("SchedualECSJob");
 
-    SKR_ASSERT(is_main_thread(query->storage));
-    SKR_ASSERT(query->parameters.length < 32);
-    llvm_vecsmall::SmallVector<sugoi_group_t*, 64> groups;
+    SKR_ASSERT(is_main_thread(q->pimpl->storage));
+    SKR_ASSERT(q->pimpl->parameters.length < 32);
+    skr::InlineVector<sugoi_group_t*, 64> groups;
     auto add_group = [&](sugoi_group_t* group) {
         groups.push_back(group);
     };
-    auto& params = query->parameters;
-    query->storage->query_groups(query->filter, query->meta, SUGOI_LAMBDA(add_group));
+    auto& params = q->pimpl->parameters;
+    q->pimpl->storage->filter_groups(q->pimpl->filter, q->pimpl->meta, SUGOI_LAMBDA(add_group));
     struct task_t {
         uint32_t groupIndex;
         uint32_t startIndex;
@@ -326,7 +351,6 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
     };
     SharedData* job = nullptr;
     skr::SPtr<SharedData> sharedData;
-
     auto groupCount = (uint32_t)groups.size();
     {
         SkrZoneScopedN("AllocateSharedData");
@@ -344,12 +368,12 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
         job->randomAccess = arena.get(&SharedData::randomAccess, groupCount);
     }
     job->groupCount = groupCount;
-    job->hasRandomWrite = !query->subqueries.empty();
+    job->hasRandomWrite = !q->pimpl->subqueries.empty();
     job->hasWriteChunkComponent = false;
     job->entityCount = 0;
     job->callback = callback;
     job->userdata = u;
-    job->query = query;
+    job->query = q;
     sharedData.reset(job, [](SharedData* p)
     {
         SkrDelete(p);
@@ -361,17 +385,17 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
         job->entityCount += group->size;
         forloop (i, 0, params.length)
         {
-            auto t = type_index_t(params.types[i]);
-            auto idx = group->index(params.types[i]);
+            const auto t = type_index_t(params.types[i]);
+            const auto idx = group->index(params.types[i]);
             job->localTypes[groupIndex * params.length + i] = idx;
-            auto& op = params.accesses[i];
+            const auto& op = params.accesses[i];
             if(idx != kInvalidTypeIndex)
             {
                 job->readonly[groupIndex].set(idx, op.readonly);
-                job->randomAccess[groupIndex].set(idx, op.randomAccess != DOS_SEQ);
+                job->randomAccess[groupIndex].set(idx, op.randomAccess != SOS_SEQ);
                 job->atomic[groupIndex].set(idx, op.atomic);
             }
-            job->hasRandomWrite |= op.randomAccess != DOS_SEQ;
+            job->hasRandomWrite |= (op.randomAccess != SOS_SEQ);
             job->hasWriteChunkComponent = t.is_chunk() && !op.readonly && !op.atomic;
         }
         ++groupIndex;
@@ -379,56 +403,59 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
     if(!job->entityCount)
         return {nullptr};
 
-    auto dependencies = update_dependencies(query, result, resources);
-    
+    auto dependencies = updateDependencies(q, result, resources);
     {
         SkrZoneScopedN("AllocateCounter");
-        allCounter.add(1);
-        query->storage->counter.add(1);
+        job_impl.allCounter.add(1);
+        q->pimpl->storage->pimpl->storage_counter.add(1);
     }
-    skr::task::schedule([dependencies = std::move(dependencies), sharedData, init, teardown, this, query, batchSize]()mutable
+    skr::task::schedule([dependencies = std::move(dependencies), sharedData, init, teardown, this, q, batchSize]()mutable
     {
+        SkrZoneScopedN("JobPreprocess");
+        SKR_DEFER({ 
+            job_impl.allCounter.decrement();
+            q->pimpl->storage->pimpl->storage_counter.decrement();
+        });
+        fixed_stack_scope_t _(localStack);
+        sugoi_meta_filter_t validatedMeta;
+        {
+            SkrZoneScopedN("JobValidateMeta");
+            auto& meta = q->pimpl->meta;
+            auto data = (char*)localStack.allocate(data_size(meta));
+            validatedMeta = clone(meta, data);
+            q->pimpl->storage->validate(validatedMeta.all_meta);
+            q->pimpl->storage->validate(validatedMeta.none_meta);
+        }
         {
             SkrZoneScopedN("JobWaitDependencies");
-            for(auto& dependency : dependencies)
-                if(auto ptr = dependency.lock())
+            for (auto& dependency : dependencies)
+            {
+                if (auto ptr = dependency.lock())
+                {
                     ptr.wait(false);
+                }
+            }
         }
         {
             SkrZoneScopedN("JobInitialize");
             if (init)
                 init(sharedData->userdata, sharedData->entityCount);
         }
-        SKR_DEFER({ 
-            allCounter.decrement();
-            query->storage->counter.decrement();
-        });
-        fixed_stack_scope_t _(localStack);
-        sugoi_meta_filter_t validatedMeta;
-        {
-            SkrZoneScopedN("JobValidateMeta");
-
-            auto& meta = query->meta;
-            auto data = (char*)localStack.allocate(data_size(meta));
-            validatedMeta = clone(meta, data);
-            query->storage->validate(validatedMeta.all_meta);
-            query->storage->validate(validatedMeta.any_meta);
-            query->storage->validate(validatedMeta.none_meta);
-        }
         //TODO: expose this as a parameter
         bool scheduleSubchunkJobs = !sharedData->hasWriteChunkComponent;
         bool singleJob = sharedData->hasRandomWrite || batchSize == 0 || sharedData->entityCount <= batchSize;
         if (singleJob)
         {
+            SkrZoneScopedN("JobBody(Single)");
             uint32_t startIndex = 0;
             forloop (i, 0, sharedData->groupCount)
             {
                 auto processView = [&](sugoi_chunk_view_t* view) {
-                    sharedData->callback(sharedData->userdata, query, view, sharedData->localTypes + i * query->parameters.length, startIndex);
+                    sharedData->callback(sharedData->userdata, q, view, sharedData->localTypes + i * q->pimpl->parameters.length, startIndex);
                     startIndex += view->count;
                 };
                 auto group = sharedData->groups[i];
-                query->storage->query(group, query->filter, validatedMeta, query->customFilter, query->customFilterUserData, SUGOI_LAMBDA(processView));
+                q->pimpl->storage->filter_in_single_group(&q->pimpl->parameters, group, q->pimpl->filter, validatedMeta, q->pimpl->customFilter, q->pimpl->customFilterUserData, SUGOI_LAMBDA(processView));
             }
         }
         else
@@ -451,7 +478,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
                 forloop (i, 0, sharedData->groupCount)
                 {
                     auto scheduleView = [&](sugoi_chunk_view_t* view) {
-                        if(!scheduleSubchunkJobs || sharedData->hasWriteChunkComponent)
+                        if (!scheduleSubchunkJobs || sharedData->hasWriteChunkComponent)
                         {
                             if (batchRemain == 0 && currentChunk != view->chunk) // batch filled
                             {
@@ -467,7 +494,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
                             newTask.view = *view;
                             startIndex += view->count;
                             batchRemain -= std::min(batchRemain, view->count);
-                            tasks.push_back(newTask);
+                            tasks.emplace_back(newTask);
                         }
                         else 
                         {
@@ -482,11 +509,11 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
                                 allocated += subViewCount;
                                 startIndex += subViewCount;
                                 batchRemain -= subViewCount;
-                                tasks.push_back(newTask);
+                                tasks.emplace_back(newTask);
                                 if (batchRemain == 0) // batch filled
                                 {
                                     currBatch.endTask = tasks.size();
-                                    batches.push_back(currBatch);
+                                    batches.emplace_back(currBatch);
                                     currBatch.startTask = currBatch.endTask; // new batch
                                     batchRemain = batchSize;
                                 }
@@ -494,29 +521,37 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
                         }
                     };
                     auto group = sharedData->groups[i];
-                    query->storage->query(group, query->filter, validatedMeta, query->customFilter, query->customFilterUserData, SUGOI_LAMBDA(scheduleView));
+                    q->pimpl->storage->filter_in_single_group(
+                        &q->pimpl->parameters, group, q->pimpl->filter, validatedMeta, 
+                        q->pimpl->customFilter, q->pimpl->customFilterUserData, SUGOI_LAMBDA(scheduleView));
                 };
                 if (currBatch.endTask != tasks.size())
                 {
                     currBatch.endTask = tasks.size();
-                    batches.push_back(currBatch);
+                    batches.emplace_back(currBatch);
                 }
             }
-            
-            
+
             skr::task::counter_t counter;
             counter.add((uint32_t)batches.size());
-            for(auto batch : batches)
+            for (auto batch : batches)
             {
                 skr::task::schedule([batch, sharedData, counter]() mutable
                 {
-                    SKR_DEFER({
-                        counter.decrement();
-                    });
+                    SkrZoneScopedN("JobBody(Batch)");
                     forloop (i, batch.startTask, batch.endTask)
                     {
-                        auto task = sharedData->tasks[i];
-                        sharedData->callback(sharedData->userdata, sharedData->query, &task.view, sharedData->localTypes + task.groupIndex * sharedData->query->parameters.length, task.startIndex);
+                        // const auto startCycles = rdtsc();
+                        auto& task = sharedData->tasks[i];
+                        sharedData->callback(sharedData->userdata, sharedData->query, &task.view, sharedData->localTypes + task.groupIndex * sharedData->query->pimpl->parameters.length, task.startIndex);
+                        // const auto endCycles = rdtsc();
+                        // const auto cycles = endCycles - startCycles;
+                        // if (cycles < 5000)
+                        //    SKR_LOG_WARN(u8"too little cycles(%d) for a task!", cycles);
+                    }
+                    {
+                        SkrZoneScopedN("JobBody(Signal)");
+                        counter.decrement();
                     }
                 }, nullptr);
             }
@@ -532,56 +567,69 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
     return result;
 }
 
-skr::task::event_t sugoi::scheduler_t::schedule_job(sugoi_query_t* query, sugoi_schedule_callback_t callback, void* u, sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources)
+skr::task::event_t sugoi::JobScheduler::schedule_job(sugoi_query_t* q, sugoi_schedule_callback_t callback, void* u, sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources)
 {
     skr::task::event_t result;
-    auto deps = update_dependencies(query, result, resources);
+    auto deps = updateDependencies(q, result, resources);
     {
-        SkrZoneScopedN("AllocateCounter");
-        allCounter.add(1);
-        query->storage->counter.add(1);
+        job_impl.allCounter.add(1);
+        q->pimpl->storage->pimpl->storage_counter.add(1);
     }
-    skr::task::schedule([deps = std::move(deps), this, query, callback, u, init, teardown]()
+    skr::task::schedule([deps = std::move(deps), this, q, callback, u, init, teardown]()
     {
-        for(auto dep : deps)
-            if(auto d = dep.lock())
-                d.wait(false);
+        {
+            SkrZoneScopedN("JobWaitDependencies");
+            for(auto dep : deps)
+                if(auto d = dep.lock())
+                    d.wait(false);
+        }
         SKR_DEFER({ 
-            allCounter.decrement();
-            query->storage->counter.decrement();
+            job_impl.allCounter.decrement();
+            q->pimpl->storage->pimpl->storage_counter.decrement();
         });
         if(init)
+        {
+            SkrZoneScopedN("JobInitialize");
             init(u, 0);
-        callback(u, query);
+        }
+        {
+            SkrZoneScopedN("JobBody");
+            callback(u, q);
+        }
         if(teardown)
+        {
+            SkrZoneScopedN("JobTeardown");
             teardown(u, 0);
+        }
     }, &result);
     return result;
 }
 
-skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies(sugoi_query_t* query, const skr::task::event_t& counter, sugoi_resource_operation_t* resources)
+skr::stl_vector<skr::task::weak_event_t> sugoi::JobScheduler::updateDependencies(sugoi_query_t* q, const skr::task::event_t& counter, sugoi_resource_operation_t* resources)
 {
-    SkrZoneScopedN("SchesugoiCustomJob");
+    SkrZoneScopedN("UpdateDependencies");
 
-    llvm_vecsmall::SmallVector<sugoi_group_t*, 64> groups;
+    skr::InlineVector<sugoi_group_t*, 64> groups;
     auto add_group = [&](sugoi_group_t* group) {
         groups.push_back(group);
     };
-    query->storage->query_groups(query->filter, query->meta, SUGOI_LAMBDA(add_group));
-    auto& params = query->parameters;
+    q->pimpl->storage->filter_groups(q->pimpl->filter, q->pimpl->meta, SUGOI_LAMBDA(add_group));
+    auto& params = q->pimpl->parameters;
     DependencySet dependencies;
 
     if (resources)
     {
         SkrZoneScopedN("UpdateResourcesEntries");
-        SMutexLock resourceLock(resourceMutex.mMutex);
-        forloop (i, 0, resources->count)
+        job_impl.allResources.write([&](auto& v)
         {
-            auto& entry = allResources[e_id(resources->resources[i])];
-            auto readonly = resources->readonly[i];
-            auto atomic = resources->atomic[i];
-            update_entry(entry, counter, readonly, atomic, dependencies);
-        }
+            forloop (i, 0, resources->count)
+            {
+                auto& entry = v[e_id(resources->resources[i])];
+                const auto readonly = resources->readonly[i];
+                const auto atomic = resources->atomic[i];
+                update_entry(entry, counter, readonly, atomic, dependencies);
+            }
+        });
     }
 
     skr::FlatHashSet<std::pair<sugoi::archetype_t*, sugoi_type_index_t>> syncedEntry;
@@ -594,12 +642,11 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
             return;
         syncedEntry.insert(pair);
         {
-            SMutexLock entryLock(entryMutex.mMutex);
-            auto iter = dependencyEntries.find(at);
-            if (iter == dependencyEntries.end())
+            auto iter = job_impl.dependencyEntries.find(at);
+            if (iter == job_impl.dependencyEntries.end())
             {
-                skr::stl_vector<job_dependency_entry_t> entries(at->type.length);
-                iter = dependencyEntries.insert(std::make_pair(at, std::move(entries))).first;
+                skr::stl_vector<JobDependencyEntry> entries(at->type.length);
+                iter = job_impl.dependencyEntries.insert(std::make_pair(at, std::move(entries))).first;
             }
 
             auto entries = (*iter).second.data();
@@ -609,12 +656,17 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
     };
 
     auto sync_type = [&](sugoi_type_index_t type, bool readonly, bool atomic) {
-        for (auto& pair : query->storage->groups)
-        {
-            auto group = pair.second;
-            auto idx = group->index(type);
-            sync_entry(group, idx, readonly, atomic);
-        }
+        q->pimpl->storage->pimpl->groups.read_versioned([&](auto& groups) {
+            for (auto& pair : groups)
+            {
+                auto group = pair.second;
+                auto idx = group->index(type);
+                sync_entry(group, idx, readonly, atomic);
+            }
+        }, 
+        [&](){
+            return q->pimpl->storage->pimpl->storage_timestamp;
+        });
     };
 
     {
@@ -623,7 +675,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
         {
             if (type_index_t(params.types[i]).is_tag())
                 continue;
-            if (params.accesses[i].randomAccess != DOS_SEQ)
+            if (params.accesses[i].randomAccess != SOS_SEQ)
             {
                 sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic);
             }
@@ -649,38 +701,38 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
                 }
             }
         }
-        for(auto subquery : query->subqueries)
+        // sync subqueries
+        for(auto subquery : q->pimpl->subqueries)
         {
-            llvm_vecsmall::SmallVector<sugoi_group_t*, 64> subgroups;
+            skr::InlineVector<sugoi_group_t*, 64> subgroups;
             auto add_subgroup = [&](sugoi_group_t* group) {
                 subgroups.push_back(group);
             };
-            query->storage->query_groups(query->filter, query->meta, SUGOI_LAMBDA(add_subgroup));
-            forloop (i, 0, subquery->parameters.length)
+            q->pimpl->storage->filter_groups(q->pimpl->filter, q->pimpl->meta, SUGOI_LAMBDA(add_subgroup));
+            forloop (i, 0, subquery->pimpl->parameters.length)
             {
-                if (type_index_t(subquery->parameters.types[i]).is_tag())
+                if (type_index_t(subquery->pimpl->parameters.types[i]).is_tag())
                     continue;
-                if (subquery->parameters.accesses[i].randomAccess != DOS_SEQ)
+                if (subquery->pimpl->parameters.accesses[i].randomAccess != SOS_SEQ)
                 {
-                    sync_type(subquery->parameters.types[i], subquery->parameters.accesses[i].readonly, subquery->parameters.accesses[i].atomic);
+                    sync_type(subquery->pimpl->parameters.types[i], subquery->pimpl->parameters.accesses[i].readonly, subquery->pimpl->parameters.accesses[i].atomic);
                 }
                 else
                 {
                     int subgroupIndex = 0;(void)subgroupIndex;
                     for (auto subgroup : subgroups)
                     {
-                        auto localType = subgroup->index(subquery->parameters.types[i]);
+                        auto localType = subgroup->index(subquery->pimpl->parameters.types[i]);
                         if (localType == kInvalidTypeIndex)
                         {
-                            auto g = subgroup->get_owner(subquery->parameters.types[i]);
-                            if (g)
+                            if (auto g = subgroup->get_owner(subquery->pimpl->parameters.types[i]))
                             {
-                                sync_entry(g, g->index(subquery->parameters.types[i]), subquery->parameters.accesses[i].readonly, subquery->parameters.accesses[i].atomic);
+                                sync_entry(g, g->index(subquery->pimpl->parameters.types[i]), subquery->pimpl->parameters.accesses[i].readonly, subquery->pimpl->parameters.accesses[i].atomic);
                             }
                         }
                         else
                         {
-                            sync_entry(subgroup, localType, subquery->parameters.accesses[i].readonly, subquery->parameters.accesses[i].atomic);
+                            sync_entry(subgroup, localType, subquery->pimpl->parameters.accesses[i].readonly, subquery->pimpl->parameters.accesses[i].atomic);
                         }
                         ++subgroupIndex;
                     }
@@ -695,18 +747,19 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
     return result;
 }
 
-skr::stl_vector<skr::task::event_t> sugoi::scheduler_t::sync_resources(const skr::task::event_t& counter, sugoi_resource_operation_t* resources)
+skr::stl_vector<skr::task::event_t> sugoi::JobScheduler::sync_resources(const skr::task::event_t& counter, sugoi_resource_operation_t* resources)
 {
     DependencySet dependencies;
     {
-        SMutexLock entryLock(entryMutex.mMutex);
-        forloop (i, 0, resources->count)
-        {
-            auto& entry = allResources[e_id(resources->resources[i])];
-            auto readonly = resources->readonly[i];
-            auto atomic = resources->atomic[i];
-            update_entry(entry, counter, readonly, atomic, dependencies);
-        }
+        job_impl.allResources.write([&](auto& v){
+            forloop (i, 0, resources->count)
+            {
+                auto& entry = v[e_id(resources->resources[i])];
+                auto readonly = resources->readonly[i];
+                auto atomic = resources->atomic[i];
+                update_entry(entry, counter, readonly, atomic, dependencies);
+            }
+        });
     }
     skr::stl_vector<skr::task::event_t> result;
 
@@ -721,12 +774,12 @@ skr::stl_vector<skr::task::event_t> sugoi::scheduler_t::sync_resources(const skr
 
 sugoi_entity_t sugoiJ_add_resource()
 {
-    return sugoi::scheduler_t::get().add_resource();
+    return sugoi::JobScheduler::Get().add_resource();
 }
 
 void sugoiJ_remove_resource(sugoi_entity_t id)
 {
-    sugoi::scheduler_t::get().remove_resource(id);
+    sugoi::JobScheduler::Get().remove_resource(id);
 }
 
 bool sugoiJ_schedule_ecs(sugoi_query_t* query, EIndex batchSize, sugoi_system_callback_t callback, void* u,
@@ -734,7 +787,7 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
 {
     SkrZoneScopedN("sugoiJ::schedule_ecs");
     
-    auto c = sugoi::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources);
+    auto c = sugoi::JobScheduler::Get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources);
     if (counter)
     {
         *counter = c;
@@ -746,34 +799,34 @@ void sugoiJ_schedule_custom(sugoi_query_t* query, sugoi_schedule_callback_t call
 sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources, skr::task::event_t* counter)
 {
     SkrZoneScopedN("sugoiJ::schedule_custom");
-    auto c = sugoi::scheduler_t::get().schedule_job(query, callback, u, init, teardown, resources);
+    auto c = sugoi::JobScheduler::Get().schedule_job(query, callback, u, init, teardown, resources);
     if (counter)
     {
         *counter = c;
     }
 }
 
-void sugoiJ_wait_all()
+void sugoiJ_wait_all_jobs_jobs()
 {
-    sugoi::scheduler_t::get().sync_all();
+    sugoi::JobScheduler::Get().sync_all_jobs();
 }
 
 void sugoiJ_gc()
 {
-    sugoi::scheduler_t::get().gc_entries();
+    sugoi::JobScheduler::Get().collect_garbage();
 }
 
 void sugoiJ_wait_storage(sugoi_storage_t* storage)
 {
-    sugoi::scheduler_t::get().sync_storage(storage);
+    sugoi::JobScheduler::Get().sync_storage(storage);
 }
 
 void sugoiJ_bind_storage(sugoi_storage_t* storage)
 {
-    sugoi::scheduler_t::get().add_storage(storage);
+    sugoi::JobScheduler::Get().add_storage(storage);
 }
 
 void sugoiJ_unbind_storage(sugoi_storage_t* storage)
 {
-    sugoi::scheduler_t::get().remove_storage(storage);
+    sugoi::JobScheduler::Get().remove_storage(storage);
 }

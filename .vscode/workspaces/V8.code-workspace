@@ -15,8 +15,6 @@
             "--use_profile=enable",
             "--toolchain=clang-cl",
             "--cxx_version=cxx20",
-            "-m",
-            "release",
         ],
         "editor.formatOnSave": true,
         "xmake.customDebugConfig": {
@@ -49,7 +47,7 @@
                 "request": "launch",
                 "program": "${workspaceFolder:root}/tools/meta_codegen/codegen.py",
                 "args": [
-                    "--config=${workspaceFolder:gen-temp-files}/MetaTest/windows/codegen/meta_codegen_config.json",
+                    "--config=${workspaceFolder:gen-temp-files}/RTTRTest/windows/codegen/meta_codegen_config.json",
                 ],
             }
         ]

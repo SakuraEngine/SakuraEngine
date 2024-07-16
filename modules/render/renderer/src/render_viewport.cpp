@@ -2,7 +2,7 @@
 #include "SkrBase/math/rtm/rtmx.h"
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/vector.hpp"
-
+#include "SkrRT/ecs/storage.hpp"
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/skr_renderer.h"
 
@@ -12,7 +12,9 @@ struct SViewportManagerImpl : public SViewportManager
 {
     SViewportManagerImpl(sugoi_storage_t* storage)
     {
-        camera_query = sugoiQ_from_literal(storage, u8"[in]skr_camera_comp_t, [in]skr_translation_comp_t");
+        camera_query = storage->new_query()
+                            .ReadAll<skr_camera_comp_t, skr_translation_comp_t>()
+                            .commit().value();
     }
 
     ~SViewportManagerImpl()

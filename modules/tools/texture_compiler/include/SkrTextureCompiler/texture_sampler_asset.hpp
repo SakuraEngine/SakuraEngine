@@ -7,9 +7,9 @@
     #include "SkrTextureCompiler/texture_sampler_asset.generated.h" // IWYU pragma: export
 #endif
 
-namespace skd sreflect
+namespace skd
 {
-namespace asset sreflect
+namespace asset
 {
 sreflect_struct("guid" : "d2fc798b-af43-4865-b953-abba2b6d524a")
 sattr("serialize" : "json")
@@ -25,5 +25,5 @@ SKR_TEXTURE_COMPILER_API STextureSamplerCooker final : public SCooker {
     bool     Cook(SCookContext* ctx) override;
     uint32_t Version() override { return 1u; }
 };
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd

@@ -4,9 +4,7 @@
     #include "SkrGui/system/input/gesture/gesture_arena.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_enum_class("guid": "64d988e6-5d8c-4418-b070-2ae6ec3ddf08")
 GestureArenaState
@@ -51,5 +49,4 @@ private:
     GestureRecognizer* eager_winner = nullptr;
 };
 
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

@@ -47,21 +47,19 @@ target("CGPUTiledTexture")
     add_files("texture/tiled_texture.c")
     
 -- close this demo until we fix exception rule issue
-if build_part("samples.cgpu") then
-    if (os.host() == "windows") then
-        target("HotTriangle")
-            set_group("04.examples/cgpu")
-            add_rules("utils.dxc", {
-                spv_outdir = "/../resources/shaders/hot-triangle",
-                dxil_outdir = "/../resources/shaders/hot-triangle"})
-            set_kind("binary")
-            -- file_watch.hpp needs exceptions
-            set_exceptions("cxx")
-            add_rules("c++.unity_build", {batchsize = default_unity_batch})
-            public_dependency("SkrRT", engine_version)
-            public_dependency("SkrWASM", engine_version)
-            add_includedirs("./../../common", {public = false})
-            add_files("hot-triangle/triangle.c", "hot-triangle/hot_wasm.cpp")
-            add_files("hot-triangle/**.hlsl")
-    end
+if (os.host() == "windows") then
+    target("HotTriangle")
+        set_group("04.examples/cgpu")
+        add_rules("utils.dxc", {
+            spv_outdir = "/../resources/shaders/hot-triangle",
+            dxil_outdir = "/../resources/shaders/hot-triangle"})
+        set_kind("binary")
+        -- file_watch.hpp needs exceptions
+        set_exceptions("cxx")
+        add_rules("c++.unity_build", {batchsize = default_unity_batch})
+        public_dependency("SkrRT", engine_version)
+        public_dependency("SkrWASM", engine_version)
+        add_includedirs("./../../common", {public = false})
+        add_files("hot-triangle/triangle.c", "hot-triangle/hot_wasm.cpp")
+        add_files("hot-triangle/**.hlsl")
 end

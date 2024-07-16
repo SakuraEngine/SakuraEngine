@@ -7,9 +7,9 @@
     #include "SkrRenderer/resources/shader_meta_resource.generated.h" // IWYU pragma: export
 #endif
 
-namespace skr sreflect
+namespace skr
 {
-namespace renderer sreflect
+namespace renderer
 {
 
 sreflect_enum_class("guid": "c289eaaf-ace9-4a86-8072-b173377f7d19")
@@ -66,5 +66,5 @@ struct SKR_RENDERER_API SShaderOptionsFactory : public resource::SResourceFactor
     [[nodiscard]] static SShaderOptionsFactory* Create(const Root& root);
     static void                                 Destroy(SShaderOptionsFactory* factory);
 };
-} // namespace renderer sreflect
-} // namespace skr sreflect
+} // namespace renderer
+} // namespace skr

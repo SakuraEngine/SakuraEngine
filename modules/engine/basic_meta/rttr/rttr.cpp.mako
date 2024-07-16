@@ -1,18 +1,19 @@
 // BEGIN RTTR GENERATED
-#include "SkrRT/rttr/type_loader/type_loader.hpp"
-#include "SkrRT/rttr/type/record_type.hpp"
-#include "SkrRT/rttr/exec_static.hpp"
-#include "SkrRT/rttr/type_loader/enum_type_from_traits_loader.hpp"
+#include "SkrBase/misc/hash.h"
+#include "SkrRTTR/type.hpp"
+#include "SkrCore/exec_static.hpp"
 #include "SkrContainers/tuple.hpp"
+#include "SkrRTTR/export/export_builder.hpp"
 
 namespace skr::rttr 
 {
-%for enum in generator.enums:
+//============================> Begin Enum Traits <============================
+%for enum in enums:
 span<EnumItem<${enum.name}>> EnumTraits<${enum.name}>::items()
 {
     static EnumItem<${enum.name}> items[] = {
-    %for name, value in vars(enum.values).items():
-        {u8"${db.short_name(name)}", ${name}},
+    %for enum_value in enum.values.values():
+        {u8"${enum_value.short_name}", ${enum_value.name}},
     %endfor
     };
     return items;
@@ -21,8 +22,8 @@ skr::StringView EnumTraits<${enum.name}>::to_string(const ${enum.name}& value)
 {
     switch (value)
     {
-    %for name, value in vars(enum.values).items():
-    case ${enum.name}::${db.short_name(name)}: return u8"${db.short_name(name)}";
+    %for enum_value in enum.values.values():
+    case ${enum.name}::${enum_value.short_name}: return u8"${enum_value.short_name}";
     %endfor
     default: SKR_UNREACHABLE_CODE(); return u8"${enum.name}::INVALID_ENUMERATOR";
     }
@@ -32,116 +33,179 @@ bool EnumTraits<${enum.name}>::from_string(skr::StringView str, ${enum.name}& va
     const auto hash = skr_hash64(str.raw().data(), str.size(), 0);
     switch(hash)
     {
-    %for name, value in vars(enum.values).items():
-        case skr::consteval_hash(u8"${db.short_name(name)}"): if(str == u8"${db.short_name(name)}") value = ${name}; return true;
+    %for enum_value in enum.values.values():
+        case skr::consteval_hash(u8"${enum_value.short_name}"): if(str == u8"${enum_value.short_name}") value = ${enum_value.name}; return true;
     %endfor
         default:
             return false;
     }
 }
 %endfor
+//============================> End Enum Traits <============================
 }
 
-SKR_RTTR_EXEC_STATIC
+SKR_EXEC_STATIC_CTOR
 {
     using namespace ::skr::rttr;
 
-%for record in generator.records:
-    static struct InternalTypeLoader_${record.id} : public TypeLoader
-    {
-        Type* create() override {
-            return SkrNew<RecordType>(
-                RTTRTraits<::${record.name}>::get_name(),
-                RTTRTraits<::${record.name}>::get_guid(),
-                sizeof(${record.name}),
-                alignof(${record.name}),
-                make_record_basic_method_table<${record.name}>()
-            );
-        }
+    //============================> Begin Record Export <============================
+%for record in records:
+    register_type_loader(type_id_of<${record.name}>(), +[](Type* type){
+<%
+    record_rttr_data=record.generator_data["rttr"]
+%>\
+        // init type
+        type->init(ETypeCategory::Record);
+        auto& record_data = type->record_data();
 
-        void load(Type* type) override 
-        {
-            using namespace skr;
-            using namespace skr::rttr;
+        // reserve
+        record_data.bases_data.reserve(${len(record.bases)});
+        record_data.methods.reserve(${len(record.methods)});
+        record_data.fields.reserve(${len(record.fields)});
+        
+        // basic
+        RecordBuilder<${record.name}> builder(&record_data);
+        builder.basic_info();
+        %if record_rttr_data.reflect_bases:
+        builder.bases<${", ".join(record_rttr_data.reflect_bases)}>();
+        %endif
+        
+        // methods
+        %if record_rttr_data.reflect_methods:
+        %for method in record_rttr_data.reflect_methods:
+        { // ${record.name}::${method.short_name}
+<% method_rttr_data = method.generator_data["rttr"] %>\
+            %if method.is_static:
+            [[maybe_unused]] auto method_builder = builder.static_method<${tools.function_signature_of(method)}, <&${record.name}::${method.short_name}>(u8"${method.short_name}");
+            %else:
+            [[maybe_unused]] auto method_builder = builder.method<${tools.function_signature_of(method)}, <&${record.name}::${method.short_name}>(u8"${method.short_name}");
+            %endif
 
-            [[maybe_unused]] RecordType* result = static_cast<RecordType*>(type);
-
-        %if record.bases:
-            result->set_base_types({
-            %for base in record.bases:
-                {RTTRTraits<${base}>::get_guid(), {RTTRTraits<${base}>::get_type(), +[](void* p) -> void* { return static_cast<${base}*>(reinterpret_cast<${record.name}*>(p)); }}},
+            // params
+            %for (i, param) in enumerate(method.parameters.values()):
+            method_builder.param_at(${i})
+                .name(u8"${param.name}");
             %endfor
-            });
+
+            // flags
+            %if method_rttr_data.flags:
+            method_builder.flag(${tools.flags_expr(method, method_rttr_data.flags)});
+            %endif
+
+            // attributes
+            %if method_rttr_data.attrs:
+            method_builder.
+                %for attr in method_rttr_data.attrs:
+                attribute(::skr::attr::${attr})
+                %endfor
+                ;
+            %endif
+        }
+        %endfor
         %endif
 
-        %if record.fields:
-            result->set_fields({
-            %for name, field in record.fields:
-                {u8"${name}", {u8"${name}", RTTRTraits<${field.type}>::get_type(), ${field.offset}}},
-            %endfor
-            });
+        // fields
+        %if record_rttr_data.reflect_fields:
+        %for field in record_rttr_data.reflect_fields:
+        { // ${record.name}::${field.name}
+<% field_rttr_data = field.generator_data["rttr"] %>\
+            %if field.is_static:
+            [[maybe_unused]] auto field_builder = builder.static_field<<&${record.name}::${field.name}>(u8"${field.name}");
+            %else:
+            [[maybe_unused]] auto field_builder = builder.field<<&${record.name}::${field.name}>(u8"${field.name}");
+            %endif
+
+            // flags
+            %if field_rttr_data.flags:
+            field_builder.flag(${tools.flags_expr(field, field_rttr_data.flags)});
+            %endif
+
+            // attributes
+            %if field_rttr_data.attrs:
+            field_builder.
+                %for attr in field_rttr_data.attrs:
+                attribute(::skr::attr::${attr})
+                %endfor
+                ;
+            %endif
+        }
+        %endfor
+
+        // flags
+        %if record_rttr_data.flags:
+        builder.flag(${tools.flags_expr(record, record_rttr_data.flags)});
         %endif
 
-        %if record.methods:
-            result->set_methods({
-            %for method in record.methods:
-                {
-                    u8"${db.short_name(method.name)}",
-                    {
-                        u8"${db.short_name(method.name)}",
-                        RTTRTraits<${method.retType}>::get_type(),
-                        {
-                        %for name, parameter in vars(method.parameters).items():
-                            {u8"${name}", RTTRTraits<${parameter.type}>::get_type()},
-                        %endfor
-                        },
-                        +[](void* self, void* parameters, void* return_value)
-                        {
-                            <%  
-                                parameters_tuple = ""
-                                if len(vars(method.parameters)) == 1:
-                                    parameters_tuple = "tuple<%s>" % vars(method.parameters).items()[0].type
-                                elif len(vars(method.parameters)) > 1:
-                                    parameters_tuple = "tuple<%s>" % ", ".join([parameter.type for name, parameter in vars(method.parameters).items()]) 
-                                invoke_expr = "{obj}->{method}({args});".format(
-                                    obj = "reinterpret_cast<%s*>(self)" % record.name,
-                                    method = db.short_name(method.name),
-                                    args = ", ".join(["get<%d>(params)" % i for i in range(len(vars(method.parameters)))])
-                                )
-                            %>
-                        %if len(vars(method.parameters)) >= 1:
-                            ${parameters_tuple}& params = *reinterpret_cast<${parameters_tuple}*>(parameters);
-                        %endif
-                        %if method.retType == "void":
-                            ${invoke_expr}
-                        %else:
-                            if (return_value)
-                            {
-                                *((${method.retType}*)return_value) = ${invoke_expr}
-                            }
-                            else
-                            {
-                                ${invoke_expr}
-                            }
-                        %endif
-                        }
-                    }
-                },
+        // attributes
+        %if record_rttr_data.attrs:
+        builder.
+            %for attr in record_rttr_data.attrs:
+            attribute(::skr::attr::${attr})
             %endfor
-            });
+            ;
         %endif
-        }
-        void destroy(Type* type) override
-        {
-            SkrDelete(type);
-        }
-    } LOADER__${record.id};
-    register_type_loader(RTTRTraits<${record.name}>::get_guid(), &LOADER__${record.id});
+
+        %endif
+    });
 %endfor
+    //============================> End Record Export <============================
 
-%for enum in generator.enums:
-    static EnumTypeFromTraitsLoader<${enum.name}> LOADER__${enum.id};
-    register_type_loader(RTTRTraits<${enum.name}>::get_guid(), &LOADER__${enum.id});
+    //============================> Begin Enum Export <============================
+%for enum in enums:
+    register_type_loader(type_id_of<${enum.name}>(), +[](Type* type){
+<%
+    enum_rttr_data=enum.generator_data["rttr"]
+%>\
+        // init type
+        type->init(ETypeCategory::Enum);
+        auto& enum_data = type->enum_data();
+
+        // reserve
+        enum_data.items.reserve(${len(enum.values)});
+
+        // basic
+        EnumBuilder<${enum.name}> builder(&enum_data);
+        builder.basic_info();
+
+        // items
+        %for enum_value in enum.values.values():
+        { // ${enum.name}::${enum_value.short_name}
+<% enum_value_rttr_data=enum_value.generator_data["rttr"] %>\
+            [[maybe_unused]] auto item_builder = builder.item(u8"${enum_value.short_name}", ${enum_value.name});
+
+            // flags
+            %if enum_value_rttr_data.flags:
+            item_builder.flag(${tools.flags_expr(enum_value, enum_value_rttr_data.flags)});
+            %endif
+
+            // attributes
+            %if enum_value_rttr_data.attrs:
+            item_builder.
+                %for attr in enum_value_rttr_data.attrs:
+                attribute(::skr::attr::${attr})
+                %endfor
+                ;
+            %endif
+        }
+
+        // flags
+        %if enum_rttr_data.flags:
+        builder.flag(${tools.flags_expr(enum, enum_rttr_data.flags)});
+        %endif
+
+        // attributes
+        %if enum_rttr_data.attrs:
+        builder.
+            %for attr in enum_rttr_data.attrs:
+            attribute(::skr::attr::${attr})
+            %endfor
+            ;
+        %endif
+
+        %endfor
+
+    });
 %endfor
+    //============================> End Enum Export <============================
 };
 // END RTTR GENERATED

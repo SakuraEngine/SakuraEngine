@@ -24,7 +24,7 @@
 // DEALINGS IN THE SOFTWARE.                                                  //
 //                                                                            //
 //----------------------------------------------------------------------------//
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrAnim/ozz/base/memory/allocator.h"
 #include "SkrAnim/ozz/base/maths/math_ex.h"
 

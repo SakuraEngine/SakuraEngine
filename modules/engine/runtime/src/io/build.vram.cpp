@@ -1,0 +1,7 @@
+#include "vram/vram_request.cpp"
+#include "vram/vram_batch.cpp"
+#include "vram/vram_resolvers.cpp"
+#include "vram/vram_readers.cpp"
+#include "vram/vram_service.cpp"
+#include "vram/vram_resources.cpp"
+#include "vram/components.cpp"

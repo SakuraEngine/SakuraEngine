@@ -1,10 +1,10 @@
+#include "SkrBase/misc/debug.h"
+#include "SkrCore/log.h"
 #include "SkrRT/resource/resource_handle.h"
-#include "SkrBase/misc/debug.h" 
-#include "SkrRT/misc/types.h"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/resource/resource_system.h"
 
-static constexpr uint64_t kResourceHandleRecordMask = ~(alignof(skr_resource_record_t) - 1);
+static constexpr uint64_t kResourceHandleRecordMask        = ~(alignof(skr_resource_record_t) - 1);
 static constexpr uint64_t kResourceHandleRequesterTypeMask = alignof(skr_resource_record_t) - 1;
 
 skr_resource_handle_t::skr_resource_handle_t()
@@ -51,7 +51,7 @@ skr_resource_handle_t::skr_resource_handle_t(const skr_resource_handle_t& other,
     auto record = other.get_record();
     SKR_ASSERT(record);
     requesterId = record->AddReference(inRequester, requesterType);
-    pointer = (uint64_t)record | (uint64_t(requesterType) & kResourceHandleRequesterTypeMask);
+    pointer     = (uint64_t)record | (uint64_t(requesterType) & kResourceHandleRequesterTypeMask);
 }
 
 skr_resource_handle_t& skr_resource_handle_t::operator=(const skr_guid_t& other)
@@ -172,7 +172,7 @@ ESkrLoadingStatus skr_resource_handle_t::get_status(bool resolve) const
         return SKR_LOADING_STATUS_UNLOADED;
     if (padding != 0)
     {
-        if(resolve)
+        if (resolve)
         {
             auto system = skr::resource::GetResourceSystem();
             return system->GetResourceStatus(get_guid());
@@ -208,6 +208,6 @@ void skr_resource_handle_t::set_record(skr_resource_record_t* record)
 void skr_resource_handle_t::set_resolved(skr_resource_record_t* record, uint32_t inRequesterId, ESkrRequesterType requesterType)
 {
     reset();
-    pointer = (uint64_t)record | (uint64_t(requesterType) & kResourceHandleRequesterTypeMask);
+    pointer     = (uint64_t)record | (uint64_t(requesterType) & kResourceHandleRequesterTypeMask);
     requesterId = inRequesterId;
 }

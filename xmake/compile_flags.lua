@@ -13,7 +13,6 @@ target("SkrCompileFlags")
     -- disable c++ warnings for gcc/clang
     add_cxflags(
         "-Wno-unused-private-field", 
-        "-Wno-deprecated-builtins",
         "-Wno-pragma-system-header-outside-header",
         "-Wno-ambiguous-reversed-operator",
         "-Wno-unused-command-line-argument",
@@ -31,6 +30,7 @@ target("SkrCompileFlags")
         "-Wno-sign-compare", -- too much check nned to disable it
         "-Wno-ignored-qualifiers", -- const int func()
         "-Wno-deprecated-copy-with-user-provided-copy", -- usally trigger it manually
+        "-Wno-unused-private-field", -- not care about unused private field
         {public = true, tools = {"gcc", "clang_cl", "clang"}}
     )
     -- disable c warnings for gcc/clang
@@ -78,6 +78,8 @@ target("SkrCompileFlags")
 
     -- util flag for clang-cl
     add_cxflags(
+        "-ftime-trace",
+        "-Wno-clang-cl-pch",
         "-Wno-microsoft-cast", -- microsoft cast extension
         "-Wno-microsoft-include", -- microsoft include extension
         "-Wno-microsoft-enum-forward-reference", -- microsoft enum forward declaration extension

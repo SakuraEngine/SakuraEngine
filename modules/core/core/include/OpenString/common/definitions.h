@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h" // IWYU pragma: export
-#include "SkrMemory/memory.h" // IWYU pragma: export
+#include "SkrCore/memory/memory.h" // IWYU pragma: export
 
 #ifndef OPEN_STRING_API
 #define OPEN_STRING_API

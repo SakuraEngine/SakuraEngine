@@ -1,8 +1,8 @@
 #pragma once
+#include "SkrBase/types.h"
 #include "SkrRT/config.h"
 #include "SkrRT/resource/resource_factory.h"
-#include "SkrBase/types.h"
-#include "SkrRT/rttr/rttr_traits.hpp"
+#include "SkrRTTR/rttr_traits.hpp"
 
 typedef struct skr_config_resource_t skr_config_resource_t;
 
@@ -17,20 +17,14 @@ SKR_RUNTIME_API skr_config_resource_t {
 
 SKR_RTTR_TYPE(skr_config_resource_t, "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74")
 
-namespace skr::binary
+namespace skr
 {
 template <>
-struct SKR_RUNTIME_API ReadTrait<skr_config_resource_t> {
-public:
-    static int Read(skr_binary_reader_t* reader, skr_config_resource_t& config);
+struct SKR_RUNTIME_API BinSerde<skr_config_resource_t> {
+    static bool read(SBinaryReader* r, skr_config_resource_t& v);
+    static bool write(SBinaryWriter* w, const skr_config_resource_t& v);
 };
-
-template <>
-struct SKR_RUNTIME_API WriteTrait<skr_config_resource_t> {
-public:
-    static int Write(skr_binary_writer_t* writer, const skr_config_resource_t& config);
-};
-} // namespace skr::binary
+} // namespace skr
 
 namespace skr
 {

@@ -3,16 +3,14 @@
 #include "SkrGui/math/color.hpp"
 // Avoid including type/type.hpp by including "containers/detail/sptr.hpp" instead.
 // #include "SkrContainers/sptr.hpp"
-#include "SkrContainers/detail/sptr.hpp"
+#include "SkrContainers/sptr.hpp"
 #include <variant> // TODO. use skr::variant, here for shit msvc
 
 #ifndef __meta__
     #include "SkrGui/render_objects/render_text.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct RenderText;
 struct IParagraph;
@@ -41,7 +39,7 @@ sreflect_struct(
 )
 SKR_GUI_API RenderText : public RenderBox {
 public:
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = RenderBox;
 
     RenderText();
@@ -58,5 +56,4 @@ private:
     IParagraph* _paragraph = nullptr;
     String      _text      = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

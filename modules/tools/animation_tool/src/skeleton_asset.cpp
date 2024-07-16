@@ -8,26 +8,23 @@
 #include "SkrAnim/ozz/base/io/stream.h"
 #include "SkrAnim/ozz/base/io/archive.h"
 #include "SkrCore/log.hpp"
-#include "SkrRT/serde/json/reader.h"
 #include "SkrAnim/resources/skeleton_resource.hpp"
 
 namespace skd::asset
 {
-bool SSkelCooker::Cook(SCookContext *ctx)
+bool SSkelCooker::Cook(SCookContext* ctx)
 {
     SkrZoneScopedNS("SSkelCooker::Cook", 4);
 
     using namespace ozz::animation::offline;
-    //-----load config
-    simdjson::ondemand::parser parser;
     //-----import resource object
     RawSkeleton* rawSkeleton = (RawSkeleton*)ctx->Import<RawSkeleton>();
     if (!rawSkeleton)
     {
         return false;
     }
-    SKR_DEFER({ctx->Destroy(rawSkeleton);});
-    if(!ValidateJointNamesUniqueness(*rawSkeleton))
+    SKR_DEFER({ ctx->Destroy(rawSkeleton); });
+    if (!ValidateJointNamesUniqueness(*rawSkeleton))
     {
         return false;
     }
@@ -36,9 +33,10 @@ bool SSkelCooker::Cook(SCookContext *ctx)
     //-----cook resource
     skr::anim::SkeletonResource resource;
     {
-        SkeletonBuilder builder;
+        SkeletonBuilder                           builder;
         ozz::unique_ptr<ozz::animation::Skeleton> skeleton = builder(*rawSkeleton);
-        if (!skeleton) {
+        if (!skeleton)
+        {
             SKR_LOG_ERROR(u8"Failed to build skeleton for asset %s.", ctx->GetAssetRecord()->path.c_str());
             return false;
         }
@@ -50,4 +48,4 @@ bool SSkelCooker::Cook(SCookContext *ctx)
     ctx->Save(resource);
     return true;
 }
-}
+} // namespace skd::asset

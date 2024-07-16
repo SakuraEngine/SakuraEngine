@@ -1,8 +1,8 @@
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_header.hpp"
-#include "SkrBase/misc/debug.h" 
-#include "SkrRT/rttr/type_registry.hpp"
-#include "SkrRT/rttr/type/type.hpp"
+#include "SkrBase/misc/debug.h"
+#include "SkrRTTR/type_registry.hpp"
+#include "SkrRTTR/type.hpp"
 #include "SkrCore/log.hpp"
 
 namespace skr
@@ -10,26 +10,41 @@ namespace skr
 namespace resource
 {
 
-int SResourceFactory::Deserialize(skr_resource_record_t* record, skr_binary_reader_t* reader)
+bool SResourceFactory::Deserialize(skr_resource_record_t* record, SBinaryReader* reader)
 {
+    // TODO. resume rttr
     if (auto type = skr::rttr::get_type_from_guid(record->header.type))
     {
         auto p_obj = sakura_malloc_aligned(type->size(), type->alignment());
-        type->call_ctor(p_obj);
-        auto serde_result = type->read_binary(p_obj, reader);
-        if (serde_result != 0)
+        // find & call ctor
         {
-            type->call_dtor(p_obj);
-            sakura_free_aligned(p_obj, type->alignment());
-            p_obj = nullptr;
+            auto ctor_data = type->record_data().find_ctor<void()>(
+                skr::rttr::ETypeSignatureCompareFlag::Strict
+            );
+            auto ctor = reinterpret_cast<void(*)(void*)>(ctor_data->native_invoke);
+            ctor(p_obj);
         }
-
+        {
+            using ReadBinProc = bool(void* o, void* r);
+            auto read_bin_data = type->record_data().find_extern_method<ReadBinProc>(
+                skr::rttr::SkrCoreExternMethods::ReadBin,
+                rttr::ETypeSignatureCompareFlag::Strict
+            ).value();
+            auto read_bin = reinterpret_cast<ReadBinProc*>(read_bin_data->native_invoke);
+            if (!read_bin(p_obj, reader))
+            {
+                // TODO: CALL DTOR IF FAILED
+                SKR_UNIMPLEMENTED_FUNCTION();
+                sakura_free_aligned(p_obj, type->alignment());
+                p_obj = nullptr;
+            }
+        }
         record->resource = p_obj;
-        return serde_result;
+        return true;
     }
     SKR_LOG_FMT_ERROR(u8"Failed to deserialize resource of type {}", record->header.type);
     SKR_UNREACHABLE_CODE();
-    return 0;
+    return false;
 }
 
 bool SResourceFactory::Unload(skr_resource_record_t* record)

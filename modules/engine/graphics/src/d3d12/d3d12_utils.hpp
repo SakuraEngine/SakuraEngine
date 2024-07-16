@@ -6,7 +6,7 @@
 #endif
 #ifdef CGPU_THREAD_SAFETY
 #include "SkrOS/thread.h"
-#include "SkrOS/atomic.h"
+#include "SkrBase/atomic/atomic.h"
 #endif
 #include "./../common/common_utils.h"
 
@@ -172,15 +172,18 @@ struct SubresTileMappings_D3D12 {
     {
         auto pTiledInfo = const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
         auto* mapping = at(x, y, z);
-        const auto status = skr_atomic32_cas_relaxed(&mapping->status,
-                                                     D3D12_TILE_MAPPING_STATUS_MAPPED, D3D12_TILE_MAPPING_STATUS_UNMAPPING);
-        if (status == D3D12_TILE_MAPPING_STATUS_MAPPED)
+
+        int32_t expect_mapped = D3D12_TILE_MAPPING_STATUS_MAPPED;
+        if (skr_atomic_compare_exchange_strong(&mapping->status,
+                                        &expect_mapped, D3D12_TILE_MAPPING_STATUS_UNMAPPING))
         {
             SAFE_RELEASE(mapping->pDxAllocation);
-            skr_atomicu64_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
+            skr_atomic_fetch_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
         }
-        skr_atomic32_cas_relaxed(&mapping->status,
-                                 D3D12_TILE_MAPPING_STATUS_UNMAPPING, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
+
+        int32_t expect_unmapping = D3D12_TILE_MAPPING_STATUS_UNMAPPING;
+        skr_atomic_compare_exchange_strong(&mapping->status,
+                                 &expect_unmapping, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
     }
 
 private:
@@ -204,15 +207,17 @@ struct PackedMipMapping_D3D12 {
     void unmap()
     {
         auto pTiledInfo = const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
-        const auto prev = skr_atomic32_cas_relaxed(&status,
-                                                   D3D12_TILE_MAPPING_STATUS_MAPPED, D3D12_TILE_MAPPING_STATUS_UNMAPPING);
-        if (prev == D3D12_TILE_MAPPING_STATUS_MAPPED)
+        int32_t expect_mapped = D3D12_TILE_MAPPING_STATUS_MAPPED;
+        if (skr_atomic_compare_exchange_strong(&status,
+                &expect_mapped, D3D12_TILE_MAPPING_STATUS_UNMAPPING))
         {
             SAFE_RELEASE(pAllocation);
-            skr_atomicu64_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
+            skr_atomic_fetch_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
         }
-        skr_atomic32_cas_relaxed(&status,
-                                 D3D12_TILE_MAPPING_STATUS_UNMAPPING, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
+
+        int32_t expect_unmapping = D3D12_TILE_MAPPING_STATUS_UNMAPPING;
+        skr_atomic_compare_exchange_strong(&status,
+                                 &expect_unmapping, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
     }
     D3D12MA::Allocation* pAllocation = nullptr;
     const uint32_t N = 0;

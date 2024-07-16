@@ -1,4 +1,4 @@
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrCore/log.h"
 #include "SkrBase/misc/defer.hpp"
 #include "image_coder_png.hpp"

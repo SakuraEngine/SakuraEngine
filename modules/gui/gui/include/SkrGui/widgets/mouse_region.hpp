@@ -5,9 +5,7 @@
     #include "SkrGui/widgets/mouse_region.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct PointerEnterEvent;
 struct PointerExitEvent;
@@ -19,7 +17,7 @@ sreflect_struct(
     "guid": "f7ee023d-dcd0-4dfc-a095-793128ac0ad9"
 )
 SKR_GUI_API MouseRegin : public SingleChildRenderObjectWidget {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
     void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
@@ -32,5 +30,4 @@ SKR_GUI_API MouseRegin : public SingleChildRenderObjectWidget {
     Function<bool(PointerDownEvent*)>  on_down  = {};
     Function<bool(PointerUpEvent*)>    on_up    = {};
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

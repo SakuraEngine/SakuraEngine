@@ -1,10 +1,11 @@
-#include "SkrTestFramework/framework.hpp"
 #include "container_test_types.hpp"
+#include "SkrTestFramework/framework.hpp"
 
 template <typename TestSparseVector, typename ModifyCapacity, typename ClampCapacity, typename CheckData, typename CheckNoData, typename CheckDataEQ>
 void template_test_sparse_vector(ModifyCapacity&& capacity_of, ClampCapacity&& clamp_capacity, CheckData&& check_data, CheckNoData&& check_no_data, CheckDataEQ&& check_data_eq)
 {
-    using namespace skr;
+    using skr::Greater;
+    using namespace skr::test_container;
     using TestVector = Vector<uint32_t>;
 
     SUBCASE("ctor")
@@ -54,7 +55,7 @@ void template_test_sparse_vector(ModifyCapacity&& capacity_of, ClampCapacity&& c
         REQUIRE(d.has_data(5));
         REQUIRE_EQ(d[5], 4);
 
-        u32              data[] = { 1, 1, 4, 5, 1, 4 };
+        uint32_t         data[] = { 1, 1, 4, 5, 1, 4 };
         TestSparseVector e(data, 6);
         REQUIRE_EQ(e.size(), 6);
         REQUIRE_EQ(e.sparse_size(), 6);
@@ -300,10 +301,10 @@ void template_test_sparse_vector(ModifyCapacity&& capacity_of, ClampCapacity&& c
 
     SUBCASE("special assign")
     {
-        u32 data[100];
+        uint32_t data[100];
         for (size_t i = 0; i < 100; ++i)
         {
-            data[i] = static_cast<u32>(99 - i);
+            data[i] = static_cast<uint32_t>(99 - i);
         }
 
         TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
@@ -316,7 +317,7 @@ void template_test_sparse_vector(ModifyCapacity&& capacity_of, ClampCapacity&& c
         REQUIRE_GE(a.capacity(), capacity_of(50));
         for (size_t i = 0; i < 50; ++i)
         {
-            a[i] = static_cast<u32>(99 - i);
+            a[i] = static_cast<uint32_t>(99 - i);
         }
 
         a.assign({ 1, 1, 4, 5, 1, 4 });
@@ -704,7 +705,7 @@ void template_test_sparse_vector(ModifyCapacity&& capacity_of, ClampCapacity&& c
     SUBCASE("remove if")
     {
         TestSparseVector a({ 1, 1, 4, 5, 1, 4 });
-        a.remove_if([](const u32& a) { return a > 3; });
+        a.remove_if([](const uint32_t& a) { return a > 3; });
         REQUIRE_EQ(a.size(), 5);
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 1);
@@ -721,7 +722,7 @@ void template_test_sparse_vector(ModifyCapacity&& capacity_of, ClampCapacity&& c
         REQUIRE_EQ(a[4], 1);
         REQUIRE_EQ(a[5], 4);
 
-        a.remove_last_if([](const u32& a) { return a > 3; });
+        a.remove_last_if([](const uint32_t& a) { return a > 3; });
         REQUIRE_EQ(a.size(), 4);
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 2);
@@ -738,7 +739,7 @@ void template_test_sparse_vector(ModifyCapacity&& capacity_of, ClampCapacity&& c
         REQUIRE_EQ(a[4], 1);
         // REQUIRE_EQ(a[5], 4);
 
-        a.remove_all_if([](const u32& a) { return a < 3; });
+        a.remove_all_if([](const uint32_t& a) { return a < 3; });
         REQUIRE_EQ(a.size(), 1);
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 5);
@@ -776,7 +777,7 @@ void template_test_sparse_vector(ModifyCapacity&& capacity_of, ClampCapacity&& c
         REQUIRE_EQ(a.count(4), 2);
         REQUIRE_EQ(a.count(5), 0);
 
-        auto cond = [](const u32& a) { return a < 4; };
+        auto cond = [](const uint32_t& a) { return a < 4; };
         REQUIRE(a.contains_if(cond));
         REQUIRE_EQ(a.count_if(cond), 3);
         a.remove_all_if(cond);
@@ -792,9 +793,9 @@ void template_test_sparse_vector(ModifyCapacity&& capacity_of, ClampCapacity&& c
         TestSparseVector a(kCapacity);
         for (size_t i = 0; i < kCapacity; ++i)
         {
-            a[i] = static_cast<u32>(kCapacity - 1 - i);
+            a[i] = static_cast<uint32_t>(kCapacity - 1 - i);
         }
-        a.remove_all_if([](const u32& n) { return n % 2 == 1; });
+        a.remove_all_if([](const uint32_t& n) { return n % 2 == 1; });
         REQUIRE_EQ(a.size(), kRemovedSize);
         REQUIRE_EQ(a.sparse_size(), kCapacity);
         REQUIRE_EQ(a.hole_size(), kCapacity - kRemovedSize);
@@ -812,14 +813,14 @@ void template_test_sparse_vector(ModifyCapacity&& capacity_of, ClampCapacity&& c
         a.clear();
         for (size_t i = 0; i < kCapacity; ++i)
         {
-            a.add(static_cast<u32>(i));
+            a.add(static_cast<uint32_t>(i));
         }
-        a.remove_all_if([](const u32& n) { return n % 2 == 1; });
+        a.remove_all_if([](const uint32_t& n) { return n % 2 == 1; });
         REQUIRE_EQ(a.size(), kRemovedSize);
         REQUIRE_EQ(a.sparse_size(), kCapacity);
         REQUIRE_EQ(a.hole_size(), kCapacity - kRemovedSize);
         REQUIRE_EQ(a.capacity(), capacity_of(kCapacity));
-        a.sort_stable(Greater<u32>());
+        a.sort_stable(Greater<uint32_t>());
         REQUIRE_EQ(a.size(), kRemovedSize);
         REQUIRE_EQ(a.sparse_size(), kRemovedSize);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -1007,7 +1008,7 @@ void template_test_sparse_vector(ModifyCapacity&& capacity_of, ClampCapacity&& c
 
 TEST_CASE("test sparse vector")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     using TestSparseVector = SparseVector<uint32_t>;
 
     template_test_sparse_vector<TestSparseVector>(
@@ -1020,7 +1021,7 @@ TEST_CASE("test sparse vector")
 
 TEST_CASE("test fixed sparse vector")
 {
-    using namespace skr;
+    using namespace skr::test_container;
     static constexpr uint64_t kFixedCapacity = 200;
 
     using TestSparseVector = FixedSparseVector<uint32_t, kFixedCapacity>;
@@ -1035,7 +1036,7 @@ TEST_CASE("test fixed sparse vector")
 
 TEST_CASE("test inline sparse vector")
 {
-    using namespace skr;
+    using namespace skr::test_container;
 
     static constexpr uint64_t kInlineCapacity = 10;
 

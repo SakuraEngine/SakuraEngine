@@ -7,9 +7,7 @@
     #include "SkrGuiRenderer/device/skr_native_window.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct SkrRenderWindow;
 struct SkrNativeDevice;
@@ -18,7 +16,7 @@ sreflect_struct(
     "guid": "53ce54d5-329c-4455-91bc-fcc80444f19f"
 )
 SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     SkrNativeWindow(SkrNativeDevice* device);
     ~SkrNativeWindow();
@@ -81,5 +79,4 @@ private:
     SkrRenderWindow*   _render_window = nullptr;
     NativeWindowLayer* _native_layer  = nullptr;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

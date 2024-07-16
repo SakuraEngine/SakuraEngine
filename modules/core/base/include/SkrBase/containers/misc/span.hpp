@@ -6,7 +6,7 @@
 
 namespace skr::container
 {
-inline static constexpr size_t kDynamicExtent = npos_of<size_t>;
+inline static constexpr size_t kDynamicExtent = skr::npos_of<size_t>;
 
 namespace __helper
 {

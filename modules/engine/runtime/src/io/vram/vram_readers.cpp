@@ -19,14 +19,14 @@ SwapableCmdPool::RC::RC(CGPUCommandPoolId v, SAtomic32* pRC) SKR_NOEXCEPT
     : v(v), pRC(pRC)
 {
     if (pRC)
-        skr_atomic32_add_relaxed(pRC, 1);
+        skr_atomic_fetch_add_relaxed(pRC, 1);
 }
 
 SwapableCmdPool::RC::~RC() SKR_NOEXCEPT
 {
     if (pRC)
     {
-        auto prev = skr_atomic32_add_relaxed(pRC, -1);
+        auto prev = skr_atomic_fetch_add_relaxed(pRC, -1);
         if (prev == 1)
         {
             cgpu_reset_command_pool(v);

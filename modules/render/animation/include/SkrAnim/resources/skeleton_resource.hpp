@@ -11,28 +11,22 @@
     #include "SkrBase/types.h"
     #include "SkrRT/resource/resource_factory.h"
 
-namespace skr sreflect
+namespace skr
 {
-namespace anim sreflect
+namespace anim
 {
 
 sreflect_struct("guid": "1876BF35-E4DC-450B-B9D4-09259397F4BA")
 SkeletonResource {
     ozz::animation::Skeleton skeleton;
 };
-} // namespace anim sreflect
+} // namespace anim
 
-namespace binary
-{
 template <>
-struct SKR_ANIM_API ReadTrait<skr::anim::SkeletonResource> {
-    static int Read(skr_binary_reader_t* reader, skr::anim::SkeletonResource& value);
+struct SKR_ANIM_API BinSerde<skr::anim::SkeletonResource> {
+    static bool read(SBinaryReader* r, skr::anim::SkeletonResource& v);
+    static bool write(SBinaryWriter* w, const skr::anim::SkeletonResource& v);
 };
-template <>
-struct SKR_ANIM_API WriteTrait<skr::anim::SkeletonResource> {
-    static int Write(skr_binary_writer_t* writer, const skr::anim::SkeletonResource& value);
-};
-} // namespace binary
 
 namespace resource
 {
@@ -43,5 +37,5 @@ public:
     bool       AsyncIO() override { return true; }
 };
 } // namespace resource
-} // namespace skr sreflect
+} // namespace skr
 #endif

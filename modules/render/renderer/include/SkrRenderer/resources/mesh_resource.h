@@ -1,6 +1,8 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrRenderer/fwd_types.h"
+#include "SkrCore/blob.hpp"
+#include "SkrBase/meta.h"
 
 #include <SkrContainers/string.hpp>
 #include <SkrContainers/vector.hpp>
@@ -62,16 +64,16 @@ skr_mesh_buffer_t {
 #ifdef __cplusplus
     #include "SkrRT/resource/resource_factory.h"
 
-namespace skr sreflect
+namespace skr
 {
-namespace renderer sreflect
+namespace renderer
 {
 using EVertexAttribute  = ESkrVertexAttribute;
 using VertexBufferEntry = skr_vertex_buffer_entry_t;
 using IndexBufferEntry  = skr_index_buffer_entry_t;
 using MeshBuffer        = skr_mesh_buffer_t;
 
-sreflect_struct("guid" : "b0b69898-166f-49de-a675-7b04405b98b1")
+sreflect_struct("guid" : "cd2d43a7-1e0e-4951-bf87-7d693fd26227")
 sattr("serialize" : "bin")
 MeshPrimitive {
     skr_vertex_layout_id           vertex_layout_id;
@@ -126,8 +128,8 @@ struct SKR_RENDERER_API SMeshFactory : public resource::SResourceFactory {
     [[nodiscard]] static SMeshFactory* Create(const Root& root);
     static void                        Destroy(SMeshFactory* factory);
 };
-} // namespace renderer sreflect
-} // namespace skr sreflect
+} // namespace renderer
+} // namespace skr
 #endif
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void

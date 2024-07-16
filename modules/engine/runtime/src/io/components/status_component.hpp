@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrRT/io/io.h"
-#include "SkrGuid/guid.hpp"
 #include "../components/component.hpp"
 
 #include "SkrProfile/profile.h"
@@ -55,22 +54,22 @@ public:
 
     virtual ESkrIOStage getStatus() const SKR_NOEXCEPT
     {
-        return static_cast<ESkrIOStage>(skr_atomicu32_load_relaxed(&future->status));
+        return static_cast<ESkrIOStage>(skr_atomic_load_relaxed(&future->status));
     }
 
     bool getCancelRequested() const SKR_NOEXCEPT
     {
-        return skr_atomicu32_load_relaxed(&future->request_cancel);
+        return skr_atomic_load_relaxed(&future->request_cancel);
     }
 
     SkrAsyncIOFinishStep getFinishStep() const SKR_NOEXCEPT
     { 
-        return (SkrAsyncIOFinishStep)skr_atomic32_load_acquire(&finish_step); 
+        return (SkrAsyncIOFinishStep)skr_atomic_load_acquire(&finish_step); 
     }
 
     void setFinishStep(SkrAsyncIOFinishStep step) SKR_NOEXCEPT
     { 
-        skr_atomic32_store_release(&finish_step, step); 
+        skr_atomic_store_release(&finish_step, step); 
     }
 
     void tryPollFinish() SKR_NOEXCEPT
@@ -85,7 +84,7 @@ public:
             finish_callbacks[SKR_IO_FINISH_POINT_CANCEL](
                 future, request, finish_callback_datas[SKR_IO_FINISH_POINT_CANCEL]);
         }
-        skr_atomic32_store_relaxed(&finish_step, SKR_ASYNC_IO_FINISH_STEP_DONE);
+        skr_atomic_store_relaxed(&finish_step, SKR_ASYNC_IO_FINISH_STEP_DONE);
     }
 
     bool needPollFinish() SKR_NOEXCEPT
@@ -97,7 +96,7 @@ public:
 
     virtual void setStatus(ESkrIOStage status) SKR_NOEXCEPT
     {
-        skr_atomicu32_store_release(&future->status, status);
+        skr_atomic_store_release(&future->status, status);
         if (const auto callback = callbacks[status])
         {
             SkrZoneScoped;
@@ -130,7 +129,7 @@ protected:
 
 constexpr skr_guid_t CID<struct IOStatusComponent>::Get()
 {
-    using namespace skr::guid::literals;
+    using namespace skr::literals;
     return u8"3db75617-8027-464b-b241-e4e59f83fd61"_guid;
 } 
 

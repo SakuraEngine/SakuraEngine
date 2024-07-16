@@ -4,15 +4,13 @@
     #include "SkrGui/framework/element/single_child_render_object_element.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "a3f51c75-2995-4f99-95c7-1166b3ba17a6"
 )
 SingleChildRenderObjectElement : public RenderObjectElement {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = RenderObjectElement;
     using Super::Super;
 
@@ -32,5 +30,4 @@ private:
     Element* _child = nullptr;
 };
 
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

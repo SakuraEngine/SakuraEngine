@@ -4,21 +4,16 @@ add_requires("harfbuzz >=7.1.0-skr", {system = false})
 
 add_requires("nanovg >=0.1.0-skr", {system = false})
 
+codegen_component("SkrGui", { api = "SKR_GUI", rootdir = "include/SkrGui" })
+    add_files("include/**.hpp")
+
 shared_module("SkrGui", "SKR_GUI", engine_version)
     add_packages("freetype", "icu", "harfbuzz")
     add_packages("nanovg")
     public_dependency("SkrRT", engine_version)
 
-    -- reflection
-    add_rules("c++.codegen", {
-        files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/SkrGui",
-        api = "SKR_GUI"
-    })
-
     -- unity build & pch
     add_rules("c++.unity_build", {batchsize = default_unity_batch})
-    set_pcxxheader("src/pch.hpp")
     add_includedirs("include", {public = true})
     add_includedirs("src", {public = false})
     add_files("src/*.cpp")
@@ -35,3 +30,7 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     add_files("src/backend/text_server_adv/*.cpp", {unity_group  = "text_adv"})
     
     remove_files("src/dev/deprecated/**.cpp")
+
+private_pch("SkrGui")
+    add_deps("SkrGui.Mako")
+    add_files("include/**.hpp")

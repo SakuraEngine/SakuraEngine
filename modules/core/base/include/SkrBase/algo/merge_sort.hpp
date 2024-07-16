@@ -3,6 +3,7 @@
 #include "binary_search.hpp"
 #include "rotate.hpp"
 #include <algorithm>
+#include "SkrBase/misc/swap.hpp"
 
 // merge sort help
 namespace skr::algo::__help
@@ -50,6 +51,8 @@ namespace skr::algo
 template <typename T, typename TP = Less<>, int MinMergeSubgroupSize = 2>
 SKR_INLINE void merge_sort(T begin, T end, TP&& p = TP())
 {
+    using Swapper = Swap<std::decay_t<decltype(*begin)>>;
+
     size_t subgroup_start = 0;
     size_t count          = end - begin;
 
@@ -68,7 +71,7 @@ SKR_INLINE void merge_sort(T begin, T end, TP&& p = TP())
                     {
                         if (p(*(begin + (it + 1)), *(begin + it)))
                         {
-                            std::swap(*(begin + it), *(begin + (it + 1)));
+                            Swapper::call(*(begin + it), *(begin + (it + 1)));
                         }
                     }
                     --group_end;
@@ -83,7 +86,7 @@ SKR_INLINE void merge_sort(T begin, T end, TP&& p = TP())
             {
                 if ((subgroup + 1) < count && p(*(begin + (subgroup + 1)), *(begin + subgroup)))
                 {
-                    std::swap(*(begin + subgroup), *(begin + (subgroup + 1)));
+                    Swapper::call(*(begin + subgroup), *(begin + (subgroup + 1)));
                 }
             }
         }

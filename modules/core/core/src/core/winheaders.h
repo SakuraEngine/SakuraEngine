@@ -4,7 +4,7 @@
 #endif
 
 #include <windows.h> // IWYU pragma: export
-
+#include <new.h>     // IWYU pragma: export
 #include <psapi.h>   // IWYU pragma: export
 #include <wtypes.h>  // IWYU pragma: export
 #include <winbase.h> // IWYU pragma: export

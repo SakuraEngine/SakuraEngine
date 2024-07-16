@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrRT/misc/types.h"
 #include "SkrRenderer/primitive_draw.h"
 #include "l2d_model_resource.h"
 

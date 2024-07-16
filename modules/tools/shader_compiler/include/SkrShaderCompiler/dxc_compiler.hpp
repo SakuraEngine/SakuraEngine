@@ -1,6 +1,6 @@
 #pragma once
 #include "shader_compiler.hpp"
-#include "SkrModule/subsystem.hpp"
+#include "SkrCore/module/subsystem.hpp"
 #include "SkrOS/shared_library.hpp"
 #include "SkrContainers/stl_string.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
@@ -17,9 +17,9 @@ struct IDxcBlobUtf8;
 struct IDxcBlobWide;
 struct IDxcBlobEncoding;
 
-namespace skd sreflect
+namespace skd
 {
-namespace asset sreflect
+namespace asset
 {
 struct SKR_SHADER_COMPILER_API SDXCCompiledShader : public ICompiledShader {
     friend struct SDXCCompiler;
@@ -82,11 +82,11 @@ protected:
 
     skr::Vector<skr_shader_option_template_t> switch_defs;
     skr::Vector<skr_shader_option_instance_t> switches;
-    skr_stable_shader_hash_t                    switches_hash = {};
+    skr_stable_shader_hash_t                  switches_hash = {};
 
     skr::Vector<skr_shader_option_template_t> option_defs;
     skr::Vector<skr_shader_option_instance_t> options;
-    skr_stable_shader_hash_t                    options_hash = {};
+    skr_stable_shader_hash_t                  options_hash = {};
 };
 
 sreflect_struct("guid" : "ae28a9e5-39cf-4eab-aa27-6103f42cbf2d", "rttr": { "reflect_bases": false })
@@ -107,5 +107,5 @@ protected:
     skr::SharedLibrary dxil_library;
     void*              pDxcCreateInstance = nullptr;
 };
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd

@@ -5,15 +5,13 @@
     #include "SkrGui/framework/element/component_element.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "8344aca9-b204-4b4a-8e16-18e4219039be"
 )
 SKR_GUI_API ComponentElement : public Element {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = Element;
     using Super::Super;
 
@@ -29,5 +27,4 @@ SKR_GUI_API ComponentElement : public Element {
 private:
     Element* _child = nullptr;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

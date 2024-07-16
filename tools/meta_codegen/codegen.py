@@ -27,10 +27,11 @@ if __name__ == '__main__':
     generate_manager.load_database()
 
     # parse and check attr
-    generate_manager.parse_attr()
-    generate_manager.check_attr()
+    generate_manager.parse_attrs()
+    generate_manager.solve_attrs()
 
     # generate code
+    generate_manager.generate_body()
     generate_manager.pre_generate()
     generate_manager.generate()
     # mix in old framework generate

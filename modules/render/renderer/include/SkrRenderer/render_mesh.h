@@ -7,9 +7,9 @@
 #endif
 
 #ifdef __cplusplus
-namespace skr sreflect
+namespace skr
 {
-namespace renderer sreflect
+namespace renderer
 {
 
 struct RenderMesh {
@@ -25,8 +25,8 @@ MeshComponent {
     SKR_RESOURCE_FIELD(MeshResource, mesh_resource);
 };
 
-} // namespace renderer sreflect
-} // namespace skr sreflect
+} // namespace renderer
+} // namespace skr
 #endif
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resource_id mesh_resource);

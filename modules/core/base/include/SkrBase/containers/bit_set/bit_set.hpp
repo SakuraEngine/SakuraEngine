@@ -48,7 +48,7 @@ struct Bitset {
 
     // modify
     void set();
-    void set(SizeType i, bool value);
+    void set(SizeType i, bool value = true);
     void reset();
     void reset(SizeType i);
     void flip();
@@ -57,6 +57,7 @@ struct Bitset {
     // visitor
     BitRef<TBlock> operator[](SizeType i);
     bool           operator[](SizeType i) const;
+    bool           test(SizeType i) const;
 
     // compare
     bool operator==(const Bitset& x) const;
@@ -76,8 +77,8 @@ struct Bitset {
     // cast
     void     from_uint32(uint32_t value);
     void     from_uint64(uint64_t value);
-    uint32_t to_uint32(uint32_t& value) const;
-    uint32_t to_uint64(uint64_t& value) const;
+    uint32_t to_uint32() const;
+    uint32_t to_uint64() const;
 
 private:
     // help function
@@ -494,6 +495,11 @@ inline bool Bitset<N, TBlock>::operator[](SizeType i) const
     SKR_ASSERT(i < N && "Bitset<N, TBlock>::operator[](SizeType i) i out of range");
     return (_block_at(i) & (static_cast<TBlock>(1) << (i & Algo::PerBlockSizeMask))) != 0;
 }
+template <size_t N, typename TBlock>
+inline bool Bitset<N, TBlock>::test(SizeType i) const
+{
+    return (*this)[i];
+}
 
 // compare
 template <size_t N, typename TBlock>
@@ -658,8 +664,9 @@ inline void Bitset<N, TBlock>::from_uint64(uint64_t value)
     _clear_unused_bits();
 }
 template <size_t N, typename TBlock>
-inline uint32_t Bitset<N, TBlock>::to_uint32(uint32_t& value) const
+inline uint32_t Bitset<N, TBlock>::to_uint32() const
 {
+    uint32_t value = 0;
     if constexpr (NumBlock == 1)
     {
         value = static_cast<uint32_t>(_data[0]);
@@ -672,10 +679,12 @@ inline uint32_t Bitset<N, TBlock>::to_uint32(uint32_t& value) const
     {
         value = static_cast<uint32_t>(_data[0]);
     }
+    return value;
 }
 template <size_t N, typename TBlock>
-inline uint32_t Bitset<N, TBlock>::to_uint64(uint64_t& value) const
+inline uint32_t Bitset<N, TBlock>::to_uint64() const
 {
+    uint64_t value = 0;
     if constexpr (NumBlock == 1)
     {
         value = static_cast<uint64_t>(_data[0]);
@@ -702,6 +711,7 @@ inline uint32_t Bitset<N, TBlock>::to_uint64(uint64_t& value) const
             value = static_cast<uint64_t>(_data[0]);
         }
     }
+    return value;
 }
 
 // help function

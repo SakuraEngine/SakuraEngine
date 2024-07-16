@@ -1,11 +1,12 @@
+#include "SkrBase/misc/defer.hpp"
+#include "SkrArchive/json/reader.h"
 #include "SkrOS/shared_library.hpp"
 #include "SkrOS/filesystem.hpp"
-#include "SkrMemory/memory.h"
-#include "SkrContainers/hashmap.hpp"
-#include "SkrModule/module_manager.hpp"
-#include "SkrModule/subsystem.hpp"
+#include "SkrCore/memory/memory.h"
+#include "SkrContainersDef/hashmap.hpp"
+#include "SkrCore/module/module_manager.hpp"
+#include "SkrCore/module/subsystem.hpp"
 #include "SkrCore/log.h"
-#include "simdjson.h"
 
 #if defined(_MSC_VER)
 bool cr_pdb_replace(const std::string& filename, const std::string& pdbname,
@@ -310,49 +311,36 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::String& name, bool hot
     return module;
 }
 
-void SIMDJson_ReadString(simdjson::ondemand::value&& json, skr::String& value)
-{
-    SkrZoneScopedN("json::ReadTrait<skr::String>::Read");
-    auto result = json.get_string();
-    if (result.error() == simdjson::SUCCESS)
-    {
-        std::string_view view = result.value_unsafe();
-        value                 = skr::String(skr::StringView((const char8_t*)view.data(), (int32_t)view.length()));
-    }
-}
-
 ModuleInfo ModuleManagerImpl::parseMetaData(const char8_t* metadata)
 {
-    ModuleInfo                 info;
-    auto                       meta = simdjson::padded_string((const char*)metadata, strlen((const char*)metadata));
-    simdjson::ondemand::parser parser;
-    auto                       doc = parser.iterate(meta);
-
-    SIMDJson_ReadString(doc.find_field("api").value_unsafe(), info.core_version);
-    SIMDJson_ReadString(doc.find_field("name").value_unsafe(), info.name);
-    SIMDJson_ReadString(doc.find_field("prettyname").value_unsafe(), info.prettyname);
-    SIMDJson_ReadString(doc.find_field("version").value_unsafe(), info.version);
-    SIMDJson_ReadString(doc.find_field("linking").value_unsafe(), info.linking);
-    SIMDJson_ReadString(doc.find_field("url").value_unsafe(), info.url);
-    SIMDJson_ReadString(doc.find_field("license").value_unsafe(), info.license);
-    SIMDJson_ReadString(doc.find_field("copyright").value_unsafe(), info.copyright);
-    auto deps_doc = doc.find_field("dependencies");
-    if (deps_doc.error() == simdjson::SUCCESS)
+    ModuleInfo                info;
+    skr::archive::_JsonReader reader(metadata);
+    reader.StartObject(u8"");
     {
-        for (auto&& jdep : deps_doc)
+        reader.ReadString(u8"api", info.core_version);
+        reader.ReadString(u8"name", info.name);
+        reader.ReadString(u8"prettyname", info.prettyname);
+        reader.ReadString(u8"version", info.version);
+        reader.ReadString(u8"linking", info.linking);
+        reader.ReadString(u8"url", info.url);
+        reader.ReadString(u8"license", info.license);
+        reader.ReadString(u8"copyright", info.copyright);
+
+        size_t dep_count;
+        reader.StartArray(u8"dependencies", dep_count);
+        for (size_t i = 0; i < dep_count; i++)
         {
             ModuleDependency dep;
-            SIMDJson_ReadString(jdep.find_field("name").value_unsafe(), dep.name);
-            SIMDJson_ReadString(jdep.find_field("version").value_unsafe(), dep.version);
-            SIMDJson_ReadString(jdep.find_field("kind").value_unsafe(), dep.kind);
+            reader.StartObject(u8"");
+            reader.ReadString(u8"name", dep.name);
+            reader.ReadString(u8"version", dep.version);
+            reader.ReadString(u8"kind", dep.kind);
+            reader.EndObject();
             info.dependencies.add(dep);
         }
+        reader.EndArray();
     }
-    else
-    {
-        SKR_LOG_FATAL(u8"parse module meta error!");
-        abort();
-    }
+    reader.EndObject();
     return info;
 }
 
@@ -529,8 +517,8 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::String& entry)
         SkrDelete(subsystem);
     }
     this_module->on_reload_begin();
-    auto this_state = std::move(this_module->state);
-    [[maybe_unused]] auto old_lib = std::move(this_module->sharedLib);
+    auto                  this_state = std::move(this_module->state);
+    [[maybe_unused]] auto old_lib    = std::move(this_module->sharedLib);
     if (modulesMap[entry] != nullptr)
     {
         delete modulesMap[entry];

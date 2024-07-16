@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
+#include "SkrBase/misc/swap.hpp"
 #include <type_traits>
 
 namespace skr::algo
@@ -8,6 +9,8 @@ namespace skr::algo
 template <typename T, typename TS>
 SKR_INLINE void rotate(T p, TS count, TS amount)
 {
+    using Swapper = Swap<std::decay_t<decltype(*p)>>;
+
     if (amount != 0)
     {
         TS loc_gcd = gcd(count, amount);
@@ -24,7 +27,7 @@ SKR_INLINE void rotate(T p, TS count, TS amount)
             for (TS j = 0; j < cycle_size; ++j)
             {
                 index_to_fill = (index_to_fill + amount) % count;
-                std::swap(*(p + index_to_fill), buf_object);
+                Swapper::call(*(p + index_to_fill), buf_object);
             }
         }
     }

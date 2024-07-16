@@ -6,7 +6,7 @@ rule("utils.dxc")
 
         -- permission
         if (os.host() == "macosx") then
-            os.exec("chmod -R 777 "..dxc.program)
+            os.exec("chmod 777 "..dxc.program)
         end
 
         -- get target profile

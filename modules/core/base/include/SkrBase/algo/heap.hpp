@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "utils.hpp"
+#include "SkrBase/misc/swap.hpp"
 
 namespace skr::algo
 {
@@ -18,6 +19,8 @@ SKR_INLINE constexpr bool heap_is_leaf(T index, T count) { return heap_lchild_id
 template <typename T, typename TS, typename TP = Less<>>
 SKR_INLINE void heap_sift_down(T heap, TS idx, TS count, TP&& p = TP())
 {
+    using Swapper = Swap<std::decay_t<decltype(*heap)>>;
+
     while (!heap_is_leaf(idx, count))
     {
         const TS l_child_idx = heap_lchild_idx(idx);
@@ -34,7 +37,7 @@ SKR_INLINE void heap_sift_down(T heap, TS idx, TS count, TP&& p = TP())
         if (!p(*(heap + min_child_idx), *(heap + idx)))
             break;
 
-        std::swap(*(heap + idx), *(heap + min_child_idx));
+        Swapper::call(*(heap + idx), *(heap + min_child_idx));
         idx = min_child_idx;
     }
 }
@@ -43,6 +46,8 @@ SKR_INLINE void heap_sift_down(T heap, TS idx, TS count, TP&& p = TP())
 template <class T, typename TS, class TP = Less<>>
 SKR_INLINE TS heap_sift_up(T* heap, TS root_idx, TS node_idx, TP&& p = TP())
 {
+    using Swapper = Swap<std::decay_t<decltype(*heap)>>;
+
     while (node_idx > root_idx)
     {
         TS parent_idx = heap_parent_idx(node_idx);
@@ -51,7 +56,7 @@ SKR_INLINE TS heap_sift_up(T* heap, TS root_idx, TS node_idx, TP&& p = TP())
         if (!p(*(heap + node_idx), *(heap + parent_idx)))
             break;
 
-        std::swap(*(heap + node_idx), *(heap + parent_idx));
+        Swapper::call(*(heap + node_idx), *(heap + parent_idx));
         node_idx = parent_idx;
     }
 
@@ -91,6 +96,8 @@ SKR_INLINE void heapify(T* heap, TS count, TP&& p = TP())
 template <typename T, typename TS, class TP = Less<>>
 SKR_INLINE void heap_sort(T heap, TS count, TP&& p = TP())
 {
+    using Swapper = Swap<std::decay_t<decltype(*heap)>>;
+
     if (count == 0) return;
     auto reverse_pred = [&](const auto& a, const auto& b) -> bool { return !p(a, b); };
 
@@ -99,7 +106,7 @@ SKR_INLINE void heap_sort(T heap, TS count, TP&& p = TP())
 
     for (TS cur_count = count - 1; cur_count > 0; --cur_count)
     {
-        std::swap(*heap, *(heap + cur_count));
+        Swapper::call(*heap, *(heap + cur_count));
         heap_sift_down(heap, (TS)0, cur_count, reverse_pred);
     }
 }

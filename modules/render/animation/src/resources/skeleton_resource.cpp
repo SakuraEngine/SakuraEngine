@@ -1,28 +1,28 @@
 #include "SkrAnim/resources/skeleton_resource.hpp"
 #include "SkrAnim/ozz/base/io/archive.h"
 
-namespace skr::binary
+namespace skr
 {
-int ReadTrait<skr::anim::SkeletonResource>::Read(skr_binary_reader_t* reader, skr::anim::SkeletonResource& value)
+bool BinSerde<skr::anim::SkeletonResource>::read(SBinaryReader* r, skr::anim::SkeletonResource& v)
 {
-    ozz::io::SkrStream stream(reader, nullptr);
+    ozz::io::SkrStream stream(r, nullptr);
     ozz::io::IArchive  archive(&stream);
-    archive >> value.skeleton;
-    return 0;
+    archive >> v.skeleton;
+    return true;
 }
-int WriteTrait<skr::anim::SkeletonResource>::Write(skr_binary_writer_t* writer, const skr::anim::SkeletonResource& value)
+bool BinSerde<skr::anim::SkeletonResource>::write(SBinaryWriter* w, const skr::anim::SkeletonResource& v)
 {
-    ozz::io::SkrStream stream(nullptr, writer);
+    ozz::io::SkrStream stream(nullptr, w);
     ozz::io::OArchive  archive(&stream);
-    archive << value.skeleton;
-    return 0;
+    archive << v.skeleton;
+    return true;
 }
-} // namespace skr::binary
+} // namespace skr
 
 namespace skr::resource
 {
 skr_guid_t SSkelFactory::GetResourceType()
 {
-    return ::skr::rttr::type_id<skr::anim::SkeletonResource>();
+    return ::skr::rttr::type_id_of<skr::anim::SkeletonResource>();
 }
 } // namespace skr::resource

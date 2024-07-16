@@ -4,15 +4,13 @@
     #include "SkrGui/framework/layer/container_layer.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "ea23bfe8-33db-4277-a415-bf059bf76f46"
 )
 SKR_GUI_API ContainerLayer : public Layer {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
 
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override;
 
@@ -25,5 +23,4 @@ SKR_GUI_API ContainerLayer : public Layer {
 private:
     Array<Layer*> _children;
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

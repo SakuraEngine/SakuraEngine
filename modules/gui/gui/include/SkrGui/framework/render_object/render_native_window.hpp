@@ -4,16 +4,14 @@
     #include "SkrGui/framework/render_object/render_native_window.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 struct INativeWindow;
 sreflect_struct(
     "guid": "1681d4be-cb32-4b65-9f07-9f143ebe1c6e"
 )
 SKR_GUI_API RenderNativeWindow : public RenderWindow {
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     RenderNativeWindow(INativeWindow* native_window);
 
     NotNull<OffsetLayer*> update_layer(OffsetLayer* old_layer) override;
@@ -23,5 +21,4 @@ SKR_GUI_API RenderNativeWindow : public RenderWindow {
 
     bool hit_test(HitTestResult* result, Offsetf local_position);
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

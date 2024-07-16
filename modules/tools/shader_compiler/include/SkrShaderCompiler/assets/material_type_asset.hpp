@@ -3,15 +3,14 @@
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
-#include "SkrGuid/guid.hpp"
 
 #ifndef __meta__
     #include "SkrShaderCompiler/assets/material_type_asset.generated.h" // IWYU pragma: export
 #endif
 
-namespace skd sreflect
+namespace skd
 {
-namespace asset sreflect
+namespace asset
 {
 sreflect_struct("guid" : "329fddb1-73a6-4b4b-8f9f-f4acca58a6e5")
 sattr("serialize" : ["json", "bin"])
@@ -50,5 +49,5 @@ SKR_SHADER_COMPILER_API SMaterialTypeCooker final : public SCooker {
     uint32_t Version() override { return kDevelopmentVersion; }
 };
 
-} // namespace asset sreflect
-} // namespace skd sreflect
+} // namespace asset
+} // namespace skd

@@ -41,6 +41,12 @@ class HeaderDatabase:
     def get_functions(self):
         return self.functions
 
+    def find_record(self, name: str) -> cpp.Record:
+        return self.__name_to_record.get(name)
+
+    def find_enum(self, name: str) -> cpp.Enumeration:
+        return self.__name_to_enum.get(name)
+
     def load_header(self, meta_file_path: str, config: config.CodegenConfig):
         self.meta_path = os.path.normpath(meta_file_path).replace(os.sep, "/")
         self.relative_meta_path = os.path.relpath(self.meta_path, self.module_db.meta_dir).replace(os.sep, "/")
@@ -50,7 +56,10 @@ class HeaderDatabase:
         # load raw data
         raw_json: sc.JsonObject
         with open(meta_file_path, encoding="utf-8") as f:
-            raw_json = json.load(f, object_pairs_hook=sc.json_object_pairs_hook)
+            try:
+                raw_json = json.load(f, object_pairs_hook=sc.json_object_pairs_hook)
+            except json.JSONDecodeError as e:
+                raise Exception(f"Failed to load meta file: {meta_file_path}")
 
         # extract cpp types
         unique_dict = raw_json.unique_dict()
@@ -181,6 +190,12 @@ class ModuleDatabase:
     def get_functions(self):
         return itertools.chain.from_iterable([db.functions for db in self.header_dbs])
 
+    def find_record(self, name: str) -> cpp.Record:
+        return self.__name_to_record.get(name)
+
+    def find_enum(self, name: str) -> cpp.Enumeration:
+        return self.__name_to_enum.get(name)
+
 
 class CodegenDatabase:
     def __init__(self) -> None:
@@ -205,10 +220,38 @@ class CodegenDatabase:
             include_module.each_cpp_types_with_attr(visitor)
 
     def get_records(self):
-        return itertools.chain(self.main_module.get_records(), [module.get_records() for module in self.include_modules])
+        return itertools.chain(self.main_module.get_records(), *[module.get_records() for module in self.include_modules])
 
     def get_enums(self):
-        return itertools.chain(self.main_module.get_enums(), [module.get_enums() for module in self.include_modules])
+        return itertools.chain(self.main_module.get_enums(), *[module.get_enums() for module in self.include_modules])
 
     def get_functions(self):
-        return itertools.chain(self.main_module.get_functions(), [module.get_functions() for module in self.include_modules])
+        return itertools.chain(self.main_module.get_functions(), *[module.get_functions() for module in self.include_modules])
+
+    def find_record(self, name: str) -> cpp.Record:
+        record = self.main_module.find_record(name)
+        if record:
+            return record
+        for module in self.include_modules:
+            record = module.find_record(name)
+            if record:
+                return record
+        return None
+
+    def find_enum(self, name: str) -> cpp.Enumeration:
+        enum = self.main_module.find_enum(name)
+        if enum:
+            return enum
+        for module in self.include_modules:
+            enum = module.find_enum(name)
+            if enum:
+                return enum
+        return None
+
+    def is_derived(self, record: cpp.Record, base: str):
+        for base_record_name in record.bases:
+            if base_record_name == base:
+                return True
+            base_record = self.find_record(base_record_name)
+            if base_record and self.is_derived(base_record, base):
+                return True

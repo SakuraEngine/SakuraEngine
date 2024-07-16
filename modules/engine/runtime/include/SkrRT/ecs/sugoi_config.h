@@ -19,6 +19,7 @@ typedef uint32_t EIndex;
 typedef uint32_t TIndex;
 typedef uint32_t SIndex;
 typedef uint32_t sugoi_entity_t;
+typedef uint32_t sugoi_timestamp_t;
 
 typedef struct sugoi_entity_debug_proxy_t {
     sugoi_entity_t value;
@@ -38,7 +39,7 @@ typedef struct sugoi_entity_debug_proxy_t {
     #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
 #endif
 
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 
 SKR_RUNTIME_API extern const char* kDualMemoryName;
 #define sugoi_malloc(size) sakura_mallocN((size), kDualMemoryName)
@@ -47,5 +48,5 @@ SKR_RUNTIME_API extern const char* kDualMemoryName;
 #define sugoi_calloc_aligned(count, size, alignment) sakura_calloc_alignedN((count), (size), (alignment), kDualMemoryName)
 #define sugoi_memalign sugoi_malloc_aligned
 #define sugoi_free(ptr) sakura_freeN((ptr), kDualMemoryName)
-#define sugoi_free_aligned(p, alignment) sakura_free_aligned((p), (alignment), kDualMemoryName)
+#define sugoi_free_aligned(p, alignment) sakura_free_alignedN((p), (alignment), kDualMemoryName)
 #define sugoi_realloc(p, newsize) sakura_reallocN((p), (newsize), kDualMemoryName)

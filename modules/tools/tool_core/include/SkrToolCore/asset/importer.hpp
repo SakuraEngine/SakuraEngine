@@ -1,17 +1,15 @@
 #pragma once
-#include "SkrToolCore/fwd_types.hpp"
-#include "SkrRT/resource/resource_header.hpp"
-#include "SkrToolCore/asset/cooker.hpp"
 #include "SkrBase/types.h"
+#include "SkrRT/resource/resource_header.hpp"
+#include "SkrToolCore/fwd_types.hpp"
+#include "SkrToolCore/asset/cooker.hpp"
 #ifndef __meta__
     #include "SkrToolCore/asset/importer.generated.h" // IWYU pragma: export
 #endif
 
-namespace skd sreflect
+namespace skd::asset
 {
 using namespace skr;
-namespace asset sreflect
-{
 template <class T>
 void          RegisterImporter(skr_guid_t guid);
 
@@ -26,34 +24,27 @@ TOOL_CORE_API SImporter {
 };
 
 struct TOOL_CORE_API SImporterTypeInfo {
-    SImporter* (*Load)(const SAssetRecord* record, skr::json::value_t&& object);
+    SImporter* (*Load)(const SAssetRecord* record, skr::archive::JsonReader* object);
     uint32_t (*Version)();
 };
 
 struct SImporterRegistry {
-    virtual SImporter* LoadImporter(const SAssetRecord* record, skr::json::value_t&& object, skr_guid_t* pGuid = nullptr) = 0;
-    virtual uint32_t   GetImporterVersion(skr_guid_t type)                                                                = 0;
-    virtual void       RegisterImporter(skr_guid_t type, SImporterTypeInfo info)                                          = 0;
+    virtual SImporter* LoadImporter(const SAssetRecord* record, skr::archive::JsonReader* object, skr_guid_t* pGuid = nullptr) = 0;
+    virtual uint32_t   GetImporterVersion(skr_guid_t type)                                                                     = 0;
+    virtual void       RegisterImporter(skr_guid_t type, SImporterTypeInfo info)                                               = 0;
 };
 
 TOOL_CORE_API SImporterRegistry* GetImporterRegistry();
-} // namespace asset sreflect
-} // namespace skd sreflect
-
-namespace skr::json
-{
-template <class T>
-error_code Read(skr::json::value_t&& json, T& value);
-} // namespace skr::json
+} // namespace skd::asset
 
 template <class T>
 void skd::asset::RegisterImporter(skr_guid_t guid)
 {
     auto registry = GetImporterRegistry();
     auto loader =
-    +[](const SAssetRecord* record, skr::json::value_t&& object) -> SImporter* {
+    +[](const SAssetRecord* record, skr::archive::JsonReader* object) -> SImporter* {
         auto importer = SkrNew<T>();
-        skr::json::Read(std::move(object), *importer);
+        skr::json_read(object, *importer);
         return importer;
     };
     SImporterTypeInfo info{ loader, T::Version };

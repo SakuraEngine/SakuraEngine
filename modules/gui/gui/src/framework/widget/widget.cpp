@@ -1,5 +1,4 @@
 #include "SkrGui/framework/widget/widget.hpp"
-#include "SkrGuid/guid.hpp"
 
 namespace skr::gui
 {
@@ -15,7 +14,7 @@ bool Widget::can_update(NotNull<Widget*> old_widget, NotNull<Widget*> new_widget
     {
         return false;
     }
-    if (old_widget->type_id() != new_widget->type_id())
+    if (old_widget->iobject_get_typeid() != new_widget->iobject_get_typeid())
     {
         return false;
     }

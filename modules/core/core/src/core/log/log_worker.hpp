@@ -1,15 +1,16 @@
 #pragma once
 #include "SkrCore/async/async_service.h"
-#include "SkrContainers/vector.hpp"
-#include "SkrContainers/sptr.hpp"
+#include "SkrContainersDef/vector.hpp"
+#include "SkrContainersDef/sptr.hpp"
 #include "log_queue.hpp"
 
-namespace skr {
-namespace log {
+namespace skr
+{
+namespace log
+{
 
 struct Logger;
-struct LogWorker : public AsyncService
-{
+struct LogWorker : public AsyncService {
     LogWorker(const ServiceThreadDesc& desc) SKR_NOEXCEPT;
     ~LogWorker() SKR_NOEXCEPT;
 
@@ -36,13 +37,14 @@ protected:
     void patternAndSink(const LogElement& e) SKR_NOEXCEPT;
 
     friend struct Logger;
-    skr::SPtr<LogQueue> queue_;
+    skr::SPtr<LogQueue>  queue_;
     skr::Vector<Logger*> loggers_;
-    LogFormatter formatter_;
+    LogFormatter         formatter_;
 };
 
-static const ServiceThreadDesc kLoggerWorkerThreadDesc =  {
+static const ServiceThreadDesc kLoggerWorkerThreadDesc = {
     u8"AsyncLogWorker", SKR_THREAD_ABOVE_NORMAL
 };
 
-} } // namespace skr::log
+} // namespace log
+} // namespace skr

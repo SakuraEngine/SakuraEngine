@@ -6,9 +6,7 @@
     #include "SkrGui/render_objects/render_flex.generated.h"
 #endif
 
-namespace skr sreflect
-{
-namespace gui sreflect
+namespace skr::gui
 {
 sreflect_struct(
     "guid": "1bc957ef-1203-489d-911d-94ba3fb81080"
@@ -16,7 +14,7 @@ sreflect_struct(
 SKR_GUI_API RenderFlex : public RenderBox,
                          public IMultiChildRenderObject {
 public:
-    SKR_RTTR_GENERATE_BODY()
+    SKR_GENERATE_BODY()
     using Super = RenderBox;
 
     // intrinsic size
@@ -67,5 +65,4 @@ private:
     // MIXIN
     MULTI_CHILD_RENDER_OBJECT_MIX_IN(RenderFlex, RenderBox, SlotData)
 };
-} // namespace gui sreflect
-} // namespace skr sreflect
+} // namespace skr::gui

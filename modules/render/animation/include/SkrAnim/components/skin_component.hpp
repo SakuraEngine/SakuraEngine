@@ -1,15 +1,13 @@
 #pragma once
-#include "SkrAnim/resources/skin_resource.hpp"
-#include "SkrRenderer/primitive_draw.h"
-#include "SkrAnim/ozz/base/maths/simd_math.h"
 #include "SkrRT/ecs/sugoi_meta.hpp"
+#include "SkrRenderer/primitive_draw.h"
+#include "SkrAnim/resources/skin_resource.hpp"
+#include "SkrAnim/ozz/base/maths/simd_math.h"
 #ifndef __meta__
     #include "SkrAnim/components/skin_component.generated.h" // IWYU pragma: export
 #endif
 
-namespace skr sreflect
-{
-namespace anim sreflect
+namespace skr::anim
 {
 
 sreflect_managed_component("guid" : "05B43406-4BCF-4E59-B2D8-ACED7D37E776")
@@ -35,16 +33,19 @@ AnimComponent {
     ~AnimComponent();
     bool                                  use_dynamic_buffer = false;
 
-    spush_attr("transient": true)
+    sattr("transient": true)
     skr::Vector<ozz::math::Float4x4>      joint_matrices;
+    sattr("transient": true)
     skr::Vector<skr::anim::SkinPrimitive> primitives;
+    sattr("transient": true)
     skr::Vector<skr::IBlob*>              buffers;
+    sattr("transient": true)
     skr::Vector<CGPUBufferId>             vbs;
+    sattr("transient": true)
     skr::Vector<skr_vertex_buffer_view_t> views;
 };
 
-} // namespace anim sreflect
-} // namespace skr sreflect
+} // namespace skr::anim
 
 SKR_ANIM_API void skr_init_skin_component(skr::anim::SkinComponent* component, const skr::anim::SkeletonResource* skeleton);
 SKR_ANIM_API void skr_init_anim_component(skr::anim::AnimComponent* component, const skr_mesh_resource_t* mesh, skr::anim::SkeletonResource* skeleton);

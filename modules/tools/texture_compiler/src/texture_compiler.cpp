@@ -37,7 +37,7 @@ void* STextureImporter::Import(skr_io_ram_service_t* ioService, SCookContext* co
     skr::BlobId blob = nullptr;
     {
         SkrZoneScopedN("LoadFileDependencies");
-        context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), blob);
+        context->AddSourceFileAndLoad(ioService, assetPath.c_str(), blob);
     }
 
     {

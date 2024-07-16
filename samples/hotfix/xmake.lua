@@ -5,6 +5,7 @@ shared_module("HotfixTest", "HOTFIX_TEST", engine_version)
 
 target("HotfixTestHost")
     set_group("04.examples/hotfix")
+    set_exceptions("no-cxx")
     set_kind("binary")
     add_deps("SkrRT", {inherit = true})
     add_deps("HotfixTest", {inherit = false})

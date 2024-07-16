@@ -1,19 +1,22 @@
 #pragma once
 #include "SkrRT/io/io.h"
+#include "SkrCore/blob.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service)
 
 typedef struct skr_ram_io_service_desc_t {
-    const char8_t* name SKR_IF_CPP(= nullptr);
-    uint32_t sleep_time SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_TIME_MAX);
-    skr_job_queue_id io_job_queue SKR_IF_CPP(= nullptr);
+    const char8_t* name                 SKR_IF_CPP(= nullptr);
+    uint32_t sleep_time                 SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_TIME_MAX);
+    skr_job_queue_id io_job_queue       SKR_IF_CPP(= nullptr);
     skr_job_queue_id callback_job_queue SKR_IF_CPP(= nullptr);
-    bool awake_at_request SKR_IF_CPP(= true);
-    bool use_dstorage SKR_IF_CPP(= true);
+    bool awake_at_request               SKR_IF_CPP(= true);
+    bool use_dstorage                   SKR_IF_CPP(= true);
 } skr_ram_io_service_desc_t;
 
-namespace skr {
-namespace io {
+namespace skr
+{
+namespace io
+{
 
 // io flow
 // 1. Enqueue requests(batches) to service
@@ -29,34 +32,31 @@ namespace io {
 struct IRAMService;
 using RAMServiceDescriptor = skr_ram_io_service_desc_t;
 
-struct SKR_RUNTIME_API IRAMIOBuffer : public skr::IBlob
-{
+struct SKR_RUNTIME_API IRAMIOBuffer : public skr::IBlob {
     virtual ~IRAMIOBuffer() SKR_NOEXCEPT;
 };
 using RAMIOBufferId = SObjectPtr<IRAMIOBuffer>;
 
-struct SKR_RUNTIME_API IBlocksRAMRequest : public IIORequest
-{
+struct SKR_RUNTIME_API IBlocksRAMRequest : public IIORequest {
     virtual ~IBlocksRAMRequest() SKR_NOEXCEPT;
 
 #pragma region BlocksComponent
-    virtual skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT = 0;
-    virtual void add_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
-    virtual void reset_blocks() SKR_NOEXCEPT = 0;
+    virtual skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT                           = 0;
+    virtual void                      add_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
+    virtual void                      reset_blocks() SKR_NOEXCEPT                         = 0;
 #pragma endregion
 
 #pragma region CompressedBlocksComponent
-    virtual skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT = 0;
-    virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
-    virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
+    virtual skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT                           = 0;
+    virtual void                                 add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
+    virtual void                                 reset_compressed_blocks() SKR_NOEXCEPT                         = 0;
 #pragma endregion
 };
 using BlocksRAMRequestId = SObjectPtr<IBlocksRAMRequest>;
 
-struct SKR_RUNTIME_API IRAMService : public IIOService
-{
+struct SKR_RUNTIME_API IRAMService : public IIOService {
     [[nodiscard]] static IRAMService* create(const RAMServiceDescriptor* desc) SKR_NOEXCEPT;
-    static void destroy(IRAMService* service) SKR_NOEXCEPT;
+    static void                       destroy(IRAMService* service) SKR_NOEXCEPT;
 
     // open a request for filling
     [[nodiscard]] virtual BlocksRAMRequestId open_request() SKR_NOEXCEPT = 0;
@@ -66,12 +66,12 @@ struct SKR_RUNTIME_API IRAMService : public IIOService
 
     // submit a request
     [[nodiscard]] virtual RAMIOBufferId request(IORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
-    
+
     // submit a batch
     virtual void request(IOBatchId request) SKR_NOEXCEPT = 0;
 
     virtual ~IRAMService() SKR_NOEXCEPT = default;
-    IRAMService() SKR_NOEXCEPT = default;
+    IRAMService() SKR_NOEXCEPT          = default;
 };
 
 } // namespace io

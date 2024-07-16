@@ -18,8 +18,9 @@ skr_texture_resource_t {
     uint32_t          height;
     uint32_t          depth;
 
-    spush_attr("transient": true)
+    sattr("transient": true)
     CGPUTextureId     texture;
+    sattr("transient": true)
     CGPUTextureViewId texture_view;
 };
 typedef struct skr_texture_resource_t  skr_texture_resource_t;
@@ -75,7 +76,7 @@ skr_texture_sampler_resource_t {
     float                         max_anisotropy;
     ESkrTextureSamplerCompareMode compare_func;
 
-    spush_attr("transient": true)
+    sattr("transient": true)
     CGPUSamplerId                 sampler;
 };
 
@@ -96,9 +97,9 @@ using TextureResource    = ::skr_texture_resource_t;
 
     #include "SkrRT/resource/resource_factory.h"
 
-namespace skr sreflect
+namespace skr
 {
-namespace resource sreflect
+namespace resource
 {
 // - dstorage & bc: dstorage
 // - dstorage & bc & zlib: dstorage with custom decompress queue
@@ -132,6 +133,6 @@ struct SKR_RENDERER_API STextureSamplerFactory : public SResourceFactory {
     [[nodiscard]] static STextureSamplerFactory* Create(const Root& root);
     static void                                  Destroy(STextureSamplerFactory* factory);
 };
-} // namespace resource sreflect
-} // namespace skr sreflect
+} // namespace resource
+} // namespace skr
 #endif

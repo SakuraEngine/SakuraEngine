@@ -123,11 +123,11 @@
 #define SKR_HEADER_SCOPE_DEFINING_PLATFORM_CONFIGURE
 
 #ifdef __APPLE__
-    #include "apple/configure.h"
+    #include "apple/configure.inc"
 #endif
 
 #ifdef _WIN32
-    #include "win/configure.h"
+    #include "win/configure.inc"
 #endif
 
 #ifndef OS_DPI

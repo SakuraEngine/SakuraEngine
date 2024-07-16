@@ -34,7 +34,7 @@
 #pragma warning(disable : 4127)
 #endif  // _MSC_VER
 
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include <list>
 
 #ifdef _MSC_VER

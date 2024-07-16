@@ -1,4 +1,4 @@
-#include "SkrMemory/memory.h"
+#include "SkrCore/memory/memory.h"
 #include "SkrCore/process.h"
 #include "mdb_utils.h"
 #include <SkrOS/filesystem.hpp>

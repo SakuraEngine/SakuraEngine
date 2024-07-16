@@ -8,25 +8,23 @@
 #include "SkrBase/types.h"
 
 typedef struct skr_resource_header_t {
-    uint32_t                                      version;
-    skr_guid_t                                    guid;
-    skr_guid_t                                    type;
-    SKR_RUNTIME_API int                           ReadWithoutDeps(skr_binary_reader_t* archive);
+    uint32_t                                    version;
+    skr_guid_t                                  guid;
+    skr_guid_t                                  type;
+    SKR_RUNTIME_API bool                        ReadWithoutDeps(SBinaryReader* archive);
     skr::InlineVector<skr_resource_handle_t, 4> dependencies;
 } skr_resource_header_t;
 
-namespace skr::binary
+// bin serde
+#include "SkrSerde/bin_serde.hpp"
+namespace skr
 {
 template <>
-struct SKR_RUNTIME_API ReadTrait<skr_resource_header_t> {
-    static int Read(skr_binary_reader_t* reader, skr_resource_header_t& header);
+struct SKR_RUNTIME_API BinSerde<skr_resource_header_t> {
+    static bool read(SBinaryReader* r, skr_resource_header_t& v);
+    static bool write(SBinaryWriter* w, const skr_resource_header_t& v);
 };
-
-template <>
-struct SKR_RUNTIME_API WriteTrait<skr_resource_header_t> {
-    static int Write(skr_binary_writer_t* writer, const skr_resource_header_t& header);
-};
-} // namespace skr::binary
+}; // namespace skr
 
 typedef enum ESkrLoadingStatus : uint32_t
 {
@@ -49,20 +47,20 @@ namespace skr::resource
 struct SResourceRequest;
 }
 struct SKR_RUNTIME_API skr_resource_record_t {
-    void* resource             = nullptr;
-    void  (*destructor)(void*) = nullptr;
+    void* resource            = nullptr;
+    void (*destructor)(void*) = nullptr;
 #ifdef SKR_RESOURCE_DEV_MODE
-    void* artifacts                     = nullptr;
-    void  (*artifactsDestructor)(void*) = nullptr;
+    void* artifacts                    = nullptr;
+    void (*artifactsDestructor)(void*) = nullptr;
 #endif
     struct callback_t {
         void* data;
-        void  (*callback)(void*);
-        void  operator()(void) const { callback(data); }
+        void (*callback)(void*);
+        void operator()(void) const { callback(data); }
     };
     skr::stl_vector<callback_t> callbacks[SKR_LOADING_STATUS_COUNT];
-    SMutexObject              mutex;
-    ESkrLoadingStatus         loadingStatus = SKR_LOADING_STATUS_UNLOADED;
+    SMutexObject                mutex;
+    ESkrLoadingStatus           loadingStatus = SKR_LOADING_STATUS_UNLOADED;
 #ifdef TRACK_RESOURCE_REQUESTS
     struct object_requester {
         uint32_t          id;
@@ -71,10 +69,10 @@ struct SKR_RUNTIME_API skr_resource_record_t {
         bool              operator==(const object_requester& other) const { return id == other.id && type == other.type; };
     };
     struct entity_requester {
-        uint32_t               id;
+        uint32_t                id;
         struct sugoi_storage_t* storage        = nullptr;
-        uint32_t               entityRefCount = 0;
-        bool                   operator==(const entity_requester& other) const { return id == other.id; };
+        uint32_t                entityRefCount = 0;
+        bool                    operator==(const entity_requester& other) const { return id == other.id; };
     };
     struct script_requester {
         uint32_t          id;
@@ -82,13 +80,13 @@ struct SKR_RUNTIME_API skr_resource_record_t {
         uint32_t          scriptRefCount = 0;
         bool              operator==(const entity_requester& other) const { return id == other.id; };
     };
-    uint32_t                        id               = 0;
-    uint32_t                        requesterCounter = 0;
+    uint32_t                          id               = 0;
+    uint32_t                          requesterCounter = 0;
     skr::stl_vector<object_requester> objectReferences;
     skr::stl_vector<entity_requester> entityReferences;
     skr::stl_vector<script_requester> scriptReferences;
-    uint32_t                        entityRefCount = 0;
-    uint32_t                        scriptRefCount = 0;
+    uint32_t                          entityRefCount = 0;
+    uint32_t                          scriptRefCount = 0;
 #else
     std::atomic<uint32_t> referenceCount = 0;
 #endif

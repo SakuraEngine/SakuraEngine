@@ -15,6 +15,14 @@
 #endif
 #define SKR_FILE_ID ${header_db.file_id}
 
+// BEGIN Generated Body
+%for record in header_db.get_records():
+%if record.has_generate_body_flag:
+#define SKR_GENERATE_BODY_${header_db.file_id}_${record.generate_body_line} ${record.dump_generate_body_content()}
+%endif
+%endfor
+// END Generated Body
+
 // BEGIN forward declarations
 %for record in header_db.get_records():
 %if record.namespace:
@@ -23,13 +31,19 @@ namespace ${record.namespace} { struct ${record.short_name}; }
 struct ${record.short_name};
 %endif
 %endfor
-
 %for enum in header_db.get_enums():
-<% prefix = "class" if enum.is_scoped else ""  %>
+<% 
+    prefix = "class" if enum.is_scoped else ""
+    underlying_type = f": {enum.underlying_type}" if enum.underlying_type != "unfixed" else ""
+%>\
 %if enum.namespace:
-namespace ${enum.namespace} { enum ${prefix} ${enum.short_name} : ${enum.underlying_type}; }
+namespace ${enum.namespace} { enum ${prefix} ${enum.short_name} ${underlying_type}; }
 %else:
-enum ${prefix} ${enum.short_name} : ${enum.underlying_type};
+enum ${prefix} ${enum.short_name} ${underlying_type};
 %endif
 %endfor
 // END forward declarations
+
+// BEGIN Generated Body
+
+// END Generated Body

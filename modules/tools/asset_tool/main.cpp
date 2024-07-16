@@ -5,7 +5,7 @@
 #include "SkrCore/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrRT/io/vram_io.hpp"
-#include "SkrModule/module_manager.hpp"
+#include "SkrCore/module/module_manager.hpp"
 
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"

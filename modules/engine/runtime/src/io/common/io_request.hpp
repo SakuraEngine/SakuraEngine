@@ -2,7 +2,6 @@
 #include "../components/status_component.hpp"
 #include "../components/src_components.hpp"
 #include "../components/blocks_component.hpp"
-#include "SkrGuid/guid.hpp"
 #include "SkrContainers/hashmap.hpp"
 
 #include <tuple>
@@ -34,7 +33,7 @@ struct IORequestMixin : public Interface
     IO_RC_OBJECT_BODY
 public:
     IORequestMixin(ISmartPoolPtr<Interface> pool, IIOService* service) 
-        : service(service), components(std::make_tuple(Components(this)...)), pool(pool)
+        : service(service), components(std::make_tuple(((void)sizeof(Components), this)...)), pool(pool)
     {
 
     }
@@ -176,7 +175,7 @@ private:
     auto& acquire_cmap() const SKR_NOEXCEPT
     {
         static bool initialized = false;
-        static skr::ParallelFlatHashMap<skr_guid_t, uint32_t, skr::guid::hash> map = {};
+        static skr::ParallelFlatHashMap<skr_guid_t, uint32_t, skr::Hash<skr_guid_t>> map = {};
         if (!initialized)
         {
             std::apply([&](const auto&... args) {

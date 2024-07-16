@@ -1,8 +1,8 @@
 #include "SkrCore/process.h"
 #include "SkrCore/log/logger.hpp"
 #include "SkrCore/log/log_pattern.hpp"
-#include "SkrContainers/array.hpp"
-#include "SkrContainers/hashmap.hpp"
+#include "SkrContainersDef/array.hpp"
+#include "SkrContainersDef/hashmap.hpp"
 #include "SkrProfile/profile.h"
 #include "./log_manager.hpp"
 // TODO: REMOVE THIS
@@ -14,7 +14,7 @@ namespace skr::log
 using U8String = std::basic_string<char8_t, std::char_traits<char8_t>, skr_stl_allocator<char8_t>>;
 struct named_arg_info {
     U8String name;
-    int64_t id;
+    int64_t  id;
 };
 
 /***/
@@ -54,7 +54,7 @@ constexpr void _store_named_args(skr::Array<named_arg_info, kAttributeCount>&)
 /***/
 template <size_t Idx, size_t NamedIdx, typename Arg, typename... Args>
 constexpr void _store_named_args(skr::Array<named_arg_info, kAttributeCount>& named_args_store,
-    const Arg& arg, const Args&... args)
+                                 const Arg&                                   arg, const Args&... args)
 {
     named_args_store[NamedIdx] = { U8String(arg), Idx };
     _store_named_args<Idx + 1, NamedIdx + 1>(named_args_store, args...);
@@ -82,8 +82,8 @@ constexpr void _store_named_args(skr::Array<named_arg_info, kAttributeCount>& na
  */
 template <typename... Args>
 [[nodiscard]] std::pair<skr::String, skr::Array<int64_t, kAttributeCount>> _generate_fmt_format_string(
-    skr::Array<bool, kAttributeCount>& is_set_in_pattern, uint32_t& args_n, U8String pattern_string,
-    Args const&... args)
+skr::Array<bool, kAttributeCount>& is_set_in_pattern, uint32_t& args_n, U8String pattern_string,
+Args const&... args)
 {
     // Attribute enum and the args we are passing here must be in sync
     static_assert(kAttributeCount == sizeof...(Args));
@@ -115,7 +115,7 @@ template <typename... Args>
 
             // find any user format specifiers
             size_t const pos = attr.find(':');
-            U8String attr_name;
+            U8String     attr_name;
 
             if (pos != U8String::npos)
             {
@@ -169,7 +169,7 @@ template <typename... Args>
             order_index[static_cast<size_t>(id)] = args_n++;
 
             // Also set the value as used in the pattern in our bitset for lazy evaluation
-            LogPattern::Attribute const attr_enum_value = attribute_from_string(attr_name);
+            LogPattern::Attribute const attr_enum_value  = attribute_from_string(attr_name);
             is_set_in_pattern[(uint32_t)attr_enum_value] = true;
 
             // Look for the next pattern to replace
@@ -191,7 +191,7 @@ void LogPattern::_initialize() SKR_NOEXCEPT
     // Initialize arrays
     for (size_t i = 0; i < kAttributeCount; ++i)
     {
-        order_index_[i] = -1;
+        order_index_[i]       = -1;
         is_set_in_pattern_[i] = false;
     }
     pid_ = skr_get_current_process_id();
@@ -204,14 +204,13 @@ void LogPattern::_set_pattern(skr::String pattern) SKR_NOEXCEPT
     {
         // the order we pass the arguments here must match with the order of Attribute enum
         auto _ = _generate_fmt_format_string(
-            is_set_in_pattern_, _args_n, format_pattern.u8_str(), 
-            u8"timestamp", u8"level_id", u8"level_name", u8"logger_name",
-            u8"thread_id", u8"thread_name", u8"process_id", u8"process_name", 
-            u8"file_name", u8"file_line", u8"function_name", u8"message"
-        );
-        
+        is_set_in_pattern_, _args_n, format_pattern.u8_str(),
+        u8"timestamp", u8"level_id", u8"level_name", u8"logger_name",
+        u8"thread_id", u8"thread_name", u8"process_id", u8"process_name",
+        u8"file_name", u8"file_line", u8"function_name", u8"message");
+
         calculated_format_ = _.first;
-        order_index_ = _.second;
+        order_index_       = _.second;
 
         _set_arg<Attribute::timestamp, skr::StringView>(u8"timestamp");
         _set_arg<Attribute::level_id, uint32_t>(u8"level_id");
@@ -230,12 +229,12 @@ void LogPattern::_set_pattern(skr::String pattern) SKR_NOEXCEPT
 
 LogPattern::~LogPattern() SKR_NOEXCEPT
 {
-
 }
 
-template<typename T>
+template <typename T>
 struct Convert {
-    auto operator()(FormatArg const& t) -> T {
+    auto operator()(FormatArg const& t) -> T
+    {
         return t;
     }
 };
@@ -246,26 +245,26 @@ skr::String format_NArgs(std::index_sequence<N...>, const skr::StringView& fmt, 
     return skr::format(fmt, args[N]...);
 }
 
-const static char8_t* main_thread_name = u8"main";
-const static char8_t* unknown_thread_name = u8"unknown";
-const static SThreadID main_thread_id = skr_current_thread_id();
-static skr::String timestring = u8"";
-skr::String const& LogPattern::pattern(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
+const static char8_t*  main_thread_name    = u8"main";
+const static char8_t*  unknown_thread_name = u8"unnamed";
+const static SThreadID main_thread_id      = skr_current_thread_id();
+static skr::String     timestring          = u8"";
+skr::String const&     LogPattern::pattern(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
 {
     formatted_string_.empty();
     if (calculated_format_.is_empty())
         return formatted_string_;
-    
+
     const auto level_id = (uint32_t)event.level;
 
     if (is_set_in_pattern_[(size_t)Attribute::timestamp])
     {
         SkrZoneScopedN("LogPattern::Time");
 
-        const auto& dt = LogManager::Get()->datetime_;
-        const auto midnightNs = dt.midnightNs;
-        const auto ts = LogManager::Get()->tscns_.tsc2ns(event.timestamp);
-        auto t =  (ts > midnightNs) ? (ts - midnightNs) : 0;
+        const auto& dt         = LogManager::Get()->datetime_;
+        const auto  midnightNs = dt.midnightNs;
+        const auto  ts         = LogManager::Get()->tscns_.tsc2ns(event.timestamp);
+        auto        t          = (ts > midnightNs) ? (ts - midnightNs) : 0;
         t /= 1'000;
         const uint64_t us = t % 1'000;
         t /= 1'000;
@@ -276,22 +275,23 @@ skr::String const& LogPattern::pattern(const LogEvent& event, skr::StringView fo
         const uint64_t minute = (t % 60);
         t /= 60;
         uint32_t h = (uint32_t)t;
-        if (h > 23) {
+        if (h > 23)
+        {
             h %= 24;
             LogManager::Get()->datetime_.reset_date();
         }
         timestring = skr::format(
-            u8"{}/{}/{} {}:{}:{}({}:{})",
-            dt.year, dt.month, dt.day,
-            h, minute, second, ms, us);
+        u8"{}/{}/{} {}:{}:{}({}:{})",
+        dt.year, dt.month, dt.day,
+        h, minute, second, ms, us);
         _set_arg_val<Attribute::timestamp>(timestring.view());
     }
-        
+
     if (is_set_in_pattern_[(size_t)Attribute::level_id])
     {
         _set_arg_val<Attribute::level_id>(level_id);
     }
-        
+
     if (is_set_in_pattern_[(size_t)Attribute::level_name])
     {
         const auto level_name = skr::StringView(LogConstants::kLogLevelNameLUT[level_id]);
@@ -326,7 +326,7 @@ skr::String const& LogPattern::pattern(const LogEvent& event, skr::StringView fo
 
     if (is_set_in_pattern_[(size_t)Attribute::process_name])
     {
-        const auto process_name = skr::StringView(LogConstants::kLogLevelNameLUT[level_id]); // TODO
+        const auto process_name = skr::StringView(skr_get_current_process_name());
         _set_arg_val<Attribute::process_name>(process_name);
     }
 
@@ -355,7 +355,7 @@ skr::String const& LogPattern::pattern(const LogEvent& event, skr::StringView fo
 
     {
         SkrZoneScopedN("LogPattern::FormatNArgs");
-        auto sequence = std::make_index_sequence<kAttributeCount>();
+        auto sequence     = std::make_index_sequence<kAttributeCount>();
         formatted_string_ = format_NArgs(sequence, calculated_format_.view(), _args);
     }
 

@@ -13,7 +13,7 @@ Widget* IBuildContext::find_ancestor_widget(const GUID& type_id, bool exact_type
         auto widget = element->widget();
         if (exact_type)
         {
-            if (widget->get_record_type()->type_id() == type_id)
+            if (widget->iobject_get_typeid() == type_id)
             {
                 found_widget = widget;
             }
@@ -38,7 +38,7 @@ State* IBuildContext::find_ancestor_state(const GUID& type_id, bool exact_type) 
             auto state = found_element->state();
             if (exact_type)
             {
-                if (state->get_record_type()->type_id() == type_id)
+                if (state->iobject_get_typeid() == type_id)
                 {
                     found_state = state;
                 }
@@ -73,7 +73,7 @@ RenderObject* IBuildContext::find_ancestor_render_object(const GUID& type_id, bo
             auto render_object = found_element->render_object();
             if (exact_type)
             {
-                if (render_object->get_record_type()->type_id() == type_id)
+                if (render_object->iobject_get_typeid() == type_id)
                 {
                     found_render_object = render_object;
                 }
