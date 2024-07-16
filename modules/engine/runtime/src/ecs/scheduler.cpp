@@ -27,13 +27,17 @@ sugoi::scheduler_t::~scheduler_t()
 sugoi_entity_t sugoi::scheduler_t::add_resource()
 {
     sugoi_entity_t result;
-    registry.new_entities(&result, 1);
+    registry.write([&](auto& v){
+        v.new_entities(&result, 1);
+    });
     return result;
 }
 
 void sugoi::scheduler_t::remove_resource(sugoi_entity_t id)
 {
-    registry.free_entities(&id, 1);
+    registry.write([&](auto& v){
+        v.free_entities(&id, 1);
+    });
 }
 
 bool sugoi::scheduler_t::is_main_thread(const sugoi_storage_t* storage)
@@ -51,19 +55,24 @@ void sugoi::scheduler_t::set_main_thread(const sugoi_storage_t* storage)
 
 void sugoi::scheduler_t::add_storage(sugoi_storage_t* storage)
 {
-    SMutexLock lock(storageMutex.mMutex);
-    storage->pimpl->scheduler = this;
-    storage->pimpl->currentFiber = skr::task::current_fiber();
-    storages.push_back(storage);
+    storages.write([&](auto& v)
+    {
+        storage->pimpl->scheduler = this;
+        storage->pimpl->currentFiber = skr::task::current_fiber();
+        v.push_back(storage);
+    });
 }
 
 void sugoi::scheduler_t::remove_storage(const sugoi_storage_t* storage)
 {
     sync_storage(storage);
-    SMutexLock lock(storageMutex.mMutex);
-    storage->pimpl->scheduler = nullptr;
-    storage->pimpl->currentFiber = nullptr;
-    storages.erase(std::remove(storages.begin(), storages.end(), storage), storages.end());
+
+    storages.write([&](auto& v)
+    {
+        storage->pimpl->scheduler = nullptr;
+        storage->pimpl->currentFiber = nullptr;
+        v.erase(std::remove(v.begin(), v.end(), storage), v.end());
+    });
 }
 
 bool sugoi::scheduler_t::sync_archetype(sugoi::archetype_t* type)
@@ -73,7 +82,6 @@ bool sugoi::scheduler_t::sync_archetype(sugoi::archetype_t* type)
     // TODO: performance optimization
     skr::stl_vector<skr::task::event_t> deps;
     {
-        SMutexLock entryLock(entryMutex.mMutex);
         auto pair = dependencyEntries.find(type);
         if (pair == dependencyEntries.end())
         {
@@ -108,7 +116,6 @@ bool sugoi::scheduler_t::sync_entry(sugoi::archetype_t* type, sugoi_type_index_t
     // TODO: performance optimization
     skr::stl_vector<skr::task::event_t> deps;
     {
-        SMutexLock entryLock(entryMutex.mMutex);
         auto pair = dependencyEntries.find(type);
         if (pair == dependencyEntries.end()) 
             return false;
@@ -335,7 +342,6 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
     };
     SharedData* job = nullptr;
     skr::SPtr<SharedData> sharedData;
-
     auto groupCount = (uint32_t)groups.size();
     {
         SkrZoneScopedN("AllocateSharedData");
@@ -600,14 +606,16 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
     if (resources)
     {
         SkrZoneScopedN("UpdateResourcesEntries");
-        SMutexLock resourceLock(resourceMutex.mMutex);
-        forloop (i, 0, resources->count)
+        allResources.write([&](auto& v)
         {
-            auto& entry = allResources[e_id(resources->resources[i])];
-            auto readonly = resources->readonly[i];
-            auto atomic = resources->atomic[i];
-            update_entry(entry, counter, readonly, atomic, dependencies);
-        }
+            forloop (i, 0, resources->count)
+            {
+                auto& entry = v[e_id(resources->resources[i])];
+                const auto readonly = resources->readonly[i];
+                const auto atomic = resources->atomic[i];
+                update_entry(entry, counter, readonly, atomic, dependencies);
+            }
+        });
     }
 
     skr::FlatHashSet<std::pair<sugoi::archetype_t*, sugoi_type_index_t>> syncedEntry;
@@ -620,7 +628,6 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::scheduler_t::update_dependencies
             return;
         syncedEntry.insert(pair);
         {
-            SMutexLock entryLock(entryMutex.mMutex);
             auto iter = dependencyEntries.find(at);
             if (iter == dependencyEntries.end())
             {
@@ -730,14 +737,15 @@ skr::stl_vector<skr::task::event_t> sugoi::scheduler_t::sync_resources(const skr
 {
     DependencySet dependencies;
     {
-        SMutexLock entryLock(entryMutex.mMutex);
-        forloop (i, 0, resources->count)
-        {
-            auto& entry = allResources[e_id(resources->resources[i])];
-            auto readonly = resources->readonly[i];
-            auto atomic = resources->atomic[i];
-            update_entry(entry, counter, readonly, atomic, dependencies);
-        }
+        allResources.write([&](auto& v){
+            forloop (i, 0, resources->count)
+            {
+                auto& entry = v[e_id(resources->resources[i])];
+                auto readonly = resources->readonly[i];
+                auto atomic = resources->atomic[i];
+                update_entry(entry, counter, readonly, atomic, dependencies);
+            }
+        });
     }
     skr::stl_vector<skr::task::event_t> result;
 

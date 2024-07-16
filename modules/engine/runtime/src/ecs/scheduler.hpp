@@ -16,15 +16,6 @@ struct JobDependencyEntry {
 };
 
 struct scheduler_t {
-    sugoi::EntityRegistry registry;
-    skr::task::counter_t allCounter;
-    skr::stl_vector<sugoi::JobDependencyEntry> allResources;
-    skr::FlatHashMap<sugoi::archetype_t*, skr::stl_vector<JobDependencyEntry>> dependencyEntries;
-    SMutexObject entryMutex;
-    SMutexObject resourceMutex;
-    skr::stl_vector<sugoi_storage_t*> storages;
-    SMutexObject storageMutex;
-
     scheduler_t();
     ~scheduler_t();
 
@@ -49,6 +40,35 @@ struct scheduler_t {
     skr::task::event_t schedule_ecs_job(sugoi_query_t* query, EIndex batchSize, sugoi_system_callback_t callback, void* u, sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources);
     skr::task::event_t schedule_job(sugoi_query_t* query, sugoi_schedule_callback_t callback, void* u, sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources);
     skr::stl_vector<skr::task::weak_event_t> update_dependencies(sugoi_query_t* query, const skr::task::event_t& counter, sugoi_resource_operation_t* resources);
+
+    template<typename T>
+    struct Lockcable
+    {
+        template<typename F>
+        void read(const F& func) const
+        {
+            mtx.lock_shared();
+            func(value);
+            mtx.unlock_shared();
+        }
+
+        template<typename F>
+        void write(const F& func)
+        {
+            mtx.lock();
+            func(value);
+            mtx.unlock();
+        }
+    private:
+        T value;
+        mutable skr::shared_atomic_mutex mtx;
+    };
+
+    skr::task::counter_t allCounter;
+    Lockcable<sugoi::EntityRegistry> registry;
+    Lockcable<skr::stl_vector<sugoi::JobDependencyEntry>> allResources;
+    Lockcable<skr::stl_vector<sugoi_storage_t*>> storages;
+    skr::ParallelFlatHashMap<sugoi::archetype_t*, skr::stl_vector<JobDependencyEntry>> dependencyEntries;
 };
 } // namespace sugoi
 
