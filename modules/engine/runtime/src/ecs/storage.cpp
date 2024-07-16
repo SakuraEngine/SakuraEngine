@@ -75,7 +75,6 @@ void sugoi_storage_t::allocate(sugoi_group_t* group, EIndex count, sugoi_view_ca
     using namespace sugoi;
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_archetype(group->archetype);
     }
     allocate_unsafe(group, count, callback, u);
@@ -119,7 +118,6 @@ void sugoi_storage_t::destroy(const sugoi_chunk_view_t& view)
     auto group = view.chunk->group;
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_archetype(group->archetype);
     }
     SKR_ASSERT(!group->isDead);
@@ -240,7 +238,6 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t src, uint32_t count, sugo
     auto group = view.chunk->group->cloned;
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_archetype(group->archetype);
     }
     while (count != 0)
@@ -260,7 +257,6 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t src, uint32_t count, sugo
     auto view = entity_view(src);
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_archetype(group->archetype);
     }
     while (count != 0)
@@ -279,7 +275,6 @@ void sugoi_storage_t::instantiate(const sugoi_entity_t* src, uint32_t n, uint32_
     using namespace sugoi;
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         forloop (i, 0, n)
         {
             auto view = entity_view(src[i]);
@@ -392,7 +387,6 @@ void sugoi_storage_t::defragment()
     using namespace sugoi;
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_storage(this);
     }
     pimpl->groups.read_versioned([&](auto& groups){
@@ -493,7 +487,6 @@ void sugoi_storage_t::pack_entities()
     using namespace sugoi;
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_storage(this);
     }
     skr::Vector<EIndex> map;
@@ -559,7 +552,6 @@ void sugoi_storage_t::cast(const sugoi_chunk_view_t& view, sugoi_group_t* group,
         return;
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_archetype(srcGroup->archetype);
     }
     if (!group)
@@ -590,7 +582,6 @@ void sugoi_storage_t::cast(sugoi_group_t* srcGroup, sugoi_group_t* group, sugoi_
         return;
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_archetype(srcGroup->archetype);
     }
     if (!group)
@@ -685,7 +676,6 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
     using namespace sugoi;
     if (pimpl->scheduler)
     {
-        SKR_ASSERT(pimpl->scheduler->is_main_thread(this));
         pimpl->scheduler->sync_storage(&src);
     }
     auto&                           sents = src.pimpl->entity_registry;

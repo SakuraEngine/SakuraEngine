@@ -30,20 +30,23 @@ struct scheduler_t {
     static scheduler_t& get();
     bool is_main_thread(const sugoi_storage_t* storage);
     void set_main_thread(const sugoi_storage_t* storage);
+    
     void add_storage(sugoi_storage_t* storage);
     void remove_storage(const sugoi_storage_t* storage);
     sugoi_entity_t add_resource();
     void remove_resource(sugoi_entity_t id);
+    void gc_entries();
+
     bool sync_archetype(sugoi::archetype_t* type);
     bool sync_entry(sugoi::archetype_t* type, sugoi_type_index_t entry, bool readonly);
     bool sync_query(sugoi_query_t* query);
     void sync_all();
-    void gc_entries();
     void sync_storage(const sugoi_storage_t* storage);
-    skr::task::event_t schedule_ecs_job(sugoi_query_t* query, EIndex batchSize, sugoi_system_callback_t callback, void* u, sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources);
-    skr::stl_vector<skr::task::weak_event_t> update_dependencies(sugoi_query_t* query, const skr::task::event_t& counter, sugoi_resource_operation_t* resources);
-    skr::task::event_t schedule_job(sugoi_query_t* query, sugoi_schedule_callback_t callback, void* u, sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources);
     skr::stl_vector<skr::task::event_t> sync_resources(const skr::task::event_t& counter, sugoi_resource_operation_t* resources);
+
+    skr::task::event_t schedule_ecs_job(sugoi_query_t* query, EIndex batchSize, sugoi_system_callback_t callback, void* u, sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources);
+    skr::task::event_t schedule_job(sugoi_query_t* query, sugoi_schedule_callback_t callback, void* u, sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown, sugoi_resource_operation_t* resources);
+    skr::stl_vector<skr::task::weak_event_t> update_dependencies(sugoi_query_t* query, const skr::task::event_t& counter, sugoi_resource_operation_t* resources);
 };
 } // namespace sugoi
 
