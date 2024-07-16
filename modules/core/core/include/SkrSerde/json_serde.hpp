@@ -177,6 +177,26 @@ struct JsonSerde<double> {
         return w->Double(v).has_value();
     }
 };
+
+#if SKR_PLAT_MACOSX
+template <>
+struct JsonSerde<size_t> {
+    inline static bool read(skr::archive::JsonReader* r, size_t& v)
+    {
+        uint64_t _v;
+        SKR_EXPECTED_CHECK(r->UInt64(_v), false);
+        v = _v;
+        return true;
+    }
+    inline static bool write(skr::archive::JsonWriter* w, const size_t& v)
+    {
+        uint64_t _v = v;
+        SKR_EXPECTED_CHECK(w->UInt64(_v), false);
+        return true;
+    }
+};
+#endif
+
 } // namespace skr
 
 // enum & array
