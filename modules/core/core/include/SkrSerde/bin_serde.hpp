@@ -148,6 +148,12 @@ struct BinSerde<float> : BinSerdePOD<float> {
 template <>
 struct BinSerde<double> : BinSerdePOD<double> {
 };
+
+#if SKR_PLAT_MACOSX
+template <>
+struct BinSerde<size_t> : BinSerdePOD<size_t> {
+};
+#endif
 } // namespace skr
 
 // enum & array
