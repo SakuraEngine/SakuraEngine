@@ -2,6 +2,7 @@
 #include "SkrBase/config.h"
 #include "SkrBase/misc/integer_tools.hpp"
 #include "SkrBase/memory/memory_traits.hpp"
+#include "SkrBase/misc/swap.hpp"
 
 // SparseHashSet structs
 namespace skr::container
@@ -84,14 +85,15 @@ struct MemoryTraits<skr::container::SparseHashSetStorage<T, TS, HashType>, skr::
 };
 } // namespace skr::memory
 
-// TODO. skr swap
-namespace std
+namespace skr
 {
 template <typename T, typename TS, typename HashType>
-SKR_INLINE void swap(::skr::container::SparseHashSetStorage<T, TS, HashType>& a, ::skr::container::SparseHashSetStorage<T, TS, HashType>& b)
-{
-    ::std::swap(a._sparse_hash_set_data, b._sparse_hash_set_data);
-    ::std::swap(a._sparse_hash_set_hash, b._sparse_hash_set_hash);
-    ::std::swap(a._sparse_hash_set_next, b._sparse_hash_set_next);
-}
-} // namespace std
+struct Swap<::skr::container::SparseHashSetStorage<T, TS, HashType>> {
+    inline static void call(::skr::container::SparseHashSetStorage<T, TS, HashType>& a, ::skr::container::SparseHashSetStorage<T, TS, HashType>& b)
+    {
+        Swap<T>::call(a._sparse_hash_set_data, b._sparse_hash_set_data);
+        Swap<HashType>::call(a._sparse_hash_set_hash, b._sparse_hash_set_hash);
+        Swap<TS>::call(a._sparse_hash_set_next, b._sparse_hash_set_next);
+    }
+};
+} // namespace skr

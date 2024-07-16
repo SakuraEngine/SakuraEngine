@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
+#include "SkrBase/misc/swap.hpp"
 #include <type_traits>
 
 namespace skr::algo
@@ -7,6 +8,8 @@ namespace skr::algo
 template <typename T, typename TP>
 SKR_INLINE T partition(T begin, T end, TP&& p = TP())
 {
+    using Swapper = Swap<std::decay_t<decltype(*begin)>>;
+
     while (begin < end)
     {
         // skip true part in head
@@ -30,7 +33,7 @@ SKR_INLINE T partition(T begin, T end, TP&& p = TP())
         } while (!p(*end));
 
         // swap bad point
-        std::swap(*begin, *end);
+        Swapper::call(*begin, *end);
         ++begin;
         --end;
     }

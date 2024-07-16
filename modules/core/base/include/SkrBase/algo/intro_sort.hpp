@@ -10,6 +10,8 @@ namespace skr::algo
 template <typename T, typename TP = Less<>>
 SKR_INLINE void intro_sort(T begin, T end, TP&& p = {})
 {
+    using Swapper = Swap<std::decay_t<decltype(*begin)>>;
+
     // simulate stack
     struct Stack {
         T      min;
@@ -61,14 +63,14 @@ SKR_INLINE void intro_sort(T begin, T end, TP&& p = {})
                 }
 
                 // swap max item
-                std::swap(*max, *current.max);
+                Swapper::call(*max, *current.max);
                 --current.max;
             }
         }
         else
         {
             // swap mid to head
-            std::swap(*current.min, *(current.min + count / 2));
+            Swapper::call(*current.min, *(current.min + count / 2));
 
             // see partition, split by middle value
             inner.min = current.min;     // skip head
@@ -85,10 +87,10 @@ SKR_INLINE void intro_sort(T begin, T end, TP&& p = {})
                     break;
                 }
                 // swap bad point
-                std::swap(*inner.min, *inner.max);
+                Swapper::call(*inner.min, *inner.max);
             }
             // resume mid value
-            std::swap(*current.min, *inner.max);
+            Swapper::call(*current.min, *inner.max);
 
             // prepare for recurve
             --current.max_depth;

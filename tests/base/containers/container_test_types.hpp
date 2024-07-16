@@ -1,8 +1,8 @@
 #pragma once
-// !! FUCK U MSVC
-#include "SkrBase/containers/sparse_vector/sparse_vector_def.hpp"
-#include "SkrBase/containers/sparse_hash_set/sparse_hash_set_def.hpp"
-#include "SkrBase/containers/sparse_hash_map/kvpair.hpp"
+// now we use skr::Swap, yeah!
+// #include "SkrBase/containers/sparse_vector/sparse_vector_def.hpp"
+// #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_def.hpp"
+// #include "SkrBase/containers/sparse_hash_map/kvpair.hpp"
 
 // allocator
 #include "skr_test_allocator.hpp"

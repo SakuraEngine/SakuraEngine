@@ -2,6 +2,7 @@
 #include <type_traits>
 #include "SkrBase/config.h"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_traits.hpp"
+#include "SkrBase/misc/swap.hpp"
 
 namespace skr::container
 {
@@ -45,16 +46,17 @@ struct KVPair {
 };
 } // namespace skr::container
 
-// TODO. skr swap
-namespace std
+namespace skr
 {
 template <typename K, typename V>
-SKR_INLINE void swap(::skr::container::KVPair<K, V>& a, ::skr::container::KVPair<K, V>& b)
-{
-    ::std::swap(a.key, b.key);
-    ::std::swap(a.value, b.value);
-}
-} // namespace std
+struct Swap<::skr::container::KVPair<K, V>> {
+    static void call(::skr::container::KVPair<K, V>& a, ::skr::container::KVPair<K, V>& b)
+    {
+        Swap<K>::call(a.key, b.key);
+        Swap<V>::call(a.value, b.value);
+    }
+};
+} // namespace skr
 
 namespace skr::container
 {
