@@ -14,6 +14,7 @@ struct SKR_RUNTIME_API EntityRegistry {
     EntityRegistry& operator=(const EntityRegistry& rhs);
 
     void reserve(size_t size);
+    void reserve_free_entries(size_t size);
     void reset();
     void shrink();
     void pack_entities(skr::Vector<EIndex>& out_map);

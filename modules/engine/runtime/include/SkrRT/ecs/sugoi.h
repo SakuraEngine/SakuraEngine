@@ -3,7 +3,6 @@
 #if defined(__cplusplus)
     #include "SkrCore/log.h"
     #include "SkrTask/fib_task.hpp"
-    #include "SkrRT/ecs/callback.hpp"
 #endif
 
 #if defined(__cplusplus)

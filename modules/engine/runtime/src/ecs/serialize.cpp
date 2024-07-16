@@ -8,7 +8,7 @@
 #include "./impl/storage.hpp"
 #include "./stack.hpp"
 #include "./archetype.hpp"
-#include "./scheduler.hpp"
+#include "./impl/job.hpp"
 
 #ifndef forloop
     #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)

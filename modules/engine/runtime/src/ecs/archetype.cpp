@@ -506,9 +506,19 @@ void sugoi_group_t::mark_full(sugoi_chunk_t* chunk)
 void sugoi_group_t::clear()
 {
     using namespace sugoi;
-    for(auto chunk : chunks)
+    SkrZoneScopedN("sugoi_group_t::clear");
+
+    auto& entity_registry = archetype->storage->getEntityRegistry();
+    size_t freeCount = 0;
+    for (auto chunk : chunks)
     {
-        archetype->storage->getEntityRegistry().free_entities({ chunk, 0, chunk->count });
+        freeCount += chunk->count;
+    }
+    entity_registry.reserve_free_entries(freeCount);
+
+    for (auto chunk : chunks)
+    {
+        entity_registry.free_entities({ chunk, 0, chunk->count });
         destruct_view({ chunk, 0, chunk->count });
         destruct_chunk(chunk);
         sugoi_chunk_t::destroy(chunk);

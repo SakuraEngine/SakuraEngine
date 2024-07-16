@@ -12,7 +12,7 @@ struct cache_t;
 struct archetype_t;
 struct fixed_stack_t;
 struct block_arena_t;
-struct scheduler_t;
+struct JobScheduler;
 struct EntityRegistry;
 using Storage = sugoi_storage_t;
 
@@ -38,7 +38,7 @@ struct sugoi_phase_alias_t {
     uint32_t phase;
 };
 
-struct sugoi_storage_t {
+struct SKR_RUNTIME_API sugoi_storage_t {
     struct Impl;
     using archetype_t = sugoi::archetype_t;
 
@@ -117,8 +117,8 @@ struct sugoi_storage_t {
     sugoi::EntityRegistry& getEntityRegistry();
 
     // TODO: REMOVE THESE
-    friend struct sugoi::scheduler_t;
-    sugoi::scheduler_t* getScheduler();
+    friend struct sugoi::JobScheduler;
+    sugoi::JobScheduler* getScheduler();
     void buildQueryOverloads();
 
 protected:

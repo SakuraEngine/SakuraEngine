@@ -9,7 +9,7 @@
 #include "./chunk_view.hpp"
 #include "./archetype.hpp"
 #include "./impl/storage.hpp"
-#include "./scheduler.hpp"
+#include "./impl/job.hpp"
 
 namespace sugoi
 {

@@ -14,7 +14,7 @@
 #include "./chunk.hpp"
 #include "./stack.hpp"
 #include "./impl/storage.hpp"
-#include "./scheduler.hpp"
+#include "./impl/job.hpp"
 
 #if __SSE2__
     #include <emmintrin.h>

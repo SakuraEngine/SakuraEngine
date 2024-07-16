@@ -27,7 +27,7 @@ pool_t& get_default_pool_large()
 {
     return sugoi_get_context()->largePool;
 }
-scheduler_t& scheduler_t::get()
+JobScheduler& JobScheduler::Get()
 {
     return sugoi_get_context()->scheduler;
 }
@@ -43,7 +43,8 @@ sugoi_context_t::sugoi_context_t()
     , smallPool(sugoi::kSmallBinSize, sugoi::kSmallBinCapacity)
     , typeRegistryImpl(smallPool)
     , typeRegistry(typeRegistryImpl)
-    , scheduler()
+    , schedulerImpl()
+    , scheduler(schedulerImpl)
 {
 }
 

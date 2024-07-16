@@ -16,6 +16,13 @@ void EntityRegistry::reserve(size_t size)
     entries.reserve(size);
 }
 
+void EntityRegistry::reserve_free_entries(size_t size)
+{
+    mutex.lock();
+    SKR_DEFER({ mutex.unlock(); });
+    freeEntries.reserve(size);
+}
+
 void EntityRegistry::reset()
 {
     mutex.lock();
@@ -40,7 +47,7 @@ void EntityRegistry::shrink()
         entries.clear();
         return;
     }
-    entries.resize_default(lastValid + 1);
+    entries.resize_unsafe(lastValid + 1);
     entries.shrink();
     freeEntries.remove_all_if([&](EIndex i) {
         return i > lastValid;
@@ -86,15 +93,16 @@ void EntityRegistry::new_entities(sugoi_entity_t* dst, EIndex count)
     }
     {
         SkrZoneScopedN("ResizeFreeEntries");
-        freeEntries.resize_default(fn - rn);
+        freeEntries.resize_unsafe(fn - rn);
     }
     if (i == count)
         return;
+
     // new entities
     EIndex newId = static_cast<EIndex>(entries.size());
     {
         SkrZoneScopedN("ResizeEntries");
-        entries.resize_default(entries.size() + count - i);
+        entries.resize_unsafe(entries.size() + count - i);
     }
     {
         SkrZoneScopedN("InitializeEntryValues");
@@ -214,10 +222,10 @@ void EntityRegistry::deserialize(SBinaryReader* reader)
     SKR_ASSERT(entries.size() == 0);
     uint32_t size = 0;
     skr::bin_read(reader, size);
-    entries.resize_default(size);
+    entries.resize_unsafe(size);
     uint32_t freeSize = 0;
     skr::bin_read(reader, freeSize);
-    freeEntries.resize_default(freeSize);
+    freeEntries.resize_unsafe(freeSize);
     reader->read((void*)freeEntries.data(), sizeof(EIndex) * freeSize);
 }
 

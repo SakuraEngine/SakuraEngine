@@ -93,7 +93,7 @@ public:
     sugoi_timestamp_t storage_timestamp;
     
     // job system
-    mutable sugoi::scheduler_t* scheduler;
+    mutable sugoi::JobScheduler* scheduler;
     mutable void* currentFiber;
     skr::task::counter_t storage_counter;
 

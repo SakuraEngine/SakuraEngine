@@ -63,7 +63,7 @@ public:
         saveParam(tsc, calulated_ns, ns, new_ns_per_tsc);
     }
 
-    static inline int64_t rdtsc()
+    inline static int64_t rdtsc()
     {
 #ifdef _MSC_VER
         return __rdtsc();

@@ -1,6 +1,8 @@
 #pragma once
 #include "sugoi_config.h"
 #include "SkrBase/types.h"
+#include "SkrBase/misc/traits.hpp"
+#include "SkrContainers/function_ref.hpp"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -114,5 +116,25 @@ SUGOI_FORCEINLINE sugoi_entity_t e_inc_version(sugoi_entity_t v)
 {
     return ((v + 1 == kEntityTransientVersion) ? 0 : (v + 1));
 }
+
+template<class F, class R, class... Args>
+auto get_trampoline(skr::type_t<R(Args...)>)
+{
+    return +[](void* u, Args... args) -> R {
+        return std::invoke(*reinterpret_cast<F*>(u), std::forward<Args>(args)...);
+    };
+}
+
+template<class F>
+auto get_trampoline()
+{
+    using T = std::decay_t<F>;
+    using raw = typename skr::FunctionTrait<T>::raw;
+    return get_trampoline<T>(skr::type_t<raw>{});
+}
 } // namespace sugoi
+
+#define SUGOI_LAMBDA(f) sugoi::get_trampoline<decltype(f)>(), &f
+#define SUGOI_LAMBDA_POINTER(f) sugoi::get_trampoline<decltype(*f)>(), f, nullptr, +[](void* u, EIndex entityCount) { SkrDelete(((decltype(f))u)); }
+
 #endif

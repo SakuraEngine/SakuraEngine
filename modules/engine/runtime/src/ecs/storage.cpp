@@ -6,10 +6,10 @@
 
 #include "./impl/query.hpp"
 #include "./impl/storage.hpp"
+#include "./impl/job.hpp"
 #include "./pool.hpp"
 #include "./mask.hpp"
 #include "./chunk_view.hpp"
-#include "./scheduler.hpp"
 #include "./iterator_ref.hpp"
 
 #ifndef forloop
@@ -121,6 +121,7 @@ sugoi_chunk_view_t sugoi_storage_t::allocateViewStrict(sugoi_group_t* group, EIn
 void sugoi_storage_t::destroy(const sugoi_chunk_view_t& view)
 {
     using namespace sugoi;
+    SkrZoneScopedN("sugoi_storage_t::destroy");
     auto group = view.chunk->group;
     if (pimpl->scheduler)
     {
@@ -896,7 +897,7 @@ sugoi::EntityRegistry& sugoi_storage_t::getEntityRegistry()
     return pimpl->entity_registry;
 }
 
-sugoi::scheduler_t* sugoi_storage_t::getScheduler()
+sugoi::JobScheduler* sugoi_storage_t::getScheduler()
 {
     return pimpl->scheduler;
 }

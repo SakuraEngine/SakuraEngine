@@ -2,6 +2,21 @@
 #include "SkrTask/parallel_for.hpp"
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/ecs/storage.hpp"
+#include "SkrRT/ecs/job.hpp"
+#include "SkrCore/log.h"
+
+struct ProcInitializer
+{
+    ProcInitializer() SKR_NOEXCEPT
+    {
+        skr_log_initialize_async_worker();
+    }
+    ~ProcInitializer() SKR_NOEXCEPT
+    {
+        skr_log_finalize_async_worker();
+    }
+
+} _;
 
 struct ECSJobs {
     ECSJobs() SKR_NOEXCEPT
@@ -10,7 +25,6 @@ struct ECSJobs {
         
         storage = sugoiS_create();
 
-        createQueries();
         spawnIntEntities();
 
         scheduler.initialize(skr::task::scheudler_config_t());
@@ -27,18 +41,6 @@ struct ECSJobs {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
-    void createQueries()
-    {
-        SkrZoneScopedN("createQueries");
-        int_read_query = storage->new_query()
-                .ReadAll<IntComponent>()
-                .commit().value();
-
-        int_write_query = storage->new_query()
-                .ReadWriteAll<IntComponent>()
-                .commit().value();
-    }
-
     void spawnIntEntities()
     {
         SkrZoneScopedN("spawnIntEntities");
@@ -53,8 +55,6 @@ struct ECSJobs {
     }
 
 protected:
-    sugoi_query_t* int_read_query = nullptr;
-    sugoi_query_t* int_write_query = nullptr;
     sugoi_storage_t* storage = nullptr;
     skr::task::scheduler_t scheduler;
 };
@@ -63,7 +63,16 @@ TEST_CASE_METHOD(ECSJobs, "WRW")
 {
     SkrZoneScopedN("ECSJobs::WRW");
 
-    auto WJob0 = SkrNewLambda([=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
+    auto ROQuery = storage->new_query()
+            .ReadAll<IntComponent>()
+            .commit().value();
+    auto RWQuery = storage->new_query()
+            .ReadWriteAll<IntComponent>()
+            .commit().value();
+    SKR_DEFER({ storage->destroy(ROQuery); storage->destroy(RWQuery); });
+
+    auto WJob0 = SkrNewLambda(
+        [=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
         SkrZoneScopedN("WJob0");
         auto ints = sugoi::get_owned<IntComponent>(view);
         for (auto i = 0; i < view->count; i++)
@@ -72,16 +81,17 @@ TEST_CASE_METHOD(ECSJobs, "WRW")
             ints[i].v = ints[i].v + 1;
         }
     });
-    auto RJob = SkrNewLambda([=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
+    auto RJob = SkrNewLambda(
+        [=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
         SkrZoneScopedN("RJob");
         auto ints = sugoi::get_owned<const IntComponent>(view);
         for (auto i = 0; i < view->count; i++)
         {
             EXPECT_EQ(ints[i].v, 1);
         }
-        
     });
-    auto WJob1 = SkrNewLambda([=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
+    auto WJob1 = SkrNewLambda(
+        [=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
         SkrZoneScopedN("WJob1");
         auto ints = sugoi::get_owned<IntComponent>(view);
         for (auto i = 0; i < view->count; i++)
@@ -90,7 +100,79 @@ TEST_CASE_METHOD(ECSJobs, "WRW")
             ints[i].v = ints[i].v + 1;
         }
     });
-    sugoiJ_schedule_ecs(int_write_query, 10'000, SUGOI_LAMBDA_POINTER(WJob0), nullptr, nullptr);
-    sugoiJ_schedule_ecs(int_read_query, 10'000, SUGOI_LAMBDA_POINTER(RJob), nullptr, nullptr);
-    sugoiJ_schedule_ecs(int_write_query, 10'000, SUGOI_LAMBDA_POINTER(WJob1), nullptr, nullptr);
+    auto& JS = sugoi::JobScheduler::Get();
+    JS.schedule_ecs_job(RWQuery, 10'000, SUGOI_LAMBDA_POINTER(WJob0));
+    JS.schedule_ecs_job(ROQuery, 10'000, SUGOI_LAMBDA_POINTER(RJob));
+    JS.schedule_ecs_job(RWQuery, 10'000, SUGOI_LAMBDA_POINTER(WJob1));
+    JS.sync_all_jobs();
+
+    JS.collect_garbage();
+}
+
+TEST_CASE_METHOD(ECSJobs, "WRW-Complex")
+{
+    SkrZoneScopedN("ECSJobs::WRW-Complex");
+
+    auto ROQuery = storage->new_query()
+            .ReadAll<IntComponent>()
+            .commit().value();
+    auto RWIntQuery = storage->new_query()
+            .ReadWriteAll<IntComponent>()
+            .commit().value();
+    auto RWFloatQuery = storage->new_query()
+            .ReadWriteAll<FloatComponent>()
+            .commit().value();
+    SKR_DEFER({ 
+        storage->destroy(ROQuery); 
+        storage->destroy(RWIntQuery); 
+        storage->destroy(RWFloatQuery); 
+    });
+
+    auto WriteInts = SkrNewLambda(
+        [=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
+        SkrZoneScopedN("WriteInts");
+        auto ints = sugoi::get_owned<IntComponent>(view);
+        for (auto i = 0; i < view->count; i++)
+        {
+            ints[i].v = ints[i].v + 1;
+        }
+    });
+    auto WriteFloats = SkrNewLambda(
+        [=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
+        SkrZoneScopedN("WriteFloats");
+        auto floats = sugoi::get_owned<FloatComponent>(view);
+        for (auto i = 0; i < view->count; i++)
+        {
+            floats[i].v = floats[i].v + 1.f;
+            floats[i].v = floats[i].v + 1.f;
+        }
+    });
+    auto RJob = SkrNewLambda(
+        [=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
+        SkrZoneScopedN("ReadOnlyJob");
+        auto ints = sugoi::get_owned<const IntComponent>(view);
+        // use an int-only query to schedule a job but reads floats
+        // FloatComponents will not be synchronized but you can still read
+        // which is an unsafe operation
+        auto floats = sugoi::get_owned<const FloatComponent>(view);
+        for (auto i = 0; i < view->count; i++)
+        {
+            EXPECT_EQ(ints[i].v, 1);
+            const auto cond0 = floats[i].v == 0.f;
+            const auto cond1 = floats[i].v == 1.f;
+            const auto cond2 = floats[i].v == 2.f;
+            const auto cond3 = floats[i].v == 3.f;
+            const auto cond4 = floats[i].v == 4.f;
+            const auto cond = cond0 || cond1 || cond2 || cond3 || cond4;
+            EXPECT_TRUE(cond);
+        }
+    });
+    auto& JS = sugoi::JobScheduler::Get();
+    JS.schedule_ecs_job(RWIntQuery, 12'800, SUGOI_LAMBDA_POINTER(WriteInts));
+    JS.schedule_ecs_job(RWFloatQuery, 2'560, SUGOI_LAMBDA_POINTER(WriteFloats));
+    JS.schedule_ecs_job(RWFloatQuery, 2'560, SUGOI_LAMBDA_POINTER(WriteFloats));
+    JS.schedule_ecs_job(ROQuery, 10'000, SUGOI_LAMBDA_POINTER(RJob));
+    JS.sync_all_jobs();
+
+    JS.collect_garbage();
 }
