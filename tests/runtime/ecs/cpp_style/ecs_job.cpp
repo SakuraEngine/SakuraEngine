@@ -57,7 +57,10 @@ TEST_CASE_METHOD(ECSJobs, "WRW")
     auto RWQuery = storage->new_query()
             .ReadWriteAll<IntComponent>()
             .commit().value();
-    SKR_DEFER({ storage->destroy(ROQuery); storage->destroy(RWQuery); });
+    SKR_DEFER({ 
+        storage->destroy_query(ROQuery); 
+        storage->destroy_query(RWQuery); 
+    });
 
     auto WJob0 = SkrNewLambda(
         [=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
@@ -111,9 +114,9 @@ TEST_CASE_METHOD(ECSJobs, "WRW-Complex")
             .ReadWriteAll<FloatComponent>()
             .commit().value();
     SKR_DEFER({ 
-        storage->destroy(ROQuery); 
-        storage->destroy(RWIntQuery); 
-        storage->destroy(RWFloatQuery); 
+        storage->destroy_query(ROQuery); 
+        storage->destroy_query(RWIntQuery); 
+        storage->destroy_query(RWFloatQuery); 
     });
 
     auto WriteInts = SkrNewLambda(
@@ -135,7 +138,7 @@ TEST_CASE_METHOD(ECSJobs, "WRW-Complex")
             floats[i].v = floats[i].v + 1.f;
         }
     });
-    auto RJob = SkrNewLambda(
+    auto ReadJob = SkrNewLambda(
         [=](sugoi_query_t* query, sugoi_chunk_view_t* view, sugoi_type_index_t* localTypes, EIndex entityIndex) {
         SkrZoneScopedN("ReadOnlyJob");
         auto ints = sugoi::get_owned<const IntComponent>(view);
@@ -158,8 +161,7 @@ TEST_CASE_METHOD(ECSJobs, "WRW-Complex")
     auto& JS = sugoi::JobScheduler::Get();
     JS.schedule_ecs_job(RWIntQuery, 12'800, SUGOI_LAMBDA_POINTER(WriteInts));
     JS.schedule_ecs_job(RWFloatQuery, 2'560, SUGOI_LAMBDA_POINTER(WriteFloats));
-    JS.schedule_ecs_job(RWFloatQuery, 2'560, SUGOI_LAMBDA_POINTER(WriteFloats));
-    JS.schedule_ecs_job(ROQuery, 10'000, SUGOI_LAMBDA_POINTER(RJob));
+    JS.schedule_ecs_job(ROQuery, 10'000, SUGOI_LAMBDA_POINTER(ReadJob));
     JS.sync_all_jobs();
 
     JS.collect_garbage();

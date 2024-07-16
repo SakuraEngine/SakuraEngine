@@ -639,7 +639,7 @@ void sugoi_storage_t::query(const sugoi_query_t* q, sugoi_view_callback_t callba
     query_groups(q, SUGOI_LAMBDA(filterChunk));
 }
 
-void sugoi_storage_t::destroy(const sugoi_query_t* q)
+void sugoi_storage_t::destroy_entities(const sugoi_query_t* q)
 {
     auto filterChunk = [&](sugoi_group_t* group) {
         group->clear();
@@ -647,7 +647,7 @@ void sugoi_storage_t::destroy(const sugoi_query_t* q)
     query_groups(q, SUGOI_LAMBDA(filterChunk));
 }
 
-void sugoi_storage_t::destroy(const sugoi_query_t* q, sugoi_destroy_callback_t callback, void* u)
+void sugoi_storage_t::destroy_entities(const sugoi_query_t* q, sugoi_destroy_callback_t callback, void* u)
 {
     skr::InlineVector<sugoi_chunk_view_t, 16> viewsToDestroy;
     auto                                      callback3 = [&](sugoi_chunk_view_t* chunk) {
@@ -664,7 +664,7 @@ void sugoi_storage_t::destroy(const sugoi_query_t* q, sugoi_destroy_callback_t c
             // destroy in reverse order
             for (int i = viewsToDestroy.size() - 1; i >= 0; --i)
             {
-                destroy(viewsToDestroy[i]);
+                destroy_entities(viewsToDestroy[i]);
             }
         };
         filter_in_single_group(&q->pimpl->parameters, group, q->pimpl->filter, q->pimpl->meta, q->pimpl->customFilter, q->pimpl->customFilterUserData, SUGOI_LAMBDA(callback2));
@@ -993,7 +993,7 @@ void sugoi_storage_t::filter_safe(const sugoi_filter_t& filter, const sugoi_meta
     }
 }
 
-void sugoi_storage_t::destroy(const sugoi_meta_filter_t& meta)
+void sugoi_storage_t::destroy_entities(const sugoi_meta_filter_t& meta)
 {
     using namespace sugoi;
     pimpl->groups.read_versioned([&](auto& groups){

@@ -118,7 +118,7 @@ sugoi_chunk_view_t sugoi_storage_t::allocateViewStrict(sugoi_group_t* group, EIn
     return { freeChunk, start, count };
 }
 
-void sugoi_storage_t::destroy(const sugoi_chunk_view_t& view)
+void sugoi_storage_t::destroy_entities(const sugoi_chunk_view_t& view)
 {
     using namespace sugoi;
     SkrZoneScopedN("sugoi_storage_t::destroy");
@@ -971,25 +971,25 @@ void sugoiS_destroy_entities(sugoi_storage_t* storage, const sugoi_entity_t* ent
         return;
 
     auto destroy_callback = [storage](sugoi_chunk_view_t* view) {
-        storage->destroy(*view);
+        storage->destroy_entities(*view);
     };
     storage->batch(ents, 1, SUGOI_LAMBDA(destroy_callback));
 }
 
 void sugoiS_destroy_in_query(const sugoi_query_t* q)
 {
-    q->pimpl->storage->destroy(q);
+    q->pimpl->storage->destroy_entities(q);
 }
 
 void sugoiS_destroy_in_query_if(const sugoi_query_t* q, sugoi_destroy_callback_t callback, void* u)
 {
-    q->pimpl->storage->destroy(q, callback, u);
+    q->pimpl->storage->destroy_entities(q, callback, u);
 }
 
 void sugoiS_destroy_all(sugoi_storage_t* storage, const sugoi_meta_filter_t* meta)
 {
     SKR_ASSERT(sugoi::ordered(*meta));
-    storage->destroy(*meta);
+    storage->destroy_entities(*meta);
 }
 
 void sugoiS_cast_view_delta(sugoi_storage_t* storage, const sugoi_chunk_view_t* view, const sugoi_delta_type_t* delta, sugoi_cast_callback_t callback, void* u)
