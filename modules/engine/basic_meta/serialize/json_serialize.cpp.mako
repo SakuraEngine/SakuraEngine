@@ -18,15 +18,6 @@ namespace skr
 {
 %for enum in generator.filter_types(db.enums):
 // enum serde traits
-span<EnumSerdeItem<${enum.name}>> EnumSerdeTraits<${enum.name}>::items()
-{
-    static EnumSerdeItem<${enum.name}> items[] = {
-%for enum_item_name, enum_value in vars(enum.values).items():
-        {u8"${db.short_name(enum_item_name)}", ${enum_item_name}},
-%endfor
-    };
-    return items;
-}
 skr::StringView EnumSerdeTraits<${enum.name}>::to_string(const ${enum.name}& value)
 {
     switch (value)
@@ -49,27 +40,6 @@ bool EnumSerdeTraits<${enum.name}>::from_string(skr::StringView str, ${enum.name
             return false;
     }
 }
-// enum serde
-bool JsonSerde<${enum.name}>::read(skr::archive::JsonReader* r, ${enum.name}& e)
-{
-    SkrZoneScopedN("json::JsonSerde<${enum.name}>::read");
-    skr::String enumStr;
-    if (r->String(enumStr).has_value())
-    {
-        if(!EnumSerdeTraits<${enum.name}>::from_string(enumStr.view(), e))
-        {
-            SKR_LOG_ERROR(u8"Unknown enumerator while reading enum ${enum.name}: %s", enumStr.raw().data());
-            return false;
-        }
-        return true;
-    }
-    return false;
-} 
-bool JsonSerde<${enum.name}>::write(skr::archive::JsonWriter* w, ${enum.name} e)
-{
-    SkrZoneScopedN("JsonSerde<${enum.name}>::write");
-    return w->String(EnumSerdeTraits<${enum.name}>::to_string(e)).has_value();
-} 
 %endfor
 
 %for record in generator.filter_types(db.records):

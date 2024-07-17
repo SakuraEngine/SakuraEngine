@@ -19,15 +19,8 @@ namespace skr
     template <>
     struct ${api} EnumSerdeTraits<${enum.name}>
     {
-        static skr::span<EnumSerdeItem<${enum.name}>> items();
         static skr::StringView to_string(const ${enum.name}& value);
         static bool from_string(skr::StringView str, ${enum.name}& value);
-    };
-    template <>
-    struct ${api} JsonSerde<${enum.name}>
-    {
-        static bool read(skr::archive::JsonReader* r, ${enum.name}& v);
-        static bool write(skr::archive::JsonWriter* w, ${enum.name} v);
     };
 %endfor
 }

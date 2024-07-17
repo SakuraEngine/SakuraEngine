@@ -10,6 +10,25 @@ from dataclasses import dataclass, field
 # TODO. serde::policy，利用 attribute 来控制具体序列化的细节行为
 
 
+@dataclass
+class RecordSerdeData:
+    enable_json: bool
+    enable_bin: bool
+    json_fields: t.List[cpp.Field]
+    bin_fields: t.List[cpp.Field]
+
+
+@dataclass
+class FieldSerdeData:
+    enable_json: bool
+    enable_bin: bool
+
+
+@dataclass
+class EnumSerdeData:
+    enable_json: bool
+
+
 class SerializeGenerator(gen.GeneratorBase):
     def load_scheme(self):
         # record scheme
@@ -34,11 +53,12 @@ class SerializeGenerator(gen.GeneratorBase):
         )
 
         # enum scheme
+        # TODO. use EnumSerdeTraits directly?
         self.owner.add_enum_scheme({
             sc.Namespace({
                 "serde": sc.Functional({
                     "json": sc.Functional(),  # default disable
-                    "bin": sc.Functional(),  # default disable
+                    # "bin": sc.Functional(),  # default disable
                 }, shorthands=sc.FunctionalOptionShorthand())
             })
         })
