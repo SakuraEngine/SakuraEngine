@@ -9,7 +9,7 @@
 
 // (GPU) texture resource
 sreflect_struct("guid" : "f8821efb-f027-4367-a244-9cc3efb3a3bf")
-sattr("serialize" : "bin")
+sattr("serde" : "bin")
 skr_texture_resource_t {
     uint32_t          format; // TODO: TEnum<ECGPUFormat>
     uint32_t          mips_count;
@@ -18,30 +18,30 @@ skr_texture_resource_t {
     uint32_t          height;
     uint32_t          depth;
 
-    sattr("transient": true)
+    sattr("serde": "disable")
     CGPUTextureId     texture;
-    sattr("transient": true)
+    sattr("serde": "disable")
     CGPUTextureViewId texture_view;
 };
 typedef struct skr_texture_resource_t  skr_texture_resource_t;
 typedef struct skr_texture_resource_t* skr_texture_resource_id;
 
 sreflect_enum_class("guid" : "a9ff6d5f-620b-444b-8cb3-3b926ec1316e")
-sattr("serialize" : ["bin", "json"])
+sattr("serde" : ["bin", "json"])
 ESkrTextureSamplerFilterType           SKR_IF_CPP( : uint32_t){
     NEAREST,
     LINEAR
 };
 
 sreflect_enum_class("guid" : "01eccfa6-ac6c-4195-b725-66c865529d6f")
-sattr("serialize" : ["bin", "json"])
+sattr("serde" : ["bin", "json"])
 ESkrTextureSamplerMipmapMode SKR_IF_CPP( : uint32_t){
     NEAREST,
     LINEAR
 };
 
 sreflect_enum_class("guid" : "b5dee0a2-5b20-4062-a036-79905b1d325f")
-sattr("serialize" : ["bin", "json"])
+sattr("serde" : ["bin", "json"])
 ESkrTextureSamplerAddressMode SKR_IF_CPP( : uint32_t){
     MIRROR,
     REPEAT,
@@ -50,7 +50,7 @@ ESkrTextureSamplerAddressMode SKR_IF_CPP( : uint32_t){
 };
 
 sreflect_enum_class("guid" : "566ef8d0-9c68-4578-be0b-b33781fc1a0f")
-sattr("serialize" : ["bin", "json"])
+sattr("serde" : ["bin", "json"])
 ESkrTextureSamplerCompareMode SKR_IF_CPP( : uint32_t){
     NEVER,
     LESS,
@@ -64,7 +64,7 @@ ESkrTextureSamplerCompareMode SKR_IF_CPP( : uint32_t){
 
 // (GPU) texture sampler resource
 sreflect_struct("guid" : "ab483a53-5024-48f2-87a7-9502063c97f3")
-sattr("serialize" : ["bin", "json"])
+sattr("serde" : ["bin", "json"])
 skr_texture_sampler_resource_t {
     ESkrTextureSamplerFilterType  min_filter;
     ESkrTextureSamplerFilterType  mag_filter;
@@ -76,7 +76,7 @@ skr_texture_sampler_resource_t {
     float                         max_anisotropy;
     ESkrTextureSamplerCompareMode compare_func;
 
-    sattr("transient": true)
+    sattr("serde": "disable")
     CGPUSamplerId                 sampler;
 };
 

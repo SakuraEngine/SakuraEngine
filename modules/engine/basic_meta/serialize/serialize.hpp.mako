@@ -5,6 +5,14 @@
 // json serde
 namespace skr
 {
+%for enum in json_enums:
+template <>
+struct ${api} EnumSerdeTraits<${enum.name}>
+{
+    static skr::StringView to_string(const ${enum.name}& value);
+    static bool from_string(skr::StringView str, ${enum.name}& value);
+};
+%endfor
 %for record in json_records:
 template <>
 struct ${api} JsonSerde<${record.name}>
@@ -14,14 +22,6 @@ struct ${api} JsonSerde<${record.name}>
 
     static bool read(skr::archive::JsonReader* r, ${record.name}& v);
     static bool write(skr::archive::JsonWriter* w, const ${record.name}& v);
-};
-%endfor
-%for enum in json_enums:
-template <>
-struct ${api} EnumSerdeTraits<${enum.name}>
-{
-    static skr::StringView to_string(const ${enum.name}& value);
-    static bool from_string(skr::StringView str, ${enum.name}& value);
 };
 %endfor
 }

@@ -13,10 +13,10 @@ namespace skr::anim
 sreflect_managed_component("guid" : "05B43406-4BCF-4E59-B2D8-ACED7D37E776")
 SkinComponent {
     SKR_RESOURCE_FIELD(SkinResource, skin_resource);
-    sattr("transient": true)
+    sattr("serde": "disable")
     skr::Vector<uint16_t>            joint_remaps;
 
-    sattr("transient": true)
+    sattr("serde": "disable")
     skr::Vector<ozz::math::Float4x4> skin_matrices;
 };
 
@@ -33,15 +33,15 @@ AnimComponent {
     ~AnimComponent();
     bool                                  use_dynamic_buffer = false;
 
-    sattr("transient": true)
+    sattr("serde": "disable")
     skr::Vector<ozz::math::Float4x4>      joint_matrices;
-    sattr("transient": true)
+    sattr("serde": "disable")
     skr::Vector<skr::anim::SkinPrimitive> primitives;
-    sattr("transient": true)
+    sattr("serde": "disable")
     skr::Vector<skr::IBlob*>              buffers;
-    sattr("transient": true)
+    sattr("serde": "disable")
     skr::Vector<CGPUBufferId>             vbs;
-    sattr("transient": true)
+    sattr("serde": "disable")
     skr::Vector<skr_vertex_buffer_view_t> views;
 };
 

@@ -15,14 +15,13 @@ namespace skd
 namespace asset
 {
 sreflect_struct("guid" : "9A2C9CBF-517D-4197-BDE3-E40D85D88320")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 MESH_CORE_API SMeshCookConfig {
-    sattr("no-default" : true)
     skr_guid_t vertexType;
 };
 
 sreflect_enum_class("guid" : "d6baca1e-eded-4517-a6ad-7abaac3de27b")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 ERawPrimitiveType : uint32_t
 {
     POINTS,
@@ -36,7 +35,7 @@ ERawPrimitiveType : uint32_t
 };
 
 sreflect_enum_class("guid" : "04ab3dda-e8a7-4db3-839a-bf48c83dc21f")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 ERawVertexStreamType : uint32_t
 {
     POSITION,

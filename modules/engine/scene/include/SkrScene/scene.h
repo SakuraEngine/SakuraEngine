@@ -61,7 +61,7 @@ SKR_ALIGNAS(16) skr_transform_comp_t {
 sreflect_struct(
     "guid" : "78DD218B-87DE-4250-A7E8-A6B4553B47BF", 
     "ecs::comp" : true, 
-    "serialize" : ["bin", "json"]
+    "serde" : ["bin", "json"]
 )
 skr_rotation_comp_t {
     skr_rotator_t euler;
@@ -70,7 +70,7 @@ skr_rotation_comp_t {
 sreflect_struct(
     "guid" : "A059A2A1-CC3B-43B0-88B6-ADA7822BA25D",
     "ecs::comp" : true, 
-    "serialize" : ["bin", "json"]
+    "serde" : ["bin", "json"]
 )
 skr_translation_comp_t {
     skr_float3_t value;
@@ -79,7 +79,7 @@ skr_translation_comp_t {
 sreflect_struct(
     "guid" : "D045D755-FBD1-44C2-8BF0-C86F2D8485FF", 
     "ecs::comp" : true, 
-    "serialize" : ["bin", "json"]
+    "serde" : ["bin", "json"]
 )
 skr_scale_comp_t {
     skr_float3_t value;

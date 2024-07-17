@@ -16,7 +16,7 @@ namespace renderer
 {
 
 sreflect_struct("guid" : "6c07aa34-249f-45b8-8080-dd2462ad5312")
-sattr("serialize" : ["json", "bin"])
+sattr("serde" : ["json", "bin"])
 MultiShaderResource {
     using stable_hash_t   = skr_stable_shader_hash_t;
     using stable_hasher_t = skr_stable_shader_hash_t::hasher;
@@ -40,7 +40,7 @@ MultiShaderResource {
 };
 
 sreflect_struct("guid": "8372f075-b4ce-400d-929f-fb0e57c1c887")
-sattr("serialize" : "bin")
+sattr("serde" : "bin")
 ShaderOptionSequence {
     skr::SerializeConstVector<EShaderOptionType>                                    types;
     skr::SerializeConstVector<skr::SerializeConstString>                            keys;
@@ -60,7 +60,7 @@ ShaderOptionSequence {
 };
 
 sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
-sattr("serialize" : "bin")
+sattr("serde" : "bin")
 ShaderCollectionResource {
     using stable_hash_t   = skr_stable_shader_hash_t;
     using stable_hasher_t = skr_stable_shader_hash_t::hasher;
@@ -87,7 +87,7 @@ ShaderCollectionResource {
 };
 
 sreflect_struct("guid" : "a633ea13-53d8-4202-b6f1-ec882ac409ec")
-sattr("serialize" : ["json", "bin"])
+sattr("serde" : ["json", "bin"])
 ShaderCollectionJSON {
     using stable_hash_t   = skr_stable_shader_hash_t;
     using stable_hasher_t = skr_stable_shader_hash_t::hasher;

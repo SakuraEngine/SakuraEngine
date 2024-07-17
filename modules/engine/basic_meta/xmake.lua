@@ -10,8 +10,7 @@ target("SkrBasicMeta")
             -- rttr
             { file = "rttr/rttr.py", use_new_framework = true },
             -- serialize
-            { file = "serialize/serialize.py" },
-            { file = "serialize/serialize_json.py" },
+            { file = "serialize/serialize.py", use_new_framework = true },
             -- trait object
             { file = "trait_object/trait_object.py" },
         }, 
