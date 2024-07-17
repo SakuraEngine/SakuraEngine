@@ -7,6 +7,7 @@ import framework.log as log
 import framework.database as db
 import typing as t
 from dataclasses import dataclass, field
+# TODO. serde::policy，利用 attribute 来控制具体序列化的细节行为
 
 
 class SerializeGenerator(gen.GeneratorBase):
@@ -15,12 +16,9 @@ class SerializeGenerator(gen.GeneratorBase):
         self.owner.add_record_scheme(
             sc.Namespace({
                 "serde": sc.Functional({
-                    "json": sc.Functional(),
-                    "bin": sc.Functional(),
-                    "blob": sc.Functional(),
-                    "net": sc.Functional({  # TODO. unused
-                        "config": sc.Str(),  # 网络序列化的额外参数
-                    }),
+                    "json": sc.Functional(),  # default: disable
+                    "bin": sc.Functional(),   # default: disable
+                    "field_default": sc.List(),  # default: follow above config
                 }, shorthands=sc.FunctionalOptionShorthand())
             })
         )
@@ -29,14 +27,8 @@ class SerializeGenerator(gen.GeneratorBase):
         self.owner.add_field_scheme(
             sc.Namespace({
                 "serde": sc.Functional({
-                    "json": sc.Functional({
-                        "no-default": sc.Bool(),  # 指定字段在 json 反序列化时，如果不存在，强制报错而不是不处理
-                    }),
-                    "bin": sc.Functional(),
-                    "blob": sc.Functional({
-                        "arena": sc.Str(),  # field 对应的 arena
-                    }),
-                    "net": sc.Functional(),
+                    "json": sc.Functional(),  # default: follow record "field_default" config
+                    "bin": sc.Functional(),  # default: follow record "field_default" config
                 }, shorthands=sc.FunctionalOptionShorthand())
             })
         )
@@ -45,9 +37,8 @@ class SerializeGenerator(gen.GeneratorBase):
         self.owner.add_enum_scheme({
             sc.Namespace({
                 "serde": sc.Functional({
-                    "json": sc.Functional(),
-                    "bin": sc.Functional(),
-                    "net": sc.Functional(),
+                    "json": sc.Functional(),  # default disable
+                    "bin": sc.Functional(),  # default disable
                 }, shorthands=sc.FunctionalOptionShorthand())
             })
         })

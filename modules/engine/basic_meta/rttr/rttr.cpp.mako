@@ -5,45 +5,6 @@
 #include "SkrContainers/tuple.hpp"
 #include "SkrRTTR/export/export_builder.hpp"
 
-namespace skr::rttr 
-{
-//============================> Begin Enum Traits <============================
-%for enum in enums:
-span<EnumItem<${enum.name}>> EnumTraits<${enum.name}>::items()
-{
-    static EnumItem<${enum.name}> items[] = {
-    %for enum_value in enum.values.values():
-        {u8"${enum_value.short_name}", ${enum_value.name}},
-    %endfor
-    };
-    return items;
-}
-skr::StringView EnumTraits<${enum.name}>::to_string(const ${enum.name}& value)
-{
-    switch (value)
-    {
-    %for enum_value in enum.values.values():
-    case ${enum.name}::${enum_value.short_name}: return u8"${enum_value.short_name}";
-    %endfor
-    default: SKR_UNREACHABLE_CODE(); return u8"${enum.name}::INVALID_ENUMERATOR";
-    }
-}
-bool EnumTraits<${enum.name}>::from_string(skr::StringView str, ${enum.name}& value)
-{
-    const auto hash = skr_hash64(str.raw().data(), str.size(), 0);
-    switch(hash)
-    {
-    %for enum_value in enum.values.values():
-        case skr::consteval_hash(u8"${enum_value.short_name}"): if(str == u8"${enum_value.short_name}") value = ${enum_value.name}; return true;
-    %endfor
-        default:
-            return false;
-    }
-}
-%endfor
-//============================> End Enum Traits <============================
-}
-
 SKR_EXEC_STATIC_CTOR
 {
     using namespace ::skr::rttr;

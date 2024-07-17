@@ -1,5 +1,5 @@
 // BEGIN SERIALIZE GENERATED
-#include "SkrBase/types.h"
-#include "SkrCore/blob.hpp"
+#include "SkrSerde/bin_serde.hpp"
+#include "SkrSerde/json_serde.hpp"
 
 // END SERIALIZE GENERATED
