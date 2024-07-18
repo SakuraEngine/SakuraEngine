@@ -14,22 +14,12 @@ rtm::qvvf make_qvv(skr_rotator_t* r, skr_float3_t* t, skr_float3_t* s)
     const auto default_translation = rtm::vector_set(0.f, 0.f, 0.f);
     const auto default_scale       = rtm::vector_set(1.f, 1.f, 1.f);
     const auto default_quat        = rtm::quat_set(0.f, 0.f, 0.f, 1.f);
-    if (r && t && s)
-        return rtm::qvv_set(skr::math::load(*r), skr::math::load(*t), skr::math::load(*s));
-    else if (r && s)
-        return rtm::qvv_set(skr::math::load(*r), default_translation, skr::math::load(*s));
-    else if (r && t)
-        return rtm::qvv_set(skr::math::load(*r), skr::math::load(*t), default_scale);
-    else if (t && s)
-        return rtm::qvv_set(default_quat, skr::math::load(*t), skr::math::load(*s));
-    else if (t)
-        return rtm::qvv_set(default_quat, skr::math::load(*t), default_scale);
-    else if (r)
-        return rtm::qvv_set(skr::math::load(*r), default_translation, default_scale);
-    else if (s)
-        return rtm::qvv_set(default_quat, default_translation, skr::math::load(*s));
-    else
-        return rtm::qvv_set(default_quat, default_translation, default_scale);
+    
+    const auto translation = t ? skr::math::load(*t) : default_translation;
+    const auto scale       = s ? skr::math::load(*s) : default_scale;
+    const auto quat           = r ? skr::math::load(*r) : default_quat;
+
+    return rtm::qvv_set(quat, translation, scale);
 }
 
 static void skr_relative_to_world_children(skr_children_t* children, rtm::qvvf parent, sugoi_storage_t* storage)
@@ -92,7 +82,7 @@ static void skr_relative_to_world_root(void* u, sugoi_query_t* query, sugoi_chun
 
 void skr_transform_setup(sugoi_storage_t* world, skr_transform_system_t* system)
 {
-    const auto qstr = u8"[inout]<seq>skr_transform_comp_t, [in]<seq>skr_child_comp_t,"
+    const auto qstr = u8"[inout]<seq>skr_transform_comp_t, [in]<seq>?skr_child_comp_t,"
                       "!skr_parent_comp_t, [in]<seq>?skr_translation_comp_t,"
                       "[in]<seq>?skr_rotation_comp_t, [in]<seq>?skr_scale_comp_t";
     // then recursively calculate local to world for node entities
