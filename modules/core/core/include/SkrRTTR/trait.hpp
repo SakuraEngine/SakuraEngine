@@ -25,3 +25,21 @@
         {                                                \
         }
 #endif
+
+// TODO. vtable 类型在 GENERATE_BODY 中直接生成
+// TODO. vtable 的模板型萃取器也在 GENERATE_BODY 中生成生命，定义可以后置
+// TODO. 萃取器的实现尽量使用 concept 来实现，实际萃取器中只是进行使用
+// TODO. 是否考虑类似于 RTTR 的实现，将函数指针置于模板参数中，进行萃取
+
+namespace skr
+{
+template <typename T>
+struct ProxyObjectTraits {
+    // TODO. validator (use concept?)
+    // method -> t->*m()
+    // static -> m(t)
+    // field(getter/setter only) -> t->f
+    //
+    // 分为两部分，存在性验证和签名验证，签名验证可以被抽象，存在性验证则必须用 Validator/Concept 来实现
+};
+} // namespace skr

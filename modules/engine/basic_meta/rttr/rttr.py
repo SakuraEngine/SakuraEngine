@@ -264,7 +264,7 @@ class RTTRGenerator(gen.GeneratorBase):
 
     def generate_body(self):
         db = self.owner.database
-        for record in db.get_records():
+        for record in db.main_module.get_records():
             if db.is_derived(record, "skr::rttr::IObject"):
                 record.generated_body_content += '''
 GUID iobject_get_typeid() const override
