@@ -9,12 +9,19 @@
 #include "SkrTask/parallel_for.hpp"
 #include "SkrScene/scene.h"
 
-struct ParallelEntry
+namespace skr
 {
-    uint32_t threshold = 0;
-    uint32_t batch_size = 128;
+struct skr::TransformSystem::Impl
+{
+    struct ParallelEntry
+    {
+        uint32_t threshold = 0;
+        uint32_t batch_size = 128;
+    };
+    sugoi_query_t* calculateTransformTree;
+    sugoi_entity_t root_meta;
+    skr::FlatHashMap<sugoi_entity_t, ParallelEntry> parallel_nodes;
 };
-skr::FlatHashMap<sugoi_entity_t, ParallelEntry> parallel_nodes;
 
 rtm::qvvf make_qvv(const skr_rotator_t* r, const skr_float3_t* t, const skr_float3_t* s)
 {
@@ -99,24 +106,76 @@ static void skr_relative_to_world_root(void* u, sugoi_query_t* query, sugoi_chun
     }
 }
 
-void skr_transform_system_setup(sugoi_storage_t* world, skr_transform_system_t* system)
+TransformSystem* TransformSystem::Create(sugoi_storage_t* world) SKR_NOEXCEPT
 {
+    SkrZoneScopedN("CreateTransformSystem");
+    auto memory = (uint8_t*)sakura_calloc(1, sizeof(TransformSystem) + sizeof(TransformSystem::Impl));
+    auto system = new(memory) TransformSystem();
+    system->impl = new(memory + sizeof(TransformSystem)) TransformSystem::Impl();
+
     sugoi::EntitySpawner<skr::ScaleComponent> spawner;
     spawner(world, 1, [&](auto& view){ 
         const auto e = sugoiV_get_entities(view.view)[0];
-        system->root_meta = e;
+        system->impl->root_meta = e;
     });
 
-    system->calculateTransformTree = world->new_query()
+    system->impl->calculateTransformTree = world->new_query()
         .ReadWriteAll<skr::TransformComponent>()
         .ReadAny<skr::ChildrenComponent>()
         .ReadAny<skr::TranslationComponent, skr::RotationComponent, skr::ScaleComponent>()
-        .WithMetaEntity(system->root_meta)
+        .WithMetaEntity(system->impl->root_meta)
         .commit().value();
+
+    return system;
 }
 
-void skr_transform_system_update(skr_transform_system_t* system)
+void TransformSystem::Destroy(TransformSystem *system) SKR_NOEXCEPT
+{
+    SkrZoneScopedN("FinalizeTransformSystem");
+    system->impl->~Impl();
+    system->~TransformSystem();
+    sakura_free(system);
+}
+
+void TransformSystem::update() SKR_NOEXCEPT
 {
     SkrZoneScopedN("CalcTransform");
-    sugoiJ_schedule_ecs(system->calculateTransformTree, 0, &skr_relative_to_world_root, nullptr, nullptr, nullptr, nullptr, nullptr);
+    sugoiJ_schedule_ecs(impl->calculateTransformTree, 0, &skr_relative_to_world_root, nullptr, nullptr, nullptr, nullptr, nullptr);
+}
+
+sugoi_entity_t TransformSystem::root_mark() const SKR_NOEXCEPT
+{
+    return impl->root_meta;
+}
+
+void TransformSystem::set_parallel_entry(sugoi_entity_t entity) SKR_NOEXCEPT
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+} // namespace skr
+
+skr::TransformSystem* skr_transform_system_create(sugoi_storage_t* world)
+{
+    return skr::TransformSystem::Create(world);
+}
+
+void skr_transform_system_destroy(skr::TransformSystem* system)
+{
+    skr::TransformSystem::Destroy(system);
+}
+
+void skr_transform_system_set_parallel_entry(skr::TransformSystem* system, sugoi_entity_t entity)
+{
+    system->set_parallel_entry(entity);
+}
+
+void skr_transform_system_update(skr::TransformSystem* system)
+{
+    system->update();
+}
+
+void skr_propagate_transform(sugoi_storage_t* world, sugoi_entity_t* entities, uint32_t count)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
 }

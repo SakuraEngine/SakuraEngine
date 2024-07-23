@@ -113,15 +113,33 @@ ParentComponent {
 #define SKR_SCENE_COMPONENTS skr::ParentComponent, skr::ChildrenComponent, skr::TranslationComponent, skr::RotationComponent, skr::ScaleComponent, skr::TransformComponent
 #endif
 
-struct skr_transform_system_t 
+namespace skr
 {
-    sugoi_query_t* calculateTransformTree;
-    sugoi_entity_t root_meta;
-};
+struct SKR_SCENE_API TransformSystem 
+{
+public:
+    static TransformSystem* Create(sugoi_storage_t* world) SKR_NOEXCEPT;
+    static void Destroy(TransformSystem* system) SKR_NOEXCEPT;
 
-SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_system_setup(sugoi_storage_t* world, skr_transform_system_t* system);
-SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_system_set_parallel_entry(skr_transform_system_t* system, sugoi_entity_t entity);
-SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_system_update(skr_transform_system_t* system);
+    void update() SKR_NOEXCEPT;
+    sugoi_entity_t root_mark() const SKR_NOEXCEPT;
+    void set_parallel_entry(sugoi_entity_t entity) SKR_NOEXCEPT;
+
+private:
+    TransformSystem() SKR_NOEXCEPT = default;
+    ~TransformSystem() SKR_NOEXCEPT = default;
+    struct Impl;
+    Impl* impl;
+
+};
+} // namespace skr
+
+SKR_SCENE_EXTERN_C SKR_SCENE_API skr::TransformSystem* skr_transform_system_create(sugoi_storage_t* world);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_system_destroy(skr::TransformSystem* system);
+
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_system_set_parallel_entry(skr::TransformSystem* system, sugoi_entity_t entity);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_system_update(skr::TransformSystem* system);
+
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_propagate_transform(sugoi_storage_t* world, sugoi_entity_t* entities, uint32_t count);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_save_scene(sugoi_storage_t* world, struct skr::archive::JsonWriter* writer);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(sugoi_storage_t* world, struct skr::archive::JsonReader* reader);

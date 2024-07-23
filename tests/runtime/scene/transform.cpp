@@ -48,10 +48,8 @@ const auto childTransform = make_qvv(childRotation, childTranslation, childScale
 struct TransformTests {
     TransformTests()
     {
-        skr_thread_sleep(3000);
-
         storage = sugoiS_create();
-        skr_transform_system_setup(storage, &transform_system);
+        transform_system = skr::TransformSystem::Create(storage);
 
         spawnEntities();
 
@@ -65,14 +63,14 @@ struct TransformTests {
         sugoiJ_unbind_storage(storage);
         ::sugoiS_release(storage);
         scheduler.unbind();
-        skr_thread_sleep(3000);
     }
 
     void spawnEntities()
     {
         SkrZoneScopedN("TestTransformUpdate");
 
-        sugoi::EntitySpawner<SKR_SCENE_COMPONENTS> root_spawner(transform_system.root_meta);
+        const auto root_mark = transform_system->root_mark();
+        sugoi::EntitySpawner<SKR_SCENE_COMPONENTS> root_spawner(root_mark);
         {
             SkrZoneScopedN("InitializeParentEntities");
             root_spawner(storage, 1, 
@@ -112,7 +110,7 @@ struct TransformTests {
         // do attach
         auto setupAttachQuery = storage->new_query()
             .ReadWriteAny<skr::ChildrenComponent>()
-            .WithMetaEntity(transform_system.root_meta)
+            .WithMetaEntity(root_mark)
             .commit().value();
         SKR_DEFER({ storage->destroy_query(setupAttachQuery); });
         {
@@ -129,7 +127,7 @@ struct TransformTests {
         }
     }
 
-    skr_transform_system_t transform_system;
+    skr::TransformSystem* transform_system;
     sugoi_storage_t* storage = nullptr;
     skr::task::scheduler_t scheduler;
 
@@ -140,7 +138,7 @@ struct TransformTests {
 TEST_CASE_METHOD(TransformTests, "update")
 {
     SkrZoneScopedN("TestTransformUpdate");
-    skr_transform_system_update(&transform_system);
+    transform_system->update();
 
     auto checkQuery = storage->new_query()
         .ReadAny<skr::ParentComponent, skr::ChildrenComponent>()
