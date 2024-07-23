@@ -98,12 +98,19 @@ skr_camera_comp_t {
     uint32_t          viewport_height;
 };
 
-struct skr_transform_system_t {
-    sugoi_query_t* relativeToWorld;
+#ifndef SKR_SCENE_COMPONENTS
+#define SKR_SCENE_COMPONENTS skr_parent_comp_t, skr_child_comp_t, skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t, skr_transform_comp_t
+#endif
+
+struct skr_transform_system_t 
+{
+    sugoi_query_t* calculateTransformTree;
+    sugoi_entity_t root_meta;
 };
 
-SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_setup(sugoi_storage_t* world, skr_transform_system_t* system);
-SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_update(skr_transform_system_t* query);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_system_setup(sugoi_storage_t* world, skr_transform_system_t* system);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_system_add_root(skr_transform_system_t* system, sugoi_entity_t entity);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_system_update(skr_transform_system_t* system);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_propagate_transform(sugoi_storage_t* world, sugoi_entity_t* entities, uint32_t count);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_save_scene(sugoi_storage_t* world, struct skr::archive::JsonWriter* writer);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(sugoi_storage_t* world, struct skr::archive::JsonReader* reader);
