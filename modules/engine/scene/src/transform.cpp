@@ -1,5 +1,3 @@
-#include "SkrBase/types.h"
-#include "SkrBase/math/matrix4x4f.h"
 #include "SkrBase/math/vector.h"
 #include "SkrBase/math/quat.h"
 #include "SkrBase/math/rtm/qvvf.h"
@@ -31,32 +29,32 @@ rtm::qvvf make_qvv(const skr_rotator_t* r, const skr_float3_t* t, const skr_floa
     return rtm::qvv_set(quat, translation, scale);
 }
 
-static void skr_relative_to_world_children(const skr_children_t* children, rtm::qvvf parent, sugoi_storage_t* storage)
+static void skr_relative_to_world_children(const skr::ChildrenArray* children, rtm::qvvf parent, sugoi_storage_t* storage)
 {
-    auto process = [&](sugoi_chunk_view_t* view) {
+    auto task = [&](sugoi_chunk_view_t* view) {
         SkrZoneScopedN("CalcTransform(Children)");
-        auto transforms = sugoi::get_owned<skr_transform_comp_t, skr_transform_t>(view);
-        if (!transforms)
-            return;
-        auto translations = sugoi::get_owned<const skr_translation_comp_t, const skr_float3_t>(view);
-        auto rotations    = sugoi::get_owned<const skr_rotation_comp_t, const skr_rotator_t>(view);
-        auto scales       = sugoi::get_owned<const skr_scale_comp_t, const skr_float3_t>(view);
-        auto childrens    = sugoi::get_owned<const skr_child_comp_t, const skr_children_t>(view);
-        for (EIndex i = 0; i < view->count; ++i)
+        if (auto transforms = sugoi::get_owned<skr::TransformComponent, skr_transform_t>(view))
         {
-            auto relative  = make_qvv(
-                rotations ? &rotations[i] : nullptr, 
-                translations ? &translations[i] : nullptr, 
-                scales ? &scales[i] : nullptr
-            );
-            auto transform = rtm::qvv_mul(relative, parent);
-            skr::math::store(transform.translation, transforms[i].translation);
-            skr::math::store(transform.rotation, transforms[i].rotation);
-            skr::math::store(transform.scale, transforms[i].scale);
-            
-            if (childrens && childrens->size())
+            auto translations = sugoi::get_owned<const skr::TranslationComponent, const skr_float3_t>(view);
+            auto rotations    = sugoi::get_owned<const skr::RotationComponent, const skr_rotator_t>(view);
+            auto scales       = sugoi::get_owned<const skr::ScaleComponent, const skr_float3_t>(view);
+            auto childrens    = sugoi::get_owned<const skr::ChildrenComponent, const skr::ChildrenArray>(view);
+            for (EIndex i = 0; i < view->count; ++i)
             {
-                skr_relative_to_world_children(&childrens[i], transform, storage);
+                auto relative  = make_qvv(
+                    rotations ? &rotations[i] : nullptr, 
+                    translations ? &translations[i] : nullptr, 
+                    scales ? &scales[i] : nullptr
+                );
+                auto transform = rtm::qvv_mul(relative, parent);
+                skr::math::store(transform.translation, transforms[i].translation);
+                skr::math::store(transform.rotation, transforms[i].rotation);
+                skr::math::store(transform.scale, transforms[i].scale);
+                
+                if (childrens && childrens->size())
+                {
+                    skr_relative_to_world_children(&childrens[i], transform, storage);
+                }
             }
         }
     };
@@ -65,12 +63,12 @@ static void skr_relative_to_world_children(const skr_children_t* children, rtm::
     {
         skr::parallel_for(children->begin(), children->end(), 128,
             [&](const auto begin, const auto end) {
-                sugoiS_batch(storage, (sugoi_entity_t*)&*begin, (EIndex)(end - begin), SUGOI_LAMBDA(process));
+                sugoiS_batch(storage, (sugoi_entity_t*)&*begin, (EIndex)(end - begin), SUGOI_LAMBDA(task));
             });
     }
     else
     {
-        sugoiS_batch(storage, (sugoi_entity_t*)children->data(), (EIndex)children->size(), SUGOI_LAMBDA(process));
+        sugoiS_batch(storage, (sugoi_entity_t*)children->data(), (EIndex)children->size(), SUGOI_LAMBDA(task));
     }
 }
 
@@ -80,7 +78,7 @@ static void skr_relative_to_world_root(void* u, sugoi_query_t* query, sugoi_chun
     SkrZoneScopedN("CalcTransform");
     auto storage = sugoiQ_get_storage(query);
     auto transforms = sugoi::get_owned_local<skr_transform_t>(view, localTypes[0]);
-    auto children = sugoi::get_owned_local<const skr_children_t>(view, localTypes[1]);
+    auto children = sugoi::get_owned_local<const skr::ChildrenArray>(view, localTypes[1]);
     auto translations = sugoi::get_owned_local<const skr_float3_t>(view, localTypes[2]);
     auto rotations = sugoi::get_owned_local<const skr_rotator_t>(view, localTypes[3]);
     auto scales = sugoi::get_owned_local<const skr_float3_t>(view, localTypes[4]);
@@ -103,16 +101,16 @@ static void skr_relative_to_world_root(void* u, sugoi_query_t* query, sugoi_chun
 
 void skr_transform_system_setup(sugoi_storage_t* world, skr_transform_system_t* system)
 {
-    sugoi::EntitySpawner<skr_scale_comp_t> spawner;
+    sugoi::EntitySpawner<skr::ScaleComponent> spawner;
     spawner(world, 1, [&](auto& view){ 
         const auto e = sugoiV_get_entities(view.view)[0];
         system->root_meta = e;
     });
 
     system->calculateTransformTree = world->new_query()
-        .ReadWriteAll<skr_transform_comp_t>()
-        .ReadAny<skr_child_comp_t>()
-        .ReadAny<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
+        .ReadWriteAll<skr::TransformComponent>()
+        .ReadAny<skr::ChildrenComponent>()
+        .ReadAny<skr::TranslationComponent, skr::RotationComponent, skr::ScaleComponent>()
         .WithMetaEntity(system->root_meta)
         .commit().value();
 }

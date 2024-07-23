@@ -34,7 +34,7 @@ struct SKR_RENDERER_API SViewportManager {
 };
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API
-void skr_resolve_camera_to_viewport(const skr_camera_comp_t* camera, const skr_translation_comp_t* translation, skr_render_viewport_t* viewport);
+void skr_resolve_camera_to_viewport(const skr::CameraComponent* camera, const skr::TranslationComponent* translation, skr_render_viewport_t* viewport);
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API
 void skr_resolve_cameras_to_viewport(struct SViewportManager* viewport_manager, sugoi_storage_t* storage);

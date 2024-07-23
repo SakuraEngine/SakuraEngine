@@ -77,9 +77,9 @@ struct TransformTests {
             SkrZoneScopedN("InitializeParentEntities");
             root_spawner(storage, 1, 
                 [&](auto& view){
-                    auto translations = sugoi::get_owned<skr_translation_comp_t>(view.view);
-                    auto rots = sugoi::get_owned<skr_rotation_comp_t>(view.view);
-                    auto scales = sugoi::get_owned<skr_scale_comp_t>(view.view);
+                    auto translations = sugoi::get_owned<skr::TranslationComponent>(view.view);
+                    auto rots = sugoi::get_owned<skr::RotationComponent>(view.view);
+                    auto scales = sugoi::get_owned<skr::ScaleComponent>(view.view);
 
                     translations[0].value = parentTranslation;
                     rots[0].euler = parentRotation;
@@ -93,10 +93,10 @@ struct TransformTests {
             children.reserve(1024);
             children_spawner(storage, 1024, 
                 [&](auto& view){
-                    auto translations = sugoi::get_owned<skr_translation_comp_t>(view.view);
-                    auto rots = sugoi::get_owned<skr_rotation_comp_t>(view.view);
-                    auto scales = sugoi::get_owned<skr_scale_comp_t>(view.view);
-                    auto parents = sugoi::get_owned<skr_parent_comp_t>(view.view);
+                    auto translations = sugoi::get_owned<skr::TranslationComponent>(view.view);
+                    auto rots = sugoi::get_owned<skr::RotationComponent>(view.view);
+                    auto scales = sugoi::get_owned<skr::ScaleComponent>(view.view);
+                    auto parents = sugoi::get_owned<skr::ParentComponent>(view.view);
                     for (uint32_t i = 0; i < view.count(); ++i)
                     {
                         translations[i].value = childTranslation;
@@ -111,7 +111,7 @@ struct TransformTests {
 
         // do attach
         auto setupAttachQuery = storage->new_query()
-            .ReadWriteAny<skr_child_comp_t>()
+            .ReadWriteAny<skr::ChildrenComponent>()
             .WithMetaEntity(transform_system.root_meta)
             .commit().value();
         SKR_DEFER({ storage->destroy_query(setupAttachQuery); });
@@ -120,10 +120,10 @@ struct TransformTests {
             storage->query(setupAttachQuery, 
             +[](void* userdata, sugoi_chunk_view_t* view) -> void {
                 auto _this = (TransformTests*)userdata;
-                auto pChildren = (skr_children_t*)sugoi::get_owned<skr_child_comp_t>(view);
+                auto pChildren = (skr::ChildrenArray*)sugoi::get_owned<skr::ChildrenComponent>(view);
                 for (uint32_t i = 0; i < _this->children.size(); ++i)
                 {
-                    pChildren->emplace_back(skr_child_comp_t{ _this->children[i] });
+                    pChildren->emplace_back(skr::ChildrenComponent{ _this->children[i] });
                 }
             }, this);
         }
@@ -143,9 +143,9 @@ TEST_CASE_METHOD(TransformTests, "update")
     skr_transform_system_update(&transform_system);
 
     auto checkQuery = storage->new_query()
-        .ReadAny<skr_parent_comp_t, skr_child_comp_t>()
-        .ReadAll<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
-        .ReadAll<skr_transform_comp_t>()
+        .ReadAny<skr::ParentComponent, skr::ChildrenComponent>()
+        .ReadAll<skr::TranslationComponent, skr::RotationComponent, skr::ScaleComponent>()
+        .ReadAll<skr::TransformComponent>()
         .commit().value();
     SKR_DEFER({ storage->destroy_query(checkQuery); });
 
@@ -155,7 +155,7 @@ TEST_CASE_METHOD(TransformTests, "update")
             SkrZoneScopedN("TransformTestBody");
             auto _this = (TransformTests*)userdata;
             const auto es = sugoiV_get_entities(view);
-            auto transforms = sugoi::get_owned<const skr_transform_comp_t>(view);
+            auto transforms = sugoi::get_owned<const skr::TransformComponent>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
                 const auto Transfrom = transforms[i].value;

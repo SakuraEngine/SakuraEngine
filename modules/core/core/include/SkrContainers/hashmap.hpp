@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrContainersDef/hashmap.hpp"
+#include "SkrContainersDef/hashmap.hpp" // IWYU pragma: export
 
 // bin serde
 #include "SkrSerde/bin_serde.hpp"
