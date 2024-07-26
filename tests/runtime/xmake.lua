@@ -64,15 +64,15 @@ executable_module("RTTRTest", "RTTR_TEST", engine_version)
 
 --------------------------------------------------------------------------------------
 
-codegen_component("TraitTest", { api = "TRAIT_TEST", rootdir = "trait" })
-    add_files("trait/**.hpp")
+codegen_component("ProxyTest", { api = "PROXY_TEST", rootdir = "proxy" })
+    add_files("proxy/**.hpp")
 
-executable_module("TraitTest", "TRAIT_TEST", engine_version, {exception = true})
+executable_module("ProxyTest", "PROXY_TEST", engine_version, {exception = true})
     set_group("05.tests/runtime")
     set_exceptions("no-cxx")
     public_dependency("SkrRT", engine_version)
     add_deps("SkrTestFramework", {public = false})
-    add_files("trait/trait_test.cpp")
+    add_files("proxy/**.cpp")
 
 --------------------------------------------------------------------------------------
 

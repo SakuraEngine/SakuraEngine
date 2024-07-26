@@ -45,7 +45,7 @@ class ProxyGenerator(gen.GeneratorBase):
         for record in records:
             # filter proxy
             record_proxy = record.attrs["proxy"]
-            if not record_proxy:
+            if not record_proxy.is_function_enable():
                 continue
 
             record_proxy_data = RecordProxyData(
@@ -56,7 +56,7 @@ class ProxyGenerator(gen.GeneratorBase):
             for method in record.methods:
                 # filter proxy
                 method_proxy = method.attrs["proxy"]
-                if not method_proxy:
+                if not method_proxy.is_function_enable():
                     continue
 
                 # parse getter/setter data
@@ -77,11 +77,16 @@ class ProxyGenerator(gen.GeneratorBase):
             record.generator_data["proxy"] = record_proxy_data
 
     def generate_body(self):
+        # load template
+        script_dir = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
+        body_template = self.owner.load_template(os.path.join(script_dir, "proxy.body.mako"))
+
         db = self.owner.database
         for record in db.main_module.get_records():
             if "proxy" in record.generator_data:
-                record.generated_body_content += '''
-'''
+                record.generated_body_content += body_template.render(
+                    record=record
+                )
 
     def generate(self):
         # load template
@@ -92,8 +97,24 @@ class ProxyGenerator(gen.GeneratorBase):
         # load data
         main_module = self.owner.database.main_module
 
-        # TODO. gen header
-        # TODO. gen source
+        # gen header
+        for header_db in main_module.header_dbs:
+            records = [record for record in header_db.get_records() if "proxy" in record.generator_data]
+            self.owner.append_content(
+                header_db.relative_target_header_path,
+                header_template.render(
+                    records=records
+                )
+            )
+
+        # gen source
+        records = [record for record in main_module.get_records() if "proxy" in record.generator_data]
+        self.owner.append_content(
+            "generated.cpp",
+            source_template.render(
+                records=records
+            )
+        )
 
 
 def load_generators(generate_manager: gen.GenerateManager):

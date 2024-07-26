@@ -10,8 +10,8 @@ target("SkrBasicMeta")
             { file = "rttr/rttr.py", use_new_framework = true },
             -- serialize
             { file = "serialize/serialize.py", use_new_framework = true },
-            -- trait object
-            { file = "trait_object/trait_object.py" },
+            -- proxy
+            { file = "proxy/proxy.py", use_new_framework = true },
         }, 
         dep_files = {
             "**.py",
