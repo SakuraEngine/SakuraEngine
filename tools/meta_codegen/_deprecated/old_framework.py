@@ -185,8 +185,6 @@ def generate(codegen_config: config.CodegenConfig, generate_manager: generator.G
     # load generators
     generators = []
     for i, generator_config in enumerate(codegen_config.generators):
-        if generator_config.use_new_framework:
-            continue
         generators.append(load_generator(i, generator_config.entry_file))
 
     # load db

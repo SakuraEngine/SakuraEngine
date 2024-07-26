@@ -34,10 +34,6 @@ if __name__ == '__main__':
     generate_manager.generate_body()
     generate_manager.pre_generate()
     generate_manager.generate()
-    # mix in old framework generate
-    # TODO. remove it
-    import framework.old_framework as old_framework
-    old_framework.generate(generate_manager.config, generate_manager)
     generate_manager.post_generate()
     generate_manager.output_content()
 

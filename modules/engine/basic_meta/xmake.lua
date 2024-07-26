@@ -3,15 +3,15 @@ target("SkrBasicMeta")
     add_rules("c++.codegen.generators", {
         scripts = {
             -- baisc
-            { file = "basic/basic.py", use_new_framework = true },
+            { file = "basic/basic.py" },
             -- ecs
-            { file = "ecs/ecs.py", use_new_framework = true },
+            { file = "ecs/ecs.py" },
             -- rttr
-            { file = "rttr/rttr.py", use_new_framework = true },
+            { file = "rttr/rttr.py" },
             -- serialize
-            { file = "serialize/serialize.py", use_new_framework = true },
+            { file = "serialize/serialize.py" },
             -- proxy
-            { file = "proxy/proxy.py", use_new_framework = true },
+            { file = "proxy/proxy.py" },
         }, 
         dep_files = {
             "**.py",

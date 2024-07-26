@@ -17,7 +17,6 @@ target("MetaTest")
                 file = "meta_scripts/install_test.py", 
                 import_dirs={ "meta_scripts/" }, 
                 private = true,
-                use_new_framework = true,
             },
         },
         dep_files = {
