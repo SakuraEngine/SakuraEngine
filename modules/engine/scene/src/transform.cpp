@@ -19,7 +19,6 @@ struct skr::TransformSystem::Impl
         uint32_t batch_size = 128;
     };
     sugoi_query_t* calculateTransformTree;
-    sugoi_entity_t root_meta;
     skr::FlatHashMap<sugoi_entity_t, ParallelEntry> parallel_nodes;
 };
 
@@ -112,20 +111,12 @@ TransformSystem* TransformSystem::Create(sugoi_storage_t* world) SKR_NOEXCEPT
     auto memory = (uint8_t*)sakura_calloc(1, sizeof(TransformSystem) + sizeof(TransformSystem::Impl));
     auto system = new(memory) TransformSystem();
     system->impl = new(memory + sizeof(TransformSystem)) TransformSystem::Impl();
-
-    sugoi::EntitySpawner<skr::ScaleComponent> spawner;
-    spawner(world, 1, [&](auto& view){ 
-        const auto e = sugoiV_get_entities(view.view)[0];
-        system->impl->root_meta = e;
-    });
-
     system->impl->calculateTransformTree = world->new_query()
         .ReadWriteAll<skr::TransformComponent>()
         .ReadAny<skr::ChildrenComponent>()
         .ReadAny<skr::TranslationComponent, skr::RotationComponent, skr::ScaleComponent>()
-        .WithMetaEntity(system->impl->root_meta)
+        .ReadAll<skr::RootComponent>()
         .commit().value();
-
     return system;
 }
 
@@ -141,11 +132,6 @@ void TransformSystem::update() SKR_NOEXCEPT
 {
     SkrZoneScopedN("CalcTransform");
     sugoiJ_schedule_ecs(impl->calculateTransformTree, 0, &skr_relative_to_world_root, nullptr, nullptr, nullptr, nullptr, nullptr);
-}
-
-sugoi_entity_t TransformSystem::root_mark() const SKR_NOEXCEPT
-{
-    return impl->root_meta;
 }
 
 void TransformSystem::set_parallel_entry(sugoi_entity_t entity) SKR_NOEXCEPT

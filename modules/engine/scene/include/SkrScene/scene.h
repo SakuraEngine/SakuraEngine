@@ -57,7 +57,7 @@ sreflect_struct(
     "ecs::comp" : true
 )
 TranslationComponent {
-    skr_float3_t value;
+    float3 value;
 };
 
 sreflect_struct(
@@ -66,7 +66,7 @@ sreflect_struct(
     "ecs::comp" : true
 )
 ScaleComponent {
-    skr_float3_t value;
+    float3 value;
 };
 
 sreflect_struct(
@@ -74,7 +74,7 @@ sreflect_struct(
     "ecs::comp" : true
 )
 MovementComponent {
-    skr_float3_t value;
+    float3 value;
 };
 
 sreflect_struct(
@@ -86,6 +86,14 @@ CameraComponent {
     uint32_t          viewport_id;
     uint32_t          viewport_width;
     uint32_t          viewport_height;
+};
+
+sreflect_struct(
+    "guid" : "70c7b2b7-c97c-442e-a3ae-01f99daef3c8",
+    "ecs::comp" : true
+)
+RootComponent {
+    uint32_t _;
 };
 
 sreflect_struct(
@@ -110,7 +118,10 @@ ParentComponent {
 } // namespace skr
 
 #ifndef SKR_SCENE_COMPONENTS
-#define SKR_SCENE_COMPONENTS skr::ParentComponent, skr::ChildrenComponent, skr::TranslationComponent, skr::RotationComponent, skr::ScaleComponent, skr::TransformComponent
+#define SKR_SCENE_COMPONENTS \
+    skr::ParentComponent, skr::ChildrenComponent, \
+    skr::TransformComponent, \
+    skr::TranslationComponent, skr::RotationComponent, skr::ScaleComponent
 #endif
 
 namespace skr
@@ -122,7 +133,6 @@ public:
     static void Destroy(TransformSystem* system) SKR_NOEXCEPT;
 
     void update() SKR_NOEXCEPT;
-    sugoi_entity_t root_mark() const SKR_NOEXCEPT;
     void set_parallel_entry(sugoi_entity_t entity) SKR_NOEXCEPT;
 
 private:
