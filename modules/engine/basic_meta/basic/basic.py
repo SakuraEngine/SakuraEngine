@@ -6,43 +6,6 @@ import framework.scheme as sc
 class BasicCPPGenerator(gen.GeneratorBase):
     def load_scheme(self):
         # dummy scheme to prevent warning
-        # serialize
-        serialize_parser = sc.Functional(
-            {
-                "bin": sc.Bool(),
-                "json": sc.Bool(),
-            },
-            shorthands=[
-                sc.OptionShorthand(
-                    mappings={
-                        "bin": {"bin": True},
-                        "json": {"json": True},
-                    }
-                )
-            ])
-        self.owner.add_record_scheme(
-            sc.Namespace({
-                "serialize": serialize_parser,
-                "serialize_config": sc.Str(),  # 向 recorder 的序列化函数添加自定义配置
-                "blob": sc.Bool(),  # 指定是否使用 blob 序列化
-                "debug": sc.Bool(),  # 只生成 write 不生成 read（目前仅在 json 序列化中使用）
-            })
-        )
-        self.owner.add_field_scheme(
-            sc.Namespace({
-                "serialize_config": sc.Str(),  # 向字段的序列化尾部添加自定义的配置
-                "arena": sc.Str(),  # 字段使用哪个 arena
-                "transient": sc.Bool(),  # 指定字段是否不参与序列化
-                "no-text": sc.Bool(),  # 指定字段是否不参与 json 序列化
-                "no-default": sc.Bool(),  # 指定字段在 json 反序列化时，如果不存在，强制报错而不是不处理
-            })
-        )
-        self.owner.add_enum_scheme(
-            sc.Namespace({
-                "serialize": serialize_parser
-            })
-        )
-
         # trait
         self.owner.add_record_scheme(
             sc.Namespace({

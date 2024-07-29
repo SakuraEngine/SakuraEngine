@@ -27,14 +27,12 @@ class ModuleConfig:
 class GeneratorConfig:
     entry_file: str = ""
     import_dirs: List[str] = field(default_factory=lambda: [])
-    use_new_framework: bool = False  # TODO. 过渡用，后续移除
 
     def load(self, json_data: Dict):
         self.entry_file = json_data["entry_file"]
 
         # load dirs
         self.import_dirs = _get_list_or_empty(json_data, "import_dirs")
-        self.use_new_framework = json_data["use_new_framework"]
 
 
 @dataclass

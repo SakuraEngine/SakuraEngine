@@ -121,6 +121,8 @@ Function json structure
 #       如果是 func 则需要递归 (需要 params 的 attr 和 params name) 否则对齐 cpp 的签名
 #       为了支持这个签名器, 还需要一个专门的 scheme 目标类型来解析
 #       https://stackoverflow.com/questions/53910964/how-to-get-function-pointer-arguments-names-using-clang-libtooling
+#
+# TODO. name/attrs 等解析可以做成带 cache 的现场解析，避免过多冗余逻辑提升性能
 from typing import List, Dict
 import framework.scheme as sc
 import framework.log as log
@@ -356,6 +358,26 @@ class Method:
 
     def make_log_stack(self) -> log.CppSourceStack:
         return log.CppSourceStack(self.parent.file_name, self.line)
+
+    def dump_params(self):
+        return ", ".join([f"{param.type} {param.name}" for param in self.parameters.values()])
+
+    def dump_params_with_comma(self):
+        param_expr = self.dump_params()
+        return f", {param_expr}" if param_expr else ""
+
+    def dump_params_name_only(self):
+        return ", ".join([param.name for param in self.parameters.values()])
+
+    def dump_params_name_only_with_comma(self):
+        param_expr = self.dump_params_name_only()
+        return f", {param_expr}" if param_expr else ""
+
+    def dump_const(self):
+        return "const" if self.is_const else ""
+
+    def dump_noexcept(self):
+        return "noexcept" if self.is_nothrow else ""
 
 
 class Parameter:

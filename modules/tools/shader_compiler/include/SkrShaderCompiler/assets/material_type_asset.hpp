@@ -13,7 +13,7 @@ namespace skd
 namespace asset
 {
 sreflect_struct("guid" : "329fddb1-73a6-4b4b-8f9f-f4acca58a6e5")
-sattr("serialize" : ["json", "bin"])
+sattr("serde" : ["json", "bin"])
 skr_material_type_asset_t {
     uint32_t version;
 
@@ -35,7 +35,7 @@ skr_material_type_asset_t {
 };
 
 sreflect_struct("guid" : "c0fc5581-f644-4752-bb30-0e7f652533b7")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 SKR_SHADER_COMPILER_API SMaterialTypeImporter final : public SImporter {
     skr::String jsonPath;
 

@@ -18,7 +18,7 @@ namespace asset
 using RawSkeleton = ozz::animation::offline::RawSkeleton;
 sreflect_struct("guid"
                 : "1719ab02-7a48-45db-b101-949155f92cad")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 SKR_ANIMTOOL_API SSkelGltfImporter : public skd::asset::SImporter {
     // bool skeleton;
     // bool marker;
@@ -27,7 +27,6 @@ SKR_ANIMTOOL_API SSkelGltfImporter : public skd::asset::SImporter {
     // bool light;
     // bool null;
     // bool any;
-    sattr("no-default" : true)
     skr::String assetPath;
     virtual ~SSkelGltfImporter() = default;
     virtual void*   Import(skr_io_ram_service_t*, SCookContext* context) override;

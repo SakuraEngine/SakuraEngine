@@ -3,6 +3,7 @@
 #include "SkrArchive/json/reader.h"
 #include "SkrBase/template/concepts.hpp"
 #include "SkrCore/log.h"
+#include "SkrSerde/enum_serde_traits.hpp"
 
 // traits
 namespace skr
@@ -204,6 +205,27 @@ namespace skr
 {
 template <concepts::Enum T>
 struct JsonSerde<T> {
+    inline static bool read(skr::archive::JsonReader* r, T& v)
+    {
+        SkrZoneScopedN("JsonSerde<concepts::Enum>::read");
+        skr::String enumStr;
+        if (r->String(enumStr).has_value())
+        {
+            if (!EnumSerdeTraits<T>::from_string(enumStr.view(), v))
+            {
+                SKR_LOG_ERROR(u8"Unknown enumerator while reading enum ${enum.name}: %s", enumStr.raw().data());
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+    inline static bool write(skr::archive::JsonWriter* w, const T& v)
+    {
+        SkrZoneScopedN("JsonSerde<concepts::Enum>::write");
+        SKR_EXPECTED_CHECK(w->String(EnumSerdeTraits<T>::to_string(v)), false);
+        return true;
+    }
 };
 
 template <typename T, size_t N>

@@ -24,11 +24,9 @@ namespace asset
 using RawAnimation = ozz::animation::offline::RawAnimation;
 
 sreflect_struct("guid": "37d07586-0901-480a-8dcd-1f1f8220569c")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 SKR_ANIMTOOL_API SAnimGltfImporter : public skd::asset::SImporter {
-    sattr("no-default" : true)
     skr::String assetPath;
-    sattr("no-default" : true)
     skr::String animationName;
     float       samplingRate     = 30.f;
     virtual ~SAnimGltfImporter() = default;
@@ -38,7 +36,7 @@ SKR_ANIMTOOL_API SAnimGltfImporter : public skd::asset::SImporter {
 };
 
 sreflect_enum_class("guid" : "544116F5-EBE9-4837-AB88-4743435F39EF")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 SAnimAdditiveReference : uint32_t
 {
     animation,
@@ -46,7 +44,7 @@ SAnimAdditiveReference : uint32_t
 };
 
 sreflect_struct("guid" : "9B780FFE-FA11-4BA9-B410-B5D5B2849E64")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 SAnimOptimizationOverride {
     /*
     {
@@ -61,7 +59,7 @@ SAnimOptimizationOverride {
 };
 
 sreflect_struct("guid" : "13873706-F7EE-4386-B7F0-B4E313864624")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 SAnimCookSettings {
     /*
         "additive" : false, //  Creates a delta animation that can be used for additive blending.

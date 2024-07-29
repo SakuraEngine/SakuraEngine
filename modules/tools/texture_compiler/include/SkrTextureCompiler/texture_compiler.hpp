@@ -12,9 +12,8 @@ namespace skd
 namespace asset
 {
 sreflect_struct("guid" : "a26c2436-9e5f-43c4-b4d7-e5373d353bae")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 SKR_TEXTURE_COMPILER_API STextureImporter final : public SImporter {
-    sattr("no-default" : true)
     skr::String assetPath;
 
     void* Import(skr_io_ram_service_t*, SCookContext* context) override;

@@ -44,7 +44,7 @@ TransformComponent {
 
 sreflect_struct(
     "guid" : "78DD218B-87DE-4250-A7E8-A6B4553B47BF", 
-    "serialize" : ["bin", "json"],
+    "serde" : ["bin", "json"],
     "ecs::comp" : true
 )
 RotationComponent {
@@ -53,7 +53,7 @@ RotationComponent {
 
 sreflect_struct(
     "guid" : "A059A2A1-CC3B-43B0-88B6-ADA7822BA25D",
-    "serialize" : ["bin", "json"],
+    "serde" : ["bin", "json"],
     "ecs::comp" : true
 )
 TranslationComponent {
@@ -62,7 +62,7 @@ TranslationComponent {
 
 sreflect_struct(
     "guid" : "D045D755-FBD1-44C2-8BF0-C86F2D8485FF", 
-    "serialize" : ["bin", "json"],
+    "serde" : ["bin", "json"],
     "ecs::comp" : true
 )
 ScaleComponent {

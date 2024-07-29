@@ -12,7 +12,7 @@ namespace skd
 namespace asset
 {
 sreflect_struct("guid" : "067d4b86-f888-4bd7-841c-bc831043e50c")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 SKR_SHADER_COMPILER_API SShaderOptionsImporter final : public SImporter {
     skr::String jsonPath;
 
@@ -27,7 +27,7 @@ SKR_SHADER_COMPILER_API SShaderOptionsCooker final : public SCooker {
 };
 
 sreflect_struct("guid" : "a897c990-abea-4f48-8880-e1ae9a93d777")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 SKR_SHADER_COMPILER_API SShaderImporter final : public SImporter {
     using shader_options_handle_t = skr::resource::TResourceHandle<skr_shader_options_resource_t>;
 

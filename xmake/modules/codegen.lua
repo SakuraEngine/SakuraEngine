@@ -74,7 +74,6 @@ function solve_generators(target)
             file = path.join(target:scriptdir(), script_config.file),
             private = script_config.private,
             import_dirs = import_dirs,
-            use_new_framework = script_config.use_new_framework or false,
         })
     end
 
@@ -292,7 +291,6 @@ function _mako_render(target, scripts, dep_files, opt)
         table.insert(config.generators, {
             entry_file = script.file,
             import_dirs = script.import_dirs,
-            use_new_framework = script.use_new_framework,
         })
     end
 

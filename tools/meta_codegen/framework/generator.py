@@ -187,9 +187,6 @@ class GenerateManager:
 
     def load_generators(self) -> None:
         for i, generator_config in enumerate(self.__config.generators):
-            if not generator_config.use_new_framework:
-                continue
-
             # add import dir
             for path in generator_config.import_dirs:
                 sys.path.insert(0, path)

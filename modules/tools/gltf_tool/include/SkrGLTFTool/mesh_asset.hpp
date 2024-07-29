@@ -12,9 +12,8 @@ namespace skd
 namespace asset
 {
 sreflect_struct("guid" : "D72E2056-3C12-402A-A8B8-148CB8EAB922")
-sattr("serialize" : "json")
+sattr("serde" : "json")
 GLTFTOOL_API SGltfMeshImporter final : public SImporter {
-    sattr("no-default" : true)
     skr::String assetPath;
 
     skr::Vector<skr_guid_t> materials;

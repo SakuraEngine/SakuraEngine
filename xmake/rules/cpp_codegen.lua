@@ -5,7 +5,6 @@
             file = "script.py", -- script file
             private = false, -- if true, generated files will not be exported
             import_dirs = { "import/a", "import/b" }, -- python import dirs
-            use_new_framework = true, -- 是否使用新框架 TODO. 过渡用，后面删
         }
     },
     dep_files = { "test/*.py", "test/*.mako" }, -- dep_files

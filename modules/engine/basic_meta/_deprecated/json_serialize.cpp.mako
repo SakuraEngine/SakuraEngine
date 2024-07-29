@@ -17,26 +17,29 @@
 namespace skr 
 {
 %for enum in generator.filter_types(db.enums):
-bool JsonSerde<${enum.name}>::read(skr::archive::JsonReader* r, ${enum.name}& e)
+// enum serde traits
+skr::StringView EnumSerdeTraits<${enum.name}>::to_string(const ${enum.name}& value)
 {
-    SkrZoneScopedN("json::JsonSerde<${enum.name}>::read");
-    skr::String enumStr;
-    if (r->String(enumStr).has_value())
+    switch (value)
     {
-        if(!skr::rttr::EnumTraits<${enum.name}>::from_string(enumStr.view(), e))
-        {
-            SKR_LOG_ERROR(u8"Unknown enumerator while reading enum ${enum.name}: %s", enumStr.raw().data());
-            return false;
-        }
-        return true;
+%for enum_item_name, enum_value in vars(enum.values).items():
+    case ${enum.name}::${db.short_name(enum_item_name)}: return u8"${enum_item_name}";
+%endfor
+    default: SKR_UNREACHABLE_CODE(); return u8"${enum.name}::INVALID_ENUMERATOR";
     }
-    return false;
-} 
-bool JsonSerde<${enum.name}>::write(skr::archive::JsonWriter* w, ${enum.name} e)
+}
+bool EnumSerdeTraits<${enum.name}>::from_string(skr::StringView str, ${enum.name}& value)
 {
-    SkrZoneScopedN("JsonSerde<${enum.name}>::write");
-    return w->String(skr::rttr::EnumTraits<${enum.name}>::to_string(e)).has_value();
-} 
+    const auto hash = skr_hash64(str.raw().data(), str.size(), 0);
+    switch(hash)
+    {
+%for enum_item_name, enum_value in vars(enum.values).items():
+        case skr::consteval_hash(u8"${db.short_name(enum_item_name)}"): if(str == u8"${db.short_name(enum_item_name)}") value = ${enum_item_name}; return true;
+%endfor
+        default:
+            return false;
+    }
+}
 %endfor
 
 %for record in generator.filter_types(db.records):

@@ -14,7 +14,7 @@ namespace renderer
 using MaterialPropertyName = skr::String;
 
 sreflect_enum_class("guid" : "4003703a-dde4-4f11-93a6-6c460bac6357")
-sattr("serialize": ["json", "bin"])
+sattr("serde": ["json", "bin"])
 EMaterialPropertyType : uint32_t
 {
     BOOL,
@@ -31,7 +31,7 @@ EMaterialPropertyType : uint32_t
 };
 
 sreflect_enum("guid" : "575331c4-785f-4a4d-b320-4490bb7a6180")
-sattr("serialize" : ["json", "bin"])
+sattr("serde" : ["json", "bin"])
 EMaterialBlendMode : uint32_t
 {
     Opaque,
@@ -41,7 +41,7 @@ EMaterialBlendMode : uint32_t
 };
 
 sreflect_struct("guid": "6cdbf15e-67c1-45c1-a4e9-417c81299dae")
-sattr("serialize": ["json", "bin"])
+sattr("serde": ["json", "bin"])
 MaterialProperty {
     using resource_handle = skr_resource_handle_t;
 
@@ -64,7 +64,7 @@ MaterialProperty {
 // material value setter mainly used for devlopment-time material editing
 // at runtime we use skr_material_value_$(type)_t
 sreflect_struct("guid": "46de11b4-6beb-4ab9-b9f8-f5c07ceeb8a5")
-sattr("serialize": ["json", "bin"])
+sattr("serde": ["json", "bin"])
 MaterialValue {
     using resource_handle = skr_resource_handle_t;
 
@@ -77,7 +77,7 @@ MaterialValue {
 };
 
 sreflect_struct("guid" : "ed2e3476-90a3-4f2f-ac97-808f63d1eb11")
-sattr("serialize" : ["json", "bin"])
+sattr("serde" : ["json", "bin"])
 MaterialPass {
     skr::String                                 pass;
     skr::Vector<skr_shader_collection_handle_t> shader_resources;
@@ -86,7 +86,7 @@ MaterialPass {
 };
 
 sreflect_struct("guid" : "83264b35-3fde-4fff-8ee1-89abce2e445b")
-sattr("serialize" : ["json", "bin"])
+sattr("serde" : ["json", "bin"])
 MaterialTypeResource {
     uint32_t version;
 

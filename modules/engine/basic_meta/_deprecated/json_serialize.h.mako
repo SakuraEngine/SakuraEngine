@@ -1,5 +1,6 @@
 // BEGIN JSON GENERATED
 #include "SkrSerde/json_serde.hpp"
+#include "SkrSerde/enum_serde_traits.hpp"
 
 namespace skr
 {
@@ -16,10 +17,10 @@ namespace skr
 %endfor
 %for enum in generator.filter_types(db.enums):
     template <>
-    struct ${api} JsonSerde<${enum.name}>
+    struct ${api} EnumSerdeTraits<${enum.name}>
     {
-        static bool read(skr::archive::JsonReader* r, ${enum.name}& v);
-        static bool write(skr::archive::JsonWriter* w, ${enum.name} v);
+        static skr::StringView to_string(const ${enum.name}& value);
+        static bool from_string(skr::StringView str, ${enum.name}& value);
     };
 %endfor
 }

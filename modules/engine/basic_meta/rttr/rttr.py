@@ -264,7 +264,7 @@ class RTTRGenerator(gen.GeneratorBase):
 
     def generate_body(self):
         db = self.owner.database
-        for record in db.get_records():
+        for record in db.main_module.get_records():
             if db.is_derived(record, "skr::rttr::IObject"):
                 record.generated_body_content += '''
 GUID iobject_get_typeid() const override
@@ -291,7 +291,11 @@ void* iobject_get_head_ptr() const override { return const_cast<void*>((const vo
             records = [record for record in header_db.get_records() if "rttr" in record.generator_data]
             self.owner.append_content(
                 header_db.relative_target_header_path,
-                header_template.render(enums=enums, records=records, api=f"{main_module.api}_API")
+                header_template.render(
+                    enums=enums,
+                    records=records,
+                    api=f"{main_module.api}_API"
+                )
             )
 
         # gen source
@@ -299,7 +303,11 @@ void* iobject_get_head_ptr() const override { return const_cast<void*>((const vo
         records = [record for record in main_module.get_records() if "rttr" in record.generator_data]
         self.owner.append_content(
             "generated.cpp",
-            source_template.render(enums=enums, records=records, tools=CodegenTools())
+            source_template.render(
+                enums=enums,
+                records=records,
+                tools=CodegenTools()
+            )
         )
 
 
