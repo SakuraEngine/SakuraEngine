@@ -531,31 +531,33 @@ sugoi_system_lifetime_callback_t init, sugoi_system_lifetime_callback_t teardown
                     batches.emplace_back(currBatch);
                 }
             }
-
-            skr::task::counter_t counter;
-            counter.add((uint32_t)batches.size());
-            for (auto batch : batches)
             {
-                skr::task::schedule([batch, sharedData, counter]() mutable
+                SkrZoneScopedN("AwaitBatches");
+                skr::task::counter_t counter;
+                counter.add((uint32_t)batches.size());
+                for (auto batch : batches)
                 {
-                    SkrZoneScopedN("JobBody(Batch)");
-                    forloop (i, batch.startTask, batch.endTask)
+                    skr::task::schedule([batch, sharedData, counter]() mutable
                     {
-                        // const auto startCycles = rdtsc();
-                        auto& task = sharedData->tasks[i];
-                        sharedData->callback(sharedData->userdata, sharedData->query, &task.view, sharedData->localTypes + task.groupIndex * sharedData->query->pimpl->parameters.length, task.startIndex);
-                        // const auto endCycles = rdtsc();
-                        // const auto cycles = endCycles - startCycles;
-                        // if (cycles < 5000)
-                        //    SKR_LOG_WARN(u8"too little cycles(%d) for a task!", cycles);
-                    }
-                    {
-                        SkrZoneScopedN("JobBody(Signal)");
-                        counter.decrement();
-                    }
-                }, nullptr);
+                        SkrZoneScopedN("JobBody(Batch)");
+                        forloop (i, batch.startTask, batch.endTask)
+                        {
+                            // const auto startCycles = rdtsc();
+                            auto& task = sharedData->tasks[i];
+                            sharedData->callback(sharedData->userdata, sharedData->query, &task.view, sharedData->localTypes + task.groupIndex * sharedData->query->pimpl->parameters.length, task.startIndex);
+                            // const auto endCycles = rdtsc();
+                            // const auto cycles = endCycles - startCycles;
+                            // if (cycles < 5000)
+                            //    SKR_LOG_WARN(u8"too little cycles(%d) for a task!", cycles);
+                        }
+                        {
+                            SkrZoneScopedN("JobBody(Signal)");
+                            counter.decrement();
+                        }
+                    }, nullptr);
+                }
+                counter.wait(false);
             }
-            counter.wait(false);
         }
 
         {

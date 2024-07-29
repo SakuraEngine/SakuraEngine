@@ -17,3 +17,4 @@ static struct ProcInitializer {
 } init;
 
 #include "serde.cpp"
+#include "transform.cpp"

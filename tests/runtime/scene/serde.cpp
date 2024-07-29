@@ -46,9 +46,9 @@ struct TestSceneType {
 
 TEST_CASE_METHOD(SceneSerdeTests, "json")
 {
-    TestSceneType<skr_scale_comp_t>(skr_scale_comp_t{ skr_float3_t{ 1.f, 2.f, 3.f } });
-    TestSceneType<skr_scale_comp_t>(skr_scale_comp_t{ skr_float3_t{ 5.f, 4.f, 3.f } });
-    TestSceneType<skr_translation_comp_t>(skr_translation_comp_t{ skr_float3_t{ 15.f, 42.f, 34.f } });
-    TestSceneType<skr_translation_comp_t>(skr_translation_comp_t{ skr_float3_t{ 5.f, 4.f, 3.f } });
-    TestSceneType<skr_rotation_comp_t>(skr_rotation_comp_t{ skr_rotator_t{ 5.f, 4.f, 3.f } });
+    TestSceneType<skr::ScaleComponent>(skr::ScaleComponent{ skr_float3_t{ 1.f, 2.f, 3.f } });
+    TestSceneType<skr::ScaleComponent>(skr::ScaleComponent{ skr_float3_t{ 5.f, 4.f, 3.f } });
+    TestSceneType<skr::TranslationComponent>(skr::TranslationComponent{ skr_float3_t{ 15.f, 42.f, 34.f } });
+    TestSceneType<skr::TranslationComponent>(skr::TranslationComponent{ skr_float3_t{ 5.f, 4.f, 3.f } });
+    TestSceneType<skr::RotationComponent>(skr::RotationComponent{ skr_rotator_t{ 5.f, 4.f, 3.f } });
 }

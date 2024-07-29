@@ -1186,26 +1186,40 @@ auto schedual_custom(T query, F callback, skr::task::event_t* counter)
     }
 }
 
-template <class F>
+template <typename F>
 auto schedual_custom(sugoi_query_t* query, F callback, skr::task::event_t* counter)
 {
     return schedual_custom<sugoi::QWildcard, F>(sugoi::QWildcard{ query }, std::move(callback), counter);
 }
 
-template <class T>
-T* get_owned(sugoi_chunk_view_t* view)
+template <typename T, typename R = T>
+R* get_owned(sugoi_chunk_view_t* view)
 {
     if constexpr (std::is_const_v<T>)
     {
-        return get_owned_ro<std::remove_const_t<T>>(view);
+        static_assert(std::is_const_v<R>, "const T must be const R");
+        return (R*)get_owned_ro<std::remove_const_t<T>>(view);
     }
     else
     {
-        return get_owned_rw<T>(view);
+        return (R*)get_owned_rw<T>(view);
     }
 }
 
-template <class T1, class T2, class... T>
+template <typename T>
+T* get_owned_local(sugoi_chunk_view_t* view, sugoi_type_index_t idx)
+{
+    if constexpr (std::is_const_v<T>)
+    {
+        return (T*)sugoiV_get_owned_ro_local(view, idx);
+    }
+    else
+    {
+        return (T*)sugoiV_get_owned_rw_local(view, idx);
+    }
+}
+
+template <typename T1, typename T2, typename... T>
 std::tuple<T1, T2, T*...> get_singleton(sugoi_query_t* query)
 {
     std::tuple<T1, T2, T*...> result;
