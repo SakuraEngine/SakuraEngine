@@ -13,7 +13,7 @@ struct SViewportManagerImpl : public SViewportManager
     SViewportManagerImpl(sugoi_storage_t* storage)
     {
         camera_query = storage->new_query()
-                            .ReadAll<skr_camera_comp_t, skr_translation_comp_t>()
+                            .ReadAll<skr::CameraComponent, skr::TranslationComponent>()
                             .commit().value();
     }
 
@@ -96,7 +96,7 @@ SViewportManager::~SViewportManager() SKR_NOEXCEPT
 
 }
 
-void skr_resolve_camera_to_viewport(const skr_camera_comp_t* camera, const skr_translation_comp_t* translation, skr_render_viewport_t* viewport)
+void skr_resolve_camera_to_viewport(const skr::CameraComponent* camera, const skr::TranslationComponent* translation, skr_render_viewport_t* viewport)
 {
     SKR_ASSERT(camera->viewport_id == viewport->index && "viewport id mismatch");
 
@@ -125,8 +125,8 @@ void skr_resolve_cameras_to_viewport(struct SViewportManager* viewport_manager, 
     auto cameraSetup = [&](sugoi_chunk_view_t* g_cv) {
         SkrZoneScopedN("CameraResolve");
 
-        auto cameras = sugoi::get_owned_ro<skr_camera_comp_t>(g_cv);
-        auto camera_transforms = sugoi::get_owned_ro<skr_translation_comp_t>(g_cv);
+        auto cameras = sugoi::get_owned_ro<skr::CameraComponent>(g_cv);
+        auto camera_transforms = sugoi::get_owned_ro<skr::TranslationComponent>(g_cv);
         for (uint32_t i = 0; i < g_cv->count; i++)
         {
             const auto viewport_index = cameras[i].viewport_id;

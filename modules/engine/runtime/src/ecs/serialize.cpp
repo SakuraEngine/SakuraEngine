@@ -278,9 +278,9 @@ void sugoi_storage_t::serialize(SBinaryWriter* s)
                 serialize_view(group, view, s, nullptr, true);
             }
         } },
-                                 [&]() {
-                                     return pimpl->groups_timestamp;
-                                 });
+        [&]() {
+            return pimpl->groups_timestamp;
+        });
 }
 
 void sugoi_storage_t::deserialize(SBinaryReader* s)

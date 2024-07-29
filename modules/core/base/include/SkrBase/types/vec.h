@@ -80,6 +80,16 @@ typedef struct SKR_ALIGNAS(16) skr_float4x4_t {
 #ifdef __cplusplus
 namespace skr
 {
+
+using float2 = skr_float2_t;
+using float3 = skr_float3_t;
+using float4 = skr_float4_t;
+using float4x4 = skr_float4x4_t;
+
+using Rotator = skr_rotator_t;
+using Quaternion = skr_quaternion_t;
+using Transform = skr_transform_t;
+
 namespace scalar_math
 {
 inline skr_float3_t operator*(float s, skr_float3_t v) { return skr_float3_t{ s * v.x, s * v.y, s * v.z }; }

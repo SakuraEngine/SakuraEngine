@@ -193,10 +193,10 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
             SkrZoneScopedN("BatchedEnts");
 
             //SKR_LOG_DEBUG(u8"batch: %d -> %d", g_cv->start, g_cv->count);
-            const auto l2ws = sugoi::get_component_ro<skr_transform_comp_t>(g_cv);
-            const auto translations = sugoi::get_component_ro<skr_translation_comp_t>(g_cv);
-            const auto rotations = sugoi::get_component_ro<skr_rotation_comp_t>(g_cv);(void)rotations;
-            const auto scales = sugoi::get_component_ro<skr_scale_comp_t>(g_cv);
+            const auto l2ws = sugoi::get_component_ro<skr::TransformComponent>(g_cv);
+            const auto translations = sugoi::get_component_ro<skr::TranslationComponent>(g_cv);
+            const auto rotations = sugoi::get_component_ro<skr::RotationComponent>(g_cv);(void)rotations;
+            const auto scales = sugoi::get_component_ro<skr::ScaleComponent>(g_cv);
             // 3.1 calculate model matrices
             {
                 SkrZoneScopedN("ComputeModelMatrices");
