@@ -49,20 +49,23 @@ using TestAllocatorType = SkrTestAllocator;
 //===========Vector===================================================================
 template <typename T>
 using Vector = container::Vector<container::VectorMemory<
+container::VectorMemoryBase<
 T,
-TestSizeType,
+TestSizeType>,
 TestAllocatorType>>;
 
 template <typename T, uint64_t kCount>
 using FixedVector = container::Vector<container::FixedVectorMemory<
+container::VectorMemoryBase<
 T,
-TestSizeType,
+TestSizeType>,
 kCount>>;
 
 template <typename T, uint64_t kInlineCount>
 using InlineVector = container::Vector<container::InlineVectorMemory<
+container::VectorMemoryBase<
 T,
-TestSizeType,
+TestSizeType>,
 kInlineCount,
 TestAllocatorType>>;
 

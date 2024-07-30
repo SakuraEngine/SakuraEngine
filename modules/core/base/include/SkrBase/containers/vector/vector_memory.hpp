@@ -5,18 +5,52 @@
 #include "SkrBase/containers/misc/default_capicity_policy.hpp"
 #include "SkrBase/memory/memory_ops.hpp"
 
+// vector memory base
+namespace skr::container
+{
+template <typename T, typename TS>
+struct VectorMemoryBase {
+    using DataType = T;
+    using SizeType = TS;
+
+    // ctor
+    inline VectorMemoryBase() noexcept = default;
+    inline VectorMemoryBase(T* data, SizeType size, SizeType capacity) noexcept
+        : _data(data)
+        , _size(size)
+        , _capacity(capacity)
+    {
+    }
+
+    // getter
+    inline T*       data() noexcept { return _data; }
+    inline const T* data() const noexcept { return _data; }
+    inline SizeType size() const noexcept { return _size; }
+    inline SizeType capacity() const noexcept { return _capacity; }
+
+    // setter
+    inline void set_size(SizeType value) noexcept { _size = value; }
+
+protected:
+    T*       _data     = nullptr;
+    SizeType _size     = 0;
+    SizeType _capacity = 0;
+};
+} // namespace skr::container
+
 // util vector memory
 namespace skr::container
 {
-template <typename T, typename TS, typename Allocator>
-struct VectorMemory : public Allocator {
-    using DataType           = T;
-    using SizeType           = TS;
+template <typename Base, typename Allocator>
+struct VectorMemory : public Base, public Allocator {
+    using DataType           = typename Base::DataType;
+    using SizeType           = typename Base::SizeType;
     using AllocatorCtorParam = typename Allocator::CtorParam;
 
     // ctor & dtor
     inline VectorMemory(AllocatorCtorParam param) noexcept
-        : Allocator(std::move(param))
+        : Base()
+        , Allocator(std::move(param))
     {
     }
     inline ~VectorMemory() noexcept
@@ -27,20 +61,19 @@ struct VectorMemory : public Allocator {
 
     // copy & move
     inline VectorMemory(const VectorMemory& rhs) noexcept
-        : Allocator(rhs)
+        : Base()
+        , Allocator(rhs)
     {
         if (rhs._size)
         {
             realloc(rhs._size);
-            memory::copy(_data, rhs._data, rhs._size);
-            _size = rhs._size;
+            memory::copy(Base::_data, rhs._data, rhs._size);
+            Base::_size = rhs._size;
         }
     }
     inline VectorMemory(VectorMemory&& rhs) noexcept
-        : Allocator(std::move(rhs))
-        , _data(rhs._data)
-        , _size(rhs._size)
-        , _capacity(rhs._capacity)
+        : Base(rhs._data, rhs._size, rhs._capacity)
+        , Allocator(std::move(rhs))
     {
         rhs._reset();
     }
@@ -60,14 +93,14 @@ struct VectorMemory : public Allocator {
             if (rhs._size > 0)
             {
                 // reserve memory
-                if (_capacity < rhs._size)
+                if (Base::_capacity < rhs._size)
                 {
                     realloc(rhs._size);
                 }
 
                 // copy data
-                memory::copy(_data, rhs._data, rhs._size);
-                _size = rhs._size;
+                memory::copy(Base::_data, rhs._data, rhs._size);
+                Base::_size = rhs._size;
             }
         }
     }
@@ -83,9 +116,9 @@ struct VectorMemory : public Allocator {
             free();
 
             // move data
-            _data     = rhs._data;
-            _size     = rhs._size;
-            _capacity = rhs._capacity;
+            Base::_data     = rhs._data;
+            Base::_size     = rhs._size;
+            Base::_capacity = rhs._capacity;
 
             // clean up rhs
             rhs._reset();
@@ -95,69 +128,69 @@ struct VectorMemory : public Allocator {
     // memory operations
     inline void realloc(SizeType new_capacity) noexcept
     {
-        SKR_ASSERT(new_capacity != _capacity);
+        SKR_ASSERT(new_capacity != Base::_capacity);
         SKR_ASSERT(new_capacity > 0);
-        SKR_ASSERT(_size <= new_capacity);
-        SKR_ASSERT((_capacity > 0 && _data != nullptr) || (_capacity == 0 && _data == nullptr));
+        SKR_ASSERT(Base::_size <= new_capacity);
+        SKR_ASSERT((Base::_capacity > 0 && Base::_data != nullptr) || (Base::_capacity == 0 && Base::_data == nullptr));
 
         // update memory
-        if constexpr (memory::MemoryTraits<T>::use_realloc && Allocator::support_realloc)
+        if constexpr (memory::MemoryTraits<DataType>::use_realloc && Allocator::support_realloc)
         {
-            _data = Allocator::template realloc<T>(_data, new_capacity);
+            Base::_data = Allocator::template realloc<DataType>(Base::_data, new_capacity);
         }
         else
         {
             // alloc new memory
-            T* new_memory = Allocator::template alloc<T>(new_capacity);
+            DataType* new_memory = Allocator::template alloc<DataType>(new_capacity);
 
             // move items
-            if (_size)
+            if (Base::_size)
             {
-                memory::move(new_memory, _data, _size);
+                memory::move(new_memory, Base::_data, Base::_size);
             }
 
             // release old memory
-            Allocator::template free<T>(_data);
+            Allocator::template free<DataType>(Base::_data);
 
             // update data
-            _data = new_memory;
+            Base::_data = new_memory;
         }
 
         // update capacity
-        _capacity = new_capacity;
+        Base::_capacity = new_capacity;
     }
     inline void free() noexcept
     {
-        if (_data)
+        if (Base::_data)
         {
-            Allocator::template free<T>(_data);
-            _data     = nullptr;
-            _capacity = 0;
+            Allocator::template free<DataType>(Base::_data);
+            Base::_data     = nullptr;
+            Base::_capacity = 0;
         }
     }
     inline SizeType grow(SizeType grow_size) noexcept
     {
-        SizeType old_size = _size;
+        SizeType old_size = Base::_size;
         SizeType new_size = old_size + grow_size;
 
-        if (new_size > _capacity)
+        if (new_size > Base::_capacity)
         {
-            SizeType new_capacity = default_get_grow<T>(new_size, _capacity);
-            SKR_ASSERT(new_capacity >= _capacity);
-            if (new_capacity >= _capacity)
+            SizeType new_capacity = default_get_grow<DataType>(new_size, Base::_capacity);
+            SKR_ASSERT(new_capacity >= Base::_capacity);
+            if (new_capacity >= Base::_capacity)
             {
                 realloc(new_capacity);
             }
         }
 
-        _size = new_size;
+        Base::_size = new_size;
         return old_size;
     }
     inline void shrink() noexcept
     {
-        SizeType new_capacity = default_get_shrink<T>(_size, _capacity);
-        SKR_ASSERT(new_capacity >= _size);
-        if (new_capacity < _capacity)
+        SizeType new_capacity = default_get_shrink<DataType>(Base::_size, Base::_capacity);
+        SKR_ASSERT(new_capacity >= Base::_size);
+        if (new_capacity < Base::_capacity)
         {
             if (new_capacity)
             {
@@ -171,53 +204,41 @@ struct VectorMemory : public Allocator {
     }
     inline void clear() noexcept
     {
-        if (_size)
+        if (Base::_size)
         {
-            memory::destruct(_data, _size);
-            _size = 0;
+            memory::destruct(Base::_data, Base::_size);
+            Base::_size = 0;
         }
     }
-
-    // getter
-    inline T*       data() noexcept { return _data; }
-    inline const T* data() const noexcept { return _data; }
-    inline SizeType size() const noexcept { return _size; }
-    inline SizeType capacity() const noexcept { return _capacity; }
-
-    // setter
-    inline void set_size(SizeType value) noexcept { _size = value; }
 
 private:
     // helper functions
     inline void _reset() noexcept
     {
-        _data     = nullptr;
-        _size     = 0;
-        _capacity = 0;
+        Base::_data     = nullptr;
+        Base::_size     = 0;
+        Base::_capacity = 0;
     }
-
-private:
-    T*       _data     = nullptr;
-    SizeType _size     = 0;
-    SizeType _capacity = 0;
 };
 } // namespace skr::container
 
 // fixed vector memory
 namespace skr::container
 {
-template <typename T, typename TS, uint64_t kCount>
-struct FixedVectorMemory {
+template <typename Base, uint64_t kCount>
+struct FixedVectorMemory : public Base {
     static_assert(kCount > 0, "FixedVectorMemory must have a capacity larger than 0");
     struct DummyParam {
     };
-    using DataType           = T;
-    using SizeType           = TS;
+    using DataType           = typename Base::DataType;
+    using SizeType           = typename Base::SizeType;
     using AllocatorCtorParam = DummyParam;
 
     // ctor & dtor
     inline FixedVectorMemory(AllocatorCtorParam) noexcept
     {
+        Base::_data     = _placeholder.data_typed();
+        Base::_capacity = kCount;
     }
     inline ~FixedVectorMemory() noexcept
     {
@@ -228,18 +249,24 @@ struct FixedVectorMemory {
     // copy & move
     inline FixedVectorMemory(const FixedVectorMemory& other) noexcept
     {
+        Base::_data     = _placeholder.data_typed();
+        Base::_capacity = kCount;
+
         if (other._size)
         {
-            memory::copy(data(), other.data(), other._size);
-            _size = other._size;
+            memory::copy(Base::data(), other.data(), other._size);
+            Base::_size = other._size;
         }
     }
     inline FixedVectorMemory(FixedVectorMemory&& other) noexcept
     {
+        Base::_data     = _placeholder.data_typed();
+        Base::_capacity = kCount;
+
         if (other._size)
         {
-            memory::move(data(), other.data(), other._size);
-            _size = other._size;
+            memory::move(Base::data(), other.data(), other._size);
+            Base::_size = other._size;
 
             other._reset();
         }
@@ -256,8 +283,8 @@ struct FixedVectorMemory {
             // copy data
             if (rhs._size > 0)
             {
-                memory::copy(data(), rhs.data(), rhs._size);
-                _size = rhs._size;
+                memory::copy(Base::data(), rhs.data(), rhs._size);
+                Base::_size = rhs._size;
             }
         }
     }
@@ -271,8 +298,8 @@ struct FixedVectorMemory {
             // move data
             if (rhs._size > 0)
             {
-                memory::move(data(), rhs.data(), rhs._size);
-                _size = rhs._size;
+                memory::move(Base::data(), rhs.data(), rhs._size);
+                Base::_size = rhs._size;
 
                 rhs._reset();
             }
@@ -289,10 +316,10 @@ struct FixedVectorMemory {
     }
     inline SizeType grow(SizeType grow_size) noexcept
     {
-        SKR_ASSERT((_size + grow_size) <= kCount && "FixedVectorMemory can't alloc memory that larger than kCount");
+        SKR_ASSERT((Base::_size + grow_size) <= kCount && "FixedVectorMemory can't alloc memory that larger than kCount");
 
-        SizeType old_size = _size;
-        _size += grow_size;
+        SizeType old_size = Base::_size;
+        Base::_size += grow_size;
         return old_size;
     }
     inline void shrink() noexcept
@@ -301,47 +328,39 @@ struct FixedVectorMemory {
     }
     inline void clear() noexcept
     {
-        if (_size)
+        if (Base::_size)
         {
-            memory::destruct(data(), _size);
-            _size = 0;
+            memory::destruct(Base::data(), Base::_size);
+            Base::_size = 0;
         }
     }
-
-    // getter
-    inline T*       data() noexcept { return _placeholder.data_typed(); }
-    inline const T* data() const noexcept { return _placeholder.data_typed(); }
-    inline SizeType size() const noexcept { return _size; }
-    inline SizeType capacity() const noexcept { return kCount; }
-
-    // setter
-    inline void set_size(SizeType value) noexcept { _size = value; }
 
 private:
     inline void _reset() noexcept
     {
-        _size = 0;
+        Base::_size = 0;
     }
 
 private:
-    Placeholder<T, kCount> _placeholder;
-    SizeType               _size = 0;
+    Placeholder<DataType, kCount> _placeholder;
 };
 } // namespace skr::container
 
 // inline vector memory
 namespace skr::container
 {
-template <typename T, typename TS, uint64_t kInlineCount, typename Allocator>
-struct InlineVectorMemory : public Allocator {
-    using DataType           = T;
-    using SizeType           = TS;
+template <typename Base, uint64_t kInlineCount, typename Allocator>
+struct InlineVectorMemory : public Base, public Allocator {
+    using DataType           = typename Base::DataType;
+    using SizeType           = typename Base::SizeType;
     using AllocatorCtorParam = typename Allocator::CtorParam;
 
     // ctor & dtor
     inline InlineVectorMemory(AllocatorCtorParam param) noexcept
-        : Allocator(std::move(param))
+        : Base()
+        , Allocator(std::move(param))
     {
+        _reset();
     }
     inline ~InlineVectorMemory() noexcept
     {
@@ -351,29 +370,35 @@ struct InlineVectorMemory : public Allocator {
 
     // copy & move
     inline InlineVectorMemory(const InlineVectorMemory& rhs) noexcept
-        : Allocator(rhs)
+        : Base()
+        , Allocator(rhs)
     {
+        _reset();
+
         if (rhs._size)
         {
             realloc(rhs._size);
-            memory::copy(data(), rhs.data(), rhs._size);
-            _size = rhs._size;
+            memory::copy(Base::data(), rhs.data(), rhs._size);
+            Base::_size = rhs._size;
         }
     }
     inline InlineVectorMemory(InlineVectorMemory&& rhs) noexcept
-        : Allocator(std::move(rhs))
+        : Base()
+        , Allocator(std::move(rhs))
     {
+        _reset();
+
         // move data
         if (rhs._is_using_inline_memory())
         {
             memory::move(_placeholder.data_typed(), rhs._placeholder.data_typed(), rhs._size);
-            _size = rhs._size;
+            Base::_size = rhs._size;
         }
         else
         {
-            _heap_data = rhs._heap_data;
-            _size      = rhs._size;
-            _capacity  = rhs._capacity;
+            Base::_data     = rhs._data;
+            Base::_size     = rhs._size;
+            Base::_capacity = rhs._capacity;
         }
 
         // reset rhs
@@ -395,14 +420,14 @@ struct InlineVectorMemory : public Allocator {
             if (rhs._size > 0)
             {
                 // reserve memory
-                if (_capacity < rhs._size)
+                if (Base::_capacity < rhs._size)
                 {
                     realloc(rhs._size);
                 }
 
                 // copy data
-                memory::copy(data(), rhs.data(), rhs._size);
-                _size = rhs._size;
+                memory::copy(Base::data(), rhs.Base::data(), rhs._size);
+                Base::_size = rhs._size;
             }
         }
     }
@@ -420,14 +445,14 @@ struct InlineVectorMemory : public Allocator {
             // move data
             if (rhs._is_using_inline_memory())
             {
-                memory::move(data(), rhs.data(), rhs._size);
-                _size = rhs._size;
+                memory::move(Base::data(), rhs.Base::data(), rhs._size);
+                Base::_size = rhs._size;
             }
             else
             {
-                _heap_data = rhs._heap_data;
-                _size      = rhs._size;
-                _capacity  = rhs._capacity;
+                Base::_data     = rhs._data;
+                Base::_size     = rhs._size;
+                Base::_capacity = rhs._capacity;
             }
 
             // reset rhs
@@ -438,9 +463,9 @@ struct InlineVectorMemory : public Allocator {
     // memory operations
     inline void realloc(SizeType new_capacity) noexcept
     {
-        SKR_ASSERT(new_capacity != _capacity);
+        SKR_ASSERT(new_capacity != Base::_capacity);
         SKR_ASSERT(new_capacity > 0);
-        SKR_ASSERT(_size <= new_capacity);
+        SKR_ASSERT(Base::_size <= new_capacity);
         new_capacity = new_capacity < kInlineCount ? kInlineCount : new_capacity;
 
         // update data
@@ -449,40 +474,40 @@ struct InlineVectorMemory : public Allocator {
             if (_is_using_inline_memory()) // inline -> heap
             {
                 // alloc new memory
-                T* new_memory = Allocator::template alloc<T>(new_capacity);
+                DataType* new_memory = Allocator::template alloc<DataType>(new_capacity);
 
                 // move items
-                if (_size)
+                if (Base::_size)
                 {
-                    memory::move(new_memory, _placeholder.data_typed(), _size);
+                    memory::move(new_memory, _placeholder.data_typed(), Base::_size);
                 }
 
                 // update data
-                _heap_data = new_memory;
+                Base::_data = new_memory;
             }
             else // heap -> heap
             {
-                if constexpr (memory::MemoryTraits<T>::use_realloc && Allocator::support_realloc)
+                if constexpr (memory::MemoryTraits<DataType>::use_realloc && Allocator::support_realloc)
                 {
-                    _heap_data = Allocator::template realloc<T>(_heap_data, new_capacity);
-                    _capacity  = new_capacity;
+                    Base::_data     = Allocator::template realloc<DataType>(Base::_data, new_capacity);
+                    Base::_capacity = new_capacity;
                 }
                 else
                 {
                     // alloc new memory
-                    T* new_memory = Allocator::template alloc<T>(new_capacity);
+                    DataType* new_memory = Allocator::template alloc<DataType>(new_capacity);
 
                     // move items
-                    if (_size)
+                    if (Base::_size)
                     {
-                        memory::move(new_memory, _heap_data, _size);
+                        memory::move(new_memory, Base::_data, Base::_size);
                     }
 
                     // release old memory
-                    Allocator::template free<T>(_heap_data);
+                    Allocator::template free<DataType>(Base::_data);
 
                     // update data
-                    _heap_data = new_memory;
+                    Base::_data = new_memory;
                 }
             }
         }
@@ -494,54 +519,56 @@ struct InlineVectorMemory : public Allocator {
             }
             else // heap -> inline
             {
-                T* cached_heap_data = _heap_data;
+                DataType* cached_heap_data = Base::_data;
 
                 // move items
-                if (_size)
+                if (Base::_size)
                 {
-                    memory::move(_placeholder.data_typed(), cached_heap_data, _size);
+                    memory::move(_placeholder.data_typed(), cached_heap_data, Base::_size);
                 }
 
                 // release old memory
-                Allocator::template free<T>(cached_heap_data);
+                Allocator::template free<DataType>(cached_heap_data);
+
+                // reset data
+                Base::_data = _placeholder.data_typed();
             }
         }
 
         // update capacity
-        _capacity = new_capacity;
+        Base::_capacity = new_capacity;
     }
     inline void free() noexcept
     {
         if (!_is_using_inline_memory())
         {
-            Allocator::template free<T>(_heap_data);
-            _heap_data = nullptr;
-            _capacity  = kInlineCount;
+            Allocator::template free<DataType>(Base::_data);
+            _reset();
         }
     }
     inline SizeType grow(SizeType grow_size) noexcept
     {
-        SizeType old_size = _size;
+        SizeType old_size = Base::_size;
         SizeType new_size = old_size + grow_size;
 
-        if (new_size > _capacity)
+        if (new_size > Base::_capacity)
         {
-            SizeType new_capacity = default_get_grow<T>(new_size, _capacity);
-            SKR_ASSERT(new_capacity >= _capacity);
-            if (new_capacity >= _capacity)
+            SizeType new_capacity = default_get_grow<DataType>(new_size, Base::_capacity);
+            SKR_ASSERT(new_capacity >= Base::_capacity);
+            if (new_capacity >= Base::_capacity)
             {
                 realloc(new_capacity);
             }
         }
 
-        _size = new_size;
+        Base::_size = new_size;
         return old_size;
     }
     inline void shrink() noexcept
     {
-        SizeType new_capacity = default_get_shrink<T>(_size, _capacity);
-        SKR_ASSERT(new_capacity >= _size);
-        if (new_capacity < _capacity)
+        SizeType new_capacity = default_get_shrink<DataType>(Base::_size, Base::_capacity);
+        SKR_ASSERT(new_capacity >= Base::_size);
+        if (new_capacity < Base::_capacity)
         {
             if (new_capacity)
             {
@@ -555,38 +582,24 @@ struct InlineVectorMemory : public Allocator {
     }
     inline void clear() noexcept
     {
-        if (_size)
+        if (Base::_size)
         {
-            memory::destruct(data(), _size);
-            _size = 0;
+            memory::destruct(Base::data(), Base::_size);
+            Base::_size = 0;
         }
     }
 
-    // getter
-    inline T*       data() noexcept { return _is_using_inline_memory() ? _placeholder.data_typed() : _heap_data; }
-    inline const T* data() const noexcept { return _is_using_inline_memory() ? _placeholder.data_typed() : _heap_data; }
-    inline SizeType size() const noexcept { return _size; }
-    inline SizeType capacity() const noexcept { return _capacity; }
-
-    // setter
-    inline void set_size(SizeType value) noexcept { _size = value; }
-
 private:
     // helper
-    inline bool _is_using_inline_memory() const noexcept { return _capacity == kInlineCount; }
+    inline bool _is_using_inline_memory() const noexcept { return Base::_data == _placeholder.data_typed(); }
     inline void _reset()
     {
-        _size     = 0;
-        _capacity = kInlineCount;
+        Base::_data     = _placeholder.data_typed();
+        Base::_size     = 0;
+        Base::_capacity = kInlineCount;
     }
 
 private:
-    union
-    {
-        Placeholder<T, kInlineCount> _placeholder;
-        T*                           _heap_data;
-    };
-    SizeType _size     = 0;
-    SizeType _capacity = kInlineCount;
+    Placeholder<DataType, kInlineCount> _placeholder;
 };
 } // namespace skr::container
