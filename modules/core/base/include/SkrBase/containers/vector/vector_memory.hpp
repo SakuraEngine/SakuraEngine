@@ -5,6 +5,8 @@
 #include "SkrBase/containers/misc/default_capicity_policy.hpp"
 #include "SkrBase/memory/memory_ops.hpp"
 
+// TODO. optimize all Base param location
+
 // vector memory base
 namespace skr::container
 {
@@ -238,8 +240,7 @@ struct FixedVectorMemory : public Base {
     // ctor & dtor
     inline FixedVectorMemory(AllocatorCtorParam) noexcept
     {
-        Base::_data     = _placeholder.data_typed();
-        Base::_capacity = kCount;
+        _init_setup();
     }
     inline ~FixedVectorMemory() noexcept
     {
@@ -250,8 +251,7 @@ struct FixedVectorMemory : public Base {
     // copy & move
     inline FixedVectorMemory(const FixedVectorMemory& other) noexcept
     {
-        Base::_data     = _placeholder.data_typed();
-        Base::_capacity = kCount;
+        _init_setup();
 
         if (other._size)
         {
@@ -261,8 +261,7 @@ struct FixedVectorMemory : public Base {
     }
     inline FixedVectorMemory(FixedVectorMemory&& other) noexcept
     {
-        Base::_data     = _placeholder.data_typed();
-        Base::_capacity = kCount;
+        _init_setup();
 
         if (other._size)
         {
@@ -341,6 +340,11 @@ struct FixedVectorMemory : public Base {
     inline const DataType* data() const noexcept { return static_cast<const DataType*>(Base::_data); }
 
 private:
+    inline void _init_setup() noexcept
+    {
+        Base::_data     = _placeholder.data_typed();
+        Base::_capacity = kCount;
+    }
     inline void _reset() noexcept
     {
         Base::_size = 0;
