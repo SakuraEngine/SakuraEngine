@@ -210,19 +210,19 @@ TestAllocatorType>>;
 template <typename T>
 using RingBuffer = container::RingBuffer<container::RingBufferMemory<
 T,
-TestSizeType,
+container::RingBufferMemoryBase<TestSizeType>,
 TestAllocatorType>>;
 
 template <typename T, uint64_t kCount>
 using FixedRingBuffer = container::RingBuffer<container::FixedRingBufferMemory<
 T,
-TestSizeType,
+container::RingBufferMemoryBase<TestSizeType>,
 kCount>>;
 
 template <typename T, uint64_t kInlineCount>
 using InlineRingBuffer = container::RingBuffer<container::InlineRingBufferMemory<
 T,
-TestSizeType,
+container::RingBufferMemoryBase<TestSizeType>,
 kInlineCount,
 TestAllocatorType>>;
 
