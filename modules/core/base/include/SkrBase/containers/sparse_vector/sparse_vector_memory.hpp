@@ -421,7 +421,7 @@ struct FixedSparseVectorMemory : public Base {
         if (Base::_sparse_size)
         {
             // destruct items
-            destruct_sparse_vector_data(data(), bit_data(), sparse_size());
+            destruct_sparse_vector_data(data(), bit_data(), Base::_sparse_size);
 
             // clean up bit data
             BitAlgo::set_blocks(bit_data(), SizeType(0), BitAlgo::num_blocks(Base::_sparse_size), false);
