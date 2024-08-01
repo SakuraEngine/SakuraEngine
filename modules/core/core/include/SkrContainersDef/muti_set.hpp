@@ -9,26 +9,26 @@ namespace skr
 {
 template <typename T, typename HashTraits = container::HashTraits<T>, typename Allocator = SkrAllocator>
 using MultiSet = container::MultiSparseHashSet<container::SparseHashSetMemory<
-T,           /*element Type*/
-uint64_t,    /*BitBlock Type*/
-HashTraits,  /*Hasher Traits*/
-uint64_t,    /*Size Type*/
-Allocator>>; /*Allocator Type*/
+T,                                            /*element Type*/
+uint64_t,                                     /*BitBlock Type*/
+HashTraits,                                   /*Hasher Traits*/
+container::SparseHashSetMemoryBase<uint64_t>, /*base*/
+Allocator>>;                                  /*Allocator Type*/
 
 template <typename T, uint64_t kCount, typename HashTraits = container::HashTraits<T>>
 using FixedMultiSet = container::MultiSparseHashSet<container::FixedSparseHashSetMemory<
-T,          /*element Type*/
-uint64_t,   /*BitBlock Type*/
-HashTraits, /*Hasher Traits*/
-uint64_t,   /*Size Type*/
-kCount>>;   /*Allocator Type*/
+T,                                            /*element Type*/
+uint64_t,                                     /*BitBlock Type*/
+HashTraits,                                   /*Hasher Traits*/
+container::SparseHashSetMemoryBase<uint64_t>, /*base*/
+kCount>>;                                     /*Allocator Type*/
 
 template <typename T, uint64_t kInlineCount, typename HashTraits = container::HashTraits<T>, typename Allocator = SkrAllocator>
 using InlineMultiSet = container::MultiSparseHashSet<container::InlineSparseHashSetMemory<
-T,            /*element Type*/
-uint64_t,     /*BitBlock Type*/
-HashTraits,   /*Hasher Traits*/
-uint64_t,     /*Size Type*/
-kInlineCount, /*Inline Count*/
-Allocator>>;  /*Allocator Type*/
+T,                                            /*element Type*/
+uint64_t,                                     /*BitBlock Type*/
+HashTraits,                                   /*Hasher Traits*/
+container::SparseHashSetMemoryBase<uint64_t>, /*base*/
+kInlineCount,                                 /*Inline Count*/
+Allocator>>;                                  /*Allocator Type*/
 } // namespace skr

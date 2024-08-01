@@ -15,18 +15,6 @@ template <typename TS>
 struct SparseVectorMemoryBase {
     using SizeType = TS;
 
-    // ctor
-    inline SparseVectorMemoryBase() noexcept = default;
-    inline SparseVectorMemoryBase(void* data, void* bit_data, SizeType sparse_size, SizeType capacity, SizeType freelist_head, SizeType hole_size) noexcept
-        : _data(data)
-        , _bit_data(bit_data)
-        , _sparse_size(sparse_size)
-        , _capacity(capacity)
-        , _freelist_head(freelist_head)
-        , _hole_size(hole_size)
-    {
-    }
-
     // getter
     inline SizeType sparse_size() const noexcept { return _sparse_size; }
     inline SizeType capacity() const noexcept { return _capacity; }
@@ -92,7 +80,7 @@ struct SparseVectorMemory : public Base, public Allocator {
         }
     }
     inline SparseVectorMemory(SparseVectorMemory&& rhs) noexcept
-        : Base(rhs._data, rhs._bit_data, rhs._sparse_size, rhs._capacity, rhs._freelist_head, rhs._hole_size)
+        : Base(std::move(rhs))
         , Allocator(std::move(rhs))
     {
         rhs._reset();
@@ -119,7 +107,7 @@ struct SparseVectorMemory : public Base, public Allocator {
                 }
 
                 // copy data
-                copy_sparse_vector_data(data(), rhs.data(), rhs._bit_data, rhs._sparse_size);
+                copy_sparse_vector_data(data(), rhs.data(), rhs.bit_data(), rhs._sparse_size);
                 copy_sparse_vector_bit_data(bit_data(), rhs.bit_data(), rhs._sparse_size);
                 Base::_sparse_size   = rhs._sparse_size;
                 Base::_capacity      = rhs._capacity;
@@ -285,10 +273,10 @@ struct SparseVectorMemory : public Base, public Allocator {
     }
 
     // getter
-    inline StorageType*        data() noexcept { return static_cast<StorageType*>(Base::_data); }
-    inline const StorageType*  data() const noexcept { return static_cast<const StorageType*>(Base::_data); }
-    inline BitBlockType*       bit_data() noexcept { return static_cast<BitBlockType*>(Base::_data); }
-    inline const BitBlockType* bit_data() const noexcept { return static_cast<const BitBlockType*>(Base::_data); }
+    inline StorageType*        data() noexcept { return reinterpret_cast<StorageType*>(Base::_data); }
+    inline const StorageType*  data() const noexcept { return reinterpret_cast<const StorageType*>(Base::_data); }
+    inline BitBlockType*       bit_data() noexcept { return reinterpret_cast<BitBlockType*>(Base::_bit_data); }
+    inline const BitBlockType* bit_data() const noexcept { return reinterpret_cast<const BitBlockType*>(Base::_bit_data); }
 
 private:
     // algo
@@ -446,10 +434,10 @@ struct FixedSparseVectorMemory : public Base {
     }
 
     // getter
-    inline StorageType*        data() noexcept { return static_cast<StorageType*>(Base::_data); }
-    inline const StorageType*  data() const noexcept { return static_cast<const StorageType*>(Base::_data); }
-    inline BitBlockType*       bit_data() noexcept { return static_cast<BitBlockType*>(Base::_data); }
-    inline const BitBlockType* bit_data() const noexcept { return static_cast<const BitBlockType*>(Base::_data); }
+    inline StorageType*        data() noexcept { return reinterpret_cast<StorageType*>(Base::_data); }
+    inline const StorageType*  data() const noexcept { return reinterpret_cast<const StorageType*>(Base::_data); }
+    inline BitBlockType*       bit_data() noexcept { return reinterpret_cast<BitBlockType*>(Base::_bit_data); }
+    inline const BitBlockType* bit_data() const noexcept { return reinterpret_cast<const BitBlockType*>(Base::_bit_data); }
 
 private:
     // algo
@@ -552,7 +540,7 @@ struct InlineSparseVectorMemory : public Base, public Allocator {
             }
 
             // move data
-            Base::_heap_data     = rhs._heap_data;
+            Base::_data          = rhs._data;
             Base::_sparse_size   = rhs._sparse_size;
             Base::_capacity      = rhs._capacity;
             Base::_freelist_head = rhs._freelist_head;
@@ -629,7 +617,7 @@ struct InlineSparseVectorMemory : public Base, public Allocator {
                 }
 
                 // move data
-                Base::_heap_data     = rhs._heap_data;
+                Base::_data          = rhs._data;
                 Base::_sparse_size   = rhs._sparse_size;
                 Base::_capacity      = rhs._capacity;
                 Base::_freelist_head = rhs._freelist_head;
@@ -872,10 +860,10 @@ struct InlineSparseVectorMemory : public Base, public Allocator {
     }
 
     // getter
-    inline StorageType*        data() noexcept { return static_cast<StorageType*>(Base::_data); }
-    inline const StorageType*  data() const noexcept { return static_cast<const StorageType*>(Base::_data); }
-    inline BitBlockType*       bit_data() noexcept { return static_cast<BitBlockType*>(Base::_data); }
-    inline const BitBlockType* bit_data() const noexcept { return static_cast<const BitBlockType*>(Base::_data); }
+    inline StorageType*        data() noexcept { return reinterpret_cast<StorageType*>(Base::_data); }
+    inline const StorageType*  data() const noexcept { return reinterpret_cast<const StorageType*>(Base::_data); }
+    inline BitBlockType*       bit_data() noexcept { return reinterpret_cast<BitBlockType*>(Base::_bit_data); }
+    inline const BitBlockType* bit_data() const noexcept { return reinterpret_cast<const BitBlockType*>(Base::_bit_data); }
 
 private:
     // algo

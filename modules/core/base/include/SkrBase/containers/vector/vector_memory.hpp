@@ -14,15 +14,6 @@ template <typename TS>
 struct VectorMemoryBase {
     using SizeType = TS;
 
-    // ctor
-    inline VectorMemoryBase() noexcept = default;
-    inline VectorMemoryBase(void* data, SizeType size, SizeType capacity) noexcept
-        : _data(data)
-        , _size(size)
-        , _capacity(capacity)
-    {
-    }
-
     // getter
     inline SizeType size() const noexcept { return _size; }
     inline SizeType capacity() const noexcept { return _capacity; }
@@ -71,7 +62,7 @@ struct VectorMemory : public Base, public Allocator {
         }
     }
     inline VectorMemory(VectorMemory&& rhs) noexcept
-        : Base(rhs._data, rhs._size, rhs._capacity)
+        : Base(std::move(rhs))
         , Allocator(std::move(rhs))
     {
         rhs._reset();
@@ -211,8 +202,8 @@ struct VectorMemory : public Base, public Allocator {
     }
 
     // getter
-    inline DataType*       data() noexcept { return static_cast<DataType*>(Base::_data); }
-    inline const DataType* data() const noexcept { return static_cast<const DataType*>(Base::_data); }
+    inline DataType*       data() noexcept { return reinterpret_cast<DataType*>(Base::_data); }
+    inline const DataType* data() const noexcept { return reinterpret_cast<const DataType*>(Base::_data); }
 
 private:
     // helper functions
@@ -336,8 +327,8 @@ struct FixedVectorMemory : public Base {
     }
 
     // getter
-    inline DataType*       data() noexcept { return static_cast<DataType*>(Base::_data); }
-    inline const DataType* data() const noexcept { return static_cast<const DataType*>(Base::_data); }
+    inline DataType*       data() noexcept { return reinterpret_cast<DataType*>(Base::_data); }
+    inline const DataType* data() const noexcept { return reinterpret_cast<const DataType*>(Base::_data); }
 
 private:
     inline void _init_setup() noexcept
@@ -600,8 +591,8 @@ struct InlineVectorMemory : public Base, public Allocator {
     }
 
     // getter
-    inline DataType*       data() noexcept { return static_cast<DataType*>(Base::_data); }
-    inline const DataType* data() const noexcept { return static_cast<const DataType*>(Base::_data); }
+    inline DataType*       data() noexcept { return reinterpret_cast<DataType*>(Base::_data); }
+    inline const DataType* data() const noexcept { return reinterpret_cast<const DataType*>(Base::_data); }
 
 private:
     // helper
