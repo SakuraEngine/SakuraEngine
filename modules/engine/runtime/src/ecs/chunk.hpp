@@ -40,7 +40,7 @@ struct sugoi_chunk_t {
     sugoi_group_t* group = nullptr;
     EIndex count = 0;
     sugoi::pool_type_t pt;
-    skr::InlineVector<uint8_t, 16> slice_lcks;
+    skr::InlineVector<uint8_t, 8> slice_lcks;
 
     static sugoi_chunk_t* create(sugoi::pool_type_t poolType);
     static void destroy(sugoi_chunk_t* chunk);

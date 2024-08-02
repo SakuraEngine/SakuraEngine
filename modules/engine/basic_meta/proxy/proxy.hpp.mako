@@ -18,8 +18,8 @@ struct ${record.short_name}_VTableTraits {
 <%method_proxy_data=method.generator_data["proxy"]%>\
 inline static ${method.ret_type} static_${method.short_name}(${method.dump_const()} void* self ${method.dump_params_with_comma()}) ${method.dump_noexcept()}
 {
-    auto validate_method = SKR_VALIDATOR((auto obj, auto... args), obj->${method.short_name}(args...));
-    auto validate_static_method = SKR_VALIDATOR((auto... args), ${method.short_name}(static_cast<${method.dump_const()} T*>(0), args...));
+    [[maybe_unused]] auto validate_method = SKR_VALIDATOR((auto obj, auto... args), obj->${method.short_name}(args...));
+    [[maybe_unused]] auto validate_static_method = SKR_VALIDATOR((auto... args), ${method.short_name}(static_cast<${method.dump_const()} T*>(0), args...));
 
 %if method_proxy_data.setter:
     static_assert(std::is_same_v<${method.ret_type}, void>, "Setter must return void");

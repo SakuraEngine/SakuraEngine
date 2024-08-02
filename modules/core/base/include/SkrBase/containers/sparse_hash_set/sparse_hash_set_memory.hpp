@@ -6,12 +6,26 @@
 #include "SkrBase/containers/sparse_vector/sparse_vector_iterator.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_helper.hpp"
 
+// sparse hash set memory base
+namespace skr::container
+{
+template <typename TS>
+struct SparseHashSetMemoryBase : public SparseVectorMemoryBase<TS> {
+    using SizeType = TS;
+
+protected:
+    SizeType* _bucket      = nullptr;
+    SizeType  _bucket_size = 0;
+    SizeType  _bucket_mask = 0;
+};
+} // namespace skr::container
+
 // util sparse hash set memory
 namespace skr::container
 {
-template <typename T, typename TBitBlock, typename HashTraits, typename TS, typename Allocator>
-struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator> {
-    using Super = SparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, Allocator>;
+template <typename T, typename TBitBlock, typename HashTraits, typename Base, typename Allocator>
+struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, Base, Allocator> {
+    using Super = SparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, Base, Allocator>;
 
     // sparse vector configure
     using typename Super::SizeType;
@@ -24,7 +38,7 @@ struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetStorage<T, T
     using HashType       = typename HashTraits::HashType;
     using HasherType     = typename HashTraits::HasherType;
     using SetDataType    = T;
-    using SetStorageType = SparseHashSetStorage<T, TS, HashType>;
+    using SetStorageType = SparseHashSetStorage<T, SizeType, HashType>;
 
     // ctor & dtor
     inline SparseHashSetMemory(AllocatorCtorParam param) noexcept
@@ -46,9 +60,6 @@ struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetStorage<T, T
     }
     inline SparseHashSetMemory(SparseHashSetMemory&& rhs) noexcept
         : Super(std::move(rhs))
-        , _bucket(rhs._bucket)
-        , _bucket_size(rhs._bucket_size)
-        , _bucket_mask(rhs._bucket_mask)
     {
         rhs._reset();
     }
@@ -74,9 +85,9 @@ struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetStorage<T, T
             free_bucket();
 
             // move data
-            _bucket      = rhs._bucket;
-            _bucket_size = rhs._bucket_size;
-            _bucket_mask = rhs._bucket_mask;
+            Base::_bucket      = rhs._bucket;
+            Base::_bucket_size = rhs._bucket_size;
+            Base::_bucket_mask = rhs._bucket_mask;
 
             // reset rhs
             rhs._reset();
@@ -87,13 +98,13 @@ struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetStorage<T, T
     inline bool resize_bucket() noexcept
     {
         SizeType new_bucket_size = sparse_hash_set_calc_bucket_size(Super::capacity());
-        if (new_bucket_size != _bucket_size)
+        if (new_bucket_size != Base::_bucket_size)
         {
             if (new_bucket_size)
             {
                 if constexpr (memory::MemoryTraits<SizeType>::use_realloc && Allocator::support_realloc)
                 {
-                    _bucket = Allocator::template realloc<SizeType>(_bucket, new_bucket_size);
+                    Base::_bucket = Allocator::template realloc<SizeType>(bucket(), new_bucket_size);
                 }
                 else
                 {
@@ -101,13 +112,13 @@ struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetStorage<T, T
                     SizeType* new_memory = Allocator::template alloc<SizeType>(new_bucket_size);
 
                     // release old memory
-                    Allocator::template free<SizeType>(_bucket);
+                    Allocator::template free<SizeType>(bucket());
 
-                    _bucket = new_memory;
+                    Base::_bucket = new_memory;
                 }
 
-                _bucket_size = new_bucket_size;
-                _bucket_mask = new_bucket_size - 1;
+                Base::_bucket_size = new_bucket_size;
+                Base::_bucket_mask = new_bucket_size - 1;
             }
             else
             {
@@ -119,58 +130,53 @@ struct SparseHashSetMemory : public SparseVectorMemory<SparseHashSetStorage<T, T
     }
     inline void free_bucket() noexcept
     {
-        if (_bucket)
+        if (Base::_bucket)
         {
-            Allocator::template free<SizeType>(_bucket);
-            _bucket      = nullptr;
-            _bucket_size = 0;
-            _bucket_mask = 0;
+            Allocator::template free<SizeType>(bucket());
+            Base::_bucket      = nullptr;
+            Base::_bucket_size = 0;
+            Base::_bucket_mask = 0;
         }
     }
     inline SizeType bucket_index(SizeType hash) const noexcept
     {
-        return hash & _bucket_mask;
+        return hash & Base::_bucket_mask;
     }
     inline void build_bucket() noexcept
     {
         if (Super::sparse_size() - Super::hole_size())
         {
             auto cursor = TrueBitCursor<BitBlockType, SizeType, false>::Begin(Super::bit_data(), Super::sparse_size());
-            sparse_hash_set_build_bucket(Super::data(), _bucket, _bucket_mask, cursor);
+            sparse_hash_set_build_bucket(Super::data(), bucket(), Base::_bucket_mask, cursor);
         }
     }
     inline void clean_bucket() noexcept
     {
-        sparse_hash_set_clean_bucket(_bucket, _bucket_size);
+        sparse_hash_set_clean_bucket(bucket(), Base::_bucket_size);
     }
 
     // getter
-    inline const SizeType* bucket() const noexcept { return _bucket; }
-    inline SizeType*       bucket() noexcept { return _bucket; }
+    inline const SizeType* bucket() const noexcept { return reinterpret_cast<const SizeType*>(Base::_bucket); }
+    inline SizeType*       bucket() noexcept { return reinterpret_cast<SizeType*>(Base::_bucket); }
 
 private:
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     inline void _reset() noexcept
     {
-        _bucket      = nullptr;
-        _bucket_size = 0;
-        _bucket_mask = 0;
+        Base::_bucket      = nullptr;
+        Base::_bucket_size = 0;
+        Base::_bucket_mask = 0;
     }
-
-private:
-    SizeType* _bucket      = nullptr;
-    SizeType  _bucket_size = 0;
-    SizeType  _bucket_mask = 0;
 };
 } // namespace skr::container
 
 // fixed sparse hash set memory
 namespace skr::container
 {
-template <typename T, typename TBitBlock, typename HashTraits, typename TS, uint64_t kCount>
-struct FixedSparseHashSetMemory : public FixedSparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount> {
-    using Super = FixedSparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kCount>;
+template <typename T, typename TBitBlock, typename HashTraits, uint64_t kCount, typename Base>
+struct FixedSparseHashSetMemory : public FixedSparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, kCount, Base> {
+    using Super = FixedSparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, kCount, Base>;
 
     // sparse vector configure
     using typename Super::SizeType;
@@ -183,12 +189,13 @@ struct FixedSparseHashSetMemory : public FixedSparseVectorMemory<SparseHashSetSt
     using HashType       = typename HashTraits::HashType;
     using HasherType     = typename HashTraits::HasherType;
     using SetDataType    = T;
-    using SetStorageType = SparseHashSetStorage<T, TS, HashType>;
+    using SetStorageType = SparseHashSetStorage<T, SizeType, HashType>;
 
     // ctor & dtor
     inline FixedSparseHashSetMemory(AllocatorCtorParam param) noexcept
         : Super(std::move(param))
     {
+        _init_setup();
         clean_bucket();
     }
     inline ~FixedSparseHashSetMemory() noexcept
@@ -200,11 +207,13 @@ struct FixedSparseHashSetMemory : public FixedSparseVectorMemory<SparseHashSetSt
     inline FixedSparseHashSetMemory(const FixedSparseHashSetMemory& rhs) noexcept
         : Super(rhs)
     {
+        _init_setup();
         memory::copy(bucket(), rhs.bucket(), kBucketSize);
     }
     inline FixedSparseHashSetMemory(FixedSparseHashSetMemory&& rhs) noexcept
         : Super(std::move(rhs))
     {
+        _init_setup();
         memory::copy(bucket(), rhs.bucket(), kBucketSize);
         rhs._reset();
     }
@@ -256,13 +265,20 @@ struct FixedSparseHashSetMemory : public FixedSparseVectorMemory<SparseHashSetSt
     }
 
     // getter
-    inline const SizeType* bucket() const noexcept { return _bucket_placeholder.data_typed(); }
-    inline SizeType*       bucket() noexcept { return _bucket_placeholder.data_typed(); }
+    inline const SizeType* bucket() const noexcept { return reinterpret_cast<const SizeType*>(Base::_bucket); }
+    inline SizeType*       bucket() noexcept { return reinterpret_cast<SizeType*>(Base::_bucket); }
 
 private:
     static constexpr SizeType npos        = npos_of<SizeType>;
     static constexpr SizeType kBucketSize = sparse_hash_set_calc_bucket_size(kCount);
     static constexpr SizeType kBucketMask = kBucketSize - 1;
+
+    inline void _init_setup()
+    {
+        Base::_bucket      = _bucket_placeholder.data_typed();
+        Base::_bucket_size = kBucketSize;
+        Base::_bucket_mask = kBucketMask;
+    }
 
     inline void _reset()
     {
@@ -277,9 +293,9 @@ private:
 // inline sparse hash set memory
 namespace skr::container
 {
-template <typename T, typename TBitBlock, typename HashTraits, typename TS, uint64_t kInlineCount, typename Allocator>
-struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator> {
-    using Super = InlineSparseVectorMemory<SparseHashSetStorage<T, TS, typename HashTraits::HashType>, TBitBlock, TS, kInlineCount, Allocator>;
+template <typename T, typename TBitBlock, typename HashTraits, uint64_t kInlineCount, typename Base, typename Allocator>
+struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, kInlineCount, Base, Allocator> {
+    using Super = InlineSparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, kInlineCount, Base, Allocator>;
 
     // sparse data configure
     using typename Super::SizeType;
@@ -292,12 +308,13 @@ struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSet
     using HashType       = typename HashTraits::HashType;
     using HasherType     = typename HashTraits::HasherType;
     using SetDataType    = T;
-    using SetStorageType = SparseHashSetStorage<T, TS, HashType>;
+    using SetStorageType = SparseHashSetStorage<T, SizeType, HashType>;
 
     // ctor & dtor
     inline InlineSparseHashSetMemory(AllocatorCtorParam param) noexcept
         : Super(std::move(param))
     {
+        _reset();
         clean_bucket();
     }
     inline ~InlineSparseHashSetMemory() noexcept
@@ -309,6 +326,7 @@ struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSet
     inline InlineSparseHashSetMemory(const InlineSparseHashSetMemory& rhs) noexcept
         : Super(rhs)
     {
+        _reset();
         resize_bucket();
         clean_bucket();
         build_bucket();
@@ -316,16 +334,17 @@ struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSet
     inline InlineSparseHashSetMemory(InlineSparseHashSetMemory&& rhs) noexcept
         : Super(std::move(rhs))
     {
+        _reset();
         if (rhs._is_using_inline_bucket())
         {
             memory::copy(bucket(), rhs._bucket_placeholder.data_typed(), rhs._bucket_size);
         }
         else
         {
-            _heap_bucket = rhs._heap_bucket;
+            Base::_bucket = rhs._bucket;
         }
 
-        rhs._reset();
+        rhs._reset_and_clean();
     }
 
     // assign & move assign
@@ -355,13 +374,13 @@ struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSet
             }
             else
             {
-                _heap_bucket = rhs._heap_bucket;
-                _bucket_size = rhs._bucket_size;
-                _bucket_mask = rhs._bucket_mask;
+                Base::_bucket      = rhs._bucket;
+                Base::_bucket_size = rhs._bucket_size;
+                Base::_bucket_mask = rhs._bucket_mask;
             }
 
             // reset rhs
-            rhs._reset();
+            rhs._reset_and_clean();
         }
     }
 
@@ -370,7 +389,7 @@ struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSet
     {
         SizeType new_bucket_size = sparse_hash_set_calc_bucket_size(Super::capacity());
         SKR_ASSERT(new_bucket_size > 0);
-        if (new_bucket_size != _bucket_size)
+        if (new_bucket_size != Base::_bucket_size)
         {
             if (new_bucket_size > kInlineBucketSize)
             {
@@ -383,15 +402,15 @@ struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSet
                     // memory::copy(new_memory, _bucket_placeholder.data_typed(), _bucket_size);
 
                     // update
-                    _heap_bucket = new_memory;
-                    _bucket_size = new_bucket_size;
-                    _bucket_mask = new_bucket_size - 1;
+                    Base::_bucket      = new_memory;
+                    Base::_bucket_size = new_bucket_size;
+                    Base::_bucket_mask = new_bucket_size - 1;
                 }
                 else // heap -> heap
                 {
                     if constexpr (memory::MemoryTraits<SizeType>::use_realloc && Allocator::support_realloc)
                     {
-                        _heap_bucket = Allocator::template realloc<SizeType>(_heap_bucket, new_bucket_size);
+                        Base::_bucket = Allocator::template realloc<SizeType>(bucket(), new_bucket_size);
                     }
                     else
                     {
@@ -405,13 +424,13 @@ struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSet
                         // }
 
                         // release old memory
-                        Allocator::template free<SizeType>(_heap_bucket);
+                        Allocator::template free<SizeType>(bucket());
 
-                        _heap_bucket = new_memory;
+                        Base::_bucket = new_memory;
                     }
 
-                    _bucket_size = new_bucket_size;
-                    _bucket_mask = new_bucket_size - 1;
+                    Base::_bucket_size = new_bucket_size;
+                    Base::_bucket_mask = new_bucket_size - 1;
                 }
             }
             else
@@ -425,11 +444,9 @@ struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSet
                     // needn't copy items here, because we always rehash after resize bucket
 
                     // just free memory
-                    Allocator::template free<SizeType>(_heap_bucket);
+                    Allocator::template free<SizeType>(bucket());
 
-                    // update
-                    _bucket_size = kInlineBucketSize;
-                    _bucket_mask = kInlineBucketMask;
+                    _reset();
                 }
             }
             return true;
@@ -440,53 +457,52 @@ struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSet
     {
         if (!_is_using_inline_bucket())
         {
-            Allocator::template free<SizeType>(_heap_bucket);
-            _bucket_size = kInlineBucketSize;
-            _bucket_mask = kInlineBucketMask;
+            Allocator::template free<SizeType>(bucket());
+            _reset_and_clean();
         }
     }
     inline SizeType bucket_index(SizeType hash) const noexcept
     {
-        return hash & _bucket_mask;
+        return hash & Base::_bucket_mask;
     }
     inline void build_bucket() noexcept
     {
         if (Super::sparse_size() - Super::hole_size())
         {
             auto cursor = TrueBitCursor<BitBlockType, SizeType, false>::Begin(Super::bit_data(), Super::sparse_size());
-            sparse_hash_set_build_bucket(Super::data(), bucket(), _bucket_mask, cursor);
+            sparse_hash_set_build_bucket(Super::data(), bucket(), Base::_bucket_mask, cursor);
         }
     }
     inline void clean_bucket() noexcept
     {
-        sparse_hash_set_clean_bucket(bucket(), _bucket_size);
+        sparse_hash_set_clean_bucket(bucket(), Base::_bucket_size);
     }
 
     // getter
-    inline const SizeType* bucket() const noexcept { return _is_using_inline_bucket() ? _bucket_placeholder.data_typed() : _heap_bucket; }
-    inline SizeType*       bucket() noexcept { return _is_using_inline_bucket() ? _bucket_placeholder.data_typed() : _heap_bucket; }
+    inline const SizeType* bucket() const noexcept { return reinterpret_cast<const SizeType*>(Base::_bucket); }
+    inline SizeType*       bucket() noexcept { return reinterpret_cast<SizeType*>(Base::_bucket); }
 
 private:
     static inline constexpr SizeType npos              = npos_of<SizeType>;
     static inline constexpr SizeType kInlineBucketSize = sparse_hash_set_calc_bucket_size(kInlineCount);
     static inline constexpr SizeType kInlineBucketMask = kInlineBucketSize - 1;
 
-    inline bool _is_using_inline_bucket() const noexcept { return _bucket_size == kInlineBucketSize; }
+    inline bool _is_using_inline_bucket() const noexcept { return Base::_bucket == _bucket_placeholder.data_typed(); }
 
     inline void _reset()
     {
-        _bucket_size = kInlineBucketSize;
-        _bucket_mask = kInlineBucketMask;
+        Base::_bucket      = _bucket_placeholder.data_typed();
+        Base::_bucket_size = kInlineBucketSize;
+        Base::_bucket_mask = kInlineBucketMask;
+    }
+
+    inline void _reset_and_clean()
+    {
+        _reset();
         clean_bucket();
     }
 
 private:
-    union
-    {
-        Placeholder<SizeType, kInlineBucketSize> _bucket_placeholder;
-        SizeType*                                _heap_bucket;
-    };
-    SizeType _bucket_size = kInlineBucketSize;
-    SizeType _bucket_mask = kInlineBucketMask;
+    Placeholder<SizeType, kInlineBucketSize> _bucket_placeholder;
 };
 } // namespace skr::container

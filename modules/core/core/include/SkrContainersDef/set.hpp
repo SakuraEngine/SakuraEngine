@@ -7,28 +7,31 @@
 
 namespace skr
 {
+using SetMemoryBase = container::SparseHashSetMemoryBase<uint64_t>;
+
 template <typename T, typename HashTraits = container::HashTraits<T>, typename Allocator = SkrAllocator>
 using Set = container::SparseHashSet<container::SparseHashSetMemory<
-T,           /*element Type*/
-uint64_t,    /*BitBlock Type*/
-HashTraits,  /*Hasher Traits*/
-uint64_t,    /*Size Type*/
-Allocator>>; /*Allocator Type*/
+T,             /*element Type*/
+uint64_t,      /*BitBlock Type*/
+HashTraits,    /*Hasher Traits*/
+SetMemoryBase, /*base*/
+Allocator>>;   /*Allocator Type*/
 
 template <typename T, uint64_t kCount, typename HashTraits = container::HashTraits<T>>
 using FixedSet = container::SparseHashSet<container::FixedSparseHashSetMemory<
-T,          /*element Type*/
-uint64_t,   /*BitBlock Type*/
-HashTraits, /*Hasher Traits*/
-uint64_t,   /*Size Type*/
-kCount>>;   /*Allocator Type*/
-
-template <typename T, uint64_t kInlineCount, typename HashTraits = container::HashTraits<T>, typename Allocator = SkrAllocator>
-using InlineSet = container::SparseHashSet<container::InlineSparseHashSetMemory<
 T,            /*element Type*/
 uint64_t,     /*BitBlock Type*/
 HashTraits,   /*Hasher Traits*/
-uint64_t,     /*Size Type*/
-kInlineCount, /*Inline Count*/
-Allocator>>;  /*Allocator Type*/
+kCount,       /*Fixed count*/
+SetMemoryBase /*base*/
+>>;
+
+template <typename T, uint64_t kInlineCount, typename HashTraits = container::HashTraits<T>, typename Allocator = SkrAllocator>
+using InlineSet = container::SparseHashSet<container::InlineSparseHashSetMemory<
+T,             /*element Type*/
+uint64_t,      /*BitBlock Type*/
+HashTraits,    /*Hasher Traits*/
+kInlineCount,  /*Inline Count*/
+SetMemoryBase, /*base*/
+Allocator>>;   /*Allocator Type*/
 } // namespace skr

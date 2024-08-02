@@ -3,12 +3,19 @@
 #include "SkrBase/containers/sparse_hash_map/kvpair.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_memory.hpp"
 
+// sparse hash map memory base
+namespace skr::container
+{
+template <typename TS>
+using SparseHashMapMemoryBase = SparseHashSetMemoryBase<TS>;
+}
+
 // sparse hash map memory
 namespace skr::container
 {
-template <typename K, typename V, typename TBitBlock, typename HashTraits, typename TS, typename Allocator>
-struct SparseHashMapMemory : public SparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, Allocator> {
-    using Super = SparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, Allocator>;
+template <typename K, typename V, typename TBitBlock, typename HashTraits, typename Base, typename Allocator>
+struct SparseHashMapMemory : public SparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, Base, Allocator> {
+    using Super = SparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, Base, Allocator>;
 
     // sparse vector configure
     using typename Super::SizeType;
@@ -62,9 +69,9 @@ struct SparseHashMapMemory : public SparseHashSetMemory<KVPair<K, V>, TBitBlock,
 // fixed sparse hash map memory
 namespace skr::container
 {
-template <typename K, typename V, typename TBitBlock, typename HashTraits, typename TS, uint64_t kCount>
-struct FixedSparseHashMapMemory : public FixedSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, kCount> {
-    using Super = FixedSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, kCount>;
+template <typename K, typename V, typename TBitBlock, typename HashTraits, uint64_t kCount, typename Base>
+struct FixedSparseHashMapMemory : public FixedSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, kCount, Base> {
+    using Super = FixedSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, kCount, Base>;
 
     // sparse vector configure
     using typename Super::SizeType;
@@ -118,9 +125,9 @@ struct FixedSparseHashMapMemory : public FixedSparseHashSetMemory<KVPair<K, V>, 
 // inline hash map memory
 namespace skr::container
 {
-template <typename K, typename V, typename TBitBlock, typename HashTraits, typename TS, uint64_t kCount, typename Allocator>
-struct InlineSparseHashMapMemory : public InlineSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, kCount, Allocator> {
-    using Super = InlineSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, TS, kCount, Allocator>;
+template <typename K, typename V, typename TBitBlock, typename HashTraits, uint64_t kCount, typename Base, typename Allocator>
+struct InlineSparseHashMapMemory : public InlineSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, kCount, Base, Allocator> {
+    using Super = InlineSparseHashSetMemory<KVPair<K, V>, TBitBlock, HashTraits, kCount, Base, Allocator>;
 
     // sparse vector configure
     using typename Super::SizeType;
