@@ -7,26 +7,28 @@
 
 namespace skr
 {
+using RingBufferMemoryBase = container::RingBufferMemoryBase<uint64_t>;
+
 template <typename T, typename Allocator = SkrAllocator>
 using RingBuffer = container::RingBuffer<container::RingBufferMemory<
-T,                                         /*type*/
-container::RingBufferMemoryBase<uint64_t>, /*base*/
-Allocator                                  /*allocator type*/
+T,                    /*type*/
+RingBufferMemoryBase, /*base*/
+Allocator             /*allocator type*/
 >>;
 
 template <typename T, uint64_t kCount>
 using FixedRingBuffer = container::RingBuffer<container::FixedRingBufferMemory<
-T,                                         /*type*/
-container::RingBufferMemoryBase<uint64_t>, /*base*/
-kCount                                     /*count*/
+T,                   /*type*/
+kCount,              /*count*/
+RingBufferMemoryBase /*base*/
 >>;
 
 template <typename T, uint64_t kInlineCount, typename Allocator = SkrAllocator>
 using InlineRingBuffer = container::RingBuffer<container::InlineRingBufferMemory<
-T,                                         /*type*/
-container::RingBufferMemoryBase<uint64_t>, /*base*/
-kInlineCount,                              /*inline count*/
-Allocator                                  /*allocator type*/
+T,                    /*type*/
+kInlineCount,         /*inline count*/
+RingBufferMemoryBase, /*base*/
+Allocator             /*allocator type*/
 >>;
 } // namespace skr
 

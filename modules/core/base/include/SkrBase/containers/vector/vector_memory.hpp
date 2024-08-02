@@ -5,8 +5,6 @@
 #include "SkrBase/containers/misc/default_capicity_policy.hpp"
 #include "SkrBase/memory/memory_ops.hpp"
 
-// TODO. optimize all Base param location
-
 // vector memory base
 namespace skr::container
 {
@@ -219,7 +217,7 @@ private:
 // fixed vector memory
 namespace skr::container
 {
-template <typename T, typename Base, uint64_t kCount>
+template <typename T, uint64_t kCount, typename Base>
 struct FixedVectorMemory : public Base {
     static_assert(kCount > 0, "FixedVectorMemory must have a capacity larger than 0");
     struct DummyParam {
@@ -349,7 +347,7 @@ private:
 // inline vector memory
 namespace skr::container
 {
-template <typename T, typename Base, uint64_t kInlineCount, typename Allocator>
+template <typename T, uint64_t kInlineCount, typename Base, typename Allocator>
 struct InlineVectorMemory : public Base, public Allocator {
     using DataType           = T;
     using SizeType           = typename Base::SizeType;

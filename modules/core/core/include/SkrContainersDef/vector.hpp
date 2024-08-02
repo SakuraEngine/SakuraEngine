@@ -6,26 +6,28 @@
 
 namespace skr
 {
+using VectorMemoryBase = container::VectorMemoryBase<uint64_t>;
+
 template <typename T, typename Allocator = SkrAllocator>
 using Vector = container::Vector<container::VectorMemory<
-T,                                     /*type*/
-container::VectorMemoryBase<uint64_t>, /*base*/
-Allocator                              /*allocator*/
+T,                /*type*/
+VectorMemoryBase, /*base*/
+Allocator         /*allocator*/
 >>;
 
 template <typename T, uint64_t kCount>
 using FixedVector = container::Vector<container::FixedVectorMemory<
-T,                                     /*type*/
-container::VectorMemoryBase<uint64_t>, /*base*/
-kCount                                 /*fixed count*/
+T,               /*type*/
+kCount,          /*fixed count*/
+VectorMemoryBase /*base*/
 >>;
 
 template <typename T, uint64_t kCount, typename Allocator = SkrAllocator>
 using InlineVector = container::Vector<container::InlineVectorMemory<
-T,                                     /*type*/
-container::VectorMemoryBase<uint64_t>, /*base*/
-kCount,                                /*inline count*/
-Allocator                              /*allocator*/
+T,                /*type*/
+kCount,           /*inline count*/
+VectorMemoryBase, /*base*/
+Allocator         /*allocator*/
 >>;
 
 template <typename T>

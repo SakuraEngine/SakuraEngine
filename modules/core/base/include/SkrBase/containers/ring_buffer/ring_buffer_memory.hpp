@@ -218,7 +218,7 @@ private:
 // fixed ring buffer memory
 namespace skr::container
 {
-template <typename T, typename Base, uint64_t kCount>
+template <typename T, uint64_t kCount, typename Base>
 struct FixedRingBufferMemory : public Base {
     static_assert(kCount > 0, "FixedRingBufferMemory must have a capacity larger than 0");
     struct DummyParam {
@@ -353,7 +353,7 @@ private:
 // inline ring buffer memory
 namespace skr::container
 {
-template <typename T, typename Base, uint64_t kInlineCount, typename Allocator>
+template <typename T, uint64_t kInlineCount, typename Base, typename Allocator>
 struct InlineRingBufferMemory : public Base, public Allocator {
     using DataType           = T;
     using SizeType           = typename Base::SizeType;

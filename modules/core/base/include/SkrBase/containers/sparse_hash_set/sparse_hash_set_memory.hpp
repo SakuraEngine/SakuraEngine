@@ -174,9 +174,9 @@ private:
 // fixed sparse hash set memory
 namespace skr::container
 {
-template <typename T, typename TBitBlock, typename HashTraits, typename Base, uint64_t kCount>
-struct FixedSparseHashSetMemory : public FixedSparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, Base, kCount> {
-    using Super = FixedSparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, Base, kCount>;
+template <typename T, typename TBitBlock, typename HashTraits, uint64_t kCount, typename Base>
+struct FixedSparseHashSetMemory : public FixedSparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, kCount, Base> {
+    using Super = FixedSparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, kCount, Base>;
 
     // sparse vector configure
     using typename Super::SizeType;
@@ -293,9 +293,9 @@ private:
 // inline sparse hash set memory
 namespace skr::container
 {
-template <typename T, typename TBitBlock, typename HashTraits, typename Base, uint64_t kInlineCount, typename Allocator>
-struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, Base, kInlineCount, Allocator> {
-    using Super = InlineSparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, Base, kInlineCount, Allocator>;
+template <typename T, typename TBitBlock, typename HashTraits, uint64_t kInlineCount, typename Base, typename Allocator>
+struct InlineSparseHashSetMemory : public InlineSparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, kInlineCount, Base, Allocator> {
+    using Super = InlineSparseVectorMemory<SparseHashSetStorage<T, typename Base::SizeType, typename HashTraits::HashType>, TBitBlock, kInlineCount, Base, Allocator>;
 
     // sparse data configure
     using typename Super::SizeType;
