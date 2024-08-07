@@ -2,13 +2,17 @@
 #include "SkrRTTR/rttr_traits.hpp"
 #include "SkrRTTR/type.hpp"
 #include "SkrRTTR/rttr_traits.hpp"
+#ifndef __meta__
+    #include "SkrCore/SkrRTTR/iobject.generated.h"
+#endif
 
 // iobject
 namespace skr::rttr
 {
 // TODO. 暂时只有 GUI 在用，修改考虑 GUI 重构即可
 // TODO. 需要对 core 开启 codegen 功能, 因为 core 内部的部分功能也需要依赖 codegen
-struct SKR_CORE_API IObject {
+sreflect_struct("guid": "3740620f-714d-4d78-b47e-095f256ba4a7")
+SKR_CORE_API IObject {
     virtual ~IObject() = default;
 
     //=> IObject API
@@ -71,8 +75,6 @@ struct SKR_CORE_API IObject {
     static void* operator new[](size_t) = delete;
 };
 } // namespace skr::rttr
-
-SKR_RTTR_TYPE(IObject, "19246699-65f8-4c0b-a82e-7886a0cb315d")
 
 // object
 namespace skr::rttr

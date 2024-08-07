@@ -2,11 +2,27 @@ if (is_os("macosx") or is_os("linux")) then
     add_requires("libsdl 2.28.5", {configs = {shared = true}})
 end
 -- add_requires("cpu_features v0.9.0")
-    
+
+target("SkrRTMeta")
+    set_kind("headeronly")
+    codegen_generator({
+        scripts = {
+            -- ecs
+            { file = "meta/ecs/ecs.py" },
+        }, 
+        dep_files = {
+            "meta/**.py",
+            "meta/**.mako"
+        }
+    })
+
 shared_module("SkrRT", "SKR_RUNTIME", engine_version)
     -- dependencies
     public_dependency("SkrTask", engine_version)
     public_dependency("SkrGraphics", engine_version)
+
+    -- meta functional
+    add_deps("SkrRTMeta")
 
     -- link system libs/frameworks
     add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public = true})

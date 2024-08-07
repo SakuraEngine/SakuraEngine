@@ -7,10 +7,9 @@
 #include "SkrRTTR/enum_tools.hpp"
 #include "SkrRTTR/export/stack_proxy.hpp"
 #include "SkrRTTR/export/attribute.hpp"
-// TODO. enable codegen for core
-// #ifndef __meta__
-//     #include "SkrRTTR/export//export_data.generated.h"
-// #endif
+#ifndef __meta__
+    #include "SkrCore/SkrRTTR/export/export_data.generated.h"
+#endif
 
 // utils
 namespace skr::rttr

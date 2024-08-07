@@ -148,3 +148,7 @@ function codegen_component(owner, opt)
             -- ...
         end)
 end
+
+function codegen_generator(opt)
+    add_rules("c++.codegen.generators", opt)
+end

@@ -29,7 +29,28 @@ static_component("SkrArchive", "SkrCore")
 --     add_packages("parallel-hashmap", {public = true, inherit = true})
 --     add_files("src/serde/build.*.cpp")
 
+codegen_component("SkrCore", {api = "SKR_CORE", rootdir = "include"})
+    add_files("include/**.hpp")
+
+target("SkrCoreMeta")
+    set_kind("headeronly")
+    codegen_generator({
+        scripts = {
+            { file = "meta/basic/basic.py" },
+            { file = "meta/rttr/rttr.py" },
+            { file = "meta/serialize/serialize.py" },
+            { file = "meta/proxy/proxy.py" },
+        }, 
+        dep_files = {
+            "meta/**.py",
+            "meta/**.mako"
+        }
+    })
+
 shared_module("SkrCore", "SKR_CORE", engine_version)
+    -- add codegen generator
+    add_deps("SkrCoreMeta")
+    
     -- add source files
     add_packages("parallel-hashmap", {public = true, inherit = true})
     add_deps("SkrProfile", {public = true, inherit = true})

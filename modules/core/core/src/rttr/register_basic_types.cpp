@@ -57,15 +57,15 @@ SKR_EXEC_STATIC_CTOR
     register_type_loader(type_id_of<double>(), &primitive_type_loader<double>);
 
     // IObject
-    register_type_loader(type_id_of<IObject>(), +[](Type* type) {
-        // init type
-        type->init(ETypeCategory::Record);
-        auto& record_data = type->record_data();
+    // register_type_loader(type_id_of<IObject>(), +[](Type* type) {
+    //     // init type
+    //     type->init(ETypeCategory::Record);
+    //     auto& record_data = type->record_data();
 
-        // build
-        RecordBuilder<IObject> builder(&record_data);
-        builder.basic_info();
+    //     // build
+    //     RecordBuilder<IObject> builder(&record_data);
+    //     builder.basic_info();
 
-        //
-    });
+    //     //
+    // });
 };
