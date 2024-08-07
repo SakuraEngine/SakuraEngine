@@ -18,6 +18,23 @@ rule("c++.codegen.generators")
     end)
 rule_end()
 
+--[[ rule options
+{
+    api="XXXX", -- export api name
+    rootdir="include/xxxx", -- root dir of generated files
+}
+-- new options
+{
+    api="XXXX", -- module api name
+    file_groups= {
+        {
+            files="xxx/*.hpp", -- files to apply codegen
+            rootdir="include/xxxx", -- for solve relative path
+        },
+        ...
+    }
+}
+]]
 rule("c++.codegen.meta")
     set_extensions(".h", ".hpp")
     before_build(function (proxy_target, opt)

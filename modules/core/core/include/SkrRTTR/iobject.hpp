@@ -7,6 +7,7 @@
 namespace skr::rttr
 {
 // TODO. 暂时只有 GUI 在用，修改考虑 GUI 重构即可
+// TODO. 需要对 core 开启 codegen 功能, 因为 core 内部的部分功能也需要依赖 codegen
 struct SKR_CORE_API IObject {
     virtual ~IObject() = default;
 
@@ -78,7 +79,7 @@ namespace skr::rttr
 {
 }
 
-// rc
+// rc concepts
 namespace skr::concepts
 {
 // can be used to RC
@@ -106,6 +107,7 @@ struct WRC;
 template <concepts::NotRCObject T>
 struct IWRC;
 
+// reference count for object
 template <concepts::RCObject T>
 struct RC {
     // factory
@@ -161,6 +163,7 @@ private:
     T* _object = nullptr;
 };
 
+// reference count for interface object
 template <concepts::NotRCObject T>
 struct IRC {
     // ctor & dtor
@@ -182,10 +185,13 @@ private:
     T*                    _interface = nullptr;
 };
 
+// weak reference count temp object
 struct WRCCounter {
     ::skr::rttr::IObject* object         = nullptr;
     uint32_t              weak_ref_count = 0;
 };
+
+// weak reference for object
 template <concepts::RCObject T>
 struct WRC {
 
@@ -193,6 +199,7 @@ private:
     WRCCounter* _counter;
 };
 
+// weak reference for interface object
 template <concepts::NotRCObject T>
 struct IWRC {
 

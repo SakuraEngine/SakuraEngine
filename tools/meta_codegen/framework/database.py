@@ -255,3 +255,6 @@ class CodegenDatabase:
             base_record = self.find_record(base_record_name)
             if base_record and self.is_derived(base_record, base):
                 return True
+
+    def is_derived_or_same(self, record: cpp.Record, base: str):
+        return record.name == base or self.is_derived(record, base)
