@@ -40,7 +40,7 @@ EEventSource : uint32_t
 sreflect_struct(
     "guid": "06ecf250-43e8-44a3-b1e9-b52b1ab53e05"
 )
-Event : virtual public skr::rttr::IObject {
+Event : virtual public skr::rttr::Object {
     SKR_GENERATE_BODY()
     EEventRoutePhase phase  = EEventRoutePhase::None;
     EEventSource     source = EEventSource::None;

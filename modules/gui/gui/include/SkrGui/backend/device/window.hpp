@@ -39,7 +39,7 @@ struct WindowDesc {
 sreflect_interface(
     "guid": "e46f6067-1fbe-41bf-8361-14399bc7054b"
 )
-SKR_GUI_API INativeWindow : virtual public skr::rttr::IObject {
+SKR_GUI_API INativeWindow : virtual public skr::rttr::Object {
     SKR_GENERATE_BODY()
 
     // init view

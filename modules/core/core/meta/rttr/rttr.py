@@ -274,6 +274,7 @@ GUID iobject_get_typeid() const override
     return type_id_of<ThisType>();
 }
 void* iobject_get_head_ptr() const override { return const_cast<void*>((const void*)this); }
+void embedded_rc_delete() override { SkrDelete(this); }
 '''
 
     def generate(self):

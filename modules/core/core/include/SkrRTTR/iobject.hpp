@@ -32,41 +32,26 @@ SKR_CORE_API IObject {
     //      b. 公有特征通过 Proxy 抽取，尽量避免有交集的组合概念，多数情况下并不会发生冲突
     // 带来的局限:
     //  1. interface 无法进行 dynamic_cast，需要通过 IRC 进行，这就意味着纯 interface 指针无法进行回转
-    virtual GUID  iobject_get_typeid() const   = 0;
-    virtual void* iobject_get_head_ptr() const = 0;
-    // virtual uint32_t embedded_rc_add_ref()         = 0;
-    // virtual uint32_t embedded_rc_release_ref()     = 0;
-    // virtual uint32_t embedded_rc_ref_count() const = 0;
-    // virtual void     embedded_rc_delete()          = 0; // TODO. pooling 的释放方式可以由具体实现控制，但是默认的释放方式就固定了，只能使用 skr 的内存管理
+    virtual GUID     iobject_get_typeid() const    = 0;
+    virtual void*    iobject_get_head_ptr() const  = 0;
+    virtual uint32_t embedded_rc_add_ref()         = 0;
+    virtual uint32_t embedded_rc_release_ref()     = 0;
+    virtual uint32_t embedded_rc_ref_count() const = 0;
+    virtual void     embedded_rc_delete()          = 0; // TODO. pooling 的释放方式可以由具体实现控制，但是默认的释放方式就固定了，只能使用 skr 的内存管理
     //=> IObject API
 
     //=> Helper API
     template <typename TO>
-    inline TO* type_cast()
-    {
-        auto  from_type = get_type_from_guid(this->iobject_get_typeid());
-        void* cast_p    = from_type->cast_to(::skr::rttr::type_id_of<TO>(), this->iobject_get_head_ptr());
-        return reinterpret_cast<TO*>(cast_p);
-    }
+    TO* type_cast();
     template <typename TO>
-    inline const TO* type_cast() const
-    {
-        return const_cast<IObject*>(this)->type_cast<TO>();
-    }
+    const TO* type_cast() const;
     template <typename TO>
-    inline const TO* type_cast_fast() const { return type_cast<TO>(); }
+    const TO* type_cast_fast() const;
     template <typename TO>
-    inline TO* type_cast_fast() { return type_cast<TO>(); }
+    TO* type_cast_fast();
     template <typename TO>
-    inline bool type_is() const noexcept
-    {
-        return type_cast<TO>() != nullptr;
-    }
-    inline bool type_is(const GUID& guid) const
-    {
-        auto from_type = get_type_from_guid(this->iobject_get_typeid());
-        return from_type->cast_to(guid, this->iobject_get_head_ptr());
-    }
+    bool type_is() const noexcept;
+    bool type_is(const GUID& guid) const;
     //=> Helper API
 
     // disable default new/delete, please use SkrNewObj/SkrDeleteObj or RC<T> instead
@@ -74,12 +59,61 @@ SKR_CORE_API IObject {
     static void* operator new(size_t)   = delete;
     static void* operator new[](size_t) = delete;
 };
+
+// helper api
+template <typename TO>
+inline TO* IObject::type_cast()
+{
+    auto  from_type = get_type_from_guid(this->iobject_get_typeid());
+    void* cast_p    = from_type->cast_to(::skr::rttr::type_id_of<TO>(), this->iobject_get_head_ptr());
+    return reinterpret_cast<TO*>(cast_p);
+}
+template <typename TO>
+inline const TO* IObject::type_cast() const
+{
+    return const_cast<IObject*>(this)->type_cast<TO>();
+}
+template <typename TO>
+inline const TO* IObject::type_cast_fast() const
+{
+    return type_cast<TO>();
+}
+template <typename TO>
+inline TO* IObject::type_cast_fast()
+{
+    return type_cast<TO>();
+}
+template <typename TO>
+inline bool IObject::type_is() const noexcept
+{
+    return type_cast<TO>() != nullptr;
+}
+inline bool IObject::type_is(const GUID& guid) const
+{
+    auto from_type = get_type_from_guid(this->iobject_get_typeid());
+    return from_type->cast_to(guid, this->iobject_get_head_ptr());
+}
+
 } // namespace skr::rttr
 
 // object
 namespace skr::rttr
 {
-}
+sreflect_struct("guid": "81cd24a8-2749-4437-b832-51dbdeb5059c")
+SKR_CORE_API Object : IObject {
+    SKR_GENERATE_BODY()
+
+    //=> Begin IObject API
+    uint32_t embedded_rc_add_ref() override;
+    uint32_t embedded_rc_release_ref() override;
+    uint32_t embedded_rc_ref_count() const override;
+    // void     embedded_rc_delete() override; impl by object self
+    //=> End IObject API
+
+protected:
+    uint32_t _object_ref_count = 0;
+};
+} // namespace skr::rttr
 
 // rc concepts
 namespace skr::concepts
@@ -169,18 +203,48 @@ private:
 template <concepts::NotRCObject T>
 struct IRC {
     // ctor & dtor
+    IRC();
+    IRC(std::nullptr_t);
+    IRC(T* p_interface, ::skr::rttr::IObject* p_object);
+    ~IRC();
 
     // copy & move
+    template <std::convertible_to<T> U>
+    IRC(const IRC<U>& other);
+    template <std::convertible_to<T> U>
+    IRC(IRC<U>&& other);
 
     // assign & move assign
+    template <std::convertible_to<T> U>
+    IRC& operator=(const IRC<U>& other);
+    template <std::convertible_to<T> U>
+    IRC& operator=(IRC<U>&& other);
+    IRC& operator=(std::nullptr_t);
+    IRC& operator=(T* p);
 
     // release & reset
+    void reset();
+    void reset(T* p_interface, ::skr::rttr::IObject* p_object);
 
     // get
+    T*                    raw_ptr() const;
+    ::skr::rttr::IObject* object() const;
+    uint32_t              ref_count() const;
 
     // validate
+    explicit operator bool() const;
+    bool     is_null() const;
+    bool     is_valid() const;
 
     // cast
+    template <concepts::RCStaticCast<T> U>
+    RC<U> static_cast_to() const;
+    template <concepts::IRCStaticCast<T> U>
+    IRC<U> static_cast_to() const;
+    template <concepts::RCObject U>
+    RC<U> dynamic_cast_to() const;
+    template <concepts::NotRCObject U>
+    IRC<U> dynamic_cast_to() const;
 
 private:
     ::skr::rttr::IObject* _object    = nullptr;
