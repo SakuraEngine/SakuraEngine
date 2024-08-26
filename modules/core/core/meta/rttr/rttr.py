@@ -274,6 +274,7 @@ GUID iobject_get_typeid() const override
     return type_id_of<ThisType>();
 }
 void* iobject_get_head_ptr() const override { return const_cast<void*>((const void*)this); }
+void embedded_rc_delete() override { SkrDelete(this); }
 '''
 
     def generate(self):
@@ -289,11 +290,13 @@ void* iobject_get_head_ptr() const override { return const_cast<void*>((const vo
         for header_db in main_module.header_dbs:
             enums = [enum for enum in header_db.get_enums() if "rttr" in enum.generator_data]
             records = [record for record in header_db.get_records() if "rttr" in record.generator_data]
+            guid_records = [record for record in records if "guid" in record.generator_data]
             self.owner.append_content(
                 header_db.relative_target_header_path,
                 header_template.render(
                     enums=enums,
                     records=records,
+                    guid_records=guid_records,
                     api=f"{main_module.api}_API"
                 )
             )

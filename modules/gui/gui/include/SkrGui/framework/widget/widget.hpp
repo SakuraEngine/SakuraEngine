@@ -11,7 +11,7 @@ namespace skr::gui
 sreflect_struct(
     "guid": "8cc86bf9-a351-4093-9bd4-f54789e72b10"
 )
-SKR_GUI_API Widget : virtual public skr::rttr::IObject {
+SKR_GUI_API Widget : virtual public skr::rttr::Object {
     SKR_GENERATE_BODY()
 
     // build callback

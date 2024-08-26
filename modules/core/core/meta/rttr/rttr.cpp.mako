@@ -20,9 +20,9 @@ SKR_EXEC_STATIC_CTOR
         auto& record_data = type->record_data();
 
         // reserve
-        record_data.bases_data.reserve(${len(record.bases)});
-        record_data.methods.reserve(${len(record.methods)});
-        record_data.fields.reserve(${len(record.fields)});
+        record_data.bases_data.reserve(${len(record_rttr_data.reflect_bases)});
+        record_data.methods.reserve(${len(record_rttr_data.reflect_methods)});
+        record_data.fields.reserve(${len(record_rttr_data.reflect_fields)});
         
         // basic
         RecordBuilder<${record.name}> builder(&record_data);

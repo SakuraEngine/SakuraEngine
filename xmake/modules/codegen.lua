@@ -190,7 +190,7 @@ function _codegen_compile(target, proxy_target, opt)
     end
 
     -- compile meta source
-    local out, err = os.iorunv(_meta.program, argv)
+    local ok, out, err = os.iorunv(_meta.program, argv)
     
     -- dump output
     if out and #out > 0 then
