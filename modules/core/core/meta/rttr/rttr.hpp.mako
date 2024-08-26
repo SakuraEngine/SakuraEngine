@@ -2,7 +2,7 @@
 #include "SkrRTTR/rttr_traits.hpp"
 
 // rttr traits
-%for record in records:
+%for record in guid_records:
 SKR_RTTR_TYPE(${record.name}, "${record.generator_data["guid"]}")
 %endfor
 %for enum in enums:
