@@ -60,11 +60,11 @@ constexpr char32_t get_utf8_maximum_codepoint(const uint64_t codeunit_count)
 constexpr skr_char8 get_utf8_mask(const uint64_t length) noexcept
 {
     constexpr skr_char8 masks[] = {
-        0b00111111_as_char,
-        0b01111111_as_char,
-        0b00011111_as_char,
-        0b00001111_as_char,
-        0b00000111_as_char,
+        static_cast<skr_char8>(0b00111111),
+        static_cast<skr_char8>(0b01111111),
+        static_cast<skr_char8>(0b00011111),
+        static_cast<skr_char8>(0b00001111),
+        static_cast<skr_char8>(0b00000111),
     };
     return masks[length];
 }
@@ -77,7 +77,7 @@ constexpr uint8_t parse_utf8_length(const skr_char8 c) noexcept
 {
     if (c == 0)
         return 1;
-    constexpr skr_char8 mask = 0b10000000_as_char;
+    constexpr skr_char8 mask = static_cast<skr_char8>(0b10000000);
     uint8_t             size = 0;
     uint8_t             v    = c;
     while (v & mask)
@@ -407,17 +407,3 @@ constexpr bool operator==(const skr_char8* lhs, const codepoint& rhs) noexcept
     return rhs == lhs;
 }
 } // namespace skr::container
-
-// literals
-inline namespace literal
-{
-constexpr skr::container::codepoint operator""_cp(const skr::container::skr_char8 c) noexcept
-{
-    return skr::container::codepoint{ c };
-}
-
-constexpr skr::container::codepoint operator""_cp(const char32_t c) noexcept
-{
-    return skr::container::codepoint{ c };
-}
-} // namespace literal
