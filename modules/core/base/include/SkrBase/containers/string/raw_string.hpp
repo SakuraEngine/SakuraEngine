@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrBase/containers/string/string_config.hpp"
+#include "SkrBase/config.h"
 #include "SkrBase/containers/vector/vector.hpp"
 
 namespace skr::container
