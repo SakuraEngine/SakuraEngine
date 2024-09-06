@@ -6,7 +6,24 @@ namespace skr::container
 // TODO. string memory 不能复用 vector memory, 有多种特殊情况:
 //  1. size > capacity, 且 capacity 为 0, 代表是常量串
 //  2. 默认 string 的 memory 为 SSO
+template <typename TS>
 struct StringMemoryBase {
+    using SizeType = TS;
+
+    // getter
+    inline SizeType size() const noexcept { return _size; }
+    inline SizeType capacity() const noexcept { return _capacity; }
+
+    // setter
+    inline void set_size(SizeType value) noexcept { _size = value; }
+
+    // string literals
+    inline bool is_literal() const noexcept { return _size > 0 && _capacity == 0; }
+
+protected:
+    void*    _data     = nullptr;
+    SizeType _size     = 0;
+    SizeType _capacity = 0;
 };
 
 // SSO string memory
