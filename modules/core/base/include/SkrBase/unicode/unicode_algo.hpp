@@ -14,6 +14,7 @@ static constexpr char32_t kUtf16TrailingSurrogateMin    = 0xDC00;
 static constexpr char32_t kUtf16TrailingSurrogateMax    = 0xDFFF;
 static constexpr char32_t kUtf16SurrogateMask           = 0x03FF;
 static constexpr char32_t kBMPMaxCodePoint              = 0xFFFF;
+static constexpr char32_t kSMPBaseCodePoint             = 0x10000;
 
 //==================> utf-8 <==================
 // return maximum code point for given sequence length
@@ -51,6 +52,9 @@ struct UTF8Seq {
     constexpr UTF8Seq(skr_char8 ch_0, skr_char8 ch_1, skr_char8 ch_2);
     constexpr UTF8Seq(skr_char8 ch_0, skr_char8 ch_1, skr_char8 ch_2, skr_char8 ch_3);
 
+    // compare
+    constexpr bool operator==(const UTF8Seq& rhs) const;
+
     // validate
     constexpr bool is_valid() const;
     constexpr      operator bool() const;
@@ -71,6 +75,9 @@ struct UTF16Seq {
     constexpr UTF16Seq(const skr_char16* c_str, uint32_t len);
     constexpr UTF16Seq(skr_char16 ch_0);
     constexpr UTF16Seq(skr_char16 ch_0, skr_char16 ch_1);
+
+    // compare
+    constexpr bool operator==(const UTF16Seq& rhs) const;
 
     // validate
     constexpr bool is_valid() const;
@@ -249,6 +256,17 @@ inline constexpr UTF8Seq::UTF8Seq(skr_char8 ch_0, skr_char8 ch_1, skr_char8 ch_2
 {
 }
 
+// compare
+inline constexpr bool UTF8Seq::operator==(const UTF8Seq& rhs) const
+{
+    if (len != rhs.len) return false;
+    for (uint32_t i = 0; i < len; ++i)
+    {
+        if (data[i] != rhs.data[i]) return false;
+    }
+    return true;
+}
+
 // validate
 inline constexpr bool UTF8Seq::is_valid() const
 {
@@ -296,6 +314,17 @@ inline constexpr UTF16Seq::UTF16Seq(skr_char16 ch_0, skr_char16 ch_1)
     : len(2)
     , data{ ch_0, ch_1 }
 {
+}
+
+// compare
+inline constexpr bool UTF16Seq::operator==(const UTF16Seq& rhs) const
+{
+    if (len != rhs.len) return false;
+    for (uint32_t i = 0; i < len; ++i)
+    {
+        if (data[i] != rhs.data[i]) return false;
+    }
+    return true;
 }
 
 // validate
@@ -366,7 +395,7 @@ inline constexpr skr_char32 utf16_to_utf32(UTF16Seq seq)
     // [110110]9876543210 |||||||||| high surrogate
     //            [110111]9876543210 low  surrogate
     return seq.len == 1 ? seq[0] :
-                          ((seq[0] & kUtf16SurrogateMask) << 10) + (seq[1] & kUtf16SurrogateMask);
+                          ((seq[0] & kUtf16SurrogateMask) << 10) + (seq[1] & kUtf16SurrogateMask) + kSMPBaseCodePoint;
 }
 inline constexpr UTF8Seq utf32_to_utf8(skr_char32 ch)
 {
@@ -401,7 +430,7 @@ inline constexpr UTF16Seq utf32_to_utf16(skr_char32 ch)
     return ch <= kBMPMaxCodePoint ?
            UTF16Seq{ static_cast<skr_char16>(ch) } :
            UTF16Seq{
-               static_cast<char16_t>((ch >> 10) + kUtf16LeadingSurrogateHeader),
+               static_cast<char16_t>(((ch - kSMPBaseCodePoint) >> 10) + kUtf16LeadingSurrogateHeader),
                static_cast<char16_t>((ch & kUtf16SurrogateMask) + kUtf16TrailingSurrogateHeader),
            };
 }
