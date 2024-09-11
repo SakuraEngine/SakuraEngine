@@ -103,3 +103,4 @@ inline constexpr bool is_power_of_2(T value) noexcept
     static_assert(std::is_integral_v<T>);
     return value && !(value & (value - 1));
 }
+} // namespace skr

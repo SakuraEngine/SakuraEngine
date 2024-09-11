@@ -1531,6 +1531,8 @@ struct ContainerTraits<Vector<Memory>> {
     constexpr static bool has_size         = true; // size()
     constexpr static bool is_iterable      = true; // begin(), end()
 
+    using ElementType = typename Memory::DataType;
+
     static inline const typename Vector<Memory>::DataType* data(const Vector<Memory>& vec) { return vec.data(); }
     static inline typename Vector<Memory>::DataType*       data(Vector<Memory>& vec) { return vec.data(); }
     static inline size_t                                   size(const Vector<Memory>& vec) { return vec.size(); }

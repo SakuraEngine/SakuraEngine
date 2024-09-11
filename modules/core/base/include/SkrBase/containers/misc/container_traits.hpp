@@ -10,6 +10,8 @@ struct ContainerTraits {
     constexpr static bool is_linear_memory = false; // data(), size()
     constexpr static bool has_size         = false; // size()
     constexpr static bool is_iterable      = false; // begin(), end()
+
+    using ElementType = void;
 };
 
 template <typename T>
@@ -17,6 +19,8 @@ struct ContainerTraits<std::initializer_list<T>> {
     constexpr static bool is_linear_memory = true; // data(), size()
     constexpr static bool has_size         = true; // size()
     constexpr static bool is_iterable      = true; // begin(), end()
+
+    using ElementType = T;
 
     static inline const T* data(const std::initializer_list<T>& init) { return init.begin(); }
     static inline size_t   size(const std::initializer_list<T>& init) { return init.size(); }
@@ -30,6 +34,8 @@ struct ContainerTraits<std::array<T, kSize>> {
     constexpr static bool is_linear_memory = true; // data(), size()
     constexpr static bool has_size         = true; // size()
     constexpr static bool is_iterable      = true; // begin(), end()
+
+    using ElementType = T;
 
     static inline const T* data(const std::array<T, kSize>& arr) { return arr.data(); }
     static inline T*       data(std::array<T, kSize>& arr) { return arr.data(); }

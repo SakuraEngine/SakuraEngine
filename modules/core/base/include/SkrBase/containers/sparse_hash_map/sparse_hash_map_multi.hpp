@@ -709,6 +709,8 @@ struct ContainerTraits<MultiSparseHashMap<Memory>> {
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()
 
+    using ElementType = typename Memory::DataType;
+
     static inline size_t size(const MultiSparseHashMap<Memory>& container) { return container.size(); }
 
     inline static typename MultiSparseHashMap<Memory>::StlIt  begin(MultiSparseHashMap<Memory>& set) { return set.begin(); }

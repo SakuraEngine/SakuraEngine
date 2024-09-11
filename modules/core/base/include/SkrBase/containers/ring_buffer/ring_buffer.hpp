@@ -766,6 +766,8 @@ struct ContainerTraits<RingBuffer<Memory>> {
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()
 
+    using ElementType = typename Memory::DataType;
+
     static inline size_t size(const RingBuffer<Memory>& container) { return container.size(); }
 
     inline static typename RingBuffer<Memory>::StlIt  begin(RingBuffer<Memory>& container) { return container.begin(); }

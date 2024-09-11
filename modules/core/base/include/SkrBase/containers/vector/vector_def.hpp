@@ -12,8 +12,7 @@ struct VectorDataRef {
     using SizeType = TS;
 
     // ctor
-    SKR_INLINE
-    VectorDataRef() = default;
+    SKR_INLINE VectorDataRef() = default;
     SKR_INLINE VectorDataRef(DataType* ptr, SizeType index)
         : _ptr(ptr)
         , _index(index)

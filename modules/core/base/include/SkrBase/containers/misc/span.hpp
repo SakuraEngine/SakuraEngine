@@ -227,6 +227,8 @@ struct ContainerTraits<Span<T, TSize, Extent>> {
     constexpr static bool has_size         = true; // size()
     constexpr static bool is_iterable      = true; // begin(), end()
 
+    using ElementType = T;
+
     static inline const typename Span<T, TSize, Extent>::DataType* data(const Span<T, TSize, Extent>& container) { return container.data(); }
     static inline typename Span<T, TSize, Extent>::DataType*       data(Span<T, TSize, Extent>& container) { return container.data(); }
     static inline size_t                                           size(const Span<T, TSize, Extent>& container) { return container.size(); }

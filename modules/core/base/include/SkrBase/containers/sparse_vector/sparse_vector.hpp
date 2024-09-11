@@ -1404,6 +1404,8 @@ struct ContainerTraits<SparseVector<Memory>> {
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()
 
+    using ElementType = typename Memory::DataType;
+
     static inline size_t size(const SparseVector<Memory>& vec) { return vec.size(); }
 
     static inline auto begin(const SparseVector<Memory>& vec) noexcept { return vec.begin(); }

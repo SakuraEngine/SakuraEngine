@@ -818,6 +818,8 @@ struct ContainerTraits<SparseHashSet<Memory>> {
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()
 
+    using ElementType = typename Memory::DataType;
+
     static inline size_t size(const SparseHashSet<Memory>& container) { return container.size(); }
 
     inline static typename SparseHashSet<Memory>::StlIt  begin(SparseHashSet<Memory>& container) { return container.begin(); }
