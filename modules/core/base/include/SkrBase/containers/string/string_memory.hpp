@@ -4,6 +4,8 @@
 #include "SkrBase/memory.hpp"
 #include "SkrBase/misc/debug.h"
 
+// TODO. literal 操作 API
+//  1. literal 与 COW 视为同类，采取主动标记（set_literal）和主动触发 copy（pre_modify）来切换形态
 namespace skr::container
 {
 template <typename TS, uint64_t SSOSize = 31>
