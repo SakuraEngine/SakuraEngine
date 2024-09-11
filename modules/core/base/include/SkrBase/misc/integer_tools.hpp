@@ -93,3 +93,13 @@ inline constexpr T npos_of = static_cast<T>(-1);
 template <typename T>
 inline constexpr T max_size_of = std::is_signed_v<T> ? std::numeric_limits<T>::max() : std::numeric_limits<T>::max() - 1;
 } // namespace skr
+
+// power of 2
+namespace skr
+{
+template <typename T>
+inline constexpr bool is_power_of_2(T value) noexcept
+{
+    static_assert(std::is_integral_v<T>);
+    return value && !(value & (value - 1));
+}
