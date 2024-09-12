@@ -321,6 +321,35 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
         }
     }
 
+    // literal
+    inline void set_literal(const DataType* data, SizeType len) noexcept
+    {
+        // clean up
+        clear();
+        free();
+        Base::_reset_heap();
+
+        // setup data
+        Base::_data     = const_cast<DataType*>(data);
+        Base::_size     = len;
+        Base::_capacity = 0;
+    }
+    inline void pre_modify() noexcept
+    {
+        if (Base::is_literal())
+        {
+            DataType* literal_data = Base::_data;
+            DataType* literal_size = Base::_size;
+
+            // realloc memory
+            realloc(literal_size);
+
+            // copy data
+            memory::copy(data(), literal_data, literal_size);
+            Base::set_size(literal_size);
+        }
+    }
+
     // getter
     inline DataType*       data() noexcept { return reinterpret_cast<DataType*>(Base::_raw_data()); }
     inline const DataType* data() const noexcept { return reinterpret_cast<DataType*>(Base::_raw_data()); }

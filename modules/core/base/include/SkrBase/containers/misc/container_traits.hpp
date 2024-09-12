@@ -10,6 +10,8 @@ struct ContainerTraits {
     constexpr static bool is_linear_memory = false; // data(), size()
     constexpr static bool has_size         = false; // size()
     constexpr static bool is_iterable      = false; // begin(), end()
+    // TODO. append able append()
+    // TODO. reserve able reserve()
 
     using ElementType = void;
 };
@@ -47,6 +49,7 @@ struct ContainerTraits<std::array<T, kSize>> {
     static inline auto end(std::array<T, kSize>& arr) { return arr.end(); }
 };
 
+// TODO. add ElementType check for better error message
 template <typename T>
 concept EachAbleContainer = ContainerTraits<std::decay_t<T>>::is_linear_memory || ContainerTraits<std::decay_t<T>>::is_iterable;
 template <typename T>
