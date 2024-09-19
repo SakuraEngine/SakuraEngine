@@ -87,13 +87,13 @@ struct BitCursor {
     inline void reset_to_end() { _bit_index = _bit_size - 1; }
 
     // reach & validate
-    bool reach_end() const { return _bit_index == _bit_size; }
-    bool reach_begin() const { return _bit_index == npos; }
-    bool is_valid() const { return !(reach_end() || reach_begin()); }
+    inline bool reach_end() const { return _bit_index == _bit_size; }
+    inline bool reach_begin() const { return _bit_index == npos; }
+    inline bool is_valid() const { return !(reach_end() || reach_begin()); }
 
     // compare
-    bool operator==(const BitCursor& rhs) const { return _data == rhs._data && _bit_index == rhs._bit_index; }
-    bool operator!=(const BitCursor& rhs) const { return !(*this == rhs); }
+    inline bool operator==(const BitCursor& rhs) const { return _data == rhs._data && _bit_index == rhs._bit_index; }
+    inline bool operator!=(const BitCursor& rhs) const { return !(*this == rhs); }
 
 private:
     DataType* _data;
@@ -202,13 +202,13 @@ struct TrueBitCursor {
     }
 
     // reach & validate
-    bool reach_end() const { return _bit_index == _bit_size; }
-    bool reach_begin() const { return _bit_index == npos; }
-    bool is_valid() const { return !(reach_end() || reach_begin()); }
+    inline bool reach_end() const { return _bit_index == _bit_size; }
+    inline bool reach_begin() const { return _bit_index == npos; }
+    inline bool is_valid() const { return !(reach_end() || reach_begin()); }
 
     // compare
-    bool operator==(const TrueBitCursor& rhs) const { return _data == rhs._data && _bit_index == rhs._bit_index; }
-    bool operator!=(const TrueBitCursor& rhs) const { return !(*this == rhs); }
+    inline bool operator==(const TrueBitCursor& rhs) const { return _data == rhs._data && _bit_index == rhs._bit_index; }
+    inline bool operator!=(const TrueBitCursor& rhs) const { return !(*this == rhs); }
 
 protected:
     inline void _reset_to_end_overflow() { _bit_index = _bit_size; }
