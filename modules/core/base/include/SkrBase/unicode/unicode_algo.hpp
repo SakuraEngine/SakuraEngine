@@ -51,6 +51,8 @@ constexpr uint64_t utf16_codepoint_index(const skr_char16* seq, uint64_t size);
 constexpr uint64_t utf16_adjust_index_to_head(const skr_char16* seq, uint64_t size, uint64_t index, uint64_t& adjusted_index);
 
 //==================> sequence <==================
+struct UTF8Seq;
+struct UTF16Seq;
 struct UTF8Seq {
     // ctor
     constexpr UTF8Seq();
@@ -60,8 +62,15 @@ struct UTF8Seq {
     constexpr UTF8Seq(skr_char8 ch_0, skr_char8 ch_1, skr_char8 ch_2);
     constexpr UTF8Seq(skr_char8 ch_0, skr_char8 ch_1, skr_char8 ch_2, skr_char8 ch_3);
 
+    // cast
+    constexpr UTF8Seq(const UTF16Seq& seq);
+    constexpr UTF8Seq(skr_char32 ch);
+    constexpr operator skr_char32() const;
+
     // factory
     constexpr static UTF8Seq Bad(skr_char8 bad_ch);
+    constexpr static UTF8Seq ParseUTF8(const skr_char8* seq, uint64_t size, uint64_t index, uint64_t& adjusted_index);
+    constexpr static UTF8Seq ParseUTF16(const skr_char16* c_str, uint64_t size, uint64_t index, uint64_t& adjusted_index);
 
     // compare
     constexpr bool operator==(const UTF8Seq& rhs) const;
@@ -88,8 +97,15 @@ struct UTF16Seq {
     constexpr UTF16Seq(skr_char16 ch_0);
     constexpr UTF16Seq(skr_char16 ch_0, skr_char16 ch_1);
 
+    // cast
+    constexpr UTF16Seq(const UTF8Seq& seq);
+    constexpr UTF16Seq(skr_char32 ch);
+    constexpr operator skr_char32() const;
+
     // factory
     constexpr static UTF16Seq Bad(skr_char16 bad_ch);
+    constexpr static UTF16Seq ParseUTF8(const skr_char8* seq, uint64_t size, uint64_t index, uint64_t& adjusted_index);
+    constexpr static UTF16Seq ParseUTF16(const skr_char16* seq, uint64_t size, uint64_t index, uint64_t& adjusted_index);
 
     // compare
     constexpr bool operator==(const UTF16Seq& rhs) const;
@@ -109,18 +125,6 @@ public:
     skr_char16 bad_data           = {};
     uint8_t    len                = 0;
 };
-
-//==================> convert <==================
-constexpr UTF16Seq   utf8_to_utf16(UTF8Seq seq);
-constexpr skr_char32 utf8_to_utf32(UTF8Seq seq);
-constexpr UTF8Seq    utf16_to_utf8(UTF16Seq seq);
-constexpr skr_char32 utf16_to_utf32(UTF16Seq seq);
-constexpr UTF8Seq    utf32_to_utf8(skr_char32 ch);
-constexpr UTF16Seq   utf32_to_utf16(skr_char32 ch);
-
-//==================> parse code seq <==================
-constexpr UTF8Seq  utf8_parse_seq(const skr_char8* seq, uint64_t size, uint64_t index, uint64_t& seq_index);
-constexpr UTF16Seq utf16_parse_seq(const skr_char16* seq, uint64_t size, uint64_t index, uint64_t& seq_index);
 } // namespace skr
 
 namespace skr
@@ -383,6 +387,63 @@ inline constexpr UTF8Seq::UTF8Seq(skr_char8 ch_0, skr_char8 ch_1, skr_char8 ch_2
     , len(4)
 {
 }
+inline constexpr UTF8Seq::UTF8Seq(const UTF16Seq& seq)
+{
+    skr_char32 u32_ch = static_cast<skr_char32>(seq);
+    *this             = u32_ch;
+}
+inline constexpr UTF8Seq::UTF8Seq(skr_char32 ch)
+{
+    if (ch <= utf8_maximum_code_point(1))
+    {
+        data[0] = static_cast<skr_char8>(ch);
+        len     = 1;
+    }
+    else if (ch <= utf8_maximum_code_point(2))
+    {
+        data[0] = static_cast<skr_char8>((ch >> 6) | 0xc0);
+        data[1] = static_cast<skr_char8>((ch & utf8_mask(0)) | 0x80);
+        len     = 2;
+    }
+    else if (ch <= utf8_maximum_code_point(3))
+    {
+        data[0] = static_cast<skr_char8>((ch >> 12) | 0xe0);
+        data[1] = static_cast<skr_char8>(((ch >> 6) & utf8_mask(0)) | 0x80);
+        data[2] = static_cast<skr_char8>((ch & utf8_mask(0)) | 0x80);
+        len     = 3;
+    }
+    else
+    {
+        data[0] = static_cast<skr_char8>((ch >> 18) | 0xf0);
+        data[1] = static_cast<skr_char8>(((ch >> 12) & utf8_mask(0)) | 0x80);
+        data[2] = static_cast<skr_char8>(((ch >> 6) & utf8_mask(0)) | 0x80);
+        data[3] = static_cast<skr_char8>((ch & utf8_mask(0)) | 0x80);
+        len     = 4;
+    }
+}
+inline constexpr UTF8Seq::operator skr_char32() const
+{
+    if (is_valid())
+    {
+        const auto         lead_mask     = utf8_mask(len);
+        constexpr auto     trailing_mask = utf8_mask(0);
+        constexpr uint64_t trailing_bits = 6;
+
+        const auto ch_0   = data[0];
+        char32_t   result = static_cast<char32_t>(ch_0 & lead_mask);
+        for (uint32_t i = 1; i < len; ++i)
+        {
+            const auto ch_i = data[i];
+            result <<= trailing_bits;
+            result |= ch_i & trailing_mask;
+        }
+        return result;
+    }
+    else
+    {
+        return 0;
+    }
+}
 
 // factory
 inline constexpr UTF8Seq UTF8Seq::Bad(skr_char8 bad_ch)
@@ -390,6 +451,22 @@ inline constexpr UTF8Seq UTF8Seq::Bad(skr_char8 bad_ch)
     UTF8Seq result{};
     result.bad_data = bad_ch;
     return result;
+}
+inline constexpr UTF8Seq UTF8Seq::ParseUTF8(const skr_char8* seq, uint64_t size, uint64_t index, uint64_t& adjusted_index)
+{
+    // bad input
+    if (!seq) return {};
+    if (index >= size) return {};
+
+    // adjust seq index
+    auto seq_len = utf8_adjust_index_to_head(seq, size, index, adjusted_index);
+
+    return seq_len ? UTF8Seq{ seq + adjusted_index, static_cast<uint8_t>(seq_len) } :
+                     UTF8Seq::Bad(seq[adjusted_index]);
+}
+inline constexpr UTF8Seq UTF8Seq::ParseUTF16(const skr_char16* seq, uint64_t size, uint64_t index, uint64_t& adjusted_index)
+{
+    return { UTF16Seq::ParseUTF16(seq, size, index, adjusted_index) };
 }
 
 // compare
@@ -452,12 +529,59 @@ inline constexpr UTF16Seq::UTF16Seq(skr_char16 ch_0, skr_char16 ch_1)
 {
 }
 
+// cast
+inline constexpr UTF16Seq::UTF16Seq(const UTF8Seq& seq)
+{
+    skr_char32 u32_ch = static_cast<skr_char32>(seq);
+    *this             = u32_ch;
+}
+inline constexpr UTF16Seq::UTF16Seq(skr_char32 ch)
+{
+    if (ch <= kBMPMaxCodePoint)
+    {
+        data[0] = static_cast<skr_char16>(ch);
+        len     = 1;
+    }
+    else
+    {
+        data[0] = static_cast<char16_t>(((ch - kSMPBaseCodePoint) >> 10) + kUtf16LeadingSurrogateHeader);
+        data[1] = static_cast<char16_t>((ch & kUtf16SurrogateMask) + kUtf16TrailingSurrogateHeader);
+        len     = 2;
+    }
+}
+inline constexpr UTF16Seq::operator skr_char32() const
+{
+    //                  1         0
+    //         9876543210 9876543210
+    //         |||||||||| ||||||||||
+    // [110110]9876543210 |||||||||| high surrogate
+    //            [110111]9876543210 low  surrogate
+    return len == 1 ? data[0] :
+                      ((data[0] & kUtf16SurrogateMask) << 10) + (data[1] & kUtf16SurrogateMask) + kSMPBaseCodePoint;
+}
+
 // factory
 inline constexpr UTF16Seq UTF16Seq::Bad(skr_char16 bad_ch)
 {
     UTF16Seq result{};
     result.bad_data = bad_ch;
     return result;
+}
+inline constexpr UTF16Seq UTF16Seq::ParseUTF8(const skr_char8* seq, uint64_t size, uint64_t index, uint64_t& adjusted_index)
+{
+    return { UTF8Seq::ParseUTF8(seq, size, index, adjusted_index) };
+}
+inline constexpr UTF16Seq UTF16Seq::ParseUTF16(const skr_char16* seq, uint64_t size, uint64_t index, uint64_t& adjusted_index)
+{
+    // bad input
+    if (!seq) return {};
+    if (index >= size) return {};
+
+    // adjust seq index
+    auto seq_len = utf16_adjust_index_to_head(seq, size, index, adjusted_index);
+
+    return seq_len ? UTF16Seq{ seq + adjusted_index, static_cast<uint8_t>(seq_len) } :
+                     UTF16Seq::Bad(seq[adjusted_index]);
 }
 
 // compare
@@ -497,111 +621,5 @@ inline constexpr skr_char16& UTF16Seq::operator[](uint32_t index)
 inline constexpr skr_char16 UTF16Seq::operator[](uint32_t index) const
 {
     return data[index];
-}
-
-//==================> convert <==================
-inline constexpr UTF16Seq utf8_to_utf16(UTF8Seq seq)
-{
-    return utf32_to_utf16(utf8_to_utf32(seq));
-}
-inline constexpr skr_char32 utf8_to_utf32(UTF8Seq seq)
-{
-    if (seq)
-    {
-        const auto         lead_mask     = utf8_mask(seq.len);
-        constexpr auto     trailing_mask = utf8_mask(0);
-        constexpr uint64_t trailing_bits = 6;
-
-        const auto ch_0   = seq[0];
-        char32_t   result = static_cast<char32_t>(ch_0 & lead_mask);
-        for (uint32_t i = 1; i < seq.len; ++i)
-        {
-            const auto ch_i = seq[i];
-            result <<= trailing_bits;
-            result |= ch_i & trailing_mask;
-        }
-        return result;
-    }
-    else
-    {
-        return 0;
-    }
-}
-inline constexpr UTF8Seq utf16_to_utf8(UTF16Seq seq)
-{
-    return utf32_to_utf8(utf16_to_utf32(seq));
-}
-inline constexpr skr_char32 utf16_to_utf32(UTF16Seq seq)
-{
-    //                  1         0
-    //         9876543210 9876543210
-    //         |||||||||| ||||||||||
-    // [110110]9876543210 |||||||||| high surrogate
-    //            [110111]9876543210 low  surrogate
-    return seq.len == 1 ? seq[0] :
-                          ((seq[0] & kUtf16SurrogateMask) << 10) + (seq[1] & kUtf16SurrogateMask) + kSMPBaseCodePoint;
-}
-inline constexpr UTF8Seq utf32_to_utf8(skr_char32 ch)
-{
-    if (ch <= utf8_maximum_code_point(1))
-    {
-        return { static_cast<skr_char8>(ch) };
-    }
-    if (ch <= utf8_maximum_code_point(2))
-    {
-        return {
-            static_cast<skr_char8>((ch >> 6) | 0xc0),
-            static_cast<skr_char8>((ch & utf8_mask(0)) | 0x80),
-        };
-    }
-    if (ch <= utf8_maximum_code_point(3))
-    {
-        return {
-            static_cast<skr_char8>((ch >> 12) | 0xe0),
-            static_cast<skr_char8>(((ch >> 6) & utf8_mask(0)) | 0x80),
-            static_cast<skr_char8>((ch & utf8_mask(0)) | 0x80)
-        };
-    }
-    return {
-        static_cast<skr_char8>((ch >> 18) | 0xf0),
-        static_cast<skr_char8>(((ch >> 12) & utf8_mask(0)) | 0x80),
-        static_cast<skr_char8>(((ch >> 6) & utf8_mask(0)) | 0x80),
-        static_cast<skr_char8>((ch & utf8_mask(0)) | 0x80)
-    };
-}
-inline constexpr UTF16Seq utf32_to_utf16(skr_char32 ch)
-{
-    return ch <= kBMPMaxCodePoint ?
-           UTF16Seq{ static_cast<skr_char16>(ch) } :
-           UTF16Seq{
-               static_cast<char16_t>(((ch - kSMPBaseCodePoint) >> 10) + kUtf16LeadingSurrogateHeader),
-               static_cast<char16_t>((ch & kUtf16SurrogateMask) + kUtf16TrailingSurrogateHeader),
-           };
-}
-
-//==================> parse code seq <==================
-inline constexpr UTF8Seq utf8_parse_seq(const skr_char8* seq, uint64_t size, uint64_t index, uint64_t& seq_index)
-{
-    // bad input
-    if (!seq) return {};
-    if (index >= size) return {};
-
-    // adjust seq index
-    auto seq_len = utf8_adjust_index_to_head(seq, size, index, seq_index);
-
-    return seq_len ? UTF8Seq{ seq + seq_index, static_cast<uint8_t>(seq_len) } :
-                     UTF8Seq::Bad(seq[seq_index]);
-}
-inline constexpr UTF16Seq utf16_parse_seq(const skr_char16* seq, uint64_t size, uint64_t index, uint64_t& seq_index)
-{
-    // bad input
-    if (!seq) return {};
-    if (index >= size) return {};
-
-    // adjust seq index
-    auto seq_len = utf16_adjust_index_to_head(seq, size, index, seq_index);
-
-    return seq_len ? UTF16Seq{ seq + seq_index, static_cast<uint8_t>(seq_len) } :
-                     UTF16Seq::Bad(seq[seq_index]);
 }
 } // namespace skr

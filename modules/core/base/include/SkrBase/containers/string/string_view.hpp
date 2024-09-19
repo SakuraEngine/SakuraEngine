@@ -91,6 +91,11 @@ struct U8StringView {
     constexpr U8StringView trim_start(const U8StringView& characters = u8" \t") const;
     constexpr U8StringView trim_end(const U8StringView& characters = u8" \t") const;
 
+    // trim invalid
+    constexpr U8StringView trim_invalid() const;
+    constexpr U8StringView trim_invalid_start() const;
+    constexpr U8StringView trim_invalid_end() const;
+
     // split
     template <typename Buffer>
     constexpr SizeType split(Buffer& out, const U8StringView& delimiter, SizeType limit = npos) const;

@@ -82,10 +82,10 @@ TEST_CASE("Test Unicode")
             const auto test_str = u8"🐓";
 
             uint64_t   seq_index_0, seq_index_1, seq_index_2, seq_index_3;
-            const auto seq_0 = utf8_parse_seq(test_str, 4, 0, seq_index_0);
-            const auto seq_1 = utf8_parse_seq(test_str, 4, 1, seq_index_1);
-            const auto seq_2 = utf8_parse_seq(test_str, 4, 2, seq_index_2);
-            const auto seq_3 = utf8_parse_seq(test_str, 4, 3, seq_index_3);
+            const auto seq_0 = UTF8Seq::ParseUTF8(test_str, 4, 0, seq_index_0);
+            const auto seq_1 = UTF8Seq::ParseUTF8(test_str, 4, 1, seq_index_1);
+            const auto seq_2 = UTF8Seq::ParseUTF8(test_str, 4, 2, seq_index_2);
+            const auto seq_3 = UTF8Seq::ParseUTF8(test_str, 4, 3, seq_index_3);
 
             REQUIRE(seq_0.is_valid());
             REQUIRE(seq_1.is_valid());
@@ -107,9 +107,9 @@ TEST_CASE("Test Unicode")
             const auto test_str = u8"鸡🐓";
 
             uint64_t   seq_index_bad_head, seq_index_bad_tail, seq_index_overflow;
-            const auto seq_bad_head = utf8_parse_seq(test_str + 1, 6, 0, seq_index_bad_head);
-            const auto seq_bad_tail = utf8_parse_seq(test_str, 6, 5, seq_index_bad_tail);
-            const auto seq_overflow = utf8_parse_seq(test_str, 6, 6, seq_index_overflow);
+            const auto seq_bad_head = UTF8Seq::ParseUTF8(test_str + 1, 6, 0, seq_index_bad_head);
+            const auto seq_bad_tail = UTF8Seq::ParseUTF8(test_str, 6, 5, seq_index_bad_tail);
+            const auto seq_overflow = UTF8Seq::ParseUTF8(test_str, 6, 6, seq_index_overflow);
 
             REQUIRE_FALSE(seq_bad_head.is_valid());
             REQUIRE_FALSE(seq_bad_tail.is_valid());
@@ -129,8 +129,8 @@ TEST_CASE("Test Unicode")
             const auto test_str = u"🐓";
 
             uint64_t   seq_index_0, seq_index_1;
-            const auto seq_0 = utf16_parse_seq(test_str, 2, 0, seq_index_0);
-            const auto seq_1 = utf16_parse_seq(test_str, 2, 1, seq_index_1);
+            const auto seq_0 = UTF16Seq::ParseUTF16(test_str, 2, 0, seq_index_0);
+            const auto seq_1 = UTF16Seq::ParseUTF16(test_str, 2, 1, seq_index_1);
 
             REQUIRE(seq_0.is_valid());
             REQUIRE(seq_1.is_valid());
@@ -146,9 +146,9 @@ TEST_CASE("Test Unicode")
             const auto test_str = u"G🐓";
 
             uint64_t   seq_index_bad_head, seq_index_bad_tail, seq_index_overflow;
-            const auto seq_bad_head = utf16_parse_seq(test_str + 2, 1, 0, seq_index_bad_head);
-            const auto seq_bad_tail = utf16_parse_seq(test_str, 2, 1, seq_index_bad_tail);
-            const auto seq_overflow = utf16_parse_seq(test_str, 3, 3, seq_index_overflow);
+            const auto seq_bad_head = UTF16Seq::ParseUTF16(test_str + 2, 1, 0, seq_index_bad_head);
+            const auto seq_bad_tail = UTF16Seq::ParseUTF16(test_str, 2, 1, seq_index_bad_tail);
+            const auto seq_overflow = UTF16Seq::ParseUTF16(test_str, 3, 3, seq_index_overflow);
 
             REQUIRE_FALSE(seq_bad_head.is_valid());
             REQUIRE_FALSE(seq_bad_tail.is_valid());
@@ -170,55 +170,55 @@ TEST_CASE("Test Unicode")
         const auto u8_2 = u8"Ĝ";
         const auto u8_1 = u8"G";
 
-        const auto u8_4_seq = utf8_parse_seq(u8_4, 4, 0, seq_index);
-        const auto u8_3_seq = utf8_parse_seq(u8_3, 3, 0, seq_index);
-        const auto u8_2_seq = utf8_parse_seq(u8_2, 2, 0, seq_index);
-        const auto u8_1_seq = utf8_parse_seq(u8_1, 1, 0, seq_index);
+        const auto u8_4_seq = UTF8Seq::ParseUTF8(u8_4, 4, 0, seq_index);
+        const auto u8_3_seq = UTF8Seq::ParseUTF8(u8_3, 3, 0, seq_index);
+        const auto u8_2_seq = UTF8Seq::ParseUTF8(u8_2, 2, 0, seq_index);
+        const auto u8_1_seq = UTF8Seq::ParseUTF8(u8_1, 1, 0, seq_index);
 
         const auto u16_4 = u"🐓";
         const auto u16_3 = u"鸡";
         const auto u16_2 = u"Ĝ";
         const auto u16_1 = u"G";
 
-        const auto u16_4_seq = utf16_parse_seq(u16_4, 2, 0, seq_index);
-        const auto u16_3_seq = utf16_parse_seq(u16_3, 1, 0, seq_index);
-        const auto u16_2_seq = utf16_parse_seq(u16_2, 1, 0, seq_index);
-        const auto u16_1_seq = utf16_parse_seq(u16_1, 1, 0, seq_index);
+        const auto u16_4_seq = UTF16Seq::ParseUTF16(u16_4, 2, 0, seq_index);
+        const auto u16_3_seq = UTF16Seq::ParseUTF16(u16_3, 1, 0, seq_index);
+        const auto u16_2_seq = UTF16Seq::ParseUTF16(u16_2, 1, 0, seq_index);
+        const auto u16_1_seq = UTF16Seq::ParseUTF16(u16_1, 1, 0, seq_index);
 
         const auto u32_4 = U'🐓';
         const auto u32_3 = U'鸡';
         const auto u32_2 = U'Ĝ';
         const auto u32_1 = U'G';
 
-        REQUIRE_EQ(utf8_to_utf16(u8_4_seq), u16_4_seq);
-        REQUIRE_EQ(utf8_to_utf16(u8_3_seq), u16_3_seq);
-        REQUIRE_EQ(utf8_to_utf16(u8_2_seq), u16_2_seq);
-        REQUIRE_EQ(utf8_to_utf16(u8_1_seq), u16_1_seq);
+        REQUIRE_EQ(UTF16Seq(u8_4_seq), u16_4_seq);
+        REQUIRE_EQ(UTF16Seq(u8_3_seq), u16_3_seq);
+        REQUIRE_EQ(UTF16Seq(u8_2_seq), u16_2_seq);
+        REQUIRE_EQ(UTF16Seq(u8_1_seq), u16_1_seq);
 
-        REQUIRE_EQ(utf8_to_utf32(u8_4_seq), u32_4);
-        REQUIRE_EQ(utf8_to_utf32(u8_3_seq), u32_3);
-        REQUIRE_EQ(utf8_to_utf32(u8_2_seq), u32_2);
-        REQUIRE_EQ(utf8_to_utf32(u8_1_seq), u32_1);
+        REQUIRE_EQ(skr_char32(u8_4_seq), u32_4);
+        REQUIRE_EQ(skr_char32(u8_3_seq), u32_3);
+        REQUIRE_EQ(skr_char32(u8_2_seq), u32_2);
+        REQUIRE_EQ(skr_char32(u8_1_seq), u32_1);
 
-        REQUIRE_EQ(utf16_to_utf8(u16_4_seq), u8_4_seq);
-        REQUIRE_EQ(utf16_to_utf8(u16_3_seq), u8_3_seq);
-        REQUIRE_EQ(utf16_to_utf8(u16_2_seq), u8_2_seq);
-        REQUIRE_EQ(utf16_to_utf8(u16_1_seq), u8_1_seq);
+        REQUIRE_EQ(UTF8Seq(u16_4_seq), u8_4_seq);
+        REQUIRE_EQ(UTF8Seq(u16_3_seq), u8_3_seq);
+        REQUIRE_EQ(UTF8Seq(u16_2_seq), u8_2_seq);
+        REQUIRE_EQ(UTF8Seq(u16_1_seq), u8_1_seq);
 
-        REQUIRE_EQ(utf16_to_utf32(u16_4_seq), u32_4);
-        REQUIRE_EQ(utf16_to_utf32(u16_3_seq), u32_3);
-        REQUIRE_EQ(utf16_to_utf32(u16_2_seq), u32_2);
-        REQUIRE_EQ(utf16_to_utf32(u16_1_seq), u32_1);
+        REQUIRE_EQ(skr_char32(u16_4_seq), u32_4);
+        REQUIRE_EQ(skr_char32(u16_3_seq), u32_3);
+        REQUIRE_EQ(skr_char32(u16_2_seq), u32_2);
+        REQUIRE_EQ(skr_char32(u16_1_seq), u32_1);
 
-        REQUIRE_EQ(utf32_to_utf8(u32_4), u8_4_seq);
-        REQUIRE_EQ(utf32_to_utf8(u32_3), u8_3_seq);
-        REQUIRE_EQ(utf32_to_utf8(u32_2), u8_2_seq);
-        REQUIRE_EQ(utf32_to_utf8(u32_1), u8_1_seq);
+        REQUIRE_EQ(UTF8Seq(u32_4), u8_4_seq);
+        REQUIRE_EQ(UTF8Seq(u32_3), u8_3_seq);
+        REQUIRE_EQ(UTF8Seq(u32_2), u8_2_seq);
+        REQUIRE_EQ(UTF8Seq(u32_1), u8_1_seq);
 
-        REQUIRE_EQ(utf32_to_utf16(u32_4), u16_4_seq);
-        REQUIRE_EQ(utf32_to_utf16(u32_3), u16_3_seq);
-        REQUIRE_EQ(utf32_to_utf16(u32_2), u16_2_seq);
-        REQUIRE_EQ(utf32_to_utf16(u32_1), u16_1_seq);
+        REQUIRE_EQ(UTF16Seq(u32_4), u16_4_seq);
+        REQUIRE_EQ(UTF16Seq(u32_3), u16_3_seq);
+        REQUIRE_EQ(UTF16Seq(u32_2), u16_2_seq);
+        REQUIRE_EQ(UTF16Seq(u32_1), u16_1_seq);
     }
 
     SUBCASE("UTF-8 iterator")
