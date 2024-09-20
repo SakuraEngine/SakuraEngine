@@ -3,6 +3,7 @@
 #include "SkrBase/containers/misc/container_traits.hpp"
 #include "SkrBase/containers/string/string_def.hpp"
 #include "SkrBase/unicode/unicode_algo.hpp"
+#include "SkrBase/unicode/unicode_iterator.hpp"
 #include <string>
 #include "SkrBase/misc/debug.h"
 
@@ -16,6 +17,18 @@ struct U8StringView {
 
     // data ref
     using CDataRef = StringDataRef<DataType, SizeType, true>;
+
+    // cursor & iterator
+    // using Cursor  = UTF8Cursor<SizeType, false>;
+    using CCursor = UTF8Cursor<SizeType, true>;
+    // using Iter    = UTF8Iter<SizeType, false>;
+    using CIter = UTF8Iter<SizeType, true>;
+    // using IterInv  = UTF8IterInv<SizeType, true>;
+    using CIterInv = UTF8IterInv<SizeType, true>;
+    // using Range   = UTF8Range<SizeType, false>;
+    using CRange = UTF8Range<SizeType, true>;
+    // using RangeInv  = UTF8RangeInv<SizeType, true>;
+    using CRangeInv = UTF8RangeInv<SizeType, true>;
 
     // helper
     using CharTraits               = std::char_traits<DataType>;
@@ -107,10 +120,16 @@ struct U8StringView {
     constexpr SizeType split(Buffer& out, const U8StringView& delimiter, SizeType limit = npos) const;
 
     // text index
-    SizeType buffer_index_to_text(SizeType index) const;
-    SizeType text_index_to_buffer(SizeType index) const;
+    constexpr SizeType buffer_index_to_text(SizeType index) const;
+    constexpr SizeType text_index_to_buffer(SizeType index) const;
 
-    // TODO. as int/float
+    // cursor & iter
+    CCursor   cursor_begin() const;
+    CCursor   cursor_end() const;
+    CIter     iter() const;
+    CIterInv  iter_inv() const;
+    CRange    range() const;
+    CRangeInv range_inv() const;
 
 private:
     DataType* _data = nullptr;
@@ -444,13 +463,86 @@ inline constexpr U8StringView<TS> U8StringView<TS>::remove_suffix(const U8String
 template <typename TS>
 inline constexpr U8StringView<TS> U8StringView<TS>::trim(const U8StringView& characters) const
 {
+    return trim_start(characters).trim_end(characters);
 }
 template <typename TS>
 inline constexpr U8StringView<TS> U8StringView<TS>::trim_start(const U8StringView& characters) const
 {
+    if (is_empty())
+    {
+        return {};
+    }
+    if (characters.is_empty())
+    {
+        return { *this };
+    }
+
+    for (auto it = iter(); it.has_next(); it.move_next())
+    {
+        if (!characters.contains(it.ref()))
+        {
+            return this->subview(it.index());
+        }
+    }
+    return {};
 }
 template <typename TS>
 inline constexpr U8StringView<TS> U8StringView<TS>::trim_end(const U8StringView& characters) const
 {
+    if (is_empty())
+    {
+        return {};
+    }
+    if (characters.is_empty())
+    {
+        return { *this };
+    }
+
+    for (auto it = iter_inv(); it.has_next(); it.move_next())
+    {
+        if (!characters.contains(it.ref()))
+        {
+            return this->subview(0, it.index() + 1);
+        }
+    }
+}
+
+// trim invalid
+template <typename TS>
+inline constexpr U8StringView<TS> U8StringView<TS>::trim_invalid() const
+{
+    return trim_invalid_start().trim_invalid_end();
+}
+template <typename TS>
+inline constexpr U8StringView<TS> U8StringView<TS>::trim_invalid_start() const
+{
+    if (is_empty())
+    {
+        return {};
+    }
+
+    for (auto it = iter(); it.has_next(); it.move_next())
+    {
+        if (it.ref().is_valid())
+        {
+            return this->subview(it.index());
+        }
+    }
+}
+template <typename TS>
+inline constexpr U8StringView<TS> U8StringView<TS>::trim_invalid_end() const
+{
+    if (is_empty())
+    {
+        return {};
+    }
+
+    for (auto it = iter_inv(); it.has_next(); it.move_next())
+    {
+        if (it.ref().is_valid())
+        {
+            return this->subview(0, it.index() + 1);
+        }
+    }
 }
 } // namespace skr::container

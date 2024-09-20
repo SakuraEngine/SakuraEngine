@@ -7,6 +7,28 @@
 namespace skr
 {
 template <typename TS, bool kConst>
+struct UTF8Cursor;
+template <typename TS, bool kConst>
+using UTF8Iter = container::CursorIter<UTF8Cursor<TS, kConst>, false>;
+template <typename TS, bool kConst>
+using UTF8IterInv = container::CursorIter<UTF8Cursor<TS, kConst>, true>;
+template <typename TS, bool kConst>
+using UTF8Range = container::CursorRange<UTF8Cursor<TS, kConst>, false>;
+template <typename TS, bool kConst>
+using UTF8RangeInv = container::CursorRange<UTF8Cursor<TS, kConst>, true>;
+
+template <typename TS, bool kConst>
+struct UTF16Cursor;
+template <typename TS, bool kConst>
+using UTF16Iter = container::CursorIter<UTF16Cursor<TS, kConst>, false>;
+template <typename TS, bool kConst>
+using UTF16IterInv = container::CursorIter<UTF16Cursor<TS, kConst>, true>;
+template <typename TS, bool kConst>
+using UTF16Range = container::CursorRange<UTF16Cursor<TS, kConst>, false>;
+template <typename TS, bool kConst>
+using UTF16RangeInv = container::CursorRange<UTF16Cursor<TS, kConst>, true>;
+
+template <typename TS, bool kConst>
 struct UTF8Cursor {
     using DataType = std::conditional_t<kConst, const skr_char8, skr_char8>;
     using SizeType = TS;
@@ -15,10 +37,10 @@ struct UTF8Cursor {
     static constexpr SizeType npos = npos_of<SizeType>;
 
     // iter & range
-    using Iter     = container::CursorIter<UTF8Cursor<TS, kConst>, false>;
-    using IterInv  = container::CursorIter<UTF8Cursor<TS, kConst>, true>;
-    using Range    = container::CursorRange<UTF8Cursor<TS, kConst>, false>;
-    using RangeInv = container::CursorRange<UTF8Cursor<TS, kConst>, true>;
+    using Iter     = UTF8Iter<TS, kConst>;
+    using IterInv  = UTF8IterInv<TS, kConst>;
+    using Range    = UTF8Range<TS, kConst>;
+    using RangeInv = UTF8RangeInv<TS, kConst>;
 
     // ctor & copy & move & assign & move assign
     inline UTF8Cursor(DataType* data, SizeType size, SizeType index)
@@ -133,10 +155,10 @@ struct UTF16Cursor {
     static constexpr SizeType npos = npos_of<SizeType>;
 
     // iter & range
-    using Iter     = container::CursorIter<UTF16Cursor<TS, kConst>, false>;
-    using IterInv  = container::CursorIter<UTF16Cursor<TS, kConst>, true>;
-    using Range    = container::CursorRange<UTF16Cursor<TS, kConst>, false>;
-    using RangeInv = container::CursorRange<UTF16Cursor<TS, kConst>, true>;
+    using Iter     = UTF16Iter<TS, kConst>;
+    using IterInv  = UTF16IterInv<TS, kConst>;
+    using Range    = UTF16Range<TS, kConst>;
+    using RangeInv = UTF16RangeInv<TS, kConst>;
 
     // ctor & copy & move & assign & move assign
     inline UTF16Cursor(DataType* data, SizeType size, SizeType index)
@@ -241,5 +263,4 @@ private:
     SizeType  _index   = 0;
     SizeType  _seq_len = 0; // npos means bad sequence
 };
-
 } // namespace skr
