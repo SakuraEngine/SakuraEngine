@@ -16,6 +16,11 @@ target("Analyze.Phase")
             return
         end
 
+        -- filter run script
+        if argv[1] == "l" or argv[1] == "lua" then
+            return
+        end
+
         -- filter analyze task
         if argv[1] == "analyze_project" then
             return
@@ -34,7 +39,14 @@ target("Analyze.Phase")
 
         -- dispatch analyze
         depend.on_changed(function ()
-            print("[Analyze.Phase]: trigger analyze")
+            print("[Analyze.Phase]: trigger analyze with arg: "..table.concat(argv, " "))
+            
+            -- record trigger log
+            local log_file = "build/.gens/analyze_trigger.log"
+            local log_file_content = io.readfile(log_file)
+            local append_log_content = "["..os.date("%Y-%m-%d %H:%M:%S").."]: ".."trigger analyze with arg: "..table.concat(argv, " ").."\n"
+            io.writefile(log_file, log_file_content..append_log_content)
+
             config.save("build/.gens/analyze.conf", {public=true})
             local out, err = os.iorun("xmake analyze_project")
             
