@@ -71,22 +71,27 @@ struct U8StringView {
     constexpr U8StringView subview(SizeType start, SizeType count = npos) const;
 
     // find
+    // TODO. single code point
     constexpr CDataRef find(const U8StringView& pattern) const;
     constexpr CDataRef find_last(const U8StringView& pattern) const;
 
     // contains & count
+    // TODO. single code point
     constexpr bool     contains(const U8StringView& pattern) const;
     constexpr SizeType count(const U8StringView& pattern) const;
 
     // starts & ends
+    // TODO. single code point
     constexpr bool starts_with(const U8StringView& prefix) const;
     constexpr bool ends_with(const U8StringView& suffix) const;
 
     // remove prefix & suffix
+    // TODO. single code point
     constexpr U8StringView remove_prefix(const U8StringView& prefix) const;
     constexpr U8StringView remove_suffix(const U8StringView& suffix) const;
 
     // trim
+    // TODO. single code point
     constexpr U8StringView trim(const U8StringView& characters = u8" \t") const;
     constexpr U8StringView trim_start(const U8StringView& characters = u8" \t") const;
     constexpr U8StringView trim_end(const U8StringView& characters = u8" \t") const;
@@ -97,6 +102,7 @@ struct U8StringView {
     constexpr U8StringView trim_invalid_end() const;
 
     // split
+    // TODO. single code point
     template <typename Buffer>
     constexpr SizeType split(Buffer& out, const U8StringView& delimiter, SizeType limit = npos) const;
 
