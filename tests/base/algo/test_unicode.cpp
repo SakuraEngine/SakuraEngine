@@ -147,6 +147,8 @@ TEST_CASE("Test Unicode")
         REQUIRE_EQ(utf16_code_unit_index(test_str + 1, 4, 1), 1);
         REQUIRE_EQ(utf16_code_unit_index(test_str + 1, 4, 2), 2);
         REQUIRE_EQ(utf16_code_unit_index(test_str + 1, 4, 3), 3);
+
+        // FIXME. if end with bad ch, CP <=> CU will mismatch
     }
 
     SUBCASE("UTF-8 parse seq")
@@ -197,7 +199,6 @@ TEST_CASE("Test Unicode")
     }
 
     SUBCASE("UTF-16 parse seq")
-
     {
         // parse from different index
         {
@@ -315,13 +316,13 @@ TEST_CASE("Test Unicode")
 
             // cursor
             count = 0;
-            for (auto cursor = CCursor::Begin(test_str, 10); cursor.reach_end(); cursor.move_next())
+            for (auto cursor = CCursor::Begin(test_str, 10); !cursor.reach_end(); cursor.move_next())
             {
                 REQUIRE_EQ(cursor.ref(), test_seq[count]);
                 ++count;
             }
             count = 3;
-            for (auto cursor = CCursor::End(test_str, 10); cursor.reach_begin(); cursor.move_prev())
+            for (auto cursor = CCursor::End(test_str, 10); !cursor.reach_begin(); cursor.move_prev())
             {
                 REQUIRE_EQ(cursor.ref(), test_seq[count]);
                 --count;
@@ -329,13 +330,13 @@ TEST_CASE("Test Unicode")
 
             // iter
             count = 0;
-            for (auto it = CCursor::Begin(test_str, 0).as_iter(); it.has_next(); it.move_next())
+            for (auto it = CCursor::Begin(test_str, 10).as_iter(); it.has_next(); it.move_next())
             {
                 REQUIRE_EQ(it.ref(), test_seq[count]);
                 ++count;
             }
             count = 3;
-            for (auto it = CCursor::End(test_str, 0).as_iter_inv(); it.has_next(); it.move_next())
+            for (auto it = CCursor::End(test_str, 10).as_iter_inv(); it.has_next(); it.move_next())
             {
                 REQUIRE_EQ(it.ref(), test_seq[count]);
                 --count;
@@ -343,13 +344,13 @@ TEST_CASE("Test Unicode")
 
             // range
             count = 0;
-            for (const auto& seq : CCursor::Begin(test_str, 0).as_range())
+            for (const auto& seq : CCursor::Begin(test_str, 10).as_range())
             {
                 REQUIRE_EQ(seq, test_seq[count]);
                 ++count;
             }
             count = 3;
-            for (const auto& seq : CCursor::End(test_str, 0).as_range_inv())
+            for (const auto& seq : CCursor::End(test_str, 10).as_range_inv())
             {
                 REQUIRE_EQ(seq, test_seq[count]);
                 --count;
@@ -399,17 +400,78 @@ TEST_CASE("Test Unicode")
                 bad_seq
             };
 
+            uint64_t bad_count;
+
+            // cursor
+            bad_count = 0;
+            for (auto cursor = CCursor::Begin(test_bad_str, 20); !cursor.reach_end(); cursor.move_next())
+            {
+                REQUIRE_EQ(cursor.ref(), test_seq[bad_count]);
+                ++bad_count;
+            }
+            bad_count = 13;
+            for (auto cursor = CCursor::End(test_bad_str, 20); !cursor.reach_begin(); cursor.move_prev())
+            {
+                REQUIRE_EQ(cursor.ref(), test_seq[bad_count]);
+                --bad_count;
+            }
+
+            // iter
+            bad_count = 0;
+            for (auto it = CCursor::Begin(test_bad_str, 20).as_iter(); it.has_next(); it.move_next())
+            {
+                REQUIRE_EQ(it.ref(), test_seq[bad_count]);
+                ++bad_count;
+            }
+            bad_count = 13;
+            for (auto it = CCursor::End(test_bad_str, 20).as_iter_inv(); it.has_next(); it.move_next())
+            {
+                REQUIRE_EQ(it.ref(), test_seq[bad_count]);
+                --bad_count;
+            }
+
+            // range
+            bad_count = 0;
+            for (const auto& seq : CCursor::Begin(test_bad_str, 20).as_range())
+            {
+                REQUIRE_EQ(seq, test_seq[bad_count]);
+                ++bad_count;
+            }
+            bad_count = 13;
+            for (const auto& seq : CCursor::End(test_bad_str, 20).as_range_inv())
+            {
+                REQUIRE_EQ(seq, test_seq[bad_count]);
+                --bad_count;
+            }
+        }
+    }
+
+    SUBCASE("UTF-16 iterator")
+    {
+        using Cursor  = UTF16Cursor<uint64_t, false>;
+        using CCursor = UTF16Cursor<uint64_t, true>;
+
+        // normal str
+        {
+            const auto     test_str   = u"🐓鸡ĜG";
+            const UTF16Seq test_seq[] = {
+                { u"🐓", 2 },
+                { u"鸡", 1 },
+                { u"Ĝ", 1 },
+                { u"G", 1 }
+            };
+
             uint64_t count;
 
             // cursor
             count = 0;
-            for (auto cursor = CCursor::Begin(test_bad_str, 20); cursor.reach_end(); cursor.move_next())
+            for (auto cursor = CCursor::Begin(test_str, 5); !cursor.reach_end(); cursor.move_next())
             {
                 REQUIRE_EQ(cursor.ref(), test_seq[count]);
                 ++count;
             }
-            count = 12;
-            for (auto cursor = CCursor::End(test_bad_str, 20); cursor.reach_begin(); cursor.move_prev())
+            count = 3;
+            for (auto cursor = CCursor::End(test_str, 5); !cursor.reach_begin(); cursor.move_prev())
             {
                 REQUIRE_EQ(cursor.ref(), test_seq[count]);
                 --count;
@@ -417,13 +479,13 @@ TEST_CASE("Test Unicode")
 
             // iter
             count = 0;
-            for (auto it = CCursor::Begin(test_bad_str, 0).as_iter(); it.has_next(); it.move_next())
+            for (auto it = CCursor::Begin(test_str, 5).as_iter(); it.has_next(); it.move_next())
             {
                 REQUIRE_EQ(it.ref(), test_seq[count]);
                 ++count;
             }
-            count = 12;
-            for (auto it = CCursor::End(test_bad_str, 0).as_iter_inv(); it.has_next(); it.move_next())
+            count = 3;
+            for (auto it = CCursor::End(test_str, 5).as_iter_inv(); it.has_next(); it.move_next())
             {
                 REQUIRE_EQ(it.ref(), test_seq[count]);
                 --count;
@@ -431,16 +493,98 @@ TEST_CASE("Test Unicode")
 
             // range
             count = 0;
-            for (const auto& seq : CCursor::Begin(test_bad_str, 0).as_range())
+            for (const auto& seq : CCursor::Begin(test_str, 5).as_range())
             {
                 REQUIRE_EQ(seq, test_seq[count]);
                 ++count;
             }
-            count = 12;
-            for (const auto& seq : CCursor::End(test_bad_str, 0).as_range_inv())
+            count = 3;
+            for (const auto& seq : CCursor::End(test_str, 5).as_range_inv())
             {
                 REQUIRE_EQ(seq, test_seq[count]);
                 --count;
+            }
+        }
+
+        // str with bad ch
+        {
+            char16_t test_bad_str[5 + 7 + 1];
+            char16_t bad_ch  = kUtf16TrailingSurrogateHeader + 10;
+            UTF16Seq bad_seq = UTF16Seq::Bad(bad_ch);
+
+            // build str
+            //   🐓鸡 Ĝ G
+            // xx--x-x-x-xx
+            test_bad_str[0] = bad_ch;
+            test_bad_str[1] = bad_ch;
+            memcpy(&test_bad_str[2], u"🐓", 2 * 2);
+            test_bad_str[4]  = bad_ch;
+            test_bad_str[5]  = u'鸡';
+            test_bad_str[6]  = bad_ch;
+            test_bad_str[7]  = u'Ĝ';
+            test_bad_str[8]  = bad_ch;
+            test_bad_str[9]  = u'G';
+            test_bad_str[10] = bad_ch;
+            test_bad_str[11] = bad_ch;
+            test_bad_str[12] = 0;
+
+            // build seq
+            const UTF16Seq test_seq[] = {
+                bad_seq,
+                bad_seq,
+                { u"🐓", 2 },
+                bad_seq,
+                { u"鸡", 1 },
+                bad_seq,
+                { u"Ĝ", 1 },
+                bad_seq,
+                { u"G", 1 },
+                bad_seq,
+                bad_seq
+            };
+
+            uint64_t bad_count;
+
+            // cursor
+            bad_count = 0;
+            for (auto cursor = CCursor::Begin(test_bad_str, 12); !cursor.reach_end(); cursor.move_next())
+            {
+                REQUIRE_EQ(cursor.ref(), test_seq[bad_count]);
+                ++bad_count;
+            }
+            bad_count = 10;
+            for (auto cursor = CCursor::End(test_bad_str, 12); !cursor.reach_begin(); cursor.move_prev())
+            {
+                REQUIRE_EQ(cursor.ref(), test_seq[bad_count]);
+                --bad_count;
+            }
+
+            // iter
+            bad_count = 0;
+            for (auto it = CCursor::Begin(test_bad_str, 12).as_iter(); it.has_next(); it.move_next())
+            {
+                REQUIRE_EQ(it.ref(), test_seq[bad_count]);
+                ++bad_count;
+            }
+            bad_count = 10;
+            for (auto it = CCursor::End(test_bad_str, 12).as_iter_inv(); it.has_next(); it.move_next())
+            {
+                REQUIRE_EQ(it.ref(), test_seq[bad_count]);
+                --bad_count;
+            }
+
+            // range
+            bad_count = 0;
+            for (const auto& seq : CCursor::Begin(test_bad_str, 12).as_range())
+            {
+                REQUIRE_EQ(seq, test_seq[bad_count]);
+                ++bad_count;
+            }
+            bad_count = 10;
+            for (const auto& seq : CCursor::End(test_bad_str, 12).as_range_inv())
+            {
+                REQUIRE_EQ(seq, test_seq[bad_count]);
+                --bad_count;
             }
         }
     }

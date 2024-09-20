@@ -56,7 +56,6 @@ struct UTF8Cursor {
     // getter
     inline RefType ref() const
     {
-        // TODO. bad sequence
         return _seq_len == npos ? UTF8Seq::Bad(_data[_index]) :
                                   UTF8Seq{ _data + _index, static_cast<uint8_t>(_seq_len) };
     }
@@ -83,7 +82,8 @@ struct UTF8Cursor {
     }
     inline void reset_to_end()
     {
-        _index = _size - 1;
+        _seq_len = utf8_adjust_index_to_head(_data, _size, _size - 1, _index);
+        _seq_len = _seq_len ? _seq_len : npos;
     }
 
     // reach & validate
@@ -109,7 +109,8 @@ private:
             _seq_len = utf8_seq_len(_data[_index]);
             // if the last sequence is invalid, set it to 1
             // this operation can avoid visit and move operation overflow
-            if (_index + _seq_len > _size)
+            // TODO. maybe 0 is better
+            if (!_seq_len || _index + _seq_len > _size)
             {
                 _seq_len = npos;
             }
@@ -129,11 +130,21 @@ struct UTF16Cursor {
     using SizeType = TS;
     using RefType  = UTF16Seq; // TODO. UTF16SeqRef
 
+    static constexpr SizeType npos = npos_of<SizeType>;
+
+    // iter & range
+    using Iter     = container::CursorIter<UTF16Cursor<TS, kConst>, false>;
+    using IterInv  = container::CursorIter<UTF16Cursor<TS, kConst>, true>;
+    using Range    = container::CursorRange<UTF16Cursor<TS, kConst>, false>;
+    using RangeInv = container::CursorRange<UTF16Cursor<TS, kConst>, true>;
+
     // ctor & copy & move & assign & move assign
-    inline UTF16Cursor(DataType* data, SizeType size)
+    inline UTF16Cursor(DataType* data, SizeType size, SizeType index)
         : _data(data)
         , _size(size)
+        , _index(index)
     {
+        _try_parse_seq_len();
     }
     inline UTF16Cursor(const UTF16Cursor& other)              = default;
     inline UTF16Cursor(UTF16Cursor&& other) noexcept          = default;
@@ -141,36 +152,94 @@ struct UTF16Cursor {
     inline UTF16Cursor& operator=(UTF16Cursor&& rhs) noexcept = default;
 
     // factory
-    inline static UTF16Cursor Begin(DataType* data, SizeType size);
-    inline static UTF16Cursor BeginOverflow(DataType* data, SizeType size);
-    inline static UTF16Cursor End(DataType* data, SizeType size);
-    inline static UTF16Cursor EndOverflow(DataType* data, SizeType size);
+    inline static UTF16Cursor Begin(DataType* data, SizeType size)
+    {
+        return { data, size, 0 };
+    }
+    inline static UTF16Cursor BeginOverflow(DataType* data, SizeType size)
+    {
+        return { data, size, npos };
+    }
+    inline static UTF16Cursor End(DataType* data, SizeType size)
+    {
+        UTF16Cursor result{ data, size, npos };
+        result.reset_to_end();
+        return result;
+    }
+    inline static UTF16Cursor EndOverflow(DataType* data, SizeType size)
+    {
+        return { data, size, size };
+    }
 
     // getter
-    inline RefType  ref() const;
-    inline SizeType index() const;
-    inline SizeType seq_len() const;
+    inline RefType ref() const
+    {
+        return _seq_len == npos ? UTF16Seq::Bad(_data[_index]) :
+                                  UTF16Seq{ _data + _index, static_cast<uint8_t>(_seq_len) };
+    }
+    inline SizeType index() const { return _index; }
+    inline SizeType seq_len() const { return _seq_len; }
 
     // move & reset
-    inline void move_next();
-    inline void move_prev();
-    inline void reset_to_begin();
-    inline void reset_to_end();
+    inline void move_next()
+    {
+        SKR_ASSERT(is_valid());
+        _index += _seq_len == npos ? 1 : _seq_len; // _seq_len is always safe, because it has adjusted in _try_parse_seq_len
+        _try_parse_seq_len();
+    }
+    inline void move_prev()
+    {
+        SKR_ASSERT(is_valid());
+        _seq_len = utf16_adjust_index_to_head(_data, _size, _index - 1, _index);
+        _seq_len = _seq_len ? _seq_len : npos;
+    }
+    inline void reset_to_begin()
+    {
+        _index = 0;
+        _try_parse_seq_len();
+    }
+    inline void reset_to_end()
+    {
+        _seq_len = utf16_adjust_index_to_head(_data, _size, _size - 1, _index);
+        _seq_len = _seq_len ? _seq_len : npos;
+    }
 
     // reach & validate
-    inline bool reach_end() const;
-    inline bool reach_begin() const;
-    inline bool is_valid() const;
+    inline bool reach_end() const { return _index == _size; }
+    inline bool reach_begin() const { return _index == npos; }
+    inline bool is_valid() const { return !reach_end() && !reach_begin(); }
 
     // compare
     inline bool operator==(const UTF16Cursor& rhs) const { return _data == rhs._data && _index == rhs._index; }
     inline bool operator!=(const UTF16Cursor& rhs) const { return !(*this == rhs); }
 
+    // convert
+    inline Iter     as_iter() const { return { *this }; }
+    inline IterInv  as_iter_inv() const { return { *this }; }
+    inline Range    as_range() const { return { *this }; }
+    inline RangeInv as_range_inv() const { return { *this }; }
+
+private:
+    inline void _try_parse_seq_len()
+    {
+        if (is_valid())
+        {
+            _seq_len = utf16_seq_len(_data[_index]);
+            // if the last sequence is invalid, set it to 1
+            // this operation can avoid visit and move operation overflow
+            // TODO. maybe 0 is better
+            if (!_seq_len || _index + _seq_len > _size)
+            {
+                _seq_len = npos;
+            }
+        }
+    }
+
 private:
     DataType* _data    = nullptr;
     SizeType  _size    = 0;
     SizeType  _index   = 0;
-    SizeType  _seq_len = 0;
+    SizeType  _seq_len = 0; // npos means bad sequence
 };
 
 } // namespace skr

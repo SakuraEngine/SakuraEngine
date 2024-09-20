@@ -237,6 +237,7 @@ inline constexpr uint64_t utf8_adjust_index_to_head(const skr_char8* seq, uint64
                 seq_len = utf8_seq_len(seq[find_idx]);
                 if (seq_len)
                 {
+                    ++code_uint_count;
                     break;
                 }
             }
