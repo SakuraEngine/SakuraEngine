@@ -617,14 +617,18 @@ struct ContainerTraits<MultiSparseHashSet<Memory>> {
     constexpr static bool is_linear_memory = false; // data(), size()
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()
+    constexpr static bool is_reservable    = true;  // reserve()
 
     using ElementType = typename Memory::DataType;
+    using SizeType    = typename Memory::SizeType;
 
-    static inline size_t size(const MultiSparseHashSet<Memory>& container) { return container.size(); }
+    inline static SizeType size(const MultiSparseHashSet<Memory>& container) { return container.size(); }
 
     inline static typename MultiSparseHashSet<Memory>::StlIt  begin(MultiSparseHashSet<Memory>& set) { return set.begin(); }
     inline static typename MultiSparseHashSet<Memory>::StlIt  end(MultiSparseHashSet<Memory>& set) { return set.end(); }
     inline static typename MultiSparseHashSet<Memory>::CStlIt begin(const MultiSparseHashSet<Memory>& set) { return set.begin(); }
     inline static typename MultiSparseHashSet<Memory>::CStlIt end(const MultiSparseHashSet<Memory>& set) { return set.end(); }
+
+    inline static void reserve(MultiSparseHashSet<Memory>& container, SizeType n) { container.reserve(n); }
 };
 } // namespace skr::container

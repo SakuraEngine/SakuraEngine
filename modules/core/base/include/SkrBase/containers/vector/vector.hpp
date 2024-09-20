@@ -1530,16 +1530,20 @@ struct ContainerTraits<Vector<Memory>> {
     constexpr static bool is_linear_memory = true; // data(), size()
     constexpr static bool has_size         = true; // size()
     constexpr static bool is_iterable      = true; // begin(), end()
+    constexpr static bool is_reservable    = true; // reserve()
 
     using ElementType = typename Memory::DataType;
+    using SizeType    = typename Memory::SizeType;
 
-    static inline const typename Vector<Memory>::DataType* data(const Vector<Memory>& vec) { return vec.data(); }
-    static inline typename Vector<Memory>::DataType*       data(Vector<Memory>& vec) { return vec.data(); }
-    static inline size_t                                   size(const Vector<Memory>& vec) { return vec.size(); }
+    inline static const typename Vector<Memory>::DataType* data(const Vector<Memory>& vec) { return vec.data(); }
+    inline static typename Vector<Memory>::DataType*       data(Vector<Memory>& vec) { return vec.data(); }
+    inline static size_t                                   size(const Vector<Memory>& vec) { return vec.size(); }
 
-    static inline auto begin(const Vector<Memory>& vec) noexcept { return vec.begin(); }
-    static inline auto end(const Vector<Memory>& vec) noexcept { return vec.end(); }
-    static inline auto begin(Vector<Memory>& vec) noexcept { return vec.begin(); }
-    static inline auto end(Vector<Memory>& vec) noexcept { return vec.end(); }
+    inline static auto begin(const Vector<Memory>& vec) noexcept { return vec.begin(); }
+    inline static auto end(const Vector<Memory>& vec) noexcept { return vec.end(); }
+    inline static auto begin(Vector<Memory>& vec) noexcept { return vec.begin(); }
+    inline static auto end(Vector<Memory>& vec) noexcept { return vec.end(); }
+
+    inline static void reserve(Vector<Memory>& vec, size_t n) { vec.reserve(n); }
 };
 } // namespace skr::container

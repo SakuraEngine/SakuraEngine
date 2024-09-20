@@ -1403,14 +1403,18 @@ struct ContainerTraits<SparseVector<Memory>> {
     constexpr static bool is_linear_memory = false; // data(), size()
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()
+    constexpr static bool is_reservable    = true;  // reserve()
 
     using ElementType = typename Memory::DataType;
+    using SizeType    = typename Memory::SizeType;
 
-    static inline size_t size(const SparseVector<Memory>& vec) { return vec.size(); }
+    inline static SizeType size(const SparseVector<Memory>& vec) { return vec.size(); }
 
-    static inline auto begin(const SparseVector<Memory>& vec) noexcept { return vec.begin(); }
-    static inline auto end(const SparseVector<Memory>& vec) noexcept { return vec.end(); }
-    static inline auto begin(SparseVector<Memory>& vec) noexcept { return vec.begin(); }
-    static inline auto end(SparseVector<Memory>& vec) noexcept { return vec.end(); }
+    inline static auto begin(const SparseVector<Memory>& vec) noexcept { return vec.begin(); }
+    inline static auto end(const SparseVector<Memory>& vec) noexcept { return vec.end(); }
+    inline static auto begin(SparseVector<Memory>& vec) noexcept { return vec.begin(); }
+    inline static auto end(SparseVector<Memory>& vec) noexcept { return vec.end(); }
+
+    inline static void reserve(SparseVector<Memory>& vec, SizeType n) { vec.reserve(n); }
 };
 } // namespace skr::container
