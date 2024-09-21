@@ -12,8 +12,6 @@ struct ContainerTraits {
     constexpr static bool is_iterable      = false; // begin(), end()
     constexpr static bool is_reservable    = false; // reserve()
 
-    // TODO. append able append()
-
     using ElementType = void;
 };
 
@@ -60,12 +58,6 @@ concept EachAbleContainer = ContainerTraits<std::decay_t<T>>::is_linear_memory |
 template <typename T>
 concept LinearMemoryContainer = ContainerTraits<std::decay_t<T>>::is_linear_memory;
 
-// TODO. Iterable
-// TODO. LinearMemory
-// TODO. EachAble
-
-// TODO. HasSize
-// TODO. CanReserve
-// TODO. CanAppend
+// TODO. invocable, maybe use std::invocable
 
 } // namespace skr::container
