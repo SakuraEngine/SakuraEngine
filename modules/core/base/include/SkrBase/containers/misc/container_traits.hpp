@@ -58,6 +58,15 @@ concept EachAbleContainer = ContainerTraits<std::decay_t<T>>::is_linear_memory |
 template <typename T>
 concept LinearMemoryContainer = ContainerTraits<std::decay_t<T>>::is_linear_memory;
 
-// TODO. invocable, maybe use std::invocable
+// TODO. container append adaptor
+
+template <typename T, typename Elem>
+concept HasAppend = requires(T t, Elem e) {
+    t.append(e);
+};
+template <typename T, typename Elem>
+concept HasAdd = requires(T t, Elem e) {
+    t.add(e);
+};
 
 } // namespace skr::container

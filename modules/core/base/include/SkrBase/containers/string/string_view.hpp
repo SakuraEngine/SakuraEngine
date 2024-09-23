@@ -30,6 +30,9 @@ struct U8StringView {
     // using RangeInv  = UTF8RangeInv<SizeType, true>;
     using CRangeInv = UTF8RangeInv<SizeType, true>;
 
+    // partition
+    using PartitionResult = StringPartitionResult<U8StringView>;
+
     // helper
     using CharTraits               = std::char_traits<DataType>;
     static constexpr SizeType npos = npos_of<SizeType>;
@@ -84,40 +87,54 @@ struct U8StringView {
     constexpr U8StringView subview(SizeType start, SizeType count = npos) const;
 
     // find
-    // TODO. single code point
     constexpr CDataRef find(const U8StringView& pattern) const;
     constexpr CDataRef find_last(const U8StringView& pattern) const;
+    constexpr CDataRef find(const UTF8Seq& pattern) const;
+    constexpr CDataRef find_last(const UTF8Seq& pattern) const;
 
     // contains & count
-    // TODO. single code point
     constexpr bool     contains(const U8StringView& pattern) const;
     constexpr SizeType count(const U8StringView& pattern) const;
+    constexpr bool     contains(const UTF8Seq& pattern) const;
+    constexpr SizeType count(const UTF8Seq& pattern) const;
 
     // starts & ends
-    // TODO. single code point
     constexpr bool starts_with(const U8StringView& prefix) const;
     constexpr bool ends_with(const U8StringView& suffix) const;
+    constexpr bool starts_with(const UTF8Seq& prefix) const;
+    constexpr bool ends_with(const UTF8Seq& suffix) const;
 
     // remove prefix & suffix
-    // TODO. single code point
     constexpr U8StringView remove_prefix(const U8StringView& prefix) const;
     constexpr U8StringView remove_suffix(const U8StringView& suffix) const;
+    constexpr U8StringView remove_prefix(const UTF8Seq& prefix) const;
+    constexpr U8StringView remove_suffix(const UTF8Seq& suffix) const;
 
     // trim
-    // TODO. single code point
     constexpr U8StringView trim(const U8StringView& characters = u8" \t") const;
     constexpr U8StringView trim_start(const U8StringView& characters = u8" \t") const;
     constexpr U8StringView trim_end(const U8StringView& characters = u8" \t") const;
+    constexpr U8StringView trim(const UTF8Seq& ch) const;
+    constexpr U8StringView trim_start(const UTF8Seq& ch) const;
+    constexpr U8StringView trim_end(const UTF8Seq& ch) const;
 
     // trim invalid
     constexpr U8StringView trim_invalid() const;
     constexpr U8StringView trim_invalid_start() const;
     constexpr U8StringView trim_invalid_end() const;
 
+    // partition
+    constexpr PartitionResult partition(const U8StringView& delimiter) const;
+
     // split
-    // TODO. single code point
     template <typename Buffer>
-    constexpr SizeType split(Buffer& out, const U8StringView& delimiter, SizeType limit = npos) const;
+    constexpr SizeType split(Buffer& out, const U8StringView& delimiter, bool cull_empty, SizeType limit = npos) const;
+    template <std::invocable<const U8StringView<TS>&> F>
+    constexpr SizeType split_each(F&& func, const U8StringView& delimiter, bool cull_empty, SizeType limit = npos) const;
+    template <typename Buffer>
+    constexpr SizeType split(Buffer& out, const UTF8Seq& delimiter, bool cull_empty, SizeType limit = npos) const;
+    template <std::invocable<const U8StringView<TS>&> F>
+    constexpr SizeType split_each(F&& func, const UTF8Seq& delimiter, bool cull_empty, SizeType limit = npos) const;
 
     // text index
     constexpr SizeType buffer_index_to_text(SizeType index) const;
@@ -390,6 +407,41 @@ inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find_last(const U8
 
     return {};
 }
+template <typename TS>
+inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find(const UTF8Seq& pattern) const
+{
+    if (pattern.is_valid())
+    {
+        // FIXME. maybe optimize in view find or just use uniform find is better?
+        if (pattern.len == 1)
+        {
+            if (auto found = CharTraits::find(_data, _size, pattern.data[0]))
+            {
+                return { found, found - _data };
+            }
+        }
+        else
+        {
+            return find(U8StringView{ &pattern.data[0], pattern.len });
+        }
+    }
+    else
+    {
+        return {};
+    }
+}
+template <typename TS>
+inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find_last(const UTF8Seq& pattern) const
+{
+    if (pattern.is_valid())
+    {
+        return find_last(U8StringView{ &pattern.data[0], pattern.len });
+    }
+    else
+    {
+        return {};
+    }
+}
 
 // contains & count
 template <typename TS>
@@ -416,6 +468,23 @@ inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::count(const U8Stri
         }
     }
     return result;
+}
+template <typename TS>
+inline constexpr bool U8StringView<TS>::contains(const UTF8Seq& pattern) const
+{
+    return (bool)find(pattern);
+}
+template <typename TS>
+inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::count(const UTF8Seq& pattern) const
+{
+    if (pattern.is_valid())
+    {
+        return count(U8StringView{ &pattern.data[0], pattern.len });
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 // starts & ends
@@ -446,6 +515,30 @@ inline constexpr bool U8StringView<TS>::ends_with(const U8StringView& suffix) co
 
     return CharTraits::compare(_data + (_size - suffix.size()), suffix.data(), suffix.size()) == 0;
 }
+template <typename TS>
+inline constexpr bool U8StringView<TS>::starts_with(const UTF8Seq& prefix) const
+{
+    if (prefix.is_valid())
+    {
+        return starts_with(U8StringView{ &prefix.data[0], prefix.len });
+    }
+    else
+    {
+        return false;
+    }
+}
+template <typename TS>
+inline constexpr bool U8StringView<TS>::ends_with(const UTF8Seq& suffix) const
+{
+    if (suffix.is_valid())
+    {
+        return ends_with(U8StringView{ &suffix.data[0], suffix.len });
+    }
+    else
+    {
+        return false;
+    }
+}
 
 // remove prefix & suffix
 template <typename TS>
@@ -457,6 +550,30 @@ template <typename TS>
 inline constexpr U8StringView<TS> U8StringView<TS>::remove_suffix(const U8StringView& suffix) const
 {
     return ends_with(suffix) ? subview(0, size() - suffix.size()) : *this;
+}
+template <typename TS>
+inline constexpr U8StringView<TS> U8StringView<TS>::remove_prefix(const UTF8Seq& prefix) const
+{
+    if (prefix.is_valid())
+    {
+        return remove_prefix(U8StringView{ &prefix.data[0], prefix.len });
+    }
+    else
+    {
+        return *this;
+    }
+}
+template <typename TS>
+inline constexpr U8StringView<TS> U8StringView<TS>::remove_suffix(const UTF8Seq& suffix) const
+{
+    if (suffix.is_valid())
+    {
+        return remove_suffix(U8StringView{ &suffix.data[0], suffix.len });
+    }
+    else
+    {
+        return *this;
+    }
 }
 
 // trim
@@ -506,6 +623,42 @@ inline constexpr U8StringView<TS> U8StringView<TS>::trim_end(const U8StringView&
         }
     }
 }
+template <typename TS>
+inline constexpr U8StringView<TS> U8StringView<TS>::trim(const UTF8Seq& ch) const
+{
+    if (ch.is_valid())
+    {
+        return trim(U8StringView{ &ch.data[0], ch.len });
+    }
+    else
+    {
+        return { *this };
+    }
+}
+template <typename TS>
+inline constexpr U8StringView<TS> U8StringView<TS>::trim_start(const UTF8Seq& ch) const
+{
+    if (ch.is_valid())
+    {
+        return trim_start(U8StringView{ &ch.data[0], ch.len });
+    }
+    else
+    {
+        return { *this };
+    }
+}
+template <typename TS>
+inline constexpr U8StringView<TS> U8StringView<TS>::trim_end(const UTF8Seq& ch) const
+{
+    if (ch.is_valid())
+    {
+        return trim_end(U8StringView{ &ch.data[0], ch.len });
+    }
+    else
+    {
+        return { *this };
+    }
+}
 
 // trim invalid
 template <typename TS>
@@ -544,5 +697,180 @@ inline constexpr U8StringView<TS> U8StringView<TS>::trim_invalid_end() const
             return this->subview(0, it.index() + 1);
         }
     }
+}
+
+// partition
+template <typename TS>
+inline constexpr U8StringView<TS>::PartitionResult U8StringView<TS>::partition(const U8StringView& delimiter) const
+{
+    if (auto found = find(delimiter))
+    {
+        return {
+            subview(0, found.index()),
+            subview(found.index(), delimiter.size()),
+            subview(found.index() + delimiter.size())
+        };
+    }
+    else
+    {
+        return {};
+    }
+}
+
+// split
+template <typename TS>
+template <typename Buffer>
+inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out, const U8StringView& delimiter, bool cull_empty, SizeType limit) const
+{
+    U8StringView each_view{ *this };
+    SizeType     count = 0;
+    while (true)
+    {
+        const auto [left, mid, right] = each_view.partition(delimiter);
+
+        // append
+        if (!cull_empty || !left.is_empty())
+        {
+            ++count;
+            if constexpr (HasAdd<Buffer, U8StringView>)
+            {
+                out.append(left);
+            }
+            else if constexpr (HasAppend<Buffer, U8StringView<TS>>)
+            {
+                out.add(left);
+            }
+            else
+            {
+                static_assert(HasAdd<Buffer, U8StringView>, "Buffer must have add or append method");
+            }
+        }
+
+        // trigger end
+        if (right.is_empty())
+        {
+            break;
+        }
+
+        // limit break
+        if (limit != npos && count >= limit)
+        {
+            break;
+        }
+
+        // update
+        each_view = right;
+    }
+    return count;
+}
+template <typename TS>
+template <std::invocable<const U8StringView<TS>&> F>
+inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split_each(F&& func, const U8StringView& delimiter, bool cull_empty, SizeType limit) const
+{
+    using EachFuncResultType = std::invoke_result_t<F, const U8StringView<TS>&>;
+
+    U8StringView each_view{ *this };
+    SizeType     count = 0;
+    while (true)
+    {
+        const auto [left, mid, right] = each_view.partition(delimiter);
+
+        // append
+        if (!cull_empty || !left.is_empty())
+        {
+            ++count;
+            if constexpr (std::is_same_v<EachFuncResultType, bool>)
+            {
+                if (!func(left))
+                {
+                    break;
+                }
+            }
+            else
+            {
+                func(left);
+            }
+        }
+
+        // trigger end
+        if (right.is_empty())
+        {
+            break;
+        }
+
+        // limit break
+        if (limit != npos && count >= limit)
+        {
+            break;
+        }
+
+        // update
+        each_view = right;
+    }
+    return count;
+}
+template <typename TS>
+template <typename Buffer>
+inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
+{
+    return split(
+    out,
+    delimiter.is_valid() ? U8StringView{ &delimiter.data[0], delimiter.len } : U8StringView{},
+    cull_empty,
+    limit);
+}
+template <typename TS>
+template <std::invocable<const U8StringView<TS>&> F>
+inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split_each(F&& func, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
+{
+    return split_each(
+    std::forward<F>(func),
+    delimiter.is_valid() ? U8StringView{ &delimiter.data[0], delimiter.len } : U8StringView{},
+    cull_empty,
+    limit);
+}
+
+// text index
+template <typename TS>
+inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::buffer_index_to_text(SizeType index) const
+{
+    return utf8_code_point_index(_data, index);
+}
+template <typename TS>
+inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::text_index_to_buffer(SizeType index) const
+{
+    return utf8_code_unit_index(_data, _size, index);
+}
+
+// cursor & iter
+template <typename TS>
+inline U8StringView<TS>::CCursor U8StringView<TS>::cursor_begin() const
+{
+    return CCursor::Begin(_data, _size);
+}
+template <typename TS>
+inline U8StringView<TS>::CCursor U8StringView<TS>::cursor_end() const
+{
+    return CCursor::End(_data, _size);
+}
+template <typename TS>
+inline U8StringView<TS>::CIter U8StringView<TS>::iter() const
+{
+    return CCursor::Begin(_data, _size).iter();
+}
+template <typename TS>
+inline U8StringView<TS>::CIterInv U8StringView<TS>::iter_inv() const
+{
+    return CCursor::End(_data, _size).iter_inv();
+}
+template <typename TS>
+inline U8StringView<TS>::CRange U8StringView<TS>::range() const
+{
+    return CCursor::Begin(_data, _size).range();
+}
+template <typename TS>
+inline U8StringView<TS>::CRangeInv U8StringView<TS>::range_inv() const
+{
+    return CCursor::RangeInv(_data, _size);
 }
 } // namespace skr::container
