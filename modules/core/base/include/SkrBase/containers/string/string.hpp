@@ -3,7 +3,9 @@
 #include "SkrBase/containers/misc/container_traits.hpp"
 #include "SkrBase/containers/string/string_def.hpp"
 #include <type_traits>
+#include "SkrBase/containers/string/string_view.hpp"
 #include "SkrBase/unicode/unicode_algo.hpp"
+#include "SkrBase/unicode/unicode_iterator.hpp"
 
 namespace skr::container
 {
@@ -30,10 +32,26 @@ struct U8String : protected Memory {
     using CDataRef = StringDataRef<DataType, SizeType, true>;
 
     // cursor & iterator
+    // using Cursor  = UTF8Cursor<SizeType, false>;
+    using CCursor = UTF8Cursor<SizeType, true>;
+    // using Iter    = UTF8Iter<SizeType, false>;
+    using CIter = UTF8Iter<SizeType, true>;
+    // using IterInv  = UTF8IterInv<SizeType, true>;
+    using CIterInv = UTF8IterInv<SizeType, true>;
+    // using Range   = UTF8Range<SizeType, false>;
+    using CRange = UTF8Range<SizeType, true>;
+    // using RangeInv  = UTF8RangeInv<SizeType, true>;
+    using CRangeInv = UTF8RangeInv<SizeType, true>;
+
+    // other types
+    using ViewType        = U8StringView<SizeType>;
+    using PartitionResult = StringPartitionResult<ViewType>;
 
     // helper
+    using CharTraits               = std::char_traits<DataType>;
     static constexpr SizeType npos = npos_of<SizeType>;
 
+    // traits
     static_assert(std::is_same_v<DataType, skr_char8>, "U8String only supports char8_t");
 
     // ctor & dtor
@@ -122,72 +140,18 @@ struct U8String : protected Memory {
     template <EachAbleContainer U>
     DataRef operator+=(const U& str);
 
-    // remove
-    void remove_at(SizeType index, SizeType n = 1);
-    bool remove(skr_char32 ch);
-    bool remove_last(skr_char32 ch);
-    bool remove_all(skr_char32 ch);
-    template <EachAbleContainer U>
-    bool remove(const U& str);
-    template <EachAbleContainer U>
-    bool remove_last(const U& str);
-    template <EachAbleContainer U>
-    SizeType remove_all(const U& str);
-
-    // replace
-    template <EachAbleContainer U>
-    bool replace(const U& dst, const U& src, SizeType start = 0, SizeType count = npos);
-
-    // index & modify
-    const DataType& at_buffer(SizeType index) const;
-    DataType&       at_buffer_w(SizeType index);
-    const DataType& last_buffer(SizeType index) const;
-    DataType&       last_buffer_w(SizeType index);
-    UTF8Seq         at_text(SizeType index) const;
-    UTF8Seq         last_text(SizeType index) const;
-
-    // find
-    template <EachAbleContainer U>
-    CDataRef find(const U& pattern, SizeType start = 0, SizeType count = npos) const;
-    template <EachAbleContainer U>
-    CDataRef find_last(const U& pattern, SizeType start = 0, SizeType count = npos) const;
-    template <EachAbleContainer U>
-    DataRef find_w(const U& pattern, SizeType start = 0, SizeType count = npos) const;
-    template <EachAbleContainer U>
-    DataRef find_last_w(const U& pattern, SizeType start = 0, SizeType count = npos) const;
-
-    // contains & count
-    template <EachAbleContainer U>
-    bool contains(const U& pattern) const;
-    template <EachAbleContainer U>
-    bool count(const U& pattern) const;
-
-    // starts & ends
-    template <EachAbleContainer U>
-    bool starts_with(const U& prefix) const;
-    template <EachAbleContainer U>
-    bool ends_with(const U& suffix) const;
-
-    // sub string
-
-    // trim
-    template <EachAbleContainer U>
-    U8String trim(const U& characters) noexcept;
-    template <EachAbleContainer U>
-    U8String trim_start(const U& characters) noexcept;
-    template <EachAbleContainer U>
-    U8String trim_end(const U& characters) noexcept;
-    template <EachAbleContainer U>
-    void trim_self(const U& characters) noexcept;
-    template <EachAbleContainer U>
-    void trim_start_self(const U& characters) noexcept;
-    template <EachAbleContainer U>
-    void trim_end_self(const U& characters) noexcept;
-
-    // split
-    // TODO. split iter
-    template <EachAbleContainer U, typename Out>
-    SizeType split(const U& splitter, Out& pieces, bool cull_empty = true) const;
+    // TODO. remove_at & remove & remove_last & remove_all
+    // TODO. replace (copy)
+    // TODO. index & modify (write API)
+    // TODO. sub_string & first & last (copy)
+    // TODO. find (write API)
+    // TODO. contains & count
+    // TODO. starts & ends
+    // TODO. remove prefix & suffix (copy)
+    // TODO. trim (copy)
+    // TODO. trim_invalid (copy)
+    // TODO. split
+    // TODO. partition
 
     // text index
     SizeType buffer_index_to_text(SizeType index) const;
@@ -195,6 +159,7 @@ struct U8String : protected Memory {
 
     // syntax
     const U8String& readonly() const;
+    ViewType        view() const;
 };
 } // namespace skr::container
 

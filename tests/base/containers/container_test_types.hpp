@@ -39,6 +39,9 @@
 #include "SkrBase/containers/ring_buffer/ring_buffer.hpp"
 #include "SkrBase/containers/ring_buffer/ring_buffer_memory.hpp"
 
+// string
+#include "SkrBase/containers/string/string_view.hpp"
+
 namespace skr::test_container
 {
 using TestSizeType      = uint64_t;

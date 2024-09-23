@@ -4,8 +4,8 @@
 #include "SkrBase/containers/string/string_def.hpp"
 #include "SkrBase/unicode/unicode_algo.hpp"
 #include "SkrBase/unicode/unicode_iterator.hpp"
-#include <string>
 #include "SkrBase/misc/debug.h"
+#include <string>
 
 namespace skr::container
 {
@@ -16,6 +16,7 @@ struct U8StringView {
     using SizeType = TS;
 
     // data ref
+    // using DataRef  = StringDataRef<DataType, SizeType, false>;
     using CDataRef = StringDataRef<DataType, SizeType, true>;
 
     // cursor & iterator
@@ -30,12 +31,15 @@ struct U8StringView {
     // using RangeInv  = UTF8RangeInv<SizeType, true>;
     using CRangeInv = UTF8RangeInv<SizeType, true>;
 
-    // partition
+    // other types
     using PartitionResult = StringPartitionResult<U8StringView>;
 
     // helper
     using CharTraits               = std::char_traits<DataType>;
     static constexpr SizeType npos = npos_of<SizeType>;
+
+    // traits
+    static_assert(std::is_same_v<DataType, skr_char8>, "U8StringView only supports char8_t");
 
     // ctor & dtor
     constexpr U8StringView();
