@@ -9,17 +9,16 @@
 
 namespace skr::container
 {
-// TODO. 类似 COW 的 literal 切换操作
-// TODO. 通过万能的 view 转换来替代 EachAbleContainer, 暂时不支持异种编码的转换，因为一般输入的
-// TODO. 基本操作默认返回新串，对自身的操作使用 xxx_self 来进行
+// TODO. 对有 const 二义性的 API 中非 const 部分添加 _w 后缀来保证普通操作不会触发常量串的拷贝
+// TODO. 对需要输入字符串的 API 提供 StringView/Seq 两种版本
+// TODO. 对需要使用串容器的 API 提供 EachAbleContainer 版本
 // TODO. 一些字符串工具函数
 //  isalnum 全是字符或者数字
 //  isalpha 全是字符
 //  isdigit 是否只包含数字字符
 //  islower 是否只包含小写字符
 //  isupper 是否只包含大写字符
-//  join 连接字符串
-//  partition 对半分割字符串
+// TODO. 是否提供 ToStringTraits 用于将各种类型转化为字符串
 template <typename Memory>
 struct U8String : protected Memory {
     // from memory
@@ -32,15 +31,15 @@ struct U8String : protected Memory {
     using CDataRef = StringDataRef<DataType, SizeType, true>;
 
     // cursor & iterator
-    // using Cursor  = UTF8Cursor<SizeType, false>;
-    using CCursor = UTF8Cursor<SizeType, true>;
-    // using Iter    = UTF8Iter<SizeType, false>;
-    using CIter = UTF8Iter<SizeType, true>;
-    // using IterInv  = UTF8IterInv<SizeType, true>;
-    using CIterInv = UTF8IterInv<SizeType, true>;
-    // using Range   = UTF8Range<SizeType, false>;
-    using CRange = UTF8Range<SizeType, true>;
-    // using RangeInv  = UTF8RangeInv<SizeType, true>;
+    using Cursor    = UTF8Cursor<SizeType, false>;
+    using CCursor   = UTF8Cursor<SizeType, true>;
+    using Iter      = UTF8Iter<SizeType, false>;
+    using CIter     = UTF8Iter<SizeType, true>;
+    using IterInv   = UTF8IterInv<SizeType, true>;
+    using CIterInv  = UTF8IterInv<SizeType, true>;
+    using Range     = UTF8Range<SizeType, false>;
+    using CRange    = UTF8Range<SizeType, true>;
+    using RangeInv  = UTF8RangeInv<SizeType, true>;
     using CRangeInv = UTF8RangeInv<SizeType, true>;
 
     // other types
@@ -67,6 +66,10 @@ struct U8String : protected Memory {
     static U8String Utf16(const skr_char16* str) noexcept;
     static U8String Utf32(const skr_char32* str) noexcept;
 
+    // join & build factory
+    // TODO. join:  针对容器的拼接
+    // TODO. build: 相当于 + 运算符，用于连接一系列可以被转化为 string 的对象以构建字符串
+
     // copy & move
     U8String(const U8String& other);
     U8String(U8String&& other) noexcept;
@@ -78,6 +81,7 @@ struct U8String : protected Memory {
     // special assign
     void assign(const DataType* str) noexcept;
     void assign(const DataType* str, SizeType len) noexcept;
+    void assign(ViewType view) noexcept;
     template <EachAbleContainer U>
     void assign(U&& container) noexcept;
 
@@ -117,28 +121,18 @@ struct U8String : protected Memory {
     // append
     DataRef append(const DataType* str);
     DataRef append(const DataType* str, SizeType len);
+    DataRef append(ViewType view);
     DataRef append(UTF8Seq seq);
-    DataRef append(UTF16Seq seq);
-    DataRef append(skr_char32 ch);
     template <EachAbleContainer U>
     DataRef append(const U& str);
 
     // append at
     DataRef append_at(SizeType idx, const DataType* str);
     DataRef append_at(SizeType idx, const DataType* str, SizeType len);
+    DataRef append_at(SizeType idx, ViewType view);
     DataRef append_at(SizeType idx, UTF8Seq seq);
-    DataRef append_at(SizeType idx, UTF16Seq seq);
-    DataRef append_at(SizeType idx, skr_char32 ch);
     template <EachAbleContainer U>
     DataRef append_at(SizeType idx, const U& str);
-
-    // operator append
-    DataRef operator+=(const U8String& str);
-    DataRef operator+=(UTF8Seq seq);
-    DataRef operator+=(UTF16Seq seq);
-    DataRef operator+=(skr_char32 ch);
-    template <EachAbleContainer U>
-    DataRef operator+=(const U& str);
 
     // TODO. remove_at & remove & remove_last & remove_all
     // TODO. replace (copy)
