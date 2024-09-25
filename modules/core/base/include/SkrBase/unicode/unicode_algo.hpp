@@ -31,7 +31,7 @@ constexpr uint64_t utf8_seq_len(skr_char32 ch);
 // return: 0 => invalid code unit, 1-4 => sequence length
 constexpr uint64_t utf8_adjust_index_to_head(const skr_char8* seq, uint64_t size, uint64_t index, uint64_t& adjusted_index);
 // return: index in code point
-constexpr uint64_t utf8_code_point_index(const skr_char8* seq, uint64_t index);
+constexpr uint64_t utf8_code_point_index(const skr_char8* seq, uint32_t size, uint64_t index);
 // return: index in code unit
 constexpr uint64_t utf8_code_unit_index(const skr_char8* seq, uint32_t size, uint64_t index);
 
@@ -51,7 +51,7 @@ constexpr uint64_t utf16_seq_len(skr_char32 ch);
 // return: 0 => invalid code unit, 1-2 => sequence length
 constexpr uint64_t utf16_adjust_index_to_head(const skr_char16* seq, uint64_t size, uint64_t index, uint64_t& adjusted_index);
 // return: index in code point
-constexpr uint64_t utf16_code_point_index(const skr_char16* seq, uint64_t index);
+constexpr uint64_t utf16_code_point_index(const skr_char16* seq, uint32_t size, uint64_t index);
 // return: index in code unit
 constexpr uint64_t utf16_code_unit_index(const skr_char16* seq, uint32_t size, uint64_t index);
 
@@ -273,15 +273,19 @@ inline constexpr uint64_t utf8_adjust_index_to_head(const skr_char8* seq, uint64
         return index + seq_len <= size ? seq_len : 0; // avoid overflow
     }
 }
-inline constexpr uint64_t utf8_code_point_index(const skr_char8* seq, uint64_t index)
+inline constexpr uint64_t utf8_code_point_index(const skr_char8* seq, uint32_t size, uint64_t index)
 {
+    SKR_ASSERT(index < size);
+
     uint64_t cur_idx          = 0;
     uint64_t code_point_count = 0;
 
     do
     {
         const auto seq_len = utf8_seq_len(seq[cur_idx]);
-        cur_idx += seq_len ? seq_len : 1; // invalid code unit
+        cur_idx += seq_len ?
+                   (cur_idx + seq_len <= size) ? seq_len : 1 : // check bad ch in tail
+                   1;                                          // invalid code unit
         ++code_point_count;
     } while (cur_idx <= index);
 
@@ -289,12 +293,16 @@ inline constexpr uint64_t utf8_code_point_index(const skr_char8* seq, uint64_t i
 }
 inline constexpr uint64_t utf8_code_unit_index(const skr_char8* seq, uint32_t size, uint64_t index)
 {
+    SKR_ASSERT(index < size);
+
     uint64_t cur_idx          = 0;
     uint64_t code_point_count = 0;
     while (cur_idx < size && code_point_count < index)
     {
         const auto seq_len = utf8_seq_len(seq[cur_idx]);
-        cur_idx += seq_len ? seq_len : 1; // invalid code unit
+        cur_idx += seq_len ?
+                   (cur_idx + seq_len <= size) ? seq_len : 1 : // check bad ch in tail
+                   1;                                          // invalid code unit
         ++code_point_count;
     }
     SKR_ASSERT(code_point_count == index && "invalid code point index");
@@ -367,26 +375,34 @@ inline constexpr uint64_t utf16_adjust_index_to_head(const skr_char16* seq, uint
         return index + seq_len <= size ? seq_len : 0; // avoid overflow
     }
 }
-inline constexpr uint64_t utf16_code_point_index(const skr_char16* seq, uint64_t index)
+inline constexpr uint64_t utf16_code_point_index(const skr_char16* seq, uint32_t size, uint64_t index)
 {
+    SKR_ASSERT(index < size);
+
     uint64_t cur_idx          = 0;
     uint64_t code_point_count = 0;
     do
     {
         const auto seq_len = utf16_seq_len(seq[cur_idx]);
-        cur_idx += seq_len ? seq_len : 1; // invalid code unit
+        cur_idx += seq_len ?
+                   (cur_idx + seq_len <= size) ? seq_len : 1 : // check bad ch in tail
+                   1;                                          // invalid code unit
         ++code_point_count;
     } while (cur_idx <= index);
     return code_point_count - 1;
 }
 inline constexpr uint64_t utf16_code_unit_index(const skr_char16* seq, uint32_t size, uint64_t index)
 {
+    SKR_ASSERT(index < size);
+
     uint64_t cur_idx          = 0;
     uint64_t code_point_count = 0;
     while (cur_idx < size && code_point_count < index)
     {
         const auto seq_len = utf16_seq_len(seq[cur_idx]);
-        cur_idx += seq_len ? seq_len : 1; // invalid code unit
+        cur_idx += seq_len ?
+                   (cur_idx + seq_len <= size) ? seq_len : 1 : // check bad ch in tail
+                   1;                                          // invalid code unit
         ++code_point_count;
     }
     SKR_ASSERT(code_point_count == index && "invalid code point index");

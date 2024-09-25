@@ -45,9 +45,6 @@ struct U8StringView {
     constexpr U8StringView();
     constexpr U8StringView(const DataType* str);
     constexpr U8StringView(const DataType* str, SizeType len);
-    constexpr U8StringView(const DataType* begin, const DataType* end);
-    template <size_t N>
-    constexpr U8StringView(const DataType (&arr)[N]);
     template <LinearMemoryContainer U>
     constexpr U8StringView(const U& container);
     constexpr ~U8StringView();
@@ -63,8 +60,6 @@ struct U8StringView {
     // compare
     constexpr bool operator==(const U8StringView& rhs) const;
     constexpr bool operator!=(const U8StringView& rhs) const;
-    constexpr bool operator==(const DataType* rhs) const;
-    constexpr bool operator!=(const DataType* rhs) const;
 
     // getter
     constexpr const DataType* data() const;
@@ -131,14 +126,14 @@ struct U8StringView {
     constexpr PartitionResult partition(const U8StringView& delimiter) const;
 
     // split
-    template <typename Buffer>
-    constexpr SizeType split(Buffer& out, const U8StringView& delimiter, bool cull_empty, SizeType limit = npos) const;
+    template <CanAdd<const U8StringView<TS>&> Buffer>
+    constexpr SizeType split(Buffer& out, const U8StringView& delimiter, bool cull_empty = false, SizeType limit = npos) const;
     template <std::invocable<const U8StringView<TS>&> F>
-    constexpr SizeType split_each(F&& func, const U8StringView& delimiter, bool cull_empty, SizeType limit = npos) const;
-    template <typename Buffer>
-    constexpr SizeType split(Buffer& out, const UTF8Seq& delimiter, bool cull_empty, SizeType limit = npos) const;
+    constexpr SizeType split_each(F&& func, const U8StringView& delimiter, bool cull_empty = false, SizeType limit = npos) const;
+    template <CanAdd<const U8StringView<TS>&> Buffer>
+    constexpr SizeType split(Buffer& out, const UTF8Seq& delimiter, bool cull_empty = false, SizeType limit = npos) const;
     template <std::invocable<const U8StringView<TS>&> F>
-    constexpr SizeType split_each(F&& func, const UTF8Seq& delimiter, bool cull_empty, SizeType limit = npos) const;
+    constexpr SizeType split_each(F&& func, const UTF8Seq& delimiter, bool cull_empty = false, SizeType limit = npos) const;
 
     // text index
     constexpr SizeType buffer_index_to_text(SizeType index) const;
@@ -176,19 +171,6 @@ inline constexpr U8StringView<TS>::U8StringView(const DataType* str, SizeType le
 {
 }
 template <typename TS>
-inline constexpr U8StringView<TS>::U8StringView(const DataType* begin, const DataType* end)
-    : _data(const_cast<DataType*>(begin))
-    , _size(end - begin)
-{
-}
-template <typename TS>
-template <size_t N>
-inline constexpr U8StringView<TS>::U8StringView(const DataType (&arr)[N])
-    : _data(const_cast<DataType*>(arr))
-    , _size(N - 1)
-{
-}
-template <typename TS>
 template <LinearMemoryContainer U>
 inline constexpr U8StringView<TS>::U8StringView(const U& container)
     : _data(const_cast<DataType*>(container.data()))
@@ -218,6 +200,10 @@ inline constexpr bool U8StringView<TS>::operator==(const U8StringView& rhs) cons
     {
         return false;
     }
+    else if (is_empty() || rhs.is_empty())
+    {
+        return is_empty() == rhs.is_empty();
+    }
     else
     {
         return CharTraits::compare(_data, rhs._data, _size) == 0;
@@ -225,24 +211,6 @@ inline constexpr bool U8StringView<TS>::operator==(const U8StringView& rhs) cons
 }
 template <typename TS>
 inline constexpr bool U8StringView<TS>::operator!=(const U8StringView& rhs) const
-{
-    return !(*this == rhs);
-}
-template <typename TS>
-inline constexpr bool U8StringView<TS>::operator==(const DataType* rhs) const
-{
-    auto rhs_size = CharTraits::length(rhs);
-    if (_size != rhs_size)
-    {
-        return false;
-    }
-    else
-    {
-        return CharTraits::compare(_data, rhs, _size) == 0;
-    }
-}
-template <typename TS>
-inline constexpr bool U8StringView<TS>::operator!=(const DataType* rhs) const
 {
     return !(*this == rhs);
 }
@@ -273,20 +241,7 @@ inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::length_buffer() co
 template <typename TS>
 inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::length_text() const
 {
-    if (_size == 0)
-    {
-        return 0;
-    }
-
-    SizeType result  = 0;
-    SizeType cur_idx = 0;
-    while (cur_idx < _size)
-    {
-        auto seq_len = utf8_seq_len(_data[cur_idx]);
-        cur_idx += seq_len == 0 ? 1 : seq_len;
-        ++result;
-    }
-    return result;
+    return is_empty() ? 0 : utf8_code_point_index(_data, _size, _size - 1) + 1;
 }
 
 // validator
@@ -324,7 +279,7 @@ inline constexpr UTF8Seq U8StringView<TS>::at_text(SizeType index) const
     SKR_ASSERT(!is_empty() && "undefined behavior accessing an empty string view");
     SKR_ASSERT(is_valid_index(index) && "undefined behavior accessing out of bounds");
     uint64_t seq_index;
-    return utf8_parse_seq(_data, _size, index, seq_index);
+    return UTF8Seq::ParseUTF8(_data, _size, index, seq_index);
 }
 template <typename TS>
 inline constexpr UTF8Seq U8StringView<TS>::last_text(SizeType index) const
@@ -333,7 +288,7 @@ inline constexpr UTF8Seq U8StringView<TS>::last_text(SizeType index) const
     SKR_ASSERT(!is_empty() && "undefined behavior accessing an empty string view");
     SKR_ASSERT(is_valid_index(index) && "undefined behavior accessing out of bounds");
     uint64_t seq_index;
-    return utf8_parse_seq(_data, _size, index, seq_index);
+    return UTF8Seq::ParseUTF8(_data, _size, index, seq_index);
 }
 
 // sub views
@@ -366,8 +321,8 @@ inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find(const U8Strin
         return {};
     }
 
-    auto match_try = _data;
-    auto match_end = _data + (_size - pattern.size()) + 1;
+    const DataType* match_try = _data;
+    auto            match_end = _data + (_size - pattern.size()) + 1;
     while (true)
     {
         match_try = CharTraits::find(match_try, match_end - match_try, pattern.at_buffer(0));
@@ -378,7 +333,7 @@ inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find(const U8Strin
 
         if (CharTraits::compare(match_try, pattern.data(), pattern.size()) == 0)
         {
-            return { match_try, match_try - _data };
+            return { match_try, static_cast<SizeType>(match_try - _data) };
         }
 
         ++match_try;
@@ -392,13 +347,13 @@ inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find_last(const U8
         return {};
     }
 
-    auto match_try = _data + _size - pattern.size();
+    const DataType* match_try = _data + _size - pattern.size();
     while (true)
     {
         if (CharTraits::eq(*match_try, pattern.at_buffer(0)) &&
             CharTraits::compare(match_try, pattern.data(), pattern.size()) == 0)
         {
-            return { match_try, match_try - _data };
+            return { match_try, static_cast<SizeType>(match_try - _data) };
         }
 
         if (match_try == _data)
@@ -421,7 +376,11 @@ inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find(const UTF8Seq
         {
             if (auto found = CharTraits::find(_data, _size, pattern.data[0]))
             {
-                return { found, found - _data };
+                return { found, static_cast<SizeType>(found - _data) };
+            }
+            else
+            {
+                return {};
             }
         }
         else
@@ -598,11 +557,11 @@ inline constexpr U8StringView<TS> U8StringView<TS>::trim_start(const U8StringVie
         return { *this };
     }
 
-    for (auto it = iter(); it.has_next(); it.move_next())
+    for (auto cursor = cursor_begin(); !cursor.reach_end(); cursor.move_next())
     {
-        if (!characters.contains(it.ref()))
+        if (!characters.contains(cursor.ref()))
         {
-            return this->subview(it.index());
+            return this->subview(cursor.index());
         }
     }
     return {};
@@ -619,13 +578,14 @@ inline constexpr U8StringView<TS> U8StringView<TS>::trim_end(const U8StringView&
         return { *this };
     }
 
-    for (auto it = iter_inv(); it.has_next(); it.move_next())
+    for (auto cursor = cursor_end(); !cursor.reach_begin(); cursor.move_prev())
     {
-        if (!characters.contains(it.ref()))
+        if (!characters.contains(cursor.ref()))
         {
-            return this->subview(0, it.index() + 1);
+            return this->subview(0, cursor.index() + cursor.seq_len());
         }
     }
+    return {};
 }
 template <typename TS>
 inline constexpr U8StringView<TS> U8StringView<TS>::trim(const UTF8Seq& ch) const
@@ -678,13 +638,14 @@ inline constexpr U8StringView<TS> U8StringView<TS>::trim_invalid_start() const
         return {};
     }
 
-    for (auto it = iter(); it.has_next(); it.move_next())
+    for (auto cursor = cursor_begin(); !cursor.reach_end(); cursor.move_next())
     {
-        if (it.ref().is_valid())
+        if (cursor.ref().is_valid())
         {
-            return this->subview(it.index());
+            return this->subview(cursor.index());
         }
     }
+    return {};
 }
 template <typename TS>
 inline constexpr U8StringView<TS> U8StringView<TS>::trim_invalid_end() const
@@ -694,13 +655,14 @@ inline constexpr U8StringView<TS> U8StringView<TS>::trim_invalid_end() const
         return {};
     }
 
-    for (auto it = iter_inv(); it.has_next(); it.move_next())
+    for (auto cursor = cursor_end(); !cursor.reach_begin(); cursor.move_prev())
     {
-        if (it.ref().is_valid())
+        if (cursor.ref().is_valid())
         {
-            return this->subview(0, it.index() + 1);
+            return this->subview(0, cursor.index() + cursor.seq_len());
         }
     }
+    return {};
 }
 
 // partition
@@ -717,13 +679,17 @@ inline constexpr U8StringView<TS>::PartitionResult U8StringView<TS>::partition(c
     }
     else
     {
-        return {};
+        return {
+            *this,
+            {},
+            {}
+        };
     }
 }
 
 // split
 template <typename TS>
-template <typename Buffer>
+template <CanAdd<const U8StringView<TS>&> Buffer>
 inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out, const U8StringView& delimiter, bool cull_empty, SizeType limit) const
 {
     U8StringView each_view{ *this };
@@ -738,11 +704,11 @@ inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out,
             ++count;
             if constexpr (HasAdd<Buffer, U8StringView>)
             {
-                out.append(left);
+                out.add(left);
             }
             else if constexpr (HasAppend<Buffer, U8StringView<TS>>)
             {
-                out.add(left);
+                out.append(left);
             }
             else
             {
@@ -814,7 +780,7 @@ inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split_each(F&& fun
     return count;
 }
 template <typename TS>
-template <typename Buffer>
+template <CanAdd<const U8StringView<TS>&> Buffer>
 inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
 {
     return split(
@@ -838,7 +804,7 @@ inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split_each(F&& fun
 template <typename TS>
 inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::buffer_index_to_text(SizeType index) const
 {
-    return utf8_code_point_index(_data, index);
+    return utf8_code_point_index(_data, _size, index);
 }
 template <typename TS>
 inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::text_index_to_buffer(SizeType index) const
@@ -860,21 +826,21 @@ inline U8StringView<TS>::CCursor U8StringView<TS>::cursor_end() const
 template <typename TS>
 inline U8StringView<TS>::CIter U8StringView<TS>::iter() const
 {
-    return CCursor::Begin(_data, _size).iter();
+    return CCursor::Begin(_data, _size).as_iter();
 }
 template <typename TS>
 inline U8StringView<TS>::CIterInv U8StringView<TS>::iter_inv() const
 {
-    return CCursor::End(_data, _size).iter_inv();
+    return CCursor::End(_data, _size).as_iter_inv();
 }
 template <typename TS>
 inline U8StringView<TS>::CRange U8StringView<TS>::range() const
 {
-    return CCursor::Begin(_data, _size).range();
+    return CCursor::Begin(_data, _size).as_range();
 }
 template <typename TS>
 inline U8StringView<TS>::CRangeInv U8StringView<TS>::range_inv() const
 {
-    return CCursor::RangeInv(_data, _size);
+    return CCursor::End(_data, _size).as_range_inv();
 }
 } // namespace skr::container

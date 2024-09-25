@@ -68,5 +68,7 @@ template <typename T, typename Elem>
 concept HasAdd = requires(T t, Elem e) {
     t.add(e);
 };
+template <typename T, typename Elem>
+concept CanAdd = HasAppend<T, Elem> || HasAdd<T, Elem>;
 
 } // namespace skr::container

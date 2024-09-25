@@ -229,4 +229,7 @@ kInlineCount,
 container::RingBufferMemoryBase<TestSizeType>,
 TestAllocatorType>>;
 
+//===========String===================================================================
+using StringView = container::U8StringView<TestSizeType>;
+
 } // namespace skr::test_container

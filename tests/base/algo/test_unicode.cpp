@@ -80,16 +80,16 @@ TEST_CASE("Test Unicode")
         const auto test_str = u8"🐓鸡ĜG";
 
         // cu => cp, normal
-        REQUIRE_EQ(utf8_code_point_index(test_str, 0), 0);
-        REQUIRE_EQ(utf8_code_point_index(test_str, 1), 0);
-        REQUIRE_EQ(utf8_code_point_index(test_str, 2), 0);
-        REQUIRE_EQ(utf8_code_point_index(test_str, 3), 0);
-        REQUIRE_EQ(utf8_code_point_index(test_str, 4), 1);
-        REQUIRE_EQ(utf8_code_point_index(test_str, 5), 1);
-        REQUIRE_EQ(utf8_code_point_index(test_str, 6), 1);
-        REQUIRE_EQ(utf8_code_point_index(test_str, 7), 2);
-        REQUIRE_EQ(utf8_code_point_index(test_str, 8), 2);
-        REQUIRE_EQ(utf8_code_point_index(test_str, 9), 3);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 10, 0), 0);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 10, 1), 0);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 10, 2), 0);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 10, 3), 0);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 10, 4), 1);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 10, 5), 1);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 10, 6), 1);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 10, 7), 2);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 10, 8), 2);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 10, 9), 3);
 
         // cp => cu, normal
         REQUIRE_EQ(utf8_code_unit_index(test_str, 10, 0), 0);
@@ -98,15 +98,15 @@ TEST_CASE("Test Unicode")
         REQUIRE_EQ(utf8_code_unit_index(test_str, 10, 3), 9);
 
         // cu => cp, start with bad ch
-        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 0), 0);
-        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 1), 1);
-        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 2), 2);
-        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 3), 3);
-        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 4), 3);
-        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 5), 3);
-        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 6), 4);
-        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 7), 4);
-        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 8), 5);
+        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 9, 0), 0);
+        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 9, 1), 1);
+        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 9, 2), 2);
+        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 9, 3), 3);
+        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 9, 4), 3);
+        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 9, 5), 3);
+        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 9, 6), 4);
+        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 9, 7), 4);
+        REQUIRE_EQ(utf8_code_point_index(test_str + 1, 9, 8), 5);
 
         // cp => cu, start with bad ch
         REQUIRE_EQ(utf8_code_unit_index(test_str + 1, 9, 0), 0);
@@ -116,19 +116,31 @@ TEST_CASE("Test Unicode")
         REQUIRE_EQ(utf8_code_unit_index(test_str + 1, 9, 4), 6);
         REQUIRE_EQ(utf8_code_unit_index(test_str + 1, 9, 5), 8);
 
-        // FIXME. if end with bad ch, CP <=> CU will mismatch
+        // cu => cp, end with bad ch
+        REQUIRE_EQ(utf8_code_point_index(test_str, 6, 0), 0);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 6, 1), 0);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 6, 2), 0);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 6, 3), 0);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 6, 4), 1);
+        REQUIRE_EQ(utf8_code_point_index(test_str, 6, 5), 2);
+
+        // cp => cu, end with bad ch
+        REQUIRE_EQ(utf8_code_unit_index(test_str, 6, 0), 0);
+        REQUIRE_EQ(utf8_code_unit_index(test_str, 6, 1), 4);
+        REQUIRE_EQ(utf8_code_unit_index(test_str, 6, 2), 5);
     }
 
     SUBCASE("UTF-16 index convert")
     {
-        const auto test_str = u"🐓鸡ĜG";
+        const auto test_str   = u"🐓鸡ĜG";
+        const auto test_str_b = u"🐓🐓🐓";
 
         // cu => cp, normal
-        REQUIRE_EQ(utf16_code_point_index(test_str, 0), 0);
-        REQUIRE_EQ(utf16_code_point_index(test_str, 1), 0);
-        REQUIRE_EQ(utf16_code_point_index(test_str, 2), 1);
-        REQUIRE_EQ(utf16_code_point_index(test_str, 3), 2);
-        REQUIRE_EQ(utf16_code_point_index(test_str, 4), 3);
+        REQUIRE_EQ(utf16_code_point_index(test_str, 5, 0), 0);
+        REQUIRE_EQ(utf16_code_point_index(test_str, 5, 1), 0);
+        REQUIRE_EQ(utf16_code_point_index(test_str, 5, 2), 1);
+        REQUIRE_EQ(utf16_code_point_index(test_str, 5, 3), 2);
+        REQUIRE_EQ(utf16_code_point_index(test_str, 5, 4), 3);
 
         // cp => cu, normal
         REQUIRE_EQ(utf16_code_unit_index(test_str, 5, 0), 0);
@@ -137,10 +149,10 @@ TEST_CASE("Test Unicode")
         REQUIRE_EQ(utf16_code_unit_index(test_str, 5, 3), 4);
 
         // cu => cp, start with bad ch
-        REQUIRE_EQ(utf16_code_point_index(test_str + 1, 0), 0);
-        REQUIRE_EQ(utf16_code_point_index(test_str + 1, 1), 1);
-        REQUIRE_EQ(utf16_code_point_index(test_str + 1, 2), 2);
-        REQUIRE_EQ(utf16_code_point_index(test_str + 1, 3), 3);
+        REQUIRE_EQ(utf16_code_point_index(test_str + 1, 4, 0), 0);
+        REQUIRE_EQ(utf16_code_point_index(test_str + 1, 4, 1), 1);
+        REQUIRE_EQ(utf16_code_point_index(test_str + 1, 4, 2), 2);
+        REQUIRE_EQ(utf16_code_point_index(test_str + 1, 4, 3), 3);
 
         // cp => cu, start with bad ch
         REQUIRE_EQ(utf16_code_unit_index(test_str + 1, 4, 0), 0);
@@ -148,7 +160,17 @@ TEST_CASE("Test Unicode")
         REQUIRE_EQ(utf16_code_unit_index(test_str + 1, 4, 2), 2);
         REQUIRE_EQ(utf16_code_unit_index(test_str + 1, 4, 3), 3);
 
-        // FIXME. if end with bad ch, CP <=> CU will mismatch
+        // cu => cp, end with bad ch
+        REQUIRE_EQ(utf16_code_point_index(test_str_b, 5, 0), 0);
+        REQUIRE_EQ(utf16_code_point_index(test_str_b, 5, 1), 0);
+        REQUIRE_EQ(utf16_code_point_index(test_str_b, 5, 2), 1);
+        REQUIRE_EQ(utf16_code_point_index(test_str_b, 5, 3), 1);
+        REQUIRE_EQ(utf16_code_point_index(test_str_b, 5, 4), 2);
+
+        // cp => cu, end with bad ch
+        REQUIRE_EQ(utf16_code_unit_index(test_str_b, 5, 0), 0);
+        REQUIRE_EQ(utf16_code_unit_index(test_str_b, 5, 1), 2);
+        REQUIRE_EQ(utf16_code_unit_index(test_str_b, 5, 2), 4);
     }
 
     SUBCASE("UTF-8 parse seq")

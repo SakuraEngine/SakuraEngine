@@ -18,7 +18,7 @@ namespace skr::container
 //  isdigit 是否只包含数字字符
 //  islower 是否只包含小写字符
 //  isupper 是否只包含大写字符
-// TODO. 是否提供 ToStringTraits 用于将各种类型转化为字符串
+// TODO. 是否提供 ToStringTraits 用于将各种类型转化为字符串，这一功能与 formatter 部分重叠
 template <typename Memory>
 struct U8String : protected Memory {
     // from memory
