@@ -6,6 +6,14 @@
 
 // TODO. literal 操作 API
 //  1. literal 与 COW 视为同类，采取主动标记（set_literal）和主动触发 copy（pre_modify）来切换形态
+// Base 自带 SSO 和常量优化，且支持三形态切换
+//  [literal]==pre_modify()==>[heap]/[sso]
+//
+//  [sso]===realloc()==>[heap]
+//       |==set_literal()==>[literal]
+//
+//  [heap]===realloc()==>[sso]
+//        |==set_literal()==>[literal]
 namespace skr::container
 {
 template <typename TS, uint64_t SSOSize = 31>
@@ -27,6 +35,9 @@ struct StringMemoryBase {
     // setter
     inline void set_size(SizeType value) noexcept
     {
+        SKR_ASSERT(value <= capacity() && "size must be less than capacity");
+        SKR_ASSERT(!is_literal() && "literal state must be canceled before size change");
+
         if (_is_sso())
         {
             _sso_size = value;
@@ -62,6 +73,13 @@ protected:
         _capacity = 0;
         _sso_flag = 0;
     }
+    inline void _reset_literal(void* data, SizeType size) noexcept
+    {
+        _data     = data;
+        _size     = size;
+        _capacity = 0;
+        _sso_flag = 0;
+    }
     inline bool _is_sso() const noexcept { return _sso_flag; }
 
 protected:
@@ -82,6 +100,7 @@ protected:
 };
 
 // SSO string memory
+// TODO. copy 考虑 literal
 template <typename T, typename TS, uint64_t SSOSize, typename Allocator>
 struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
     using Base               = StringMemoryBase<TS, SSOSize>;
@@ -200,6 +219,8 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
     // memory operations
     inline void realloc(SizeType new_capacity) noexcept
     {
+        SKR_ASSERT(!Base::is_literal() && "literal state must be canceled before memory ops");
+
         SKR_ASSERT(new_capacity != Base::_capacity);
         SKR_ASSERT(new_capacity > 0);
         SKR_ASSERT(Base::size() <= new_capacity);
@@ -272,6 +293,8 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
     }
     inline void free() noexcept
     {
+        SKR_ASSERT(!Base::is_literal() && "literal state must be canceled before realloc");
+
         if (!Base::_is_sso())
         {
             Allocator::template free<DataType>(Base::_data);
@@ -280,6 +303,8 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
     }
     inline SizeType grow(SizeType grow_size) noexcept
     {
+        SKR_ASSERT(!Base::is_literal() && "literal state must be canceled before realloc");
+
         SizeType old_size = Base::size();
         SizeType new_size = old_size + grow_size;
 
@@ -298,6 +323,8 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
     }
     inline void shrink() noexcept
     {
+        SKR_ASSERT(!Base::is_literal() && "literal state must be canceled before realloc");
+
         SizeType new_capacity = default_get_shrink<DataType>(Base::size(), Base::capacity());
         SKR_ASSERT(new_capacity >= Base::size());
         if (new_capacity < Base::capacity())
@@ -314,7 +341,11 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
     }
     inline void clear() noexcept
     {
-        if (Base::size())
+        if (is_literal())
+        {
+            Base::_reset_sso();
+        }
+        else if (Base::size())
         {
             memory::destruct(data(), Base::size());
             Base::set_size(0);
@@ -327,27 +358,34 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
         // clean up
         clear();
         free();
-        Base::_reset_heap();
 
         // setup data
-        Base::_data     = const_cast<DataType*>(data);
-        Base::_size     = len;
-        Base::_capacity = 0;
+        Base::_reset_literal(data, len);
     }
-    inline void pre_modify() noexcept
+    inline bool pre_modify(SizeType except_size = 0) noexcept
     {
+        // if you want to clean up literal data, use clear() instead
         if (Base::is_literal())
         {
+            // cache data
             DataType* literal_data = Base::_data;
             DataType* literal_size = Base::_size;
 
+            // reset to empty string
+            Base::_reset_sso();
+
             // realloc memory
-            realloc(literal_size);
+            except_size = except_size ? except_size : literal_size;
+            realloc(except_size);
 
             // copy data
-            memory::copy(data(), literal_data, literal_size);
-            Base::set_size(literal_size);
+            SizeType copy_size = std::min(except_size, literal_size);
+            memory::copy(data(), literal_data, copy_size);
+            Base::set_size(copy_size);
+
+            return true;
         }
+        return false;
     }
 
     // getter

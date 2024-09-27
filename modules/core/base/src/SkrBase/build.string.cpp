@@ -14,6 +14,7 @@ namespace skr
 {
 bool in_const_segment(const void* ptr)
 {
+    // reference: https://www.youtube.com/watch?v=fglXeSWGVDc
 #if SKR_PLAT_WINDOWS
     static MODULEINFO module_info;
     static const bool b = GetModuleInformation(GetCurrentProcess(), GetModuleHandleA(NULL), &module_info, sizeof(MODULEINFO));

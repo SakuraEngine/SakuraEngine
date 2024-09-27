@@ -303,35 +303,73 @@ TEST_CASE("Test U8StringView")
 
     SUBCASE("partition")
     {
-        StringView view{ u8"This is a 🐓 good text" };
-        StringView left{ u8"This is a " };
-        StringView mid{ u8"🐓" };
-        StringView right{ u8" good text" };
-        auto [result_left, result_mid, result_right] = view.partition(u8"🐓");
-        REQUIRE_EQ(result_left, left);
-        REQUIRE_EQ(result_mid, mid);
-        REQUIRE_EQ(result_right, right);
+        // view partition
+        {
+            // util
+            StringView view{ u8"This is a 🐓 good text" };
+            StringView left{ u8"This is a " };
+            StringView mid{ u8"🐓" };
+            StringView right{ u8" good text" };
+            auto [result_left, result_mid, result_right] = view.partition(u8"🐓");
+            REQUIRE_EQ(result_left, left);
+            REQUIRE_EQ(result_mid, mid);
+            REQUIRE_EQ(result_right, right);
 
-        // not found
-        StringView not_found_view{ u8"This is a good text" };
-        auto [not_found_left, not_found_mid, not_found_right] = not_found_view.partition(u8"🐓");
-        REQUIRE_EQ(not_found_left, not_found_view);
-        REQUIRE(not_found_mid.is_empty());
-        REQUIRE(not_found_right.is_empty());
+            // not found
+            StringView not_found_view{ u8"This is a good text" };
+            auto [not_found_left, not_found_mid, not_found_right] = not_found_view.partition(u8"🐓");
+            REQUIRE_EQ(not_found_left, not_found_view);
+            REQUIRE(not_found_mid.is_empty());
+            REQUIRE(not_found_right.is_empty());
 
-        // first
-        StringView first_view{ u8"🐓 This is a good text" };
-        auto [first_left, first_mid, first_right] = first_view.partition(u8"🐓");
-        REQUIRE(first_left.is_empty());
-        REQUIRE_EQ(first_mid, u8"🐓");
-        REQUIRE_EQ(first_right, StringView{ u8" This is a good text" });
+            // first
+            StringView first_view{ u8"🐓 This is a good text" };
+            auto [first_left, first_mid, first_right] = first_view.partition(u8"🐓");
+            REQUIRE(first_left.is_empty());
+            REQUIRE_EQ(first_mid, u8"🐓");
+            REQUIRE_EQ(first_right, StringView{ u8" This is a good text" });
 
-        // last
-        StringView last_view{ u8"This is a good text 🐓" };
-        auto [last_left, last_mid, last_right] = last_view.partition(u8"🐓");
-        REQUIRE_EQ(last_left, StringView{ u8"This is a good text " });
-        REQUIRE_EQ(last_mid, u8"🐓");
-        REQUIRE(last_right.is_empty());
+            // last
+            StringView last_view{ u8"This is a good text 🐓" };
+            auto [last_left, last_mid, last_right] = last_view.partition(u8"🐓");
+            REQUIRE_EQ(last_left, StringView{ u8"This is a good text " });
+            REQUIRE_EQ(last_mid, u8"🐓");
+            REQUIRE(last_right.is_empty());
+        }
+
+        // seq partition
+        {
+            // util
+            StringView view{ u8"This is a 🐓 good text" };
+            StringView left{ u8"This is a " };
+            StringView mid{ u8"🐓" };
+            StringView right{ u8" good text" };
+            auto [result_left, result_mid, result_right] = view.partition(skr::UTF8Seq{ u8"🐓", 4 });
+            REQUIRE_EQ(result_left, left);
+            REQUIRE_EQ(result_mid, mid);
+            REQUIRE_EQ(result_right, right);
+
+            // not found
+            StringView not_found_view{ u8"This is a good text" };
+            auto [not_found_left, not_found_mid, not_found_right] = not_found_view.partition(skr::UTF8Seq{ u8"🐓", 4 });
+            REQUIRE_EQ(not_found_left, not_found_view);
+            REQUIRE(not_found_mid.is_empty());
+            REQUIRE(not_found_right.is_empty());
+
+            // first
+            StringView first_view{ u8"🐓 This is a good text" };
+            auto [first_left, first_mid, first_right] = first_view.partition(skr::UTF8Seq{ u8"🐓", 4 });
+            REQUIRE(first_left.is_empty());
+            REQUIRE_EQ(first_mid, u8"🐓");
+            REQUIRE_EQ(first_right, StringView{ u8" This is a good text" });
+
+            // last
+            StringView last_view{ u8"This is a good text 🐓" };
+            auto [last_left, last_mid, last_right] = last_view.partition(skr::UTF8Seq{ u8"🐓", 4 });
+            REQUIRE_EQ(last_left, StringView{ u8"This is a good text " });
+            REQUIRE_EQ(last_mid, u8"🐓");
+            REQUIRE(last_right.is_empty());
+        }
     }
 
     SUBCASE("split")

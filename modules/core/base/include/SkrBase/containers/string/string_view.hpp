@@ -124,6 +124,7 @@ struct U8StringView {
 
     // partition
     constexpr PartitionResult partition(const U8StringView& delimiter) const;
+    constexpr PartitionResult partition(const UTF8Seq& delimiter) const;
 
     // split
     template <CanAdd<const U8StringView<TS>&> Buffer>
@@ -684,6 +685,18 @@ inline constexpr U8StringView<TS>::PartitionResult U8StringView<TS>::partition(c
             {},
             {}
         };
+    }
+}
+template <typename TS>
+inline constexpr U8StringView<TS>::PartitionResult U8StringView<TS>::partition(const UTF8Seq& delimiter) const
+{
+    if (delimiter.is_valid())
+    {
+        return partition(U8StringView{ &delimiter.data[0], delimiter.len });
+    }
+    else
+    {
+        return { *this, {}, {} };
     }
 }
 
