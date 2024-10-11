@@ -53,12 +53,12 @@ struct StringMemoryBase {
     }
 
     // string literals
-    inline bool is_literal() const noexcept { return !is_sso() && _size > 0 && _capacity == 0; }
+    inline bool is_literal() const noexcept { return !_is_sso() && _size > 0 && _capacity == 0; }
 
 protected:
     // data getter
-    inline void*       _raw_data() noexcept { return is_sso() ? _sso_data : _data; }
-    inline const void* _raw_data() const noexcept { return is_sso() ? _sso_data : _data; }
+    inline void*       _raw_data() noexcept { return _is_sso() ? _sso_data : _data; }
+    inline const void* _raw_data() const noexcept { return _is_sso() ? _sso_data : _data; }
 
     // sso
     inline void _reset_sso() noexcept
@@ -86,9 +86,9 @@ protected:
     union
     {
         struct {
-            void*    _data     = nullptr;
-            SizeType _size     = 0;
-            SizeType _capacity = 0;
+            void*    _data;
+            SizeType _size;
+            SizeType _capacity;
         };
         struct {
             uint8_t _sso_data[SSOSize];
@@ -341,7 +341,7 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
     }
     inline void clear() noexcept
     {
-        if (is_literal())
+        if (Base::is_literal())
         {
             Base::_reset_sso();
         }

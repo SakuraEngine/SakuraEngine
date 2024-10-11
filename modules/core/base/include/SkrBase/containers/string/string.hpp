@@ -706,7 +706,7 @@ inline void U8String<Memory>::add_at(SizeType idx, const DataType& v, SizeType n
 template <typename Memory>
 inline void U8String<Memory>::add_at_unsafe(SizeType idx, SizeType n)
 {
-    SKR_ASSERT((empty() && idx == 0) || is_valid_index(idx));
+    SKR_ASSERT((is_empty() && idx == 0) || is_valid_index(idx));
     auto move_n = size() - idx;
     add_unsafe(n);
     memory::move(data() + idx + n, data() + idx, move_n);
