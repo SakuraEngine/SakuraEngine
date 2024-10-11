@@ -268,16 +268,15 @@ struct U8String : protected Memory {
 
 private:
     // helper
-    void     _realloc(SizeType expect_capacity);
-    void     _free();
-    SizeType _grow(SizeType grow_size);
-    void     _set_size(SizeType new_size);
-    void     _set_literal(const DataType* str, SizeType len);
-    bool     _pre_modify(SizeType except_memory = 0);
-    void     _assign_with_literal_check(const DataType* str, SizeType len);
-
-    //! Note. use data_w() outside
-    DataType* data();
+    void            _realloc(SizeType expect_capacity);
+    void            _free();
+    SizeType        _grow(SizeType grow_size);
+    void            _set_size(SizeType new_size);
+    void            _set_literal(const DataType* str, SizeType len);
+    bool            _pre_modify(SizeType except_memory = 0);
+    void            _assign_with_literal_check(const DataType* str, SizeType len);
+    DataType*       _data();
+    const DataType* _data() const;
 };
 } // namespace skr::container
 
@@ -326,12 +325,17 @@ inline void U8String<Memory>::_assign_with_literal_check(const DataType* str, Si
         else
         {
             resize_unsafe(len);
-            memory::copy(data(), str, len);
+            memory::copy(_data(), str, len);
         }
     }
 }
 template <typename Memory>
-inline U8String<Memory>::DataType* U8String<Memory>::data()
+inline U8String<Memory>::DataType* U8String<Memory>::_data()
+{
+    return Memory::data();
+}
+template <typename Memory>
+inline const U8String<Memory>::DataType* U8String<Memory>::_data() const
 {
     return Memory::data();
 }
@@ -426,7 +430,7 @@ inline void U8String<Memory>::assign(U&& container) noexcept
         auto n = Traits::size(std::forward<U>(container));
         auto p = Traits::data(std::forward<U>(container));
         resize_unsafe(n);
-        memory::copy(data(), p, n);
+        memory::copy(_data(), p, n);
     }
     else if constexpr (Traits::is_iterable && Traits::has_size)
     {
@@ -497,12 +501,12 @@ template <typename Memory>
 inline U8String<Memory>::DataType* U8String<Memory>::data_w()
 {
     _pre_modify();
-    return Memory::data();
+    return _data();
 }
 template <typename Memory>
 inline const U8String<Memory>::DataType* U8String<Memory>::data() const
 {
-    return Memory::data();
+    return _data();
 }
 template <typename Memory>
 inline Memory& U8String<Memory>::memory()
@@ -529,12 +533,12 @@ inline U8String<Memory>::SizeType U8String<Memory>::length_buffer() const
 template <typename Memory>
 inline const U8String<Memory>::DataType* U8String<Memory>::c_str() const
 {
-    return data();
+    return _data();
 }
 template <typename Memory>
 inline const char* U8String<Memory>::c_str_raw() const
 {
-    return static_cast<const char*>(data());
+    return static_cast<const char*>(_data());
 }
 
 // validate
@@ -590,12 +594,12 @@ inline void U8String<Memory>::resize(SizeType expect_size, const DataType& new_v
     {
         for (SizeType i = size(); i < expect_size; ++i)
         {
-            new (data() + i) DataType(new_value);
+            new (_data() + i) DataType(new_value);
         }
     }
     else if (expect_size < size())
     {
-        memory::destruct(data() + expect_size, size() - expect_size);
+        memory::destruct(_data() + expect_size, size() - expect_size);
     }
 }
 template <typename Memory>
@@ -610,7 +614,7 @@ inline void U8String<Memory>::resize_unsafe(SizeType expect_size)
     // destruct item if need
     if (expect_size < size())
     {
-        memory::destruct(data() + expect_size, size() - expect_size);
+        memory::destruct(_data() + expect_size, size() - expect_size);
     }
 
     // set size
@@ -628,11 +632,11 @@ inline void U8String<Memory>::resize_default(SizeType expect_size)
     // construct item or destruct item if need
     if (expect_size > size())
     {
-        memory::construct(data() + size(), expect_size - size());
+        memory::construct(_data() + size(), expect_size - size());
     }
     else if (expect_size < size())
     {
-        memory::destruct(data() + expect_size, size() - expect_size);
+        memory::destruct(_data() + expect_size, size() - expect_size);
     }
 
     // set size
@@ -650,11 +654,11 @@ inline void U8String<Memory>::resize_zeroed(SizeType expect_size)
     // construct item or destruct item if need
     if (expect_size > size())
     {
-        std::memset(reinterpret_cast<void*>(data() + size()), 0, (expect_size - size()) * sizeof(DataType));
+        std::memset(reinterpret_cast<void*>(_data() + size()), 0, (expect_size - size()) * sizeof(DataType));
     }
     else if (expect_size < size())
     {
-        memory::destruct(data() + expect_size, size() - expect_size);
+        memory::destruct(_data() + expect_size, size() - expect_size);
     }
 
     // set size
@@ -668,7 +672,7 @@ inline U8String<Memory>::DataRef U8String<Memory>::add(const DataType& v, SizeTy
     DataRef ref = add_unsafe(n);
     for (SizeType i = ref.index(); i < size(); ++i)
     {
-        new (data() + i) DataType(v);
+        new (_data() + i) DataType(v);
     }
     return ref;
 }
@@ -679,11 +683,11 @@ inline U8String<Memory>::DataRef U8String<Memory>::add_unsafe(SizeType n)
     {
         _pre_modify(size() + n);
         SizeType old_size = _grow(n);
-        return { data() + old_size, old_size };
+        return { _data() + old_size, old_size };
     }
     else
     {
-        return data() ? DataRef(data() + size(), size()) : DataRef();
+        return _data() ? DataRef(_data() + size(), size()) : DataRef();
     }
 }
 template <typename Memory>
@@ -708,7 +712,7 @@ inline void U8String<Memory>::add_at(SizeType idx, const DataType& v, SizeType n
     add_at_unsafe(idx, n);
     for (SizeType i = 0; i < n; ++i)
     {
-        new (data() + idx + i) DataType(v);
+        new (_data() + idx + i) DataType(v);
     }
 }
 template <typename Memory>
@@ -717,19 +721,19 @@ inline void U8String<Memory>::add_at_unsafe(SizeType idx, SizeType n)
     SKR_ASSERT((is_empty() && idx == 0) || is_valid_index(idx));
     auto move_n = size() - idx;
     add_unsafe(n);
-    memory::move(data() + idx + n, data() + idx, move_n);
+    memory::move(_data() + idx + n, _data() + idx, move_n);
 }
 template <typename Memory>
 inline void U8String<Memory>::add_at_default(SizeType idx, SizeType n)
 {
     add_at_unsafe(idx, n);
-    memory::construct(data() + idx, n);
+    memory::construct(_data() + idx, n);
 }
 template <typename Memory>
 inline void U8String<Memory>::add_at_zeroed(SizeType idx, SizeType n)
 {
     add_at_unsafe(idx, n);
-    std::memset(data() + idx, 0, n * sizeof(DataType));
+    std::memset(_data() + idx, 0, n * sizeof(DataType));
 }
 
 // append
@@ -757,7 +761,7 @@ inline U8String<Memory>::DataRef U8String<Memory>::append(UTF8Seq seq)
     {
         return append(&seq.data[0], seq.len);
     }
-    return data() ? DataRef(data() + size(), size()) : DataRef();
+    return _data() ? DataRef(_data() + size(), size()) : DataRef();
 }
 template <typename Memory>
 template <EachAbleContainer U>
@@ -786,7 +790,7 @@ inline U8String<Memory>::DataRef U8String<Memory>::append(const U& container)
         {
             add(*begin);
         }
-        return { data() + old_size, old_size };
+        return { _data() + old_size, old_size };
     }
     else if constexpr (Traits::is_iterable)
     {
@@ -797,7 +801,7 @@ inline U8String<Memory>::DataRef U8String<Memory>::append(const U& container)
         {
             add(*begin);
         }
-        return { data() + old_size, old_size };
+        return { _data() + old_size, old_size };
     }
     return {};
 }
@@ -814,7 +818,7 @@ inline U8String<Memory>::DataRef U8String<Memory>::append_at(SizeType idx, const
     if (len)
     {
         add_at_unsafe(idx, len);
-        memory::copy(data() + idx, str, len);
+        memory::copy(_data() + idx, str, len);
     }
 }
 template <typename Memory>
@@ -829,7 +833,7 @@ inline U8String<Memory>::DataRef U8String<Memory>::append_at(SizeType idx, UTF8S
     {
         return append_at(idx, &seq.data[0], seq.len);
     }
-    return data() ? DataRef(data() + size(), size()) : DataRef();
+    return _data() ? DataRef(_data() + size(), size()) : DataRef();
 }
 template <typename Memory>
 template <EachAbleContainer U>
@@ -843,7 +847,7 @@ inline U8String<Memory>::DataRef U8String<Memory>::append_at(SizeType idx, const
         if (n)
         {
             add_at_unsafe(idx, n);
-            memory::copy(data() + idx, p, n);
+            memory::copy(_data() + idx, p, n);
         }
     }
     else if constexpr (Traits::is_iterable && Traits::has_size)
@@ -855,7 +859,7 @@ inline U8String<Memory>::DataRef U8String<Memory>::append_at(SizeType idx, const
         add_at_unsafe(idx, n);
         for (; begin != end; ++begin)
         {
-            new (data() + idx) DataType(*begin);
+            new (_data() + idx) DataType(*begin);
             ++idx;
         }
     }
@@ -886,12 +890,12 @@ inline void U8String<Memory>::remove_at(SizeType index, SizeType n)
         auto move_n = size() - index - n;
 
         // destruct remove items
-        memory::destruct(data() + index, n);
+        memory::destruct(_data() + index, n);
 
         // move data
         if (move_n)
         {
-            memory::move(data() + index, data() + size() - move_n, move_n);
+            memory::move(_data() + index, _data() + size() - move_n, move_n);
         }
 
         // update size
@@ -927,8 +931,8 @@ inline bool U8String<Memory>::remove_all(ViewType view)
 
         if (first_found)
         {
-            DataType* write     = data();
-            DataType* read      = data();
+            DataType* write     = _data();
+            DataType* read      = _data();
             SizeType  read_size = size();
 
             _pre_modify();
@@ -1114,7 +1118,7 @@ inline U8String<Memory>::SizeType U8String<Memory>::replace(ViewType from, ViewT
         }
 
         // move final part
-        DataType* end = data() + size();
+        DataType* end = _data() + size();
         if (read != end)
         {
             memory::move(write, read, end - read);
@@ -1160,7 +1164,7 @@ inline U8String<Memory> U8String<Memory>::replace_copy(ViewType from, ViewType t
         result.reserve(count() + replace_size_to - replace_size_from);
 
         CDataRef        found_ref = find_view.find(from);
-        const DataType* read      = data();
+        const DataType* read      = _data();
 
         while (found_ref)
         {
@@ -1179,7 +1183,7 @@ inline U8String<Memory> U8String<Memory>::replace_copy(ViewType from, ViewType t
         }
 
         // copy final part
-        result.append(ViewType{ read, data() + size() - read });
+        result.append(ViewType{ read, _data() + size() - read });
     }
 }
 template <typename Memory>
@@ -1198,10 +1202,10 @@ inline void U8String<Memory>::replace_range(ViewType to, SizeType start, SizeTyp
         _pre_modify();
 
         // copy to
-        memory::copy(data() + start, to.data(), to.size());
+        memory::copy(_data() + start, to._data(), to.size());
 
         // move rest
-        memory::move(data() + start + to.size(), data() + start + count, size() - start - count);
+        memory::move(_data() + start + to.size(), _data() + start + count, size() - start - count);
     }
     else
     {
@@ -1210,10 +1214,10 @@ inline void U8String<Memory>::replace_range(ViewType to, SizeType start, SizeTyp
         reserve(reserve_size);
 
         // move rest
-        memory::move(data() + start + to.size(), data() + start + count, size() - start - count);
+        memory::move(_data() + start + to.size(), _data() + start + count, size() - start - count);
 
         // copy to
-        memory::copy(data() + start, to.data(), to.size());
+        memory::copy(_data() + start, to._data(), to.size());
     }
 
     // update size
@@ -1231,41 +1235,41 @@ template <typename Memory>
 inline const U8String<Memory>::DataType& U8String<Memory>::at_buffer(SizeType index) const
 {
     SKR_ASSERT(is_valid_index(index) && "undefined behaviour accessing out of bounds");
-    return data()[index];
+    return _data()[index];
 }
 template <typename Memory>
 inline const U8String<Memory>::DataType& U8String<Memory>::last_buffer(SizeType index) const
 {
     SKR_ASSERT(is_valid_index(index) && "undefined behaviour accessing out of bounds");
-    return data()[size() - index - 1];
+    return _data()[size() - index - 1];
 }
 template <typename Memory>
 inline U8String<Memory>::DataType& U8String<Memory>::at_buffer_w(SizeType index)
 {
     SKR_ASSERT(is_valid_index(index) && "undefined behaviour accessing out of bounds");
     _pre_modify();
-    return data()[index];
+    return _data()[index];
 }
 template <typename Memory>
 inline U8String<Memory>::DataType& U8String<Memory>::last_buffer_w(SizeType index)
 {
     SKR_ASSERT(is_valid_index(index) && "undefined behaviour accessing out of bounds");
     _pre_modify();
-    return data()[size() - index - 1];
+    return _data()[size() - index - 1];
 }
 template <typename Memory>
 inline UTF8Seq U8String<Memory>::at_text(SizeType index) const
 {
     SKR_ASSERT(is_valid_index(index) && "undefined behaviour accessing out of bounds");
     uint64_t seq_index;
-    return UTF8Seq::ParseUTF8(data(), size(), index, seq_index);
+    return UTF8Seq::ParseUTF8(_data(), size(), index, seq_index);
 }
 template <typename Memory>
 inline UTF8Seq U8String<Memory>::last_text(SizeType index) const
 {
     SKR_ASSERT(is_valid_index(index) && "undefined behaviour accessing out of bounds");
     uint64_t seq_index;
-    return UTF8Seq::ParseUTF8(data(), size(), size() - index - 1, seq_index);
+    return UTF8Seq::ParseUTF8(_data(), size(), size() - index - 1, seq_index);
 }
 
 // sub_string
@@ -1298,7 +1302,7 @@ inline void U8String<Memory>::substr(SizeType start, SizeType count)
     {
         return;
     }
-    memory::move(data(), data() + start, count);
+    memory::move(_data(), _data() + start, count);
     _set_size(count);
 }
 template <typename Memory>
@@ -1515,7 +1519,7 @@ inline void U8String<Memory>::trim_start(const ViewType& characters)
     if (trim_view.size() != size())
     {
         _pre_modify();
-        memory::move(data(), trim_view.data(), trim_view.size());
+        memory::move(_data(), trim_view._data(), trim_view.size());
         _set_size(trim_view.size());
     }
 }
@@ -1542,7 +1546,7 @@ inline void U8String<Memory>::trim_start(const UTF8Seq& ch)
     if (trim_view.size() != size())
     {
         _pre_modify();
-        memory::move(data(), trim_view.data(), trim_view.size());
+        memory::move(_data(), trim_view._data(), trim_view.size());
         _set_size(trim_view.size());
     }
 }
@@ -1601,7 +1605,7 @@ inline void U8String<Memory>::trim_invalid_start()
     if (trim_view.size() != size())
     {
         _pre_modify();
-        memory::move(data(), trim_view.data(), trim_view.size());
+        memory::move(_data(), trim_view._data(), trim_view.size());
         _set_size(trim_view.size());
     }
 }
@@ -1690,7 +1694,7 @@ inline const U8String<Memory>& U8String<Memory>::readonly() const
 template <typename Memory>
 inline U8String<Memory>::ViewType U8String<Memory>::view() const
 {
-    return { data(), size() };
+    return { _data(), size() };
 }
 template <typename Memory>
 inline bool U8String<Memory>::force_cancel_literal() const

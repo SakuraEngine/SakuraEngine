@@ -45,7 +45,7 @@ struct SkrPipelineKey {
 namespace skr
 {
 template <>
-struct skr::Hash<gui::SkrPipelineKey> {
+struct Hash<gui::SkrPipelineKey> {
     inline size_t operator()(const gui::SkrPipelineKey& key) const
     {
         const auto FlagsHash       = skr::Hash<gui::ESkrPipelineFlag>()(key.flags);

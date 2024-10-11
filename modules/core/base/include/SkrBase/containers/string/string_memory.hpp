@@ -112,24 +112,34 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
         : Base()
         , Allocator(rhs)
     {
-        Base::_reset_sso();
-
-        if (rhs.size())
+        if (rhs.is_literal())
         {
+            Base::_reset_literal(rhs.data(), rhs.size());
+        }
+        else if (rhs.size())
+        {
+            Base::_reset_sso();
             realloc(rhs.size());
             memory::copy(data(), rhs.data(), rhs.size());
             set_size(rhs.size());
+        }
+        else
+        {
+            Base::_reset_sso();
         }
     }
     inline StringMemory(StringMemory&& rhs) noexcept
         : Base()
         , Allocator(std::move(rhs))
     {
-        // move data
-        if (rhs._is_sso())
+        if (rhs.is_literal())
+        {
+            Base::_reset_literal(rhs.data(), rhs.size());
+        }
+        else if (rhs._is_sso())
         {
             Base::_reset_sso();
-            memory::move(sso_data(), rhs._sso_data, rhs._sso_size + 1); // include '\0
+            memory::move(sso_data(), rhs.sso_data(), rhs._sso_size + 1); // include '\0
             Base::_sso_size = rhs._sso_size;
         }
         else
@@ -144,26 +154,6 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
         rhs._reset_sso();
     }
 
-    // setter
-    inline void set_size(SizeType value) noexcept
-    {
-        SKR_ASSERT(value <= Base::capacity() && "size must be less than capacity");
-        SKR_ASSERT(!is_literal() && "literal state must be canceled before size change");
-
-        if (_is_sso())
-        {
-            Base::_sso_size = value;
-            // trigger '\0' update
-            sso_data()[Base::_sso_size] = 0;
-        }
-        else
-        {
-            Base::_size = value;
-            // trigger '\0' update
-            heap_data()[Base::_size] = 0;
-        }
-    }
-
     // assign & move assign
     inline void operator=(const StringMemory& rhs) noexcept
     {
@@ -176,7 +166,15 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
             clear();
 
             // copy data
-            if (rhs.size() > 0)
+            if (rhs.is_literal())
+            {
+                if (!Base::is_literal())
+                {
+                    free();
+                }
+                Base::_reset_literal(rhs.data(), rhs.size());
+            }
+            else if (rhs.size() > 0)
             {
                 // reserve memory
                 if (Base::capacity() < rhs.size())
@@ -202,10 +200,18 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
             free();
 
             // move data
-            if (rhs._is_sso())
+            if (rhs.is_literal())
+            {
+                if (!Base::is_literal())
+                {
+                    free();
+                }
+                Base::_reset_literal(rhs.data(), rhs.size());
+            }
+            else if (rhs._is_sso())
             {
                 Base::_reset_sso();
-                memory::move(sso_data(), rhs._sso_data, rhs._sso_size + 1); // include '\0'
+                memory::move(sso_data(), rhs.sso_data(), rhs._sso_size + 1); // include '\0'
                 Base::_sso_size = rhs._sso_size;
             }
             else
@@ -218,6 +224,26 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
 
             // reset rhs
             rhs._reset_sso();
+        }
+    }
+
+    // setter
+    inline void set_size(SizeType value) noexcept
+    {
+        SKR_ASSERT(value <= Base::capacity() && "size must be less than capacity");
+        SKR_ASSERT(!Base::is_literal() && "literal state must be canceled before size change");
+
+        if (Base::_is_sso())
+        {
+            Base::_sso_size = value;
+            // trigger '\0' update
+            sso_data()[Base::_sso_size] = 0;
+        }
+        else
+        {
+            Base::_size = value;
+            // trigger '\0' update
+            heap_data()[Base::_size] = 0;
         }
     }
 
@@ -395,12 +421,10 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
 
     // getter
     inline DataType*       data() noexcept { return reinterpret_cast<DataType*>(Base::_raw_data()); }
-    inline const DataType* data() const noexcept { return reinterpret_cast<DataType*>(Base::_raw_data()); }
+    inline const DataType* data() const noexcept { return reinterpret_cast<const DataType*>(Base::_raw_data()); }
 
 private:
     // helper
-    inline DataType*       raw_data() noexcept { return reinterpret_cast<DataType*>(Base::_raw_data()); }
-    inline const DataType* raw_data() const noexcept { return reinterpret_cast<DataType*>(Base::_raw_data()); }
     inline DataType*       sso_data() noexcept { return reinterpret_cast<DataType*>(Base::_sso_data); }
     inline const DataType* sso_data() const noexcept { return reinterpret_cast<DataType*>(Base::_sso_data); }
     inline DataType*       heap_data() noexcept { return reinterpret_cast<DataType*>(Base::_data); }

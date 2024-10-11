@@ -22,6 +22,14 @@ TEST_CASE("Test U8String")
 {
     using namespace skr::test_container;
 
+    // public test literals
+    StringView        short_literal{ u8"🐓鸡ĜG" };
+    Vector<skr_char8> short_buffer_vec{ short_literal.data(), short_literal.size() + 1 };
+    StringView        short_buffer{ short_buffer_vec.data() };
+    StringView        long_literal{ u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀" };
+    Vector<skr_char8> long_buffer_vec{ long_literal.data(), long_literal.size() + 1 };
+    StringView        long_buffer{ long_buffer_vec.data() };
+
     SUBCASE("ctor & dtor")
     {
         String empty;
@@ -82,15 +90,145 @@ TEST_CASE("Test U8String")
             }
         };
 
-        StringView        short_literal{ u8"🐓鸡ĜG" };
-        Vector<skr_char8> short_buffer_vec{ short_literal.data(), short_literal.size() + 1 };
-        StringView        short_buffer{ short_buffer_vec.data() };
-        StringView        long_literal{ u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀" };
-        Vector<skr_char8> long_buffer_vec{ long_literal.data(), long_literal.size() + 1 };
-        StringView        long_buffer{ long_buffer_vec.data() };
         test_ctors_of_view(short_literal);
         test_ctors_of_view(short_buffer);
         test_ctors_of_view(long_literal);
         test_ctors_of_view(long_buffer);
+    }
+
+    SUBCASE("copy & move")
+    {
+        String literal_a = short_literal;
+        String sso_a     = short_buffer;
+        String heap_a    = long_buffer;
+
+        // copy literal
+        String literal_b = literal_a;
+        REQUIRE_EQ(literal_b.size(), literal_a.size());
+        REQUIRE_EQ(literal_b.capacity(), literal_a.capacity());
+        REQUIRE_EQ(literal_b, literal_a);
+        REQUIRE_EQ(literal_b.data(), literal_a.data());
+        REQUIRE(is_literal(literal_a));
+        REQUIRE(is_literal(literal_b));
+
+        // copy sso
+        String sso_b = sso_a;
+        REQUIRE_EQ(sso_b.size(), sso_a.size());
+        REQUIRE_EQ(sso_b.capacity(), sso_a.capacity());
+        REQUIRE_EQ(sso_b, sso_a);
+        REQUIRE_NE(sso_b.data(), sso_a.data());
+
+        // copy heap
+        String heap_b = heap_a;
+        REQUIRE_EQ(heap_b.size(), heap_a.size());
+        REQUIRE_EQ(heap_b.capacity(), heap_a.capacity());
+        REQUIRE_EQ(heap_b, heap_a);
+        REQUIRE_NE(heap_b.data(), heap_a.data());
+
+        // move literal
+        auto   old_literal_a_size     = literal_a.size();
+        auto   old_literal_a_capacity = literal_a.capacity();
+        auto   old_literal_a_data     = literal_a.data();
+        String literal_c              = std::move(literal_a);
+        REQUIRE_EQ(literal_a.size(), 0);
+        REQUIRE_EQ(literal_a.capacity(), kStringSSOCapacity);
+        REQUIRE_EQ(literal_c.size(), old_literal_a_size);
+        REQUIRE_EQ(literal_c.capacity(), old_literal_a_capacity);
+        REQUIRE_EQ(literal_c.data(), old_literal_a_data);
+        REQUIRE(is_literal(literal_c));
+        REQUIRE(literal_a.is_empty());
+
+        // move sso
+        auto   old_sso_a_size     = sso_a.size();
+        auto   old_sso_a_capacity = sso_a.capacity();
+        String sso_c              = std::move(sso_a);
+        REQUIRE_EQ(sso_a.size(), 0);
+        REQUIRE_EQ(sso_a.capacity(), kStringSSOCapacity);
+        REQUIRE_EQ(sso_c.size(), old_sso_a_size);
+        REQUIRE_EQ(sso_c.capacity(), old_sso_a_capacity);
+        REQUIRE(sso_a.is_empty());
+
+        // move heap
+        auto   old_heap_a_size     = heap_a.size();
+        auto   old_heap_a_capacity = heap_a.capacity();
+        auto   old_heap_a_data     = heap_a.data();
+        String heap_c              = std::move(heap_a);
+        REQUIRE_EQ(heap_a.size(), 0);
+        REQUIRE_EQ(heap_a.capacity(), kStringSSOCapacity);
+        REQUIRE_EQ(heap_c.size(), old_heap_a_size);
+        REQUIRE_EQ(heap_c.capacity(), old_heap_a_capacity);
+        REQUIRE_EQ(heap_c.data(), old_heap_a_data);
+        REQUIRE(heap_a.is_empty());
+    }
+
+    SUBCASE("assign & move assign")
+    {
+        String literal_a = short_literal;
+        String literal_b;
+        String literal_c;
+        String sso_a = short_buffer;
+        String sso_b;
+        String sso_c;
+        String heap_a = long_buffer;
+        String heap_b;
+        String heap_c;
+
+        // assign literal
+        literal_b = literal_a;
+        REQUIRE_EQ(literal_b.size(), literal_a.size());
+        REQUIRE_EQ(literal_b.capacity(), literal_a.capacity());
+        REQUIRE_EQ(literal_b, literal_a);
+        REQUIRE_EQ(literal_b.data(), literal_a.data());
+        REQUIRE(is_literal(literal_a));
+        REQUIRE(is_literal(literal_b));
+
+        // assign sso
+        sso_b = sso_a;
+        REQUIRE_EQ(sso_b.size(), sso_a.size());
+        REQUIRE_EQ(sso_b.capacity(), sso_a.capacity());
+        REQUIRE_EQ(sso_b, sso_a);
+        REQUIRE_NE(sso_b.data(), sso_a.data());
+
+        // assign heap
+        heap_b = heap_a;
+        REQUIRE_EQ(heap_b.size(), heap_a.size());
+        // REQUIRE_EQ(heap_b.capacity(), heap_a.capacity());
+        REQUIRE_EQ(heap_b, heap_a);
+        REQUIRE_NE(heap_b.data(), heap_a.data());
+
+        // move assign literal
+        auto old_literal_a_size     = literal_a.size();
+        auto old_literal_a_capacity = literal_a.capacity();
+        auto old_literal_a_data     = literal_a.data();
+        literal_c                   = std::move(literal_a);
+        REQUIRE_EQ(literal_a.size(), 0);
+        REQUIRE_EQ(literal_a.capacity(), kStringSSOCapacity);
+        REQUIRE_EQ(literal_c.size(), old_literal_a_size);
+        REQUIRE_EQ(literal_c.capacity(), old_literal_a_capacity);
+        REQUIRE_EQ(literal_c.data(), old_literal_a_data);
+        REQUIRE(is_literal(literal_c));
+        REQUIRE(literal_a.is_empty());
+
+        // move assign sso
+        auto old_sso_a_size     = sso_a.size();
+        auto old_sso_a_capacity = sso_a.capacity();
+        sso_c                   = std::move(sso_a);
+        REQUIRE_EQ(sso_a.size(), 0);
+        REQUIRE_EQ(sso_a.capacity(), kStringSSOCapacity);
+        REQUIRE_EQ(sso_c.size(), old_sso_a_size);
+        REQUIRE_EQ(sso_c.capacity(), old_sso_a_capacity);
+        REQUIRE(sso_a.is_empty());
+
+        // move assign heap
+        auto old_heap_a_size     = heap_a.size();
+        auto old_heap_a_capacity = heap_a.capacity();
+        auto old_heap_a_data     = heap_a.data();
+        heap_c                   = std::move(heap_a);
+        REQUIRE_EQ(heap_a.size(), 0);
+        REQUIRE_EQ(heap_a.capacity(), kStringSSOCapacity);
+        REQUIRE_EQ(heap_c.size(), old_heap_a_size);
+        REQUIRE_EQ(heap_c.capacity(), old_heap_a_capacity);
+        REQUIRE_EQ(heap_c.data(), old_heap_a_data);
+        REQUIRE(heap_a.is_empty());
     }
 }
