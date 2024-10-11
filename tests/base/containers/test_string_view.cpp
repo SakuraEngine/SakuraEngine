@@ -26,12 +26,12 @@ TEST_CASE("Test U8StringView")
         REQUIRE_EQ(manual_len.length_buffer(), 9);
         REQUIRE_EQ(manual_len.length_text(), 3);
 
-        const Vector<char8_t> text_vector{ u8"🐓鸡ĜG", 10 };
-        StringView            from_container{ text_vector };
-        REQUIRE_EQ(from_container.data(), text_vector.data());
-        REQUIRE_EQ(from_container.size(), 10);
-        REQUIRE_EQ(from_container.length_buffer(), 10);
-        REQUIRE_EQ(from_container.length_text(), 4);
+        // const Vector<char8_t> text_vector{ u8"🐓鸡ĜG", 10 };
+        // StringView            from_container{ text_vector };
+        // REQUIRE_EQ(from_container.data(), text_vector.data());
+        // REQUIRE_EQ(from_container.size(), 10);
+        // REQUIRE_EQ(from_container.length_buffer(), 10);
+        // REQUIRE_EQ(from_container.length_text(), 4);
     }
 
     // [needn't test] copy & move

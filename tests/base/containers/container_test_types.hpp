@@ -41,6 +41,8 @@
 
 // string
 #include "SkrBase/containers/string/string_view.hpp"
+#include "SkrBase/containers/string/string.hpp"
+#include "SkrBase/containers/string/string_memory.hpp"
 
 namespace skr::test_container
 {
@@ -230,6 +232,13 @@ container::RingBufferMemoryBase<TestSizeType>,
 TestAllocatorType>>;
 
 //===========String===================================================================
+constexpr uint64_t kStringSSOSize = 31;
+
 using StringView = container::U8StringView<TestSizeType>;
+using String     = container::U8String<container::StringMemory<
+    skr_char8,
+    TestSizeType,
+    kStringSSOSize,
+    TestAllocatorType>>;
 
 } // namespace skr::test_container

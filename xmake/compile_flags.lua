@@ -26,11 +26,12 @@ target("SkrCompileFlags")
         "-Wno-nullability-completeness", 
         "-Wno-tautological-undefined-compare",
         "-Werror=return-type",
-        "-Wno-unused-parameter", -- too much check nned to disable it
+        "-Wno-unused-parameter", -- too much check need to disable it
         "-Wno-sign-compare", -- too much check nned to disable it
         "-Wno-ignored-qualifiers", -- const int func()
         "-Wno-deprecated-copy-with-user-provided-copy", -- usally trigger it manually
         "-Wno-unused-private-field", -- not care about unused private field
+        "-Wno-unused-but-set-variable", -- not care about unused variable
         {public = true, tools = {"gcc", "clang_cl", "clang"}}
     )
     -- disable c warnings for gcc/clang

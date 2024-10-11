@@ -45,8 +45,8 @@ struct U8StringView {
     constexpr U8StringView();
     constexpr U8StringView(const DataType* str);
     constexpr U8StringView(const DataType* str, SizeType len);
-    template <LinearMemoryContainer U>
-    constexpr U8StringView(const U& container);
+    // template <LinearMemoryContainer U>
+    // constexpr U8StringView(const U& container); //!NOTE: container data may not end with '\0'
     constexpr ~U8StringView();
 
     // copy & move
@@ -171,13 +171,13 @@ inline constexpr U8StringView<TS>::U8StringView(const DataType* str, SizeType le
     , _size(len)
 {
 }
-template <typename TS>
-template <LinearMemoryContainer U>
-inline constexpr U8StringView<TS>::U8StringView(const U& container)
-    : _data(const_cast<DataType*>(container.data()))
-    , _size(container.size())
-{
-}
+// template <typename TS>
+// template <LinearMemoryContainer U>
+// inline constexpr U8StringView<TS>::U8StringView(const U& container)
+//     : _data(const_cast<DataType*>(container.data()))
+//     , _size(container.size())
+// {
+// }
 template <typename TS>
 inline constexpr U8StringView<TS>::~U8StringView() = default;
 

@@ -275,6 +275,9 @@ private:
     void     _set_literal(const DataType* str, SizeType len);
     bool     _pre_modify(SizeType except_memory = 0);
     void     _assign_with_literal_check(const DataType* str, SizeType len);
+
+    //! Note. use data_w() outside
+    DataType* data();
 };
 } // namespace skr::container
 
@@ -326,6 +329,11 @@ inline void U8String<Memory>::_assign_with_literal_check(const DataType* str, Si
             memory::copy(data(), str, len);
         }
     }
+}
+template <typename Memory>
+inline U8String<Memory>::DataType* U8String<Memory>::data()
+{
+    return Memory::data();
 }
 
 // ctor & dtor
