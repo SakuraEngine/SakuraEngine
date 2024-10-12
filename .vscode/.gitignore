@@ -6,7 +6,7 @@
 
 # vscode settings
 !extensions.json
-!launch.json
+# !launch.json
 !settings.json
 
 # workspaces
