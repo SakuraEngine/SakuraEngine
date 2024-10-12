@@ -4,5 +4,7 @@ task("vsc_dbg")
     set_menu {
         usage = "xmake vsc_dbg [options]",
         description = "generate vscode debug configurations",
-        options = {}
+        options = {
+            {nil, "targets",   "vs", nil,       "targets needed to gen debug files"           }
+        }
     }
