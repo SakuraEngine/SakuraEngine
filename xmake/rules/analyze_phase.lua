@@ -70,7 +70,7 @@ target("Analyze.Phase")
 target_end()
 
 -- analyze tool functions
-function analyzer(name)
+function analyzer_target(name)
     target("Analyze.Phase")
         add_rules("__Analyzer."..name)
         set_default(false)
@@ -80,15 +80,18 @@ end
 function analyze(func, opt)
     on_build(func, opt)
 end
-function analyzer_end()
+function analyzer_target_end()
     rule_end()
 end
-function add_attribute(attribute)
+function analyzer_attribute(attribute)
     add_values("Sakura.Attributes", attribute)
+end
+function analyzer_ignore()
+    analyzer_attribute("Analyze.Ignore")
 end
 
 -- solve dependencies
-analyzer("Dependencies")
+analyzer_target("Dependencies")
     analyze(function(target, attributes, analyzing)
         local dependencies = {}
         local idx = 1
@@ -101,11 +104,11 @@ analyzer("Dependencies")
         end
         return dependencies
     end)
-analyzer_end()
+analyzer_target_end()
 
 -- solve attributes
-analyzer("Attributes")
+analyzer_target("Attributes")
     analyze(function(target, attributes, analyzing)
         return attributes
     end)
-analyzer_end()
+analyzer_target_end()
