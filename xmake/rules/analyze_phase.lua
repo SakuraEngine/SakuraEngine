@@ -43,7 +43,7 @@ target("Analyze.Phase")
             
             -- record trigger log
             local log_file = "build/.gens/analyze_trigger.log"
-            local log_file_content = io.readfile(log_file)
+            local log_file_content = os.exists(log_file) and io.readfile(log_file) or ""
             local append_log_content = "["..os.date("%Y-%m-%d %H:%M:%S").."]: ".."trigger analyze with arg: "..table.concat(argv, " ").."\n"
             io.writefile(log_file, log_file_content..append_log_content)
 
