@@ -50,69 +50,72 @@ function main()
         end
     end
 
-    -- generate debug configurations for exec targets
-    local configs = {}
+    -- gen config contenets
+    local launches = {}
     local tasks = {}
-    for _, target in ipairs(exec_targets) do
-        table.insert(configs, {
-            name = "▶️"..target:name(),
-            type = "cppvsdbg",
-            request = "launch",
-            program = format("%s/%s.exe", build_dir, target:name()),
-            args = json.mark_as_array({}),
-            stopAtEntry = false,
-            cwd = build_dir,
-            environment = json.mark_as_array({}),
-            console = "externalTerminal",
-            preLaunchTask = "build "..target:name(),
-        })
-        table.insert(configs, {
-            name = "🔍"..target:name(),
-            type = "cppvsdbg",
-            request = "attach",
-            program = format("%s/%s.exe", build_dir, target:name()),
-            args = json.mark_as_array({}),
-            stopAtEntry = false,
-            cwd = build_dir,
-            environment = json.mark_as_array({}),
-            console = "externalTerminal",
-            -- preLaunchTask = "build "..target:name(),
-        })
-        table.insert(tasks, {
-            label = "build "..target:name(),
-            type = "shell",
-            command = "xmake",
-            args = {"build", target:name()},
-            options = {
-                cwd = "${workspaceFolder}",
-            },
-            group = {
-                kind = "build",
-                isDefault = false
-            }
-        })
-    end
+    do
+        function _exec_launch(target)
+            table.insert(launches,{
+                name = "▶️"..target:name(),
+                type = "cppvsdbg",
+                request = "launch",
+                program = format("%s/%s.exe", build_dir, target:name()),
+                args = json.mark_as_array({}),
+                stopAtEntry = false,
+                cwd = build_dir,
+                environment = json.mark_as_array({}),
+                console = "externalTerminal",
+                preLaunchTask = "build "..target:name(),
+            })
+        end
+        function _attach_launch(target)
+            table.insert(launches,{
+                name = "🔍"..target:name(),
+                type = "cppvsdbg",
+                request = "attach",
+                processId = "${command:pickProcess}",
+                -- program = format("%s/%s.dll", build_dir, target:name()),
+                -- args = json.mark_as_array({}),
+                -- stopAtEntry = false,
+                -- cwd = build_dir,
+                -- environment = json.mark_as_array({}),
+                -- console = "externalTerminal",
+                -- preLaunchTask = "build "..target:name(),
+            })
+        end
+        function _build_task(target)
+            table.insert(tasks, {
+                label = "build "..target:name(),
+                type = "shell",
+                command = "xmake",
+                args = {"build", target:name()},
+                options = {
+                    cwd = "${workspaceFolder}",
+                },
+                group = {
+                    kind = "build",
+                    isDefault = false
+                }
+            })
+        end
 
-    -- generate debug configurations for dynamic targets
-    for _, target in ipairs(dynmaic_targets) do
-        table.insert(configs, {
-            name = "🔍"..target:name(),
-            type = "cppvsdbg",
-            request = "attach",
-            program = format("%s/%s.dll", build_dir, target:name()),
-            args = json.mark_as_array({}),
-            stopAtEntry = false,
-            cwd = build_dir,
-            environment = json.mark_as_array({}),
-            console = "externalTerminal",
-            -- preLaunchTask = "build "..target:name(),
-        })
+        -- generate debug configurations for exec targets
+        for _, target in ipairs(exec_targets) do
+            _exec_launch(target)
+            _attach_launch(target)
+            _build_task(target)
+        end
+
+        -- generate debug configurations for dynamic targets
+        for _, target in ipairs(dynmaic_targets) do
+            _attach_launch(target)
+        end
     end
 
     -- save debug configurations
     json.savefile(".vscode/launch.json", {
         version = "0.2.0",
-        configurations = configs
+        configurations = launches
     })
     json.savefile(".vscode/tasks.json", {
         version = "2.0.0",
