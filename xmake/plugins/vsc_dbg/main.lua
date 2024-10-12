@@ -102,14 +102,29 @@ function main()
         -- generate debug configurations for exec targets
         for _, target in ipairs(exec_targets) do
             _exec_launch(target)
-            _attach_launch(target)
+            --_attach_launch(target)
             _build_task(target)
         end
 
         -- generate debug configurations for dynamic targets
         for _, target in ipairs(dynmaic_targets) do
-            _attach_launch(target)
+            --_attach_launch(target)
         end
+
+        -- attach launch needn't bound with target
+        table.insert(launches,{
+            name = "🔍Attach",
+            type = "cppvsdbg",
+            request = "attach",
+            processId = "${command:pickProcess}",
+            -- program = format("%s/%s.dll", build_dir, target:name()),
+            -- args = json.mark_as_array({}),
+            -- stopAtEntry = false,
+            -- cwd = build_dir,
+            -- environment = json.mark_as_array({}),
+            -- console = "externalTerminal",
+            -- preLaunchTask = "build "..target:name(),
+        })
     end
 
     -- save debug configurations
