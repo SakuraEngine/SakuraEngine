@@ -992,6 +992,151 @@ TEST_CASE("Test U8String")
         }
     }
 
+    SUBCASE("replace")
+    {
+        // replace
+        {
+            StringView view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+
+            StringView replace_less_from_view = u8"🐓";
+            StringView replace_less_to_view   = u8"g";
+            StringView replaced_less_view     = u8"g🏀g🏀g🏀g🏀g🏀g🏀";
+
+            StringView replace_eq_from_view = u8"🏀";
+            StringView replace_eq_to_view   = u8"🐓";
+            StringView replaced_eq_view     = u8"🐓🐓🐓🐓🐓🐓🐓🐓🐓🐓🐓🐓";
+
+            StringView replace_more_from_view = u8"🐓";
+            StringView replace_more_to_view   = u8"🐓鸡";
+            StringView replaced_more_view     = u8"🐓鸡🏀🐓鸡🏀🐓鸡🏀🐓鸡🏀🐓鸡🏀🐓鸡🏀";
+
+            String str = view;
+            str.replace(replace_less_from_view, replace_less_to_view);
+            REQUIRE_EQ(str.size(), replaced_less_view.size());
+            REQUIRE_EQ(str, replaced_less_view);
+
+            str = view;
+            str.replace(replace_eq_from_view, replace_eq_to_view);
+            REQUIRE_EQ(str.size(), replaced_eq_view.size());
+            REQUIRE_EQ(str, replaced_eq_view);
+
+            str = view;
+            str.replace(replace_more_from_view, replace_more_to_view);
+            REQUIRE_EQ(str.size(), replaced_more_view.size());
+            REQUIRE_EQ(str, replaced_more_view);
+        }
+
+        // [ranged] replace
+        {
+            StringView   view          = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            TestSizeType replace_start = view.text_index_to_buffer(2);
+            TestSizeType replace_end   = view.text_index_to_buffer(view.length_text() - 2);
+            TestSizeType replace_count = replace_end - replace_start;
+
+            StringView replace_less_from_view = u8"🐓";
+            StringView replace_less_to_view   = u8"g";
+            StringView replaced_less_view     = u8"🐓🏀g🏀g🏀g🏀g🏀🐓🏀";
+
+            StringView replace_eq_from_view = u8"🏀";
+            StringView replace_eq_to_view   = u8"🐓";
+            StringView replaced_eq_view     = u8"🐓🏀🐓🐓🐓🐓🐓🐓🐓🐓🐓🏀";
+
+            StringView replace_more_from_view = u8"🐓";
+            StringView replace_more_to_view   = u8"🐓鸡";
+            StringView replaced_more_view     = u8"🐓🏀🐓鸡🏀🐓鸡🏀🐓鸡🏀🐓鸡🏀🐓🏀";
+
+            String str = view;
+            str.replace(replace_less_from_view, replace_less_to_view, replace_start, replace_count);
+            REQUIRE_EQ(str.size(), replaced_less_view.size());
+            REQUIRE_EQ(str, replaced_less_view);
+
+            str = view;
+            str.replace(replace_eq_from_view, replace_eq_to_view, replace_start, replace_count);
+            REQUIRE_EQ(str.size(), replaced_eq_view.size());
+            REQUIRE_EQ(str, replaced_eq_view);
+
+            str = view;
+            str.replace(replace_more_from_view, replace_more_to_view, replace_start, replace_count);
+            REQUIRE_EQ(str.size(), replaced_more_view.size());
+            REQUIRE_EQ(str, replaced_more_view);
+        }
+
+        // [copy] replace
+        {
+            StringView view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+
+            StringView replace_less_from_view = u8"🐓";
+            StringView replace_less_to_view   = u8"g";
+            StringView replaced_less_view     = u8"g🏀g🏀g🏀g🏀g🏀g🏀";
+
+            StringView replace_eq_from_view = u8"🏀";
+            StringView replace_eq_to_view   = u8"🐓";
+            StringView replaced_eq_view     = u8"🐓🐓🐓🐓🐓🐓🐓🐓🐓🐓🐓🐓";
+
+            StringView replace_more_from_view = u8"🐓";
+            StringView replace_more_to_view   = u8"🐓鸡";
+            StringView replaced_more_view     = u8"🐓鸡🏀🐓鸡🏀🐓鸡🏀🐓鸡🏀🐓鸡🏀🐓鸡🏀";
+
+            String str           = view;
+            auto   replaced_less = str.replace_copy(replace_less_from_view, replace_less_to_view);
+            REQUIRE_EQ(replaced_less.size(), replaced_less_view.size());
+            REQUIRE_EQ(replaced_less, replaced_less_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+
+            auto replaced_eq = str.replace_copy(replace_eq_from_view, replace_eq_to_view);
+            REQUIRE_EQ(replaced_eq.size(), replaced_eq_view.size());
+            REQUIRE_EQ(replaced_eq, replaced_eq_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+
+            auto replaced_more = str.replace_copy(replace_more_from_view, replace_more_to_view);
+            REQUIRE_EQ(replaced_more.size(), replaced_more_view.size());
+            REQUIRE_EQ(replaced_more, replaced_more_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+        }
+
+        // [copy] [ranged] replace
+        {
+            StringView   view          = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            TestSizeType replace_start = view.text_index_to_buffer(2);
+            TestSizeType replace_end   = view.text_index_to_buffer(view.length_text() - 2);
+            TestSizeType replace_count = replace_end - replace_start;
+
+            StringView replace_less_from_view = u8"🐓";
+            StringView replace_less_to_view   = u8"g";
+            StringView replaced_less_view     = u8"🐓🏀g🏀g🏀g🏀g🏀🐓🏀";
+
+            StringView replace_eq_from_view = u8"🏀";
+            StringView replace_eq_to_view   = u8"🐓";
+            StringView replaced_eq_view     = u8"🐓🏀🐓🐓🐓🐓🐓🐓🐓🐓🐓🏀";
+
+            StringView replace_more_from_view = u8"🐓";
+            StringView replace_more_to_view   = u8"🐓鸡";
+            StringView replaced_more_view     = u8"🐓🏀🐓鸡🏀🐓鸡🏀🐓鸡🏀🐓鸡🏀🐓🏀";
+
+            String str           = view;
+            auto   replaced_less = str.replace_copy(replace_less_from_view, replace_less_to_view, replace_start, replace_count);
+            REQUIRE_EQ(replaced_less.size(), replaced_less_view.size());
+            REQUIRE_EQ(replaced_less, replaced_less_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+
+            auto replaced_eq = str.replace_copy(replace_eq_from_view, replace_eq_to_view, replace_start, replace_count);
+            REQUIRE_EQ(replaced_eq.size(), replaced_eq_view.size());
+            REQUIRE_EQ(replaced_eq, replaced_eq_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+
+            auto replaced_more = str.replace_copy(replace_more_from_view, replace_more_to_view, replace_start, replace_count);
+            REQUIRE_EQ(replaced_more.size(), replaced_more_view.size());
+            REQUIRE_EQ(replaced_more, replaced_more_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+        }
+    }
+
     // index & modify
 
     // sub_string

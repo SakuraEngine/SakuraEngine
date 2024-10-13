@@ -1092,7 +1092,10 @@ inline U8String<Memory>::SizeType U8String<Memory>::replace(ViewType from, ViewT
 
     if (to.size() == from.size())
     { // just find and replace
-        _pre_modify();
+        if (_pre_modify())
+        {
+            find_view = subview(start, count);
+        }
 
         DataRef found_ref = find_view.find(from);
         while (found_ref)
@@ -1109,7 +1112,10 @@ inline U8String<Memory>::SizeType U8String<Memory>::replace(ViewType from, ViewT
     }
     else if (to.size() < from.size())
     { // replace from start to end
-        _pre_modify();
+        if (_pre_modify())
+        {
+            find_view = subview(start, count);
+        }
 
         DataRef   found_ref = find_view.find(from);
         DataType* read      = found_ref.ptr();
@@ -1132,7 +1138,7 @@ inline U8String<Memory>::SizeType U8String<Memory>::replace(ViewType from, ViewT
             find_view = find_view.subview(found_ref.index() + from.size());
 
             // update read
-            read = find_view.data();
+            read = const_cast<DataType*>(find_view.data());
 
             // find next
             found_ref = find_view.find(from);
@@ -1151,7 +1157,10 @@ inline U8String<Memory>::SizeType U8String<Memory>::replace(ViewType from, ViewT
     else
     { // make a new string and copy
         U8String result = replace_copy(from, to, start, count);
+        *this           = std::move(result);
     }
+
+    return replace_count;
 }
 template <typename Memory>
 inline U8String<Memory> U8String<Memory>::replace_copy(ViewType from, ViewType to, SizeType start, SizeType count) const
@@ -1178,11 +1187,12 @@ inline U8String<Memory> U8String<Memory>::replace_copy(ViewType from, ViewType t
     {
         U8String result = *this;
         result.replace(from, to, start, count);
+        return result;
     }
     else
     {
         U8String result;
-        result.reserve(count() + replace_size_to - replace_size_from);
+        result.reserve((count == npos ? size() : count) + replace_size_to - replace_size_from);
 
         CDataRef        found_ref = find_view.find(from);
         const DataType* read      = _data();
@@ -1190,7 +1200,7 @@ inline U8String<Memory> U8String<Memory>::replace_copy(ViewType from, ViewType t
         while (found_ref)
         {
             // copy data before found
-            result.append(ViewType{ read, found_ref.ptr() - read });
+            result.append(ViewType{ read, static_cast<SizeType>(found_ref.ptr() - read) });
 
             // copy replace part
             result.append(ViewType{ to.data(), to.size() });
@@ -1204,7 +1214,8 @@ inline U8String<Memory> U8String<Memory>::replace_copy(ViewType from, ViewType t
         }
 
         // copy final part
-        result.append(ViewType{ read, _data() + size() - read });
+        result.append(ViewType{ read, static_cast<SizeType>(_data() + size() - read) });
+        return result;
     }
 }
 template <typename Memory>
