@@ -298,6 +298,9 @@ struct StringMemory : public StringMemoryBase<TS, SSOSize>, public Allocator {
 
                 // update data
                 Base::_data = new_memory;
+
+                // update capacity
+                Base::_capacity = new_capacity;
             }
         }
         else

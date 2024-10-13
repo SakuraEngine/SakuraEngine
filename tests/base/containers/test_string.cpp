@@ -501,13 +501,496 @@ TEST_CASE("Test U8String")
         }
     }
 
-    // add
-    // add at
-    // append
-    // append at
+    SUBCASE("add")
+    {
+        String str = long_literal;
 
-    // remove
-    // replace
+        // add
+        str.add(u8'g');
+        REQUIRE_EQ(str.size(), long_literal.size() + 1);
+        REQUIRE_GE(str.capacity(), capacity_of(long_literal.size() + 1));
+        REQUIRE_EQ(str.at_buffer(long_literal.size()), u8'g');
+        for (TestSizeType i = 0; i < long_literal.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i));
+        }
+        REQUIRE_EQ(str.at_buffer(long_literal.size()), u8'g');
+
+        // add unsafe
+        str.add_unsafe(10);
+        REQUIRE_EQ(str.size(), long_literal.size() + 1 + 10);
+        REQUIRE_GE(str.capacity(), capacity_of(long_literal.size() + 1 + 10));
+        for (TestSizeType i = 0; i < long_literal.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i));
+        }
+        REQUIRE_EQ(str.at_buffer(long_literal.size()), u8'g');
+        // for (TestSizeType i = long_literal.size() + 1; i < long_literal.size() + 1 + 10; ++i)
+        // {
+        //     REQUIRE_EQ(str.at_buffer(i), 0);
+        // }
+
+        // add default
+        str.add_default(10);
+        REQUIRE_EQ(str.size(), long_literal.size() + 1 + 10 + 10);
+        REQUIRE_GE(str.capacity(), capacity_of(long_literal.size() + 1 + 10 + 10));
+        for (TestSizeType i = 0; i < long_literal.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i));
+        }
+        REQUIRE_EQ(str.at_buffer(long_literal.size()), u8'g');
+        // for (TestSizeType i = long_literal.size() + 1; i < long_literal.size() + 1 + 10; ++i)
+        // {
+        //     REQUIRE_EQ(str.at_buffer(i), 0);
+        // }
+        for (TestSizeType i = long_literal.size() + 1 + 10; i < long_literal.size() + 1 + 10 + 10; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), 0);
+        }
+
+        // add zeroed
+        str.add_zeroed(10);
+        REQUIRE_EQ(str.size(), long_literal.size() + 1 + 10 + 10 + 10);
+        REQUIRE_GE(str.capacity(), capacity_of(long_literal.size() + 1 + 10 + 10 + 10));
+        for (TestSizeType i = 0; i < long_literal.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i));
+        }
+        REQUIRE_EQ(str.at_buffer(long_literal.size()), u8'g');
+        // for (TestSizeType i = long_literal.size() + 1; i < long_literal.size() + 1 + 10; ++i)
+        // {
+        //     REQUIRE_EQ(str.at_buffer(i), 0);
+        // }
+        for (TestSizeType i = long_literal.size() + 1 + 10; i < long_literal.size() + 1 + 10 + 10; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), 0);
+        }
+        for (TestSizeType i = long_literal.size() + 1 + 10 + 10; i < long_literal.size() + 1 + 10 + 10 + 10; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), 0);
+        }
+    }
+
+    SUBCASE("add at")
+    {
+        String str = long_literal;
+
+        // add at
+        str.add_at(0, u8'g');
+        REQUIRE_EQ(str.size(), long_literal.size() + 1);
+        REQUIRE_GE(str.capacity(), capacity_of(long_literal.size() + 1));
+        REQUIRE_EQ(str.at_buffer(0), u8'g');
+        for (TestSizeType i = 1; i < long_literal.size() + 1; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i - 1));
+        }
+
+        // add at unsafe
+        str.add_at_unsafe(0, 10);
+        REQUIRE_EQ(str.size(), long_literal.size() + 1 + 10);
+        REQUIRE_GE(str.capacity(), capacity_of(long_literal.size() + 1 + 10));
+        // for (TestSizeType i = 0; i < 10; ++i)
+        // {
+        //     REQUIRE_EQ(str.at_buffer(i), 0);
+        // }
+        REQUIRE_EQ(str.at_buffer(10), u8'g');
+        for (TestSizeType i = 11; i < long_literal.size() + 1 + 10; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i - 11));
+        }
+
+        // add at default
+        str.add_at_default(0, 10);
+        REQUIRE_EQ(str.size(), long_literal.size() + 1 + 10 + 10);
+        REQUIRE_GE(str.capacity(), capacity_of(long_literal.size() + 1 + 10 + 10));
+        for (TestSizeType i = 0; i < 10; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), 0);
+        }
+        // for (TestSizeType i = 10; i < 20; ++i)
+        // {
+        //     REQUIRE_EQ(str.at_buffer(i), 0);
+        // }
+        REQUIRE_EQ(str.at_buffer(20), u8'g');
+        for (TestSizeType i = 21; i < long_literal.size() + 1 + 10 + 10; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i - 21));
+        }
+
+        // add at zeroed
+        str.add_at_zeroed(0, 10);
+        REQUIRE_EQ(str.size(), long_literal.size() + 1 + 10 + 10 + 10);
+        REQUIRE_GE(str.capacity(), capacity_of(long_literal.size() + 1 + 10 + 10 + 10));
+        for (TestSizeType i = 0; i < 10; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), 0);
+        }
+        for (TestSizeType i = 10; i < 20; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), 0);
+        }
+        // for (TestSizeType i = 20; i < 30; ++i)
+        // {
+        //     REQUIRE_EQ(str.at_buffer(i), 0);
+        // }
+        REQUIRE_EQ(str.at_buffer(30), u8'g');
+        for (TestSizeType i = 31; i < long_literal.size() + 1 + 10 + 10 + 10; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i - 31));
+        }
+    }
+
+    SUBCASE("append")
+    {
+        StringView   append_view_a = short_literal;
+        StringView   append_view_b = u8"🏀🐓";
+        skr::UTF8Seq append_seq_a{ U'🏀' };
+
+        String str = long_literal;
+
+        // append
+        auto len_before_append = str.length_buffer();
+        str.append(append_view_a.data());
+        auto len_after_append = str.length_buffer();
+        REQUIRE_EQ(str.size(), len_before_append + append_view_a.size());
+        REQUIRE_GE(str.capacity(), capacity_of(len_before_append + append_view_a.size()));
+        for (TestSizeType i = 0; i < long_literal.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i));
+        }
+        for (TestSizeType i = len_before_append; i < len_after_append; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_a.at_buffer(i - len_before_append));
+        }
+
+        // append with len
+        auto len_before_append_len = str.length_buffer();
+        auto append_len            = append_view_b.text_index_to_buffer(1);
+        str.append(append_view_b.data(), append_len);
+        auto len_after_append_len = str.length_buffer();
+        REQUIRE_EQ(str.size(), len_before_append_len + append_len);
+        REQUIRE_GE(str.capacity(), capacity_of(len_before_append_len + append_len));
+        for (TestSizeType i = 0; i < long_literal.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i));
+        }
+        for (TestSizeType i = len_before_append; i < len_after_append; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_a.at_buffer(i - len_before_append));
+        }
+        for (TestSizeType i = len_before_append_len; i < len_after_append_len; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_b.at_buffer(i - len_before_append_len));
+        }
+
+        // append view
+        auto len_before_append_view = str.length_buffer();
+        str.append(append_view_a);
+        auto len_after_append_view = str.length_buffer();
+        REQUIRE_EQ(str.size(), len_before_append_view + append_view_a.size());
+        REQUIRE_GE(str.capacity(), capacity_of(len_before_append_view + append_view_a.size()));
+        for (TestSizeType i = 0; i < long_literal.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i));
+        }
+        for (TestSizeType i = len_before_append; i < len_after_append; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_a.at_buffer(i - len_before_append));
+        }
+        for (TestSizeType i = len_before_append_len; i < len_after_append_len; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_b.at_buffer(i - len_before_append_len));
+        }
+        for (TestSizeType i = len_before_append_view; i < len_after_append_view; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_a.at_buffer(i - len_before_append_view));
+        }
+
+        // append seq
+        auto len_before_append_seq = str.length_buffer();
+        str.append(append_seq_a);
+        auto len_after_append_seq = str.length_buffer();
+        REQUIRE_EQ(str.size(), len_before_append_seq + append_seq_a.len);
+        REQUIRE_GE(str.capacity(), capacity_of(len_before_append_seq + append_seq_a.len));
+        for (TestSizeType i = 0; i < long_literal.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i));
+        }
+        for (TestSizeType i = len_before_append; i < len_after_append; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_a.at_buffer(i - len_before_append));
+        }
+        for (TestSizeType i = len_before_append_len; i < len_after_append_len; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_b.at_buffer(i - len_before_append_len));
+        }
+        for (TestSizeType i = len_before_append_view; i < len_after_append_view; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_a.at_buffer(i - len_before_append_view));
+        }
+        for (TestSizeType i = len_before_append_seq; i < len_after_append_seq; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_seq_a.at(i - len_before_append_seq));
+        }
+    }
+
+    SUBCASE("append at")
+    {
+        StringView   append_view_a = short_literal;
+        StringView   append_view_b = u8"🏀🐓";
+        skr::UTF8Seq append_seq_a{ U'🏀' };
+
+        String str = long_literal;
+
+        // append at
+        str.append_at(0, append_view_a.data());
+        auto append_at_begin = 0;
+        auto append_at_end   = append_view_a.size();
+        auto append_at_len   = str.length_buffer();
+        REQUIRE_EQ(str.size(), long_literal.size() + append_view_a.size());
+        REQUIRE_GE(str.capacity(), capacity_of(long_literal.size() + append_view_a.size()));
+        for (TestSizeType i = append_at_begin; i < append_at_end; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_a.at_buffer(i - append_at_begin));
+        }
+        for (TestSizeType i = append_at_end; i < str.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i - append_at_end));
+        }
+
+        // append at with len
+        auto append_len = append_view_b.text_index_to_buffer(1);
+        str.append_at(0, append_view_b.data(), append_len);
+        auto append_at_len_begin = 0;
+        auto append_at_len_end   = append_len;
+        auto append_at_len_len   = str.length_buffer();
+        append_at_begin += append_len;
+        append_at_end += append_len;
+        REQUIRE_EQ(str.size(), append_at_len + append_len);
+        REQUIRE_GE(str.capacity(), capacity_of(append_at_len + append_len));
+        for (TestSizeType i = append_at_len_begin; i < append_at_len_end; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_b.at_buffer(i - append_at_len_begin));
+        }
+        for (TestSizeType i = append_at_begin; i < append_at_end; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_a.at_buffer(i - append_at_begin));
+        }
+        for (TestSizeType i = append_at_end; i < str.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i - append_at_end));
+        }
+
+        // append at view
+        str.append_at(0, append_view_a);
+        auto append_at_view_begin = 0;
+        auto append_at_view_end   = append_view_a.size();
+        auto append_at_view_len   = str.length_buffer();
+        append_at_len_begin += append_view_a.size();
+        append_at_len_end += append_view_a.size();
+        append_at_begin += append_view_a.size();
+        append_at_end += append_view_a.size();
+        REQUIRE_EQ(str.size(), append_at_len_len + append_view_a.size());
+        REQUIRE_GE(str.capacity(), capacity_of(append_at_len_len + append_view_a.size()));
+        for (TestSizeType i = append_at_view_begin; i < append_at_view_end; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_a.at_buffer(i - append_at_view_begin));
+        }
+        for (TestSizeType i = append_at_len_begin; i < append_at_len_end; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_b.at_buffer(i - append_at_len_begin));
+        }
+        for (TestSizeType i = append_at_begin; i < append_at_end; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_a.at_buffer(i - append_at_begin));
+        }
+        for (TestSizeType i = append_at_end; i < str.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i - append_at_end));
+        }
+
+        // append at seq
+        str.append_at(0, append_seq_a);
+        auto append_at_seq_begin = 0;
+        auto append_at_seq_end   = append_seq_a.len;
+        auto append_at_seq_len   = str.length_buffer();
+        append_at_view_begin += append_seq_a.len;
+        append_at_view_end += append_seq_a.len;
+        append_at_len_begin += append_seq_a.len;
+        append_at_len_end += append_seq_a.len;
+        append_at_begin += append_seq_a.len;
+        append_at_end += append_seq_a.len;
+        REQUIRE_EQ(str.size(), append_at_view_len + append_seq_a.len);
+        REQUIRE_GE(str.capacity(), capacity_of(append_at_view_len + append_seq_a.len));
+        for (TestSizeType i = append_at_seq_begin; i < append_at_seq_end; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_seq_a.at(i - append_at_seq_begin));
+        }
+        for (TestSizeType i = append_at_view_begin; i < append_at_view_end; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_a.at_buffer(i - append_at_view_begin));
+        }
+        for (TestSizeType i = append_at_len_begin; i < append_at_len_end; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_b.at_buffer(i - append_at_len_begin));
+        }
+        for (TestSizeType i = append_at_begin; i < append_at_end; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), append_view_a.at_buffer(i - append_at_begin));
+        }
+        for (TestSizeType i = append_at_end; i < str.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i - append_at_end));
+        }
+    }
+
+    SUBCASE("remove")
+    {
+        // remove at
+        {
+            StringView view              = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView remove_item_view  = u8"🐓";
+            StringView removed_view_1    = u8"🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView remove_start_view = u8"🏀";
+            StringView removed_view_2    = u8"🏀🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+
+            String str = view;
+
+            // remove start
+            str.remove_at(0, remove_item_view.size());
+            REQUIRE_EQ(str.size(), removed_view_1.size());
+            REQUIRE_GE(str.capacity(), view.size());
+            REQUIRE_EQ(str, removed_view_1);
+
+            // remove center
+            str.remove_at(remove_start_view.size(), remove_item_view.size());
+            REQUIRE_EQ(str.size(), removed_view_2.size());
+            REQUIRE_GE(str.capacity(), view.size());
+            REQUIRE_EQ(str, removed_view_2);
+        }
+
+        // [view] remove & remove last & remove all
+        {
+            StringView view              = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView remove_item_view  = u8"🐓";
+            StringView removed_view      = u8"🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView removed_last_view = u8"🏀🐓🏀🐓🏀🐓🏀🐓🏀🏀";
+            StringView removed_all_view  = u8"🏀🏀🏀🏀🏀🏀";
+
+            String str = view;
+
+            // remove
+            str.remove(remove_item_view);
+            REQUIRE_EQ(str.size(), removed_view.size());
+            REQUIRE_GE(str.capacity(), view.size());
+            REQUIRE_EQ(str, removed_view);
+
+            // remove last
+            str.remove_last(remove_item_view);
+            REQUIRE_EQ(str.size(), removed_last_view.size());
+            REQUIRE_GE(str.capacity(), view.size());
+            REQUIRE_EQ(str, removed_last_view);
+
+            // remove all
+            str.remove_all(remove_item_view);
+            REQUIRE_EQ(str.size(), removed_all_view.size());
+            REQUIRE_GE(str.capacity(), view.size());
+            REQUIRE_EQ(str, removed_all_view);
+        }
+
+        // [seq] remove & remove last & remove all
+        {
+            StringView   view              = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            skr::UTF8Seq remove_item_seq   = { U'🐓' };
+            StringView   removed_view      = u8"🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView   removed_last_view = u8"🏀🐓🏀🐓🏀🐓🏀🐓🏀🏀";
+            StringView   removed_all_view  = u8"🏀🏀🏀🏀🏀🏀";
+
+            String str = view;
+
+            // remove
+            str.remove(remove_item_seq);
+            REQUIRE_EQ(str.size(), removed_view.size());
+            REQUIRE_GE(str.capacity(), view.size());
+            REQUIRE_EQ(str, removed_view);
+
+            // remove last
+            str.remove_last(remove_item_seq);
+            REQUIRE_EQ(str.size(), removed_last_view.size());
+            REQUIRE_GE(str.capacity(), view.size());
+            REQUIRE_EQ(str, removed_last_view);
+
+            // remove all
+            str.remove_all(remove_item_seq);
+            REQUIRE_EQ(str.size(), removed_all_view.size());
+            REQUIRE_GE(str.capacity(), view.size());
+            REQUIRE_EQ(str, removed_all_view);
+        }
+
+        // [view] [copy] remove & remove last & remove all
+        {
+            StringView view              = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView remove_item_view  = u8"🐓";
+            StringView removed_view      = u8"🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView removed_last_view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🏀";
+            StringView removed_all_view  = u8"🏀🏀🏀🏀🏀🏀";
+
+            String str = view;
+
+            // remove
+            auto removed = str.remove_copy(remove_item_view);
+            REQUIRE_EQ(removed.size(), removed_view.size());
+            REQUIRE_EQ(removed, removed_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+
+            // remove last
+            auto removed_last = str.remove_last_copy(remove_item_view);
+            REQUIRE_EQ(removed_last.size(), removed_last_view.size());
+            REQUIRE_EQ(removed_last, removed_last_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+
+            // remove all
+            auto removed_all = str.remove_all_copy(remove_item_view);
+            REQUIRE_EQ(removed_all.size(), removed_all_view.size());
+            REQUIRE_EQ(removed_all, removed_all_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+        }
+
+        // [seq] [copy] remove & remove last & remove all
+        {
+            StringView   view              = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            skr::UTF8Seq remove_item_seq   = { U'🐓' };
+            StringView   removed_view      = u8"🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView   removed_last_view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🏀";
+            StringView   removed_all_view  = u8"🏀🏀🏀🏀🏀🏀";
+
+            String str = view;
+
+            // remove
+            auto removed = str.remove_copy(remove_item_seq);
+            REQUIRE_EQ(removed.size(), removed_view.size());
+            REQUIRE_EQ(removed, removed_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+
+            // remove last
+            auto removed_last = str.remove_last_copy(remove_item_seq);
+            REQUIRE_EQ(removed_last.size(), removed_last_view.size());
+            REQUIRE_EQ(removed_last, removed_last_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+
+            // remove all
+            auto removed_all = str.remove_all_copy(remove_item_seq);
+            REQUIRE_EQ(removed_all.size(), removed_all_view.size());
+            REQUIRE_EQ(removed_all, removed_all_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+        }
+    }
 
     // index & modify
 

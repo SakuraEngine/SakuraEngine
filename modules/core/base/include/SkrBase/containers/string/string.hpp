@@ -140,22 +140,22 @@ struct U8String : protected Memory {
     DataRef append(const U& container);
 
     // append at
-    DataRef append_at(SizeType idx, const DataType* str);
-    DataRef append_at(SizeType idx, const DataType* str, SizeType len);
-    DataRef append_at(SizeType idx, ViewType view);
-    DataRef append_at(SizeType idx, UTF8Seq seq);
+    void append_at(SizeType idx, const DataType* str);
+    void append_at(SizeType idx, const DataType* str, SizeType len);
+    void append_at(SizeType idx, ViewType view);
+    void append_at(SizeType idx, UTF8Seq seq);
     template <EachAbleContainer U>
-    DataRef append_at(SizeType idx, const U& container);
+    void append_at(SizeType idx, const U& container);
 
     // remove
     // TODO. remove based on replace
     void     remove_at(SizeType index, SizeType n);
     bool     remove(ViewType view);
     bool     remove_last(ViewType view);
-    bool     remove_all(ViewType view);
+    SizeType remove_all(ViewType view);
     bool     remove(UTF8Seq seq);
     bool     remove_last(UTF8Seq seq);
-    bool     remove_all(UTF8Seq seq);
+    SizeType remove_all(UTF8Seq seq);
     U8String remove_copy(ViewType view) const;
     U8String remove_last_copy(ViewType view) const;
     U8String remove_all_copy(ViewType view) const;
@@ -814,12 +814,12 @@ inline U8String<Memory>::DataRef U8String<Memory>::append(const U& container)
 
 // append at
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::append_at(SizeType idx, const DataType* str)
+inline void U8String<Memory>::append_at(SizeType idx, const DataType* str)
 {
-    return append_at(idx, str, CharTraits::length(str));
+    append_at(idx, str, CharTraits::length(str));
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::append_at(SizeType idx, const DataType* str, SizeType len)
+inline void U8String<Memory>::append_at(SizeType idx, const DataType* str, SizeType len)
 {
     if (len)
     {
@@ -828,22 +828,21 @@ inline U8String<Memory>::DataRef U8String<Memory>::append_at(SizeType idx, const
     }
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::append_at(SizeType idx, ViewType view)
+inline void U8String<Memory>::append_at(SizeType idx, ViewType view)
 {
-    return append_at(idx, view.data(), view.size());
+    append_at(idx, view.data(), view.size());
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::append_at(SizeType idx, UTF8Seq seq)
+inline void U8String<Memory>::append_at(SizeType idx, UTF8Seq seq)
 {
     if (seq.is_valid())
     {
-        return append_at(idx, &seq.data[0], seq.len);
+        append_at(idx, &seq.data[0], seq.len);
     }
-    return _data() ? DataRef(_data() + size(), size()) : DataRef();
 }
 template <typename Memory>
 template <EachAbleContainer U>
-inline U8String<Memory>::DataRef U8String<Memory>::append_at(SizeType idx, const U& container)
+inline void U8String<Memory>::append_at(SizeType idx, const U& container)
 {
     using Traits = ContainerTraits<std::decay_t<U>>;
     if constexpr (Traits::is_linear_memory)
@@ -913,7 +912,7 @@ inline bool U8String<Memory>::remove(ViewType view)
 {
     if (DataRef ref = find(view))
     {
-        remove_at(ref.index, view.size());
+        remove_at(ref.index(), view.size());
         return true;
     }
     return false;
@@ -929,7 +928,7 @@ inline bool U8String<Memory>::remove_last(ViewType view)
     return false;
 }
 template <typename Memory>
-inline bool U8String<Memory>::remove_all(ViewType view)
+inline U8String<Memory>::SizeType U8String<Memory>::remove_all(ViewType view)
 {
     if (!is_empty())
     {
@@ -937,41 +936,57 @@ inline bool U8String<Memory>::remove_all(ViewType view)
 
         if (first_found)
         {
+            // exit literal state
+            if (_pre_modify())
+            {
+                first_found = { _data() + first_found.index(), first_found.index() };
+            }
+
             DataType* write     = _data();
             DataType* read      = _data();
             SizeType  read_size = size();
 
-            _pre_modify();
-            DataRef found = first_found;
+            SizeType count = 0;
+            DataRef  found = first_found;
             while (found)
             {
+                SizeType move_count = found.ptr() - read;
+
                 // copy data before found
                 if (write != read)
                 {
-                    memory::move(write, read, found.ptr() - read);
+                    memory::move(write, read, move_count);
                 }
 
                 // update read info
-                read_size = read_size - (found.ptr() - read) - view.size();
-                read      = found.ptr() + view.size();
+                read_size -= move_count + view.size();
+                read = found.ptr() + view.size();
+
+                // update write info
+                write += move_count;
 
                 // find next
                 found = ViewType{ read, read_size }.find(view);
+
+                ++count;
             }
 
             // copy final data
             memory::move(write, read, read_size);
 
-            return true;
+            // set size
+            _set_size(size() - view.size() * count);
+
+            return count;
         }
         else
         {
-            return false;
+            return 0;
         }
     }
     else
     {
-        return false;
+        return 0;
     }
 }
 template <typename Memory>
@@ -999,7 +1014,7 @@ inline bool U8String<Memory>::remove_last(UTF8Seq seq)
     }
 }
 template <typename Memory>
-inline bool U8String<Memory>::remove_all(UTF8Seq seq)
+inline U8String<Memory>::SizeType U8String<Memory>::remove_all(UTF8Seq seq)
 {
     if (seq.is_valid())
     {
@@ -1015,42 +1030,42 @@ inline U8String<Memory> U8String<Memory>::remove_copy(ViewType view) const
 {
     U8String result = *this;
     result.remove(view);
-    return result;
+    return std::move(result);
 }
 template <typename Memory>
 inline U8String<Memory> U8String<Memory>::remove_last_copy(ViewType view) const
 {
     U8String result = *this;
     result.remove_last(view);
-    return result;
+    return std::move(result);
 }
 template <typename Memory>
 inline U8String<Memory> U8String<Memory>::remove_all_copy(ViewType view) const
 {
     U8String result = *this;
     result.remove_all(view);
-    return result;
+    return std::move(result);
 }
 template <typename Memory>
 inline U8String<Memory> U8String<Memory>::remove_copy(UTF8Seq seq) const
 {
     U8String result = *this;
     result.remove(seq);
-    return result;
+    return std::move(result);
 }
 template <typename Memory>
 inline U8String<Memory> U8String<Memory>::remove_last_copy(UTF8Seq seq) const
 {
     U8String result = *this;
     result.remove_last(seq);
-    return result;
+    return std::move(result);
 }
 template <typename Memory>
 inline U8String<Memory> U8String<Memory>::remove_all_copy(UTF8Seq seq) const
 {
     U8String result = *this;
     result.remove_all(seq);
-    return result;
+    return std::move(result);
 }
 
 // replace
