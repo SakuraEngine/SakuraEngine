@@ -1325,13 +1325,155 @@ TEST_CASE("Test U8String")
         }
     }
 
-    // find
-    // contains & count
+    // [test in StringView] find
+    // [test in StringView] contains & count
+    // [test in StringView] starts & ends
 
-    // starts & ends
-    // remove prefix & suffix
-    // trim
-    // trim invalid
+    SUBCASE("remove prefix & suffix")
+    {
+        // remove prefix & suffix
+        {
+            StringView view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+
+            StringView   prefix_view     = u8"🐓🏀";
+            StringView   bad_prefix_view = u8"🏀🐓";
+            StringView   suffix_view     = u8"🐓🏀";
+            StringView   bad_suffix_view = u8"🏀🐓";
+            skr::UTF8Seq prefix_seq{ U'🐓' };
+            skr::UTF8Seq bad_prefix_seq{ U'🏀' };
+            skr::UTF8Seq suffix_seq{ U'🏀' };
+            skr::UTF8Seq bad_suffix_seq{ U'🐓' };
+
+            StringView remove_prefix_view         = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView remove_bad_prefix_view     = view;
+            StringView remove_suffix_view         = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView remove_bad_suffix_view     = view;
+            StringView remove_prefix_seq_view     = u8"🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView remove_bad_prefix_seq_view = view;
+            StringView remove_suffix_seq_view     = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓";
+            StringView remove_bad_suffix_seq_view = view;
+
+            String str = view;
+
+            // remove prefix
+            str.remove_prefix(prefix_view);
+            REQUIRE_EQ(str.size(), remove_prefix_view.size());
+            REQUIRE_EQ(str, remove_prefix_view);
+
+            // remove bad prefix
+            str = view;
+            str.remove_prefix(bad_prefix_view);
+            REQUIRE_EQ(str.size(), remove_bad_prefix_view.size());
+            REQUIRE_EQ(str, remove_bad_prefix_view);
+
+            // remove suffix
+            str = view;
+            str.remove_suffix(suffix_view);
+            REQUIRE_EQ(str.size(), remove_suffix_view.size());
+            REQUIRE_EQ(str, remove_suffix_view);
+
+            // remove bad suffix
+            str = view;
+            str.remove_suffix(bad_suffix_view);
+            REQUIRE_EQ(str.size(), remove_bad_suffix_view.size());
+            REQUIRE_EQ(str, remove_bad_suffix_view);
+
+            // remove prefix seq
+            str = view;
+            str.remove_prefix(prefix_seq);
+            REQUIRE_EQ(str.size(), remove_prefix_seq_view.size());
+            REQUIRE_EQ(str, remove_prefix_seq_view);
+
+            // remove bad prefix seq
+            str = view;
+            str.remove_prefix(bad_prefix_seq);
+            REQUIRE_EQ(str.size(), remove_bad_prefix_seq_view.size());
+            REQUIRE_EQ(str, remove_bad_prefix_seq_view);
+
+            // remove suffix seq
+            str = view;
+            str.remove_suffix(suffix_seq);
+            REQUIRE_EQ(str.size(), remove_suffix_seq_view.size());
+            REQUIRE_EQ(str, remove_suffix_seq_view);
+
+            // remove bad suffix seq
+            str = view;
+            str.remove_suffix(bad_suffix_seq);
+            REQUIRE_EQ(str.size(), remove_bad_suffix_seq_view.size());
+            REQUIRE_EQ(str, remove_bad_suffix_seq_view);
+        }
+
+        // [copy] remove prefix & suffix
+        {
+            StringView view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+
+            StringView   prefix_view     = u8"🐓🏀";
+            StringView   bad_prefix_view = u8"🏀🐓";
+            StringView   suffix_view     = u8"🐓🏀";
+            StringView   bad_suffix_view = u8"🏀🐓";
+            skr::UTF8Seq prefix_seq{ U'🐓' };
+            skr::UTF8Seq bad_prefix_seq{ U'🏀' };
+            skr::UTF8Seq suffix_seq{ U'🏀' };
+            skr::UTF8Seq bad_suffix_seq{ U'🐓' };
+
+            StringView remove_prefix_view         = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView remove_bad_prefix_view     = view;
+            StringView remove_suffix_view         = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView remove_bad_suffix_view     = view;
+            StringView remove_prefix_seq_view     = u8"🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView remove_bad_prefix_seq_view = view;
+            StringView remove_suffix_seq_view     = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓";
+            StringView remove_bad_suffix_seq_view = view;
+
+            String str = view;
+
+            // remove prefix
+            auto removed_prefix = str.remove_prefix_copy(prefix_view);
+            REQUIRE_EQ(removed_prefix.size(), remove_prefix_view.size());
+            REQUIRE_EQ(removed_prefix, remove_prefix_view);
+
+            // remove bad prefix
+            auto removed_bad_prefix = str.remove_prefix_copy(bad_prefix_view);
+            REQUIRE_EQ(removed_bad_prefix.size(), remove_bad_prefix_view.size());
+            REQUIRE_EQ(removed_bad_prefix, remove_bad_prefix_view);
+
+            // remove suffix
+            auto removed_suffix = str.remove_suffix_copy(suffix_view);
+            REQUIRE_EQ(removed_suffix.size(), remove_suffix_view.size());
+            REQUIRE_EQ(removed_suffix, remove_suffix_view);
+
+            // remove bad suffix
+            auto removed_bad_suffix = str.remove_suffix_copy(bad_suffix_view);
+            REQUIRE_EQ(removed_bad_suffix.size(), remove_bad_suffix_view.size());
+            REQUIRE_EQ(removed_bad_suffix, remove_bad_suffix_view);
+
+            // remove prefix seq
+            auto removed_prefix_seq = str.remove_prefix_copy(prefix_seq);
+            REQUIRE_EQ(removed_prefix_seq.size(), remove_prefix_seq_view.size());
+            REQUIRE_EQ(removed_prefix_seq, remove_prefix_seq_view);
+
+            // remove bad prefix seq
+            auto removed_bad_prefix_seq = str.remove_prefix_copy(bad_prefix_seq);
+            REQUIRE_EQ(removed_bad_prefix_seq.size(), remove_bad_prefix_seq_view.size());
+            REQUIRE_EQ(removed_bad_prefix_seq, remove_bad_prefix_seq_view);
+
+            // remove suffix seq
+            auto removed_suffix_seq = str.remove_suffix_copy(suffix_seq);
+            REQUIRE_EQ(removed_suffix_seq.size(), remove_suffix_seq_view.size());
+            REQUIRE_EQ(removed_suffix_seq, remove_suffix_seq_view);
+
+            // remove bad suffix seq
+            auto removed_bad_suffix_seq = str.remove_suffix_copy(bad_suffix_seq);
+            REQUIRE_EQ(removed_bad_suffix_seq.size(), remove_bad_suffix_seq_view.size());
+            REQUIRE_EQ(removed_bad_suffix_seq, remove_bad_suffix_seq_view);
+
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+        }
+    }
+
+    // [test in StringView] trim
+    // [test in StringView] trim invalid
 
     // partition
     // split

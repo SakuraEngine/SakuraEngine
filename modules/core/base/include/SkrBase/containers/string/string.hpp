@@ -1537,22 +1537,22 @@ inline void U8String<Memory>::remove_suffix(const UTF8Seq& suffix)
 template <typename Memory>
 inline U8String<Memory> U8String<Memory>::remove_prefix_copy(const ViewType& prefix) const
 {
-    return { view().remove_prefix_copy(prefix) };
+    return { view().remove_prefix(prefix) };
 }
 template <typename Memory>
 inline U8String<Memory> U8String<Memory>::remove_suffix_copy(const ViewType& suffix) const
 {
-    return { view().remove_suffix_copy(suffix) };
+    return { view().remove_suffix(suffix) };
 }
 template <typename Memory>
 inline U8String<Memory> U8String<Memory>::remove_prefix_copy(const UTF8Seq& prefix) const
 {
-    return { view().remove_prefix_copy(prefix) };
+    return { view().remove_prefix(prefix) };
 }
 template <typename Memory>
 inline U8String<Memory> U8String<Memory>::remove_suffix_copy(const UTF8Seq& suffix) const
 {
-    return { view().remove_suffix_copy(suffix) };
+    return { view().remove_suffix(suffix) };
 }
 
 // trim
