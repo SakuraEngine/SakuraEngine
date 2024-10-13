@@ -941,22 +941,20 @@ TEST_CASE("Test U8String")
             auto removed = str.remove_copy(remove_item_view);
             REQUIRE_EQ(removed.size(), removed_view.size());
             REQUIRE_EQ(removed, removed_view);
-            REQUIRE_EQ(str.size(), view.size());
-            REQUIRE_EQ(str, view);
 
             // remove last
             auto removed_last = str.remove_last_copy(remove_item_view);
             REQUIRE_EQ(removed_last.size(), removed_last_view.size());
             REQUIRE_EQ(removed_last, removed_last_view);
-            REQUIRE_EQ(str.size(), view.size());
-            REQUIRE_EQ(str, view);
 
             // remove all
             auto removed_all = str.remove_all_copy(remove_item_view);
             REQUIRE_EQ(removed_all.size(), removed_all_view.size());
             REQUIRE_EQ(removed_all, removed_all_view);
+
             REQUIRE_EQ(str.size(), view.size());
             REQUIRE_EQ(str, view);
+            REQUIRE(is_literal(str));
         }
 
         // [seq] [copy] remove & remove last & remove all
@@ -973,22 +971,20 @@ TEST_CASE("Test U8String")
             auto removed = str.remove_copy(remove_item_seq);
             REQUIRE_EQ(removed.size(), removed_view.size());
             REQUIRE_EQ(removed, removed_view);
-            REQUIRE_EQ(str.size(), view.size());
-            REQUIRE_EQ(str, view);
 
             // remove last
             auto removed_last = str.remove_last_copy(remove_item_seq);
             REQUIRE_EQ(removed_last.size(), removed_last_view.size());
             REQUIRE_EQ(removed_last, removed_last_view);
-            REQUIRE_EQ(str.size(), view.size());
-            REQUIRE_EQ(str, view);
 
             // remove all
             auto removed_all = str.remove_all_copy(remove_item_seq);
             REQUIRE_EQ(removed_all.size(), removed_all_view.size());
             REQUIRE_EQ(removed_all, removed_all_view);
+
             REQUIRE_EQ(str.size(), view.size());
             REQUIRE_EQ(str, view);
+            REQUIRE(is_literal(str));
         }
     }
 
@@ -1081,20 +1077,18 @@ TEST_CASE("Test U8String")
             auto   replaced_less = str.replace_copy(replace_less_from_view, replace_less_to_view);
             REQUIRE_EQ(replaced_less.size(), replaced_less_view.size());
             REQUIRE_EQ(replaced_less, replaced_less_view);
-            REQUIRE_EQ(str.size(), view.size());
-            REQUIRE_EQ(str, view);
 
             auto replaced_eq = str.replace_copy(replace_eq_from_view, replace_eq_to_view);
             REQUIRE_EQ(replaced_eq.size(), replaced_eq_view.size());
             REQUIRE_EQ(replaced_eq, replaced_eq_view);
-            REQUIRE_EQ(str.size(), view.size());
-            REQUIRE_EQ(str, view);
 
             auto replaced_more = str.replace_copy(replace_more_from_view, replace_more_to_view);
             REQUIRE_EQ(replaced_more.size(), replaced_more_view.size());
             REQUIRE_EQ(replaced_more, replaced_more_view);
+
             REQUIRE_EQ(str.size(), view.size());
             REQUIRE_EQ(str, view);
+            REQUIRE(is_literal(str));
         }
 
         // [copy] [ranged] replace
@@ -1120,20 +1114,18 @@ TEST_CASE("Test U8String")
             auto   replaced_less = str.replace_copy(replace_less_from_view, replace_less_to_view, replace_start, replace_count);
             REQUIRE_EQ(replaced_less.size(), replaced_less_view.size());
             REQUIRE_EQ(replaced_less, replaced_less_view);
-            REQUIRE_EQ(str.size(), view.size());
-            REQUIRE_EQ(str, view);
 
             auto replaced_eq = str.replace_copy(replace_eq_from_view, replace_eq_to_view, replace_start, replace_count);
             REQUIRE_EQ(replaced_eq.size(), replaced_eq_view.size());
             REQUIRE_EQ(replaced_eq, replaced_eq_view);
-            REQUIRE_EQ(str.size(), view.size());
-            REQUIRE_EQ(str, view);
 
             auto replaced_more = str.replace_copy(replace_more_from_view, replace_more_to_view, replace_start, replace_count);
             REQUIRE_EQ(replaced_more.size(), replaced_more_view.size());
             REQUIRE_EQ(replaced_more, replaced_more_view);
+
             REQUIRE_EQ(str.size(), view.size());
             REQUIRE_EQ(str, view);
+            REQUIRE(is_literal(str));
         }
 
         // replace range
@@ -1184,15 +1176,15 @@ TEST_CASE("Test U8String")
             auto replaced_less = str.replace_range_copy(replace_less_to, replace_start, replace_count);
             REQUIRE_EQ(replaced_less.size(), replaced_less_view.size());
             REQUIRE_EQ(replaced_less, replaced_less_view);
-            REQUIRE_EQ(str.size(), view.size());
-            REQUIRE_EQ(str, view);
 
             // replace more
             auto replaced_more = str.replace_range_copy(replace_more_to, replace_start, replace_count);
             REQUIRE_EQ(replaced_more.size(), replaced_more_view.size());
             REQUIRE_EQ(replaced_more, replaced_more_view);
+
             REQUIRE_EQ(str.size(), view.size());
             REQUIRE_EQ(str, view);
+            REQUIRE(is_literal(str));
         }
     }
 
@@ -1299,6 +1291,10 @@ TEST_CASE("Test U8String")
             auto last_str = str.last_copy(last_count);
             REQUIRE_EQ(last_str.size(), last_view.size());
             REQUIRE_EQ(last_str, last_view);
+
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+            REQUIRE(is_literal(str));
         }
     }
 
@@ -1469,11 +1465,179 @@ TEST_CASE("Test U8String")
 
             REQUIRE_EQ(str.size(), view.size());
             REQUIRE_EQ(str, view);
+            REQUIRE(is_literal(str));
         }
     }
 
-    // [test in StringView] trim
-    // [test in StringView] trim invalid
+    SUBCASE("trim")
+    {
+        // trim
+        {
+            StringView view = u8"鸡鸡鸡  \t\t🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀\t\t  鸡鸡鸡";
+
+            StringView   trim_chs = u8" \t鸡";
+            skr::UTF8Seq trim_seq = { U'鸡' };
+
+            StringView trim_view       = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView trim_start_view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀\t\t  鸡鸡鸡";
+            StringView trim_end_view   = u8"鸡鸡鸡  \t\t🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+
+            StringView trim_seq_view       = u8"  \t\t🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀\t\t  ";
+            StringView trim_start_seq_view = u8"  \t\t🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀\t\t  鸡鸡鸡";
+            StringView trim_end_seq_view   = u8"鸡鸡鸡  \t\t🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀\t\t  ";
+
+            String str = view;
+
+            // trim
+            str.trim(trim_chs);
+            REQUIRE_EQ(str.size(), trim_view.size());
+            REQUIRE_EQ(str, trim_view);
+
+            // trim start
+            str = view;
+            str.trim_start(trim_chs);
+            REQUIRE_EQ(str.size(), trim_start_view.size());
+            REQUIRE_EQ(str, trim_start_view);
+
+            // trim end
+            str = view;
+            str.trim_end(trim_chs);
+            REQUIRE_EQ(str.size(), trim_end_view.size());
+            REQUIRE_EQ(str, trim_end_view);
+
+            // trim seq
+            str = view;
+            str.trim(trim_seq);
+            REQUIRE_EQ(str.size(), trim_seq_view.size());
+            REQUIRE_EQ(str, trim_seq_view);
+
+            // trim start seq
+            str = view;
+            str.trim_start(trim_seq);
+            REQUIRE_EQ(str.size(), trim_start_seq_view.size());
+            REQUIRE_EQ(str, trim_start_seq_view);
+
+            // trim end seq
+            str = view;
+            str.trim_end(trim_seq);
+            REQUIRE_EQ(str.size(), trim_end_seq_view.size());
+            REQUIRE_EQ(str, trim_end_seq_view);
+        }
+
+        // [copy] trim
+        {
+            StringView view = u8"鸡鸡鸡  \t\t🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀\t\t  鸡鸡鸡";
+
+            StringView   trim_chs = u8" \t鸡";
+            skr::UTF8Seq trim_seq = { U'鸡' };
+
+            StringView trim_view       = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView trim_start_view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀\t\t  鸡鸡鸡";
+            StringView trim_end_view   = u8"鸡鸡鸡  \t\t🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+
+            StringView trim_seq_view       = u8"  \t\t🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀\t\t  ";
+            StringView trim_start_seq_view = u8"  \t\t🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀\t\t  鸡鸡鸡";
+            StringView trim_end_seq_view   = u8"鸡鸡鸡  \t\t🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀\t\t  ";
+
+            String str = view;
+
+            // trim
+            auto trimmed = str.trim_copy(trim_chs);
+            REQUIRE_EQ(trimmed.size(), trim_view.size());
+            REQUIRE_EQ(trimmed, trim_view);
+
+            // trim start
+            auto trimmed_start = str.trim_start_copy(trim_chs);
+            REQUIRE_EQ(trimmed_start.size(), trim_start_view.size());
+            REQUIRE_EQ(trimmed_start, trim_start_view);
+
+            // trim end
+            auto trimmed_end = str.trim_end_copy(trim_chs);
+            REQUIRE_EQ(trimmed_end.size(), trim_end_view.size());
+            REQUIRE_EQ(trimmed_end, trim_end_view);
+
+            // trim seq
+            auto trimmed_seq = str.trim_copy(trim_seq);
+            REQUIRE_EQ(trimmed_seq.size(), trim_seq_view.size());
+            REQUIRE_EQ(trimmed_seq, trim_seq_view);
+
+            // trim start seq
+            auto trimmed_start_seq = str.trim_start_copy(trim_seq);
+            REQUIRE_EQ(trimmed_start_seq.size(), trim_start_seq_view.size());
+            REQUIRE_EQ(trimmed_start_seq, trim_start_seq_view);
+
+            // trim end seq
+            auto trimmed_end_seq = str.trim_end_copy(trim_seq);
+            REQUIRE_EQ(trimmed_end_seq.size(), trim_end_seq_view.size());
+            REQUIRE_EQ(trimmed_end_seq, trim_end_seq_view);
+
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+            REQUIRE(is_literal(str));
+        }
+    }
+
+    SUBCASE("trim invalid")
+    {
+        // trim invalid
+        {
+            StringView raw_view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView view     = raw_view.subview(1, raw_view.size() - 2);
+
+            StringView trim_view       = u8"🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓";
+            StringView trim_start_view = view.subview(3);
+            StringView trim_end_view   = view.subview(0, view.size() - 3);
+
+            String str = view;
+
+            // trim
+            str.trim_invalid();
+            REQUIRE_EQ(str.size(), trim_view.size());
+            REQUIRE_EQ(str, trim_view);
+
+            // trim start
+            str = view;
+            str.trim_invalid_start();
+            REQUIRE_EQ(str.size(), trim_start_view.size());
+            REQUIRE_EQ(str, trim_start_view);
+
+            // trim end
+            str = view;
+            str.trim_invalid_end();
+            REQUIRE_EQ(str.size(), trim_end_view.size());
+            REQUIRE_EQ(str, trim_end_view);
+        }
+
+        // [copy] trim invalid
+        {
+            StringView raw_view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+            StringView view     = raw_view.subview(1, raw_view.size() - 2);
+
+            StringView trim_view       = u8"🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓";
+            StringView trim_start_view = view.subview(3);
+            StringView trim_end_view   = view.subview(0, view.size() - 3);
+
+            String str = view;
+
+            // trim
+            auto trimmed = str.trim_invalid_copy();
+            REQUIRE_EQ(trimmed.size(), trim_view.size());
+            REQUIRE_EQ(trimmed, trim_view);
+
+            // trim start
+            auto trimmed_start = str.trim_invalid_start_copy();
+            REQUIRE_EQ(trimmed_start.size(), trim_start_view.size());
+            REQUIRE_EQ(trimmed_start, trim_start_view);
+
+            // trim end
+            auto trimmed_end = str.trim_invalid_end_copy();
+            REQUIRE_EQ(trimmed_end.size(), trim_end_view.size());
+            REQUIRE_EQ(trimmed_end, trim_end_view);
+
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+        }
+    }
 
     // partition
     // split

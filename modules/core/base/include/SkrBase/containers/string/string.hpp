@@ -1569,7 +1569,7 @@ inline void U8String<Memory>::trim_start(const ViewType& characters)
     if (trim_view.size() != size())
     {
         _pre_modify();
-        memory::move(_data(), trim_view._data(), trim_view.size());
+        memory::move(_data(), const_cast<DataType*>(trim_view.data()), trim_view.size());
         _set_size(trim_view.size());
     }
 }
@@ -1596,7 +1596,7 @@ inline void U8String<Memory>::trim_start(const UTF8Seq& ch)
     if (trim_view.size() != size())
     {
         _pre_modify();
-        memory::move(_data(), trim_view._data(), trim_view.size());
+        memory::move(_data(), const_cast<DataType*>(trim_view.data()), trim_view.size());
         _set_size(trim_view.size());
     }
 }
@@ -1655,7 +1655,7 @@ inline void U8String<Memory>::trim_invalid_start()
     if (trim_view.size() != size())
     {
         _pre_modify();
-        memory::move(_data(), trim_view._data(), trim_view.size());
+        memory::move(_data(), const_cast<DataType*>(trim_view.data()), trim_view.size());
         _set_size(trim_view.size());
     }
 }
