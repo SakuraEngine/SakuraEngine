@@ -111,7 +111,7 @@ struct U8String : protected Memory {
 
     // memory op
     void clear();
-    void release(SizeType reserve_capacity = 0);
+    void release(SizeType reserve_capacity = 0); // TODO. release test when equal to capacity FOR ALL CONTAINERS
     void reserve(SizeType expect_capacity);
     void shrink();
     void resize(SizeType expect_size, const DataType& new_value);
@@ -468,12 +468,12 @@ inline bool U8String<Memory>::operator!=(const U8String& rhs) const noexcept
 template <typename Memory>
 inline bool U8String<Memory>::operator==(ViewType view) const noexcept
 {
-    return view() == view;
+    return this->view() == view;
 }
 template <typename Memory>
 inline bool U8String<Memory>::operator!=(ViewType view) const noexcept
 {
-    return view() != view;
+    return this->view() != view;
 }
 
 // getter
@@ -538,7 +538,7 @@ inline const U8String<Memory>::DataType* U8String<Memory>::c_str() const
 template <typename Memory>
 inline const char* U8String<Memory>::c_str_raw() const
 {
-    return static_cast<const char*>(_data());
+    return reinterpret_cast<const char*>(_data());
 }
 
 // validate
@@ -572,6 +572,7 @@ inline void U8String<Memory>::reserve(SizeType expect_capacity)
 {
     if (expect_capacity > capacity())
     {
+        _pre_modify();
         _realloc(expect_capacity);
     }
 }
@@ -601,6 +602,9 @@ inline void U8String<Memory>::resize(SizeType expect_size, const DataType& new_v
     {
         memory::destruct(_data() + expect_size, size() - expect_size);
     }
+
+    // set size
+    _set_size(expect_size);
 }
 template <typename Memory>
 inline void U8String<Memory>::resize_unsafe(SizeType expect_size)

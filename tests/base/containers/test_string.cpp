@@ -12,9 +12,13 @@ inline bool allow_literal(const StringView& view)
 {
     return skr::in_const_segment(view.data()) && view.data()[view.size()] == u8'\0';
 }
+inline TestSizeType capacity_of(TestSizeType capacity)
+{
+    return std::max(kStringSSOCapacity, capacity);
+}
 inline TestSizeType capacity_of(const StringView& view)
 {
-    return allow_literal(view) ? view.size() : std::max(kStringSSOCapacity, view.size());
+    return allow_literal(view) ? view.size() : capacity_of(view.size());
 }
 } // namespace skr::test_container
 
@@ -231,4 +235,273 @@ TEST_CASE("Test U8String")
         REQUIRE_EQ(heap_c.data(), old_heap_a_data);
         REQUIRE(heap_a.is_empty());
     }
+
+    SUBCASE("special assign")
+    {
+        auto test_assign_of_view = [](const StringView& view) {
+            auto length_text = view.length_text();
+            SKR_ASSERT(length_text > 1 && "for test subview ctor, view length must > 1");
+
+            // ctor
+            String ctor;
+            ctor.assign(view.data());
+            REQUIRE_EQ(ctor.size(), view.size());
+            REQUIRE_EQ(ctor.capacity(), capacity_of(view));
+            REQUIRE_EQ(is_literal(ctor), allow_literal(view));
+
+            // len ctor
+            String ctor_with_len;
+            ctor_with_len.assign(view.data(), view.size());
+            REQUIRE_EQ(ctor_with_len.size(), view.size());
+            REQUIRE_EQ(ctor_with_len.capacity(), capacity_of(view));
+            REQUIRE_EQ(is_literal(ctor_with_len), allow_literal(view));
+
+            // view ctor
+            String view_ctor;
+            view_ctor.assign(view);
+            REQUIRE_EQ(view_ctor.size(), view.size());
+            REQUIRE_EQ(view_ctor.capacity(), capacity_of(view));
+            REQUIRE_EQ(is_literal(view_ctor), allow_literal(view));
+
+            if (allow_literal(view))
+            {
+                auto subview_end_with_zero     = view.subview(view.text_index_to_buffer(1));
+                auto subview_not_end_with_zero = view.subview(0, view.text_index_to_buffer(length_text - 1));
+
+                // len ctor that end with '\0'
+                String ctor_with_len_zero_ending;
+                ctor_with_len_zero_ending.assign(subview_end_with_zero.data(), subview_end_with_zero.size());
+                REQUIRE_EQ(ctor_with_len_zero_ending.size(), subview_end_with_zero.size());
+                REQUIRE_EQ(ctor_with_len_zero_ending.capacity(), capacity_of(subview_end_with_zero));
+                REQUIRE_EQ(is_literal(ctor_with_len_zero_ending), allow_literal(subview_end_with_zero));
+
+                // len ctor that not end with '\0'
+                String ctor_with_len_not_zero_ending;
+                ctor_with_len_not_zero_ending.assign(subview_not_end_with_zero.data(), subview_not_end_with_zero.size());
+                REQUIRE_EQ(ctor_with_len_not_zero_ending.size(), subview_not_end_with_zero.size());
+                REQUIRE_EQ(ctor_with_len_not_zero_ending.capacity(), capacity_of(subview_not_end_with_zero));
+                REQUIRE_EQ(is_literal(ctor_with_len_not_zero_ending), allow_literal(subview_not_end_with_zero));
+
+                // view ctor that end with '\0'
+                String view_ctor_zero_ending;
+                view_ctor_zero_ending.assign(subview_end_with_zero);
+                REQUIRE_EQ(view_ctor_zero_ending.size(), subview_end_with_zero.size());
+                REQUIRE_EQ(view_ctor_zero_ending.capacity(), capacity_of(subview_end_with_zero));
+                REQUIRE_EQ(is_literal(view_ctor_zero_ending), allow_literal(subview_end_with_zero));
+
+                // view ctor that not end with '\0'
+                String view_ctor_not_zero_ending;
+                view_ctor_not_zero_ending.assign(subview_not_end_with_zero);
+                REQUIRE_EQ(view_ctor_not_zero_ending.size(), subview_not_end_with_zero.size());
+                REQUIRE_EQ(view_ctor_not_zero_ending.capacity(), capacity_of(subview_not_end_with_zero));
+                REQUIRE_EQ(is_literal(view_ctor_not_zero_ending), allow_literal(subview_not_end_with_zero));
+            }
+        };
+
+        test_assign_of_view(short_literal);
+        test_assign_of_view(short_buffer);
+        test_assign_of_view(long_literal);
+        test_assign_of_view(long_buffer);
+    }
+
+    SUBCASE("compare")
+    {
+        // test equal
+        {
+            String a = short_literal;
+            String b = short_literal;
+            String c = short_buffer;
+            String d = long_literal;
+            String e = long_literal;
+            String f = long_buffer;
+
+            REQUIRE_EQ(a, b);
+            REQUIRE_EQ(a, c);
+            REQUIRE_EQ(b, c);
+            REQUIRE_EQ(d, e);
+            REQUIRE_EQ(d, f);
+            REQUIRE_EQ(e, f);
+        }
+
+        // test not equal
+        {
+            String a = short_literal;
+            String b = short_literal.subview(short_literal.text_index_to_buffer(1));
+            String c = short_literal.subview(0, short_literal.text_index_to_buffer(short_buffer.length_text() - 1));
+            String d = long_literal;
+            String e = long_literal.subview(long_literal.text_index_to_buffer(1));
+            String f = long_literal.subview(0, long_literal.text_index_to_buffer(long_buffer.length_text() - 1));
+
+            REQUIRE_NE(a, b);
+            REQUIRE_NE(a, c);
+            REQUIRE_NE(b, c);
+            REQUIRE_NE(d, e);
+            REQUIRE_NE(d, f);
+            REQUIRE_NE(e, f);
+        }
+    }
+
+    // [needn't test] getter
+
+    SUBCASE("str getter")
+    {
+        String a = short_literal;
+        String b = short_buffer;
+        String c = long_literal;
+        String d = long_buffer;
+
+        REQUIRE_EQ(a.length_text(), short_literal.length_text());
+        REQUIRE_EQ(a.length_buffer(), short_literal.length_buffer());
+        REQUIRE_EQ(b.length_text(), short_buffer.length_text());
+        REQUIRE_EQ(b.length_buffer(), short_buffer.length_buffer());
+        REQUIRE_EQ(c.length_text(), long_literal.length_text());
+        REQUIRE_EQ(c.length_buffer(), long_literal.length_buffer());
+        REQUIRE_EQ(d.length_text(), long_buffer.length_text());
+        REQUIRE_EQ(d.length_buffer(), long_buffer.length_buffer());
+
+        REQUIRE_EQ(a.c_str(), a.data());
+        REQUIRE_EQ(b.c_str(), b.data());
+        REQUIRE_EQ(c.c_str(), c.data());
+        REQUIRE_EQ(d.c_str(), d.data());
+
+        REQUIRE_EQ(a.c_str_raw(), reinterpret_cast<const char*>(a.data()));
+        REQUIRE_EQ(b.c_str_raw(), reinterpret_cast<const char*>(b.data()));
+        REQUIRE_EQ(c.c_str_raw(), reinterpret_cast<const char*>(c.data()));
+        REQUIRE_EQ(d.c_str_raw(), reinterpret_cast<const char*>(d.data()));
+    }
+
+    // [needn't test] validate
+
+    SUBCASE("memory op")
+    {
+        String str = long_literal;
+
+        // literal clear
+        str.clear();
+        REQUIRE(str.is_empty());
+        REQUIRE_EQ(str.capacity(), kStringSSOCapacity);
+        REQUIRE_EQ(str.size(), 0);
+        REQUIRE_FALSE(is_literal(str));
+
+        // buffer clear
+        str = long_buffer;
+        str.clear();
+        auto old_capacity = str.capacity();
+        auto old_data     = str.data();
+        REQUIRE(str.is_empty());
+        REQUIRE_EQ(str.capacity(), capacity_of(old_capacity));
+        REQUIRE_EQ(str.size(), 0);
+        REQUIRE_EQ(str.data(), old_data);
+        REQUIRE_FALSE(is_literal(str));
+
+        // release
+        str.release();
+        REQUIRE(str.is_empty());
+        REQUIRE_EQ(str.capacity(), capacity_of(0));
+        REQUIRE_EQ(str.size(), 0);
+        REQUIRE_FALSE(is_literal(str));
+
+        // release with content
+        str = long_literal;
+        str.release();
+        REQUIRE(str.is_empty());
+        REQUIRE_EQ(str.capacity(), capacity_of(0));
+        REQUIRE_EQ(str.size(), 0);
+        REQUIRE_FALSE(is_literal(str));
+
+        // release with reserve size
+        str = long_literal;
+        str.release(10086);
+        REQUIRE(str.is_empty());
+        REQUIRE_EQ(str.capacity(), capacity_of(10086));
+        REQUIRE_EQ(str.size(), 0);
+        REQUIRE_FALSE(is_literal(str));
+
+        // reserve
+        str.release();
+        str.reserve(60);
+        REQUIRE(str.is_empty());
+        REQUIRE_EQ(str.capacity(), capacity_of(60));
+        REQUIRE_EQ(str.size(), 0);
+        REQUIRE_FALSE(is_literal(str));
+
+        // shrink
+        str.shrink();
+        REQUIRE(str.is_empty());
+        REQUIRE_EQ(str.capacity(), capacity_of(0));
+        REQUIRE_EQ(str.size(), 0);
+        REQUIRE_FALSE(is_literal(str));
+
+        // shrink with content
+        str = long_literal;
+        str.reserve(10086);
+        str.shrink();
+        REQUIRE_EQ(str.size(), long_literal.size());
+        REQUIRE_EQ(str.capacity(), capacity_of(long_literal));
+        REQUIRE_EQ(str, long_literal);
+
+        // resize
+        str.release();
+        str = long_literal;
+        str.resize(200, u8'g');
+        REQUIRE_EQ(str.size(), 200);
+        REQUIRE_GE(str.capacity(), capacity_of(200));
+        REQUIRE_FALSE(is_literal(str));
+        for (TestSizeType i = 0; i < long_literal.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i));
+        }
+        for (TestSizeType i = long_literal.size(); i < 200; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), u8'g');
+        }
+
+        // resize unsafe
+        str.release();
+        str = long_literal;
+        str.resize_unsafe(200);
+        REQUIRE_EQ(str.size(), 200);
+        REQUIRE_GE(str.capacity(), capacity_of(200));
+        REQUIRE_FALSE(is_literal(str));
+        for (TestSizeType i = 0; i < long_literal.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i));
+        }
+
+        // resize default
+        str.release();
+        str = long_literal;
+        str.resize_default(200);
+        REQUIRE_EQ(str.size(), 200);
+        REQUIRE_GE(str.capacity(), capacity_of(200));
+        REQUIRE_FALSE(is_literal(str));
+        for (TestSizeType i = 0; i < long_literal.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i));
+        }
+        for (TestSizeType i = long_literal.size(); i < 200; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), 0);
+        }
+
+        // resize zeroed
+        str.release();
+        str = long_literal;
+        str.resize_zeroed(200);
+        REQUIRE_EQ(str.size(), 200);
+        REQUIRE_GE(str.capacity(), capacity_of(200));
+        REQUIRE_FALSE(is_literal(str));
+        for (TestSizeType i = 0; i < long_literal.size(); ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), long_literal.at_buffer(i));
+        }
+        for (TestSizeType i = long_literal.size(); i < 200; ++i)
+        {
+            REQUIRE_EQ(str.at_buffer(i), 0);
+        }
+    }
+
+    // add
+
+    // add at
 }

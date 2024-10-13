@@ -205,6 +205,10 @@ inline constexpr bool U8StringView<TS>::operator==(const U8StringView& rhs) cons
     {
         return is_empty() == rhs.is_empty();
     }
+    else if (_data == rhs._data)
+    {
+        return true;
+    }
     else
     {
         return CharTraits::compare(_data, rhs._data, _size) == 0;
