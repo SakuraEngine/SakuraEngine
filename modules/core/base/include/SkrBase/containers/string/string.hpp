@@ -176,15 +176,17 @@ struct U8String : protected Memory {
     DataType&       last_buffer_w(SizeType index);
     UTF8Seq         at_text(SizeType index) const;
     UTF8Seq         last_text(SizeType index) const;
-    // if you want to modify seq (code point), use replace or remove
+    //! NOTE. if you want to modify seq (code point), use replace or remove
 
-    // sub_string
+    // sub string
     void     first(SizeType count);
     void     last(SizeType count);
     void     substr(SizeType start, SizeType count = npos);
     U8String first_copy(SizeType count) const;
     U8String last_copy(SizeType count) const;
     U8String substr_copy(SizeType start, SizeType count = npos) const;
+
+    // sub view
     ViewType first_view(SizeType count) const;
     ViewType last_view(SizeType count) const;
     ViewType subview(SizeType start, SizeType count = npos) const;
@@ -1349,6 +1351,8 @@ inline U8String<Memory> U8String<Memory>::substr_copy(SizeType start, SizeType c
         return { view().subview(start, count) };
     }
 }
+
+// sub view
 template <typename Memory>
 inline U8String<Memory>::ViewType U8String<Memory>::first_view(SizeType count) const
 {

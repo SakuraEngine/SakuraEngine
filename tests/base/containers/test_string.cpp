@@ -502,6 +502,29 @@ TEST_CASE("Test U8String")
     }
 
     // add
-
     // add at
+    // append
+    // append at
+
+    // remove
+    // replace
+
+    // index & modify
+
+    // sub_string
+
+    // find
+    // contains & count
+
+    // starts & ends
+    // remove prefix & suffix
+    // trim
+    // trim invalid
+
+    // partition
+    // split
+
+    // text index
+
+    // iterators
 }
