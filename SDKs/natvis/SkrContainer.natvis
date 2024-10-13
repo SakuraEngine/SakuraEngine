@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <!-- Vector -->
+  <Type Name="skr::container::Vector&lt;*&gt;">
+    <DisplayString Condition="_size == 0">empty</DisplayString>
+    <DisplayString Condition="_size &gt; 0">size={_size}, capacity={_capacity}</DisplayString>
+    <Expand>
+      <ArrayItems>
+        <Size>_size</Size>
+        <ValuePointer>(skr::container::Vector&lt;$T1&gt;::DataType*)_data</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
   <!-- Array -->
   <Type Name="skr::container::Array&lt;*,*&gt;">
     <DisplayString Condition="_size == 0">empty</DisplayString>
