@@ -1137,9 +1137,134 @@ TEST_CASE("Test U8String")
         }
     }
 
-    // index & modify
+    SUBCASE("index & modify")
+    {
+        StringView view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
 
-    // sub_string
+        // at/last buffer
+        {
+            String str = view;
+            for (TestSizeType i = 0; i < view.size(); ++i)
+            {
+                REQUIRE_EQ(str.at_buffer(i), view.at_buffer(i));
+                REQUIRE_EQ(str.last_buffer(i), view.last_buffer(i));
+            }
+        }
+
+        // at/last buffer w
+        {
+            String str = view;
+            for (TestSizeType i = 0; i < view.size(); ++i)
+            {
+                REQUIRE_EQ(str.at_buffer_w(i), view.at_buffer(i));
+                REQUIRE_EQ(str.last_buffer_w(i), view.last_buffer(i));
+            }
+            REQUIRE_FALSE(is_literal(str));
+            for (TestSizeType i = 0; i < view.size() / 2; ++i)
+            {
+                str.at_buffer_w(i)   = u8'g';
+                str.last_buffer_w(i) = u8'l';
+            }
+            for (TestSizeType i = 0; i < view.size() / 2; ++i)
+            {
+                REQUIRE_EQ(str.at_buffer(i), u8'g');
+                REQUIRE_EQ(str.last_buffer(i), u8'l');
+            }
+        }
+
+        // at/last text
+        {
+            String str = view;
+            for (TestSizeType i = 0; i < view.length_text(); ++i)
+            {
+                REQUIRE_EQ(str.at_text(i), view.at_text(i));
+                REQUIRE_EQ(str.last_text(i), view.last_text(i));
+            }
+        }
+    }
+
+    SUBCASE("sub string")
+    {
+        StringView view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+
+        // sub string
+        {
+            TestSizeType sub_start   = view.text_index_to_buffer(2);
+            TestSizeType sub_end     = view.text_index_to_buffer(view.length_text() - 2);
+            TestSizeType sub_count   = sub_end - sub_start;
+            TestSizeType first_count = sub_start - 0;
+            TestSizeType last_count  = view.size() - sub_end;
+
+            StringView sub_view   = view.subview(sub_start, sub_count);
+            StringView first_view = view.first(first_count);
+            StringView last_view  = view.last(last_count);
+
+            String str = view;
+            str.substr(sub_start, sub_count);
+            REQUIRE_EQ(str.size(), sub_view.size());
+            REQUIRE_EQ(str, sub_view);
+
+            str = view;
+            str.first(first_count);
+            REQUIRE_EQ(str.size(), first_view.size());
+            REQUIRE_EQ(str, first_view);
+
+            str = view;
+            str.last(last_count);
+            REQUIRE_EQ(str.size(), last_view.size());
+            REQUIRE_EQ(str, last_view);
+        }
+
+        // [copy] sub string
+        {
+            TestSizeType sub_start   = view.text_index_to_buffer(2);
+            TestSizeType sub_end     = view.text_index_to_buffer(view.length_text() - 2);
+            TestSizeType sub_count   = sub_end - sub_start;
+            TestSizeType first_count = sub_start - 0;
+            TestSizeType last_count  = view.size() - sub_end;
+
+            StringView sub_view   = view.subview(sub_start, sub_count);
+            StringView first_view = view.first(first_count);
+            StringView last_view  = view.last(last_count);
+
+            String str = view;
+
+            auto sub_str = str.substr_copy(sub_start, sub_count);
+            REQUIRE_EQ(sub_str.size(), sub_view.size());
+            REQUIRE_EQ(sub_str, sub_view);
+
+            auto first_str = str.first_copy(first_count);
+            REQUIRE_EQ(first_str.size(), first_view.size());
+            REQUIRE_EQ(first_str, first_view);
+
+            auto last_str = str.last_copy(last_count);
+            REQUIRE_EQ(last_str.size(), last_view.size());
+            REQUIRE_EQ(last_str, last_view);
+        }
+    }
+
+    SUBCASE("sub view")
+    {
+        StringView view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+
+        // sub view
+        {
+            TestSizeType sub_start   = view.text_index_to_buffer(2);
+            TestSizeType sub_end     = view.text_index_to_buffer(view.length_text() - 2);
+            TestSizeType sub_count   = sub_end - sub_start;
+            TestSizeType first_count = sub_start - 0;
+            TestSizeType last_count  = view.size() - sub_end;
+
+            StringView sub_view   = view.subview(sub_start, sub_count);
+            StringView first_view = view.first(first_count);
+            StringView last_view  = view.last(last_count);
+
+            String str = view;
+            REQUIRE_EQ(str.subview(sub_start, sub_count), sub_view);
+            REQUIRE_EQ(str.first_view(first_count), first_view);
+            REQUIRE_EQ(str.last_view(last_count), last_view);
+        }
+    }
 
     // find
     // contains & count

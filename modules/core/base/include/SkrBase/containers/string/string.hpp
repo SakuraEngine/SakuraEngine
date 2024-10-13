@@ -1330,12 +1330,19 @@ inline void U8String<Memory>::substr(SizeType start, SizeType count)
 {
     SKR_ASSERT(start <= size() && "undefined behaviour accessing out of bounds");
     SKR_ASSERT(count == npos || count <= (size() - start) && "undefined behaviour exceeding size of string view");
+    count = count == npos ? size() - start : count;
+
     if (start == 0 && count == size())
-    {
+    { // clear case
+        clear();
         return;
     }
-    memory::move(_data(), _data() + start, count);
-    _set_size(count);
+    else
+    { // move center
+        _pre_modify();
+        memory::move(_data(), _data() + start, count);
+        _set_size(count);
+    }
 }
 template <typename Memory>
 inline U8String<Memory> U8String<Memory>::first_copy(SizeType count) const
