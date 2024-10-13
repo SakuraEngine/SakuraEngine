@@ -167,7 +167,7 @@ struct U8String : protected Memory {
     SizeType replace(ViewType from, ViewType to, SizeType start = 0, SizeType count = npos);
     U8String replace_copy(ViewType from, ViewType to, SizeType start = 0, SizeType count = npos) const;
     void     replace_range(ViewType to, SizeType start = 0, SizeType count = npos);
-    void     replace_range_copy(ViewType to, SizeType start = 0, SizeType count = npos) const;
+    U8String replace_range_copy(ViewType to, SizeType start = 0, SizeType count = npos) const;
 
     // index & modify
     const DataType& at_buffer(SizeType index) const;
@@ -1224,23 +1224,31 @@ inline void U8String<Memory>::replace_range(ViewType to, SizeType start, SizeTyp
     SKR_ASSERT(start <= size() && "undefined behaviour accessing out of bounds");
     SKR_ASSERT(count == npos || count <= (size() - start) && "undefined behaviour exceeding size of string view");
 
+    count = count == npos ? size() - start : count;
+
     if (count == 0)
-    {
+    { // no replace
+        return;
+    }
+    if (start == 0 && count == size())
+    { // full replace
+        clear();
+        append(to);
         return;
     }
 
     if (to.size() <= count)
-    {
+    { // no need to reserve
         _pre_modify();
 
         // copy to
-        memory::copy(_data() + start, to._data(), to.size());
+        memory::copy(_data() + start, to.data(), to.size());
 
         // move rest
         memory::move(_data() + start + to.size(), _data() + start + count, size() - start - count);
     }
     else
-    {
+    { // need to reserve
         SizeType reserve_size = size() + to.size() - count;
         _pre_modify(reserve_size);
         reserve(reserve_size);
@@ -1249,17 +1257,18 @@ inline void U8String<Memory>::replace_range(ViewType to, SizeType start, SizeTyp
         memory::move(_data() + start + to.size(), _data() + start + count, size() - start - count);
 
         // copy to
-        memory::copy(_data() + start, to._data(), to.size());
+        memory::copy(_data() + start, to.data(), to.size());
     }
 
     // update size
     _set_size(size() - count + to.size());
 }
 template <typename Memory>
-inline void U8String<Memory>::replace_range_copy(ViewType to, SizeType start, SizeType count) const
+inline U8String<Memory> U8String<Memory>::replace_range_copy(ViewType to, SizeType start, SizeType count) const
 {
     U8String result = *this;
     result.replace_range(to, start, count);
+    return std::move(result);
 }
 
 // index & modify

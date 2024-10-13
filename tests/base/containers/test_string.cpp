@@ -1135,6 +1135,65 @@ TEST_CASE("Test U8String")
             REQUIRE_EQ(str.size(), view.size());
             REQUIRE_EQ(str, view);
         }
+
+        // replace range
+        {
+            StringView view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+
+            TestSizeType replace_start = view.text_index_to_buffer(2);
+            TestSizeType replace_end   = view.text_index_to_buffer(view.length_text() - 2);
+            TestSizeType replace_count = replace_end - replace_start;
+
+            StringView replace_less_to    = u8"鸡鸡鸡";
+            StringView replaced_less_view = u8"🐓🏀鸡鸡鸡🐓🏀";
+
+            StringView replace_more_to    = u8"🐓🏀🐓🏀坤❤坤🐓🏀🐓🏀";
+            StringView replaced_more_view = u8"🐓🏀🐓🏀🐓🏀坤❤坤🐓🏀🐓🏀🐓🏀";
+
+            String str = view;
+
+            // replace less
+            str.replace_range(replace_less_to, replace_start, replace_count);
+            REQUIRE_EQ(str.size(), replaced_less_view.size());
+            REQUIRE_EQ(str, replaced_less_view);
+
+            // replace more
+            str = view;
+            str.replace_range(replace_more_to, replace_start, replace_count);
+            REQUIRE_EQ(str.size(), replaced_more_view.size());
+            REQUIRE_EQ(str, replaced_more_view);
+        }
+
+        // [copy] replace range
+        {
+            StringView view = u8"🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀🐓🏀";
+
+            TestSizeType replace_start = view.text_index_to_buffer(2);
+            TestSizeType replace_end   = view.text_index_to_buffer(view.length_text() - 2);
+            TestSizeType replace_count = replace_end - replace_start;
+
+            StringView replace_less_to    = u8"鸡鸡鸡";
+            StringView replaced_less_view = u8"🐓🏀鸡鸡鸡🐓🏀";
+
+            StringView replace_more_to    = u8"🐓🏀🐓🏀坤❤坤🐓🏀🐓🏀";
+            StringView replaced_more_view = u8"🐓🏀🐓🏀🐓🏀坤❤坤🐓🏀🐓🏀🐓🏀";
+
+            String str = view;
+
+            // replace less
+            auto replaced_less = str.replace_range_copy(replace_less_to, replace_start, replace_count);
+            REQUIRE_EQ(replaced_less.size(), replaced_less_view.size());
+            REQUIRE_EQ(replaced_less, replaced_less_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+
+            // replace more
+            auto replaced_more = str.replace_range_copy(replace_more_to, replace_start, replace_count);
+            REQUIRE_EQ(replaced_more.size(), replaced_more_view.size());
+            REQUIRE_EQ(replaced_more, replaced_more_view);
+            REQUIRE_EQ(str.size(), view.size());
+            REQUIRE_EQ(str, view);
+        }
     }
 
     SUBCASE("index & modify")
