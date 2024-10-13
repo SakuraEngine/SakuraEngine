@@ -95,6 +95,14 @@ function main()
                 group = {
                     kind = "build",
                     isDefault = false
+                },
+                presentation = {
+                    echo = true,
+                    reveal = "always",
+                    focus = false,
+                    panel = "new",
+                    showReuseMessage = false,
+                    close = true,
                 }
             })
         end

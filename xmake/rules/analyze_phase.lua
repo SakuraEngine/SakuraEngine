@@ -37,6 +37,9 @@ target("Analyze.Phase")
             io.writefile("build/.gens/analyze_phase.flag", "flag to trigger analyze_phase")
         end
 
+        -- write analyze config
+        config.save("build/.gens/analyze.conf", {public=true})
+
         -- dispatch analyze
         depend.on_changed(function ()
             print("[Analyze.Phase]: trigger analyze with arg: "..table.concat(argv, " "))
@@ -47,7 +50,7 @@ target("Analyze.Phase")
             local append_log_content = "["..os.date("%Y-%m-%d %H:%M:%S").."]: ".."trigger analyze with arg: "..table.concat(argv, " ").."\n"
             io.writefile(log_file, log_file_content..append_log_content)
 
-            config.save("build/.gens/analyze.conf", {public=true})
+            -- run analyze
             local out, err = os.iorun("xmake analyze_project")
             
             if out and #out > 0 then
