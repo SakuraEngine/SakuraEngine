@@ -127,13 +127,18 @@ struct U8StringView {
     constexpr PartitionResult partition(const UTF8Seq& delimiter) const;
 
     // split
-    template <CanAdd<const U8StringView<TS>&> Buffer>
+    // TODO. concept for fucking apple
+    // template <CanAdd<const U8StringView<TS>&> Buffer>
+    template <typename Buffer>
     constexpr SizeType split(Buffer& out, const U8StringView& delimiter, bool cull_empty = false, SizeType limit = npos) const;
-    template <std::invocable<const U8StringView<TS>&> F>
+    // template <std::invocable<const U8StringView<TS>&> F>
+    template <typename F>
     constexpr SizeType split_each(F&& func, const U8StringView& delimiter, bool cull_empty = false, SizeType limit = npos) const;
-    template <CanAdd<const U8StringView<TS>&> Buffer>
+    // template <CanAdd<const U8StringView<TS>&> Buffer>
+    template <typename Buffer>
     constexpr SizeType split(Buffer& out, const UTF8Seq& delimiter, bool cull_empty = false, SizeType limit = npos) const;
-    template <std::invocable<const U8StringView<TS>&> F>
+    // template <std::invocable<const U8StringView<TS>&> F>
+    template <typename F>
     constexpr SizeType split_each(F&& func, const UTF8Seq& delimiter, bool cull_empty = false, SizeType limit = npos) const;
 
     // text index
@@ -319,7 +324,7 @@ inline constexpr U8StringView<TS> U8StringView<TS>::subview(SizeType start, Size
 
 // find
 template <typename TS>
-inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find(const U8StringView& pattern) const
+inline constexpr typename U8StringView<TS>::CDataRef U8StringView<TS>::find(const U8StringView& pattern) const
 {
     if (is_empty() || pattern.is_empty() || size() < pattern.size())
     {
@@ -345,7 +350,7 @@ inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find(const U8Strin
     }
 }
 template <typename TS>
-inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find_last(const U8StringView& pattern) const
+inline constexpr typename U8StringView<TS>::CDataRef U8StringView<TS>::find_last(const U8StringView& pattern) const
 {
     if (is_empty() || pattern.is_empty() || size() < pattern.size())
     {
@@ -372,7 +377,7 @@ inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find_last(const U8
     return {};
 }
 template <typename TS>
-inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find(const UTF8Seq& pattern) const
+inline constexpr typename U8StringView<TS>::CDataRef U8StringView<TS>::find(const UTF8Seq& pattern) const
 {
     if (pattern.is_valid())
     {
@@ -399,7 +404,7 @@ inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find(const UTF8Seq
     }
 }
 template <typename TS>
-inline constexpr U8StringView<TS>::CDataRef U8StringView<TS>::find_last(const UTF8Seq& pattern) const
+inline constexpr typename U8StringView<TS>::CDataRef U8StringView<TS>::find_last(const UTF8Seq& pattern) const
 {
     if (pattern.is_valid())
     {
@@ -706,7 +711,8 @@ inline constexpr typename U8StringView<TS>::PartitionResult U8StringView<TS>::pa
 
 // split
 template <typename TS>
-template <CanAdd<const U8StringView<TS>&> Buffer>
+// template <CanAdd<const U8StringView<TS>&> Buffer>
+template <typename Buffer>
 inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out, const U8StringView& delimiter, bool cull_empty, SizeType limit) const
 {
     U8StringView each_view{ *this };
@@ -751,7 +757,8 @@ inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::split(Buf
     return count;
 }
 template <typename TS>
-template <std::invocable<const U8StringView<TS>&> F>
+// template <std::invocable<const U8StringView<TS>&> F>
+template <typename F>
 inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::split_each(F&& func, const U8StringView& delimiter, bool cull_empty, SizeType limit) const
 {
     using EachFuncResultType = std::invoke_result_t<F, const U8StringView<TS>&>;
@@ -797,7 +804,8 @@ inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::split_eac
     return count;
 }
 template <typename TS>
-template <CanAdd<const U8StringView<TS>&> Buffer>
+// template <CanAdd<const U8StringView<TS>&> Buffer>
+template <typename Buffer>
 inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
 {
     return split(
@@ -807,7 +815,8 @@ inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::split(Buf
     limit);
 }
 template <typename TS>
-template <std::invocable<const U8StringView<TS>&> F>
+// template <std::invocable<const U8StringView<TS>&> F>
+template <typename F>
 inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::split_each(F&& func, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
 {
     return split_each(
