@@ -296,7 +296,7 @@ inline void U8String<Memory>::_free()
     Memory::free();
 }
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::_grow(SizeType grow_size)
+inline typename U8String<Memory>::SizeType U8String<Memory>::_grow(SizeType grow_size)
 {
     return Memory::grow(grow_size);
 }
@@ -332,12 +332,12 @@ inline void U8String<Memory>::_assign_with_literal_check(const DataType* str, Si
     }
 }
 template <typename Memory>
-inline U8String<Memory>::DataType* U8String<Memory>::_data()
+inline typename U8String<Memory>::DataType* U8String<Memory>::_data()
 {
     return Memory::data();
 }
 template <typename Memory>
-inline const U8String<Memory>::DataType* U8String<Memory>::_data() const
+inline const typename U8String<Memory>::DataType* U8String<Memory>::_data() const
 {
     return Memory::data();
 }
@@ -480,17 +480,17 @@ inline bool U8String<Memory>::operator!=(ViewType view) const noexcept
 
 // getter
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::size() const
+inline typename U8String<Memory>::SizeType U8String<Memory>::size() const
 {
     return Memory::size();
 }
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::capacity() const
+inline typename U8String<Memory>::SizeType U8String<Memory>::capacity() const
 {
     return Memory::capacity();
 }
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::slack() const
+inline typename U8String<Memory>::SizeType U8String<Memory>::slack() const
 {
     return capacity() - size();
 }
@@ -500,13 +500,13 @@ inline bool U8String<Memory>::is_empty() const
     return size() == 0;
 }
 template <typename Memory>
-inline U8String<Memory>::DataType* U8String<Memory>::data_w()
+inline typename U8String<Memory>::DataType* U8String<Memory>::data_w()
 {
     _pre_modify();
     return _data();
 }
 template <typename Memory>
-inline const U8String<Memory>::DataType* U8String<Memory>::data() const
+inline const typename U8String<Memory>::DataType* U8String<Memory>::data() const
 {
     return _data();
 }
@@ -523,17 +523,17 @@ inline const Memory& U8String<Memory>::memory() const
 
 // str getter
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::length_text() const
+inline typename U8String<Memory>::SizeType U8String<Memory>::length_text() const
 {
     return view().length_text();
 }
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::length_buffer() const
+inline typename U8String<Memory>::SizeType U8String<Memory>::length_buffer() const
 {
     return view().length_buffer();
 }
 template <typename Memory>
-inline const U8String<Memory>::DataType* U8String<Memory>::c_str() const
+inline const typename U8String<Memory>::DataType* U8String<Memory>::c_str() const
 {
     return _data();
 }
@@ -673,7 +673,7 @@ inline void U8String<Memory>::resize_zeroed(SizeType expect_size)
 
 // add
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::add(const DataType& v, SizeType n)
+inline typename U8String<Memory>::DataRef U8String<Memory>::add(const DataType& v, SizeType n)
 {
     DataRef ref = add_unsafe(n);
     for (SizeType i = ref.index(); i < size(); ++i)
@@ -683,7 +683,7 @@ inline U8String<Memory>::DataRef U8String<Memory>::add(const DataType& v, SizeTy
     return ref;
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::add_unsafe(SizeType n)
+inline typename U8String<Memory>::DataRef U8String<Memory>::add_unsafe(SizeType n)
 {
     if (n)
     {
@@ -697,14 +697,14 @@ inline U8String<Memory>::DataRef U8String<Memory>::add_unsafe(SizeType n)
     }
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::add_default(SizeType n)
+inline typename U8String<Memory>::DataRef U8String<Memory>::add_default(SizeType n)
 {
     DataRef ref = add_unsafe(n);
     memory::construct(ref.ptr(), n);
     return ref;
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::add_zeroed(SizeType n)
+inline typename U8String<Memory>::DataRef U8String<Memory>::add_zeroed(SizeType n)
 {
     DataRef ref = add_unsafe(n);
     std::memset(ref.ptr(), 0, n * sizeof(DataType));
@@ -744,24 +744,24 @@ inline void U8String<Memory>::add_at_zeroed(SizeType idx, SizeType n)
 
 // append
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::append(const DataType* str)
+inline typename U8String<Memory>::DataRef U8String<Memory>::append(const DataType* str)
 {
     return append(str, CharTraits::length(str));
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::append(const DataType* str, SizeType len)
+inline typename U8String<Memory>::DataRef U8String<Memory>::append(const DataType* str, SizeType len)
 {
     DataRef ref = add_unsafe(len);
     memory::copy(ref.ptr(), str, len);
     return ref;
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::append(ViewType view)
+inline typename U8String<Memory>::DataRef U8String<Memory>::append(ViewType view)
 {
     return append(view.data(), view.size());
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::append(UTF8Seq seq)
+inline typename U8String<Memory>::DataRef U8String<Memory>::append(UTF8Seq seq)
 {
     if (seq.is_valid())
     {
@@ -771,7 +771,7 @@ inline U8String<Memory>::DataRef U8String<Memory>::append(UTF8Seq seq)
 }
 template <typename Memory>
 template <EachAbleContainer U>
-inline U8String<Memory>::DataRef U8String<Memory>::append(const U& container)
+inline typename U8String<Memory>::DataRef U8String<Memory>::append(const U& container)
 {
     using Traits = ContainerTraits<std::decay_t<U>>;
     if constexpr (Traits::is_linear_memory)
@@ -928,7 +928,7 @@ inline bool U8String<Memory>::remove_last(ViewType view)
     return false;
 }
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::remove_all(ViewType view)
+inline typename U8String<Memory>::SizeType U8String<Memory>::remove_all(ViewType view)
 {
     if (!is_empty())
     {
@@ -1014,7 +1014,7 @@ inline bool U8String<Memory>::remove_last(UTF8Seq seq)
     }
 }
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::remove_all(UTF8Seq seq)
+inline typename U8String<Memory>::SizeType U8String<Memory>::remove_all(UTF8Seq seq)
 {
     if (seq.is_valid())
     {
@@ -1070,7 +1070,7 @@ inline U8String<Memory> U8String<Memory>::remove_all_copy(UTF8Seq seq) const
 
 // replace
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::replace(ViewType from, ViewType to, SizeType start, SizeType count)
+inline typename U8String<Memory>::SizeType U8String<Memory>::replace(ViewType from, ViewType to, SizeType start, SizeType count)
 {
     SKR_ASSERT(start <= size() && "undefined behaviour accessing out of bounds");
     SKR_ASSERT(count == npos || count <= (size() - start) && "undefined behaviour exceeding size of string view");
@@ -1273,26 +1273,26 @@ inline U8String<Memory> U8String<Memory>::replace_range_copy(ViewType to, SizeTy
 
 // index & modify
 template <typename Memory>
-inline const U8String<Memory>::DataType& U8String<Memory>::at_buffer(SizeType index) const
+inline const typename U8String<Memory>::DataType& U8String<Memory>::at_buffer(SizeType index) const
 {
     SKR_ASSERT(is_valid_index(index) && "undefined behaviour accessing out of bounds");
     return _data()[index];
 }
 template <typename Memory>
-inline const U8String<Memory>::DataType& U8String<Memory>::last_buffer(SizeType index) const
+inline const typename U8String<Memory>::DataType& U8String<Memory>::last_buffer(SizeType index) const
 {
     SKR_ASSERT(is_valid_index(index) && "undefined behaviour accessing out of bounds");
     return _data()[size() - index - 1];
 }
 template <typename Memory>
-inline U8String<Memory>::DataType& U8String<Memory>::at_buffer_w(SizeType index)
+inline typename U8String<Memory>::DataType& U8String<Memory>::at_buffer_w(SizeType index)
 {
     SKR_ASSERT(is_valid_index(index) && "undefined behaviour accessing out of bounds");
     _pre_modify();
     return _data()[index];
 }
 template <typename Memory>
-inline U8String<Memory>::DataType& U8String<Memory>::last_buffer_w(SizeType index)
+inline typename U8String<Memory>::DataType& U8String<Memory>::last_buffer_w(SizeType index)
 {
     SKR_ASSERT(is_valid_index(index) && "undefined behaviour accessing out of bounds");
     _pre_modify();
@@ -1396,62 +1396,62 @@ inline U8String<Memory> U8String<Memory>::substr_copy(SizeType start, SizeType c
 
 // sub view
 template <typename Memory>
-inline U8String<Memory>::ViewType U8String<Memory>::first_view(SizeType count) const
+inline typename U8String<Memory>::ViewType U8String<Memory>::first_view(SizeType count) const
 {
     return view().first(count);
 }
 template <typename Memory>
-inline U8String<Memory>::ViewType U8String<Memory>::last_view(SizeType count) const
+inline typename U8String<Memory>::ViewType U8String<Memory>::last_view(SizeType count) const
 {
     return view().last(count);
 }
 template <typename Memory>
-inline U8String<Memory>::ViewType U8String<Memory>::subview(SizeType start, SizeType count) const
+inline typename U8String<Memory>::ViewType U8String<Memory>::subview(SizeType start, SizeType count) const
 {
     return view().subview(start, count);
 }
 
 // find
 template <typename Memory>
-inline U8String<Memory>::CDataRef U8String<Memory>::find(const ViewType& pattern) const
+inline typename U8String<Memory>::CDataRef U8String<Memory>::find(const ViewType& pattern) const
 {
     return view().find(pattern);
 }
 template <typename Memory>
-inline U8String<Memory>::CDataRef U8String<Memory>::find_last(const ViewType& pattern) const
+inline typename U8String<Memory>::CDataRef U8String<Memory>::find_last(const ViewType& pattern) const
 {
     return view().find_last(pattern);
 }
 template <typename Memory>
-inline U8String<Memory>::CDataRef U8String<Memory>::find(const UTF8Seq& pattern) const
+inline typename U8String<Memory>::CDataRef U8String<Memory>::find(const UTF8Seq& pattern) const
 {
     return view().find(pattern);
 }
 template <typename Memory>
-inline U8String<Memory>::CDataRef U8String<Memory>::find_last(const UTF8Seq& pattern) const
+inline typename U8String<Memory>::CDataRef U8String<Memory>::find_last(const UTF8Seq& pattern) const
 {
     return view().find_last(pattern);
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::find_w(const ViewType& pattern)
+inline typename U8String<Memory>::DataRef U8String<Memory>::find_w(const ViewType& pattern)
 {
     _pre_modify();
     return view().find(pattern);
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::find_last_w(const ViewType& pattern)
+inline typename U8String<Memory>::DataRef U8String<Memory>::find_last_w(const ViewType& pattern)
 {
     _pre_modify();
     return view().find_last(pattern);
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::find_w(const UTF8Seq& pattern)
+inline typename U8String<Memory>::DataRef U8String<Memory>::find_w(const UTF8Seq& pattern)
 {
     _pre_modify();
     return view().find(pattern);
 }
 template <typename Memory>
-inline U8String<Memory>::DataRef U8String<Memory>::find_last_w(const UTF8Seq& pattern)
+inline typename U8String<Memory>::DataRef U8String<Memory>::find_last_w(const UTF8Seq& pattern)
 {
     _pre_modify();
     return view().find_last(pattern);
@@ -1464,7 +1464,7 @@ inline bool U8String<Memory>::contains(const ViewType& pattern) const
     return view().contains(pattern);
 }
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::count(const ViewType& pattern) const
+inline typename U8String<Memory>::SizeType U8String<Memory>::count(const ViewType& pattern) const
 {
     return view().count(pattern);
 }
@@ -1474,7 +1474,7 @@ inline bool U8String<Memory>::contains(const UTF8Seq& pattern) const
     return view().contains(pattern);
 }
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::count(const UTF8Seq& pattern) const
+inline typename U8String<Memory>::SizeType U8String<Memory>::count(const UTF8Seq& pattern) const
 {
     return view().count(pattern);
 }
@@ -1687,12 +1687,12 @@ inline U8String<Memory> U8String<Memory>::trim_invalid_end_copy() const
 
 // partition
 template <typename Memory>
-inline U8String<Memory>::PartitionResult U8String<Memory>::partition(const ViewType& delimiter) const
+inline typename U8String<Memory>::PartitionResult U8String<Memory>::partition(const ViewType& delimiter) const
 {
     return view().partition(delimiter);
 }
 template <typename Memory>
-inline U8String<Memory>::PartitionResult U8String<Memory>::partition(const UTF8Seq& delimiter) const
+inline typename U8String<Memory>::PartitionResult U8String<Memory>::partition(const UTF8Seq& delimiter) const
 {
     return view().partition(delimiter);
 }
@@ -1700,37 +1700,37 @@ inline U8String<Memory>::PartitionResult U8String<Memory>::partition(const UTF8S
 // split
 template <typename Memory>
 template <CanAdd<const U8StringView<typename Memory::SizeType>&> Buffer>
-inline U8String<Memory>::SizeType U8String<Memory>::split(Buffer& out, const ViewType& delimiter, bool cull_empty, SizeType limit) const
+inline typename U8String<Memory>::SizeType U8String<Memory>::split(Buffer& out, const ViewType& delimiter, bool cull_empty, SizeType limit) const
 {
     return view().split(out, delimiter, cull_empty, limit);
 }
 template <typename Memory>
 template <std::invocable<const U8StringView<typename Memory::SizeType>&> F>
-inline U8String<Memory>::SizeType U8String<Memory>::split_each(F&& func, const ViewType& delimiter, bool cull_empty, SizeType limit) const
+inline typename U8String<Memory>::SizeType U8String<Memory>::split_each(F&& func, const ViewType& delimiter, bool cull_empty, SizeType limit) const
 {
     return view().split_each(std::forward<F>(func), delimiter, cull_empty, limit);
 }
 template <typename Memory>
 template <CanAdd<const U8StringView<typename Memory::SizeType>&> Buffer>
-inline U8String<Memory>::SizeType U8String<Memory>::split(Buffer& out, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
+inline typename U8String<Memory>::SizeType U8String<Memory>::split(Buffer& out, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
 {
     return view().split(out, delimiter, cull_empty, limit);
 }
 template <typename Memory>
 template <std::invocable<const U8StringView<typename Memory::SizeType>&> F>
-inline U8String<Memory>::SizeType U8String<Memory>::split_each(F&& func, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
+inline typename U8String<Memory>::SizeType U8String<Memory>::split_each(F&& func, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
 {
     return view().split_each(std::forward<F>(func), delimiter, cull_empty, limit);
 }
 
 // text index
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::buffer_index_to_text(SizeType index) const
+inline typename U8String<Memory>::SizeType U8String<Memory>::buffer_index_to_text(SizeType index) const
 {
     return view().buffer_index_to_text(index);
 }
 template <typename Memory>
-inline U8String<Memory>::SizeType U8String<Memory>::text_index_to_buffer(SizeType index) const
+inline typename U8String<Memory>::SizeType U8String<Memory>::text_index_to_buffer(SizeType index) const
 {
     return view().text_index_to_buffer(index);
 }
@@ -1742,7 +1742,7 @@ inline const U8String<Memory>& U8String<Memory>::readonly() const
     return *this;
 }
 template <typename Memory>
-inline U8String<Memory>::ViewType U8String<Memory>::view() const
+inline typename U8String<Memory>::ViewType U8String<Memory>::view() const
 {
     return { _data(), size() };
 }

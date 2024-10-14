@@ -222,12 +222,12 @@ inline constexpr bool U8StringView<TS>::operator!=(const U8StringView& rhs) cons
 
 // getter
 template <typename TS>
-inline constexpr const U8StringView<TS>::DataType* U8StringView<TS>::data() const
+inline constexpr const typename U8StringView<TS>::DataType* U8StringView<TS>::data() const
 {
     return _data;
 }
 template <typename TS>
-inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::size() const
+inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::size() const
 {
     return _size;
 }
@@ -239,12 +239,12 @@ inline constexpr bool U8StringView<TS>::is_empty() const
 
 // str getter
 template <typename TS>
-inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::length_buffer() const
+inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::length_buffer() const
 {
     return _size;
 }
 template <typename TS>
-inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::length_text() const
+inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::length_text() const
 {
     return is_empty() ? 0 : utf8_code_point_index(_data, _size, _size - 1) + 1;
 }
@@ -263,7 +263,7 @@ inline constexpr bool U8StringView<TS>::is_valid_ptr(const DataType* ptr) const
 
 // index & modify
 template <typename TS>
-inline constexpr const U8StringView<TS>::DataType& U8StringView<TS>::at_buffer(SizeType index) const
+inline constexpr const typename U8StringView<TS>::DataType& U8StringView<TS>::at_buffer(SizeType index) const
 {
     SKR_ASSERT(!is_empty() && "undefined behavior accessing an empty string view");
     SKR_ASSERT(is_valid_index(index) && "undefined behavior accessing out of bounds");
@@ -271,7 +271,7 @@ inline constexpr const U8StringView<TS>::DataType& U8StringView<TS>::at_buffer(S
     return _data[index];
 }
 template <typename TS>
-inline constexpr const U8StringView<TS>::DataType& U8StringView<TS>::last_buffer(SizeType index) const
+inline constexpr const typename U8StringView<TS>::DataType& U8StringView<TS>::last_buffer(SizeType index) const
 {
     index = _size - index - 1;
     SKR_ASSERT(!is_empty() && "undefined behavior accessing an empty string view");
@@ -418,7 +418,7 @@ inline constexpr bool U8StringView<TS>::contains(const U8StringView& pattern) co
     return (bool)find(pattern);
 }
 template <typename TS>
-inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::count(const U8StringView& pattern) const
+inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::count(const U8StringView& pattern) const
 {
     auto     find_view{ *this };
     SizeType result = 0;
@@ -443,7 +443,7 @@ inline constexpr bool U8StringView<TS>::contains(const UTF8Seq& pattern) const
     return (bool)find(pattern);
 }
 template <typename TS>
-inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::count(const UTF8Seq& pattern) const
+inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::count(const UTF8Seq& pattern) const
 {
     if (pattern.is_valid())
     {
@@ -672,7 +672,7 @@ inline constexpr U8StringView<TS> U8StringView<TS>::trim_invalid_end() const
 
 // partition
 template <typename TS>
-inline constexpr U8StringView<TS>::PartitionResult U8StringView<TS>::partition(const U8StringView& delimiter) const
+inline constexpr typename U8StringView<TS>::PartitionResult U8StringView<TS>::partition(const U8StringView& delimiter) const
 {
     if (auto found = find(delimiter))
     {
@@ -692,7 +692,7 @@ inline constexpr U8StringView<TS>::PartitionResult U8StringView<TS>::partition(c
     }
 }
 template <typename TS>
-inline constexpr U8StringView<TS>::PartitionResult U8StringView<TS>::partition(const UTF8Seq& delimiter) const
+inline constexpr typename U8StringView<TS>::PartitionResult U8StringView<TS>::partition(const UTF8Seq& delimiter) const
 {
     if (delimiter.is_valid())
     {
@@ -707,7 +707,7 @@ inline constexpr U8StringView<TS>::PartitionResult U8StringView<TS>::partition(c
 // split
 template <typename TS>
 template <CanAdd<const U8StringView<TS>&> Buffer>
-inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out, const U8StringView& delimiter, bool cull_empty, SizeType limit) const
+inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out, const U8StringView& delimiter, bool cull_empty, SizeType limit) const
 {
     U8StringView each_view{ *this };
     SizeType     count = 0;
@@ -752,7 +752,7 @@ inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out,
 }
 template <typename TS>
 template <std::invocable<const U8StringView<TS>&> F>
-inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split_each(F&& func, const U8StringView& delimiter, bool cull_empty, SizeType limit) const
+inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::split_each(F&& func, const U8StringView& delimiter, bool cull_empty, SizeType limit) const
 {
     using EachFuncResultType = std::invoke_result_t<F, const U8StringView<TS>&>;
 
@@ -798,7 +798,7 @@ inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split_each(F&& fun
 }
 template <typename TS>
 template <CanAdd<const U8StringView<TS>&> Buffer>
-inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
+inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
 {
     return split(
     out,
@@ -808,7 +808,7 @@ inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split(Buffer& out,
 }
 template <typename TS>
 template <std::invocable<const U8StringView<TS>&> F>
-inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split_each(F&& func, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
+inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::split_each(F&& func, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
 {
     return split_each(
     std::forward<F>(func),
@@ -819,44 +819,44 @@ inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::split_each(F&& fun
 
 // text index
 template <typename TS>
-inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::buffer_index_to_text(SizeType index) const
+inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::buffer_index_to_text(SizeType index) const
 {
     return utf8_code_point_index(_data, _size, index);
 }
 template <typename TS>
-inline constexpr U8StringView<TS>::SizeType U8StringView<TS>::text_index_to_buffer(SizeType index) const
+inline constexpr typename U8StringView<TS>::SizeType U8StringView<TS>::text_index_to_buffer(SizeType index) const
 {
     return utf8_code_unit_index(_data, _size, index);
 }
 
 // cursor & iter
 template <typename TS>
-inline U8StringView<TS>::CCursor U8StringView<TS>::cursor_begin() const
+inline typename U8StringView<TS>::CCursor U8StringView<TS>::cursor_begin() const
 {
     return CCursor::Begin(_data, _size);
 }
 template <typename TS>
-inline U8StringView<TS>::CCursor U8StringView<TS>::cursor_end() const
+inline typename U8StringView<TS>::CCursor U8StringView<TS>::cursor_end() const
 {
     return CCursor::End(_data, _size);
 }
 template <typename TS>
-inline U8StringView<TS>::CIter U8StringView<TS>::iter() const
+inline typename U8StringView<TS>::CIter U8StringView<TS>::iter() const
 {
     return CCursor::Begin(_data, _size).as_iter();
 }
 template <typename TS>
-inline U8StringView<TS>::CIterInv U8StringView<TS>::iter_inv() const
+inline typename U8StringView<TS>::CIterInv U8StringView<TS>::iter_inv() const
 {
     return CCursor::End(_data, _size).as_iter_inv();
 }
 template <typename TS>
-inline U8StringView<TS>::CRange U8StringView<TS>::range() const
+inline typename U8StringView<TS>::CRange U8StringView<TS>::range() const
 {
     return CCursor::Begin(_data, _size).as_range();
 }
 template <typename TS>
-inline U8StringView<TS>::CRangeInv U8StringView<TS>::range_inv() const
+inline typename U8StringView<TS>::CRangeInv U8StringView<TS>::range_inv() const
 {
     return CCursor::End(_data, _size).as_range_inv();
 }
