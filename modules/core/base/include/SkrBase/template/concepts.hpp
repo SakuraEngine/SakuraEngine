@@ -87,4 +87,10 @@ concept Function = IsFunction<T>;
 template <typename T>
 concept Enum = std::is_enum_v<T>;
 
+template <typename T>
+concept Character = std::is_same_v<T, char> ||
+                    std::is_same_v<T, wchar_t> ||
+                    std::is_same_v<T, char8_t> ||
+                    std::is_same_v<T, char16_t> ||
+                    std::is_same_v<T, char32_t>;
 } // namespace skr::concepts

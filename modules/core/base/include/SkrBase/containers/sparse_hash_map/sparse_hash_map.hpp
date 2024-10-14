@@ -841,12 +841,18 @@ struct ContainerTraits<SparseHashMap<Memory>> {
     constexpr static bool is_linear_memory = false; // data(), size()
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()
+    constexpr static bool is_reservable    = true;  // reserve()
 
-    static inline size_t size(const SparseHashMap<Memory>& container) { return container.size(); }
+    using ElementType = typename Memory::DataType;
+    using SizeType    = typename Memory::SizeType;
+
+    inline static SizeType size(const SparseHashMap<Memory>& container) { return container.size(); }
 
     inline static typename SparseHashMap<Memory>::StlIt  begin(SparseHashMap<Memory>& set) { return set.begin(); }
     inline static typename SparseHashMap<Memory>::StlIt  end(SparseHashMap<Memory>& set) { return set.end(); }
     inline static typename SparseHashMap<Memory>::CStlIt begin(const SparseHashMap<Memory>& set) { return set.begin(); }
     inline static typename SparseHashMap<Memory>::CStlIt end(const SparseHashMap<Memory>& set) { return set.end(); }
+
+    inline static void reserve(SparseHashMap<Memory>& container, SizeType new_capacity) { container.reserve(new_capacity); }
 };
 } // namespace skr::container

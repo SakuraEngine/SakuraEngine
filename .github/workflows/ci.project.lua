@@ -1,4 +1,4 @@
-analyzer("DisableSingle")
+analyzer_target("DisableSingle")
     analyze(function(target, attributes, analyzing)
         -- 2024/6/7 GithubAction CI fails with multi-thread codes
         local target_name = target:name()
@@ -49,9 +49,9 @@ analyzer("DisableSingle")
         target:data_set("_Disable", not enable)
         return not enable
     end)
-analyzer_end()
-    
-analyzer("Disable")
+analyzer_target_end()
+
+analyzer_target("Disable")
     add_deps("__Analyzer.DisableSingle", { order = true })
     analyze(function(target, attributes, analyzing)
         local _disable = target:data("_Disable") or false
@@ -65,4 +65,4 @@ analyzer("Disable")
         end
         return _disable
     end)
-analyzer_end()
+analyzer_target_end()

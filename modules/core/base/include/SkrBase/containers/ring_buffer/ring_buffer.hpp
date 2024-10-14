@@ -765,12 +765,18 @@ struct ContainerTraits<RingBuffer<Memory>> {
     constexpr static bool is_linear_memory = false; // data(), size()
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()
+    constexpr static bool is_reservable    = true;  // reserve()
 
-    static inline size_t size(const RingBuffer<Memory>& container) { return container.size(); }
+    using ElementType = typename Memory::DataType;
+    using SizeType    = typename Memory::SizeType;
+
+    inline static SizeType size(const RingBuffer<Memory>& container) { return container.size(); }
 
     inline static typename RingBuffer<Memory>::StlIt  begin(RingBuffer<Memory>& container) { return container.begin(); }
     inline static typename RingBuffer<Memory>::StlIt  end(RingBuffer<Memory>& container) { return container.end(); }
     inline static typename RingBuffer<Memory>::CStlIt begin(const RingBuffer<Memory>& container) { return container.begin(); }
     inline static typename RingBuffer<Memory>::CStlIt end(const RingBuffer<Memory>& container) { return container.end(); }
+
+    inline static void reserve(RingBuffer<Memory>& container, SizeType expect_capacity) { container.reserve(expect_capacity); }
 };
 } // namespace skr::container

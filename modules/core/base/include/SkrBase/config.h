@@ -23,3 +23,6 @@
 // keywords
 #include "SkrBase/config/key_words.h"
 #include "SkrBase/config/values.h"
+
+// character
+#include "SkrBase/config/character.h"

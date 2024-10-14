@@ -16,6 +16,11 @@ target("Analyze.Phase")
             return
         end
 
+        -- filter run script
+        if argv[1] == "l" or argv[1] == "lua" then
+            return
+        end
+
         -- filter analyze task
         if argv[1] == "analyze_project" then
             return
@@ -32,10 +37,20 @@ target("Analyze.Phase")
             io.writefile("build/.gens/analyze_phase.flag", "flag to trigger analyze_phase")
         end
 
+        -- write analyze config
+        config.save("build/.gens/analyze.conf", {public=true})
+
         -- dispatch analyze
         depend.on_changed(function ()
-            print("[Analyze.Phase]: trigger analyze")
-            config.save("build/.gens/analyze.conf", {public=true})
+            print("[Analyze.Phase]: trigger analyze with arg: "..table.concat(argv, " "))
+            
+            -- record trigger log
+            local log_file = "build/.gens/analyze_trigger.log"
+            local log_file_content = os.exists(log_file) and io.readfile(log_file) or ""
+            local append_log_content = "["..os.date("%Y-%m-%d %H:%M:%S").."]: ".."trigger analyze with arg: "..table.concat(argv, " ").."\n"
+            io.writefile(log_file, log_file_content..append_log_content)
+
+            -- run analyze
             local out, err = os.iorun("xmake analyze_project")
             
             if out and #out > 0 then
@@ -58,7 +73,7 @@ target("Analyze.Phase")
 target_end()
 
 -- analyze tool functions
-function analyzer(name)
+function analyzer_target(name)
     target("Analyze.Phase")
         add_rules("__Analyzer."..name)
         set_default(false)
@@ -68,15 +83,18 @@ end
 function analyze(func, opt)
     on_build(func, opt)
 end
-function analyzer_end()
+function analyzer_target_end()
     rule_end()
 end
-function add_attribute(attribute)
+function analyzer_attribute(attribute)
     add_values("Sakura.Attributes", attribute)
+end
+function analyzer_ignore()
+    analyzer_attribute("Analyze.Ignore")
 end
 
 -- solve dependencies
-analyzer("Dependencies")
+analyzer_target("Dependencies")
     analyze(function(target, attributes, analyzing)
         local dependencies = {}
         local idx = 1
@@ -89,11 +107,11 @@ analyzer("Dependencies")
         end
         return dependencies
     end)
-analyzer_end()
+analyzer_target_end()
 
 -- solve attributes
-analyzer("Attributes")
+analyzer_target("Attributes")
     analyze(function(target, attributes, analyzing)
         return attributes
     end)
-analyzer_end()
+analyzer_target_end()

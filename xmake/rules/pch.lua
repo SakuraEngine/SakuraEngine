@@ -120,8 +120,8 @@ function pch_target(owner_name, pch_target_name)
         set_policy("build.fence", true)
         -- temporaly close the exception for pch target
         set_exceptions("no-cxx")
-        add_attribute("PCH")
-        add_attribute("Analyze.Ignore")
+        analyzer_attribute("PCH")
+        analyzer_ignore()
 end
 
 ------------------------------------PRIVATE PCH------------------------------------
@@ -129,20 +129,20 @@ end
 function private_pch(owner_name)
     target(owner_name)
         add_deps(owner_name..".PrivatePCH", {inherit = false})
-        add_attribute("PrivatePCH.Owner")
+        analyzer_attribute("PrivatePCH.Owner")
     target_end()
 
     pch_target(owner_name, owner_name..".PrivatePCH")
         -- private pch generate pch file and inject it to owner
         set_kind("headeronly")
-        add_attribute("PrivatePCH")
+        analyzer_attribute("PrivatePCH")
         add_rules("sakura.pcxxheader", { buildtarget = owner_name, shared = false })
         add_rules("sakura.derived_target", { owner_name = owner_name })
 end
 
 ------------------------------------SHARED PCH------------------------------------
 
-analyzer("SharedPCH.Score")
+analyzer_target("SharedPCH.Score")
     analyze(function(target, attributes, analyzing)
         if not table.contains(attributes, "SharedPCH.Owner") then
             return 0
@@ -158,9 +158,9 @@ analyzer("SharedPCH.Score")
         target:data_set("SharedPCH.Score", score)
         return score
     end)
-analyzer_end()
+analyzer_target_end()
 
-analyzer("SharedPCH.ShareFrom")
+analyzer_target("SharedPCH.ShareFrom")
     add_deps("__Analyzer.SharedPCH.Score", { order = true })
     analyze(function(target, attributes, analyzing)
         local share_from = ""
@@ -193,11 +193,11 @@ analyzer("SharedPCH.ShareFrom")
         end
         return share_from
     end)
-analyzer_end()
+analyzer_target_end()
 
 function shared_pch(owner_name)
     target(owner_name)
-        add_attribute("SharedPCH.Owner")
+        analyzer_attribute("SharedPCH.Owner")
     target_end()
 
     pch_target(owner_name, owner_name..".SharedPCH")
@@ -205,7 +205,7 @@ function shared_pch(owner_name)
         set_kind("object") 
         add_rules("sakura.pcxxheader", { buildtarget = owner_name..".SharedPCH", shared = true })
         add_deps(owner_name)
-        add_attribute("SharedPCH")
+        analyzer_attribute("SharedPCH")
         add_rules("sakura.derived_target", { owner_name = owner_name })
 end
 
