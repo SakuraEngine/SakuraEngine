@@ -48,9 +48,9 @@ struct Optional {
     const T&  value() const&;
     T&&       value() &&;
     const T&& value() const&&;
-    template <typename U>
+    template <typename U = T>
     T value_or(U&& default_value) const&;
-    template <typename U>
+    template <typename U = T>
     T value_or(U&& default_value) &&;
 
     // modifier
