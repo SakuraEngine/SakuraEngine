@@ -1,5 +1,5 @@
 #include "SkrGuiRenderer/resource/skr_resource_device.hpp"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 #include "SkrOS/filesystem.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 

@@ -5,7 +5,7 @@
 #include "SkrGuiRenderer/resource/skr_resource_device.hpp"
 #include "SkrGui/backend/embed_services.hpp"
 #include "SkrGui/dev/sandbox.hpp"
-#include "SkrRT/platform/system.h"
+#include "SkrCore/platform/system.h"
 #include "SkrProfile/profile.h"
 #include "SkrGui/backend/device/window.hpp"
 #include "SkrInputSystem/input_system.hpp"

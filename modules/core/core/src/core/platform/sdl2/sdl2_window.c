@@ -1,4 +1,4 @@
-#include "SkrRT/platform/window.h"
+#include "SkrCore/platform/window.h"
 #include "SDL2/SDL_syswm.h"
 #include "SDL2/SDL_mouse.h"
 
@@ -122,7 +122,7 @@ void* skr_window_get_native_handle(SWindowHandle window)
 }
 
 #if SKR_PLAT_MACOSX
-    #include "SkrRT/platform/apple/macos/window.h"
+    #include "SkrCore/platform/apple/macos/window.h"
 #endif
 
 void* skr_window_get_native_view(SWindowHandle window)

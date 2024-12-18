@@ -3,7 +3,7 @@
 #include "cgltf/cgltf.h"           // IWYU pragma: export
 #include "MeshOpt/meshoptimizer.h" // IWYU pragma: export
 
-#include "SkrRT/platform/vfs.h"     // IWYU pragma: export
+#include "SkrCore/platform/vfs.h"     // IWYU pragma: export
 #include "SkrOS/filesystem.hpp"     // IWYU pragma: export
 #include "SkrBase/misc/defer.hpp"   // IWYU pragma: export
 #include "SkrCore/log.hpp"          // IWYU pragma: export

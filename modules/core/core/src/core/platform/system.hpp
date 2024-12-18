@@ -1,12 +1,12 @@
 #pragma once
-#include "SkrRT/platform/system.h"
+#include "SkrCore/platform/system.h"
 #include "SkrContainers/vector.hpp"
 #include "SkrContainers/map.hpp"
 
 namespace skr
 {
 
-struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler {
+struct SKR_CORE_API SystemMessageHandlerProxy : public ISystemMessageHandler {
     template <typename T>
     using Handler = std::pair<T, void*>;
     template <typename T>

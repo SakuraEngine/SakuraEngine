@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrRT/platform/input.h"
+#include "SkrCore/platform/input.h"
 #include "SkrContainers/span.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::input, InputDevice, skr_input_device)

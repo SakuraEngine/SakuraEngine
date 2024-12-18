@@ -2,8 +2,8 @@
 #include <SkrContainers/string.hpp>
 #include <SkrContainers/vector.hpp>
 #include "SkrCore/log.h"
-#include "SkrRT/platform/input.h"
-#include "SkrRT/platform/system.h"
+#include "SkrCore/platform/input.h"
+#include "SkrCore/platform/system.h"
 
 #include "SkrInput/input.h"
 

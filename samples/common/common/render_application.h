@@ -1,6 +1,6 @@
 #pragma once
 #include "./utils.h"
-#include "SkrRT/platform/window.h"
+#include "SkrCore/platform/window.h"
 
 #if _WIN32
 static const ECGPUBackend platform_default_backend = CGPU_BACKEND_D3D12;

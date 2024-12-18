@@ -1,6 +1,6 @@
 #pragma once
 #include "godot_containers.hpp"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 
 namespace godot 
 {

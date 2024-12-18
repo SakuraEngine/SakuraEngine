@@ -1,6 +1,6 @@
 #include "gdi_application.h"
 #include "gui_render_graph.hpp"
-#include "SkrRT/platform/system.h"
+#include "SkrCore/platform/system.h"
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"

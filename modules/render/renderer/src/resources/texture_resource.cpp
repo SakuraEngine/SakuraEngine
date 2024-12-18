@@ -16,7 +16,7 @@
 #include "SkrRenderer/resources/texture_resource.h"
 
 #ifdef _WIN32
-// #include "SkrRT/platform/win/dstorage_windows.h"
+// #include "SkrCore/platform/win/dstorage_windows.h"
 #endif
 
 #include "SkrProfile/profile.h"

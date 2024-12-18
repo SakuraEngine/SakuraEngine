@@ -1,4 +1,4 @@
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 #include <SkrOS/filesystem.hpp>
 #include "../common/io_request.hpp"
 #include "../common/io_batch.hpp"

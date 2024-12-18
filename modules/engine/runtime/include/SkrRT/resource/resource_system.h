@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrContainers/span.hpp"

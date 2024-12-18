@@ -1,6 +1,6 @@
 #include "SkrCore/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrSerde/json_serde.hpp"

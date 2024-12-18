@@ -2,11 +2,11 @@
 #include "GameRuntime/gamert.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrOS/filesystem.hpp"
-#include "SkrRT/platform/system.h"
+#include "SkrCore/platform/system.h"
 #include "SkrRT/config.h"
 #include "SkrCore/memory/memory.h"
 #include "SkrCore/time.h"
-#include "SkrRT/platform/window.h"
+#include "SkrCore/platform/window.h"
 
 #include "SkrRT/ecs/type_builder.hpp"
 

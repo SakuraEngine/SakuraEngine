@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 #include "SkrCore/log.h"
 #include "SkrRenderer/skr_renderer.h"
 #ifdef __cplusplus

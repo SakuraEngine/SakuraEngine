@@ -4,7 +4,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #ifdef TARGET_MACOS
-    #include "SkrRT/platform/apple/macos/window.h"
+    #include "SkrCore/platform/apple/macos/window.h"
 #endif
 #include "SkrGraphics/api.h"
 #define SDL_MAIN_HANDLED

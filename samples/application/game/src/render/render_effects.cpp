@@ -27,7 +27,7 @@
 #include "SkrAnim/components/skeleton_component.hpp"
 
 #include "cube.hpp"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 #include <SkrOS/filesystem.hpp>
 
 #include "SkrTask/parallel_for.hpp"

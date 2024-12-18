@@ -5,7 +5,7 @@
 
 #include "SkrCore/memory/memory.h"
 #include "SkrBase/misc/debug.h" 
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 
 #include "SkrLive2D/l2d_render_model.h"
 #include "live2d_clipping.hpp"

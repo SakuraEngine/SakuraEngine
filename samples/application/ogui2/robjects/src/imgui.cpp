@@ -1,10 +1,10 @@
 #include "common/utils.h"
 #include "SkrCore/memory/memory.h"
-#include "SkrRT/platform/window.h"
+#include "SkrCore/platform/window.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/log.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 
 #include "SkrContainers/string.hpp"
 

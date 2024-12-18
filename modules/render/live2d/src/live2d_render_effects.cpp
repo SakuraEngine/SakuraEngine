@@ -3,7 +3,7 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/time.h"
 #include "SkrCore/memory/memory.h"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/ecs/storage.hpp"
 #include "SkrContainers/map.hpp"

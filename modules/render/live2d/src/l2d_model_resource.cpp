@@ -4,7 +4,7 @@
 #include "SkrCore/memory/memory.h"
 #include "SkrCore/log.h"
 #include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 
 #include "live2d_helpers.hpp"
 

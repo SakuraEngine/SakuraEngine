@@ -1,4 +1,4 @@
-#include "SkrRT/platform/input.h"
+#include "SkrCore/platform/input.h"
 #include "SDL2/SDL_scancode.h"
 
 #include "SDL2/SDL_keyboard.h"
@@ -147,7 +147,7 @@ inline static SDL_Scancode KeyCodeTranslator(EKeyCode keycode)
     }
 }
 
-SKR_RUNTIME_API bool skr_key_down(EKeyCode key_code)
+SKR_CORE_API bool skr_key_down(EKeyCode key_code)
 {
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
     switch (key_code)
@@ -178,7 +178,7 @@ Uint32 MouseKeyCodeTranslator(EMouseKey keycode)
     }
 }
 
-SKR_RUNTIME_API bool skr_mouse_key_down(EMouseKey key_code)
+SKR_CORE_API bool skr_mouse_key_down(EMouseKey key_code)
 {
     int x, y;
     Uint32 button = SDL_GetGlobalMouseState(&x, &y);
@@ -187,7 +187,7 @@ SKR_RUNTIME_API bool skr_mouse_key_down(EMouseKey key_code)
     return false;
 }
 
-SKR_RUNTIME_API bool skr_set_cursor_pos(int32_t x, int32_t y)
+SKR_CORE_API bool skr_set_cursor_pos(int32_t x, int32_t y)
 {
     SDL_WarpMouseInWindow(NULL, x, y);
     return true;
@@ -213,7 +213,7 @@ SDL_SystemCursor MouseCursorTranslator(EMouseCursor cursor)
     }
 }
 
-SKR_RUNTIME_API bool skr_set_cursor(EMouseCursor cursor)
+SKR_CORE_API bool skr_set_cursor(EMouseCursor cursor)
 {
     if (cursor == MOUSE_CURSOR_Hide)
     {

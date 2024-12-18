@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrGraphics/api.h"
-#include "SkrRT/platform/window.h"
+#include "SkrCore/platform/window.h"
 #include "SkrGui/backend/canvas/canvas_types.hpp"
 #include "SkrBase/math/rtm/rtmx.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"

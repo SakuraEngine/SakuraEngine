@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/config.h"
+#include "SkrBase/config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -123,17 +123,17 @@ typedef struct skr_vfs_desc_t {
 } skr_vfs_desc_t;
 
 // file system
-SKR_RUNTIME_API skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT;
-SKR_RUNTIME_API void skr_free_vfs(skr_vfs_t*) SKR_NOEXCEPT;
+SKR_CORE_API skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT;
+SKR_CORE_API void skr_free_vfs(skr_vfs_t*) SKR_NOEXCEPT;
 
 // file I/O
-SKR_RUNTIME_API skr_vfile_t* skr_vfs_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, ESkrFileCreation creation) SKR_NOEXCEPT;
-SKR_RUNTIME_API size_t skr_vfs_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT;
-SKR_RUNTIME_API size_t skr_vfs_fwrite(skr_vfile_t* file, const void* in_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT;
-SKR_RUNTIME_API int64_t skr_vfs_fsize(const skr_vfile_t* file) SKR_NOEXCEPT;
-SKR_RUNTIME_API bool skr_vfs_fclose(skr_vfile_t* file) SKR_NOEXCEPT;
+SKR_CORE_API skr_vfile_t* skr_vfs_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, ESkrFileCreation creation) SKR_NOEXCEPT;
+SKR_CORE_API size_t skr_vfs_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT;
+SKR_CORE_API size_t skr_vfs_fwrite(skr_vfile_t* file, const void* in_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT;
+SKR_CORE_API int64_t skr_vfs_fsize(const skr_vfile_t* file) SKR_NOEXCEPT;
+SKR_CORE_API bool skr_vfs_fclose(skr_vfile_t* file) SKR_NOEXCEPT;
 
-SKR_RUNTIME_API void skr_vfs_get_native_procs(struct skr_vfs_proctable_t* procs) SKR_NOEXCEPT;
+SKR_CORE_API void skr_vfs_get_native_procs(struct skr_vfs_proctable_t* procs) SKR_NOEXCEPT;
 
 static SKR_FORCEINLINE const char8_t* skr_vfs_filemode_to_string(ESkrFileMode mode)
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/window.h"
+#include "SkrCore/platform/window.h"
 #include "SkrImGui/skr_imgui.config.h"
 #include "imgui/imgui.h" // IWYU pragma: export
 

@@ -3,7 +3,7 @@
 #include "SkrBase/config.h"
 #include "fwd_types.h"
 #ifdef __cplusplus
-#include "SkrRT/platform/window.h"
+#include "SkrCore/platform/window.h"
 
 namespace skr
 {

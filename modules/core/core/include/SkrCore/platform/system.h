@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/platform/window.h"
-#include "SkrRT/platform/input.h"
+#include "SkrCore/platform/window.h"
+#include "SkrCore/platform/input.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr, ISystemHandler, skr_system_handler)
 SKR_DECLARE_TYPE_ID_FWD(skr, ISystemMessageHandler, skr_system_message_handler)
@@ -19,7 +19,7 @@ typedef void (*STextInputHandlerProc)(const char8_t* text, void* usr_data);
 namespace skr
 {
 
-struct SKR_RUNTIME_API ISystemMessageHandler {
+struct SKR_CORE_API ISystemMessageHandler {
     virtual ~ISystemMessageHandler() SKR_NOEXCEPT;
 
     virtual void on_window_resized(SWindowHandle, int32_t w, int32_t h) SKR_NOEXCEPT {};
@@ -33,7 +33,7 @@ struct SKR_RUNTIME_API ISystemMessageHandler {
     virtual void on_text_input(const char8_t* text) {};
 };
 
-struct SKR_RUNTIME_API ISystemHandler {
+struct SKR_CORE_API ISystemHandler {
     virtual ~ISystemHandler() SKR_NOEXCEPT;
 
     virtual void  pump_messages(float delta) SKR_NOEXCEPT          = 0;
@@ -67,72 +67,72 @@ struct SKR_RUNTIME_API ISystemHandler {
 } // namespace skr
 #endif
 
-SKR_EXTERN_C SKR_RUNTIME_API
+SKR_EXTERN_C SKR_CORE_API
 skr_system_handler_id
 skr_system_get_default_handler();
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_pump_messages(skr_system_handler_id handler, float delta);
+SKR_EXTERN_C SKR_CORE_API void skr_system_pump_messages(skr_system_handler_id handler, float delta);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_process_messages(skr_system_handler_id handler, float delta);
+SKR_EXTERN_C SKR_CORE_API void skr_system_process_messages(skr_system_handler_id handler, float delta);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_update_device_states(skr_system_handler_id handler);
+SKR_EXTERN_C SKR_CORE_API void skr_system_update_device_states(skr_system_handler_id handler);
 
-SKR_EXTERN_C SKR_RUNTIME_API void* skr_system_load_handler_proc(skr_system_handler_id handler, const char* name);
+SKR_EXTERN_C SKR_CORE_API void* skr_system_load_handler_proc(skr_system_handler_id handler, const char* name);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_add_message_handler(skr_system_handler_id handler, skr_system_message_handler_id message_handler);
+SKR_EXTERN_C SKR_CORE_API void skr_system_add_message_handler(skr_system_handler_id handler, skr_system_message_handler_id message_handler);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_remove_message_handler(skr_system_handler_id handler, skr_system_message_handler_id message_handler);
+SKR_EXTERN_C SKR_CORE_API void skr_system_remove_message_handler(skr_system_handler_id handler, skr_system_message_handler_id message_handler);
 
-SKR_EXTERN_C SKR_RUNTIME_API
+SKR_EXTERN_C SKR_CORE_API
 int64_t
 skr_system_add_window_resize_handler(skr_system_handler_id handler, SWindowResizeHandlerProc proc, void* usr_data);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_remove_window_resize_handler(skr_system_handler_id handler, int64_t rid);
+SKR_EXTERN_C SKR_CORE_API void skr_system_remove_window_resize_handler(skr_system_handler_id handler, int64_t rid);
 
-SKR_EXTERN_C SKR_RUNTIME_API
+SKR_EXTERN_C SKR_CORE_API
 int64_t
 skr_system_add_window_close_handler(skr_system_handler_id handler, SWindowCloseHandlerProc proc, void* usr_data);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_remove_window_close_handler(skr_system_handler_id handler, int64_t rid);
+SKR_EXTERN_C SKR_CORE_API void skr_system_remove_window_close_handler(skr_system_handler_id handler, int64_t rid);
 
-SKR_EXTERN_C SKR_RUNTIME_API
+SKR_EXTERN_C SKR_CORE_API
 int64_t
 skr_system_add_window_move_handler(skr_system_handler_id handler, SWindowMoveHandlerProc proc, void* usr_data);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_remove_window_move_handler(skr_system_handler_id handler, int64_t rid);
+SKR_EXTERN_C SKR_CORE_API void skr_system_remove_window_move_handler(skr_system_handler_id handler, int64_t rid);
 
-SKR_EXTERN_C SKR_RUNTIME_API
+SKR_EXTERN_C SKR_CORE_API
 int64_t
 skr_system_add_mouse_wheel_handler(skr_system_handler_id handler, SMouseWheelHandlerProc proc, void* usr_data);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_remove_mouse_wheel_handler(skr_system_handler_id handler, int64_t rid);
+SKR_EXTERN_C SKR_CORE_API void skr_system_remove_mouse_wheel_handler(skr_system_handler_id handler, int64_t rid);
 
-SKR_EXTERN_C SKR_RUNTIME_API
+SKR_EXTERN_C SKR_CORE_API
 int64_t
 skr_system_add_mouse_button_down_handler(skr_system_handler_id handler, SMouseButtonDownHandlerProc proc, void* usr_data);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_remove_mouse_button_down_handler(skr_system_handler_id handler, int64_t rid);
+SKR_EXTERN_C SKR_CORE_API void skr_system_remove_mouse_button_down_handler(skr_system_handler_id handler, int64_t rid);
 
-SKR_EXTERN_C SKR_RUNTIME_API
+SKR_EXTERN_C SKR_CORE_API
 int64_t
 skr_system_add_mouse_button_up_handler(skr_system_handler_id handler, SMouseButtonUpHandlerProc proc, void* usr_data);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_remove_mouse_button_up_handler(skr_system_handler_id handler, int64_t rid);
+SKR_EXTERN_C SKR_CORE_API void skr_system_remove_mouse_button_up_handler(skr_system_handler_id handler, int64_t rid);
 
-SKR_EXTERN_C SKR_RUNTIME_API
+SKR_EXTERN_C SKR_CORE_API
 int64_t
 skr_system_add_key_down_handler(skr_system_handler_id handler, SKeyDownHandlerProc proc, void* usr_data);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_remove_key_down_handler(skr_system_handler_id handler, int64_t rid);
+SKR_EXTERN_C SKR_CORE_API void skr_system_remove_key_down_handler(skr_system_handler_id handler, int64_t rid);
 
-SKR_EXTERN_C SKR_RUNTIME_API
+SKR_EXTERN_C SKR_CORE_API
 int64_t
 skr_system_add_key_up_handler(skr_system_handler_id handler, SKeyUpHandlerProc proc, void* usr_data);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_remove_key_up_handler(skr_system_handler_id handler, int64_t rid);
+SKR_EXTERN_C SKR_CORE_API void skr_system_remove_key_up_handler(skr_system_handler_id handler, int64_t rid);
 
-SKR_EXTERN_C SKR_RUNTIME_API
+SKR_EXTERN_C SKR_CORE_API
 int64_t
 skr_system_add_text_input_handler(skr_system_handler_id handler, STextInputHandlerProc proc, void* usr_data);
 
-SKR_EXTERN_C SKR_RUNTIME_API void skr_system_remove_text_input_handler(skr_system_handler_id handler, int64_t rid);
+SKR_EXTERN_C SKR_CORE_API void skr_system_remove_text_input_handler(skr_system_handler_id handler, int64_t rid);

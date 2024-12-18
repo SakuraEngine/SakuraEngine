@@ -3,7 +3,7 @@
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrCore/log.hpp"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
 
 namespace skr

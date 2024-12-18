@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGraphics/dstorage.h"
 #include "SkrRT/io/io.h"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 #include "../components/component.hpp"
 
 namespace skr {

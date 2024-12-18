@@ -10,7 +10,7 @@
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HWND createWin32Window();
 #elif defined(_MACOS)
-    #include "SkrRT/platform/apple/macos/window.h"
+    #include "SkrCore/platform/apple/macos/window.h"
 #endif
 
 template <ECGPUBackend backend>

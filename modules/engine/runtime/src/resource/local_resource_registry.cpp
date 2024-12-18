@@ -1,6 +1,6 @@
 ﻿#include <SkrOS/filesystem.hpp>
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 #include "SkrRT/resource/local_resource_registry.hpp"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrCore/log.hpp"

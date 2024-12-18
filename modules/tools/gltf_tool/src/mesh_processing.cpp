@@ -1,6 +1,6 @@
 #include "SkrGraphics/api.h"
 #include "cgltf/cgltf.h"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 #include "SkrOS/filesystem.hpp"
 #include "SkrTask/fib_task.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"

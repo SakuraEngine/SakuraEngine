@@ -1,14 +1,14 @@
-#include "SkrRT/config.h"
-#include "vfs.cpp"
+#include "SkrBase/config.h"
+#include "platform/vfs.cpp"
 
-#include "standard/stdio_vfs.cpp"
+#include "platform/standard/stdio_vfs.cpp"
 #if SKR_PLAT_UNIX
-    #include "unix/unix_vfs.cpp"
+    #include "platform/unix/unix_vfs.cpp"
 #elif SKR_PLAT_WINDOWS
-    #include "windows/windows_vfs.cpp"
+    #include "platform/windows/windows_vfs.cpp"
 #endif
 
-#include "SkrRT/platform/system.h"
+#include "SkrCore/platform/system.h"
 
 namespace skr
 {
@@ -18,13 +18,13 @@ ISystemHandler::~ISystemHandler() SKR_NOEXCEPT {}
 
 #ifdef RUNTIME_SHARED
 extern "C" {
-SKR_RUNTIME_API bool mi_allocator_init(const char** message)
+SKR_CORE_API bool mi_allocator_init(const char** message)
 {
     if (message != NULL) *message = NULL;
     return true;
 }
 
-SKR_RUNTIME_API void mi_allocator_done(void)
+SKR_CORE_API void mi_allocator_done(void)
 {
     // nothing to do
 }
@@ -152,8 +152,8 @@ void skr_system_remove_text_input_handler(skr_system_handler_id handler, int64_t
 }
 #endif
 
-#include "sdl2/sdl2_system.cpp"
-SKR_EXTERN_C SKR_RUNTIME_API
+#include "platform/sdl2/sdl2_system.cpp"
+SKR_EXTERN_C SKR_CORE_API
 skr_system_handler_id skr_system_get_default_handler()
 {
     return skr::SystemHandler_SDL2::Get();

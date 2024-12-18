@@ -1,4 +1,4 @@
-#include "SkrRT/platform/apple/macos/window.h"
+#include "SkrCore/platform/apple/macos/window.h"
 
 #import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>

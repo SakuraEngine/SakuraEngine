@@ -4,7 +4,7 @@
 #include "SkrRT/resource/resource_handle.h"
 
 #include "SkrCore/log.h"
-#include "SkrRT/platform/vfs.h"
+#include "SkrCore/platform/vfs.h"
 #include "SkrRT/ecs/sugoi.h"
 
 #include "SkrLua/skr_lua.h"

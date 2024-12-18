@@ -3,7 +3,7 @@
 
 #include "SkrContainers/string.hpp"
 
-#include "SkrRT/platform/system.h"
+#include "SkrCore/platform/system.h"
 #include "SkrCore/log.h"
 #include "SkrBase/misc/defer.hpp"
 
