@@ -312,7 +312,7 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
 
 void skr::imgui::imgui_create_window(ImGuiViewport* viewport)
 {
-    SWindowDescroptor desc = {};
+    SWindowDescriptor desc = {};
     desc.flags             = SKR_WINDOW_HIDDEN;
     desc.flags |= (viewport->Flags & ImGuiViewportFlags_NoDecoration) ? SKR_WINDOW_BOARDLESS : 0;
     desc.flags |= !(viewport->Flags & ImGuiViewportFlags_NoDecoration) ? 0 : SKR_WINDOW_RESIZABLE;

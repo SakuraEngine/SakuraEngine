@@ -27,7 +27,7 @@ SkrNativeWindow::~SkrNativeWindow()
 // init functions
 void SkrNativeWindow::init_normal(const WindowDesc& desc)
 {
-    SWindowDescroptor create_desc;
+    SWindowDescriptor create_desc;
     create_desc.width  = (int32_t)desc.size.width;
     create_desc.height = (int32_t)desc.size.height;
     create_desc.posx   = (int32_t)desc.pos.x;

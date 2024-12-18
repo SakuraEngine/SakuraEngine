@@ -78,7 +78,7 @@ inline static int app_create_window(render_application_t* pApp, uint32_t width, 
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     const char8_t* window_title = pApp->window_title ? pApp->window_title :gCGPUBackendNames[pApp->backend];
-    SKR_DECLARE_ZERO(SWindowDescroptor, window_desc);
+    SKR_DECLARE_ZERO(SWindowDescriptor, window_desc);
     window_desc.width = width;
     window_desc.height = height;
     window_desc.flags |= SKR_WINDOW_CENTERED;

@@ -217,7 +217,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
     auto cgpu_device = render_device->get_cgpu_device();
     auto gfx_queue = render_device->get_gfx_queue();
     auto adapter_detail = cgpu_query_adapter_detail(cgpu_device->adapter);
-    auto window_desc = make_zeroed<SWindowDescroptor>();
+    auto window_desc = make_zeroed<SWindowDescriptor>();
     window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;
     // TODO: Resizable swapchain
     window_desc.height = 1500;

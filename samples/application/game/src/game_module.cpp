@@ -524,7 +524,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
     auto render_device = skr_get_default_render_device();
     auto cgpu_device   = render_device->get_cgpu_device();
     auto gfx_queue     = render_device->get_gfx_queue();
-    auto window_desc   = make_zeroed<SWindowDescroptor>();
+    auto window_desc   = make_zeroed<SWindowDescriptor>();
     window_desc.flags  = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE; // | SKR_WINDOW_BOARDLESS;
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width  = BACK_BUFFER_WIDTH;

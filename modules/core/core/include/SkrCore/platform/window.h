@@ -16,13 +16,13 @@ typedef enum SWindowFlag {
 } SWindowFlag;
 typedef uint32_t SWindowFlags;
 
-typedef struct SWindowDescroptor {
+typedef struct SWindowDescriptor {
     uint32_t width;
     uint32_t height;
     uint32_t posx;
     uint32_t posy;
     SWindowFlags flags;
-} SWindowDescroptor;
+} SWindowDescriptor;
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,7 +33,7 @@ SKR_CORE_API void skr_monitor_get_extent(SMonitorHandle monitor, int32_t* width,
 SKR_CORE_API void skr_monitor_get_position(SMonitorHandle monitor, int32_t* x, int32_t* y);
 SKR_CORE_API bool skr_monitor_get_ddpi(SMonitorHandle monitor, float* ddpi, float* hdpi, float* vdpi);
 
-SKR_CORE_API SWindowHandle skr_create_window(const char8_t* name, const SWindowDescroptor* desc);
+SKR_CORE_API SWindowHandle skr_create_window(const char8_t* name, const SWindowDescriptor* desc);
 SKR_CORE_API void skr_show_window(SWindowHandle window);
 SKR_CORE_API void skr_window_set_title(SWindowHandle window, const char8_t* name);
 SKR_CORE_API void skr_window_set_extent(SWindowHandle window, int32_t width, int32_t height);
