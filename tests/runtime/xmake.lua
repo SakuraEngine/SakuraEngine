@@ -44,12 +44,6 @@ executable_module("ECSTest_CPPStyle", "ECS_TEST", engine_version)
     add_deps("SkrTestFramework", {public = false})
     add_files("ecs/cpp_style/*.cpp")
 
-test_target("MDBTest")
-    set_group("05.tests/runtime")
-    public_dependency("SkrRT", engine_version)
-    public_dependency("SkrLightningStorage", engine_version)
-    add_files("mdb/main.cpp")
-
 --------------------------------------------------------------------------------------
 
 codegen_component("RTTRTest", { api = "RTTR_TEST", rootdir = "rttr" })
