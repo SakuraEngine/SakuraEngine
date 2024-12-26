@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrBase/config.h"
+#include "SkrBase/types/guid.h"
 
 namespace skr
 {
@@ -7,7 +7,7 @@ namespace skr
 struct SharedMemory
 {
 public:
-	SharedMemory(const unsigned int key, const unsigned int size, const unsigned int accessPermission = 0666);
+	SharedMemory(skr::GUID key, const unsigned int size, const unsigned int accessPermission = 0666);
 	~SharedMemory();
 	void* address(uint64_t offset = 0);
 

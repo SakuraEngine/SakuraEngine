@@ -11,8 +11,10 @@
 
 namespace skr
 {
-SharedMemory::SharedMemory(const unsigned int key, const unsigned int size, const unsigned int accessPermission)
+SharedMemory::SharedMemory(skr::GUID key, const unsigned int size, const unsigned int accessPermission)
 {
+	SKR_UNIMPLEMENTED_FUNCTION();
+	/*
 	if (0 == key)
 	{
 		// LOG_ERROR("key=%u, Create shared memory failed\r\n", key);
@@ -47,6 +49,7 @@ SharedMemory::SharedMemory(const unsigned int key, const unsigned int size, cons
 		memset(base_address, 0, size);
 		// LOG_DEBUG("key=%u, Init shared memory\r\n", key);
 	}
+	*/
 }
 
 SharedMemory::~SharedMemory()

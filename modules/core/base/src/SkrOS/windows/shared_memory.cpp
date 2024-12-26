@@ -40,10 +40,11 @@ inline static SECURITY_ATTRIBUTES* CreateSecurityDescriptor(const unsigned int a
 	return &security;
 }
 
-SharedMemory::SharedMemory(const unsigned int key, const unsigned int size, const unsigned int accessPermission)
+SharedMemory::SharedMemory(skr::GUID key, const unsigned int size, const unsigned int accessPermission)
 {
 	char nameHead[0x100] = { 0 };
-	sprintf(nameHead, "Global\\SharedMemory_%u", key);
+	sprintf(nameHead, "Global\\SharedMemory_%u_%u_%u_%u",
+		key.storage0, key.storage1, key.storage2, key.storage3);
 
 	shared_handle = (int64_t)CreateFileMappingA(
 		INVALID_HANDLE_VALUE,
@@ -57,7 +58,8 @@ SharedMemory::SharedMemory(const unsigned int key, const unsigned int size, cons
 	int iRet = GetLastError();
 	if (NULL == shared_handle && ERROR_ACCESS_DENIED == iRet)
 	{
-		sprintf(nameHead, "MessageQueue_%u", key);
+		sprintf(nameHead, "MessageQueue_%u_%u_%u_%u",
+			key.storage0, key.storage1, key.storage2, key.storage3);
 		shared_handle = (int64_t)CreateFileMappingA(
 			INVALID_HANDLE_VALUE,
 			CreateSecurityDescriptor(accessPermission),
