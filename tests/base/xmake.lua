@@ -1,10 +1,16 @@
+test_target("OSTest")
+    set_group("05.tests/base")
+    add_deps("SkrBase")
+    add_files("os/main.cpp")
+    set_exceptions("no-cxx")
+    add_rules("PickSharedPCH")
+
 test_target("AlgoTest")
     set_group("05.tests/base")
     add_deps("SkrBase")
     add_files("algo/*.cpp")
     set_exceptions("no-cxx")
     add_rules("PickSharedPCH")
-target_end()
 
 target("ContainersTest")
     set_kind("binary")

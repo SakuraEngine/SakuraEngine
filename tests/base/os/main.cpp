@@ -16,6 +16,4 @@ static struct ProcInitializer {
     }
 } init;
 
-#include "binary.cpp"
-#include "json.cpp"
-
+#include "shared_memory.cpp"
