@@ -39,7 +39,7 @@ struct StringMemoryBase {
     }
 
     // string literals
-    inline bool is_literal() const noexcept { return !_is_sso() && _size > 0 && _capacity == 0; }
+    inline bool is_literal() const noexcept { return !_is_sso() && _size >= 0 && _capacity == 0; }
     inline bool is_sso() const noexcept { return _is_sso(); }
     inline bool is_heap() const noexcept { return !_is_sso() && _capacity > 0; }
 
