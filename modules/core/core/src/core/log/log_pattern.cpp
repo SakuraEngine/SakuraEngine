@@ -248,12 +248,12 @@ skr::String format_NArgs(std::index_sequence<N...>, const skr::StringView& fmt, 
 const static char8_t*  main_thread_name    = u8"main";
 const static char8_t*  unknown_thread_name = u8"unnamed";
 const static SThreadID main_thread_id      = skr_current_thread_id();
-static skr::String     timestring          = u8"";
-skr::String const&     LogPattern::pattern(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
+static thread_local skr::String timestring = u8"";
+skr::String LogPattern::pattern(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
 {
-    formatted_string_.clear();
+    skr::String formatted_string = u8"";
     if (calculated_format_.is_empty())
-        return formatted_string_;
+        return formatted_string;
 
     const auto level_id = (uint32_t)event.level;
 
@@ -281,9 +281,10 @@ skr::String const&     LogPattern::pattern(const LogEvent& event, skr::StringVie
             LogManager::Get()->datetime_.reset_date();
         }
         timestring = skr::format(
-        u8"{}/{}/{} {}:{}:{}({}:{})",
-        dt.year, dt.month, dt.day,
-        h, minute, second, ms, us);
+            u8"{}/{}/{} {}:{}:{}({}:{})",
+            dt.year, dt.month, dt.day,
+            h, minute, second, ms, us
+        );
         _set_arg_val<Attribute::timestamp>(timestring.view());
     }
 
@@ -356,15 +357,10 @@ skr::String const&     LogPattern::pattern(const LogEvent& event, skr::StringVie
     {
         SkrZoneScopedN("LogPattern::FormatNArgs");
         auto sequence     = std::make_index_sequence<kAttributeCount>();
-        formatted_string_ = format_NArgs(sequence, calculated_format_.view(), _args);
+        formatted_string = format_NArgs(sequence, calculated_format_.view(), _args);
     }
 
-    return formatted_string_;
-}
-
-skr::String const& LogPattern::last_result() SKR_NOEXCEPT
-{
-    return formatted_string_;
+    return formatted_string;
 }
 
 } // namespace skr::log

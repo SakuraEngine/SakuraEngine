@@ -98,11 +98,7 @@ public:
     };
     static constexpr uint64_t kAttributeCount = (uint64_t)LogPattern::Attribute::Count;
 
-    [[nodiscard]] skr::String const& pattern(
-    const LogEvent& event,
-    skr::StringView formatted_message) SKR_NOEXCEPT;
-
-    [[nodiscard]] skr::String const& last_result() SKR_NOEXCEPT;
+    [[nodiscard]] skr::String pattern(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT;
 
     LogPattern(const char8_t* format_pattern) SKR_NOEXCEPT
     {
@@ -144,8 +140,6 @@ protected:
     skr::Array<FormatArg, kAttributeCount> _args;
     skr::Array<int64_t, kAttributeCount>   order_index_;
     skr::Array<bool, kAttributeCount>      is_set_in_pattern_;
-
-    skr::String formatted_string_ = u8"";
 };
 
 static constexpr uint64_t kAttributeCount = LogPattern::kAttributeCount;

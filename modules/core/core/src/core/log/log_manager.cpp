@@ -145,7 +145,7 @@ LogSink* LogManager::QuerySink(skr_guid_t guid)
 
 void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
 {
-    static thread_local skr::FlatHashSet<skr_guid_t, skr::Hash<skr_guid_t>> patterns_set_;
+    static thread_local skr::FlatHashMap<skr_guid_t, skr::String, skr::Hash<skr_guid_t>> patterns_set_;
     patterns_set_.clear();
     {
         SkrZoneScopedN("PatternAll");
@@ -159,10 +159,7 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted
             if (auto p = LogManager::QueryPattern(pattern_id))
             {
                 SkrZoneScopedN("LogPattern::Pattern");
-
-                [[maybe_unused]]
-                auto& _ = p->pattern(event, formatted_message);
-                patterns_set_.insert(pattern_id);
+                patterns_set_.insert({pattern_id, p->pattern(event, formatted_message)});
             }
             else
             {
@@ -176,12 +173,14 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted
         for (auto&& [id, sink] : sinks_)
         {
             auto pattern_id = sink->get_pattern();
-
+            auto&& iter = patterns_set_.find(pattern_id);
+            if (iter == patterns_set_.end())
+                continue;
+            
             if (auto p = LogManager::QueryPattern(pattern_id))
             {
                 SkrZoneScopedN("LogSink::Sink");
-
-                sink->sink(event, p->last_result().view());
+                sink->sink(event, iter->second.view());
             }
             else
             {
