@@ -8,4 +8,4 @@ if (false) then
     includes("v8/xmake.lua")
 end
 
--- includes("lua/xmake.lua") -- FIXME. lua support
+includes("lua/xmake.lua")

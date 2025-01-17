@@ -9,7 +9,7 @@
 
 #include "SkrLua/skr_lua.h"
 #include "SkrLua/bind.hpp"
-#include "SkrRTTR/type/type.hpp"
+#include "SkrRTTR/type.hpp"
 
 extern "C" {
 #include "luacode.h"
@@ -53,14 +53,14 @@ void**                                     lua_getextraspace(lua_State* L)
 int skr_lua_loadfile(lua_State* L, const char* filename)
 {
     skr_lua_state_extra_t* extra = (skr_lua_state_extra_t*)*(void**)lua_getextraspace(L);
-    skr::stl_u8string      path  = (const char8_t*)filename;
+    skr::stl_u8string      path  = (const skr_char8*)filename;
     replaceAll(path, u8".", u8"/");
     skr::stl_u8string_view exts[] = { u8".lua", u8".luac" };
     skr_vfile_t*           file   = nullptr;
     for (int i = 0; i < 2; ++i)
     {
         skr::stl_u8string fullpath = path + exts[i].data();
-        file                       = skr_vfs_fopen(extra->vfs, (const char8_t*)fullpath.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+        file                       = skr_vfs_fopen(extra->vfs, (const skr_char8*)fullpath.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
         if (file)
             break;
     }
@@ -73,7 +73,7 @@ int skr_lua_loadfile(lua_State* L, const char* filename)
     auto              size = skr_vfs_fsize(file);
     skr::Vector<char> buffer(size);
     skr_vfs_fread(file, buffer.data(), 0, size);
-    auto   name         = skr::stl_u8string(u8"@") + (const char8_t*)filename;
+    auto   name         = skr::stl_u8string(u8"@") + (const skr_char8*)filename;
     size_t bytecodeSize = 0;
     char*  bytecode     = luau_compile(buffer.data(), size, NULL, &bytecodeSize);
     SKR_DEFER({ free(bytecode); });
@@ -288,7 +288,7 @@ void bind_skr_guid(lua_State* L)
     luaL_Reg metamethods[] = {
         { "__tostring", +[](lua_State* L) -> int {
              auto guid = (skr_guid_t*)luaL_checkudata(L, 1, "skr_guid_t");
-             lua_pushstring(L, skr::format(u8"{}", *guid).c_str());
+             lua_pushstring(L, (char*)skr::format(u8"{}", *guid).c_str());
              return 1;
          } },
         { "__eq", +[](lua_State* L) -> int {
@@ -352,7 +352,7 @@ void bind_skr_resource_handle(lua_State* L)
         }
         else if (lua_isstring(L, 1))
         {
-            auto                   str      = (const char8_t*)lua_tostring(L, 1);
+            auto                   str      = (const skr_char8*)lua_tostring(L, 1);
             skr_resource_handle_t* resource = (skr_resource_handle_t*)lua_newuserdatadtor(L, sizeof(skr_resource_handle_t), dtor_resource_handle);
             skr_guid_t guid;
             skr::guid_from_sv(skr::StringView(str), guid);
@@ -375,7 +375,7 @@ void bind_skr_resource_handle(lua_State* L)
     luaL_Reg metamethods[] = {
         { "__tostring", +[](lua_State* L) -> int {
              auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-             lua_pushstring(L, skr::format(u8"resource {}", resource->get_serialized()).c_str());
+             lua_pushstring(L, (char*)skr::format(u8"resource {}", resource->get_serialized()).c_str());
              return 1;
          } },
         { "__eq", +[](lua_State* L) -> int {
@@ -497,18 +497,18 @@ int skr_lua_log(lua_State* L)
 {
     lua_Debug ar;
     lua_getinfo(L, 1, "nSl", &ar);
-    auto str = skr::format(u8"[{} : {}]:\t", (uint64_t)ar.what, (const char8_t*)ar.name);
+    auto str = skr::format(u8"[{} : {}]:\t", (uint64_t)ar.what, (const skr_char8*)ar.name);
     int  top = lua_gettop(L);
     for (int n = 1; n <= top; n++)
     {
         size_t         len;
-        const char8_t* s = (const char8_t*)luaL_tolstring(L, n, &len);
-        str += u8"\t";
+        const skr_char8* s = (const skr_char8*)luaL_tolstring(L, n, &len);
+        str.append(u8"\t");
         // TODO: use string builder?
-        if (s) str += s;
+        if (s) str.append(s);
     }
     const int line = ar.currentline;
-    auto      src  = (const char8_t*)ar.source;
+    auto      src  = (const skr_char8*)ar.source;
     if (line != -1)
     {
         skr::stl_u8string_view Source(src);
@@ -521,7 +521,7 @@ int skr_lua_log(lua_State* L)
 
         const auto modulename = join(tokens, u8".");
         auto       lstr       = skr::format(u8"{}", line);
-        skr_log_log(level, (const char*)modulename.c_str(), "unknown", lstr.c_str(), str.u8_str());
+        skr_log_log(level, (const char*)modulename.c_str(), "unknown", (const char*)lstr.c_str(), str.u8_str());
     }
     else
     {
@@ -594,7 +594,7 @@ long long opt_enum(lua_State* L, int index, long long def)
 
 int push_string(lua_State* L, const skr::String& str)
 {
-    lua_pushstring(L, str.c_str());
+    lua_pushstring(L, (char*)str.c_str());
     return 1;
 }
 
@@ -606,12 +606,12 @@ int push_string(lua_State* L, skr::stl_u8string_view str)
 
 skr::String check_string(lua_State* L, int index)
 {
-    return (const char8_t*)lua_tostring(L, index);
+    return (const skr_char8*)lua_tostring(L, index);
 }
 
 skr::String opt_string(lua_State* L, int index, const skr::String& def)
 {
-    return { (const char8_t*)luaL_optstring(L, index, def.c_str()) };
+    return { (const skr_char8*)luaL_optstring(L, index, (char*)def.c_str()) };
 }
 
 int push_resource(lua_State* L, const skr_resource_handle_t* resource)

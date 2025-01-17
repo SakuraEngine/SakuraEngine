@@ -5,11 +5,9 @@ extern "C" {
 #include "lua.h"
 #include "lualib.h"
 }
-#include "./stack.hpp"
-#include "./query.hpp"
-#include "./chunk.hpp"
-#include "./archetype.hpp"
-#include "./type_registry.hpp"
+#include "SkrRT/ecs/sugoi.h"
+#include "SkrRT/ecs/stack.hpp"
+#include "SkrRT/ecs/type_registry.hpp"
 
 namespace skr::lua
 {
@@ -117,7 +115,7 @@ static lua_chunk_view_t fill_chunk_view(sugoi_storage_t* storage, sugoi_chunk_vi
     auto& typeReg    = sugoi::TypeRegistry::get();
     forloop (i, 0, count)
     {
-        auto& desc = typeReg.descriptions[sugoi::type_index_t(indices[i]).index()];
+        auto& desc = *typeReg.get_type_desc(sugoi::type_index_t(indices[i]).index());
         if ((operations && !operations[i].readonly) || !readonly)
         {
             luaView.lua_checks[i] = desc.callback.lua_check;
@@ -143,7 +141,9 @@ static lua_chunk_view_t init_chunk_view(sugoi_storage_t* storage, sugoi_chunk_vi
 
 static lua_chunk_view_t query_chunk_view(sugoi_chunk_view_t* view, sugoi_query_t* query)
 {
-    return fill_chunk_view(query->storage, view, query->parameters.types, query->parameters.length, query->parameters.accesses, true);
+    sugoi_parameters_t params = {};
+    sugoiQ_get(query, nullptr, &params);
+    return fill_chunk_view(sugoiQ_get_storage(query), view, params.types, params.length, params.accesses, true);
 }
 
 void dtor_query(void* p)
@@ -227,7 +227,7 @@ void bind_ecs(lua_State* L)
             luaL_argexpected(L, lua_istable(L, 2), 2, "table");
             // iterate array
             auto                            count = lua_objlen(L, 2);
-            skr::stl_vector<sugoi_entity_t> entities;
+            skr::Vector<sugoi_entity_t> entities;
             entities.reserve(count);
             for (auto i = 1; i <= count; ++i)
             {
@@ -253,7 +253,7 @@ void bind_ecs(lua_State* L)
             luaL_argexpected(L, lua_isfunction(L, 4 + withRemove), 4 + withRemove, "table");
             // iterate array
             auto                            count = lua_objlen(L, 2);
-            skr::stl_vector<sugoi_entity_t> entities;
+            skr::Vector<sugoi_entity_t> entities;
             sugoi::TypeSetBuilder           addBuilder;
             sugoi::TypeSetBuilder           removeBuilder;
             entities.reserve(count);
@@ -401,7 +401,7 @@ void bind_ecs(lua_State* L)
                             {
                                 auto str = (const char8_t*)lua_tostring(L, 3);
                                 auto id = sugoiT_get_type_by_name(str);
-                                compId = view->view.chunk->type->index(id);
+                                compId = sugoiV_get_local_type(&view->view, id);
                             }
                             else if(lua_isnumber(L, 3))
                             {
@@ -449,7 +449,7 @@ void bind_ecs(lua_State* L)
                             {
                                 auto str = (const char8_t*)lua_tostring(L, 3);
                                 auto id = sugoiT_get_type_by_name(str);
-                                compId = view->view.chunk->type->index(id);
+                                compId = sugoiV_get_local_type(&view->view, id);
                             }
                             else if(lua_isnumber(L, 3))
                             {
@@ -484,7 +484,7 @@ void bind_ecs(lua_State* L)
                          luaL_argexpected(L, lua_isfunction(L, 3), 3, "function");
                          // iterate array
                          auto                            count = lua_objlen(L, 2);
-                         skr::stl_vector<sugoi_entity_t> entities;
+                         skr::Vector<sugoi_entity_t> entities;
                          entities.reserve(count);
                          for (auto i = 1; i <= count; ++i)
                          {
