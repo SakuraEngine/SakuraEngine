@@ -1,6 +1,6 @@
 #include "SkrProfile/profile.h"
 #include "SkrRT/ecs/sugoi_config.h"
-#include "./stack.hpp"
+#include "SkrRT/ecs/stack.hpp"
 
 namespace sugoi
 {

@@ -7,12 +7,12 @@
 #include "SkrRT/ecs/array.hpp"
 #include "SkrRT/ecs/set.hpp"
 #include "SkrRT/ecs/type_registry.hpp"
+#include "SkrRT/ecs/stack.hpp"
 #include "./impl/query.hpp"
 
 #include "./archetype.hpp"
 #include "./arena.hpp"
 #include "./chunk.hpp"
-#include "./stack.hpp"
 #include "./impl/storage.hpp"
 #include "./impl/job.hpp"
 

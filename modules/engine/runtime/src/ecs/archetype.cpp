@@ -3,8 +3,8 @@
 #include "SkrRT/ecs/set.hpp"
 #include "SkrRT/ecs/type_index.hpp"
 #include "SkrRT/ecs/type_registry.hpp"
+#include "SkrRT/ecs/stack.hpp"
 
-#include "./stack.hpp"
 #include "./chunk.hpp"
 #include "./chunk_view.hpp"
 #include "./impl/storage.hpp"

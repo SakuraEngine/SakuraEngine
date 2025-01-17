@@ -2,11 +2,11 @@
 #include "SkrRT/ecs/sugoi.h"
 #include "SkrRT/ecs/array.hpp"
 #include "SkrRT/ecs/type_registry.hpp"
+#include "SkrRT/ecs/stack.hpp"
 #include "SkrSerde/bin_serde.hpp"
 
 #include "./chunk.hpp"
 #include "./impl/storage.hpp"
-#include "./stack.hpp"
 #include "./archetype.hpp"
 #include "./impl/job.hpp"
 
