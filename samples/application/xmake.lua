@@ -1,6 +1,6 @@
 includes("ogui2/xmake.lua")
 
--- includes("game/xmake.lua") -- FIXME. lua support
+includes("game/xmake.lua") -- FIXME. lua support
 
 if os.host() == "windows" and false then
     includes("chat/xmake.lua")

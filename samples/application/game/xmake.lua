@@ -16,6 +16,11 @@ executable_module("Game", "GAME")
         out_dir = "../resources",
         root_dir = "script"
     })
+    skr_install("download", {
+        name = "SourceSansPro-Regular.ttf",
+        install_func = "file",
+        out_dir = "../resources/font"
+    })
 
     -- shaders
     add_rules("utils.dxc", {

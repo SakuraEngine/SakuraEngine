@@ -267,7 +267,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                     // record draw calls
                     const auto& cmds = renderMesh->primitive_commands;
                     const auto& materials = resourcePtr->materials;
-                    if(anims && !anims->vbs.empty())
+                    if(anims && !anims->vbs.is_empty())
                     {
                         for (size_t i = 0; i < resourcePtr->primitives.size(); ++i)
                         {

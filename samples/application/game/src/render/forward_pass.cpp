@@ -165,7 +165,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
     };
     const auto ButtonText = skr::format(u8"SwitchShadingRate-{}", shadingRateNames[shading_rate]);
     ImGui::Begin("ShadingRate");
-    if (ImGui::Button(ButtonText.c_str()))
+    if (ImGui::Button((const char*)ButtonText.c_str()))
     {
         if (shading_rate != CGPU_SHADING_RATE_COUNT - 1)
             shading_rate = (ECGPUShadingRate)(shading_rate + 1);

@@ -411,7 +411,7 @@ void skr_render_effect_access(SRendererId r, sugoi_chunk_view_t* cv, skr_render_
         skr::Vector<sugoi_entity_t> batch_render_effects;
         batch_render_effects.reserve(cv->count);
         // batch game ents to collect render effects
-        auto effects_chunk = (render_effects_t*)sugoiV_get_owned_rw(cv, sugoi_id_of<skr_render_effect_t>::get());
+        auto effects_chunk = (const render_effects_t*)sugoiV_get_owned_ro(cv, sugoi_id_of<skr_render_effect_t>::get());
         if (effects_chunk)
         {
             for (uint32_t i = 0; i < cv->count; i++)

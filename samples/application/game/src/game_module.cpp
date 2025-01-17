@@ -339,7 +339,7 @@ void create_test_scene(SRendererId renderer)
     auto renderableT_builder = make_zeroed<sugoi::TypeSetBuilder>();
     renderableT_builder
     .with<skr::TranslationComponent, skr::RotationComponent, skr::ScaleComponent>()
-    .with<skr_index_comp_t, skr_movement_comp_t>()
+    .with<skr::IndexComponent, skr::MovementComponent>()
     .with<skr_render_effect_t>()
     .with(SUGOI_COMPONENT_GUID);
     // allocate renderable
@@ -350,8 +350,8 @@ void create_test_scene(SRendererId renderer)
         auto translations = sugoi::get_owned_rw<skr::TranslationComponent>(view);
         auto rotations    = sugoi::get_owned_rw<skr::RotationComponent>(view);
         auto scales       = sugoi::get_owned_rw<skr::ScaleComponent>(view);
-        auto indices      = sugoi::get_owned_rw<skr_index_comp_t>(view);
-        auto movements    = sugoi::get_owned_rw<skr_movement_comp_t>(view);
+        auto indices      = sugoi::get_owned_rw<skr::IndexComponent>(view);
+        auto movements    = sugoi::get_owned_rw<skr::MovementComponent>(view);
         auto states       = sugoi::get_owned_rw<game::anim_state_t>(view);
         auto guids        = (skr_guid_t*)sugoiV_get_owned_ro(view, SUGOI_COMPONENT_GUID);
         for (uint32_t i = 0; i < view->count; i++)
@@ -394,7 +394,7 @@ void create_test_scene(SRendererId renderer)
     auto playerT_builder = make_zeroed<sugoi::TypeSetBuilder>();
     playerT_builder
     .with<skr::TranslationComponent, skr::RotationComponent, skr::ScaleComponent>()
-    .with<skr_movement_comp_t>()
+    .with<skr::MovementComponent>()
     .with<skr::CameraComponent>();
     auto playerT = make_zeroed<sugoi_entity_type_t>();
     playerT.type = playerT_builder.build();
@@ -423,7 +423,7 @@ void async_attach_skin_mesh(SRendererId renderer)
     auto renderable_type = make_zeroed<sugoi::TypeSetBuilder>();
     renderable_type.with<skr_render_effect_t, skr::TranslationComponent>();
     auto static_type = make_zeroed<sugoi::TypeSetBuilder>();
-    static_type.with<skr_movement_comp_t>();
+    static_type.with<skr::MovementComponent>();
     filter.all     = renderable_type.build();
     filter.none    = static_type.build();
     auto skin_type = make_zeroed<sugoi::TypeSetBuilder>();
@@ -466,7 +466,7 @@ void async_attach_render_mesh(SRendererId renderer)
     auto renderable_type = make_zeroed<sugoi::TypeSetBuilder>();
     renderable_type.with<skr_render_effect_t, skr::TranslationComponent>();
     auto static_type = make_zeroed<sugoi::TypeSetBuilder>();
-    static_type.with<skr_movement_comp_t>();
+    static_type.with<skr::MovementComponent>();
     filter.all     = renderable_type.build();
     filter.none    = static_type.build();
     auto skin_type = make_zeroed<sugoi::TypeSetBuilder>();
@@ -548,7 +548,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
     // Lua
     auto L = skr_lua_newstate(resource_vfs);
     skr_lua_bind_imgui(L);
-    skr_lua_open_game_runtime(L);
+    // skr_lua_open_game_runtime(L);
     lua_newtable(L);
     lua_pushvalue(L, -1);
     lua_setglobal(L, "game");
@@ -601,9 +601,9 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
     sugoi_query_t*     cameraQuery;
     sugoi_query_t*     animQuery;
     moveQuery         = sugoiQ_from_literal(game_world,
-                                            u8"[has]skr_movement_comp_t, [inout]skr::TranslationComponent, [in]skr::ScaleComponent, [in]skr_index_comp_t,!skr::CameraComponent");
+                                            u8"[has]skr::MovementComponent, [inout]skr::TranslationComponent, [in]skr::ScaleComponent, [in]skr::IndexComponent,!skr::CameraComponent");
     cameraQuery       = sugoiQ_from_literal(game_world,
-                                            u8"[has]skr_movement_comp_t, [inout]skr::TranslationComponent, [inout]skr::CameraComponent");
+                                            u8"[has]skr::MovementComponent, [inout]skr::TranslationComponent, [inout]skr::CameraComponent");
     animQuery         = sugoiQ_from_literal(game_world,
                                             u8"[in]skr_render_effect_t, [in]game::anim_state_t, [out]<unseq>skr::anim::AnimComponent, [in]<unseq>skr::anim::SkeletonComponent");
     initAnimSkinQuery = sugoiQ_from_literal(game_world,
@@ -715,7 +715,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                     auto file = skr_vfs_fopen(resource_vfs, u8"scene.json", SKR_FM_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
                     if (file)
                     {
-                        auto str = writer.Str();
+                        auto str = writer.Write();
                         skr_vfs_fwrite(file, str.u8_str(), 0, str.size());
                         skr_vfs_fclose(file);
                     }
@@ -737,7 +737,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
         }
 
         // move
-        // [has]skr_movement_comp_t, [inout]skr::TranslationComponent, [in]skr::ScaleComponent, [in]skr_index_comp_t, !skr::CameraComponent
+        // [has]skr::MovementComponent, [inout]skr::TranslationComponent, [in]skr::ScaleComponent, [in]skr::IndexComponent, !skr::CameraComponent
         if (bUseJob)
         {
             SkrZoneScopedN("MoveSystem");
@@ -752,7 +752,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                 auto  translations = (skr::TranslationComponent*)sugoiV_get_owned_rw_local(view, localTypes[0]);
                 auto  scales       = (skr::ScaleComponent*)sugoiV_get_owned_ro_local(view, localTypes[1]);
                 (void)scales;
-                auto indices = (skr_index_comp_t*)sugoiV_get_owned_ro_local(view, localTypes[2]);
+                auto indices = (skr::IndexComponent*)sugoiV_get_owned_ro_local(view, localTypes[2]);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
                     const auto actual_idx = indices[i].value;
@@ -795,7 +795,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                         auto  skeleton_resource = skel.skeleton.get_resolved();
                         if (!skeleton_resource)
                             continue;
-                        if (anim.buffers.empty())
+                        if (anim.buffers.is_empty())
                             continue;
                         if (state.sampling_context.max_tracks() == 0)
                         {
@@ -829,11 +829,11 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                     const auto skin_resource = skins[i].skin_resource.get_resolved();
                     if (!mesh_resource || !skel_resource || !skin_resource) continue;
 
-                    if (skins[i].joint_remaps.empty())
+                    if (skins[i].joint_remaps.is_empty())
                     {
                         skr_init_skin_component(&skins[i], skel_resource);
                     }
-                    if (anims[i].buffers.empty())
+                    if (anims[i].buffers.is_empty())
                     {
                         skr_init_anim_component(&anims[i], mesh_resource, skel_resource);
                     }
@@ -862,7 +862,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
                     auto mesh_resource = meshes[i].mesh_resource.get_resolved();
                     if (!mesh_resource)
                         continue;
-                    if (!skins[i].joint_remaps.empty() && !anims[i].buffers.empty())
+                    if (!skins[i].joint_remaps.is_empty() && !anims[i].buffers.is_empty())
                     {
                         SkrZoneScopedN("CPU Skin");
 
@@ -872,7 +872,7 @@ int              SGameModule::main_module_exec(int argc, char8_t** argv)
             });
             sugoiJ_schedule_ecs(skinQuery, 4, SUGOI_LAMBDA_POINTER(cpuSkinJob), nullptr, &pSkinCounter);
         }
-        // [has]skr_movement_comp_t, [inout]skr::TranslationComponent, [in]skr::CameraComponent
+        // [has]skr::MovementComponent, [inout]skr::TranslationComponent, [in]skr::CameraComponent
         if (bUseJob)
         {
             SkrZoneScopedN("PlayerSystem");
