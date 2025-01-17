@@ -431,6 +431,10 @@ sugoi_query_t* sugoi_storage_t::make_query(const char8_t* inDesc)
     }
 
     SKR_DECLARE_ZERO(sugoi_filter_t, filter);
+    all.sort();
+    none.sort();
+    all_shared.sort();
+    none_shared.sort();
     filter.all = { all.data(), (SIndex)all.size() };
     filter.none = { none.data(), (SIndex)none.size() };
     filter.all_shared = { all_shared.data(), (SIndex)all_shared.size() };
