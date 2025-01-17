@@ -5,10 +5,10 @@
 #include "SkrTask/fib_task.hpp"
 #include "SkrRT/ecs/storage.hpp"
 #include "SkrRT/ecs/entity_registry.hpp"
+#include "SkrRT/ecs/stack.hpp"
 #include "./query.hpp"
 #include "./../arena.hpp"
 #include "./../pool.hpp"
-#include "./../stack.hpp"
 
 namespace sugoi
 {
@@ -84,13 +84,14 @@ public:
 
 private:
     friend struct sugoi_storage_t;
+    friend struct sugoi::JobScheduler;
     sugoi_timestamp_t groups_timestamp = 0;
     sugoi_timestamp_t archetype_timestamp = 0;
     sugoi_timestamp_t queries_timestamp = 0;
 
 public:
     sugoi::EntityRegistry entity_registry;
-    sugoi_timestamp_t storage_timestamp;
+    sugoi_timestamp_t storage_timestamp = 0;
     
     // job system
     mutable sugoi::JobScheduler* scheduler;

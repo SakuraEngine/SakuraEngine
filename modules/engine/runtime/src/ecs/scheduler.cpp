@@ -167,7 +167,7 @@ bool sugoi::JobScheduler::sync_query(sugoi_query_t* q)
             }
         }, 
         [&](){
-            return q->pimpl->storage->pimpl->storage_timestamp;
+            return q->pimpl->storage->pimpl->groups_timestamp;
         });
         return result;
     };
@@ -667,7 +667,7 @@ skr::stl_vector<skr::task::weak_event_t> sugoi::JobScheduler::updateDependencies
             }
         }, 
         [&](){
-            return q->pimpl->storage->pimpl->storage_timestamp;
+            return q->pimpl->storage->pimpl->groups_timestamp;
         });
     };
 
