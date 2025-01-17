@@ -159,16 +159,16 @@ SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(sugoi_storage_t* world, str
 //     #include "SkrLua/bind.hpp"
 // namespace skr::lua
 // {
-// SKR_SCENE_API int             push_name_comp(lua_State* L, const skr_name_comp_t& value);
-// SKR_SCENE_API skr_name_comp_t check_name_comp(lua_State* L, int index);
+// SKR_SCENE_API int             push_name_comp(lua_State* L, const NameComponent& value);
+// SKR_SCENE_API NameComponent check_name_comp(lua_State* L, int index);
 // template <>
-// struct BindTrait<skr_name_comp_t> {
-//     static int push(lua_State* L, const skr_name_comp_t& value)
+// struct BindTrait<NameComponent> {
+//     static int push(lua_State* L, const NameComponent& value)
 //     {
 //         return push_name_comp(L, value);
 //     }
 
-//     static skr_name_comp_t check(lua_State* L, int index)
+//     static NameComponent check(lua_State* L, int index)
 //     {
 //         return check_name_comp(L, index);
 //     }

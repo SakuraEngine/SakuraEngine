@@ -3,7 +3,7 @@ local module = {}
 function module:init()
     self.animQuery = skr.create_query(game.GetStorage(), "[in]game::anim_state_t")
     -- root entities
-    self.outlineQuery = skr.create_query(game.GetStorage(), "[in]?skr_name_comp_t, [in]?skr::ChildrenComponent, [has]!skr::ParentComponent")
+    self.outlineQuery = skr.create_query(game.GetStorage(), "[in]?skr::NameComponent, [in]?skr::ChildrenComponent, [has]!skr::ParentComponent")
 end
 
 
