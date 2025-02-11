@@ -1429,7 +1429,7 @@ CGPUTextureViewId cgpu_create_texture_view_d3d12(CGPUDeviceId device, const stru
                     srvDesc.TextureCubeArray.MipLevels        = desc->mip_level_count;
                     srvDesc.TextureCubeArray.MostDetailedMip  = desc->base_mip_level;
                     srvDesc.TextureCubeArray.NumCubes         = desc->array_layer_count;
-                    srvDesc.TextureCubeArray.First2DArrayFace = desc->array_layer_count;
+                    srvDesc.TextureCubeArray.First2DArrayFace = desc->base_array_layer;
                 }
                 break;
                 default:
