@@ -3,7 +3,7 @@ target("SkrSketchUpCommon")
     set_exceptions("no-cxx")
     public_dependency("SkrCore", engine_version)
     add_includedirs("SketchUp", {public = true})
-    add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public=true})
+    add_linkdirs("$(builddir)/$(os)/$(arch)/$(mode)", {public=true})
     -- install
     skr_install_rule()
     skr_install("download", {

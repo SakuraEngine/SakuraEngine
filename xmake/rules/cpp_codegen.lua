@@ -40,7 +40,7 @@ rule_end()
 ]]
 rule("c++.codegen.meta")
     set_extensions(".h", ".hpp")
-    before_build(function (proxy_target, opt)
+    on_prepare(function (proxy_target, opt)
         import("core.project.project")
         import("skr.codegen")
         local sourcebatches = proxy_target:sourcebatches()
@@ -57,7 +57,7 @@ rule("c++.codegen.meta")
 rule_end()
 
 rule("c++.codegen.mako")
-    before_build(function (proxy_target, opt)
+    on_prepare(function (proxy_target, opt)
         import("core.project.project")
         import("skr.codegen")
         -- render mako templates

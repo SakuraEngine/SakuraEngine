@@ -46,7 +46,7 @@ rule("sakura.pcxxheader")
         target:data_set("need_pc_obj", need_pc_obj)
         target:data_set("pch_owner_flags", pch_owner_flags)
     end)
-    before_build(function(target, opt)
+    on_prepare(function(target, opt)
         import("core.project.project")
         import("core.language.language")
         import("private.action.build.object")
@@ -151,7 +151,8 @@ analyzer_target("SharedPCH.Score")
 analyzer_target_end()
 
 analyzer_target("SharedPCH.ShareFrom")
-    add_deps("__Analyzer.SharedPCH.Score", { order = true })
+    add_deps("__Analyzer.SharedPCH.Score")
+    add_orders("__Analyzer.SharedPCH.Score", "__Analyzer.SharedPCH.ShareFrom")
     analyze(function(target, attributes, analyze_ctx)
         local share_from = ""
         local has_private_pch = table.contains(attributes, "PrivatePCH.Owner")
@@ -200,7 +201,7 @@ rule("PickSharedPCH")
             end
         end
     end)
-    before_build(function(target)
+    on_prepare(function(target)
         import("core.project.project")
         local share_from = target:data("SharedPCH.ShareFrom")
         if share_from then
