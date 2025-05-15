@@ -121,7 +121,6 @@ void _mi_prim_thread_associate_default_heap(mi_heap_t* heap);
 bool _mi_prim_thread_is_in_threadpool(void);
 
 
-
 //-------------------------------------------------------------------
 // Access to TLS (thread local storage) slots.
 // We need fast access to both a unique thread id (in `free.c:mi_free`) and
@@ -209,19 +208,19 @@ static inline void mi_prim_tls_slot_set(size_t slot, void* value) mi_attr_noexce
 #elif _WIN32 && MI_WIN_USE_FIXED_TLS && !defined(MI_WIN_USE_FLS)
 
 // On windows we can store the thread-local heap at a fixed TLS slot to avoid
-// thread-local initialization checks in the fast path. This uses a fixed location
-// in the TCB though (last user-reserved slot by default) which may clash with other applications.
+// thread-local initialization checks in the fast path.
+// We allocate a user TLS slot at process initialization (see `windows/prim.c`)
+// and store the offset `_mi_win_tls_offset`.
+#define MI_HAS_TLS_SLOT  1              // 2 = we can reliably initialize the slot (saving a test on each malloc)
 
-#define MI_HAS_TLS_SLOT      2              // 2 = we can reliably initialize the slot (saving a test on each malloc)
+extern mi_decl_hidden size_t _mi_win_tls_offset;
 
 #if MI_WIN_USE_FIXED_TLS > 1
 #define MI_TLS_SLOT     (MI_WIN_USE_FIXED_TLS)
 #elif MI_SIZE_SIZE == 4
-#define MI_TLS_SLOT     (0x710)             // Last user-reserved slot <https://en.wikipedia.org/wiki/Win32_Thread_Information_Block>
-// #define MI_TLS_SLOT  (0xF0C)             // Last TlsSlot (might clash with other app reserved slot)
+#define MI_TLS_SLOT     (0x0E10 + _mi_win_tls_offset)  // User TLS slots <https://en.wikipedia.org/wiki/Win32_Thread_Information_Block>
 #else
-#define MI_TLS_SLOT     (0x888)             // Last user-reserved slot <https://en.wikipedia.org/wiki/Win32_Thread_Information_Block>
-// #define MI_TLS_SLOT  (0x1678)            // Last TlsSlot (might clash with other app reserved slot)
+#define MI_TLS_SLOT     (0x1480 + _mi_win_tls_offset)  // User TLS slots <https://en.wikipedia.org/wiki/Win32_Thread_Information_Block>
 #endif
 
 static inline void* mi_prim_tls_slot(size_t slot) mi_attr_noexcept {
@@ -406,7 +405,7 @@ static inline mi_heap_t* mi_prim_get_default_heap(void) {
 
 #elif defined(MI_TLS_PTHREAD)
 
-extern pthread_key_t _mi_heap_default_key;
+extern mi_decl_hidden pthread_key_t _mi_heap_default_key;
 static inline mi_heap_t* mi_prim_get_default_heap(void) {
   mi_heap_t* heap = (mi_unlikely(_mi_heap_default_key == (pthread_key_t)(-1)) ? _mi_heap_main_get() : (mi_heap_t*)pthread_getspecific(_mi_heap_default_key));
   return (mi_unlikely(heap == NULL) ? (mi_heap_t*)&_mi_heap_empty : heap);

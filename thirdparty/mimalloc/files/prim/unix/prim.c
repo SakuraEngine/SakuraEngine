@@ -1,5 +1,5 @@
 /* ----------------------------------------------------------------------------
-Copyright (c) 2018-2023, Microsoft Research, Daan Leijen
+Copyright (c) 2018-2025, Microsoft Research, Daan Leijen
 This is free software; you can redistribute it and/or modify it under the
 terms of the MIT license. A copy of the license can be found in the file
 "LICENSE" at the root of this distribution.
@@ -32,6 +32,9 @@ terms of the MIT license. A copy of the license can be found in the file
 #if defined(__linux__)
   #include <features.h>
   #include <sys/prctl.h>    // THP disable, PR_SET_VMA
+  #if defined(__GLIBC__) && !defined(PR_SET_VMA)
+  #include <linux/prctl.h>
+  #endif
   #if defined(__GLIBC__)
   #include <linux/mman.h>   // linux mmap flags
   #else
@@ -69,7 +72,6 @@ terms of the MIT license. A copy of the license can be found in the file
 
 #define MI_UNIX_LARGE_PAGE_SIZE (2*MI_MiB) // TODO: can we query the OS for this?
 
-  
 //------------------------------------------------------------------------------------
 // Use syscalls for some primitives to allow for libraries that override open/read/close etc.
 // and do allocation themselves; using syscalls prevents recursion when mimalloc is
@@ -185,6 +187,7 @@ void _mi_prim_mem_init( mi_os_mem_config_t* config )
 //---------------------------------------------
 
 int _mi_prim_free(void* addr, size_t size ) {
+  if (size==0) return 0;
   bool err = (munmap(addr, size) == -1);
   return (err ? errno : 0);
 }
@@ -220,8 +223,8 @@ static void* unix_mmap_prim_aligned(void* addr, size_t size, size_t try_alignmen
   void* p = NULL;
   #if defined(MAP_ALIGNED)  // BSD
   if (addr == NULL && try_alignment > 1 && (try_alignment % _mi_os_page_size()) == 0) {
-    size_t idx;
-    size_t n = mi_bsr(try_alignment, &idx);
+    size_t n = 0;
+    mi_bsr(try_alignment, &n);
     if (((size_t)1 << n) == try_alignment && n >= 12 && n <= 30) {  // alignment is a power of 2 and 4096 <= alignment <= 1GiB
       p = unix_mmap_prim(addr, size, protect_flags, flags | MAP_ALIGNED(n), fd);
       if (p==MAP_FAILED || !_mi_is_aligned(p,try_alignment)) {

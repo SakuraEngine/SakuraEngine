@@ -71,6 +71,17 @@ bool _mi_page_map_init(void) {
   return true;
 }
 
+void _mi_page_map_unsafe_destroy(void) {
+  mi_assert_internal(_mi_page_map != NULL);
+  if (_mi_page_map == NULL) return;
+  _mi_os_free(mi_page_map_memid.mem.os.base, mi_page_map_memid.mem.os.size, mi_page_map_memid);
+  _mi_page_map = NULL;
+  mi_page_map_commit = NULL;
+  mi_page_map_max_address = NULL;
+  mi_page_map_memid = _mi_memid_none();  
+}
+
+
 static void mi_page_map_ensure_committed(size_t idx, size_t slice_count) {
   // is the page map area that contains the page address committed?
   // we always set the commit bits so we can track what ranges are in-use.
@@ -163,11 +174,12 @@ mi_decl_nodiscard mi_decl_export bool mi_is_in_heap_region(const void* p) mi_att
 #define MI_PAGE_MAP_SUB_SIZE    (MI_PAGE_MAP_SUB_COUNT * sizeof(mi_page_t*))
 
 mi_decl_cache_align mi_page_t*** _mi_page_map;
+static size_t       mi_page_map_count;
 static void*        mi_page_map_max_address;
 static mi_memid_t   mi_page_map_memid;
-
 static _Atomic(mi_bfield_t)  mi_page_map_commit;
 
+static inline bool mi_page_map_is_committed(size_t idx, size_t* pbit_idx);
 static mi_page_t** mi_page_map_ensure_committed(size_t idx);
 static mi_page_t** mi_page_map_ensure_at(size_t idx);
 static inline void mi_page_map_set_range(mi_page_t* page, size_t idx, size_t sub_idx, size_t slice_count);
@@ -184,10 +196,10 @@ bool _mi_page_map_init(void) {
   // Allocate the page map and commit bits
   mi_assert(MI_MAX_VABITS >= vbits);
   mi_page_map_max_address = (void*)(vbits >= MI_SIZE_BITS ? (SIZE_MAX - MI_ARENA_SLICE_SIZE + 1) : (MI_PU(1) << vbits));
-  const size_t page_map_count = (MI_ZU(1) << (vbits - MI_PAGE_MAP_SUB_SHIFT - MI_ARENA_SLICE_SHIFT));
-  mi_assert(page_map_count <= MI_PAGE_MAP_COUNT);
+  mi_page_map_count = (MI_ZU(1) << (vbits - MI_PAGE_MAP_SUB_SHIFT - MI_ARENA_SLICE_SHIFT));
+  mi_assert(mi_page_map_count <= MI_PAGE_MAP_COUNT);
   const size_t os_page_size = _mi_os_page_size();
-  const size_t page_map_size = _mi_align_up( page_map_count * sizeof(mi_page_t**), os_page_size);
+  const size_t page_map_size = _mi_align_up( mi_page_map_count * sizeof(mi_page_t**), os_page_size);
   const size_t reserve_size = page_map_size + os_page_size;
   const bool commit = page_map_size <= 64*MI_KiB ||
                       mi_option_is_enabled(mi_option_pagemap_commit) || _mi_os_has_overcommit();
@@ -206,12 +218,38 @@ bool _mi_page_map_init(void) {
   if (!mi_page_map_memid.initially_committed) {
     _mi_os_commit(&_mi_page_map[0], os_page_size, NULL);  // commit first part of the map
   }
-  _mi_page_map[0] = (mi_page_t**)((uint8_t*)_mi_page_map + page_map_size);  // we reserved 2 sub maps at the end already
+  _mi_page_map[0] = (mi_page_t**)((uint8_t*)_mi_page_map + page_map_size);  // we reserved a submap part at the end already
   if (!mi_page_map_memid.initially_committed) {
     _mi_os_commit(_mi_page_map[0], os_page_size, NULL);   // only first OS page
   }
+  if (!mi_page_map_memid.initially_zero) {                // initialize first addresses with NULL
+    _mi_memzero_aligned(_mi_page_map[0], os_page_size);
+  }
+
   mi_assert_internal(_mi_ptr_page(NULL)==NULL);
   return true;
+}
+
+void _mi_page_map_unsafe_destroy(void) {
+  mi_assert_internal(_mi_page_map != NULL);
+  if (_mi_page_map == NULL) return;
+  for (size_t idx = 1; idx < mi_page_map_count; idx++) {  // skip entry 0
+    // free all sub-maps
+    if (mi_page_map_is_committed(idx, NULL)) {
+      mi_page_t** sub = _mi_page_map[idx];
+      if (sub != NULL) {
+        mi_memid_t memid = _mi_memid_create_os(sub, MI_PAGE_MAP_SUB_COUNT * sizeof(mi_page_t*), true, false, false);
+        _mi_os_free(memid.mem.os.base, memid.mem.os.size, memid);
+        _mi_page_map[idx] = NULL;
+      }
+    }
+  }
+  _mi_os_free(_mi_page_map, mi_page_map_memid.mem.os.size, mi_page_map_memid);
+  _mi_page_map = NULL;
+  mi_page_map_count = 0;
+  mi_page_map_memid = _mi_memid_none();
+  mi_page_map_max_address = NULL;
+  mi_atomic_store_release(&mi_page_map_commit, 0);
 }
 
 
@@ -237,19 +275,24 @@ static mi_page_t** mi_page_map_ensure_committed(size_t idx) {
 
 static mi_page_t** mi_page_map_ensure_at(size_t idx) {
   mi_page_t** sub = mi_page_map_ensure_committed(idx);
-  if mi_unlikely(sub == NULL) {
+  if mi_unlikely(sub == NULL || idx == 0 /* low addresses */) {
     // sub map not yet allocated, alloc now
     mi_memid_t memid;
-    sub = (mi_page_t**)_mi_os_alloc(MI_PAGE_MAP_SUB_COUNT * sizeof(mi_page_t*), &memid);
-    mi_page_t** expect = NULL;
-    if (!mi_atomic_cas_ptr_strong_acq_rel(mi_page_t*, ((_Atomic(mi_page_t**)*)&_mi_page_map[idx]), &expect, sub)) {
-      // another thread already allocated it.. free and continue
-      _mi_os_free(sub, MI_PAGE_MAP_SUB_COUNT * sizeof(mi_page_t*), memid);
-      sub = expect;
-      mi_assert_internal(sub!=NULL);
-    }
+    mi_page_t** expect = sub;
+    const size_t submap_size = MI_PAGE_MAP_SUB_COUNT * sizeof(mi_page_t*);
+    sub = (mi_page_t**)_mi_os_alloc(submap_size, &memid);
     if (sub == NULL) {
       _mi_error_message(EFAULT, "internal error: unable to extend the page map\n");
+      return NULL;
+    }
+    if (!memid.initially_zero) {
+      _mi_memzero_aligned(sub, submap_size);
+    }
+    if (!mi_atomic_cas_ptr_strong_acq_rel(mi_page_t*, ((_Atomic(mi_page_t**)*)&_mi_page_map[idx]), &expect, sub)) {
+      // another thread already allocated it.. free and continue
+      _mi_os_free(sub, submap_size, memid);
+      sub = expect;
+      mi_assert_internal(sub!=NULL);
     }
   }
   return sub;

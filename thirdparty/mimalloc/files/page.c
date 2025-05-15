@@ -112,7 +112,7 @@ static bool mi_page_is_valid_init(mi_page_t* page) {
   return true;
 }
 
-extern bool _mi_process_is_initialized;             // has mi_process_init been called?
+extern mi_decl_hidden bool _mi_process_is_initialized;             // has mi_process_init been called?
 
 bool _mi_page_is_valid(mi_page_t* page) {
   mi_assert_internal(mi_page_is_valid_init(page));
@@ -396,6 +396,7 @@ void _mi_page_free(mi_page_t* page, mi_page_queue_t* pq) {
   // and free it
   mi_heap_t* heap = page->heap;
   mi_heap_stat_decrease(heap, page_bins[mi_page_bin(page)], 1);
+  mi_heap_stat_decrease(heap, pages, 1);
   mi_page_set_heap(page,NULL);
   _mi_arenas_page_free(page);
   _mi_arenas_collect(false, false, heap->tld);  // allow purging

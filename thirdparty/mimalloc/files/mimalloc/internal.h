@@ -200,6 +200,7 @@ void          _mi_page_map_register(mi_page_t* page);
 void          _mi_page_map_unregister(mi_page_t* page);
 void          _mi_page_map_unregister_range(void* start, size_t size);
 mi_page_t*    _mi_safe_ptr_page(const void* p);
+void          _mi_page_map_unsafe_destroy(void);
 
 // "page.c"
 void*         _mi_malloc_generic(mi_heap_t* heap, size_t size, bool zero, size_t huge_alignment)  mi_attr_noexcept mi_attr_malloc;
@@ -1078,8 +1079,8 @@ static inline uintptr_t _mi_random_shuffle(uintptr_t x) {
 // ---------------------------------------------------------------------------------
 
 #if !MI_TRACK_ENABLED && defined(_WIN32) && (MI_ARCH_X64 || MI_ARCH_X86)
-extern bool _mi_cpu_has_fsrm;
-extern bool _mi_cpu_has_erms;
+extern mi_decl_hidden bool _mi_cpu_has_fsrm;
+extern mi_decl_hidden bool _mi_cpu_has_erms;
 
 static inline void _mi_memcpy(void* dst, const void* src, size_t n) {
   if ((_mi_cpu_has_fsrm && n <= 128) || (_mi_cpu_has_erms && n > 128)) {
