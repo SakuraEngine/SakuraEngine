@@ -179,8 +179,8 @@ struct SKR_STATIC_API JsonReader : public _JsonReader {
     JsonReadResult StartArray(SizeType& count);
     JsonReadResult StartObject();
 
-    inline JsonReadResult Int(int value) { return Int32(value); }
-    inline JsonReadResult UInt(unsigned int value) { return UInt32(value); }
+    inline JsonReadResult Int(int& value) { return Int32(value); }
+    inline JsonReadResult UInt(uint32_t& value) { return UInt32(value); }
 
 protected:
     skr::String _currentKey;
