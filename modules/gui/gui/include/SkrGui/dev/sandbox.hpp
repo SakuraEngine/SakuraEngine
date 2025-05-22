@@ -31,6 +31,11 @@ struct SKR_GUI_API Sandbox {
 
     void resize_window(int32_t width, int32_t height);
 
+    inline RenderNativeWindow* native_window() SKR_NOEXCEPT
+    {
+        return _root_render_object;
+    }
+
 private:
     // backend
     INativeDevice* _device = nullptr;

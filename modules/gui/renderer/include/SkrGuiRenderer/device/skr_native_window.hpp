@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrGui/backend/device/window.hpp"
-#include "SkrCore/platform/window.h"
 #include "SkrGui/backend/device/device.hpp"
+#include <SDL3/SDL.h>
 #ifndef __meta__
     #include "SkrGuiRenderer/device/skr_native_window.generated.h"
 #endif
@@ -67,13 +67,13 @@ SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
     void set_title(const String& title) SKR_NOEXCEPT override;
 
     inline SkrNativeDevice*   device() const SKR_NOEXCEPT { return _device; }
-    inline SWindowHandle      window() const SKR_NOEXCEPT { return _window; }
+    inline SDL_Window*        window() const SKR_NOEXCEPT { return _window; }
     inline SkrRenderWindow*   render_window() const SKR_NOEXCEPT { return _render_window; }
     inline NativeWindowLayer* native_layer() const SKR_NOEXCEPT { return _native_layer; }
 
 private:
     SkrNativeDevice*   _device        = nullptr;
-    SWindowHandle      _window        = {};
+    SDL_Window*        _window        = {};
     SkrRenderWindow*   _render_window = nullptr;
     NativeWindowLayer* _native_layer  = nullptr;
 };

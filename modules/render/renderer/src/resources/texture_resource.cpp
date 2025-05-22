@@ -1,4 +1,4 @@
-#include "SkrCore/sp/sp.hpp"
+#include "SkrCore/memory/sp.hpp"
 #include "SkrGraphics/api.h"
 #include "SkrRT/io/ram_io.hpp"
 #include <SkrOS/filesystem.hpp>

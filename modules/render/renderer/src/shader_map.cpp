@@ -1,5 +1,5 @@
 #include "SkrRenderer/shader_map.h"
-#include "SkrCore/sp/sp.hpp"
+#include "SkrCore/memory/sp.hpp"
 #include "SkrRenderer/shader_hash.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrBase/atomic/atomic.h"

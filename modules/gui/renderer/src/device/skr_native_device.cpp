@@ -20,24 +20,26 @@ void SkrNativeDevice::init()
     _resource_device->init();
 
     // get display metrics
-    uint32_t       count;
-    SMonitorHandle monitors[128];
-    skr_get_all_monitors(&count, monitors);
-    for (uint32_t i = 0; i < count; ++i)
+    int   display_count;
+    auto* displays = SDL_GetDisplays(&display_count);
+    for (int i = 0; i < display_count; ++i)
     {
-        SMonitorHandle monitor = monitors[i];
-        int32_t        x, y, width, height;
-        skr_monitor_get_extent(monitor, &width, &height);
-        skr_monitor_get_position(monitor, &x, &y);
+        auto     display_id = displays[i];
+        SDL_Rect display_bounds;
+        SDL_GetDisplayBounds(display_id, &display_bounds);
 
         auto out = _display_metrics.monitors.add_default().ref();
-
         // name
         // device_id
         // native_size
         // max_resolution
         // display_area
-        out.work_area = Recti::LTWH(x, y, width, height);
+        out.work_area = Recti::LTWH(
+            display_bounds.x,
+            display_bounds.y,
+            display_bounds.w,
+            display_bounds.h
+        );
         // is_primary
         // features
     }

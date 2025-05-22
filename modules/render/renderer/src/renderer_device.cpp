@@ -14,8 +14,6 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice {
     void initialize(const Builder& builder) override;
     void finalize() override;
 
-    CGPUSwapChainId register_window(SWindowHandle window) override;
-    CGPUSwapChainId recreate_window_swapchain(SWindowHandle window) override;
     void            create_api_objects(const Builder& builder) override;
 
     CGPUDeviceId get_cgpu_device() const override
@@ -57,16 +55,6 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice {
         return memory_dstorage_queue;
     }
 
-    ECGPUFormat get_swapchain_format() const override
-    {
-        if (swapchains.size())
-        {
-            const auto pInfo = swapchains.cursor_begin().ref().value->back_buffers[0]->info;
-            return pInfo->format;
-        }
-        return CGPU_FORMAT_B8G8R8A8_UNORM;
-    }
-
     CGPUSamplerId get_linear_sampler() const override
     {
         return linear_sampler;
@@ -80,8 +68,6 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice {
 protected:
     // Device objects
     uint32_t                                  backbuffer_index = 0;
-    skr::Map<SWindowHandle, CGPUSurfaceId>   surfaces;
-    skr::Map<SWindowHandle, CGPUSwapChainId> swapchains;
     CGPUInstanceId                            instance  = nullptr;
     CGPUAdapterId                             adapter   = nullptr;
     CGPUDeviceId                              device    = nullptr;
@@ -118,18 +104,6 @@ void RendererDeviceImpl::finalize()
     if (memory_dstorage_queue)
         cgpu_free_dstorage_queue(memory_dstorage_queue);
 
-    for (auto& swapchain : swapchains)
-    {
-        if (swapchain.value)
-            cgpu_free_swapchain(swapchain.value);
-    }
-    swapchains.clear();
-    for (auto& surface : surfaces)
-    {
-        if (surface.value)
-            cgpu_free_surface(device, surface.value);
-    }
-    surfaces.clear();
     cgpu_free_sampler(linear_sampler);
 
     // free queues & device
@@ -266,83 +240,5 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     sampler_desc.mag_filter            = CGPU_FILTER_TYPE_LINEAR;
     sampler_desc.compare_func          = CGPU_CMP_NEVER;
     linear_sampler                     = cgpu_create_sampler(device, &sampler_desc);
-}
-
-CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
-{
-    // find registered swapchain
-    {
-        if (auto _ = swapchains.find(window)) return _.value();
-    }
-    // find registered surface
-    CGPUSurfaceId surface = nullptr;
-    {
-        if (auto _ = surfaces.find(window))
-            surface = _.value();
-        else
-        {
-            surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
-            surfaces.add(window, surface);
-        }
-    }
-    int32_t width, height;
-    skr_window_get_extent(window, &width, &height);
-    // create swapchain
-    CGPUSwapChainDescriptor chain_desc = {};
-    chain_desc.present_queues          = &gfx_queue;
-    chain_desc.present_queues_count    = 1;
-    chain_desc.width                   = width;
-    chain_desc.height                  = height;
-    chain_desc.surface                 = surface;
-    chain_desc.image_count             = 2;
-    chain_desc.format                  = CGPU_FORMAT_B8G8R8A8_UNORM;
-    chain_desc.enable_vsync            = false;
-    auto swapchain                     = cgpu_create_swapchain(device, &chain_desc);
-    swapchains.add(window, swapchain);
-    return swapchain;
-}
-
-CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle window)
-{
-    // find registered
-    CGPUSwapChainId old = nullptr;
-    {
-        if (auto _ = swapchains.find(window))
-        {
-            old = _.value();
-        }
-        else
-        {
-            return nullptr;
-        }
-    }
-    CGPUSurfaceId surface = nullptr;
-    // free existed
-    {
-        cgpu_free_swapchain(old);
-        if (auto _ = surfaces.find(window))
-        {
-            cgpu_free_surface(device, _.value());
-        }
-        {
-            surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(window));
-            surfaces.add(window, surface);
-        }
-    }
-    int32_t width, height;
-    skr_window_get_extent(window, &width, &height);
-    // create swapchain
-    CGPUSwapChainDescriptor chain_desc = {};
-    chain_desc.present_queues          = &gfx_queue;
-    chain_desc.present_queues_count    = 1;
-    chain_desc.width                   = width;
-    chain_desc.height                  = height;
-    chain_desc.surface                 = surface;
-    chain_desc.image_count             = 2;
-    chain_desc.format                  = CGPU_FORMAT_B8G8R8A8_UNORM;
-    chain_desc.enable_vsync            = false;
-    auto swapchain                     = cgpu_create_swapchain(gfx_queue->device, &chain_desc);
-    swapchains.add(window, swapchain);
-    return swapchain;
 }
 } // namespace skr

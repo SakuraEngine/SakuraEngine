@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrContainers/set.hpp"
-#include "SkrCore/sp/sp.hpp"
+#include "SkrCore/memory/sp.hpp"
 #include "SkrGraphics/extensions/cgpu_marker_buffer.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderGraph/backend/texture_pool.hpp"

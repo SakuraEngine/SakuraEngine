@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrInputSystem/input_value.hpp"
-#include "SkrCore/rc/rc.hpp"
+#include "SkrCore/memory/rc.hpp"
 
 namespace skr
 {

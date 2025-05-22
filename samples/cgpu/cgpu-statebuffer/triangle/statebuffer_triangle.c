@@ -3,22 +3,22 @@
 #include "math.h"
 
 // Render objects
-THREAD_LOCAL SDL_Window* sdl_window;
-THREAD_LOCAL ECGPUBackend backend;
-THREAD_LOCAL CGPUSurfaceId surface;
-THREAD_LOCAL CGPUSwapChainId swapchain;
-THREAD_LOCAL uint32_t backbuffer_index;
-THREAD_LOCAL CGPUInstanceId instance;
-THREAD_LOCAL CGPUAdapterId adapter;
-THREAD_LOCAL CGPUDeviceId device;
-THREAD_LOCAL CGPUFenceId present_fence;
-THREAD_LOCAL CGPUQueueId gfx_queue;
+THREAD_LOCAL SDL_Window*         sdl_window;
+THREAD_LOCAL ECGPUBackend        backend;
+THREAD_LOCAL CGPUSurfaceId       surface;
+THREAD_LOCAL CGPUSwapChainId     swapchain;
+THREAD_LOCAL uint32_t            backbuffer_index;
+THREAD_LOCAL CGPUInstanceId      instance;
+THREAD_LOCAL CGPUAdapterId       adapter;
+THREAD_LOCAL CGPUDeviceId        device;
+THREAD_LOCAL CGPUFenceId         present_fence;
+THREAD_LOCAL CGPUQueueId         gfx_queue;
 THREAD_LOCAL CGPURootSignatureId root_sig;
-THREAD_LOCAL CGPULinkedShaderId linked_shader;
-THREAD_LOCAL CGPUCommandPoolId pool;
+THREAD_LOCAL CGPULinkedShaderId  linked_shader;
+THREAD_LOCAL CGPUCommandPoolId   pool;
 THREAD_LOCAL CGPUCommandBufferId cmd;
-THREAD_LOCAL CGPUStateBufferId sb;
-THREAD_LOCAL CGPUTextureViewId views[3];
+THREAD_LOCAL CGPUStateBufferId   sb;
+THREAD_LOCAL CGPUTextureViewId   views[3];
 
 void create_shaders()
 {
@@ -27,51 +27,43 @@ void create_shaders()
     read_shader_bytes("statebuffer-triangle/vertex_shader", &vs_bytes, &vs_length, backend);
     read_shader_bytes("statebuffer-triangle/fragment_shader", &fs_bytes, &fs_length, backend);
     CGPUShaderLibraryDescriptor shader_libs[2] = {
-        {
-            .stage = CGPU_SHADER_STAGE_VERT,
-            .name = "VertexShaderLibrary",
-            .code = vs_bytes,
-            .code_size = vs_length,
-            .reflection_only = true
-        },
-        {
-            .name = "FragmentShaderLibrary",
-            .stage = CGPU_SHADER_STAGE_FRAG,
-            .code = fs_bytes,
-            .code_size = fs_length,
-            .reflection_only = true
-        } 
+        { .stage           = CGPU_SHADER_STAGE_VERT,
+          .name            = "VertexShaderLibrary",
+          .code            = vs_bytes,
+          .code_size       = vs_length,
+          .reflection_only = true },
+        { .name            = "FragmentShaderLibrary",
+          .stage           = CGPU_SHADER_STAGE_FRAG,
+          .code            = fs_bytes,
+          .code_size       = fs_length,
+          .reflection_only = true }
     };
-    CGPUShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &shader_libs[0]);
-    CGPUShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &shader_libs[1]);
-    CGPUShaderEntryDescriptor ppl_shaders[2] = {
+    CGPUShaderLibraryId       vertex_shader   = cgpu_create_shader_library(device, &shader_libs[0]);
+    CGPUShaderLibraryId       fragment_shader = cgpu_create_shader_library(device, &shader_libs[1]);
+    CGPUShaderEntryDescriptor ppl_shaders[2]  = {
         {
-            .stage = CGPU_SHADER_STAGE_VERT,
-            .entry = "main",
-            .library = vertex_shader,
+             .stage   = CGPU_SHADER_STAGE_VERT,
+             .entry   = "main",
+             .library = vertex_shader,
         },
         {
-            .stage = CGPU_SHADER_STAGE_FRAG,
-            .entry = "main",
-            .library = fragment_shader,
+             .stage   = CGPU_SHADER_STAGE_FRAG,
+             .entry   = "main",
+             .library = fragment_shader,
         }
     };
     CGPURootSignatureDescriptor rs_desc = {
-        .shaders = ppl_shaders,
+        .shaders      = ppl_shaders,
         .shader_count = 2
     };
-    root_sig = cgpu_create_root_signature(device, &rs_desc);
-    CGPUCompiledShaderDescriptor compile_shaders[2]  = {
-        {
-            .entry = ppl_shaders[0],
-            .shader_code = vs_bytes,
-            .code_size = vs_length
-        },
-        {
-            .entry = ppl_shaders[1],
-            .shader_code = fs_bytes,
-            .code_size = fs_length
-        }
+    root_sig                                        = cgpu_create_root_signature(device, &rs_desc);
+    CGPUCompiledShaderDescriptor compile_shaders[2] = {
+        { .entry       = ppl_shaders[0],
+          .shader_code = vs_bytes,
+          .code_size   = vs_length },
+        { .entry       = ppl_shaders[1],
+          .shader_code = fs_bytes,
+          .code_size   = fs_length }
     };
     linked_shader = cgpu_compile_and_link_shaders(root_sig, compile_shaders, 2);
 
@@ -83,23 +75,20 @@ void create_shaders()
 
 void initialize(void* usrdata)
 {
-    // Create window
-    SDL_SysWMinfo wmInfo;
-    backend = *(ECGPUBackend*)usrdata;
 
-    sdl_window = SDL_CreateWindow(gCGPUBackendNames[backend],
-    SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-    BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
-    SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-    SDL_VERSION(&wmInfo.version);
-    SDL_GetWindowWMInfo(sdl_window, &wmInfo);
+    sdl_window = SDL_CreateWindow(
+        gCGPUBackendNames[backend],
+        BACK_BUFFER_WIDTH,
+        BACK_BUFFER_HEIGHT,
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
+    );
 
     // Create instance
     CGPUInstanceDescriptor instance_desc = {
-        .backend = backend,
-        .enable_debug_layer = false,
+        .backend                     = backend,
+        .enable_debug_layer          = false,
         .enable_gpu_based_validation = false,
-        .enable_set_name = true
+        .enable_set_name             = true
     };
     instance = cgpu_create_instance(&instance_desc);
 
@@ -112,45 +101,45 @@ void initialize(void* usrdata)
 
     // Create device
     CGPUQueueGroupDescriptor G = {
-        .queue_type = CGPU_QUEUE_TYPE_GRAPHICS,
+        .queue_type  = CGPU_QUEUE_TYPE_GRAPHICS,
         .queue_count = 1
     };
     CGPUDeviceDescriptor device_desc = {
-        .queue_groups = &G,
+        .queue_groups      = &G,
         .queue_group_count = 1
     };
-    device = cgpu_create_device(adapter, &device_desc);
-    gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
+    device        = cgpu_create_device(adapter, &device_desc);
+    gfx_queue     = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
     present_fence = cgpu_create_fence(device);
 
     // Create swapchain
 #if defined(_WIN32) || defined(_WIN64)
-    surface = cgpu_surface_from_hwnd(device, wmInfo.info.win.window);
+    surface = cgpu_surface_from_hwnd(device, (HWND)SDLGetNativeWindowHandle(sdl_window));
 #elif defined(__APPLE__)
-    struct CGPUNSView* ns_view = (struct CGPUNSView*)nswindow_get_content_view(wmInfo.info.cocoa.window);
-    surface = cgpu_surface_from_ns_view(device, ns_view);
+    struct CGPUNSView* ns_view = (struct CGPUNSView*)nswindow_get_content_view(SDLGetNativeWindowHandle(sdl_window));
+    surface                    = cgpu_surface_from_ns_view(device, ns_view);
 #endif
     CGPUSwapChainDescriptor descriptor = {
-        .present_queues = &gfx_queue,
+        .present_queues       = &gfx_queue,
         .present_queues_count = 1,
-        .width = BACK_BUFFER_WIDTH,
-        .height = BACK_BUFFER_HEIGHT,
-        .surface = surface,
-        .image_count = 3,
-        .format = CGPU_FORMAT_R8G8B8A8_UNORM,
-        .enable_vsync = true
+        .width                = BACK_BUFFER_WIDTH,
+        .height               = BACK_BUFFER_HEIGHT,
+        .surface              = surface,
+        .image_count          = 3,
+        .format               = CGPU_FORMAT_R8G8B8A8_UNORM,
+        .enable_vsync         = true
     };
     swapchain = cgpu_create_swapchain(device, &descriptor);
     // Create views
     for (uint32_t i = 0; i < swapchain->buffer_count; i++)
     {
         CGPUTextureViewDescriptor view_desc = {
-            .texture = swapchain->back_buffers[i],
-            .aspects = CGPU_TVA_COLOR,
+            .texture           = swapchain->back_buffers[i],
+            .aspects           = CGPU_TVA_COLOR,
             .array_layer_count = 1,
-            .dims = CGPU_TEX_DIMENSION_2D,
-            .format = swapchain->back_buffers[i]->info->format,
-            .usages = CGPU_TVU_RTV_DSV
+            .dims              = CGPU_TEX_DIMENSION_2D,
+            .format            = swapchain->back_buffers[i]->info->format,
+            .usages            = CGPU_TVU_RTV_DSV
         };
         views[i] = cgpu_create_texture_view(device, &view_desc);
     }
@@ -159,18 +148,18 @@ void initialize(void* usrdata)
 
 void triangle_pass(uint32_t w, uint32_t h)
 {
-    const CGPUTextureViewId back_buffer_view = views[backbuffer_index];
-    CGPUColorAttachment screen_attachment = {
-        .view = back_buffer_view,
-        .load_action = CGPU_LOAD_ACTION_CLEAR,
-        .store_action = CGPU_STORE_ACTION_STORE,
-        .clear_color = fastclear_0000
+    const CGPUTextureViewId back_buffer_view  = views[backbuffer_index];
+    CGPUColorAttachment     screen_attachment = {
+            .view         = back_buffer_view,
+            .load_action  = CGPU_LOAD_ACTION_CLEAR,
+            .store_action = CGPU_STORE_ACTION_STORE,
+            .clear_color  = fastclear_0000
     };
     CGPURenderPassDescriptor rp_desc = {
         .render_target_count = 1,
-        .sample_count = CGPU_SAMPLE_COUNT_1,
-        .color_attachments = &screen_attachment,
-        .depth_stencil = CGPU_NULLPTR
+        .sample_count        = CGPU_SAMPLE_COUNT_1,
+        .color_attachments   = &screen_attachment,
+        .depth_stencil       = CGPU_NULLPTR
     };
     CGPURenderPassEncoderId rp_encoder = cgpu_cmd_begin_render_pass(cmd, &rp_desc);
     {
@@ -199,14 +188,14 @@ void raster_redraw()
     // sync & reset
     cgpu_wait_fences(&present_fence, 1);
     CGPUAcquireNextDescriptor acquire_desc = { .fence = present_fence };
-    backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire_desc);
-    const CGPUTextureId back_buffer = swapchain->back_buffers[backbuffer_index];
+    backbuffer_index                       = cgpu_acquire_next_image(swapchain, &acquire_desc);
+    const CGPUTextureId back_buffer        = swapchain->back_buffers[backbuffer_index];
     cgpu_reset_command_pool(pool);
     cgpu_cmd_begin(cmd);
-    
+
     // barrier swapchain to drawable
     CGPUTextureBarrier draw_barrier = {
-        .texture = back_buffer,
+        .texture   = back_buffer,
         .src_state = CGPU_RESOURCE_STATE_UNDEFINED,
         .dst_state = CGPU_RESOURCE_STATE_RENDER_TARGET
     };
@@ -218,7 +207,7 @@ void raster_redraw()
 
     // barrier swapchain to present
     CGPUTextureBarrier present_barrier = {
-        .texture = back_buffer,
+        .texture   = back_buffer,
         .src_state = CGPU_RESOURCE_STATE_RENDER_TARGET,
         .dst_state = CGPU_RESOURCE_STATE_PRESENT
     };
@@ -227,16 +216,19 @@ void raster_redraw()
 
     // end & submit cmd
     cgpu_cmd_end(cmd);
-    CGPUQueueSubmitDescriptor submit_desc = { .cmds = &cmd, .cmds_count = 1, };
+    CGPUQueueSubmitDescriptor submit_desc = {
+        .cmds       = &cmd,
+        .cmds_count = 1,
+    };
     cgpu_submit_queue(gfx_queue, &submit_desc);
-    
+
     // present swapchain
     cgpu_wait_queue_idle(gfx_queue);
     CGPUQueuePresentDescriptor present_desc = {
-        .index = backbuffer_index,
-        .swapchain = swapchain,
+        .index                = backbuffer_index,
+        .swapchain            = swapchain,
         .wait_semaphore_count = 0,
-        .wait_semaphores = CGPU_NULLPTR
+        .wait_semaphores      = CGPU_NULLPTR
     };
     cgpu_queue_present(gfx_queue, &present_desc);
 }
@@ -244,10 +236,10 @@ void raster_redraw()
 void raster_program()
 {
     // Create command objects
-    pool = cgpu_create_command_pool(gfx_queue, CGPU_NULLPTR);
+    pool                                 = cgpu_create_command_pool(gfx_queue, CGPU_NULLPTR);
     CGPUCommandBufferDescriptor cmd_desc = { .is_secondary = false };
-    cmd = cgpu_create_command_buffer(pool, &cmd_desc);
-    sb = cgpu_create_state_buffer(cmd, NULL);
+    cmd                                  = cgpu_create_command_buffer(pool, &cmd_desc);
+    sb                                   = cgpu_create_state_buffer(cmd, NULL);
 
     bool quit = false;
     while (!quit)
@@ -297,18 +289,16 @@ void ProgramMain(void* usrdata)
 
 int main(int argc, char* argv[])
 {
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     // When we support more add them here
     ECGPUBackend backends[] = {
         CGPU_BACKEND_VULKAN
 #ifdef CGPU_USE_D3D12
-        , CGPU_BACKEND_D3D12
+        ,
+        CGPU_BACKEND_D3D12
 #endif
     };
 
     ProgramMain(backends);
-
-    SDL_Quit();
 
     return 0;
 }

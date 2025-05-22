@@ -19,7 +19,7 @@ SkrNativeWindow::~SkrNativeWindow()
     }
     if (_window)
     {
-        skr_free_window(_window);
+        SDL_DestroyWindow(_window);
         _window = nullptr;
     }
 }
@@ -27,13 +27,13 @@ SkrNativeWindow::~SkrNativeWindow()
 // init functions
 void SkrNativeWindow::init_normal(const WindowDesc& desc)
 {
-    SWindowDescriptor create_desc;
-    create_desc.width  = (int32_t)desc.size.width;
-    create_desc.height = (int32_t)desc.size.height;
-    create_desc.posx   = (int32_t)desc.pos.x;
-    create_desc.posy   = (int32_t)desc.pos.y;
-    create_desc.flags  = SKR_WINDOW_RESIZABLE;
-    _window            = skr_create_window(desc.name.c_str(), &create_desc);
+    _window            = SDL_CreateWindow(
+        desc.name.c_str_raw(),
+        desc.size.width,
+        desc.size.height,
+        SDL_WINDOW_RESIZABLE
+    );
+    SDL_ShowWindow(_window);
 
     _render_window = _device->render_device()->create_window(_window);
 }
@@ -84,13 +84,13 @@ INativeDevice* SkrNativeWindow::device() SKR_NOEXCEPT
 Offsetf SkrNativeWindow::absolute_pos() SKR_NOEXCEPT
 {
     int32_t pos_x, pos_y;
-    skr_window_get_position(_window, &pos_x, &pos_y);
+    SDL_GetWindowPosition(_window, &pos_x, &pos_y);
     return { (float)pos_x, (float)pos_y };
 }
 Sizef SkrNativeWindow::absolute_size() SKR_NOEXCEPT
 {
     int32_t width, height;
-    skr_window_get_extent(_window, &width, &height);
+    SDL_GetWindowSize(_window, &width, &height);
     return { (float)width, (float)height };
 }
 Rectf SkrNativeWindow::absolute_work_area() SKR_NOEXCEPT
@@ -107,21 +107,21 @@ float SkrNativeWindow::text_pixel_ratio() SKR_NOEXCEPT
 }
 bool SkrNativeWindow::invisible() SKR_NOEXCEPT
 {
-    return skr_window_is_minimized(_window);
+    return SDL_GetWindowFlags(_window) | SDL_WINDOW_HIDDEN;
 }
 bool SkrNativeWindow::focused() SKR_NOEXCEPT
 {
-    return skr_window_is_focused(_window);
+    return SDL_GetWindowFlags(_window) | SDL_WINDOW_INPUT_FOCUS;
 }
 
 // operators
 void SkrNativeWindow::set_absolute_pos(Offsetf absolute) SKR_NOEXCEPT
 {
-    skr_window_set_position(_window, (int32_t)absolute.x, (int32_t)absolute.y);
+    SDL_SetWindowPosition(_window, (int32_t)absolute.x, (int32_t)absolute.y);
 }
 void SkrNativeWindow::set_absolute_size(Sizef absolute) SKR_NOEXCEPT
 {
-    skr_window_set_extent(_window, (int32_t)absolute.width, (int32_t)absolute.height);
+    SDL_SetWindowSize(_window, (int32_t)absolute.width, (int32_t)absolute.height);
 }
 void SkrNativeWindow::update_content(WindowLayer* root_layer) SKR_NOEXCEPT
 {
@@ -137,7 +137,7 @@ void SkrNativeWindow::raise() SKR_NOEXCEPT
 }
 void SkrNativeWindow::show() SKR_NOEXCEPT
 {
-    skr_show_window(_window);
+    SDL_ShowWindow(_window);
 }
 void SkrNativeWindow::hide() SKR_NOEXCEPT
 {

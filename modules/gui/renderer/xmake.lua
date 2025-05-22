@@ -18,3 +18,4 @@ shared_module("SkrGuiRenderer", "SKR_GUI_RENDERER")
         public_dependency("SkrImageCoder")
         add_defines("SKR_GUI_RENDERER_USE_IMAGE_CODER")
     end
+    add_deps("AppSampleCommon")

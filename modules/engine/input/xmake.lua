@@ -16,6 +16,7 @@ shared_module("SkrInput", "SKR_INPUT")
         -- add_links("GameInput", "xgameruntime", "Microsoft.Xbox.Services.141.GDK.C.Thunks", {public=false})
     end
     add_files("src/*.cpp")
-    -- common layer implemented with SDL2
+    -- common layer implemented with SDL3
     add_files("src/common/**.cpp")
-    add_files("src/sdl2/**.cpp")
+    add_files("src/sdl3/**.cpp")
+    add_deps("SDL3")

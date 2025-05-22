@@ -3,7 +3,6 @@
 #include "SkrBase/config.h"
 #include "fwd_types.h"
 #ifdef __cplusplus
-#include "SkrCore/platform/window.h"
 
 namespace skr
 {
@@ -24,8 +23,6 @@ struct SKR_RENDERER_API RendererDevice
     virtual void initialize(const Builder& builder) = 0;
     virtual void finalize() = 0;
 
-    virtual CGPUSwapChainId register_window(SWindowHandle window) = 0;
-    virtual CGPUSwapChainId recreate_window_swapchain(SWindowHandle window) = 0;
     virtual void create_api_objects(const Builder& builder) = 0;
 
     virtual CGPUDeviceId get_cgpu_device() const = 0;
@@ -35,18 +32,11 @@ struct SKR_RENDERER_API RendererDevice
     virtual CGPUQueueId get_compute_queue(uint32_t idx = 0) const = 0;
     virtual CGPUDStorageQueueId get_file_dstorage_queue() const = 0;
     virtual CGPUDStorageQueueId get_memory_dstorage_queue() const = 0;
-    virtual ECGPUFormat get_swapchain_format() const = 0;
     virtual CGPUSamplerId get_linear_sampler() const = 0;
     virtual CGPURootSignaturePoolId get_root_signature_pool() const = 0;
 };
 } // namespace skr
 #endif
-
-SKR_EXTERN_C SKR_RENDERER_API 
-CGPUSwapChainId skr_render_device_register_window(SRenderDeviceId device, SWindowHandle window);
-
-SKR_EXTERN_C SKR_RENDERER_API 
-CGPUSwapChainId skr_render_device_recreate_window_swapchain(SRenderDeviceId device, SWindowHandle window);
 
 SKR_EXTERN_C SKR_RENDERER_API 
 ECGPUFormat skr_render_device_get_swapchain_format(SRenderDeviceId device);

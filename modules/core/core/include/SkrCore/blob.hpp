@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/types.h"
-#include <SkrCore/rc/rc.hpp>
+#include <SkrCore/memory/rc.hpp>
 
 namespace skr
 {

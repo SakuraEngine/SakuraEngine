@@ -531,7 +531,7 @@ struct JsonSerde<T> {
 
         size_t count;
         SKR_EXPECTED_CHECK(r->StartArray(count), false);
-        if (count != 2)
+        if (count != dim)
             return false;
 
         for (size_t i = 0; i < dim; ++i)
@@ -570,7 +570,7 @@ struct JsonSerde<T> {
 
         size_t count;
         SKR_EXPECTED_CHECK(r->StartArray(count), false);
-        if (count != 2)
+        if (count != dim)
             return false;
 
         for (size_t row_idx = 0; row_idx < dim; ++row_idx)

@@ -1,6 +1,6 @@
 #include "SkrTestFramework/framework.hpp"
 
-#include <SkrCore/rc/rc.hpp>
+#include <SkrCore/memory/rc.hpp>
 
 static uint64_t rc_base_count           = 0;
 static uint64_t rc_derived_count        = 0;

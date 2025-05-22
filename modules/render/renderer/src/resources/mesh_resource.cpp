@@ -1,7 +1,7 @@
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrCore/memory/memory.h"
 #include "SkrCore/platform/vfs.h"
-#include "SkrCore/sp/sp.hpp"
+#include "SkrCore/memory/sp.hpp"
 #include "SkrGraphics/cgpux.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"

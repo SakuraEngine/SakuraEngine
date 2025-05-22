@@ -3,6 +3,7 @@
 #include "SkrGui/framework/layer/offset_layer.hpp"
 #include "SkrGui/framework/layer/geometry_layer.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
+#include "common/utils.h"
 #include "rtm/qvvf.h"
 #include "rtm/matrix3x4f.h"
 #include "rtm/matrix4x4f.h"
@@ -15,7 +16,7 @@
 
 namespace skr::gui
 {
-SkrRenderWindow::SkrRenderWindow(SkrRenderDevice* owner, SWindowHandle window)
+SkrRenderWindow::SkrRenderWindow(SkrRenderDevice* owner, SDL_Window* window)
     : _owner(owner)
     , _window(window)
 {
@@ -23,10 +24,10 @@ SkrRenderWindow::SkrRenderWindow(SkrRenderDevice* owner, SWindowHandle window)
     auto queue  = _owner->cgpu_queue();
 
     _cgpu_fence   = cgpu_create_fence(_owner->cgpu_device());
-    _cgpu_surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(_window));
+    _cgpu_surface = cgpu_surface_from_native_view(device, SDLGetNativeWindowHandle(_window));
 
     int32_t width, height;
-    skr_window_get_extent(_window, &width, &height);
+    SDL_GetWindowSize(_window, &width, &height);
     CGPUSwapChainDescriptor chain_desc = {};
     chain_desc.surface                 = _cgpu_surface;
     chain_desc.present_queues          = &queue;
@@ -68,7 +69,7 @@ void SkrRenderWindow::sync_window_size()
     }
     if (!_cgpu_surface)
     {
-        _cgpu_surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(_window));
+        _cgpu_surface = cgpu_surface_from_native_view(device, SDLGetNativeWindowHandle(_window));
     }
 
     if (_cgpu_fence)
@@ -81,7 +82,7 @@ void SkrRenderWindow::sync_window_size()
     }
 
     int32_t width, height;
-    skr_window_get_extent(_window, &width, &height);
+    SDL_GetWindowSize(_window, &width, &height);
     CGPUSwapChainDescriptor chain_desc = {};
     chain_desc.surface                 = _cgpu_surface;
     chain_desc.present_queues          = &queue;
@@ -155,20 +156,25 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
         auto&              projection   = _projections.add_default().ref();
         const skr_float2_t zero_point   = { window_size.width * 0.5f, window_size.height * 0.5f };
         const skr_float2_t eye_position = { zero_point.x, zero_point.y };
-        rtm::matrix3x4f               view         = rtm::matrix_cast(rtm::view_look_to(
-            { eye_position.x, eye_position.y, 0.f },
-            { 0.f, 0.f, 1.f },
-            { 0.0f, 1.0f, 0.0f }
+        rtm::matrix3x4f    view         = rtm::matrix_cast(rtm::view_look_to(
+            rtm::vector_set(eye_position.x, eye_position.y, -1.f, 0.0f),
+            rtm::vector_set(0.f, 0.f, 1.f, 0.0f),
+            rtm::vector_set(0.0f, 1.0f, 0.0f, 0.0f)
         ));
         // flip y axis for direct x
         view = rtm::matrix_mul(view, (rtm::matrix3x4f)rtm::matrix_from_scale(rtm::vector_set(1.f, -1.f, 1.f, 0.f)));
 
-        const auto proj = rtm::proj_orthographic(window_size.width, window_size.height, 0.f, 1000.f);
-        projection      = rtm::matrix_mul(rtm::matrix_cast(view), proj);
+        const auto proj = rtm::proj_orthographic(
+            window_size.width,
+            window_size.height,
+            0.01f,
+            1000.f
+        );
+        projection = rtm::matrix_mul(rtm::matrix_cast(view), proj);
 
         // make render data
-        auto  rb_cursor     = _render_data.size();
-        auto& render_data   = _render_data.add_default().ref();
+        auto  rb_cursor        = _render_data.size();
+        auto& render_data      = _render_data.add_default().ref();
         render_data.rows[0][0] = static_cast<float>(cmd.texture_swizzle.r);
         render_data.rows[0][1] = static_cast<float>(cmd.texture_swizzle.g);
         render_data.rows[0][2] = static_cast<float>(cmd.texture_swizzle.b);

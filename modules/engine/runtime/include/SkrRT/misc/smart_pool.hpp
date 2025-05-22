@@ -2,7 +2,7 @@
 #include "SkrCore/log.h"
 #include "SkrBase/atomic/atomic.h"
 #include "SkrContainers/concurrent_queue.hpp"
-#include "SkrCore/rc/rc.hpp"
+#include "SkrCore/memory/rc.hpp"
 
 namespace skr
 {

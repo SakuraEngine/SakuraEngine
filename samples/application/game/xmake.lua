@@ -11,7 +11,7 @@ shared_module("GameRuntime", "GAME_RUNTIME")
     -- public_dependency("SkrTweak")
     -- public_dependency("SkrInspector")
     add_includedirs("modules/game_runtime/include/", { public=true })
-    add_includedirs("./../../common", {public = false})
+    add_deps("AppSampleCommon")
     add_files("modules/game_runtime/src/**.cpp")
     skr_unity_build()
 
@@ -20,7 +20,7 @@ executable_module("Game", "GAME")
     set_exceptions("no-cxx")
     public_dependency("GameRuntime")
     skr_unity_build()
-    add_includedirs("./../../common", {public = false})
+    add_deps("AppSampleCommon")
     add_files("src/**.cpp")
 
     -- install

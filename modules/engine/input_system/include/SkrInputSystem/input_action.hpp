@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrInputSystem/input_value.hpp"
 #include "SkrContainers/stl_function.hpp" // IWYU pragma: keep
-#include "SkrCore/rc/rc.hpp"
+#include "SkrCore/memory/rc.hpp"
 
 namespace skr
 {

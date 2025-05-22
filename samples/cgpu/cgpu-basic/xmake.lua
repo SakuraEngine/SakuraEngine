@@ -7,7 +7,7 @@ target("CGPUMandelbrot")
         spv_outdir = "/../resources/shaders/cgpu-mandelbrot",
         dxil_outdir = "/../resources/shaders/cgpu-mandelbrot"})
     public_dependency("SkrRT")
-    add_includedirs("./../../common", {public = false})
+    add_deps("AppSampleCommon")
     add_files("mandelbrot/*.c")
     add_files("mandelbrot/**.hlsl")
 
@@ -20,7 +20,7 @@ target("CGPUIndexedInstance")
         spv_outdir = "/../resources/shaders/cgpu-indexed-instance",
         dxil_outdir = "/../resources/shaders/cgpu-indexed-instance"})
     public_dependency("SkrRT")
-    add_includedirs("./../../common", {public = false})
+    add_deps("AppSampleCommon")
     add_files("indexed-instance/*.c")
     add_files("indexed-instance/**.hlsl")
 
@@ -33,7 +33,7 @@ target("CGPUTexture")
         spv_outdir = "/../resources/shaders/cgpu-texture",
         dxil_outdir = "/../resources/shaders/cgpu-texture"})
     public_dependency("SkrRT")
-    add_includedirs("./../../common", {public = false})
+    add_deps("AppSampleCommon")
     add_files("texture/texture.c")
     add_files("texture/**.hlsl")
 
@@ -43,5 +43,5 @@ target("CGPUTiledTexture")
     set_kind("binary")
     skr_unity_build()
     public_dependency("SkrRT")
-    add_includedirs("./../../common", {public = false})
+    add_deps("AppSampleCommon")
     add_files("texture/tiled_texture.c")

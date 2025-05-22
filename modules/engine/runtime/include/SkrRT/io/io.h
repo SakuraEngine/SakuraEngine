@@ -2,7 +2,7 @@
 #include "SkrBase/atomic/atomic.h"
 #include "SkrCore/async/async_service.h"
 #ifdef __cplusplus
-    #include "SkrCore/rc/rc.hpp"
+    #include "SkrCore/memory/rc.hpp"
     #include "SkrContainers/span.hpp"
 #endif
 

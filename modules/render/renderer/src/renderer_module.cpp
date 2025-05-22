@@ -7,7 +7,6 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/module/module_manager.hpp"
 
-#include "SkrImGui/skr_imgui.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
 
@@ -97,21 +96,6 @@ SRenderDeviceId SkrRendererModule::get_render_device()
 SRenderDeviceId skr_get_default_render_device()
 {
     return SkrRendererModule::Get()->get_render_device();
-}
-
-CGPUSwapChainId skr_render_device_register_window(SRenderDeviceId device, SWindowHandle window)
-{
-    return device->register_window(window);
-}
-
-CGPUSwapChainId skr_render_device_recreate_window_swapchain(SRenderDeviceId device, SWindowHandle window)
-{
-    return device->recreate_window_swapchain(window);
-}
-
-ECGPUFormat skr_render_device_get_swapchain_format(SRenderDeviceId device)
-{
-    return device->get_swapchain_format();
 }
 
 CGPUSamplerId skr_render_device_get_linear_sampler(SRenderDeviceId device)

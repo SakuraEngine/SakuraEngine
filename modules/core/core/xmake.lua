@@ -61,8 +61,11 @@ shared_module("SkrCore", "SKR_CORE")
     add_defines("SKR_MEMORY_IMPL", {public = false})
     -- core
     add_files("src/core/build.*.c", "src/core/build.*.cpp")
+
     -- rttr
     add_files("src/rttr/build.*.cpp")
+
+    -- macosx files
     if (is_os("macosx")) then 
         add_files("src/**/build.*.mm")
         add_mxflags("-fno-objc-arc", {force = true})
@@ -75,9 +78,6 @@ shared_module("SkrCore", "SKR_CORE")
     else
         add_syslinks("pthread")
     end
-
-    -- add deps
-    add_deps("SDL2", {public= true})
 
 --[[
 shared_pch("SkrCore")

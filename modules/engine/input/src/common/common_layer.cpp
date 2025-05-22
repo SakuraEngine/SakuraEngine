@@ -5,15 +5,15 @@
 #include "reading_pool.hpp"
 #include "common_layer.hpp"
 #include "../common/reading_ring.hpp"
-#include "SDL2/SDL_timer.h"
+#include "SDL3/SDL_timer.h"
 
 namespace skr
 {
 namespace input
 {
 
-extern CommonInputDevice* CreateInputDevice_SDL2Keyboard(CommonInputLayer* pLayer) SKR_NOEXCEPT;
-extern CommonInputDevice* CreateInputDevice_SDL2Mouse(CommonInputLayer* pLayer) SKR_NOEXCEPT;
+extern CommonInputDevice* CreateInputDevice_SDL3Keyboard(CommonInputLayer* pLayer) SKR_NOEXCEPT;
+extern CommonInputDevice* CreateInputDevice_SDL3Mouse(CommonInputLayer* pLayer) SKR_NOEXCEPT;
 
 CommonInputReading::CommonInputReading(CommonInputReadingProxy* pPool, struct CommonInputDevice* pDevice) SKR_NOEXCEPT
     : ref_count(0),
@@ -72,9 +72,9 @@ struct Input_Common : public CommonInputLayer {
 
     bool Initialize() SKR_NOEXCEPT final
     {
-        // Add SDL2 keyboard device
-        devices.add(CreateInputDevice_SDL2Keyboard(this));
-        devices.add(CreateInputDevice_SDL2Mouse(this));
+        // Add SDL3 keyboard device
+        devices.add(CreateInputDevice_SDL3Keyboard(this));
+        devices.add(CreateInputDevice_SDL3Mouse(this));
 
         return true;
     }

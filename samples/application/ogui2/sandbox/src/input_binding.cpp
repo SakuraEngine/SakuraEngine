@@ -1,12 +1,13 @@
 #include "input_binding.hpp"
+#include "SDL3/SDL.h"
 #include "SkrGui/system/input/pointer_event.hpp"
 
 namespace skr::gui
 {
 inline static void _fill_pointer_event(PointerEvent* event)
 {
-    int32_t cursor_x, cursor_y;
-    skr_cursor_pos(&cursor_x, &cursor_y, ECursorCoordinate::CURSOR_COORDINATE_SCREEN);
+    float cursor_x, cursor_y;
+    SDL_GetGlobalMouseState(&cursor_x, &cursor_y);
 
     event->device_type     = EPointerDeviceType::Mouse;
     event->global_position = { (float)cursor_x, (float)cursor_y };
@@ -15,27 +16,27 @@ inline static void _fill_pointer_event(PointerEvent* event)
 inline static void _bind_mouse_button(skr::input::InputSystem* system, RC<input::InputMappingContext> ctx, Sandbox* sandbox, EPointerButton button)
 {
     // translate key
-    EMouseKey key;
+    input::EMouseKey key;
     switch (button)
     {
-        case EPointerButton::Left:
-            key = EMouseKey::MOUSE_KEY_LB;
-            break;
-        case EPointerButton::Right:
-            key = EMouseKey::MOUSE_KEY_RB;
-            break;
-        case EPointerButton::Middle:
-            key = EMouseKey::MOUSE_KEY_MB;
-            break;
-        case EPointerButton::X1B:
-            key = EMouseKey::MOUSE_KEY_X1B;
-            break;
-        case EPointerButton::X2B:
-            key = EMouseKey::MOUSE_KEY_X2B;
-            break;
-        default:
-            key = EMouseKey::MOUSE_KEY_None;
-            break;
+    case EPointerButton::Left:
+        key = input::EMouseKey::MOUSE_KEY_LB;
+        break;
+    case EPointerButton::Right:
+        key = input::EMouseKey::MOUSE_KEY_RB;
+        break;
+    case EPointerButton::Middle:
+        key = input::EMouseKey::MOUSE_KEY_MB;
+        break;
+    case EPointerButton::X1B:
+        key = input::EMouseKey::MOUSE_KEY_X1B;
+        break;
+    case EPointerButton::X2B:
+        key = input::EMouseKey::MOUSE_KEY_X2B;
+        break;
+    default:
+        key = input::EMouseKey::MOUSE_KEY_None;
+        break;
     }
 
     // down/up
@@ -85,7 +86,7 @@ void bind_pointer_event(skr::input::InputSystem* system, RC<input::InputMappingC
             event.global_delta = { delta.x, delta.y };
             sandbox->dispatch_event(&event);
         });
-        auto mapping    = system->create_mapping<skr::input::InputMapping_MouseAxis>(EMouseAxis::MOUSE_AXIS_XY);
+        auto mapping    = system->create_mapping<skr::input::InputMapping_MouseAxis>(input::EMouseAxis::MOUSE_AXIS_XY);
         mapping->action = action;
         ctx->add_mapping(mapping);
     }
@@ -101,7 +102,7 @@ void bind_pointer_event(skr::input::InputSystem* system, RC<input::InputMappingC
             event.scroll_delta = { delta.x, delta.y };
             sandbox->dispatch_event(&event);
         });
-        auto mapping    = system->create_mapping<skr::input::InputMapping_MouseAxis>(EMouseAxis::MOUSE_AXIS_WHEEL_XY);
+        auto mapping    = system->create_mapping<skr::input::InputMapping_MouseAxis>(input::EMouseAxis::MOUSE_AXIS_WHEEL_XY);
         mapping->action = action;
         ctx->add_mapping(mapping);
     }

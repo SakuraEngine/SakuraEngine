@@ -156,7 +156,7 @@ void SkrRenderDevice::shutdown()
 }
 
 // create view
-SkrRenderWindow* SkrRenderDevice::create_window(SWindowHandle window)
+SkrRenderWindow* SkrRenderDevice::create_window(SDL_Window* window)
 {
     return SkrNew<SkrRenderWindow>(this, window);
 }

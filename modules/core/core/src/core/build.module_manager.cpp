@@ -1,6 +1,6 @@
 #include "SkrBase/misc/defer.hpp"
 #include "SkrArchive/json/reader.h"
-#include "SkrCore/sp/sp.hpp"
+#include "SkrCore/memory/sp.hpp"
 #include "SkrOS/shared_library.hpp"
 #include "SkrOS/filesystem.hpp"
 #include "SkrCore/memory/memory.h"

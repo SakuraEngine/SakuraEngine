@@ -7,7 +7,7 @@
 #include "SkrContainers/array.hpp"
 #include "SkrContainers/vector.hpp"
 #include "SkrContainers/stl_function.hpp"
-#include "SkrCore/sp/sp.hpp"
+#include "SkrCore/memory/sp.hpp"
 
 #if __cpp_lib_coroutine
     #include <coroutine>

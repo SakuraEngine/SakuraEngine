@@ -5,14 +5,17 @@
 #include "SkrGuiRenderer/resource/skr_resource_device.hpp"
 #include "SkrGui/backend/embed_services.hpp"
 #include "SkrGui/dev/sandbox.hpp"
-#include "SkrCore/platform/system.h"
 #include "SkrProfile/profile.h"
 #include "SkrGui/backend/device/window.hpp"
 #include "SkrInputSystem/input_system.hpp"
 #include "SkrInputSystem/input_trigger.hpp"
 #include "input_binding.hpp"
 #include "SkrGui/system/input/pointer_event.hpp"
+
 #include "counter_state.hpp"
+#include <SkrGui/backend/device/window.hpp>
+#include "SkrGui/framework/render_object/render_native_window.hpp"
+#include "SkrGuiRenderer/device/skr_native_window.hpp"
 
 // !!!! TestWidgets !!!!
 #include "SkrGui/widgets/stack.hpp"
@@ -63,20 +66,7 @@ int main(void)
     }
 
     // handler
-    bool b_quit  = false;
-    auto handler = skr_system_get_default_handler();
-    handler->add_window_close_handler(
-    +[](SWindowHandle window, void* pQuit) {
-        bool& quit = *(bool*)pQuit;
-        quit       = true;
-    },
-    &b_quit);
-    handler->add_window_resize_handler(
-    +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
-        auto sandbox = reinterpret_cast<Sandbox*>(usr_data);
-        sandbox->resize_window(w, h);
-    },
-    sandbox);
+    bool b_quit = false;
 
     // show window
     {
@@ -103,8 +93,29 @@ int main(void)
         FrameMark;
         {
             SkrZoneScopedN("SystemEvents");
-            handler->pump_messages(delta_sec);
-            handler->process_messages(delta_sec);
+            SDL_Event e;
+            auto      sdl_window = sandbox->native_window()->window()->type_cast_fast<SkrNativeWindow>()->window();
+            while (SDL_PollEvent(&e))
+            {
+                switch (e.type)
+                {
+                case SDL_EVENT_QUIT:
+                    b_quit = true;
+                    break;
+                case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+                    if (e.window.windowID == SDL_GetWindowID(sdl_window))
+                    {
+                        b_quit = true;
+                    }
+                    break;
+                case SDL_EVENT_WINDOW_RESIZED:
+                    if (e.window.windowID == SDL_GetWindowID(sdl_window))
+                    {
+                        sandbox->resize_window(e.window.data1, e.window.data2);
+                    }
+                    break;
+                }
+            }
         }
         {
             SkrZoneScopedN("InputSystem");

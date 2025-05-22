@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrContainersDef/hashmap.hpp"
 #include "SkrBase/atomic/atomic.h"
-#include "SkrCore/sp/sp.hpp"
+#include "SkrCore/memory/sp.hpp"
 #include "SkrOS/thread.h"
 #include "SkrCore/log/log_base.hpp"
 #include "SkrCore/log/log_formatter.hpp"

@@ -3,7 +3,7 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/async/thread_job.hpp"
 
-#include "SkrCore/sp/sp.hpp"
+#include "SkrCore/memory/sp.hpp"
 #include "SkrTestFramework/framework.hpp"
 
 static struct ProcInitializer

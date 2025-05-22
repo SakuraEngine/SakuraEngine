@@ -644,12 +644,15 @@ void sugoi_storage_t::query_unsafe(const sugoi_query_t* q, sugoi_view_callback_t
 void sugoi_storage_t::query(const sugoi_query_t* q, sugoi_view_callback_t callback, void* u)
 {
     auto filterChunk = [&](sugoi_group_t* group) {
-        for (EIndex i = 0; i < q->pimpl->parameters.length; ++i)
+        if (pimpl->scheduler)
+        {
+            for (EIndex i = 0; i < q->pimpl->parameters.length; ++i)
             {
                 int idx = group->index(q->pimpl->parameters.types[i]);
                 if (idx != sugoi::kInvalidTypeIndex)
                     pimpl->scheduler->sync_entry(group->archetype, idx, q->pimpl->parameters.accesses[i].readonly);
             }
+        }
         filter_in_single_group(&q->pimpl->parameters, group, q->pimpl->filter, q->pimpl->meta, q->pimpl->customFilter, q->pimpl->customFilterUserData, callback, u);
     };
     query_groups(q, SUGOI_LAMBDA(filterChunk));

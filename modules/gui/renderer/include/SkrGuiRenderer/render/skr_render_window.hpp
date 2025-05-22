@@ -1,11 +1,11 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrGraphics/api.h"
-#include "SkrCore/platform/window.h"
 #include "SkrGui/backend/canvas/canvas_types.hpp"
 #include "rtm/camera_utilsf.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
+#include <SDL3/SDL.h>
 
 namespace skr::gui
 {
@@ -13,7 +13,7 @@ struct SkrRenderDevice;
 struct NativeWindowLayer;
 
 struct SKR_GUI_RENDERER_API SkrRenderWindow final {
-    SkrRenderWindow(SkrRenderDevice* owner, SWindowHandle window);
+    SkrRenderWindow(SkrRenderDevice* owner, SDL_Window* window);
     ~SkrRenderWindow();
 
     void sync_window_size();
@@ -30,7 +30,7 @@ private:
 private:
     // owner
     SkrRenderDevice* _owner  = nullptr;
-    SWindowHandle    _window = nullptr;
+    SDL_Window*      _window = nullptr;
 
     // cgpu data
     CGPUSurfaceId               _cgpu_surface     = nullptr;

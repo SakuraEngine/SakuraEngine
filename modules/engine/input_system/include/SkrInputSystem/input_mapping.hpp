@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrContainers/vector.hpp"
-#include "SkrCore/rc/rc.hpp"
+#include "SkrCore/memory/rc.hpp"
 #include "SkrContainers/span.hpp"
 #include "SkrInput/input.h"
 #include "SkrInputSystem/input_value.hpp"

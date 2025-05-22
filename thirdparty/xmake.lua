@@ -1,6 +1,6 @@
 -- basement, can not be culled
 includes("mimalloc")
-includes("SDL2")
+includes("SDL3")
 includes("rtm")
 
 skr_includes_with_cull("gamenetworkingsockets", function()

@@ -1,7 +1,7 @@
 #include "SkrAssetTool/gltf_factory.h"
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrImGui/skr_imgui.h"
 #include "SkrContainers/stl_string.hpp"
+#include <imgui.h>
 #include "cgltf/cgltf.h"
 
 namespace skd::asset
