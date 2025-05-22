@@ -362,7 +362,7 @@ static void _mi_stats_print(mi_stats_t* stats, mi_output_fun* out0, void* arg0) 
   mi_stat_counter_print(&stats->malloc_guarded_count, "guarded", out, arg);
   mi_stat_print(&stats->threads, "threads", -1, out, arg);
   mi_stat_counter_print_avg(&stats->page_searches, "searches", out, arg);
-  _mi_fprintf(out, arg, "%10s: %5zu\n", "numa nodes", _mi_os_numa_node_count());
+  _mi_fprintf(out, arg, "%10s: %5i\n", "numa nodes", _mi_os_numa_node_count());
 
   size_t elapsed;
   size_t user_time;
@@ -373,9 +373,9 @@ static void _mi_stats_print(mi_stats_t* stats, mi_output_fun* out0, void* arg0) 
   size_t peak_commit;
   size_t page_faults;
   mi_process_info(&elapsed, &user_time, &sys_time, &current_rss, &peak_rss, &current_commit, &peak_commit, &page_faults);
-  _mi_fprintf(out, arg, "%10s: %5ld.%03ld s\n", "elapsed", elapsed/1000, elapsed%1000);
-  _mi_fprintf(out, arg, "%10s: user: %ld.%03ld s, system: %ld.%03ld s, faults: %lu, rss: ", "process",
-              user_time/1000, user_time%1000, sys_time/1000, sys_time%1000, (unsigned long)page_faults );
+  _mi_fprintf(out, arg, "%10s: %5zu.%03zu s\n", "elapsed", elapsed/1000, elapsed%1000);
+  _mi_fprintf(out, arg, "%10s: user: %zu.%03zu s, system: %zu.%03zu s, faults: %zu, rss: ", "process",
+              user_time/1000, user_time%1000, sys_time/1000, sys_time%1000, page_faults );
   mi_printf_amount((int64_t)peak_rss, 1, out, arg, "%s");
   if (peak_commit > 0) {
     _mi_fprintf(out, arg, ", commit: ");
@@ -386,9 +386,15 @@ static void _mi_stats_print(mi_stats_t* stats, mi_output_fun* out0, void* arg0) 
 
 static mi_msecs_t mi_process_start; // = 0
 
+// called on process init
+void _mi_stats_init(void) {
+  if (mi_process_start == 0) { mi_process_start = _mi_clock_start(); };
+}
+
+
 // return thread local stats
 static mi_stats_t* mi_get_tld_stats(void) {
-  return &mi_heap_get_default()->tld->stats;
+  return &_mi_thread_tld()->stats;
 }
 
 void mi_stats_reset(void) mi_attr_noexcept {
@@ -396,10 +402,12 @@ void mi_stats_reset(void) mi_attr_noexcept {
   mi_subproc_t* subproc = _mi_subproc();
   if (stats != &subproc->stats) { _mi_memzero(stats, sizeof(mi_stats_t)); }
   _mi_memzero(&subproc->stats, sizeof(mi_stats_t));
-  if (mi_process_start == 0) { mi_process_start = _mi_clock_start(); };
+  _mi_stats_init();
 }
 
+
 void _mi_stats_merge_from(mi_stats_t* to, mi_stats_t* from) {
+  mi_assert_internal(to != NULL && from != NULL);
   if (to != from) {
     mi_stats_add(to, from);
     _mi_memzero(from, sizeof(mi_stats_t));
@@ -410,8 +418,13 @@ void _mi_stats_done(mi_stats_t* stats) {  // called from `mi_thread_done`
   _mi_stats_merge_from(&_mi_subproc()->stats, stats);
 }
 
+void _mi_stats_merge_thread(mi_tld_t* tld) {
+  mi_assert_internal(tld != NULL && tld->subproc != NULL);
+  _mi_stats_merge_from( &tld->subproc->stats, &tld->stats );
+}
+
 void mi_stats_merge(void) mi_attr_noexcept {
-  _mi_stats_done( mi_get_tld_stats() );
+  _mi_stats_merge_thread( _mi_thread_tld() );
 }
 
 void mi_stats_print_out(mi_output_fun* out, void* arg) mi_attr_noexcept {
@@ -519,7 +532,7 @@ static bool mi_heap_buf_expand(mi_heap_buf_t* hbuf) {
     hbuf->buf[hbuf->size-1] = 0;
   }
   if (hbuf->size > SIZE_MAX/2 || !hbuf->can_realloc) return false;
-  const size_t newsize = (hbuf->size == 0 ? 2*MI_KiB : 2*hbuf->size);
+  const size_t newsize = (hbuf->size == 0 ? mi_good_size(12*MI_KiB) : 2*hbuf->size);
   char* const  newbuf  = (char*)mi_rezalloc(hbuf->buf, newsize);
   if (newbuf == NULL) return false;
   hbuf->buf = newbuf;
@@ -605,6 +618,7 @@ static void mi_heap_buf_print_counter_value(mi_heap_buf_t* hbuf, const char* nam
 #define MI_STAT_COUNTER(stat)  mi_heap_buf_print_counter_value(&hbuf, #stat, &stats->stat);
 
 char* mi_stats_get_json(size_t output_size, char* output_buf) mi_attr_noexcept {
+  mi_stats_merge();
   mi_heap_buf_t hbuf = { NULL, 0, 0, true };
   if (output_size > 0 && output_buf != NULL) {
     _mi_memzero(output_buf, output_size);

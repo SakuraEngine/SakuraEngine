@@ -184,7 +184,7 @@ void          _mi_arenas_collect(bool force_purge, bool visit_all, mi_tld_t* tld
 void          _mi_arenas_unsafe_destroy_all(mi_tld_t* tld);
 
 mi_page_t*    _mi_arenas_page_alloc(mi_heap_t* heap, size_t block_size, size_t page_alignment);
-void          _mi_arenas_page_free(mi_page_t* page);
+void          _mi_arenas_page_free(mi_page_t* page, mi_tld_t* tld);
 void          _mi_arenas_page_abandon(mi_page_t* page, mi_tld_t* tld);
 void          _mi_arenas_page_unabandon(mi_page_t* page);
 bool          _mi_arenas_page_try_reabandon_to_mapped(mi_page_t* page);
@@ -219,6 +219,7 @@ void          _mi_page_free_collect_partly(mi_page_t* page, mi_block_t* head);
 void          _mi_page_init(mi_heap_t* heap, mi_page_t* page);
 bool          _mi_page_queue_is_valid(mi_heap_t* heap, const mi_page_queue_t* pq);
 
+size_t        _mi_page_bin(const mi_page_t* page); // for stats
 size_t        _mi_bin_size(size_t bin);            // for stats
 size_t        _mi_bin(size_t size);                // for stats
 
@@ -236,7 +237,9 @@ bool          _mi_heap_area_visit_blocks(const mi_heap_area_t* area, mi_page_t* 
 void          _mi_heap_page_reclaim(mi_heap_t* heap, mi_page_t* page);
 
 // "stats.c"
+void          _mi_stats_init(void);
 void          _mi_stats_done(mi_stats_t* stats);
+void          _mi_stats_merge_thread(mi_tld_t* tld);
 void          _mi_stats_merge_from(mi_stats_t* to, mi_stats_t* from);
 mi_msecs_t    _mi_clock_now(void);
 mi_msecs_t    _mi_clock_end(mi_msecs_t start);
@@ -547,16 +550,16 @@ static inline mi_page_t* _mi_unchecked_ptr_page(const void* p) {
 // 2-level page map:
 // double indirection, but low commit and low virtual reserve.
 //
-// the page-map is usually 4 MiB (for 48 bits virtual addresses) and points to sub maps of 64 KiB.
+// the page-map is usually 4 MiB (for 48 bit virtual addresses) and points to sub maps of 64 KiB.
 // the page-map is committed on-demand (in 64 KiB parts) (and sub-maps are committed on-demand as well)
 // one sub page-map = 64 KiB => covers 2^(16-3) * 2^16 = 2^29 = 512 MiB address space
-// the page-map needs 48-(16+13) = 19 bits => 2^19 sub map pointers = 4 MiB size.
+// the page-map needs 48-(16+13) = 19 bits => 2^19 sub map pointers = 2^22 bytes = 4 MiB reserved size.
 #define MI_PAGE_MAP_SUB_SHIFT     (13)
 #define MI_PAGE_MAP_SUB_COUNT     (MI_ZU(1) << MI_PAGE_MAP_SUB_SHIFT)
 #define MI_PAGE_MAP_SHIFT         (MI_MAX_VABITS - MI_PAGE_MAP_SUB_SHIFT - MI_ARENA_SLICE_SHIFT)
 #define MI_PAGE_MAP_COUNT         (MI_ZU(1) << MI_PAGE_MAP_SHIFT)
 
-extern mi_decl_hidden mi_page_t*** _mi_page_map;
+extern mi_decl_hidden _Atomic(mi_page_t**)* _mi_page_map;
 
 static inline size_t _mi_page_map_index(const void* p, size_t* sub_idx) {
   const size_t u = (size_t)((uintptr_t)p / MI_ARENA_SLICE_SIZE);
@@ -564,16 +567,20 @@ static inline size_t _mi_page_map_index(const void* p, size_t* sub_idx) {
   return (u / MI_PAGE_MAP_SUB_COUNT);
 }
 
+static inline mi_page_t** _mi_page_map_at(size_t idx) {
+  return mi_atomic_load_ptr_relaxed(mi_page_t*, &_mi_page_map[idx]);
+}
+
 static inline mi_page_t* _mi_unchecked_ptr_page(const void* p) {
   size_t sub_idx;
   const size_t idx = _mi_page_map_index(p, &sub_idx);
-  return _mi_page_map[idx][sub_idx];  // NULL if p==NULL
+  return (_mi_page_map_at(idx))[sub_idx];  // NULL if p==NULL
 }
 
 static inline mi_page_t* _mi_checked_ptr_page(const void* p) {
   size_t sub_idx;
   const size_t idx = _mi_page_map_index(p, &sub_idx);
-  mi_page_t** const sub = _mi_page_map[idx];
+  mi_page_t** const sub = _mi_page_map_at(idx);
   if mi_unlikely(sub == NULL) return NULL;
   return sub[sub_idx];
 }
@@ -583,7 +590,7 @@ static inline mi_page_t* _mi_checked_ptr_page(const void* p) {
 
 static inline mi_page_t* _mi_ptr_page(const void* p) {
   mi_assert_internal(p==NULL || mi_is_in_heap_region(p));
-  #if MI_DEBUG || defined(__APPLE__)
+  #if MI_DEBUG || MI_SECURE || defined(__APPLE__)
   return _mi_checked_ptr_page(p);
   #else
   return _mi_unchecked_ptr_page(p);
@@ -841,7 +848,7 @@ static inline bool _mi_page_unown(mi_page_t* page) {
       _mi_page_free_collect(page, false);  // update used
       if (mi_page_all_free(page)) {        // it may become free just before unowning it
         _mi_arenas_page_unabandon(page);
-        _mi_arenas_page_free(page);
+        _mi_arenas_page_free(page,NULL);
         return true;
       }
       tf_old = mi_atomic_load_relaxed(&page->xthread_free);

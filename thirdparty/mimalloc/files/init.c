@@ -16,7 +16,7 @@ terms of the MIT license. A copy of the license can be found in the file
 
 // Empty page used to initialize the small free pages array
 const mi_page_t _mi_page_empty = {
-  MI_ATOMIC_VAR_INIT(0),  // xthread_id 
+  MI_ATOMIC_VAR_INIT(0),  // xthread_id
   NULL,                   // free
   0,                      // used
   0,                      // capacity
@@ -709,6 +709,7 @@ void mi_process_init(void) mi_attr_noexcept {
   _mi_verbose_message("process init: 0x%zx\n", _mi_thread_id());
 
   mi_detect_cpu_features();
+  _mi_stats_init();
   _mi_os_init();
   _mi_page_map_init();
   mi_heap_main_init();
@@ -725,7 +726,7 @@ void mi_process_init(void) mi_attr_noexcept {
   _mi_prim_thread_associate_default_heap(NULL);
   #endif
 
-  mi_stats_reset();  // only call stat reset *after* thread init (or the heap tld == NULL)
+  // mi_stats_reset();  // only call stat reset *after* thread init (or the heap tld == NULL)
   mi_track_init();
 
   if (mi_option_is_enabled(mi_option_reserve_huge_os_pages)) {
