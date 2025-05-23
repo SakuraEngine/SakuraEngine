@@ -190,7 +190,10 @@ struct TrueBitCursor {
             SizeType index = Algo::find(_data, (SizeType)0, _bit_size, true);
             _bit_index     = (index == npos) ? _bit_size : index;
         }
-        _bit_index = 0;
+        else
+        {
+            _bit_index = 0;
+        }
     }
     inline void reset_to_end()
     {
@@ -198,7 +201,10 @@ struct TrueBitCursor {
         {
             _bit_index = Algo::find_last(_data, (SizeType)0, _bit_size, true);
         }
-        _bit_index = npos;
+        else
+        {
+            _bit_index = npos;
+        }
     }
 
     // reach & validate
