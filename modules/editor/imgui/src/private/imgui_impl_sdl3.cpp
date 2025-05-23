@@ -1195,6 +1195,11 @@ static void ImGui_ImplSDL3_InitMultiViewportSupport(SDL_Window* window, void* sd
     platform_io.Platform_SwapBuffers = ImGui_ImplSDL3_SwapBuffers;
     platform_io.Platform_SetWindowAlpha = ImGui_ImplSDL3_SetWindowAlpha;
     platform_io.Platform_CreateVkSurface = ImGui_ImplSDL3_CreateVkSurface;
+    platform_io.Platform_GetWindowDpiScale = +[](ImGuiViewport* viewport) -> float
+    {
+        ImGui_ImplSDL3_ViewportData* vd = (ImGui_ImplSDL3_ViewportData*)viewport->PlatformUserData;
+        return SDL_GetWindowDisplayScale(vd->Window);
+    };
 
     // Register main window handle (which is owned by the main application, not by us)
     // This is mostly for simplicity and consistency, so that our code (e.g. mouse handling etc.) can use same logic for main and secondary viewports.

@@ -53,6 +53,7 @@ int main()
         imgui_backend.create({}, std::move(render_backend));
         imgui_backend.main_window().show();
         imgui_backend.enable_docking();
+        imgui_backend.enable_high_dpi();
         // imgui_backend.enable_multi_viewport();
     }
 

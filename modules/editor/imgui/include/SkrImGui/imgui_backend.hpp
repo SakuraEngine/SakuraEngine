@@ -41,6 +41,7 @@ struct SKR_IMGUI_API ImGuiBackend {
     void enable_transparent_docking(bool enable = true);
     void enable_always_tab_bar(bool enable = true);
     void enable_move_window_by_blank_area(bool enable = true);
+    void enable_high_dpi(bool enable = true);
 
     // getter
     inline bool                      is_created() const { return _context != nullptr; }

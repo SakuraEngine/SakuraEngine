@@ -314,5 +314,17 @@ void ImGuiBackend::enable_move_window_by_blank_area(bool enable)
     SKR_ASSERT(is_created() && "please create context before set feature");
     _context->IO.ConfigWindowsMoveFromTitleBarOnly = !enable;
 }
-
+void ImGuiBackend::enable_high_dpi(bool enable)
+{
+    if (enable)
+    {
+        _context->IO.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;
+        _context->IO.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports;
+    }
+    else
+    {
+        _context->IO.ConfigFlags &= ~ImGuiConfigFlags_DpiEnableScaleFonts;
+        _context->IO.ConfigFlags &= ~ImGuiConfigFlags_DpiEnableScaleViewports;
+    }
+}
 } // namespace skr
