@@ -133,8 +133,9 @@ void template_test_sparse_hash_map(ModifyCapacity&& capacity_of, ClampCapacity&&
         REQUIRE_EQ(a.count(5), 1);
 
         a.add_ex(
-        Hash<KeyType>()(100),
-        [](auto* p) { *p = PairType{ 100, 100 }; });
+            Hash<KeyType>()(100),
+            [](auto* p) { *p = PairType{ 100, 100 }; }
+        );
         REQUIRE_EQ(a.size(), 7);
         REQUIRE_EQ(a.count(100), 1);
 
@@ -654,8 +655,9 @@ TEST_CASE("test sparse hash map")
     using TestHashMap = MultiSparseHashMap<KeyType, ValueType>;
 
     template_test_sparse_hash_map<KeyType, PairType, TestHashMap>(
-    [](auto capacity) { return capacity; },
-    [](auto capacity) { return capacity; });
+        [](auto capacity) { return capacity; },
+        [](auto capacity) { return capacity; }
+    );
 }
 
 TEST_CASE("test fixed sparse hash map")
@@ -669,8 +671,9 @@ TEST_CASE("test fixed sparse hash map")
     using TestHashMap                      = FixedMultiSparseHashMap<KeyType, ValueType, kFixedCapacity>;
 
     template_test_sparse_hash_map<KeyType, PairType, TestHashMap>(
-    [](auto capacity) { return kFixedCapacity; },
-    [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; });
+        [](auto capacity) { return kFixedCapacity; },
+        [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; }
+    );
 }
 
 TEST_CASE("test inline sparse hash map")
@@ -684,6 +687,21 @@ TEST_CASE("test inline sparse hash map")
 
     using TestHashMap = InlineMultiSparseHashMap<KeyType, ValueType, kInlineCapacity>;
     template_test_sparse_hash_map<KeyType, PairType, TestHashMap>(
-    [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
-    [](auto capacity) { return capacity; });
+        [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
+        [](auto capacity) { return capacity; }
+    );
+
+    SUBCASE("inline copy & move & assign & move assign")
+    {
+        using TestHashMap2 = InlineMultiSparseHashMap<KeyType, ValueType, 4>;
+
+        TestHashMap2 map({ { 1, 1 }, { 2, 2 }, { 3, 3 }, { 4, 4 } });
+
+        TestHashMap2 map_copy{ map };
+        TestHashMap2 map_move{ std::move(map) };
+        TestHashMap2 map_assign;
+        map_assign = map_copy;
+        TestHashMap2 map_move_assign;
+        map_move_assign = std::move(map_move);
+    }
 }

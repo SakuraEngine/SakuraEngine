@@ -257,10 +257,11 @@ void template_test_sparse_hash_set(ModifyCapacity&& capacity_of, ClampCapacity&&
         a.remove(114514);
 
         a.add_ex(
-        Hash<ValueType>()(100),
-        [](const ValueType& v) { return v == 100; },
-        [](auto* p) { new (p) ValueType(100); },
-        [](auto* p) { *p = 100; });
+            Hash<ValueType>()(100),
+            [](const ValueType& v) { return v == 100; },
+            [](auto* p) { new (p) ValueType(100); },
+            [](auto* p) { *p = 100; }
+        );
         REQUIRE_EQ(a.size(), 5);
         REQUIRE_EQ(a.sparse_size(), 5);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -733,8 +734,9 @@ TEST_CASE("test sparse hash set (Single)")
     using TestHashSet = SparseHashSet<ValueType>;
 
     template_test_sparse_hash_set<ValueType, TestHashSet>(
-    [](auto capacity) { return capacity; },
-    [](auto capacity) { return capacity; });
+        [](auto capacity) { return capacity; },
+        [](auto capacity) { return capacity; }
+    );
 }
 
 TEST_CASE("test fixed sparse hash set (Single)")
@@ -745,8 +747,9 @@ TEST_CASE("test fixed sparse hash set (Single)")
     using TestHashSet                        = FixedSparseHashSet<ValueType, kFixedCapacity>;
 
     template_test_sparse_hash_set<ValueType, TestHashSet>(
-    [](auto capacity) { return kFixedCapacity; },
-    [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; });
+        [](auto capacity) { return kFixedCapacity; },
+        [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; }
+    );
 }
 
 TEST_CASE("test inline sparse hash set (Single)")
@@ -759,6 +762,18 @@ TEST_CASE("test inline sparse hash set (Single)")
     using TestHashSet = InlineSparseHashSet<ValueType, kInlineCapacity>;
 
     template_test_sparse_hash_set<ValueType, TestHashSet>(
-    [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
-    [](auto capacity) { return capacity; });
+        [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
+        [](auto capacity) { return capacity; }
+    );
+
+    SUBCASE("inline copy & move & assign & move assign")
+    {
+        InlineSparseHashSet<ValueType, 4> set({ 1, 2, 3, 4 });
+        InlineSparseHashSet<ValueType, 4> set_copy{ set };
+        InlineSparseHashSet<ValueType, 4> set_move{ std::move(set) };
+        InlineSparseHashSet<ValueType, 4> set_assign;
+        set_assign = set_copy;
+        InlineSparseHashSet<ValueType, 4> set_move_assign;
+        set_move_assign = std::move(set_move);
+    }
 }

@@ -236,6 +236,19 @@ TEST_CASE("Test U8String")
         REQUIRE(heap_a.is_empty());
     }
 
+    SUBCASE("sso copy & move & assign & move assign")
+    {
+        String str{};
+        str.resize(String::SSOCapacity, u8'g');
+
+        String str_copy{ str };
+        String str_move{ std::move(str) };
+        String str_assign;
+        str_assign = str_copy;
+        String str_move_assign;
+        str_move_assign = std::move(str_move);
+    }
+
     SUBCASE("special assign")
     {
         auto test_assign_of_view = [](const StringView& view) {

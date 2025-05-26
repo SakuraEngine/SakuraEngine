@@ -509,9 +509,10 @@ TEST_CASE("test ring buffer")
     };
 
     template_test_ring_buffer<TestRingBuffer>(
-    [](auto capacity) { return capacity; },
-    [](auto capacity) { return capacity; },
-    shuffle_ring_buffer);
+        [](auto capacity) { return capacity; },
+        [](auto capacity) { return capacity; },
+        shuffle_ring_buffer
+    );
 }
 
 TEST_CASE("test fixed ring buffer")
@@ -521,9 +522,10 @@ TEST_CASE("test fixed ring buffer")
 
     using TestRingBuffer = FixedRingBuffer<uint32_t, kFixedCapacity>;
     template_test_ring_buffer<TestRingBuffer>(
-    [](auto capacity) { return kFixedCapacity; },
-    [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; },
-    [](auto&& vec) {});
+        [](auto capacity) { return kFixedCapacity; },
+        [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; },
+        [](auto&& vec) {}
+    );
 }
 
 TEST_CASE("test inline ring buffer")
@@ -576,7 +578,23 @@ TEST_CASE("test inline ring buffer")
         }
     };
     template_test_ring_buffer<TestRingBuffer>(
-    [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
-    [](auto capacity) { return capacity; },
-    shuffle_ring_buffer);
+        [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
+        [](auto capacity) { return capacity; },
+        shuffle_ring_buffer
+    );
+
+    SUBCASE("inline copy & move & assign & move assign")
+    {
+        using TestRingBuffer2 = InlineRingBuffer<uint32_t, 4>;
+
+        TestRingBuffer2 buffer({ 1, 2, 3, 4 });
+
+        TestRingBuffer2 buffer_copy{ buffer };
+        TestRingBuffer2 buffer_move{ std::move(buffer) };
+
+        TestRingBuffer2 buffer_assign;
+        buffer_assign = buffer_copy;
+        TestRingBuffer2 buffer_move_assign;
+        buffer_move_assign = std::move(buffer_move);
+    }
 }

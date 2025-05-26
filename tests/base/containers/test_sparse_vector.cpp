@@ -1023,11 +1023,12 @@ TEST_CASE("test sparse vector")
     using TestSparseVector = SparseVector<uint32_t>;
 
     template_test_sparse_vector<TestSparseVector>(
-    [](auto capacity) { return capacity; },
-    [](auto capacity) { return capacity; },
-    [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
-    [](auto&& vec) { REQUIRE_EQ(vec.storage(), nullptr); },
-    [](auto&& vec, auto&& v) { REQUIRE_EQ(vec.storage(), v); });
+        [](auto capacity) { return capacity; },
+        [](auto capacity) { return capacity; },
+        [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
+        [](auto&& vec) { REQUIRE_EQ(vec.storage(), nullptr); },
+        [](auto&& vec, auto&& v) { REQUIRE_EQ(vec.storage(), v); }
+    );
 }
 
 TEST_CASE("test fixed sparse vector")
@@ -1038,11 +1039,12 @@ TEST_CASE("test fixed sparse vector")
     using TestSparseVector = FixedSparseVector<uint32_t, kFixedCapacity>;
 
     template_test_sparse_vector<TestSparseVector>(
-    [](auto capacity) { return kFixedCapacity; },
-    [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; },
-    [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
-    [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
-    [](auto&& vec, auto&& v) { REQUIRE_NE(vec.storage(), nullptr); });
+        [](auto capacity) { return kFixedCapacity; },
+        [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; },
+        [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
+        [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
+        [](auto&& vec, auto&& v) { REQUIRE_NE(vec.storage(), nullptr); }
+    );
 }
 
 TEST_CASE("test inline sparse vector")
@@ -1054,9 +1056,22 @@ TEST_CASE("test inline sparse vector")
     using TestSparseVector = InlineSparseVector<uint32_t, kInlineCapacity>;
 
     template_test_sparse_vector<TestSparseVector>(
-    [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
-    [](auto capacity) { return capacity; },
-    [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
-    [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
-    [](auto&& vec, auto&& v) { REQUIRE_NE(vec.storage(), nullptr); });
+        [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
+        [](auto capacity) { return capacity; },
+        [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
+        [](auto&& vec) { REQUIRE_NE(vec.storage(), nullptr); },
+        [](auto&& vec, auto&& v) { REQUIRE_NE(vec.storage(), nullptr); }
+    );
+
+    SUBCASE("inline copy & move & assign & move assign")
+    {
+        InlineSparseVector<uint32_t, 4> v({ 1, 2, 3, 4 });
+
+        InlineSparseVector<uint32_t, 4> v_copy{ v };
+        InlineSparseVector<uint32_t, 4> v_move{ std::move(v) };
+        InlineSparseVector<uint32_t, 4> v_assign;
+        v_assign = v_copy;
+        InlineSparseVector<uint32_t, 4> v_move_assign;
+        v_move_assign = std::move(v_move);
+    }
 }
