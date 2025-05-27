@@ -902,11 +902,12 @@ TEST_CASE("test vector")
     using TestVector = Vector<uint32_t>;
 
     template_test_vector<TestVector>(
-    [](auto capacity) { return capacity; },
-    [](auto capacity) { return capacity; },
-    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto&& vec) { REQUIRE_EQ(vec.data(), nullptr); },
-    [](auto&& vec, auto&& v) { REQUIRE_EQ(vec.data(), v); });
+        [](auto capacity) { return capacity; },
+        [](auto capacity) { return capacity; },
+        [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
+        [](auto&& vec) { REQUIRE_EQ(vec.data(), nullptr); },
+        [](auto&& vec, auto&& v) { REQUIRE_EQ(vec.data(), v); }
+    );
 }
 
 TEST_CASE("test fixed vector")
@@ -918,11 +919,12 @@ TEST_CASE("test fixed vector")
     using TestVector = FixedVector<uint32_t, kFixedCapacity>;
 
     template_test_vector<TestVector>(
-    [](auto capacity) { return kFixedCapacity; },
-    [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; },
-    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); });
+        [](auto capacity) { return kFixedCapacity; },
+        [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; },
+        [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
+        [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
+        [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); }
+    );
 }
 
 TEST_CASE("test inline vector")
@@ -933,11 +935,23 @@ TEST_CASE("test inline vector")
     using TestVector = InlineVector<uint32_t, kInlineCapacity>;
 
     template_test_vector<TestVector>(
-    [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
-    [](auto capacity) { return capacity; },
-    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); });
+        [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
+        [](auto capacity) { return capacity; },
+        [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
+        [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
+        [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); }
+    );
+
+    SUBCASE("inline copy & move & assign & move assign")
+    {
+        InlineVector<uint32_t, 4> v({ 1, 2, 3, 4 });
+        InlineVector<uint32_t, 4> v_copy{ v };
+        InlineVector<uint32_t, 4> v_move{ std::move(v) };
+        InlineVector<uint32_t, 4> v_assign;
+        v_assign = v_copy;
+        InlineVector<uint32_t, 4> v_move_assign;
+        v_move_assign = std::move(v_move);
+    }
 }
 
 TEST_CASE("test inline vector2")
@@ -948,9 +962,10 @@ TEST_CASE("test inline vector2")
     using TestVector = InlineVector<uint32_t, kInlineCapacity>;
 
     template_test_vector<TestVector>(
-    [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
-    [](auto capacity) { return capacity; },
-    [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
-    [](auto&& vec) { REQUIRE_EQ(vec.data(), nullptr); },
-    [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); });
+        [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
+        [](auto capacity) { return capacity; },
+        [](auto&& vec) { REQUIRE_NE(vec.data(), nullptr); },
+        [](auto&& vec) { REQUIRE_EQ(vec.data(), nullptr); },
+        [](auto&& vec, auto&& v) { REQUIRE_NE(vec.data(), nullptr); }
+    );
 }

@@ -464,7 +464,7 @@ struct InlineVectorMemory : public Base, public Allocator {
     // memory operations
     inline void realloc(SizeType new_capacity) noexcept
     {
-        SKR_ASSERT(new_capacity != Base::_capacity);
+        SKR_ASSERT(new_capacity != Base::_capacity || Base::_capacity <= kInlineCount);
         SKR_ASSERT(new_capacity > 0);
         SKR_ASSERT(Base::_size <= new_capacity);
         new_capacity = new_capacity < kInlineCount ? kInlineCount : new_capacity;

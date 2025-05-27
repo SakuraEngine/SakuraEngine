@@ -434,43 +434,47 @@ TEST_CASE("Test U8StringView")
 
             idx   = 0;
             count = view.split_each(
-            [&](const StringView& v) {
-                REQUIRE_EQ(v, split_result[idx]);
-                ++idx;
-            },
-            split_view);
+                [&](const StringView& v) {
+                    REQUIRE_EQ(v, split_result[idx]);
+                    ++idx;
+                },
+                split_view
+            );
             REQUIRE_EQ(count, 5);
 
             idx   = 0;
             count = view.split_each(
-            [&](const StringView& v) {
-                REQUIRE_EQ(v, split_result_cull_empty[idx]);
-                ++idx;
-            },
-            split_view,
-            true);
+                [&](const StringView& v) {
+                    REQUIRE_EQ(v, split_result_cull_empty[idx]);
+                    ++idx;
+                },
+                split_view,
+                true
+            );
             REQUIRE_EQ(count, 4);
 
             idx   = 0;
             count = view.split_each(
-            [&](const StringView& v) {
-                REQUIRE_EQ(v, split_result[idx]);
-                ++idx;
-            },
-            split_view,
-            false,
-            3);
+                [&](const StringView& v) {
+                    REQUIRE_EQ(v, split_result[idx]);
+                    ++idx;
+                },
+                split_view,
+                false,
+                3
+            );
             REQUIRE_EQ(count, 3);
 
             idx   = 0;
             count = view.split_each(
-            [&](const StringView& v) {
-                REQUIRE_EQ(v, split_result_cull_empty[idx]);
-                ++idx;
-            },
-            split_view,
-            true,
-            3);
+                [&](const StringView& v) {
+                    REQUIRE_EQ(v, split_result_cull_empty[idx]);
+                    ++idx;
+                },
+                split_view,
+                true,
+                3
+            );
             REQUIRE_EQ(count, 3);
         }
     }

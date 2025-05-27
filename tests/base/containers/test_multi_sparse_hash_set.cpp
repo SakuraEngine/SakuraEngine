@@ -468,8 +468,9 @@ TEST_CASE("test sparse hash set (multi)")
     using TestHashSet = MultiSparseHashSet<ValueType>;
 
     template_test_multi_sparse_hash_set<ValueType, TestHashSet>(
-    [](auto capacity) { return capacity; },
-    [](auto capacity) { return capacity; });
+        [](auto capacity) { return capacity; },
+        [](auto capacity) { return capacity; }
+    );
 }
 
 TEST_CASE("test fixed sparse hash set (multi)")
@@ -480,8 +481,9 @@ TEST_CASE("test fixed sparse hash set (multi)")
     using TestHashSet                        = FixedMultiSparseHashSet<ValueType, kFixedCapacity>;
 
     template_test_multi_sparse_hash_set<ValueType, TestHashSet>(
-    [](auto capacity) { return kFixedCapacity; },
-    [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; });
+        [](auto capacity) { return kFixedCapacity; },
+        [](auto capacity) { return capacity < kFixedCapacity ? capacity : kFixedCapacity; }
+    );
 }
 
 TEST_CASE("test inline sparse hash set (multi)")
@@ -494,6 +496,20 @@ TEST_CASE("test inline sparse hash set (multi)")
     using TestHashSet = InlineMultiSparseHashSet<ValueType, kInlineCapacity>;
 
     template_test_multi_sparse_hash_set<ValueType, TestHashSet>(
-    [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
-    [](auto capacity) { return capacity; });
+        [](auto capacity) { return capacity < kInlineCapacity ? kInlineCapacity : capacity; },
+        [](auto capacity) { return capacity; }
+    );
+
+    SUBCASE("inline copy & move & assign & move assign")
+    {
+        using TestHashSet2 = InlineMultiSparseHashSet<ValueType, 4>;
+
+        TestHashSet2 set({ 1, 2, 3, 4 });
+        TestHashSet2 set_copy(set);
+        TestHashSet2 set_move(std::move(set));
+        TestHashSet2 set_assign;
+        set_assign = set_copy;
+        TestHashSet2 set_move_assign;
+        set_move_assign = std::move(set_move);
+    }
 }
