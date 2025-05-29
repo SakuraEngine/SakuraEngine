@@ -74,10 +74,31 @@ target("SkrCompileFlags")
     add_cxflags(
         "/Zc:__cplusplus", -- enable __cplusplus macro
         "/FC", -- output full path in diagnostics
-        "/GR-", -- disable RTTI
         { public = true, tools = {"clang_cl", "cl"} }
     )
 
+    -- Enable RTTI for special targets' requirement (like pybind11)
+    on_load(function(target)
+        if (target:values("skr_use_rtti") or get_config("skr_use_rtti")) then
+            target:add("cxflags", 
+                "/GR", -- enable RTTI
+                { public = true, tools = {"clang_cl", "cl"} }
+            )
+        else
+            target:add("cxflags", 
+                "/GR-", -- disable RTTI
+                { public = true, tools = {"clang_cl", "cl"} }
+            )
+            target:add("cxflags", "-fno-rtti", "-fno-rtti-data", {
+                tools = {"clang"},
+                public = true
+            })
+            target:add("cxflags", "-fno-rtti", {
+                tools = {"gcc"},
+                public = true
+            })
+        end
+    end)
     -- util flag for clang-cl
     add_cxflags(
         "-ftime-trace",
