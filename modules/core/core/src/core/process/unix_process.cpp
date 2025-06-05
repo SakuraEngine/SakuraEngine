@@ -20,8 +20,12 @@ typedef struct SProcess {
     pid_t pid;
 } SProcess;
 
-SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments, uint32_t arg_count, const char8_t* stdout_file)
+SProcessHandle skr_run_process_with(SkrRunProcessArgs *args)
 {
+    const char8_t* command = args->command;
+    const char8_t** arguments = args->arguments;
+    uint32_t arg_count = args->arg_count;
+    const char8_t* stdout_file = args->stdout_file;
     skr::Vector<skr::String> Args;
     for (size_t i = 0; i < arg_count; ++i)
     {
@@ -102,6 +106,17 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
     SProcessHandle result = SkrNew<SProcess>();
     result->pid           = ChildPid;
     return result;
+}
+
+SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments, uint32_t arg_count, const char8_t* stdout_file)
+{
+    SkrRunProcessArgs args = {
+        .command = command,
+        .arguments = arguments,
+        .arg_count = arg_count,
+        .stdout_file = stdout_file,
+    };
+    return skr_run_process_with(&args);
 }
 
 const char8_t* skr_get_current_process_name()

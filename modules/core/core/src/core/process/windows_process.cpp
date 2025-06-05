@@ -15,8 +15,39 @@ typedef struct SProcess {
     HANDLE              stdOut = NULL;
 } SProcess;
 
-SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments, uint32_t arg_count, const char8_t* stdout_file)
+void setup_show_window_flag(STARTUPINFOA* startupInfo, int32_t show_window_flag)
 {
+    startupInfo->dwFlags |= STARTF_USESHOWWINDOW;
+    switch (show_window_flag)
+    {
+        case SKR_PROCESS_SW_HIDE:
+            startupInfo->wShowWindow = SW_HIDE;
+            break;
+        case SKR_PROCESS_SW_SHOWMAXIMIZED:
+            startupInfo->wShowWindow = SW_SHOWMAXIMIZED;
+            break;
+        case SKR_PROCESS_SW_SHOWMINIMIZED:
+            startupInfo->wShowWindow = SW_SHOWMINIMIZED;
+            break;
+        case SKR_PROCESS_SW_SHOWMINNOACTIVE:
+            startupInfo->wShowWindow = SW_SHOWMINNOACTIVE;
+            break;
+        case SKR_PROCESS_SW_SHOWNOACTIVATE:
+            startupInfo->wShowWindow = SW_SHOWNOACTIVATE;
+            break;
+        case SKR_PROCESS_SW_SHOWNORMAL:
+        default:
+            startupInfo->wShowWindow = SW_SHOWNORMAL;
+            break;
+    }
+}
+
+SProcessHandle skr_run_process_with(SkrRunProcessArgs *args)
+{
+    const char8_t* command = args->command;
+    const char8_t** arguments = args->arguments;
+    uint32_t arg_count = args->arg_count;
+    const char8_t* stdout_file = args->stdout_file;
     skr::String commandLine = skr::format(u8"\"{}\"", command);
     for (size_t i = 0; i < arg_count; ++i)
     {
@@ -46,7 +77,7 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
     memset(&startupInfo, 0, sizeof startupInfo);
     memset(&processInfo, 0, sizeof processInfo);
     startupInfo.cb = sizeof(STARTUPINFO);
-    // startupInfo.dwFlags |= STARTF_USESHOWWINDOW;
+    setup_show_window_flag(&startupInfo, args->show_window_flag);
     if (stdOut)
     {
         startupInfo.dwFlags |= STARTF_USESTDHANDLES;
@@ -64,6 +95,18 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
     result->processInfo   = processInfo;
     result->stdOut        = stdOut;
     return result;
+}
+
+SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments, uint32_t arg_count, const char8_t* stdout_file)
+{
+    SkrRunProcessArgs args = {
+        .command = command,
+        .arguments = arguments,
+        .arg_count = arg_count,
+        .stdout_file = stdout_file,
+        .show_window_flag = SKR_PROCESS_SW_SHOWNORMAL
+    };
+    return skr_run_process_with(&args);
 }
 
 const char8_t* skr_get_current_process_name()
