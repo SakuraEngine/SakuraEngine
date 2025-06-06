@@ -23,6 +23,11 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
         commandLine.append(u8" ");
         commandLine.append(skr::String(arguments[i]));
     }
+    auto len = commandLine.to_wide_length();
+    std::unique_ptr<wchar_t[]> commandLineW(new wchar_t[len + 1]);
+    std::memset(commandLineW.get(), 0, (len + 1) * sizeof(wchar_t));
+    commandLine.to_wide(commandLineW.get());
+
 
     HANDLE stdOut = NULL;
     if (stdout_file)
@@ -41,11 +46,11 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
                              FILE_ATTRIBUTE_NORMAL, NULL);
     }
 
-    STARTUPINFOA        startupInfo;
+    STARTUPINFOW        startupInfo;
     PROCESS_INFORMATION processInfo;
     memset(&startupInfo, 0, sizeof startupInfo);
     memset(&processInfo, 0, sizeof processInfo);
-    startupInfo.cb = sizeof(STARTUPINFO);
+    startupInfo.cb = sizeof(STARTUPINFOW);
     // startupInfo.dwFlags |= STARTF_USESHOWWINDOW;
     if (stdOut)
     {
@@ -54,9 +59,11 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
         startupInfo.hStdError  = stdOut;
     }
 
-    if (!CreateProcessA(
-        NULL, (LPSTR)commandLine.c_str(), NULL,
-        NULL, stdOut ? TRUE : FALSE, 0 /*CREATE_NO_WINDOW*/,
+    auto create_flags = CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW;
+
+    if (!CreateProcessW(
+        NULL, commandLineW.get(), NULL,
+        NULL, stdOut ? TRUE : FALSE, create_flags,
         NULL, NULL, &startupInfo, &processInfo))
         return nullptr;
 
