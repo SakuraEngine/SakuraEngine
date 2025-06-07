@@ -405,8 +405,10 @@ void mi_register_output(mi_output_fun* out, void* arg) mi_attr_noexcept {
 // add stderr to the delayed output after the module is loaded
 static void mi_add_stderr_output(void) {
   mi_assert_internal(mi_out_default == NULL);
-  mi_out_buf_flush(&mi_out_stderr, false, NULL); // flush current contents to stderr
-  mi_out_default = &mi_out_buf_stderr;           // and add stderr to the delayed output
+  if (mi_out_default==NULL) {
+    mi_out_buf_flush(&mi_out_stderr, false, NULL); // flush current contents to stderr
+    mi_out_default = &mi_out_buf_stderr;           // and add stderr to the delayed output
+  }
 }
 
 // --------------------------------------------------------
@@ -544,7 +546,7 @@ void _mi_warning_message(const char* fmt, ...) {
 
 
 #if MI_DEBUG
-void _mi_assert_fail(const char* assertion, const char* fname, unsigned line, const char* func ) {
+mi_decl_noreturn mi_decl_cold void _mi_assert_fail(const char* assertion, const char* fname, unsigned line, const char* func ) mi_attr_noexcept {
   _mi_fprintf(NULL, NULL, "mimalloc: assertion failed: at \"%s\":%u, %s\n  assertion: \"%s\"\n", fname, line, (func==NULL?"":func), assertion);
   abort();
 }

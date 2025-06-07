@@ -76,7 +76,7 @@ size_t mi_arena_min_alignment(void) {
   return MI_ARENA_SLICE_ALIGN;
 }
 
-static bool mi_arena_commit(mi_arena_t* arena, void* start, size_t size, bool* is_zero, size_t already_committed) {
+mi_decl_nodiscard static bool mi_arena_commit(mi_arena_t* arena, void* start, size_t size, bool* is_zero, size_t already_committed) {
   if (arena != NULL && arena->commit_fun != NULL) {
     return (*arena->commit_fun)(true, start, size, is_zero, arena->commit_fun_arg);
   }
@@ -200,28 +200,30 @@ static mi_decl_noinline void* mi_arena_try_alloc_at(
       // now actually commit
       bool commit_zero = false;
       if (!mi_arena_commit(arena, p, mi_size_of_slices(slice_count), &commit_zero, mi_size_of_slices(slice_count - already_committed_count))) {
-        memid->initially_committed = false;
+        // if the commit fails, we roll back
+        _mi_arenas_free( p, mi_size_of_slices(slice_count), *memid);  // this will uncommit as well
+        return NULL;
       }
-      else {
-        // committed
-        if (commit_zero) { memid->initially_zero = true; }
-        #if MI_DEBUG > 1
-        if (memid->initially_zero) {
-          if (!mi_mem_is_zero(p, mi_size_of_slices(slice_count))) {
-            _mi_error_message(EFAULT, "interal error: arena allocation was not zero-initialized!\n");
-            memid->initially_zero = false;
-          }
+      
+      // committed
+      if (commit_zero) { memid->initially_zero = true; }
+      #if MI_DEBUG > 1
+      if (memid->initially_zero) {
+        if (!mi_mem_is_zero(p, mi_size_of_slices(slice_count))) {
+          _mi_error_message(EFAULT, "interal error: arena allocation was not zero-initialized!\n");
+          memid->initially_zero = false;
         }
-        #endif
       }
+      #endif
     }
     else {
-      // already fully commited.
+      // already fully committed.
+      _mi_os_reuse(p, mi_size_of_slices(slice_count));
       // if the OS has overcommit, and this is the first time we access these pages, then
       // count the commit now (as at arena reserve we didn't count those commits as these are on-demand)
       if (_mi_os_has_overcommit() && touched_slices > 0) {
         mi_subproc_stat_increase( arena->subproc, committed, mi_size_of_slices(touched_slices));
-      }
+      }      
     }
     // tool support
     if (memid->initially_zero) {
@@ -232,8 +234,7 @@ static mi_decl_noinline void* mi_arena_try_alloc_at(
     }
   }
   else {
-    // no need to commit, but check if already fully committed
-    // commit requested, but the range may not be committed as a whole: ensure it is committed now
+    // no need to commit, but check if it is already fully committed
     memid->initially_committed = mi_bitmap_is_setN(arena->slices_committed, slice_index, slice_count);
     if (!memid->initially_committed) {
       // partly committed.. adjust stats
@@ -246,6 +247,7 @@ static mi_decl_noinline void* mi_arena_try_alloc_at(
 
   mi_assert_internal(mi_bbitmap_is_clearN(arena->slices_free, slice_index, slice_count));
   if (commit) { mi_assert_internal(mi_bitmap_is_setN(arena->slices_committed, slice_index, slice_count)); }
+  if (commit) { mi_assert_internal(memid->initially_committed); }
   mi_assert_internal(mi_bitmap_is_setN(arena->slices_dirty, slice_index, slice_count));
 
   return p;
@@ -677,7 +679,10 @@ static mi_page_t* mi_arenas_page_alloc_fresh(size_t slice_count, size_t block_si
     commit_size = _mi_align_up(block_start + block_size, MI_PAGE_MIN_COMMIT_SIZE);
     if (commit_size > page_noguard_size) { commit_size = page_noguard_size; }
     bool is_zero;
-    mi_arena_commit( mi_memid_arena(memid), page, commit_size, &is_zero, 0);
+    if (!mi_arena_commit( mi_memid_arena(memid), page, commit_size, &is_zero, 0)) {
+      _mi_arenas_free(page, alloc_size, memid);
+      return NULL;
+    }
     if (!memid.initially_zero && !is_zero) {
       _mi_memzero_aligned(page, commit_size);
     }
@@ -711,6 +716,7 @@ static mi_page_t* mi_arenas_page_alloc_fresh(size_t slice_count, size_t block_si
   mi_assert_internal(mi_page_block_size(page) == block_size);
   mi_assert_internal(mi_page_is_abandoned(page));
   mi_assert_internal(mi_page_is_owned(page));
+
   return page;
 }
 
@@ -730,13 +736,15 @@ static mi_page_t* mi_arenas_page_regular_alloc(mi_heap_t* heap, size_t slice_cou
   const bool commit = (slice_count <= mi_slice_count_of_size(MI_PAGE_MIN_COMMIT_SIZE) ||  // always commit small pages
                        (commit_on_demand == 2 && _mi_os_has_overcommit()) || (commit_on_demand == 0));
   page = mi_arenas_page_alloc_fresh(slice_count, block_size, 1, req_arena, heap->numa_node, commit, tld);
-  if (page != NULL) {
-    mi_assert_internal(page->memid.memkind != MI_MEM_ARENA || page->memid.mem.arena.slice_count == slice_count);
-    _mi_page_init(heap, page);
-    return page;
-  }
+  if (page == NULL) return NULL;
 
-  return NULL;
+  mi_assert_internal(page->memid.memkind != MI_MEM_ARENA || page->memid.mem.arena.slice_count == slice_count);
+  if (!_mi_page_init(heap, page)) {
+    _mi_arenas_free( page, mi_page_full_size(page), page->memid);
+    return NULL;
+  }
+  
+  return page;
 }
 
 // Allocate a page containing one block (very large, or with large alignment)
@@ -755,7 +763,10 @@ static mi_page_t* mi_arenas_page_singleton_alloc(mi_heap_t* heap, size_t block_s
   if (page == NULL) return NULL;
 
   mi_assert(page->reserved == 1);
-  _mi_page_init(heap, page);
+  if (!_mi_page_init(heap, page)) {
+    _mi_arenas_free( page, mi_page_full_size(page), page->memid);
+    return NULL;
+  }
 
   return page;
 }
@@ -1068,6 +1079,7 @@ bool _mi_arenas_contain(const void* p) {
 // destroy owned arenas; this is unsafe and should only be done using `mi_option_destroy_on_exit`
 // for dynamic libraries that are unloaded and need to release all their allocated memory.
 static void mi_arenas_unsafe_destroy(mi_subproc_t* subproc) {
+  mi_assert_internal(subproc != NULL);
   const size_t max_arena = mi_arenas_get_count(subproc);
   size_t new_max_arena = 0;
   for (size_t i = 0; i < max_arena; i++) {
@@ -1076,7 +1088,7 @@ static void mi_arenas_unsafe_destroy(mi_subproc_t* subproc) {
       // mi_lock_done(&arena->abandoned_visit_lock);
       mi_atomic_store_ptr_release(mi_arena_t, &subproc->arenas[i], NULL);
       if (mi_memkind_is_os(arena->memid.memkind)) {
-        _mi_os_free(mi_arena_start(arena), mi_arena_size(arena), arena->memid);
+        _mi_os_free_ex(mi_arena_start(arena), mi_arena_size(arena), true, arena->memid, subproc); // pass `subproc` to avoid accessing the heap pointer (in `_mi_subproc()`)
       }
     }
   }
@@ -1090,7 +1102,7 @@ static void mi_arenas_unsafe_destroy(mi_subproc_t* subproc) {
 // destroy owned arenas; this is unsafe and should only be done using `mi_option_destroy_on_exit`
 // for dynamic libraries that are unloaded and need to release all their allocated memory.
 void _mi_arenas_unsafe_destroy_all(mi_tld_t* tld) {
-  mi_arenas_unsafe_destroy(_mi_subproc());
+  mi_arenas_unsafe_destroy(tld->subproc);
   _mi_arenas_collect(true /* force purge */, true /* visit all*/, tld);  // purge non-owned arenas
 }
 
@@ -1204,11 +1216,16 @@ static bool mi_manage_os_memory_ex2(mi_subproc_t* subproc, void* start, size_t s
     size_t commit_size = mi_size_of_slices(info_slices);
     // leave a guard OS page decommitted at the end?
     if (!memid.is_pinned) { commit_size -= _mi_os_secure_guard_page_size(); }
+    bool ok = false;
     if (commit_fun != NULL) {
-      (*commit_fun)(true /* commit */, arena, commit_size, NULL, commit_fun_arg);
+      ok = (*commit_fun)(true /* commit */, arena, commit_size, NULL, commit_fun_arg);
     }
     else {
-      _mi_os_commit(arena, commit_size, NULL);
+      ok = _mi_os_commit(arena, commit_size, NULL);
+    }
+    if (!ok) {
+      _mi_warning_message("unable to commit meta-data for OS memory");
+      return false;
     }
   }
   else if (!memid.is_pinned) {
@@ -1293,7 +1310,7 @@ static int mi_reserve_os_memory_ex2(mi_subproc_t* subproc, size_t size, bool com
   void* start = _mi_os_alloc_aligned(size, MI_ARENA_SLICE_ALIGN, commit, allow_large, &memid);
   if (start == NULL) return ENOMEM;
   if (!mi_manage_os_memory_ex2(subproc, start, size, -1 /* numa node */, exclusive, memid, NULL, NULL, arena_id)) {
-    _mi_os_free_ex(start, size, commit, memid);
+    _mi_os_free_ex(start, size, commit, memid, NULL);
     _mi_verbose_message("failed to reserve %zu KiB memory\n", _mi_divide_up(size, 1024));
     return ENOMEM;
   }
