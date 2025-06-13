@@ -18,7 +18,10 @@ public static class SkrTask
 
         if (BuildSystem.TargetOS != OSPlatform.Windows)
         {
-            SkrTask.AddCFiles(Path.Combine(MarlSourceDir, "src/**.c"), Path.Combine(MarlSourceDir, "src/**.S"));
+            SkrTask.AddCFiles(
+                Path.Combine(MarlSourceDir, "src/**.c"), 
+                Path.Combine(MarlSourceDir, "src/**.S")
+            );
         }
 
         if (!Engine.ShippingOneArchive)

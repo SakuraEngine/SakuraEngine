@@ -10,9 +10,9 @@ public static class SkrInput
         var SkrInput = Engine
             .Module("SkrInput")
             .EnableUnityBuild()
-            .Depend(Visibility.Public, "SkrRT")
+            .Depend(Visibility.Public, "SDL3", "SkrRT")
             .IncludeDirs(Visibility.Public, "include")
-            .AddCppFiles("src/*.cpp", "src/common/*.cpp", "src/sdl2/*.cpp");
+            .AddCppFiles("src/*.cpp", "src/common/*.cpp", "src/sdl3/*.cpp");
 
         if (BuildSystem.TargetOS == OSPlatform.Windows)
         {

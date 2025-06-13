@@ -62,8 +62,7 @@ namespace SB
                 var ParamFile = Path.Combine(CodegenDirectory, $"{Target.Name}_codegen_config.json");
                 File.WriteAllText(ParamFile, Json.Serialize(Config));
 
-                CodegenDoctor.Installation!.Wait();
-                var EXE = Path.Combine(CodegenDoctor.Installation.Result, BS.HostOS == OSPlatform.Windows ? "bun.exe" : "bun");
+                var EXE = Path.Combine(CodegenDoctor.Installation!.Result, BS.HostOS == OSPlatform.Windows ? "bun.exe" : "bun");
                 
                 var ExitCode = BS.RunProcess(EXE, $"{GenerateScript} {ParamFile}", out var OutputInfo, out var ErrorInfo, null);
                 if (ExitCode != 0)
@@ -121,6 +120,7 @@ namespace SB
         public override bool Check()
         {
             Installation = Install.Tool("bun_1.2.5");
+            Installation.Wait();
             return true;
         }
         public override bool Fix() 

@@ -49,7 +49,7 @@ namespace SB
             // Compiler arguments
             var ArgsWithoutPCH = Target.Arguments.ToDictionary();
             ArgsWithoutPCH.Remove("UsePCHAST");
-            var CompilerArgs = Toolchain.Compiler.CreateArgumentDriver(CFamily.Cpp)
+            var CompilerArgs = Toolchain.Compiler.CreateArgumentDriver(CFamily.Cpp, false)
                 .AddArguments(ArgsWithoutPCH)
                 .CalculateArguments()
                 .Values.SelectMany(x => x).ToList();
@@ -58,11 +58,17 @@ namespace SB
             if (BS.TargetOS == OSPlatform.Windows)
                 CompilerArgs.Add("--driver-mode=cl");
             MetaArgs.AddRange(CompilerArgs);
+            MetaArgs.AddRange(
+                "-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX15.5.sdk/usr/include/c++/v1",
+                "-isystem /Library/Developer/CommandLineTools/usr/lib/clang/17/include",
+                "-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX15.5.sdk/usr/include",
+                "-isystem /Library/Developer/CommandLineTools/usr/include",
+                "-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX15.5.sdk/System/Library/Frameworks"
+            );
             // Run meta.exe
             bool Changed = Depend.OnChanged(Target.Name, MetaAttribute.MetaDirectory, Name, (Depend depend) =>
             {
-                MetaDoctor.Installation!.Wait();
-                var EXE = Path.Combine(MetaDoctor.Installation.Result, BS.HostOS == OSPlatform.Windows ? "meta.exe" : "meta");
+                var EXE = Path.Combine(MetaDoctor.Installation!.Result, BS.HostOS == OSPlatform.Windows ? "meta.exe" : "meta");
 
                 int ExitCode = BS.RunProcess(EXE, string.Join(" ", MetaArgs), out var OutputInfo, out var ErrorInfo);
                 if (ExitCode != 0)
@@ -88,6 +94,7 @@ namespace SB
         public override bool Check()
         {
             Installation = Install.Tool("meta_v1.0.3-llvm_19.1.7");
+            Installation!.Wait();
             return true;
         }
         public override bool Fix() 

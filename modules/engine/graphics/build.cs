@@ -32,9 +32,9 @@ public static class SkrGraphics
             OCOptions.Arguments.CppFlags(Visibility.Private, "-fno-objc-arc");
 
             SkrGraphics
-                .AddCFiles(OCOptions, "src/build.*.m") 
-                .AddCppFiles(OCOptions, "src/build.*.mm") 
-                // .AddFrameworks(Visibility.Public, "CoreFoundation", "Cocoa", "Metal", "IOKit");
+                .AddObjCFiles(OCOptions, "src/build.*.m") 
+                .AddObjCppFiles(OCOptions, "src/build.*.mm") 
+                .AppleFramework(Visibility.Public, "CoreFoundation", "Cocoa", "Metal", "IOKit")
                 .Defines(Visibility.Private, "VK_USE_PLATFORM_MACOS_MVK");
         }
 

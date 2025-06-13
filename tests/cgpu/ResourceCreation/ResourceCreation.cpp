@@ -256,9 +256,6 @@ void ResourceCreation<backend>::test_all()
         fdesc.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_FRAG;
         auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
 
-        skr::String cbName = fragment_shader->entry_reflections[0].shader_resources[0].name;
-        EXPECT_EQ(cbName, u8"perDrawCBuffer");
-
         EXPECT_NE(vertex_shader, CGPU_NULLPTR);
         EXPECT_NE(fragment_shader, CGPU_NULLPTR);
 

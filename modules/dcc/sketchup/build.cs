@@ -40,19 +40,24 @@ public static class SkrSketchUp
     {
         var SkrSketchUpLive = Engine.Module("SkrSketchUpLive", "SKR_SKETCH_UP")
             .ApplySketchUpSettings()
-            .AddCppFiles("src/build.*.cpp")
-            .Link(Visibility.Public, "sketchup");
+            .AddCppFiles("src/build.*.cpp");
         
         if (BuildSystem.TargetOS == OSPlatform.Windows)
         {
             SkrSketchUpLive.LinkDirs(Visibility.Public, "libs/windows")
+                .Link(Visibility.Public, "sketchup")
                 .Link(Visibility.Public, "x64-msvcrt-ruby270");
+        }
+        else if (BuildSystem.TargetOS == OSPlatform.OSX)
+        {
+            // SkrSketchUpLive.BundleLoader("/Applications/SketchUp 2023/SketchUp.app/Contents/MacOS/SketchUp");
         }
     }
 
     private static Target ApplySketchUpSettings(this Target @this)
     {
         @this.Depend(Visibility.Public, "SkrCore")
+            .AppleFramework(Visibility.Public, "CoreFoundation")
             .IncludeDirs(Visibility.Public, "SketchUp");
         return @this;
     }

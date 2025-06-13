@@ -57,15 +57,15 @@ namespace SB.Core
                     {
                         case "vcvarsall.bat":
                             FoundVS = true;
-                            VCVarsAllBat = file.Contains("Preview") ? file : VCVarsAllBat;
+                            VCVarsAllBat = file; //file.Contains("Preview") ? file : VCVarsAllBat;
                             break;
                         case "vcvars.bat":
                             FoundVS = true;
-                            VCVarsBat = file.Contains("Preview") ? file : VCVarsBat;
+                            VCVarsBat = file; //file.Contains("Preview") ? file : VCVarsBat;
                             break;
                         case "winsdk.bat":
                             FoundVS = true;
-                            WindowsSDKBat = file.Contains("Preview") ? file : WindowsSDKBat;
+                            WindowsSDKBat = file; //file.Contains("Preview") ? file : WindowsSDKBat;
                             break;
                     }
                 }

@@ -30,9 +30,9 @@ namespace SB.Core
             });
         }
 
-        public IArgumentDriver CreateArgumentDriver(CFamily Language)
+        public IArgumentDriver CreateArgumentDriver(CFamily Language, bool isPCH)
         {
-            return new ClangCLArgumentDriver(Language);
+            return new ClangCLArgumentDriver(Language, isPCH);
         }
 
         public CompileResult Compile(TaskEmitter Emitter, Target Target, IArgumentDriver Driver, string? WorkDirectory = null)

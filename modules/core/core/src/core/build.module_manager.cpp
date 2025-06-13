@@ -323,9 +323,9 @@ ModuleInfo ModuleManagerImpl::parseMetaData(const char8_t* metadata)
         reader.ReadString(u8"prettyname", info.prettyname);
         reader.ReadString(u8"version", info.version);
         reader.ReadString(u8"linking", info.linking);
-        reader.ReadString(u8"url", info.url);
-        reader.ReadString(u8"license", info.license);
-        reader.ReadString(u8"copyright", info.copyright);
+        // reader.ReadString(u8"url", info.url);
+        // reader.ReadString(u8"license", info.license);
+        // reader.ReadString(u8"copyright", info.copyright);
 
         size_t dep_count;
         reader.StartArray(u8"dependencies", dep_count);

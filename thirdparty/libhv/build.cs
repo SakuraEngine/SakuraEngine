@@ -12,7 +12,8 @@ public static class LibHV
             .TargetType(TargetType.HeaderOnly)
             .Defines(Visibility.Public, "HV_STATICLIB")
             .IncludeDirs(Visibility.Public, "include")
-            .Link(Visibility.Public, "hv_static");
+            .Link(Visibility.Public, "hv_static")
+            .AppleFramework(Visibility.Public, "Security");
     }
 }
 
@@ -20,7 +21,7 @@ public class LibHVDoctor : DoctorAttribute
 {
     public override bool Check()
     {
-        Install.SDK("libhv").Wait();
+        Install.SDK("libhv_1.3.3a").Wait();
         return true;
     }
     public override bool Fix() 

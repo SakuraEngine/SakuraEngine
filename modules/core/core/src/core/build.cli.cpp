@@ -119,7 +119,7 @@ bool CmdOptionData::init(attr::CmdOption config, TypeSignatureView type_sig, voi
     // check reset param kind
     if (_config.name == u8"..." && _kind != EKind::StringVector)
     {
-        SKR_LOG_FMT_ERROR(u8"option '...' must be a string vector!");
+        SKR_LOG_ERROR(u8"option '...' must be a string vector!");
         return false;
     }
 
@@ -300,12 +300,12 @@ bool CmdNode::solve()
             // check signature
             if (!field_type_sig.is_type())
             {
-                SKR_LOG_FMT_ERROR(u8"sub command must be a type!");
+                SKR_LOG_ERROR(u8"sub command must be a type!");
                 return;
             }
             if (field_type_sig.is_decayed_pointer())
             {
-                SKR_LOG_FMT_ERROR(u8"sub command must be a value field!");
+                SKR_LOG_ERROR(u8"sub command must be a value field!");
                 return;
             }
 
@@ -316,7 +316,7 @@ bool CmdNode::solve()
             const RTTRType* sub_cmd_type = get_type_from_guid(type_id);
             if (!sub_cmd_type)
             {
-                SKR_LOG_FMT_ERROR(u8"sub command type not found!");
+                SKR_LOG_ERROR(u8"sub command type not found!");
                 return;
             }
 
@@ -354,7 +354,7 @@ bool CmdNode::solve()
             TypeSignatureTyped<void()> sig;
             if (!method->signature_equal(sig.view(), ETypeSignatureCompareFlag::Strict))
             {
-                SKR_LOG_FMT_ERROR(u8"exec method must be a void() method!");
+                SKR_LOG_ERROR(u8"exec method must be a void() method!");
                 return;
             }
 
@@ -551,7 +551,7 @@ void CmdParser::main_cmd(const RTTRType* type, void* object, attr::CmdSub config
 {
     if (_root_cmd.object != nullptr)
     {
-        SKR_LOG_FMT_ERROR(u8"main command has registered!");
+        SKR_LOG_ERROR(u8"main command has registered!");
         return;
     }
 

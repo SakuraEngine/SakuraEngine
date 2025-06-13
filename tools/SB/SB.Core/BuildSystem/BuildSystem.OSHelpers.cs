@@ -1,8 +1,10 @@
 ﻿using System.Text;
+using System.IO;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using SB.Core;
+using System.Security.AccessControl;
 
 namespace SB
 {
@@ -37,6 +39,13 @@ namespace SB
         {
             using (Profiler.BeginZone($"RunProcess", color: (uint)Profiler.ColorType.Yellow1))
             {
+                if (!OperatingSystem.IsWindows())
+                {
+                    var Mode = File.GetUnixFileMode(ExecutablePath);
+                    if (!Mode.HasFlag(UnixFileMode.UserExecute))
+                        File.SetUnixFileMode(ExecutablePath, UnixFileMode.UserExecute);
+                }
+
                 try
                 {
                     Process P = new Process
@@ -49,7 +58,8 @@ namespace SB
                             RedirectStandardError = true,
                             CreateNoWindow = false,
                             UseShellExecute = false,
-                            Arguments = Arguments
+                            Arguments = Arguments,
+                            WorkingDirectory = Directory.GetParent(ExecutablePath)!.FullName
                         }
                     };
                     if (WorkingDirectory is not null)

@@ -11,6 +11,9 @@ public static class Freetype
         BuildSystem.Package("freetype")
             .AddTarget("freetype", (Target Target, PackageConfig Config) =>
             {
+                if (Config.Version != new Version(2, 13, 0))
+                    throw new TaskFatalError("freetype version mismatch!", "freetype version mismatch, only v2.13.0 is supported in source.");
+
                 Target.TargetType(TargetType.Static)
                     .EnableUnityBuild()
                     .OptimizationLevel(OptimizationLevel.Fastest)
@@ -18,7 +21,7 @@ public static class Freetype
                     .IncludeDirs(Visibility.Private, "port/ft-zlib")
                     .Defines(Visibility.Private, "FT2_BUILD_LIBRARY", "FT_CONFIG_OPTION_SYSTEM_ZLIB")
                     .Require("zlib", new PackageConfig { Version = new(1, 2, 8) })
-                    .Depend(Visibility.Private, "zlib@zlib")
+                    .Depend(Visibility.Public, "zlib@zlib")
                     .ClangCl_CFlags(Visibility.Private, "-Wno-macro-redefined")
                     .Cl_CFlags(Visibility.Private, "/wd4005")
                     .AddCFiles(

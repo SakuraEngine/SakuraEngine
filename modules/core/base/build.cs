@@ -8,7 +8,7 @@ public static class SkrBase
     {
         var Target = Engine.StaticComponent("SkrBase", "SkrCore")
             .EnableUnityBuild()
-            .Depend(Visibility.Public, "SkrProfile")
+            .Depend(Visibility.Public, "rtm", "SkrProfile")
             // TODO: MIGRATE COMPILE FLAGS FROM XMAKE
             // .Depend(Visibility.Public, "SkrCompileFlags")
             .IncludeDirs(Visibility.Public, "include")
@@ -18,6 +18,6 @@ public static class SkrBase
         if (BuildSystem.TargetOS == OSPlatform.Windows)
             Target.Link(Visibility.Private, "advapi32");
         else if (BuildSystem.TargetOS == OSPlatform.OSX)
-            Target.Link(Visibility.Private, "CoreFoundation");
+            Target.AppleFramework(Visibility.Private, "CoreFoundation");
     }
 }

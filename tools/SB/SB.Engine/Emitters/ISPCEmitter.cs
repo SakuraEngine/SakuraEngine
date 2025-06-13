@@ -11,7 +11,8 @@ namespace SB
         public override bool EmitFileTask(Target Target, FileList FileList) => FileList.Is<ISPCFileList>();
         public override IArtifact? PerFileTask(Target Target, FileList FileList, FileOptions? Options, string SourceFile)
         {
-            var GeneratedObj = GetObjectFile(Target, SourceFile) + "." + CppLinkEmitter.GetPlatformLinkedFileExtension(TargetType.Static);
+            var GeneratedObj = GetObjectFile(SourceFile);
+            GeneratedObj = Path.Combine(GetObjectDirectory(Target), GeneratedObj);
             var GeneratedHeader = GetGeneratedHeaderFile(Target, SourceFile);
             var Arguments = new string[] {
                 "-O2",
@@ -32,7 +33,8 @@ namespace SB
             }, new string [] { SourceFile }, Arguments);
             return new PlainArtifact { IsRestored = !Changed };
         }
-        public static string GetObjectFile(Target Target, string SourceFile) => Path.Combine(Target.GetStorePath(BS.ObjsStore), Path.GetFileNameWithoutExtension(SourceFile) + ".obj");
+        public static string GetObjectDirectory(Target Target) => Path.Combine(Target.GetStorePath(BS.ObjsStore));
+        public static string GetObjectFile(string SourceFile) => Path.GetFileNameWithoutExtension(SourceFile) + ".o";
         public static string GetGeneratedHeadersDir(Target Target) => Path.Combine(Target.GetCodegenDirectory(), "ispc-includes");
         public static string GetGeneratedHeaderFile(Target Target, string SourceFile) => Path.Combine(GetGeneratedHeadersDir(Target), Path.GetFileName(SourceFile) + ".h");
     }
@@ -53,7 +55,8 @@ namespace SB
             Directory.CreateDirectory(HeadersDir);
             @this.IncludeDirs(Visibility.Private, HeadersDir);
             @this.FileList<ISPCFileList>().AddFiles(ResolvedFiles.ToArray());
-            @this.Link(Visibility.Private, ResolvedFiles.Select(f => ISPCEmitter.GetObjectFile(@this, f)).ToArray());
+            @this.LinkDirs(Visibility.Private, ISPCEmitter.GetObjectDirectory(@this));
+            @this.Link(Visibility.Private, ResolvedFiles.Select(f => ISPCEmitter.GetObjectFile(f)).ToArray());
             return @this;
         }
     }
@@ -62,7 +65,7 @@ namespace SB
     {
         public override bool Check()
         {
-            var Installation = Install.Tool("ispc");
+            var Installation = Install.Tool("ispc-1.26.0");
             Installation.Wait();
             ISPC = Path.Combine(Installation.Result, BuildSystem.HostOS == OSPlatform.Windows ? "ispc.exe" : "ispc");
             return true;

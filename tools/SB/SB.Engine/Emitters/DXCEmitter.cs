@@ -10,6 +10,7 @@ namespace SB
         public override bool EmitFileTask(Target Target, FileList FileList) => FileList.Is<HLSLFileList>();
         public override IArtifact? PerFileTask(Target Target, FileList FileList, FileOptions? Options, string SourceFile)
         {
+            var HLSLFileList = FileList as HLSLFileList;
             var Parts = Path.GetFileName(SourceFile).Split('.');
             var HLSLBaseName = Parts[0];
             var TargetProfile = Parts[1];
@@ -23,6 +24,7 @@ namespace SB
                     "-Wno-ignored-attributes",
                     "-all_resources_bound",
                     "-spirv",
+                    $"-E {HLSLFileList!.Entry}",
                     "-fspv-target-env=vulkan1.1",
                     $"-Fo{SpvFile}",
                     $"-T{TargetProfile}",
@@ -42,6 +44,7 @@ namespace SB
                 var Arguments = new string[] {
                     "-Wno-ignored-attributes",
                     "-all_resources_bound",
+                    $"-E {HLSLFileList!.Entry}",
                     $"-Fo{DxilFile}",
                     $"-T{TargetProfile}",
                     SourceFile
@@ -60,13 +63,31 @@ namespace SB
         public static Dictionary<string, string> ShaderOutputDirectories = new();
     }
 
-    public class HLSLFileList : FileList {}
+    public class HLSLFileList : FileList
+    {
+        internal string Entry = "main";
+    }
 
     public static partial class TargetExtensions
     {
         public static Target AddHLSLFiles(this Target @this, params string[] Files)
         {
             @this.FileList<HLSLFileList>().AddFiles(Files);
+            DXCEmitter.ShaderOutputDirectories.Add(@this.Name, "resources/shaders");
+            return @this;
+        }
+
+        public static Target AddHLSLFilesWithEntry(this Target @this, string Entry, params string[] Files)
+        {
+            if (Files.Length == 0)
+            {
+                Log.Fatal("No HLSL files provided for target {TargetName}!", @this.Name);
+                throw new ArgumentException("No HLSL files provided.");
+            }
+            
+            var FL = @this.FileList<HLSLFileList>();
+            FL.Entry = Entry;
+            FL.AddFiles(Files);
             DXCEmitter.ShaderOutputDirectories.Add(@this.Name, "resources/shaders");
             return @this;
         }
@@ -82,7 +103,7 @@ namespace SB
     {
         public override bool Check()
         {
-            var Installation = Install.Tool("dxc-2025_02_21");
+            var Installation = (BuildSystem.TargetOS == OSPlatform.Windows) ? Install.Tool("dxc-2025_02_21") : Install.Tool("dxc");
             Installation.Wait();
             DXC = Path.Combine(Installation.Result, BuildSystem.HostOS == OSPlatform.Windows ? "dxc.exe" : "dxc");
             Directory.CreateDirectory(Path.Combine(Engine.BuildPath, "resources/shaders"));

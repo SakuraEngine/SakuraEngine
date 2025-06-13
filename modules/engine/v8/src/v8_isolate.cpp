@@ -610,12 +610,12 @@ v8::Local<v8::Value> V8Isolate::to_v8(TypeSignatureView sig_view, const void* da
     }
     else if (sig_view.is_generic_type())
     {
-        SKR_LOG_FMT_ERROR(u8"generic type not supported yet");
+        SKR_LOG_ERROR(u8"generic type not supported yet");
         return {};
     }
     else
     {
-        SKR_LOG_FMT_ERROR(u8"unsupported type signature");
+        SKR_LOG_ERROR(u8"unsupported type signature");
         return {};
     }
 }
@@ -637,12 +637,12 @@ bool V8Isolate::to_native(TypeSignatureView sig_view, void* data, v8::Local<v8::
     }
     else if (sig_view.is_generic_type())
     {
-        SKR_LOG_FMT_ERROR(u8"generic type not supported yet");
+        SKR_LOG_ERROR(u8"generic type not supported yet");
         return {};
     }
     else
     {
-        SKR_LOG_FMT_ERROR(u8"unsupported type signature");
+        SKR_LOG_ERROR(u8"unsupported type signature");
         return {};
     }
 }

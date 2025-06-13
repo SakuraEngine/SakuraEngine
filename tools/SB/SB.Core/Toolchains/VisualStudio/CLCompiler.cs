@@ -42,7 +42,7 @@ namespace SB.Core
             });
         }
 
-        public IArgumentDriver CreateArgumentDriver(CFamily Language) => new CLArgumentDriver(Language);
+        public IArgumentDriver CreateArgumentDriver(CFamily Language, bool isPCH) => new CLArgumentDriver(Language, isPCH);
 
         public CompileResult Compile(TaskEmitter Emitter, Target Target, IArgumentDriver Driver, string? WorkDirectory = null)
         {

@@ -96,8 +96,8 @@ namespace SB.Core
         }
 
         public static WorkStealingTaskScheduler SchedulerTS = new(Environment.ProcessorCount);
-        public static QueuedTaskScheduler BuildQTS = new(Environment.ProcessorCount, "BuildWorker", false, ThreadPriority.AboveNormal, ApartmentState.MTA, 0);
-        public static QueuedTaskScheduler IOQTS = new(1, "I/O Worker", false, ThreadPriority.BelowNormal);
+        public static QueuedTaskScheduler BuildQTS = new(Environment.ProcessorCount, "BuildWorker", false, ThreadPriority.AboveNormal, ApartmentState.Unknown, 0);
+        public static QueuedTaskScheduler IOQTS = new(1, "I/O Worker", false, ThreadPriority.BelowNormal, ApartmentState.Unknown, 0);
 
         internal static bool StopAll = false;
         internal static ConcurrentDictionary<TaskFingerprint, Task<bool>> AllTasks = new();

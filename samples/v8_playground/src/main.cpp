@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
         &cmd,
         {
             .help  = u8"V8 Playground",
-            .usage = u8"V8Playground [options] [...js_fils]",
+            .usage = u8"V8Playground [options] [...js_files]",
         }
     );
     parser.parse(argc, argv);

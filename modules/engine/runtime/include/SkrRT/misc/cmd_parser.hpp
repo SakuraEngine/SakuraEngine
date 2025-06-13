@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrBase/misc/debug.h" 
+#include "SkrBase/misc/demangle.hpp"
 #include "SkrContainers/vector.hpp"
 #include "SkrCore/log.h"
 #include "SkrContainers/string.hpp"
@@ -164,7 +165,7 @@ struct parser {
             auto ret = std::from_chars(value.c_str(), value.c_str() + value.size(), result);
             if (ret.ec != 0)
             {
-                auto name = typeid(T).name();
+                auto name = skr::demangle<T>().c_str();
                 SKR_LOG_ERROR(u8"failed to parse '%s' as '%s'", value.c_str(), name);
                 //throw std::runtime_error(std::string("error: failed to parse '") + value.c_str() + "' as '" + name + "'");
             }
@@ -177,7 +178,7 @@ struct parser {
             auto ret = fast_float::from_chars(value.c_str(), value.c_str() + value.size(), result);
             if (ret.ec != 0)
             {
-                auto name = typeid(T).name();
+                auto name = skr::demangle<T>().c_str();
                 SKR_LOG_ERROR(u8"failed to parse '%s' as '%s'", value.c_str(), name);
                 //throw std::runtime_error(std::string("error: failed to parse '") + value.c_str() + "' as '" + name + "'");
             }

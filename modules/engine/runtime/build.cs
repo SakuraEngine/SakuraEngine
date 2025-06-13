@@ -15,11 +15,10 @@ public static class SkrRT
 
         if (BuildSystem.TargetOS == OSPlatform.OSX)
         {
-            SkrRT
-                // .AddFrameworks(Visibility.Public, "CoreFoundation", "IOKit")
+            SkrRT.AppleFramework(Visibility.Public, "CoreFoundation", "Cocoa", "IOKit")
                 // .MppFlags(Visibility.Public, "-fno-objc-arc")
-                .AddCFiles("src/**/build.*.m")
-                .AddCppFiles("src/**/build.*.mm");
+                .AddObjCFiles("src/**/build.*.m")
+                .AddObjCppFiles("src/**/build.*.mm");
         }
     }
 }

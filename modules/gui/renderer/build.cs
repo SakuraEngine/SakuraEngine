@@ -10,6 +10,7 @@ public static class SkrGuiRenderer
         Engine.Module("SkrGuiRenderer")
             .EnableUnityBuild()
             .Depend(Visibility.Public, "SkrGui", "SkrRenderGraph", "SkrImageCoder")
+            .Depend(Visibility.Private, "AppSampleCommon")
             .Defines(Visibility.Private, "SKR_GUI_RENDERER_USE_IMAGE_CODER")
             .IncludeDirs(Visibility.Public, "include")
             .IncludeDirs(Visibility.Private, "src")
