@@ -5,9 +5,10 @@
     using BS = BuildSystem;
     public class CLArgumentDriver : IArgumentDriver
     {
-        public CLArgumentDriver(CFamily Language)
+        public CLArgumentDriver(CFamily Language, bool isPCH)
         {
             this.Language = Language;
+            this.isPCH = isPCH;
             if (Language == CFamily.C)
             {
                 RawArguments.Add("/TC");
@@ -39,7 +40,7 @@
             "";
         public static readonly Dictionary<string, string> cVersionMap = new Dictionary<string, string> { { "11", "/std:c11" }, { "17", "/std:c17" }, { "latest", "/std:clatest" } };
 
-        [TargetProperty] 
+        [TargetProperty]
         public virtual string SIMD(SIMDArchitecture simd) => $"/arch:{simd}".Replace("_", ".");
 
         [TargetProperty] 
@@ -128,6 +129,7 @@
         public virtual string[] Cl_CXFlags(ArgumentList<string> flags) => CXFlags(flags);
 
         protected CFamily Language { get; }
+        protected bool isPCH { get; }
         public ArgumentDictionary Arguments { get; } = new();
         public HashSet<string> RawArguments { get; } = new HashSet<string> { "/c", "/cgthreads1", "/nologo", "/FC" };
         // /c: dont link while compiling, https://learn.microsoft.com/zh-cn/cpp/build/reference/c-compile-without-linking?view=msvc-170

@@ -261,9 +261,9 @@ skr::String LogPattern::pattern(const LogEvent& event, skr::StringView formatted
     {
         SkrZoneScopedN("LogPattern::Time");
 
-        const auto& dt         = LogManager::Get()->datetime_;
+        const auto& dt         = LogManagerImpl::gLogManager->datetime_;
         const auto  midnightNs = dt.midnightNs;
-        const auto  ts         = LogManager::Get()->tscns_.tsc2ns(event.timestamp);
+        const auto  ts         = LogManagerImpl::gLogManager->tscns_.tsc2ns(event.timestamp);
         auto        t          = (ts > midnightNs) ? (ts - midnightNs) : 0;
         t /= 1'000;
         const uint64_t us = t % 1'000;
@@ -278,7 +278,7 @@ skr::String LogPattern::pattern(const LogEvent& event, skr::StringView formatted
         if (h > 23)
         {
             h %= 24;
-            LogManager::Get()->datetime_.reset_date();
+            LogManagerImpl::gLogManager->datetime_.reset_date();
         }
         timestring = skr::format(
             u8"{}/{}/{} {}:{}:{}({}:{})",

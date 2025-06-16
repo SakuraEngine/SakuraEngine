@@ -4,23 +4,10 @@ using Serilog;
 
 namespace SB.Core
 {
+    [XCodeDoctor]
     public partial class XCode : IToolchain
     {
-        public Task<bool> Initialize()
-        {
-            if (BuildSystem.TargetOS != OSPlatform.OSX)
-                throw new Exception("We only support macosx native compilation for now!");
-            InitializeTask = Task.Run(() =>
-            {
-                FastPathFind();
-                XCRunFind();
-                InitializeTools();
-                return true;
-            });
-            return InitializeTask;
-        }
-
-        void FastPathFind()
+        internal void FastPathFind()
         {
             HasCommandLineTools = Directory.Exists(CommandLineToolsDirectory);
             HasXCodeIDE = Directory.Exists(XCodeDirectory);
@@ -38,7 +25,7 @@ namespace SB.Core
             PlatSDKDirectory = Path.Combine(RootDirectoryToFind, "SDKs", $"MacOSX{SDKVersion}.sdk");
         }
 
-        void XCRunFind()
+        internal void XCRunFind()
         {
             if (PlatSDKDirectory is null)
             {
@@ -85,7 +72,7 @@ namespace SB.Core
             }
         }
 
-        void InitializeTools()
+        internal void InitializeTools()
         {
             AppleClang = new AppleClangCompiler(ClangDirectory!, this);
             AppleClangPP = new AppleClangCompiler(ClangPPDirectory!, this);
@@ -93,38 +80,10 @@ namespace SB.Core
         }
 
         public string Name => "apple-clang";
-        public Version Version
-        {
-            get
-            {
-                InitializeTask!.Wait();
-                return SDKVersion!;
-            }
-        }
-        public ICompiler Compiler
-        {
-            get
-            {
-                InitializeTask!.Wait();
-                return AppleClang!;
-            }
-        }
-        public IArchiver Archiver
-        {
-            get
-            {
-                InitializeTask!.Wait();
-                return AR!;
-            }
-        }
-        public ILinker Linker
-        {
-            get
-            {
-                InitializeTask!.Wait();
-                return AppleClangPP!;
-            }
-        }
+        public Version Version => SDKVersion!;
+        public ICompiler Compiler => AppleClang!;
+        public IArchiver Archiver => AR!;
+        public ILinker Linker => AppleClangPP!;
         public bool HasCommandLineTools { get; private set; } = false;
         public string CommandLineToolsDirectory { get; private set; } = "/Library/Developer/CommandLineTools/";
         public bool HasXCodeIDE { get; private set; } = false;
@@ -146,7 +105,27 @@ namespace SB.Core
         public bool HasAR { get; private set; } = false;
         public string? ARDirectory { get; private set; }
         public AR? AR { get; private set; }
-        private Task<bool>? InitializeTask { get; set; }
         internal Version? SDKVersion = null;
+    }
+
+    public class XCodeDoctor : DoctorAttribute
+    {
+        public override bool Check()
+        {
+            if (BuildSystem.HostOS == OSPlatform.OSX)
+            {
+                XCode.FastPathFind();
+                XCode.XCRunFind();
+                XCode.InitializeTools();
+            }
+            return true;
+        }
+        public override bool Fix()
+        {
+            Log.Fatal("XCode discover failed!");
+            return true;
+        }
+
+        public static XCode XCode { get; private set; } = new XCode();
     }
 }

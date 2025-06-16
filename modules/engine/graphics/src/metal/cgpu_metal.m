@@ -1,3 +1,5 @@
+#include "SkrGraphics/api.h"
+#include "SkrGraphics/flags.h"
 #include "metal_utils.h"
 #include "SkrGraphics/backend/metal/cgpu_metal.h"
 #include "SkrGraphics/backend/metal/cgpu_metal_types.h"
@@ -20,6 +22,8 @@ const CGPUProcTable tbl_metal = {
     // API Objects APIs
     .create_fence = &cgpu_create_fence_metal,
     .free_fence = &cgpu_free_fence_metal,
+    .create_root_signature = &cgpu_create_root_signature_metal,
+    .free_root_signature = &cgpu_free_root_signature_metal,
 
     // Queue APIs
     .get_queue = &cgpu_get_queue_metal,
@@ -31,7 +35,11 @@ const CGPUProcTable tbl_metal = {
     .create_command_pool = &cgpu_create_command_pool_metal,
     .create_command_buffer = &cgpu_create_command_buffer_metal,
     .free_command_buffer = &cgpu_free_command_buffer_metal,
-    .free_command_pool = &cgpu_free_command_pool_metal
+    .free_command_pool = &cgpu_free_command_pool_metal,
+
+    // Shader APIs
+    .create_shader_library = &cgpu_create_shader_library_metal,
+    .free_shader_library = &cgpu_free_shader_library_metal,
 };
 
 const CGPUProcTable* CGPU_MetalProcTable()
@@ -231,6 +239,57 @@ void cgpu_free_command_pool_metal(CGPUCommandPoolId pool)
 {
     CGPUCommandPool_Metal* PQ = (CGPUCommandPool_Metal*)pool;
     cgpu_free(PQ);
+}
+
+// Shader APIs
+CGPUShaderLibraryId cgpu_create_shader_library_metal(CGPUDeviceId device, const CGPUShaderLibraryDescriptor* desc)
+{
+    CGPUShaderLibrary_Metal* ML = (CGPUShaderLibrary_Metal*)cgpu_calloc(1, sizeof(CGPUShaderLibrary_Metal));
+    dispatch_data_t byteCode = dispatch_data_create(desc->code, desc->code_size, nil, DISPATCH_DATA_DESTRUCTOR_DEFAULT);
+    NSError* error = nil;
+    ML->mtlLibrary = [((CGPUDevice_Metal*)device)->pDevice newLibraryWithData: byteCode error:&error];
+    if (error)
+    {
+        cgpu_free(ML);
+        return NULL;
+    }
+    return &ML->super;
+}
+
+void cgpu_free_shader_library_metal(CGPUShaderLibraryId library)
+{
+    CGPUShaderLibrary_Metal* ML = (CGPUShaderLibrary_Metal*)library;
+    ML->mtlLibrary = nil;
+    cgpu_free(ML);
+}
+
+CGPURootSignatureId cgpu_create_root_signature_metal(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc)
+{
+    CGPURootSignature_Metal* RS = (CGPURootSignature_Metal*)cgpu_calloc(1, sizeof(CGPURootSignature_Metal));
+    for (uint32_t i = 0; i < desc->shader_count; i++)
+    {
+        const struct CGPUShaderEntryDescriptor* shader_entry = desc->shaders + i;
+        const struct CGPUShaderLibrary_Metal* lib = (const struct CGPUShaderLibrary_Metal*)shader_entry->library;
+        // TODO: CONSTANT SPECIALIZATION
+
+        NSString* entryName = [NSString stringWithUTF8String:shader_entry->entry];
+        [entryName autorelease];
+        RS->mtlFunctions[i] = [lib->mtlLibrary newFunctionWithName: entryName];
+    }
+    return &RS->super;
+}
+
+void cgpu_free_root_signature_metal(CGPURootSignatureId root_signature)
+{
+    CGPURootSignature_Metal* RS = (CGPURootSignature_Metal*)root_signature;
+    for (uint32_t i = 0; i < CGPU_SHADER_STAGE_COUNT; i++)
+    {
+        if (RS->mtlFunctions[i])
+        {
+            RS->mtlFunctions[i] = nil;
+        }
+    }
+    cgpu_free(RS);
 }
 
 // Helpers

@@ -25,8 +25,14 @@ namespace SB.Core
         public string[] Inputs(ArgumentList<string> inputs) => inputs.Select(dir => $"\"{dir}\"").ToArray();
 
         public string Output(string output) => BS.CheckFile(output, false) ? $"-o \"{output}\"" : throw new ArgumentException($"Invalid output file path {output}!");
+       
+        [TargetProperty(InheritBehavior = true)]
+        public string[]? AppleFramework(ArgumentList<string> frameworks) => frameworks.Select(framework => $"-framework {framework}").ToArray();
+
+        [TargetProperty]
+        public string BundleLoader(string loader) => $"-bundle -bundle_loader {loader}";
 
         public ArgumentDictionary Arguments { get; } = new ArgumentDictionary();
-        public HashSet<string> RawArguments { get; } = new HashSet<string> {  };
+        public HashSet<string> RawArguments { get; } = new HashSet<string> { "-Wl,-rpath,." };
     }
 }

@@ -61,6 +61,16 @@ typedef struct CGPUCommandBuffer_Metal {
     CGPUComputePassEncoder_Metal cmptEncoder;
 } CGPUCommandBuffer_Metal;
 
+typedef struct CGPUShaderLibrary_Metal {
+	CGPUShaderLibrary super;
+	id<MTLLibrary> mtlLibrary;
+} CGPUShaderLibrary_Metal;
+
+typedef struct CGPURootSignature_Metal {
+	CGPURootSignature super;
+	id<MTLFunction> mtlFunctions[CGPU_SHADER_STAGE_COUNT];
+} CGPURootSignature_Metal;
+
 // Mac Catalyst does not support feature sets, so we redefine them to GPU families in MVKDevice.h.
 #if TARGET_MACCAT
     #define supportsMTLFeatureSet(device, MFS) [device supportsFamily:MTLFeatureSet_##MFS]

@@ -21,7 +21,7 @@ namespace SB
                 if (BS.HostOS == OSPlatform.Windows)
                     Toolchain = VisualStudioDoctor.VisualStudio;
                 else if (BS.HostOS == OSPlatform.OSX)
-                    Toolchain = new XCode();
+                    Toolchain = XCodeDoctor.XCode;
                 else
                     throw new Exception("Unsupported Platform!");
                 

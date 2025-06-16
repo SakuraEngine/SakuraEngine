@@ -20,13 +20,13 @@ namespace SB
             }
         }
 
-        public FileList FileList<T>()
+        public T FileList<T>()
             where T : FileList, new()
         {
             foreach (var FileList in FileLists)
             {
                 if (FileList is T)
-                    return FileList;
+                    return (FileList as T)!;
             }
             var FL = new T { Target = this };
             FileLists.Add(FL);
@@ -167,7 +167,9 @@ namespace SB
             To.AddRange(DepNames);
             foreach (var DepName in DepNames)
             {
-                Target DepTarget = BuildSystem.GetTarget(DepName)!;
+                Target? DepTarget = BuildSystem.GetTarget(DepName)!;
+                if (DepTarget == null)
+                    throw new TaskFatalError($"Target {Name}: Dependency {DepName} does not exist!");
                 RecursiveMergeDependencies(To, DepTarget.PublicTargetDependencies);
                 RecursiveMergeDependencies(To, DepTarget.InterfaceTargetDependencies);
             }

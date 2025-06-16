@@ -13,7 +13,7 @@ namespace SB
     public class CppLinkEmitter : TaskEmitter
     {
         public CppLinkEmitter(IToolchain Toolchain) => this.Toolchain = Toolchain;
-        public override bool EnableEmitter(Target Target) => Target.HasFilesOf<CppFileList>() || Target.HasFilesOf<CFileList>();
+        public override bool EnableEmitter(Target Target) => Target.HasFilesOf<CppFileList>() || Target.HasFilesOf<CFileList>() || Target.HasFilesOf<ObjCppFileList>() || Target.HasFilesOf<ObjCFileList>();
         public override bool EmitTargetTask(Target Target) => true;
         public override IArtifact? PerTargetTask(Target Target)
         {
@@ -30,6 +30,11 @@ namespace SB
                 // Add obj files
                 var SourceFiles = Target.FileList<CppFileList>().Files.ToList();
                 SourceFiles.AddRange(Target.FileList<CFileList>().Files.ToList());
+                if (BuildSystem.TargetOS == OSPlatform.OSX)
+                {
+                    SourceFiles.AddRange(Target.FileList<ObjCFileList>().Files.ToList());
+                    SourceFiles.AddRange(Target.FileList<ObjCppFileList>().Files.ToList());
+                }
                 Inputs.AddRange(SourceFiles.Select(F => CppCompileEmitter.GetObjectFilePath(Target, F)));
                 // Add dep obj files
                 Inputs.AddRange(Target.Dependencies.Where(
@@ -88,7 +93,7 @@ namespace SB
         {
             var OutputType = Target.GetTargetType();
             var Extension = GetPlatformLinkedFileExtension(OutputType);
-            var OutputFile = Path.Combine(Target.GetBinaryPath(), $"{Target.Name}.{Extension}");
+            var OutputFile = Path.Combine(Target.GetBinaryPath(), $"{Target.Name}{Extension}");
             return OutputFile;
         }
 
@@ -98,7 +103,7 @@ namespace SB
             var Extension = GetPlatformStubFileExtension(OutputType);
             if (Extension.Length == 0)
                 return null;
-            var OutputFile = Path.Combine(Target.GetBinaryPath(), $"{Target.Name}.{Extension}");
+            var OutputFile = Path.Combine(Target.GetBinaryPath(), $"{Target.Name}{Extension}");
             return OutputFile;
         }
 
@@ -107,24 +112,24 @@ namespace SB
             if (BS.TargetOS == OSPlatform.Windows)
                 return Type switch
                 {
-                    TargetType.Static => "lib",
-                    TargetType.Dynamic => "dll",
-                    TargetType.Executable => "exe",
+                    TargetType.Static => ".lib",
+                    TargetType.Dynamic => ".dll",
+                    TargetType.Executable => ".exe",
                     _ => ""
                 };
             else if (BS.TargetOS == OSPlatform.OSX)
                 return Type switch
                 {
-                    TargetType.Static => "a",
-                    TargetType.Dynamic => "dylib",
+                    TargetType.Static => ".a",
+                    TargetType.Dynamic => ".dylib",
                     TargetType.Executable => "",
                     _ => ""
                 };
             else if (BS.TargetOS == OSPlatform.Linux)
                 return Type switch
                 {
-                    TargetType.Static => "a",
-                    TargetType.Dynamic => "so",
+                    TargetType.Static => ".a",
+                    TargetType.Dynamic => ".so",
                     TargetType.Executable => "",
                     _ => ""
                 };
@@ -136,22 +141,22 @@ namespace SB
             if (BS.TargetOS == OSPlatform.Windows)
                 return Type switch
                 {
-                    TargetType.Static => "lib",
-                    TargetType.Dynamic => "lib",
+                    TargetType.Static => ".lib",
+                    TargetType.Dynamic => ".lib",
                     _ => ""
                 };
             else if (BS.TargetOS == OSPlatform.OSX)
                 return Type switch
                 {
-                    TargetType.Static => "a",
-                    TargetType.Dynamic => "dylib",
+                    TargetType.Static => ".a",
+                    TargetType.Dynamic => ".dylib",
                     _ => ""
                 };
             else if (BS.TargetOS == OSPlatform.Linux)
                 return Type switch
                 {
-                    TargetType.Static => "a",
-                    TargetType.Dynamic => "a",
+                    TargetType.Static => ".a",
+                    TargetType.Dynamic => ".a",
                     _ => ""
                 };
             return "";

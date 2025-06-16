@@ -8,7 +8,7 @@ public static class SkrGui
     {
         Engine.Module("SkrGui")
             .EnableUnityBuild()
-            .Require("freetype", new PackageConfig { Version = new Version(1, 2, 8) })
+            .Require("freetype", new PackageConfig { Version = new Version(2, 13, 0) })
             .Require("icu", new PackageConfig { Version = new Version(72, 1, 0) })
             .Require("harfbuzz", new PackageConfig { Version = new Version(7, 1, 0) })
             .Require("nanovg", new PackageConfig { Version = new Version(0, 1, 0) })

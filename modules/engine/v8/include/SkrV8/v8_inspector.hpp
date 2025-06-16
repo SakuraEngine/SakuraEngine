@@ -27,7 +27,7 @@ public:
 
 private:
     // callback
-    static int _callback_server(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t len);
+    // static int _callback_server(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t len);
 
     // json response
     void _combine_json_response();

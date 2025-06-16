@@ -9,6 +9,7 @@ public static class SkrCore
     static SkrCore()
     {
         var DependencyGraph = Engine.StaticComponent("SkrDependencyGraph", "SkrCore")
+            .Exception(true) // DAG uses lemon which uses exceptions
             .OptimizationLevel(OptimizationLevel.Fastest)
             .Depend(Visibility.Public, "SkrBase")
             .Require("lemon", new PackageConfig { Version = new Version(1, 3, 1) })
@@ -61,10 +62,15 @@ public static class SkrCore
             .AddCodegenScript("meta/proxy.ts")
             .CreateSharedPCH("include/**.h", "include/**.hpp", "../profile/include/SkrProfile/profile.h")
             // TODO: REMOVE THIS
-            .Depend(Visibility.Public, "SDL2");
+            .Depend(Visibility.Public, "SDL3");
 
         if (BuildSystem.TargetOS == OSPlatform.Windows)
             SkrCore.Link(Visibility.Private, "shell32", "Ole32", "Shlwapi");
+        else if (BuildSystem.TargetOS == OSPlatform.OSX)
+        {
+            SkrCore.AddObjCppFiles("src/**/build.*.mm")
+                .AppleFramework(Visibility.Public, "CoreFoundation", "Cocoa", "IOKit");
+        }
         else
             SkrCore.Link(Visibility.Private, "pthread");
     }
@@ -74,7 +80,7 @@ public class SkrCoreDoctor : DoctorAttribute
 {
     public override bool Check()
     {
-        Install.SDK("SDL2").Wait();
+        Install.SDK("SDL_3.2.12").Wait();
         return true;
     }
     public override bool Fix() 

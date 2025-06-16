@@ -74,7 +74,7 @@ namespace SB.Core
             };
         }
 
-        IArgumentDriver ICompiler.CreateArgumentDriver(CFamily Language) => new AppleClangArgumentDriver(XCodeToolchain.PlatSDKDirectory!);
+        IArgumentDriver ICompiler.CreateArgumentDriver(CFamily Language, bool isPCH) => new AppleClangArgumentDriver(XCodeToolchain.PlatSDKDirectory!, Language, isPCH);
 
         public LinkResult Link(TaskEmitter Emitter, Target Target, IArgumentDriver Driver)
         {

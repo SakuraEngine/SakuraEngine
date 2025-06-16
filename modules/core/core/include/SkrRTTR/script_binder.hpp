@@ -481,7 +481,7 @@ private:
             error.first(error.length_buffer() - 1);
 
             // log error
-            SKR_LOG_FMT_ERROR(error.c_str());
+            SKR_LOG_FMT_ERROR(u8"{}", error.c_str());
         }
 
         inline bool any_error() const

@@ -13,17 +13,17 @@ namespace SB
     public class CppCompileEmitter : TaskEmitter
     {
         public CppCompileEmitter(IToolchain Toolchain) => this.Toolchain = Toolchain;
-        public override bool EnableEmitter(Target Target) => Target.HasFilesOf<CppFileList>() || Target.HasFilesOf<CFileList>();
-        public override bool EmitFileTask(Target Target, FileList FileList) => FileList.Is<CppFileList>() || FileList.Is<CFileList>();
+        public override bool EnableEmitter(Target Target) => Target.HasFilesOf<CppFileList>() || Target.HasFilesOf<CFileList>() || Target.HasFilesOf<ObjCppFileList>() || Target.HasFilesOf<ObjCFileList>();
+        public override bool EmitFileTask(Target Target, FileList FileList) => FileList.Is<CppFileList>() || FileList.Is<CFileList>() || FileList.Is<ObjCppFileList>() || FileList.Is<ObjCFileList>();
         public override IArtifact? PerFileTask(Target Target, FileList FileList, FileOptions? Options, string SourceFile)
         {
             Stopwatch sw = new();
             sw.Start();
 
-            CFamily Language = FileList.Is<CppFileList>() ? CFamily.Cpp : CFamily.C;
+            CFamily Language = FileList.Is<ObjCppFileList>() ? CFamily.ObjCpp : FileList.Is<ObjCFileList>() ? CFamily.ObjC : FileList.Is<CppFileList>() ? CFamily.Cpp : CFamily.C;
             var SourceDependencies = Path.Combine(Target.GetStorePath(BS.DepsStore), BS.GetUniqueTempFileName(SourceFile, Target.Name + this.Name, "source.deps.json"));
             var ObjectFile = GetObjectFilePath(Target, SourceFile);
-            var CompilerDriver = Toolchain.Compiler.CreateArgumentDriver(Language)
+            var CompilerDriver = Toolchain.Compiler.CreateArgumentDriver(Language, false)
                 .AddArguments(Target.Arguments)
                 .MergeArguments(Options?.Arguments)
                 .AddArgument("Source", SourceFile)
@@ -61,6 +61,8 @@ namespace SB
     public class CFamilyFileOptions : UnityBuildableFileOptions {}
     public class CFileList : FileList {}
     public class CppFileList : FileList {}
+    public class ObjCFileList : FileList {}
+    public class ObjCppFileList : FileList {}
 
     public static partial class TargetExtensions
     {
@@ -76,6 +78,18 @@ namespace SB
             return @this;
         }
 
+        public static Target AddObjCppFiles(this Target @this, params string[] Files)
+        {
+            @this.FileList<ObjCppFileList>().AddFiles(Files);
+            return @this;
+        }
+
+        public static Target AddObjCFiles(this Target @this, params string[] Files)
+        {
+            @this.FileList<ObjCFileList>().AddFiles(Files);
+            return @this;
+        }
+
         public static Target AddCppFiles(this Target @this, CFamilyFileOptions Options, params string[] Files)
         {
             @this.FileList<CppFileList>().AddFiles(Options, Files);
@@ -85,6 +99,18 @@ namespace SB
         public static Target AddCFiles(this Target @this, CFamilyFileOptions Options, params string[] Files)
         {
             @this.FileList<CFileList>().AddFiles(Options, Files);
+            return @this;
+        }
+
+        public static Target AddObjCppFiles(this Target @this, CFamilyFileOptions Options, params string[] Files)
+        {
+            @this.FileList<ObjCppFileList>().AddFiles(Options, Files);
+            return @this;
+        }
+
+        public static Target AddObjCFiles(this Target @this, CFamilyFileOptions Options, params string[] Files)
+        {
+            @this.FileList<ObjCFileList>().AddFiles(Options, Files);
             return @this;
         }
     }

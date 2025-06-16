@@ -45,6 +45,9 @@ ECGPUBackend backend)
         case CGPU_BACKEND_XBOX_D3D12:
             strcat(shader_file, ".dxil");
             break;
+        case CGPU_BACKEND_METAL:
+            strcat(shader_file, ".metallib");
+            break;
         default:
             SKR_UNIMPLEMENTED_FUNCTION();
             break;
@@ -111,11 +114,10 @@ void ComputeFunc(void* usrdata)
 
     // Create root signature
     CGPUShaderEntryDescriptor compute_shader_entry = {
-        .entry = "main",
+        .entry = "compute_main",
         .stage = CGPU_SHADER_STAGE_COMPUTE,
         .library = compute_shader
     };
-    CGPUShaderReflection* entry_reflection = &compute_shader->entry_reflections[0];
     CGPURootSignatureDescriptor root_desc = {
         .shaders = &compute_shader_entry,
         .shader_count = 1
@@ -184,9 +186,9 @@ void ComputeFunc(void* usrdata)
         cgpu_compute_encoder_bind_pipeline(encoder, pipeline);
         cgpu_compute_encoder_bind_descriptor_set(encoder, set);
         cgpu_compute_encoder_dispatch(encoder,
-        (uint32_t)ceil(MANDELBROT_WIDTH / (float)entry_reflection->thread_group_sizes[0]),
-        (uint32_t)ceil(MANDELBROT_HEIGHT / (float)entry_reflection->thread_group_sizes[1]),
-        1);
+            (uint32_t)ceil(MANDELBROT_WIDTH / (float)32),
+            (uint32_t)ceil(MANDELBROT_HEIGHT / (float)32),
+            1);
         cgpu_cmd_end_compute_pass(cmd, encoder);
         // Barrier UAV buffer to transfer source
         CGPUBufferBarrier buffer_barrier = {
@@ -264,9 +266,13 @@ int main(void)
 {
     // When we support more add them here
     ECGPUBackend backends[] = {
-        CGPU_BACKEND_VULKAN
+#if SKR_PLAT_MACOSX
+        CGPU_BACKEND_METAL,
+#else
+        CGPU_BACKEND_VULKAN,
+#endif
+
 #ifdef CGPU_USE_D3D12
-        ,
         CGPU_BACKEND_D3D12
 #endif
     };

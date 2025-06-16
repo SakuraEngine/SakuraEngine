@@ -13,7 +13,7 @@ namespace SB
 
     public class UnityBuildEmitter : TaskEmitter
     {
-        public override bool EnableEmitter(Target Target) =>  (Target.HasFilesOf<CFileList>() || Target.HasFilesOf<CppFileList>()) && Target.HasAttribute<UnityBuildAttribute>();
+        public override bool EnableEmitter(Target Target) => (Target.HasFilesOf<CppFileList>() || Target.HasFilesOf<CFileList>() || Target.HasFilesOf<ObjCppFileList>() || Target.HasFilesOf<ObjCFileList>()) && Target.HasAttribute<UnityBuildAttribute>();
         public override bool EmitTargetTask(Target Target) => true;
         public override IArtifact? PerTargetTask(Target Target)
         {

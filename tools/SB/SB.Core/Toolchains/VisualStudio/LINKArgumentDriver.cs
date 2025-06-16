@@ -20,7 +20,7 @@ namespace SB.Core
         public string[]? LinkDirs(ArgumentList<string> dirs) => dirs.All(x => BS.CheckPath(x, false) ? true : throw new ArgumentException($"Invalid link dir {x}!")) ? dirs.Select(dir => $"/LIBPATH:{dir}").ToArray() : null;
         
         [TargetProperty(InheritBehavior = true)] 
-        public string[]? Link(ArgumentList<string> dirs) => dirs.Select(dir => $"{dir}.lib").ToArray();
+        public string[]? Link(ArgumentList<string> dirs) => dirs.Select(dir => Path.GetExtension(dir) != ".o" ?  $"{dir}.lib" : dir).ToArray();
 
         [TargetProperty(InheritBehavior = true)]
         public string[]? WholeArchive(ArgumentList<string> libs) => libs.Select(lib => $"/WHOLEARCHIVE:\"{lib}.lib\"").ToArray();

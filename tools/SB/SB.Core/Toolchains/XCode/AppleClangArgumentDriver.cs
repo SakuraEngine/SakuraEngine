@@ -4,20 +4,35 @@ namespace SB.Core
     using BS = BuildSystem;
     public class AppleClangArgumentDriver : IArgumentDriver
     {
-        public AppleClangArgumentDriver(string SDKDirectory)
+        public AppleClangArgumentDriver(string SDKDirectory, CFamily Language, bool isPCH)
         {
+            this.Language = Language;
+            this.isPCH = isPCH;
             RawArguments.Add($"-isysroot {SDKDirectory}");
+            /*
+            RawArguments.Add($"-isystem {SDKDirectory}/System/Library/Frameworks");
+            RawArguments.Add($"-isystem {SDKDirectory}/usr/include/c++/v1");
+            RawArguments.Add($"-isystem {SDKDirectory}/usr/include");
+            RawArguments.Add("-isystem /Library/Developer/CommandLineTools/usr/lib/clang/16/include");
+            RawArguments.Add("-isystem /Library/Developer/CommandLineTools/usr/include");
+            */
         }
 
         [TargetProperty]
         public string Exception(bool Enable) => Enable ? "-fexceptions" : "-fno-exceptions";
 
         [TargetProperty]
-        public string CppVersion(string what) => cppVersionMap.TryGetValue(what.Replace("c++", "").Replace("C++", ""), out var r) ? r : throw new TaskFatalError($"Invalid argument \"{what}\" for CppVersion!");
+        public string CppVersion(string what) => 
+            Language == CFamily.Cpp || Language == CFamily.ObjCpp ?
+            cppVersionMap.TryGetValue(what.Replace("c++", "").Replace("C++", ""), out var r) ? r : throw new TaskFatalError($"Invalid argument \"{what}\" for CppVersion!") :
+            "";
         public static readonly Dictionary<string, string> cppVersionMap = new Dictionary<string, string> { { "11", "-std=c++11" }, { "14", "-std=c++14" }, { "17", "-std=c++17" }, { "20", "-std=c++20" }, { "23", "-std=c++23" }, { "latest", "-std=c++26" } };
 
         [TargetProperty]
-        public string CVersion(string what) => cVersionMap.TryGetValue(what.Replace("c", "").Replace("C", ""), out var r) ? r : throw new TaskFatalError($"Invalid argument \"{what}\" for CppVersion!");
+        public string CVersion(string what) => 
+            Language == CFamily.C || Language == CFamily.ObjC ?
+            cVersionMap.TryGetValue(what.Replace("c", "").Replace("C", ""), out var r) ? r : throw new TaskFatalError($"Invalid argument \"{what}\" for CppVersion!") :
+            "";
         public static readonly Dictionary<string, string> cVersionMap = new Dictionary<string, string> { { "11", "-std=c11" }, { "17", "-std=c17" }, { "23", "-std=c23" }, { "latest", "-std=c2y" } };
 
         [TargetProperty]
@@ -60,9 +75,12 @@ namespace SB.Core
         
         [TargetProperty] 
         public string RTTI(bool v) => v ? "-frtti" : "-fno-rtti";
+
+        [TargetProperty]
+        public virtual string DebugSymbols(bool Enable) => Enable ? "-g" : "";
         
         [TargetProperty] 
-        public string Source(string path) => BS.CheckFile(path, true) ? $"\"{path}\"" : throw new TaskFatalError($"Source value {path} is not an existed absolute path!");
+        public string Source(string path) => BS.CheckFile(path, true) ? GetLanguageArgString() + $" \"{path}\"" : throw new TaskFatalError($"Source value {path} is not an existed absolute path!");
 
         public string Arch(Architecture arch) => archMap.TryGetValue(arch, out var r) ? r : throw new TaskFatalError($"Invalid architecture \"{arch}\" for Apple clang!");
         static readonly Dictionary<Architecture, string> archMap = new Dictionary<Architecture, string> { { Architecture.X86, "" }, { Architecture.X64, "" }, { Architecture.ARM64, "" } };
@@ -75,6 +93,18 @@ namespace SB.Core
 
         public string SourceDependencies(string path) => BS.CheckFile(path, false) ? $"-MD -MF\"{path}\"" : throw new TaskFatalError($"SourceDependencies value {path} is not a valid absolute path!");
 
+        public string UsePCHAST(string path) => BS.CheckFile(path, false) ? $"-include-pch \"{path}\"" : throw new TaskFatalError($"PCHObject value {path} is not a valid absolute path!");
+
+        protected CFamily Language { get; }
+        protected bool isPCH = false;
+        protected string GetLanguageArgString() => Language switch
+        {
+            CFamily.C => isPCH ? "-xc-header" : "",
+            CFamily.Cpp => isPCH ? "-xc++-header" : "-xc++",
+            CFamily.ObjC => isPCH ? "-xobjective-c-header" : "-xobjective-c",
+            CFamily.ObjCpp => isPCH ? "-xobjective-c++-header" : "-xobjective-c++",
+            _ => throw new TaskFatalError($"Invalid language \"{Language}\" for Apple clang!")
+        };
         public ArgumentDictionary Arguments { get; } = new ArgumentDictionary();
         public HashSet<string> RawArguments { get; } = new HashSet<string> { "-c" };
     }

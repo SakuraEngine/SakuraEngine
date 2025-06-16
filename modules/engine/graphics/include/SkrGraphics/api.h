@@ -941,6 +941,7 @@ typedef struct CGPUShaderReflection {
 typedef struct CGPUShaderLibrary {
     CGPUDeviceId device;
     char8_t* name;
+    // TODO: only d3d12 & vulkan support this, move this to backend specific later
     CGPUShaderReflection* entry_reflections;
     uint32_t entrys_count;
 } CGPUShaderLibrary;

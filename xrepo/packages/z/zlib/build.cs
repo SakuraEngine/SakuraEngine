@@ -28,7 +28,7 @@ public static class Zlib
                 {
                     Target
                         .LinkDirs(Visibility.Public, "port/zlib/lib/macos/x86_64")
-                        .Link(Visibility.Public, "libz.a");
+                        .Link(Visibility.Public, "z");
                 }
                 else
                 {

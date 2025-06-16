@@ -18,7 +18,12 @@ public static class SkrShaderCompiler
 
         if (BuildSystem.TargetOS == OSPlatform.Windows)
         {
+            ShaderCompiler.ClangCl_CppFlags(Visibility.Private, "-fms-extensions");
+        }
+        else
+        {
             ShaderCompiler.CppFlags(Visibility.Private, "-fms-extensions");
+            ShaderCompiler.IncludeDirs(Visibility.Private, "src/dxc/Support");
         }
     }
 }

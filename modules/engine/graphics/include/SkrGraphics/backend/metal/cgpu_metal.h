@@ -26,6 +26,8 @@ CGPU_API void cgpu_free_device_metal(CGPUDeviceId device);
 // API Object APIs
 CGPU_API CGPUFenceId cgpu_create_fence_metal(CGPUDeviceId device);
 CGPU_API void cgpu_free_fence_metal(CGPUFenceId fence);
+CGPU_API CGPURootSignatureId cgpu_create_root_signature_metal(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc);
+CGPU_API void cgpu_free_root_signature_metal(CGPURootSignatureId signature);
 
 // Queue APIs
 CGPU_API CGPUQueueId cgpu_get_queue_metal(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
@@ -38,6 +40,10 @@ CGPU_API CGPUCommandPoolId cgpu_create_command_pool_metal(CGPUQueueId queue, con
 CGPU_API CGPUCommandBufferId cgpu_create_command_buffer_metal(CGPUCommandPoolId pool, const struct CGPUCommandBufferDescriptor* desc);
 CGPU_API void cgpu_free_command_buffer_metal(CGPUCommandBufferId cmd);
 CGPU_API void cgpu_free_command_pool_metal(CGPUCommandPoolId pool);
+
+// Shader APIs
+CGPU_API CGPUShaderLibraryId cgpu_create_shader_library_metal(CGPUDeviceId device, const CGPUShaderLibraryDescriptor* desc);
+CGPU_API void cgpu_free_shader_library_metal(CGPUShaderLibraryId library);
 
 #ifdef __cplusplus
 }

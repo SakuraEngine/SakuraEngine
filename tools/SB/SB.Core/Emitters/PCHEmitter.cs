@@ -68,10 +68,9 @@ namespace SB
                 }
                 // Execute
                 // TODO: SEPERATE C AND CPP PCH
-                var CompilerDriver = Toolchain.Compiler.CreateArgumentDriver(CFamily.Cpp)
+                var CompilerDriver = Toolchain.Compiler.CreateArgumentDriver(CFamily.Cpp, true)
                     .AddArguments(PCHArguments)
                     .AddArgument("Source", PCHFile)
-                    .AddArgument("AsPCHHeader", true)
                     .AddArgument("Object", PCHASTFile)
                     .AddArgument("SourceDependencies", SourceDependencies);
                 Toolchain.Compiler.Compile(this, Target, CompilerDriver, Path.GetDirectoryName(PCHASTFile));

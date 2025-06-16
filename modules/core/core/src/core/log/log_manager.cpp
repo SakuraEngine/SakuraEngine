@@ -8,55 +8,56 @@ namespace logging
 {
 
 std::once_flag default_logger_once_;
+skr::UPtr<LogManagerImpl> LogManagerImpl::gLogManager = skr::UPtr<LogManagerImpl>::New();
 
-LogManager::LogManager() SKR_NOEXCEPT
+LogManagerImpl::LogManagerImpl() SKR_NOEXCEPT
 {
+
 }
 
-void LogManager::Initialize() SKR_NOEXCEPT
+void LogManagerImpl::Initialize() SKR_NOEXCEPT
 {
     tscns_.init();
     datetime_.reset_date();
-    logger_ = skr::make_unique<skr::logging::Logger>(u8"Log");
+    logger_ = skr::UPtr<skr::logging::Logger>::New(u8"Log");
 
     // register default pattern
     auto ret = RegisterPattern(LogConstants::kDefaultPatternId,
-                               skr::make_unique<LogPattern>(
-                               u8"[%(timestamp)][%(thread_name)(tid:%(thread_id))] %(logger_name).%(level_name): %(message)"));
+                u8"[%(timestamp)][%(thread_name)(tid:%(thread_id))] %(logger_name).%(level_name): %(message)");
     SKR_ASSERT(ret && "Default log pattern register failed!");
 
     // register default console pattern & sink
     ret = RegisterPattern(LogConstants::kDefaultConsolePatternId,
-                          skr::make_unique<LogPattern>(
                           u8"[%(timestamp)][%(process_name)@%(thread_name)(tid:%(thread_id))] %(logger_name).%(level_name): %(message) "
-                          u8"\n    \x1b[90mIn %(function_name) At %(file_name):%(file_line)\x1b[0m"));
+                          u8"\n    \x1b[90mIn %(function_name) At %(file_name):%(file_line)\x1b[0m");
     SKR_ASSERT(ret && "Default log console pattern register failed!");
-    ret = RegisterSink(LogConstants::kDefaultConsoleSinkId, skr::make_unique<LogANSIOutputSink>());
+    ret = RegisterSink(LogConstants::kDefaultConsoleSinkId, skr::UPtr<LogANSIOutputSink>::New());
     SKR_ASSERT(ret && "Default log console sink register failed!");
 
     // register default file pattern & sink
     ret = RegisterPattern(LogConstants::kDefaultFilePatternId,
-                          skr::make_unique<LogPattern>(
                           u8"[%(timestamp)][%(thread_name)(tid:%(thread_id))] %(logger_name).%(level_name): %(message) "
-                          u8"\n    In %(function_name) At %(file_name):%(file_line)"));
+                          u8"\n    In %(function_name) At %(file_name):%(file_line)");
     SKR_ASSERT(ret && "Default log file pattern register failed!");
-    ret = RegisterSink(LogConstants::kDefaultFileSinkId, skr::make_unique<LogFileSink>());
-    SKR_ASSERT(ret && "Default log file sink register failed!");
-}
 
+    /*
+    ret = RegisterSink(LogConstants::kDefaultFileSinkId, skr::UPtr<LogFileSink>::New());
+    SKR_ASSERT(ret && "Default log file sink register failed!");
+    */
+}
+    
 LogManager* LogManager::Get() SKR_NOEXCEPT
 {
-    static skr::unique_ptr<LogManager> manager         = skr::make_unique<LogManager>();
-    static bool                        initialize_once = false;
+    static bool initialize_once = false;
     if (!initialize_once)
     {
         initialize_once = true;
-        manager->Initialize();
+        LogManagerImpl::gLogManager->Initialize();
     }
-    return manager.get();
+    return LogManagerImpl::gLogManager.get();
 }
 
-void LogManager::InitializeAsyncWorker() SKR_NOEXCEPT
+void LogManagerImpl::InitializeAsyncWorker() SKR_NOEXCEPT
 {
     if (skr_atomic_load_acquire(&available_) != 0)
         return;
@@ -64,16 +65,16 @@ void LogManager::InitializeAsyncWorker() SKR_NOEXCEPT
     // start worker
     if (!worker_)
     {
-        worker_ = skr::make_unique<LogWorker>(kLoggerWorkerThreadDesc);
+        worker_ = skr::UPtr<LogWorker>::New(kLoggerWorkerThreadDesc);
         worker_->run();
     }
     int64_t expected = 0;
     skr_atomic_compare_exchange_strong(&available_, &expected, 1ll);
 }
 
-void LogManager::FinalizeAsyncWorker() SKR_NOEXCEPT
+void LogManagerImpl::FinalizeAsyncWorker() SKR_NOEXCEPT
 {
-    // skr::logging::LogManager::logger_.reset();
+    // skr::logging::LogManagerImpl::logger_.reset();
     if (skr_atomic_load_acquire(&available_) != 0)
     {
         worker_.reset();
@@ -82,36 +83,35 @@ void LogManager::FinalizeAsyncWorker() SKR_NOEXCEPT
     }
 }
 
-LogWorker* LogManager::TryGetWorker() SKR_NOEXCEPT
+LogWorker* LogManagerImpl::TryGetWorker() SKR_NOEXCEPT
 {
     if (skr_atomic_load_acquire(&available_) == 0)
         return nullptr;
     return worker_.get();
 }
 
-Logger* LogManager::GetDefaultLogger() SKR_NOEXCEPT
+Logger* LogManagerImpl::GetDefaultLogger() SKR_NOEXCEPT
 {
-    auto Manager = skr::logging::LogManager::Get();
-    return Manager->logger_.get();
+    return gLogManager->logger_.get();
 }
 
-skr_guid_t LogManager::RegisterPattern(skr::unique_ptr<LogPattern> pattern)
+skr_guid_t LogManagerImpl::RegisterPattern(const char8_t* pattern)
 {
     auto guid = skr_guid_t();
     skr_make_guid(&guid);
-    patterns_.emplace(guid, std::move(pattern));
+    patterns_.emplace(guid, skr::UPtr<LogPattern>::New(pattern));
     return guid;
 }
 
-bool LogManager::RegisterPattern(skr_guid_t guid, skr::unique_ptr<LogPattern> pattern)
+bool LogManagerImpl::RegisterPattern(skr_guid_t guid, const char8_t* pattern)
 {
     if (patterns_.find(guid) != patterns_.end())
         return false;
-    patterns_.emplace(guid, std::move(pattern));
+    patterns_.emplace(guid, skr::UPtr<LogPattern>::New(pattern));
     return true;
 }
 
-LogPattern* LogManager::QueryPattern(skr_guid_t guid)
+LogPattern* LogManagerImpl::QueryPattern(skr_guid_t guid)
 {
     auto it = patterns_.find(guid);
     if (it != patterns_.end())
@@ -119,7 +119,7 @@ LogPattern* LogManager::QueryPattern(skr_guid_t guid)
     return nullptr;
 }
 
-skr_guid_t LogManager::RegisterSink(skr::unique_ptr<LogSink> sink)
+skr_guid_t LogManagerImpl::RegisterSink(skr::UPtr<LogSink> sink)
 {
     auto guid = skr_guid_t();
     skr_make_guid(&guid);
@@ -127,7 +127,7 @@ skr_guid_t LogManager::RegisterSink(skr::unique_ptr<LogSink> sink)
     return guid;
 }
 
-bool LogManager::RegisterSink(skr_guid_t guid, skr::unique_ptr<LogSink> sink)
+bool LogManagerImpl::RegisterSink(skr_guid_t guid, skr::UPtr<LogSink> sink)
 {
     if (sinks_.find(guid) != sinks_.end())
         return false;
@@ -135,7 +135,7 @@ bool LogManager::RegisterSink(skr_guid_t guid, skr::unique_ptr<LogSink> sink)
     return true;
 }
 
-LogSink* LogManager::QuerySink(skr_guid_t guid)
+LogSink* LogManagerImpl::QuerySink(skr_guid_t guid)
 {
     auto it = sinks_.find(guid);
     if (it != sinks_.end())
@@ -143,7 +143,7 @@ LogSink* LogManager::QuerySink(skr_guid_t guid)
     return nullptr;
 }
 
-void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
+void LogManagerImpl::PatternAndSink(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
 {
     static thread_local skr::FlatHashMap<skr_guid_t, skr::String, skr::Hash<skr_guid_t>> patterns_set_;
     patterns_set_.clear();
@@ -156,7 +156,7 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted
             if (iter != patterns_set_.end())
                 continue;
 
-            if (auto p = LogManager::QueryPattern(pattern_id))
+            if (auto p = LogManagerImpl::QueryPattern(pattern_id))
             {
                 SkrZoneScopedN("LogPattern::Pattern");
                 patterns_set_.insert({pattern_id, p->pattern(event, formatted_message)});
@@ -177,7 +177,7 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted
             if (iter == patterns_set_.end())
                 continue;
             
-            if (auto p = LogManager::QueryPattern(pattern_id))
+            if (auto p = LogManagerImpl::QueryPattern(pattern_id))
             {
                 SkrZoneScopedN("LogSink::Sink");
                 sink->sink(event, iter->second.view());
@@ -188,7 +188,7 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted
             }
         }
     }
-    const bool bInplaceLog     = !LogManager::Get() || !LogManager::Get()->TryGetWorker();
+    const bool bInplaceLog     = !LogManagerImpl::Get() || !gLogManager->TryGetWorker();
     const bool bFlushImmediate = LogConstants::gFlushBehavior == LogFlushBehavior::kFlushImmediate;
     if (bInplaceLog || bFlushImmediate)
     {
@@ -196,9 +196,9 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::StringView formatted
     }
 }
 
-void LogManager::FlushAllSinks() SKR_NOEXCEPT
+void LogManagerImpl::FlushAllSinks() SKR_NOEXCEPT
 {
-    SkrZoneScopedN("LogManager::FlushSinks");
+    SkrZoneScopedN("LogManagerImpl::FlushSinks");
 
     for (auto&& [id, sink] : sinks_)
     {
@@ -206,7 +206,7 @@ void LogManager::FlushAllSinks() SKR_NOEXCEPT
     }
 }
 
-bool LogManager::ShouldBacktrace(const LogEvent& event) SKR_NOEXCEPT
+bool LogManagerImpl::ShouldBacktrace(const LogEvent& event) SKR_NOEXCEPT
 {
     const auto lv = event.get_level();
     const auto gt = lv >= LogLevel::kError;
@@ -214,10 +214,9 @@ bool LogManager::ShouldBacktrace(const LogEvent& event) SKR_NOEXCEPT
     return gt && ne;
 }
 
-void LogManager::DateTime::reset_date() SKR_NOEXCEPT
+void LogManagerImpl::DateTime::reset_date() SKR_NOEXCEPT
 {
-    auto       Manager  = LogManager::Get();
-    time_t     rawtime  = Manager->tscns_.rdns() / 1000000000;
+    time_t     rawtime  = gLogManager->tscns_.rdns() / 1000000000;
     struct tm* timeinfo = ::localtime(&rawtime);
     timeinfo->tm_sec = timeinfo->tm_min = timeinfo->tm_hour = 0;
     midnightNs                                              = ::mktime(timeinfo) * 1000000000;

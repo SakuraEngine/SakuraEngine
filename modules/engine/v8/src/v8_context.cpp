@@ -303,7 +303,7 @@ v8::MaybeLocal<v8::Module> V8Context::_resolve_module(
     if (!V8Bind::to_native(specifier, module_name))
     {
         isolate->ThrowException(V8Bind::to_v8(u8"failed to convert module name"));
-        SKR_LOG_FMT_ERROR(u8"failed to convert module name");
+        SKR_LOG_ERROR(u8"failed to convert module name");
         return {};
     }
 

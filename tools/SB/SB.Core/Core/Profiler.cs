@@ -9,6 +9,7 @@ public static class Profiler
     // Plot names need to be cached for the lifetime of the program
     // seealso Tracy docs section 3.1
     private static readonly Dictionary<string, CString> PlotNameCache = new Dictionary<string, CString>();
+    private static readonly bool EnableProfile = false;
 
     /// <summary>
     /// Begins a new <see cref="ProfilerZone"/> and returns the handle to that zone. Time
@@ -42,19 +43,23 @@ public static class Profiler
         [CallerFilePath] string? filePath = null,
         [CallerMemberName] string? memberName = null)
     {
-        using var filestr = GetCString(filePath, out var fileln);
-        using var memberstr = GetCString(memberName, out var memberln);
-        using var namestr = GetCString(zoneName, out var nameln);
-        var srcLocId = TracyAllocSrclocName(lineNumber, filestr, fileln, memberstr, memberln, namestr, nameln);
-        var context = TracyEmitZoneBeginAlloc(srcLocId, active ? 1 : 0);
-        TracyEmitZoneColor(context, color);
-        if (text != null)
+        if (EnableProfile)
         {
-            using var textstr = GetCString(text, out var textln);
-            TracyEmitZoneText(context, textstr, textln);
-        }
+            using var filestr = GetCString(filePath, out var fileln);
+            using var memberstr = GetCString(memberName, out var memberln);
+            using var namestr = GetCString(zoneName, out var nameln);
+            var srcLocId = TracyAllocSrclocName(lineNumber, filestr, fileln, memberstr, memberln, namestr, nameln);
+            var context = TracyEmitZoneBeginAlloc(srcLocId, active ? 1 : 0);
+            TracyEmitZoneColor(context, color);
+            if (text != null)
+            {
+                using var textstr = GetCString(text, out var textln);
+                TracyEmitZoneText(context, textstr, textln);
+            }
 
-        return new ProfilerZone(context);
+            return new ProfilerZone(context);
+        }
+        return default;
     }
 
     /// <summary>
@@ -77,8 +82,11 @@ public static class Profiler
     /// </param>
     public static void PlotConfig(string name, PlotType type = PlotType.Number, bool step = false, bool fill = true, uint color = 0)
     {
-        var namestr = GetPlotCString(name);
-        TracyEmitPlotConfig(namestr, (int)type, step ? 1 : 0, fill ? 1 : 0, color);
+        if (EnableProfile)
+        {
+            var namestr = GetPlotCString(name);
+            TracyEmitPlotConfig(namestr, (int)type, step ? 1 : 0, fill ? 1 : 0, color);
+        }
     }
 
     /// <summary>
@@ -86,8 +94,11 @@ public static class Profiler
     /// </summary>
     public static void Plot(string name, double val)
     {
-        var namestr = GetPlotCString(name);
-        TracyEmitPlot(namestr, val);
+        if (EnableProfile)
+        {
+            var namestr = GetPlotCString(name);
+            TracyEmitPlot(namestr, val);
+        }
     }
 
     /// <summary>
@@ -95,8 +106,11 @@ public static class Profiler
     /// </summary>
     public static void Plot(string name, int val)
     {
-        var namestr = GetPlotCString(name);
-        TracyEmitPlotInt(namestr, val);
+        if (EnableProfile)
+        {
+            var namestr = GetPlotCString(name);
+            TracyEmitPlotInt(namestr, val);
+        }
     }
 
     /// <summary>
@@ -104,8 +118,11 @@ public static class Profiler
     /// </summary>
     public static void Plot(string name, float val)
     {
-        var namestr = GetPlotCString(name);
-        TracyEmitPlotFloat(namestr, val);
+        if (EnableProfile)
+        {
+            var namestr = GetPlotCString(name);
+            TracyEmitPlotFloat(namestr, val);
+        }
     }
 
     private static CString GetPlotCString(string name)
@@ -132,8 +149,11 @@ public static class Profiler
 
     public static void Message(string message)
     {
-        using var messagestr = GetCString(message, out var messageln);
-        TracyEmitMessage(messagestr, messageln, 0);
+        if (EnableProfile)
+        {
+            using var messagestr = GetCString(message, out var messageln);
+            TracyEmitMessage(messagestr, messageln, 0);
+        }
     }
 
 
@@ -205,24 +225,32 @@ public static class Profiler
 
         public void EmitName(string name)
         {
-            using var namestr = Profiler.GetCString(name, out var nameln);
-            TracyEmitZoneName(Context, namestr, nameln);
+            if (EnableProfile)
+            {
+                using var namestr = Profiler.GetCString(name, out var nameln);
+                TracyEmitZoneName(Context, namestr, nameln);
+            }
         }
 
         public void EmitColor(uint color)
         {
-            TracyEmitZoneColor(Context, color);
+            if (EnableProfile)
+                TracyEmitZoneColor(Context, color);
         }
 
         public void EmitText(string text)
         {
-            using var textstr = Profiler.GetCString(text, out var textln);
-            TracyEmitZoneText(Context, textstr, textln);
+            if (EnableProfile)
+            {
+                using var textstr = Profiler.GetCString(text, out var textln);
+                TracyEmitZoneText(Context, textstr, textln);
+            }
         }
 
         public void Dispose()
         {
-            TracyEmitZoneEnd(Context);
+            if (EnableProfile)
+                TracyEmitZoneEnd(Context);
         }
     }
 
