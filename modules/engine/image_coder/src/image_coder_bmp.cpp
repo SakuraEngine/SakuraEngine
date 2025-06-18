@@ -82,6 +82,7 @@ bool BMPImageDecoder::decode(EImageCoderColorFormat in_format, uint32_t bit_dept
 		return false;
 	}
 
+	const bool isRGBA = (in_format == IMAGE_CODER_COLOR_FORMAT_RGBA);
 	/*
 	UE_LOG(LogImageWrapper, Log, TEXT("BMP compression = (%i) BitCount = (%i)"), bmhdr->biCompression,bmhdr->biBitCount)
 	UE_LOG(LogImageWrapper, Log, TEXT("BMP BitsOffset = (%i)"), BitsOffset)
@@ -211,13 +212,17 @@ bool BMPImageDecoder::decode(EImageCoderColorFormat in_format, uint32_t bit_dept
 	{
 		for (int32_t Y = 0; Y < Height; Y++)
 		{
+			const uint32_t _X = isRGBA ? 2u : 0u;
+			const uint32_t _Z = isRGBA ? 0u : 2u;
+
 			const uint8_t* SrcRowPtr = SrcPtr;
 			for (int32_t X = 0; X < Width; X++)
 			{
-				*ImageData++ = *SrcRowPtr++;
-				*ImageData++ = *SrcRowPtr++;
-				*ImageData++ = *SrcRowPtr++;
-				*ImageData++ = 0xFF;
+				ImageData[_X] = *SrcRowPtr++;
+				ImageData[1u] = *SrcRowPtr++;
+				ImageData[_Z] = *SrcRowPtr++;
+				ImageData[3u] = 0xFF;
+				ImageData += 4;
 			}
 			SrcPtr += SrcPtrDiff;
 		}
@@ -374,7 +379,6 @@ bool BMPImageDecoder::decode(EImageCoderColorFormat in_format, uint32_t bit_dept
 			AlphaBias = 255.f;
 		}
 		
-		const bool isRGBA = (in_format == IMAGE_CODER_COLOR_FORMAT_RGBA);
 		const uint32_t _R = 0, _G = 1, _B = 2, _A = 3;
 		const uint32_t _X = isRGBA ? _R : _B;
 		const uint32_t _Y = _G;
