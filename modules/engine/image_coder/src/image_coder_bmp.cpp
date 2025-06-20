@@ -67,8 +67,10 @@ EImageCoderFormat BMPImageDecoder::get_image_format() const SKR_NOEXCEPT
 
 #define ALIGN_UP(x, y) (((x) + ((y)-1)) & ~((y)-1))
 
-bool BMPImageDecoder::decode(EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT
+bool BMPImageDecoder::decode(EImageCoderColorFormat in_format, uint32_t bit_depth) SKR_NOEXCEPT
 {
+	SKR_ASSERT(in_format == IMAGE_CODER_COLOR_FORMAT_BGRA || in_format == IMAGE_CODER_COLOR_FORMAT_RGBA);
+
     auto Buffer = encoded_view.data();
     auto BufferEnd = Buffer + encoded_view.size();
     EBitmapHeaderVersion HeaderVersion = EBitmapHeaderVersion::BHV_BITMAPINFOHEADER;
@@ -80,6 +82,7 @@ bool BMPImageDecoder::decode(EImageCoderColorFormat format, uint32_t bit_depth) 
 		return false;
 	}
 
+	const bool isRGBA = (in_format == IMAGE_CODER_COLOR_FORMAT_RGBA);
 	/*
 	UE_LOG(LogImageWrapper, Log, TEXT("BMP compression = (%i) BitCount = (%i)"), bmhdr->biCompression,bmhdr->biBitCount)
 	UE_LOG(LogImageWrapper, Log, TEXT("BMP BitsOffset = (%i)"), BitsOffset)
@@ -209,13 +212,17 @@ bool BMPImageDecoder::decode(EImageCoderColorFormat format, uint32_t bit_depth) 
 	{
 		for (int32_t Y = 0; Y < Height; Y++)
 		{
+			const uint32_t _X = isRGBA ? 2u : 0u;
+			const uint32_t _Z = isRGBA ? 0u : 2u;
+
 			const uint8_t* SrcRowPtr = SrcPtr;
 			for (int32_t X = 0; X < Width; X++)
 			{
-				*ImageData++ = *SrcRowPtr++;
-				*ImageData++ = *SrcRowPtr++;
-				*ImageData++ = *SrcRowPtr++;
-				*ImageData++ = 0xFF;
+				ImageData[_X] = *SrcRowPtr++;
+				ImageData[1u] = *SrcRowPtr++;
+				ImageData[_Z] = *SrcRowPtr++;
+				ImageData[3u] = 0xFF;
+				ImageData += 4;
 			}
 			SrcPtr += SrcPtrDiff;
 		}
@@ -372,6 +379,11 @@ bool BMPImageDecoder::decode(EImageCoderColorFormat format, uint32_t bit_depth) 
 			AlphaBias = 255.f;
 		}
 		
+		const uint32_t _R = 0, _G = 1, _B = 2, _A = 3;
+		const uint32_t _X = isRGBA ? _R : _B;
+		const uint32_t _Y = _G;
+		const uint32_t _Z = isRGBA ? _B : _R;
+		const uint32_t _W = _A;
 		if ( bmhdr->biBitCount == 32 )
 		{
 			for (int32_t Y = 0; Y < Height; Y++)
@@ -381,10 +393,10 @@ bool BMPImageDecoder::decode(EImageCoderColorFormat format, uint32_t bit_depth) 
 					const uint32_t SrcPixel = ((const uint32_t*)SrcPtr)[X];
 					// Set the color values in BGRA order.
 					//	integer output of RoundToInt will always fit in U8, no clamp needed
-					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[2]) * MappingRatio[2] + 0.5f);
-					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[1]) * MappingRatio[1] + 0.5f);
-					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[0]) * MappingRatio[0] + 0.5f);
-					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[3]) * MappingRatio[3] + AlphaBias);
+					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[_X]) * MappingRatio[_X] + 0.5f);
+					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[_Y]) * MappingRatio[_Y] + 0.5f);
+					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[_Z]) * MappingRatio[_Z] + 0.5f);
+					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[_W]) * MappingRatio[_W] + AlphaBias);
 				}
 
 				SrcPtr += SrcPtrDiff;
@@ -402,10 +414,10 @@ bool BMPImageDecoder::decode(EImageCoderColorFormat format, uint32_t bit_depth) 
 
 					// Set the color values in BGRA order.
 					//	integer output of RoundToInt will always fit in U8, no clamp needed
-					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[2]) * MappingRatio[2] + 0.5f);
-					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[1]) * MappingRatio[1] + 0.5f);
-					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[0]) * MappingRatio[0] + 0.5f);
-					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[3]) * MappingRatio[3] + AlphaBias);
+					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[_X]) * MappingRatio[_X] + 0.5f);
+					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[_Y]) * MappingRatio[_Y] + 0.5f);
+					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[_Z]) * MappingRatio[_Z] + 0.5f);
+					*ImageData++ = (uint8_t) ((SrcPixel & RGBAMask[_W]) * MappingRatio[_W] + AlphaBias);
 				}
 
 				SrcPtr += SrcPtrDiff;
