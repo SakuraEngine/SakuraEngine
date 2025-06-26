@@ -53,8 +53,7 @@ public:
     }
     virtual void on_cmd_end(class skr::render_graph::RenderGraph&, class skr::render_graph::RenderGraphFrameExecutor& executor)
     {
-        cgpu_cmd_resolve_query(executor.gfx_cmd_buf, query_pool,
-        query_buffer, 0, query_cursor);
+        cgpu_cmd_resolve_query(executor.gfx_cmd_buf, query_pool, query_buffer, 0, query_cursor);
     }
     virtual void on_pass_begin(class skr::render_graph::RenderGraph&, class skr::render_graph::RenderGraphFrameExecutor&, class skr::render_graph::PassNode& pass)
     {

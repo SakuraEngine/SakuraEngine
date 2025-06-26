@@ -8,7 +8,8 @@ namespace SB.Core
         {
             this.Language = Language;
             this.isPCH = isPCH;
-            RawArguments.Add($"-isysroot {SDKDirectory}");
+            RawArguments.Add("-isysroot");
+            RawArguments.Add($"{SDKDirectory}");
             /*
             RawArguments.Add($"-isystem {SDKDirectory}/System/Library/Frameworks");
             RawArguments.Add($"-isystem {SDKDirectory}/usr/include/c++/v1");
@@ -22,14 +23,14 @@ namespace SB.Core
         public string Exception(bool Enable) => Enable ? "-fexceptions" : "-fno-exceptions";
 
         [TargetProperty]
-        public string CppVersion(string what) => 
+        public string CppVersion(string what) =>
             Language == CFamily.Cpp || Language == CFamily.ObjCpp ?
             cppVersionMap.TryGetValue(what.Replace("c++", "").Replace("C++", ""), out var r) ? r : throw new TaskFatalError($"Invalid argument \"{what}\" for CppVersion!") :
             "";
         public static readonly Dictionary<string, string> cppVersionMap = new Dictionary<string, string> { { "11", "-std=c++11" }, { "14", "-std=c++14" }, { "17", "-std=c++17" }, { "20", "-std=c++20" }, { "23", "-std=c++23" }, { "latest", "-std=c++26" } };
 
         [TargetProperty]
-        public string CVersion(string what) => 
+        public string CVersion(string what) =>
             Language == CFamily.C || Language == CFamily.ObjC ?
             cVersionMap.TryGetValue(what.Replace("c", "").Replace("C", ""), out var r) ? r : throw new TaskFatalError($"Invalid argument \"{what}\" for CppVersion!") :
             "";
@@ -61,25 +62,25 @@ namespace SB.Core
             _ => throw new TaskFatalError($"Invalid argument \"{level}\" for OptimizationLevel!")
         };
 
-        [TargetProperty] 
+        [TargetProperty]
         public string FpModel(FpModel v) => $"-ffp-model={v}".ToLowerInvariant();
 
-        [TargetProperty(InheritBehavior = true)] 
+        [TargetProperty(InheritBehavior = true)]
         public string[] CppFlags(ArgumentList<string> flags) => flags.Select(flag => flag).ToArray();
-        
-        [TargetProperty(InheritBehavior = true)] 
+
+        [TargetProperty(InheritBehavior = true)]
         public string[] Defines(ArgumentList<string> defines) => defines.Select(define => $"-D{define}").ToArray();
 
-        [TargetProperty(InheritBehavior = true, PathBehavior = true)] 
+        [TargetProperty(InheritBehavior = true, PathBehavior = true)]
         public string[]? IncludeDirs(ArgumentList<string> dirs) => dirs.All(x => BS.CheckPath(x, true) ? true : throw new TaskFatalError($"Invalid include dir {x}!")) ? dirs.Select(dir => $"-I{dir}").ToArray() : null;
-        
-        [TargetProperty] 
+
+        [TargetProperty]
         public string RTTI(bool v) => v ? "-frtti" : "-fno-rtti";
 
         [TargetProperty]
         public virtual string DebugSymbols(bool Enable) => Enable ? "-g" : "";
-        
-        [TargetProperty] 
+
+        [TargetProperty]
         public string Source(string path) => BS.CheckFile(path, true) ? GetLanguageArgString() + $" \"{path}\"" : throw new TaskFatalError($"Source value {path} is not an existed absolute path!");
 
         public string Arch(Architecture arch) => archMap.TryGetValue(arch, out var r) ? r : throw new TaskFatalError($"Invalid architecture \"{arch}\" for Apple clang!");
@@ -91,7 +92,7 @@ namespace SB.Core
 
         public string PDB(string path) => "";
 
-        public string SourceDependencies(string path) => BS.CheckFile(path, false) ? $"-MD -MF\"{path}\"" : throw new TaskFatalError($"SourceDependencies value {path} is not a valid absolute path!");
+        public string[] SourceDependencies(string path) => BS.CheckFile(path, false) ? new string[] { "-MD", "-MF", $"\"{path}\"" } : throw new TaskFatalError($"SourceDependencies value {path} is not a valid absolute path!");
 
         public string UsePCHAST(string path) => BS.CheckFile(path, false) ? $"-include-pch \"{path}\"" : throw new TaskFatalError($"PCHObject value {path} is not a valid absolute path!");
 

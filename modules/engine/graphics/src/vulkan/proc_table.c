@@ -95,6 +95,8 @@ const CGPUProcTable tbl_vk = {
     .cmd_transfer_buffer_to_texture = &cgpu_cmd_transfer_buffer_to_texture_vulkan,
     .cmd_transfer_buffer_to_tiles = &cgpu_cmd_transfer_buffer_to_tiles_vulkan,
     .cmd_transfer_texture_to_texture = &cgpu_cmd_transfer_texture_to_texture_vulkan,
+    .cmd_fill_buffer = &cgpu_cmd_fill_buffer_vulkan,
+    .cmd_fill_buffer_n = &cgpu_cmd_fill_buffer_n_vulkan,
     .cmd_resource_barrier = &cgpu_cmd_resource_barrier_vulkan,
     .cmd_begin_query = &cgpu_cmd_begin_query_vulkan,
     .cmd_end_query = &cgpu_cmd_end_query_vulkan,
@@ -212,8 +214,6 @@ static void VKAPI_PTR cgpu_vulkan_internal_free_notify(
 {
 
 }
-
-#define CGPU_ALIGN(size, align) ((size + align - 1) & (~(align - 1)))
 
 typedef struct AllocHeader
 {

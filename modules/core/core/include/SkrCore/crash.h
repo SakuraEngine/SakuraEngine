@@ -45,6 +45,9 @@ typedef int (*SProcCrashCallback)(struct SCrashContext* context, void* usr_data)
 typedef struct SCrashHandler* SCrashHandlerId;
 
 SKR_CORE_API SCrashHandlerId skr_initialize_crash_handler() SKR_NOEXCEPT;
+#ifdef SKR_PLAT_WINDOWS
+SKR_CORE_API void skr_crash_handler_set_dump_file(const char8_t* dump_file) SKR_NOEXCEPT;
+#endif
 SKR_CORE_API SCrashHandlerId skr_crash_handler_get() SKR_NOEXCEPT;
 SKR_CORE_API void            skr_crash_handler_add_callback(SCrashHandlerId handler, SProcCrashCallback callback, void* usr_data) SKR_NOEXCEPT;
 SKR_CORE_API void            skr_finalize_crash_handler() SKR_NOEXCEPT;

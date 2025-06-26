@@ -29,7 +29,7 @@ public static class SkrGraphics
         if (BuildSystem.TargetOS == OSPlatform.OSX)
         {
             var OCOptions = new CFamilyFileOptions();
-            OCOptions.Arguments.CppFlags(Visibility.Private, "-fno-objc-arc");
+            OCOptions.Arguments.CppFlags(Visibility.Private, "-fobjc-arc");
 
             SkrGraphics
                 .AddObjCFiles(OCOptions, "src/build.*.m") 

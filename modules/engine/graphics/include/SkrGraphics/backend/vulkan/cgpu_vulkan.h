@@ -122,6 +122,8 @@ CGPU_API void cgpu_cmd_transfer_buffer_to_buffer_vulkan(CGPUCommandBufferId cmd,
 CGPU_API void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
 CGPU_API void cgpu_cmd_transfer_buffer_to_tiles_vulkan(CGPUCommandBufferId cmd, const struct CGPUBufferToTilesTransfer* desc);
 CGPU_API void cgpu_cmd_transfer_texture_to_texture_vulkan(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc);
+CGPU_API void cgpu_cmd_fill_buffer_vulkan(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc);
+CGPU_API void cgpu_cmd_fill_buffer_n_vulkan(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc, uint32_t count);
 CGPU_API void cgpu_cmd_resource_barrier_vulkan(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
 CGPU_API void cgpu_cmd_begin_query_vulkan(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
 CGPU_API void cgpu_cmd_end_query_vulkan(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
@@ -222,6 +224,12 @@ typedef struct CGPUAdapter_Vulkan {
 #if VK_EXT_descriptor_buffer
     VkPhysicalDeviceDescriptorBufferFeaturesEXT mPhysicalDeviceDescriptorBufferFeatures;
     VkPhysicalDeviceDescriptorBufferPropertiesEXT mPhysicalDeviceDescriptorBufferProperties;
+#endif
+#if VK_KHR_acceleration_structure
+    VkPhysicalDeviceAccelerationStructureFeaturesKHR mPhysicalDeviceAccelerationStructureFeatures;
+#endif
+#if VK_KHR_ray_query
+    VkPhysicalDeviceRayQueryFeaturesKHR mPhysicalDeviceRayQueryFeatures;
 #endif
     VkPhysicalDeviceFeatures2 mPhysicalDeviceFeatures;
     VkPhysicalDeviceSubgroupProperties mSubgroupProperties;
@@ -449,9 +457,7 @@ static const VkPipelineBindPoint gPipelineBindPoint[CGPU_PIPELINE_TYPE_COUNT] = 
     VK_PIPELINE_BIND_POINT_MAX_ENUM,
     VK_PIPELINE_BIND_POINT_COMPUTE,
     VK_PIPELINE_BIND_POINT_GRAPHICS,
-#ifdef ENABLE_RAYTRACING
-    VK_PIPELINE_BIND_POINT_RAY_TRACING_NV
-#endif
+    VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR
 };
 
 static const VkAttachmentStoreOp gVkAttachmentStoreOpTranslator[CGPU_STORE_ACTION_COUNT] = {
@@ -495,8 +501,8 @@ extern "C" {
 #endif
 
 SKR_FORCEINLINE static VkFormat VkUtil_FormatTranslateToVk(const ECGPUFormat format);
-
 #include "cgpu_vulkan.inl"
+
 #ifdef __cplusplus
 } // end extern "C"
 #endif

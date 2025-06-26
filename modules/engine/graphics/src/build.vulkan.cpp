@@ -6,8 +6,3 @@
         #include "vulkan/cgpu_vulkan_windows.cpp"
     #endif
 #endif
-
-// marker buffers
-#ifdef CGPU_USE_VULKAN
-#include "extensions/marker_buffer_vulkan.cpp"
-#endif

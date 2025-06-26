@@ -1,11 +1,8 @@
 #pragma once
 #include "SkrBase/misc/hash.h" // IWYU pragma: export
-#include "SkrCore/memory/memory.h"
 #include "SkrGraphics/api.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+CGPU_EXTERN_C_BEGIN
 
 struct CGPURuntimeTable* cgpu_create_runtime_table();
 void cgpu_early_free_runtime_table(struct CGPURuntimeTable* table);
@@ -27,13 +24,11 @@ CGPURootSignaturePoolId CGPUUtil_CreateRootSignaturePool(const CGPURootSignature
 CGPURootSignatureId CGPUUtil_TryAllocateSignature(CGPURootSignaturePoolId pool, CGPURootSignature* RSTables, const struct CGPURootSignatureDescriptor* desc);
 CGPURootSignatureId CGPUUtil_AddSignature(CGPURootSignaturePoolId pool, CGPURootSignature* sig, const CGPURootSignatureDescriptor* desc);
 // TODO: signature pool statics
-//void CGPUUtil_AllSignatures(CGPURootSignaturePoolId pool, CGPURootSignatureId* signatures, uint32_t* count);
+// void CGPUUtil_AllSignatures(CGPURootSignaturePoolId pool, CGPURootSignatureId* signatures, uint32_t* count);
 bool CGPUUtil_PoolFreeSignature(CGPURootSignaturePoolId pool, CGPURootSignatureId sig);
 void CGPUUtil_FreeRootSignaturePool(CGPURootSignaturePoolId pool);
 
 #define cgpu_round_up(value, multiple) ((((value) + (multiple)-1) / (multiple)) * (multiple))
 #define cgpu_round_down(value, multiple) ((value) - (value) % (multiple))
 
-#ifdef __cplusplus
-} // end extern "C"
-#endif
+CGPU_EXTERN_C_END

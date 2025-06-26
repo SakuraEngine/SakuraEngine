@@ -16,7 +16,7 @@ namespace SB.Core
             RawArguments.Remove("/TP");
             RawArguments.Remove("/TC");
         }
-        public override string Source(string path) => BS.CheckFile(path, true) ? GetLanguageArgString() + $" \"{path}\"" : throw new TaskFatalError($"Source value {path} is not an existed absolute path!");
+        public override string[] Source(string path) => BS.CheckFile(path, true) ? new string[] { GetLanguageArgString(), $"\"{path}\"" } : throw new TaskFatalError($"Source value {path} is not an existed absolute path!");
 
         [TargetProperty(InheritBehavior = true)]
         public virtual string[] ClangCl_CppFlags(ArgumentList<string> flags) => CppFlags(flags);

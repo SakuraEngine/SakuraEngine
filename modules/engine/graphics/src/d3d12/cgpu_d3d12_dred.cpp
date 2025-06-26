@@ -1,4 +1,4 @@
-#include "d3d12_utils.hpp"
+#include "d3d12_utils.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrGraphics/containers.hpp"
 

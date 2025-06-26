@@ -122,7 +122,7 @@ void QueueOperations<backend>::test_all()
             desc.descriptors = CGPU_RESOURCE_TYPE_BUFFER;
             desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
             desc.element_stride = sizeof(uint16_t);
-            desc.elemet_count = 3;
+            desc.element_count = 3;
             desc.size = sizeof(uint16_t) * 3;
             desc.name = u8"UploadBuffer";
             upload_buffer = cgpu_create_buffer(device, &desc);
@@ -140,7 +140,7 @@ void QueueOperations<backend>::test_all()
             desc.start_state = CGPU_RESOURCE_STATE_COPY_DEST;
             desc.memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU;
             desc.element_stride = sizeof(uint16_t);
-            desc.elemet_count = 3;
+            desc.element_count = 3;
             desc.size = sizeof(uint16_t) * 3;
             desc.name = u8"ReadbackBuffer";
             index_buffer = cgpu_create_buffer(device, &desc);

@@ -1,14 +1,6 @@
 #include "SkrGraphics/api.h"
 #include "SkrGraphics/containers.hpp"
-#ifdef CGPU_USE_VULKAN
-    // #include "SkrGraphics/backend/vulkan/cgpu_vulkan.h"
-#endif
-#ifdef CGPU_USE_D3D12
-    // #include "SkrGraphics/backend/d3d12/cgpu_d3d12.h"
-#endif
-#ifdef CGPU_USE_METAL
-    // #include "SkrGraphics/backend/metal/cgpu_metal.h"
-#endif
+#include "SkrContainersDef/set.hpp"
 #include "common_utils.h"
 #include <functional>
 

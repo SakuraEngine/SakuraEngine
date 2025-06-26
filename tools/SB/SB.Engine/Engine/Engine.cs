@@ -84,13 +84,11 @@ namespace SB
 
         public static void AddCompileCommandsEmitter(IToolchain Toolchain)
         {
-            Engine.AddTaskEmitter("Cpp.CompileCommands",  new CompileCommandsEmitter(Toolchain))
-                .AddDependency("Module.Info", DependencyModel.PerTarget)
-                .AddDependency("Cpp.UnityBuild", DependencyModel.PerTarget)
-                .AddDependency("Cpp.PCH", DependencyModel.PerTarget)
-                .AddDependency("Cpp.PCH", DependencyModel.ExternalTarget)
-                .AddDependency("Codgen.Codegen", DependencyModel.ExternalTarget)
-                .AddDependency("Codgen.Codegen", DependencyModel.PerTarget);
+            Engine.AddTaskEmitter("Cpp.CompileCommands", new CompileCommandsEmitter(Toolchain))
+                .AddDependency("Module.Info", DependencyModel.PerTarget);
+
+            Engine.GetTaskEmitter("Cpp.UnityBuild")
+                ?.AddDependency("Cpp.CompileCommands", DependencyModel.PerTarget);
         }
 
         public static new void RunBuild()

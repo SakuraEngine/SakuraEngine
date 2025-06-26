@@ -13,6 +13,7 @@
 #define CGPU_COLOR_MASK_ALPHA 0x8
 #define CGPU_COLOR_MASK_ALL CGPU_COLOR_MASK_RED | CGPU_COLOR_MASK_GREEN | CGPU_COLOR_MASK_BLUE | CGPU_COLOR_MASK_ALPHA
 #define CGPU_COLOR_MASK_NONE 0
+#define CGPU_ALIGN(size, align) ((size + align - 1) & (~(align - 1)))
 
 #if SKR_ARCH_WA32
 #define DEFINE_CGPU_OBJECT(name) struct name##Descriptor; typedef const host_ptr_t name##Id;
@@ -48,6 +49,7 @@ DEFINE_CGPU_OBJECT(CGPURenderPipeline)
 DEFINE_CGPU_OBJECT(CGPUComputePipeline)
 DEFINE_CGPU_OBJECT(CGPUShaderReflection)
 DEFINE_CGPU_OBJECT(CGPUPipelineReflection)
+DEFINE_CGPU_OBJECT(CGPUAccelerationStructure)
 
 typedef struct SkrDStorageQueueDescriptor CGPUDStorageQueueDescriptor;
 typedef struct SkrDStorageFileInfo CGPUDStorageFileInfo;
@@ -79,6 +81,7 @@ struct CGPUBufferToBufferTransfer;
 struct CGPUBufferToTilesTransfer;
 struct CGPUBufferToTextureTransfer;
 struct CGPUTextureToTextureTransfer;
+struct CGPUFillBufferDescriptor;
 struct CGPUQueryDescriptor;
 struct CGPUDescriptorData;
 struct CGPUResourceBarrierDescriptor;
@@ -324,6 +327,10 @@ CGPU_API void cgpu_cmd_transfer_buffer_to_texture(CGPUCommandBufferId cmd, const
 typedef void (*CGPUProcCmdTransferBufferToTexture)(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
 CGPU_API void cgpu_cmd_transfer_buffer_to_tiles(CGPUCommandBufferId cmd, const struct CGPUBufferToTilesTransfer* desc);
 typedef void (*CGPUProcCmdTransferBufferToTiles)(CGPUCommandBufferId cmd, const struct CGPUBufferToTilesTransfer* desc);
+CGPU_API void cgpu_cmd_fill_buffer(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc);
+typedef void (*CGPUProcCmdFillBuffer)(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc);
+CGPU_API void cgpu_cmd_fill_buffer_n(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc, uint32_t count);
+typedef void (*CGPUProcCmdFillBufferN)(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc, uint32_t count);
 CGPU_API void cgpu_cmd_resource_barrier(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
 typedef void (*CGPUProcCmdResourceBarrier)(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
 CGPU_API void cgpu_cmd_begin_query(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
@@ -629,6 +636,8 @@ typedef struct CGPUProcTable {
     const CGPUProcCmdTransferBufferToBuffer cmd_transfer_buffer_to_buffer;
     const CGPUProcCmdTransferBufferToTexture cmd_transfer_buffer_to_texture;
     const CGPUProcCmdTransferBufferToTiles cmd_transfer_buffer_to_tiles;
+    const CGPUProcCmdFillBuffer cmd_fill_buffer;
+    const CGPUProcCmdFillBufferN cmd_fill_buffer_n;
     const CGPUProcCmdTransferTextureToTexture cmd_transfer_texture_to_texture;
     const CGPUProcCmdResourceBarrier cmd_resource_barrier;
     const CGPUProcCmdBeginQuery cmd_begin_query;
@@ -832,14 +841,17 @@ typedef struct CGPUAdapterDetail {
     bool support_shading_rate : 1;
     bool support_shading_rate_mask : 1;
     bool support_shading_rate_sv : 1;
+    // RayTracing
+    bool support_ray_tracing : 1;
     CGPUFormatSupport format_supports[CGPU_FORMAT_COUNT];
     CGPUVendorPreset vendor_preset;
 } CGPUAdapterDetail;
 
 // Objects (Heap Safety)
 typedef struct CGPUInstance {
-    const CGPUProcTable* proc_table;
-    const CGPUSurfacesProcTable* surfaces_table;
+    const struct CGPUProcTable* proc_table;
+    const struct CGPUSurfacesProcTable* surfaces_table;
+    const struct CGPURayTracingProcTable* raytracing_table;
     // Some Cached Data
     struct CGPURuntimeTable* runtime_table;
     ECGPUBackend backend;
@@ -998,7 +1010,7 @@ typedef struct CGPUDescriptorData {
         /// DescriptorSet buffer extraction
         CGPUDescriptorSetId* descriptor_sets;
         /// Custom binding (raytracing acceleration structure ...)
-        // CGPUAccelerationStructureId* acceleration_structures;
+        CGPUAccelerationStructureId* acceleration_structures;
     };
     uint32_t count;
 } CGPUDescriptorData;
@@ -1163,13 +1175,18 @@ typedef struct CGPUBufferToTextureTransfer {
     uint64_t src_offset;
 } CGPUBufferToTextureTransfer;
 
+typedef struct CGPUFillBufferDescriptor {
+    uint64_t offset;
+    uint32_t value;
+} CGPUFillBufferDescriptor;
+
 typedef struct CGPUBufferBarrier {
     CGPUBufferId buffer;
     ECGPUResourceState src_state;
     ECGPUResourceState dst_state;
+    ECGPUQueueType queue_type;
     uint8_t queue_acquire;
     uint8_t queue_release;
-    ECGPUQueueType queue_type;
     uint8_t d3d12_begin_only;
     uint8_t d3d12_end_only;
 } CGPUBufferBarrier;
@@ -1424,8 +1441,14 @@ typedef struct CGPUMemoryPool {
 typedef struct CGPUParameterTable {
     // This should be stored here because shader could be destoryed after RS creation
     CGPUShaderResource* resources;
-    uint32_t resources_count;
-    uint32_t set_index;
+    uint16_t resources_count;
+    uint16_t set_index;
+    union {
+        uint32_t __storage;
+        struct {
+            uint32_t arg_buf_size;
+        } metal;
+    };
 } CGPUParameterTable;
 
 typedef struct CGPURootSignaturePool {
@@ -1521,7 +1544,7 @@ typedef struct CGPUBufferDescriptor {
     /// Index of the first element accessible by the SRV/UAV (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
     uint64_t first_element;
     /// Number of elements in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
-    uint64_t elemet_count;
+    uint64_t element_count;
     /// Size of each element (in bytes) in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
     uint64_t element_stride;
     /// Owner queue of the resource at creation
@@ -1539,8 +1562,8 @@ typedef struct CGPUBufferDescriptor {
 typedef struct CGPUBufferInfo {
     uint64_t size;
     void* cpu_mapped_address;
-    uint32_t descriptors;
-    uint32_t memory_usage;
+    CGPUResourceTypes descriptors;
+    CGPUMemoryUsages memory_usage;
 } CGPUBufferInfo;
 
 typedef struct CGPUBuffer {

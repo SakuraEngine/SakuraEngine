@@ -1,11 +1,8 @@
-#include "SkrGraphics/config.h"
-#include "math.h"
-#include "lodepng.h"
-#include "SkrRT/config.h"
-#include "SkrCore/memory/memory.h"
+#include "SkrOS/thread.h"
 #include "SkrGraphics/api.h"
-#include "stdio.h"
-#include <stdint.h>
+#include "SkrGraphics/raytracing.h"
+#include "lodepng.h"
+#include "math.h"
 
 inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* length)
 {
@@ -28,9 +25,7 @@ typedef struct SKR_ALIGNAS(16) skr_float4_tt {
     };
 } skr_float4_tt;
 
-inline static void read_shader_bytes(
-const char* virtual_path, uint32_t** bytes, uint32_t* length,
-ECGPUBackend backend)
+inline static void read_shader_bytes(const char* virtual_path, uint32_t** bytes, uint32_t* length, ECGPUBackend backend)
 {
     char shader_file[256];
     const char* shader_path = "./../resources/shaders/";
@@ -55,19 +50,20 @@ ECGPUBackend backend)
     read_bytes(shader_file, (char8_t**)bytes, length);
 }
 
-#define MANDELBROT_WIDTH 3200
-#define MANDELBROT_HEIGHT 2400
+#define RAYTRACING_WIDTH 3200
+#define RAYTRACING_HEIGHT 2400
 static const char8_t* gPNGNames[CGPU_BACKEND_COUNT] = {
-    "mandelbrot-vulkan.png",
-    "mandelbrot-d3d12.png",
-    "mandelbrot-d3d12(xbox).png",
-    "mandelbrot-agc.png",
-    "mandelbrot-metal.png"
+    "raytracing-vulkan.png",
+    "raytracing-d3d12.png",
+    "raytracing-d3d12(xbox).png",
+    "raytracing-agc.png",
+    "raytracing-metal.png"
 };
 
 typedef struct Pixel {
     float r, g, b, a;
 } Pixel;
+
 
 void ComputeFunc(void* usrdata)
 {
@@ -98,10 +94,11 @@ void ComputeFunc(void* usrdata)
         .queue_group_count = 1
     };
     CGPUDeviceId device = cgpu_create_device(adapter, &device_desc);
+    skr_thread_sleep(4000);
 
     // Create compute shader
     uint32_t *shader_bytes, shader_length;
-    read_shader_bytes("cgpu-mandelbrot/mandelbrot",
+    read_shader_bytes("cgpu-raytracing/raytracing",
     &shader_bytes, &shader_length, backend);
     CGPUShaderLibraryDescriptor shader_desc = {
         .code = shader_bytes,
@@ -145,8 +142,8 @@ void ComputeFunc(void* usrdata)
         .start_state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS,
         .memory_usage = CGPU_MEM_USAGE_GPU_ONLY,
         .element_stride = sizeof(Pixel),
-        .element_count = MANDELBROT_WIDTH * MANDELBROT_HEIGHT,
-        .size = sizeof(Pixel) * MANDELBROT_WIDTH * MANDELBROT_HEIGHT
+        .element_count = RAYTRACING_WIDTH * RAYTRACING_HEIGHT,
+        .size = sizeof(Pixel) * RAYTRACING_WIDTH * RAYTRACING_HEIGHT
     };
     CGPUBufferId data_buffer = cgpu_create_buffer(device, &buffer_desc);
 
@@ -163,14 +160,94 @@ void ComputeFunc(void* usrdata)
     };
     CGPUBufferId readback_buffer = cgpu_create_buffer(device, &rb_desc);
 
-    // Update descriptor set
-    CGPUDescriptorData descriptor_data = {
-        .name = "buf",
-        .binding_type = CGPU_RESOURCE_TYPE_RW_BUFFER,
-        .buffers = &data_buffer,
-        .count = 1
+    // Create vertex buffer
+    float vertices[] = {
+        0.75f, 0.75f, 0.f,
+        0.25f, 0.25f, 0.f,
+        0.75f, 0.25f, 0.f,
+        0.25f, 0.75f, 0.f
     };
-    cgpu_update_descriptor_set(set, &descriptor_data, 1);
+    CGPUBufferDescriptor vertex_buffer_desc = {
+        .name = "VertexBuffer",
+        .flags = CGPU_BCF_PERSISTENT_MAP_BIT,
+        .descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER,
+        .start_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+        .memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU,
+        .element_stride = sizeof(float) * 3,
+        .element_count = 12,
+        .size = sizeof(vertices)
+    };
+    CGPUBufferId vertex_buffer = cgpu_create_buffer(device, &vertex_buffer_desc);
+    memcpy(vertex_buffer->info->cpu_mapped_address, vertices, vertex_buffer_desc.size);
+
+    // Create index buffer
+    uint16_t indices[] = {
+        0, 1, 2,
+        0, 3, 1
+    };
+    CGPUBufferDescriptor index_buffer_desc = {
+        .name = "IndexBuffer",
+        .flags = CGPU_BCF_PERSISTENT_MAP_BIT,
+        .descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER,
+        .start_state = CGPU_RESOURCE_STATE_INDEX_BUFFER,
+        .memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU,
+        .element_stride = sizeof(uint16_t),
+        .element_count = 6,
+        .size = sizeof(indices)
+    };
+    CGPUBufferId index_buffer = cgpu_create_buffer(device, &index_buffer_desc);
+    memcpy(index_buffer->info->cpu_mapped_address, indices, index_buffer_desc.size);
+
+    CGPUAccelerationStructureGeometryDesc blas_geom = { 0 };
+    blas_geom.flags = CGPU_ACCELERATION_STRUCTURE_GEOMETRY_FLAG_OPAQUE;
+    blas_geom.vertex_buffer = vertex_buffer;
+    blas_geom.index_buffer = index_buffer;
+    blas_geom.vertex_offset = 0;
+    blas_geom.vertex_count = 4;
+    blas_geom.vertex_stride = sizeof(float) * 3;
+    blas_geom.vertex_format = CGPU_FORMAT_R32G32B32_SFLOAT;
+    blas_geom.index_offset = 0;
+    blas_geom.index_count = 6;
+    blas_geom.index_stride = sizeof(uint16_t);
+
+    CGPUAccelerationStructureDescriptor blas_desc = { 0 };
+    blas_desc.type = CGPU_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+    blas_desc.flags = CGPU_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+    blas_desc.bottom.count = 1;
+    blas_desc.bottom.geometries = &blas_geom;
+    CGPUAccelerationStructureId blas = cgpu_create_acceleration_structure(device, &blas_desc);
+
+    CGPUAccelerationStructureInstanceDesc tlas_instance = { 0 };
+    tlas_instance.bottom = blas;
+    tlas_instance.instance_id = 0;
+    tlas_instance.instance_mask = 255;
+    tlas_instance.transform[0] = 1.f;
+    tlas_instance.transform[5] = 1.f;
+    tlas_instance.transform[10] = 1.f;
+
+    CGPUAccelerationStructureDescriptor tlas_desc = { 0 };
+    tlas_desc.type = CGPU_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
+    tlas_desc.flags = CGPU_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+    tlas_desc.top.count = 1;
+    tlas_desc.top.instances = &tlas_instance;
+    CGPUAccelerationStructureId tlas = cgpu_create_acceleration_structure(device, &tlas_desc);
+
+    // Update descriptor set
+    CGPUDescriptorData descriptor_data[2] = {
+        {
+            .name = "buf",
+            .binding_type = CGPU_RESOURCE_TYPE_RW_BUFFER,
+            .buffers = &data_buffer,
+            .count = 1
+        },
+        {
+            .name = "AS",
+            .binding_type = CGPU_RESOURCE_TYPE_ACCELERATION_STRUCTURE,
+            .acceleration_structures = &tlas,
+            .count = 1
+        }
+    };
+    cgpu_update_descriptor_set(set, descriptor_data, 2);
 
     // Create command objects
     CGPUQueueId gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
@@ -181,14 +258,19 @@ void ComputeFunc(void* usrdata)
     // Dispatch
     {
         cgpu_cmd_begin(cmd);
+        // Build BLAS then TLAS
+        CGPUAccelerationStructureBuildDescriptor blas_build = { .type = CGPU_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL, .as = &blas, .as_count = 1 };
+        cgpu_cmd_build_acceleration_structures(cmd, &blas_build);
+        CGPUAccelerationStructureBuildDescriptor tlas_build = { .type = CGPU_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL, .as = &tlas, .as_count = 1 };
+        cgpu_cmd_build_acceleration_structures(cmd, &tlas_build);
         // Begin dispatch compute pass
         CGPUComputePassDescriptor pass_desc = { .name = "ComputePass" };
         CGPUComputePassEncoderId encoder = cgpu_cmd_begin_compute_pass(cmd, &pass_desc);
         cgpu_compute_encoder_bind_pipeline(encoder, pipeline);
         cgpu_compute_encoder_bind_descriptor_set(encoder, set);
         cgpu_compute_encoder_dispatch(encoder,
-            (uint32_t)ceil(MANDELBROT_WIDTH / (float)32),
-            (uint32_t)ceil(MANDELBROT_HEIGHT / (float)32),
+            (uint32_t)ceil(RAYTRACING_WIDTH / (float)32),
+            (uint32_t)ceil(RAYTRACING_HEIGHT / (float)32),
             1);
         cgpu_cmd_end_compute_pass(cmd, encoder);
         // Barrier UAV buffer to transfer source
@@ -229,8 +311,8 @@ void ComputeFunc(void* usrdata)
         };
         cgpu_map_buffer(readback_buffer, &map_range);
         Pixel* mapped_memory = (Pixel*)readback_buffer->info->cpu_mapped_address;
-        image = sakura_malloc(MANDELBROT_WIDTH * MANDELBROT_HEIGHT * 4);
-        for (int i = 0; i < MANDELBROT_WIDTH * MANDELBROT_HEIGHT; i += 1)
+        image = sakura_malloc(RAYTRACING_WIDTH * RAYTRACING_HEIGHT * 4);
+        for (int i = 0; i < RAYTRACING_WIDTH * RAYTRACING_HEIGHT; i += 1)
         {
             image[i * 4] = (uint8_t)(255.0f * mapped_memory[i].r);
             image[i * 4 + 1] = (uint8_t)(255.0f * mapped_memory[i].g);
@@ -242,13 +324,17 @@ void ComputeFunc(void* usrdata)
 
     // Now we save the acquired color data to a .png.
     {
-        unsigned error = lodepng_encode32_file(gPNGNames[backend], image, MANDELBROT_WIDTH, MANDELBROT_HEIGHT);
+        unsigned error = lodepng_encode32_file(gPNGNames[backend], image, RAYTRACING_WIDTH, RAYTRACING_HEIGHT);
         if (error)
             printf("encoder error %d: %s", error, lodepng_error_text(error));
     }
     // Clean up
     cgpu_free_command_buffer(cmd);
     cgpu_free_command_pool(pool);
+    cgpu_free_acceleration_structure(blas);
+    cgpu_free_acceleration_structure(tlas);
+    cgpu_free_buffer(vertex_buffer);
+    cgpu_free_buffer(index_buffer);
     cgpu_free_buffer(data_buffer);
     cgpu_free_buffer(readback_buffer);
     cgpu_free_queue(gfx_queue);
@@ -269,12 +355,14 @@ int main(void)
     ECGPUBackend backends[] = {
 #if SKR_PLAT_MACOSX
         CGPU_BACKEND_METAL,
-#else
-        CGPU_BACKEND_VULKAN,
+#endif
+
+#ifdef CGPU_USE_VULKAN
+       //  CGPU_BACKEND_VULKAN,
 #endif
 
 #ifdef CGPU_USE_D3D12
-        CGPU_BACKEND_D3D12
+        CGPU_BACKEND_D3D12,
 #endif
     };
     const uint32_t CGPU_BACKEND_COUNT = sizeof(backends) / sizeof(ECGPUBackend);
