@@ -223,7 +223,7 @@ void*         _mi_arenas_alloc_aligned(mi_subproc_t* subproc, size_t size, size_
 void          _mi_arenas_free(void* p, size_t size, mi_memid_t memid);
 bool          _mi_arenas_contain(const void* p);
 void          _mi_arenas_collect(bool force_purge, bool visit_all, mi_tld_t* tld);
-void          _mi_arenas_unsafe_destroy_all(mi_tld_t* tld);
+void          _mi_arenas_unsafe_destroy_all(mi_subproc_t* subproc);
 
 mi_page_t*    _mi_arenas_page_alloc(mi_heap_t* heap, size_t block_size, size_t page_alignment);
 void          _mi_arenas_page_free(mi_page_t* page, mi_tld_t* tld);
@@ -238,7 +238,7 @@ bool          _mi_meta_is_meta_page(void* p);
 
 // "page-map.c"
 bool          _mi_page_map_init(void);
-void          _mi_page_map_register(mi_page_t* page);
+mi_decl_nodiscard bool _mi_page_map_register(mi_page_t* page);
 void          _mi_page_map_unregister(mi_page_t* page);
 void          _mi_page_map_unregister_range(void* start, size_t size);
 mi_page_t*    _mi_safe_ptr_page(const void* p);
@@ -604,7 +604,8 @@ static inline mi_page_t* _mi_unchecked_ptr_page(const void* p) {
 #define MI_PAGE_MAP_SHIFT         (MI_MAX_VABITS - MI_PAGE_MAP_SUB_SHIFT - MI_ARENA_SLICE_SHIFT)
 #define MI_PAGE_MAP_COUNT         (MI_ZU(1) << MI_PAGE_MAP_SHIFT)
 
-extern mi_decl_hidden _Atomic(mi_page_t**)* _mi_page_map;
+typedef mi_page_t**   mi_submap_t;
+extern mi_decl_hidden _Atomic(mi_submap_t)* _mi_page_map;
 
 static inline size_t _mi_page_map_index(const void* p, size_t* sub_idx) {
   const size_t u = (size_t)((uintptr_t)p / MI_ARENA_SLICE_SIZE);
@@ -612,7 +613,7 @@ static inline size_t _mi_page_map_index(const void* p, size_t* sub_idx) {
   return (u / MI_PAGE_MAP_SUB_COUNT);
 }
 
-static inline mi_page_t** _mi_page_map_at(size_t idx) {
+static inline mi_submap_t _mi_page_map_at(size_t idx) {
   return mi_atomic_load_ptr_relaxed(mi_page_t*, &_mi_page_map[idx]);
 }
 
@@ -625,7 +626,7 @@ static inline mi_page_t* _mi_unchecked_ptr_page(const void* p) {
 static inline mi_page_t* _mi_checked_ptr_page(const void* p) {
   size_t sub_idx;
   const size_t idx = _mi_page_map_index(p, &sub_idx);
-  mi_page_t** const sub = _mi_page_map_at(idx);
+  mi_submap_t const sub = _mi_page_map_at(idx);
   if mi_unlikely(sub == NULL) return NULL;
   return sub[sub_idx];
 }

@@ -684,7 +684,7 @@ static mi_page_t* mi_arenas_page_alloc_fresh(size_t slice_count, size_t block_si
     commit_size = _mi_align_up(block_start + block_size, MI_PAGE_MIN_COMMIT_SIZE);
     if (commit_size > page_noguard_size) { commit_size = page_noguard_size; }
     bool is_zero;
-    if (!mi_arena_commit( mi_memid_arena(memid), page, commit_size, &is_zero, 0)) {
+    if mi_unlikely(!mi_arena_commit( mi_memid_arena(memid), page, commit_size, &is_zero, 0)) {
       _mi_arenas_free(page, alloc_size, memid);
       return NULL;
     }
@@ -710,7 +710,10 @@ static mi_page_t* mi_arenas_page_alloc_fresh(size_t slice_count, size_t block_si
   mi_page_try_claim_ownership(page);
 
   // register in the page map
-  _mi_page_map_register(page);
+  if mi_unlikely(!_mi_page_map_register(page)) {
+    _mi_arenas_free( page, alloc_size, memid );
+    return NULL;
+  }
 
   // stats
   mi_tld_stat_increase(tld, pages, 1);
@@ -990,7 +993,7 @@ void _mi_arenas_page_unabandon(mi_page_t* page) {
   Arena free
 ----------------------------------------------------------- */
 static void mi_arena_schedule_purge(mi_arena_t* arena, size_t slice_index, size_t slices);
-static void mi_arenas_try_purge(bool force, bool visit_all, mi_tld_t* tld);
+static void mi_arenas_try_purge(bool force, bool visit_all, mi_subproc_t* subproc, size_t tseq);
 
 void _mi_arenas_free(void* p, size_t size, mi_memid_t memid) {
   if (p==NULL) return;
@@ -1051,7 +1054,7 @@ void _mi_arenas_free(void* p, size_t size, mi_memid_t memid) {
 
 // Purge the arenas; if `force_purge` is true, amenable parts are purged even if not yet expired
 void _mi_arenas_collect(bool force_purge, bool visit_all, mi_tld_t* tld) {
-  mi_arenas_try_purge(force_purge, visit_all, tld);
+  mi_arenas_try_purge(force_purge, visit_all, tld->subproc, tld->thread_seq);
 }
 
 
@@ -1085,9 +1088,8 @@ bool _mi_arenas_contain(const void* p) {
 // for dynamic libraries that are unloaded and need to release all their allocated memory.
 static void mi_arenas_unsafe_destroy(mi_subproc_t* subproc) {
   mi_assert_internal(subproc != NULL);
-  const size_t max_arena = mi_arenas_get_count(subproc);
-  size_t new_max_arena = 0;
-  for (size_t i = 0; i < max_arena; i++) {
+  const size_t arena_count = mi_arenas_get_count(subproc);
+  for (size_t i = 0; i < arena_count; i++) {
     mi_arena_t* arena = mi_atomic_load_ptr_acquire(mi_arena_t, &subproc->arenas[i]);
     if (arena != NULL) {
       // mi_lock_done(&arena->abandoned_visit_lock);
@@ -1097,18 +1099,17 @@ static void mi_arenas_unsafe_destroy(mi_subproc_t* subproc) {
       }
     }
   }
-
   // try to lower the max arena.
-  size_t expected = max_arena;
-  mi_atomic_cas_strong_acq_rel(&subproc->arena_count, &expected, new_max_arena);
+  size_t expected = arena_count;
+  mi_atomic_cas_strong_acq_rel(&subproc->arena_count, &expected, 0);
 }
 
 
 // destroy owned arenas; this is unsafe and should only be done using `mi_option_destroy_on_exit`
 // for dynamic libraries that are unloaded and need to release all their allocated memory.
-void _mi_arenas_unsafe_destroy_all(mi_tld_t* tld) {
-  mi_arenas_unsafe_destroy(tld->subproc);
-  _mi_arenas_collect(true /* force purge */, true /* visit all*/, tld);  // purge non-owned arenas
+void _mi_arenas_unsafe_destroy_all(mi_subproc_t* subproc) {
+  mi_arenas_unsafe_destroy(subproc);
+  // mi_arenas_try_purge(true /* force purge */, true /* visit all*/, subproc, 0 /* thread seq */);  // purge non-owned arenas
 }
 
 
@@ -1772,14 +1773,13 @@ static bool mi_arena_try_purge(mi_arena_t* arena, mi_msecs_t now, bool force)
 }
 
 
-static void mi_arenas_try_purge(bool force, bool visit_all, mi_tld_t* tld)
+static void mi_arenas_try_purge(bool force, bool visit_all, mi_subproc_t* subproc, size_t tseq)
 {
   // try purge can be called often so try to only run when needed
   const long delay = mi_arena_purge_delay();
   if (_mi_preloading() || delay <= 0) return;  // nothing will be scheduled
 
   // check if any arena needs purging?
-  mi_subproc_t* subproc = tld->subproc;
   const mi_msecs_t now = _mi_clock_now();
   const mi_msecs_t arenas_expire = mi_atomic_loadi64_acquire(&subproc->purge_expire);
   if (!visit_all && !force && (arenas_expire == 0 || arenas_expire > now)) return;
@@ -1793,7 +1793,7 @@ static void mi_arenas_try_purge(bool force, bool visit_all, mi_tld_t* tld)
   {
     // increase global expire: at most one purge per delay cycle
     if (arenas_expire > now) { mi_atomic_storei64_release(&subproc->purge_expire, now + (delay/10)); }
-    const size_t arena_start = tld->thread_seq % max_arena;
+    const size_t arena_start = tseq % max_arena;
     size_t max_purge_count = (visit_all ? max_arena : (max_arena/4)+1);
     bool all_visited = true;
     bool any_purged = false;
@@ -1894,12 +1894,12 @@ static bool mi_arena_page_register(size_t slice_index, size_t slice_count, mi_ar
   mi_assert_internal(slice_count == 1);
   mi_page_t* page = (mi_page_t*)mi_arena_slice_start(arena, slice_index);
   mi_assert_internal(mi_bitmap_is_setN(page->memid.mem.arena.arena->pages, page->memid.mem.arena.slice_index, 1));
-  _mi_page_map_register(page);
+  if (!_mi_page_map_register(page)) return false; // break
   mi_assert_internal(_mi_ptr_page(page)==page);
   return true;
 }
 
-static bool mi_arena_pages_reregister(mi_arena_t* arena) {
+mi_decl_nodiscard static bool mi_arena_pages_reregister(mi_arena_t* arena) {
   return _mi_bitmap_forall_set(arena->pages, &mi_arena_page_register, arena, NULL);
 }
 
@@ -1979,7 +1979,10 @@ mi_decl_export bool mi_arena_reload(void* start, size_t size, mi_commit_fun_t* c
   if (!mi_arenas_add(arena->subproc, arena, arena_id)) {
     return false;
   }
-  mi_arena_pages_reregister(arena);
+  if (!mi_arena_pages_reregister(arena)) {
+    // todo: clear arena entry in the subproc?
+    return false;
+  }
 
   // adjust abandoned page count
   for (size_t bin = 0; bin < MI_BIN_COUNT; bin++) {
