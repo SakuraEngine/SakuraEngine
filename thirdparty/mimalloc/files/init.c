@@ -711,7 +711,7 @@ void mi_process_init(void) mi_attr_noexcept {
   mi_detect_cpu_features();
   _mi_stats_init();
   _mi_os_init();
-  _mi_page_map_init();
+  _mi_page_map_init(); // this could fail.. should we abort in that case?
   mi_heap_main_init();
   mi_tld_main_init();
   // the following two can potentially allocate (on freeBSD for locks and thread keys)
@@ -778,7 +778,7 @@ void mi_cdecl mi_process_done(void) mi_attr_noexcept {
   if (mi_option_is_enabled(mi_option_destroy_on_exit)) {
     mi_heap_collect(heap, true /* force */);
     _mi_heap_unsafe_destroy_all(heap);     // forcefully release all memory held by all heaps (of this thread only!)
-    _mi_arenas_unsafe_destroy_all(heap->tld);
+    _mi_arenas_unsafe_destroy_all(_mi_subproc_main());
     _mi_page_map_unsafe_destroy(_mi_subproc_main());
   }
   //_mi_page_map_unsafe_destroy(_mi_subproc_main());
