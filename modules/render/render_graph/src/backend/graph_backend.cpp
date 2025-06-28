@@ -31,9 +31,12 @@ void RenderGraphFrameExecutor::initialize(CGPUQueueId gfx_queue, CGPUDeviceId de
     gfx_cmd_buf                          = cgpu_create_command_buffer(gfx_cmd_pool, &cmd_desc);
     exec_fence                           = cgpu_create_fence(device);
 
-    CGPUMarkerBufferDescriptor marker_desc = {};
-    marker_desc.marker_count               = 1000;
-    marker_buffer                          = cgpu_create_marker_buffer(device, &marker_desc);
+    CGPUBufferDescriptor marker_buffer_desc = {};
+    marker_buffer_desc.name = u8"MarkerBuffer";
+    marker_buffer_desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
+    marker_buffer_desc.memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU;
+    marker_buffer_desc.size = 1024 * sizeof(uint32_t);
+    marker_buffer = cgpu_create_buffer(device, &marker_buffer_desc);
 }
 
 void RenderGraphFrameExecutor::commit(CGPUQueueId gfx_queue, uint64_t frame_index)
@@ -92,13 +95,18 @@ void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
 
 void RenderGraphFrameExecutor::write_marker(const char8_t* message)
 {
-    cgpu_marker_buffer_write(gfx_cmd_buf, marker_buffer, marker_idx++, valid_marker_val);
+    CGPUFillBufferDescriptor fill_desc = {
+        .offset = marker_idx * sizeof(uint32_t),
+        .value = valid_marker_val
+    };
+    marker_idx += 1;
+    cgpu_cmd_fill_buffer(gfx_cmd_buf, marker_buffer, &fill_desc);
     marker_messages.add(message);
 }
 
 void RenderGraphFrameExecutor::print_error_trace(uint64_t frame_index)
 {
-    auto fill_data = (const uint32_t*)marker_buffer->cgpu_buffer->info->cpu_mapped_address;
+    auto fill_data = (const uint32_t*)marker_buffer->info->cpu_mapped_address;
     if (fill_data[0] == 0) return; // begin cmd is unlikely to fail on gpu
     SKR_LOG_FATAL(u8"Device lost caused by GPU command buffer failure detected %d frames ago, command trace:", frame_index - exec_frame);
     for (uint32_t i = 0; i < marker_messages.size(); i++)
@@ -147,7 +155,8 @@ void RenderGraphFrameExecutor::finalize()
     {
         cgpu_free_texture(aliasing_tex);
     }
-    if (marker_buffer) cgpu_free_marker_buffer(marker_buffer);
+    if (marker_buffer) 
+        cgpu_free_buffer(marker_buffer);
 }
 
 // Render Graph Backend

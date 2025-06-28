@@ -89,7 +89,7 @@
         public virtual string RTTI(bool v) => v ? "/GR" : "/GR-";
         
         [TargetProperty] 
-        public virtual string Source(string path) => BS.CheckFile(path, true) ? $"\"{path}\"" : throw new TaskFatalError($"Source value {path} is not an existed absolute path!");
+        public virtual string[] Source(string path) => BS.CheckFile(path, true) ? new string[] { $"\"{path}\"" } : throw new TaskFatalError($"Source value {path} is not an existed absolute path!");
 
         public virtual string Arch(Architecture arch) => archMap.TryGetValue(arch, out var r) ? r : throw new TaskFatalError($"Invalid architecture \"{arch}\" for MSVC CL.exe!");
         static readonly Dictionary<Architecture, string> archMap = new Dictionary<Architecture, string> { { Architecture.X86, "" }, { Architecture.X64, "" }, { Architecture.ARM64, "" } };

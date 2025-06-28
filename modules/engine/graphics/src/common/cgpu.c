@@ -1,16 +1,22 @@
 #include "SkrGraphics/api.h"
+#include "SkrGraphics/raytracing.h"
 #include "SkrGraphics/flags.h"
 #include "common_utils.h"
 #include <stdint.h>
+
 #ifdef CGPU_USE_VULKAN
     #include "SkrGraphics/backend/vulkan/cgpu_vulkan.h"
 #endif
+
 #ifdef CGPU_USE_D3D12
     #include "SkrGraphics/backend/d3d12/cgpu_d3d12.h"
+    #include "SkrGraphics/backend/d3d12/cgpu_d3d12_raytracing.h"
 #endif
+
 #ifdef CGPU_USE_METAL
     #include "SkrGraphics/backend/metal/cgpu_metal.h"
 #endif
+
 #ifdef __APPLE__
     #include "TargetConditionals.h"
     #if TARGET_OS_MAC
@@ -37,6 +43,7 @@ CGPU_API CGPUInstanceId cgpu_create_instance(const CGPUInstanceDescriptor* desc)
     cgpu_assert((desc->backend == CGPU_BACKEND_VULKAN || desc->backend == CGPU_BACKEND_D3D12 || desc->backend == CGPU_BACKEND_METAL) && "CGPU support only vulkan & d3d12 & metal currently!");
     const CGPUProcTable* tbl = CGPU_NULLPTR;
     const CGPUSurfacesProcTable* s_tbl = CGPU_NULLPTR;
+    const CGPURayTracingProcTable* rt_tbl = CGPU_NULLPTR;
 
     if (desc->backend == CGPU_BACKEND_COUNT)
     {
@@ -53,6 +60,7 @@ CGPU_API CGPUInstanceId cgpu_create_instance(const CGPUInstanceDescriptor* desc)
     {
         tbl = CGPU_MetalProcTable();
         s_tbl = CGPU_MetalSurfacesProcTable();
+        rt_tbl = CGPU_MetalRayTracingProcTable();
     }
 #endif
 #ifdef CGPU_USE_D3D12
@@ -60,6 +68,7 @@ CGPU_API CGPUInstanceId cgpu_create_instance(const CGPUInstanceDescriptor* desc)
     {
         tbl = CGPU_D3D12ProcTable();
         s_tbl = CGPU_D3D12SurfacesProcTable();
+        rt_tbl = CGPU_D3D12RayTracingProcTable();
     }
 #endif
     CGPUInstance* instance = (CGPUInstance*)tbl->create_instance(desc);
@@ -67,6 +76,7 @@ CGPU_API CGPUInstanceId cgpu_create_instance(const CGPUInstanceDescriptor* desc)
     instance->backend = desc->backend;
     instance->proc_table = tbl;
     instance->surfaces_table = s_tbl;
+    instance->raytracing_table = rt_tbl;
     if(!instance->runtime_table) 
         instance->runtime_table = cgpu_create_runtime_table();
     
@@ -150,8 +160,9 @@ CGPUDeviceId cgpu_create_device(CGPUAdapterId adapter, const CGPUDeviceDescripto
     cgpu_assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
     cgpu_assert(adapter->proc_table_cache->create_device && "create_device Proc Missing!");
 
-    CGPUDeviceId device = adapter->proc_table_cache->create_device(adapter, desc);
-    ((CGPUDevice*)device)->next_texture_id = 0;
+    CGPUDevice* device = (CGPUDevice*)adapter->proc_table_cache->create_device(adapter, desc);
+    device->next_texture_id = 0;
+    *((CGPUAdapterId*)&device->adapter) = adapter;
     // ++ proc_table_cache
     if (device != CGPU_NULLPTR)
     {
@@ -693,6 +704,28 @@ void cgpu_cmd_transfer_buffer_to_tiles(CGPUCommandBufferId cmd, const struct CGP
     const CGPUProcCmdTransferBufferToTiles fn_cmd_transfer_buffer_to_tiles = cmd->device->proc_table_cache->cmd_transfer_buffer_to_tiles;
     cgpu_assert(fn_cmd_transfer_buffer_to_tiles && "cmd_transfer_buffer_to_tiles Proc Missing!");
     fn_cmd_transfer_buffer_to_tiles(cmd, desc);
+}
+
+void cgpu_cmd_fill_buffer(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc)
+{
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(cmd->current_dispatch == CGPU_PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(desc != CGPU_NULLPTR && "fatal: call on NULL cpy_desc!");
+    const CGPUProcCmdFillBuffer fn_fill_buffer = cmd->device->proc_table_cache->cmd_fill_buffer;
+    cgpu_assert(fn_fill_buffer && "cgpu_cmd_fill_buffer Proc Missing!");
+    fn_fill_buffer(cmd, buffer, desc);
+}
+
+void cgpu_cmd_fill_buffer_n(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc, uint32_t count)
+{
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(cmd->current_dispatch == CGPU_PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(desc != CGPU_NULLPTR && "fatal: call on NULL cpy_desc!");
+    const CGPUProcCmdFillBufferN fn_fill_buffer_n = cmd->device->proc_table_cache->cmd_fill_buffer_n;
+    cgpu_assert(fn_fill_buffer_n && "cgpu_cmd_fill_buffer_n Proc Missing!");
+    fn_fill_buffer_n(cmd, buffer, desc, count);
 }
 
 void cgpu_cmd_resource_barrier(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc)
@@ -1736,4 +1769,43 @@ void cgpu_free_binder(CGPUBinderId binder)
     cgpu_assert(binder->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(binder->device->proc_table_cache->free_binder && "free_binder Proc Missing!");
     binder->device->proc_table_cache->free_binder(binder);
+}
+
+CGPUAccelerationStructureId cgpu_create_acceleration_structure(CGPUDeviceId device, const struct CGPUAccelerationStructureDescriptor* desc)
+{
+    SkrCZoneN(zz, "CGPUCreateAccelerationStructure", 1);
+
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(device->adapter->instance->raytracing_table->create_acceleration_structure && "create_acceleration_structure Proc Missing!");
+    CGPUAccelerationStructure* as = (CGPUAccelerationStructure*)device->adapter->instance->raytracing_table->create_acceleration_structure(device, desc);
+    as->device = device;
+
+    SkrCZoneEnd(zz);
+    return as;
+}
+
+void cgpu_free_acceleration_structure(CGPUAccelerationStructureId as)
+{
+    SkrCZoneN(zz, "CGPUFreeAccelerationStructure", 1);
+
+    cgpu_assert(as != CGPU_NULLPTR && "fatal: call on NULL acceleration structure!");
+    cgpu_assert(as->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(as->device->adapter->instance->raytracing_table->free_acceleration_structure && "free_acceleration_structure Proc Missing!");
+
+    as->device->adapter->instance->raytracing_table->free_acceleration_structure(as);
+
+    SkrCZoneEnd(zz);
+}
+
+void cgpu_cmd_build_acceleration_structures(CGPUCommandBufferId cmd, const struct CGPUAccelerationStructureBuildDescriptor* desc)
+{
+    SkrCZoneN(zz, "CGPUCmdBuildAccelerationStructure", 1);
+
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL command buffer!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(cmd->device->adapter->instance->raytracing_table->cmd_build_acceleration_structure && "cmd_build_acceleration_structure Proc Missing!");
+
+    cmd->device->adapter->instance->raytracing_table->cmd_build_acceleration_structure(cmd, desc);
+
+    SkrCZoneEnd(zz);
 }

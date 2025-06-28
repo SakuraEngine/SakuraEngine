@@ -8,6 +8,3 @@
 #include "common/cgpu.cpp"
 #include "common/cgpu_ags.cpp"
 #include "common/cgpu_nvapi.cpp"
-
-// marker buffers
-#include "extensions/marker_buffer.cpp"

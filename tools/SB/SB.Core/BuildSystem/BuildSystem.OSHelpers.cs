@@ -39,7 +39,7 @@ namespace SB
         {
             using (Profiler.BeginZone($"RunProcess", color: (uint)Profiler.ColorType.Yellow1))
             {
-                if (!OperatingSystem.IsWindows())
+                if (!OperatingSystem.IsWindows() && File.Exists(ExecutablePath))
                 {
                     var Mode = File.GetUnixFileMode(ExecutablePath);
                     if (!Mode.HasFlag(UnixFileMode.UserExecute))

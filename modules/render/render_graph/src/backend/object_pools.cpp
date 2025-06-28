@@ -303,7 +303,7 @@ BufferPool::Key::Key(CGPUDeviceId device, const CGPUBufferDescriptor& desc)
     , format(desc.format)
     , flags(desc.flags)
     , first_element(desc.first_element)
-    , elemet_count(desc.elemet_count)
+    , element_count(desc.element_count)
     , element_stride(desc.element_stride)
 {
 }

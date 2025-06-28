@@ -184,7 +184,7 @@ CGPUBufferId cgpu_create_buffer_vulkan(CGPUDeviceId device, const struct CGPUBuf
             .flags = 0,
             .format = texel_format,
             .offset = desc->first_element * desc->element_stride,
-            .range = desc->elemet_count * desc->element_stride
+            .range = desc->element_count * desc->element_stride
         };
         if (add_info.usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT)
         {
@@ -410,6 +410,26 @@ void cgpu_cmd_transfer_texture_to_texture_vulkan(CGPUCommandBufferId cmd, const 
         D->mVkDeviceTable.vkCmdCopyImage(Cmd->pVkCmdBuf,
             Src->pVkImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
             Dst->pVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy_region);
+    }
+}
+
+void cgpu_cmd_fill_buffer_vulkan(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc)
+{
+    CGPUCommandBuffer_Vulkan* Cmd = (CGPUCommandBuffer_Vulkan*)cmd;
+    CGPUBuffer_Vulkan* Buffer = (CGPUBuffer_Vulkan*)buffer;
+    CGPUDevice_Vulkan* Device = (CGPUDevice_Vulkan*)buffer->device;
+    PFN_vkCmdFillBuffer write_fn = Device->mVkDeviceTable.vkCmdFillBuffer;
+    if (write_fn)
+    {
+        write_fn(Cmd->pVkCmdBuf, Buffer->pVkBuffer, desc->offset, sizeof(uint32_t), desc->value);
+    }
+}
+
+void cgpu_cmd_fill_buffer_n_vulkan(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc, uint32_t count)
+{
+    for (uint32_t i = 0; i < count; i++)
+    {
+        cgpu_cmd_fill_buffer_vulkan(cmd, buffer, desc);
     }
 }
 

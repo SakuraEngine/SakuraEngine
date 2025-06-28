@@ -165,7 +165,7 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
     }
 
     // App-managed marker resolve callback
-    // Markers are desperated now, we use vkCmdFillBuffer & ID3D12GraphicsCommandList2::WriteBufferImmediate instead
+    // Markers are deprecated now, we use vkCmdFillBuffer & ID3D12GraphicsCommandList2::WriteBufferImmediate instead
     static void ResolveMarkerCallback(
         const void* pMarker,
         void* pUserData,

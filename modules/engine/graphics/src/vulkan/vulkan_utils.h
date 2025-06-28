@@ -318,9 +318,13 @@ SKR_UNUSED static const char* cgpu_wanted_device_exts[] = {
 /************************************************************************/
 // Raytracing
 /************************************************************************/
-#ifdef ENABLE_RAYTRACING
-    VK_NV_RAY_TRACING_EXTENSION_NAME,
-#endif
+	VK_KHR_RAY_QUERY_EXTENSION_NAME,
+	VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+	// Required by VK_KHR_ray_tracing_pipeline
+	VK_KHR_SPIRV_1_4_EXTENSION_NAME,
+	// Required by VK_KHR_spirv_1_4
+	VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME,
+    
 /************************************************************************/
 // YCbCr format support
 /************************************************************************/

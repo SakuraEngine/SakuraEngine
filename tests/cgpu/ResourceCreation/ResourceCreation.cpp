@@ -110,7 +110,7 @@ void ResourceCreation<backend>::test_all()
         desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
         desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
         desc.element_stride = sizeof(uint16_t);
-        desc.elemet_count = 3;
+        desc.element_count = 3;
         desc.size = sizeof(uint16_t) * 3;
         desc.name = u8"IndexBuffer";
         auto buffer = cgpu_create_buffer(device, &desc);
@@ -161,7 +161,7 @@ void ResourceCreation<backend>::test_all()
         desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_BUFFER;
         desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
         desc.element_stride = sizeof(uint16_t);
-        desc.elemet_count = 3;
+        desc.element_count = 3;
         desc.size = sizeof(uint16_t) * 3;
         desc.name = u8"UploadBuffer";
         auto buffer = cgpu_create_buffer(device, &desc);
@@ -195,7 +195,7 @@ void ResourceCreation<backend>::test_all()
         desc.descriptors = CGPU_RESOURCE_TYPE_BUFFER;
         desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
         desc.element_stride = sizeof(uint16_t);
-        desc.elemet_count = 3;
+        desc.element_count = 3;
         desc.size = sizeof(uint16_t) * 3;
         desc.name = u8"UploadBuffer";
         auto buffer = cgpu_create_buffer(device, &desc);
@@ -211,7 +211,7 @@ void ResourceCreation<backend>::test_all()
         desc.descriptors = CGPU_RESOURCE_TYPE_BUFFER;
         desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
         desc.element_stride = sizeof(uint16_t);
-        desc.elemet_count = 3;
+        desc.element_count = 3;
         desc.size = sizeof(uint16_t) * 3;
         desc.name = u8"UploadBuffer";
         auto buffer = cgpu_create_buffer(device, &desc);

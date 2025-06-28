@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGraphics/api.h"
-#include "SkrGraphics/backend/d3d12/cgpu_d3d12.h"
+#include "SkrGraphics/raytracing.h"
 #ifndef WIN32_LEAN_AND_MEAN
     #define WIN32_LEAN_AND_MEAN
 #endif
@@ -12,15 +12,14 @@
 #define D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN ((D3D12_GPU_VIRTUAL_ADDRESS)-1)
 #define D3D12_DESCRIPTOR_ID_NONE (D3D12_CPU_DESCRIPTOR_HANDLE{(size_t)~0})
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+CGPU_EXTERN_C_BEGIN
 
 struct DMA_Allocator;
 struct DMA_Pool;
 struct DMA_Allocation;
 struct D3D12Util_DescriptorHandle;
 struct D3D12Util_DescriptorHeap;
+typedef struct CGPUAccelerationStructure_D3D12 CGPUAccelerationStructure_D3D12;
 
 CGPU_API const CGPUProcTable* CGPU_D3D12ProcTable();
 CGPU_API const CGPUSurfacesProcTable* CGPU_D3D12SurfacesProcTable();
@@ -124,6 +123,8 @@ CGPU_API void cgpu_cmd_transfer_buffer_to_buffer_d3d12(CGPUCommandBufferId cmd, 
 CGPU_API void cgpu_cmd_transfer_texture_to_texture_d3d12(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc);
 CGPU_API void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
 CGPU_API void cgpu_cmd_transfer_buffer_to_tiles_d3d12(CGPUCommandBufferId cmd, const struct CGPUBufferToTilesTransfer* desc);
+CGPU_API void cgpu_cmd_fill_buffer_d3d12(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc);
+CGPU_API void cgpu_cmd_fill_buffer_n_d3d12(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc, uint32_t count);
 CGPU_API void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
 CGPU_API void cgpu_cmd_begin_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
 CGPU_API void cgpu_cmd_end_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
@@ -167,8 +168,9 @@ CGPU_API void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFe
 CGPU_API void cgpu_dstorage_close_file_d3d12(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file);
 CGPU_API void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue);
 
+CGPU_EXTERN_C_END
+
 #ifdef __cplusplus
-} // end extern "C"
 namespace D3D12MA
 {
 class Allocator;
@@ -205,6 +207,7 @@ typedef struct CGPUAdapter_D3D12 {
     bool mStandardSwizzle64KBSupported : 1;
     bool mEnhancedBarriersSupported : 1;
     uint8_t mTiledResourceTier;
+    uint8_t mRayTracingTier;
 } CGPUAdapter_D3D12;
 
 typedef struct CGPUEmptyDescriptors_D3D12 {
@@ -237,6 +240,8 @@ typedef struct CGPUDevice_D3D12 {
     ID3D12PipelineLibrary* pPipelineLibrary;
     void* pPSOCacheData;
     uint32_t next_shared_id;
+    // ray tracing, TODO: add a 'CGPUDeviceFeatures' struct
+    ID3D12Device5* pDxDevice5;
 } CGPUDevice_D3D12;
 
 typedef struct CGPUFence_D3D12 {
@@ -305,6 +310,8 @@ typedef struct CGPUDescriptorSet_D3D12 {
     uint32_t mSamplerStride;
     // TODO: Support root descriptors
     // D3D12_GPU_VIRTUAL_ADDRESS* pRootAddresses;
+    // Raytracing
+    CGPUAccelerationStructure_D3D12* pBoundAccel;
 } CGPUDescriptorSet_D3D12;
 
 typedef struct CGPUComputePipeline_D3D12 {
@@ -389,15 +396,6 @@ typedef struct CGPUSwapChain_D3D12 {
     uint32_t mEnableVsync : 1;
 } CGPUSwapChain_D3D12;
 
-#ifndef SAFE_RELEASE
-    #define SAFE_RELEASE(p_var) \
-        if (p_var)              \
-        {                       \
-            p_var->Release();   \
-            p_var = NULL;       \
-        }
-#endif
-
 static const D3D_FEATURE_LEVEL d3d_feature_levels[] = {
     D3D_FEATURE_LEVEL_12_1,
     D3D_FEATURE_LEVEL_12_0,
@@ -411,4 +409,38 @@ static const D3D12_COMMAND_LIST_TYPE gDx12CmdTypeTranslator[CGPU_QUEUE_TYPE_COUN
     D3D12_COMMAND_LIST_TYPE_COPY
 };
 
-#define IID_ARGS IID_PPV_ARGS
+// COM HELPERS
+
+#ifndef IID_ARGS
+    #ifdef __cplusplus
+    #define IID_ARGS IID_PPV_ARGS
+    #else
+    #define IID_ARGS(Type, Ptr) &IID_##Type, (void**)(Ptr)
+    #endif
+#endif
+
+#ifndef COM_CALL
+#define COM_CALL(METHOD, CALLER, ...) (CALLER)->lpVtbl->METHOD(CALLER, ##__VA_ARGS__)
+#endif
+
+#ifndef IID_REF
+#define IID_REF(Type)                 &IID_##Type
+#endif
+
+#ifndef SAFE_RELEASE
+#ifdef __cplusplus
+    #define SAFE_RELEASE(p_var) \
+        if (p_var != CGPU_NULLPTR)              \
+        {                       \
+            p_var->Release();   \
+            p_var = CGPU_NULLPTR;       \
+        }
+#else
+    #define SAFE_RELEASE(p_var) \
+        if (p_var != CGPU_NULLPTR)              \
+        {                       \
+            COM_CALL(Release, (p_var)); \
+            (p_var) = CGPU_NULLPTR;     \
+        }
+#endif
+#endif

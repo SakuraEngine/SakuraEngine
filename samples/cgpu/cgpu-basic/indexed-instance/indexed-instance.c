@@ -96,7 +96,7 @@ void create_vertex_buffer()
         .descriptors    = CGPU_RESOURCE_TYPE_VERTEX_BUFFER,
         .memory_usage   = CGPU_MEM_USAGE_GPU_ONLY,
         .element_stride = sizeof(Vertex),
-        .elemet_count   = sizeof(vertices) / sizeof(Vertex),
+        .element_count   = sizeof(vertices) / sizeof(Vertex),
         .size           = sizeof(vertices),
         .name           = "VertexBuffer"
     };
@@ -110,7 +110,7 @@ void create_index_buffer()
         .descriptors    = CGPU_RESOURCE_TYPE_INDEX_BUFFER,
         .memory_usage   = CGPU_MEM_USAGE_GPU_ONLY,
         .element_stride = sizeof(Index),
-        .elemet_count   = sizeof(indices) / sizeof(Index),
+        .element_count   = sizeof(indices) / sizeof(Index),
         .size           = sizeof(indices),
         .name           = "IndexBuffer"
     };
@@ -125,7 +125,7 @@ void upload_resources()
         .descriptors    = CGPU_RESOURCE_TYPE_NONE,
         .memory_usage   = CGPU_MEM_USAGE_CPU_ONLY,
         .element_stride = sizeof(TEXTURE_DATA),
-        .elemet_count   = 1,
+        .element_count   = 1,
         .size           = sizeof(TEXTURE_DATA)
     };
     CGPUBufferId upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);

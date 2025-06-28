@@ -413,7 +413,7 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::allocate_dedicated() SKR
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::structured(uint64_t first_element, uint64_t element_count, uint64_t element_stride) SKR_NOEXCEPT
 {
     node.descriptor.first_element = first_element;
-    node.descriptor.elemet_count = element_count;
+    node.descriptor.element_count = element_count;
     node.descriptor.element_stride = element_stride;
     return *this;
 }

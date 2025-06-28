@@ -253,6 +253,16 @@ const char* const* device_extensions, uint32_t device_extension_count)
                 *ppNext = &VkAdapter->mPhysicalDeviceShaderObjectFeatures;
                 ppNext = &VkAdapter->mPhysicalDeviceShaderObjectFeatures.pNext;
 #endif
+#if VK_KHR_acceleration_structure
+                VkAdapter->mPhysicalDeviceAccelerationStructureFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+                *ppNext = &VkAdapter->mPhysicalDeviceAccelerationStructureFeatures;
+                ppNext = &VkAdapter->mPhysicalDeviceAccelerationStructureFeatures.pNext;
+#endif
+#if VK_KHR_ray_query
+                VkAdapter->mPhysicalDeviceRayQueryFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
+                *ppNext = &VkAdapter->mPhysicalDeviceRayQueryFeatures;
+                ppNext = &VkAdapter->mPhysicalDeviceRayQueryFeatures.pNext;
+#endif
             }
 #ifndef NX64
             vkGetPhysicalDeviceFeatures2KHR(pysicalDevices[i], &VkAdapter->mPhysicalDeviceFeatures);
@@ -306,7 +316,7 @@ static const ECGPUResourceType RTLut[] = {
     CGPU_RESOURCE_TYPE_UNIFORM_BUFFER,         // SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC
     CGPU_RESOURCE_TYPE_RW_BUFFER,              // SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
     CGPU_RESOURCE_TYPE_INPUT_ATTACHMENT,       // SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT
-    CGPU_RESOURCE_TYPE_RAY_TRACING             // SPV_REFLECT_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
+    CGPU_RESOURCE_TYPE_ACCELERATION_STRUCTURE             // SPV_REFLECT_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
 };
 static ECGPUTextureDimension DIMLut[SpvDimSubpassData + 1] = {
     CGPU_TEX_DIMENSION_1D,        // SpvDim1D
@@ -816,6 +826,9 @@ void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter)
     adapter_detail->dynamic_state_features |= VkAdapter->mPhysicalDeviceExtendedDynamicState3Features.extendedDynamicState3CoverageModulationMode ? CGPU_DYNAMIC_STATE_CoverageReductionMode : 0;
     adapter_detail->dynamic_state_features |= VkAdapter->mPhysicalDeviceExtendedDynamicState3Features.extendedDynamicState3RepresentativeFragmentTestEnable ? CGPU_DYNAMIC_STATE_RepresentativeFragmentTestEnable : 0;
     adapter_detail->dynamic_state_features |= VkAdapter->mPhysicalDeviceExtendedDynamicState3Features.extendedDynamicState3ShadingRateImageEnable ? CGPU_DYNAMIC_STATE_ShadingRateImageEnable : 0;
+#endif
+#if VK_KHR_ray_query && VK_KHR_acceleration_structure
+    adapter_detail->support_ray_tracing = VkAdapter->mPhysicalDeviceRayQueryFeatures.rayQuery;
 #endif
     // memory features
     VkUtil_QueryHostVisbleVramInfo(VkAdapter);

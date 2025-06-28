@@ -308,7 +308,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
 #endif
             ImGui::Text("Graphics: %s", adapter_detail->vendor_preset.gpu_name);
             auto res = ImGui::GetMainViewport()->Size;
-            ImGui::Text("Resolution: %dx%d", res.x, res.y);
+            ImGui::Text("Resolution: %dx%d", (int)res.x, (int)res.y);
             ImGui::Text("MotionEvalFPS(Fixed): %d", 240);
             ImGui::Text("PhysicsEvalFPS(Fixed): %d", 240);
             ImGui::Text("RenderFPS: %d", (uint32_t)fps);

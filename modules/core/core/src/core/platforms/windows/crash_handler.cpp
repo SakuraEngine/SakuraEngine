@@ -23,6 +23,7 @@ struct WinCrashHandler : public SCrashHandler {
 
     bool Initialize() SKR_NOEXCEPT override;
     bool Finalize() SKR_NOEXCEPT override;
+    void SetDumpFile(const char8_t* dumpFile) SKR_NOEXCEPT { dump_file = dumpFile;}
     bool SetProcessSignalHandlers() SKR_NOEXCEPT override;
     bool SetThreadSignalHandlers() SKR_NOEXCEPT override;
     bool UnsetProcessSignalHandlers() SKR_NOEXCEPT override;
@@ -42,6 +43,7 @@ struct WinCrashHandler : public SCrashHandler {
 
 private:
     skr::String app_name;
+    skr::String dump_file;
     HANDLE      dbghelp_dll = nullptr;
     bool        initialized = false;
 
@@ -160,12 +162,12 @@ int WinCrashHandler::internalHandler(struct SCrashContext* context) SKR_NOEXCEPT
                                            localTime.wYear, localTime.wMonth, localTime.wDay, localTime.wHour,
                                            localTime.wMinute, localTime.wSecond, localTime.wMilliseconds);
 
-        skr::String dumpPath  = skr::format(u8"{}\\{}-minidump-{}.dmp",
-                                            currentPath, skr_get_current_process_name(), dateTime);
-        const char* pDumpPath = dumpPath.c_str_raw();
-
-        HANDLE lhDumpFile = ::CreateFileA(pDumpPath,
-                                          GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        skr::String dumpPath  = !dump_file.is_empty() ? dump_file : skr::format(u8"{}\\{}-minidump-{}.dmp", currentPath, skr_get_current_process_name(), dateTime);
+        auto length = dumpPath.to_u16_length();
+        std::wstring dumpPathW; 
+        dumpPathW.resize(length);
+        dumpPath.to_u16((skr_char16*)dumpPathW.data());
+        HANDLE lhDumpFile = ::CreateFileW(dumpPathW.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
         MINIDUMP_EXCEPTION_INFORMATION loExceptionInfo;
         loExceptionInfo.ExceptionPointers = context->exception_pointers;
@@ -280,8 +282,7 @@ void WINAPI WinCrashHandler::PureCallHandler() SKR_NOEXCEPT
             auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    },
-                         reason);
+    }, reason);
 }
 
 int WINAPI WinCrashHandler::NewHandler(size_t sz) SKR_NOEXCEPT
@@ -293,8 +294,7 @@ int WINAPI WinCrashHandler::NewHandler(size_t sz) SKR_NOEXCEPT
             auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    },
-                         reason);
+    }, reason);
     return 0;
 }
 #endif
@@ -311,8 +311,7 @@ void WINAPI WinCrashHandler::InvalidParameterHandler(const wchar_t* expression, 
             auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    },
-                         reason);
+    }, reason);
 }
 #endif
 
@@ -390,6 +389,12 @@ SKR_CORE_API SCrashHandlerId skr_initialize_crash_handler() SKR_NOEXCEPT
     auto& this_ = ::windows_crash_handler;
     this_.Initialize();
     return &this_;
+}
+
+SKR_CORE_API void skr_crash_handler_set_dump_file(const char8_t* dump_file) SKR_NOEXCEPT
+{
+    auto& this_ = ::windows_crash_handler;
+    this_.SetDumpFile(dump_file);
 }
 
 SKR_CORE_API SCrashHandlerId skr_crash_handler_get() SKR_NOEXCEPT

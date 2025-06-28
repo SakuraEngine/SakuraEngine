@@ -81,7 +81,7 @@ void create_sampled_texture()
         .descriptors    = CGPU_RESOURCE_TYPE_NONE,
         .memory_usage   = CGPU_MEM_USAGE_CPU_ONLY,
         .element_stride = sizeof(TEXTURE_DATA),
-        .elemet_count   = 1,
+        .element_count   = 1,
         .size           = sizeof(TEXTURE_DATA)
     };
     streaming_heap = cgpu_create_buffer(App.device, &upload_buffer_desc);

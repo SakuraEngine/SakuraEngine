@@ -7,7 +7,7 @@ target("CGPUMandelbrot")
         spv_outdir = "/../resources/shaders/cgpu-mandelbrot",
         dxil_outdir = "/../resources/shaders/cgpu-mandelbrot"})
     public_dependency("SkrRT")
-    add_deps("AppSampleCommon")
+    add_deps("AppSampleCommon", "lodepng")
     add_files("mandelbrot/*.c")
     add_files("mandelbrot/**.hlsl")
 

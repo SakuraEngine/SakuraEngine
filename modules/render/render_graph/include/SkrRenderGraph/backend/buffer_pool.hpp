@@ -35,7 +35,7 @@ public:
         ECGPUFormat             format         = CGPU_FORMAT_UNDEFINED;
         CGPUBufferCreationFlags flags          = 0;
         uint64_t                first_element  = 0;
-        uint64_t                elemet_count   = 0;
+        uint64_t                element_count   = 0;
         uint64_t                element_stride = 0;
         uint64_t                padding        = 0;
         uint64_t                padding1       = 0;

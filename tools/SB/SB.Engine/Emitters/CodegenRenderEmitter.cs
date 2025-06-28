@@ -54,7 +54,7 @@ namespace SB
                 });
             // Collect depend files
             List<string> DependFiles = new();
-            DependFiles.AddRange(RenderAttribute.Scripts);
+            DependFiles.AddRange(Config.generators.Select(G => G.entry_file));
             if (MetaAttribute.AllGeneratedMetaFiles is not null)
                 DependFiles.AddRange(MetaAttribute.AllGeneratedMetaFiles);
             // Execute

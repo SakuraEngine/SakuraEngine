@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrContainers/set.hpp"
 #include "SkrCore/memory/sp.hpp"
-#include "SkrGraphics/extensions/cgpu_marker_buffer.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderGraph/backend/texture_pool.hpp"
 #include "SkrRenderGraph/backend/buffer_pool.hpp"
@@ -36,7 +35,7 @@ public:
     skr::Vector<CGPUTextureId>                            aliasing_textures;
     skr::FlatHashMap<CGPURootSignatureId, BindTablePool*> bind_table_pools;
 
-    CGPUMarkerBufferId                   marker_buffer    = nullptr;
+    CGPUBufferId                         marker_buffer    = nullptr;
     uint32_t                             marker_idx       = 0;
     uint32_t                             valid_marker_val = 1;
     skr::Vector<graph_big_object_string> marker_messages;

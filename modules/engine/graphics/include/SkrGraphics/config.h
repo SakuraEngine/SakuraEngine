@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrBase/config.h"
+#include "SkrBase/misc/hash.h"
 #ifdef __cplusplus
 #include "SkrOS/shared_library.hpp"  // IWYU pragma: export
 #endif
@@ -51,12 +51,7 @@
 // ...
 #define CGPU_THREAD_SAFETY
 
-#ifdef _DEBUG
-    #include "assert.h"
-    #define cgpu_assert assert
-#else
-    #define cgpu_assert(expr) (void)(expr);
-#endif
+#define cgpu_assert(expr) SKR_ASSERT(expr);
 #define cgpu_static_assert static_assert
 
 #if UINTPTR_MAX == UINT32_MAX

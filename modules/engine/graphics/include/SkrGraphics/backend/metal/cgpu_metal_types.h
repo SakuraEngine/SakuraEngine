@@ -9,20 +9,13 @@ static_assert(0, "This Header Should Only Be Included By OBJC SOURCES!!!!!");
 typedef struct CGPUDevice_Metal {
     CGPUDevice super;
     id<MTLDevice> pDevice;
-    id<MTLCommandQueue>* __strong ppMtlQueues[CGPU_QUEUE_TYPE_COUNT];
+    __strong id<MTLCommandQueue>* ppMtlQueues[CGPU_QUEUE_TYPE_COUNT];
     uint32_t pMtlQueueCounts[CGPU_QUEUE_TYPE_COUNT];
 } CGPUDevice_Metal;
-
-typedef struct CGPUFence_Metal {
-    CGPUFence super;
-    dispatch_semaphore_t pMtlSemaphore;
-    uint32_t mSubmitted : 1;
-} CGPUFence_Metal;
 
 typedef struct CGPUAdapter_Metal {
     CGPUAdapter super;
     CGPUDevice_Metal device;
-
     CGPUAdapterDetail adapter_detail;
 } CGPUAdapter_Metal;
 
@@ -31,6 +24,17 @@ typedef struct CGPUInstance_Metal {
     CGPUAdapter_Metal* adapters;
     uint32_t adapters_count;
 } CGPUInstance_Metal;
+
+typedef struct CGPUFence_Metal {
+    CGPUFence super;
+    dispatch_semaphore_t sysSemaphore;
+} CGPUFence_Metal;
+
+typedef struct CGPUSemaphore_Metal {
+	CGPUSemaphore super;
+	id<MTLEvent> mtlSemaphore;
+	uint64_t value;
+} CGPUSemaphore_Metal;
 
 typedef struct CGPUQueue_Metal {
     CGPUQueue super;
@@ -44,11 +48,13 @@ typedef struct CGPUCommandPool_Metal {
 } CGPUCommandPool_Metal;
 
 typedef struct CGPURenderPassEncoder_Metal {
+	CGPURenderPassEncoder super;
     struct CGPUCommandBuffer_Metal* cmdBuffer;
     id<MTLRenderCommandEncoder> mtlRenderEncoder;
 } CGPURenderPassEncoder_Metal;
 
 typedef struct CGPUComputePassEncoder_Metal {
+	CGPUComputePassEncoder super;
     struct CGPUCommandBuffer_Metal* cmdBuffer;
     id<MTLComputeCommandEncoder> mtlComputeEncoder;
 } CGPUComputePassEncoder_Metal;
@@ -56,9 +62,13 @@ typedef struct CGPUComputePassEncoder_Metal {
 typedef struct CGPUCommandBuffer_Metal {
     CGPUCommandBuffer super;
     id<MTLCommandBuffer> mtlCommandBuffer;
-    id<MTLBlitCommandEncoder> mtlBlitEncoder;
     CGPURenderPassEncoder_Metal renderEncoder;
     CGPUComputePassEncoder_Metal cmptEncoder;
+	struct
+	{
+		id<MTLBlitCommandEncoder> mtlBlitEncoder;
+		id<MTLAccelerationStructureCommandEncoder> mtlASCommandEncoder;
+	} UtilEncoders;
 } CGPUCommandBuffer_Metal;
 
 typedef struct CGPUShaderLibrary_Metal {
@@ -69,7 +79,64 @@ typedef struct CGPUShaderLibrary_Metal {
 typedef struct CGPURootSignature_Metal {
 	CGPURootSignature super;
 	id<MTLFunction> mtlFunctions[CGPU_SHADER_STAGE_COUNT];
+	id<MTLComputePipelineState> mtlPipelineState;
 } CGPURootSignature_Metal;
+
+typedef struct BindSlot_Metal {
+	id<MTLResource> mtlResource;
+	uint32_t binding_index;
+	MTLResourceUsage mtlUsage;
+} BindSlot_Metal;
+
+typedef struct CGPUDescriptorSet_Metal {
+	CGPUDescriptorSet super;
+	CGPUBufferId mtlArgumentBuffer;
+	BindSlot_Metal* mtlBindSlots;
+	uint32_t mtlBindSlotCount;
+	__strong id* mtlReadArgsCache;
+	__strong id* mtlReadWriteArgsCache;
+} CGPUDescriptorSet_Metal;
+
+typedef struct CGPUComputePipeline_Metal {
+	CGPUComputePipeline super;
+	id<MTLComputePipelineState> mtlPipelineState;
+} CGPUComputePipeline_Metal;
+
+typedef struct CGPUBuffer_Metal {
+	CGPUBuffer super;
+	struct VmaAllocation_T*      pAllocation;
+	id<MTLBuffer>                mtlBuffer;
+	id<MTLIndirectCommandBuffer> mtlIndirectCommandBuffer;
+	uint64_t                     mOffset;
+} CGPUBuffer_Metal;
+
+typedef struct CGPUQueryPool_Metal {
+    CGPUQueryPool super;
+    id<MTLCounterSampleBuffer> mtlCounterSampleBuffer;
+    ECGPUQueryType queryType;
+} CGPUQueryPool_Metal;
+
+typedef struct CGPUAccelerationStructure_Metal {
+	CGPUAccelerationStructure super;
+    uint32_t descriptor_count;
+
+	id<MTLAccelerationStructure> mtlAS;
+    CGPUBufferId instance_desc_buffer;
+    CGPUBufferId scratch_buffer;
+    union
+    {
+		struct
+		{
+	        MTLPrimitiveAccelerationStructureDescriptor* mtlBottomDesc;
+		} asBottom;
+        struct
+        {
+            MTLInstanceAccelerationStructureDescriptor* mtlTopDesc;
+            __unsafe_unretained id* mtlBottomASRefs;
+            uint32_t mtlBottomASRefsCount;
+        } asTop;
+    };
+} CGPUAccelerationStructure_Metal;
 
 // Mac Catalyst does not support feature sets, so we redefine them to GPU families in MVKDevice.h.
 #if TARGET_MACCAT
@@ -163,10 +230,10 @@ SKR_FORCEINLINE static MTLPixelFormat MetalUtil_TranslatePixelFormat(const ECGPU
 	case CGPU_FORMAT_DXBC6H_SFLOAT:				return MTLPixelFormatBC6H_RGBFloat;
 	case CGPU_FORMAT_DXBC7_UNORM:					return MTLPixelFormatBC7_RGBAUnorm;
 	case CGPU_FORMAT_DXBC7_SRGB:					return MTLPixelFormatBC7_RGBAUnorm_sRGB;
-	case CGPU_FORMAT_PVRTC1_2BPP_UNORM:		return MTLPixelFormatPVRTC_RGBA_2BPP;
-	case CGPU_FORMAT_PVRTC1_4BPP_UNORM:		return MTLPixelFormatPVRTC_RGBA_4BPP;
-	case CGPU_FORMAT_PVRTC1_2BPP_SRGB:		return MTLPixelFormatPVRTC_RGBA_2BPP_sRGB;
-	case CGPU_FORMAT_PVRTC1_4BPP_SRGB:		return MTLPixelFormatPVRTC_RGBA_4BPP_sRGB;
+	// case CGPU_FORMAT_PVRTC1_2BPP_UNORM:		return MTLPixelFormatPVRTC_RGBA_2BPP;
+	// case CGPU_FORMAT_PVRTC1_4BPP_UNORM:		return MTLPixelFormatPVRTC_RGBA_4BPP;
+	// case CGPU_FORMAT_PVRTC1_2BPP_SRGB:		return MTLPixelFormatPVRTC_RGBA_2BPP_sRGB;
+	// case CGPU_FORMAT_PVRTC1_4BPP_SRGB:		return MTLPixelFormatPVRTC_RGBA_4BPP_sRGB;
 	case CGPU_FORMAT_ETC2_R8G8B8_UNORM:	return MTLPixelFormatETC2_RGB8;
 	case CGPU_FORMAT_ETC2_R8G8B8A1_UNORM:return MTLPixelFormatETC2_RGB8A1;
 	case CGPU_FORMAT_ETC2_R8G8B8A8_UNORM: return MTLPixelFormatEAC_RGBA8;
@@ -296,14 +363,14 @@ SKR_FORCEINLINE static bool MetalFormatOkayOnMac(MTLPixelFormat fmt)
         case MTLPixelFormatBGR5A1Unorm:
         case MTLPixelFormatR8Unorm_sRGB:
         case MTLPixelFormatRG8Unorm_sRGB:
-        case MTLPixelFormatPVRTC_RGB_2BPP:
-        case MTLPixelFormatPVRTC_RGB_2BPP_sRGB:
-        case MTLPixelFormatPVRTC_RGB_4BPP:
-        case MTLPixelFormatPVRTC_RGB_4BPP_sRGB:
-        case MTLPixelFormatPVRTC_RGBA_2BPP:
-        case MTLPixelFormatPVRTC_RGBA_2BPP_sRGB:
-        case MTLPixelFormatPVRTC_RGBA_4BPP:
-        case MTLPixelFormatPVRTC_RGBA_4BPP_sRGB:
+        // case MTLPixelFormatPVRTC_RGB_2BPP:
+        // case MTLPixelFormatPVRTC_RGB_2BPP_sRGB:
+        // case MTLPixelFormatPVRTC_RGB_4BPP:
+        // case MTLPixelFormatPVRTC_RGB_4BPP_sRGB:
+        // case MTLPixelFormatPVRTC_RGBA_2BPP:
+        // case MTLPixelFormatPVRTC_RGBA_2BPP_sRGB:
+        // case MTLPixelFormatPVRTC_RGBA_4BPP:
+        // case MTLPixelFormatPVRTC_RGBA_4BPP_sRGB:
         case MTLPixelFormatEAC_R11Unorm:
         case MTLPixelFormatEAC_R11Snorm:
         case MTLPixelFormatEAC_RG11Unorm:
@@ -407,14 +474,14 @@ SKR_FORCEINLINE static bool MetalFormatOkayOnIOS(MTLPixelFormat fmt) {
 	    case MTLPixelFormatBGRA10_XR_sRGB:
 	    case MTLPixelFormatBGR10_XR:
 	    case MTLPixelFormatBGR10_XR_sRGB:
-	    case MTLPixelFormatPVRTC_RGB_2BPP:
-	    case MTLPixelFormatPVRTC_RGB_2BPP_sRGB:
-	    case MTLPixelFormatPVRTC_RGB_4BPP:
-	    case MTLPixelFormatPVRTC_RGB_4BPP_sRGB:
-	    case MTLPixelFormatPVRTC_RGBA_2BPP:
-	    case MTLPixelFormatPVRTC_RGBA_2BPP_sRGB:
-	    case MTLPixelFormatPVRTC_RGBA_4BPP:
-	    case MTLPixelFormatPVRTC_RGBA_4BPP_sRGB:
+	    // case MTLPixelFormatPVRTC_RGB_2BPP:
+	    // case MTLPixelFormatPVRTC_RGB_2BPP_sRGB:
+	    // case MTLPixelFormatPVRTC_RGB_4BPP:
+	    // case MTLPixelFormatPVRTC_RGB_4BPP_sRGB:
+	    // case MTLPixelFormatPVRTC_RGBA_2BPP:
+	    // case MTLPixelFormatPVRTC_RGBA_2BPP_sRGB:
+	    // case MTLPixelFormatPVRTC_RGBA_4BPP:
+	    // case MTLPixelFormatPVRTC_RGBA_4BPP_sRGB:
 	    case MTLPixelFormatEAC_R11Unorm:
 	    case MTLPixelFormatEAC_R11Snorm:
 	    case MTLPixelFormatEAC_RG11Unorm:

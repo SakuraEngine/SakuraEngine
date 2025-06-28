@@ -9,6 +9,7 @@ sw.Start();
 Engine.SetEngineDirectory(SourceLocation.Directory());
 var Toolchain = Engine.Bootstrap(SourceLocation.Directory());
 Engine.AddEngineTaskEmitters(Toolchain);
+Engine.AddCompileCommandsEmitter(Toolchain);
 
 Engine.SetTagsUnderDirectory("thirdparty", TargetTags.ThirdParty);
 Engine.SetTagsUnderDirectory("modules/core", TargetTags.Engine);
@@ -32,3 +33,5 @@ Log.Information($"Compile Commands Total: {CompileCommandsEmitter.Time / 1000.0f
 Log.Information($"Compile Total: {CppCompileEmitter.Time / 1000.0f}s");
 Log.Information($"Link Total: {CppLinkEmitter.Time / 1000.0f}s");
 Log.CloseAndFlush();
+
+CompileCommandsEmitter.WriteToFile("compile_commands.json");
