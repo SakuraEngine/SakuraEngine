@@ -265,7 +265,7 @@ namespace SB
                         await PerTargetEmitterTask;
                         await Task.WhenAll(FileTasks);
                         return true;
-                    });
+                    }, TaskManager.SchedulerTS);
                     EmitterTasks.Add(EmitterTask);
                 }
                 await Task.WhenAll(EmitterTasks);
