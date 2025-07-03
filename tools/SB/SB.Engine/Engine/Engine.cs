@@ -177,6 +177,5 @@ namespace SB
         public static string ToolDirectory => Path.Combine(TempPath, "tools");
         public static string DownloadDirectory => Path.Combine(TempPath, "downloads");
         public static bool EnableDebugInfo = true;
-        private static Task? DoctorsTask = null;
     }
 }

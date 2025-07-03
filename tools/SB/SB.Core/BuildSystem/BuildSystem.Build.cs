@@ -82,8 +82,8 @@ namespace SB
         private class TaskPlan
         {
             public TaskFingerprint Fingerprint { get; set; }
-            public Target Target { get; set; }
-            public TaskEmitter Emitter { get; set; }
+            public required Target Target { get; set; }
+            public required TaskEmitter Emitter { get; set; }
             public HashSet<TaskFingerprint> DirectDependencies { get; set; } = new();
         }
 
