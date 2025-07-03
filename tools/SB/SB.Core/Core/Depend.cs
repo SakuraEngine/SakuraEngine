@@ -31,14 +31,14 @@ namespace SB.Core
 
         public static PooledDbContextFactory<DependDbContext> ProjectFactory = new(
             new DbContextOptionsBuilder<DependDbContext>()
-                .UseSqlite($"Data Source={Path.Join(BS.BuildPath, "depend.db")}")
+                .UseSqlite($"Data Source={Path.Join(BS.BuildPath, BS.GlobalConfiguration + "_depend.db")}")
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                 .Options
         );
 
         public static PooledDbContextFactory<DependDbContext> PackagesFactory = new(
             new DbContextOptionsBuilder<DependDbContext>()
-                .UseSqlite($"Data Source={Path.Join(BS.PackageBuildPath, "depend.db")}")
+                .UseSqlite($"Data Source={Path.Join(BS.PackageBuildPath, BS.GlobalConfiguration + "_depend.db")}")
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                 .Options
         );
