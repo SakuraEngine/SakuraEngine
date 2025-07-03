@@ -96,6 +96,7 @@ namespace SB
             BS.RunBuild();
         }
 
+        public static LogEventLevel LogLevel = LogEventLevel.Information;
         private static void SetupLogger()
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
@@ -122,16 +123,16 @@ namespace SB
                });
 
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Information()
+                .MinimumLevel.Is(LogLevel)
                 // .Enrich.WithThreadId()
-                // .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information, outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.ffff zzz} {Message:lj}{NewLine}{Exception}")
+                // .WriteTo.Console(restrictedToMinimumLevel: LogLevel, outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.ffff zzz} {Message:lj}{NewLine}{Exception}")
                 .WriteTo.Async(a => a.Logger(l => l
-                    .Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Information)
-                    .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information, outputTemplate: "{Message:lj}{NewLine}{Exception}", theme: ConsoleLogTheme)
+                    .Filter.ByIncludingOnly(e => e.Level == LogLevel)
+                    .WriteTo.Console(restrictedToMinimumLevel: LogLevel, outputTemplate: "{Message:lj}{NewLine}{Exception}", theme: ConsoleLogTheme)
                 ))
                 .WriteTo.Async(a => a.Logger(l => l
-                    .Filter.ByExcluding(e => e.Level == LogEventLevel.Information)
-                    .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information, outputTemplate: "{Level:u}: {Message:lj}{NewLine}{Exception}", theme: ConsoleLogTheme)
+                    .Filter.ByExcluding(e => e.Level == LogLevel)
+                    .WriteTo.Console(restrictedToMinimumLevel: LogLevel, outputTemplate: "{Level:u}: {Message:lj}{NewLine}{Exception}", theme: ConsoleLogTheme)
                 ))
                 .CreateLogger();
         }

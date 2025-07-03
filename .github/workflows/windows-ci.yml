@@ -31,12 +31,12 @@ jobs:
       - name: BuildTools
         if: success() || failure()
         shell: cmd
-        run: dotnet run SB tools
+        run: dotnet run SB tools verbose
 
       - name: BuildPrograms
         if: success() || failure()
         shell: cmd
-        run: dotnet run SB
+        run: dotnet run SB verbose
       
       # - name: TestDebug
       #   if: success()

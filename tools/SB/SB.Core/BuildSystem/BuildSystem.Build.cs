@@ -91,7 +91,6 @@ namespace SB
             public Target Target { get; set; }
             public TaskEmitter Emitter { get; set; }
             public HashSet<TaskFingerprint> DirectDependencies { get; set; } = new();
-            // 这是发射器级别的任务计划，内部会处理PerTarget和PerFile子任务
         }
 
         private static TaskScheduler TQTS = TaskManager.BuildQTS.ActivateNewQueue(0);
@@ -99,6 +98,7 @@ namespace SB
         
         public static void RunBuildImpl()
         {
+            Log.Verbose("Resolving Packages... ");
             using (Profiler.BeginZone($"ResolvePackages", color: (uint)Profiler.ColorType.Yellow))
             {
                 Dictionary<string, Target> PackageTargets = new();
@@ -107,6 +107,7 @@ namespace SB
                 AllTargets.AddRange(PackageTargets);
             }
 
+            Log.Verbose("Resolving Dependencies... ");
             using (Profiler.BeginZone($"ResolveDependencies", color: (uint)Profiler.ColorType.Blue2))
             {
                 foreach (var TargetKVP in AllTargets)
@@ -119,11 +120,13 @@ namespace SB
                     TargetKVP.Value.CallAllActions(TargetKVP.Value.AfterLoadActions);
             }
 
+            Log.Verbose("Resolving Arguments... ");
             using (Profiler.BeginZone($"ResolveArguments", color: (uint)Profiler.ColorType.Pink))
             {
-                Parallel.ForEach(AllTargets.Values, 
+                Parallel.ForEach(AllTargets.Values,
                 new ParallelOptions { TaskScheduler = TQTS },
-                Target => {
+                Target =>
+                {
                     using (Profiler.BeginZone($"ResolveArgument | {Target.Name}", color: (uint)Profiler.ColorType.Pink))
                     {
                         Target.ResolveArguments();
@@ -132,6 +135,7 @@ namespace SB
             }
 
             List<Target> SortedTargets;
+            Log.Verbose("Sorting... ");
             using (Profiler.BeginZone($"SortTargets", color: (uint)Profiler.ColorType.Purple))
             {
                 SortedTargets = AllTargets.Values.OrderBy(T => T.Dependencies.Count).ToList();
@@ -147,7 +151,7 @@ namespace SB
             Dictionary<TaskFingerprint, TaskPlan> AllTaskPlans;
             List<TaskPlan> ExecutionOrder;
             
-            Log.Information("Planning... ");
+            Log.Verbose("Planning... ");
             using (Profiler.BeginZone($"BuildEmitterPlans", color: (uint)Profiler.ColorType.Orange))
             {
                 AllTaskPlans = BuildEmitterPlans(SortedTargets);
@@ -158,16 +162,16 @@ namespace SB
                 ResolvePlanDependencies(AllTaskPlans);
             }
 
-            Log.Information("Topological Sorting... ");
+            Log.Verbose("Topological Sorting... ");
             using (Profiler.BeginZone($"SortTaskPlans", color: (uint)Profiler.ColorType.Magenta))
             {
                 ExecutionOrder = TopologicalSort(AllTaskPlans);
             }
 
-            // == 第二阶段：按依赖顺序执行发射器任务 ==
-            using (Profiler.BeginZone($"ExecuteEmitterTasks", color: (uint)Profiler.ColorType.Red))
+            // == 第二阶段：按依赖顺序执行发射器任务，充分利用双调度器 ==
+            using (Profiler.BeginZone($"ExecuteEmitterTasksWithSchedulers", color: (uint)Profiler.ColorType.Red))
             {
-                ExecuteEmitterTasks(ExecutionOrder);
+                ExecuteEmitterTasksWithSchedulers(ExecutionOrder);
             }
 
             TaskManager.WaitAll();
@@ -190,11 +194,12 @@ namespace SB
                     if (!Emitter.EnableEmitter(Target))
                         continue;
 
-                    // 发射器任务计划 - 对应原始代码中的EmitterTask
+                    // 发射器任务计划 - 与原始代码的EmitterTask对应
+                    // 依赖关系都是在这个级别建立的，File字段为空字符串
                     var Fingerprint = new TaskFingerprint
                     {
                         TargetName = Target.Name,
-                        File = "", // 发射器任务的File字段为空
+                        File = "", // 发射器任务级别的依赖都是基于File=""
                         TaskName = EmitterName
                     };
 
@@ -212,7 +217,7 @@ namespace SB
             return AllTaskPlans;
         }
 
-        // 第一阶段：解析发射器任务间的依赖关系
+        // 第一阶段：解析发射器任务间的依赖关系（与原始代码逻辑一致）
         private static void ResolvePlanDependencies(Dictionary<TaskFingerprint, TaskPlan> AllTaskPlans)
         {
             foreach (var PlanKVP in AllTaskPlans)
@@ -222,6 +227,7 @@ namespace SB
                 var Emitter = Plan.Emitter;
 
                 // ExternalTarget依赖：依赖于其他目标的指定发射器
+                // 对应原始代码中的AwaitExternalTargetDependencies
                 foreach (var DepTarget in Target.Dependencies)
                 {
                     foreach (var DepEmitter in Emitter.Dependencies.Where(KVP => KVP.Value.Equals(DependencyModel.ExternalTarget)))
@@ -229,7 +235,7 @@ namespace SB
                         var DepFingerprint = new TaskFingerprint
                         {
                             TargetName = DepTarget,
-                            File = "",
+                            File = "", // 原始代码中依赖的是发射器任务级别
                             TaskName = DepEmitter.Key
                         };
 
@@ -241,12 +247,13 @@ namespace SB
                 }
 
                 // PerTarget依赖：依赖于同目标的其他发射器
+                // 对应原始代码中的AwaitPerTargetDependencies
                 foreach (var Dependency in Emitter.Dependencies.Where(KVP => KVP.Value.Equals(DependencyModel.PerTarget)))
                 {
                     var DepFingerprint = new TaskFingerprint
                     {
                         TargetName = Target.Name,
-                        File = "",
+                        File = "", // 原始代码中依赖的是发射器任务级别
                         TaskName = Dependency.Key
                     };
 
@@ -256,8 +263,22 @@ namespace SB
                     }
                 }
 
-                // 注意：PerFile依赖在发射器级别不适用，因为发射器任务会内部处理所有文件
-                // PerFile依赖会在发射器任务内部的文件处理循环中处理
+                // PerFile依赖：提升为发射器级别依赖以简化实现
+                // 这确保了依赖关系的正确性，虽然可能降低一些并行度
+                foreach (var Dependency in Emitter.Dependencies.Where(KVP => KVP.Value.Equals(DependencyModel.PerFile)))
+                {
+                    var DepFingerprint = new TaskFingerprint
+                    {
+                        TargetName = Target.Name,
+                        File = "", // 提升为发射器级别依赖
+                        TaskName = Dependency.Key
+                    };
+
+                    if (AllTaskPlans.ContainsKey(DepFingerprint))
+                    {
+                        Plan.DirectDependencies.Add(DepFingerprint);
+                    }
+                }
             }
         }
 
@@ -317,8 +338,8 @@ namespace SB
             return ExecutionOrder;
         }
 
-        // 第二阶段：按顺序执行发射器任务
-        private static void ExecuteEmitterTasks(List<TaskPlan> ExecutionOrder)
+        // 第二阶段：执行发射器任务，内部充分利用双调度器
+        private static void ExecuteEmitterTasksWithSchedulers(List<TaskPlan> ExecutionOrder)
         {
             var RunningTasks = new ConcurrentDictionary<TaskFingerprint, Task>();
             var AllTasks = new List<Task>();
@@ -349,7 +370,6 @@ namespace SB
                 var TaskExecution = Task.Run(async () =>
                 {
                     // 等待所有直接依赖完成
-                    Log.Information("...");
                     foreach (var DepFingerprint in Plan.DirectDependencies)
                     {
                         if (RunningTasks.TryGetValue(DepFingerprint, out var DepTask))
@@ -358,8 +378,8 @@ namespace SB
                         }
                     }
 
-                    // 执行发射器任务（模拟原始代码的EmitterTask逻辑）
-                    await ExecuteEmitterTask(Plan, AllTaskCount, FileTaskCount);
+                    // 执行发射器任务，内部使用双调度器
+                    await ExecuteEmitterTaskWithSchedulers(Plan, AllTaskCount, FileTaskCount);
                 });
 
                 RunningTasks[Plan.Fingerprint] = TaskExecution;
@@ -370,19 +390,19 @@ namespace SB
             Task.WaitAll(AllTasks.ToArray());
         }
 
-        private static async Task ExecuteEmitterTask(TaskPlan Plan, uint AllTaskCount, uint FileTaskCount)
+        private static async Task ExecuteEmitterTaskWithSchedulers(TaskPlan Plan, uint AllTaskCount, uint FileTaskCount)
         {
             var Target = Plan.Target;
             var Emitter = Plan.Emitter;
 
-            // 模拟原始代码中EmitterTask的执行逻辑
+            // 发射器任务内部逻辑，模拟原始代码但使用双调度器优化
             List<Task> FileTasks = new();
             Task PerTargetEmitterTask = Task.CompletedTask;
 
-            // PerTarget任务
+            // PerTarget任务 - 提交到TQTS调度器
             if (Emitter.EmitTargetTask(Target))
             {
-                PerTargetEmitterTask = Task.Run(() =>
+                PerTargetEmitterTask = Task.Factory.StartNew(() =>
                 {
                     var TaskIndex = Interlocked.Increment(ref _AllTaskCounter);
                     var Percentage = 100.0f * TaskIndex / AllTaskCount;
@@ -406,22 +426,23 @@ namespace SB
                             }
                         }
                     }
-                });
+                }, CancellationToken.None, TaskCreationOptions.None, TQTS);
             }
 
-            // PerFile任务
+            // 处理PerFile任务 - 提交到FQTS调度器
             foreach (var FL in Target.FileLists.ToArray().Where(FL => Emitter.EmitFileTask(Target, FL)))
             {
                 foreach (var File in FL.Files)
                 {
-                    // 等待PerTarget任务完成（如果有的话）
-                    await PerTargetEmitterTask;
-
-                    // 等待PerFile依赖
-                    await WaitForPerFileDependencies(Emitter, Target, File);
-
-                    var FileTask = Task.Run(() =>
+                    // 为每个文件创建一个任务，提交到FQTS调度器
+                    var FileTask = Task.Factory.StartNew(async () =>
                     {
+                        // 等待PerFile依赖（在文件任务内部处理）
+                        await WaitForPerFileDependencies(Emitter, Target, File);
+
+                        // 等待PerTarget任务完成（如果有的话）
+                        await PerTargetEmitterTask;
+
                         var FileTaskIndex = Interlocked.Increment(ref _FileTaskCounter);
                         var TaskIndex = Interlocked.Increment(ref _AllTaskCounter);
                         var Percentage = 100.0f * TaskIndex / AllTaskCount;
@@ -446,31 +467,23 @@ namespace SB
                                 }
                             }
                         }
-                    });
+                    }, CancellationToken.None, TaskCreationOptions.None, FQTS).Unwrap();
+                    
                     FileTasks.Add(FileTask);
                 }
             }
 
+            // 等待所有子任务完成
             await PerTargetEmitterTask;
             await Task.WhenAll(FileTasks);
         }
 
-        // 等待PerFile依赖（在发射器任务内部处理）
+        // 简化的PerFile依赖处理（依赖关系已在发射器级别处理）
         private static async Task WaitForPerFileDependencies(TaskEmitter Emitter, Target Target, string File)
         {
-            foreach (var Dependency in Emitter.Dependencies.Where(KVP => KVP.Value.Equals(DependencyModel.PerFile)))
-            {
-                var DepFingerprint = new TaskFingerprint
-                {
-                    TargetName = Target.Name,
-                    File = File,
-                    TaskName = Dependency.Key
-                };
-                // 这里需要等待同一文件的其他发射器任务完成
-                // 由于我们现在是发射器级别的任务，这种依赖需要通过其他机制处理
-                // 暂时跳过，可能需要更复杂的同步机制
-                await Task.CompletedTask;
-            }
+            // 由于PerFile依赖已经提升为发射器级别依赖，
+            // 这里不需要额外的等待逻辑
+            await Task.CompletedTask;
         }
 
         private static uint _AllTaskCounter = 0;

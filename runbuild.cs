@@ -1,6 +1,7 @@
 using SB;
 using SB.Core;
 using Serilog;
+using Serilog.Events;
 using System.Diagnostics;
 
 Stopwatch sw = new();
@@ -8,6 +9,13 @@ sw.Start();
 
 TargetCategory Categories = TargetCategory.Runtime;
 string? cmd = args.Length > 1 ? args[1] : null;
+string? verbose = args.Length > 2 ? args[2] : null;
+
+if (verbose != null && verbose == "verbose")
+{
+    Engine.LogLevel = LogEventLevel.Verbose;
+}
+
 if (cmd == null)
 {
     cmd = "build";
