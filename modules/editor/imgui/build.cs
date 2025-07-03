@@ -11,7 +11,7 @@ public static class SkrImGui
             .Depend(Visibility.Public, "SkrInput", "SkrRenderGraph")
             .IncludeDirs(Visibility.Public, "include")
             .AddCppFiles("src/**.cpp")
-            .AddHLSLFiles("shaders/*.hlsl")
+            .AddCppSLFiles("shaders/*.cppsl")
             .IncludeDirs(Visibility.Public, "imgui/include")
             .IncludeDirs(Visibility.Private, "imgui/src")
             .AddCppFiles("imgui/src/**.cpp")

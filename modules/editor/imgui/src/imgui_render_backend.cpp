@@ -488,11 +488,11 @@ void ImGuiRendererBackendRG::init(const ImGuiRendererBackendRGConfig& config)
     else
     {
         auto vs_bytes = _read_shader_bytes(
-            u8"imgui_vertex",
+            u8"imgui.vs",
             _gfx_queue->device->adapter->instance->backend
         );
         auto ps_bytes = _read_shader_bytes(
-            u8"imgui_fragment",
+            u8"imgui.fs",
             _gfx_queue->device->adapter->instance->backend
         );
 
@@ -517,10 +517,10 @@ void ImGuiRendererBackendRG::init(const ImGuiRendererBackendRGConfig& config)
         // fill desc
         ppl_shaders[0].library = vs_lib;
         ppl_shaders[0].stage   = CGPU_SHADER_STAGE_VERT;
-        ppl_shaders[0].entry   = SKR_UTF8("main");
+        ppl_shaders[0].entry   = SKR_UTF8("vs");
         ppl_shaders[1].library = fs_lib;
         ppl_shaders[1].stage   = CGPU_SHADER_STAGE_FRAG;
-        ppl_shaders[1].entry   = SKR_UTF8("main");
+        ppl_shaders[1].entry   = SKR_UTF8("fs");
     }
 
     // load static sampler
@@ -569,7 +569,7 @@ void ImGuiRendererBackendRG::init(const ImGuiRendererBackendRGConfig& config)
         CGPUVertexLayout vertex_layout{};
         vertex_layout.attribute_count = 3;
         vertex_layout.attributes[0]   = {
-            u8"POSITION",
+            u8"pos",
             1,
             CGPU_FORMAT_R32G32_SFLOAT,
             0,
@@ -578,7 +578,7 @@ void ImGuiRendererBackendRG::init(const ImGuiRendererBackendRGConfig& config)
             CGPU_INPUT_RATE_VERTEX
         };
         vertex_layout.attributes[1] = {
-            u8"TEXCOORD",
+            u8"uv",
             1,
             CGPU_FORMAT_R32G32_SFLOAT,
             0,
@@ -587,7 +587,7 @@ void ImGuiRendererBackendRG::init(const ImGuiRendererBackendRGConfig& config)
             CGPU_INPUT_RATE_VERTEX
         };
         vertex_layout.attributes[2] = {
-            u8"COLOR",
+            u8"color",
             1,
             CGPU_FORMAT_R8G8B8A8_UNORM,
             0, sizeof(float) * 4,
