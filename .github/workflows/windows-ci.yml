@@ -31,15 +31,25 @@ jobs:
             .build
           key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
 
-      - name: BuildTools
+      - name: BuildTools(Debug)
         if: success() || failure()
         shell: cmd
-        run: dotnet run --configuration Release SB tools verbose
+        run: dotnet run --configuration Release SB tools debug verbose ${{ matrix.toolchain }}
 
-      - name: BuildPrograms
+      - name: BuildPrograms(Debug)
         if: success() || failure()
         shell: cmd
-        run: dotnet run --configuration Release SB build verbose
+        run: dotnet run --configuration Release SB build debug verbose ${{ matrix.toolchain }}
+
+      - name: BuildTools(Release)
+        if: success() || failure()
+        shell: cmd
+        run: dotnet run --configuration Release SB tools release verbose ${{ matrix.toolchain }}
+
+      - name: BuildPrograms(Release)
+        if: success() || failure()
+        shell: cmd
+        run: dotnet run --configuration Release SB build release verbose ${{ matrix.toolchain }}
       
       # - name: TestDebug
       #   if: success()

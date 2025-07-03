@@ -18,7 +18,7 @@ namespace SB.Core
             this.TargetArch = TargetArch ?? HostInformation.HostArch;
         }
 
-        private bool UseClangCl => true;
+        public static bool UseClangCl = true;
         public string Name => UseClangCl ? "clang-cl" : "msvc";
         public Version Version => new Version(VSVersion, 0);
         public ICompiler Compiler => UseClangCl ? ClangCLCC! : CLCC!;

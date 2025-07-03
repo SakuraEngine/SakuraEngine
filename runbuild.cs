@@ -8,28 +8,36 @@ Stopwatch sw = new();
 sw.Start();
 
 TargetCategory Categories = TargetCategory.Runtime;
-string? cmd = args.Length > 1 ? args[1] : null;
-string? verbose = args.Length > 2 ? args[2] : null;
+HashSet<string> AllArgs = args.ToHashSet();
 
-if (verbose != null && verbose == "verbose")
+BuildSystem.GlobalConfiguration = "debug";
+if (AllArgs.Contains("verbose"))
 {
     Engine.LogLevel = LogEventLevel.Verbose;
 }
-
-if (cmd == null)
+if (AllArgs.Contains("build"))
 {
-    cmd = "build";
+    Categories |= TargetCategory.Runtime | TargetCategory.DevTime;
 }
-
-if (cmd == "build")
+if (AllArgs.Contains("tools"))
+{
+    Categories |= TargetCategory.Tool;
+}
+if (AllArgs.Contains("debug"))
 {
     BuildSystem.GlobalConfiguration = "debug";
-    Categories = TargetCategory.Runtime | TargetCategory.DevTime;
 }
-else if (cmd == "tools")
+if (AllArgs.Contains("release"))
 {
-    BuildSystem.GlobalConfiguration = "debug";
-    Categories = TargetCategory.Tool;
+    BuildSystem.GlobalConfiguration = "release";
+}
+if (AllArgs.Contains("clang-cl"))
+{
+    VisualStudio.UseClangCl = true;
+}
+if (AllArgs.Contains("msvc"))
+{
+    VisualStudio.UseClangCl = false;
 }
 
 Engine.SetEngineDirectory(SourceLocation.Directory());
@@ -62,7 +70,7 @@ Log.Information($"Link Total: {CppLinkEmitter.Time / 1000.0f}s");
 Log.CloseAndFlush();
 
 
-if (cmd == "tools")
+if (Categories.HasFlag(TargetCategory.Tool))
 {
     Directory.CreateDirectory(".sb/compile_commands/tools");
     CompileCommandsEmitter.WriteToFile(".sb/compile_commands/tools/compile_commands.json");
