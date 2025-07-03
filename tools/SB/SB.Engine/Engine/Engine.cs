@@ -37,8 +37,10 @@ namespace SB
                 BS.PackageBuildPath = Directory.CreateDirectory(Path.Combine(ProjectRoot, ".pkgs/.build", Toolchain.Name)).FullName;
                 BS.LoadConfigurations();
 
+                Log.Verbose("Load Targets... ");
                 LoadTargets(Categories);
                 
+                Log.Verbose("Run Doctors... ");
                 DoctorsTask = Engine.RunDoctors();
                 return Toolchain!;
             }
@@ -92,7 +94,9 @@ namespace SB
 
         public static new void RunBuild()
         {
+            Log.Verbose("Wait Doctors... ");
             DoctorsTask!.Wait();
+            
             BS.RunBuild();
         }
 

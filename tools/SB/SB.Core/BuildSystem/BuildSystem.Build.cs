@@ -51,6 +51,7 @@ namespace SB
         {
             try
             {
+                Log.Verbose("Run Build... ");
                 using (Profiler.BeginZone("RunBuild", color: (uint)Profiler.ColorType.WebPurple))
                 {
                     var RunBuildTask = new Task(() => { 

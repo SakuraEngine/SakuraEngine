@@ -36,7 +36,7 @@ jobs:
       - name: BuildPrograms
         if: success() || failure()
         shell: cmd
-        run: dotnet run SB verbose
+        run: dotnet run SB build verbose
       
       # - name: TestDebug
       #   if: success()
