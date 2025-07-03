@@ -7,7 +7,7 @@ using System.Diagnostics;
 Stopwatch sw = new();
 sw.Start();
 
-TargetCategory Categories = TargetCategory.Runtime;
+TargetCategory Categories = TargetCategory.None;
 HashSet<string> AllArgs = args.ToHashSet();
 
 BuildSystem.GlobalConfiguration = "debug";

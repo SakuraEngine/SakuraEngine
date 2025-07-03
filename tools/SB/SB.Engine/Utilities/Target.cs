@@ -9,6 +9,7 @@ namespace SB
     [Flags]
     public enum TargetCategory
     {
+        None = 0,
         Runtime = 1 << 0,
         DevTime = 1 << 1,
         Tool = 1 << 2
