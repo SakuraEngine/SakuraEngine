@@ -44,12 +44,15 @@ namespace SB
                 
                 Log.Verbose("Run Doctors... ");
                 Engine.RunDoctors();
+                Log.Verbose("Doctors Finished... ");
                 return Toolchain!;
             }
         }
 
         public static void AddEngineTaskEmitters(IToolchain Toolchain)
         {
+            Log.Verbose("Add Engine Task Emitters... ");
+
             Engine.AddTaskEmitter("Codgen.Meta", new CodegenMetaEmitter(Toolchain));
 
             Engine.AddTaskEmitter("Module.Info", new ModuleInfoEmitter());
