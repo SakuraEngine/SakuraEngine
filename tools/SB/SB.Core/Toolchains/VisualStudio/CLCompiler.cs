@@ -31,15 +31,11 @@ namespace SB.Core
             if (!File.Exists(ExePath))
                 throw new ArgumentException($"CLCompiler: ExePath: {ExePath} is not an existed absolute path!");
 
-            this.CLVersionTask = Task.Run(() =>
-            {
-                BuildSystem.RunProcess(ExePath, "", out var Output, out var Error, VCEnvVariables);
-                Regex pattern = new Regex(@"\d+(\.\d+)+");
-                // FUCK YOU MICROSOFT THIS IS WEIRD, WHY YOU DUMP VERSION THROUGH STDERR
-                var CLVersion = Version.Parse(pattern.Match(Error).Value);
-                Log.Information("CL.exe version ... {CLVersion}", CLVersion);
-                return CLVersion;
-            });
+            BuildSystem.RunProcess(ExePath, "", out var Output, out var Error, VCEnvVariables);
+            Regex pattern = new Regex(@"\d+(\.\d+)+");
+            // FUCK YOU MICROSOFT THIS IS WEIRD, WHY YOU DUMP VERSION THROUGH STDERR
+            CLVersion = Version.Parse(pattern.Match(Error).Value);
+            Log.Information("CL.exe version ... {CLVersion}", CLVersion);
         }
 
         public IArgumentDriver CreateArgumentDriver(CFamily Language, bool isPCH) => new CLArgumentDriver(Language, isPCH);
@@ -91,18 +87,9 @@ namespace SB.Core
             };
         }
 
-        public Version Version
-        {
-            get
-            {
-                if (!CLVersionTask.IsCompleted)
-                    CLVersionTask.Wait();
-                return CLVersionTask.Result;
-            }
-        }
-
+        public Version Version => CLVersion;
         public readonly Dictionary<string, string?> VCEnvVariables;
-        private readonly Task<Version> CLVersionTask;
+        private readonly Version CLVersion;
         public string ExecutablePath { get; }
     }
 }

@@ -13,21 +13,17 @@ namespace SB.Core
             if (!File.Exists(ExePath))
                 throw new ArgumentException($"ClangCLCompiler: ExePath: {ExePath} is not an existed absolute path!");
 
-            this.ClangCLVersionTask = Task.Run(() =>
+            int ExitCode = BuildSystem.RunProcess(ExePath, "--version", out var Output, out var Error, VCEnvVariables);
+            if (ExitCode == 0)
             {
-                int ExitCode = BuildSystem.RunProcess(ExePath, "--version", out var Output, out var Error, VCEnvVariables);
-                if (ExitCode == 0)
-                {
-                    Regex pattern = new Regex(@"\d+(\.\d+)+");
-                    var ClangCLVersion = Version.Parse(pattern.Match(Output).Value);
-                    Log.Information("clang-cl.exe version ... {ClangCLVersion}", ClangCLVersion);
-                    return ClangCLVersion;
-                }
-                else
-                {
-                    throw new Exception($"Failed to get clang-cl.exe version! Exit code: {ExitCode}, Error: {Error}");
-                }
-            });
+                Regex pattern = new Regex(@"\d+(\.\d+)+");
+                ClangCLVersion = Version.Parse(pattern.Match(Output).Value);
+                Log.Information("clang-cl.exe version ... {ClangCLVersion}", ClangCLVersion);
+            }
+            else
+            {
+                throw new Exception($"Failed to get clang-cl.exe version! Exit code: {ExitCode}, Error: {Error}");
+            }
         }
 
         public IArgumentDriver CreateArgumentDriver(CFamily Language, bool isPCH)
@@ -84,15 +80,7 @@ namespace SB.Core
             };
         }
 
-        public Version Version
-        {
-            get
-            {
-                if (!ClangCLVersionTask.IsCompleted)
-                    ClangCLVersionTask.Wait();
-                return ClangCLVersionTask.Result;
-            }
-        }
+        public Version Version => ClangCLVersion;
 
         private string? TryGet(Dictionary<string, object?> Dict, string Name)
         {
@@ -100,7 +88,7 @@ namespace SB.Core
         }
 
         public readonly Dictionary<string, string?> VCEnvVariables;
-        private readonly Task<Version> ClangCLVersionTask;
+        private readonly Version ClangCLVersion;
         public string ExecutablePath { get; }
     }
 }
