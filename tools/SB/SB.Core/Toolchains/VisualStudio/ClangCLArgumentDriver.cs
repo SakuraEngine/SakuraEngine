@@ -40,10 +40,10 @@ namespace SB.Core
         
         protected string[] GetLanguageArgString(string p) => Language switch
         {
-            CFamily.C => isPCH ? new string[] { "-x", "c-header", p } : new string[] { "-x", "c", p },
-            CFamily.Cpp => isPCH ? new string[] { "-x", "c++-header", p } : new string[] { "-x", "c++", p },
-            CFamily.ObjC => isPCH ? new string[] { "-x", "objective-c-header", p } : new string[] { "-x", "objective-c", p },
-            CFamily.ObjCpp => isPCH ? new string[] { "-x", "objective-c++-header", p } : new string[] { "-x", "objective-c++", p },
+            CFamily.C => isPCH ? new string[] { "-Xclang", "-x", "c-header", p } : new string[] { "-Xclang", "-x", "c", p },
+            CFamily.Cpp => isPCH ? new string[] { "-Xclang", "-x", "c++-header", p } : new string[] { "-Xclang", "-x", "c++", p },
+            CFamily.ObjC => isPCH ? new string[] { "-Xclang", "-x", "objective-c-header", p } : new string[] { "-Xclang", "-x", "objective-c", p },
+            CFamily.ObjCpp => isPCH ? new string[] { "-Xclang", "-x", "objective-c++-header", p } : new string[] { "-Xclang", "-x", "objective-c++", p },
             _ => throw new TaskFatalError($"Invalid language \"{Language}\" for clang-cl!")
         };
     }

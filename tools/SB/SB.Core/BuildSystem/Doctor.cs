@@ -43,9 +43,9 @@ namespace SB
                         }
                     }
                 }
-                Log.Verbose("Starting doctors with {ProcessorCount} threads ...", Environment.ProcessorCount);
+                Log.Verbose("Starting doctors with {ProcessorCount} threads ...", 1 + Environment.ProcessorCount / 2);
                 Parallel.ForEach(_AllDoctors,
-                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+                new ParallelOptions { MaxDegreeOfParallelism = 1 + Environment.ProcessorCount / 2 },
                 (Doctor) =>
                 {
                     using (Profiler.BeginZone($"{Doctor.GetType().Name}", color: (uint)Profiler.ColorType.WebMaroon))
