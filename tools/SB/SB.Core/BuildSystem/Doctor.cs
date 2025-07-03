@@ -50,6 +50,7 @@ namespace SB
                 {
                     using (Profiler.BeginZone($"{Doctor.GetType().Name}", color: (uint)Profiler.ColorType.WebMaroon))
                     {
+                        Log.Verbose("Doctor {ProcessorCount} starts ...", Doctor.GetType().Name);
                         if (!Doctor.Check())
                         {
                             if (!Doctor.Fix())
@@ -57,6 +58,7 @@ namespace SB
                                 throw new Exception("Doctor failed to fix the issue");
                             }
                         }
+                        Log.Verbose("Doctor {ProcessorCount} finished ...", Doctor.GetType().Name);
                     }
                 });
             }
