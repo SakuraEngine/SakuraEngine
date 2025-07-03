@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using Serilog;
 
 namespace SB
 {
@@ -42,6 +43,7 @@ namespace SB
                         }
                     }
                 }
+                Log.Verbose("Starting doctors with {ProcessorCount} threads ...", Environment.ProcessorCount);
                 Parallel.ForEach(_AllDoctors,
                 new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount, TaskScheduler = TQTS },
                 (Doctor) =>

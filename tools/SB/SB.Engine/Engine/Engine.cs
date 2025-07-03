@@ -16,8 +16,10 @@ namespace SB
             using (Profiler.BeginZone("Bootstrap", color: (uint)Profiler.ColorType.WebMaroon))
             {
                 SetupLogger();
+
+                Log.Verbose("Runs on {HostOS} with {ProcessorCount} logical processors", HostOS, Environment.ProcessorCount);
+
                 IToolchain? Toolchain = null;
-                
                 if (BS.HostOS == OSPlatform.Windows)
                     Toolchain = VisualStudioDoctor.VisualStudio;
                 else if (BS.HostOS == OSPlatform.OSX)
