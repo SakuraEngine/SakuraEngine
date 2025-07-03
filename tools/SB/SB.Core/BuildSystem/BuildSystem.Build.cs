@@ -147,6 +147,7 @@ namespace SB
             Dictionary<TaskFingerprint, TaskPlan> AllTaskPlans;
             List<TaskPlan> ExecutionOrder;
             
+            Log.Information("Planning... ");
             using (Profiler.BeginZone($"BuildEmitterPlans", color: (uint)Profiler.ColorType.Orange))
             {
                 AllTaskPlans = BuildEmitterPlans(SortedTargets);
@@ -157,6 +158,7 @@ namespace SB
                 ResolvePlanDependencies(AllTaskPlans);
             }
 
+            Log.Information("Topological Sorting... ");
             using (Profiler.BeginZone($"SortTaskPlans", color: (uint)Profiler.ColorType.Magenta))
             {
                 ExecutionOrder = TopologicalSort(AllTaskPlans);
@@ -347,6 +349,7 @@ namespace SB
                 var TaskExecution = Task.Run(async () =>
                 {
                     // 等待所有直接依赖完成
+                    Log.Information("...");
                     foreach (var DepFingerprint in Plan.DirectDependencies)
                     {
                         if (RunningTasks.TryGetValue(DepFingerprint, out var DepTask))
