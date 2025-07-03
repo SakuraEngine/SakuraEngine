@@ -96,6 +96,7 @@ public class LLVMDownloader
     public static bool Download()
     {
         string URL = "";
+        Directory.CreateDirectory(Engine.DownloadDirectory);
         string Destination = Path.Combine(Engine.DownloadDirectory, "llvm-" + Version + ".zip");
         if (BuildSystem.HostOS == OSPlatform.OSX)
         {
