@@ -83,7 +83,7 @@ namespace SB
         }
 
         public static ConcurrentBag<string> CompileCommands = new();
-        public static string CppSLCompiler = Path.Combine(Engine.TempPath, "tools", "SSLCompiler");
+        public static string CppSLCompiler = Path.Combine(Engine.TempPath, "tools", "CppSLCompiler");
         public static Dictionary<string, string> ShaderOutputDirectories = new();
     }
 

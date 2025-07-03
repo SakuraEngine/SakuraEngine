@@ -18,7 +18,7 @@ public static class LLVMTools
             .LinkAgainstLLVM()
             .AddCppFiles("meta/src/**.cpp");
 
-        BuildSystem.Target("SSLAst")
+        BuildSystem.Target("CppSLAst")
             .TargetType(TargetType.Static)
             .RTTI(true)
             .IncludeDirs(Visibility.Public, "shader_compiler/AST/include")
@@ -26,21 +26,21 @@ public static class LLVMTools
             .AddCppFiles("shader_compiler/AST/double-conversion/**.cc")
             .AddCppFiles("shader_compiler/AST/src/**.cpp");
 
-        BuildSystem.Target("SSLLLVM")
+        BuildSystem.Target("CppSLLLVM")
             .TargetType(TargetType.Static)
-            .Depend(Visibility.Public, "SSLAst")
+            .Depend(Visibility.Public, "CppSLAst")
             .IncludeDirs(Visibility.Public, "shader_compiler/LLVM/include")
             .AddCppFiles("shader_compiler/LLVM/src/**.cpp")
             .LinkAgainstLLVM();
 
-        BuildSystem.Target("SSLCompiler")
+        BuildSystem.Target("CppSLCompiler")
             .TargetType(TargetType.Executable)
-            .Depend(Visibility.Public, "SSLLLVM")
+            .Depend(Visibility.Public, "CppSLLLVM")
             .AddCppFiles("shader_compiler/shader_compiler.cpp");
 
-        BuildSystem.Target("SSL_ManualTest")
+        BuildSystem.Target("CppSLManualTest")
             .TargetType(TargetType.Executable)
-            .Depend(Visibility.Public, "SSLAst")
+            .Depend(Visibility.Public, "CppSLAst")
             .AddCppFiles("shader_compiler/ast_test.cpp");
     }
 
