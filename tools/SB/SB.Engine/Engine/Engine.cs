@@ -47,6 +47,7 @@ namespace SB
                 sw.Start();
                 Log.Verbose("Run Doctors... ");
                 Engine.RunDoctors();
+                sw.Stop();
                 Log.Verbose($"Doctors Finished... cost {sw.ElapsedMilliseconds / 1000.0f}s");
                 return Toolchain!;
             }

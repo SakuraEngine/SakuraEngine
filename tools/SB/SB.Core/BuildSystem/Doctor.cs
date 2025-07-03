@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Diagnostics;
 using Serilog;
 
 namespace SB
@@ -51,7 +52,9 @@ namespace SB
                 {
                     using (Profiler.BeginZone($"{Doctor.GetType().Name}", color: (uint)Profiler.ColorType.WebMaroon))
                     {
-                        Log.Verbose("Doctor {ProcessorCount} starts ...", Doctor.GetType().Name);
+                        Stopwatch sw = new();
+                        sw.Start();
+                        Log.Verbose("Doctor {Name} starts ...", Doctor.GetType().Name);
                         if (!Doctor.Check())
                         {
                             if (!Doctor.Fix())
@@ -59,7 +62,9 @@ namespace SB
                                 throw new Exception("Doctor failed to fix the issue");
                             }
                         }
-                        Log.Verbose("Doctor {ProcessorCount} finished ...", Doctor.GetType().Name);
+                        sw.Stop();
+                        float Seconds = sw.ElapsedMilliseconds / 1000.0f;
+                        Log.Verbose("Doctor {Name} finished... cost {Seconds}s", Doctor.GetType().Name, Seconds);
                     }
                 });
             }
