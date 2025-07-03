@@ -95,7 +95,7 @@ namespace SB.Core
             WaitAll(AllTasks.Values);
         }
 
-        public static WorkStealingTaskScheduler SchedulerTS = new(Environment.ProcessorCount);
+        public static HighPerformanceTaskScheduler SchedulerTS = new HighPerformanceTaskScheduler(Math.Max(4, Environment.ProcessorCount));
         public static QueuedTaskScheduler BuildQTS = new(Environment.ProcessorCount, "BuildWorker", false, ThreadPriority.AboveNormal, ApartmentState.Unknown, 0);
         public static QueuedTaskScheduler IOQTS = new(1, "I/O Worker", false, ThreadPriority.BelowNormal, ApartmentState.Unknown, 0);
 

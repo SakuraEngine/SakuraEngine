@@ -138,7 +138,7 @@ namespace SB
             uint AllTaskCounter = 0;
             uint FileTaskCounter = 0;
             Parallel.ForEachAsync(SortedTargets, 
-            new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount, TaskScheduler = TaskManager.SchedulerTS },
+            new ParallelOptions { TaskScheduler = TaskManager.SchedulerTS },
             async (Target Target, CancellationToken Cancel) =>
             {
                 Target.CallAllActions(Target.BeforeBuildActions);
