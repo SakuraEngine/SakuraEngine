@@ -54,14 +54,7 @@ namespace SB
                 Log.Verbose("Run Build... ");
                 using (Profiler.BeginZone("RunBuild", color: (uint)Profiler.ColorType.WebPurple))
                 {
-                    var RunBuildTask = new Task(() => { 
-                        using (Profiler.BeginZone("RunBuild", color: (uint)Profiler.ColorType.WebPurple))
-                        {
-                            RunBuildImpl();
-                        }
-                    }, TaskManager.RootCTS.Token);
-                    RunBuildTask.Start(TaskManager.SchedulerTS);
-                    RunBuildTask.Wait(TaskManager.RootCTS.Token);
+                    RunBuildImpl();
                 }
             }
             catch (OperationCanceledException)
