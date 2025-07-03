@@ -27,17 +27,6 @@ namespace SB.Core
 
     public static class TaskManager
     {
-        public static void AddCompleted(TaskFingerprint Fingerprint)
-        {
-            if (AllTasks.TryGetValue(Fingerprint, out var _))
-                throw new ArgumentException($"Task with fingerprint {Fingerprint} already exists! Fingerprint should be unique to every task!");
-
-            if (!AllTasks.TryAdd(Fingerprint, Task.FromResult(true)))
-            {
-                throw new ArgumentException($"Failed to add task with fingerprint {Fingerprint}! Are you adding same tasks in parallel?");
-            }
-        }
-
         public static async Task Run(TaskFingerprint Fingerprint, Func<Task<bool>> Function, TaskScheduler? TS = null)
         {
             if (AllTasks.TryGetValue(Fingerprint, out var _))
@@ -65,18 +54,6 @@ namespace SB.Core
             {
                 throw new ArgumentException($"Failed to add task with fingerprint {Fingerprint}! Are you adding same tasks in parallel?");
             }
-        }
-
-        public static async Task<bool> AwaitFingerprint(TaskFingerprint Fingerprint)
-        {
-            Task<bool>? ToAwait = null;
-            int YieldTimes = 0;
-            while (!AllTasks.TryGetValue(Fingerprint, out ToAwait))
-            {
-                YieldTimes += 5;
-                await Task.Delay(YieldTimes);
-            }
-            return await ToAwait!;
         }
 
         public static void WaitAll(IEnumerable<Task> tasks)

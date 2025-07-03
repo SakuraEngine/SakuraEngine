@@ -123,10 +123,16 @@ namespace SB.Core
             {
                 // check file list change
                 if (!SortedFiles.SequenceEqual(OldDepend?.InputFiles!))
+                {
+                    Log.Verbose("Dependency changed for {TargetName} {FileName} {EmitterName}: File list changed", TargetName, FileName, EmitterName);
                     return false;
+                }
                 // check arg list change
                 if (!SortedArgs.SequenceEqual(OldDepend?.InputArgs!))
+                {
+                    Log.Verbose("Dependency changed for {TargetName} {FileName} {EmitterName}: Arg list changed", TargetName, FileName, EmitterName);
                     return false;
+                }
                 // check input file mtime change
                 for (int i = 0; i < OldDepend?.InputFiles.Count; i++)
                 {
@@ -134,9 +140,15 @@ namespace SB.Core
                     var DepTime = OldDepend?.InputFileTimes[i];
 
                     if (!File.Exists(InputFile)) // deleted
+                    {
+                        Log.Verbose("Dependency changed for {TargetName} {FileName} {EmitterName}: Input file {InputFile} deleted", TargetName, FileName, EmitterName, InputFile);
                         return false;
+                    }
                     if (DepTime != Directory.GetLastWriteTimeUtc(InputFile)) // modified
+                    {
+                        Log.Verbose("Dependency changed for {TargetName} {FileName} {EmitterName}: Input file {InputFile} modified", TargetName, FileName, EmitterName, InputFile);
                         return false;
+                    }
                 }
                 // check output file mtime change
                 for (int i = 0; i < OldDepend?.ExternalFiles.Count; i++)
@@ -146,9 +158,15 @@ namespace SB.Core
 
                     DateTime LastWriteTime;
                     if (!BuildSystem.CachedFileExists(ExternalFile!, out LastWriteTime)) // deleted
+                    {
+                        Log.Verbose("Dependency changed for {TargetName} {FileName} {EmitterName}: Output file {OutputFile} deleted", TargetName, FileName, EmitterName, ExternalFile);
                         return false;
+                    }
                     if (DepTime != LastWriteTime) // modified
+                    {
+                        Log.Verbose("Dependency changed for {TargetName} {FileName} {EmitterName}: Output file {OutputFile} modified", TargetName, FileName, EmitterName, ExternalFile);
                         return false;
+                    }
                 }
                 return true;
             }
