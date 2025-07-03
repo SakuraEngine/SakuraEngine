@@ -43,6 +43,7 @@ namespace SB
                         }
                     }
                 }
+
                 Log.Verbose("Starting doctors with {ProcessorCount} threads ...", 1 + Environment.ProcessorCount / 2);
                 Parallel.ForEach(_AllDoctors,
                 new ParallelOptions { MaxDegreeOfParallelism = 1 + Environment.ProcessorCount / 2 },

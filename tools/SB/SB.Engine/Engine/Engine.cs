@@ -3,6 +3,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace SB
 {
@@ -42,9 +43,11 @@ namespace SB
                 Log.Verbose("Load Targets... ");
                 LoadTargets(Categories);
                 
+                Stopwatch sw = new();
+                sw.Start();
                 Log.Verbose("Run Doctors... ");
                 Engine.RunDoctors();
-                Log.Verbose("Doctors Finished... ");
+                Log.Verbose($"Doctors Finished... cost {sw.ElapsedMilliseconds / 1000.0f}s");
                 return Toolchain!;
             }
         }
