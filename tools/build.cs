@@ -11,7 +11,7 @@ public static class LLVMTools
         if (UsePrecompiledCompiler)
             return;
 
-        BuildSystem.AddDoctor<LLVMDoctor>();
+        LLVMDownloader.Download();
 
         BuildSystem.Target("meta")
             .TargetType(TargetType.Executable)
@@ -46,9 +46,9 @@ public static class LLVMTools
 
     private static Target LinkAgainstLLVM(this Target @this)
     {
-        var LibDir = Path.Combine(Engine.DownloadDirectory, "llvm-" + LLVMDoctor.Version, "lib");
+        var LibDir = Path.Combine(Engine.DownloadDirectory, "llvm-" + LLVMDownloader.Version, "lib");
         @this.RTTI(false)
-            .IncludeDirs(Visibility.Private, Path.Combine(Engine.DownloadDirectory, "llvm-" + LLVMDoctor.Version, "include"))
+            .IncludeDirs(Visibility.Private, Path.Combine(Engine.DownloadDirectory, "llvm-" + LLVMDownloader.Version, "include"))
             .LinkDirs(Visibility.Private, LibDir);
 
         var libs = new List<string>();
@@ -90,10 +90,10 @@ public static class LLVMTools
     }
 }
 
-public class LLVMDoctor : IDoctor
+public class LLVMDownloader
 {
     public static string Version = "18.1.6";
-    public bool Check()
+    public static bool Download()
     {
         string URL = "";
         string Destination = Path.Combine(Engine.DownloadDirectory, "llvm-" + Version + ".zip");
@@ -132,11 +132,6 @@ public class LLVMDoctor : IDoctor
             }
             depend.ExternalFiles.Add(Destination);
         }, null, null);
-        return true;
-    }
-
-    public bool Fix()
-    {
         return true;
     }
 }

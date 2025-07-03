@@ -1,4 +1,4 @@
-name: windows-build
+name: windows-ci
 
 on: [push, pull_request]
 
