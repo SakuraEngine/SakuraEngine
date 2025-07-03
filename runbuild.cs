@@ -15,7 +15,7 @@ if (AllArgs.Contains("verbose"))
 {
     Engine.LogLevel = LogEventLevel.Verbose;
 }
-if (AllArgs.Contains("build"))
+if (AllArgs.Contains("build") || !AllArgs.Contains("tools"))
 {
     Categories |= TargetCategory.Runtime | TargetCategory.DevTime;
 }
@@ -41,10 +41,14 @@ if (AllArgs.Contains("msvc"))
 }
 
 Engine.SetEngineDirectory(SourceLocation.Directory());
-var Toolchain = Engine.Bootstrap(SourceLocation.Directory(), Categories); 
+var Toolchain = Engine.Bootstrap(SourceLocation.Directory(), Categories);
 
-Engine.AddEngineTaskEmitters(Toolchain);
-Engine.AddCompileCommandsEmitter(Toolchain);
+Engine.AddShaderTaskEmitters(Toolchain);
+if (!AllArgs.Contains("shader_only"))
+{
+    Engine.AddEngineTaskEmitters(Toolchain);
+    Engine.AddCompileCommandsEmitter(Toolchain);
+}
 
 Engine.SetTagsUnderDirectory("thirdparty", TargetTags.ThirdParty);
 Engine.SetTagsUnderDirectory("modules/core", TargetTags.Engine);
@@ -84,9 +88,15 @@ if (Categories.HasFlag(TargetCategory.Tool))
             {
                 // copy to /.sb/tools
                 if (File.Exists(Program.PDBFile))
+                {
+                    Log.Verbose("Copying PDB file {PDBFile} to {ToolsDirectory}", Program.PDBFile, ToolsDirectory);
                     File.Copy(Program.PDBFile, Path.Combine(ToolsDirectory, Path.GetFileName(Program.PDBFile)), true);
+                }
                 if (File.Exists(Program.TargetFile))
+                {
+                    Log.Verbose("Copying target file {TargetFile} to {ToolsDirectory}", Program.TargetFile, ToolsDirectory);
                     File.Copy(Program.TargetFile, Path.Combine(ToolsDirectory, Path.GetFileName(Program.TargetFile)), true);
+                }
             }
         }
     });
