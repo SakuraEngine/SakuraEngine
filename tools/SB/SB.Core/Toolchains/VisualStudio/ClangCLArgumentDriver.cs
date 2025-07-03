@@ -19,7 +19,7 @@ namespace SB.Core
             RawArguments.Remove("/TP");
             RawArguments.Remove("/TC");
         }
-        public override string[] Source(string path) => BS.CheckFile(path, true) ? new string[] { GetLanguageArgString(), $"\"{path}\"" } : throw new TaskFatalError($"Source value {path} is not an existed absolute path!");
+        public override string[] Source(string path) => BS.CheckFile(path, true) ? GetLanguageArgString($"\"{path}\"") : throw new TaskFatalError($"Source value {path} is not an existed absolute path!");
 
         [TargetProperty(InheritBehavior = true)]
         public virtual string[] ClangCl_CppFlags(ArgumentList<string> flags) => CppFlags(flags);
@@ -38,13 +38,13 @@ namespace SB.Core
         public override string UsePCHAST(string path) => BS.CheckFile(path, false) ? $"/clang:-include-pch /clang:\"{path}\"" : throw new TaskFatalError($"PCHObject value {path} is not a valid absolute path!");
         public override string DynamicDebug(bool v) => "";
         
-        protected string GetLanguageArgString() => Language switch
+        protected string[] GetLanguageArgString(string p) => Language switch
         {
-            CFamily.C => isPCH ? "-xc-header" : "",
-            CFamily.Cpp => isPCH ? "-xc++-header" : "-xc++",
-            CFamily.ObjC => isPCH ? "-xobjective-c-header" : "-xobjective-c",
-            CFamily.ObjCpp => isPCH ? "-xobjective-c++-header" : "-xobjective-c++",
-            _ => throw new TaskFatalError($"Invalid language \"{Language}\" for Apple clang!")
+            CFamily.C => isPCH ? new string[] { "-x", "c-header", p } : new string[] { "-x", "c", p },
+            CFamily.Cpp => isPCH ? new string[] { "-x", "c++-header", p } : new string[] { "-x", "c++", p },
+            CFamily.ObjC => isPCH ? new string[] { "-x", "objective-c-header", p } : new string[] { "-x", "objective-c", p },
+            CFamily.ObjCpp => isPCH ? new string[] { "-x", "objective-c++-header", p } : new string[] { "-x", "objective-c++", p },
+            _ => throw new TaskFatalError($"Invalid language \"{Language}\" for clang-cl!")
         };
     }
 }
