@@ -125,7 +125,7 @@ namespace SB
             using (Profiler.BeginZone($"ResolveArguments", color: (uint)Profiler.ColorType.Pink))
             {
                 Parallel.ForEach(AllTargets.Values,
-                new ParallelOptions { TaskScheduler = TQTS },
+                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount, TaskScheduler = TQTS },
                 Target =>
                 {
                     using (Profiler.BeginZone($"ResolveArgument | {Target.Name}", color: (uint)Profiler.ColorType.Pink))

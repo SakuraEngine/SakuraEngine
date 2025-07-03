@@ -41,7 +41,7 @@ namespace SB
                 LoadTargets(Categories);
                 
                 Log.Verbose("Run Doctors... ");
-                DoctorsTask = Engine.RunDoctors();
+                Engine.RunDoctors();
                 return Toolchain!;
             }
         }
@@ -94,9 +94,6 @@ namespace SB
 
         public static new void RunBuild()
         {
-            Log.Verbose("Wait Doctors... ");
-            DoctorsTask!.Wait();
-            
             BS.RunBuild();
         }
 
