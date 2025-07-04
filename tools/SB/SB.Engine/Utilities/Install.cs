@@ -10,7 +10,7 @@ namespace SB
         public static async Task<string> Tool(string Name)
         {
             var ToolDirectory = Path.Combine(Engine.ToolDirectory, Name);
-            await Depend.OnChanged("Install.Tool.Download", Name, "Install.Tools", async (Depend depend) =>
+            await Engine.ConfigureNotAwareDepend.OnChanged("Install.Tool.Download", Name, "Install.Tools", async (Depend depend) =>
             {
                 var ZipFile = await Download.DownloadFile(Name + GetPlatPostfix());
 
@@ -33,7 +33,7 @@ namespace SB
         {
             var IntermediateDirectory = Path.Combine(Engine.DownloadDirectory, "SDKs", Name);
 
-            await Depend.OnChanged("Install.SDK.Download", Name, "Install.SDKs", async (Depend depend) =>
+            await Engine.ConfigureNotAwareDepend.OnChanged("Install.SDK.Download", Name, "Install.SDKs", async (Depend depend) =>
             {
                 Directory.CreateDirectory(IntermediateDirectory);
                 var ZipFile = await Download.DownloadFile(Name + GetPlatPostfix());
@@ -49,7 +49,7 @@ namespace SB
             {
                 using (Profiler.BeginZone($"Install.SDKs | {Name} | Copy", color: (uint)Profiler.ColorType.Pink1))
                 {
-                    Depend.OnChanged("Install.SDK.Copy", Name, "Install.SDKs", (Depend depend) =>
+                    Engine.ConfigureNotAwareDepend.OnChanged("Install.SDK.Copy", Name, "Install.SDKs", (Depend depend) =>
                     {
                         var BuildDirectory = Path.Combine(BS.BuildPath, $"{BS.TargetOS}-{BS.TargetArch}-{BS.GlobalConfiguration}");
                         Directory.CreateDirectory(BuildDirectory);

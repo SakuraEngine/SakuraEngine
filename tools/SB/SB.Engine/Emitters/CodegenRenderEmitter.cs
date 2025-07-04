@@ -58,7 +58,7 @@ namespace SB
             if (MetaAttribute.AllGeneratedMetaFiles is not null)
                 DependFiles.AddRange(MetaAttribute.AllGeneratedMetaFiles);
             // Execute
-            bool Changed = Depend.OnChanged(Target.Name, "", this.Name, (Depend depend) => {
+            bool Changed = BS.CppCompileDepends.OnChanged(Target.Name, "", this.Name, (Depend depend) => {
                 var ParamFile = Path.Combine(CodegenDirectory, $"{Target.Name}_codegen_config.json");
                 File.WriteAllText(ParamFile, Json.Serialize(Config));
 

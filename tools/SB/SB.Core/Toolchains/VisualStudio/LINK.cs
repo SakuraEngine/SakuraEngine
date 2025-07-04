@@ -4,6 +4,7 @@ using System.Diagnostics;
 namespace SB.Core
 {
     using VS = VisualStudio;
+    using BS = BuildSystem;
     public class LINK : ILinker, IArchiver
     {
         public LINK(string ExePath, Dictionary<string, string?> Env)
@@ -21,7 +22,7 @@ namespace SB.Core
         public LinkResult Link(TaskEmitter Emitter, Target Target, IArgumentDriver Driver)
         {
             var LinkerArgsDict = Driver.CalculateArguments();
-            
+
             // FUCK YOU MICROSOFT AGAIN AND AGAIN
             // WE CAN NOT PUT /LIB, /DLL INTO ARGS.txt
             var TargetTypeArg = LinkerArgsDict["TargetType"][0];
@@ -34,11 +35,11 @@ namespace SB.Core
             // LINE.exe links against Windows DLLs with syslinks so we need to add the version in deps
             DependArgsList.Add($"ENV:WindowsSDKVersion={VCEnvVariables["WindowsSDKVersion"]}");
             // LINE.exe links against system CRT libs implicitly so we need to add the version in deps
-            DependArgsList.Add($"ENV:UCRTVersion={VCEnvVariables["UCRTVersion"]}"); 
+            DependArgsList.Add($"ENV:UCRTVersion={VCEnvVariables["UCRTVersion"]}");
 
             var InputFiles = Driver.Arguments["Inputs"] as ArgumentList<string>;
             var OutputFile = Driver.Arguments["Output"] as string;
-            bool Changed = Depend.OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
+            bool Changed = BS.CppCompileDepends.OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
             {
                 var StringLength = LinkerArgsList.Sum(x => x.Length);
                 string Arguments = "";

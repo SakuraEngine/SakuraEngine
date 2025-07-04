@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 namespace SB.Core
 {
     using VS = VisualStudio;
+    using BS = BuildSystem;
     public struct CLDependenciesData
     {
         public string Source { get; set; }
@@ -54,7 +55,7 @@ namespace SB.Core
 
             var SourceFile = Driver.Arguments["Source"] as string;
             var ObjectFile = Driver.Arguments["Object"] as string;
-            var Changed = Depend.OnChanged(Target.Name, SourceFile!, Emitter.Name, (Depend depend) =>
+            var Changed = BS.CppCompileDepends.OnChanged(Target.Name, SourceFile!, Emitter.Name, (Depend depend) =>
             {
                 var Args = String.Join(" ", CompilerArgsList);
                 int ExitCode = BuildSystem.RunProcess(ExecutablePath, Args, out var OutputInfo, out var ErrorInfo, VCEnvVariables, WorkDirectory);

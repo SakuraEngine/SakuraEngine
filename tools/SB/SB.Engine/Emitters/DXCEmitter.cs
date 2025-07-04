@@ -30,7 +30,7 @@ namespace SB
             Directory.CreateDirectory(OutputDirectory);
 
             // SPV
-            bool Changed = Depend.OnChanged(Target.Name, SourceFile, "DXC.SPV", (Depend depend) => {
+            bool Changed = Engine.ConfigureAwareDepend.OnChanged(Target.Name, SourceFile, "DXC.SPV", (Depend depend) => {
                 var SpvFile = Path.Combine(OutputDirectory, AppendEntryInArtifactPath ? $"{HLSLBaseName}.{Entry}.spv" : $"{HLSLBaseName}.spv");
                 var Arguments = new string[] {
                     "-HV 2021",
@@ -51,7 +51,7 @@ namespace SB
             }, new string [] { SourceFile }, null);
 
             // DXIL
-            Changed |= Depend.OnChanged(Target.Name, SourceFile, "DXC.DXIL", (Depend depend) => {
+            Changed |= Engine.ConfigureAwareDepend.OnChanged(Target.Name, SourceFile, "DXC.DXIL", (Depend depend) => {
                 var DxilFile = Path.Combine(OutputDirectory, AppendEntryInArtifactPath? $"{HLSLBaseName}.{Entry}.dxil" : $"{HLSLBaseName}.dxil");
                 var Arguments = new string[] {
                     "-HV 2021",

@@ -106,7 +106,7 @@ public class LLVMDownloader
         {
             URL = "https://github.com/SakuraEngine/llvm-build/releases/download/llvm-windows-" + Version + "/llvm-windows-" + Version + "-msvc-x64-md-release.7z";
         }
-        Depend.OnChanged("Download-LLVM", "LLVM-" + Version, "LLVMDoctor", (Depend depend) =>
+        Engine.ConfigureNotAwareDepend.OnChanged("Download-LLVM", "LLVM-" + Version, "LLVMDoctor", (Depend depend) =>
         {
             using (var Http = new HttpClient())
             {
@@ -118,7 +118,7 @@ public class LLVMDownloader
             depend.ExternalFiles.Add(Destination);
         }, null, null);
 
-        Depend.OnChanged("Install-LLVM", "LLVM-" + Version, "LLVMDoctor", (Depend depend) =>
+        Engine.ConfigureNotAwareDepend.OnChanged("Install-LLVM", "LLVM-" + Version, "LLVMDoctor", (Depend depend) =>
         {
             var IntermediateDirectory = Path.Combine(Engine.DownloadDirectory, "llvm-" + Version);
             Directory.CreateDirectory(IntermediateDirectory);

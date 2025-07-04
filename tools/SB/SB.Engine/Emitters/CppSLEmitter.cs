@@ -20,7 +20,7 @@ namespace SB
             if (BuildSystem.TargetOS == OSPlatform.Windows)
                 Executable += ".exe";
 
-            bool Changed = Depend.OnChanged(Target.Name, SourceFile, "CPPSL", (Depend depend) =>
+            bool Changed = Engine.ConfigureAwareDepend.OnChanged(Target.Name, SourceFile, "CPPSL", (Depend depend) =>
             {
                 var Arguments = new string[]
                 {

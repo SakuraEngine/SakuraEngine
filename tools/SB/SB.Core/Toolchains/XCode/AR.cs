@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace SB.Core
 {
+    using BS = BuildSystem;
     public class AR : IArchiver
     {
         public AR(string ExePath)
@@ -19,7 +20,7 @@ namespace SB.Core
 
             var InputFiles = Driver.Arguments["Inputs"] as ArgumentList<string>;
             var OutputFile = Driver.Arguments["Output"] as string;
-            bool Changed = Depend.OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
+            bool Changed = BS.CppCompileDepends.OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
             {
                 // AR output must be the first argument
                 var OutputArg = LinkerArgsDict["Output"];

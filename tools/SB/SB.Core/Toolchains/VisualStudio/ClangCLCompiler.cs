@@ -3,6 +3,8 @@ using System.Text.RegularExpressions;
 
 namespace SB.Core
 {
+    using BS = BuildSystem;
+    
     public class ClangCLCompiler : ICompiler
     {
         public ClangCLCompiler(string ExePath, Dictionary<string, string?> Env)
@@ -45,7 +47,7 @@ namespace SB.Core
 
             var FileToCompile = TryGet(Driver.Arguments, "Source") ?? TryGet(Driver.Arguments, "PCHHeader");
             var ObjectFile = TryGet(Driver.Arguments, "Object") ?? TryGet(Driver.Arguments, "PCHObject");
-            var Changed = Depend.OnChanged(Target.Name, FileToCompile!, Emitter.Name, (Depend depend) =>
+            var Changed = BS.CppCompileDepends.OnChanged(Target.Name, FileToCompile!, Emitter.Name, (Depend depend) =>
             {
                 int ExitCode = BuildSystem.RunProcess(ExecutablePath, String.Join(" ", CompilerArgsList), out var OutputInfo, out var ErrorInfo, VCEnvVariables, WorkDirectory);
                 if (ExitCode != 0)
@@ -64,9 +66,9 @@ namespace SB.Core
                     depend.ExternalFiles.AddRange(DepIncludes);
                 }
 
-                if (OutputInfo != "") 
+                if (OutputInfo != "")
                     Log.Warning("clang-cl.exe: {OutputInfo}", OutputInfo);
-                if (ErrorInfo != "") 
+                if (ErrorInfo != "")
                     Log.Warning("clang-cl.exe: {ErrorInfo}", ErrorInfo);
 
                 depend.ExternalFiles.Add(ObjectFile!);

@@ -94,7 +94,7 @@ namespace SB
 
         private static TaskScheduler TQTS = TaskManager.BuildQTS.ActivateNewQueue(0);
         private static TaskScheduler FQTS = TaskManager.BuildQTS.ActivateNewQueue(1);
-        
+
         public static void RunBuildImpl()
         {
             Log.Verbose("Resolving Packages... ");
@@ -149,7 +149,7 @@ namespace SB
             // == 第一阶段：构建发射器任务计划和依赖图 ==
             Dictionary<PlanKey, TaskPlan> AllTaskPlans;
             List<TaskPlan> ExecutionOrder;
-            
+
             Log.Verbose("Planning... ");
             using (Profiler.BeginZone($"BuildEmitterPlans", color: (uint)Profiler.ColorType.Orange))
             {
@@ -446,7 +446,7 @@ namespace SB
                             }
                             return await Task.FromResult(true);
                         }, FQTS);
-                        
+
                     FileTasks.Add(FileTask);
                 }
             }
@@ -465,10 +465,13 @@ namespace SB
         protected static Dictionary<string, Package> AllPackages { get; } = new();
         internal static Dictionary<string, Target> _AllTargets => AllTargets;
         public delegate void TargetDelegate(Target Target);
-        public static TargetDelegate TargetDefaultSettings = new(Target => {
+        public static TargetDelegate TargetDefaultSettings = new(Target =>
+        {
             Target.SetAttribute(new CppCompileAttribute());
             Target.SetAttribute(new CppLinkAttribute());
         });
+        public static DependDatabase CppCompileDepends => cppCompileDepends.Value;
+        public static Lazy<DependDatabase> cppCompileDepends = new Lazy<DependDatabase>(() => new DependDatabase("CppCompile." + BuildSystem.GlobalConfiguration));
     }
 
     internal static class TargetTaskExtensions

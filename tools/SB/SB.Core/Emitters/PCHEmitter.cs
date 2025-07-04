@@ -29,7 +29,7 @@ namespace SB
                     CreatePCH.Headers.AddRange(GlobMatcher.GetResultsInFullPath(Target.Directory));
                 }
 
-                Changed |= Depend.OnChanged(Target.Name, PCHFile, "PCHEmitter.CreatePCH", (Depend depend) =>
+                Changed |= BS.CppCompileDepends.OnChanged(Target.Name, PCHFile, "PCHEmitter.CreatePCH", (Depend depend) =>
                 {
                     var PCHIncludes = String.Join("\n", CreatePCH.Headers.Select(H => $"#include \"{H}\""));
                     var PCHFileContent = $"""

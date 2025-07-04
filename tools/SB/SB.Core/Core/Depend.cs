@@ -8,65 +8,17 @@ namespace SB.Core
 {
     using BS = BuildSystem;
 
-    [Doctor<DependDbDoctor>]
-    public class DependDbContext : DbContext
+    public struct DependOptions
     {
-        static DependDbContext()
-        {
-            WarmUpContext = PackagesFactory.CreateDbContext();
-            WarmUpContext!.Database.EnsureCreated();
-
-            WarmUpContext = ProjectFactory.CreateDbContext();
-            WarmUpContext!.Database.EnsureCreated();
-        }
-
-        public DependDbContext(DbContextOptions<DependDbContext> options)
-            : base(options)
-        {
-
-        }
-
-        public static DependDbContext CreateContext(string TargetName)
-            => (BS.GetTarget(TargetName)?.IsFromPackage == true) ? PackagesFactory.CreateDbContext() : ProjectFactory.CreateDbContext();
-
-        public static PooledDbContextFactory<DependDbContext> ProjectFactory = new(
-            new DbContextOptionsBuilder<DependDbContext>()
-                .UseSqlite($"Data Source={Path.Join(BS.BuildPath, BS.GlobalConfiguration + "_depend.db")}")
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-                .Options
-        );
-
-        public static PooledDbContextFactory<DependDbContext> PackagesFactory = new(
-            new DbContextOptionsBuilder<DependDbContext>()
-                .UseSqlite($"Data Source={Path.Join(BS.PackageBuildPath, BS.GlobalConfiguration + "_depend.db")}")
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-                .Options
-        );
-
-        internal DbSet<DependEntity> Depends { get; set; }
-        internal static DbContext? WarmUpContext;
+        public bool UseSHA { get; init; }
+        public bool Force { get; init; }
     }
 
-    public struct Depend
+    public class DependDatabase
     {
-        private string PrimaryKey { get; set; } = "Invalid";
-        private List<string> InputArgs { get; init; } = new();
-        private List<string> InputFiles { get; init; } = new();
-        private List<DateTime> InputFileTimes { get; init; } = new();
-        private List<DateTime> ExternalFileTimes { get; set; } = new();
-        public List<string> ExternalFiles { get; set; } = new();
-
-        public struct Options
+        public bool OnChanged(string TargetName, string FileName, string EmitterName, Action<Depend> func, IEnumerable<string>? Files, IEnumerable<string>? Args, DependOptions? opt = null)
         {
-            public bool UseSHA { get; init; }
-            public bool Force { get; init; }
-        }
-
-        public Depend() {}
-
-        public static bool OnChanged(string TargetName, string FileName, string EmitterName, Action<Depend> func, IEnumerable<string>? Files, IEnumerable<string>? Args, Options? opt = null)
-        {
-            Options option = opt ?? new Options { Force = false, UseSHA = false };
+            DependOptions option = opt ?? new DependOptions { Force = false, UseSHA = false };
             var SortedFiles = Files?.ToList() ?? new(); SortedFiles.Sort();
             var SortedArgs = Args?.ToList() ?? new(); SortedArgs.Sort();
 
@@ -88,9 +40,9 @@ namespace SB.Core
             return false;
         }
 
-        public static async Task<bool> OnChanged(string TargetName, string FileName, string EmitterName, Func<Depend, Task> func, IEnumerable<string>? Files, IEnumerable<string>? Args, Options? opt = null)
+        public async Task<bool> OnChanged(string TargetName, string FileName, string EmitterName, Func<Depend, Task> func, IEnumerable<string>? Files, IEnumerable<string>? Args, DependOptions? opt = null)
         {
-            Options option = opt ?? new Options { Force = false, UseSHA = false };
+            DependOptions option = opt ?? new DependOptions { Force = false, UseSHA = false };
             var SortedFiles = Files?.ToList() ?? new(); SortedFiles.Sort();
             var SortedArgs = Args?.ToList() ?? new(); SortedArgs.Sort();
 
@@ -112,10 +64,10 @@ namespace SB.Core
             return false;
         }
 
-        private static bool CheckDependency(string TargetName, string FileName, string EmitterName, List<string> SortedFiles, List<string> SortedArgs, out Depend? OldDepend)
+        private bool CheckDependency(string TargetName, string FileName, string EmitterName, List<string> SortedFiles, List<string> SortedArgs, out Depend? OldDepend)
         {
             OldDepend = null;
-            using (var DB = DependDbContext.CreateContext(TargetName))
+            using (var DB = CreateContext(TargetName))
             {
                 OldDepend = FromEntity(DB.Depends.Find(TargetName + FileName + EmitterName));
             }
@@ -173,21 +125,22 @@ namespace SB.Core
             return false;
         }
 
-        private static void UpdateDependency(string TargetName, Depend NewDepend, Depend? OldDepend)
+        private void UpdateDependency(string TargetName, Depend NewDepend, Depend? OldDepend)
         {
             NewDepend.ExternalFileTimes = NewDepend.ExternalFiles.Select(x => Directory.GetLastWriteTimeUtc(x)).ToList();
 
-            TaskFingerprint Fingerprint = new TaskFingerprint{ TargetName = TargetName, File = NewDepend.PrimaryKey, TaskName = "UpdateDependency"};
-            TaskManager.Run(Fingerprint, async () => {
+            TaskFingerprint Fingerprint = new TaskFingerprint { TargetName = TargetName, File = NewDepend.PrimaryKey, TaskName = "UpdateDependency" };
+            TaskManager.Run(Fingerprint, async () =>
+            {
                 using (Profiler.BeginZone($"WriteToDB", color: (uint)Profiler.ColorType.Gray))
                 {
-                    var DB = DependDbContext.CreateContext(TargetName);
+                    var DB = CreateContext(TargetName);
                     {
                         if (OldDepend is not null)
                             DB.Depends.Update(ToEntity(NewDepend));
                         else
                             DB.Depends.Add(ToEntity(NewDepend));
-                                
+
                         await DB.SaveChangesAsync();
                     }
                     return true;
@@ -223,6 +176,50 @@ namespace SB.Core
                 ExternalFileTimes = entity.ExternalFileTimes
             };
         }
+
+        public DependDatabase(string Name)
+        {
+            this.Name = Name;
+
+            Factory = new(
+                new DbContextOptionsBuilder<DependContext>()
+                    .UseSqlite($"Data Source={Path.Join(BS.BuildPath, Name + ".db")}")
+                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+                    .Options
+            );
+
+            WarmUpContext = Factory.CreateDbContext();
+            WarmUpContext!.Database.EnsureCreated();
+            WarmUpContext!.FindAsync<DependEntity>("");
+        }
+
+        private DependContext CreateContext(string TargetName) => Factory.CreateDbContext();
+
+        private string Name { get; init; } = "depend";
+        private PooledDbContextFactory<DependContext> Factory;
+        private DbContext? WarmUpContext;
+    }
+
+    public struct Depend
+    {
+        internal string PrimaryKey { get; set; } = "Invalid";
+        internal List<string> InputArgs { get; init; } = new();
+        internal List<string> InputFiles { get; init; } = new();
+        internal List<DateTime> InputFileTimes { get; init; } = new();
+        internal List<DateTime> ExternalFileTimes { get; set; } = new();
+        public List<string> ExternalFiles { get; set; } = new();
+
+        public Depend() {}
+    }
+
+    public class DependContext : DbContext
+    {
+        public DependContext(DbContextOptions<DependContext> options)
+            : base(options)
+        {
+
+        }
+        internal DbSet<DependEntity> Depends { get; set; }
     }
 
     [PrimaryKey(nameof(PrimaryKey))]
@@ -234,22 +231,5 @@ namespace SB.Core
         public List<DateTime> InputFileTimes { get; init; } = new();
         public List<string> ExternalFiles { get; init; } = new();
         public List<DateTime> ExternalFileTimes { get; init; } = new();
-    }
-
-    public class DependDbDoctor : IDoctor
-    {
-        public bool Check()
-        {
-            using (Profiler.BeginZone("WarmUp | EntityFramework", color: (uint)Profiler.ColorType.WebMaroon))
-            {
-                DependDbContext.WarmUpContext!.FindAsync<DependEntity>("");
-                return true;
-            }
-        }
-
-        public bool Fix()
-        {
-            return true;
-        }
     }
 }

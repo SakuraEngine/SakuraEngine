@@ -33,7 +33,7 @@ namespace SB
             // Batch headers to a source file
             var Headers = Target.FileList<MetaHeaderList>().Files;
             var BatchFile = Path.Combine(BatchDirectory, "ReflectionBatch.cpp");
-            Depend.OnChanged(Target.Name, BatchFile, Name, (Depend depend) => {
+            BS.CppCompileDepends.OnChanged(Target.Name, BatchFile, Name, (Depend depend) => {
                 Directory.CreateDirectory(BatchDirectory);
                 File.WriteAllLines(BatchFile, Headers.Select(H => $"#include \"{H}\""));
                 depend.ExternalFiles.Add(BatchFile);
@@ -66,7 +66,7 @@ namespace SB
                 "-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX15.5.sdk/System/Library/Frameworks"
             );
             // Run meta.exe
-            bool Changed = Depend.OnChanged(Target.Name, MetaAttribute.MetaDirectory, Name, (Depend depend) =>
+            bool Changed = BS.CppCompileDepends.OnChanged(Target.Name, MetaAttribute.MetaDirectory, Name, (Depend depend) =>
             {
                 var EXE = Path.Combine(MetaDoctor.Installation!.Result, BS.HostOS == OSPlatform.Windows ? "meta.exe" : "meta");
 

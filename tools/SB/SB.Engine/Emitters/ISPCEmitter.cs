@@ -22,7 +22,7 @@ namespace SB
                 "--target=host",
                 "--opt=fast-math"
             };
-            bool Changed = Depend.OnChanged(Target.Name, SourceFile, Name, (Depend depend) => {
+            bool Changed = Engine.ConfigureAwareDepend.OnChanged(Target.Name, SourceFile, Name, (Depend depend) => {
                 int ExitCode = BuildSystem.RunProcess(ISPCDoctor.ISPC!, string.Join(" ", Arguments), out var Output, out var Error);
                 if (ExitCode != 0)
                 {
