@@ -2,6 +2,7 @@
 {
     public struct LinkResult : IArtifact
     {
+        public required Target Target { get; init; }
         public string TargetFile { get; init; }
         public string PDBFile { get; init; }
         public bool IsRestored { get; init; }

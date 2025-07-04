@@ -71,7 +71,6 @@ Log.Information($"Execution Total: {sw.ElapsedMilliseconds / 1000.0f}s");
 Log.Information($"Compile Commands Total: {CompileCommandsEmitter.Time / 1000.0f}s");
 Log.Information($"Compile Total: {CppCompileEmitter.Time / 1000.0f}s");
 Log.Information($"Link Total: {CppLinkEmitter.Time / 1000.0f}s");
-Log.CloseAndFlush();
 
 
 if (Categories.HasFlag(TargetCategory.Tool))
@@ -109,3 +108,30 @@ else
     Directory.CreateDirectory(".sb/compile_commands/shaders");
     CppSLEmitter.WriteCompileCommandsToFile(".sb/compile_commands/shaders/compile_commands.json");
 }
+
+if (AllArgs.Contains("test"))
+{
+    var Programs = BuildSystem.Artifacts.Where(a => a is LinkResult)
+        .Select(a => (LinkResult)a)
+        .Where(p => p.Target.HasTags(TargetTags.Tests) && p.Target.GetTargetType() == TargetType.Executable)
+        .ToList();
+
+    Programs.AsParallel().ForAll(program =>
+    {
+        Stopwatch sw = Stopwatch.StartNew();
+        Log.Information("Running test target {TargetName}", program.Target.Name);
+        var result = BuildSystem.RunProcess(program.TargetFile, "", out var output, out var error, null, Path.GetDirectoryName(program.TargetFile));
+        sw.Stop();
+        float Seconds = sw.ElapsedMilliseconds / 1000.0f;
+        if (result != 0)
+        {
+            Log.Error("Test target {TargetName} failed with error: {Error}", program.Target.Name, error);
+        }
+        else
+        {
+            Log.Information("Test target {TargetName} passed, cost {Seconds}s", program.Target.Name, Seconds);
+        }
+    });
+}
+
+Log.CloseAndFlush();

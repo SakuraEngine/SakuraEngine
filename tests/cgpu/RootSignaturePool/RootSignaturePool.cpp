@@ -12,8 +12,8 @@ protected:
     {
         SKR_DECLARE_ZERO(CGPUInstanceDescriptor, desc)
         desc.backend = backend;
-        desc.enable_debug_layer = true;
-        desc.enable_gpu_based_validation = true;
+        desc.enable_debug_layer = false;
+        desc.enable_gpu_based_validation = false;
         desc.enable_set_name = true;
         instance = cgpu_create_instance(&desc);
 

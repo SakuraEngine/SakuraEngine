@@ -73,6 +73,7 @@ namespace SB.Core
 
             return new LinkResult
             {
+                Target = Target,
                 TargetFile = (Driver.Arguments["Output"] as string)!,
                 PDBFile = Driver.Arguments.TryGetValue("PDB", out var args) ? (string)args! : "",
                 IsRestored = !Changed

@@ -40,6 +40,12 @@ jobs:
         if: success() || failure()
         shell: cmd
         run: dotnet run --configuration Release SB build debug verbose ${{ matrix.toolchain }}
+      
+      - name: Test(Debug)
+        if: success() || failure()
+        env:
+          TRACY_NO_INVARIANT_CHECK: 1
+        run: dotnet run --configuration Release SB test verbose ${{ matrix.toolchain }}
 
       - name: BuildTools(Release)
         if: success() || failure()
@@ -51,19 +57,18 @@ jobs:
         shell: cmd
         run: dotnet run --configuration Release SB build release verbose ${{ matrix.toolchain }}
       
-      # - name: TestDebug
-      #   if: success()
-      #   env:
-      #     TRACY_NO_INVARIANT_CHECK: 1
-      #   run: |
-      #     xmake test -g 05.tests/* -vD ... -d yes
+      - name: Test(Release)
+        if: success() || failure()
+        env:
+          TRACY_NO_INVARIANT_CHECK: 1
+        run: dotnet run --configuration Release SB test verbose ${{ matrix.toolchain }}
       
-      # - name: UploadCompileResults
-      #   if: success() || failure()
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
-      #     path: build/windows
+      - name: UploadCompileResults
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
+          path: .build
       
       # - name: RemoveBuildDir
       #   uses: JesseTG/rm@v1.0.3
