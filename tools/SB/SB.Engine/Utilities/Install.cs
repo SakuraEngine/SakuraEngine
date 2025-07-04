@@ -49,7 +49,7 @@ namespace SB
             {
                 using (Profiler.BeginZone($"Install.SDKs | {Name} | Copy", color: (uint)Profiler.ColorType.Pink1))
                 {
-                    Engine.ConfigureNotAwareDepend.OnChanged("Install.SDK.Copy", Name, "Install.SDKs", (Depend depend) =>
+                    Engine.ConfigureAwareDepend.OnChanged("Install.SDK.Copy", Name, "Install.SDKs", (Depend depend) =>
                     {
                         var BuildDirectory = Path.Combine(BS.BuildPath, $"{BS.TargetOS}-{BS.TargetArch}-{BS.GlobalConfiguration}");
                         Directory.CreateDirectory(BuildDirectory);

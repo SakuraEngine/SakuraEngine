@@ -25,7 +25,7 @@ namespace SB
 
             var RunBatch = (FileList FileList, string[] Batch, string BatchName, string Postfix) => {
                 var UnityFile = Path.Combine(UnityFileDirectory, $"unity_build.{BatchName}.{Postfix}");
-                Changed |= BS.CppCompileDepends.OnChanged(Target.Name, UnityFile, this.Name, (Depend depend) => {
+                Changed |= BS.CppCompileDepends(Target).OnChanged(Target.Name, UnityFile, this.Name, (Depend depend) => {
                     var UnityContent = String.Join("\n", Batch.Select(F => $"#include \"{F}\""));
                     File.WriteAllText(UnityFile, UnityContent);
                     depend.ExternalFiles.Add(UnityFile);

@@ -42,7 +42,7 @@ namespace SB.Core
 
             var SourceFile = Driver.Arguments["Source"] as string;
             var ObjectFile = Driver.Arguments["Object"] as string;
-            var Changed = BS.CppCompileDepends.OnChanged(Target.Name, SourceFile!, Emitter.Name, (Depend depend) =>
+            var Changed = BS.CppCompileDepends(Target).OnChanged(Target.Name, SourceFile!, Emitter.Name, (Depend depend) =>
             {
                 int ExitCode = BuildSystem.RunProcess(ExecutablePath, String.Join(" ", CompilerArgsList), out var OutputInfo, out var ErrorInfo, null, WorkDirectory);
                 if (ExitCode != 0)
@@ -88,7 +88,7 @@ namespace SB.Core
 
             var InputFiles = Driver.Arguments["Inputs"] as ArgumentList<string>;
             var OutputFile = Driver.Arguments["Output"] as string;
-            bool Changed = BS.CppCompileDepends.OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
+            bool Changed = BS.CppCompileDepends(Target).OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
             {
                 int ExitCode = BuildSystem.RunProcess(ExecutablePath, String.Join(" ", LinkerArgsList), out var OutputInfo, out var ErrorInfo);
                 if (ExitCode != 0)

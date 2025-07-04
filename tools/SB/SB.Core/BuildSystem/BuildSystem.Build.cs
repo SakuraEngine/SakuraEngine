@@ -470,8 +470,13 @@ namespace SB
             Target.SetAttribute(new CppCompileAttribute());
             Target.SetAttribute(new CppLinkAttribute());
         });
-        public static DependDatabase CppCompileDepends => cppCompileDepends.Value;
-        public static Lazy<DependDatabase> cppCompileDepends = new Lazy<DependDatabase>(() => new DependDatabase("CppCompile." + BuildSystem.GlobalConfiguration));
+        public static DependDatabase CppCompileDepends(Target Target) => Target.IsFromPackage ? pkgCompileDepends.Value : targetCompileDepends.Value;
+        public static Lazy<DependDatabase> pkgCompileDepends = new Lazy<DependDatabase>(
+            () => new DependDatabase(PackageBuildPath, "CppCompile.Paks." + BuildSystem.GlobalConfiguration)
+        );
+        public static Lazy<DependDatabase> targetCompileDepends = new Lazy<DependDatabase>(
+            () => new DependDatabase(BuildPath, "CppCompile.Targets." + BuildSystem.GlobalConfiguration)
+        );
     }
 
     internal static class TargetTaskExtensions

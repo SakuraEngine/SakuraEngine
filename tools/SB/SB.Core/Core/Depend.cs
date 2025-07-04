@@ -177,13 +177,13 @@ namespace SB.Core
             };
         }
 
-        public DependDatabase(string Name)
+        public DependDatabase(string Location, string Name)
         {
             this.Name = Name;
 
             Factory = new(
                 new DbContextOptionsBuilder<DependContext>()
-                    .UseSqlite($"Data Source={Path.Join(BS.BuildPath, Name + ".db")}")
+                    .UseSqlite($"Data Source={Path.Join(Location, Name + ".db")}")
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                     .Options
             );

@@ -39,7 +39,7 @@ namespace SB.Core
 
             var InputFiles = Driver.Arguments["Inputs"] as ArgumentList<string>;
             var OutputFile = Driver.Arguments["Output"] as string;
-            bool Changed = BS.CppCompileDepends.OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
+            bool Changed = BS.CppCompileDepends(Target).OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
             {
                 var StringLength = LinkerArgsList.Sum(x => x.Length);
                 string Arguments = "";
