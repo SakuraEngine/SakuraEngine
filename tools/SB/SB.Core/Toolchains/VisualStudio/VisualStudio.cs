@@ -203,8 +203,16 @@ namespace SB.Core
             {
                 using (Profiler.BeginZone("InitializeVisualStudio", color: (uint)Profiler.ColorType.WebMaroon))
                 {
+                    Stopwatch sw = Stopwatch.StartNew();
+
                     VisualStudio.FindVCVars();
+                    sw.Stop();
+                    Log.Information("Find VCVars took {ElapsedMilliseconds}s", sw.ElapsedMilliseconds / 1000.0f);
+
+                    sw.Restart();
                     VisualStudio.RunVCVars();
+                    sw.Stop();
+                    Log.Information("Run VCVars took {ElapsedMilliseconds}s", sw.ElapsedMilliseconds / 1000.0f);
                     return true;
                 }
             }

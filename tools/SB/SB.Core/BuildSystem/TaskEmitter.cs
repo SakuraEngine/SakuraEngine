@@ -6,7 +6,6 @@ namespace SB
     public enum DependencyModel
     {
         PerTarget,
-        PerFile,
         ExternalTarget
     }
 
