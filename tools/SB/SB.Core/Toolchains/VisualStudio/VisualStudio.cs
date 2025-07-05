@@ -30,54 +30,73 @@ namespace SB.Core
         {
             Log.Information("VisualStudio version ... {VSVersion}", VSVersion);
 
-            var matcher = new Matcher();
+            var fastMatcher = new Matcher();
+            var slowMatcher = new Matcher();
             if (FastFind)
             {
-                matcher.AddIncludePatterns(new[] {
+                fastMatcher.AddIncludePatterns(new[] {
+                    "./Program Files/Microsoft Visual Studio/2022/*/Common7/Tools/vsdevcmd/ext/vcvars.bat",
+                    "./Program Files/Microsoft Visual Studio/2022/*/Common7/Tools/vsdevcmd/core/winsdk.bat"
+                });
+                slowMatcher.AddIncludePatterns(new[] {
                     "./**/Tools/vsdevcmd/ext/vcvars.bat",
                     "./**/Tools/vsdevcmd/core/winsdk.bat"
                 });
             }
             else
             {
-                matcher.AddIncludePatterns(new[] {
+                fastMatcher.AddIncludePatterns(new[] {
+                    "./Program Files/Microsoft Visual Studio/2022/*/VC/Auxiliary/Build/vcvarsall.bat",
+                });
+                slowMatcher.AddIncludePatterns(new[] {
                     "./**/VC/Auxiliary/Build/vcvarsall.bat"
                 });
             }
             foreach (var Disk in Windows.EnumLogicalDrives())
             {
                 bool FoundVS = false;
-                var VersionPostfix = (VSVersion == 2022) ? "/2022" : "";
-                var searchDirectory = $"{Disk}:/Program Files/Microsoft Visual Studio{VersionPostfix}";
-                IEnumerable<string> matchingFiles = matcher.GetResultsInFullPath(searchDirectory);
-                foreach (string file in matchingFiles)
+                var FindWithMatcher = (Matcher matcher) =>
                 {
-                    var FileName = Path.GetFileName(file);
-                    switch (FileName)
+                    var VersionPostfix = (VSVersion == 2022) ? "/2022" : "";
+                    var searchDirectory = $"{Disk}:/Program Files/Microsoft Visual Studio{VersionPostfix}";
+                    IEnumerable<string> matchingFiles = matcher.GetResultsInFullPath(searchDirectory);
+                    foreach (string file in matchingFiles)
                     {
-                        case "vcvarsall.bat":
-                            FoundVS = true;
-                            VCVarsAllBat = file; //file.Contains("Preview") ? file : VCVarsAllBat;
-                            break;
-                        case "vcvars.bat":
-                            FoundVS = true;
-                            VCVarsBat = file; //file.Contains("Preview") ? file : VCVarsBat;
-                            break;
-                        case "winsdk.bat":
-                            FoundVS = true;
-                            WindowsSDKBat = file; //file.Contains("Preview") ? file : WindowsSDKBat;
-                            break;
+                        var FileName = Path.GetFileName(file);
+                        switch (FileName)
+                        {
+                            case "vcvarsall.bat":
+                                FoundVS = true;
+                                VCVarsAllBat = file; //file.Contains("Preview") ? file : VCVarsAllBat;
+                                break;
+                            case "vcvars.bat":
+                                FoundVS = true;
+                                VCVarsBat = file; //file.Contains("Preview") ? file : VCVarsBat;
+                                break;
+                            case "winsdk.bat":
+                                FoundVS = true;
+                                WindowsSDKBat = file; //file.Contains("Preview") ? file : WindowsSDKBat;
+                                break;
+                        }
                     }
+                    return searchDirectory;
+                };
+
+                var SDKRoot = FindWithMatcher(fastMatcher);
+                if (!FoundVS)
+                {
+                    FindWithMatcher(slowMatcher);
                 }
+
                 if (FoundVS)
                 {
                     // "*/Visual Studio/2022/*/**"
                     var SomeBatPath = VCVarsAllBat ?? VCVarsBat;
                     var PayInfo = SomeBatPath!
                         .Replace("\\", "/")
-                        .Replace(searchDirectory, "")
+                        .Replace(SDKRoot, "")
                         .Split('/')[1];
-                    VSInstallDir = $"{searchDirectory}/{PayInfo}/";
+                    VSInstallDir = $"{SDKRoot}/{PayInfo}/";
                     break;
                 }
             }

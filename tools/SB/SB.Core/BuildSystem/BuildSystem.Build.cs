@@ -408,7 +408,8 @@ namespace SB
                     }, TQTS);
             }
 
-            // 处理PerFile任务 - 提交到FQTS调度器
+            await PerTargetEmitterTask;
+
             foreach (var FL in Target.FileLists.ToArray().Where(FL => Emitter.EmitFileTask(Target, FL)))
             {
                 foreach (var File in FL.Files)
@@ -418,8 +419,6 @@ namespace SB
                         new TaskFingerprint { TargetName = Target.Name, File = File, TaskName = Emitter.Name },
                         async () =>
                         {
-                            await PerTargetEmitterTask;
-
                             var FileTaskIndex = Interlocked.Increment(ref _FileTaskCounter);
                             var TaskIndex = Interlocked.Increment(ref _AllTaskCounter);
                             var Percentage = 100.0f * TaskIndex / AllTaskCount;
