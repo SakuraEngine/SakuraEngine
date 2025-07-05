@@ -25,8 +25,9 @@ jobs:
       - name: Checkout Code
         uses: nschloe/action-cached-lfs-checkout@v1
         
-      - name: Cache Artifacts
-        uses: actions/cache@v4
+      - name: Restore Artifacts Cache
+        uses: actions/cache/restore@v4
+        id: restore-cache
         with:
           path: |
             .sb
@@ -55,6 +56,18 @@ jobs:
           TRACY_NO_INVARIANT_CHECK: 1
         run: dotnet run --configuration Release SB test ${{ matrix.configure }} verbose ${{ matrix.toolchain }} sha-depend
       
+      - name: Save Artifacts Cache
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .sb
+            .pkgs
+            .build/.deps
+            .build/.gens
+            .build/.objs
+            .build/resources
+          key: ${{ steps.restore-cache.outputs.cache-primary-key }}
+
       - name: Upload Compile Results
         if: success() || failure()
         uses: actions/upload-artifact@v4
