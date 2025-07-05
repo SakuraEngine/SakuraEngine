@@ -30,21 +30,21 @@ jobs:
       - name: Checkout code
         uses: nschloe/action-cached-lfs-checkout@v1
         
-      # Setup dotnet
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 9.0.x
-          cache: true
-      - run: dotnet restore --locked-mode
-
-      - name: Retrieve cached artifacts
-        uses: actions/cache@v3
+      - name: Restore cached artifacts
+        uses: actions/cache/restore@v3
         with:
           path: |
             .sb
             .pkgs
             .build
           key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}
+
+      # Setup dotnet
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+          cache: true
+      - run: dotnet restore --locked-mode
 
       - name: BuildTools(Debug)
         if: success() || failure()
@@ -78,6 +78,16 @@ jobs:
           TRACY_NO_INVARIANT_CHECK: 1
         run: dotnet run --configuration Release SB test verbose ${{ matrix.toolchain }} sha-depend
       
+      - name: Save cached artifacts
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: |
+            .sb
+            .pkgs
+            .build
+          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}
+
       - name: UploadCompileResults
         if: success() || failure()
         uses: actions/upload-artifact@v4
