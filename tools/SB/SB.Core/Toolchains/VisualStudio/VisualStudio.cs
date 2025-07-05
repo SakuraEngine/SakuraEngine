@@ -33,15 +33,15 @@ namespace SB.Core
             var matcher = new Matcher();
             if (FastFind)
             {
-                matcher.AddIncludePatterns(new[] { 
+                matcher.AddIncludePatterns(new[] {
                     "./**/Tools/vsdevcmd/ext/vcvars.bat",
-                    "./**/Tools/vsdevcmd/core/winsdk.bat" 
+                    "./**/Tools/vsdevcmd/core/winsdk.bat"
                 });
             }
             else
             {
-                matcher.AddIncludePatterns(new[] { 
-                    "./**/VC/Auxiliary/Build/vcvarsall.bat" 
+                matcher.AddIncludePatterns(new[] {
+                    "./**/VC/Auxiliary/Build/vcvarsall.bat"
                 });
             }
             foreach (var Disk in Windows.EnumLogicalDrives())
@@ -80,6 +80,15 @@ namespace SB.Core
                     VSInstallDir = $"{searchDirectory}/{PayInfo}/";
                     break;
                 }
+            }
+            if (FastFind)
+            {
+                Log.Verbose("Found VCVarsAllBat: {VCVarsAllBat}", VCVarsAllBat);
+            }
+            else
+            {
+                Log.Verbose("Found VCVarsBat: {VCVarsBat}", VCVarsBat);
+                Log.Verbose("Found WindowsSDKBat: {WindowsSDKBat}", WindowsSDKBat);
             }
         }
 
