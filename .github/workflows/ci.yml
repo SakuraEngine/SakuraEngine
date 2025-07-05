@@ -43,7 +43,6 @@ jobs:
         with:
           dotnet-version: 9.0.x
           cache: true
-      - run: dotnet restore
 
       - name: BuildTools(Debug)
         if: success() || failure()
