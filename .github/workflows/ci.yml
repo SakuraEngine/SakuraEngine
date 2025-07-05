@@ -8,17 +8,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Windows builds
-          - os: windows-latest
-            arch: x64
-            toolchain: msvc
-          - os: windows-latest
-            arch: x64
-            toolchain: clang-cl
-          # MacOS builds
-          - os: macos-latest
-            arch: arm64
-            toolchain: clang
+          - { os: windows-latest, arch: x64, toolchain: msvc, configure: debug }
+          - { os: windows-latest, arch: x64, toolchain: msvc, configure: release }
+          - { os: windows-latest, arch: x64, toolchain: clang-cl, configure: debug }
+          - { os: windows-latest, arch: x64, toolchain: clang-cl, configure: release }
+          - { os: macos-latest, arch: arm64, toolchain: clang, configure: debug }
+          - { os: macos-latest, arch: arm64, toolchain: clang, configure: release }
 
     name: ${{ matrix.toolchain }} + ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
@@ -37,39 +32,25 @@ jobs:
             .sb
             .pkgs
             .build
-          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}
+          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.configure }}
 
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
 
-      - name: BuildTools(Debug)
-        if: success() || failure()
-        run: dotnet run --configuration Release SB tools debug verbose ${{ matrix.toolchain }} sha-depend
-
-      - name: BuildPrograms(Debug)
-        if: success() || failure()
-        run: dotnet run --configuration Release SB build debug verbose ${{ matrix.toolchain }} sha-depend
-      
-      - name: Test(Debug)
-        if: success() || failure()
-        env:
-          TRACY_NO_INVARIANT_CHECK: 1
-        run: dotnet run --configuration Release SB test verbose ${{ matrix.toolchain }} sha-depend
-
-      - name: BuildTools(Release)
+      - name: BuildTools
         if: success() || failure()
         run: dotnet run --configuration Release SB tools release verbose ${{ matrix.toolchain }} sha-depend
 
-      - name: BuildPrograms(Release)
-        if: success() || failure()
-        run: dotnet run --configuration Release SB build release verbose ${{ matrix.toolchain }} sha-depend
+      - name: BuildPrograms(${{ matrix.configure }})
+        if: success()
+        run: dotnet run --configuration Release SB build ${{ matrix.configure }} verbose ${{ matrix.toolchain }} sha-depend
       
-      - name: Test(Release)
-        if: success() || failure()
+      - name: Test(${{ matrix.configure }})
+        if: success()
         env:
           TRACY_NO_INVARIANT_CHECK: 1
-        run: dotnet run --configuration Release SB test verbose ${{ matrix.toolchain }} sha-depend
+        run: dotnet run --configuration Release SB test ${{ matrix.configure }} verbose ${{ matrix.toolchain }} sha-depend
       
       - name: Save cached artifacts
         uses: actions/cache/save@v3
@@ -79,13 +60,13 @@ jobs:
             .sb
             .pkgs
             .build
-          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}
+          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.configure }}
 
       - name: UploadCompileResults
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.configure }}
           path: |
             .build/
             !.build/.deps/
