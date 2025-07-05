@@ -32,7 +32,7 @@ jobs:
             .sb
             .pkgs
             .build
-          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.configure }}
+          key: CICache-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.toolchain }}-${{ matrix.configure }}
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -60,21 +60,15 @@ jobs:
             .sb
             .pkgs
             .build
-          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.configure }}
+          key: CICache-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.toolchain }}-${{ matrix.configure }}
 
       - name: UploadCompileResults
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
           name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.configure }}
-          path: |
-            .build/
-            !.build/.deps/
-            !.build/.gens/
-            !.build/.objs/
-            !.build/**/*.exp
-            !.build/**/*.ilk
-      
+          path: .build/
+
       # - name: RemoveBuildDir
       #   uses: JesseTG/rm@v1.0.3
       #   with:
