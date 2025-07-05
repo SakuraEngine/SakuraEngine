@@ -26,7 +26,7 @@ jobs:
         uses: nschloe/action-cached-lfs-checkout@v1
         
       - name: Cache Artifacts
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             .sb
@@ -59,6 +59,7 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
+          include-hidden-files: true
           name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.configure }}
           path: ./.build
 
