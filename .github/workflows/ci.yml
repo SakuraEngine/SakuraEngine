@@ -15,7 +15,7 @@ jobs:
           - { os: macos-latest, arch: arm64, toolchain: clang, configure: debug }
           - { os: macos-latest, arch: arm64, toolchain: clang, configure: release }
 
-    name: ${{ matrix.toolchain }} + ${{ matrix.arch }}
+    name: ${{ matrix.os }} + ${{ matrix.toolchain }} + ${{ matrix.arch }} + ${{ matrix.configure }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Upgrade LLVM
