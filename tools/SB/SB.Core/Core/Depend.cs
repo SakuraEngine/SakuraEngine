@@ -251,6 +251,13 @@ namespace SB.Core
             string? SHAString = String.Empty;
             if (!cachedFileSHAs.TryGetValue(FilePath, out SHAString) || CacheMode == CacheMode.NoCache)
             {
+                if (!OperatingSystem.IsWindows())
+                {
+                    var Mode = File.GetUnixFileMode(FilePath);
+                    if (!Mode.HasFlag(UnixFileMode.UserRead))
+                        File.SetUnixFileMode(FilePath, Mode | UnixFileMode.UserRead);
+                }
+
                 byte[] SHA = SHA256.HashData(File.ReadAllBytes(FilePath));
                 SHAString = Convert.ToHexString(SHA).ToLowerInvariant();
                 cachedFileSHAs[FilePath] = SHAString;
