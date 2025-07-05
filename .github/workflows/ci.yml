@@ -24,6 +24,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Upgrade LLVM
+        if: runner.os == 'Windows'
         run: choco upgrade llvm
 
       - name: Checkout code
