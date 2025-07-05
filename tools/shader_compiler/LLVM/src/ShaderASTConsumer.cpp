@@ -1671,7 +1671,7 @@ void ASTConsumer::CheckStageInputs(const clang::FunctionDecl* x, skr::CppSL::Sha
     auto CheckParamTypeIsStageInout = [this](const clang::ParmVarDecl* p) -> bool 
     {
         auto Type = Decay(p->getType()).getTypePtr()->getAsRecordDecl();
-        return Type ? IsStageInout(Type) : false;
+        return Type ? (IsStageInout(Type) != nullptr) : false;
     };
 
     for (auto param : x->parameters())

@@ -1,9 +1,7 @@
-using Microsoft.VisualBasic;
 using SB;
 using SB.Core;
-using System.Runtime.Intrinsics.X86;
 
-[TargetScript]
+[TargetScript(TargetCategory.Package)]
 public static class Freetype
 {
     static Freetype()

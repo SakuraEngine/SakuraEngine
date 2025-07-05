@@ -81,7 +81,8 @@ public:
                     default:
                         continue;
                 }
-                std::wofstream hlsl_file(SourceName.wstring() + func->name() + target_string + L"hlsl");
+                std::filesystem::path output_path = SourceName.wstring() + func->name() + target_string + L"hlsl";
+                std::wofstream hlsl_file(output_path);
                 hlsl_file << hlsl_code;
                 hlsl_file.close();
             }

@@ -1,7 +1,7 @@
 using SB;
 using SB.Core;
 
-[TargetScript]
+[TargetScript(TargetCategory.Package)]
 public static class DaScriptCore
 {
     static DaScriptCore()

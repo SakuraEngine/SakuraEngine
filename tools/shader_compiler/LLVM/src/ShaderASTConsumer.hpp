@@ -6,6 +6,8 @@
 
 namespace skr::CppSL {
 
+struct ASTConsumer;
+
 struct CompileFrontendAction : public clang::ASTFrontendAction 
 {
 public:
@@ -41,14 +43,14 @@ public:
 
 private:
     friend class ASTConsumer;
-    FunctionStack(const clang::FunctionDecl* func, const ASTConsumer* pASTConsumer)
+    FunctionStack(const clang::FunctionDecl* func, const skr::CppSL::ASTConsumer* pASTConsumer)
         : func(func), pASTConsumer(pASTConsumer)
     {
 
     }
 
     const clang::FunctionDecl* func = nullptr;
-    const ASTConsumer* pASTConsumer = nullptr;
+    const skr::CppSL::ASTConsumer* pASTConsumer = nullptr;
     FunctionStack* prev = nullptr;
 };
 

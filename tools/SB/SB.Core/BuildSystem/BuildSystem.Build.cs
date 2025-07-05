@@ -60,7 +60,9 @@ namespace SB
             catch (OperationCanceledException)
             {
                 TaskManager.ForceQuit();
-
+            }
+            finally
+            {
                 bool First = true;
                 TaskFatalError? Fatal = null;
                 while (TaskManager.FatalErrors.TryDequeue(out Fatal))

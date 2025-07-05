@@ -2,6 +2,7 @@ using SB;
 using SB.Core;
 using Serilog;
 using SharpCompress.Archives;
+
 [TargetScript(TargetCategory.Tool)]
 public static class LLVMTools
 {
@@ -49,7 +50,7 @@ public static class LLVMTools
         var LibDir = Path.Combine(Engine.DownloadDirectory, "llvm-" + LLVMDownloader.Version, "lib");
         @this.RTTI(false)
             .IncludeDirs(Visibility.Private, Path.Combine(Engine.DownloadDirectory, "llvm-" + LLVMDownloader.Version, "include"))
-            .LinkDirs(Visibility.Private, LibDir);
+            .LinkDirs(Visibility.Public, LibDir);
 
         var libs = new List<string>();
         if (BuildSystem.HostOS == OSPlatform.OSX)
@@ -62,11 +63,11 @@ public static class LLVMTools
                 var libName = match.Success ? match.Groups[1].Value : Path.GetFileNameWithoutExtension(basename);
                 libs.Add(libName);
             }
-            libs.Remove("LLVM-C");
-            libs.Remove("LTO");
-            libs.Remove("libclang");
-            libs.Remove("Remarks");
-            @this.Link(Visibility.Private, libs.ToArray());
+            @this.Link(Visibility.Public, libs.ToArray());
+
+            @this.Require("zlib", new PackageConfig { Version = new Version(1, 2, 8) })
+                .Depend(Visibility.Public, "zlib@zlib")
+                .Link(Visibility.Public, "pthread", "curses");
         }
         else if (Engine.HostOS == OSPlatform.Windows)
         {

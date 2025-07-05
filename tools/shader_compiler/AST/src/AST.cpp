@@ -554,7 +554,7 @@ const TypeDecl* AST::GetType(const Name& name) const
     auto found = std::find_if(_types.begin(), _types.end(), [&](auto t){ return t->name() == name; });
     if (found != _types.end())
         return *found;
-    throw std::logic_error("Type not found");
+    return nullptr;
 }
 
 template <typename... Args>

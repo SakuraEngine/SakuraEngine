@@ -1,7 +1,7 @@
 using SB;
 using SB.Core;
 
-[TargetScript]
+[TargetScript(TargetCategory.Package)]
 public static class Zlib
 {
     static Zlib()
@@ -27,8 +27,8 @@ public static class Zlib
                 else if (BuildSystem.TargetOS == OSPlatform.OSX)
                 {
                     Target
-                        .LinkDirs(Visibility.Public, "port/zlib/lib/macos/x86_64")
-                        .Link(Visibility.Public, "z");
+                        .LinkDirs(Visibility.Public, "port/zlib/lib/macos/arm64")
+                        .Link(Visibility.Public, "z", "zstd");
                 }
                 else
                 {

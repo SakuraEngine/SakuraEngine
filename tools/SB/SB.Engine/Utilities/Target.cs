@@ -10,9 +10,10 @@ namespace SB
     public enum TargetCategory
     {
         None = 0,
-        Runtime = 1 << 0,
-        DevTime = 1 << 1,
-        Tool = 1 << 2
+        Package = 1 << 0,
+        Runtime = 1 << 1,
+        DevTime = 1 << 2,
+        Tool = 1 << 3
     };
 
     [AttributeUsage(AttributeTargets.Class)]
