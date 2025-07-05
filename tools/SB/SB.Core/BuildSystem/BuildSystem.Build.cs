@@ -414,7 +414,8 @@ namespace SB
 
             foreach (var FL in Target.FileLists.ToArray().Where(FL => Emitter.EmitFileTask(Target, FL)))
             {
-                foreach (var File in FL.Files)
+                var FilesCopy = FL.Files.ToArray();
+                foreach (var File in FilesCopy)
                 {
                     // 为每个文件创建一个任务，提交到FQTS调度器
                     var FileTask = TaskManager.Run(

@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.configure }}
-          path: .build/**/*
+          path: ./.build
 
       # - name: RemoveBuildDir
       #   uses: JesseTG/rm@v1.0.3
