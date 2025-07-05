@@ -15,7 +15,7 @@ jobs:
           - os: windows-latest
             arch: x64
             toolchain: clang-cl
-          # macOS builds
+          # MacOS builds
           - os: macos-latest
             arch: arm64
             toolchain: appleclang
@@ -30,8 +30,14 @@ jobs:
       - name: Checkout code
         uses: nschloe/action-cached-lfs-checkout@v1
         
-      # Cache xmake dependencies
-      - name: Retrieve cached package artifacts
+      # Setup dotnet
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+          cache: true
+      - run: dotnet restore --locked-mode
+
+      - name: Retrieve cached artifacts
         uses: actions/cache@v3
         with:
           path: |
@@ -77,7 +83,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}
-          path: .build
+          path: |
+            .build/
+            !.build/.deps/
+            !.build/.gens/
+            !.build/.objs/
+            !.build/**/*.exp
+            !.build/**/*.ilk
       
       # - name: RemoveBuildDir
       #   uses: JesseTG/rm@v1.0.3
