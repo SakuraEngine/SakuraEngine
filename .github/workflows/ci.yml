@@ -31,8 +31,11 @@ jobs:
           path: |
             .sb
             .pkgs
-            .build
-          key: CICache-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.toolchain }}-${{ matrix.configure }}
+            .build/.deps
+            .build/.gens
+            .build/.objs
+            .build/resources
+          key: CICache-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.arch }}-${{ matrix.configure }}
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -59,7 +62,10 @@ jobs:
           path: |
             .sb
             .pkgs
-            .build
+            .build/.deps
+            .build/.gens
+            .build/.objs
+            .build/resources
           key: CICache-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.toolchain }}-${{ matrix.configure }}
 
       - name: UploadCompileResults
