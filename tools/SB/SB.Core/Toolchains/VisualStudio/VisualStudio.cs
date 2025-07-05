@@ -85,6 +85,7 @@ namespace SB.Core
                 var SDKRoot = FindWithMatcher(fastMatcher);
                 if (!FoundVS)
                 {
+                    Log.Verbose("Fast find failed, trying slow find in {SDKRoot}", SDKRoot);
                     FindWithMatcher(slowMatcher);
                 }
 
