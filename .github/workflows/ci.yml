@@ -22,11 +22,11 @@ jobs:
         if: runner.os == 'Windows'
         run: choco upgrade llvm
 
-      - name: Checkout code
+      - name: Checkout Code
         uses: nschloe/action-cached-lfs-checkout@v1
         
-      - name: Restore cached artifacts
-        uses: actions/cache/restore@v3
+      - name: Cache Artifacts
+        uses: actions/cache@v3
         with:
           path: |
             .sb
@@ -41,11 +41,11 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      - name: BuildTools
+      - name: Build Tools
         if: success() || failure()
         run: dotnet run --configuration Release SB tools release verbose ${{ matrix.toolchain }} sha-depend
 
-      - name: BuildPrograms(${{ matrix.configure }})
+      - name: Build Programs(${{ matrix.configure }})
         if: success()
         run: dotnet run --configuration Release SB build ${{ matrix.configure }} verbose ${{ matrix.toolchain }} sha-depend
       
@@ -55,20 +55,7 @@ jobs:
           TRACY_NO_INVARIANT_CHECK: 1
         run: dotnet run --configuration Release SB test ${{ matrix.configure }} verbose ${{ matrix.toolchain }} sha-depend
       
-      - name: Save cached artifacts
-        uses: actions/cache/save@v3
-        if: always()
-        with:
-          path: |
-            .sb
-            .pkgs
-            .build/.deps
-            .build/.gens
-            .build/.objs
-            .build/resources
-          key: CICache-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.toolchain }}-${{ matrix.configure }}
-
-      - name: UploadCompileResults
+      - name: Upload Compile Results
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
