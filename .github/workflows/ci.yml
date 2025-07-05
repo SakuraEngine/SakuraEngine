@@ -1,18 +1,26 @@
-name: windows-ci
+name: ci
 
 on: [push, pull_request]
 
 jobs:
-  build-windows:
+  ci:
     strategy:
       fail-fast: false
       matrix:
-        os: [ windows-latest ]
-        arch: [ x64 ]
-        cxx: [ cxx20 ]
-        toolchain: [ msvc, clang-cl ]
+        include:
+          # Windows builds
+          - os: windows-latest
+            arch: x64
+            toolchain: msvc
+          - os: windows-latest
+            arch: x64
+            toolchain: clang-cl
+          # macOS builds
+          - os: macos-latest
+            arch: arm64
+            toolchain: appleclang
 
-    name: ${{ matrix.toolchain }} + ${{ matrix.cxx }} + ${{ matrix.arch }}
+    name: ${{ matrix.toolchain }} + ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Upgrade LLVM
@@ -29,7 +37,7 @@ jobs:
             .sb
             .pkgs
             .build
-          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}-1
+          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}
 
       - name: BuildTools(Debug)
         if: success() || failure()
@@ -67,7 +75,7 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
+          name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}
           path: .build
       
       # - name: RemoveBuildDir

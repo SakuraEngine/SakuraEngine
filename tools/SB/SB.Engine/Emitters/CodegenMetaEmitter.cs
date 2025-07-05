@@ -46,6 +46,7 @@ namespace SB
                 $"--root={MetaAttribute.RootDirectory}",
                 "--"
             };
+
             // Compiler arguments
             var ArgsWithoutPCH = Target.Arguments.ToDictionary();
             ArgsWithoutPCH.Remove("UsePCHAST");
@@ -53,18 +54,15 @@ namespace SB
                 .AddArguments(ArgsWithoutPCH)
                 .CalculateArguments()
                 .Values.SelectMany(x => x).ToList();
+
             // Set addon flags            
             CompilerArgs.Add("-Wno-abstract-final-class");
             if (BS.TargetOS == OSPlatform.Windows)
+            {
                 CompilerArgs.Add("--driver-mode=cl");
+            }
             MetaArgs.AddRange(CompilerArgs);
-            MetaArgs.AddRange(
-                "-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX15.5.sdk/usr/include/c++/v1",
-                "-isystem /Library/Developer/CommandLineTools/usr/lib/clang/17/include",
-                "-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX15.5.sdk/usr/include",
-                "-isystem /Library/Developer/CommandLineTools/usr/include",
-                "-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX15.5.sdk/System/Library/Frameworks"
-            );
+
             // Run meta.exe
             bool Changed = BS.CppCompileDepends(Target).OnChanged(Target.Name, MetaAttribute.MetaDirectory, Name, (Depend depend) =>
             {

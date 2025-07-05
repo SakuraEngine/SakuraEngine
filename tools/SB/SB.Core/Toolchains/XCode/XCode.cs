@@ -23,6 +23,7 @@ namespace SB.Core
             var LatestVersion = SDKs.Select(P => Path.GetFileName(P).Replace("MacOSX", "").Replace(".sdk", "")).OrderByDescending(P => P).First();
             SDKVersion = Version.Parse(LatestVersion);
             PlatSDKDirectory = Path.Combine(RootDirectoryToFind, "SDKs", $"MacOSX{SDKVersion}.sdk");
+            DeveloperDirectory = RootDirectoryToFind;
         }
 
         internal void XCRunFind()
@@ -31,6 +32,11 @@ namespace SB.Core
             {
                 BuildSystem.RunProcess("xcrun", "-sdk macosx --show-sdk-path", out string? output, out string? error);
                 PlatSDKDirectory = output.Trim();
+            }
+            if (DeveloperDirectory is null)
+            {
+                BuildSystem.RunProcess("xcrun", "xcode-select --print-path", out string? output, out string? error);
+                DeveloperDirectory = output.Trim();
             }
             if (SDKVersion is null)
             {
@@ -94,8 +100,9 @@ namespace SB.Core
         // /Applications/Xcode*.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX*.*.sdk
         // /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX*.*.sdk
         // From CommandLineTools:
-        // /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/System/Library/Frameworks/CoreFoundation.framework/Versions/A/Headers
+        // /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/
         internal string? PlatSDKDirectory { get; set; }
+        internal string? DeveloperDirectory { get; set; }
         public bool HasClang { get; private set; } = false;
         public string? ClangDirectory { get; private set; }
         public bool HasClangPP { get; private set; } = false;
