@@ -392,7 +392,7 @@ namespace SB
                             var TargetTaskArtifact = Emitter.PerTargetTask(Target);
                             sw.Stop();
 
-                            Log.Verbose("[{Percentage:00.0}%] {EmitterName} {TargetName}", Percentage, Emitter.Name, Target.Name);
+                            // Log.Verbose("[{Percentage:00.0}%] {EmitterName} {TargetName}", Percentage, Emitter.Name, Target.Name);
                             if (TargetTaskArtifact is not null)
                             {
                                 Artifacts.Add(TargetTaskArtifact);
@@ -431,8 +431,7 @@ namespace SB
                                 var FileTaskArtifact = Emitter.PerFileTask(Target, FL, FL.GetFileOptions(File), File);
                                 sw.Stop();
 
-                                Log.Verbose("[{Percentage:00.0}%][{FileTaskIndex}/{FileTaskCount}]: {EmitterName} {TargetName}: {FileName}",
-                                        Percentage, FileTaskIndex, FileTaskCount, Emitter.Name, Target.Name, File);
+                                // Log.Verbose("[{Percentage:00.0}%][{FileTaskIndex}/{FileTaskCount}]: {EmitterName} {TargetName}: {FileName}", Percentage, FileTaskIndex, FileTaskCount, Emitter.Name, Target.Name, File);
                                 if (FileTaskArtifact is not null)
                                 {
                                     Artifacts.Add(FileTaskArtifact);

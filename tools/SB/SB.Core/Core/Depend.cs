@@ -122,6 +122,7 @@ namespace SB.Core
                 }
                 return true;
             }
+            Log.Verbose("Dependency not found for {TargetName} {FileName} {EmitterName}: No previous record", TargetName, FileName, EmitterName);
             return false;
         }
 
