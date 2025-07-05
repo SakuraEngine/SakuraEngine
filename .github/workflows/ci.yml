@@ -18,7 +18,7 @@ jobs:
           # MacOS builds
           - os: macos-latest
             arch: arm64
-            toolchain: appleclang
+            toolchain: clang
 
     name: ${{ matrix.toolchain }} + ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
@@ -42,7 +42,6 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
-          cache: true
 
       - name: BuildTools(Debug)
         if: success() || failure()
