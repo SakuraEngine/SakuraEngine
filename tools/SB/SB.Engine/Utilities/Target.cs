@@ -13,6 +13,7 @@ namespace SB
         Package = 1 << 0,
         Runtime = 1 << 1,
         DevTime = 1 << 2,
+        Tests = 1 << 3,
         Tool = 1 << 3
     };
 

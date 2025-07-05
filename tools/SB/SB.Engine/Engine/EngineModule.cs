@@ -4,22 +4,6 @@ using System.Runtime.CompilerServices;
 namespace SB
 {   
     using BS = BuildSystem;
-    [Flags]
-    public enum TargetTags
-    {
-        None = 0,
-        ThirdParty = 1,
-        Engine = ThirdParty << 1,
-        Render = Engine << 1,
-        GUI = Render << 1,
-        Tool = GUI << 1,
-        DCC = Tool << 1,
-        Experimental = DCC << 1,
-        V8 = Experimental << 1,
-        Lua = V8 << 1,
-        Tests = Lua << 1,
-        Application = Tests << 1,
-    }
 
     public class ModuleAttribute
     {
@@ -94,21 +78,6 @@ namespace SB
             return Target;
         }
 
-        public static void SetTagsUnderDirectory(string Dir, TargetTags Tags, [CallerFilePath] string? Location = null)
-        {
-            if (!Path.IsPathFullyQualified(Dir))
-            {
-                Dir = Path.Combine(Path.GetDirectoryName(Location!)!, Dir);
-                Dir = Path.GetFullPath(Dir);
-            }
-
-            var Matches = BS.AllTargets.Where(KVP => KVP.Value.Directory.StartsWith(Dir)).Select(KVP => KVP.Value);
-            foreach (var Target in Matches)
-            {
-                Target.Tags(Tags);
-            }
-        }
-
         public static bool ShippingOneArchive = false;
         public static bool UseProfile = true;
     }
@@ -180,12 +149,12 @@ namespace SB
             return @this;
         }
 
-        public static Target Tags(this Target @this, TargetTags Tags)
+        public static Target SetCategory(this Target @this, TargetCategory Tags)
         {
-            TargetTags Existed = @this.GetAttribute<TargetTags>();
+            TargetCategory Existed = @this.GetAttribute<TargetCategory>();
             @this.SetAttribute(Tags | Existed, true);
             return @this;
         }
-        public static bool HasTags(this Target @this, TargetTags Tags) => (Tags & @this.GetAttribute<TargetTags>()) == Tags;
+        public static bool IsCategory(this Target @this, TargetCategory Tags) => (Tags & @this.GetAttribute<TargetCategory>()) == Tags;
     }
 }

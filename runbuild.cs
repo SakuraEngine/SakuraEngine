@@ -54,18 +54,6 @@ if (!AllArgs.Contains("shader_only"))
     Engine.AddCompileCommandsEmitter(Toolchain);
 }
 
-Engine.SetTagsUnderDirectory("thirdparty", TargetTags.ThirdParty);
-Engine.SetTagsUnderDirectory("modules/core", TargetTags.Engine);
-Engine.SetTagsUnderDirectory("modules/engine", TargetTags.Engine);
-Engine.SetTagsUnderDirectory("modules/render", TargetTags.Render);
-Engine.SetTagsUnderDirectory("modules/gui", TargetTags.GUI);
-Engine.SetTagsUnderDirectory("modules/dcc", TargetTags.DCC);
-Engine.SetTagsUnderDirectory("modules/devtime", TargetTags.Tool);
-Engine.SetTagsUnderDirectory("modules/tools", TargetTags.Tool);
-Engine.SetTagsUnderDirectory("modules/experimental", TargetTags.Experimental);
-Engine.SetTagsUnderDirectory("samples", TargetTags.Application);
-Engine.SetTagsUnderDirectory("tests", TargetTags.Tests);
-
 Engine.RunBuild();
 
 sw.Stop();
@@ -87,7 +75,7 @@ if (Categories.HasFlag(TargetCategory.Tool))
     {
         if (artifact is LinkResult Program)
         {
-            if (!Program.IsRestored)
+            if (!Program.IsRestored && Program.Target.IsCategory(TargetCategory.Tool))
             {
                 // copy to /.sb/tools
                 if (File.Exists(Program.PDBFile))
@@ -117,7 +105,7 @@ if (AllArgs.Contains("test"))
 {
     var Programs = BuildSystem.Artifacts.Where(a => a is LinkResult)
         .Select(a => (LinkResult)a)
-        .Where(p => p.Target.HasTags(TargetTags.Tests) && p.Target.GetTargetType() == TargetType.Executable)
+        .Where(p => p.Target.IsCategory(TargetCategory.Tests) && p.Target.GetTargetType() == TargetType.Executable)
         .ToList();
 
     Programs.AsParallel().ForAll(program =>

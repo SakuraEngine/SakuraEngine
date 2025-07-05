@@ -48,7 +48,7 @@ namespace SB
                     TargetName = Target.Name,
                     TargetType = (Target.Arguments["TargetType"] as SB.Core.TargetType?)?.ToString() ?? "null",
                     IsPackage = Target.IsFromPackage ? "true" : "false",
-                    Tag = Target.GetAttribute("TargetTags")?.ToString() ?? "",
+                    Category = Target.GetAttribute("TargetCategory")?.ToString() ?? "",
                     ScriptLocation = Target.Location,
                     LineNumber = Target.LineNumber,
                     FileLists = Json.Serialize(FileLists),
@@ -85,7 +85,7 @@ namespace SB
         public required string TargetName { get; set; }
         public required string TargetType { get; set; }
         public required string IsPackage { get; set; }
-        public required string Tag { get; set; }
+        public required string Category { get; set; }
         public required string ScriptLocation { get; set; }
         public required int LineNumber { get; set; }
         public required string FileLists { get; set; }

@@ -56,7 +56,6 @@ public static class RuntimeTests
             .AddCppFiles("proxy/**.cpp");
 
         Engine.Program("V8Test")
-            .Tags(TargetTags.V8)
             .EnableCodegen("v8")
             .AddMetaHeaders("v8/**.hpp")
             .Depend(Visibility.Private, "SkrTestFramework")

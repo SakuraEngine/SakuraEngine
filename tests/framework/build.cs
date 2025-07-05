@@ -29,7 +29,8 @@ namespace SB
                 .UseSharedPCH()
                 .TargetType(TargetType.Executable)
                 .Depend(Visibility.Private, "SkrTestFramework")
-                .Exception(false);
+                .Exception(false)
+                .SetCategory(TargetCategory.Tests);
         }
     }
 }

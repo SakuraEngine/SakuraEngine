@@ -173,7 +173,13 @@ namespace SB
             var Scripts = Types.Where(Type => IsTargetOfCategory(Type, Categories));
             foreach (var Script in Scripts)
             {
+                var PrevTargets = AllTargets.Values.ToHashSet();
                 System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(Script.TypeHandle);
+                var NewTargets = AllTargets.Values.Except(PrevTargets);
+                foreach (var NewTarget in NewTargets)
+                {
+                    NewTarget.SetCategory(Script.GetCustomAttribute<TargetScript>()!.Category);
+                }
             }
         }
         
