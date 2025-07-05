@@ -464,7 +464,7 @@ RC<IGenericBase> build_generic(TypeSignatureView signature)
         {
             if (jumped_modifiers.decayed_pointer_level() > 1)
             {
-                SKR_LOG_FMT_ERROR(u8"invalid type, decayed pointer level must be 0 or 1");
+                SKR_LOG_ERROR(u8"invalid type, decayed pointer level must be 0 or 1");
                 return nullptr;
             }
         }
@@ -511,7 +511,7 @@ RC<IGenericBase> build_generic(TypeSignatureView signature)
         {
             if (jumped_modifiers.is_decayed_pointer())
             {
-                SKR_LOG_FMT_ERROR(u8"generic cannot be pointer type");
+                SKR_LOG_ERROR(u8"generic cannot be pointer type");
                 return nullptr;
             }
         }
@@ -532,7 +532,7 @@ RC<IGenericBase> build_generic(TypeSignatureView signature)
     }
     else
     {
-        SKR_LOG_FMT_ERROR(u8"invalid generic signature, expected TypeId or GenericTypeId");
+        SKR_LOG_ERROR(u8"invalid generic signature, expected TypeId or GenericTypeId");
         return nullptr;
     }
 }

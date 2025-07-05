@@ -11,11 +11,12 @@ namespace SB.Core
             RawArguments.Add("-isysroot");
             RawArguments.Add($"{SDKDirectory}");
 
-            RawArguments.Add($"-isystem {SDKDirectory}/usr/include/c++/v1");
-            RawArguments.Add($"-isystem {SDKDirectory}/usr/include");
-            RawArguments.Add($"-isystem {SDKDirectory}/System/Library/Frameworks");
-            RawArguments.Add($"-isystem {DeveloperDirectory}/usr/lib/clang/{ClangVersion.Major}/include");
-            RawArguments.Add($"-isystem {DeveloperDirectory}/usr/include");
+            // WE MUST KEEP THIS ORDER OTHER WISE IT WILL BREAK THE BUILD!
+            RawArguments.Add($"-isystem {Path.Combine(SDKDirectory, "usr/include/c++/v1")}");
+            RawArguments.Add($"-isystem {Path.Combine(DeveloperDirectory, $"usr/lib/clang/{ClangVersion.Major}/include")}");
+            RawArguments.Add($"-isystem {Path.Combine(SDKDirectory, "usr/include")}");
+            RawArguments.Add($"-isystem {Path.Combine(DeveloperDirectory, "usr/include")}");
+            RawArguments.Add($"-isystem {Path.Combine(SDKDirectory, "System/Library/Frameworks")}");
         }
 
         [TargetProperty]

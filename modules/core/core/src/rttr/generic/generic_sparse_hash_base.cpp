@@ -38,14 +38,14 @@ MemoryTraitsData GenericSparseHashSetStorage::memory_traits_data() const
 uint64_t GenericSparseHashSetStorage::size() const
 {
     SKR_ASSERT(is_valid());
-    auto alignment         = std::max(_inner_alignment, alignof(uint64_t));
+    auto alignment         = std::max(_inner_alignment, (uint64_t)alignof(uint64_t));
     auto padded_inner_size = ::skr::memory::padded_size(_inner_size, alignment); // align inner size
     return padded_inner_size + sizeof(uint64_t) * 2 /* hash + next */;
 }
 uint64_t GenericSparseHashSetStorage::alignment() const
 {
     SKR_ASSERT(is_valid());
-    return std::max(_inner_alignment, alignof(uint64_t));
+    return std::max(_inner_alignment, (uint64_t)alignof(uint64_t));
 }
 
 // operations, used for generic container algorithms
@@ -311,7 +311,7 @@ size_t GenericSparseHashSetStorage::item_hash(const void* dst) const
 {
     SKR_ASSERT(is_valid());
     SKR_ASSERT(dst);
-    auto alignment         = std::max(_inner_alignment, alignof(uint64_t));
+    auto alignment         = std::max(_inner_alignment, (uint64_t)alignof(uint64_t));
     auto padded_inner_size = ::skr::memory::padded_size(_inner_size, alignment); // align inner size
     auto hash_ptr          = ::skr::memory::offset_bytes(dst, padded_inner_size);
     return *static_cast<const size_t*>(hash_ptr);
@@ -320,7 +320,7 @@ size_t& GenericSparseHashSetStorage::item_hash(void* dst) const
 {
     SKR_ASSERT(is_valid());
     SKR_ASSERT(dst);
-    auto alignment         = std::max(_inner_alignment, alignof(uint64_t));
+    auto alignment         = std::max(_inner_alignment, (uint64_t)alignof(uint64_t));
     auto padded_inner_size = ::skr::memory::padded_size(_inner_size, alignment); // align inner size
     auto hash_ptr          = ::skr::memory::offset_bytes(dst, padded_inner_size);
     return *static_cast<size_t*>(hash_ptr);
@@ -329,7 +329,7 @@ uint64_t GenericSparseHashSetStorage::next(const void* dst) const
 {
     SKR_ASSERT(is_valid());
     SKR_ASSERT(dst);
-    auto alignment         = std::max(_inner_alignment, alignof(uint64_t));
+    auto alignment         = std::max(_inner_alignment, (uint64_t)alignof(uint64_t));
     auto padded_inner_size = ::skr::memory::padded_size(_inner_size, alignment); // align inner size
     auto next_ptr          = ::skr::memory::offset_bytes(dst, padded_inner_size + sizeof(size_t));
     return *static_cast<const uint64_t*>(next_ptr);
@@ -338,7 +338,7 @@ uint64_t& GenericSparseHashSetStorage::next(void* dst) const
 {
     SKR_ASSERT(is_valid());
     SKR_ASSERT(dst);
-    auto alignment         = std::max(_inner_alignment, alignof(uint64_t));
+    auto alignment         = std::max(_inner_alignment, (uint64_t)alignof(uint64_t));
     auto padded_inner_size = ::skr::memory::padded_size(_inner_size, alignment); // align inner size
     auto next_ptr          = ::skr::memory::offset_bytes(dst, padded_inner_size + sizeof(size_t));
     return *static_cast<uint64_t*>(next_ptr);

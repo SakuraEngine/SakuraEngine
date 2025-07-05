@@ -322,7 +322,7 @@ struct RTTRRecordBuilder {
         // fill hash
         if constexpr (skr::concepts::HasHasher<T>)
         {
-            extern_method<+[](const T& object) -> size_t {
+            extern_method<+[](const T& object) -> uint64_t {
                 return skr::Hash<T>{}(object);
             }>(SkrCoreExternMethods::Hash);
         }
@@ -634,7 +634,7 @@ struct RTTRPrimitiveBuilder {
         // fill hash
         // if constexpr (skr::concepts::HasHasher<T>)
         {
-            extern_method<+[](const T& object) -> size_t {
+            extern_method<+[](const T& object) -> uint64_t {
                 return skr::Hash<T>{}(object);
             }>(SkrCoreExternMethods::Hash);
         }

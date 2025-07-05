@@ -187,7 +187,7 @@ class _Gen {
         });
 
         if (_any_private_export) {
-          b.$line(`void zz_register_record_${record.name.replaceAll('::', '_')}(struct ::skr::RTTRType* type);`);
+          b.$line(`static void zz_register_record_${record.name.replaceAll('::', '_')}(struct ::skr::RTTRType* type);`);
         }
       }
     })

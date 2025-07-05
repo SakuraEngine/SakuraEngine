@@ -789,7 +789,7 @@ RTTRInvokerHash RTTRType::find_hash() const
 {
     TypeSignatureBuilder tb;
     tb.write_function_signature(1);
-    tb.write_type_id(type_id_of<size_t>()); // return
+    tb.write_type_id(type_id_of<uint64_t>()); // return
     tb.write_const_ref();
     tb.write_type_id(type_id()); // param 1: const T&
     return find_extern_method({ .name = { SkrCoreExternMethods::Hash }, .signature = tb.type_signature_view() });

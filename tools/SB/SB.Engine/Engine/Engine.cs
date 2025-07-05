@@ -101,7 +101,10 @@ namespace SB
 
         public static void AddShaderTaskEmitters(IToolchain Toolchain)
         {
-            Engine.AddTaskEmitter("DXC.Compile", new DXCEmitter());
+            if (BuildSystem.TargetOS == OSPlatform.Windows)
+            {
+                Engine.AddTaskEmitter("DXC.Compile", new DXCEmitter());
+            }
             Engine.AddTaskEmitter("CppSL.Compile", new CppSLEmitter());
         }
 

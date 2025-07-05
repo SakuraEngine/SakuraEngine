@@ -69,11 +69,15 @@ namespace SB
             };
             CompileCommands.Add(SB.Core.Json.Serialize(CMD));
 
-            var OutputFiles = Directory.GetFiles(OutputDirectory, $"{SourceName}.*.*.hlsl");
-            foreach (var HLSL in OutputFiles)
+            if (BuildSystem.TargetOS == OSPlatform.Windows)
             {
-                Changed |= !DXCEmitter.CompileHLSL(Target, HLSL, "", OutputDirectory)!.IsRestored;
+                var OutputFiles = Directory.GetFiles(OutputDirectory, $"{SourceName}.*.*.hlsl");
+                foreach (var HLSL in OutputFiles)
+                {
+                    Changed |= !DXCEmitter.CompileHLSL(Target, HLSL, "", OutputDirectory)!.IsRestored;
+                }
             }
+
             return new PlainArtifact { IsRestored = !Changed };
         }
 
