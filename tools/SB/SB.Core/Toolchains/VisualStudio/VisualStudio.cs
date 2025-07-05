@@ -83,12 +83,12 @@ namespace SB.Core
             }
             if (FastFind)
             {
-                Log.Verbose("Found VCVarsAllBat: {VCVarsAllBat}", VCVarsAllBat);
+                Log.Verbose("Found VCVarsBat: {VCVarsBat}", VCVarsBat);
+                Log.Verbose("Found WindowsSDKBat: {WindowsSDKBat}", WindowsSDKBat);
             }
             else
             {
-                Log.Verbose("Found VCVarsBat: {VCVarsBat}", VCVarsBat);
-                Log.Verbose("Found WindowsSDKBat: {WindowsSDKBat}", WindowsSDKBat);
+                Log.Verbose("Found VCVarsAllBat: {VCVarsAllBat}", VCVarsAllBat);
             }
         }
 
