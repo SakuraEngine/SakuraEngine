@@ -1,10 +1,7 @@
 ﻿using System.Text;
-using System.IO;
 using System.Security.Cryptography;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using SB.Core;
-using System.Security.AccessControl;
 
 namespace SB
 {
@@ -18,21 +15,7 @@ namespace SB
             return $"{Hint}.{Path.GetFileName(File)}.{Convert.ToHexString(SHA)}.{Extension}";
         }
 
-        public static bool CachedFileExists(string Path, out DateTime dateTime)
-        {
-            if (cachedFileExists.TryGetValue(Path, out dateTime))
-                return true;
-            if (File.Exists(Path))
-            {
-                dateTime = File.GetLastWriteTimeUtc(Path);
-                cachedFileExists[Path] = dateTime;
-                return true;
-            }
-            return false;
-        }
-
         public static bool CheckPath(string P, bool MustExist) => Path.IsPathFullyQualified(P) && (!MustExist || Directory.Exists(P));
-        
         public static bool CheckFile(string P, bool MustExist) => Path.IsPathFullyQualified(P) && (!MustExist || File.Exists(P));
 
         public static int RunProcess(string ExecutablePath, string Arguments, out string Output, out string Error, Dictionary<string, string?>? Env = null, string? WorkingDirectory = null)
@@ -90,7 +73,6 @@ namespace SB
             }
         }
 
-        private static ConcurrentDictionary<string, DateTime> cachedFileExists = new();
         public static string DepsStore = ".deps";
         public static string ObjsStore = ".objs";
         public static string GeneratedSourceStore = ".gens";

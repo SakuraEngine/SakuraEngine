@@ -7,6 +7,7 @@ public static class CGPUTests
 {
     static CGPUTests()
     {
+        /*
         if (false)
         {
             var CGPUTests = Engine.UnitTest("CGPUTests")
@@ -39,5 +40,6 @@ public static class CGPUTests
                 CGPUTests.Link(Visibility.Private, "User32");
             }
         }
+        */
     }
 }

@@ -471,10 +471,10 @@ namespace SB
         });
         public static DependDatabase CppCompileDepends(Target Target) => Target.IsFromPackage ? pkgCompileDepends.Value : targetCompileDepends.Value;
         public static Lazy<DependDatabase> pkgCompileDepends = new Lazy<DependDatabase>(
-            () => new DependDatabase(PackageBuildPath, "CppCompile.Paks." + BuildSystem.GlobalConfiguration)
+            () => new DependDatabase(PackageBuildPath!, "CppCompile.Paks." + BuildSystem.GlobalConfiguration)
         );
         public static Lazy<DependDatabase> targetCompileDepends = new Lazy<DependDatabase>(
-            () => new DependDatabase(BuildPath, "CppCompile.Targets." + BuildSystem.GlobalConfiguration)
+            () => new DependDatabase(BuildPath!, "CppCompile.Targets." + BuildSystem.GlobalConfiguration)
         );
     }
 

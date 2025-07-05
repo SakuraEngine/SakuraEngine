@@ -29,39 +29,39 @@ jobs:
             .sb
             .pkgs
             .build
-          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
+          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}-1
 
       - name: BuildTools(Debug)
         if: success() || failure()
         shell: cmd
-        run: dotnet run --configuration Release SB tools debug verbose ${{ matrix.toolchain }}
+        run: dotnet run --configuration Release SB tools debug verbose ${{ matrix.toolchain }} sha-depend
 
       - name: BuildPrograms(Debug)
         if: success() || failure()
         shell: cmd
-        run: dotnet run --configuration Release SB build debug verbose ${{ matrix.toolchain }}
+        run: dotnet run --configuration Release SB build debug verbose ${{ matrix.toolchain }} sha-depend
       
       - name: Test(Debug)
         if: success() || failure()
         env:
           TRACY_NO_INVARIANT_CHECK: 1
-        run: dotnet run --configuration Release SB test verbose ${{ matrix.toolchain }}
+        run: dotnet run --configuration Release SB test verbose ${{ matrix.toolchain }} sha-depend
 
       - name: BuildTools(Release)
         if: success() || failure()
         shell: cmd
-        run: dotnet run --configuration Release SB tools release verbose ${{ matrix.toolchain }}
+        run: dotnet run --configuration Release SB tools release verbose ${{ matrix.toolchain }} sha-depend
 
       - name: BuildPrograms(Release)
         if: success() || failure()
         shell: cmd
-        run: dotnet run --configuration Release SB build release verbose ${{ matrix.toolchain }}
+        run: dotnet run --configuration Release SB build release verbose ${{ matrix.toolchain }} sha-depend
       
       - name: Test(Release)
         if: success() || failure()
         env:
           TRACY_NO_INVARIANT_CHECK: 1
-        run: dotnet run --configuration Release SB test verbose ${{ matrix.toolchain }}
+        run: dotnet run --configuration Release SB test verbose ${{ matrix.toolchain }} sha-depend
       
       - name: UploadCompileResults
         if: success() || failure()

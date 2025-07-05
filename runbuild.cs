@@ -11,6 +11,10 @@ TargetCategory Categories = TargetCategory.None;
 HashSet<string> AllArgs = args.ToHashSet();
 
 BuildSystem.GlobalConfiguration = "debug";
+if (AllArgs.Contains("sha-depend"))
+{
+    Depend.DefaultUseSHAInsteadOfDateTime = true;
+}
 if (AllArgs.Contains("verbose"))
 {
     Engine.LogLevel = LogEventLevel.Verbose;
