@@ -31,10 +31,11 @@ jobs:
         with:
           path: |
             .pkgs
-            .build/.deps
-            .build/.gens
-            .build/.objs
-            .build/resources
+            .build/${{ matrix.toolchain }}/.deps
+            .build/${{ matrix.toolchain }}/.gens
+            .build/${{ matrix.toolchain }}/.objs
+            .build/${{ matrix.toolchain }}/resources
+            .build/${{ matrix.toolchain }}/CppCompile.Targets.${{ matrix.configure }}.db
           key: BuildCache-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.arch }}-${{ matrix.configure }}
 
       - uses: actions/setup-dotnet@v4
@@ -60,10 +61,11 @@ jobs:
         with:
           path: |
             .pkgs
-            .build/.deps
-            .build/.gens
-            .build/.objs
-            .build/resources
+            .build/${{ matrix.toolchain }}/.deps
+            .build/${{ matrix.toolchain }}/.gens
+            .build/${{ matrix.toolchain }}/.objs
+            .build/${{ matrix.toolchain }}/resources
+            .build/${{ matrix.toolchain }}/CppCompile.Targets.${{ matrix.configure }}.db
           key: ${{ steps.restore-cache.outputs.cache-primary-key }}
 
       - name: Upload Compile Results
