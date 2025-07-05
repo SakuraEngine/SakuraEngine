@@ -17,11 +17,11 @@ public static class AsyncTests
         Engine.UnitTest("JobTest")
             .Depend(Visibility.Public, "SkrRT")
             .AddCppFiles("threads/job.cpp");
-            
+
         Engine.UnitTest("Task2Test")
             .Depend(Visibility.Public, "SkrRT")
             .AddCppFiles("task2/**.cpp");
-            
+          
         Engine.UnitTest("MarlTest")
             .EnableUnityBuild()
             .Depend(Visibility.Public, "SkrRT")
