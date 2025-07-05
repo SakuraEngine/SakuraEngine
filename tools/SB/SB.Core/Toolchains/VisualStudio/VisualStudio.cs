@@ -35,8 +35,8 @@ namespace SB.Core
             if (FastFind)
             {
                 fastMatcher.AddIncludePatterns(new[] {
-                    "./Program Files/Microsoft Visual Studio/2022/*/Common7/Tools/vsdevcmd/ext/vcvars.bat",
-                    "./Program Files/Microsoft Visual Studio/2022/*/Common7/Tools/vsdevcmd/core/winsdk.bat"
+                    "*/Common7/Tools/vsdevcmd/ext/vcvars.bat",
+                    "*/Common7/Tools/vsdevcmd/core/winsdk.bat"
                 });
                 slowMatcher.AddIncludePatterns(new[] {
                     "./**/Tools/vsdevcmd/ext/vcvars.bat",
