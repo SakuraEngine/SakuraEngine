@@ -31,7 +31,7 @@ public class CefDoctor : IDoctor
         if (BuildSystem.TargetOS != OSPlatform.Windows)
             return true;
 
-        Install.SDK("cef-6778", new Dictionary<string, string> {
+        Install.SDK("cef-no-dxc-6778", new Dictionary<string, string> {
             { "Release", "./" }, 
             { "Resources", "Resources" }
         }).Wait();
