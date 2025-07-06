@@ -2139,7 +2139,7 @@ inline static bool D3D12Util_UseAccel(CGPUCommandBufferId cmd, const CGPUDescrip
             };
             b.buffer_barriers = &bb;
             b.buffer_barriers_count = 1;
-            cgpu_cmd_resource_barrier(cmd, &b);
+            cgpu_cmd_resource_barrier_d3d12(cmd, &b);
             Set->pBoundAccel->bIsDirty = false;
         }
     }

@@ -955,6 +955,42 @@ void AST::DeclareIntrinstics()
         return (const TypeDecl*)nullptr;
     }, Sample2DParams);
 
+    // Declare Ray tracing related types
+    auto RayType = DeclareBuiltinType(L"Ray", 32, 16);
+    auto CommittedHitType = DeclareBuiltinType(L"CommittedHit", 24, 4);
+    auto TriangleHitType = DeclareBuiltinType(L"TriangleHit", 20, 4);
+    auto ProceduralHitType = DeclareBuiltinType(L"ProceduralHit", 8, 4);
+
+    // RayQuery family concept
+    auto RayQueryFamily = DeclareVarConcept(L"RayQueryFamily", 
+        [this](EVariableQualifier qualifier, const TypeDecl* type) {
+            return (dynamic_cast<const skr::CppSL::RayQueryTypeDecl*>(type) != nullptr);
+        });
+
+    // TraceRayInline intrinsic
+    auto AccelFamily = DeclareVarConcept(L"AccelFamily",
+        [this](EVariableQualifier qualifier, const TypeDecl* type) {
+            return (dynamic_cast<const skr::CppSL::AccelTypeDecl*>(type) != nullptr);
+        });
+    std::array<VarConceptDecl*, 9> TraceRayInlineParams = { RayQueryFamily, AccelFamily, IntScalar, IntScalar, 
+        FloatVector3D, FloatScalar, FloatVector3D, FloatScalar, IntScalar };
+    _intrinstics["TRACE_RAY_INLINE"] = DeclareTemplateFunction(L"trace_ray_inline", VoidType, TraceRayInlineParams);
+
+    // RayQuery methods as intrinsics - all take the RayQuery as first implicit parameter
+    _intrinstics["RAY_QUERY_PROCEED"] = DeclareTemplateMethod(nullptr, L"ray_query_proceed", BoolType, {});
+    _intrinstics["RAY_QUERY_IS_TRIANGLE_CANDIDATE"] = DeclareTemplateMethod(nullptr, L"ray_query_is_triangle_candidate", BoolType, {});
+    _intrinstics["RAY_QUERY_IS_PROCEDURAL_CANDIDATE"] = DeclareTemplateMethod(nullptr, L"ray_query_is_procedural_candidate", BoolType, {});
+    _intrinstics["RAY_QUERY_WORLD_SPACE_RAY"] = DeclareTemplateMethod(nullptr, L"ray_query_world_space_ray", RayType, {});
+    _intrinstics["RAY_QUERY_PROCEDURAL_CANDIDATE_HIT"] = DeclareTemplateMethod(nullptr, L"ray_query_procedural_candidate_hit", ProceduralHitType, {});
+    _intrinstics["RAY_QUERY_TRIANGLE_CANDIDATE_HIT"] = DeclareTemplateMethod(nullptr, L"ray_query_triangle_candidate_hit", TriangleHitType, {});
+    _intrinstics["RAY_QUERY_COMMITTED_HIT"] = DeclareTemplateMethod(nullptr, L"ray_query_committed_hit", CommittedHitType, {});
+    _intrinstics["RAY_QUERY_COMMIT_TRIANGLE"] = DeclareTemplateMethod(nullptr, L"ray_query_commit_triangle", VoidType, {});
+    _intrinstics["RAY_QUERY_TERMINATE"] = DeclareTemplateMethod(nullptr, L"ray_query_terminate", VoidType, {});
+
+    // commit_procedural with float parameter
+    std::array<VarConceptDecl*, 1> CommitProceduralParams = { FloatScalar };
+    _intrinstics["RAY_QUERY_COMMIT_PROCEDURAL"] = DeclareTemplateMethod(nullptr, L"ray_query_commit_procedural", VoidType, CommitProceduralParams);
+
     _intrinstics["WAVE_IS_FIRST_ACTIVE_LANE"] = DeclareTemplateFunction(L"wave_is_first_active_lane", BoolType, {});
     _intrinstics["WAVE_ACTIVE_ALL_EQUAL"] = DeclareTemplateFunction(L"wave_active_all_equal", ReturnBoolVecWithSameDim, OneArithmeticVec);
     _intrinstics["WAVE_ACTIVE_BIT_AND"] = DeclareTemplateFunction(L"wave_active_bit_and", ReturnFirstArgType, OneIntFamily);
