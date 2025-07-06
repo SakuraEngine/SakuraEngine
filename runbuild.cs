@@ -55,15 +55,11 @@ public abstract class CommandBase
     [CmdOption(Name = "sha-depend", ShortName = 's', Help = "Use SHA instead of DateTime for dependency checking", IsRequired = false)]
     public bool UseShaDepend { get; set; }
 
-
     [CmdOption(Name = "category", ShortName = 'c', Help = "Build tools", IsRequired = false)]
     public string Category { get; set; } = "modules";
 
-    [CmdOption(Name = "clang-cl", Help = "Use clang-cl compiler", IsRequired = false)]
-    public bool UseClangCl { get; set; }
-
-    [CmdOption(Name = "msvc", Help = "Use MSVC compiler", IsRequired = false)]
-    public bool UseMsvc { get; set; }
+    [CmdOption(Name = "toolchain", Help = "Toolchain to use", IsRequired = false)]
+    public string ToolchainName { get; set; } = OperatingSystem.IsWindows() ? "clang-cl" : "clang";
 
     [CmdExec]
     public void Exec()
@@ -86,10 +82,14 @@ public abstract class CommandBase
         }
 
         // Set compiler
-        if (UseClangCl)
+        if (ToolchainName == "clang-cl")
             VisualStudio.UseClangCl = true;
-        else if (UseMsvc)
+        else if (ToolchainName == "msvc")
             VisualStudio.UseClangCl = false;
+        else if (ToolchainName == "clang")
+        {
+            ; //XCode.
+        }
 
         // Set configuration based on mode
         BuildSystem.GlobalConfiguration = Mode.ToLower();

@@ -45,17 +45,17 @@ jobs:
 
       - name: Build Tools
         if: success() || failure()
-        run: dotnet run --configuration Release SB build --category=tools --mode=release --verbose --${{ matrix.toolchain }} --sha-depend
+        run: dotnet run --configuration Release SB build --category=tools   --verbose --toolchain=${{ matrix.toolchain }} --sha-depend --mode=release 
 
       - name: Build Programs(${{ matrix.configure }})
         if: success()
-        run: dotnet run --configuration Release SB build --category=modules --mode=${{ matrix.configure }} --verbose --${{ matrix.toolchain }} --sha-depend
+        run: dotnet run --configuration Release SB build --category=modules --verbose --toolchain=${{ matrix.toolchain }} --sha-depend --mode=${{ matrix.configure }} 
 
       - name: Test(${{ matrix.configure }})
         if: success()
         env:
           TRACY_NO_INVARIANT_CHECK: 1
-        run: dotnet run --configuration Release SB test --mode=${{ matrix.configure }} --verbose --${{ matrix.toolchain }} --sha-depend
+        run: dotnet run --configuration Release SB test  --category=modules --verbose --toolchain=${{ matrix.toolchain }} --sha-depend --mode=${{ matrix.configure }} 
 
       - name: Save Artifacts Cache
         uses: actions/cache/save@v4
