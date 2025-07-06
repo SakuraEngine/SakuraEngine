@@ -19,6 +19,11 @@ namespace SB
                     using (Profiler.BeginZone($"Install.Tool | {Name} | Copy", color: (uint)Profiler.ColorType.Pink1))
                     {
                         Directory.CreateDirectory(ToolDirectory);
+                        if (!OperatingSystem.IsWindows())
+                        {
+                            foreach (var F in Directory.GetFiles(ToolDirectory, "*"))
+                                File.SetUnixFileMode(F, UnixFileMode.UserExecute | UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                        }
                         System.IO.Compression.ZipFile.ExtractToDirectory(ZipFile, ToolDirectory, true);
 
                         depend.ExternalFiles.Add(ZipFile);
@@ -39,6 +44,11 @@ namespace SB
                 var ZipFile = await Download.DownloadFile(Name + GetPlatPostfix());
                 using (Profiler.BeginZone($"Install.SDKs | {Name} | Download", color: (uint)Profiler.ColorType.Pink1))
                 {
+                    if (!OperatingSystem.IsWindows())
+                    {
+                        foreach (var F in Directory.GetFiles(IntermediateDirectory, "*"))
+                            File.SetUnixFileMode(F, UnixFileMode.UserExecute | UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                    }
                     System.IO.Compression.ZipFile.ExtractToDirectory(ZipFile, IntermediateDirectory, true);
                     depend.ExternalFiles.Add(ZipFile);
                     depend.ExternalFiles.AddRange(Directory.GetFiles(IntermediateDirectory, "*", SearchOption.AllDirectories));
