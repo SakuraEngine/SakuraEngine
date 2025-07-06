@@ -9,6 +9,17 @@ sw.Start();
 
 TargetCategory Categories = TargetCategory.Package;
 HashSet<string> AllArgs = args.ToHashSet();
+string? SingleTargetName = null;
+
+// Check for single target build syntax: --target=<targetname>
+foreach (var arg in AllArgs)
+{
+    if (arg.StartsWith("--target="))
+    {
+        SingleTargetName = arg.Substring("--target=".Length);
+        break;
+    }
+}
 
 BuildSystem.GlobalConfiguration = "debug";
 if (AllArgs.Contains("sha-depend"))
@@ -54,7 +65,7 @@ if (!AllArgs.Contains("shader_only"))
     Engine.AddCompileCommandsEmitter(Toolchain);
 }
 
-Engine.RunBuild();
+Engine.RunBuild(SingleTargetName);
 
 sw.Stop();
 

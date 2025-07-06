@@ -37,10 +37,14 @@ namespace SB
     
     public partial class BuildSystem
     {
-        public static void UpdateTargetDatabase()
+        public static void UpdateTargetDatabase(ICollection<Target> targetsToBuild)
         {
-            List<TargetEntity> TargetEntities = new (AllTargets.Values.Count);
-            foreach (var Target in AllTargets.Values)
+            var targetsToUpdate = targetsToBuild != null
+                ? AllTargets.Where(t => targetsToBuild.Contains(t.Value)).Select(t => t.Value)
+                : AllTargets.Values;
+                
+            List<TargetEntity> TargetEntities = new (targetsToUpdate.Count());
+            foreach (var Target in targetsToUpdate)
             {
                 var FileLists = Target.FileLists.Select(FL => new KeyValuePair<string, IReadOnlySet<string>>(FL.GetType().Name, FL.Files)).ToDictionary();
                 var Entity = new TargetEntity

@@ -47,14 +47,14 @@ namespace SB
         }
         public static TaskEmitter? GetTaskEmitter(string Name) => TaskEmitters.TryGetValue(Name, out var Found) ? Found : null;
 
-        public static void RunBuild()
+        public static void RunBuild(string? SingleTargetName = null)
         {
             try
             {
                 Log.Verbose("Run Build... ");
                 using (Profiler.BeginZone("RunBuild", color: (uint)Profiler.ColorType.WebPurple))
                 {
-                    RunBuildImpl();
+                    RunBuildImpl(SingleTargetName);
                 }
             }
             catch (OperationCanceledException)
@@ -97,7 +97,20 @@ namespace SB
         private static TaskScheduler TQTS = TaskManager.BuildQTS.ActivateNewQueue(0);
         private static TaskScheduler FQTS = TaskManager.BuildQTS.ActivateNewQueue(1);
 
-        public static void RunBuildImpl()
+        private static void GlobDependencies(Target ToGlob, Dictionary<string, Target> TargetsToBuild)
+        {
+            var DirectDependencies = ToGlob!.Dependencies.Select(d => AllTargets[d]);
+            foreach (var DirectDependency in DirectDependencies)
+            {
+                if (DirectDependency.Dependencies.Count > 0)
+                {
+                    GlobDependencies(DirectDependency, TargetsToBuild);
+                }
+                TargetsToBuild.TryAdd(DirectDependency.Name, DirectDependency);
+            }
+        }
+
+        public static void RunBuildImpl(string? SingleTargetName = null)
         {
             Log.Verbose("Resolving Packages... ");
             using (Profiler.BeginZone($"ResolvePackages", color: (uint)Profiler.ColorType.Yellow))
@@ -115,16 +128,28 @@ namespace SB
                     TargetKVP.Value.ResolveDependencies();
             }
 
+            Dictionary<string, Target> TargetsToBuild = new();
+            if (!String.IsNullOrEmpty(SingleTargetName))
+            {
+                var SingleTarget = GetTarget(SingleTargetName);
+                GlobDependencies(SingleTarget!, TargetsToBuild);
+                TargetsToBuild.Add(SingleTargetName, AllTargets[SingleTargetName]);
+            }
+            else
+            {
+                TargetsToBuild = AllTargets.ToDictionary();
+            }
+
             using (Profiler.BeginZone($"CallAfterLoads", color: (uint)Profiler.ColorType.Green))
             {
-                foreach (var TargetKVP in AllTargets)
+                foreach (var TargetKVP in TargetsToBuild)
                     TargetKVP.Value.CallAllActions(TargetKVP.Value.AfterLoadActions);
             }
 
             Log.Verbose("Resolving Arguments... ");
             using (Profiler.BeginZone($"ResolveArguments", color: (uint)Profiler.ColorType.Pink))
             {
-                Parallel.ForEach(AllTargets.Values,
+                Parallel.ForEach(TargetsToBuild.Values,
                 new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount, TaskScheduler = TQTS },
                 Target =>
                 {
@@ -139,13 +164,13 @@ namespace SB
             Log.Verbose("Sorting... ");
             using (Profiler.BeginZone($"SortTargets", color: (uint)Profiler.ColorType.Purple))
             {
-                SortedTargets = AllTargets.Values.OrderBy(T => T.Dependencies.Count).ToList();
+                SortedTargets = TargetsToBuild.Values.OrderBy(T => T.Dependencies.Count).ToList();
             }
 
             using (Profiler.BeginZone($"UpdateTargetDatabase", color: (uint)Profiler.ColorType.Brown))
             {
                 // TODO: MOVE THIS TO SOMEWHERE ELES
-                UpdateTargetDatabase();
+                UpdateTargetDatabase(SortedTargets);
             }
 
             // == 第一阶段：构建发射器任务计划和依赖图 ==

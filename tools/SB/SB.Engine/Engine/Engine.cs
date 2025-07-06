@@ -108,9 +108,9 @@ namespace SB
             Engine.AddTaskEmitter("CppSL.Compile", new CppSLEmitter());
         }
 
-        public static new void RunBuild()
+        public static new void RunBuild(string? singleTargetName = null)
         {
-            BS.RunBuild();
+            BS.RunBuild(singleTargetName);
         }
 
         public static LogEventLevel LogLevel = LogEventLevel.Information;
