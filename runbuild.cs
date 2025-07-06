@@ -56,12 +56,8 @@ public abstract class CommandBase
     public bool UseShaDepend { get; set; }
 
 
-    [CmdOption(Name = "tools", ShortName = 't', Help = "Build tools", IsRequired = false)]
-    public bool BuildTools { get; set; }
-
-    [CmdOption(Name = "runtime", ShortName = 'r', Help = "Build runtime and devtime targets", IsRequired = false)]
-    public bool BuildRuntime { get; set; } = true;
-
+    [CmdOption(Name = "category", ShortName = 'c', Help = "Build tools", IsRequired = false)]
+    public string Category { get; set; } = "modules";
 
     [CmdOption(Name = "clang-cl", Help = "Use clang-cl compiler", IsRequired = false)]
     public bool UseClangCl { get; set; }
@@ -105,13 +101,13 @@ public abstract class CommandBase
         Log.Information("Build start with configuration: {Configuration}", BuildSystem.GlobalConfiguration);
 
         // Set categories
-        if (BuildRuntime)
+        if (Category == "modules")
         {
             Categories |= TargetCategory.Runtime | TargetCategory.DevTime;
         }
-        if (BuildTools)
+        if (Category == "tools")
         {
-            Categories |= TargetCategory.Tool;
+            Categories = TargetCategory.Tool;
         }
         Log.Information("Build start with categories: {Categories}", Categories);
 

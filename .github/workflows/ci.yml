@@ -45,11 +45,11 @@ jobs:
 
       - name: Build Tools
         if: success() || failure()
-        run: dotnet run --configuration Release SB build --tools --mode=release --verbose --${{ matrix.toolchain }} --sha-depend
+        run: dotnet run --configuration Release SB build --category=tools --mode=release --verbose --${{ matrix.toolchain }} --sha-depend
 
       - name: Build Programs(${{ matrix.configure }})
         if: success()
-        run: dotnet run --configuration Release SB build --runtime --mode=${{ matrix.configure }} --verbose --${{ matrix.toolchain }} --sha-depend
+        run: dotnet run --configuration Release SB build --category=modules --mode=${{ matrix.configure }} --verbose --${{ matrix.toolchain }} --sha-depend
 
       - name: Test(${{ matrix.configure }})
         if: success()
