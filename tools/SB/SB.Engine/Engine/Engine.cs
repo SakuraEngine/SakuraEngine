@@ -16,8 +16,6 @@ namespace SB
         {
             using (Profiler.BeginZone("Bootstrap", color: (uint)Profiler.ColorType.WebMaroon))
             {
-                SetupLogger();
-
                 Log.Verbose("Runs on {HostOS} with {ProcessorCount} logical processors", HostOS, Environment.ProcessorCount);
 
                 IToolchain? Toolchain = null;
@@ -113,8 +111,44 @@ namespace SB
             BS.RunBuild(singleTargetName);
         }
 
+        private static void LoadTargets(TargetCategory Categories)
+        {
+            BS.TargetDefaultSettings += (Target Target) =>
+            {
+                Target.CppVersion("20")
+                    .Exception(false)
+                    .RTTI(false)
+                    .LinkDirs(Visibility.Public, Target.GetBinaryPath());
+                if (BS.TargetOS == OSPlatform.Windows)
+                {
+                    Target.RuntimeLibrary("MD");
+                }
+            };
+
+            var Assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            var Types = Assemblies.AsParallel().SelectMany(A => A.GetTypes());
+            var Scripts = Types.Where(Type => IsTargetOfCategory(Type, Categories));
+            foreach (var Script in Scripts)
+            {
+                var PrevTargets = AllTargets.Values.ToHashSet();
+                System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(Script.TypeHandle);
+                var NewTargets = AllTargets.Values.Except(PrevTargets);
+                foreach (var NewTarget in NewTargets)
+                {
+                    NewTarget.SetCategory(Script.GetCustomAttribute<TargetScript>()!.Category);
+                }
+            }
+        }
+        
+        private static bool IsTargetOfCategory(Type Type, TargetCategory Category)
+        {
+            var TargetAttr = Type.GetCustomAttribute<TargetScript>();
+            if (TargetAttr == null) return false;
+            return (TargetAttr.Category & Category) != 0;
+        }
+
         public static LogEventLevel LogLevel = LogEventLevel.Information;
-        private static void SetupLogger()
+        static Engine()
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             SystemConsoleTheme ConsoleLogTheme = new SystemConsoleTheme(
@@ -152,42 +186,6 @@ namespace SB
                     .WriteTo.Console(restrictedToMinimumLevel: LogLevel, outputTemplate: "{Level:u}: {Message:lj}{NewLine}{Exception}", theme: ConsoleLogTheme)
                 ))
                 .CreateLogger();
-        }
-
-        private static void LoadTargets(TargetCategory Categories)
-        {
-            BS.TargetDefaultSettings += (Target Target) =>
-            {
-                Target.CppVersion("20")
-                    .Exception(false)
-                    .RTTI(false)
-                    .LinkDirs(Visibility.Public, Target.GetBinaryPath());
-                if (BS.TargetOS == OSPlatform.Windows)
-                {
-                    Target.RuntimeLibrary("MD");
-                }
-            };
-
-            var Assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            var Types = Assemblies.AsParallel().SelectMany(A => A.GetTypes());
-            var Scripts = Types.Where(Type => IsTargetOfCategory(Type, Categories));
-            foreach (var Script in Scripts)
-            {
-                var PrevTargets = AllTargets.Values.ToHashSet();
-                System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(Script.TypeHandle);
-                var NewTargets = AllTargets.Values.Except(PrevTargets);
-                foreach (var NewTarget in NewTargets)
-                {
-                    NewTarget.SetCategory(Script.GetCustomAttribute<TargetScript>()!.Category);
-                }
-            }
-        }
-        
-        private static bool IsTargetOfCategory(Type Type, TargetCategory Category)
-        {
-            var TargetAttr = Type.GetCustomAttribute<TargetScript>();
-            if (TargetAttr == null) return false;
-            return (TargetAttr.Category & Category) != 0;
         }
 
         public static DependDatabase ConfigureAwareDepend = new DependDatabase(Engine.TempPath, "Engine.ConfigureAwareDepends." + Engine.GlobalConfiguration);
