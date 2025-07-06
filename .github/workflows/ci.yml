@@ -30,6 +30,7 @@ jobs:
         id: restore-cache
         with:
           path: |
+            .sb/*.db
             .pkgs
             .build/${{ matrix.toolchain }}/.deps
             .build/${{ matrix.toolchain }}/.gens
@@ -60,6 +61,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: |
+            .sb/*.db
             .pkgs
             .build/${{ matrix.toolchain }}/.deps
             .build/${{ matrix.toolchain }}/.gens
