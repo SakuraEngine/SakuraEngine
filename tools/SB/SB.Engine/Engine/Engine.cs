@@ -147,8 +147,7 @@ namespace SB
             return (TargetAttr.Category & Category) != 0;
         }
 
-        public static LogEventLevel LogLevel = LogEventLevel.Information;
-        static Engine()
+        public static void InitializeLogger(LogEventLevel LogLevel = LogEventLevel.Information)
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             SystemConsoleTheme ConsoleLogTheme = new SystemConsoleTheme(

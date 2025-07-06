@@ -4,9 +4,6 @@ using Serilog;
 using Serilog.Events;
 using System.Diagnostics;
 
-// Initialize Engine & SetDirectory
-Engine.SetEngineDirectory(SourceLocation.Directory());
-
 // Main entry point
 var parser = new CommandParser();
 var mainCmd = new MainCommand();
@@ -40,37 +37,31 @@ return exitCode;
 // Main command that holds global options
 public class MainCommand
 {
-    [CmdOption(Name = "verbose", ShortName = 'v', Help = "Enable verbose logging", IsRequired = false)]
-    public bool Verbose { get; set; }
-
     [CmdSub(Name = "build", ShortName = 'b', Help = "Build the project")]
     public BuildCommand Build { get; set; } = new BuildCommand();
 
     [CmdSub(Name = "test", ShortName = 't', Help = "Run tests")]
     public TestCommand Test { get; set; } = new TestCommand();
-
-    [CmdExec]
-    public void Execute()
-    {
-        // If no subcommand is specified, default to build
-        Build.Execute();
-    }
 }
 
-// Build subcommand
-public class BuildCommand
+public abstract class CommandBase
 {
+    [CmdOption(Name = "verbose", ShortName = 'v', Help = "Enable verbose logging", IsRequired = false)]
+    public bool Verbose { get; set; }
+
     [CmdOption(Name = "mode", ShortName = 'm', Help = "Build mode (debug/release)", IsRequired = false)]
     public string Mode { get; set; } = "debug";
 
     [CmdOption(Name = "sha-depend", ShortName = 's', Help = "Use SHA instead of DateTime for dependency checking", IsRequired = false)]
     public bool UseShaDepend { get; set; }
 
+
     [CmdOption(Name = "tools", ShortName = 't', Help = "Build tools", IsRequired = false)]
     public bool BuildTools { get; set; }
 
     [CmdOption(Name = "runtime", ShortName = 'r', Help = "Build runtime and devtime targets", IsRequired = false)]
-    public bool BuildRuntime { get; set; }
+    public bool BuildRuntime { get; set; } = true;
+
 
     [CmdOption(Name = "clang-cl", Help = "Use clang-cl compiler", IsRequired = false)]
     public bool UseClangCl { get; set; }
@@ -78,52 +69,31 @@ public class BuildCommand
     [CmdOption(Name = "msvc", Help = "Use MSVC compiler", IsRequired = false)]
     public bool UseMsvc { get; set; }
 
-    [CmdOption(Name = "shader-only", Help = "Build shaders only", IsRequired = false)]
-    public bool ShaderOnly { get; set; }
-
-    [CmdOption(Name = "target", Help = "Build a single target", IsRequired = false)]
-    public string? SingleTarget { get; set; }
-
-    [CmdOption(Name = "test", Help = "Run tests after build", IsRequired = false)]
-    public bool RunTests { get; set; }
-
     [CmdExec]
-    public void Execute()
+    public void Exec()
     {
         Stopwatch sw = new();
         sw.Start();
 
-        // Configure build settings
-        TargetCategory Categories = TargetCategory.Package;
+        // Use global verbose setting if available
+        LogEventLevel LogLevel = LogEventLevel.Information;
+        if (Verbose)
+        {
+            LogLevel = LogEventLevel.Verbose;
+        }
+        Engine.InitializeLogger(LogLevel);
+        Engine.SetEngineDirectory(SourceLocation.Directory());
 
         if (UseShaDepend)
         {
             Depend.DefaultUseSHAInsteadOfDateTime = true;
         }
 
-        // Use global verbose setting if available
-        var mainCmd = GetMainCommand();
-        if (mainCmd?.Verbose ?? false)
-        {
-            Engine.LogLevel = LogEventLevel.Verbose;
-        }
-
-        // Determine what to build
-        // If neither tools nor runtime is specified, build runtime by default
-        if (!BuildTools && !BuildRuntime)
-        {
-            BuildRuntime = true;
-        }
-
-        if (BuildRuntime)
-        {
-            Categories |= TargetCategory.Runtime | TargetCategory.DevTime;
-        }
-        if (BuildTools)
-        {
-            Categories |= TargetCategory.Tool;
-        }
-        Log.Information("Build start with categories: {Categories}", Categories);
+        // Set compiler
+        if (UseClangCl)
+            VisualStudio.UseClangCl = true;
+        else if (UseMsvc)
+            VisualStudio.UseClangCl = false;
 
         // Set configuration based on mode
         BuildSystem.GlobalConfiguration = Mode.ToLower();
@@ -134,19 +104,47 @@ public class BuildCommand
         }
         Log.Information("Build start with configuration: {Configuration}", BuildSystem.GlobalConfiguration);
 
-        // Set compiler
-        if (UseClangCl)
+        // Set categories
+        if (BuildRuntime)
         {
-            VisualStudio.UseClangCl = true;
+            Categories |= TargetCategory.Runtime | TargetCategory.DevTime;
         }
-        else if (UseMsvc)
+        if (BuildTools)
         {
-            VisualStudio.UseClangCl = false;
+            Categories |= TargetCategory.Tool;
         }
+        Log.Information("Build start with categories: {Categories}", Categories);
 
         // Bootstrap engine
-        var Toolchain = Engine.Bootstrap(SourceLocation.Directory(), Categories);
+        _toolchain = Engine.Bootstrap(SourceLocation.Directory(), Categories);
 
+        OnExecute();
+
+        sw.Stop();
+        Log.Information($"Total: {sw.ElapsedMilliseconds / 1000.0f}s");
+        Log.Information($"Execution Total: {sw.ElapsedMilliseconds / 1000.0f}s");
+        Log.Information($"Compile Commands Total: {CompileCommandsEmitter.Time / 1000.0f}s");
+        Log.Information($"Compile Total: {CppCompileEmitter.Time / 1000.0f}s");
+        Log.Information($"Link Total: {CppLinkEmitter.Time / 1000.0f}s");
+    }
+
+    public abstract void OnExecute();
+    public IToolchain Toolchain => _toolchain!;
+    private IToolchain? _toolchain;
+    protected TargetCategory Categories = TargetCategory.Package;
+}
+
+// Build subcommand
+public class BuildCommand : CommandBase
+{
+    [CmdOption(Name = "shader-only", Help = "Build shaders only", IsRequired = false)]
+    public bool ShaderOnly { get; set; }
+
+    [CmdOption(Name = "target", Help = "Build a single target", IsRequired = false)]
+    public string? SingleTarget { get; set; }
+
+    public override void OnExecute()
+    {
         Engine.AddShaderTaskEmitters(Toolchain);
         if (!ShaderOnly)
         {
@@ -155,14 +153,6 @@ public class BuildCommand
         }
 
         Engine.RunBuild(SingleTarget);
-
-        sw.Stop();
-
-        Log.Information($"Total: {sw.ElapsedMilliseconds / 1000.0f}s");
-        Log.Information($"Execution Total: {sw.ElapsedMilliseconds / 1000.0f}s");
-        Log.Information($"Compile Commands Total: {CompileCommandsEmitter.Time / 1000.0f}s");
-        Log.Information($"Compile Total: {CppCompileEmitter.Time / 1000.0f}s");
-        Log.Information($"Link Total: {CppLinkEmitter.Time / 1000.0f}s");
 
         // Handle post-build tasks
         if (Categories.HasFlag(TargetCategory.Tool))
@@ -200,53 +190,18 @@ public class BuildCommand
             Directory.CreateDirectory(".sb/compile_commands/shaders");
             CppSLEmitter.WriteCompileCommandsToFile(".sb/compile_commands/shaders/compile_commands.json");
         }
-
-        // Run tests if requested
-        if (RunTests)
-        {
-            RunTestsInternal();
-        }
-    }
-
-    private MainCommand? GetMainCommand()
-    {
-        // This is a simple way to access parent command's properties
-        // In a real implementation, you might want to pass this through constructor
-        return null;
-    }
-
-    private void RunTestsInternal()
-    {
-        var Programs = BuildSystem.Artifacts.Where(a => a is LinkResult)
-            .Select(a => (LinkResult)a)
-            .Where(p => p.Target.IsCategory(TargetCategory.Tests) && p.Target.GetTargetType() == TargetType.Executable)
-            .ToList();
-
-        Programs.AsParallel().ForAll(program =>
-        {
-            Stopwatch sw = Stopwatch.StartNew();
-            Log.Information("Running test target {TargetName}", program.Target.Name);
-            var result = BuildSystem.RunProcess(program.TargetFile, "", out var output, out var error, null, Path.GetDirectoryName(program.TargetFile));
-            sw.Stop();
-            float Seconds = sw.ElapsedMilliseconds / 1000.0f;
-            if (result != 0)
-            {
-                Log.Error("Test target {TargetName} failed with error: {Error}", program.Target.Name, error);
-            }
-            else
-            {
-                Log.Information("Test target {TargetName} passed, cost {Seconds}s", program.Target.Name, Seconds);
-            }
-        });
     }
 }
 
 // Test subcommand
-public class TestCommand
+public class TestCommand : CommandBase
 {
-    [CmdExec]
-    public void Execute()
+    public override void OnExecute()
     {
+        // Add necessary emitters for test execution
+        Engine.AddEngineTaskEmitters(Toolchain);
+        Engine.RunBuild();
+
         // This assumes build has already been done
         var Programs = BuildSystem.Artifacts.Where(a => a is LinkResult)
             .Select(a => (LinkResult)a)
