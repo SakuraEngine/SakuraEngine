@@ -7,7 +7,6 @@ using System.Diagnostics;
 // Main entry point
 var parser = new CommandParser();
 var mainCmd = new MainCommand();
-
 // Check if arguments look like they're for the default build command
 // This allows "SB --mode=release" to work as "SB build --mode=release"
 if (args.Length > 0 && !args[0].Equals("build", StringComparison.OrdinalIgnoreCase) && 
@@ -24,15 +23,9 @@ else if (args.Length == 0)
     // No arguments means default to build
     args = new[] { "build" };
 }
-
 // Configure the parser
 parser.MainCmd(mainCmd, "SB", "Sakura Build System", "SB [options] <command> [command-options]");
-
-// Parse and execute
-int exitCode = parser.ParseSync(args);
-
-Log.CloseAndFlush();
-return exitCode;
+return parser.ParseSync(args);
 
 // Main command that holds global options
 public class MainCommand
@@ -122,6 +115,8 @@ public abstract class CommandBase
         Log.Information($"Compile Commands Total: {CompileCommandsEmitter.Time / 1000.0f}s");
         Log.Information($"Compile Total: {CppCompileEmitter.Time / 1000.0f}s");
         Log.Information($"Link Total: {CppLinkEmitter.Time / 1000.0f}s");
+
+        Log.CloseAndFlush();
     }
 
     public abstract void OnExecute();

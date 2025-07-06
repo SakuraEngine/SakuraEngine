@@ -37,7 +37,7 @@ jobs:
             .build/${{ matrix.toolchain }}/.objs
             .build/${{ matrix.toolchain }}/resources
             .build/${{ matrix.toolchain }}/CppCompile.Targets.${{ matrix.configure }}.db
-          key: BuildCache-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.arch }}-${{ matrix.configure }}
+          key: BuildCache-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.toolchain }}-${{ matrix.configure }}
 
       - uses: actions/setup-dotnet@v4
         with:
