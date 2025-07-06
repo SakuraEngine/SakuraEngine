@@ -40,13 +40,13 @@ public class MainCommand
 public abstract class CommandBase
 {
     [CmdOption(Name = "verbose", ShortName = 'v', Help = "Enable verbose logging", IsRequired = false)]
-    public bool Verbose { get; set; }
+    public bool Verbose { get; set; } = false;
 
     [CmdOption(Name = "mode", ShortName = 'm', Help = "Build mode (debug/release)", IsRequired = false)]
     public string Mode { get; set; } = "debug";
 
     [CmdOption(Name = "sha-depend", ShortName = 's', Help = "Use SHA instead of DateTime for dependency checking", IsRequired = false)]
-    public bool UseShaDepend { get; set; }
+    public bool UseShaDepend { get; set; } = false;
 
     [CmdOption(Name = "category", ShortName = 'c', Help = "Build tools", IsRequired = false)]
     public string Category { get; set; } = "modules";
@@ -57,8 +57,7 @@ public abstract class CommandBase
     [CmdExec]
     public void Exec()
     {
-        Stopwatch sw = new();
-        sw.Start();
+        Stopwatch timer = Stopwatch.StartNew();
 
         // Use global verbose setting if available
         LogEventLevel LogLevel = LogEventLevel.Information;
@@ -69,10 +68,9 @@ public abstract class CommandBase
         Engine.InitializeLogger(LogLevel);
         Engine.SetEngineDirectory(SourceLocation.Directory());
 
+        // use sha to check file dependency instead of using last write time 
         if (UseShaDepend)
-        {
             Depend.DefaultUseSHAInsteadOfDateTime = true;
-        }
 
         // Set compiler
         if (ToolchainName == "clang-cl")
@@ -95,27 +93,24 @@ public abstract class CommandBase
 
         // Set categories
         if (Category == "modules")
-        {
             Categories |= TargetCategory.Runtime | TargetCategory.DevTime;
-        }
         if (Category == "tools")
-        {
-            Categories = TargetCategory.Tool;
-        }
+            Categories |= TargetCategory.Tool;
         Log.Information("Build start with categories: {Categories}", Categories);
 
         // Bootstrap engine
         _toolchain = Engine.Bootstrap(SourceLocation.Directory(), Categories);
 
+        // run subcmd exec
         OnExecute();
 
-        sw.Stop();
-        Log.Information($"Total: {sw.ElapsedMilliseconds / 1000.0f}s");
-        Log.Information($"Execution Total: {sw.ElapsedMilliseconds / 1000.0f}s");
+        // stop and dump counters
+        timer.Stop();
+        Log.Information($"Total: {timer.ElapsedMilliseconds / 1000.0f}s");
+        Log.Information($"Execution Total: {timer.ElapsedMilliseconds / 1000.0f}s");
         Log.Information($"Compile Commands Total: {CompileCommandsEmitter.Time / 1000.0f}s");
         Log.Information($"Compile Total: {CppCompileEmitter.Time / 1000.0f}s");
         Log.Information($"Link Total: {CppLinkEmitter.Time / 1000.0f}s");
-
         Log.CloseAndFlush();
     }
 
