@@ -110,6 +110,7 @@ public class LLVMDownloader
         }
         Engine.ConfigureNotAwareDepend.OnChanged("Download-LLVM", "LLVM-" + Version, "LLVMDoctor", (Depend depend) =>
         {
+            Log.Verbose("http handshaking ... from {URL} to {Destination}", URL, Destination);
             using (var Http = new HttpClient(new HttpClientHandler { Proxy = SB.Download.HttpProxyObject.Value }))
             {
                 Log.Information("downloading ... from {URL} to {Destination}", URL, Destination);
@@ -135,6 +136,7 @@ public class LLVMDownloader
             }
             depend.ExternalFiles.Add(Destination);
         }, null, null);
+        Log.Verbose("LLVM SDK Installation complete, version {Version}", Version);
         return true;
     }
 }
