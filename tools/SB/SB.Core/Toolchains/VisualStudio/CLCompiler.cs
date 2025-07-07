@@ -40,6 +40,7 @@ namespace SB.Core
                 TimeoutMilliseconds = 20 * 60 * 1000 // 20 minutes
             };
             BuildSystem.RunProcess(ExePath, "", out var Output, out var Error, Options);
+            Log.Verbose("cl.exe output: {Error}", Error);
             Regex pattern = new Regex(@"\d+(\.\d+)+");
             // FUCK YOU MICROSOFT THIS IS WEIRD, WHY YOU DUMP VERSION THROUGH STDERR
             CLVersion = Version.Parse(pattern.Match(Error).Value);

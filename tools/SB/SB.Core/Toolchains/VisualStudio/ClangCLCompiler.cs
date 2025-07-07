@@ -26,6 +26,7 @@ namespace SB.Core
             int ExitCode = BuildSystem.RunProcess(ExePath, "--version", out var Output, out var Error, Options);
             if (ExitCode == 0)
             {
+                Log.Verbose("clang-cl.exe --version output: {Output}", Output);
                 Regex pattern = new Regex(@"\d+(\.\d+)+");
                 ClangCLVersion = Version.Parse(pattern.Match(Output).Value);
                 Log.Information("clang-cl.exe version ... {ClangCLVersion}", ClangCLVersion);
