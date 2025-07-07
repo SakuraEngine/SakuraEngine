@@ -537,24 +537,6 @@ cgpu_dstorage_submit(dstorage_queue, dstorage_fence);
 cgpu_wait_fences(&dstorage_fence, 1);
 ```
 
-### 厂商扩展
-
-```c
-// NVIDIA 特定功能
-if (cgpu_query_device_feature(device, CGPU_FEATURE_NVIDIA_REFLEX)) {
-    // 启用 NVIDIA Reflex
-    CGPUNVReflexDescriptor reflex_desc = {
-        .mode = CGPU_NV_REFLEX_MODE_LOW_LATENCY_BOOST
-    };
-    cgpu_enable_nvidia_reflex(device, &reflex_desc);
-}
-
-// AMD 特定功能
-if (cgpu_query_device_feature(device, CGPU_FEATURE_AMD_FIDELITYFX)) {
-    // 使用 FidelityFX 功能
-}
-```
-
 ## 性能最佳实践
 
 ### DO - 推荐做法
@@ -603,80 +585,6 @@ if (cgpu_query_device_feature(device, CGPU_FEATURE_AMD_FIDELITYFX)) {
    // 使用专用传输队列进行上传
    // 而不是在图形队列上做所有事情
    ```
-
-## 调试支持
-
-### 对象命名
-
-```c
-// 命名所有对象便于调试
-cgpu_name_object(texture, CGPU_OBJECT_TYPE_TEXTURE, u8"Player Diffuse Map");
-cgpu_name_object(buffer, CGPU_OBJECT_TYPE_BUFFER, u8"Frame Constants");
-```
-
-### 验证层
-
-```c
-// 开发时启用验证
-instance_desc.enable_debug_layer = true;
-instance_desc.enable_gpu_based_validation = true;
-
-// 设置调试回调
-cgpu_set_debug_callback(instance, debug_callback, user_data);
-```
-
-### RenderDoc 集成
-
-```c
-// 标记感兴趣的帧
-cgpu_render_doc_capture_begin(instance);
-render_frame();
-cgpu_render_doc_capture_end(instance);
-```
-
-## 跨平台注意事项
-
-### 坐标系差异
-
-```c
-// Vulkan 的 Y 轴是反的
-if (backend == CGPU_BACKEND_VULKAN) {
-    projection_matrix[1][1] *= -1.0f;
-}
-```
-
-### 纹理格式支持
-
-```c
-// 查询格式支持
-CGPUFormatSupport support;
-cgpu_query_format_support(device, CGPU_FORMAT_BC7_UNORM, &support);
-if (support & CGPU_FORMAT_SUPPORT_TEXTURE) {
-    // 可以使用 BC7 压缩
-}
-```
-
-## 与其他系统集成
-
-### 与 RenderGraph 集成
-
-```c
-// RenderGraph 使用 CGPU 作为后端
-RenderPassContext context;
-CGPURenderPassEncoderId encoder = context.get_encoder();
-// 直接使用 CGPU API
-```
-
-### 与资源系统集成
-
-```c
-// 资源系统加载的纹理可以直接导入
-CGPUTextureDescriptor import_desc = {
-    .native_handle = loaded_texture_handle,
-    .is_import = true
-};
-CGPUTextureId imported = cgpu_create_texture(device, &import_desc);
-```
 
 ## 总结
 
