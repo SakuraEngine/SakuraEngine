@@ -120,7 +120,7 @@ namespace SB.Core
                 {
                     var InputFile = OldDepend?.InputFiles[i];
 
-                    if (!File.Exists(InputFile)) // deleted
+                    if (!CheckFileExist(CacheMode.Cache, InputFile!))
                     {
                         Log.Verbose("Dependency changed for {TargetName} {FileName} {EmitterName}: Input file {InputFile} deleted", ctx.TargetName, ctx.FileName, ctx.EmitterName, InputFile);
                         return false;
@@ -149,6 +149,11 @@ namespace SB.Core
                 {
                     var ExternalFile = OldDepend?.ExternalFiles[i];
 
+                    if (!CheckFileExist(CacheMode.Cache, ExternalFile!))
+                    {
+                        Log.Verbose("Dependency changed for {TargetName} {FileName} {EmitterName}: External file {ExternalFile} deleted", ctx.TargetName, ctx.FileName, ctx.EmitterName, ExternalFile);
+                        return false;
+                    }
                     if (ctx.opt.UseSHA == true)
                     {
                         string SHAString = GetFileSHA(CacheMode.Cache, ExternalFile!, ctx.opt);
