@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using System.Diagnostics;
 using SB.Core;
+using Serilog;
 
 namespace SB
 {
@@ -92,6 +93,7 @@ namespace SB
                             catch { }
                             Output = localOutput;
                             Error = "TimeOut";
+                            Log.Error("Process {ExecutablePath} with arguments {Arguments} timed out after {TimeoutMilliseconds} milliseconds.", ExecutablePath, Arguments, options.TimeoutMilliseconds);
                             return -1;
                         }
                     }
