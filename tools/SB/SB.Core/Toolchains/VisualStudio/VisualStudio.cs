@@ -148,9 +148,7 @@ namespace SB.Core
 
             var oldEnv = EnvReader.Load(oldEnvPath)!;
             VCEnvVariables = EnvReader.Load(newEnvPath)!;
-            bool isInDevEnv = oldEnv.ContainsKey("VSCMD_ARG_TGT_ARCH") || 
-                              oldEnv.ContainsKey("VSINSTALLDIR") ||
-                              oldEnv.ContainsKey("VCINSTALLDIR");
+            bool isInDevEnv = oldEnv.ContainsKey("VSCMD_ARG_TGT_ARCH") || oldEnv.ContainsKey("VSINSTALLDIR") || oldEnv.ContainsKey("VCINSTALLDIR");
 
             HashSet<string> vcPaths;
             var oldPaths = oldEnv["Path"].Split(';').ToHashSet();
