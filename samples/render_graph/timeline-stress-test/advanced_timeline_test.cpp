@@ -1,7 +1,9 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
-#include "SkrRenderGraph/phases/timeline_phase.hpp"
+#include "SkrRenderGraph/phases_v2/schedule_timeline.hpp"
 #include "SkrCore/log.hpp"
 #include <random>
+
+using namespace skr::render_graph;
 
 // 高级Timeline压力测试 - 模拟真实游戏引擎的复杂场景
 class AdvancedTimelineTest
@@ -28,29 +30,30 @@ private:
     // 测试1: 大量并行计算场景
     void test_massively_parallel_scenario()
     {
+
         SKR_LOG_INFO(u8"🧪 Test 1: Massively Parallel Scenario");
         
         auto* graph = skr::render_graph::RenderGraph::create([](auto& builder) {
             builder.frontend_only();
         });
         
-        auto timeline_config = skr::render_graph::TimelinePhaseConfig{};
+        auto timeline_config = skr::render_graph::ScheduleTimelineConfig{};
         timeline_config.enable_async_compute = true;
         timeline_config.enable_copy_queue = true;
         
-        auto* timeline_phase = new skr::render_graph::TimelinePhase(timeline_config);
+        auto* timeline_phase = new skr::render_graph::ScheduleTimeline(timeline_config);
         
         // 创建20个独立的计算Pass（应该全部分配到AsyncCompute队列）
         for (int i = 0; i < 20; ++i) {
             auto buffer = graph->create_buffer([i](auto& graph, auto& builder) {
-                builder.set_name((skr::String(u8"ComputeBuffer_") + skr::String::ToString(i)).c_str())
+                builder.set_name(skr::format(u8"ComputeBuffer_{}", i).c_str())
                        .size(1024 * 1024)
                        .allow_shader_readwrite();
             });
             
             graph->add_compute_pass(
                 [buffer, i](auto& graph, auto& builder) {
-                    builder.set_name((skr::String(u8"ParallelCompute_") + skr::String::ToString(i)).c_str())
+                    builder.set_name(skr::format(u8"ParallelCompute_{}", i).c_str())
                            .readwrite(0, 0, buffer);
                 },
                 [](auto& graph, ComputePassContext& context) {
@@ -106,11 +109,11 @@ private:
             builder.frontend_only();
         });
         
-        auto timeline_config = skr::render_graph::TimelinePhaseConfig{};
+        auto timeline_config = skr::render_graph::ScheduleTimelineConfig{};
         timeline_config.enable_async_compute = true;
         timeline_config.enable_copy_queue = true;
         
-        auto* timeline_phase = new skr::render_graph::TimelinePhase(timeline_config);
+        auto* timeline_phase = new skr::render_graph::ScheduleTimeline(timeline_config);
         
         // 创建一个长依赖链：Graphics -> Compute -> Graphics -> Compute ...
         auto chain_texture = graph->create_texture([](auto& graph, auto& builder) {
@@ -151,7 +154,7 @@ private:
             [chain_texture, chain_buffer](auto& graph, auto& builder) {
                 builder.set_name(u8"ChainStep3_Graphics")
                        .write(0, chain_texture, CGPU_LOAD_ACTION_CLEAR)
-                       .read(u8"chain_buffer", chain_buffer);
+                       .read(u8"chain_buffer", chain_buffer.range(0, ~0));
             },
             [](auto& graph, RenderPassContext& context) {}
         );
@@ -188,11 +191,11 @@ private:
             builder.frontend_only();
         });
         
-        auto timeline_config = skr::render_graph::TimelinePhaseConfig{};
+        auto timeline_config = skr::render_graph::ScheduleTimelineConfig{};
         timeline_config.enable_async_compute = true;
         timeline_config.enable_copy_queue = true;
         
-        auto* timeline_phase = new skr::render_graph::TimelinePhase(timeline_config);
+        auto* timeline_phase = new skr::render_graph::ScheduleTimeline(timeline_config);
         
         // 创建各种类型的Pass混合
         std::vector<skr::render_graph::PassHandle> passes;
@@ -200,7 +203,7 @@ private:
         // 10个Render Pass
         for (int i = 0; i < 10; ++i) {
             auto texture = graph->create_texture([i](auto& graph, auto& builder) {
-                builder.set_name((skr::String(u8"RenderTarget_") + skr::String::ToString(i)).c_str())
+                builder.set_name(skr::format(u8"RenderTarget_{}", i).c_str())
                        .extent(512, 512)
                        .format(CGPU_FORMAT_R8G8B8A8_UNORM)
                        .allow_render_target();
@@ -208,7 +211,7 @@ private:
             
             passes.push_back(graph->add_render_pass(
                 [texture, i](auto& graph, auto& builder) {
-                    builder.set_name((skr::String(u8"RenderPass_") + skr::String::ToString(i)).c_str())
+                    builder.set_name(skr::format(u8"RenderPass_{}", i).c_str())
                            .write(0, texture, CGPU_LOAD_ACTION_CLEAR);
                 },
                 [](auto& graph, RenderPassContext& context) {}
@@ -218,14 +221,14 @@ private:
         // 15个Compute Pass（混合有/无Graphics依赖）
         for (int i = 0; i < 15; ++i) {
             auto buffer = graph->create_buffer([i](auto& graph, auto& builder) {
-                builder.set_name((skr::String(u8"ComputeBuffer_") + skr::String::ToString(i)).c_str())
+                builder.set_name(skr::format(u8"ComputeBuffer_{}", i).c_str())
                        .size(1024 * 1024)
                        .allow_shader_readwrite();
             });
             
             passes.push_back(graph->add_compute_pass(
                 [buffer, i](auto& graph, auto& builder) {
-                    builder.set_name((skr::String(u8"ComputePass_") + skr::String::ToString(i)).c_str())
+                    builder.set_name(skr::format(u8"ComputePass_{}", i).c_str())
                            .readwrite(0, 0, buffer);
                 },
                 [](auto& graph, ComputePassContext& context) {}
@@ -235,20 +238,20 @@ private:
         // 5个Copy Pass
         for (int i = 0; i < 5; ++i) {
             auto src_texture = graph->create_texture([i](auto& graph, auto& builder) {
-                builder.set_name((skr::String(u8"CopySrc_") + skr::String::ToString(i)).c_str())
+                builder.set_name(skr::format(u8"CopySrc_{}", i).c_str())
                        .extent(256, 256)
                        .format(CGPU_FORMAT_R8G8B8A8_UNORM);
             });
             
             auto dst_texture = graph->create_texture([i](auto& graph, auto& builder) {
-                builder.set_name((skr::String(u8"CopyDst_") + skr::String::ToString(i)).c_str())
+                builder.set_name(skr::format(u8"CopyDst_{}", i).c_str())
                        .extent(256, 256)
                        .format(CGPU_FORMAT_R8G8B8A8_UNORM);
             });
             
             passes.push_back(graph->add_copy_pass(
                 [src_texture, dst_texture, i](auto& graph, auto& builder) {
-                    builder.set_name((skr::String(u8"CopyPass_") + skr::String::ToString(i)).c_str())
+                    builder.set_name(skr::format(u8"CopyPass_{}", i).c_str())
                            .can_be_lone()
                            .texture_to_texture(src_texture, dst_texture);
                 },
@@ -279,11 +282,11 @@ private:
             builder.frontend_only();
         });
         
-        auto timeline_config = skr::render_graph::TimelinePhaseConfig{};
+        auto timeline_config = skr::render_graph::ScheduleTimelineConfig{};
         timeline_config.enable_async_compute = true;
         timeline_config.enable_copy_queue = true;
         
-        auto* timeline_phase = new skr::render_graph::TimelinePhase(timeline_config);
+        auto* timeline_phase = new skr::render_graph::ScheduleTimeline(timeline_config);
         
         // 创建大量资源
         std::vector<skr::render_graph::TextureHandle> textures;
@@ -292,7 +295,7 @@ private:
         // 50个纹理
         for (int i = 0; i < 50; ++i) {
             textures.push_back(graph->create_texture([i](auto& graph, auto& builder) {
-                builder.set_name((skr::String(u8"HeavyTexture_") + skr::String::ToString(i)).c_str())
+                builder.set_name(skr::format(u8"HeavyTexture_{}", i).c_str())
                        .extent(1024, 1024)
                        .format(CGPU_FORMAT_R8G8B8A8_UNORM)
                        .allow_render_target()
@@ -303,7 +306,7 @@ private:
         // 30个缓冲区
         for (int i = 0; i < 30; ++i) {
             buffers.push_back(graph->create_buffer([i](auto& graph, auto& builder) {
-                builder.set_name((skr::String(u8"HeavyBuffer_") + skr::String::ToString(i)).c_str())
+                builder.set_name(skr::format(u8"HeavyBuffer_{}", i).c_str())
                        .size(10 * 1024 * 1024)  // 10MB每个
                        .allow_shader_readwrite();
             }));
@@ -321,8 +324,8 @@ private:
                 int tex_idx = texture_dist(rng);
                 graph->add_render_pass(
                     [this, textures, tex_idx, pass_idx](auto& graph, auto& builder) {
-                        builder.set_name((skr::String(u8"HeavyRender_") + skr::String::ToString(pass_idx)).c_str())
-                               .write(0, textures[tex_idx].rtv());
+                        builder.set_name(skr::format(u8"HeavyRender_{}", pass_idx).c_str())
+                               .write(0, textures[tex_idx]);
                         
                         // 随机读取其他纹理
                         std::uniform_int_distribution<> read_count_dist(0, 3);
@@ -331,7 +334,7 @@ private:
                             std::uniform_int_distribution<> read_tex_dist(0, textures.size() - 1);
                             int read_tex = read_tex_dist(rng);
                             if (read_tex != tex_idx) {
-                                builder.read(r, 0, textures[read_tex].srv());
+                                builder.read(r, 0, textures[read_tex]);
                             }
                         }
                     },
@@ -341,8 +344,8 @@ private:
                 int buf_idx = buffer_dist(rng);
                 graph->add_compute_pass(
                     [this, buffers, buf_idx, pass_idx](auto& graph, auto& builder) {
-                        builder.set_name((skr::String(u8"HeavyCompute_") + skr::String::ToString(pass_idx)).c_str())
-                               .readwrite(0, 0, buffers[buf_idx].uav());
+                        builder.set_name(skr::format(u8"HeavyCompute_{}", pass_idx).c_str())
+                               .readwrite(0, 0, buffers[buf_idx]);
                         
                         // 随机读取其他缓冲区
                         std::uniform_int_distribution<> read_count_dist(0, 2);
@@ -351,7 +354,7 @@ private:
                             std::uniform_int_distribution<> read_buf_dist(0, buffers.size() - 1);
                             int read_buf = read_buf_dist(rng);
                             if (read_buf != buf_idx) {
-                                builder.read(r, 1, buffers[read_buf].srv());
+                                builder.read(r, 1, buffers[read_buf]);
                             }
                         }
                     },
@@ -363,9 +366,9 @@ private:
                 if (src_idx != dst_idx) {
                     graph->add_copy_pass(
                         [textures, src_idx, dst_idx, pass_idx](auto& graph, auto& builder) {
-                            builder.set_name((skr::String(u8"HeavyCopy_") + skr::String::ToString(pass_idx)).c_str())
+                            builder.set_name(skr::format(u8"HeavyCopy_{}", pass_idx).c_str())
                                    .can_be_lone()
-                                   .texture_to_texture(textures[src_idx].srv(), textures[dst_idx].srv());
+                                   .texture_to_texture(textures[src_idx], textures[dst_idx]);
                         },
                         [](auto& graph, auto& executor) {}
                     );
@@ -396,7 +399,7 @@ private:
                 builder.frontend_only();
             });
             
-            auto* timeline_phase = new skr::render_graph::TimelinePhase();
+            auto* timeline_phase = new skr::render_graph::ScheduleTimeline();
             
             timeline_phase->on_initialize(graph);
             timeline_phase->on_execute(graph, nullptr);
@@ -417,7 +420,7 @@ private:
                 builder.frontend_only();
             });
             
-            auto* timeline_phase = new skr::render_graph::TimelinePhase();
+            auto* timeline_phase = new skr::render_graph::ScheduleTimeline();
             
             auto final_texture = graph->create_texture([](auto& graph, auto& builder) {
                 builder.set_name(u8"FinalTexture")
@@ -447,11 +450,11 @@ private:
                 builder.frontend_only();
             });
             
-            auto timeline_config = skr::render_graph::TimelinePhaseConfig{};
+            auto timeline_config = skr::render_graph::ScheduleTimelineConfig{};
             timeline_config.enable_async_compute = false;
             timeline_config.enable_copy_queue = false;
             
-            auto* timeline_phase = new skr::render_graph::TimelinePhase(timeline_config);
+            auto* timeline_phase = new skr::render_graph::ScheduleTimeline(timeline_config);
             
             // 添加各种Pass，应该全部分配到Graphics队列
             auto texture = graph->create_texture([](auto& graph, auto& builder) {

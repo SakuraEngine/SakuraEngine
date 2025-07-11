@@ -98,7 +98,6 @@ void SkrNativeDevice::render_all_windows() SKR_NOEXCEPT
     }
 
     // commit render graph
-    render_graph->compile();
     auto frame_index = render_device()->render_graph()->execute();
 
     // TODO: 更优雅地回收垃圾

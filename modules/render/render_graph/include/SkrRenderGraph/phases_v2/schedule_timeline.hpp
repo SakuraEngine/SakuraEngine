@@ -29,7 +29,7 @@ struct QueueCapabilities
     CGPUQueueId queue_handle = nullptr;  // 队列句柄
 };
 
-// 同步需求 - TimelinePhase的调度输出
+// 同步需求 - ScheduleTimeline的调度输出
 struct SyncRequirement 
 {
     uint32_t signal_queue_index;    // 发信号的队列
@@ -47,7 +47,7 @@ struct QueueScheduleInfo
     skr::Vector<PassNode*> scheduled_passes;    // 调度的Pass序列
 };
 
-// TimelinePhase的输出结果
+// ScheduleTimeline的输出结果
 struct TimelineScheduleResult 
 {
     skr::Vector<QueueScheduleInfo> queue_schedules;    // 各队列的调度信息
@@ -74,7 +74,7 @@ struct CrossQueueDependency
 };
 
 // Timeline Phase 配置
-struct TimelinePhaseConfig 
+struct ScheduleTimelineConfig 
 {
     bool enable_async_compute = true;       // 启用异步计算
     bool enable_copy_queue = true;          // 启用拷贝队列
@@ -84,11 +84,11 @@ struct TimelinePhaseConfig
 };
 
 // Timeline Phase - 负责多队列调度
-class SKR_RENDER_GRAPH_API TimelinePhase : public IRenderGraphPhase 
+class SKR_RENDER_GRAPH_API ScheduleTimeline : public IRenderGraphPhase 
 {
 public:
-    TimelinePhase(const TimelinePhaseConfig& config = {});
-    ~TimelinePhase() override;
+    ScheduleTimeline(const ScheduleTimelineConfig& config = {});
+    ~ScheduleTimeline() override;
 
     // IRenderGraphPhase 接口
     void on_execute(RenderGraph* graph, RenderGraphProfiler* profiler) SKR_NOEXCEPT override;
@@ -120,7 +120,7 @@ private:
 
 
 private:
-    TimelinePhaseConfig config;
+    ScheduleTimelineConfig config;
     
     // 动态队列信息 - 支持多计算队列
     skr::Vector<QueueCapabilities> available_queues;  // 所有可用队列

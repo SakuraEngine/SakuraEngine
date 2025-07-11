@@ -1,6 +1,6 @@
 #include "SkrBase/config/platform.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
-#include "SkrRenderGraph/phases/timeline_phase.hpp"
+#include "SkrRenderGraph/phases_v2/schedule_timeline.hpp"
 #include "SkrCore/log.hpp"
 #include "SkrCore/memory/memory.h"
 
@@ -60,12 +60,12 @@ public:
             });
 
         // 添加TimelinePhase
-        auto timeline_config = skr::render_graph::TimelinePhaseConfig{};
+        auto timeline_config = skr::render_graph::ScheduleTimelineConfig{};
         timeline_config.enable_async_compute = true;
         timeline_config.enable_copy_queue = true;
         timeline_config.max_sync_points = 128;
 
-        auto* timeline_phase = new skr::render_graph::TimelinePhase(timeline_config);
+        auto* timeline_phase = new skr::render_graph::ScheduleTimeline(timeline_config);
 
         // 构建复杂的渲染管线
         build_complex_pipeline(graph);

@@ -1,23 +1,19 @@
-#include "SkrCore/log.hpp"
 #include "SkrGraphics/api.h"
-#include "SkrRenderGraph/phases/timeline_phase.hpp"
+#include "SkrRenderGraph/phases_v2/schedule_timeline.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
-#include "SkrRenderGraph/backend/graph_backend.hpp"
-#include "SkrContainers/string.hpp"
-#include <algorithm>
 
 namespace skr {
 namespace render_graph {
 
-TimelinePhase::TimelinePhase(const TimelinePhaseConfig& cfg)
+ScheduleTimeline::ScheduleTimeline(const ScheduleTimelineConfig& cfg)
     : config(cfg)
 {
 }
 
-TimelinePhase::~TimelinePhase() = default;
+ScheduleTimeline::~ScheduleTimeline() = default;
 
-void TimelinePhase::on_initialize(RenderGraph* graph) SKR_NOEXCEPT
+void ScheduleTimeline::on_initialize(RenderGraph* graph) SKR_NOEXCEPT
 {
     // 查询队列能力
     query_queue_capabilities(graph);
@@ -28,7 +24,7 @@ void TimelinePhase::on_initialize(RenderGraph* graph) SKR_NOEXCEPT
     schedule_result.pass_queue_assignments.clear();
 }
 
-void TimelinePhase::on_finalize(RenderGraph* graph) SKR_NOEXCEPT
+void ScheduleTimeline::on_finalize(RenderGraph* graph) SKR_NOEXCEPT
 {
     // 清理分配的Fence资源
     for (auto& requirement : schedule_result.sync_requirements) {
@@ -42,7 +38,7 @@ void TimelinePhase::on_finalize(RenderGraph* graph) SKR_NOEXCEPT
     clear_frame_data();
 }
 
-void TimelinePhase::clear_frame_data() SKR_NOEXCEPT
+void ScheduleTimeline::clear_frame_data() SKR_NOEXCEPT
 {
     // 清理调度结果
     schedule_result.queue_schedules.clear();
@@ -55,9 +51,9 @@ void TimelinePhase::clear_frame_data() SKR_NOEXCEPT
     pass_preferred_queue.clear();
 }
 
-void TimelinePhase::on_execute(RenderGraph* graph, RenderGraphProfiler* profiler) SKR_NOEXCEPT
+void ScheduleTimeline::on_execute(RenderGraph* graph, RenderGraphProfiler* profiler) SKR_NOEXCEPT
 {
-    SKR_LOG_DEBUG(u8"TimelinePhase: Starting timeline scheduling and fence allocation");
+    SKR_LOG_DEBUG(u8"ScheduleTimeline: Starting timeline scheduling and fence allocation");
     
     // 0. 清空上一帧的数据 - RG中的资源和Pass每帧都不稳定
     clear_frame_data();
@@ -77,11 +73,11 @@ void TimelinePhase::on_execute(RenderGraph* graph, RenderGraphProfiler* profiler
     // 5. 分配Fence对象
     allocate_fences(graph);
     
-    SKR_LOG_DEBUG(u8"TimelinePhase: Scheduling completed. Queues: %d, SyncRequirements: %d", 
+    SKR_LOG_DEBUG(u8"ScheduleTimeline: Scheduling completed. Queues: %d, SyncRequirements: %d", 
                   (int)schedule_result.queue_schedules.size(), (int)schedule_result.sync_requirements.size());
 }
 
-void TimelinePhase::query_queue_capabilities(RenderGraph* graph) SKR_NOEXCEPT
+void ScheduleTimeline::query_queue_capabilities(RenderGraph* graph) SKR_NOEXCEPT
 {
     // 清空队列信息
     available_queues.clear();
@@ -126,12 +122,12 @@ void TimelinePhase::query_queue_capabilities(RenderGraph* graph) SKR_NOEXCEPT
         }
     }
     
-    SKR_LOG_DEBUG(u8"TimelinePhase: Queue capabilities - Graphics: %s, AsyncCompute: %d queues, Copy: %d queues",
+    SKR_LOG_DEBUG(u8"ScheduleTimeline: Queue capabilities - Graphics: %s, AsyncCompute: %d queues, Copy: %d queues",
                   graphics_queue_index != UINT32_MAX ? u8"✓" : u8"✗",
                   (int)compute_queue_indices.size(), (int)copy_queue_indices.size());
 }
 
-void TimelinePhase::analyze_dependencies(RenderGraph* graph) SKR_NOEXCEPT
+void ScheduleTimeline::analyze_dependencies(RenderGraph* graph) SKR_NOEXCEPT
 {
     dependency_info.clear();
     
@@ -170,7 +166,7 @@ void TimelinePhase::analyze_dependencies(RenderGraph* graph) SKR_NOEXCEPT
     }
 }
 
-void TimelinePhase::classify_passes(RenderGraph* graph) SKR_NOEXCEPT
+void ScheduleTimeline::classify_passes(RenderGraph* graph) SKR_NOEXCEPT
 {
     auto& passes = get_passes(graph);
     
@@ -181,7 +177,7 @@ void TimelinePhase::classify_passes(RenderGraph* graph) SKR_NOEXCEPT
     }
 }
 
-ERenderGraphQueueType TimelinePhase::classify_pass(PassNode* pass) SKR_NOEXCEPT
+ERenderGraphQueueType ScheduleTimeline::classify_pass(PassNode* pass) SKR_NOEXCEPT
 {
     // 1. Present Pass必须在Graphics队列
     if (pass->pass_type == EPassType::Present) {
@@ -227,7 +223,7 @@ ERenderGraphQueueType TimelinePhase::classify_pass(PassNode* pass) SKR_NOEXCEPT
     return ERenderGraphQueueType::Graphics;
 }
 
-bool TimelinePhase::can_run_on_queue(PassNode* pass, ERenderGraphQueueType queue) SKR_NOEXCEPT
+bool ScheduleTimeline::can_run_on_queue(PassNode* pass, ERenderGraphQueueType queue) SKR_NOEXCEPT
 {
     switch (queue) {
         case ERenderGraphQueueType::Graphics:
@@ -241,7 +237,7 @@ bool TimelinePhase::can_run_on_queue(PassNode* pass, ERenderGraphQueueType queue
     }
 }
 
-bool TimelinePhase::can_run_on_queue_index(PassNode* pass, uint32_t queue_index) SKR_NOEXCEPT
+bool ScheduleTimeline::can_run_on_queue_index(PassNode* pass, uint32_t queue_index) SKR_NOEXCEPT
 {
     if (queue_index >= available_queues.size()) return false;
     
@@ -255,7 +251,7 @@ bool TimelinePhase::can_run_on_queue_index(PassNode* pass, uint32_t queue_index)
     }
 }
 
-bool TimelinePhase::has_graphics_resource_dependency(PassNode* pass) SKR_NOEXCEPT
+bool ScheduleTimeline::has_graphics_resource_dependency(PassNode* pass) SKR_NOEXCEPT
 {
     bool has_graphics_dep = false;
     
@@ -273,7 +269,7 @@ bool TimelinePhase::has_graphics_resource_dependency(PassNode* pass) SKR_NOEXCEP
     return has_graphics_dep;
 }
 
-void TimelinePhase::assign_passes_to_queues(RenderGraph* graph) SKR_NOEXCEPT
+void ScheduleTimeline::assign_passes_to_queues(RenderGraph* graph) SKR_NOEXCEPT
 {
     // 初始化队列调度结果
     schedule_result.queue_schedules.clear();
@@ -295,7 +291,7 @@ void TimelinePhase::assign_passes_to_queues(RenderGraph* graph) SKR_NOEXCEPT
     }
 }
 
-skr::Vector<PassNode*> TimelinePhase::topological_sort_passes(const skr::Vector<PassNode*>& passes) SKR_NOEXCEPT
+skr::Vector<PassNode*> ScheduleTimeline::topological_sort_passes(const skr::Vector<PassNode*>& passes) SKR_NOEXCEPT
 {
     skr::Vector<PassNode*> sorted_passes;
     skr::FlatHashMap<PassNode*, uint32_t> in_degree;
@@ -325,7 +321,7 @@ skr::Vector<PassNode*> TimelinePhase::topological_sort_passes(const skr::Vector<
 }
 
 
-uint32_t TimelinePhase::select_best_queue_for_pass(PassNode* pass) SKR_NOEXCEPT
+uint32_t ScheduleTimeline::select_best_queue_for_pass(PassNode* pass) SKR_NOEXCEPT
 {
     auto preferred_type = pass_preferred_queue[pass];
     
@@ -350,7 +346,7 @@ uint32_t TimelinePhase::select_best_queue_for_pass(PassNode* pass) SKR_NOEXCEPT
 }
 
 
-uint32_t TimelinePhase::find_least_loaded_compute_queue() SKR_NOEXCEPT
+uint32_t ScheduleTimeline::find_least_loaded_compute_queue() SKR_NOEXCEPT
 {
     if (compute_queue_indices.is_empty()) {
         return graphics_queue_index; // 回退到Graphics队列
@@ -373,7 +369,7 @@ uint32_t TimelinePhase::find_least_loaded_compute_queue() SKR_NOEXCEPT
     return best_queue;
 }
 
-bool TimelinePhase::is_compute_queue(uint32_t queue_index) const SKR_NOEXCEPT
+bool ScheduleTimeline::is_compute_queue(uint32_t queue_index) const SKR_NOEXCEPT
 {
     for (uint32_t compute_idx : compute_queue_indices) {
         if (compute_idx == queue_index) {
@@ -383,7 +379,7 @@ bool TimelinePhase::is_compute_queue(uint32_t queue_index) const SKR_NOEXCEPT
     return false;
 }
 
-void TimelinePhase::calculate_sync_requirements(RenderGraph* graph) SKR_NOEXCEPT
+void ScheduleTimeline::calculate_sync_requirements(RenderGraph* graph) SKR_NOEXCEPT
 {
     schedule_result.sync_requirements.clear();
     
@@ -413,11 +409,11 @@ void TimelinePhase::calculate_sync_requirements(RenderGraph* graph) SKR_NOEXCEPT
 }
 
 
-void TimelinePhase::allocate_fences(RenderGraph* graph) SKR_NOEXCEPT
+void ScheduleTimeline::allocate_fences(RenderGraph* graph) SKR_NOEXCEPT
 {
     auto device = graph->get_backend_device();
     if (!device) {
-        SKR_LOG_WARN(u8"TimelinePhase: No backend device available for fence allocation");
+        SKR_LOG_WARN(u8"ScheduleTimeline: No backend device available for fence allocation");
         return;
     }
     
@@ -426,17 +422,17 @@ void TimelinePhase::allocate_fences(RenderGraph* graph) SKR_NOEXCEPT
         if (!requirement.fence) {
             requirement.fence = cgpu_create_fence(device);
             
-            SKR_LOG_DEBUG(u8"TimelinePhase: Allocated fence for sync between queue %d->%d (pass %p->%p)", 
+            SKR_LOG_DEBUG(u8"ScheduleTimeline: Allocated fence for sync between queue %d->%d (pass %p->%p)", 
                          requirement.signal_queue_index, requirement.wait_queue_index,
                          requirement.signal_after_pass, requirement.wait_before_pass);
         }
     }
     
-    SKR_LOG_DEBUG(u8"TimelinePhase: Allocated %d fences for cross-queue synchronization", 
+    SKR_LOG_DEBUG(u8"ScheduleTimeline: Allocated %d fences for cross-queue synchronization", 
                   (int)schedule_result.sync_requirements.size());
 }
 
-void TimelinePhase::dump_timeline_result(const char8_t* title) const SKR_NOEXCEPT
+void ScheduleTimeline::dump_timeline_result(const char8_t* title) const SKR_NOEXCEPT
 {
     SKR_LOG_INFO(u8"═══════════════════════════════════════");
     SKR_LOG_INFO(u8"%s", title);
