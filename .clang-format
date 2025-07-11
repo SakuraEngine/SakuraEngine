@@ -3,20 +3,26 @@ TabWidth: 4
 AccessModifierOffset: -4
 IndentWidth: 4
 ObjCBlockIndentWidth: 4
-ContinuationIndentWidth: 4 # 禁用缩进是为了防止反射宏出问题, what can i say, Mamba Out!
+ContinuationIndentWidth: 4
 MaxEmptyLinesToKeep: 1
 
 AllowShortIfStatementsOnASingleLine: true
 AllowShortBlocksOnASingleLine: true
 
-AlignConsecutiveAssignments: true
-AlignConsecutiveDeclarations: true
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
 AlignTrailingComments: true
 SpacesBeforeTrailingComments: 1
 SpacesInSquareBrackets: false
 IndentCaseLabels: false
 SpaceBeforeAssignmentOperators: true
-AlignAfterOpenBracket: BlockIndent
+
+# 关键设置：正常代码使用固定缩进，宏内部特殊处理
+AlignAfterOpenBracket: DontAlign
+AlignOperands: DontAlign
+BinPackArguments: false
+BinPackParameters: false
+
 BreakConstructorInitializersBeforeComma: true
 SpaceAfterCStyleCast: false
 SpaceBeforeParens: ControlStatements
@@ -32,10 +38,7 @@ AlignEscapedNewlinesLeft: true
 
 BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: false
-AlignOperands: Align
 
-BinPackArguments: true
-BinPackParameters: true
 IndentPPDirectives: BeforeHash
 
 BreakBeforeBraces: Custom
@@ -54,7 +57,14 @@ Cpp11BracedListStyle: false
 
 RequiresClausePosition: SingleLine
 
-AttributeMacros: ["SUGOI_UNLIKELY", "SUGOI_FORCEINLINE", "FORCEINLINE"]
+# 宏特殊处理
+AttributeMacros:
+  - "SUGOI_UNLIKELY"
+  - "SUGOI_FORCEINLINE"
+  - "FORCEINLINE"
+  - "sattr"
+  - "SKR_ALIGNAS"
+
 WhitespaceSensitiveMacros:
   - "sattr"
   - "spush_attr"
@@ -65,87 +75,24 @@ WhitespaceSensitiveMacros:
   - "sreflect_interface"
   - "sreflect_function"
 
-Macros:
-  # attr
-  - sattr(x)=/* x */
-  - sattr(x,y)=/* x */
-  - sattr(x,y,z)=/* x */
-  - sattr(x,y,z)=/* x */
-  - sattr(x,y,z,w)=/* x */
-  - sattr(x,y,z,w,a)=/* x */
-  - sattr(x,y,z,w,a,b)=/* x */
-  - sattr(x,y,z,w,a,b,c)=/* x */
-  - sattr(x,y,z,w,a,b,c,d)=/* x */
-  - sattr(x,y,z,w,a,b,c,d,e)=/* x */
-  # enum
-  - sreflect_enum(x)=enum class
-  - sreflect_enum(x,y)=enum class
-  - sreflect_enum(x,y,z)=enum class
-  - sreflect_enum(x,y,z)=enum class
-  - sreflect_enum(x,y,z,w)=enum class
-  - sreflect_enum(x,y,z,w,a)=enum class
-  - sreflect_enum(x,y,z,w,a,b)=enum class
-  - sreflect_enum(x,y,z,w,a,b,c)=enum class
-  - sreflect_enum(x,y,z,w,a,b,c,d)=enum class
-  - sreflect_enum(x,y,z,w,a,b,c,d,e)=enum class
-  # enum class
-  - sreflect_enum_class(x)=enum class
-  - sreflect_enum_class(x,y)=enum class
-  - sreflect_enum_class(x,y,z)=enum class
-  - sreflect_enum_class(x,y,z)=enum class
-  - sreflect_enum_class(x,y,z,w)=enum class
-  - sreflect_enum_class(x,y,z,w,a)=enum class
-  - sreflect_enum_class(x,y,z,w,a,b)=enum class
-  - sreflect_enum_class(x,y,z,w,a,b,c)=enum class
-  - sreflect_enum_class(x,y,z,w,a,b,c,d)=enum class
-  - sreflect_enum_class(x,y,z,w,a,b,c,d,e)=enum class
-  # struct
-  - sreflect_struct(x)=struct
-  - sreflect_struct(x,y)=struct
-  - sreflect_struct(x,y,z)=struct
-  - sreflect_struct(x,y,z)=struct
-  - sreflect_struct(x,y,z,w)=struct
-  - sreflect_struct(x,y,z,w,a)=struct
-  - sreflect_struct(x,y,z,w,a,b)=struct
-  - sreflect_struct(x,y,z,w,a,b,c)=struct
-  - sreflect_struct(x,y,z,w,a,b,c,d)=struct
-  - sreflect_struct(x,y,z,w,a,b,c,d,e)=struct
-  # interface
-  - sreflect_interface(x)=struct
-  - sreflect_interface(x,y)=struct
-  - sreflect_interface(x,y,z)=struct
-  - sreflect_interface(x,y,z)=struct
-  - sreflect_interface(x,y,z,w)=struct
-  - sreflect_interface(x,y,z,w,a)=struct
-  - sreflect_interface(x,y,z,w,a,b)=struct
-  - sreflect_interface(x,y,z,w,a,b,c)=struct
-  - sreflect_interface(x,y,z,w,a,b,c,d)=struct
-  - sreflect_interface(x,y,z,w,a,b,c,d,e)=struct
-  # interface
-  - sreflect_function(x)=struct
-  - sreflect_function(x,y)=struct
-  - sreflect_function(x,y,z)=struct
-  - sreflect_function(x,y,z)=struct
-  - sreflect_function(x,y,z,w)=struct
-  - sreflect_function(x,y,z,w,a)=struct
-  - sreflect_function(x,y,z,w,a,b)=struct
-  - sreflect_function(x,y,z,w,a,b,c)=struct
-  - sreflect_function(x,y,z,w,a,b,c,d)=struct
-  - sreflect_function(x,y,z,w,a,b,c,d,e)=struct
-  # struct
-  - sreflect_managed_component(x)=struct
-  - sreflect_managed_component(x,y)=struct
-  - sreflect_managed_component(x,y,z)=struct
-  - sreflect_managed_component(x,y,z)=struct
-  - sreflect_managed_component(x,y,z,w)=struct
-  - sreflect_managed_component(x,y,z,w,a)=struct
-  - sreflect_managed_component(x,y,z,w,a,b)=struct
-  - sreflect_managed_component(x,y,z,w,a,b,c)=struct
-  - sreflect_managed_component(x,y,z,w,a,b,c,d)=struct
-  - sreflect_managed_component(x,y,z,w,a,b,c,d,e)=struct
+# 告诉 clang-format 这些宏是语句宏
+StatementMacros:
+  - "sreflect_struct"
+  - "sreflect_enum"
+  - "sreflect_enum_class"
+  - "sreflect_interface"
+  - "sreflect_function"
+  - "sreflect_managed_component"
 
 ForEachMacros: ["forloop"]
 
 BreakAfterAttributes: Leave
+IndentExternBlock: NoIndent
+
+# 特殊处理：不要重新格式化宏块
+ReflowComments: false
+
+# 保持原有的换行
+KeepEmptyLinesAtTheStartOfBlocks: true
 
 SortIncludes: false
