@@ -327,7 +327,6 @@ struct SKR_RENDER_GRAPH_API PassContext {
 struct SKR_RENDER_GRAPH_API BindablePassContext : public PassContext {
     friend class RenderGraphBackend;
 
-    const struct CGPUXBindTable* create_and_update_bind_table(CGPURootSignatureId root_sig) SKR_NOEXCEPT;
     const struct CGPUXMergedBindTable* merge_tables(const struct CGPUXBindTable** tables, uint32_t count) SKR_NOEXCEPT;
 
     const struct CGPUXBindTable* bind_table;

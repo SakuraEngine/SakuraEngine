@@ -478,7 +478,6 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
         // compile and draw rg
         {
             SkrZoneScopedN("GraphCompile");
-            graph->compile();
             if (frame_index == 0)
                 render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_deferred_cs.gv");
             if (frame_index == 6)

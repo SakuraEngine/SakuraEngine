@@ -48,6 +48,7 @@ publish
 **/bin
 **/obj
 
+memory_bank/context
 .sb
 .pkgs
 sbuild

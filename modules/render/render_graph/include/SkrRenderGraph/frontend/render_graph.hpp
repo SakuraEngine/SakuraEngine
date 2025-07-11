@@ -27,7 +27,7 @@ public:
 struct SKR_RENDER_GRAPH_API IRenderGraphPhase
 {
     virtual ~IRenderGraphPhase() SKR_NOEXCEPT;
-    virtual void on_compile(RenderGraph* graph) SKR_NOEXCEPT;
+    [[deprecated("don't use this!")]] virtual void on_compile(RenderGraph* graph) SKR_NOEXCEPT;
     virtual void on_execute(RenderGraph* graph, RenderGraphProfiler* profiler) SKR_NOEXCEPT;
     virtual uint32_t on_collect_texture_garbage(RenderGraph* graph, uint64_t critical_frame, uint32_t with_tags, uint32_t without_flags) SKR_NOEXCEPT;
     virtual uint32_t on_collect_buffer_garbage(RenderGraph* graph, uint64_t critical_frame, uint32_t with_tags, uint32_t without_flags) SKR_NOEXCEPT;
@@ -51,6 +51,8 @@ public:
         RenderGraphBuilder& backend_api(ECGPUBackend backend) SKR_NOEXCEPT;
         RenderGraphBuilder& with_device(CGPUDeviceId device) SKR_NOEXCEPT;
         RenderGraphBuilder& with_gfx_queue(CGPUQueueId queue) SKR_NOEXCEPT;
+        RenderGraphBuilder& with_cmpt_queues(const skr::Vector<CGPUQueueId>& queues) SKR_NOEXCEPT;
+        RenderGraphBuilder& with_cpy_queues(const skr::Vector<CGPUQueueId>& queues) SKR_NOEXCEPT;
         RenderGraphBuilder& enable_memory_aliasing() SKR_NOEXCEPT;
 
     protected:
@@ -59,6 +61,8 @@ public:
         ECGPUBackend api;
         CGPUDeviceId device;
         CGPUQueueId gfx_queue;
+        skr::Vector<CGPUQueueId> cmpt_queues;
+        skr::Vector<CGPUQueueId> cpy_queues;
     };
     using RenderGraphSetupFunction = skr::stl_function<void(class RenderGraph::RenderGraphBuilder&)>;
     static RenderGraph* create(const RenderGraphSetupFunction& setup) SKR_NOEXCEPT;
@@ -87,8 +91,8 @@ public:
         // buffers
         RenderPassBuilder& read(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT;
         RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferRangeHandle handle) SKR_NOEXCEPT;
-        RenderPassBuilder& write(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT;
-        RenderPassBuilder& write(const char8_t* name, BufferHandle handle) SKR_NOEXCEPT;
+        RenderPassBuilder& write(uint32_t set, uint32_t binding, BufferRangeHandle handle) SKR_NOEXCEPT;
+        RenderPassBuilder& write(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT;
         RenderPassBuilder& use_buffer(PipelineBufferHandle buffer, ECGPUResourceState requested_state) SKR_NOEXCEPT;
 
         RenderPassBuilder& set_pipeline(CGPURenderPipelineId pipeline) SKR_NOEXCEPT;
@@ -110,10 +114,14 @@ public:
         ComputePassBuilder& read(const char8_t* name, TextureSRVHandle handle) SKR_NOEXCEPT;
         ComputePassBuilder& readwrite(uint32_t set, uint32_t binding, TextureUAVHandle handle) SKR_NOEXCEPT;
         ComputePassBuilder& readwrite(const char8_t* name, TextureUAVHandle handle) SKR_NOEXCEPT;
-        ComputePassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT;
+        ComputePassBuilder& read(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT;
+        ComputePassBuilder& read(uint32_t set, uint32_t binding, BufferRangeHandle handle) SKR_NOEXCEPT;
         ComputePassBuilder& read(const char8_t* name, BufferHandle handle) SKR_NOEXCEPT;
-        ComputePassBuilder& readwrite(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT;
+        ComputePassBuilder& read(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT;
+        ComputePassBuilder& readwrite(uint32_t set, uint32_t binding, BufferRangeHandle handle) SKR_NOEXCEPT;
+        ComputePassBuilder& readwrite(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT;
         ComputePassBuilder& readwrite(const char8_t* name, BufferHandle handle) SKR_NOEXCEPT;
+        ComputePassBuilder& readwrite(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT;
         ComputePassBuilder& set_pipeline(CGPUComputePipelineId pipeline) SKR_NOEXCEPT;
         ComputePassBuilder& set_root_signature(CGPURootSignatureId signature) SKR_NOEXCEPT;
 
@@ -235,6 +243,8 @@ public:
     }
     virtual CGPUDeviceId get_backend_device() SKR_NOEXCEPT { return nullptr; }
     virtual CGPUQueueId get_gfx_queue() SKR_NOEXCEPT { return nullptr; }
+    virtual const skr::Vector<CGPUQueueId>& get_cmpt_queues() SKR_NOEXCEPT { static skr::Vector<CGPUQueueId> empty; return empty; }
+    virtual const skr::Vector<CGPUQueueId>& get_cpy_queues() SKR_NOEXCEPT { static skr::Vector<CGPUQueueId> empty; return empty; }
     inline uint64_t get_frame_index() const SKR_NOEXCEPT { return frame_index; }
     inline struct NodeAndEdgeFactory* get_node_factory() SKR_NOEXCEPT { return node_factory; }
     virtual uint32_t collect_garbage(uint64_t critical_frame,
@@ -250,23 +260,21 @@ public:
 
 // interfaces
     friend struct IRenderGraphPhase;
-    virtual bool compile() SKR_NOEXCEPT;    
     virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr) SKR_NOEXCEPT;
     virtual uint32_t collect_texture_garbage(uint64_t critical_frame,
         uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
     virtual uint32_t collect_buffer_garbage(uint64_t critical_frame,
         uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
 
-protected:
-    virtual void initialize() SKR_NOEXCEPT;
-    virtual void finalize() SKR_NOEXCEPT;
-
-protected:
     uint32_t foreach_textures(skr::stl_function<void(TextureNode*)> texture) SKR_NOEXCEPT;
     uint32_t foreach_passes(TextureHandle texture,
         skr::stl_function<void(PassNode* writer, TextureNode* tex, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
     uint32_t foreach_passes(BufferHandle buffer,
         skr::stl_function<void(PassNode* reader, BufferNode* buf, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
+
+protected:
+    virtual void initialize() SKR_NOEXCEPT;
+    virtual void finalize() SKR_NOEXCEPT;
 
     bool aliasing_enabled = false;
     uint64_t frame_index = 0;

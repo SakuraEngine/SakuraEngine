@@ -2,6 +2,7 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
+#include "SkrContainers/string.hpp"
 
 namespace skr
 {
@@ -29,6 +30,18 @@ RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::enable_memory_
 RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::with_gfx_queue(CGPUQueueId queue) SKR_NOEXCEPT
 {
     gfx_queue = queue;
+    return *this;
+}
+
+RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::with_cmpt_queues(const skr::Vector<CGPUQueueId>& queues) SKR_NOEXCEPT
+{
+    cmpt_queues = queues;
+    return *this;
+}
+
+RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::with_cpy_queues(const skr::Vector<CGPUQueueId>& queues) SKR_NOEXCEPT
+{
+    cpy_queues = queues;
     return *this;
 }
 
@@ -126,7 +139,7 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8
     return *this;
 }
 
-RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(const char8_t* name, BufferHandle handle) SKR_NOEXCEPT
+RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return *this;
@@ -185,15 +198,89 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(cons
     return *this;
 }
 
+RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT
+{
+    auto allocated = graph.node_factory->Allocate<BufferReadEdge>(name, handle, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
+    auto&& edge = node.in_buffer_edges.emplace(allocated).ref();
+    graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
+    return *this;
+}
+
+RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(uint32_t set, uint32_t binding, BufferRangeHandle handle) SKR_NOEXCEPT
+{
+    auto name = skr::format(u8"set{}_binding{}", set, binding);
+    auto allocated = graph.node_factory->Allocate<BufferReadEdge>(name.c_str(), handle, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
+    auto&& edge = node.in_buffer_edges.emplace(allocated).ref();
+    graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
+    return *this;
+}
+
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(const char8_t* name, BufferHandle handle) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    auto allocated = graph.node_factory->Allocate<BufferReadEdge>(name, handle.range(0, ~0), CGPU_RESOURCE_STATE_SHADER_RESOURCE);
+    auto&& edge = node.in_buffer_edges.emplace(allocated).ref();
+    graph.graph->link(graph.graph->access_node(handle), &node, edge);
+    return *this;
+}
+
+RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT
+{
+    auto name = skr::format(u8"set{}_binding{}", set, binding);
+    auto allocated = graph.node_factory->Allocate<BufferReadEdge>(name.c_str(), handle.range(0, ~0), CGPU_RESOURCE_STATE_SHADER_RESOURCE);
+    auto&& edge = node.in_buffer_edges.emplace(allocated).ref();
+    graph.graph->link(graph.graph->access_node(handle), &node, edge);
+    return *this;
+}
+
+RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(uint32_t set, uint32_t binding, TextureSRVHandle handle) SKR_NOEXCEPT
+{
+    auto name = skr::format(u8"set{}_binding{}", set, binding);
+    auto allocated = graph.node_factory->Allocate<TextureReadEdge>(name.c_str(), handle);
+    auto&& edge = node.in_texture_edges.emplace(allocated).ref();
+    graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
+    return *this;
+}
+
+RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(uint32_t set, uint32_t binding, TextureUAVHandle handle) SKR_NOEXCEPT
+{
+    auto name = skr::format(u8"set{}_binding{}", set, binding);
+    auto allocated = graph.node_factory->Allocate<TextureReadWriteEdge>(name.c_str(), handle);
+    auto&& edge = node.inout_texture_edges.emplace(allocated).ref();
+    graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
+    return *this;
+}
+
+RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(uint32_t set, uint32_t binding, BufferRangeHandle handle) SKR_NOEXCEPT
+{
+    auto name = skr::format(u8"set{}_binding{}", set, binding);
+    auto allocated = graph.node_factory->Allocate<BufferReadWriteEdge>(handle, CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
+    auto&& edge = node.out_buffer_edges.emplace(allocated).ref();
+    graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     return *this;
 }
 
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(const char8_t* name, BufferHandle handle) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    auto allocated = graph.node_factory->Allocate<BufferReadWriteEdge>(handle.range(0, ~0), CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
+    auto&& edge = node.out_buffer_edges.emplace(allocated).ref();
+    graph.graph->link(&node, graph.graph->access_node(handle), edge);
+    return *this;
+}
+
+RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(uint32_t set, uint32_t binding, BufferHandle handle) SKR_NOEXCEPT
+{
+    auto name = skr::format(u8"set{}_binding{}", set, binding);
+    auto allocated = graph.node_factory->Allocate<BufferReadWriteEdge>(handle.range(0, ~0), CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
+    auto&& edge = node.out_buffer_edges.emplace(allocated).ref();
+    graph.graph->link(&node, graph.graph->access_node(handle), edge);
+    return *this;
+}
+
+RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT
+{
+    auto allocated = graph.node_factory->Allocate<BufferReadWriteEdge>(handle, CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
+    auto&& edge = node.out_buffer_edges.emplace(allocated).ref();
+    graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     return *this;
 }
 

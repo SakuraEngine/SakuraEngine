@@ -214,11 +214,6 @@ const CGPUTextureDescriptor* RenderGraph::resolve_descriptor(TextureHandle hdl) 
     return nullptr;
 }
 
-bool RenderGraph::compile() SKR_NOEXCEPT
-{
-    return true;
-}
-
 uint32_t RenderGraph::foreach_textures(skr::stl_function<void(TextureNode*)> f) SKR_NOEXCEPT
 {
     uint32_t num = 0;

@@ -12,6 +12,7 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <Windows.h>
+#include <io.h>
 #endif
 
 namespace skr {
@@ -65,6 +66,9 @@ LogANSIOutputSink::LogANSIOutputSink(skr_guid_t pattern) SKR_NOEXCEPT
     : LogConsoleSink(pattern)
 {
     ::setvbuf(stdout, NULL, _IOFBF, bufSize);
+#if SKR_PLAT_WINDOWS
+    ::SetConsoleOutputCP(CP_UTF8);
+#endif
 }
 
 LogANSIOutputSink::~LogANSIOutputSink() SKR_NOEXCEPT

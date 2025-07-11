@@ -223,7 +223,6 @@ int main(int argc, char* argv[])
                     .texture(back_buffer, true);
             }
         );
-        graph->compile();
         const auto frame_index = graph->execute();
         // present
         cgpu_wait_queue_idle(gfx_queue);
