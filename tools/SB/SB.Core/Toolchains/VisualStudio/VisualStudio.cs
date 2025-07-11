@@ -148,36 +148,23 @@ namespace SB.Core
 
             var oldEnv = EnvReader.Load(oldEnvPath)!;
             VCEnvVariables = EnvReader.Load(newEnvPath)!;
-            bool isInDevEnv = oldEnv.ContainsKey("VSCMD_ARG_TGT_ARCH") || oldEnv.ContainsKey("VSINSTALLDIR") || oldEnv.ContainsKey("VCINSTALLDIR");
-
-            HashSet<string> vcPaths;
+            // Preprocess: cull old env variables
+            foreach (var oldVar in oldEnv)
+            {
+                if (VCEnvVariables.ContainsKey(oldVar.Key) && VCEnvVariables[oldVar.Key] == oldEnv[oldVar.Key])
+                    VCEnvVariables.Remove(oldVar.Key);
+            }
+            // Preprocess: cull user env variables
+            var vcPaths = VCEnvVariables["Path"]!.Split(';').ToHashSet();
             var oldPaths = oldEnv["Path"].Split(';').ToHashSet();
-            if (!isInDevEnv)
-            {
-                // Preprocess: cull old env variables
-                foreach (var oldVar in oldEnv)
-                {
-                    if (VCEnvVariables.ContainsKey(oldVar.Key) && VCEnvVariables[oldVar.Key] == oldEnv[oldVar.Key])
-                        VCEnvVariables.Remove(oldVar.Key);
-                }
-                // Preprocess: cull user env variables
-                vcPaths = VCEnvVariables["Path"]!.Split(';').ToHashSet();
-                vcPaths.ExceptWith(oldPaths);
-            }
-            else
-            {
-                Log.Information("Visual Studio {VSVersion} is in dev environment, disable dirty env vars culling", VSVersion);
-                vcPaths = VCEnvVariables["Path"]!.Split(';').ToHashSet();
-            }
-
+            vcPaths.ExceptWith(oldPaths);
+            VCEnvVariables["Path"] = string.Join(";", vcPaths);
             // Preprocess: calculate include dir
             var OriginalIncludes = VCEnvVariables.TryGetValue("INCLUDE", out var V0) ? V0 : "";
             var VCVarsIncludes = VCEnvVariables.TryGetValue("__VSCMD_VCVARS_INCLUDE", out var V1) ? V1 : "";
             var WindowsSDKIncludes = VCEnvVariables.TryGetValue("__VSCMD_WINSDK_INCLUDE", out var V2) ? V2 : "";
             var NetFXIncludes = VCEnvVariables.TryGetValue("__VSCMD_NETFX_INCLUDE", out var V3) ? V3 : "";
             VCEnvVariables["INCLUDE"] = VCVarsIncludes + WindowsSDKIncludes + NetFXIncludes + OriginalIncludes;
-            VCEnvVariables["Path"] = string.Join(";", vcPaths);
-
             // Enum all files and pick usable tools
             foreach (var path in vcPaths)
             {
@@ -194,10 +181,9 @@ namespace SB.Core
                         ClangCLPath = file;
                 }
             }
-            
             // clang-cl may be installed in a different user path
             if (!File.Exists(ClangCLPath))
-            {
+            {   
                 foreach (var path in oldPaths)
                 {
                     if (!Directory.Exists(path))
