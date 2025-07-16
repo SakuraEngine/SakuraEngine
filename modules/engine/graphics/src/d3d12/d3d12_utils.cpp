@@ -623,7 +623,7 @@ void D3D12Util_ResetDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap)
     pHeap->mFreeList.clear();
 }
 
-static void D3D12Util_FreeDescriptorHeap(D3D12Util_DescriptorHeap* pHeap)
+void D3D12Util_FreeDescriptorHeap(D3D12Util_DescriptorHeap* pHeap)
 {
     if (pHeap == nullptr) return;
     SAFE_RELEASE(pHeap->pCurrentHeap);

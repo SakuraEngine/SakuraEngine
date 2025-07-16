@@ -273,9 +273,10 @@ void cgpu_cmd_build_acceleration_structures_d3d12(CGPUCommandBufferId cmd, const
 
     if (desc->type == CGPU_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL)
     {
-        const uint32_t STORE_COUNT = 4;
+#define STORE_COUNT 4
         CGPUBufferBarrier STORE[STORE_COUNT];
         const bool USE_STORE = desc->as_count < STORE_COUNT;
+#undef STORE_COUNT
 
         CGPUBufferBarrier* BufferBarriers = USE_STORE ? STORE : cgpu_malloc(desc->as_count * sizeof(CGPUBufferBarrier));
         for (uint32_t i = 0; i < desc->as_count; i++)

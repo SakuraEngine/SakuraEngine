@@ -1289,7 +1289,7 @@ void cgpu_submit_queue_d3d12(CGPUQueueId queue, const struct CGPUQueueSubmitDesc
     // execute given command list
     cgpu_assert(Q->pCommandQueue);
 
-    ID3D12CommandList* cmds[CmdCount];
+    SKR_DECLARE_ZERO_VLA(ID3D12CommandList*, cmds, CmdCount);
     for (uint32_t i = 0; i < CmdCount; ++i)
     {
         cmds[i] = (ID3D12CommandList*)Cmds[i]->pDxCmdList;
@@ -1923,7 +1923,7 @@ void cgpu_cmd_fill_buffer_n_d3d12(CGPUCommandBufferId cmd, CGPUBufferId buffer, 
     ID3D12GraphicsCommandList2* pCommandList2 = CGPU_NULLPTR;
     COM_CALL(QueryInterface, CMD->pDxCmdList, IID_ARGS(ID3D12GraphicsCommandList, &pCommandList2));
 
-    D3D12_WRITEBUFFERIMMEDIATE_PARAMETER params[count];
+    SKR_DECLARE_ZERO_VLA(D3D12_WRITEBUFFERIMMEDIATE_PARAMETER, params, count);
     for (uint32_t i = 0; i < count; i++)
     {
         params[i].Dest = B->mDxGpuAddress + desc->offset;
@@ -1983,7 +1983,7 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
 {
     CGPUCommandBuffer_D3D12* Cmd             = (CGPUCommandBuffer_D3D12*)cmd;
     const uint32_t barriers_count  = desc->buffer_barriers_count + desc->texture_barriers_count;
-    D3D12_RESOURCE_BARRIER barriers[barriers_count];
+    SKR_DECLARE_ZERO_VLA(D3D12_RESOURCE_BARRIER, barriers, barriers_count);
     uint32_t transitionCount = 0;
     for (uint32_t i = 0; i < desc->buffer_barriers_count; ++i)
     {
@@ -2545,7 +2545,7 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
     SAFE_RELEASE(swapchain);
 
     // Get swapchain images
-    ID3D12Resource* backbuffers[desc->image_count];
+    SKR_DECLARE_ZERO_VLA(ID3D12Resource*, backbuffers, desc->image_count);
     for (uint32_t i = 0; i < desc->image_count; ++i)
     {
         CHECK_HRESULT(COM_CALL(GetBuffer, S->pDxSwapChain, i, IID_ARGS(ID3D12Resource, &backbuffers[i])));
