@@ -34,8 +34,8 @@ public:
         bytes = nullptr;
     }
 
-    uint8_t* get_data() const SKR_NOEXCEPT { return bytes; }
-    uint64_t get_size() const SKR_NOEXCEPT { return size; }
+    uint8_t* get_data() const SKR_NOEXCEPT override { return bytes; }
+    uint64_t get_size() const SKR_NOEXCEPT override { return size; }
 
 private:
     uint64_t size      = 0;

@@ -5,12 +5,20 @@
 #include "SkrBase/containers/misc/default_capicity_policy.hpp"
 #include "SkrBase/memory/memory_ops.hpp"
 
+// generic vector fwd
+namespace skr
+{
+struct GenericVector;
+}
+
 // vector memory base
 namespace skr::container
 {
 template <typename TSize>
 struct VectorMemoryBase {
     using SizeType = TSize;
+
+    friend struct ::skr::GenericVector;
 
     // getter
     inline SizeType size() const noexcept { return _size; }
@@ -19,8 +27,26 @@ struct VectorMemoryBase {
     // setter
     inline void set_size(SizeType value) noexcept { _size = value; }
 
-    //! Note. ONLY USED BY GENERIC CONTAINER
-    inline void* _generic_only_data() noexcept { return _data; }
+private:
+    // helper for generic
+    inline void* _item_at(SizeType index, SizeType item_size) const
+    {
+        return ::skr::memory::offset_item(_data, item_size, index);
+    }
+    inline static VectorMemoryBase* _memory_at(void* p, SizeType index)
+    {
+        SKR_ASSERT(p);
+        return reinterpret_cast<VectorMemoryBase*>(
+            ::skr::memory::offset_item(p, sizeof(VectorMemoryBase), index)
+        );
+    }
+    inline static const VectorMemoryBase* _memory_at(const void* p, SizeType index)
+    {
+        SKR_ASSERT(p);
+        return reinterpret_cast<const VectorMemoryBase*>(
+            ::skr::memory::offset_item(p, sizeof(VectorMemoryBase), index)
+        );
+    }
 
 protected:
     void*    _data     = nullptr;

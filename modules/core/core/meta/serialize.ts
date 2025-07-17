@@ -356,6 +356,34 @@ class SerializeGenerator extends gen.Generator {
     });
   }
 
+  override gen_body(): void {
+    this.main_module_db.each_record((record, header) => {
+      if (record.ml_configs.serde.json) {
+        const _gen_fields_json = record.fields.filter(field => !field.is_static && field.ml_configs.serde.json);
+        let _has_private_json_field = false;
+        _gen_fields_json.forEach((field) => {
+          if (field.access !== "public") {
+            _has_private_json_field = true;
+          }
+        });
+        if (_has_private_json_field) {
+          record.generate_body_content.$line(`friend struct ::skr::JsonSerde<${record.name}>;`);
+        }
+      }
+      if (record.ml_configs.serde.bin) {
+        const _gen_fields_bin = record.fields.filter(field => !field.is_static && field.ml_configs.serde.bin);
+        let _has_private_bin_field = false;
+        _gen_fields_bin.forEach((field) => {
+          if (field.access !== "public") {
+            _has_private_bin_field = true;
+          }
+        });
+        if (_has_private_bin_field) {
+          record.generate_body_content.$line(`friend struct ::skr::BinSerde<${record.name}>;`);
+        }
+      }
+    });
+  }
   override gen(): void {
     this.main_module_db.headers.forEach((header) => {
       _Gen.header(header);

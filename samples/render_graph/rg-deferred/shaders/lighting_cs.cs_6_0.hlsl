@@ -1,5 +1,3 @@
-#pragma pack_matrix(row_major)
-
 Texture2D gbuffer_color;
 Texture2D gbuffer_normal;
 Texture2D gbuffer_depth;
@@ -23,6 +21,6 @@ void main(int2 threadID : SV_DispatchThreadID)
     float4 gbufferColor = gbuffer_color[pixelPosition];
     float4 gbufferNormal = gbuffer_normal[pixelPosition];
 
-    lighting_output[pixelPosition] = gbufferColor * 0.5 + gbufferNormal * 0.5;
+    lighting_output[pixelPosition] = gbufferColor * 0.5 + abs(gbufferNormal) * 0.5;
     lighting_output[pixelPosition] *= gbuffer_depth[pixelPosition].rrrr;
 }

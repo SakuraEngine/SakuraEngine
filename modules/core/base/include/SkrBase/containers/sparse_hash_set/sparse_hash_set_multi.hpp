@@ -64,7 +64,7 @@ struct MultiSparseHashSet : protected SparseHashBase<Memory> {
     using Super::sparse_size;
     using Super::hole_size;
     using Super::bit_size;
-    using Super::free_list_head;
+    using Super::freelist_head;
     using Super::is_compact;
     using Super::is_empty;
     using Super::data_vector;
@@ -98,6 +98,7 @@ struct MultiSparseHashSet : protected SparseHashBase<Memory> {
 
     // emplace
     template <typename... Args>
+    requires(std::is_constructible_v<typename Memory::SetDataType, Args...>)
     DataRef emplace(Args&&... args);
 
     // append
@@ -113,10 +114,12 @@ struct MultiSparseHashSet : protected SparseHashBase<Memory> {
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     bool remove(const U& v);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     bool remove_ex(HashType hash, Pred&& pred);
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     SizeType remove_all(const U& v);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     SizeType remove_all_ex(HashType hash, Pred&& pred);
 
     // remove if
@@ -130,36 +133,46 @@ struct MultiSparseHashSet : protected SparseHashBase<Memory> {
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     CDataRef find(const U& v) const;
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     DataRef find_ex(HashType hash, Pred&& pred);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     CDataRef find_ex(HashType hash, Pred&& pred) const;
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     DataRef find_next(DataRef ref, const U& v);
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     CDataRef find_next(CDataRef ref, const U& v) const;
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     DataRef find_next_ex(CDataRef ref, Pred&& pred);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     CDataRef find_next_ex(CDataRef ref, Pred&& pred) const;
 
     // find if
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     DataRef find_if(Pred&& pred);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     DataRef find_last_if(Pred&& pred);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     CDataRef find_if(Pred&& pred) const;
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     CDataRef find_last_if(Pred&& pred) const;
 
     // contains
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     bool contains(const U& v) const;
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     bool contains_ex(HashType hash, Pred&& pred) const;
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     SizeType count(const U& v) const;
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     SizeType count_ex(HashType hash, Pred&& pred) const;
 
     // contains if
@@ -288,6 +301,7 @@ SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memor
 // emplace
 template <typename Memory>
 template <typename... Args>
+requires(std::is_constructible_v<typename Memory::SetDataType, Args...>)
 SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::emplace(Args&&... args)
 {
     auto data_arr_ref = data_vector().add_unsafe();
@@ -376,6 +390,7 @@ SKR_INLINE bool MultiSparseHashSet<Memory>::remove(const U& v)
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE bool MultiSparseHashSet<Memory>::remove_ex(HashType hash, Pred&& pred)
 {
     return Super::_remove(hash, std::forward<Pred>(pred));
@@ -389,6 +404,7 @@ SKR_INLINE typename MultiSparseHashSet<Memory>::SizeType MultiSparseHashSet<Memo
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename MultiSparseHashSet<Memory>::SizeType MultiSparseHashSet<Memory>::remove_all_ex(HashType hash, Pred&& pred)
 {
     return Super::_remove_all(hash, std::forward<Pred>(pred));
@@ -411,12 +427,14 @@ SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memo
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::find_ex(HashType hash, Pred&& pred)
 {
     return Super::template _find<DataRef>(hash, std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memory>::find_ex(HashType hash, Pred&& pred) const
 {
     return Super::template _find<CDataRef>(hash, std::forward<Pred>(pred));
@@ -435,12 +453,14 @@ SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memo
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::find_next_ex(CDataRef ref, Pred&& pred)
 {
     return Super::template _find_next<DataRef>(ref, std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memory>::find_next_ex(CDataRef ref, Pred&& pred) const
 {
     return Super::template _find_next<CDataRef>(ref, std::forward<Pred>(pred));
@@ -449,24 +469,28 @@ SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memo
 // find if
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::find_if(Pred&& pred)
 {
     return Super::template _find_if<DataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename MultiSparseHashSet<Memory>::DataRef MultiSparseHashSet<Memory>::find_last_if(Pred&& pred)
 {
     return Super::template _find_last_if<DataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memory>::find_if(Pred&& pred) const
 {
     return Super::template _find_if<CDataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename MultiSparseHashSet<Memory>::CDataRef MultiSparseHashSet<Memory>::find_last_if(Pred&& pred) const
 {
     return Super::template _find_last_if<CDataRef>(std::forward<Pred>(pred));
@@ -481,6 +505,7 @@ bool MultiSparseHashSet<Memory>::contains(const U& v) const
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 bool MultiSparseHashSet<Memory>::contains_ex(HashType hash, Pred&& pred) const
 {
     return (bool)find_ex(hash, std::forward<Pred>(pred));
@@ -503,6 +528,7 @@ typename MultiSparseHashSet<Memory>::SizeType MultiSparseHashSet<Memory>::count(
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 typename MultiSparseHashSet<Memory>::SizeType MultiSparseHashSet<Memory>::count_ex(HashType hash, Pred&& pred) const
 {
     SizeType count = 0;

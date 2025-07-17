@@ -38,7 +38,7 @@ inline void sparse_hash_set_build_bucket(TStorage* data, TSize* bucket, TSize bu
     while (!cursor.reach_end())
     {
         TStorage& data_ref                                 = data[cursor.index()];
-        TSize&       index_ref                                = bucket[data_ref._sparse_vector_data._sparse_hash_set_hash & bucket_mask];
+        TSize&    index_ref                                = bucket[data_ref._sparse_vector_data._sparse_hash_set_hash & bucket_mask];
         data_ref._sparse_vector_data._sparse_hash_set_next = index_ref;
         index_ref                                          = cursor.index();
 

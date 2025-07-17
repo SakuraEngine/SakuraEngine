@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/misc/traits.hpp"
 #include "SkrBase/misc/debug.h"
+#include "SkrContainersDef/optional.hpp"
 
 namespace skr
 {
@@ -49,59 +50,21 @@ public:
     void             value() SKR_NOEXCEPT requires(ExpectedValue<T>::is_void);
     const E&         error() const SKR_NOEXCEPT;
 
+    void mark_handled();
+
     template <typename V>
-    bool operator==(const V& v) const SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
-    {
-        return has_value() && (value() == v);
-    }
-
-    bool operator==(const E& e) const SKR_NOEXCEPT
-    {
-        return has_error() && (error() == e);
-    }
-
-    bool operator==(const Expected& other) const SKR_NOEXCEPT
-    {
-        if (has_value() && other.has_value())
-            return _value == other._value;
-        else if (has_error() && other.has_error())
-            return error() == other.error();
-        return false;
-    }
+    bool operator==(const V& v) const SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void);
+    bool operator==(const E& e) const SKR_NOEXCEPT;
+    bool operator==(const Expected& other) const SKR_NOEXCEPT;
 
     template <typename F>
-    Expected& error_then(F&& f) SKR_NOEXCEPT
-    {
-        if (!_hasValue && _unhandled)
-        {
-            f(error());
-            _unhandled = false;
-        }
-        return *this;
-    }
-
+    Expected& error_then(F&& f) SKR_NOEXCEPT;
     template <typename F>
-    Expected& and_then(F&& f) SKR_NOEXCEPT
-    {
-        if (_hasValue)
-        {
-            if constexpr (ExpectedValue<T>::is_void)
-                f();
-            else
-                f(value());
-        }
-        return *this;
-    }
+    Expected& and_then(F&& f) SKR_NOEXCEPT;
 
-protected:
-    enum PanicReasion
-    {
-        ErrorButNotValue,
-        ValueButNotError,
-        ErrorNotHandled
-    };
-    void CondPanic(PanicReasion reason) const;
+    Optional<E> take_error();
 
+private:
     union
     {
         E         _error;
@@ -112,7 +75,7 @@ protected:
 };
 
 template <typename E, typename T>
-Expected<E, T>::Expected() SKR_NOEXCEPT requires(ExpectedValue<T>::is_void)
+inline Expected<E, T>::Expected() SKR_NOEXCEPT requires(ExpectedValue<T>::is_void)
     : _value(true)
     , _hasValue(true)
     , _unhandled(false)
@@ -120,7 +83,7 @@ Expected<E, T>::Expected() SKR_NOEXCEPT requires(ExpectedValue<T>::is_void)
 }
 
 template <typename E, typename T>
-Expected<E, T>::Expected(const ValueType& value) SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
+inline Expected<E, T>::Expected(const ValueType& value) SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
     : _value(value)
     , _hasValue(true)
     , _unhandled(false)
@@ -128,7 +91,7 @@ Expected<E, T>::Expected(const ValueType& value) SKR_NOEXCEPT requires(!Expected
 }
 
 template <typename E, typename T>
-Expected<E, T>::Expected(ValueType&& value) SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
+inline Expected<E, T>::Expected(ValueType&& value) SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
     : _value(std::move(value))
     , _hasValue(true)
     , _unhandled(false)
@@ -136,7 +99,7 @@ Expected<E, T>::Expected(ValueType&& value) SKR_NOEXCEPT requires(!ExpectedValue
 }
 
 template <typename E, typename T>
-Expected<E, T>::Expected(const E& error) SKR_NOEXCEPT
+inline Expected<E, T>::Expected(const E& error) SKR_NOEXCEPT
     : _error(error),
       _hasValue(false),
       _unhandled(true)
@@ -144,14 +107,14 @@ Expected<E, T>::Expected(const E& error) SKR_NOEXCEPT
 }
 
 template <typename E, typename T>
-Expected<E, T>::Expected(E&& error) SKR_NOEXCEPT
+inline Expected<E, T>::Expected(E&& error) SKR_NOEXCEPT
     : _error(std::move(error)),
       _hasValue(false),
       _unhandled(true)
 {
 }
 template <typename E, typename T>
-Expected<E, T>::Expected(Expected&& other) SKR_NOEXCEPT
+inline Expected<E, T>::Expected(Expected&& other) SKR_NOEXCEPT
     : _hasValue(other._hasValue),
       _unhandled(other._unhandled)
 {
@@ -163,7 +126,7 @@ Expected<E, T>::Expected(Expected&& other) SKR_NOEXCEPT
 }
 
 template <typename E, typename T>
-Expected<E, T>& Expected<E, T>::operator=(const ValueType& value) SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
+inline Expected<E, T>& Expected<E, T>::operator=(const ValueType& value) SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
 {
     _hasValue  = true;
     _unhandled = false;
@@ -172,7 +135,7 @@ Expected<E, T>& Expected<E, T>::operator=(const ValueType& value) SKR_NOEXCEPT r
 }
 
 template <typename E, typename T>
-Expected<E, T>& Expected<E, T>::operator=(ValueType&& value) SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
+inline Expected<E, T>& Expected<E, T>::operator=(ValueType&& value) SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
 {
     _hasValue  = true;
     _unhandled = false;
@@ -181,7 +144,7 @@ Expected<E, T>& Expected<E, T>::operator=(ValueType&& value) SKR_NOEXCEPT requir
 }
 
 template <typename E, typename T>
-Expected<E, T>& Expected<E, T>::operator=(const E& error) SKR_NOEXCEPT
+inline Expected<E, T>& Expected<E, T>::operator=(const E& error) SKR_NOEXCEPT
 {
     _hasValue  = false;
     _unhandled = true;
@@ -190,7 +153,7 @@ Expected<E, T>& Expected<E, T>::operator=(const E& error) SKR_NOEXCEPT
 }
 
 template <typename E, typename T>
-Expected<E, T>& Expected<E, T>::operator=(E&& error) SKR_NOEXCEPT
+inline Expected<E, T>& Expected<E, T>::operator=(E&& error) SKR_NOEXCEPT
 {
     _hasValue  = false;
     _unhandled = true;
@@ -199,7 +162,7 @@ Expected<E, T>& Expected<E, T>::operator=(E&& error) SKR_NOEXCEPT
 }
 
 template <typename E, typename T>
-Expected<E, T>& Expected<E, T>::operator=(Expected&& other) SKR_NOEXCEPT
+inline Expected<E, T>& Expected<E, T>::operator=(Expected&& other) SKR_NOEXCEPT
 {
     if (_hasValue)
         _value.~ValueType();
@@ -217,9 +180,9 @@ Expected<E, T>& Expected<E, T>::operator=(Expected&& other) SKR_NOEXCEPT
 }
 
 template <typename E, typename T>
-Expected<E, T>::~Expected() SKR_NOEXCEPT
+inline Expected<E, T>::~Expected() SKR_NOEXCEPT
 {
-    CondPanic(ErrorNotHandled);
+    SKR_ASSERT((_hasValue || !_unhandled) && "contains an error but not handled!");
 
     if (_hasValue)
         _value.~ValueType();
@@ -228,65 +191,108 @@ Expected<E, T>::~Expected() SKR_NOEXCEPT
 }
 
 template <typename E, typename T>
-const typename Expected<E, T>::ValueType& Expected<E, T>::value() const SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
+inline const typename Expected<E, T>::ValueType& Expected<E, T>::value() const SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
 {
-    CondPanic(ErrorButNotValue);
+    SKR_ASSERT(_hasValue && "take value in error state!");
     return _value;
 }
 
 template <typename E, typename T>
-typename Expected<E, T>::ValueType& Expected<E, T>::value() SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
+inline typename Expected<E, T>::ValueType& Expected<E, T>::value() SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
 {
-    CondPanic(ErrorButNotValue);
+    SKR_ASSERT(_hasValue && "take value in error state!");
     return _value;
 }
 
 template <typename E, typename T>
-void Expected<E, T>::value() const SKR_NOEXCEPT requires(ExpectedValue<T>::is_void)
+inline void Expected<E, T>::value() const SKR_NOEXCEPT requires(ExpectedValue<T>::is_void)
 {
-    CondPanic(ErrorButNotValue);
+    SKR_ASSERT(_hasValue && "take value in error state!");
 }
 
 template <typename E, typename T>
-void Expected<E, T>::value() SKR_NOEXCEPT requires(ExpectedValue<T>::is_void)
+inline void Expected<E, T>::value() SKR_NOEXCEPT requires(ExpectedValue<T>::is_void)
 {
-    CondPanic(ErrorButNotValue);
+    SKR_ASSERT(_hasValue && "take value in error state!");
 }
 
 template <typename E, typename T>
-const E& Expected<E, T>::error() const SKR_NOEXCEPT
+inline const E& Expected<E, T>::error() const SKR_NOEXCEPT
 {
-    CondPanic(ValueButNotError);
+    SKR_ASSERT(!_hasValue && "take error in value state!");
     return _error;
 }
 
 template <typename E, typename T>
-void Expected<E, T>::CondPanic(PanicReasion reason) const
+inline void Expected<E, T>::mark_handled()
 {
-    switch (reason)
+    _unhandled = false;
+}
+
+template <typename E, typename T>
+template <typename V>
+inline bool Expected<E, T>::operator==(const V& v) const SKR_NOEXCEPT requires(!ExpectedValue<T>::is_void)
+{
+    return has_value() && (value() == v);
+}
+template <typename E, typename T>
+inline bool Expected<E, T>::operator==(const E& e) const SKR_NOEXCEPT
+{
+    return has_error() && (error() == e);
+}
+template <typename E, typename T>
+inline bool Expected<E, T>::operator==(const Expected& other) const SKR_NOEXCEPT
+{
+    if (has_value() && other.has_value())
+        return _value == other._value;
+    else if (has_error() && other.has_error())
+        return error() == other.error();
+    return false;
+}
+
+template <typename E, typename T>
+template <typename F>
+inline Expected<E, T>& Expected<E, T>::error_then(F&& f) SKR_NOEXCEPT
+{
+    if (!_hasValue && _unhandled)
     {
-        case ErrorButNotValue:
-            SKR_ASSERT(_hasValue && "Expect<E, T> contains an error but not value!");
-            break;
-        case ValueButNotError:
-            SKR_ASSERT(!_hasValue && "Expect<E, T> contains a value but not error!");
-            break;
-        case ErrorNotHandled:
-            SKR_ASSERT((_hasValue || !_unhandled) && "Expect<E, T> contains an error but not handled!");
-            break;
-        default:
-            SKR_ASSERT(false && "Unknown panic reason!");
-            break;
+        f(error());
+        _unhandled = false;
+    }
+    return *this;
+}
+template <typename E, typename T>
+template <typename F>
+inline Expected<E, T>& Expected<E, T>::and_then(F&& f) SKR_NOEXCEPT
+{
+    if (_hasValue)
+    {
+        if constexpr (ExpectedValue<T>::is_void)
+            f();
+        else
+            f(value());
+    }
+    return *this;
+}
+
+template <typename E, typename T>
+Optional<E> Expected<E, T>::take_error()
+{
+    if (_hasValue)
+    {
+        return {};
+    }
+    else
+    {
+        _unhandled = false;
+        return std::move(_error);
     }
 }
 
 } // namespace skr
 
-#define SKR_EXPECTED_THROW(__E) \
-    if (!__E.has_value()) return std::move(__E);
-
-#define SKR_EXPECTED_THROW_EXPR(__EXPR) \
-    if (auto _e = (__EXPR); !_e.has_value()) return std::move(_e);
+#define SKR_EXPECTED_ENSURE(__EXPR) \
+    if (auto zz_expected = (__EXPR); !zz_expected.has_value()) return zz_expected;
 
 #define SKR_EXPECTED_CHECK(__EXPR, __RET) \
     if (!(__EXPR).has_value()) return __RET;

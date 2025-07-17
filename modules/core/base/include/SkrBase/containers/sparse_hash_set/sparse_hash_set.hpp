@@ -68,7 +68,7 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     using Super::sparse_size;
     using Super::hole_size;
     using Super::bit_size;
-    using Super::free_list_head;
+    using Super::freelist_head;
     using Super::is_compact;
     using Super::is_empty;
     using Super::data_vector;
@@ -99,14 +99,18 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     DataRef add(U&& v, DataRef hint);
     template <typename Pred, typename ConstructFunc, typename AssignFunc>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     DataRef add_ex(HashType hash, Pred&& pred, ConstructFunc&& construct, AssignFunc&& assign);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     DataRef add_ex_unsafe(HashType hash, Pred&& pred);
 
     // emplace
     template <typename... Args>
+    requires(std::is_constructible_v<typename Memory::SetDataType, Args...>)
     DataRef emplace(Args&&... args);
     template <typename... Args>
+    requires(std::is_constructible_v<typename Memory::SetDataType, Args...>)
     DataRef emplace(DataRef hint, Args&&... args);
 
     // append
@@ -122,6 +126,7 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     bool remove(const U& v);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     bool remove_ex(HashType hash, Pred&& pred);
 
     // remove if
@@ -135,24 +140,31 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     CDataRef find(const U& v) const;
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     DataRef find_ex(HashType hash, Pred&& pred);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     CDataRef find_ex(HashType hash, Pred&& pred) const;
 
     // find if
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     DataRef find_if(Pred&& pred);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     DataRef find_last_if(Pred&& pred);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     CDataRef find_if(Pred&& pred) const;
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     CDataRef find_last_if(Pred&& pred) const;
 
     // contains
     template <TransparentToOrSameAs<typename Memory::SetDataType, typename Memory::HasherType> U = SetDataType>
     bool contains(const U& v) const;
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
     bool contains_ex(HashType hash, Pred&& pred) const;
 
     // contains if
@@ -318,6 +330,7 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add(U&
 }
 template <typename Memory>
 template <typename Pred, typename ConstructFunc, typename AssignFunc>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex(HashType hash, Pred&& pred, ConstructFunc&& construct, AssignFunc&& assign)
 {
     DataRef ref = add_ex_unsafe(hash, std::forward<Pred>(pred));
@@ -334,6 +347,7 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex_unsafe(HashType hash, Pred&& pred)
 {
     if (DataRef ref = Super::template _find<DataRef>(hash, std::forward<Pred>(pred)))
@@ -349,6 +363,7 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::add_ex
 // emplace
 template <typename Memory>
 template <typename... Args>
+requires(std::is_constructible_v<typename Memory::SetDataType, Args...>)
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplace(Args&&... args)
 {
     // emplace to data vector
@@ -357,10 +372,11 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplac
     data_arr_ref.ref()._sparse_hash_set_hash = HasherType()(data_arr_ref.ref()._sparse_hash_set_data);
 
     if (DataRef ref = find_ex(
-        data_arr_ref.ref()._sparse_hash_set_hash,
-        [&data_arr_ref](const SetDataType& k) {
-            return k == data_arr_ref.ref()._sparse_hash_set_data;
-        }))
+            data_arr_ref.ref()._sparse_hash_set_hash,
+            [&data_arr_ref](const SetDataType& k) {
+                return k == data_arr_ref.ref()._sparse_hash_set_data;
+            }
+        ))
     {
         // move data
         ::skr::memory::move(ref.ptr(), &data_arr_ref.ref()._sparse_hash_set_data);
@@ -384,6 +400,7 @@ SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplac
 }
 template <typename Memory>
 template <typename... Args>
+requires(std::is_constructible_v<typename Memory::SetDataType, Args...>)
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::emplace(DataRef hint, Args&&... args)
 {
     if (hint.is_valid())
@@ -555,6 +572,7 @@ SKR_INLINE bool SparseHashSet<Memory>::remove(const U& v)
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE bool SparseHashSet<Memory>::remove_ex(HashType hash, Pred&& pred)
 {
     return Super::_remove(hash, std::forward<Pred>(pred));
@@ -577,12 +595,14 @@ SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find(
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find_ex(HashType hash, Pred&& pred)
 {
     return Super::template _find<DataRef>(hash, std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find_ex(HashType hash, Pred&& pred) const
 {
     return Super::template _find<CDataRef>(hash, std::forward<Pred>(pred));
@@ -591,24 +611,28 @@ SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find_
 // find if
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find_if(Pred&& pred)
 {
     return Super::template _find_if<DataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename SparseHashSet<Memory>::DataRef SparseHashSet<Memory>::find_last_if(Pred&& pred)
 {
     return Super::template _find_last_if<DataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find_if(Pred&& pred) const
 {
     return Super::template _find_if<CDataRef>(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE typename SparseHashSet<Memory>::CDataRef SparseHashSet<Memory>::find_last_if(Pred&& pred) const
 {
     return Super::template _find_last_if<CDataRef>(std::forward<Pred>(pred));
@@ -623,6 +647,7 @@ SKR_INLINE bool SparseHashSet<Memory>::contains(const U& v) const
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::SetDataType&>)
 SKR_INLINE bool SparseHashSet<Memory>::contains_ex(HashType hash, Pred&& pred) const
 {
     return (bool)find_ex(hash, std::forward<Pred>(pred));

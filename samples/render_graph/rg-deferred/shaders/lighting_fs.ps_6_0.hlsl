@@ -1,8 +1,6 @@
-#pragma pack_matrix(row_major)
-
-Texture2D<float4> gbuffer_color : register(t0, space0);
-Texture2D<float4> gbuffer_normal : register(t1, space0);
-Texture2D<float> gbuffer_depth : register(t2, space0);
+Texture2D gbuffer_color : register(t0, space0);
+Texture2D gbuffer_normal : register(t1, space0);
+Texture2D gbuffer_depth : register(t2, space0);
 
 [[vk::binding(0, 1)]]
 SamplerState texture_sampler : register(s0, space1);
@@ -29,6 +27,6 @@ void main(VSOut psIn, out float4 out_color : SV_TARGET0) : SV_TARGET
     if(push_constants.bFlipUVY) uv.y = 1 - uv.y;
     float4 gbufferColor = gbuffer_color.Sample(texture_sampler, uv);
     float4 gbufferNormal = gbuffer_normal.Sample(texture_sampler, uv);
-    out_color = gbufferColor * 0.5 + gbufferNormal * 0.5;
-    out_color *= gbuffer_depth.Sample(texture_sampler, uv);
+    out_color = gbufferColor * 0.5 + abs(gbufferNormal) * 0.5;
+    out_color *= gbuffer_depth.Sample(texture_sampler, uv).rrrr;
 }

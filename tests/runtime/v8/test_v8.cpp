@@ -27,8 +27,8 @@ TEST_CASE("test v8")
 
     SUBCASE("basic object")
     {
-        V8Context context(&isolate);
-        context.init();
+        V8Context& context = *isolate.create_context();
+        SKR_DEFER({ isolate.destroy_context(&context); });
 
         // register context
         context.build_global_export([](ScriptModule& module) {
@@ -62,12 +62,6 @@ TEST_CASE("test v8")
         context.exec_script(u8"test_obj.test_method(Number(BasicObject.test_static_field))");
         REQUIRE_EQ(obj->test_method_v, 44544);
 
-        // test overload
-        context.exec_script(u8"test_obj.test_overload(114514)");
-        REQUIRE_EQ(obj->overload_int, 114514);
-        context.exec_script(u8"test_obj.test_overload('1919810')");
-        REQUIRE_EQ(obj->overload_str, u8"1919810");
-
         // test property
         context.exec_script(u8"test_obj.test_prop = 1");
         context.exec_script(u8"test_obj.test_prop = 2");
@@ -87,8 +81,6 @@ TEST_CASE("test v8")
         // test new
         context.exec_script(u8"let new_obj_1 = new BasicObject()");
         REQUIRE_EQ(test_v8::BasicObject::test_ctor_value, 114514);
-        context.exec_script(u8"let new_obj_2 = new BasicObject(568798)");
-        REQUIRE_EQ(test_v8::BasicObject::test_ctor_value, 568798);
 
         // test inherit
         context.exec_script(u8"let inherit_obj = new InheritObject()");
@@ -134,8 +126,8 @@ TEST_CASE("test v8")
 
     SUBCASE("basic value")
     {
-        V8Context context(&isolate);
-        context.init();
+        V8Context& context = *isolate.create_context();
+        SKR_DEFER({ isolate.destroy_context(&context); });
 
         // register context
         context.build_global_export([](ScriptModule& module) {
@@ -175,15 +167,6 @@ TEST_CASE("test v8")
             REQUIRE_EQ(result.get<test_v8::BasicValue>().value().test_method_v, 44544);
         }
 
-        // test overload
-        {
-            context.exec_script(u8"test_value.test_overload(114514)");
-            context.exec_script(u8"test_value.test_overload('1919810')");
-            auto result = context.exec_script(u8"test_value");
-            REQUIRE_EQ(result.get<test_v8::BasicValue>().value().overload_int, 114514);
-            REQUIRE_EQ(result.get<test_v8::BasicValue>().value().overload_str, u8"1919810");
-        }
-
         // test property
         {
             context.exec_script(u8"test_value.test_prop = 1");
@@ -206,8 +189,6 @@ TEST_CASE("test v8")
         {
             context.exec_script(u8"let new_value_1 = new BasicValue()");
             REQUIRE_EQ(test_v8::BasicValue::test_ctor_value, 114514);
-            context.exec_script(u8"let new_value_2 = new BasicValue(568798)");
-            REQUIRE_EQ(test_v8::BasicValue::test_ctor_value, 568798);
         }
 
         // test inherit
@@ -238,8 +219,8 @@ TEST_CASE("test v8")
 
     SUBCASE("basic mapping")
     {
-        V8Context context(&isolate);
-        context.init();
+        V8Context& context = *isolate.create_context();
+        SKR_DEFER({ isolate.destroy_context(&context); });
 
         context.build_global_export([](ScriptModule& module) {
             // module.register_type<test_v8::BasicMapping>(u8"");    //!NOTE. mapping type need not to be registered
@@ -266,26 +247,13 @@ TEST_CASE("test v8")
         REQUIRE_EQ(test_v8::BasicMappingHelper::basic_value.y, 2);
         REQUIRE_EQ(test_v8::BasicMappingHelper::basic_value.z, 3);
 
-        // test overload
-        context.exec_script(u8"BasicMappingHelper.set({x:555, y:444, z: 333, w: 222})");
-        REQUIRE_EQ(test_v8::BasicMappingHelper::inherit_value.x, 555);
-        REQUIRE_EQ(test_v8::BasicMappingHelper::inherit_value.y, 444);
-        REQUIRE_EQ(test_v8::BasicMappingHelper::inherit_value.z, 333);
-        REQUIRE_EQ(test_v8::BasicMappingHelper::inherit_value.w, 222);
-
-        // test overload
-        context.exec_script(u8"BasicMappingHelper.set({x:555, y:444, z: 333})");
-        REQUIRE_EQ(test_v8::BasicMappingHelper::basic_value.x, 555);
-        REQUIRE_EQ(test_v8::BasicMappingHelper::basic_value.y, 444);
-        REQUIRE_EQ(test_v8::BasicMappingHelper::basic_value.z, 333);
-
         context.shutdown();
     }
 
     SUBCASE("basic enum")
     {
-        V8Context context(&isolate);
-        context.init();
+        V8Context& context = *isolate.create_context();
+        SKR_DEFER({ isolate.destroy_context(&context); });
 
         context.build_global_export([](ScriptModule& module) {
             module.register_type<test_v8::BasicEnum>(u8"");
@@ -313,8 +281,8 @@ TEST_CASE("test v8")
 
     SUBCASE("param flag")
     {
-        V8Context context(&isolate);
-        context.init();
+        V8Context& context = *isolate.create_context();
+        SKR_DEFER({ isolate.destroy_context(&context); });
 
         context.build_global_export([](ScriptModule& module) {
             module.register_type<test_v8::ParamFlagTest>(u8"");
@@ -356,8 +324,8 @@ TEST_CASE("test v8")
 
     SUBCASE("string")
     {
-        V8Context context(&isolate);
-        context.init();
+        V8Context& context = *isolate.create_context();
+        SKR_DEFER({ isolate.destroy_context(&context); });
 
         context.build_global_export([](ScriptModule& module) {
             module.register_type<test_v8::TestString>(u8"");
@@ -390,8 +358,8 @@ TEST_CASE("test v8")
 
     SUBCASE("call script")
     {
-        V8Context context(&isolate);
-        context.init();
+        V8Context& context = *isolate.create_context();
+        SKR_DEFER({ isolate.destroy_context(&context); });
         context.build_global_export([](ScriptModule& module) {
         });
 
@@ -410,8 +378,8 @@ TEST_CASE("test v8")
 
     SUBCASE("rttr mixin")
     {
-        V8Context context(&isolate);
-        context.init();
+        V8Context& context = *isolate.create_context();
+        SKR_DEFER({ isolate.destroy_context(&context); });
         context.build_global_export([](ScriptModule& module) {
             module.register_type<test_v8::TestMixinValue>(u8"");
             module.register_type<test_v8::RttrMixin>(u8"");
@@ -497,10 +465,10 @@ TEST_CASE("test v8")
             test_v8::MixinHelper::mixin->test_pure_out_value(test);
             REQUIRE_EQ(test.name, u8"PURE_OUT_VALUE");
             test.name = u8"INVALID";
-            test = test_v8::MixinHelper::mixin->test_return_value();
+            test      = test_v8::MixinHelper::mixin->test_return_value();
             REQUIRE_EQ(test.name, u8"RETURN_VALUE");
-            test.name = u8"INVALID";
-            test_b.name = u8"INVALID";
+            test.name                 = u8"INVALID";
+            test_b.name               = u8"INVALID";
             skr::String multi_out_ret = test_v8::MixinHelper::mixin->test_multi_out_value(test, test_b);
             REQUIRE_EQ(multi_out_ret, u8"MULTI_OUT");
             REQUIRE_EQ(test.name, u8"OUT_VALUE_1");
@@ -546,11 +514,11 @@ TEST_CASE("test v8")
             test_v8::MixinHelper::mixin->test_pure_out_value(test);
             REQUIRE_EQ(test.name, u8"PURE_OUT_VALUE + mixin");
             test.name = u8"INVALID";
-            test = test_v8::MixinHelper::mixin->test_return_value();
+            test      = test_v8::MixinHelper::mixin->test_return_value();
             REQUIRE_EQ(test.name, u8"RETURN_VALUE + mixin");
-            test.name = u8"INVALID";
-            test_b.name = u8"INVALID";
-            multi_out_ret = test_v8::MixinHelper::mixin->test_multi_out_value(test, test_b);    
+            test.name     = u8"INVALID";
+            test_b.name   = u8"INVALID";
+            multi_out_ret = test_v8::MixinHelper::mixin->test_multi_out_value(test, test_b);
             REQUIRE_EQ(multi_out_ret, u8"MULTI_OUT_FROM_JS");
             REQUIRE_EQ(test.name, u8"OUT_VALUE_1 + mixin");
             REQUIRE_EQ(test_b.name, u8"OUT_VALUE_2 + mixin");

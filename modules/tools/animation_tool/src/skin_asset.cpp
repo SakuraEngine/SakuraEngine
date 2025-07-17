@@ -29,7 +29,7 @@ bool SSkinCooker::Cook(SCookContext* ctx)
     auto components = cgltf_num_components(cgltf_type_mat4);
     SKR_ASSERT(components == 16);
     resource.inverse_bind_poses.resize_default(rawSkin->joints_count);
-    std::memcpy(resource.inverse_bind_poses.data(), matrix, sizeof(cgltf_float) * components * rawSkin->joints_count);
+    std::memcpy((void*)resource.inverse_bind_poses.data(), matrix, sizeof(cgltf_float) * components * rawSkin->joints_count);
     return ctx->Save(resource);
 }
 } // namespace skd::asset

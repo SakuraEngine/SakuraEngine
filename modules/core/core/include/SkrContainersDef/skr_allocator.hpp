@@ -3,8 +3,6 @@
 
 namespace skr
 {
-static const char* kContainersDefaultPoolName = "sakura::containers";
-
 struct SkrAllocator {
     struct DummyParam {
     };
@@ -22,38 +20,67 @@ struct SkrAllocator {
     template <typename T>
     inline static T* alloc(size_t size)
     {
-#if defined(TRACY_TRACE_ALLOCATION)
-        SkrCZoneNCS(z, "containers::allocate", SKR_ALLOC_TRACY_MARKER_COLOR, 16, 1);
-        void* p = sakura_malloc_alignedN(size * sizeof(T), alignof(T), kContainersDefaultPoolName);
-        SkrCZoneEnd(z);
-        return reinterpret_cast<T*>(p);
-#else
-        return reinterpret_cast<T*>(sakura_malloc_aligned(size * sizeof(T), alignof(T)));
-#endif
+        return reinterpret_cast<T*>(alloc_raw(
+            size,
+            sizeof(T),
+            alignof(T)
+        ));
     }
 
     template <typename T>
-    static void free(T* p)
+    inline static void free(T* p)
+    {
+        return free_raw(
+            reinterpret_cast<void*>(p),
+            alignof(T)
+        );
+    }
+
+    template <typename T>
+    inline static T* realloc(T* p, size_t size)
+    {
+        return reinterpret_cast<T*>(realloc_raw(
+            reinterpret_cast<void*>(p),
+            size,
+            sizeof(T),
+            alignof(T)
+        ));
+    }
+
+    //===>raw alloc api
+    inline static constexpr const char* kContainersDefaultPoolName = "sakura::containers";
+
+    inline static void* alloc_raw(size_t count, size_t item_size, size_t item_align)
+    {
+#if defined(TRACY_TRACE_ALLOCATION)
+        SkrCZoneNCS(z, "containers::allocate", SKR_ALLOC_TRACY_MARKER_COLOR, 16, 1);
+        void* p = sakura_malloc_alignedN(count * item_size, item_align, kContainersDefaultPoolName);
+        SkrCZoneEnd(z);
+        return p;
+#else
+        return sakura_malloc_aligned(count * item_size, item_align);
+#endif
+    }
+    inline static void free_raw(void* p, size_t item_align)
     {
         if (p)
         {
 #if defined(TRACY_TRACE_ALLOCATION)
             SkrCZoneNCS(z, "containers::free", SKR_DEALLOC_TRACY_MARKER_COLOR, 16, 1);
-            sakura_free_alignedN(p, alignof(T), kContainersDefaultPoolName);
+            sakura_free_alignedN(p, item_align, kContainersDefaultPoolName);
             SkrCZoneEnd(z);
 #else
-            sakura_free_aligned(p, alignof(T));
+            sakura_free_aligned(p, item_align);
 #endif
         }
     }
-
-    template <typename T>
-    static T* realloc(T* p, size_t size)
+    inline static void* realloc_raw(void* p, size_t count, size_t item_size, size_t item_align)
     {
         SkrCZoneNCS(z, "containers::realloc", SKR_DEALLOC_TRACY_MARKER_COLOR, 16, 1);
-        void* new_mem = sakura_realloc_alignedN(p, size * sizeof(T), alignof(T), kContainersDefaultPoolName);
+        void* new_mem = sakura_realloc_alignedN(p, count * item_size, item_align, kContainersDefaultPoolName);
         SkrCZoneEnd(z);
-        return reinterpret_cast<T*>(new_mem);
+        return new_mem;
     }
+    //===>raw alloc api
 };
 } // namespace skr

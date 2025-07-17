@@ -143,28 +143,13 @@ class EnumValueConfig extends ConfigBase {
 }
 
 class _Gen {
-  static body(record: db.Record) {
-    const b = record.generate_body_content;
-    b.$line(``);
-    b.$line(`::skr::GUID iobject_get_typeid() const override`);
-    b.$scope((_b) => {
-      b.$line(`using namespace ::skr;`);
-      b.$line(
-        `using ThisType = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>;`,
-      );
-      b.$line(`return type_id_of<ThisType>();`);
-    });
-    b.$line(
-      `void* iobject_get_head_ptr() const override { return const_cast<void*>((const void*)this); }`,
-    );
-    b.$line(``);
-  }
   static header(header: db.Header) {
     const b = header.gen_code;
     const _gen_records = header.records.filter(_Gen.filter_record);
     const _gen_enums = header.enums.filter(_Gen.filter_enum);
 
     b.$line(`// BEGIN RTTR GENERATED`);
+    b.$line(`// RTTRTraits`)
     b.$line(`#include "SkrRTTR/rttr_traits.hpp"`);
     _gen_records.forEach((record) => {
       b.$line(`SKR_RTTR_TYPE(${record.name}, "${record.ml_configs.guid}")`,);
@@ -172,6 +157,41 @@ class _Gen {
     _gen_enums.forEach((enum_) => {
       b.$line(`SKR_RTTR_TYPE(${enum_.name}, "${enum_.ml_configs.guid}")`,);
     });
+    b.$line(``)
+    b.$line(`// forward export functions for friend`)
+    b.$line(`namespace skr {`);
+    header.each_record((record, header) => {
+      // skip if rttr is disabled
+      if (record.ml_configs.rttr.enable === false) return;
+
+      // gen friend for export
+      {
+        const _gen_fields: db.Field[] = record.fields.filter((field) => field.ml_configs.rttr.enable);
+        const _gen_methods: db.Method[] = record.methods.filter((method) => method.ml_configs.rttr.enable);
+        const _gen_ctors: db.Ctor[] = record.ctors.filter(ctor => ctor.ml_configs.rttr.enable);
+        let _any_private_export = false;
+        _gen_fields.forEach((field) => {
+          if (field.access !== "public") {
+            _any_private_export = true;
+          }
+        });
+        _gen_methods.forEach((method) => {
+          if (method.access !== "public") {
+            _any_private_export = true;
+          }
+        });
+        _gen_ctors.forEach((ctor) => {
+          if (ctor.access !== "public") {
+            _any_private_export = true;
+          }
+        });
+
+        if (_any_private_export) {
+          b.$line(`void zz_register_record_${record.name.replaceAll('::', '_')}(struct ::skr::RTTRType* type);`);
+        }
+      }
+    })
+    b.$line(`}`);
     b.$line(`// END RTTR GENERATED`);
   }
   static source(main_db: db.Module) {
@@ -193,13 +213,10 @@ class _Gen {
     b.$line(`#include "SkrRTTR/export/export_builder.hpp"`);
     b.$line(``);
 
-    // static register
-    b.$line(`SKR_EXEC_STATIC_CTOR`);
-    b.$line(`{`);
-    b.$indent(() => {
-      b.$line(`using namespace ::skr;`);
-      b.$line(``);
-
+    // static register functions
+    b.$line(`// static register functions`);
+    b.$line(`namespace skr {`);
+    {
       // export records
       _gen_records.forEach((record, _header) => {
         const record_config = record.ml_configs.rttr as RecordConfig;
@@ -213,7 +230,7 @@ class _Gen {
         const _gen_ctors: db.Ctor[] = record.ctors.filter(ctor => ctor.ml_configs.rttr.enable);
 
         // register function
-        b.$line(`register_type_loader(type_id_of<${record.name}>(), +[](RTTRType* type) {`);
+        b.$line(`static void zz_register_record_${record.name.replaceAll('::', '_')}(RTTRType* type) {`);
         b.$indent((_b) => {
           // module info
           b.$line(`// setup module`);
@@ -332,7 +349,7 @@ class _Gen {
           });
           b.$line(`});`);
         });
-        b.$line(`});`);
+        b.$line(`}`);
       });
 
       // export enums
@@ -341,7 +358,7 @@ class _Gen {
         const _gen_enum_values = enum_.values.filter((enum_value) => enum_value.ml_configs.rttr.enable);
 
         // register function
-        b.$line(`register_type_loader(type_id_of<${enum_.name}> (), +[](RTTRType * type){`,);
+        b.$line(`static void zz_register_enum_${enum_.name.replaceAll('::', '_')}(RTTRType * type){`,);
         b.$indent((_b) => {
           // module info
           b.$line(`// setup module`);
@@ -380,7 +397,26 @@ class _Gen {
           });
           b.$line(`});`);
         });
-        b.$line(`});`);
+        b.$line(`}`);
+      });
+    }
+    b.$line(`}`);
+
+    // static register
+    b.$line(`SKR_EXEC_STATIC_CTOR`);
+    b.$line(`{`);
+    b.$indent(() => {
+      b.$line(`using namespace ::skr;`);
+      b.$line(``);
+
+      // export records
+      _gen_records.forEach((record, _header) => {
+        b.$line(`register_type_loader(type_id_of<${record.name}>(), zz_register_record_${record.name.replaceAll('::', '_')});`,);
+      });
+
+      // export enums
+      _gen_enums.forEach((enum_) => {
+        b.$line(`register_type_loader(type_id_of<${enum_.name}> (), zz_register_enum_${enum_.name.replaceAll('::', '_')});`);
       });
     });
     b.$line(`};`);
@@ -530,8 +566,53 @@ class RttrGenerator extends gen.Generator {
 
   override gen_body(): void {
     this.main_module_db.each_record((record, header) => {
+      // skip if rttr is disabled
+      if (record.ml_configs.rttr.enable === false) return;
+
+      // gen friend for export
+      {
+        const _gen_fields: db.Field[] = record.fields.filter((field) => field.ml_configs.rttr.enable);
+        const _gen_methods: db.Method[] = record.methods.filter((method) => method.ml_configs.rttr.enable);
+        const _gen_ctors: db.Ctor[] = record.ctors.filter(ctor => ctor.ml_configs.rttr.enable);
+        let _any_private_export = false;
+        _gen_fields.forEach((field) => {
+          if (field.access === "private") {
+            _any_private_export = true;
+          }
+        });
+        _gen_methods.forEach((method) => {
+          if (method.access === "private") {
+            _any_private_export = true;
+          }
+        });
+        _gen_ctors.forEach((ctor) => {
+          if (ctor.access === "private") {
+            _any_private_export = true;
+          }
+        });
+
+        if (_any_private_export) {
+          const b = record.generate_body_content;
+          b.$line(`friend void ::skr::zz_register_record_${record.name.replaceAll('::', '_')}(struct ::skr::RTTRType* type);`);
+        }
+      }
+
+      // gen iobject body
       if (this.project_db.is_derived(record, "skr::IObject")) {
-        _Gen.body(record);
+        const b = record.generate_body_content;
+        b.$line(``);
+        b.$line(`::skr::GUID iobject_get_typeid() const override`);
+        b.$scope((_b) => {
+          b.$line(`using namespace ::skr;`);
+          b.$line(
+            `using ThisType = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>;`,
+          );
+          b.$line(`return type_id_of<ThisType>();`);
+        });
+        b.$line(
+          `void* iobject_get_head_ptr() const override { return const_cast<void*>((const void*)this); }`,
+        );
+        b.$line(``);
       }
     });
   }

@@ -201,7 +201,7 @@ std::pair<CGPUTextureId, ECGPUResourceState> TexturePool::allocate(const CGPUTex
         textures[key].emplace_back(new_tex, desc.start_state, mark);
     }
     textures[key].front().mark = mark;
-    allocated                  = { textures[key].front().texture, textures[key].front().state };
+    allocated = { textures[key].front().texture, textures[key].front().state };
     textures[key].pop_front();
     return allocated;
 }

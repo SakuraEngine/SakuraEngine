@@ -317,7 +317,7 @@ void SkrRenderWindow::_upload_draw_data()
                 memcpy(idx_dst, render_indices.data(), indices_count * sizeof(PaintIndex));
                 memcpy(transform_dst, render_transforms.data(), transforms_count * sizeof(rtm::matrix4x4f));
                 memcpy(projection_dst, render_projections.data(), projections_count * sizeof(rtm::matrix4x4f));
-                memcpy(rdata_dst, render_data.data(), render_data_count * sizeof(skr_float4x4_t));
+                memcpy((void*)rdata_dst, render_data.data(), render_data_count * sizeof(skr_float4x4_t));
             }
         );
     }

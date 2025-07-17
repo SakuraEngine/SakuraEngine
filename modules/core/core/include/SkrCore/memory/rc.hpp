@@ -51,8 +51,10 @@ struct RC {
 
     // factory
     template <typename... Args>
+    requires(std::is_constructible_v<T, Args...>)
     static RC New(Args&&... args);
     template <typename... Args>
+    requires(std::is_constructible_v<T, Args...>)
     static RC NewZeroed(Args&&... args);
 
     // getter
@@ -121,8 +123,10 @@ struct RCUnique {
 
     // factory
     template <typename... Args>
+    requires(std::is_constructible_v<T, Args...>)
     static RCUnique New(Args&&... args);
     template <typename... Args>
+    requires(std::is_constructible_v<T, Args...>)
     static RCUnique NewZeroed(Args&&... args);
 
     // getter
@@ -467,12 +471,14 @@ inline RC<T>& RC<T>::operator=(RCUnique<U>&& rhs)
 // factory
 template <typename T>
 template <typename... Args>
+requires(std::is_constructible_v<T, Args...>)
 inline RC<T> RC<T>::New(Args&&... args)
 {
     return { SkrNew<T>(std::forward<Args>(args)...) };
 }
 template <typename T>
 template <typename... Args>
+requires(std::is_constructible_v<T, Args...>)
 inline RC<T> RC<T>::NewZeroed(Args&&... args)
 {
     return { SkrNewZeroed<T>(std::forward<Args>(args)...) };
@@ -832,12 +838,14 @@ inline RCUnique<T>& RCUnique<T>::operator=(RCUnique<U>&& rhs)
 // factory
 template <typename T>
 template <typename... Args>
+requires(std::is_constructible_v<T, Args...>)
 inline RCUnique<T> RCUnique<T>::New(Args&&... args)
 {
     return { SkrNew<T>(std::forward<Args>(args)...) };
 }
 template <typename T>
 template <typename... Args>
+requires(std::is_constructible_v<T, Args...>)
 inline RCUnique<T> RCUnique<T>::NewZeroed(Args&&... args)
 {
     return { SkrNewZeroed<T>(std::forward<Args>(args)...) };

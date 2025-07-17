@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrRTTR/iobject.hpp"
-#include "stack_proxy.hpp"
+#include "./stack_proxy.hpp"
 #ifndef __meta__
-    #include "SkrRTTR/scriptble_object.generated.h"
+    #include "SkrRTTR/script/scriptble_object.generated.h"
 #endif
 
 namespace skr

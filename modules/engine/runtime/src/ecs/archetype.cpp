@@ -307,7 +307,7 @@ sugoi_group_t* sugoi_storage_t::cloneGroup(sugoi_group_t* srcG)
     if(auto g = tryGetGroup(srcG->type))
         return g;
     sugoi_group_t& group = *new (pimpl->groupPool.allocate()) sugoi_group_t();
-    std::memcpy(&group, srcG, sizeof(sugoi_group_t));
+    std::memcpy((void*)&group, srcG, sizeof(sugoi_group_t));
     char* buffer = (char*)(&group + 1);
     group.type = sugoi::clone(srcG->type, buffer);
     group.archetype = cloneArchetype(srcG->archetype);

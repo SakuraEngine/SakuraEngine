@@ -1520,7 +1520,7 @@ struct TypeSignatureBuilder {
         return { data.data(), data.size() };
     }
 
-    Vector<uint8_t> data;
+    InlineVector<uint8_t, 256> data;
 };
 #pragma endregion
 

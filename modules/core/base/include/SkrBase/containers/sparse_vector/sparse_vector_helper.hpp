@@ -13,7 +13,7 @@ inline void copy_sparse_vector_data(SparseVectorStorage<T, TSize>* dst, const Sp
     using StorageType = SparseVectorStorage<T, TSize>;
 
     // copy data
-    if constexpr (::skr::memory::MemoryTraits<T>::use_ctor)
+    if constexpr (::skr::memory::MemoryTraits<T>::use_copy)
     {
         for (TSize i = 0; i < size; ++i)
         {

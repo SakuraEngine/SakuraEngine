@@ -102,6 +102,8 @@ class BasicGenerator extends gen.Generator {
     this.main_module_db.each_record((record, _header) => {
       // check GENERATE_BODY()
       if (!record.generate_body_content.is_empty() && !record.has_generate_body_flag) {
+        console.error(`cpp file: ${record.file_name}:${record.line}`)
+        console.error(`content: ${record.generate_body_content}`)
         throw new Error(
           `The record ${record.name} has a body content but the generate_body_flag is not set. Please check the record.`
         )

@@ -9,7 +9,6 @@
 #include "SkrProfile/profile.h"
 #include "pass_profiler.h"
 #include "SkrOS/thread.h"
-#include "rtm/qvvf.h"
 
 CubeGeometry::InstanceData CubeGeometry::instance_data;
 
@@ -131,15 +130,8 @@ void create_resources()
     ib_cpy.size                       = sizeof(CubeGeometry::g_Indices);
     cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &ib_cpy);
     // wvp
-    const auto quat = rtm::quat_from_euler(
-        rtm::scalar_deg_to_rad(0.f),
-        rtm::scalar_deg_to_rad(0.f),
-        rtm::scalar_deg_to_rad(0.f)
-    );
-    const rtm::vector4f   translation = rtm::vector_set(0.f, 0.f, 0.f, 0.f);
-    const rtm::vector4f   scale       = rtm::vector_set(2.f, 2.f, 2.f, 0.f);
-    const rtm::qvvf       transform   = rtm::qvv_set(quat, translation, scale);
-    const rtm::matrix4x4f matrix      = rtm::matrix_cast(rtm::matrix_from_qvv(transform));
+    const auto transform = skr::TransformF(skr::QuatF(skr::RotatorF()), skr::float3(0), skr::float3(2));
+    const auto matrix = skr::transpose(transform.to_matrix());
     CubeGeometry::instance_data.world = *(skr_float4x4_t*)&matrix;
     {
         memcpy((char8_t*)upload_buffer->info->cpu_mapped_address + sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices), &CubeGeometry::instance_data, sizeof(CubeGeometry::InstanceData));
@@ -213,7 +205,7 @@ struct LightingCSPushConstants {
     skr_float2_t viewportOrigin = { 0, 0 };
 };
 static LightingCSPushConstants lighting_cs_data     = {};
-bool                           fragmentLightingPass = true;
+bool                           fragmentLightingPass = false;
 bool                           lockFPS              = true;
 bool                           DPIAware             = false;
 
@@ -262,7 +254,12 @@ int main(int argc, char* argv[])
             config.queue          = gfx_queue;
             config.static_sampler = static_sampler;
             render_backend->init(config);
-            imgui_backend.create({}, std::move(render_backend));
+
+            ImGuiWindowCreateInfo window_config = {
+                .size = { BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT },
+                .is_resizable = false
+            };
+            imgui_backend.create(window_config, std::move(render_backend));
             imgui_backend.main_window().show();
             imgui_backend.enable_docking();
 
@@ -392,17 +389,16 @@ int main(int argc, char* argv[])
                 }
             );
             // camera
-            auto view = rtm::view_look_at(
-                rtm::vector_set(0.f, 2.5f, 2.5f, 0.0f) /*eye*/,
-                rtm::vector_set(0.f, 0.f, 0.f, 0.f) /*at*/,
-                rtm::vector_set(0.f, 1.f, 0.f, 0.f) /*up*/
-            );
-            auto proj = rtm::proj_perspective_fov(
-                3.1415926f / 2.f,
-                (float)BACK_BUFFER_WIDTH / (float)BACK_BUFFER_HEIGHT,
+            auto eye = skr::float4(0.f, 2.1f, -2.1f, 0.0f) /*eye*/;
+            auto view = skr::float4x4::view_at(eye, skr::float4(0.f), skr::float4(skr::float3::up(), 0.f));
+            const auto aspect_ratio = (float)BACK_BUFFER_WIDTH / (float)BACK_BUFFER_HEIGHT;
+            auto proj = skr::float4x4::perspective_fov(
+                skr::camera_fov_y_from_x(3.1415926f / 2.f, aspect_ratio),
+                aspect_ratio,
                 1.f, 1000.f
             );
-            auto view_proj = rtm::matrix_mul(rtm::matrix_cast(view), proj);
+            auto _view_proj = skr::mul(view, proj);
+            auto view_proj = skr::transpose(_view_proj);
             graph->add_render_pass(
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
                     builder.set_name(u8"gbuffer_pass")

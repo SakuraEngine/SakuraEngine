@@ -8,9 +8,16 @@
 namespace skr::container
 {
 #ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : 4624 )
+    #pragma warning(push)
+    #pragma warning(disable : 4624)
 #endif
+
+// free linked list helper, for generic
+template <typename TSize>
+struct SparseVectorFreeListNode {
+    TSize prev = 0;
+    TSize next = 0;
+};
 
 // SparseVector 的 Element 定义
 // 空穴状态会变为链表的节点，带来的问题是当 sizeof(T) < sizeof(TSize) * 2 时，会产生不必要的浪费的浪费
@@ -30,7 +37,7 @@ union SparseVectorStorage
 };
 
 #ifdef _MSC_VER
-#pragma warning( pop )
+    #pragma warning(pop)
 #endif
 
 // SparseVector 的数据引用，代替单纯的指针/Index返回

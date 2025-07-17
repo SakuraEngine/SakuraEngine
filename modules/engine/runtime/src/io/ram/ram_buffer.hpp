@@ -11,8 +11,8 @@ struct SKR_RUNTIME_API RAMIOBuffer : public IRAMIOBuffer {
     SKR_RC_IMPL(override)
     virtual ~RAMIOBuffer() SKR_NOEXCEPT;
 
-    uint8_t* get_data() const SKR_NOEXCEPT { return bytes; }
-    uint64_t get_size() const SKR_NOEXCEPT { return size; }
+    uint8_t* get_data() const SKR_NOEXCEPT override { return bytes; }
+    uint64_t get_size() const SKR_NOEXCEPT override { return size; }
 
     void allocate_buffer(uint64_t n) SKR_NOEXCEPT;
     void free_buffer() SKR_NOEXCEPT;

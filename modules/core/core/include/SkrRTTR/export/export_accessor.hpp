@@ -27,7 +27,7 @@ struct ExportCtorInvoker<void(Args...)> {
     inline                     operator bool() const { return is_valid(); }
 
     // invoke
-    inline void invoke(void* p_obj, Args... args)
+    inline void invoke(void* p_obj, Args... args) const
     {
         SKR_ASSERT(_ctor_data->native_invoke);
         auto invoker = reinterpret_cast<void (*)(void*, Args...)>(_ctor_data->native_invoke);
@@ -51,7 +51,7 @@ struct ExportMethodInvoker<Ret(Args...)> {
     inline                       operator bool() const { return is_valid(); }
 
     // invoke
-    inline Ret invoke(void* p_obj, Args... args)
+    inline Ret invoke(void* p_obj, Args... args) const
     {
         SKR_ASSERT(_method_data->native_invoke);
         auto invoker = reinterpret_cast<Ret (*)(void*, Args...)>(_method_data->native_invoke);
@@ -75,7 +75,7 @@ struct ExportStaticMethodInvoker<Ret(Args...)> {
     inline                             operator bool() const { return is_valid(); }
 
     // invoke
-    inline Ret invoke(Args... args)
+    inline Ret invoke(Args... args) const
     {
         SKR_ASSERT(_method_data->native_invoke);
         auto invoker = reinterpret_cast<Ret (*)(Args...)>(_method_data->native_invoke);
@@ -99,7 +99,7 @@ struct ExportExternMethodInvoker<Ret(Args...)> {
     inline                             operator bool() const { return is_valid(); }
 
     // invoke
-    inline Ret invoke(Args... args)
+    inline Ret invoke(Args... args) const
     {
         SKR_ASSERT(_method_data->native_invoke);
         auto invoker = reinterpret_cast<Ret (*)(Args...)>(_method_data->native_invoke);

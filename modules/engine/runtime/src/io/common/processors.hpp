@@ -18,14 +18,14 @@ public:
         }
     }
 
-    bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
+    bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT override
     {
         queues[priority].enqueue(batch);
         skr_atomic_fetch_add_relaxed(&counts[priority], 1);
         return true;
     }
 
-    virtual bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT
+    virtual bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT override
     {
         if (queues[priority].try_dequeue(batch))
         {
@@ -35,7 +35,7 @@ public:
         return false;
     }
 
-    uint64_t processed_count(SkrAsyncServicePriority priority) const SKR_NOEXCEPT
+    uint64_t processed_count(SkrAsyncServicePriority priority) const SKR_NOEXCEPT override
     {
         if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
         {
@@ -52,10 +52,10 @@ public:
         }
     }
 
-    virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT {}
-    virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT {}
-    bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return false; }
-    uint64_t processing_count(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return 0; }
+    virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT override {}
+    virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT override {}
+    bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT override { return false; }
+    uint64_t processing_count(SkrAsyncServicePriority priority) const SKR_NOEXCEPT override { return 0; }
 
 protected:
     SAtomic64 counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
@@ -66,7 +66,7 @@ using IOBatchBufferId = RC<IOBatchBuffer>;
 #define IO_RESOLVER_OBJECT_BODY \
     SKR_RC_IMPL(override);\
     SKR_RC_DELETER_IMPL_DEFAULT(override)\
-    uint64_t processing_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT\
+    uint64_t processing_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT override\
     {\
         if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)\
             return skr_atomic_load_acquire(&processing_counts[priority]);\
@@ -80,7 +80,7 @@ using IOBatchBufferId = RC<IOBatchBuffer>;
             return count;\
         }\
     }\
-    uint64_t processed_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT\
+    uint64_t processed_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT override\
     {\
         if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)\
             return skr_atomic_load_acquire(&processed_counts[priority]);\
@@ -114,17 +114,17 @@ struct IORequestResolverChain final : public IIORequestResolverChain
 public:
     IORequestResolverChain() SKR_NOEXCEPT;
 
-    bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
+    bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT override
     {
         fetched_batches[priority].enqueue(batch);
         inc_processing(priority);
         return true;
     }
-    virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT { return; }
-    virtual bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return false; }
+    virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT override;
+    virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT override { return; }
+    virtual bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT override { return false; }
 
-    virtual bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT
+    virtual bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT override
     {
         if (processed_batches[priority].try_dequeue(batch))
         {
@@ -148,7 +148,7 @@ public:
             chain.add(resolver);
         }
     }
-    RC<IIORequestResolverChain> then(IORequestResolverId resolver) SKR_NOEXCEPT
+    RC<IIORequestResolverChain> then(IORequestResolverId resolver) SKR_NOEXCEPT override
     {
         chain.add(resolver);
         return this;

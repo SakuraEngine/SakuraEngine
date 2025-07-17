@@ -1,28 +1,36 @@
 #include <SkrV8/v8_module.hpp>
 #include <SkrV8/v8_isolate.hpp>
 #include <SkrV8/v8_bind.hpp>
-#include <SkrRTTR/script_binder.hpp>
+#include <SkrRTTR/script/script_binder.hpp>
 
 namespace skr
 {
-// ctor & dtor
-V8Module::V8Module(V8Isolate* isolate)
-    : _isolate(isolate)
+// setup by isolate
+void V8Module::_init_basic(V8Isolate* isolate, StringView name)
 {
+    _isolate             = isolate;
     _module_info.manager = &_isolate->script_binder_manger();
+    _name                = name;
+}
+
+// ctor & dtor
+V8Module::V8Module()
+{
 }
 V8Module::~V8Module()
 {
-    shutdown();
+    if (is_built())
+    {
+        shutdown();
+    }
 }
 
 // build api
-void V8Module::name(StringView name)
-{
-    _name = name;
-}
 bool V8Module::build(FunctionRef<void(ScriptModule& module)> build_func)
 {
+    SKR_ASSERT(!is_built());
+    SKR_ASSERT(_isolate != nullptr && "please setup isolate first");
+
     // build
     build_func(_module_info);
 
@@ -68,11 +76,6 @@ bool V8Module::build(FunctionRef<void(ScriptModule& module)> build_func)
             auto            isolate     = _isolate->v8_isolate();
             auto            skr_isolate = reinterpret_cast<V8Isolate*>(isolate->GetData(0));
             v8::HandleScope handle_scope(isolate);
-            if (skr_isolate->_modules.contains(_name))
-            {
-                SKR_LOG_FMT_ERROR(u8"module {} already exists", _name);
-                return false;
-            }
 
             // build import items
             std::vector<v8::Local<v8::String>> imports;
@@ -91,17 +94,19 @@ bool V8Module::build(FunctionRef<void(ScriptModule& module)> build_func)
             _module.Reset(isolate, module);
 
             // add to skr module map
-            skr_isolate->_modules.add(_name, this);
-            skr_isolate->_to_skr_module.add(module->GetIdentityHash(), this);
+            skr_isolate->register_cpp_module_id(
+                this,
+                module->GetIdentityHash()
+            );
 
             return true;
         }
     }
 }
-
-// init & shutdown
 void V8Module::shutdown()
 {
+    SKR_ASSERT(is_built());
+
     // handle scope
     v8::Isolate::Scope isolate_scope(_isolate->v8_isolate());
     v8::HandleScope    handle_scope(_isolate->v8_isolate());
@@ -110,11 +115,17 @@ void V8Module::shutdown()
     auto isolate     = _isolate->v8_isolate();
     auto skr_isolate = reinterpret_cast<V8Isolate*>(isolate->GetData(0));
     auto module      = _module.Get(isolate);
-    skr_isolate->_modules.remove(_name);
-    skr_isolate->_to_skr_module.remove(module->GetIdentityHash());
+    skr_isolate->unregister_cpp_module_id(
+        this,
+        module->GetIdentityHash()
+    );
 
     // destroy module
     _module.Reset();
+}
+bool V8Module::is_built() const
+{
+    return !_module.IsEmpty();
 }
 
 // getter
@@ -133,10 +144,10 @@ v8::MaybeLocal<v8::Value> V8Module::_eval_callback(
     auto  isolate    = v8::Isolate::GetCurrent();
     auto* skr_iolate = reinterpret_cast<V8Isolate*>(v8::Isolate::GetCurrent()->GetData(0));
 
-    if (auto result = skr_iolate->_to_skr_module.find(module->GetIdentityHash()))
+    if (auto* result = skr_iolate->find_cpp_module(module->GetIdentityHash()))
     {
         // export namespace roots
-        for (const auto& [k, v] : result.value()->_module_info.ns_mapper().root().children())
+        for (const auto& [k, v] : result->_module_info.ns_mapper().root().children())
         {
             // clang-format off
             module->SetSyntheticModuleExport(

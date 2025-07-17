@@ -1,18 +1,25 @@
-#include "SkrV8/v8_context.hpp"
-#include "SkrCore/log.hpp"
-#include "SkrV8/v8_isolate.hpp"
-#include "SkrV8/v8_bind.hpp"
-#include "SkrV8/v8_module.hpp"
-#include "v8-exception.h"
-#include "v8-function.h"
+#include <SkrV8/v8_context.hpp>
+#include <SkrCore/log.hpp>
+#include <SkrV8/v8_isolate.hpp>
+#include <SkrV8/v8_bind.hpp>
+#include <SkrV8/v8_module.hpp>
+
+#include <v8-exception.h>
+#include <v8-function.h>
 
 namespace skr
 {
-// ctor & dtor
-V8Context::V8Context(V8Isolate* isolate)
-    : _isolate(isolate)
+// setup by isolate
+void V8Context::_init_basic(V8Isolate* isolate, String name)
 {
+    _isolate               = isolate;
+    _name                  = name;
     _global_module.manager = &_isolate->script_binder_manger();
+}
+
+// ctor & dtor
+V8Context::V8Context()
+{
 }
 V8Context::~V8Context()
 {
@@ -149,7 +156,7 @@ V8Value V8Context::exec_script(StringView script, StringView file_path)
     v8::Local<v8::String> source = V8Bind::to_v8(script, false);
     v8::ScriptOrigin      origin(
         isolate,
-        V8Bind::to_v8(file_path),
+        V8Bind::to_v8(file_path.is_empty() ? u8"[CPP]" : file_path),
         0,
         0,
         true,
@@ -207,7 +214,7 @@ V8Value V8Context::exec_module(StringView script, StringView file_path)
     // compile module
     v8::ScriptOrigin origin(
         isolate,
-        V8Bind::to_v8(file_path),
+        V8Bind::to_v8(file_path.is_empty() ? u8"[CPP]" : file_path),
         0,
         0,
         true,
@@ -307,17 +314,28 @@ v8::MaybeLocal<v8::Module> V8Context::_resolve_module(
         return {};
     }
 
-    // find module
-    auto found_module = skr_isolate->_modules.find(module_name);
-    if (!found_module)
+    // solve module kind
+    bool is_cpp_module = true;
+
+    // solve module
+    if (is_cpp_module)
+    { // cpp module
+        // find module
+        auto found_module = skr_isolate->find_cpp_module(module_name);
+        if (!found_module)
+        {
+            isolate->ThrowException(V8Bind::to_v8(u8"cannot find module"));
+            SKR_LOG_FMT_ERROR(u8"module {} not found", module_name);
+            return {};
+        }
+
+        // return module
+        return found_module->v8_module();
+    }
+    else
     {
-        isolate->ThrowException(V8Bind::to_v8(u8"cannot find module"));
-        SKR_LOG_FMT_ERROR(u8"module {} not found", module_name);
         return {};
     }
-
-    // return module
-    return found_module.value()->v8_module();
 }
 
 } // namespace skr

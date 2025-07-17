@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrContainers/set.hpp"
-#include <SkrRTTR/script_binder.hpp>
+#include <SkrRTTR/script/script_binder.hpp>
 
 namespace skr
 {
@@ -328,11 +328,8 @@ private:
     // check helper
     inline void _check_full_export(ScriptBinderRecordBase* record)
     {
-        // each ctors
-        for (const auto& ctor : record->ctors)
-        {
-            _check_full_export(ctor.params_binder);
-        }
+        // each ctor
+        _check_full_export(record->ctor.params_binder);
 
         // each fields
         for (const auto& [key, field] : record->fields)
@@ -349,51 +346,35 @@ private:
         // each methods
         for (const auto& [key, method] : record->methods)
         {
-            for (const auto& overload : method.overloads)
-            {
-                _check_full_export(overload.params_binder);
-                _check_exported(overload.return_binder.binder);
-            }
+            _check_full_export(method.params_binder);
+            _check_exported(method.return_binder.binder);
         }
 
         // each static methods
         for (const auto& [key, method] : record->static_methods)
         {
-            for (const auto& overload : method.overloads)
-            {
-                _check_full_export(overload.params_binder);
-                _check_exported(overload.return_binder.binder);
-            }
+            _check_full_export(method.params_binder);
+            _check_exported(method.return_binder.binder);
         }
 
         // each properties
         for (const auto& [key, prop] : record->properties)
         {
-            for (const auto& overload : prop.getter.overloads)
-            {
-                _check_full_export(overload.params_binder);
-                _check_exported(overload.return_binder.binder);
-            }
-            for (const auto& overload : prop.setter.overloads)
-            {
-                _check_full_export(overload.params_binder);
-                _check_exported(overload.return_binder.binder);
-            }
+            _check_full_export(prop.getter.params_binder);
+            _check_exported(prop.getter.return_binder.binder);
+
+            _check_full_export(prop.setter.params_binder);
+            _check_exported(prop.setter.return_binder.binder);
         }
 
         // each static properties
         for (const auto& [key, prop] : record->static_properties)
         {
-            for (const auto& overload : prop.getter.overloads)
-            {
-                _check_full_export(overload.params_binder);
-                _check_exported(overload.return_binder.binder);
-            }
-            for (const auto& overload : prop.setter.overloads)
-            {
-                _check_full_export(overload.params_binder);
-                _check_exported(overload.return_binder.binder);
-            }
+            _check_full_export(prop.getter.params_binder);
+            _check_exported(prop.getter.return_binder.binder);
+
+            _check_full_export(prop.setter.params_binder);
+            _check_exported(prop.setter.return_binder.binder);
         }
     }
     inline void _check_full_export(const Vector<ScriptBinderParam>& params)

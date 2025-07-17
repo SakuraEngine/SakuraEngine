@@ -54,6 +54,15 @@ struct RTTRTypeFindConfig {
     bool include_bases = true;
 };
 
+using RTTRInvokerDefaultCtor = ExportCtorInvoker<void()>;
+using RTTRInvokerCopyCtor    = ExportCtorInvoker<void(const void*)>;
+using RTTRInvokerMoveCtor    = ExportCtorInvoker<void(void*)>;
+using RTTRInvokerAssign      = ExportExternMethodInvoker<void(void*, const void*)>;
+using RTTRInvokerMoveAssign  = ExportExternMethodInvoker<void(void*, void*)>;
+using RTTRInvokerEqual       = ExportExternMethodInvoker<bool(const void*, const void*)>;
+using RTTRInvokerHash        = ExportExternMethodInvoker<size_t(const void*)>;
+using RTTRInvokerSwap        = ExportExternMethodInvoker<void(void*, void*)>;
+
 struct SKR_CORE_API RTTRType final {
     // ctor & dtor
     RTTRType();
@@ -72,6 +81,7 @@ struct SKR_CORE_API RTTRType final {
     size_t             size() const;
     size_t             alignment() const;
     void               each_name_space(FunctionRef<void(StringView)> each_func) const;
+    MemoryTraitsData   memory_traits_data() const;
 
     // kind getter
     bool is_primitive() const;
@@ -102,8 +112,8 @@ struct SKR_CORE_API RTTRType final {
 
     // get dtor
     Optional<RTTRDtorData> dtor_data() const;
-    DtorInvoker dtor_invoker() const;
-    void invoke_dtor(void* p) const;
+    DtorInvoker            dtor_invoker() const;
+    void                   invoke_dtor(void* p) const;
 
     // each method & field
     void each_bases(FunctionRef<void(const RTTRBaseData* base_data, const RTTRType* owner)> each_func, RTTRTypeEachConfig config = {}) const;
@@ -138,9 +148,14 @@ struct SKR_CORE_API RTTRType final {
     ExportExternMethodInvoker<Func> find_extern_method_t(StringView name, ETypeSignatureCompareFlag flag = ETypeSignatureCompareFlag::Strict, bool include_base = true) const;
 
     // find basic functions
-    ExportCtorInvoker<void()>                           find_default_ctor() const;
-    ExportCtorInvoker<void(const void*)>                find_copy_ctor() const;
-    ExportExternMethodInvoker<void(void*, const void*)> find_assign() const;
+    RTTRInvokerDefaultCtor find_default_ctor() const;
+    RTTRInvokerCopyCtor    find_copy_ctor() const;
+    RTTRInvokerMoveCtor    find_move_ctor() const;
+    RTTRInvokerAssign      find_assign() const;
+    RTTRInvokerMoveAssign  find_move_assign() const;
+    RTTRInvokerEqual       find_equal() const;
+    RTTRInvokerHash        find_hash() const;
+    RTTRInvokerSwap        find_swap() const;
 
     // flag & attribute
     ERTTRRecordFlag record_flag() const;
@@ -294,6 +309,21 @@ inline void RTTRType::each_name_space(FunctionRef<void(StringView)> each_func) c
     default:
         SKR_UNREACHABLE_CODE()
         break;
+    }
+}
+inline MemoryTraitsData RTTRType::memory_traits_data() const
+{
+    switch (_type_category)
+    {
+    case ERTTRTypeCategory::Primitive:
+        return _primitive_data.memory_traits_data;
+    case ERTTRTypeCategory::Record:
+        return _record_data.memory_traits_data;
+    case ERTTRTypeCategory::Enum:
+        return _enum_data.memory_traits_data;
+    default:
+        SKR_UNREACHABLE_CODE()
+        return {};
     }
 }
 

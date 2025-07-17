@@ -3,6 +3,13 @@
 #include "SkrBase/misc/integer_tools.hpp"
 #include "SkrBase/memory/memory_traits.hpp"
 #include "SkrBase/misc/swap.hpp"
+#include "SkrBase/types/guid.h"
+
+// generic id for generic system use
+namespace skr
+{
+static constexpr GUID kSparseHashSetStorageGenericId = u8"a2691920-e808-43ac-a697-9f9a32a0350d"_guid;
+}
 
 // SparseHashSet structs
 namespace skr::container
@@ -11,8 +18,8 @@ namespace skr::container
 // 存储的 hash 用于快速比较，next 用于查找 hash 链表
 template <typename T, typename TSize, typename HashType>
 struct SparseHashSetStorage {
-    T          _sparse_hash_set_data;
-    HashType   _sparse_hash_set_hash;
+    T             _sparse_hash_set_data;
+    HashType      _sparse_hash_set_hash;
     mutable TSize _sparse_hash_set_next;
 };
 

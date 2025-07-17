@@ -5,9 +5,20 @@
 #include "SkrBase/types.h"
 #include "SkrBase/math.h"
 
+namespace skr::concepts
+{
+template <typename T>
+concept BinWriterSupportBitPacking = requires(T t, void* data, size_t size) {
+    t.write_bits(data, size);
+};
+template <typename T>
+concept BinReaderSupportBitPacking = requires(T t, void* data, size_t size) {
+    t.read_bits(data, size);
+};
+} // namespace skr::concepts
+
 // writer & reader
-// TODO. 搬到 archive 里面去
-// TODO. use proxy instead
+// TODO. proxy 样式
 struct SBinaryWriter {
     using WriteFunc     = bool(void* user_data, const void* data, size_t size);
     using WriteBitsFunc = bool(void* user_data, const void* data, size_t size);
@@ -19,8 +30,7 @@ struct SBinaryWriter {
         _vwrite    = +[](void* user, const void* data, size_t size) -> bool {
             return static_cast<T*>(user)->write(data, size);
         };
-        auto SupportBitPacking = SKR_VALIDATOR((auto t), t.write_bits((void*)0, (size_t)0));
-        if constexpr (SupportBitPacking(SKR_TYPELIST(T)))
+        if constexpr (skr::concepts::BinWriterSupportBitPacking<T>)
         {
             _vwrite_bits = +[](void* user, const void* data, size_t size) -> bool {
                 return static_cast<T*>(user)->write_bits(data, size);
@@ -52,8 +62,7 @@ struct SBinaryReader {
         _vread     = +[](void* user, void* data, size_t size) -> bool {
             return static_cast<T*>(user)->read(data, size);
         };
-        auto SupportBitPacking = SKR_VALIDATOR((auto t), t.read_bits((void*)0, (size_t)0));
-        if constexpr (SupportBitPacking(SKR_TYPELIST(T)))
+        if constexpr (skr::concepts::BinReaderSupportBitPacking<T>)
         {
             _vread_bits = +[](void* user, void* data, size_t size) -> bool {
                 return static_cast<T*>(user)->read_bits(data, size);
@@ -82,15 +91,18 @@ template <typename T>
 struct BinSerde;
 
 // concept
+namespace concepts
+{
 template <typename T>
 concept HasBinRead = requires(SBinaryReader* r, T& t) { BinSerde<T>::read(r, t); };
 template <typename T>
 concept HasBinWrite = requires(SBinaryWriter* w, const T& t) { BinSerde<T>::write(w, t); };
+} // namespace concepts
 
 // helper
-template <HasBinRead T>
+template <concepts::HasBinRead T>
 inline bool bin_read(SBinaryReader* r, T& v) { return BinSerde<T>::read(r, v); }
-template <HasBinWrite T>
+template <concepts::HasBinWrite T>
 inline bool bin_write(SBinaryWriter* w, const T& v) { return BinSerde<T>::write(w, v); }
 
 // POD writer
@@ -176,7 +188,7 @@ struct BinSerde<T> {
 template <typename T, size_t N>
 struct BinSerde<T[N]> {
     inline static bool read(SBinaryReader* r, T (&v)[N])
-        requires(HasBinRead<T>)
+        requires(concepts::HasBinRead<T>)
     {
         for (size_t i = 0; i < N; ++i)
         {
@@ -189,7 +201,7 @@ struct BinSerde<T[N]> {
         return true;
     }
     inline static bool write(SBinaryWriter* w, const T (&v)[N])
-        requires(HasBinWrite<T>)
+        requires(concepts::HasBinWrite<T>)
     {
         for (size_t i = 0; i < N; ++i)
         {
@@ -253,4 +265,4 @@ struct BinSerde<T> : BinSerdePOD<T> {
 template <MathMatrix T>
 struct BinSerde<T> : BinSerdePOD<T> {
 };
-}
+} // namespace skr

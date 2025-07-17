@@ -47,7 +47,7 @@ struct SparseHashBase : protected SparseVector<Memory> {
     SizeType          sparse_size() const;
     SizeType          hole_size() const;
     SizeType          bit_size() const;
-    SizeType          free_list_head() const;
+    SizeType          freelist_head() const;
     bool              is_compact() const;
     bool              is_empty() const;
     DataVector&       data_vector();
@@ -95,7 +95,7 @@ struct SparseHashBase : protected SparseVector<Memory> {
     template <typename Pred>
     SizeType remove_all_if(Pred&& pred);
 
-    // constains
+    // contains
     template <typename Pred>
     bool contains_if(Pred&& pred) const;
     template <typename Pred>
@@ -119,26 +119,6 @@ protected:
     DataRef _find_if(Pred&& pred) const;
     template <typename DataRef, typename Pred>
     DataRef _find_last_if(Pred&& pred) const;
-
-    // contains & count
-    template <typename Pred>
-    bool _contains(HasherType hash, Pred&& pred);
-    template <typename Pred>
-    SizeType _count(HasherType hash, Pred&& pred);
-
-    // sync hash
-    template <bool kKeepUnique>
-    bool _sync_hash();
-    template <bool kKeepUnique>
-    bool _sync_hash_at(SizeType index);
-
-    // modify
-    template <bool kKeepUnique, typename Modifier>
-    bool _modify_at(SizeType index, Modifier&& modifier, bool update_hash = true);
-    template <bool kKeepUnique, typename Modifier>
-    bool _modify_last(SizeType index, Modifier&& modifier, bool update_hash = true);
-    template <bool kKeepUnique, typename Modifier, typename DataRef>
-    bool _modify(DataRef ref, Modifier&& modifier, bool update_hash = true);
 
     // helpers
     SizeType _bucket_index(SizeType hash) const; // get bucket data index by hash
@@ -220,18 +200,18 @@ SKR_INLINE void SparseHashBase<Memory>::_remove_from_bucket(SizeType index)
 
     while (*p_next_idx != npos)
     {
-        auto& next_data = Super::at(*p_next_idx);
+        auto& next_node = Super::at(*p_next_idx);
 
         if (*p_next_idx == index)
         {
             // update link
-            *p_next_idx = next_data._sparse_hash_set_next;
+            *p_next_idx = next_node._sparse_hash_set_next;
             break;
         }
         else
         {
             // move to next node
-            p_next_idx = &next_data._sparse_hash_set_next;
+            p_next_idx = &next_node._sparse_hash_set_next;
         }
     }
 }
@@ -304,9 +284,9 @@ SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::bit
     return Super::bit_size();
 }
 template <typename Memory>
-SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::free_list_head() const
+SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::freelist_head() const
 {
-    return Super::free_list_head();
+    return Super::freelist_head();
 }
 template <typename Memory>
 SKR_INLINE bool SparseHashBase<Memory>::is_compact() const
@@ -563,16 +543,22 @@ SKR_INLINE bool SparseHashBase<Memory>::_remove(HashType hash, Pred&& pred)
 {
     if (!bucket()) return false;
 
-    SizeType search_index = bucket()[_bucket_index(hash)];
-    while (search_index != npos)
+    SizeType* p_next_idx = bucket() + _bucket_index(hash);
+    while (*p_next_idx != npos)
     {
-        auto& node = Super::at(search_index);
-        if (node._sparse_hash_set_hash == hash && pred(node._sparse_hash_set_data))
+        auto& next_node = Super::at(*p_next_idx);
+
+        if (next_node._sparse_hash_set_hash == hash && pred(next_node._sparse_hash_set_data))
         {
-            remove_at(search_index);
+            // update link
+            SizeType index = *p_next_idx;
+            *p_next_idx    = next_node._sparse_hash_set_next;
+
+            // remove item
+            Super::remove_at(index);
             return true;
         }
-        search_index = node._sparse_hash_set_next;
+        p_next_idx = &next_node._sparse_hash_set_next;
     }
     return false;
 }
@@ -588,13 +574,13 @@ SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::_re
 
     while (*p_next_idx != npos)
     {
-        auto& next_data = Super::at(*p_next_idx);
+        auto& next_node = Super::at(*p_next_idx);
 
-        if (next_data._sparse_hash_set_hash == hash && pred(next_data._sparse_hash_set_data))
+        if (next_node._sparse_hash_set_hash == hash && pred(next_node._sparse_hash_set_data))
         {
             // update link
             SizeType index = *p_next_idx;
-            *p_next_idx    = next_data._sparse_hash_set_next;
+            *p_next_idx    = next_node._sparse_hash_set_next;
 
             // remove item
             Super::remove_at(index);
@@ -603,7 +589,7 @@ SKR_INLINE typename SparseHashBase<Memory>::SizeType SparseHashBase<Memory>::_re
         else
         {
             // move to next node
-            p_next_idx = &next_data._sparse_hash_set_next;
+            p_next_idx = &next_node._sparse_hash_set_next;
         }
     }
 

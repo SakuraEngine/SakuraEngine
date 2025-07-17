@@ -50,6 +50,8 @@ sreflect_struct(
     rttr.attrs = [`test_rttr::AttrA{u8"fuck_u"}`];
 )
 BasicRecord : public BasicBaseAB {
+    SKR_GENERATE_BODY()
+
     // ctors
     inline BasicRecord() {}
     sattr(rttr.flags = ["ScriptVisible"])
@@ -82,6 +84,12 @@ BasicRecord : public BasicBaseAB {
     sattr(rttr.attrs += `test_rttr::AttrA{u8"shit_static_method"}`)
     static void    static_method_a() {}
     static int32_t static_method_b(float param_a, double param_b) { return 0; }
+
+private:
+    int32_t _private_field;
+    static int32_t _private_static_field;
+    void _private_method() {}
+    static void _private_static_method() {}
 };
 
 sreflect_enum_class(

@@ -29,7 +29,7 @@ struct CPPExternMethods {
     static constexpr const char8_t* LogicOr  = u8"__LOGIC_OR__";  // ||
 
     // assign op
-    static constexpr const char8_t* Assign    = u8"__ASSIGN__";     // "=
+    static constexpr const char8_t* Assign    = u8"__ASSIGN__";     // =
     static constexpr const char8_t* AddAssign = u8"__ADD_ASSIGN__"; // +=
     static constexpr const char8_t* SubAssign = u8"__SUB_ASSIGN__"; // -=
     static constexpr const char8_t* MulAssign = u8"__MUL_ASSIGN__"; // *=
@@ -46,6 +46,12 @@ struct CPPExternMethods {
 };
 
 struct SkrCoreExternMethods {
+    // hasher
+    static constexpr const char8_t* Hash = u8"__SKR_HASH__";
+
+    // swap
+    static constexpr const char8_t* Swap = u8"__SKR_SWAP__";
+
     // serialize
     static constexpr const char8_t* WriteJson = u8"__WRITE_JSON__";
     static constexpr const char8_t* ReadJson  = u8"__READ_JSON__";

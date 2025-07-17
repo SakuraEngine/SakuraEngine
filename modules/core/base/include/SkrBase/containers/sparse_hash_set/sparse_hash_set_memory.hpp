@@ -6,12 +6,29 @@
 #include "SkrBase/containers/sparse_vector/sparse_vector_iterator.hpp"
 #include "SkrBase/containers/sparse_hash_set/sparse_hash_set_helper.hpp"
 
+// generic fwd decl
+namespace skr
+{
+struct GenericSparseHashBase;
+}
+
 // sparse hash set memory base
 namespace skr::container
 {
 template <typename TSize>
 struct SparseHashSetMemoryBase : public SparseVectorMemoryBase<TSize> {
     using SizeType = TSize;
+    friend struct ::skr::GenericSparseHashBase;
+
+private:
+    using Super = SparseVectorMemoryBase<TSize>;
+    inline void _reset()
+    {
+        Super::_reset();
+        _bucket      = nullptr;
+        _bucket_size = 0;
+        _bucket_mask = 0;
+    }
 
 protected:
     SizeType* _bucket      = nullptr;

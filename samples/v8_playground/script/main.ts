@@ -1,5 +1,8 @@
 export { }
 
+// @ts-expect-error
+Symbol.metadata ??= Symbol('Symbol.metadata');
+
 try {
   let a: any
   a.b.c.fuck();
@@ -7,25 +10,16 @@ try {
   Debug.error(String(e));
 }
 
-async function test_async() {
-  let a: any
-  a.b.c.fuck();
-}
-
-await test_async()
-
-let a: any
-a.b.c.fuck();
-
 function ImDog(name: string) {
   return (value: any, context: ClassDecoratorContext) => {
-    Debug.info(`${name}: ImDog\n  at: <${context.kind}> ${context.name}, meta ${context.metadata}`);
+    Debug.info(`${name}: ImDog\n  at: <${context.kind}> ${context.name}, meta ${typeof context.metadata}`);
     // context.addInitializer(() => {
     //   Debug.info(`${name}: ImDog, ${this.speak}\n  at: <${context.kind}> ${context.name}`);
     // })
     return value;
   }
 }
+
 
 @ImDog("圆头")
 class TestClass {
@@ -36,6 +30,7 @@ class TestClass {
 }
 
 let test_inst = new TestClass("汪汪汪");
+
 
 Debug.wait(1000)
 Debug.info("Hello V8")
