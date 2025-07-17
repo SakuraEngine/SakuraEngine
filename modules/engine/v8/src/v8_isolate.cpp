@@ -1,15 +1,19 @@
-#include "SkrV8/v8_isolate.hpp"
-#include "SkrContainers/set.hpp"
-#include "SkrCore/log.hpp"
-#include "SkrV8/v8_bind_data.hpp"
-#include "libplatform/libplatform.h"
-#include "v8-initialization.h"
-#include "SkrRTTR/type.hpp"
-#include "v8-template.h"
-#include "v8-external.h"
-#include "v8-function.h"
-#include "v8-container.h"
-#include "SkrV8/v8_bind.hpp"
+#include <SkrV8/v8_isolate.hpp>
+#include <SkrContainers/set.hpp>
+#include <SkrV8/v8_bind_data.hpp>
+#include <SkrCore/log.hpp>
+#include <SkrRTTR/type.hpp>
+#include <SkrV8/v8_bind.hpp>
+#include <SkrV8/v8_context.hpp>
+#include <SkrV8/v8_module.hpp>
+
+// v8 includes
+#include <libplatform/libplatform.h>
+#include <v8-initialization.h>
+#include <v8-template.h>
+#include <v8-external.h>
+#include <v8-function.h>
+#include <v8-container.h>
 
 // allocator
 namespace skr
@@ -64,12 +68,16 @@ V8Isolate::V8Isolate()
 }
 V8Isolate::~V8Isolate()
 {
-    shutdown();
+    if (is_init())
+    {
+        shutdown();
+    }
 }
 
 void V8Isolate::init()
 {
     using namespace ::v8;
+    SKR_ASSERT(!is_init());
 
     // init isolate
     _isolate_create_params.array_buffer_allocator = SkrNew<V8Allocator>();
@@ -79,28 +87,52 @@ void V8Isolate::init()
     // auto microtasks
     _isolate->SetMicrotasksPolicy(v8::MicrotasksPolicy::kAuto);
 
-    // TODO. module support
+    // TODO. dynamic module support
     // _isolate->SetHostImportModuleDynamicallyCallback(_dynamic_import_module); // used for support module
     // _isolate->SetHostInitializeImportMetaObjectCallback(); // used for set import.meta
     // v8::Module::CreateSyntheticModule
 
     // TODO. promise support
     // _isolate->SetPromiseRejectCallback; // used for capture unhandledRejection
+
+    // init main context
+    _main_context = SkrNew<V8Context>();
+    _main_context->_init_basic(this, u8"[Main]");
+    _main_context->init();
 }
 void V8Isolate::shutdown()
 {
-    if (_isolate)
+    SKR_ASSERT(is_init());
+
+    // shutdown debugger
+    if (is_debugger_init())
     {
-        // cleanup templates
-        cleanup_templates();
-
-        // dispose isolate
-        _isolate->Dispose();
-        _isolate = nullptr;
-
-        // cleanup cores
-        cleanup_bind_cores();
+        shutdown_debugger();
     }
+
+    // shutdown main context
+    _main_context->shutdown();
+    _main_context.reset();
+
+    // shutdown contexts
+    _contexts.clear();
+
+    // shutdown modules
+    _cpp_modules.clear();
+
+    // cleanup templates
+    cleanup_templates();
+
+    // dispose isolate
+    _isolate->Dispose();
+    _isolate = nullptr;
+
+    // cleanup bind cores
+    cleanup_bind_cores();
+}
+bool V8Isolate::is_init() const
+{
+    return _isolate != nullptr;
 }
 
 // isolate operators
@@ -114,6 +146,177 @@ void V8Isolate::gc(bool full)
 
     _isolate->LowMemoryNotification();
     _isolate->IdleNotificationDeadline(0);
+}
+
+// context
+V8Context* V8Isolate::main_context() const
+{
+    return _main_context.get();
+}
+V8Context* V8Isolate::create_context(String name)
+{
+    // solve name
+    if (name.is_empty())
+    {
+        name = skr::format(u8"context_{}", _contexts.size());
+    }
+
+    // create context
+    auto* context = SkrNew<V8Context>();
+    context->_init_basic(this, name);
+    context->init();
+    _contexts.add(context);
+
+    // notify inspector client
+    if (is_debugger_init())
+    {
+        _inspector_client.notify_context_created(context);
+    }
+
+    return context;
+}
+void V8Isolate::destroy_context(V8Context* context)
+{
+    // shutdown context
+    context->shutdown();
+    _contexts.remove(context);
+
+    // notify inspector client
+    if (is_debugger_init())
+    {
+        _inspector_client.notify_context_destroyed(context);
+    }
+}
+
+// module
+V8Module* V8Isolate::add_cpp_module(StringView name)
+{
+    if (auto found = _cpp_modules.find(name))
+    {
+        SKR_LOG_FMT_ERROR(u8"module {} already exists", name);
+        return found.value().get();
+    }
+    else
+    {
+        auto* module = SkrNew<V8Module>();
+        module->_init_basic(this, name);
+        _cpp_modules.add(name, module).value();
+        return module;
+    }
+}
+void V8Isolate::remove_cpp_module(V8Module* module)
+{
+    if (auto found = _cpp_modules.find(module->name()))
+    {
+        auto* module = found.value().get();
+        if (module->is_built())
+        {
+            module->shutdown();
+        }
+        _cpp_modules.remove(module->name());
+    }
+    else
+    {
+        SKR_LOG_FMT_ERROR(u8"module {} not found", module->name());
+        return;
+    }
+}
+
+void V8Isolate::register_cpp_module_id(V8Module* module, int v8_module_id)
+{
+    auto add_result = _cpp_modules_id.add(v8_module_id, module);
+    if (add_result.already_exist())
+    {
+        SKR_LOG_FMT_ERROR(u8"v8 module id {} already registered for module {}", v8_module_id, module->name());
+        return;
+    }
+}
+void V8Isolate::unregister_cpp_module_id(V8Module* module, int v8_module_id)
+{
+    auto remove_result = _cpp_modules_id.remove(v8_module_id);
+    if (!remove_result)
+    {
+        SKR_LOG_FMT_ERROR(u8"v8 module id {} not found for module {}", v8_module_id, module->name());
+        return;
+    }
+}
+V8Module* V8Isolate::find_cpp_module(StringView name) const
+{
+    if (auto result = _cpp_modules.find(name))
+    {
+        return result.value().get();
+    }
+    return nullptr;
+}
+V8Module* V8Isolate::find_cpp_module(int v8_module_id) const
+{
+    if (auto result = _cpp_modules_id.find(v8_module_id))
+    {
+        return result.value();
+    }
+    return nullptr;
+}
+
+// debugger
+void V8Isolate::init_debugger(int port)
+{
+    SKR_ASSERT(is_init());
+    SKR_ASSERT(!is_debugger_init());
+    _websocket_server.init(port);
+    _inspector_client.server = &_websocket_server;
+    _inspector_client.init(this);
+
+    // notify main context created
+    _inspector_client.notify_context_created(_main_context.get());
+
+    // notify created context
+    for (const auto& context : _contexts)
+    {
+        _inspector_client.notify_context_created(context.get());
+    }
+}
+void V8Isolate::shutdown_debugger()
+{
+    SKR_ASSERT(is_init());
+    SKR_ASSERT(is_debugger_init());
+    _inspector_client.shutdown();
+    _inspector_client.server = nullptr;
+    _websocket_server.shutdown();
+}
+bool V8Isolate::is_debugger_init() const
+{
+    return _websocket_server.is_init();
+}
+void V8Isolate::pump_debugger_messages()
+{
+    _websocket_server.pump_messages();
+}
+void V8Isolate::wait_for_debugger_connected(uint64_t timeout_ms)
+{
+    auto start_time = std::chrono::high_resolution_clock::now();
+    while (!_inspector_client.is_connected())
+    {
+        // pump v8 messages
+        this->pump_message_loop();
+
+        // pump net messages
+        _websocket_server.pump_messages();
+
+        // check timeout
+        auto current_time = std::chrono::high_resolution_clock::now();
+        auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - start_time).count();
+        if (elapsed_time >= timeout_ms)
+        {
+            break;
+        }
+
+        // sleep for a while
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+}
+bool V8Isolate::any_debugger_connected() const
+{
+    return is_debugger_init() && _inspector_client.is_connected();
 }
 
 // bind object
@@ -693,11 +896,11 @@ bool V8Isolate::invoke_v8(
     return success_read_return;
 }
 bool V8Isolate::invoke_v8_mixin(
-    v8::Local<v8::Value>                v8_this,
-    v8::Local<v8::Function>             v8_func,
-    const ScriptBinderMethod::Overload& mixin_data,
-    span<const StackProxy>              params,
-    StackProxy                          return_value
+    v8::Local<v8::Value>      v8_this,
+    v8::Local<v8::Function>   v8_func,
+    const ScriptBinderMethod& mixin_data,
+    span<const StackProxy>    params,
+    StackProxy                return_value
 )
 {
     auto*           isolate = v8::Isolate::GetCurrent();
@@ -767,7 +970,7 @@ bool V8Isolate::try_invoke_mixin(ScriptbleObject* obj, StringView name, const sp
             SKR_LOG_FMT_ERROR(u8"find method {} but not a mixin", name);
             return false;
         }
-        const auto& overload = found_method.value()->binder.overloads[0];
+        const auto& overload = found_method.value()->binder;
 
         // find method in object
         auto v8_object = bind_core->v8_object.Get(v8::Isolate::GetCurrent());
@@ -1149,29 +1352,24 @@ void V8Isolate::_call_ctor(const ::v8::FunctionCallbackInfo<::v8::Value>& info)
                 return;
             }
 
-            // match ctor
-            const ScriptBinderCtor* final_ctor_binder = nullptr;
-            int32_t                 highest_score     = std::numeric_limits<int32_t>::min();
-            for (const auto& ctor_binder : binder->ctors)
+            // match ctor param
             {
-                auto match_result = V8Bind::match(ctor_binder.params_binder, ctor_binder.params_binder.size(), info);
-                if (!match_result.matched) continue;
-                if (match_result.match_score > highest_score)
+                auto match_result = V8Bind::match(binder->ctor.params_binder, binder->ctor.params_binder.size(), info);
+                if (!match_result.matched)
                 {
-                    final_ctor_binder = &ctor_binder;
-                    highest_score     = match_result.match_score;
+                    Isolate->ThrowError("ctor params mismatch");
+                    return;
                 }
             }
 
             // invoke ctor
-            if (final_ctor_binder)
             {
                 // alloc memory
                 void* alloc_mem = sakura_new_aligned(binder->type->size(), binder->type->alignment());
 
                 // call ctor
                 bool success = bind_data->manager->_call_native(
-                    *final_ctor_binder,
+                    binder->ctor,
                     info,
                     alloc_mem
                 );
@@ -1184,7 +1382,7 @@ void V8Isolate::_call_ctor(const ::v8::FunctionCallbackInfo<::v8::Value>& info)
                 }
 
                 // make bind core
-                V8BindCoreValue* bind_core = SkrNew<V8BindCoreValue>();
+                V8BindCoreValue* bind_core = skr_isolate->_new_bind_core<V8BindCoreValue>();
                 bind_core->manager         = bind_data->manager;
                 bind_core->type            = binder->type;
                 bind_core->data            = alloc_mem;
@@ -1206,11 +1404,6 @@ void V8Isolate::_call_ctor(const ::v8::FunctionCallbackInfo<::v8::Value>& info)
                 // add to map
                 skr_isolate->_script_created_values.add(bind_core->data, bind_core);
             }
-            else
-            {
-                // no ctor called
-                Isolate->ThrowError("no ctor matched");
-            }
         }
         else
         {
@@ -1224,29 +1417,24 @@ void V8Isolate::_call_ctor(const ::v8::FunctionCallbackInfo<::v8::Value>& info)
                 return;
             }
 
-            // match ctor
-            const ScriptBinderCtor* final_ctor_binder = nullptr;
-            int32_t                 highest_score     = std::numeric_limits<int32_t>::min();
-            for (const auto& ctor_binder : binder->ctors)
+            // match ctor param
             {
-                auto match_result = V8Bind::match(ctor_binder.params_binder, ctor_binder.params_binder.size(), info);
-                if (!match_result.matched) continue;
-                if (match_result.match_score > highest_score)
+                auto match_result = V8Bind::match(binder->ctor.params_binder, binder->ctor.params_binder.size(), info);
+                if (!match_result.matched)
                 {
-                    final_ctor_binder = &ctor_binder;
-                    highest_score     = match_result.match_score;
+                    Isolate->ThrowError("ctor params mismatch");
+                    return;
                 }
             }
 
             // invoke ctor
-            if (final_ctor_binder)
             {
                 // alloc memory
                 void* alloc_mem = sakura_new_aligned(binder->type->size(), binder->type->alignment());
 
                 // call ctor
                 bool success = bind_data->manager->_call_native(
-                    *final_ctor_binder,
+                    binder->ctor,
                     info,
                     alloc_mem
                 );
@@ -1289,11 +1477,6 @@ void V8Isolate::_call_ctor(const ::v8::FunctionCallbackInfo<::v8::Value>& info)
 
                 // add to map
                 skr_isolate->_alive_objects.add(bind_core->object, bind_core);
-            }
-            else
-            {
-                // no ctor called
-                Isolate->ThrowError("no ctor matched");
             }
         }
     }
@@ -2669,28 +2852,22 @@ bool V8Isolate::_call_native(
     const RTTRType*                                obj_type
 )
 {
-    // match overload
-    const ScriptBinderMethod::Overload* final_overload = nullptr;
-    int32_t                             highest_score  = std::numeric_limits<int32_t>::min();
-    for (const auto& overload : binder.overloads)
+    // match params
     {
-        auto result = V8Bind::match(overload.params_binder, overload.params_count, v8_stack);
-        if (!result.matched) { continue; }
-        if (result.match_score > highest_score)
+        auto result = V8Bind::match(binder.params_binder, binder.params_count, v8_stack);
+        if (!result.matched)
         {
-            highest_score  = result.match_score;
-            final_overload = &overload;
+            return false;
         }
     }
 
     // invoke overload
-    if (final_overload)
     {
         DynamicStack native_stack;
 
         // push param
         uint32_t v8_stack_index = 0;
-        for (const auto& param_binder : final_overload->params_binder)
+        for (const auto& param_binder : binder.params_binder)
         {
             if (param_binder.inout_flag == ERTTRParamFlag::Out)
             { // pure out param, we will push a dummy xvalue
@@ -2711,25 +2888,25 @@ bool V8Isolate::_call_native(
         }
 
         // cast
-        void* owner_address = obj_type->cast_to_base(final_overload->owner->type_id(), obj);
+        void* owner_address = obj_type->cast_to_base(binder.owner->type_id(), obj);
 
         // invoke
         native_stack.return_behaviour_store();
-        if (final_overload->mixin_impl_data)
+        if (binder.mixin_impl_data)
         {
-            final_overload->mixin_impl_data->dynamic_stack_invoke(owner_address, native_stack);
+            binder.mixin_impl_data->dynamic_stack_invoke(owner_address, native_stack);
         }
         else
         {
-            final_overload->data->dynamic_stack_invoke(owner_address, native_stack);
+            binder.data->dynamic_stack_invoke(owner_address, native_stack);
         }
 
         // read return
         auto return_value = _read_return(
             native_stack,
-            final_overload->params_binder,
-            final_overload->return_binder,
-            final_overload->return_count
+            binder.params_binder,
+            binder.return_binder,
+            binder.return_count
         );
         if (!return_value.IsEmpty())
         {
@@ -2737,10 +2914,6 @@ bool V8Isolate::_call_native(
         }
 
         return true;
-    }
-    else
-    {
-        return false;
     }
 }
 bool V8Isolate::_call_native(
@@ -2748,69 +2921,58 @@ bool V8Isolate::_call_native(
     const ::v8::FunctionCallbackInfo<::v8::Value>& v8_stack
 )
 {
-    // match overload
-    const ScriptBinderStaticMethod::Overload* final_overload = nullptr;
-    int32_t                                   highest_score  = std::numeric_limits<int32_t>::min();
-    for (const auto& overload : binder.overloads)
+    // match function
     {
-        auto result = V8Bind::match(overload.params_binder, overload.params_count, v8_stack);
-        if (!result.matched) { continue; }
-        if (result.match_score > highest_score)
+        auto result = V8Bind::match(binder.params_binder, binder.params_count, v8_stack);
+        if (!result.matched)
         {
-            highest_score  = result.match_score;
-            final_overload = &overload;
+            v8_stack.GetIsolate()->ThrowError("ctor parameter mismatch");
+            return false;
         }
     }
 
     // invoke overload
-    if (final_overload)
+    DynamicStack native_stack;
+
+    // push param
+    uint32_t v8_stack_index = 0;
+    for (const auto& param_binder : binder.params_binder)
     {
-        DynamicStack native_stack;
-
-        // push param
-        uint32_t v8_stack_index = 0;
-        for (const auto& param_binder : final_overload->params_binder)
-        {
-            if (param_binder.inout_flag == ERTTRParamFlag::Out)
-            { // pure out param, we will push a dummy xvalue
-                _push_param_pure_out(
-                    native_stack,
-                    param_binder
-                );
-            }
-            else
-            {
-                _push_param(
-                    native_stack,
-                    param_binder,
-                    v8_stack[v8_stack_index]
-                );
-                ++v8_stack_index;
-            }
+        if (param_binder.inout_flag == ERTTRParamFlag::Out)
+        { // pure out param, we will push a dummy xvalue
+            _push_param_pure_out(
+                native_stack,
+                param_binder
+            );
         }
-
-        // invoke
-        native_stack.return_behaviour_store();
-        final_overload->data->dynamic_stack_invoke(native_stack);
-
-        // read return
-        auto return_value = _read_return(
-            native_stack,
-            final_overload->params_binder,
-            final_overload->return_binder,
-            final_overload->return_count
-        );
-        if (!return_value.IsEmpty())
+        else
         {
-            v8_stack.GetReturnValue().Set(return_value);
+            _push_param(
+                native_stack,
+                param_binder,
+                v8_stack[v8_stack_index]
+            );
+            ++v8_stack_index;
         }
-
-        return true;
     }
-    else
+
+    // invoke
+    native_stack.return_behaviour_store();
+    binder.data->dynamic_stack_invoke(native_stack);
+
+    // read return
+    auto return_value = _read_return(
+        native_stack,
+        binder.params_binder,
+        binder.return_binder,
+        binder.return_count
+    );
+    if (!return_value.IsEmpty())
     {
-        return false;
+        v8_stack.GetReturnValue().Set(return_value);
     }
+
+    return true;
 }
 
 } // namespace skr

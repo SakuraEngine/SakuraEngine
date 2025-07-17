@@ -8,12 +8,19 @@
 #include "SkrBase/containers/sparse_vector/sparse_vector_helper.hpp"
 #include <algorithm>
 
+// generic fwd decl
+namespace skr
+{
+struct GenericSparseVector;
+} // namespace skr
+
 // sparse vector memory base
 namespace skr::container
 {
 template <typename TSize>
 struct SparseVectorMemoryBase {
     using SizeType = TSize;
+    friend struct ::skr::GenericSparseVector;
 
     // getter
     inline SizeType sparse_size() const noexcept { return _sparse_size; }
@@ -26,6 +33,37 @@ struct SparseVectorMemoryBase {
     inline void set_sparse_size(SizeType value) noexcept { _sparse_size = value; }
     inline void set_freelist_head(SizeType value) noexcept { _freelist_head = value; }
     inline void set_hole_size(SizeType value) noexcept { _hole_size = value; }
+
+protected:
+    // helper for generic sparse vector
+    inline void _reset()
+    {
+        _data          = nullptr;
+        _bit_data      = nullptr;
+        _sparse_size   = 0;
+        _capacity      = 0;
+        _freelist_head = npos_of<SizeType>;
+        _hole_size     = 0;
+    }
+    inline static SizeType _storage_size(SizeType item_size)
+    {
+        constexpr SizeType freelist_node_size = sizeof(SparseVectorFreeListNode<TSize>);
+        return std::max(freelist_node_size, item_size);
+    }
+    inline void* _storage_at(SizeType index, SizeType item_size) const
+    {
+        return ::skr::memory::offset_item(_data, _storage_size(item_size), index);
+    }
+    inline SparseVectorFreeListNode<TSize>* _freelist_node_at(SizeType index, SizeType item_size) const
+    {
+        return reinterpret_cast<SparseVectorFreeListNode<TSize>*>(
+            _storage_at(index, _storage_size(item_size))
+        );
+    }
+    inline uint64_t* _typed_bit_data() const
+    {
+        return reinterpret_cast<uint64_t*>(_bit_data);
+    }
 
 protected:
     void*    _data          = nullptr;

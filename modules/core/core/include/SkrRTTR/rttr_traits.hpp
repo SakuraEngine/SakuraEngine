@@ -80,6 +80,12 @@ SKR_RTTR_TYPE(uint64_t, "52b49582-f1f3-4b34-94f2-f89cc40499ca")
 SKR_RTTR_TYPE(float, "42f9cf37-9995-40a7-9776-1cdb67b98fcf")
 SKR_RTTR_TYPE(double, "9454d5cd-68dd-4039-8e67-07732de87e5c")
 
+SKR_RTTR_TYPE(char, "94e47971-6c88-4216-ae99-71cd9f360992")
+SKR_RTTR_TYPE(wchar_t, "fe9c2851-7bd5-45b7-8c98-bfabcaaba353")
+SKR_RTTR_TYPE(char8_t, "089ab395-f8b6-43c3-82ab-01142f3cf34e")
+SKR_RTTR_TYPE(char16_t, "a4a6ef79-ef3c-4520-a970-4b1163e673c4")
+SKR_RTTR_TYPE(char32_t, "a9e07135-6091-45dc-b64d-339b42c1bb90")
+
 //======================================== skr types
 // GUID & MD5
 SKR_RTTR_TYPE(skr::MD5, "F8ABEC14-9436-43B5-A93A-460E7D3CBEC2");

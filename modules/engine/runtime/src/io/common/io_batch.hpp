@@ -13,20 +13,20 @@ namespace io
 struct IOBatchBase : public IIOBatch {
     SKR_RC_IMPL(override)
 public:
-    void reserve(uint64_t n) SKR_NOEXCEPT
+    void reserve(uint64_t n) SKR_NOEXCEPT override
     {
         requests.reserve(n);
     }
 
-    skr::span<IORequestId> get_requests() SKR_NOEXCEPT
+    skr::span<IORequestId> get_requests() SKR_NOEXCEPT override
     {
         skr_rw_mutex_acquire_r(&rw_lock);
         SKR_DEFER({ skr_rw_mutex_release_r(&rw_lock); });
         return { requests.data(), requests.size() };
     }
 
-    void                    set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT { priority = pri; }
-    SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT { return priority; }
+    void                    set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT override { priority = pri; }
+    SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT override { return priority; }
 
     const bool can_use_dstorage = true; // TODO: make it configurable
 

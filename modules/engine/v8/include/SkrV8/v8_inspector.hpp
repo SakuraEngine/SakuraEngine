@@ -1,13 +1,13 @@
 #pragma once
-#include "SkrBase/config.h"
-#include "SkrContainersDef/ring_buffer.hpp"
 #include "SkrCore/delegate/event.hpp"
 #include "v8-inspector.h"
-#include "SkrV8/v8_isolate.hpp"
 #include "hv/WebSocketServer.h"
 
 namespace skr
 {
+struct V8Isolate;
+struct V8Context;
+
 // websocket
 struct SKR_V8_API V8WebSocketServer {
     V8WebSocketServer();
@@ -16,6 +16,7 @@ struct SKR_V8_API V8WebSocketServer {
     // init & shutdown
     bool init(int port);
     void shutdown();
+    bool is_init() const;
 
     // message
     void send_message(StringView message);
@@ -59,17 +60,22 @@ struct SKR_V8_API V8InspectorChannel : v8_inspector::V8Inspector::Channel {
 
 // inspector client
 struct SKR_V8_API V8InspectorClient : v8_inspector::V8InspectorClient {
+    friend struct V8Isolate;
+private:
     // init & shutdown
     void init(V8Isolate* isolate);
     void shutdown();
+    bool is_init() const;
 
+public:
     // override
     void runMessageLoopOnPause(int contextGroupId) override;
     void quitMessageLoopOnPause() override;
     void runIfWaitingForDebugger(int contextGroupId) override;
 
     // notify
-    void notify_context_created(V8Context* context, StringView name);
+    void notify_context_created(V8Context* context);
+    void notify_context_destroyed(V8Context* context);
 
     // getter
     inline v8_inspector::V8InspectorSession*       v8_session() { return _session.get(); }

@@ -188,11 +188,11 @@ struct Delegate<Ret(Args...)> {
 private:
     union
     {
-        FuncType*    _static_delegate;
-        MemberCore   _member_delegate;
-        FunctorCore* _functor_delegate;
+        FuncType*    _static_delegate;  // 64 bits,  void*
+        MemberCore   _member_delegate;  // 128 bits, [void*, void*]
+        FunctorCore* _functor_delegate; // 64 bits,  void*
     };
-    EDelegateKind _kind = EDelegateKind::Empty;
+    EDelegateKind _kind = EDelegateKind::Empty; // 8 bits, wrap to 64 bits
 };
 } // namespace skr
 

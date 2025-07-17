@@ -62,7 +62,7 @@ inline CGPURenderPipelineId create_gbuffer_render_pipeline(CGPUDeviceId device)
     raster_desc.cull_mode                     = ECGPUCullMode::CGPU_CULL_MODE_BACK;
     raster_desc.depth_bias                    = 0;
     raster_desc.fill_mode                     = CGPU_FILL_MODE_SOLID;
-    raster_desc.front_face                    = CGPU_FRONT_FACE_CCW;
+    raster_desc.front_face                    = CGPU_FRONT_FACE_CW;
     rp_desc.rasterizer_state                  = &raster_desc;
     CGPUDepthStateDescriptor ds_desc          = {};
     ds_desc.depth_func                        = CGPU_CMP_LEQUAL;

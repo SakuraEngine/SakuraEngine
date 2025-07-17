@@ -1,49 +1,50 @@
 #pragma once
-#include "SkrRTTR/script_binder.hpp"
-#include "v8-persistent-handle.h"
-#include "v8-template.h"
-#include "SkrRTTR/type.hpp"
-#include "SkrRTTR/scriptble_object.hpp"
+#include <SkrRTTR/script/script_binder.hpp>
+#include <SkrRTTR/script/scriptble_object.hpp>
+
+// v8 includes
+#include <v8-persistent-handle.h>
+#include <v8-template.h>
 
 namespace skr
 {
 struct V8Isolate;
 //===============================bind data===============================
 struct V8BindDataMethod {
-    ScriptBinderMethod binder;
+    ScriptBinderMethod                 binder;
     v8::Global<::v8::FunctionTemplate> v8_template;
     // manager
     V8Isolate* manager = nullptr;
 };
 struct V8BindDataStaticMethod {
-    ScriptBinderStaticMethod binder;
+    ScriptBinderStaticMethod           binder;
     v8::Global<::v8::FunctionTemplate> v8_template;
     // manager
     V8Isolate* manager = nullptr;
 };
 struct V8BindDataField {
-    ScriptBinderField binder;
+    ScriptBinderField                  binder;
     v8::Global<::v8::FunctionTemplate> v8_template_getter;
     v8::Global<::v8::FunctionTemplate> v8_template_setter;
     // manager
     V8Isolate* manager = nullptr;
 };
 struct V8BindDataStaticField {
-    ScriptBinderStaticField binder;
+    ScriptBinderStaticField            binder;
     v8::Global<::v8::FunctionTemplate> v8_template_getter;
     v8::Global<::v8::FunctionTemplate> v8_template_setter;
     // manager
     V8Isolate* manager = nullptr;
 };
 struct V8BindDataProperty {
-    ScriptBinderProperty binder;
+    ScriptBinderProperty               binder;
     v8::Global<::v8::FunctionTemplate> v8_template_getter;
     v8::Global<::v8::FunctionTemplate> v8_template_setter;
     // manager
     V8Isolate* manager = nullptr;
 };
 struct V8BindDataStaticProperty {
-    ScriptBinderStaticProperty binder;
+    ScriptBinderStaticProperty         binder;
     v8::Global<::v8::FunctionTemplate> v8_template_getter;
     v8::Global<::v8::FunctionTemplate> v8_template_setter;
     // manager

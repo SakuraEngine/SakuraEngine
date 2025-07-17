@@ -499,14 +499,16 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
     pass->foreach_textures([this, pass](TextureNode* texture, TextureEdge* edge) {
         if (texture->imported) return;
         bool is_last_user = true;
-        texture->foreach_neighbors([&](DependencyGraphNode* neig) {
+        auto try_discard = [&](DependencyGraphNode* neig) {
             RenderGraphNode* rg_node = (RenderGraphNode*)neig;
             if (rg_node->type == EObjectType::Pass)
             {
                 PassNode* other_pass = (PassNode*)rg_node;
                 is_last_user         = is_last_user && (pass->order >= other_pass->order);
             }
-        });
+        };
+        texture->foreach_neighbors(try_discard);
+        texture->foreach_inv_neighbors(try_discard);
         if (is_last_user)
         {
             if (!texture->frame_aliasing)
@@ -521,14 +523,16 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
     pass->foreach_buffers([this, pass](BufferNode* buffer, BufferEdge* edge) {
         if (buffer->imported) return;
         bool is_last_user = true;
-        buffer->foreach_neighbors([&](DependencyGraphNode* neig) {
+        auto try_discard = [&](DependencyGraphNode* neig) {
             RenderGraphNode* rg_node = (RenderGraphNode*)neig;
             if (rg_node->type == EObjectType::Pass)
             {
                 PassNode* other_pass = (PassNode*)rg_node;
                 is_last_user         = is_last_user && (pass->order >= other_pass->order);
             }
-        });
+        };
+        buffer->foreach_neighbors(try_discard);
+        buffer->foreach_inv_neighbors(try_discard);
         if (is_last_user)
         {
             SkrZoneScopedN("VirtualDeallocate::BufferFromPool");

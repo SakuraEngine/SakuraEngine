@@ -3,7 +3,6 @@
 #include "SkrBase/meta.h"
 #include "SkrContainersDef/set.hpp"
 #include "SkrContainersDef/string.hpp"
-#include "SkrRTTR/generic_container.hpp"
 #include "SkrRTTR/type.hpp"
 #ifndef __meta__
     #include "SkrCore/cli.generated.h"

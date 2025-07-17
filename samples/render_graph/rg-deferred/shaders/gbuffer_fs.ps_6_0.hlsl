@@ -1,5 +1,3 @@
-#pragma pack_matrix(row_major)
-
 struct VSOut
 {
     // ignore SV_POSITION in pixel shader if we dont use it

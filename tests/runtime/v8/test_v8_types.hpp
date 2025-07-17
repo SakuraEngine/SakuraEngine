@@ -1,5 +1,5 @@
 #include "SkrCore/log.hpp"
-#include <SkrRTTR/scriptble_object.hpp>
+#include <SkrRTTR/script/scriptble_object.hpp>
 #ifndef __meta__
     #include "test_v8_types.generated.h"
 #endif
@@ -14,8 +14,6 @@ BasicObject : public ::skr::ScriptbleObject {
 
     sscript_visible
     BasicObject() { test_ctor_value = 114514; }
-    sscript_visible
-    BasicObject(int32_t v) { test_ctor_value = v; }
 
     static int32_t test_ctor_value;
 
@@ -38,14 +36,6 @@ BasicObject : public ::skr::ScriptbleObject {
     // static field
     sscript_visible
     static uint64_t test_static_field;
-
-    // test overload
-    sscript_visible
-    void test_overload(int32_t v) { overload_int = v; }
-    sscript_visible
-    void test_overload(skr::String v) { overload_str = v; }
-    int32_t overload_int = 0;
-    skr::String overload_str = u8"";
 
     // test property
     sscript_visible sscript_getter(test_prop)
@@ -86,8 +76,6 @@ sscript_visible sscript_newable
 BasicValue {
     sscript_visible
     BasicValue() { test_ctor_value = 114514; }
-    sscript_visible
-    BasicValue(int32_t v) { test_ctor_value = v; }
 
     static int32_t test_ctor_value;
 
@@ -110,14 +98,6 @@ BasicValue {
     // static field
     sscript_visible
     static uint64_t test_static_field;
-
-    // test overload
-    sscript_visible
-    void test_overload(int32_t v) { overload_int = v; }
-    sscript_visible
-    void test_overload(skr::String v) { overload_str = v; }
-    int32_t overload_int = 0;
-    skr::String overload_str = u8"";
 
     // test property
     sscript_visible sscript_getter(test_prop)
@@ -175,11 +155,6 @@ BasicMappingHelper
     static BasicMapping basic_value;
     sscript_visible
     static InheritMapping inherit_value;
-
-    sscript_visible
-    static void set(BasicMapping v) { basic_value = v; }
-    sscript_visible
-    static void set(InheritMapping v) { inherit_value = v; }
 };
 }
 
@@ -291,7 +266,6 @@ namespace test_v8
 sreflect_struct(guid = "fe94dd7f-9c4e-4cb3-a275-0f8f8011145c" rttr = @full)
 sscript_visible sscript_newable
 TestMixinValue {
-    sscript_visible
     TestMixinValue() = default;
     sscript_visible
     TestMixinValue(skr::String v) : name(v) {}

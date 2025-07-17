@@ -52,7 +52,7 @@ public static class SkrCore
             // Codegen Files
             .AddMetaHeaders(
                 "include/SkrRTTR/iobject.hpp",
-                "include/SkrRTTR/scriptble_object.hpp",
+                "include/SkrRTTR/script/scriptble_object.hpp",
                 "include/SkrRTTR/export/export_data.hpp",
                 "include/SkrCore/cli.hpp"
             )

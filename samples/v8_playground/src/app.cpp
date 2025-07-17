@@ -30,60 +30,40 @@ void V8PlaygroundApp::init()
     shutdown();
     _isolate = SkrNew<V8Isolate>();
     _isolate->init();
-    _main_context = SkrNew<V8Context>(_isolate);
-    _main_context->init();
 }
 void V8PlaygroundApp::shutdown()
 {
     if (_isolate)
     {
-        _main_context->shutdown();
-        SkrDelete(_main_context);
         _isolate->shutdown();
         SkrDelete(_isolate);
         _isolate      = nullptr;
-        _main_context = nullptr;
     }
 }
 
 // debug
 void V8PlaygroundApp::init_debugger(int port)
 {
-    _websocket_server.init(port);
-    _inspector_client.server = &_websocket_server;
-    _inspector_client.init(_isolate);
-    _inspector_client.notify_context_created(_main_context, u8"main");
+    _isolate->init_debugger(port);
 }
 void V8PlaygroundApp::shutdown_debugger()
 {
-    _inspector_client.shutdown();
-    _inspector_client.server = nullptr;
-    _websocket_server.shutdown();
+    _isolate->shutdown_debugger();
 }
 void V8PlaygroundApp::pump_debugger_messages()
 {
-    _websocket_server.pump_messages();
+    _isolate->pump_debugger_messages();
 }
 void V8PlaygroundApp::wait_for_debugger_connected()
 {
-    while (!_inspector_client.is_connected())
-    {
-        // pump v8 messages
-        _isolate->pump_message_loop();
-
-        // pump net messages
-        _websocket_server.pump_messages();
-
-        // sleep for a while
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
+    _isolate->wait_for_debugger_connected();
 }
 
 // load native
 void V8PlaygroundApp::load_native_types()
 {
     load_all_types();
-    _main_context->build_global_export([](ScriptModule& module) {
+    _isolate->main_context()->build_global_export([](ScriptModule& module) {
         each_types_of_module(u8"V8Playground", [&](const RTTRType* type) -> bool {
             bool do_export =
                 (type->is_record() && flag_all(type->record_flag(), ERTTRRecordFlag::ScriptVisible)) ||
@@ -121,7 +101,7 @@ bool V8PlaygroundApp::run_script(StringView script_path)
     // v8::TryCatch try_catch(isolate);
 
     // run script
-    _main_context->exec_module(script, script_path);
+    _isolate->main_context()->exec_module(script, script_path);
 
     // auto _inspect_str = +[](const skr_char8* str) {
     //     return v8_inspector::StringView{
@@ -179,7 +159,7 @@ bool V8PlaygroundApp::dump_types(StringView output_dir)
 
     // do export
     TSDefineExporter exporter;
-    exporter.module = &_main_context->global_module();
+    exporter.module = &_isolate->main_context()->global_module();
     return _save_to_file(String::From(out_file_path.c_str()), exporter.generate_global());
 }
 

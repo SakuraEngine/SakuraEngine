@@ -241,7 +241,6 @@ struct RTTRRecordBuilder {
     }
 
     // basic info
-    // TODO. 在外部提供并抹除 T 信息
     inline RTTRRecordBuilder& basic_info()
     {
         // split namespace
@@ -269,12 +268,19 @@ struct RTTRRecordBuilder {
         _data->size      = sizeof(T);
         _data->alignment = alignof(T);
 
-        // TODO. 带参构造的反射导出
+        // fill memory traits
+        _data->memory_traits_data.Fill<T>();
 
         // fill default ctor
         if constexpr (std::is_default_constructible_v<T>)
         {
             ctor<>();
+        }
+
+        // fill dtor
+        if constexpr (std::is_destructible_v<T>)
+        {
+            _data->dtor_data.native_invoke = RTTRExportHelper::export_dtor<T>();
         }
 
         // fill copy ctor
@@ -292,51 +298,69 @@ struct RTTRRecordBuilder {
         // fill assign operator
         if constexpr (std::is_copy_assignable_v<T>)
         {
-            extern_method<+[](T& lhs, const T& rhs) -> void { lhs.operator=(rhs); }>(CPPExternMethods::Assign);
+            extern_method<+[](T& lhs, const T& rhs) -> void {
+                lhs.operator=(rhs);
+            }>(CPPExternMethods::Assign);
         }
 
         // fill move assign operator
         if constexpr (std::is_move_assignable_v<T>)
         {
-            extern_method<+[](T& lhs, T&& rhs) -> void { lhs.operator=(std::move(rhs)); }>(CPPExternMethods::Assign);
+            extern_method<+[](T& lhs, T&& rhs) -> void {
+                lhs.operator=(std::move(rhs));
+            }>(CPPExternMethods::Assign);
+        }
+
+        // fill compare operator
+        if constexpr (skr::concepts::HasEq<const T&, const T&>)
+        {
+            extern_method<+[](const T& lhs, const T& rhs) -> bool {
+                return lhs == rhs;
+            }>(CPPExternMethods::Eq);
+        }
+
+        // fill hash
+        if constexpr (skr::concepts::HasHasher<T>)
+        {
+            extern_method<+[](const T& object) -> size_t {
+                return skr::Hash<T>{}(object);
+            }>(SkrCoreExternMethods::Hash);
+        }
+
+        // fill swap
+        if constexpr (skr::concepts::HasSwap<T>)
+        {
+            extern_method<+[](T& lhs, T& rhs) -> void {
+                skr::Swap<T>::call(lhs, rhs);
+            }>(SkrCoreExternMethods::Swap);
         }
 
         // fill bin serde
-        if constexpr (skr::HasBinRead<T>)
+        if constexpr (skr::concepts::HasBinRead<T>)
         {
-            extern_method<
-                +[](void* object, void* reader) -> bool {
-                    return skr::bin_read<T>((SBinaryReader*)reader, *(T*)object);
-                }>(SkrCoreExternMethods::ReadBin);
+            extern_method<+[](void* object, void* reader) -> bool {
+                return skr::bin_read<T>((SBinaryReader*)reader, *(T*)object);
+            }>(SkrCoreExternMethods::ReadBin);
         }
-        if constexpr (skr::HasBinWrite<T>)
+        if constexpr (skr::concepts::HasBinWrite<T>)
         {
-            extern_method<
-                +[](void* object, void* writer) -> bool {
-                    return skr::bin_write<T>((SBinaryWriter*)writer, *(T*)object);
-                }>(SkrCoreExternMethods::WriteBin);
+            extern_method<+[](void* object, void* writer) -> bool {
+                return skr::bin_write<T>((SBinaryWriter*)writer, *(T*)object);
+            }>(SkrCoreExternMethods::WriteBin);
         }
 
         // fill json serde
-        if constexpr (skr::HasJsonRead<T>)
+        if constexpr (skr::concepts::HasJsonRead<T>)
         {
-            extern_method<
-                +[](void* object, void* reader) -> bool {
-                    return skr::json_read<T>((skr::archive::JsonReader*)reader, *(T*)object);
-                }>(SkrCoreExternMethods::ReadJson);
+            extern_method<+[](void* object, void* reader) -> bool {
+                return skr::json_read<T>((skr::archive::JsonReader*)reader, *(T*)object);
+            }>(SkrCoreExternMethods::ReadJson);
         }
-        if constexpr (skr::HasJsonWrite<T>)
+        if constexpr (skr::concepts::HasJsonWrite<T>)
         {
-            extern_method<
-                +[](void* object, void* writer) -> bool {
-                    return skr::json_write<T>((skr::archive::JsonWriter*)writer, *(T*)object);
-                }>(SkrCoreExternMethods::WriteJson);
-        }
-
-        // fill dtor
-        if constexpr (std::is_destructible_v<T>)
-        {
-            _data->dtor_data.native_invoke = RTTRExportHelper::export_dtor<T>();
+            extern_method<+[](void* object, void* writer) -> bool {
+                return skr::json_write<T>((skr::archive::JsonWriter*)writer, *(T*)object);
+            }>(SkrCoreExternMethods::WriteJson);
         }
 
         return *this;
@@ -347,6 +371,7 @@ struct RTTRRecordBuilder {
     inline RTTRCtorBuilder ctor()
     {
         // find first
+        // TODO. use extern mode flag will be better?
         {
             TypeSignatureTyped<void(Args...)> signature;
 
@@ -530,6 +555,9 @@ struct RTTREnumBuilder {
         _data->size      = sizeof(T);
         _data->alignment = alignof(T);
 
+        // fill memory traits
+        _data->memory_traits_data.Fill<T>();
+
         // fill underlying type id
         _data->underlying_type_id = RTTRTraits<std::underlying_type_t<T>>::get_guid();
         return *this;
@@ -557,7 +585,118 @@ struct RTTREnumBuilder {
         return *this;
     }
 
+    // extern methods
+    template <auto func>
+    inline RTTRExternMethodBuilder extern_method(String name, ERTTRAccessLevel access_level = ERTTRAccessLevel::Public)
+    {
+        auto method_data          = SkrNew<RTTRExternMethodData>();
+        method_data->name         = std::move(name);
+        method_data->access_level = access_level;
+        method_data->fill_signature(func);
+        method_data->native_invoke        = RTTRExportHelper::export_extern_method<func>();
+        method_data->dynamic_stack_invoke = RTTRExportHelper::export_extern_method_dynamic_stack<func>();
+        _data->extern_methods.add(method_data);
+        return { method_data };
+    }
+    template <typename Func, Func func>
+    inline RTTRStaticMethodBuilder extern_method(String name, ERTTRAccessLevel access_level = ERTTRAccessLevel::Public)
+    {
+        return extern_method<func>(std::move(name), access_level);
+    }
+
 private:
     RTTREnumData* _data;
+};
+} // namespace skr
+
+// primitive builder
+namespace skr
+{
+template <typename T>
+struct RTTRPrimitiveBuilder {
+    inline RTTRPrimitiveBuilder(RTTRPrimitiveData* data)
+        : _data(data)
+    {
+    }
+
+    // basic info
+    inline RTTRPrimitiveBuilder& basic_info()
+    {
+        // fill basic data
+        _data->name      = RTTRTraits<T>::get_name();
+        _data->type_id   = RTTRTraits<T>::get_guid();
+        _data->size      = sizeof(T);
+        _data->alignment = alignof(T);
+
+        // fill memory traits
+        _data->memory_traits_data.Fill<T>();
+
+        // fill hash
+        // if constexpr (skr::concepts::HasHasher<T>)
+        {
+            extern_method<+[](const T& object) -> size_t {
+                return skr::Hash<T>{}(object);
+            }>(SkrCoreExternMethods::Hash);
+        }
+
+        // fill swap
+        // if constexpr (skr::concepts::HasSwap<T>)
+        {
+            extern_method<+[](T& lhs, T& rhs) -> void {
+                skr::Swap<T>::call(lhs, rhs);
+            }>(SkrCoreExternMethods::Swap);
+        }
+
+        // fill bin serde
+        // if constexpr (skr::concepts::HasBinRead<T>)
+        {
+            extern_method<+[](void* object, void* reader) -> bool {
+                return skr::bin_read<T>((SBinaryReader*)reader, *(T*)object);
+            }>(SkrCoreExternMethods::ReadBin);
+        }
+        // if constexpr (skr::concepts::HasBinWrite<T>)
+        {
+            extern_method<+[](void* object, void* writer) -> bool {
+                return skr::bin_write<T>((SBinaryWriter*)writer, *(T*)object);
+            }>(SkrCoreExternMethods::WriteBin);
+        }
+
+        // fill json serde
+        // if constexpr (skr::concepts::HasJsonRead<T>)
+        {
+            extern_method<+[](void* object, void* reader) -> bool {
+                return skr::json_read<T>((skr::archive::JsonReader*)reader, *(T*)object);
+            }>(SkrCoreExternMethods::ReadJson);
+        }
+        // if constexpr (skr::concepts::HasJsonWrite<T>)
+        {
+            extern_method<+[](void* object, void* writer) -> bool {
+                return skr::json_write<T>((skr::archive::JsonWriter*)writer, *(T*)object);
+            }>(SkrCoreExternMethods::WriteJson);
+        }
+
+        return *this;
+    }
+
+    template <auto func>
+    inline RTTRExternMethodBuilder extern_method(String name, ERTTRAccessLevel access_level = ERTTRAccessLevel::Public)
+    {
+        auto method_data          = SkrNew<RTTRExternMethodData>();
+        method_data->name         = std::move(name);
+        method_data->access_level = access_level;
+        method_data->fill_signature(func);
+        method_data->native_invoke        = RTTRExportHelper::export_extern_method<func>();
+        method_data->dynamic_stack_invoke = RTTRExportHelper::export_extern_method_dynamic_stack<func>();
+        _data->extern_methods.add(method_data);
+        return { method_data };
+    }
+    template <typename Func, Func func>
+    inline RTTRStaticMethodBuilder extern_method(String name, ERTTRAccessLevel access_level = ERTTRAccessLevel::Public)
+    {
+        return extern_method<func>(std::move(name), access_level);
+    }
+
+private:
+    RTTRPrimitiveData* _data;
 };
 } // namespace skr

@@ -37,8 +37,10 @@ struct UPtr {
 
     // factory
     template <typename... Args>
+    requires(std::is_constructible_v<T, Args...>)
     static UPtr New(Args&&... args);
     template <typename... Args>
+    requires(std::is_constructible_v<T, Args...>)
     static UPtr NewZeroed(Args&&... args);
 
     // getter
@@ -108,8 +110,10 @@ struct SP {
 
     // factory
     template <typename... Args>
+    requires(std::is_constructible_v<T, Args...>)
     static SP New(Args&&... args);
     template <typename... Args>
+    requires(std::is_constructible_v<T, Args...>)
     static SP NewZeroed(Args&&... args);
 
     // getter
@@ -308,12 +312,14 @@ inline UPtr<T>& UPtr<T>::operator=(UPtr<U>&& rhs)
 // factory
 template <typename T>
 template <typename... Args>
+requires(std::is_constructible_v<T, Args...>)
 inline UPtr<T> UPtr<T>::New(Args&&... args)
 {
     return { SkrNew<T>(std::forward<Args>(args)...) };
 }
 template <typename T>
 template <typename... Args>
+requires(std::is_constructible_v<T, Args...>)
 inline UPtr<T> UPtr<T>::NewZeroed(Args&&... args)
 {
     return { SkrNewZeroed<T>(std::forward<Args>(args)...) };
@@ -758,12 +764,14 @@ inline SP<T>& SP<T>::operator=(UPtr<U>&& rhs)
 // factory
 template <typename T>
 template <typename... Args>
+requires(std::is_constructible_v<T, Args...>)
 inline SP<T> SP<T>::New(Args&&... args)
 {
     return { SkrNew<T>(std::forward<Args>(args)...) };
 }
 template <typename T>
 template <typename... Args>
+requires(std::is_constructible_v<T, Args...>)
 inline SP<T> SP<T>::NewZeroed(Args&&... args)
 {
     return { SkrNewZeroed<T>(std::forward<Args>(args)...) };

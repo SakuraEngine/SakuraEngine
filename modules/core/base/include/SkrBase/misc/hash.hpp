@@ -2,6 +2,7 @@
 #include <string_view>
 #include "SkrBase/config.h"
 #include "SkrBase/misc/traits.hpp"
+#include "SkrBase/template/concepts.hpp"
 #include "internal/constexpr-xxh3.hpp"
 #include <concepts>
 
@@ -18,65 +19,65 @@ namespace skr
 {
 template <typename T>
 struct Hash;
-namespace detail
-{
-template <typename T>
-using has_skr_hash = decltype(T::_skr_hash(std::declval<const T&>()));
-template <typename T>
-using skr_hashable = decltype(std::declval<Hash<T>>().operator()(std::declval<const T&>()));
-} // namespace detail
-template <typename T>
-inline constexpr bool has_skr_hash_v = is_detected_v<detail::has_skr_hash, T>;
-template <typename T>
-inline constexpr bool skr_hashable_v = is_detected_v<detail::skr_hashable, T>;
 
-template <typename T>
-concept EmbeddedHasher = requires(const T& t) {
-    {
-        t._skr_hash()
-    } -> std::same_as<size_t>;
+// concepts
+namespace concepts
+{
+template <typename U, typename T = U>
+concept HasEmbeddedHasherMember = requires(const T& t, const U& u) {
+    { t._skr_hash(u) } -> std::same_as<size_t>;
 };
-template <typename T>
-concept Hashable = requires(const T& t) {
-    {
-        Hash<T>{}(t)
-    } -> std::same_as<size_t>;
+template <typename U, typename T = U>
+concept HasEmbeddedHasherStatic = requires(const T& t, const U& u) {
+    { T::_skr_hash(u) } -> std::same_as<size_t>;
+};
+template <typename U, typename T = U>
+concept HasEmbeddedHasher = HasEmbeddedHasherMember<T, U> || HasEmbeddedHasherStatic<T, U>;
+
+template <typename U, typename T = U>
+concept HasHasher = requires(const T& t, const U& u) {
+    { ::skr::Hash<T>{}(u) } -> std::same_as<size_t>;
 };
 
-namespace detail
-{
-template <typename T, typename = void>
-struct HashSelector {
-};
+} // namespace concepts
+
 template <typename T>
-struct HashSelector<T, std::enable_if_t<std::is_enum_v<T>>> {
-    size_t operator()(const T& p) const
+struct Hash {
+};
+
+template <concepts::HasEmbeddedHasher T>
+struct Hash<T> {
+    inline size_t operator()(const T& p) const
+    {
+        if constexpr (concepts::HasEmbeddedHasherMember<T>)
+        {
+            return p._skr_hash(p);
+        }
+        else if constexpr (concepts::HasEmbeddedHasherStatic<T>)
+        {
+            return T::_skr_hash(p);
+        }
+    }
+    template <concepts::HasEmbeddedHasher<T> U>
+    inline size_t operator()(const U& u) const
+    {
+        if constexpr (concepts::HasEmbeddedHasherMember<U, T>)
+        {
+            return u._skr_hash(u);
+        }
+        else if constexpr (concepts::HasEmbeddedHasherStatic<U, T>)
+        {
+            return T::_skr_hash(u);
+        }
+    }
+};
+
+template <concepts::Enum T>
+struct Hash<T> {
+    inline size_t operator()(const T& p) const
     {
         return static_cast<size_t>(p);
     }
-};
-template <typename T>
-struct HashSelector<T, std::enable_if_t<has_skr_hash_v<T>>> {
-    size_t operator()(const T& p) const
-    {
-        return T::_skr_hash(p);
-    }
-    template <typename U>
-    requires requires(const U& u) {
-        {
-            T::_skr_hash(u)
-        }
-        -> std::same_as<size_t>;
-    }
-    size_t operator()(const U& u) const
-    {
-        return T::_skr_hash(u);
-    }
-};
-} // namespace detail
-
-template <typename T>
-struct Hash : detail::HashSelector<T> {
 };
 
 // hash combine
@@ -172,7 +173,7 @@ struct Hash<double> {
 // impl for string
 namespace skr
 {
-// char 8
+// raw char
 template <>
 struct Hash<char*> {
     SKR_INLINE size_t operator()(const char* p) const
@@ -188,6 +189,44 @@ struct Hash<const char*> {
     SKR_INLINE size_t operator()(const char* p) const
     {
         return Hash<char*>()(p);
+    }
+};
+
+// wchar_t
+template <>
+struct Hash<wchar_t*> {
+    SKR_INLINE size_t operator()(const wchar_t* p) const
+    {
+        uint32_t c, result = 2166136261U; // Intentionally uint32_t instead of size_t, so the behavior is the same regardless of size.
+        while ((c = (uint16_t)*p++) != 0) // cast to unsigned 16 bit.
+            result = (result * 16777619) ^ c;
+        return (size_t)result;
+    }
+};
+template <>
+struct Hash<const wchar_t*> {
+    SKR_INLINE size_t operator()(const wchar_t* p) const
+    {
+        return Hash<wchar_t*>()(p);
+    }
+};
+
+// char 8
+template <>
+struct Hash<char8_t*> {
+    SKR_INLINE size_t operator()(const char8_t* p) const
+    {
+        uint32_t c, result = 2166136261U; // Intentionally uint32_t instead of size_t, so the behavior is the same regardless of size.
+        while ((c = (uint8_t)*p++) != 0)  // cast to unsigned 8 bit.
+            result = (result * 16777619) ^ c;
+        return (size_t)result;
+    }
+};
+template <>
+struct Hash<const char8_t*> {
+    SKR_INLINE size_t operator()(const char8_t* p) const
+    {
+        return Hash<char8_t*>()(p);
     }
 };
 

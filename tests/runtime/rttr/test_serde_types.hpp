@@ -13,6 +13,8 @@ sreflect_struct(
     serde = @json
 )
 TestJson {
+    SKR_GENERATE_BODY()
+
     // in json: {"serde_normal": <number>}
     int32_t serde_normal;
     
@@ -23,6 +25,9 @@ TestJson {
     // will not appare in json
     sattr(serde = @disable)
     int32_t disabled;
+
+private:
+    int32_t _private_member;
 };
 
 sreflect_struct(
@@ -30,11 +35,16 @@ sreflect_struct(
     serde = @bin
 )
 TestBin {
+    SKR_GENERATE_BODY()
+
     // in json: {"serde_normal": <number>}
     int32_t serde_normal;
 
     // will not appare in bin
     sattr(serde = @disable)
     int32_t disabled;
+
+private:
+    int32_t _private_member;
 };
 } // namespace test_serde

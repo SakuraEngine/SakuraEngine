@@ -155,6 +155,38 @@ struct RTTRParamData {
         }
     }
 };
+struct MemoryTraitsData {
+    bool use_ctor : 1;
+    bool use_dtor : 1;
+    bool use_copy : 1;
+    bool use_move : 1;
+    bool use_assign : 1;
+    bool use_move_assign : 1;
+    bool need_dtor_after_move : 1;
+    bool use_realloc : 1;
+    bool use_compare : 1;
+
+    template <typename T>
+    inline void Fill()
+    {
+        use_ctor             = memory::MemoryTraits<T>::use_ctor;
+        use_dtor             = memory::MemoryTraits<T>::use_dtor;
+        use_copy             = memory::MemoryTraits<T>::use_copy;
+        use_move             = memory::MemoryTraits<T>::use_move;
+        use_assign           = memory::MemoryTraits<T>::use_assign;
+        use_move_assign      = memory::MemoryTraits<T>::use_move_assign;
+        need_dtor_after_move = memory::MemoryTraits<T>::need_dtor_after_move;
+        use_realloc          = memory::MemoryTraits<T>::use_realloc;
+        use_compare          = memory::MemoryTraits<T>::use_compare;
+    }
+    template <typename T>
+    inline static MemoryTraitsData Make()
+    {
+        MemoryTraitsData data;
+        data.Fill<T>();
+        return data;
+    }
+};
 
 // help functions
 template <typename Data>
@@ -546,11 +578,12 @@ struct RTTRDtorData {
 };
 struct RTTRRecordData {
     // basic
-    String         name       = {};
-    Vector<String> name_space = {};
-    GUID           type_id    = {};
-    size_t         size       = 0;
-    size_t         alignment  = 0;
+    String           name               = {};
+    Vector<String>   name_space         = {};
+    GUID             type_id            = {};
+    size_t           size               = 0;
+    size_t           alignment          = 0;
+    MemoryTraitsData memory_traits_data = {};
 
     // bases
     Vector<RTTRBaseData*> bases_data = {};
@@ -634,11 +667,12 @@ struct RTTREnumItemData {
 };
 struct RTTREnumData {
     // basic
-    String         name       = {};
-    Vector<String> name_space = {};
-    GUID           type_id    = {};
-    size_t         size       = 0;
-    size_t         alignment  = 0;
+    String           name               = {};
+    Vector<String>   name_space         = {};
+    GUID             type_id            = {};
+    size_t           size               = 0;
+    size_t           alignment          = 0;
+    MemoryTraitsData memory_traits_data = {};
 
     // underlying type
     GUID underlying_type_id = {};
@@ -675,10 +709,11 @@ namespace skr
 {
 struct RTTRPrimitiveData {
     // basic
-    String name;
-    GUID   type_id;
-    size_t size;
-    size_t alignment;
+    String           name               = {};
+    GUID             type_id            = {};
+    size_t           size               = 0;
+    size_t           alignment          = 0;
+    MemoryTraitsData memory_traits_data = {};
 
     // extern method
     Vector<RTTRExternMethodData*> extern_methods;

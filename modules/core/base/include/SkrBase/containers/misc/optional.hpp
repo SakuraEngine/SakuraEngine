@@ -63,6 +63,7 @@ struct Optional {
     // modifier
     void reset();
     template <typename... Args>
+    requires(std::is_constructible_v<T, Args...>)
     void emplace(Args&&... args);
 
 private:
@@ -157,22 +158,42 @@ inline Optional<T>::Optional(Optional<U>&& other)
 template <typename T>
 inline Optional<T>& Optional<T>::operator=(const Optional& other)
 {
-    reset();
     if (other._has_value)
     {
-        ::skr::memory::copy(_data_ptr(), other._data_ptr());
-        _has_value = true;
+        if (_has_value)
+        {
+            ::skr::memory::assign(_data_ptr(), other._data_ptr());
+        }
+        else
+        {
+            ::skr::memory::copy(_data_ptr(), other._data_ptr());
+            _has_value = true;
+        }
+    }
+    else
+    {
+        reset();
     }
     return *this;
 }
 template <typename T>
 inline Optional<T>& Optional<T>::operator=(Optional&& other)
 {
-    reset();
-    if (other._has_value)
+    if (other.has_value())
     {
-        ::skr::memory::move(_data_ptr(), other._data_ptr());
-        _has_value = true;
+        if (_has_value)
+        {
+            ::skr::memory::move_assign(_data_ptr(), other._data_ptr());
+        }
+        else
+        {
+            ::skr::memory::move(_data_ptr(), other._data_ptr());
+            _has_value = true;
+        }
+    }
+    else
+    {
+        reset();
     }
     other.reset();
     return *this;
@@ -181,29 +202,51 @@ template <typename T>
 template <typename U>
 inline Optional<T>& Optional<T>::operator=(const U& value)
 {
-    reset();
-    ::skr::memory::copy(_data_ptr(), &value);
-    _has_value = true;
+    if (_has_value)
+    {
+        ::skr::memory::assign(_data_ptr(), &value);
+    }
+    else
+    {
+        ::skr::memory::copy(_data_ptr(), &value);
+        _has_value = true;
+    }
     return *this;
 }
 template <typename T>
 template <typename U>
 inline Optional<T>& Optional<T>::operator=(U&& value)
 {
-    reset();
-    ::skr::memory::move(_data_ptr(), &value);
-    _has_value = true;
+    if (_has_value)
+    {
+        ::skr::memory::move_assign(_data_ptr(), &value);
+    }
+    else
+    {
+        ::skr::memory::move(_data_ptr(), &value);
+        _has_value = true;
+    }
     return *this;
 }
 template <typename T>
 template <typename U>
 inline Optional<T>& Optional<T>::operator=(const Optional<U>& other)
 {
-    reset();
     if (other.has_value())
     {
-        ::skr::memory::copy(_data_ptr(), &other.value());
-        _has_value = true;
+        if (_has_value)
+        {
+            ::skr::memory::assign(_data_ptr(), &other.value());
+        }
+        else
+        {
+            ::skr::memory::copy(_data_ptr(), &other.value());
+            _has_value = true;
+        }
+    }
+    else
+    {
+        reset();
     }
     return *this;
 }
@@ -211,13 +254,22 @@ template <typename T>
 template <typename U>
 inline Optional<T>& Optional<T>::operator=(Optional<U>&& other)
 {
-    reset();
     if (other.has_value())
     {
-        ::skr::memory::move(_data_ptr(), &other.value());
-        _has_value = true;
+        if (_has_value)
+        {
+            ::skr::memory::move_assign(_data_ptr(), &other.value());
+        }
+        else
+        {
+            ::skr::memory::move(_data_ptr(), &other.value());
+            _has_value = true;
+        }
     }
-    other.reset();
+    else
+    {
+        reset();
+    }
     return *this;
 }
 
@@ -308,6 +360,7 @@ inline void Optional<T>::reset()
 }
 template <typename T>
 template <typename... Args>
+requires(std::is_constructible_v<T, Args...>)
 inline void Optional<T>::emplace(Args&&... args)
 {
     reset();

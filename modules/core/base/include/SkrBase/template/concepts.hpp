@@ -13,13 +13,13 @@ std::remove_reference_t<T>&& decl_rval(T&& t) {}
 template <class From, class To>
 concept convertible_to =
 #ifdef __clang__
-__is_convertible_to(From, To) &&
+    __is_convertible_to(From, To) &&
 #else
-std::is_convertible_v<From, To> &&
+    std::is_convertible_v<From, To> &&
 #endif
-requires {
-    static_cast<To>(std::declval<From>());
-};
+    requires {
+        static_cast<To>(std::declval<From>());
+    };
 } // namespace detail
 
 template <typename T, typename... Args>
@@ -93,4 +93,31 @@ concept Character = std::is_same_v<T, char> ||
                     std::is_same_v<T, char8_t> ||
                     std::is_same_v<T, char16_t> ||
                     std::is_same_v<T, char32_t>;
+
+// operator concepts
+template <typename LHS, typename RHS>
+concept HasEq = requires(LHS lhs, RHS rhs) {
+    { lhs == rhs } -> std::convertible_to<bool>;
+};
+template <typename LHS, typename RHS>
+concept HasNe = requires(LHS lhs, RHS rhs) {
+    { lhs != rhs } -> std::convertible_to<bool>;
+};
+template <typename LHS, typename RHS>
+concept HasLt = requires(LHS lhs, RHS rhs) {
+    { lhs < rhs } -> std::convertible_to<bool>;
+};
+template <typename LHS, typename RHS>
+concept HasGt = requires(LHS lhs, RHS rhs) {
+    { lhs > rhs } -> std::convertible_to<bool>;
+};
+template <typename LHS, typename RHS>
+concept HasLe = requires(LHS lhs, RHS rhs) {
+    { lhs <= rhs } -> std::convertible_to<bool>;
+};
+template <typename LHS, typename RHS>
+concept HasGe = requires(LHS lhs, RHS rhs) {
+    { lhs >= rhs } -> std::convertible_to<bool>;
+};
+
 } // namespace skr::concepts

@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/memory/memory_ops.hpp"
+#include "SkrBase/template/concepts.hpp"
 #include "sparse_vector_def.hpp"
 #include "sparse_vector_iterator.hpp"
 #include "SkrBase/containers/misc/container_traits.hpp"
@@ -110,8 +111,10 @@ struct SparseVector : protected Memory {
 
     // emplace
     template <typename... Args>
+    requires(std::is_constructible_v<typename Memory::DataType, Args...>)
     DataRef emplace(Args&&... args);
     template <typename... Args>
+    requires(std::is_constructible_v<typename Memory::DataType, Args...>)
     void emplace_at(SizeType index, Args&&... args);
 
     // append
@@ -133,10 +136,13 @@ struct SparseVector : protected Memory {
 
     // remove if
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
     bool remove_if(Pred&& pred);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
     bool remove_last_if(Pred&& pred);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
     SizeType remove_all_if(Pred&& pred);
 
     // modify
@@ -149,32 +155,44 @@ struct SparseVector : protected Memory {
 
     // find
     template <typename U = DataType>
+    requires(concepts::HasEq<typename Memory::DataType, U>)
     DataRef find(const U& v);
     template <typename U = DataType>
+    requires(concepts::HasEq<typename Memory::DataType, U>)
     DataRef find_last(const U& v);
     template <typename U = DataType>
+    requires(concepts::HasEq<typename Memory::DataType, U>)
     CDataRef find(const U& v) const;
     template <typename U = DataType>
+    requires(concepts::HasEq<typename Memory::DataType, U>)
     CDataRef find_last(const U& v) const;
 
     // find if
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
     DataRef find_if(Pred&& pred);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
     DataRef find_last_if(Pred&& pred);
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
     CDataRef find_if(Pred&& pred) const;
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
     CDataRef find_last_if(Pred&& pred) const;
 
     // contains
     template <typename U = DataType>
+    requires(concepts::HasEq<typename Memory::DataType, U>)
     bool contains(const U& v) const;
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
     bool contains_if(Pred&& pred) const;
     template <typename U = DataType>
+    requires(concepts::HasEq<typename Memory::DataType, U>)
     SizeType count(const U& v) const;
     template <typename Pred>
+    requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
     SizeType count_if(Pred&& pred) const;
 
     // sort
@@ -497,28 +515,31 @@ SKR_INLINE void SparseVector<Memory>::assign(U&& container)
 template <typename Memory>
 SKR_INLINE bool SparseVector<Memory>::operator==(const SparseVector& rhs) const
 {
-    if (sparse_size() == rhs.sparse_size())
+    // compare size
+    if (sparse_size() != rhs.sparse_size() || hole_size() != rhs.hole_size())
     {
-        for (SizeType i = 0; i < sparse_size(); ++i)
-        {
-            bool lhs_has_data = has_data(i);
-            bool rhs_has_data = rhs.has_data(i);
+        return false;
+    }
 
-            if (lhs_has_data != rhs_has_data)
+    // compare data
+    for (SizeType i = 0; i < sparse_size(); ++i)
+    {
+        bool lhs_has_data = has_data(i);
+        bool rhs_has_data = rhs.has_data(i);
+
+        if (lhs_has_data != rhs_has_data)
+        {
+            return false;
+        }
+        else if (lhs_has_data)
+        {
+            if ((*this)[i] != rhs[i])
             {
                 return false;
             }
-            else if (lhs_has_data)
-            {
-                if ((*this)[i] != rhs[i])
-                {
-                    return false;
-                }
-            }
         }
-        return true;
     }
-    return false;
+    return true;
 }
 template <typename Memory>
 SKR_INLINE bool SparseVector<Memory>::operator!=(const SparseVector& rhs) const
@@ -749,16 +770,16 @@ SKR_INLINE bool SparseVector<Memory>::compact_stable()
 template <typename Memory>
 SKR_INLINE bool SparseVector<Memory>::compact_top()
 {
-    if (!is_compact())
+    if (!is_empty() && !is_compact())
     {
         bool has_changes = false;
-        for (SizeType i(sparse_size() - 1), n(sparse_size()); n; --i, --n)
+        for (SizeType i = sparse_size(); i; --i)
         {
-            if (is_hole(i))
+            if (is_hole(i - 1))
             {
                 // remove from freelist
                 _set_hole_size(hole_size() - 1);
-                _break_freelist_at(i);
+                _break_freelist_at(i - 1);
 
                 // update size
                 _set_sparse_size(sparse_size() - 1);
@@ -805,7 +826,7 @@ SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::add_unsa
         _set_freelist_head(storage()[index]._sparse_vector_freelist_next);
         _set_hole_size(hole_size() - 1);
 
-        // break link
+        // break prev link
         if (hole_size())
         {
             storage()[freelist_head()]._sparse_vector_freelist_prev = npos;
@@ -878,6 +899,7 @@ SKR_INLINE void SparseVector<Memory>::add_at_zeroed(SizeType idx)
 // emplace
 template <typename Memory>
 template <typename... Args>
+requires(std::is_constructible_v<typename Memory::DataType, Args...>)
 SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::emplace(Args&&... args)
 {
     DataRef info = add_unsafe();
@@ -886,6 +908,7 @@ SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::emplace(
 }
 template <typename Memory>
 template <typename... Args>
+requires(std::is_constructible_v<typename Memory::DataType, Args...>)
 SKR_INLINE void SparseVector<Memory>::emplace_at(SizeType index, Args&&... args)
 {
     add_at_unsafe(index);
@@ -1087,6 +1110,7 @@ SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::remove_
 // remove if
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
 SKR_INLINE bool SparseVector<Memory>::remove_if(Pred&& pred)
 {
     if (DataRef ref = find_if(std::forward<Pred>(pred)))
@@ -1098,6 +1122,7 @@ SKR_INLINE bool SparseVector<Memory>::remove_if(Pred&& pred)
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
 SKR_INLINE bool SparseVector<Memory>::remove_last_if(Pred&& pred)
 {
     if (DataRef ref = find_last_if(std::forward<Pred>(pred)))
@@ -1109,6 +1134,7 @@ SKR_INLINE bool SparseVector<Memory>::remove_last_if(Pred&& pred)
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
 SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::remove_all_if(Pred&& pred)
 {
     SizeType count = 0;
@@ -1156,37 +1182,41 @@ SKR_INLINE typename SparseVector<Memory>::DataType& SparseVector<Memory>::at_las
 {
     index = sparse_size() - index - 1;
     SKR_ASSERT(!is_empty() && is_valid_index(index) && has_data(index));
-    return *(storage() + index);
+    return storage()[index]._sparse_vector_data;
 }
 template <typename Memory>
 SKR_INLINE const typename SparseVector<Memory>::DataType& SparseVector<Memory>::at_last(SizeType index) const
 {
     index = sparse_size() - index - 1;
     SKR_ASSERT(!is_empty() && is_valid_index(index) && has_data(index));
-    return *(storage() + index);
+    return storage()[index]._sparse_vector_data;
 }
 
 // find
 template <typename Memory>
 template <typename U>
+requires(concepts::HasEq<typename Memory::DataType, U>)
 SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::find(const U& v)
 {
     return find_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
+requires(concepts::HasEq<typename Memory::DataType, U>)
 SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::find_last(const U& v)
 {
     return find_last_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
+requires(concepts::HasEq<typename Memory::DataType, U>)
 SKR_INLINE typename SparseVector<Memory>::CDataRef SparseVector<Memory>::find(const U& v) const
 {
     return find_if([&v](const DataType& a) { return a == v; });
 }
 template <typename Memory>
 template <typename U>
+requires(concepts::HasEq<typename Memory::DataType, U>)
 SKR_INLINE typename SparseVector<Memory>::CDataRef SparseVector<Memory>::find_last(const U& v) const
 {
     return find_last_if([&v](const DataType& a) { return a == v; });
@@ -1195,6 +1225,7 @@ SKR_INLINE typename SparseVector<Memory>::CDataRef SparseVector<Memory>::find_la
 // find if
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
 SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::find_if(Pred&& pred)
 {
     for (auto cursor = cursor_begin(); !cursor.reach_end(); cursor.move_next())
@@ -1208,6 +1239,7 @@ SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::find_if(
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
 SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::find_last_if(Pred&& pred)
 {
     for (auto cursor = cursor_end(); !cursor.reach_begin(); cursor.move_prev())
@@ -1221,12 +1253,14 @@ SKR_INLINE typename SparseVector<Memory>::DataRef SparseVector<Memory>::find_las
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
 SKR_INLINE typename SparseVector<Memory>::CDataRef SparseVector<Memory>::find_if(Pred&& pred) const
 {
     return const_cast<SparseVector*>(this)->find_if(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
 SKR_INLINE typename SparseVector<Memory>::CDataRef SparseVector<Memory>::find_last_if(Pred&& pred) const
 {
     return const_cast<SparseVector*>(this)->find_last_if(std::forward<Pred>(pred));
@@ -1235,18 +1269,21 @@ SKR_INLINE typename SparseVector<Memory>::CDataRef SparseVector<Memory>::find_la
 // contains
 template <typename Memory>
 template <typename U>
+requires(concepts::HasEq<typename Memory::DataType, U>)
 SKR_INLINE bool SparseVector<Memory>::contains(const U& v) const
 {
     return (bool)find(v);
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
 SKR_INLINE bool SparseVector<Memory>::contains_if(Pred&& pred) const
 {
     return (bool)find_if(std::forward<Pred>(pred));
 }
 template <typename Memory>
 template <typename U>
+requires(concepts::HasEq<typename Memory::DataType, U>)
 SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::count(const U& v) const
 {
     SizeType count = 0;
@@ -1261,6 +1298,7 @@ SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::count(c
 }
 template <typename Memory>
 template <typename Pred>
+requires(std::is_invocable_r_v<bool, Pred, const typename Memory::DataType&>)
 SKR_INLINE typename SparseVector<Memory>::SizeType SparseVector<Memory>::count_if(Pred&& pred) const
 {
     SizeType count = 0;
@@ -1283,11 +1321,12 @@ SKR_INLINE void SparseVector<Memory>::sort(Functor&& f)
     {
         compact();
         algo::intro_sort(
-        storage(),
-        storage() + sparse_size(),
-        [&f](const StorageType& a, const StorageType& b) {
-            return f(a._sparse_vector_data, b._sparse_vector_data);
-        });
+            storage(),
+            storage() + sparse_size(),
+            [&f](const StorageType& a, const StorageType& b) {
+                return f(a._sparse_vector_data, b._sparse_vector_data);
+            }
+        );
     }
 }
 template <typename Memory>
@@ -1298,11 +1337,12 @@ SKR_INLINE void SparseVector<Memory>::sort_stable(Functor&& f)
     {
         compact_stable();
         algo::merge_sort(
-        storage(),
-        storage() + sparse_size(),
-        [&f](const StorageType& a, const StorageType& b) {
-            return f(a._sparse_vector_data, b._sparse_vector_data);
-        });
+            storage(),
+            storage() + sparse_size(),
+            [&f](const StorageType& a, const StorageType& b) {
+                return f(a._sparse_vector_data, b._sparse_vector_data);
+            }
+        );
     }
 }
 

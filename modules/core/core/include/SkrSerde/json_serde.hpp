@@ -13,15 +13,18 @@ template <typename T>
 struct JsonSerde;
 
 // concept
+namespace concepts
+{
 template <typename T>
 concept HasJsonRead = requires(skr::archive::JsonReader* r, T& t) { JsonSerde<T>::read(r, t); };
 template <typename T>
 concept HasJsonWrite = requires(skr::archive::JsonWriter* w, const T& t) { JsonSerde<T>::write(w, t); };
+} // namespace concepts
 
 // helper
-template <HasJsonRead T>
+template <concepts::HasJsonRead T>
 inline bool json_read(skr::archive::JsonReader* r, T& v) { return JsonSerde<T>::read(r, v); }
-template <HasJsonWrite T>
+template <concepts::HasJsonWrite T>
 inline bool json_write(skr::archive::JsonWriter* w, const T& v) { return JsonSerde<T>::write(w, v); }
 } // namespace skr
 

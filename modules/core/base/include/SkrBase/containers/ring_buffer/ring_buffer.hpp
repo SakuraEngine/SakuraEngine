@@ -76,8 +76,10 @@ struct RingBuffer : protected Memory {
 
     // emplace
     template <typename... Args>
+    requires(std::is_constructible_v<typename Memory::DataType, Args...>)
     DataRef emplace_back(Args&&... args);
     template <typename... Args>
+    requires(std::is_constructible_v<typename Memory::DataType, Args...>)
     DataRef emplace_front(Args&&... args);
 
     // append
@@ -596,6 +598,7 @@ inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::push_front_zeroe
 // emplace
 template <typename Memory>
 template <typename... Args>
+requires(std::is_constructible_v<typename Memory::DataType, Args...>)
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::emplace_back(Args&&... args)
 {
     DataRef ref = push_back_unsafe(1);
@@ -604,6 +607,7 @@ inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::emplace_back(Arg
 }
 template <typename Memory>
 template <typename... Args>
+requires(std::is_constructible_v<typename Memory::DataType, Args...>)
 inline typename RingBuffer<Memory>::DataRef RingBuffer<Memory>::emplace_front(Args&&... args)
 {
     DataRef ref = push_front_unsafe(1);

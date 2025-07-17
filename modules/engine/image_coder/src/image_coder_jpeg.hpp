@@ -30,6 +30,9 @@ public:
 
     bool load_jpeg_header() SKR_NOEXCEPT;
 
+    int ColorSpace = 0;
+	int SubSampling = 0;
+    
     uint32_t          channels = 0;
     turbo_jpeg_handle Decompressor;
 };

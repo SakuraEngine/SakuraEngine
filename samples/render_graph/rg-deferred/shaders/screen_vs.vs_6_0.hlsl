@@ -1,5 +1,3 @@
-#pragma pack_matrix(row_major)
-
 // reverse depth: #define QUAD_Z 1
 #define QUAD_Z 0
 

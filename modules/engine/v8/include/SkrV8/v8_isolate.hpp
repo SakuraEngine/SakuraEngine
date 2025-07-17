@@ -1,10 +1,15 @@
 #pragma once
-#include "SkrRTTR/script_binder.hpp"
-#include <SkrRTTR/stack_proxy.hpp>
-#include "v8-isolate.h"
-#include "v8-platform.h"
-#include "v8_bind_data.hpp"
-#include "v8-primitive.h"
+#include <SkrCore/memory/rc.hpp>
+#include <SkrRTTR/script/script_binder.hpp>
+#include <SkrRTTR/script/stack_proxy.hpp>
+#include <SkrV8/v8_inspector.hpp>
+#include <SkrV8/v8_bind_data.hpp>
+#include <SkrV8/v8_script_loader.hpp>
+
+// v8 includes
+#include <v8-isolate.h>
+#include <v8-platform.h>
+#include <v8-primitive.h>
 #ifndef __meta__
     #include "SkrV8/v8_isolate.generated.h"
 #endif
@@ -14,15 +19,23 @@ namespace skr
 struct V8Context;
 struct V8Module;
 
+enum class EV8ConvertCase
+{
+    Create,      // create from script/ set/get global value
+    Field,       // set/get field value
+    StaticField, // set/get static field value
+    Param,       // set/get param value
+    Return,      // set/get return value
+};
+
 // clang-format off
 sreflect_struct(guid = "8aea5942-6e5c-4711-9502-83f252faa231")
 SKR_V8_API V8Isolate: IScriptMixinCore {
     // clang-format on
     SKR_GENERATE_BODY()
 
-    friend struct V8Context;
+    // friend struct V8Context;
     friend struct V8Value;
-    friend struct V8Module;
 
     // ctor & dtor
     V8Isolate();
@@ -37,10 +50,34 @@ SKR_V8_API V8Isolate: IScriptMixinCore {
     // init & shutdown
     void init();
     void shutdown();
+    bool is_init() const;
 
     // isolate operators
     void pump_message_loop();
     void gc(bool full = true);
+
+    // context
+    V8Context* main_context() const;
+    V8Context* create_context(String name = {});
+    void       destroy_context(V8Context* context);
+
+    // cpp module
+    V8Module* add_cpp_module(StringView name);
+    void      remove_cpp_module(V8Module* module);
+    void      register_cpp_module_id(V8Module* module, int v8_module_id);
+    void      unregister_cpp_module_id(V8Module* module, int v8_module_id);
+    V8Module* find_cpp_module(StringView name) const;
+    V8Module* find_cpp_module(int v8_module_id) const;
+
+    // script loader & file modules
+
+    // debugger
+    void init_debugger(int port);
+    void shutdown_debugger();
+    bool is_debugger_init() const;
+    void pump_debugger_messages();
+    void wait_for_debugger_connected(uint64_t timeout_ms = std::numeric_limits<uint64_t>::max());
+    bool any_debugger_connected() const;
 
     // getter
     inline v8::Isolate*               v8_isolate() const { return _isolate; }
@@ -76,11 +113,11 @@ SKR_V8_API V8Isolate: IScriptMixinCore {
         StackProxy              return_value
     );
     bool invoke_v8_mixin(
-        v8::Local<v8::Value>                v8_this,
-        v8::Local<v8::Function>             v8_func,
-        const ScriptBinderMethod::Overload& mixin_data,
-        span<const StackProxy>              params,
-        StackProxy                          return_value
+        v8::Local<v8::Value>      v8_this,
+        v8::Local<v8::Function>   v8_func,
+        const ScriptBinderMethod& mixin_data,
+        span<const StackProxy>    params,
+        StackProxy                return_value
     );
 
     // => IScriptMixinCore API
@@ -294,26 +331,41 @@ private:
 
 private:
     // isolate data
-    v8::Isolate*              _isolate;
-    v8::Isolate::CreateParams _isolate_create_params;
-
-    // modules
-    Map<String, V8Module*> _modules       = {};
-    Map<int, V8Module*>    _to_skr_module = {};
+    v8::Isolate*              _isolate               = nullptr;
+    v8::Isolate::CreateParams _isolate_create_params = {};
 
     // binder manager
-    ScriptBinderManager _binder_mgr;
+    ScriptBinderManager _binder_mgr = {};
 
     // template & bind data
-    Map<const RTTRType*, V8BindDataRecordBase*> _record_templates;
-    Map<const RTTRType*, V8BindDataEnum*>       _enum_templates;
+    Map<const RTTRType*, V8BindDataRecordBase*> _record_templates = {};
+    Map<const RTTRType*, V8BindDataEnum*>       _enum_templates   = {};
 
     // bind cores & objects
-    Map<ScriptbleObject*, V8BindCoreObject*> _alive_objects;
-    Vector<V8BindCoreObject*>                _deleted_objects;
-    Map<void*, V8BindCoreValue*>             _script_created_values;
-    Map<void*, V8BindCoreValue*>             _static_field_values;
-    Map<void*, V8BindCoreValue*>             _temporal_values;
+    Map<ScriptbleObject*, V8BindCoreObject*> _alive_objects         = {};
+    Vector<V8BindCoreObject*>                _deleted_objects       = {};
+    Map<void*, V8BindCoreValue*>             _script_created_values = {};
+    Map<void*, V8BindCoreValue*>             _static_field_values   = {};
+    Map<void*, V8BindCoreValue*>             _temporal_values       = {};
+
+    // context manage
+    RCUnique<V8Context>         _main_context = nullptr;
+    Vector<RCUnique<V8Context>> _contexts     = {};
+
+    // modules manage
+    Map<String, RCUnique<V8Module>> _cpp_modules    = {};
+    Map<int, V8Module*>             _cpp_modules_id = {};
+
+    // script file loader
+    RCUnique<IV8ScriptLoader> _script_loader = nullptr;
+
+    // file module cache
+    Map<String, v8::Global<v8::Module>> _file_module_cache    = {};
+    Map<int, v8::Global<v8::Module>>    _file_module_cache_id = {};
+
+    // debugger
+    V8WebSocketServer _websocket_server = {};
+    V8InspectorClient _inspector_client = {};
 };
 } // namespace skr
 

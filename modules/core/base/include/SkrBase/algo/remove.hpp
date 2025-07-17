@@ -88,7 +88,7 @@ SKR_INLINE T remove_all_swap(T begin, T end, TP&& p = TP())
             --end;
         }
 
-        // destruct and move
+        // swap items at bad pos
         ::skr::memory::destruct(begin);
         ::skr::memory::move(begin, end);
 

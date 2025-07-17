@@ -9,7 +9,7 @@ static constexpr uint64_t kResourceHandleRequesterTypeMask = alignof(skr_resourc
 
 skr_resource_handle_t::skr_resource_handle_t()
 {
-    std::memset(this, 0, sizeof(skr_resource_handle_t));
+    std::memset((void*)this, 0, sizeof(skr_resource_handle_t));
 }
 
 skr_resource_handle_t::~skr_resource_handle_t()
@@ -32,8 +32,8 @@ skr_resource_handle_t::skr_resource_handle_t(const skr_resource_handle_t& other)
 
 skr_resource_handle_t::skr_resource_handle_t(skr_resource_handle_t&& other)
 {
-    memcpy(this, &other, sizeof(skr_resource_handle_t));
-    memset(&other, 0, sizeof(skr_resource_handle_t));
+    memcpy((void*)this, &other, sizeof(skr_resource_handle_t));
+    memset((void*)&other, 0, sizeof(skr_resource_handle_t));
 }
 
 skr_resource_handle_t& skr_resource_handle_t::operator=(const skr_resource_handle_t& other)
@@ -45,7 +45,7 @@ skr_resource_handle_t& skr_resource_handle_t::operator=(const skr_resource_handl
 skr_resource_handle_t::skr_resource_handle_t(const skr_resource_handle_t& other, uint64_t inRequester, ESkrRequesterType requesterType)
 {
     if (other.is_null())
-        std::memset(this, 0, sizeof(skr_resource_handle_t));
+        std::memset((void*)this, 0, sizeof(skr_resource_handle_t));
     if (other.padding != 0)
         guid = other.guid;
     auto record = other.get_record();
@@ -62,8 +62,8 @@ skr_resource_handle_t& skr_resource_handle_t::operator=(const skr_guid_t& other)
 
 skr_resource_handle_t& skr_resource_handle_t::operator=(skr_resource_handle_t&& other)
 {
-    memcpy(this, &other, sizeof(skr_resource_handle_t));
-    memset(&other, 0, sizeof(skr_resource_handle_t));
+    memcpy((void*)this, &other, sizeof(skr_resource_handle_t));
+    memset((void*)&other, 0, sizeof(skr_resource_handle_t));
     return *this;
 }
 
@@ -163,7 +163,7 @@ void skr_resource_handle_t::reset()
 {
     if (is_resolved())
         unload();
-    std::memset(this, 0, sizeof(skr_resource_handle_t));
+    std::memset((void*)this, 0, sizeof(skr_resource_handle_t));
 }
 
 ESkrLoadingStatus skr_resource_handle_t::get_status(bool resolve) const

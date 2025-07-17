@@ -1,6 +1,7 @@
 #include "hv/WebSocketServer.h"
 #include "hv/WebSocketClient.h"
 #include <WebSocketSample/web_socket_cmds.hpp>
+#include <SkrCore/log.hpp>
 
 namespace skr
 {

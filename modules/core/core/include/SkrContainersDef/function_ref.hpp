@@ -86,14 +86,6 @@ private:
     R (*callback_)(void*, Args...) = nullptr;
 };
 
-/// Swaps the referred callables of `lhs` and `rhs`.
-template <typename R, typename... Args>
-constexpr void swap(FunctionRef<R(Args...)>& lhs,
-FunctionRef<R(Args...)>& rhs) noexcept
-{
-    lhs.swap(rhs);
-}
-
 template <class F, class = void>
 struct FunctionTrait : public FunctionTrait<decltype(&F::operator())> {};
 

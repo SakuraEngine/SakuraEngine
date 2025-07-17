@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRTTR/stack_proxy.hpp"
+#include "SkrRTTR/script/stack_proxy.hpp"
 #include <SkrRTTR/type.hpp>
 #include <SkrCore/log.hpp>
 
@@ -106,6 +106,11 @@
 //   - cannot return by script(ScriptMixin)
 //   - will copy when return by native
 //
+// about generic container element visit:
+//   - at()/find() means get copy in all cases
+//   - visit([func]) means access by ref in value case, it will be invalid out of [func] body
+//   - each by iterator means access by ref in value case, it will be invalid when iterator reach end
+//
 // script support generic types(can be toggled off):
 //   skr::Array: accept script array
 //   skr::Span: accept script array
@@ -128,7 +133,12 @@ struct StringViewStackProxy {
     }
 };
 
-// root binder, used for nested binder
+// root binder, means script visible types
+//   - primitive
+//   - enum
+//   - value
+//   - mapping
+//   - object
 struct ScriptBinderPrimitive;
 struct ScriptBinderMapping;
 struct ScriptBinderObject;
@@ -248,6 +258,28 @@ private:
     void* _binder = nullptr;
 };
 
+// nested binder, means elements of export types
+//   - ctor
+//   - field
+//   - static field
+//   - method
+//   - static method
+//   - property
+//   - static property
+//   - param
+//   - return
+struct ScriptBinderCtor;
+struct ScriptBinderField;
+struct ScriptBinderStaticField;
+struct ScriptBinderMethod;
+struct ScriptBinderStaticMethod;
+struct ScriptBinderProperty;
+struct ScriptBinderStaticProperty;
+struct ScriptBinderParam;
+struct ScriptBinderReturn;
+// TODO. ScriptBinderNested，用于在实际类型转换时传递全量的信息
+
+//==================nested binders==================
 // nested binder, field & static field
 struct ScriptBinderField {
     const RTTRType*      owner  = nullptr;
@@ -277,34 +309,24 @@ struct ScriptBinderReturn {
     bool             is_void     = false;
 };
 struct ScriptBinderMethod {
-    struct Overload {
-        const RTTRType*           owner           = nullptr;
-        const RTTRMethodData*     data            = nullptr;
-        const RTTRMethodData*     mixin_impl_data = nullptr;
-        ScriptBinderReturn        return_binder   = {};
-        Vector<ScriptBinderParam> params_binder   = {};
-        uint32_t                  params_count    = 0;
-        uint32_t                  return_count    = 0;
-        bool                      failed          = false;
-    };
-
-    Vector<Overload> overloads = {};
-    bool             is_mixin  = false;
-    bool             failed    = false;
+    const RTTRType*           owner           = nullptr;
+    const RTTRMethodData*     data            = nullptr;
+    const RTTRMethodData*     mixin_impl_data = nullptr;
+    ScriptBinderReturn        return_binder   = {};
+    Vector<ScriptBinderParam> params_binder   = {};
+    uint32_t                  params_count    = 0;
+    uint32_t                  return_count    = 0;
+    bool                      is_mixin        = false;
+    bool                      failed          = false;
 };
 struct ScriptBinderStaticMethod {
-    struct Overload {
-        const RTTRType*             owner         = nullptr;
-        const RTTRStaticMethodData* data          = nullptr;
-        ScriptBinderReturn          return_binder = {};
-        Vector<ScriptBinderParam>   params_binder = {};
-        uint32_t                    params_count  = 0;
-        uint32_t                    return_count  = 0;
-        bool                        failed        = false;
-    };
-
-    Vector<Overload> overloads = {};
-    bool             failed    = false;
+    const RTTRType*             owner         = nullptr;
+    const RTTRStaticMethodData* data          = nullptr;
+    ScriptBinderReturn          return_binder = {};
+    Vector<ScriptBinderParam>   params_binder = {};
+    uint32_t                    params_count  = 0;
+    uint32_t                    return_count  = 0;
+    bool                        failed        = false;
 };
 
 // nested binder, property
@@ -327,8 +349,9 @@ struct ScriptBinderCtor {
     Vector<ScriptBinderParam> params_binder = {};
     bool                      failed        = false;
 };
+//==================nested binders==================
 
-// root binders
+//==================root binders==================
 struct ScriptBinderPrimitive {
     uint32_t    size      = 0;
     uint32_t    alignment = 0;
@@ -346,8 +369,8 @@ struct ScriptBinderMapping {
 struct ScriptBinderRecordBase {
     const RTTRType* type = nullptr;
 
-    bool                     is_script_newable = false;
-    Vector<ScriptBinderCtor> ctors             = {};
+    bool             is_script_newable = false;
+    ScriptBinderCtor ctor              = {};
 
     Map<String, ScriptBinderField>          fields            = {};
     Map<String, ScriptBinderStaticField>    static_fields     = {};
@@ -371,6 +394,7 @@ struct ScriptBinderEnum {
 
     bool is_signed = false;
 };
+//==================root binders==================
 
 // function binder, used for call script function
 struct ScriptBinderCallScript {
@@ -382,14 +406,29 @@ struct ScriptBinderCallScript {
     bool failed = false;
 };
 
+// export case
+enum class EScriptExportCase : uint8_t
+{
+    Basic,       // global variable or create from script
+    Field,       // field value
+    StaticField, // static field value
+    Param,       // param value
+    Return,      // return value
+};
+
 // TODO. Generic type support
+//   ScriptBinderGeneric，存储一个 GenericId，可以通过 GenericId cast 到具体子类
+//   扩展 Generic 类型采用向 ScriptBinderManager 中注册 Plugin 的形式进行，或者所有的 Generic 类型都通过 Plugin 形式插入
+//   Generic 类型采用特殊的方式注入函数，令其模拟 Value Export 的行为
+//   与普通 Value 类型的区别是，除了 void* 的首位指针，还会传入 ScriptBinderGeneric* 便于 Generic 行为的模拟
+//   Optional/FunctionRef/Delegate/Event 等特殊 Generic 类型的导出可以考虑不进行行为模拟，而是在 Script 端主动处理
 struct SKR_CORE_API ScriptBinderManager {
     // ctor & dtor
     ScriptBinderManager();
     ~ScriptBinderManager();
 
     // get binder
-    ScriptBinderRoot       get_or_build(GUID type_id);
+    ScriptBinderRoot       get_or_build(GUID type_id); // TODO. 直接传入 TypeSignatureView，若带有 Modifier 则抛出 warning，并提醒在外部清除 Modifier 以进行抑制
     ScriptBinderCallScript build_call_script_binder(span<const StackProxy> params, StackProxy ret);
 
     // each
@@ -409,9 +448,9 @@ private:
 
     // make nested binder
     void _make_ctor(ScriptBinderCtor& out, const RTTRCtorData* ctor, const RTTRType* owner);
-    void _make_method(ScriptBinderMethod::Overload& out, const RTTRMethodData* method, const RTTRType* owner);
-    void _make_static_method(ScriptBinderStaticMethod::Overload& out, const RTTRStaticMethodData* method, const RTTRType* owner);
-    void _make_mixin_method(ScriptBinderMethod::Overload& out, const RTTRMethodData* method, const RTTRMethodData* impl_method, const RTTRType* owner);
+    void _make_method(ScriptBinderMethod& out, const RTTRMethodData* method, const RTTRType* owner);
+    void _make_static_method(ScriptBinderStaticMethod& out, const RTTRStaticMethodData* method, const RTTRType* owner);
+    void _make_mixin_method(ScriptBinderMethod& out, const RTTRMethodData* method, const RTTRMethodData* impl_method, const RTTRType* owner);
     void _make_prop_getter(ScriptBinderMethod& out, const RTTRMethodData* method, const RTTRType* owner);
     void _make_prop_setter(ScriptBinderMethod& out, const RTTRMethodData* method, const RTTRType* owner);
     void _make_static_prop_getter(ScriptBinderStaticMethod& out, const RTTRStaticMethodData* method, const RTTRType* owner);

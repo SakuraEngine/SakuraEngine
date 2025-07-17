@@ -440,7 +440,7 @@ CGPUSemaphoreId cgpu_create_semaphore_d3d12(CGPUDeviceId device)
 
 void cgpu_free_semaphore_d3d12(CGPUSemaphoreId semaphore)
 {
-    return cgpu_free_fence((CGPUFenceId)semaphore);
+    cgpu_free_fence((CGPUFenceId)semaphore);
 }
 
 CGPURootSignaturePoolId cgpu_create_root_signature_pool_d3d12(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc)
@@ -2549,6 +2549,8 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
     for (uint32_t i = 0; i < desc->image_count; ++i)
     {
         CHECK_HRESULT(COM_CALL(GetBuffer, S->pDxSwapChain, i, IID_ARGS(ID3D12Resource, &backbuffers[i])));
+        if (backbuffers[i]->lpVtbl->SetName)
+            backbuffers[i]->lpVtbl->SetName(backbuffers[i], L"SwapChainBackBuffer");
     }
     typedef struct THeader {
         CGPUTexture_D3D12 T;

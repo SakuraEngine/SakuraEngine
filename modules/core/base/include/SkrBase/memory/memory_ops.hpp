@@ -325,4 +325,42 @@ SKR_INLINE bool compare(const A* a, const B* b, size_t count)
     }
 }
 
+// padded size
+SKR_INLINE uint64_t padded_size(uint64_t size, uint64_t alignment)
+{
+    return (size + alignment - 1) / alignment * alignment;
+}
+
+// offset
+SKR_INLINE void* offset_bytes(void* p, int64_t offset) noexcept
+{
+    return static_cast<uint8_t*>(p) + offset;
+}
+SKR_INLINE const void* offset_bytes(const void* p, int64_t offset) noexcept
+{
+    return static_cast<const uint8_t*>(p) + offset;
+}
+SKR_INLINE void* offset_item(void* p, uint64_t item_size, int64_t count) noexcept
+{
+    return offset_bytes(p, item_size * count);
+}
+SKR_INLINE const void* offset_item(const void* p, uint64_t item_size, int64_t count) noexcept
+{
+    return offset_bytes(p, item_size * count);
+}
+SKR_INLINE int64_t distance_bytes(const void* p1, const void* p2) noexcept
+{
+    return static_cast<const uint8_t*>(p2) - static_cast<const uint8_t*>(p1);
+}
+SKR_INLINE int64_t distance_item(const void* p1, const void* p2, uint64_t item_size) noexcept
+{
+    return distance_bytes(p1, p2) / item_size;
+}
+
+// zero memory
+SKR_INLINE void zero_memory(void* p, size_t size) noexcept
+{
+    ::std::memset(p, 0, size);
+}
+
 } // namespace skr::memory

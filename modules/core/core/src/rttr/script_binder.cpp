@@ -1,7 +1,7 @@
 #include "SkrContainersDef/set.hpp"
 #include "SkrCore/log.hpp"
-#include "SkrRTTR/scriptble_object.hpp"
-#include <SkrRTTR/script_binder.hpp>
+#include "SkrRTTR/script/scriptble_object.hpp"
+#include <SkrRTTR/script/script_binder.hpp>
 
 // helpers
 namespace skr
@@ -383,8 +383,12 @@ void ScriptBinderManager::_fill_record_info(ScriptBinderRecordBase& out, const R
     {
         type->each_ctor([&](const RTTRCtorData* ctor) {
             if (!flag_all(ctor->flag, ERTTRCtorFlag::ScriptVisible)) { return; }
-            auto& ctor_data = out.ctors.add_default().ref();
-            _make_ctor(ctor_data, ctor, type);
+            if (out.ctor.data)
+            {
+                _logger.error(u8"overload is not supported yet for ctor '{}'", type->name());
+                return;
+            }
+            _make_ctor(out.ctor, ctor, type);
         });
     }
 
@@ -412,10 +416,16 @@ void ScriptBinderManager::_fill_record_info(ScriptBinderRecordBase& out, const R
         mixin_consumed_methods.add(found_impl_method);
 
         // export
-        auto& mixin_method_data    = out.methods.try_add_default(method->name).value();
-        auto& overload_data        = mixin_method_data.overloads.add_default().ref();
-        mixin_method_data.is_mixin = true;
-        _make_mixin_method(overload_data, method, found_impl_method, owner_type);
+        if (auto found_mixin = out.methods.find(method->name))
+        {
+            _logger.error(u8"overload is not supported yet for mixin method '{}'", method->name);
+        }
+        else
+        {
+            auto& mixin_method_data    = out.methods.try_add_default(method->name, found_mixin).value();
+            mixin_method_data.is_mixin = true;
+            _make_mixin_method(mixin_method_data, method, found_impl_method, owner_type);
+        }
 
         // clang-format off
     }, {.include_bases = true});
@@ -464,24 +474,45 @@ void ScriptBinderManager::_fill_record_info(ScriptBinderRecordBase& out, const R
         }
 
         if (find_getter_result)
-        {
+        { // getter case
             String prop_name  = find_getter_result.ref().cast<skr::attr::ScriptGetter>()->prop_name;
             auto&  prop_data  = out.properties.try_add_default(prop_name).value();
             auto   _log_stack = _logger.stack(u8"export property '{}' getter", prop_name);
-            _make_prop_getter(prop_data.getter, method, owner_type);
+            if (prop_data.getter.data)
+            {
+                _logger.error(u8"overload is not supported yet for property '{}'", prop_name);
+            }
+            else
+            {
+                _make_prop_getter(prop_data.getter, method, owner_type);
+            }
         }
         else if (find_setter_result)
-        {
+        { // setter case
             String prop_name  = find_setter_result.ref().cast<skr::attr::ScriptSetter>()->prop_name;
             auto&  prop_data  = out.properties.try_add_default(prop_name).value();
             auto   _log_stack = _logger.stack(u8"export property '{}' setter", prop_name);
-            _make_prop_setter(prop_data.setter, method, owner_type);
+            if (prop_data.setter.data)
+            {
+                _logger.error(u8"overload is not supported yet for property '{}'", prop_name);
+            }
+            else
+            {
+                _make_prop_setter(prop_data.setter, method, owner_type);
+            }
         }
         else
-        {
-            auto& method_data   = out.methods.try_add_default(method->name).value();
-            auto& overload_data = method_data.overloads.add_default().ref();
-            _make_method(overload_data, method, owner_type);
+        { // normal method
+            if (auto found_method = out.methods.find(method->name))
+            {
+                _logger.error(u8"overload is not supported yet for method '{}'", method->name);
+            }
+            else
+            {
+                // add method
+                auto& method_data = out.methods.try_add_default(method->name, found_method).value();
+                _make_method(method_data, method, owner_type);
+            }
         }
         // clang-format off
     }, { .include_bases = true });
@@ -507,24 +538,45 @@ void ScriptBinderManager::_fill_record_info(ScriptBinderRecordBase& out, const R
         }
 
         if (find_getter_result)
-        {
+        { // getter case
             String prop_name  = find_getter_result.ref().cast<skr::attr::ScriptGetter>()->prop_name;
             auto&  prop_data  = out.static_properties.try_add_default(prop_name).value();
             auto   _log_stack = _logger.stack(u8"export static getter '{}'", prop_name);
-            _make_static_prop_getter(prop_data.getter, method, owner_type);
+            if (prop_data.getter.data)
+            {
+                _logger.error(u8"overload is not supported yet for static property '{}'", prop_name);
+            }
+            else
+            {
+                _make_static_prop_getter(prop_data.getter, method, owner_type);
+            }
         }
         else if (find_setter_result)
-        {
+        { // setter case
             String prop_name  = find_setter_result.ref().cast<skr::attr::ScriptSetter>()->prop_name;
             auto&  prop_data  = out.static_properties.try_add_default(prop_name).value();
             auto   _log_stack = _logger.stack(u8"export static setter '{}'", prop_name);
-            _make_static_prop_setter(prop_data.setter, method, owner_type);
+            if (prop_data.setter.data)
+            {
+                _logger.error(u8"overload is not supported yet for static property '{}'", prop_name);
+            }
+            else
+            {
+                _make_static_prop_setter(prop_data.setter, method, owner_type);
+            }
         }
         else
-        {
-            auto& static_method_data = out.static_methods.try_add_default(method->name).value();
-            auto& overload_data      = static_method_data.overloads.add_default().ref();
-            _make_static_method(overload_data, method, owner_type);
+        { // normal method
+            if (auto found_method = out.static_methods.find(method->name))
+            {
+                _logger.error(u8"overload is not supported yet for static method '{}'", method->name);
+            }
+            else
+            {
+                // add method
+                auto& method_data = out.static_methods.try_add_default(method->name, found_method).value();
+                _make_static_method(method_data, method, owner_type);
+            }
         }
         // clang-format off
     }, { .include_bases = true });
@@ -535,37 +587,10 @@ void ScriptBinderManager::_fill_record_info(ScriptBinderRecordBase& out, const R
     {
         if (prop.failed) { continue; }
 
-        // check multiple overloads
-        if (prop.getter.overloads.size() > 1)
-        {
-            String conflict_methods = u8"";
-            for (auto& overload : prop.getter.overloads)
-            {
-                conflict_methods.append(overload.data->name);
-                conflict_methods.append(u8", ");
-            }
-            conflict_methods.first(conflict_methods.length_buffer() - 2);
-            _logger.error(u8"prop '{}' getter has multiple overloads: {}", name, conflict_methods);
-            prop.failed = true;
-        }
-        if (prop.setter.overloads.size() > 1)
-        {
-            String conflict_methods = u8"";
-            for (auto& overload : prop.setter.overloads)
-            {
-                conflict_methods.append(overload.data->name);
-                conflict_methods.append(u8", ");
-            }
-            conflict_methods.first(conflict_methods.length_buffer() - 2);
-            _logger.error(u8"prop '{}' setter has multiple overloads: {}", name, conflict_methods);
-            prop.failed = true;
-        }
-
         // check property type
-        if (prop.getter.overloads.size() == 1 && prop.setter.overloads.size() == 1)
         {
-            auto& getter = prop.getter.overloads[0];
-            auto& setter = prop.setter.overloads[0];
+            auto& getter = prop.getter;
+            auto& setter = prop.setter;
 
             if (!getter.failed && !setter.failed)
             {
@@ -614,37 +639,10 @@ void ScriptBinderManager::_fill_record_info(ScriptBinderRecordBase& out, const R
     {
         if (static_prop.failed) { continue; }
 
-        // check multiple overloads
-        if (static_prop.getter.overloads.size() > 1)
-        {
-            String conflict_methods = u8"";
-            for (auto& overload : static_prop.getter.overloads)
-            {
-                conflict_methods.append(overload.data->name);
-                conflict_methods.append(u8", ");
-            }
-            conflict_methods.first(conflict_methods.length_buffer() - 2);
-            _logger.error(u8"static_prop '{}' getter has multiple overloads: {}", name, conflict_methods);
-            static_prop.failed = true;
-        }
-        if (static_prop.setter.overloads.size() > 1)
-        {
-            String conflict_methods = u8"";
-            for (auto& overload : static_prop.setter.overloads)
-            {
-                conflict_methods.append(overload.data->name);
-                conflict_methods.append(u8", ");
-            }
-            conflict_methods.first(conflict_methods.length_buffer() - 2);
-            _logger.error(u8"static_prop '{}' setter has multiple overloads: {}", name, conflict_methods);
-            static_prop.failed = true;
-        }
-
         // check property type
-        if (static_prop.getter.overloads.size() == 1 && static_prop.setter.overloads.size() == 1)
         {
-            auto& getter = static_prop.getter.overloads[0];
-            auto& setter = static_prop.setter.overloads[0];
+            auto& getter = static_prop.getter;
+            auto& setter = static_prop.setter;
 
             if (!getter.failed && !setter.failed)
             {
@@ -688,15 +686,6 @@ void ScriptBinderManager::_fill_record_info(ScriptBinderRecordBase& out, const R
         }
     }
 
-    // check mixin overloads
-    for (auto& [name, method] : out.methods)
-    {
-        if (method.is_mixin && method.overloads.size() > 1)
-        {
-            _logger.error(u8"method '{}' with mixin flag not allow overloads", name);
-        }
-    }
-
     out.failed |= _logger.any_error();
 }
 
@@ -731,7 +720,7 @@ void ScriptBinderManager::_make_ctor(ScriptBinderCtor& out, const RTTRCtorData* 
 
     out.failed |= _logger.any_error();
 }
-void ScriptBinderManager::_make_method(ScriptBinderMethod::Overload& out, const RTTRMethodData* method, const RTTRType* owner)
+void ScriptBinderManager::_make_method(ScriptBinderMethod& out, const RTTRMethodData* method, const RTTRType* owner)
 {
     auto _log_stack = _logger.stack(u8"export method '{}'", method->name);
 
@@ -754,7 +743,7 @@ void ScriptBinderManager::_make_method(ScriptBinderMethod::Overload& out, const 
 
     out.failed |= _logger.any_error();
 }
-void ScriptBinderManager::_make_static_method(ScriptBinderStaticMethod::Overload& out, const RTTRStaticMethodData* static_method, const RTTRType* owner)
+void ScriptBinderManager::_make_static_method(ScriptBinderStaticMethod& out, const RTTRStaticMethodData* static_method, const RTTRType* owner)
 {
     auto _log_stack = _logger.stack(u8"export static method {}", static_method->name);
 
@@ -777,7 +766,7 @@ void ScriptBinderManager::_make_static_method(ScriptBinderStaticMethod::Overload
 
     out.failed |= _logger.any_error();
 }
-void ScriptBinderManager::_make_mixin_method(ScriptBinderMethod::Overload& out, const RTTRMethodData* method, const RTTRMethodData* impl_method, const RTTRType* owner)
+void ScriptBinderManager::_make_mixin_method(ScriptBinderMethod& out, const RTTRMethodData* method, const RTTRMethodData* impl_method, const RTTRType* owner)
 {
     auto _log_stack = _logger.stack(u8"export mixin method {}", method->name);
 
@@ -825,8 +814,7 @@ void ScriptBinderManager::_make_prop_getter(ScriptBinderMethod& out, const RTTRM
     }
 
     // fill data
-    auto& method_data = out.overloads.add_default().ref();
-    _make_method(method_data, method, owner);
+    _make_method(out, method, owner);
 
     out.failed |= _logger.any_error();
 }
@@ -848,8 +836,7 @@ void ScriptBinderManager::_make_prop_setter(ScriptBinderMethod& out, const RTTRM
     }
 
     // fill data
-    auto& method_data = out.overloads.add_default().ref();
-    _make_method(method_data, method, owner);
+    _make_method(out, method, owner);
 
     out.failed |= _logger.any_error();
 }
@@ -871,8 +858,7 @@ void ScriptBinderManager::_make_static_prop_getter(ScriptBinderStaticMethod& out
     }
 
     // fill data
-    auto& method_data = out.overloads.add_default().ref();
-    _make_static_method(method_data, method, owner);
+    _make_static_method(out, method, owner);
 
     out.failed |= _logger.any_error();
 }
@@ -894,8 +880,7 @@ void ScriptBinderManager::_make_static_prop_setter(ScriptBinderStaticMethod& out
     }
 
     // fill data
-    auto& method_data = out.overloads.add_default().ref();
-    _make_static_method(method_data, method, owner);
+    _make_static_method(out, method, owner);
 
     out.failed |= _logger.any_error();
 }

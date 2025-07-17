@@ -233,10 +233,11 @@ uint32_t RenderGraph::foreach_textures(skr::stl_function<void(TextureNode*)> f) 
     return num;
 }
 
-uint32_t RenderGraph::foreach_writer_passes(TextureHandle texture,
+uint32_t RenderGraph::foreach_passes(TextureHandle texture,
     skr::stl_function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
 {
-    return graph->foreach_incoming_edges(
+    uint32_t n = 0;
+    n += graph->foreach_incoming_edges(
     texture,
     [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
         PassNode* pass = static_cast<PassNode*>(from);
@@ -244,25 +245,22 @@ uint32_t RenderGraph::foreach_writer_passes(TextureHandle texture,
         RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
         f(pass, texture, edge);
     });
-}
-
-uint32_t RenderGraph::foreach_reader_passes(TextureHandle texture,
-    skr::stl_function<void(PassNode*, TextureNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
-{
-    return graph->foreach_outgoing_edges(
+    n += graph->foreach_outgoing_edges(
     texture,
-    [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) SKR_NOEXCEPT {
+    [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
         PassNode* pass = static_cast<PassNode*>(to);
         TextureNode* texture = static_cast<TextureNode*>(from);
         RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
         f(pass, texture, edge);
     });
+    return n;
 }
 
-uint32_t RenderGraph::foreach_writer_passes(BufferHandle buffer,
+uint32_t RenderGraph::foreach_passes(BufferHandle buffer,
     skr::stl_function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
 {
-    return graph->foreach_incoming_edges(
+    uint32_t n = 0;
+    n += graph->foreach_incoming_edges(
     buffer,
     [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) SKR_NOEXCEPT {
         PassNode* pass = static_cast<PassNode*>(from);
@@ -270,19 +268,15 @@ uint32_t RenderGraph::foreach_writer_passes(BufferHandle buffer,
         RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
         f(pass, buffer, edge);
     });
-}
-
-uint32_t RenderGraph::foreach_reader_passes(BufferHandle buffer,
-    skr::stl_function<void(PassNode*, BufferNode*, RenderGraphEdge*)> f) const SKR_NOEXCEPT
-{
-    return graph->foreach_outgoing_edges(
+    n += graph->foreach_outgoing_edges(
     buffer,
-    [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) {
+    [&](DependencyGraphNode* from, DependencyGraphNode* to, DependencyGraphEdge* e) SKR_NOEXCEPT {
         PassNode* pass = static_cast<PassNode*>(to);
         BufferNode* buffer = static_cast<BufferNode*>(from);
         RenderGraphEdge* edge = static_cast<RenderGraphEdge*>(e);
         f(pass, buffer, edge);
     });
+    return n;
 }
 
 const ECGPUResourceState RenderGraph::get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const SKR_NOEXCEPT
@@ -293,7 +287,7 @@ const ECGPUResourceState RenderGraph::get_lastest_state(const TextureNode* textu
         return texture->init_state;
     PassNode* pass_iter = nullptr;
     auto result = texture->init_state;
-    foreach_writer_passes(texture->get_handle(),
+    foreach_passes(texture->get_handle(),
     [&](PassNode* pass, TextureNode* texture, RenderGraphEdge* edge) {
         if (edge->type == ERelationshipType::TextureWrite)
         {
@@ -313,10 +307,7 @@ const ECGPUResourceState RenderGraph::get_lastest_state(const TextureNode* textu
                 result = rw_edge->requested_state;
             }
         }
-    });
-    foreach_reader_passes(texture->get_handle(),
-    [&](PassNode* pass, TextureNode* texture, RenderGraphEdge* edge) {
-        if (edge->type == ERelationshipType::TextureRead)
+        else if (edge->type == ERelationshipType::TextureRead)
         {
             auto read_edge = static_cast<TextureRenderEdge*>(edge);
             if (pass->after(pass_iter) && pass->before(pending_pass))
@@ -337,7 +328,7 @@ const ECGPUResourceState RenderGraph::get_lastest_state(const BufferNode* buffer
         return buffer->init_state;
     PassNode* pass_iter = nullptr;
     auto result = buffer->init_state;
-    foreach_writer_passes(buffer->get_handle(),
+    foreach_passes(buffer->get_handle(),
     [&](PassNode* pass, BufferNode* buffer, RenderGraphEdge* edge) SKR_NOEXCEPT {
         if (edge->type == ERelationshipType::BufferReadWrite)
         {
@@ -348,10 +339,7 @@ const ECGPUResourceState RenderGraph::get_lastest_state(const BufferNode* buffer
                 result = write_edge->requested_state;
             }
         }
-    });
-    foreach_reader_passes(buffer->get_handle(),
-    [&](PassNode* pass, BufferNode* buffer, RenderGraphEdge* edge) SKR_NOEXCEPT {
-        if (edge->type == ERelationshipType::BufferRead)
+        else if (edge->type == ERelationshipType::BufferRead)
         {
             auto read_edge = static_cast<BufferReadEdge*>(edge);
             if (pass->after(pass_iter) && pass->before(pending_pass))

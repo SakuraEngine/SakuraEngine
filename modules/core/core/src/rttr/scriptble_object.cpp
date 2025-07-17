@@ -1,4 +1,4 @@
-#include <SkrRTTR/scriptble_object.hpp>
+#include <SkrRTTR/script/scriptble_object.hpp>
 
 namespace skr
 {

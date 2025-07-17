@@ -703,6 +703,7 @@ void ImGuiRendererBackendRG::present_main_viewport()
     present_desc.swapchain = rdata->swapchain;
     cgpu_queue_present(rdata->present_queue, &present_desc);
 }
+
 void ImGuiRendererBackendRG::present_sub_viewports()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();

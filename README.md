@@ -6,6 +6,8 @@
 
 <h2 align="center"> 为下一代平台的功能性能需求而生 </h2>
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/SakuraEngine/SakuraEngine)
+
 ## 特性
 
 ### 原生

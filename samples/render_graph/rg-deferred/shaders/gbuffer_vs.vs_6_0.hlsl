@@ -1,5 +1,3 @@
-#pragma pack_matrix(row_major)
-
 struct VSIn
 {
     float3 position : POSITION;
