@@ -13,7 +13,7 @@ shared_module("SkrGraphics", "SKR_GRAPHICS")
     end
     
     if (is_os("windows")) then 
-        add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public=true})
+        add_linkdirs("$(builddir)/$(os)/$(arch)/$(mode)", {public=true})
         add_links("nvapi_x64", {public = true})
         add_links("WinPixEventRuntime", {public = true})
     end

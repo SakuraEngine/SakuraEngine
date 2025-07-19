@@ -11,6 +11,6 @@ target("openssl")
     })
 
     -- add add_links
-    add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public = true})
+    add_linkdirs("$(builddir)/$(os)/$(arch)/$(mode)", {public = true})
     add_links("libcrypto", {public = true})
     add_links("libssl", {public = true})

@@ -27,7 +27,7 @@ shared_module("SkrRT", "SKR_RUNTIME")
     add_deps("SkrRTMeta")
 
     -- link system libs/frameworks
-    add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public = true})
+    add_linkdirs("$(builddir)/$(os)/$(arch)/$(mode)", {public = true})
     
     -- add source files
     add_includedirs("include", {public = true})
