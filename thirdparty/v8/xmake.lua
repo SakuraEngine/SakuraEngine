@@ -2,7 +2,7 @@ target("v8")
     set_kind("headeronly")
 
     add_includedirs("include", { public = true })
-    add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public=true})
+    add_linkdirs("$(builddir)/$(os)/$(arch)/$(mode)", {public=true})
 
     -- v8 sys env
     if is_plat("linux", "bsd") then

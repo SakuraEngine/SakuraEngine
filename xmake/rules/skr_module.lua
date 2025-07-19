@@ -69,7 +69,7 @@ rule("sakura.dyn_module")
     on_config(function(target)
         if has_config("shipping_one_archive") then
             if target:kind() == "binary" then
-                local output_dir = vformat("$(buildir)/$(os)/$(arch)/$(mode)")
+                local output_dir = vformat("$(builddir)/$(os)/$(arch)/$(mode)")
                 for _, dep in pairs(dep_modules) do
                     if is_plat("linux") then
                         target:add("ldflags", "-Wl,--whole-archive "..output_dir.."/lib"..dep..".a -Wl,--no-whole-archive", {force = true, public = false})

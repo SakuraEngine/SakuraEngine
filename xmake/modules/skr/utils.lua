@@ -15,7 +15,7 @@ function saved_config_path()
     return path.join(skr_build_artifact_dir(), "project.config")
 end
 function binary_dir()
-    return vformat("$(buildir)/$(os)/$(arch)/$(mode)")
+    return vformat("$(builddir)/$(os)/$(arch)/$(mode)")
 end
 function download_dir()
     return path.join(skr_build_artifact_dir(), "download")

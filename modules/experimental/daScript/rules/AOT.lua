@@ -32,7 +32,7 @@ rule("daScript")
             table.insert(aot:sourcefiles(), source)
         end
         local wholearchive = function(t, aot)
-            local output_dir = vformat("$(buildir)/$(os)/$(arch)/$(mode)")
+            local output_dir = vformat("$(builddir)/$(os)/$(arch)/$(mode)")
             if is_plat("linux") then
                 t:add("ldflags", "-Wl,--whole-archive "..output_dir.."/lib"..aot:name()..".a -Wl,--no-whole-archive", {force = true, public = false})
             elseif is_plat("macosx") then
