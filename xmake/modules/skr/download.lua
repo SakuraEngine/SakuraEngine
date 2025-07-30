@@ -58,7 +58,7 @@ function Downloader:fetch_manifests()
     if not os.isdir(path.join(utils.download_dir(), "manifests")) then
         os.mkdir(path.join(utils.download_dir(), "manifests"))
     end
-    
+
     -- download
     for _, source in ipairs(self.sources) do
         local url = source.url.."manifest.json"
@@ -80,6 +80,13 @@ function Downloader:fetch_manifests()
 
     -- load files
     self:load_manifests()
+end
+function Downloader:download_cache_dir()
+    local cache_dir = os.getenv("SAKURA_ENGINE_DOWNLOAD_CACHE_DIR")
+    if not cache_dir then
+        cache_dir = path.join(os.getenv("TEMP"), "SakuraEngine", "download_cache")
+    end
+    return cache_dir
 end
 
 function Downloader:load_manifests()
@@ -158,10 +165,31 @@ function Downloader:_download_from_source(file_name, source)
         raise("file not found in source: %s", file_name)
     end
 
+    -- check cache dir
+    local cache_dir = self:download_cache_dir()
+    if not os.isdir(cache_dir) then
+        os.mkdir(cache_dir)
+    end
+    local cache_path = path.join(cache_dir, file_name)
+
     -- get download params
     local download_dir = utils.download_dir()
-    local download_path = path.join(download_dir, file_name)
+    local download_path = cache_path
     local download_url = source.url..file_name
+    local dest_path = path.join(download_dir, file_name)
+
+    -- check file exists
+    if os.exists(cache_path) then
+        local actual_sha = hash.sha256(cache_path)
+        if actual_sha == sha then
+            os.cp(cache_path, dest_path)
+            cprint("${green}[found in cache]${clear} %s", file_name)
+            return
+        else
+            cprint("${red}[cache sha miss match]${clear} %s, expect: %s, actual: %s", file_name, sha, actual_sha)
+            os.rm(cache_path)  -- remove invalid cache
+        end
+    end
 
     -- download file
     cprint("download: %s to %s", download_url, download_path)
@@ -175,6 +203,7 @@ function Downloader:_download_from_source(file_name, source)
             sha,
             actual_sha)
     end
+    os.cp(download_path, dest_path)
 end
 function Downloader:download_file(file_name, opt)
     -- load opt
@@ -248,7 +277,7 @@ function Downloader:_install_tool(tool_name)
     if not package_path then
         raise("failed to find tool \"%s\" when install", tool_name)
     end
-    
+
     -- extract package
     local package_file_name = path.filename(package_path)
     utils.on_changed(function (change_info)
