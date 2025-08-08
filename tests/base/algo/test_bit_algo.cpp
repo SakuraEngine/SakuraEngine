@@ -1,3 +1,4 @@
+#include "SkrBase/containers/bit_tools/bit_iterator.hpp"
 #include "SkrTestFramework/framework.hpp"
 
 #include "SkrBase/algo/bit_algo.hpp"
@@ -32,9 +33,9 @@ void testBitAlgo()
         REQUIRE_EQ(BitAlgo::last_block_mask(BitAlgo::PerBlockSize), BitAlgo::FullMask);
     }
 
-    constexpr TSize DATA_SIZE       = 1024;
-    constexpr TSize BIT_SIZE        = 1024 * BitAlgo::PerBlockSize;
-    TBlock          data[DATA_SIZE] = { 0 };
+    constexpr TSize DATA_SIZE = 1024;
+    constexpr TSize BIT_SIZE = 1024 * BitAlgo::PerBlockSize;
+    TBlock data[DATA_SIZE] = { 0 };
 
     SUBCASE("set block")
     {
@@ -298,6 +299,16 @@ void testBitAlgo()
                 REQUIRE_EQ(data[i], BitAlgo::FullMask);
             }
         }
+    }
+
+    SUBCASE("BitAlgo::find overflow")
+    {
+        BitAlgo::set_blocks(data, TSize(0), DATA_SIZE, false);
+        BitAlgo::set(data, BIT_SIZE - 1, true);
+        auto found_idx = BitAlgo::find(data, TSize(0), BIT_SIZE - 1, true);
+        REQUIRE_EQ(found_idx, npos_of<TSize>);
+        found_idx = BitAlgo::find_last(data, TSize(0), BIT_SIZE - 1, true);
+        REQUIRE_EQ(found_idx, npos_of<TSize>);
     }
 }
 
