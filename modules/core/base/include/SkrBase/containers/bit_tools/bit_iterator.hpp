@@ -177,11 +177,13 @@ struct TrueBitCursor {
         SKR_ASSERT(is_valid());
         SizeType result = Algo::find(_data, _bit_index + 1, _bit_size - _bit_index - 1, true);
         _bit_index      = result == npos ? _bit_size : result;
+        SKR_ASSERT(_bit_index == npos || _bit_index <= _bit_size);
     }
     inline void move_prev()
     {
         SKR_ASSERT(is_valid());
         _bit_index = Algo::find_last(_data, (SizeType)0, _bit_index, true);
+        SKR_ASSERT(_bit_index == npos || _bit_index <= _bit_size);
     }
     inline void reset_to_begin()
     {
@@ -194,6 +196,7 @@ struct TrueBitCursor {
         {
             _bit_index = 0;
         }
+        SKR_ASSERT(_bit_index == npos || _bit_index <= _bit_size);
     }
     inline void reset_to_end()
     {
@@ -205,6 +208,7 @@ struct TrueBitCursor {
         {
             _bit_index = npos;
         }
+        SKR_ASSERT(_bit_index == npos || _bit_index <= _bit_size);
     }
 
     // reach & validate

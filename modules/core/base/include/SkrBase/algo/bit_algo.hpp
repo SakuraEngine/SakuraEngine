@@ -266,7 +266,7 @@ SKR_INLINE TSize BitAlgo<T>::find(const T* data, TSize start, TSize num, bool v)
 
         // center
         const T test = v ? EmptyMask : FullMask;
-        for (TSize i = 1; i < block_count; ++i)
+        for (TSize i = 1; i < block_count - 1; ++i)
         {
             TSize block_idx   = block_start + i;
             T     block_value = data[block_idx];
@@ -318,13 +318,12 @@ SKR_INLINE TSize BitAlgo<T>::find_last(const T* data, TSize start, TSize num, bo
             if (idx != npos_of<T>)
             {
                 return static_cast<TSize>(idx) + (block_last << PerBlockSizeLog2);
-                ;
             }
         }
 
         // center
         const T test = v ? EmptyMask : FullMask;
-        for (TSize i = block_count - 1; i >= 1; --i)
+        for (TSize i = block_count - 2; i >= 1; --i)
         {
             TSize block_idx   = block_start + i;
             T     block_value = data[block_idx];

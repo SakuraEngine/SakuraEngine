@@ -87,6 +87,7 @@ inline void destruct_sparse_vector_data(SparseVectorStorage<T, TSize>* data, con
 
         while (!cursor.reach_end())
         {
+            SKR_ASSERT(cursor.index() < size);
             ::skr::memory::destruct<T>(&data[cursor.index()]._sparse_vector_data);
             cursor.move_next();
         }
