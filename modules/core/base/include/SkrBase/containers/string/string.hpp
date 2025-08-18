@@ -278,22 +278,22 @@ struct U8String : protected Memory {
     bool ends_with(const UTF8Seq& suffix) const;
 
     // remove prefix & suffix
-    void     remove_prefix(const ViewType& prefix);
-    void     remove_suffix(const ViewType& suffix);
-    void     remove_prefix(const UTF8Seq& prefix);
-    void     remove_suffix(const UTF8Seq& suffix);
+    bool     remove_prefix(const ViewType& prefix);
+    bool     remove_suffix(const ViewType& suffix);
+    bool     remove_prefix(const UTF8Seq& prefix);
+    bool     remove_suffix(const UTF8Seq& suffix);
     U8String remove_prefix_copy(const ViewType& prefix) const;
     U8String remove_suffix_copy(const ViewType& suffix) const;
     U8String remove_prefix_copy(const UTF8Seq& prefix) const;
     U8String remove_suffix_copy(const UTF8Seq& suffix) const;
 
     // trim
-    void     trim(const ViewType& characters = u8" \t");
-    void     trim_start(const ViewType& characters = u8" \t");
-    void     trim_end(const ViewType& characters = u8" \t");
-    void     trim(const UTF8Seq& ch);
-    void     trim_start(const UTF8Seq& ch);
-    void     trim_end(const UTF8Seq& ch);
+    bool     trim(const ViewType& characters = u8" \t");
+    bool     trim_start(const ViewType& characters = u8" \t");
+    bool     trim_end(const ViewType& characters = u8" \t");
+    bool     trim(const UTF8Seq& ch);
+    bool     trim_start(const UTF8Seq& ch);
+    bool     trim_end(const UTF8Seq& ch);
     U8String trim_copy(const ViewType& characters = u8" \t") const;
     U8String trim_start_copy(const ViewType& characters = u8" \t") const;
     U8String trim_end_copy(const ViewType& characters = u8" \t") const;
@@ -302,9 +302,9 @@ struct U8String : protected Memory {
     U8String trim_end_copy(const UTF8Seq& ch) const;
 
     // trim_invalid
-    void     trim_invalid();
-    void     trim_invalid_start();
-    void     trim_invalid_end();
+    bool     trim_invalid();
+    bool     trim_invalid_start();
+    bool     trim_invalid_end();
     U8String trim_invalid_copy() const;
     U8String trim_invalid_start_copy() const;
     U8String trim_invalid_end_copy() const;
@@ -2253,35 +2253,55 @@ inline bool U8String<Memory>::ends_with(const UTF8Seq& suffix) const
 
 // remove prefix & suffix
 template <typename Memory>
-inline void U8String<Memory>::remove_prefix(const ViewType& prefix)
+inline bool U8String<Memory>::remove_prefix(const ViewType& prefix)
 {
     if (starts_with(prefix))
     {
         remove_at(0, prefix.size());
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 template <typename Memory>
-inline void U8String<Memory>::remove_suffix(const ViewType& suffix)
+inline bool U8String<Memory>::remove_suffix(const ViewType& suffix)
 {
     if (ends_with(suffix))
     {
         remove_at(size() - suffix.size(), suffix.size());
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 template <typename Memory>
-inline void U8String<Memory>::remove_prefix(const UTF8Seq& prefix)
+inline bool U8String<Memory>::remove_prefix(const UTF8Seq& prefix)
 {
     if (starts_with(prefix))
     {
         remove_at(0, prefix.len);
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 template <typename Memory>
-inline void U8String<Memory>::remove_suffix(const UTF8Seq& suffix)
+inline bool U8String<Memory>::remove_suffix(const UTF8Seq& suffix)
 {
     if (ends_with(suffix))
     {
         remove_at(size() - suffix.len, suffix.len);
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 template <typename Memory>
@@ -2307,13 +2327,15 @@ inline U8String<Memory> U8String<Memory>::remove_suffix_copy(const UTF8Seq& suff
 
 // trim
 template <typename Memory>
-inline void U8String<Memory>::trim(const ViewType& characters)
+inline bool U8String<Memory>::trim(const ViewType& characters)
 {
-    trim_start(characters);
-    trim_end(characters);
+    bool any_trim = false;
+    any_trim |= trim_start(characters);
+    any_trim |= trim_end(characters);
+    return any_trim;
 }
 template <typename Memory>
-inline void U8String<Memory>::trim_start(const ViewType& characters)
+inline bool U8String<Memory>::trim_start(const ViewType& characters)
 {
     ViewType trim_view = view().trim_start(characters);
     if (trim_view.size() != size())
@@ -2321,26 +2343,38 @@ inline void U8String<Memory>::trim_start(const ViewType& characters)
         _pre_modify();
         ::skr::memory::move(_data(), const_cast<DataType*>(trim_view.data()), trim_view.size());
         _set_size(trim_view.size());
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 template <typename Memory>
-inline void U8String<Memory>::trim_end(const ViewType& characters)
+inline bool U8String<Memory>::trim_end(const ViewType& characters)
 {
     ViewType trim_view = view().trim_end(characters);
     if (trim_view.size() != size())
     {
         _pre_modify();
         _set_size(trim_view.size());
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 template <typename Memory>
-inline void U8String<Memory>::trim(const UTF8Seq& ch)
+inline bool U8String<Memory>::trim(const UTF8Seq& ch)
 {
-    trim_start(ch);
-    trim_end(ch);
+    bool any_trim = false;
+    any_trim |= trim_start(ch);
+    any_trim |= trim_end(ch);
+    return any_trim;
 }
 template <typename Memory>
-inline void U8String<Memory>::trim_start(const UTF8Seq& ch)
+inline bool U8String<Memory>::trim_start(const UTF8Seq& ch)
 {
     ViewType trim_view = view().trim_start(ch);
     if (trim_view.size() != size())
@@ -2348,16 +2382,26 @@ inline void U8String<Memory>::trim_start(const UTF8Seq& ch)
         _pre_modify();
         ::skr::memory::move(_data(), const_cast<DataType*>(trim_view.data()), trim_view.size());
         _set_size(trim_view.size());
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 template <typename Memory>
-inline void U8String<Memory>::trim_end(const UTF8Seq& ch)
+inline bool U8String<Memory>::trim_end(const UTF8Seq& ch)
 {
     ViewType trim_view = view().trim_end(ch);
     if (trim_view.size() != size())
     {
         _pre_modify();
         _set_size(trim_view.size());
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 template <typename Memory>
@@ -2393,13 +2437,15 @@ inline U8String<Memory> U8String<Memory>::trim_end_copy(const UTF8Seq& ch) const
 
 // trim_invalid
 template <typename Memory>
-inline void U8String<Memory>::trim_invalid()
+inline bool U8String<Memory>::trim_invalid()
 {
-    trim_invalid_start();
-    trim_invalid_end();
+    bool any_trim = false;
+    any_trim |= trim_invalid_start();
+    any_trim |= trim_invalid_end();
+    return any_trim;
 }
 template <typename Memory>
-inline void U8String<Memory>::trim_invalid_start()
+inline bool U8String<Memory>::trim_invalid_start()
 {
     ViewType trim_view = view().trim_invalid_start();
     if (trim_view.size() != size())
@@ -2407,16 +2453,26 @@ inline void U8String<Memory>::trim_invalid_start()
         _pre_modify();
         ::skr::memory::move(_data(), const_cast<DataType*>(trim_view.data()), trim_view.size());
         _set_size(trim_view.size());
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 template <typename Memory>
-inline void U8String<Memory>::trim_invalid_end()
+inline bool U8String<Memory>::trim_invalid_end()
 {
     ViewType trim_view = view().trim_invalid_end();
     if (trim_view.size() != size())
     {
         _pre_modify();
         _set_size(trim_view.size());
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 template <typename Memory>
