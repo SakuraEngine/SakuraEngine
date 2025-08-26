@@ -17,7 +17,7 @@ shared_module("SkrShaderCompiler", "SKR_SHADER_COMPILER")
     -- install
     skr_install_rule()
     skr_install("download", {
-        name = "dxc-2025_02_21",
+        name = "dxc-2025_07_14",
         install_func = "sdk",
     })
 

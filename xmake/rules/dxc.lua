@@ -5,7 +5,7 @@ rule("utils.dxc")
 
         install.add_rule_if_not_found(target)
         install.add_install_item(target, "download", {
-            name = "dxc-2025_02_21",
+            name = "dxc-2025_07_14",
             install_func = "tool",
         })
     end)

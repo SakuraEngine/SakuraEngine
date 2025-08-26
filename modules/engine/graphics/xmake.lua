@@ -21,12 +21,12 @@ shared_module("SkrGraphics", "SKR_GRAPHICS")
     -- install
     skr_install_rule()
     skr_install("download", {
-        name = "dstorage-1.2.3",
+        name = "dstorage-1.3.0",
         install_func = "sdk",
         plat = { "windows" }
     })
     skr_install("download", {
-        name = "dxc-2025_02_21",
+        name = "dxc-2025_07_14",
         install_func = "sdk",
         plat = { "windows" }
     })
