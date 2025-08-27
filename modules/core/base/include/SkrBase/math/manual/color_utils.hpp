@@ -1,5 +1,6 @@
 #pragma once
 #include "./rtm_conv.hpp"
+#include "./matrix.hpp"
 #include "../gen/misc/quat.hpp"
 
 namespace skr
@@ -11,6 +12,7 @@ enum class EWhitePoint : uint8_t
     CIE1931_D65,
     ACES_D60,
     DCI_CalibrationWhite,
+    E,
 };
 enum class EChromaticAdaptationMethod : uint8_t
 {
@@ -21,7 +23,9 @@ enum class EChromaticAdaptationMethod : uint8_t
 };
 enum class EColorSpace : uint8_t
 {
-    sRGB,
+    CIEXYZ,
+    AdobeRGB,
+    Rec709, // unreal default color space
     Rec2020,
     ACES_AP0,
     ACES_AP1,
@@ -760,6 +764,8 @@ inline double2 Chromaticities::get_white_point(EWhitePoint white_point)
         return { 0.32168, 0.33767 };
     case EWhitePoint::DCI_CalibrationWhite:
         return { 0.314, 0.351 };
+    case EWhitePoint::E:
+        return { 1.0 / 3.0, 1.0 / 3.0 };
     default:
         SKR_UNREACHABLE_CODE()
         return {};
@@ -904,7 +910,19 @@ inline void Chromaticities::setup_by_color_space(EColorSpace color_space)
 {
     switch (color_space)
     {
-    case EColorSpace::sRGB:
+    case EColorSpace::CIEXYZ:
+        red         = { 1, 0 };
+        green       = { 0, 1 };
+        blue        = { 0, 0 };
+        white_point = get_white_point(EWhitePoint::E);
+        break;
+    case EColorSpace::AdobeRGB:
+        red         = { 0.6400, 0.3300 };
+        green       = { 0.2100, 0.7100 };
+        blue        = { 0.1500, 0.0600 };
+        white_point = get_white_point(EWhitePoint::CIE1931_D65);
+        break;
+    case EColorSpace::Rec709:
         red         = { 0.64, 0.33 };
         green       = { 0.30, 0.60 };
         blue        = { 0.15, 0.06 };
@@ -996,16 +1014,19 @@ inline void Chromaticities::setup_by_color_space(EColorSpace color_space)
 
 inline double3x3 Chromaticities::matrix_to_xyz()
 {
-    double3x3 mat = inverse(double3x3{
+    // calc unscaled matrix
+    double3x3 mat = double3x3{
         { red.x, red.y, 1 - red.x - red.y },
         { green.x, green.y, 1 - green.x - green.y },
         { blue.x, blue.y, 1 - blue.x - blue.y },
-    });
+    };
 
-    double3 white_xyz = xyY_to_XYZ({ white_point, 1.0 });
+    // calc scale
+    double3x3 inv_mat   = inverse(mat);
+    double3   white_xyz = xyY_to_XYZ({ white_point, 1.0 });
+    double3   scale     = mul(white_xyz, inv_mat);
 
-    double3 scale = mul(white_xyz, mat);
-
+    // apply scale
     mat.axis_x *= scale.x;
     mat.axis_y *= scale.y;
     mat.axis_z *= scale.z;
