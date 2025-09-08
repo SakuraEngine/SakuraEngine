@@ -340,7 +340,7 @@ void skr_thread_set_affinity(SThreadHandle handle, uint64_t affinityMask)
 
 char8_t* thread_name()
 {
-	THREAD_LOCAL static char8_t name[SKR_MAX_THREAD_NAME_LENGTH + 1];
+	THREAD_LOCAL static char8_t name[SKR_MAX_THREAD_NAME_LENGTH + 1] = { 0 };
 	return name;
 }
 
@@ -355,6 +355,7 @@ void skr_current_thread_set_name(const char8_t* pName)
     SThreadHandle handle = skr_get_current_thread();
     SetThreadDescription((HANDLE)handle, buffer);
     strcpy_s(thread_name(), SKR_MAX_THREAD_NAME_LENGTH + 1, pName);
+    thread_name()[SKR_MAX_THREAD_NAME_LENGTH] = '0';
 
     free(buffer);
 }
