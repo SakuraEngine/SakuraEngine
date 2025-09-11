@@ -126,29 +126,37 @@ function trigger_analyze()
     end
 
     -- dispatch analyze
-    utils.on_changed(function (change_info)
-        cprint("${cyan}[ANALYZE]: trigger analyze with arg: %s${clear}", table.concat(argv, " "))
-        
+    utils.on_changed(function(change_info)
+        import("core.base.task")
         -- record trigger log
+        local flag_file = utils.log_file("_analyze_flag")
         local log_file = utils.log_file("analyze_trigger")
-        local log_file_content = os.exists(log_file) and io.readfile(log_file) or ""
-        local append_log_content = "["..os.date("%Y-%m-%d %H:%M:%S").."]: ".."trigger analyze with arg: "..table.concat(argv, " ").."\n"
-        io.writefile(log_file, log_file_content..append_log_content)
+        local magic_code = "114514_1919810"
+        if not os.exists(flag_file) or io.readfile(flag_file) ~= magic_code then
+            cprint("${cyan}[ANALYZE]: trigger analyze with arg: %s${clear}", table.concat(argv, " "))
+            local log_file_content = os.exists(log_file) and io.readfile(log_file) or ""
+            local append_log_content = "[" .. os.date("%Y-%m-%d %H:%M:%S") .. "]: " .. "trigger analyze with arg: " ..
+                                           table.concat(argv, " ") .. "\n"
+            io.writefile(log_file, log_file_content .. append_log_content)
+            io.writefile(flag_file, magic_code)
+            -- run analyze
+            -- local out, err = os.iorun("xmake analyze_project")
 
-        -- run analyze
-        local out, err = os.iorun("xmake analyze_project")
-        
-        if out and #out > 0 then
-            print("===================[Analyze Output]===================")
-            printf(out)
-            print("===================[Analyze Output]===================")
+            -- if out and #out > 0 then
+            --     print("===================[Analyze Output]===================")
+            --     printf(out)
+            --     print("===================[Analyze Output]===================")
+            -- end
+            -- if err and #err > 0 then
+            --     print("===================[Analyze Error]===================")
+            --     printf(err)
+            --     print("===================[Analyze Error]===================")
+            -- end
+            task.run("analyze_project")
+        else
+            os.rm(flag_file)
         end
-        if err and #err > 0 then
-            print("===================[Analyze Error]===================")
-            printf(err)
-            print("===================[Analyze Error]===================")
-        end
-    end,{
+    end, {
         cache_file = utils.depend_file("ANALYZE_PHASE"),
         files = deps,
     })

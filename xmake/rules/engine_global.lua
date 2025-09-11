@@ -8,10 +8,10 @@ skr_global_target()
 
     -- scripts
     on_load(function (target)
+        import("core.base.task")
         import("skr.utils")
         import("skr.analyze")
         import("skr.install")
-        import("core.tool.toolchain")
         import("skr.download")
         
         argv = xmake.argv()
@@ -23,9 +23,6 @@ skr_global_target()
 
         -- trigger analyze
         if analyze.filter_analyze_trigger() then
-            if toolchain.save then
-                toolchain.save()
-            end
             analyze.trigger_analyze()
         end
     end)
